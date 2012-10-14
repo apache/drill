@@ -1,0 +1,9 @@
+%1 := scan-json "table-1"	# from table-1
+
+%2 := bind "x", %1		# variable x
+
+# full-line comment
+%3 := bind "y", %2		# and y
+%4 := > %2, 3			# where x > 3
+%5 := filter %4, %1		# apply the filter
+%6 := project %5, %2, %3	# select columns for final output

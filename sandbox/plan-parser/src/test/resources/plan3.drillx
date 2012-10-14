@@ -1,0 +1,11 @@
+#comment taking up a full line
+
+# and then a blank line
+%1 := scan-json "table-1"	# from table-1
+%2 := bind "a.x", %1		# we will sum a.x
+%3 := > %2, 3			# where x > 3
+%4 := filter %3, %1		# apply the filter
+%5 := aggregate "sum", %3, %2, %4
+%6 := as %5, "total", %4	# rename total
+%7 := bind "total", %6		# set up final select
+%9 := project %4, %6
