@@ -13,10 +13,18 @@ import com.google.common.collect.Lists;
 package org.apache.drill.plan.ast;
 }
 
+@lexer::members {
+  Stack<String> paraphrase = new Stack<String>();
+}
+
 @members {
+  Stack<String> paraphrase = new Stack<String>();
   public void reportError(RecognitionException e) {
-    throw new LogicalPlanParseException("Syntax error in schema: ", e);
+      throw new LogicalPlanParseException(
+           String.format("Syntax error in schema line \%d:\%d ", e.line, e.charPositionInLine),
+           e);
   }
+
 }
 
 plan returns [Plan r]: s=statements EOF {$r = $s.r;};
@@ -46,14 +54,50 @@ arg returns [Arg r]:
     ;
 
 
-STRING: ('"'|'Ò') ( ~('"' | '\\') | '\\' .)* ('"'|'Ó') ;
-GETS: ':=' ;
-BOOLEAN: 'true'|'false';
-SYMBOL: '%' ('0'..'9')+;
-OP: ('a'..'z'|'A'..'Z') ('a'..'z'|'A'..'Z'|'-')*
+STRING
+@init { paraphrase.push("a string"); }
+@after { paraphrase.pop(); }
+  : ('"'|'\u201c') ( ~('"' | '\\') | '\\' .)* ('"'|'\u201d') ;
+
+GETS
+@init { paraphrase.push(":="); }
+@after { paraphrase.pop(); }
+  : ':=' ;
+
+BOOLEAN
+@init { paraphrase.push("a boolean value"); }
+@after { paraphrase.pop(); }
+  : 'true'|'false';
+
+SYMBOL
+@init { paraphrase.push("a percent-symbol"); }
+@after { paraphrase.pop(); }
+  : '%' ('0'..'9')+;
+
+OP
+@init { paraphrase.push("an operator"); }
+@after { paraphrase.pop(); }
+  : ('a'..'z'|'A'..'Z') ('a'..'z'|'A'..'Z'|'-')*
     | '>' | '<' | '>=' | '<=' | '+' | '-' | '*' | '/';
-COMMA: ',' ;
-NUMBER: ('0'..'9')+ ;
-LINE_ENDING: '\r'? '\n';
-COMMENT: '#' (~'\n')* {$channel=HIDDEN;} ;
-WHITESPACE : ( '\t' | ' ' )+ { $channel = HIDDEN; } ;
+
+COMMA
+@init { paraphrase.push("a comma"); }
+@after { paraphrase.pop(); }
+  : ',' ;
+
+NUMBER
+@init { paraphrase.push("a number"); }
+@after { paraphrase.pop(); }
+  : ('0'..'9')+ ;
+
+LINE_ENDING
+@init { paraphrase.push("an end of line"); }
+@after { paraphrase.pop(); }
+  : '\r'? '\n';
+
+COMMENT
+@init { paraphrase.push("a comment"); }
+@after { paraphrase.pop(); }
+  : '#' (~'\n')* {$channel=HIDDEN;} ;
+
+WHITESPACE: ( '\t' | ' ' )+ { $channel = HIDDEN; } ;

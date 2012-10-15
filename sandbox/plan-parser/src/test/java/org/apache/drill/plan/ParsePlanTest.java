@@ -33,6 +33,8 @@ import java.util.Iterator;
 import java.util.List;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertTrue;
+import static junit.framework.Assert.fail;
 
 public class ParsePlanTest {
     @Test
@@ -52,6 +54,30 @@ public class ParsePlanTest {
         Plan r = ParsePlan.parseResource("plan3.drillx");
         assertEquals("Lines", 8, r.getStatements().size());
     }
+
+    @Test
+    public void testParseError1() throws IOException, RecognitionException, ParsePlan.ValidationException {
+        try {
+            ParsePlan.parseResource("bad-plan1.drillx");
+            fail("Should have thrown exception");
+        } catch (ParsePlan.ValidationException e) {
+            assertTrue(e.getMessage().contains("%2 used more than once"));
+            assertTrue(e.getMessage().contains("Undefined reference to %3"));
+        }
+    }
+
+    @Test
+    public void testParseError2() throws IOException, RecognitionException, ParsePlan.ValidationException {
+        try {
+            ParsePlan.parseResource("bad-plan2.drillx");
+            fail("Should have thrown exception");
+        } catch (ParsePlan.ValidationException e) {
+            assertTrue(e.getMessage().contains("%2 used more than once"));
+            assertTrue(e.getMessage().contains("Undefined reference to %3"));
+        }
+    }
+
+
 
     @Test
     public void testLexer() throws IOException {

@@ -6,7 +6,7 @@
 
     <groupId>plan-parser</groupId>
     <artifactId>plan-parser</artifactId>
-    <version>0.1</version>
+    <version>0.1-SNAPSHOT</version>
   <dependencies>
     <dependency>
       <groupId>com.google.guava</groupId>

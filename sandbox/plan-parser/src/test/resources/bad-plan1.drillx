@@ -1,0 +1,3 @@
+%1 := scan-json "table-1"	# normal
+%2 := bind "x", %3		    # undefined reference
+%2 := bind "y", %2		    # duplicate def
