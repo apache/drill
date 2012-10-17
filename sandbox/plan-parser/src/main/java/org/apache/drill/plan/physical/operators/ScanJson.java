@@ -39,6 +39,7 @@ import java.util.Map;
  * Reads JSON formatted records from a file.
  */
 public class ScanJson extends Operator {
+
     public static void define() {
         Operator.defineOperator("scan-json", ScanJson.class);
     }
@@ -74,9 +75,6 @@ public class ScanJson extends Operator {
 
     @Override
     public Object call() throws IOException {
-        JsonSchema schema = new JsonSchema();
-        emitSchema(schema);
-
         int count = 0;
         Reader in = input.getInput();
         JsonStreamParser jp = new JsonStreamParser(in);

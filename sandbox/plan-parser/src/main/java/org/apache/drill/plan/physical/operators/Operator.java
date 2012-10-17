@@ -75,7 +75,6 @@ public abstract class Operator implements Callable<Object> {
     }
 
     protected final List<DataListener> dataOut = Lists.newArrayList();
-    protected final List<SchemaListener> schemaOut = Lists.newArrayList();
 
     public void addDataListener(DataListener listener) {
         this.dataOut.add(listener);
@@ -84,12 +83,6 @@ public abstract class Operator implements Callable<Object> {
     protected void emit(Object r) {
         for (DataListener listener : dataOut) {
             listener.notify(r);
-        }
-    }
-
-    protected void emitSchema(Schema schema) {
-        for (SchemaListener listener : schemaOut) {
-            listener.notify(schema);
         }
     }
 
