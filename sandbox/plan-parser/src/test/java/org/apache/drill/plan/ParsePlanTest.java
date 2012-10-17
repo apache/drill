@@ -21,8 +21,10 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import org.antlr.runtime.ANTLRReaderStream;
+import org.antlr.runtime.MissingTokenException;
 import org.antlr.runtime.RecognitionException;
 import org.antlr.runtime.Token;
+import org.apache.drill.plan.ast.LogicalPlanParseException;
 import org.apache.drill.plan.ast.Plan;
 import org.apache.drill.plan.ast.PlanLexer;
 import org.junit.Test;
@@ -69,9 +71,11 @@ public class ParsePlanTest {
         try {
             ParsePlan.parseResource("bad-plan2.drillx");
             fail("Should have thrown exception");
-        } catch (ParsePlan.ValidationException e) {
-            assertTrue(e.getMessage().contains("%2 used more than once"));
-            assertTrue(e.getMessage().contains("Undefined reference to %3"));
+        } catch (LogicalPlanParseException e) {
+            assertTrue(e.getCause() instanceof MissingTokenException);
+            MissingTokenException ex = ((MissingTokenException) e.getCause());
+            assertEquals(1, ex.line);
+            assertEquals(6, ex.charPositionInLine);
         }
     }
 
