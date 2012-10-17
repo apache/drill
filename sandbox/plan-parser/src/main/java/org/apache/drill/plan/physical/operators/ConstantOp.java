@@ -32,7 +32,7 @@ public class ConstantOp extends EvalOperator {
     }
 
     @Override
-    public void link(Op op, Map<Integer, OperatorReference> bindings) {
+    public void link(Op op, Map<Integer, Operator> bindings) {
         // ignore
     }
 

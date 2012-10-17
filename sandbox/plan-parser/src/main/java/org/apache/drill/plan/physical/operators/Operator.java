@@ -64,7 +64,7 @@ public abstract class Operator implements Callable<Object> {
         operatorMap.put(name, clazz);
     }
 
-    public static Operator create(Op op, Map<Integer, OperatorReference> bindings) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, InstantiationException {
+    public static Operator create(Op op, Map<Integer, Operator> bindings) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException, InstantiationException {
         Class<? extends Operator> c = operatorMap.get(op.getOp());
         if (c == null) {
             throw new IllegalArgumentException(String.format("No such operators as %s", op.getOp()));
@@ -90,7 +90,7 @@ public abstract class Operator implements Callable<Object> {
         throw new UnsupportedOperationException("default no can do");  //To change body of created methods use File | Settings | File Templates.
     }
 
-    public abstract void link(Op op, Map<Integer, OperatorReference> bindings);
+    public abstract void link(Op op, Map<Integer, Operator> bindings);
 
     public Object call() throws Exception {
         // do nothing

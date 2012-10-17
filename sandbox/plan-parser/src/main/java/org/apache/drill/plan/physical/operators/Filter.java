@@ -36,23 +36,23 @@ public class Filter extends Operator implements DataListener {
 
     private EvalOperator filterExpression = null;
 
-    public Filter(Op op, Map<Integer, OperatorReference> bindings) {
+    public Filter(Op op, Map<Integer, Operator> bindings) {
         checkArity(op, 2, 1);
         List<Arg> outputs = op.getOutputs();
         if (outputs.size() != 1) {
             throw new IllegalArgumentException("filter operator should only have one output");
         }
-        bindings.put(outputs.get(0).asSymbol().getInt(), new OperatorReference(this, 0));
+        bindings.put(outputs.get(0).asSymbol().getInt(), this);
     }
 
     @Override
-    public void link(Op op, Map<Integer, OperatorReference> bindings) {
+    public void link(Op op, Map<Integer, Operator> bindings) {
         List<Arg> inputs = op.getInputs();
         if (inputs.size() != 2) {
             throw new IllegalArgumentException("filter requires two inputs, a filter-expression and a data source.  Got " + inputs.size());
         }
-        filterExpression = (EvalOperator) bindings.get(inputs.get(0).asSymbol().getInt()).getOp();
-        data = bindings.get(inputs.get(1).asSymbol().getInt()).getOp();
+        filterExpression = (EvalOperator) bindings.get(inputs.get(0).asSymbol().getInt());
+        data = bindings.get(inputs.get(1).asSymbol().getInt());
         data.addDataListener(this);
     }
 

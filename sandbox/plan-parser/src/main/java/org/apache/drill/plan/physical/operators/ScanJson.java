@@ -46,7 +46,7 @@ public class ScanJson extends Operator {
 
     private InputSupplier<InputStreamReader> input;
 
-    public ScanJson(Op op, Map<Integer, OperatorReference> bindings) {
+    public ScanJson(Op op, Map<Integer, Operator> bindings) {
         List<Arg> in = op.getInputs();
         if (in.size() != 1) {
             throw new IllegalArgumentException("scan-json should have exactly one argument (a file name)");
@@ -57,7 +57,7 @@ public class ScanJson extends Operator {
         if (out.size() != 1) {
             throw new IllegalArgumentException("scan-json should have exactly one output");
         }
-        bindings.put(out.get(0).asSymbol().getInt(), new OperatorReference(this, 0));
+        bindings.put(out.get(0).asSymbol().getInt(), this);
     }
 
     public ScanJson(InputSupplier<InputStreamReader> input) throws IOException {
@@ -69,7 +69,7 @@ public class ScanJson extends Operator {
     }
 
     @Override
-    public void link(Op next, Map<Integer, OperatorReference> bindings) {
+    public void link(Op next, Map<Integer, Operator> bindings) {
         // nothing to look for
     }
 

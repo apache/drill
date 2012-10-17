@@ -35,17 +35,17 @@ public class Bind extends EvalOperator {
 
     private String name;
 
-    public Bind(Op op, Map<Integer, OperatorReference> bindings) {
+    public Bind(Op op, Map<Integer, Operator> bindings) {
         checkArity(op, 2, 1);
         List<Arg> out = op.getOutputs();
-        bindings.put(out.get(0).asSymbol().getInt(), new OperatorReference(this, 0));
+        bindings.put(out.get(0).asSymbol().getInt(), this);
     }
 
     @Override
-    public void link(Op op, Map<Integer, OperatorReference> bindings) {
+    public void link(Op op, Map<Integer, Operator> bindings) {
         // connect to our inputs
         name = op.getInputs().get(0).asString();
-        schema = bindings.get(op.getInputs().get(1).asSymbol().getInt()).getOp().getSchema();
+        schema = bindings.get(op.getInputs().get(1).asSymbol().getInt()).getSchema();
     }
 
     @Override

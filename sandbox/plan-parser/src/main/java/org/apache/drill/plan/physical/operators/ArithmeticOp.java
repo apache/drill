@@ -39,11 +39,11 @@ public abstract class ArithmeticOp extends EvalOperator {
 
     public EvalOperator left, right;
 
-    public ArithmeticOp(Op op, Map<Integer, OperatorReference> bindings) {
+    public ArithmeticOp(Op op, Map<Integer, Operator> bindings) {
         checkArity(op, 2, 1);
 
         // bind our output
-        bindings.put(op.getOutputs().get(0).asSymbol().getInt(), new OperatorReference(this, 0));
+        bindings.put(op.getOutputs().get(0).asSymbol().getInt(), this);
     }
 
     @Override
@@ -63,7 +63,7 @@ public abstract class ArithmeticOp extends EvalOperator {
     }
 
     @Override
-    public void link(Op op, Map<Integer, OperatorReference> bindings) {
+    public void link(Op op, Map<Integer, Operator> bindings) {
         checkArity(op, 2, 1);
 
         List<Arg> in = op.getInputs();
@@ -71,11 +71,11 @@ public abstract class ArithmeticOp extends EvalOperator {
         right = extractOperand(in.get(1), bindings);
     }
 
-    private EvalOperator extractOperand(Arg arg, Map<Integer, ? extends OperatorReference> bindings) {
+    private EvalOperator extractOperand(Arg arg, Map<Integer, Operator> bindings) {
         if (arg instanceof Arg.Number) {
             return new ConstantOp(((Arg.Number) arg).doubleValue());
         } else if (arg instanceof Arg.Symbol) {
-            return (EvalOperator) bindings.get(arg.asSymbol().getInt()).getOp();
+            return (EvalOperator) bindings.get(arg.asSymbol().getInt());
         } else {
             throw new IllegalArgumentException("Wanted constant or reference to another operator");
         }
@@ -84,7 +84,7 @@ public abstract class ArithmeticOp extends EvalOperator {
     public abstract Object eval(double x, double y);
 
     public static class GT extends ArithmeticOp {
-        public GT(Op op, Map<Integer, OperatorReference> bindings) {
+        public GT(Op op, Map<Integer, Operator> bindings) {
             super(op, bindings);
         }
 
@@ -95,7 +95,7 @@ public abstract class ArithmeticOp extends EvalOperator {
     }
 
     public static class LT extends ArithmeticOp {
-        public LT(Op op, Map<Integer, OperatorReference> bindings) {
+        public LT(Op op, Map<Integer, Operator> bindings) {
             super(op, bindings);
         }
 
@@ -106,7 +106,7 @@ public abstract class ArithmeticOp extends EvalOperator {
     }
 
     public static class EQUALS extends ArithmeticOp {
-        public EQUALS(Op op, Map<Integer, OperatorReference> bindings) {
+        public EQUALS(Op op, Map<Integer, Operator> bindings) {
             super(op, bindings);
         }
 
@@ -117,7 +117,7 @@ public abstract class ArithmeticOp extends EvalOperator {
     }
 
     public static class PLUS extends ArithmeticOp {
-        public PLUS(Op op, Map<Integer, OperatorReference> bindings) {
+        public PLUS(Op op, Map<Integer, Operator> bindings) {
             super(op, bindings);
         }
 
@@ -129,7 +129,7 @@ public abstract class ArithmeticOp extends EvalOperator {
 
 
     public static class MINUS extends ArithmeticOp {
-        public MINUS(Op op, Map<Integer, OperatorReference> bindings) {
+        public MINUS(Op op, Map<Integer, Operator> bindings) {
             super(op, bindings);
         }
 
@@ -141,7 +141,7 @@ public abstract class ArithmeticOp extends EvalOperator {
 
 
     public static class TIMES extends ArithmeticOp {
-        public TIMES(Op op, Map<Integer, OperatorReference> bindings) {
+        public TIMES(Op op, Map<Integer, Operator> bindings) {
             super(op, bindings);
         }
 
@@ -153,7 +153,7 @@ public abstract class ArithmeticOp extends EvalOperator {
 
 
     public static class DIVIDE extends ArithmeticOp {
-        public DIVIDE(Op op, Map<Integer, OperatorReference> bindings) {
+        public DIVIDE(Op op, Map<Integer, Operator> bindings) {
             super(op, bindings);
         }
 

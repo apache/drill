@@ -24,7 +24,6 @@ import org.apache.drill.plan.ast.Op;
 import org.apache.drill.plan.ast.Plan;
 import org.apache.drill.plan.physical.operators.DataListener;
 import org.apache.drill.plan.physical.operators.Operator;
-import org.apache.drill.plan.physical.operators.OperatorReference;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
@@ -44,7 +43,7 @@ public class PhysicalInterpreter implements DataListener {
     private final List<Operator> ops;
 
     public PhysicalInterpreter(Plan prog) throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
-        Map<Integer, OperatorReference> bindings = Maps.newHashMap();
+        Map<Integer, Operator> bindings = Maps.newHashMap();
         ops = Lists.newArrayList();
 
         for (Op op : prog.getStatements()) {
@@ -58,7 +57,7 @@ public class PhysicalInterpreter implements DataListener {
 
         Collection<Arg> outputs = prog.getOutputs();
         for (Arg output : outputs) {
-            bindings.get(output.asSymbol().getInt()).getOp().addDataListener(this);
+            bindings.get(output.asSymbol().getInt()).addDataListener(this);
         }
     }
 
