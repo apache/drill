@@ -48,6 +48,7 @@ args returns [List<Arg> r]: a = arg {$r = Lists.newArrayList($a.r);} ( COMMA b =
 
 arg returns [Arg r]:
     s = STRING {$r = Arg.createString($s.text);}
+    | z = HEX_LONG {$r = Arg.createLong($z.text);}
     | n = NUMBER {$r = Arg.createNumber($n.text);}
     | b = BOOLEAN {$r = Arg.createBoolean($b.text);}
     | s = SYMBOL {$r = Arg.createSymbol($s.text);}
@@ -58,6 +59,11 @@ STRING
 @init { paraphrase.push("a string"); }
 @after { paraphrase.pop(); }
   : ('"'|'\u201c') ( ~('"' | '\\') | '\\' .)* ('"'|'\u201d') ;
+
+HEX_LONG
+@init { paraphrase.push("a binary string"); }
+@after { paraphrase.pop(); }
+  : '0x' ( '0'..'9' | 'A'..'F' | 'a'..'f')+ ;
 
 GETS
 @init { paraphrase.push(":="); }
