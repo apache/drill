@@ -1,0 +1,4 @@
+%1 := scan-json "resource:data1.json"
+%2 := bind "a", %1
+%3 := < %2, 3
+%4 := filter %3, %1

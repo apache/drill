@@ -21,6 +21,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
 import com.google.common.io.Files;
 import com.google.common.io.InputSupplier;
+import com.google.common.io.Resources;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
@@ -51,7 +52,12 @@ public class ScanJson extends Operator {
         if (in.size() != 1) {
             throw new IllegalArgumentException("scan-json should have exactly one argument (a file name)");
         }
-        input = Files.newReaderSupplier(new File(in.get(0).asString()), Charsets.UTF_8);
+        String inputName = in.get(0).asString();
+        if (inputName.startsWith("resource:")) {
+            input = Resources.newReaderSupplier(Resources.getResource(inputName.substring(inputName.indexOf(':') + 1)), Charsets.UTF_8);
+        } else {
+            input = Files.newReaderSupplier(new File(inputName), Charsets.UTF_8);
+        }
 
         List<Arg> out = op.getOutputs();
         if (out.size() != 1) {
