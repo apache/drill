@@ -40,10 +40,7 @@ public abstract class ArithmeticOp extends EvalOperator {
     public EvalOperator left, right;
 
     public ArithmeticOp(Op op, Map<Integer, Operator> bindings) {
-        checkArity(op, 2, 1);
-
-        // bind our output
-        bindings.put(op.getOutputs().get(0).asSymbol().getInt(), this);
+        super(op, bindings, 2, 1);
     }
 
     @Override
@@ -64,8 +61,6 @@ public abstract class ArithmeticOp extends EvalOperator {
 
     @Override
     public void link(Op op, Map<Integer, Operator> bindings) {
-        checkArity(op, 2, 1);
-
         List<Arg> in = op.getInputs();
         left = extractOperand(in.get(0), bindings);
         right = extractOperand(in.get(1), bindings);

@@ -18,14 +18,10 @@
 package org.apache.drill.plan.physical.operators;
 
 import com.google.common.base.Charsets;
-import com.google.common.base.Splitter;
 import com.google.common.io.Files;
 import com.google.common.io.InputSupplier;
 import com.google.common.io.Resources;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
-import com.google.gson.JsonStreamParser;
+import com.google.gson.*;
 import org.apache.drill.plan.ast.Arg;
 import org.apache.drill.plan.ast.Op;
 
@@ -35,11 +31,12 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 /**
  * Reads JSON formatted records from a file.
  */
-public class ScanJson extends Operator {
+public class ScanJson extends Operator implements Callable<Object> {
 
     public static void define() {
         Operator.defineOperator("scan-json", ScanJson.class);
@@ -90,6 +87,9 @@ public class ScanJson extends Operator {
             count++;
         }
         in.close();
+        // TODO what should the parent record be at the top-level?
+        finishBatch(null);
+
         return count;
     }
 
@@ -98,27 +98,4 @@ public class ScanJson extends Operator {
         return new JsonSchema();
     }
 
-    private class JsonSchema extends Schema {
-        Splitter onDot = Splitter.on(".");
-
-        @Override
-        public Object get(String name, Object data) {
-            Iterable<String> bits = onDot.split(name);
-            for (String bit : bits) {
-                data = ((JsonObject) data).get(bit);
-            }
-            if (data instanceof JsonPrimitive) {
-                JsonPrimitive v = (JsonPrimitive) data;
-                if (v.isNumber()) {
-                    return v.getAsDouble();
-                } else if (v.isString()) {
-                    return v.getAsString();
-                } else {
-                    return v.getAsBoolean();
-                }
-            } else {
-                return data;
-            }
-        }
-    }
 }

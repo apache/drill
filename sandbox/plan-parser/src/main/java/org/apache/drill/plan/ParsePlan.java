@@ -35,28 +35,37 @@ import java.util.Formatter;
 
 /**
  * Parses a plan from a resource or file.
- *
+ * <p/>
  * The result is validated to ensure that symbols mentioned on the left-hand side of assignments are only mentioned
  * once and all referenced symbols on the right hand side are defined somewhere.
  */
 public class ParsePlan {
-    public static Plan parseResource(File file) throws IOException, RecognitionException, ValidationException {
+    public static Plan parseResource(File file) throws ParseException {
         return ParsePlan.parse(Files.newReaderSupplier(file, Charsets.UTF_8));
     }
 
-    public static Plan parseResource(String resourceName) throws IOException, RecognitionException, ValidationException {
+    public static Plan parseResource(String resourceName) throws ParseException {
         return ParsePlan.parse(Resources.newReaderSupplier(Resources.getResource(resourceName), Charsets.UTF_8));
     }
 
-    public static Plan parse(InputSupplier<InputStreamReader> in) throws IOException, RecognitionException, ValidationException {
-        InputStreamReader inStream = in.getInput();
-        PlanLexer lex = new PlanLexer(new ANTLRReaderStream(inStream));
-        PlanParser r = new PlanParser(new CommonTokenStream(lex));
-        inStream.close();
+    public static Plan parse(InputSupplier<InputStreamReader> in) throws ParseException {
+        PlanParser r;
+        try {
+            InputStreamReader inStream = in.getInput();
+            PlanLexer lex = new PlanLexer(new ANTLRReaderStream(inStream));
+            r = new PlanParser(new CommonTokenStream(lex));
+            inStream.close();
+        } catch (IOException e) {
+            throw new ParseException(e);
+        }
 
-        Plan plan = r.plan().r;
-        validate(plan);
-        return plan;
+        try {
+            Plan plan = r.plan().r;
+            validate(plan);
+            return plan;
+        } catch (RecognitionException e) {
+            throw new ParseException(e);
+        }
     }
 
     private static void validate(Plan r) throws ValidationException {
@@ -98,7 +107,17 @@ public class ParsePlan {
         }
     }
 
-    public static class ValidationException extends Exception {
+    public static class ParseException extends Exception {
+        public ParseException(Throwable throwable) {
+            super(throwable);
+        }
+
+        public ParseException(String s) {
+            super(s);
+        }
+    }
+
+    public static class ValidationException extends ParseException {
         public ValidationException(String s) {
             super(s);
         }

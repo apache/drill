@@ -17,18 +17,22 @@
 
 package org.apache.drill.plan;
 
-import org.antlr.runtime.RecognitionException;
 import org.apache.drill.plan.ast.Plan;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.util.concurrent.ExecutionException;
-
 public class PhysicalInterpreterTest {
     @Test
-    public void testTrivialPlan() throws ParsePlan.ValidationException, RecognitionException, IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException, InstantiationException, InterruptedException, ExecutionException {
-        Plan p = ParsePlan.parseResource("physical-1.drillx");
+    public void testTrivialPlan() throws PhysicalInterpreter.InterpreterException, ParsePlan.ParseException {
+        run("physical-1.drillx");
+    }
+
+    @Test
+    public void testExplodeFilter() throws PhysicalInterpreter.InterpreterException, ParsePlan.ParseException {
+        run("physical-2.drillx");
+    }
+
+    private void run(String name) throws ParsePlan.ParseException, PhysicalInterpreter.SetupException, PhysicalInterpreter.QueryException {
+        Plan p = ParsePlan.parseResource(name);
         PhysicalInterpreter pi = new PhysicalInterpreter(p);
         pi.run();
     }

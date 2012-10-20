@@ -19,9 +19,17 @@ package org.apache.drill.plan.physical.operators;
 
 /**
  * Describes a schema.  In this context a schema is what understands how to get data
- * out of a record.  For JSON, the schema is pretty dumb, but for other data types it
+ * into and out of a record.  For JSON, the schema is pretty dumb, but for other data types it
  * could be quite clever.
  */
 public abstract class Schema {
     public abstract Object get(String name, Object data);
+
+    public abstract <T> Iterable<? extends T> getIterable(String name, Object data);
+
+    public abstract Schema getSubSchema(String name);
+
+    public abstract Schema overlay();
+
+    public abstract void set(String name, Object parent, Object value);
 }

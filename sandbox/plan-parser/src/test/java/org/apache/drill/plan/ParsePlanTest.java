@@ -22,7 +22,6 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import org.antlr.runtime.ANTLRReaderStream;
 import org.antlr.runtime.MissingTokenException;
-import org.antlr.runtime.RecognitionException;
 import org.antlr.runtime.Token;
 import org.apache.drill.plan.ast.LogicalPlanParseException;
 import org.apache.drill.plan.ast.Plan;
@@ -38,25 +37,25 @@ import static junit.framework.Assert.*;
 
 public class ParsePlanTest {
     @Test
-    public void testParse1() throws IOException, RecognitionException, ParsePlan.ValidationException {
+    public void testParse1() throws ParsePlan.ParseException {
         Plan r = ParsePlan.parseResource("plan1.drillx");
         assertEquals("Lines", 3, r.getStatements().size());
     }
 
     @Test
-    public void testParse2() throws IOException, RecognitionException, ParsePlan.ValidationException {
+    public void testParse2() throws ParsePlan.ParseException {
         Plan r = ParsePlan.parseResource("plan2.drillx");
         assertEquals("Lines", 6, r.getStatements().size());
     }
 
     @Test
-    public void testParse3() throws IOException, RecognitionException, ParsePlan.ValidationException {
+    public void testParse3() throws ParsePlan.ParseException {
         Plan r = ParsePlan.parseResource("plan3.drillx");
         assertEquals("Lines", 8, r.getStatements().size());
     }
 
     @Test
-    public void testParseError1() throws IOException, RecognitionException, ParsePlan.ValidationException {
+    public void testParseError1() throws ParsePlan.ParseException {
         try {
             ParsePlan.parseResource("bad-plan1.drillx");
             fail("Should have thrown exception");
@@ -67,7 +66,7 @@ public class ParsePlanTest {
     }
 
     @Test
-    public void testParseError2() throws IOException, RecognitionException, ParsePlan.ValidationException {
+    public void testParseError2() throws ParsePlan.ParseException {
         try {
             ParsePlan.parseResource("bad-plan2.drillx");
             fail("Should have thrown exception");
@@ -78,7 +77,6 @@ public class ParsePlanTest {
             assertEquals(6, ex.charPositionInLine);
         }
     }
-
 
 
     @Test

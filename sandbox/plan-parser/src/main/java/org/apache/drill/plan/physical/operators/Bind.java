@@ -17,10 +17,8 @@
 
 package org.apache.drill.plan.physical.operators;
 
-import org.apache.drill.plan.ast.Arg;
 import org.apache.drill.plan.ast.Op;
 
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -36,9 +34,7 @@ public class Bind extends EvalOperator {
     private String name;
 
     public Bind(Op op, Map<Integer, Operator> bindings) {
-        checkArity(op, 2, 1);
-        List<Arg> out = op.getOutputs();
-        bindings.put(out.get(0).asSymbol().getInt(), this);
+        super(op, bindings, 2, 1);
     }
 
     @Override

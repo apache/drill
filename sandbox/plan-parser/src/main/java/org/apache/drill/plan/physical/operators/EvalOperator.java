@@ -17,10 +17,23 @@
 
 package org.apache.drill.plan.physical.operators;
 
+import org.apache.drill.plan.ast.Op;
+
+import java.util.Map;
+
 /**
  * Describes a scalar expression.
  */
 public abstract class EvalOperator extends Operator {
+    public EvalOperator(Op op, Map<Integer, Operator> bindings, int inputArgs, int outputArgs) {
+        super(op, bindings, inputArgs, outputArgs);
+    }
+
+    // only for Constants
+    protected EvalOperator() {
+        super();
+    }
+
     public abstract Object eval(Object data);
 
     @Override
