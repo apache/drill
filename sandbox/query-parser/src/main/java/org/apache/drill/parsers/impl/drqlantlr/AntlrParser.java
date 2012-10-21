@@ -31,10 +31,8 @@ import org.apache.drill.parsers.DrqlParser.SemanticModelReader.Expression;
 import org.apache.drill.parsers.DrqlParser.SemanticModelReader.Expression.BinaryOp.Operators;
 import org.apache.drill.parsers.DrqlParser.SemanticModelReader.Symbol.Type;
 import org.apache.drill.parsers.impl.drqlantlr.SemanticModel.Symbol;
-import org.apache.drill.parsers.impl.drqlantlr.autogen.DrqlAntlrLexer;
-import org.apache.drill.parsers.impl.drqlantlr.autogen.DrqlAntlrParser;
 
-public class Parser implements DrqlParser{
+public class AntlrParser implements DrqlParser{
 	/**
 	 * ANTLRNoCaseStringStream. //This class provides and implementation for a
 	 * case insensitive token checker //for the lexical analysis part of antlr.

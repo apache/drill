@@ -20,9 +20,7 @@ import static org.junit.Assert.*;
 import java.io.*;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.drill.parsers.impl.drqlantlr.AstNode;
-import org.apache.drill.parsers.impl.drqlantlr.Parser;
-import org.apache.drill.parsers.impl.drqlantlr.SemanticModel;
+import org.apache.drill.parsers.impl.drqlantlr.AntlrParser;
 import org.junit.Test;
 
 public class DrqlParserAstTest {
@@ -40,7 +38,7 @@ public class DrqlParserAstTest {
 	           File queryFile = getFile("q"+i+".drql");
 	           
 	           String query = FileUtils.readFileToString(queryFile);
-	           String ast = Parser.parseToAst(query).toStringTree();
+	           String ast = AntlrParser.parseToAst(query).toStringTree();
 	           
 	           FileUtils.writeStringToFile(tempFile, ast);
 

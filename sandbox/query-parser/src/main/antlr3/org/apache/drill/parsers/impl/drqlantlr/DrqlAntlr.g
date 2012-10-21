@@ -36,9 +36,9 @@ N_DIVIDE;N_MULTIPLY;N_SUBSTRUCT;N_ADD;N_BITWISE_RIGHT_SHIFT;
 N_BITWISE_LEFT_SHIFT;N_IN_PARAMS;N_CALL_PARAMS;N_INT; N_FLOAT; N_STRING;
 }
 
-@header {package org.apache.drill.parsers.impl.drqlantlr.autogen;}
+@header {package org.apache.drill.parsers.impl.drqlantlr;}
 
-@lexer::header {package org.apache.drill.parsers.impl.drqlantlr.autogen;}
+@lexer::header {package org.apache.drill.parsers.impl.drqlantlr;}
 
 ///Starting production 
 request: selectStatement (SEMICOLON!)? EOF!;

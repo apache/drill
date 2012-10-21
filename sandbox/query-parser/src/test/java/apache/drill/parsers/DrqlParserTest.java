@@ -21,7 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.drill.parsers.impl.drqlantlr.Parser;
+import org.apache.drill.parsers.impl.drqlantlr.AntlrParser;
 import org.apache.drill.parsers.DrqlParser.SemanticModelReader;
 import org.apache.drill.parsers.DrqlParser.SemanticModelReader.Expression;
 import org.apache.drill.parsers.DrqlParser.SemanticModelReader.Expression.BinaryOp;
@@ -63,7 +63,7 @@ public class DrqlParserTest {
 	public void testBasicQuery() throws IOException {
 		
 		String drqlQueryText = "SELECT column1 FROM table1";
-		DrqlParser parser = new Parser();
+		DrqlParser parser = new AntlrParser();
 		SemanticModelReader query = parser.parse(drqlQueryText);
 
 		//result column list
@@ -95,7 +95,7 @@ public class DrqlParserTest {
 	public void testQuery1() throws IOException {
 		
 		String drqlQueryText = "SELECT column1 as col1, column2 FROM table1 WHERE col1 > 55 ORDER BY column2 ASC";
-		DrqlParser parser = new Parser();
+		DrqlParser parser = new AntlrParser();
 		SemanticModelReader query = parser.parse(drqlQueryText);
 
 		//result column list
@@ -143,8 +143,8 @@ public class DrqlParserTest {
 				"FROM customersTable " +
 				"INNER JOIN ordersTable ON customersTable.id = ordersTable.customerId";
 
-		DrqlParser parser = new Parser();
-        String ast = Parser.parseToAst(drqlQueryText).toStringTree();
+		DrqlParser parser = new AntlrParser();
+        String ast = AntlrParser.parseToAst(drqlQueryText).toStringTree();
 		SemanticModelReader query = parser.parse(drqlQueryText);
 
         SemanticModelReader.JoinOnClause join = query.getJoinOnClause();
@@ -162,7 +162,7 @@ public class DrqlParserTest {
 	public void testQuery3() throws IOException {
 		
 		String drqlQueryText = "SELECT COUNT(f1) FROM table1";
-		DrqlParser parser = new Parser();
+		DrqlParser parser = new AntlrParser();
 		SemanticModelReader query = parser.parse(drqlQueryText);
 
 		//result column list
@@ -198,7 +198,7 @@ public class DrqlParserTest {
 	public void testQuery4() throws IOException {
 		
 		String drqlQueryText = "SELECT COUNT(r1.m2.f3) WITHIN r1.m2 AS cnt FROM [Table1];";
-		DrqlParser parser = new Parser();
+		DrqlParser parser = new AntlrParser();
 		SemanticModelReader query = parser.parse(drqlQueryText);
 
 		//result column list
@@ -233,7 +233,7 @@ public class DrqlParserTest {
 	public void testQuery5() throws IOException {
 		
 		String drqlQueryText = "SELECT f1, SUM(f2) FROM [Table1] GROUP BY f1 HAVING SUM(f2) > 1000;";
-		DrqlParser parser = new Parser();
+		DrqlParser parser = new AntlrParser();
 		SemanticModelReader query = parser.parse(drqlQueryText);
 
 		//result column list
@@ -277,7 +277,7 @@ public class DrqlParserTest {
 	public void testQuery6() throws IOException {
 		
 		String drqlQueryText = "SELECT COUNT(m1.f2) WITHIN RECORD FROM table1;";
-		DrqlParser parser = new Parser();
+		DrqlParser parser = new AntlrParser();
 		SemanticModelReader query = parser.parse(drqlQueryText);
 
 		//result column list
@@ -312,7 +312,7 @@ public class DrqlParserTest {
 	public void testQuery7() throws IOException {
 		
 		String drqlQueryText = "SELECT column1 FROM table1 LIMIT 5;";
-		DrqlParser parser = new Parser();
+		DrqlParser parser = new AntlrParser();
 		SemanticModelReader query = parser.parse(drqlQueryText);
 
 		//result column list
@@ -360,7 +360,7 @@ public class DrqlParserTest {
 	public void testQuery8() throws IOException {
 		
 		String drqlQueryText = "SELECT c - 1, c + 1, c / 1, c * 1 FROM table1;";
-		DrqlParser parser = new Parser();
+		DrqlParser parser = new AntlrParser();
 		SemanticModelReader query = parser.parse(drqlQueryText);
 
 		//result column list
@@ -392,7 +392,7 @@ public class DrqlParserTest {
 	public void testQuery9() throws IOException {
 		
 		String drqlQueryText = "SELECT c - 1 + 2 FROM table1;";
-		DrqlParser parser = new Parser();
+		DrqlParser parser = new AntlrParser();
 		SemanticModelReader query = parser.parse(drqlQueryText);
 
 		//result column list
@@ -443,7 +443,7 @@ public class DrqlParserTest {
 		// TODO: provide syntax error messages in g file. write this test.
 		
 		/*
-		DrqlParser parser = new Parser();
+		DrqlParser parser = new AntlrParser();
 		SemanticModelReader query = parser.parse(drqlQueryText);
 		
 		
