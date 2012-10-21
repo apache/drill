@@ -1,0 +1,82 @@
+body {
+	padding-top: 60px;
+	padding-bottom: 40px;
+}
+.hero-unit {
+	width: 60%;
+	padding: 50px;
+	text-align: justify;
+}
+.hero-unit h1 {
+	margin: 0 0 20px 0;
+}
+legend {
+	margin: 20px 0 10px 0;
+}
+label {
+	font-weight: bold;
+}
+.sidebar-nav {
+	padding: 10px;
+}
+.active {
+	background: #fefefe;
+	-webkit-border-radius: 4px;
+	-moz-border-radius: 4px;
+	border-radius: 4px;
+}
+#project-list {
+	margin: 40px 0;
+}
+.project-entry {
+	border-top: 1px solid #eaeaea;
+	margin: 40px 0 20px 0;
+	padding: 10px 10px 2px 15px;
+}
+.project-main {
+	cursor: pointer;
+}
+.project-meta {
+	font-size: 85%;
+	margin: 0;
+	padding: 0 0 0 0;
+}
+.datasource-entry-container {
+	margin: 10px 0 0 20px;
+}
+.datasource-entry {
+	margin: 5px 0 15px 20px;
+}
+.target {
+	-webkit-border-radius: 4px;
+	-moz-border-radius: 4px;
+	border-radius: 4px;
+	padding: 3px;
+}
+.renderjson-object {
+	border: 1px solid #c0c0c0;
+	-webkit-border-radius: 2px;
+	-moz-border-radius: 2px;
+	border-radius: 2px;
+	padding: 10px;
+	margin: 0 0 20px 20px;
+}
+.renderjson-key {
+	font-weight: bold;
+}
+.renderjson-value {
+	padding: 0 0 5px 10px;
+}
+.apache-logo {
+	text-align: right;
+}
+pre {
+	font-size: 80%;
+	margin: 0 0 25px 0;
+}
+footer {
+	border-top: 1px solid #eee;
+	margin: 4em 0 0 0;
+	padding: 20px;
+	text-align: justify;
+}

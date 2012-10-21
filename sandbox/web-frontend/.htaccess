@@ -1,0 +1,2 @@
+RewriteEngine on 
+RewriteRule ^q/(.*)$ http://140.203.155.169:6996/q/$1 [P]
