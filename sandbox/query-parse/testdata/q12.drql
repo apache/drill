@@ -1,0 +1,1 @@
+SELECT COUNT(f1) FROM Table;

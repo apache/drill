@@ -1,0 +1,1 @@
+SELECT COUNT(*), word FROM [Table] WHERE word CONTAINS 'th' GROUP_BY word LIMIT 5;

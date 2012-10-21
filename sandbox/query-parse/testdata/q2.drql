@@ -1,0 +1,3 @@
+SELECT COUNT(*)
+  FROM [bigquery/samples/shakespeare]
+  WHERE word CONTAINS 'th';

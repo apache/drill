@@ -1,0 +1,1 @@
+SELECT f1, COUNT(r1.m2.f3) WITHIN RECORD AS cnt FROM [Table];

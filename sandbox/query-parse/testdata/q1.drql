@@ -1,0 +1,3 @@
+SELECT word AS w, LENGTH(word), 3*2-1
+  FROM [bigquery/samples/shakespeare]
+  WHERE word CONTAINS 'th';

@@ -1,0 +1,3 @@
+SELECT f1, total
+  FROM (SELECT f1, SUM(f2) AS total from [Table] GROUP BY f1)
+  WHERE total > 1000;

@@ -1,0 +1,8 @@
+SELECT 
+	DocId AS Id, 
+	COUNT(Name.Language.Code) WITHIN Name AS Cnt, 
+	Name.Url + ',' + Name.Language.Code AS Str
+FROM 
+	t , (select a,b from c)
+WHERE 
+	REGEXP(Name.Url, '^http') AND DocId < 20
