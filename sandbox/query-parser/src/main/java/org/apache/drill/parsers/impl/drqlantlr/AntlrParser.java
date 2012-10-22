@@ -22,6 +22,7 @@ import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.CharStream;
 import org.antlr.runtime.Token;
 import org.antlr.runtime.TokenRewriteStream;
+import org.antlr.runtime.tree.CommonTree;
 import org.antlr.runtime.tree.CommonTreeAdaptor;
 import org.antlr.runtime.tree.Tree;
 import org.antlr.runtime.tree.TreeAdaptor;
@@ -31,6 +32,9 @@ import org.apache.drill.parsers.DrqlParser.SemanticModelReader.Expression;
 import org.apache.drill.parsers.DrqlParser.SemanticModelReader.Expression.BinaryOp.Operators;
 import org.apache.drill.parsers.DrqlParser.SemanticModelReader.Symbol.Type;
 import org.apache.drill.parsers.impl.drqlantlr.SemanticModel.Symbol;
+import org.junit.Assert;
+
+import static org.junit.Assert.assertEquals;
 
 public class AntlrParser implements DrqlParser{
 	/**
@@ -144,6 +148,24 @@ public class AntlrParser implements DrqlParser{
 		column.alias = new Symbol();
 		column.alias.name = node.getChild(0).toString();
 		column.alias.type = DrqlParser.SemanticModelReader.Symbol.Type.COLUMN_ALIAS;
+	}
+	static String idNode2String(Tree idNode) {
+		StringBuilder ret = new StringBuilder();
+		assert (idNode.getType() == DrqlAntlrParser.N_ID);
+		assert (idNode.getChildCount() >= 1);
+		AstNode nameNode = (AstNode) idNode.getChild(0);
+		assert (nameNode.getType() == DrqlAntlrParser.N_NAME);
+		assert (nameNode.getChildCount() == 1);
+		ret.append(nameNode.getChild(0).toString());
+
+		for (int i = 1; i < idNode.getChildCount(); i++) {
+			nameNode = (AstNode) idNode.getChild(i);
+			assert (nameNode.getType() == DrqlAntlrParser.N_NAME);
+			assert (nameNode.getChildCount() == 1);
+			ret.append(".");
+			ret.append(nameNode.getChild(0).toString());
+		}
+		return ret.toString();
 	}
 	static String idNode2String(AstNode idNode) {
 		StringBuilder ret = new StringBuilder();
@@ -264,7 +286,8 @@ public class AntlrParser implements DrqlParser{
 			query.groupByClause.add(column);
 		}	
 	}
-	private static void parseWhereClause(AstNode node, SemanticModel query) {
+
+    private static void parseWhereClause(AstNode node, SemanticModel query) {
 		if (node == null) {
 			return;
 		}
@@ -273,9 +296,10 @@ public class AntlrParser implements DrqlParser{
 		assert (count == 1);
 		AstNode node2 = (AstNode) node.getChild(0);
 		assert (node2.getType() == DrqlAntlrParser.N_EXPRESSION);
-		AstNode node3 = (AstNode) node2.getChild(0);
+		Tree node3 = node2.getChild(0);
 		query.whereClause = createExpression(node3);
 	}
+
 	static Expression.Function parseFunction(AstNode node) {
 		SemanticModel.Expression.Function func = new SemanticModel.Expression.Function();
 		func.function = new SemanticModel.Symbol();
@@ -302,7 +326,34 @@ public class AntlrParser implements DrqlParser{
 		func.args = args;
 		return func;
 	}
-	static SemanticModelReader.Expression createExpression(AstNode node) {
+	static Expression.Function parseFunction(Tree node) {
+		SemanticModel.Expression.Function func = new SemanticModel.Expression.Function();
+		func.function = new SemanticModel.Symbol();
+
+		String funcName = null;
+		List<Expression> args = new ArrayList<Expression>();
+		AstNode n2, n3;
+
+		for (int i = 0; i < node.getChildCount(); i++) {
+			n2 = (AstNode) node.getChild(i);
+			if (n2.getType() == DrqlAntlrParser.N_EXPRESSION) {
+				n3 = (AstNode) n2.getChild(0);
+				assert(n3.getType() == DrqlAntlrParser.N_ID);
+				args.add(createExpression(n3));
+			} else {
+				assert(n2.getType() == DrqlAntlrParser.N_ID);
+				n3 = (AstNode) n2.getChild(0);
+				assert(n3.getType() == DrqlAntlrParser.N_NAME);
+				funcName = n3.getChild(0).getText();
+			}
+		}
+		func.function.type = Type.FUNCTION;
+		func.function.name = funcName;
+		func.args = args;
+		return func;
+	}
+
+	static SemanticModelReader.Expression createExpression(Tree node) {
 		SemanticModelReader.Expression result = null;
 		SemanticModel.Expression.BinaryOp binaryOp;
 		AstNode n2, n3;
@@ -457,6 +508,163 @@ public class AntlrParser implements DrqlParser{
 			break;
 		}
 		
+		return result;
+	}
+	static SemanticModelReader.Expression createExpression(AstNode node) {
+		SemanticModelReader.Expression result = null;
+		SemanticModel.Expression.BinaryOp binaryOp;
+		AstNode n2, n3;
+		SemanticModel.Expression.Column column;
+		SemanticModel.Expression.Constant constant;
+
+		switch (node.getType()) {
+
+		case DrqlAntlrParser.N_LOGICAL_AND:
+			assert (node.getChildCount() == 2);
+			binaryOp = new SemanticModel.Expression.BinaryOp();
+			binaryOp.left = createExpression((AstNode) node.getChild(0));
+			binaryOp.right = createExpression((AstNode) node.getChild(1));
+			binaryOp.operator = Operators.AND;
+			result = binaryOp;
+			break;
+
+		case DrqlAntlrParser.N_LOGICAL_OR:
+			assert (node.getChildCount() == 2);
+			binaryOp = new SemanticModel.Expression.BinaryOp();
+			binaryOp.left = createExpression((AstNode) node.getChild(0));
+			binaryOp.right = createExpression((AstNode) node.getChild(1));
+			binaryOp.operator = Operators.OR;
+			result = binaryOp;
+			break;
+
+		case DrqlAntlrParser.N_CONTAINS:
+			assert (node.getChildCount() == 2);
+			binaryOp = new SemanticModel.Expression.BinaryOp();
+			binaryOp.left = createExpression((AstNode) node.getChild(0));
+			binaryOp.right = createExpression((AstNode) node.getChild(1));
+			binaryOp.operator = Operators.CONTAINS;
+			result = binaryOp;
+			break;
+
+		case DrqlAntlrParser.N_GREATER_THAN:
+			assert (node.getChildCount() == 2);
+			binaryOp = new SemanticModel.Expression.BinaryOp();
+			binaryOp.left = createExpression((AstNode) node.getChild(0));
+			binaryOp.right = createExpression((AstNode) node.getChild(1));
+			binaryOp.operator = Operators.GREATER_THAN;
+			result = binaryOp;
+			break;
+
+		case DrqlAntlrParser.N_GREATER_THAN_OR_EQUAL:
+			assert (node.getChildCount() == 2);
+			binaryOp = new SemanticModel.Expression.BinaryOp();
+			binaryOp.left = createExpression((AstNode) node.getChild(0));
+			binaryOp.right = createExpression((AstNode) node.getChild(1));
+			binaryOp.operator = Operators.GREATER_THAN_OR_EQUAL;
+			result = binaryOp;
+			break;
+
+		case DrqlAntlrParser.EQUAL:
+			assert (node.getChildCount() == 2);
+			binaryOp = new SemanticModel.Expression.BinaryOp();
+			binaryOp.left = createExpression((AstNode) node.getChild(0));
+			binaryOp.right = createExpression((AstNode) node.getChild(1));
+			binaryOp.operator = Operators.EQUAL;
+			result = binaryOp;
+			break;
+
+		case DrqlAntlrParser.LESS_THAN:
+			assert (node.getChildCount() == 2);
+			binaryOp = new SemanticModel.Expression.BinaryOp();
+			binaryOp.left = createExpression((AstNode) node.getChild(0));
+			binaryOp.right = createExpression((AstNode) node.getChild(1));
+			binaryOp.operator = Operators.LESS_THAN;
+			result = binaryOp;
+			break;
+
+		case DrqlAntlrParser.LESS_THAN_OR_EQUAL:
+			assert (node.getChildCount() == 2);
+			binaryOp = new SemanticModel.Expression.BinaryOp();
+			binaryOp.left = createExpression((AstNode) node.getChild(0));
+			binaryOp.right = createExpression((AstNode) node.getChild(1));
+			binaryOp.operator = Operators.LESS_THAN_OR_EQUAL;
+			result = binaryOp;
+			break;
+
+		case DrqlAntlrParser.N_SUBSTRUCT:
+			assert (node.getChildCount() == 2);
+			binaryOp = new SemanticModel.Expression.BinaryOp();
+			binaryOp.left = createExpression((AstNode) node.getChild(0));
+			binaryOp.right = createExpression((AstNode) node.getChild(1));
+			binaryOp.operator = Operators.SUBTRACT;
+			result = binaryOp;
+			break;
+
+		case DrqlAntlrParser.N_ADD:
+			assert (node.getChildCount() == 2);
+			binaryOp = new SemanticModel.Expression.BinaryOp();
+			binaryOp.left = createExpression((AstNode) node.getChild(0));
+			binaryOp.right = createExpression((AstNode) node.getChild(1));
+			binaryOp.operator = Operators.ADD;
+			result = binaryOp;
+			break;
+
+		case DrqlAntlrParser.N_MULTIPLY:
+			assert (node.getChildCount() == 2);
+			binaryOp = new SemanticModel.Expression.BinaryOp();
+			binaryOp.left = createExpression((AstNode) node.getChild(0));
+			binaryOp.right = createExpression((AstNode) node.getChild(1));
+			binaryOp.operator = Operators.MULTIPLY;
+			result = binaryOp;
+			break;
+
+		case DrqlAntlrParser.N_DIVIDE:
+			assert (node.getChildCount() == 2);
+			binaryOp = new SemanticModel.Expression.BinaryOp();
+			binaryOp.left = createExpression((AstNode) node.getChild(0));
+			binaryOp.right = createExpression((AstNode) node.getChild(1));
+			binaryOp.operator = Operators.DIVIDE;
+			result = binaryOp;
+			break;
+
+		case DrqlAntlrParser.N_EXPRESSION:
+			assert(node.getChildCount() == 1);
+            Tree n2a = node.getChild(0);
+			if (n2a.getType() == DrqlAntlrParser.N_CALL_PARAMS) {
+				result = parseFunction(n2a);
+			} else if (n2a.getType() == DrqlAntlrParser.N_ID) {
+				SemanticModel.Expression.Column colExpr = new SemanticModel.Expression.Column();
+				colExpr.column = new SemanticModel.Symbol();
+				colExpr.column.name = idNode2String(n2a);
+				result = colExpr;
+			} else {
+				result = createExpression(n2a);
+			}
+			break;
+
+		case DrqlAntlrParser.N_ID:
+			n2 = (AstNode) node.getChild(0);
+			assert (n2.getType() == DrqlAntlrParser.N_NAME);
+			n3 = (AstNode) n2.getChild(0);
+			assert (n3.getType() == DrqlAntlrParser.ID);
+			column = new SemanticModel.Expression.Column();
+			Symbol colSymbol = new Symbol();
+			colSymbol.name = n3.getText();
+			colSymbol.type = Type.COLUMN;
+			column.column = colSymbol;
+			result = column;
+			break;
+
+		case DrqlAntlrParser.N_INT:
+			n2 = (AstNode) node.getChild(0);
+			assert (n2.getType() == DrqlAntlrParser.INT);
+			Integer integer = (Integer) Integer.parseInt(n2.getText());
+			constant = new SemanticModel.Expression.Constant();
+			constant.value = integer;
+			result = constant;
+			break;
+		}
+
 		return result;
 	}
 	private static void parseLimitClause(AstNode node, SemanticModel query) {
