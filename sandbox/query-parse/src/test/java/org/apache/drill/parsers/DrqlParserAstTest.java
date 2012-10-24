@@ -20,34 +20,36 @@ import static org.junit.Assert.*;
 import java.io.*;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.drill.parsers.impl.drqlantlr.AstNode;
 import org.apache.drill.parsers.impl.drqlantlr.Parser;
-import org.apache.drill.parsers.impl.drqlantlr.SemanticModel;
+import org.apache.drill.parsers.utils.ResourceReader;
 import org.junit.Test;
 
 public class DrqlParserAstTest {
 
-	File getFile(String filename) {
-		return new File("testdata" + File.separatorChar + filename);
+	File getFile(String filename, String suffix) throws IOException {
+		return File.createTempFile(filename, suffix);
 	}
 	@Test
 	public void testQueryList() throws IOException {
 	       //tests parsing all SQL that are encountered in the documentation
 	       for(int i = 1; i <= 15; i++) {
 
-	           File tempFile = getFile("q"+i+"_temp.drql.sm");
-	           File expectedFile = getFile("q"+i+".drql.ast");
-	           File queryFile = getFile("q"+i+".drql");
-	           
-	           String query = FileUtils.readFileToString(queryFile);
+	           File tempFileParsed = getFile("q"+i+"_temp", "drql.sm");
+               File tempFileExpected = getFile("qe"+i+"_tmp", "drql.ast");
+
+               String expectedOutput = ResourceReader.read("q" + i + ".drql.ast");
+	           String query = ResourceReader.read("q"+i+".drql");
+
 	           String ast = Parser.parseToAst(query).toStringTree();
-	           
-	           FileUtils.writeStringToFile(tempFile, ast);
+
+               FileUtils.writeStringToFile(tempFileParsed, ast);
+               FileUtils.writeStringToFile(tempFileExpected, expectedOutput);
 
 	           assertTrue("sm files differs",
-                       FileUtils.contentEquals(expectedFile, tempFile));
+                       FileUtils.contentEquals(tempFileExpected, tempFileParsed));
 
-	           FileUtils.forceDelete(tempFile);
+               FileUtils.forceDelete(tempFileExpected);
+               FileUtils.forceDelete(tempFileParsed);
 	       }
 	}
 }
