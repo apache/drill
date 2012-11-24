@@ -1,0 +1,113 @@
+{
+  head:{
+    type:"apache_drill_logical_plan",
+    version:"1",
+    generator:{
+      type:"manual",
+      info:"na"
+    }
+    
+  },
+  sources:[
+    {
+      type:"text",
+      name:"local-logs",
+      files:[
+        "local://logs/*.log"
+      ],
+      compress:"gzip",
+      line-delimiter:"\n",
+      record-maker:{
+        type:"first-row",
+        delimiter:","
+      }
+      
+    },
+    {
+      type:"mongo",
+      name:"users",
+      connection:"mongodb://blue:red@localhost/users"
+    },
+    {
+      type:"mysql",
+      name:"mysql",
+      connection:"jdbc:mysql://localhost/main"
+    }
+    
+  ],
+  query:[
+    {
+      @id:"1",
+      op:"scan",
+      source:"local-logs",
+      name:"activity"
+    },
+    {
+      @id:"2",
+      input:"1",
+      op:"transform",
+      transforms:[
+        {
+          name:"userId",
+          expr:"regex('activity.cookie', \"persistent=([^;]*)\")"
+        },
+        {
+          name:"session",
+          expr:"regex('activity.cookie', \"session=([^;]*)\")"
+        }
+        
+      ]
+      
+    },
+    {
+      @id:"3",
+      input:"2",
+      op:"transform",
+      transforms:[
+        {
+          name:"userId",
+          expr:"regex('activity.cookie', \"persistent=([^;]*)\")"
+        },
+        {
+          name:"session",
+          expr:"regex('activity.cookie', \"session=([^;]*)\")"
+        }
+        
+      ]
+      
+    },
+    {
+      input:"3",
+      op:"sequence",
+      do:[
+        {
+          op:"transform",
+          transforms:[
+            {
+              name:"happy",
+              expr:"regex('ep2', \"dink\")"
+            }
+            
+          ]
+          
+        }
+        ,
+        {
+          op:"transform",
+          transforms:[
+            {
+              name:"abc",
+              expr:"2"
+            }
+            
+          ]
+          
+        }
+        
+      ]
+      
+    }
+    
+  ]
+  
+}
