@@ -4,9 +4,11 @@ import java.util.List;
 
 import org.apache.drill.common.expression.LogicalExpression;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 
-public class Flatten {
-	@JsonProperty("input") public int inputNode;
+@JsonTypeName("flatten")
+public class Flatten extends SingleInputOperator{
+  
 	public List<LogicalExpression> exprs;
+	
 }

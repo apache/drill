@@ -7,7 +7,13 @@ import org.apache.drill.common.expression.LogicalExpression;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName("group")
-public class Group extends LogicalOperatorBase{
-	public int input;
+public class Group extends SingleInputOperator{
 	public List<LogicalExpression> exprs;
+
+  @Override
+  public int getNestLevel() {
+    return super.getNestLevel() + exprs.size();
+  }
+	
+	
 }

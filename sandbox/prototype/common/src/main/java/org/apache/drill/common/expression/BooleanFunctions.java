@@ -12,12 +12,10 @@ public class BooleanFunctions {
   public static final Class<?>[] SUB_TYPES = { Or.class, And.class };
 
   private static abstract class BooleanFunctionBase extends FunctionBase {
-    
+
     protected BooleanFunctionBase(List<LogicalExpression> expressions) {
       super(expressions);
     }
-    
-
 
     @Override
     public DataType getDataType() {
@@ -35,15 +33,13 @@ public class BooleanFunctions {
       this.opToString(sb, "||");
     }
 
-    
-    
   }
 
   public static class And extends BooleanFunctionBase {
     public And(List<LogicalExpression> expressions) {
       super(expressions);
     }
-    
+
     @Override
     public void addToString(StringBuilder sb) {
       this.opToString(sb, "&&");
@@ -56,7 +52,7 @@ public class BooleanFunctions {
     public IsNull(List<LogicalExpression> expressions) {
       super(expressions);
     }
-    
+
     @Override
     public void addToString(StringBuilder sb) {
       this.funcToString(sb, "isNull");
@@ -79,7 +75,6 @@ public class BooleanFunctions {
       }
     }
 
-    
     public Comparison(String s, LogicalExpression left, LogicalExpression right) {
       this.left = left;
       this.right = right;
@@ -95,7 +90,7 @@ public class BooleanFunctions {
       type = temp;
 
     }
-    
+
     @Override
     public void addToString(StringBuilder sb) {
       sb.append(" ( ");
@@ -108,7 +103,7 @@ public class BooleanFunctions {
     }
 
     public static LogicalExpression create(List<LogicalExpression> expressions, List<String> comparisonTypes) {
-      logger.debug("Generating new comparison expressions.");
+      // logger.debug("Generating new comparison expressions.");
       if (expressions.size() == 1) {
         return expressions.get(0);
       }

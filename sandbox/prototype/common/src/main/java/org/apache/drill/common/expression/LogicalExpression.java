@@ -27,58 +27,56 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
-@JsonDeserialize(using=LogicalExpression.De.class)
-@JsonSerialize(using=LogicalExpression.Se.class)
-//@JsonTypeInfo(use = JsonTypeInfo.Id.MINIMAL_CLASS, include = JsonTypeInfo.As.PROPERTY, property = "fn")
+@JsonDeserialize(using = LogicalExpression.De.class)
+@JsonSerialize(using = LogicalExpression.Se.class)
+// @JsonTypeInfo(use = JsonTypeInfo.Id.MINIMAL_CLASS, include =
+// JsonTypeInfo.As.PROPERTY, property = "fn")
 public interface LogicalExpression {
-	static final Logger logger = LoggerFactory.getLogger(LogicalExpression.class);
-	
-	public static final Class<?>[] SUB_TYPES = {};
+  static final Logger logger = LoggerFactory.getLogger(LogicalExpression.class);
 
-	LogicalExpression wrapWithCastIfNecessary(DataType dt)
-			throws ExpressionValidationError;
+  public static final Class<?>[] SUB_TYPES = {};
 
-	@JsonIgnore
-	public abstract DataType getDataType();
+  LogicalExpression wrapWithCastIfNecessary(DataType dt) throws ExpressionValidationError;
 
-	
-	public void addToString(StringBuilder sb);
-	public void resolveAndValidate(List<LogicalExpression> expressions,
-			Collection<ValidationError> errors);
+  @JsonIgnore
+  public abstract DataType getDataType();
 
-	public Object accept(FunctionVisitor visitor);
+  public void addToString(StringBuilder sb);
 
-	public static class De extends StdDeserializer<LogicalExpression> {
-		
+  public void resolveAndValidate(List<LogicalExpression> expressions, Collection<ValidationError> errors);
 
-		public De() {
-			super(LogicalExpression.class);
-		}
-		
-		@Override
-		public LogicalExpression deserialize(JsonParser jp,
-				DeserializationContext ctxt) throws IOException,
-				JsonProcessingException {
-			String expr = jp.getText();
+  public Object accept(FunctionVisitor visitor);
 
-			if(expr == null || expr.isEmpty()) return null;
-			try {
-				logger.debug("Parsing expression string '{}'", expr);
-				ExprLexer lexer = new ExprLexer(new ANTLRStringStream(expr));
+  public static class De extends StdDeserializer<LogicalExpression> {
 
-				CommonTokenStream tokens = new CommonTokenStream(lexer);
-				ExprParser parser = new ExprParser(tokens);
-				parse_return ret = parser.parse();
-				logger.debug("Found expression '{}'", ret.e);
-				return ret.e;
-			} catch (RecognitionException e) {
-				throw new RuntimeException(e);
-			}
-		}
+    public De() {
+      super(LogicalExpression.class);
+    }
 
-	}
-	
-	public static class Se extends StdSerializer<LogicalExpression> {
+    @Override
+    public LogicalExpression deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException,
+        JsonProcessingException {
+      String expr = jp.getText();
+
+      if (expr == null || expr.isEmpty())
+        return null;
+      try {
+        // logger.debug("Parsing expression string '{}'", expr);
+        ExprLexer lexer = new ExprLexer(new ANTLRStringStream(expr));
+
+        CommonTokenStream tokens = new CommonTokenStream(lexer);
+        ExprParser parser = new ExprParser(tokens);
+        parse_return ret = parser.parse();
+        // logger.debug("Found expression '{}'", ret.e);
+        return ret.e;
+      } catch (RecognitionException e) {
+        throw new RuntimeException(e);
+      }
+    }
+
+  }
+
+  public static class Se extends StdSerializer<LogicalExpression> {
 
     protected Se() {
       super(LogicalExpression.class);
@@ -91,7 +89,7 @@ public interface LogicalExpression {
       value.addToString(sb);
       jgen.writeString(sb.toString());
     }
-	  
-	}
+
+  }
 
 }

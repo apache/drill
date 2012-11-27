@@ -56,7 +56,7 @@ public class OperatorListDeserializer {
           LogicalOperator o = jp.readValueAs(LogicalOperator.class);
 
           if (pos == 0) {
-            if (!(o instanceof SingleInputOperator) && !(o instanceof ZeroInputOperator))
+            if (!(o instanceof SingleInputOperator) && !(o instanceof SourceOperator))
               throwE(
                   l,
                   "The first operator in a sequence must be either a ZeroInput or SingleInput operator.  The provided first operator was not. It was of type "
@@ -87,7 +87,7 @@ public class OperatorListDeserializer {
     if (first == null)
       throwE(start, "A sequence must include at least one operator.");
     if ((parent == null && first instanceof SingleInputOperator)
-        || (parent != null && first instanceof ZeroInputOperator))
+        || (parent != null && first instanceof SourceOperator))
       throwE(start,
           "A sequence must either start with a ZeroInputOperator or have a provided input. It cannot have both or neither.");
 
@@ -95,6 +95,7 @@ public class OperatorListDeserializer {
       ((SingleInputOperator) first).setInput(parent);
     }
 
+    
     return first;
   }
 

@@ -5,7 +5,6 @@ import org.apache.drill.common.expression.LogicalExpression;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName("filter")
-public class Filter extends LogicalOperatorBase{
-	public int input;
+public class Filter extends SingleInputOperator{
 	public LogicalExpression expr;
 }

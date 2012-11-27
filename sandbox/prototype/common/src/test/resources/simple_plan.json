@@ -6,7 +6,6 @@
       type:"manual",
       info:"na"
     }
-    
   },
   sources:[
     {
@@ -21,7 +20,6 @@
         type:"first-row",
         delimiter:","
       }
-      
     },
     {
       type:"mongo",
@@ -33,18 +31,19 @@
       name:"mysql",
       connection:"jdbc:mysql://localhost/main"
     }
-    
   ],
   query:[
     {
       @id:"1",
       op:"scan",
+      memo:"initial_scan",
       source:"local-logs",
-      name:"activity"
+      space:"activity"
     },
     {
       @id:"2",
       input:"1",
+      memo:"transform1",
       op:"transform",
       transforms:[
         {
@@ -55,13 +54,12 @@
           name:"session",
           expr:"regex('activity.cookie', \"session=([^;]*)\")"
         }
-        
       ]
-      
     },
     {
       @id:"3",
       input:"2",
+      memo:"transform2",
       op:"transform",
       transforms:[
         {
@@ -72,42 +70,71 @@
           name:"session",
           expr:"regex('activity.cookie', \"session=([^;]*)\")"
         }
-        
       ]
-      
     },
     {
+      @id:"7",
       input:"3",
       op:"sequence",
       do:[
         {
           op:"transform",
+          memo:"seq_transform",
           transforms:[
             {
               name:"happy",
               expr:"regex('ep2', \"dink\")"
             }
-            
           ]
-          
         }
         ,
         {
           op:"transform",
+          memo:"last_transform",
           transforms:[
             {
               name:"abc",
-              expr:"2"
+              expr:"123"
             }
-            
           ]
-          
         }
-        
       ]
+    },
+    {
+      @id:"10",
+      input:"3",
+      op:"transform",
+      memo:"t3",
+      transforms:[
+        {
+          name:"happy",
+          expr:"regex('ep2', \"dink\")"
+        }
+      ]
+    },
+    {
+      @id:12,
+      op:"join",
+      left:"7",
+      right:"10"
       
+    }
+    ,
+    {
+      input:"12",
+      op:"project",
+      memo:"prj1",
+      exprs:[
+        {
+          ref:"blue",
+          expr:"hello"
+        },
+        {
+          ref:"red",
+          expr:"users"
+        }
+      ]
     }
     
   ]
-  
 }

@@ -8,12 +8,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName("order")
-public class Order extends LogicalOperatorBase{
-	public int input;
+public class Order extends SingleInputOperator{
+
 	@JsonProperty("orders") public List<Ordering> orderings;
 	
 	public static class Ordering {
 		public String direction;
 		public LogicalExpression expr;
 	}
+	
+	
 }
