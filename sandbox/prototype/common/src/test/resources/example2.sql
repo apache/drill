@@ -53,3 +53,46 @@ scan day, user
 hash_aggregate(day+user, 1 as cnt1)
 hash_aggregate(day, sum(cnt1) as cnt)
 */
+	
+	
+### Goal
+Generate a list of user ids who have at least one out of state phone number.
+
+### Data Source
+#### contacts table
+`record: { id: "1", number: [ "415-555-1212", "408-555-1212" ] }`
+
+#### areacode table
+
+`record: {prefix: "503", state: "OR" }`
+
+### Drill Query
+<pre><code>SELECT c.id, FLATTEN( LEFT(c.number, 3)) AS prefix 
+	FROM contacts c
+	JOIN areacodes a ON c.state != a.state AND c.prefix == a.prefix
+	GROUP BY c.id, c.state, count(1) as prefixCount
+	ORDER by c.id, c.state;
+</code></pre>
+
+### Logical Query (pseudo)
+<pre><code>scan contacts c
+	explode(c.number){
+	transform( left(c.number, 3), prefix)
+	}flatten(prefix)
+scan areacodes a
+join a,c, (c.state != a.state && c.prefix == a.prefix)
+group c.id, c.state{{
+		aggregate(count(1) as prefixCount)
+		}combine(c.state)
+	}combine(c.id)
+order(c.id, c.state)
+</code></pre>
+
+
+### Physical Query (pseudo)
+#### Simple
+scan areacodes a, a.prefix, a.state
+scan contacts c, c.id, c.number
+materialize( LEFT(c.number, 3) as prefix)
+loop_join a,c on {conditions}
+hash_aggregate(c.id+c.state, count(1))

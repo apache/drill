@@ -38,7 +38,7 @@
       op:"scan",
       memo:"initial_scan",
       source:"local-logs",
-      space:"activity"
+      selection:"activity"
     },
     {
       @id:"2",
@@ -47,11 +47,11 @@
       op:"transform",
       transforms:[
         {
-          name:"userId",
+          ref:"userId",
           expr:"regex('activity.cookie', \"persistent=([^;]*)\")"
         },
         {
-          name:"session",
+          ref:"session",
           expr:"regex('activity.cookie', \"session=([^;]*)\")"
         }
       ]
@@ -63,11 +63,11 @@
       op:"transform",
       transforms:[
         {
-          name:"userId",
+          ref:"userId",
           expr:"regex('activity.cookie', \"persistent=([^;]*)\")"
         },
         {
-          name:"session",
+          ref:"session",
           expr:"regex('activity.cookie', \"session=([^;]*)\")"
         }
       ]
@@ -82,7 +82,7 @@
           memo:"seq_transform",
           transforms:[
             {
-              name:"happy",
+              ref:"happy",
               expr:"regex('ep2', \"dink\")"
             }
           ]
@@ -93,7 +93,7 @@
           memo:"last_transform",
           transforms:[
             {
-              name:"abc",
+              ref:"abc",
               expr:"123"
             }
           ]
@@ -107,7 +107,7 @@
       memo:"t3",
       transforms:[
         {
-          name:"happy",
+          ref:"happy",
           expr:"regex('ep2', \"dink\")"
         }
       ]
@@ -116,8 +116,8 @@
       @id:12,
       op:"join",
       left:"7",
-      right:"10"
-      
+      right:"10",
+      conditions: [{relationship:"==", left: "1", right: "1" }]
     }
     ,
     {

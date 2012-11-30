@@ -15,8 +15,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.apache.drill.common.expression.aggregate;
+package org.apache.drill.common.logical.data;
 
-public class BasicAggregates {
+import org.apache.drill.common.expression.FieldReference;
+import org.apache.drill.common.expression.LogicalExpression;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+
+@JsonPropertyOrder({"ref", "expr"}) 
+public class NamedExpression {
+  private final LogicalExpression expr;
+  private final FieldReference ref;
+  
+  @JsonCreator
+  public NamedExpression( @JsonProperty("expr") LogicalExpression expr, @JsonProperty("ref") FieldReference ref) {
+    super();
+    this.expr = expr;
+    this.ref = ref;
+  }
+
+  public LogicalExpression getExpr() {
+    return expr;
+  }
+
+  public FieldReference getRef() {
+    return ref;
+  }
+  
 }

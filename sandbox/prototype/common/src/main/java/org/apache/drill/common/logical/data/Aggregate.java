@@ -17,30 +17,40 @@
  ******************************************************************************/
 package org.apache.drill.common.logical.data;
 
-import org.apache.drill.common.logical.UnexpectedOperatorType;
+import org.apache.drill.common.expression.FieldReference;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 
-/**
- * SimpleOperator is an operator that has one inputs at most.
- */
-public abstract class SingleInputOperator extends LogicalOperatorBase{
-
-  private LogicalOperator input;
+@JsonTypeName("aggregate")
+public class Aggregate {
   
-  @JsonProperty("input")
-  public LogicalOperator getInput() {
-    return input;
+  public static final String ALL = "all";
+  public static final String HERE = "here";
+  
+  private final String aggregateType;
+  private final FieldReference[] keys;
+  private final NamedExpression[]  aggregations;
+
+  @JsonCreator
+  public Aggregate(@JsonProperty("type") String aggregateType, @JsonProperty("keys") FieldReference[] keys, @JsonProperty("aggregations") NamedExpression[] aggregations) {
+    super();
+    this.aggregateType = aggregateType;
+    this.keys = keys;
+    this.aggregations = aggregations;
   }
 
-  @JsonProperty(value="input", required=true)
-  public void setInput(LogicalOperator input) {
-    if(input instanceof SinkOperator) throw new UnexpectedOperatorType("You have set the input of a sink node of type ["+input.getClass().getSimpleName()+ "] as the input for another node of type ["+this.getClass().getSimpleName()+ "].  This is invalid.");
-    this.input = input;
-    input.registerAsSubscriber(this);
+  public String getAggregateType() {
+    return aggregateType;
   }
 
-  
-  
+  public FieldReference[] getKeys() {
+    return keys;
+  }
+
+  public NamedExpression[] getAggregations() {
+    return aggregations;
+  }
   
 }

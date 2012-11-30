@@ -15,8 +15,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.apache.drill.common.expression.aggregate;
+package org.apache.drill.common.expression;
 
-public class BasicAggregates {
+public class FunctionDefinition {
+
+  private final String name;
+  private final Arg[] args;
+
+  public FunctionDefinition(String name, Arg...args){
+    this.name = name;
+    this.args = args;
+  }
+  
+  public static class Arg {
+    private final String name;
+    private final DataType[] allowedTypes;
+    
+    public Arg(String name, DataType...allowedTypes){
+      this.name = name;
+      this.allowedTypes = allowedTypes;
+    }
+  }
+  
+  public Arg arg(String name, DataType...allowedTypes){
+    return new Arg(name, allowedTypes);
+  }
 
 }

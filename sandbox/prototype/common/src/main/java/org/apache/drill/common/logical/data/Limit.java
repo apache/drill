@@ -15,8 +15,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.apache.drill.common.expression.aggregate;
+package org.apache.drill.common.logical.data;
 
-public class BasicAggregates {
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 
+@JsonTypeName("limit")
+public class Limit extends SingleInputOperator{
+  
+  private final int first; 
+  private final int last;
+  
+  @JsonCreator
+  public Limit(@JsonProperty("first") int first, @JsonProperty("last") int last) {
+    super();
+    this.first = first;
+    this.last = last;
+  }
+
+  public int getFirst() {
+    return first;
+  }
+
+  public int getLast() {
+    return last;
+  }
+  
+  
 }

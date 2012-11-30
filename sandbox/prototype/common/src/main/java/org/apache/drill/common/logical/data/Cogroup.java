@@ -15,8 +15,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.apache.drill.common.expression.aggregate;
+package org.apache.drill.common.logical.data;
 
-public class BasicAggregates {
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 
+@JsonTypeName("cogroup")
+public class Cogroup {
+  private final Grouping[] groupings;
+
+  @JsonCreator
+  public Cogroup(@JsonProperty("groupings") Grouping[] groupings) {
+    super();
+    this.groupings = groupings;
+  }
+
+  public Grouping[] getGroupings() {
+    return groupings;
+  }
+  
 }

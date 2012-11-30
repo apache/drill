@@ -18,43 +18,72 @@
 package org.apache.drill.common.logical.data;
 
 import org.apache.drill.common.expression.FieldReference;
-import org.apache.drill.common.expression.LogicalExpression;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
-@JsonTypeName("flatten")
-public class Flatten extends SingleInputOperator{
-  private final FieldReference name;
-  private final LogicalExpression expr;
-  private final boolean drop;
+@JsonTypeName("window-frame")
+public class WindowFrame {
   
+  public static final String ALL = "all";
+  public static final String HERE = "here";
+  
+  private final FieldReference[] keys;
+  private final FieldReference ref;
+  private final int before;
+  private final int after;
+  
+
   @JsonCreator
-  public Flatten(@JsonProperty("name") FieldReference name, @JsonProperty("expr") LogicalExpression expr) {
-    this(name, expr, true);
+  public WindowFrame(@JsonProperty("keys") FieldReference[] keys, @JsonProperty("ref") FieldReference ref, @JsonProperty("before") String before, @JsonProperty("after") String after) {
+    super();
+    this.keys = keys;
+    this.ref = ref;
+    this.before = getVal(before);
+    this.after = getVal(after);
+  }
+
+  private int getVal(String phrase){
+    if(ALL.equals(phrase)) return -1;
+    if(HERE.equals(phrase)) return 0;
+    return Integer.parseInt(phrase);
+  }
+
+  private String getStr(int val){
+    if(val == 0) return HERE;
+    if(val == -1) return ALL;
+    return Integer.toString(val);
+  }
+
+  public static String getAll() {
+    return ALL;
+  }
+
+
+  public static String getHere() {
+    return HERE;
+  }
+
+
+  public FieldReference[] getKeys() {
+    return keys;
+  }
+
+
+  public FieldReference getRef() {
+    return ref;
+  }
+
+
+  public String getBefore() {
+    return getStr(before);
+  }
+
+
+  public String getAfter() {
+    return getStr(after);
   }
   
-  @JsonCreator
-  public Flatten(@JsonProperty("name") FieldReference name, @JsonProperty("expr") LogicalExpression expr, @JsonProperty("drop") boolean drop) {
-    this.name = name;
-    this.expr = expr;
-    this.drop = drop;
-  }
-
-  public FieldReference getName() {
-    return name;
-  }
-
-  public LogicalExpression getExpr() {
-    return expr;
-  }
-
-  public boolean isDrop() {
-    return drop;
-  }
   
-  
-
-	
 }
