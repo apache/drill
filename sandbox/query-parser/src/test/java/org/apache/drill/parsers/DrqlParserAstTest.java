@@ -18,10 +18,18 @@ package org.apache.drill.parsers;
 import static org.junit.Assert.*;
 
 import java.io.*;
+import java.util.Formatter;
 
+import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
+import com.google.common.io.Files;
+import com.google.common.io.Resources;
+import org.antlr.runtime.tree.Tree;
 import org.apache.commons.io.FileUtils;
 import org.apache.drill.parsers.impl.drqlantlr.AntlrParser;
+import org.apache.drill.parsers.impl.drqlantlr.AstNode;
 import org.junit.Test;
+
 
 public class DrqlParserAstTest {
 
@@ -30,22 +38,51 @@ public class DrqlParserAstTest {
 	}
 	@Test
 	public void testQueryList() throws IOException {
-	       //tests parsing all SQL that are encountered in the documentation
-	       for(int i = 1; i <= 15; i++) {
+        Joiner withNewline = Joiner.on("\n");
+        //tests parsing all SQL that are encountered in the documentation
+        for(int i = 1; i <= 15; i++) {
 
-	           File tempFile = getFile("q"+i+"_temp.drql.sm");
-	           File expectedFile = getFile("q"+i+".drql.ast");
-	           File queryFile = getFile("q"+i+".drql");
-	           
-	           String query = FileUtils.readFileToString(queryFile);
-	           String ast = AntlrParser.parseToAst(query).toStringTree();
-	           
-	           FileUtils.writeStringToFile(tempFile, ast);
+            File tempFile = getFile("q" + i + "_temp.drql.sm");
+            File expectedFile = getFile("q" + i + ".drql.ast");
+            File queryFile = getFile("q" + i + ".drql");
 
-	           assertTrue("sm files differs",
+            String query = FileUtils.readFileToString(queryFile);
+            String ast = AntlrParser.parseToAst(query).toStringTree();
+            Formatter f = new Formatter();
+            formatAst(AntlrParser.parseToAst(query), f, 0);
+
+            query = withNewline.join(Resources.readLines(Resources.getResource("q" + i + ".drql"), Charsets.UTF_8));
+            assertEquals(query, f.toString());
+
+            FileUtils.writeStringToFile(tempFile, ast);
+
+               assertEquals(withNewline.join(Files.readLines(expectedFile, Charsets.UTF_8)), withNewline.join(Files.readLines(expectedFile, Charsets.UTF_8)));
+               assertEquals(String.format("sm files differs %s versus %s",expectedFile, tempFile),
+                       withNewline.join(Files.readLines(expectedFile, Charsets.UTF_8)),
+                       withNewline.join(Files.readLines(tempFile, Charsets.UTF_8)));
+               assertTrue(String.format("sm files differs %s versus %s",expectedFile, tempFile),
                        FileUtils.contentEquals(expectedFile, tempFile));
 
-	           FileUtils.forceDelete(tempFile);
-	       }
+               FileUtils.forceDelete(tempFile);
+           }
 	}
+
+
+    public void formatAst(AstNode astNode, Formatter formatter, int indent) {
+        String spaces = "                                                    ";
+        formatter.format("%s%s\n", spaces.substring(0, indent), astNode.getText());
+        int n = astNode.getChildCount();
+        for (int i = 0; i < n; i++) {
+            formatAst(astNode.getChild(i), formatter, indent + 2);
+        }
+    }
+
+    public void formatAst(Tree astNode, Formatter formatter, int indent) {
+        String spaces = "                                                    ";
+        formatter.format("%s%s\n", spaces.substring(0, indent), astNode.getText());
+        int n = astNode.getChildCount();
+        for (int i = 0; i < n; i++) {
+            formatAst(astNode.getChild(i), formatter, indent + 2);
+        }
+    }
 }

@@ -68,27 +68,27 @@ public class DrqlParserTest {
 
 		//result column list
 		List<ResultColumn> resColList = query.getResultColumnList();
-		assertTrue(resColList.size() == 1);
+        assertEquals(1, resColList.size());
 		ResultColumn col = resColList.get(0);
 		testBasicResultColumn(col, "column1");
 		
 		//from clause
 		List<SemanticModelReader> subQueryList = query.getFromClause();
-		assertTrue(subQueryList.size() == 1);
+        assertEquals(1, subQueryList.size());
 		SemanticModelReader subQuery = subQueryList.get(0);
 		testBasicTable(subQuery, "table1");
 		
 		//check the rest of the model
-		assertTrue(query.getGroupByClause().size() == 0);
-		assertTrue(query.getJoinOnClause() == null);
-		assertTrue(query.getOrderByClause().size() == 0);
-		assertTrue(query.getLimitClause() == null);
+        assertEquals(0, query.getGroupByClause().size());
+        assertEquals(null, query.getJoinOnClause());
+        assertEquals(0, query.getOrderByClause().size());
+        assertEquals(null, query.getLimitClause());
 	}
 	
 	void testAlias(ResultColumn col, String name) {
 		Symbol alias = col.getAlias();
-		assertTrue(alias.getName().equals(name));
-		assertTrue(alias.getType().name().equals("COLUMN_ALIAS"));
+        assertEquals(name, alias.getName());
+        assertEquals("COLUMN_ALIAS", alias.getType().name());
 	}
 	
 	@Test
@@ -100,11 +100,11 @@ public class DrqlParserTest {
 
 		//result column list
 		List<ResultColumn> resColList = query.getResultColumnList();
-		assertTrue(resColList.size() == 2);
+        assertEquals(2, resColList.size());
 		ResultColumn col1 = resColList.get(0);
-		assertTrue(col1.getScope() == Scope.FULL);
+        assertEquals(Scope.FULL, col1.getScope());
 		testAlias(col1, "col1");
-		assertTrue(col1.getColumnScope() == null);
+        assertEquals(null, col1.getColumnScope());
 		Expression expr = col1.getExpression();
 		assertTrue(expr instanceof Expression.Column);
 		ResultColumn col2 = resColList.get(1);
@@ -112,7 +112,7 @@ public class DrqlParserTest {
 		
 		//from clause
 		List<SemanticModelReader> subQueryList = query.getFromClause();
-		assertTrue(subQueryList.size() == 1);
+        assertEquals(1, subQueryList.size());
 		SemanticModelReader subQuery = subQueryList.get(0);
 		testBasicTable(subQuery, "table1");
 		
@@ -120,19 +120,19 @@ public class DrqlParserTest {
 		Expression whereExpr = query.getWhereClause();
 		assertTrue(whereExpr instanceof Expression.BinaryOp);
 		Expression.BinaryOp whereExpr2 = (BinaryOp) query.getWhereClause();
-		assertTrue(whereExpr2.getOperator() == Operators.GREATER_THAN);
+        assertEquals(Operators.GREATER_THAN, whereExpr2.getOperator());
 		
 		//order by clause
 		List<Symbol> orderByClause = query.getOrderByClause();
-		assertTrue(orderByClause.size() == 1);
+        assertEquals(1, orderByClause.size());
 		Symbol orderBy1 = orderByClause.get(0);
-		assertTrue(orderBy1.getName().equals("column2"));
-		assertTrue(orderBy1.getType().name().equals("COLUMN"));
+        assertEquals("column2", orderBy1.getName());
+        assertEquals("COLUMN", orderBy1.getType().name());
 		
 		//check the rest of the model
-		assertTrue(query.getGroupByClause().size() == 0);
-		assertTrue(query.getJoinOnClause() == null);
-		assertTrue(query.getLimitClause() == null);
+        assertEquals(0, query.getGroupByClause().size());
+        assertEquals(null, query.getJoinOnClause());
+        assertEquals(null, query.getLimitClause());
 	}
 	
 	@Test
@@ -149,13 +149,12 @@ public class DrqlParserTest {
 
         SemanticModelReader.JoinOnClause join = query.getJoinOnClause();
         assertNotNull(join);
-        assertTrue("ordersTable".equals(join.getTable().getName()));
-        assertTrue(join.getJoinConditionClause().size() == 1);
-        assertTrue(join.getJoinConditionClause().get(0).getLeftSymbol().getType() == Symbol.Type.COLUMN);
-        assertTrue("customersTable.id".equals(join.getJoinConditionClause().get(0).getLeftSymbol().getName()));
-        assertTrue(join.getJoinConditionClause().get(0).getRightSymbol().getType() == Symbol.Type.COLUMN);
-        assertTrue("ordersTable.customerId".equals(join.getJoinConditionClause().get(0).getRightSymbol().getName()));
-
+        assertEquals("ordersTable", join.getTable().getName());
+        assertEquals(1, join.getJoinConditionClause().size());
+        assertEquals(Symbol.Type.COLUMN, join.getJoinConditionClause().get(0).getLeftSymbol().getType());
+        assertEquals("customersTable.id", join.getJoinConditionClause().get(0).getLeftSymbol().getName());
+        assertEquals(Symbol.Type.COLUMN, join.getJoinConditionClause().get(0).getRightSymbol().getType());
+        assertEquals("ordersTable.customerId", join.getJoinConditionClause().get(0).getRightSymbol().getName());
     }
 	
 	@Test
@@ -167,66 +166,65 @@ public class DrqlParserTest {
 
 		//result column list
 		List<ResultColumn> resColList = query.getResultColumnList();
-		assertTrue(resColList.size() == 1);
+        assertEquals(1, resColList.size());
 		ResultColumn col1 = resColList.get(0);
-		assertTrue(col1.getScope() == Scope.FULL);
-		assertTrue(col1.getAlias() == null);
+        assertEquals(Scope.FULL, col1.getScope());
+        assertEquals(null, col1.getAlias());
 		Expression expr = col1.getExpression();
 		assertTrue(expr instanceof Expression.Function);
 		Expression.Function func = (Function) col1.getExpression();
-		assertTrue(func.getSymbol().getName().equals("COUNT"));
-		assertTrue(func.getArgs().size() == 1);
+        assertEquals("COUNT", func.getSymbol().getName());
+        assertEquals(1, func.getArgs().size());
 		Expression arg1 = (Expression) func.getArgs().get(0);
 		assertTrue(arg1 instanceof Expression.Column);
 		Expression.Column arg1Column = (Column) arg1;
-		assertTrue(arg1Column.getSymbol().getName().equals("f1"));
-		assertTrue(col1.getColumnScope() == null);
+        assertEquals("f1", arg1Column.getSymbol().getName());
+        assertEquals(null, col1.getColumnScope());
 		
 		//from clause
 		List<SemanticModelReader> subQueryList = query.getFromClause();
-		assertTrue(subQueryList.size() == 1);
+        assertEquals(1, subQueryList.size());
 		SemanticModelReader subQuery = subQueryList.get(0);
 		testBasicTable(subQuery, "table1");
 		
 		//check the rest of the model
-		assertTrue(query.getGroupByClause().size() == 0);
-		assertTrue(query.getJoinOnClause() == null);
-		assertTrue(query.getLimitClause() == null);
+        assertEquals(0, query.getGroupByClause().size());
+        assertEquals(null, query.getJoinOnClause());
+        assertEquals(null, query.getLimitClause());
 	}
 	
 	@Test
 	public void testQuery4() throws IOException {
-		
 		String drqlQueryText = "SELECT COUNT(r1.m2.f3) WITHIN r1.m2 AS cnt FROM [Table1];";
 		DrqlParser parser = new AntlrParser();
 		SemanticModelReader query = parser.parse(drqlQueryText);
 
 		//result column list
 		List<ResultColumn> resColList = query.getResultColumnList();
-		assertTrue(resColList.size() == 1);
+        assertEquals(1, resColList.size());
 		ResultColumn col1 = resColList.get(0);
-		assertTrue(col1.getScope() == Scope.COLUMN);
+        assertEquals(Scope.COLUMN, col1.getScope());
 		testAlias(col1, "cnt");
 		Expression expr = col1.getExpression();
 		assertTrue(expr instanceof Expression.Function);
 		Expression.Function func = (Function) col1.getExpression();
-		assertTrue(func.getSymbol().getName().equals("COUNT"));
-		assertTrue(func.getArgs().size() == 1);
+        assertEquals("COUNT", func.getSymbol().getName());
+        assertEquals(1, func.getArgs().size());
 		Expression arg1 = (Expression) func.getArgs().get(0);
 		assertTrue(arg1 instanceof Expression.Column);
 		Expression.Column arg1Column = (Column) arg1;
-		assertTrue(arg1Column.getSymbol().getName().equals("r1"));
+        assertEquals("r1", arg1Column.getSymbol().getName());
 		
 		//from clause
 		List<SemanticModelReader> subQueryList = query.getFromClause();
-		assertTrue(subQueryList.size() == 1);
+        assertEquals(1, subQueryList.size());
 		SemanticModelReader subQuery = subQueryList.get(0);
 		testBasicTable(subQuery, "[Table1]");
 		
 		//check the rest of the model
-		assertTrue(query.getGroupByClause().size() == 0);
-		assertTrue(query.getJoinOnClause() == null);
-		assertTrue(query.getLimitClause() == null);
+        assertEquals(0, query.getGroupByClause().size());
+        assertEquals(null, query.getJoinOnClause());
+        assertEquals(null, query.getLimitClause());
 	}
 	
 	@Test
@@ -238,39 +236,39 @@ public class DrqlParserTest {
 
 		//result column list
 		List<ResultColumn> resColList = query.getResultColumnList();
-		assertTrue(resColList.size() == 2);
+        assertEquals(2, resColList.size());
 		
 		ResultColumn col1 = resColList.get(0);
-		assertTrue(col1.getScope() == Scope.FULL);
+        assertEquals(Scope.FULL, col1.getScope());
 		testBasicResultColumn(col1, "f1");
 		
 		ResultColumn col2 = resColList.get(1);
 		Expression expr = col2.getExpression();
 		assertTrue(expr instanceof Expression.Function);
 		Expression.Function func = (Function) col2.getExpression();
-		assertTrue(func.getSymbol().getName().equals("SUM"));
-		assertTrue(func.getArgs().size() == 1);
+        assertEquals("SUM", func.getSymbol().getName());
+        assertEquals(1, func.getArgs().size());
 		Expression arg1 = (Expression) func.getArgs().get(0);
 		assertTrue(arg1 instanceof Expression.Column);
 		Expression.Column arg1Column = (Column) arg1;
-		assertTrue(arg1Column.getSymbol().getName().equals("f2"));
+        assertEquals("f2", arg1Column.getSymbol().getName());
 		
 		//from clause
 		List<SemanticModelReader> subQueryList = query.getFromClause();
-		assertTrue(subQueryList.size() == 1);
+        assertEquals(1, subQueryList.size());
 		SemanticModelReader subQuery = subQueryList.get(0);
 		testBasicTable(subQuery, "[Table1]");
 		
 		//group-by clause
 		List<Symbol> groupByList = query.getGroupByClause();
-		assertTrue(groupByList.size() == 1);
+        assertEquals(1, groupByList.size());
 		Symbol groupBy1 = groupByList.get(0);
-		assertTrue(groupBy1.getName().equals("f1"));
-		assertTrue(groupBy1.getType().name().equals("COLUMN"));
+        assertEquals("f1", groupBy1.getName());
+        assertEquals("COLUMN", groupBy1.getType().name());
 		
 		//check the rest of the model
-		assertTrue(query.getJoinOnClause() == null);
-		assertTrue(query.getLimitClause() == null);
+        assertEquals(null, query.getJoinOnClause());
+        assertEquals(null, query.getLimitClause());
 	}
 	
 	@Test
@@ -282,30 +280,30 @@ public class DrqlParserTest {
 
 		//result column list
 		List<ResultColumn> resColList = query.getResultColumnList();
-		assertTrue(resColList.size() == 1);
+        assertEquals(1, resColList.size());
 		
 		ResultColumn col1 = resColList.get(0);
-		assertTrue(col1.getScope() == Scope.RECORD);
+        assertEquals(Scope.RECORD, col1.getScope());
 		Expression expr = col1.getExpression();
 		assertTrue(expr instanceof Expression.Function);
 		Expression.Function func = (Function) col1.getExpression();
-		assertTrue(func.getSymbol().getName().equals("COUNT"));
-		assertTrue(func.getArgs().size() == 1);
+        assertEquals("COUNT", func.getSymbol().getName());
+        assertEquals(1, func.getArgs().size());
 		Expression arg1 = (Expression) func.getArgs().get(0);
 		assertTrue(arg1 instanceof Expression.Column);
 		Expression.Column arg1Column = (Column) arg1;
-		assertTrue(arg1Column.getSymbol().getName().equals("m1"));
+        assertEquals("m1", arg1Column.getSymbol().getName());
 		
 		//from clause
 		List<SemanticModelReader> subQueryList = query.getFromClause();
-		assertTrue(subQueryList.size() == 1);
+        assertEquals(1, subQueryList.size());
 		SemanticModelReader subQuery = subQueryList.get(0);
 		testBasicTable(subQuery, "table1");
 		
 		//check the rest of the model
-		assertTrue(query.getGroupByClause().size() == 0);
-		assertTrue(query.getJoinOnClause() == null);
-		assertTrue(query.getLimitClause() == null);
+        assertEquals(0, query.getGroupByClause().size());
+        assertEquals(null, query.getJoinOnClause());
+        assertEquals(null, query.getLimitClause());
 	}
 	
 	@Test
@@ -317,34 +315,34 @@ public class DrqlParserTest {
 
 		//result column list
 		List<ResultColumn> resColList = query.getResultColumnList();
-		assertTrue(resColList.size() == 1);
+        assertEquals(1, resColList.size());
 		ResultColumn col = resColList.get(0);
 		testBasicResultColumn(col, "column1");
 		
 		//from clause
 		List<SemanticModelReader> subQueryList = query.getFromClause();
-		assertTrue(subQueryList.size() == 1);
+        assertEquals(1, subQueryList.size());
 		SemanticModelReader subQuery = subQueryList.get(0);
 		testBasicTable(subQuery, "table1");
 		
 		//limit clause
 		int limitClause = query.getLimitClause();
-		assertTrue(limitClause == 5);
+        assertEquals(5, limitClause);
 		
 		//check the rest of the model
-		assertTrue(query.getGroupByClause().size() == 0);
-		assertTrue(query.getJoinOnClause() == null);
-		assertTrue(query.getOrderByClause().size() == 0);
+        assertEquals(0, query.getGroupByClause().size());
+        assertEquals(null, query.getJoinOnClause());
+        assertEquals(0, query.getOrderByClause().size());
 	}
 	
 	void testColumnBinaryOpC1(ResultColumn col, Operators op) {
-		assertTrue(col.getScope() == Scope.FULL);
-		assertTrue(col.getAlias() == null);
-		assertTrue(col.getColumnScope() == null);
+        assertEquals(Scope.FULL, col.getScope());
+        assertNull(col.getAlias());
+        assertNull(col.getColumnScope());
 		Expression expr = col.getExpression();
 		assertTrue(expr instanceof Expression.BinaryOp);
 		Expression.BinaryOp colExpr = (Expression.BinaryOp) expr;
-		assertTrue(colExpr.getOperator() == op);
+        assertEquals(op, colExpr.getOperator());
 		Expression left = colExpr.getLeftExpression();
 		Expression right = colExpr.getRightExpression();
 		assertTrue(left instanceof Expression.Column);
@@ -353,7 +351,7 @@ public class DrqlParserTest {
 		Expression.Constant rightExpr = (Expression.Constant) right;
 		Symbol sym = leftExpr.getSymbol();
 		testBasicSymbol(sym, "c");
-		assertTrue((Integer)rightExpr.getValue() == 1);
+		assertEquals(Integer.valueOf(1), rightExpr.getValue());
 	}
 	
 	@Test
@@ -382,10 +380,10 @@ public class DrqlParserTest {
 		testBasicTable(subQuery, "table1");
 		
 		//check the rest of the model
-		assertTrue(query.getLimitClause() == null);
-		assertTrue(query.getGroupByClause().size() == 0);
-		assertTrue(query.getJoinOnClause() == null);
-		assertTrue(query.getOrderByClause().size() == 0);
+        assertNull(query.getLimitClause());
+        assertEquals(0, query.getGroupByClause().size());
+        assertNull(query.getJoinOnClause());
+        assertEquals(0, query.getOrderByClause().size());
 	}
 	
 	@Test
@@ -397,42 +395,42 @@ public class DrqlParserTest {
 
 		//result column list
 		List<ResultColumn> resColList = query.getResultColumnList();
-		assertTrue(resColList.size() == 1);
+        assertEquals(1, resColList.size());
 		ResultColumn col1 = resColList.get(0);
-		assertTrue(col1.getScope() == Scope.FULL);
-		assertTrue(col1.getAlias() == null);
-		assertTrue(col1.getColumnScope() == null);
+        assertEquals(Scope.FULL, col1.getScope());
+        assertNull(col1.getAlias());
+        assertNull(col1.getColumnScope());
 		Expression expr = col1.getExpression();
 		assertTrue(expr instanceof Expression.BinaryOp);
 		Expression.BinaryOp colExpr = (Expression.BinaryOp) expr;
-		assertTrue(colExpr.getOperator() == Operators.ADD);
+        assertEquals(Operators.ADD, colExpr.getOperator());
 		Expression left1 = colExpr.getLeftExpression();
 		Expression right1 = colExpr.getRightExpression();
 		assertTrue(left1 instanceof Expression.BinaryOp);
 		assertTrue(right1 instanceof Expression.Constant);
 		Expression.BinaryOp leftExpr1 = (Expression.BinaryOp) left1;
 		Expression.Constant rightExpr1 = (Expression.Constant) right1;
-		assertTrue((Integer)rightExpr1.getValue() == 2);
-		assertTrue(leftExpr1.getOperator() == Operators.SUBTRACT);
+        assertEquals(2, rightExpr1.getValue());
+        assertEquals(Operators.SUBTRACT, leftExpr1.getOperator());
 		Expression left1_2 = leftExpr1.getLeftExpression();
 		Expression right1_2 = leftExpr1.getRightExpression();
 		Expression.Column leftExpr1_2 = (Expression.Column) left1_2;
 		Expression.Constant rightExpr1_2 = (Expression.Constant) right1_2;
 		Symbol sym = leftExpr1_2.getSymbol();
 		testBasicSymbol(sym, "c");
-		assertTrue((Integer)rightExpr1_2.getValue() == 1);
+        assertEquals(1, rightExpr1_2.getValue());
 		
 		//from clause
 		List<SemanticModelReader> subQueryList = query.getFromClause();
-		assertTrue(subQueryList.size() == 1);
+        assertEquals(1, subQueryList.size());
 		SemanticModelReader subQuery = subQueryList.get(0);
 		testBasicTable(subQuery, "table1");
 		
 		//check the rest of the model
-		assertTrue(query.getLimitClause() == null);
-		assertTrue(query.getGroupByClause().size() == 0);
-		assertTrue(query.getJoinOnClause() == null);
-		assertTrue(query.getOrderByClause().size() == 0);
+        assertNull(query.getLimitClause());
+        assertEquals(0, query.getGroupByClause().size());
+        assertNull(query.getJoinOnClause());
+        assertEquals(0, query.getOrderByClause().size());
 	}
 	
 	@Test
