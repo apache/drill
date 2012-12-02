@@ -1,0 +1,32 @@
+{
+    type:"sequence",
+    do:[
+        {
+            type:"scan",
+            resource:"iris.csv"
+        },
+        {
+            type:"group",
+            by:"Species",
+            as:"cnt",
+            do:[
+                 {
+                    type:"sequence",
+                    do:[
+                      {
+                        type="filter",
+                        vars="Sepal.Length",
+                        types="double",
+                        if="Sepal.Length > 5"
+                      },
+                      {
+                        type:"aggregate",
+                        update:"count"
+                      }
+                    ]
+                 }
+            ]
+
+        }
+    ]
+}
