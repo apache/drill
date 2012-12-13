@@ -120,7 +120,8 @@ b3e:  (a=b2e->$a) (o=b3o b=b2e  -> ^($o $b3e $b))*;
 b2e:  (a=b1e->$a) (o=b2o b=b1e 	-> ^($o $b2e $b))*;
 b1e:  (a=uPrefixExpr->$a)   (o=b1o b=uPrefixExpr -> ^($o $b1e $b))*;
 uPrefixExpr: (o=uPrefixOp->^($o $uPrefixExpr))* (a=uPostfixExpr -> $a); 
-uPostfixExpr: (a=atomExpr->$a) (o=uPostfixOp -> ^($o $uPostfixExpr))*;
+//uPostfixExpr: (a=atomExpr->$a) (o=uPostfixOp -> ^($o $uPostfixExpr))*;
+uPostfixExpr: atomExpr (uPostfixOp^)*;
 atomExpr: INT -> ^(N_INT INT)
     | FLOAT -> ^(N_FLOAT FLOAT)
     | STRING -> ^(N_STRING STRING)  
