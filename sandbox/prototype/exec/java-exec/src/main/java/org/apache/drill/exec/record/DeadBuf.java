@@ -34,7 +34,7 @@ import io.netty.buffer.ByteBufIndexFinder;
 public class DeadBuf implements ByteBuf {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DeadBuf.class);
   
-  private static final String ERROR_MESSAGE = "Attemped to access a DeadBuf.  This would happen if you attempted to interact with a buffer that has been moved or not yet initialized.";
+  private static final String ERROR_MESSAGE = "Attemped to access a DeadBuf. This would happen if you attempted to interact with a buffer that has been moved or not yet initialized.";
   
   public static final DeadBuf DEAD_BUFFER = new DeadBuf();
 

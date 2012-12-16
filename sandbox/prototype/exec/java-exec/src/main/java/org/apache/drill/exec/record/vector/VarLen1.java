@@ -24,13 +24,13 @@ public class VarLen1 extends VariableVector<VarLen1, Fixed1>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(VarLen1.class);
 
   public VarLen1(MaterializedField field, BufferAllocator allocator) {
-    super(field, allocator);
+    super(field, allocator, 1);
   }
 
   @Override
   protected Fixed1 getNewLengthVector(BufferAllocator allocator) {
     return new Fixed1(null, allocator);
   }
-  
-  
+
+
 }

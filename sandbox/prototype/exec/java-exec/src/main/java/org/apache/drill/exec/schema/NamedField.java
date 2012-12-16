@@ -22,13 +22,14 @@ import com.google.common.base.Objects;
 
 public class NamedField extends Field {
     final FieldType keyType;
+    String fieldName;
 
-    public NamedField(RecordSchema parentSchema, IdGenerator<Integer> generator, String prefixFieldName, String fieldName, Field.FieldType fieldType) {
-        this(parentSchema, generator, prefixFieldName, fieldName, fieldType, FieldType.STRING);
+    public NamedField(RecordSchema parentSchema, int parentFieldId, IdGenerator<Integer> generator, String prefixFieldName, String fieldName, Field.FieldType fieldType) {
+        this(parentSchema, parentFieldId, generator, prefixFieldName, fieldName, fieldType, FieldType.STRING);
     }
 
-    public NamedField(RecordSchema parentSchema, IdGenerator<Integer> generator, String prefixFieldName, String fieldName, Field.FieldType fieldType, FieldType keyType) {
-        super(parentSchema, generator, fieldType, prefixFieldName);
+    public NamedField(RecordSchema parentSchema, int parentFieldId, IdGenerator<Integer> generator, String prefixFieldName, String fieldName, Field.FieldType fieldType, FieldType keyType) {
+        super(parentSchema, parentFieldId, generator, fieldType, prefixFieldName);
         this.fieldName = fieldName;
         this.keyType = FieldType.STRING;
     }

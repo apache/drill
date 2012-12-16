@@ -37,8 +37,12 @@ abstract class AbstractFixedValueVector<T extends AbstractFixedValueVector<T>> e
     super(field, allocator);
     this.widthInBits = widthInBits;
   }
-  
-  @Override
+
+    public int getWidthInBits() {
+        return widthInBits;
+    }
+
+    @Override
   protected int getAllocationSize(int valueCount) {
     return (int) Math.ceil(valueCount*widthInBits*1.0/8);
   }

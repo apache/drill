@@ -51,5 +51,9 @@ public class Fixed4 extends AbstractFixedValueVector<Fixed4>{
   public Object getObject(int index) {
     return getInt(index);
   }
-  
+
+    public void setBytes(int index, byte[] bytes) {
+        index*=bytes.length;
+        data.setBytes(index, bytes);
+    }
 }

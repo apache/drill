@@ -16,16 +16,14 @@
  * limitations under the License.
  ******************************************************************************/
 
-package org.apache.drill.exec.schema.json.jackson;
+package org.apache.drill.common.physical.schema;
 
-import org.apache.drill.exec.schema.Record;
-
-import java.io.IOException;
-
-public interface PhysicalOperatorIterator{
-    public enum NextOutcome {NONE_LEFT, INCREMENTED_SCHEMA_UNCHANGED, INCREMENTED_SCHEMA_CHANGED}
-    public Record getRecord();
-    public NextOutcome next() throws IOException;
+public interface RecordSchema {
+    public void addField(Field field);
+    public Field getField(String fieldName, int index);
+    public void removeField(Field field, int index);
+    public Iterable<? extends Field> getFields();
+    public String toSchemaString();
+    void resetMarkedFields();
+    Iterable<? extends Field> removeUnreadFields();
 }
-
-

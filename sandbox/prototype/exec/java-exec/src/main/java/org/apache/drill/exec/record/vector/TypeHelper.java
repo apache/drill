@@ -202,7 +202,7 @@ public class TypeHelper {
       switch(type.getMinorType()){
       case TINYINT: return new Fixed1(field, allocator);
       case SMALLINT: return new Fixed2(field, allocator);
-      case INT: return new Fixed4(field, allocator);
+      case INT: return new NullableFixed4(field, allocator);
       case BIGINT: return new Fixed8(field, allocator);
       case DECIMAL4: return new Fixed4(field, allocator);
       case DECIMAL8: return new Fixed8(field, allocator);
@@ -221,7 +221,7 @@ public class TypeHelper {
       case FIXEDCHAR: return new FixedLen(field, allocator);
       case VARCHAR1: return new VarLen1(field, allocator);
       case VARCHAR2: return new VarLen2(field, allocator);
-      case VARCHAR4: return new VarLen4(field, allocator);
+      case VARCHAR4: return new NullableVarLen4(field, allocator);
       case FIXEDBINARY: return new FixedLen(field, allocator);
       case VARBINARY1: return new VarLen1(field, allocator);
       case VARBINARY2: return new VarLen2(field, allocator);
@@ -244,7 +244,7 @@ public class TypeHelper {
       break;
     
     }
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException(type.getMinorType() + " type is not supported.");
   }
 
 }
