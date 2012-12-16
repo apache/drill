@@ -21,7 +21,7 @@ import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.metrics.SingleThreadNestedCounter;
 import org.apache.drill.exec.physical.impl.FilteringRecordBatchTransformer;
-import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.ExecProtos.FragmentStatus;
 import org.apache.drill.exec.rpc.bit.BitCom;
@@ -76,7 +76,7 @@ public class FragmentContext {
     return context;
   }
 
-  public DrillbitEndpoint getIdentity(){
+  public CoordinationProtos.DrillbitEndpoint getIdentity(){
     return context.getEndpoint();
   }
   

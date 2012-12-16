@@ -16,46 +16,37 @@
  * limitations under the License.
  ******************************************************************************/
 
-package org.apache.drill.exec.schema.json.jackson;
+package org.apache.drill.common.physical.schema.json.jackson;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.google.common.collect.Maps;
-
-import com.sun.javaws.exceptions.InvalidArgumentException;
-import org.apache.drill.exec.schema.Field;
+import org.apache.drill.common.physical.schema.Field;
 
 import java.io.IOException;
 import java.util.EnumMap;
 
-import static com.fasterxml.jackson.core.JsonToken.*;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static org.apache.drill.exec.schema.Field.FieldType.*;
 
 public class JacksonHelper {
-    public static Field.FieldType getFieldType(JsonToken token) {
-        switch(token) {
-            case VALUE_STRING:
-                return STRING;
-            case VALUE_FALSE:
-                return BOOLEAN;
-            case VALUE_TRUE:
-                return BOOLEAN;
-            case START_ARRAY:
-                return ARRAY;
-            case START_OBJECT:
-                return MAP;
-            case VALUE_NUMBER_INT:
-                return INTEGER;
-            case VALUE_NUMBER_FLOAT:
-                return FLOAT;
-        }
+    private static final EnumMap<JsonToken, Field.FieldType> TYPE_LOOKUP = Maps.newEnumMap(JsonToken.class);
 
-        throw new UnsupportedOperationException();
+    static {
+        TYPE_LOOKUP.put(JsonToken.VALUE_STRING, Field.FieldType.STRING);
+        TYPE_LOOKUP.put(JsonToken.VALUE_FALSE, Field.FieldType.BOOLEAN);
+        TYPE_LOOKUP.put(JsonToken.VALUE_TRUE, Field.FieldType.BOOLEAN);
+        TYPE_LOOKUP.put(JsonToken.START_ARRAY, Field.FieldType.ARRAY);
+        TYPE_LOOKUP.put(JsonToken.START_OBJECT, Field.FieldType.MAP);
+        TYPE_LOOKUP.put(JsonToken.VALUE_NUMBER_INT, Field.FieldType.INTEGER);
+        TYPE_LOOKUP.put(JsonToken.VALUE_NUMBER_FLOAT, Field.FieldType.FLOAT);
+    }
+
+    public static Field.FieldType getFieldType(JsonToken token) {
+        return TYPE_LOOKUP.get(token);
     }
 
     public static Object getValueFromFieldType(JsonParser parser, Field.FieldType fieldType) throws IOException {
-        switch (fieldType) {
+        switch(fieldType) {
             case INTEGER:
                 return parser.getIntValue();
             case STRING:

@@ -51,10 +51,8 @@ public class DrillbitContext {
     super();
     Preconditions.checkNotNull(endpoint);
     Preconditions.checkNotNull(context);
-    Preconditions.checkNotNull(context);
     Preconditions.checkNotNull(com);
-    Preconditions.checkNotNull(com);
-    
+
     this.context = context;
     this.coord = coord;
     this.com = com;

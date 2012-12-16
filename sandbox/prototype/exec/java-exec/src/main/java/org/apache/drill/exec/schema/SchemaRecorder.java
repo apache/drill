@@ -18,61 +18,19 @@
 
 package org.apache.drill.exec.schema;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import org.apache.drill.exec.schema.json.jackson.JacksonHelper;
-import org.apache.drill.exec.schema.json.jackson.ScanJson;
-
-import java.io.IOException;
-import java.util.List;
-
 public class SchemaRecorder {
-    DiffSchema diffSchema;
-    RecordSchema currentSchema;
-    List<Field> removedFields;
 
+    /*
     public SchemaRecorder() {
-        currentSchema = new ObjectSchema();
-        diffSchema = new DiffSchema();
-        removedFields = Lists.newArrayList();
+
     }
 
     public RecordSchema getCurrentSchema() {
         return currentSchema;
     }
 
-    public void recordData(ScanJson.ReadType currentReadType, ScanJson.ReadType readType, JsonParser parser, IdGenerator generator, DataRecord record, Field.FieldType fieldType, String prefixFieldName, String fieldName, int index) throws IOException {
-        Field field = currentSchema.getField(fieldName, index);
+    public void recordData() throws IOException {
 
-        if (field == null || field.getFieldType() != fieldType) {
-            if (field != null) {
-                removeStaleField(index, field);
-            }
-            field = currentReadType.createField(currentSchema, generator, prefixFieldName, fieldName, fieldType, index);
-            field.setRead(true);
-            diffSchema.recordNewField(field);
-            currentSchema.addField(field);
-        } else {
-            field.setRead(true);
-        }
-
-        if (readType != null) {
-            RecordSchema origSchema = currentSchema;
-            if (field != null) {
-                currentSchema = field.getAssignedSchema();
-            }
-
-            RecordSchema newSchema = readType.createSchema();
-            field.assignSchemaIfNull(newSchema);
-            setCurrentSchemaIfNull(newSchema);
-            readType.readRecord(parser, generator, this, record, field.getFullFieldName());
-
-            currentSchema = origSchema;
-        } else {
-            RecordSchema schema = field.getParentSchema();
-            record.addData(field.getFieldId(), JacksonHelper.getValueFromFieldType(parser, fieldType), schema != null && schema instanceof ListSchema);
-        }
     }
 
     private void removeStaleField(int index, Field field) {
@@ -115,8 +73,7 @@ public class SchemaRecorder {
     }
 
     public void addMissingFields() {
-        for (Field field : Iterables.concat(currentSchema.removeUnreadFields(), removedFields)) {
-            diffSchema.addRemovedField(field);
-        }
+
     }
+    */
 }

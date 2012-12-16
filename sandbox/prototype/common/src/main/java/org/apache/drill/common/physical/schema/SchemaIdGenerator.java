@@ -16,21 +16,21 @@
  * limitations under the License.
  ******************************************************************************/
 
-package org.apache.drill.exec.schema.json.jackson;
+package org.apache.drill.common.physical.schema;
 
-import com.google.common.collect.Lists;
+public class SchemaIdGenerator implements IdGenerator<Integer> {
+    private int nextId;
 
-import org.apache.drill.exec.schema.Record;
-
-import java.io.IOException;
-import java.util.List;
-
-public abstract class PhysicalOperator {
-    List<PhysicalOperatorIterator> parents;
-
-    public PhysicalOperator(PhysicalOperatorIterator... parents) {
-        this.parents = Lists.newArrayList(parents);
+    public SchemaIdGenerator() {
+        nextId = 1;
     }
 
-    public abstract PhysicalOperatorIterator getIterator();
+    public Integer getNextId() {
+        return nextId++;
+    }
+
+    @Override
+    public void reset() {
+        nextId = 1;
+    }
 }

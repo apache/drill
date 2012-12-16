@@ -16,25 +16,29 @@
  * limitations under the License.
  ******************************************************************************/
 
-package org.apache.drill.exec.schema;
+package org.apache.drill.common.physical.schema;
 
 import com.google.common.base.Objects;
 
-public class OrderedField extends Field {
-    private final int index;
+public class NamedField extends Field {
+    final FieldType keyType;
 
-    public OrderedField(RecordSchema parentSchema, int parentFieldId, IdGenerator<Integer> generator, FieldType fieldType, String prefixFieldName, int index) {
-        super(parentSchema, parentFieldId, generator, fieldType, prefixFieldName);
-        this.index = index;
+    public NamedField(RecordSchema parentSchema, IdGenerator<Integer> generator, String prefixFieldName, String fieldName, Field.FieldType fieldType) {
+        this(parentSchema, generator, prefixFieldName, fieldName, fieldType, FieldType.STRING);
     }
 
-    @Override
+    public NamedField(RecordSchema parentSchema, IdGenerator<Integer> generator, String prefixFieldName, String fieldName, Field.FieldType fieldType, FieldType keyType) {
+        super(parentSchema, generator, fieldType, prefixFieldName);
+        this.fieldName = fieldName;
+        this.keyType = FieldType.STRING;
+    }
+
     public String getFieldName() {
-        return "[" + index + "]";
+        return fieldName;
     }
 
     @Override
     protected Objects.ToStringHelper addAttributesToHelper(Objects.ToStringHelper helper) {
-        return helper;
+        return helper.add("keyType", keyType);
     }
 }

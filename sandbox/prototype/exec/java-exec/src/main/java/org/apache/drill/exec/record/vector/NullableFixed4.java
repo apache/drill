@@ -24,7 +24,7 @@ public final class NullableFixed4 extends NullableValueVector<NullableFixed4, Fi
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NullableFixed4.class);
 
   public NullableFixed4(MaterializedField field, BufferAllocator allocator) {
-    super(field, allocator, NullableFixed4.class);
+    super(field, allocator);
   }
 
   @Override
@@ -32,6 +32,11 @@ public final class NullableFixed4 extends NullableValueVector<NullableFixed4, Fi
     return new Fixed4(null, allocator);
   }
 
+  public void setInt(int index, int newVal) {
+      value.setInt(index, newVal);
+  }
 
-  
+    public void setFloat4(int index, Float val) {
+        value.setFloat4(index, val);
+    }
 }
