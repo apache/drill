@@ -24,5 +24,6 @@
   </dependencies>
   <modules>
     <module>java-exec</module>
+    <module>ref</module>
   </modules>
 </project>

@@ -17,24 +17,34 @@
  ******************************************************************************/
 package org.apache.drill.common.logical.data;
 
+import org.apache.drill.common.exceptions.ExpressionParsingException;
+import org.apache.drill.common.expression.PathSegment;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName("project")
-public class Project extends SinkOperator{
-  
+public class Project extends SingleInputOperator {
+
   private final NamedExpression[] selections;
-  
+
   @JsonCreator
-  public Project(@JsonProperty("exprs") NamedExpression[] selections){
-    this.selections = selections; 
+  public Project(@JsonProperty("projections") NamedExpression[] selections) {
+    this.selections = selections;
+    for (int i = 0; i < selections.length; i++) {
+      PathSegment segment = selections[i].getRef().getRootSegment();
+      CharSequence path = segment.getNameSegment().getPath();
+      if (!segment.isNamed() || !path.equals("output"))
+        throw new ExpressionParsingException(String.format(
+            "Outputs for projections always have to start with named path of output. First segment was named '%s' or was named [%s]", path, segment.isNamed()));
+
+    }
   }
-  
+
   @JsonProperty("exprs")
   public NamedExpression[] getSelections() {
     return selections;
   }
 
-	
 }

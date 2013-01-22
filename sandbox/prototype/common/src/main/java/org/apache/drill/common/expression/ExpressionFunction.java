@@ -21,7 +21,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
 import java.util.List;
 
-import org.apache.drill.common.expression.BooleanFunctions.IsNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +35,7 @@ public class ExpressionFunction {
   final static Type EXPR_LIST = (new TypeToken<List<LogicalExpression>>() {
   }).getType();
 
-  private static final Class<?>[] FUNCTIONS = { StringFunctions.Regex.class, StringFunctions.StartsWith.class, IsNull.class };
+  private static final Class<?>[] FUNCTIONS = {};
 
   private static final ImmutableMap<String, Constructor<LogicalExpression>> FUNCTION_MAP;
 
@@ -81,15 +80,15 @@ public class ExpressionFunction {
   }
 
   public static LogicalExpression create(String functionName, List<LogicalExpression> expressions)
-      throws ExpressionValidationError {
+      throws ExpressionValidationException {
     // logger.debug("Requesting generation of new function with name {}.",
     // functionName);
     if (!FUNCTION_MAP.containsKey(functionName))
-      throw new ExpressionValidationError(String.format("Unknown function with name '%s'", functionName));
+      throw new ExpressionValidationException(String.format("Unknown function with name '%s'", functionName));
     try {
       return FUNCTION_MAP.get(functionName).newInstance(expressions);
     } catch (Exception e) {
-      throw new ExpressionValidationError("Failure while attempting to build type of " + functionName, e);
+      throw new ExpressionValidationException("Failure while attempting to build type of " + functionName, e);
     }
   }
 }

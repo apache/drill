@@ -26,6 +26,7 @@ public class Node<T> implements Comparable<Node<T>> {
   int index = -1; // used for Tarjan's algorithm
 
   public Node(final T operator) {
+    if(operator == null) throw new IllegalArgumentException("Operator node was null.");
     this.nodeValue = operator;
   }
 

@@ -1,0 +1,76 @@
+{
+  head:{
+    type:"apache_drill_logical_plan",
+    version:"1",
+    generator:{
+      type:"manual",
+      info:"na"
+    }
+  },
+  sources:[
+    {
+      type:"json",
+      name:"local-logs",
+      files:[
+        "src/test/resources/donuts.json"
+      ]
+    }
+  ],
+  query:[
+    {
+      op:"sequence",
+      do:[
+	    {
+	      op: "scan",
+	      memo: "initial_scan",
+	      ref: "donuts",
+	      source: "local-logs",
+	      selection: {data: "activity"}
+	    },
+	    {
+	      op: "transform",
+	      transforms: [
+	        { ref: "donuts.quanity", expr: "donuts.sales"}
+	      ]
+	    },
+	    { 
+	      op: "filter",
+	      expr: "donuts.ppu < 1.00"
+	    },
+	    {
+	      op: "group",
+	      groupings: [
+	        { ref: "donuts.ppu", expr: "donuts.ppu" }
+	      ]
+	    },
+	    {
+	      op: "aggregate",
+	      type: "simple",
+	      keys: ["donuts.ppu"],
+	      aggregations: [
+	        { ref: "donuts.typeCount",  expr: "count(1)" },
+	        { ref: "donuts.quantity",  expr: "sum(donuts.sales)" },
+	        { ref: "donuts.sales",  expr: "sum(donuts.ppu * donuts.sales)" }
+	      ]
+	    },
+	    { 
+	      op: "order",
+	      orderings: [
+	        {order: "desc", expr: "donuts.ppu" }
+	      ]
+	    },	    
+	    {
+	      op: "project",
+	      projections: [
+	        { ref: "output", expr: "donuts" }
+	      ]
+	    },	    
+	    {
+	      op: "write",
+	      memo: "save file",
+	      file: "file:///opt/data/out.json"
+	    }     
+      ]
+    }
+  ]
+}

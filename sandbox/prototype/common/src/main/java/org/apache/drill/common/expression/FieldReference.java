@@ -35,7 +35,7 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
 @JsonSerialize(using = Se.class)
 @JsonDeserialize(using = De.class)
-public class FieldReference extends ValueExpressions.Identifier {
+public class FieldReference extends SchemaPath {
 
   public FieldReference(String value) {
     super(value);
@@ -64,7 +64,7 @@ public class FieldReference extends ValueExpressions.Identifier {
     @Override
     public void serialize(FieldReference value, JsonGenerator jgen, SerializerProvider provider) throws IOException,
         JsonGenerationException {
-      jgen.writeString(value.value);
+      jgen.writeString(value.getPath().toString());
     }
 
   }

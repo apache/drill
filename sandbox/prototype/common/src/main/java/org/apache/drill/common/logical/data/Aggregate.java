@@ -24,7 +24,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName("aggregate")
-public class Aggregate {
+public class Aggregate extends SingleInputOperator{
   
   public static final String ALL = "all";
   public static final String HERE = "here";
@@ -52,5 +52,7 @@ public class Aggregate {
   public NamedExpression[] getAggregations() {
     return aggregations;
   }
-  
+
+
+
 }

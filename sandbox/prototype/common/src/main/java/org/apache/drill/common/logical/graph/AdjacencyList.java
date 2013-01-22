@@ -17,53 +17,61 @@
  ******************************************************************************/
 package org.apache.drill.common.logical.graph;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
+
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Multimaps;
 
 
 public class AdjacencyList<N extends Node<?>> {
   private Set<N> allNodes = new HashSet<N>();
-  private Map<N, List<Edge<N>>> adjacencies = new HashMap<N, List<Edge<N>>>();
+  private ListMultimap<N, Edge<N>> adjacencies = ArrayListMultimap.create();
 
   public void addEdge(N source, N target, int weight) {
-    List<Edge<N>> list;
-    if (!adjacencies.containsKey(source)) {
-      list = new ArrayList<Edge<N>>();
-      adjacencies.put(source, list);
-    } else {
-      list = adjacencies.get(source);
-    }
-    list.add(new Edge<N>(source, target, weight));
+    adjacencies.put(source, new Edge<N>(source, target, weight));
     allNodes.add(source);
     allNodes.add(target);
   }
 
+  public void clearVisited(){
+    for (Edge<N> e : adjacencies.values()) {
+      e.from.visited = false;
+      e.to.visited = false;
+    }
+  }
+  
   public List<Edge<N>> getAdjacent(N source) {
     return adjacencies.get(source);
   }
 
-  public void reverseEdge(Edge<N> e) {
-    adjacencies.get(e.from).remove(e);
-    addEdge(e.to, e.from, e.weight);
+  
+  public void printEdges(){
+    for (Edge<N> e : adjacencies.values()) {
+      System.out.println(e.from.index + " -> " + e.to.index);
+    }
   }
+  
+  
+//  public void reverseEdge(Edge<N> e) {
+//    adjacencies.get(e.from).remove(e);
+//    addEdge(e.to, e.from, e.weight);
+//  }
 
-  public void reverseGraph() {
-    adjacencies = getReversedList().adjacencies;
-  }
+//  public void reverseGraph() {
+//    adjacencies = getReversedList().adjacencies;
+//  }
 
   public AdjacencyList<N> getReversedList() {
     AdjacencyList<N> newlist = new AdjacencyList<N>();
-    for (List<Edge<N>> edges : adjacencies.values()) {
-      for (Edge<N> e : edges) {
-        newlist.addEdge(e.to, e.from, e.weight);
-      }
+    for (Edge<N> e : adjacencies.values()) {
+      newlist.addEdge(e.to, e.from, e.weight);
     }
     return newlist;
   }
@@ -97,19 +105,19 @@ public class AdjacencyList<N extends Node<?>> {
    */
   public Collection<N> getStartNodes(){
     Set<N> nodes = new HashSet<N>(getNodeSet());
-    for(List<Edge<N>> le : adjacencies.values()){
-      for(Edge<N> e : le){
-        nodes.remove(e.to);
-      }
+    for(Edge<N> e : adjacencies.values()){
+      nodes.remove(e.to);
     }
     return nodes;
   }
   
   public Collection<Edge<N>> getAllEdges() {
-    List<Edge<N>> edges = new LinkedList<Edge<N>>();
-    for (List<Edge<N>> e : adjacencies.values()) {
-      edges.addAll(e);
-    }
-    return edges;
+    return adjacencies.values();
+  }
+  
+  
+  public void fix(){
+    adjacencies = Multimaps.unmodifiableListMultimap(adjacencies);
+    allNodes =  Collections.unmodifiableSet(allNodes);
   }
 }

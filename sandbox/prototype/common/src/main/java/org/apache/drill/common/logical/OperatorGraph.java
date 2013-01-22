@@ -36,30 +36,35 @@ import org.slf4j.LoggerFactory;
 public class OperatorGraph {
 
   static final Logger logger = LoggerFactory.getLogger(OperatorGraph.class);
-  
+
   private AdjacencyList<OpNode> adjList;
   private final Collection<SourceOperator> sources;
   private final Collection<SinkOperator> sinks;
-  
-  public OperatorGraph(List<LogicalOperator> operators){
+
+  public OperatorGraph(List<LogicalOperator> operators) {
     AdjacencyListBuilder b = new AdjacencyListBuilder();
-    for(LogicalOperator o : operators){
+
+    // Some of these operators are operator chains hidden through the use of sequences. This is okay because the
+    // adjacency list builder is responsible for grabbing these as well.
+    for (LogicalOperator o : operators) {
       o.accept(b);
     }
-    
+
     adjList = b.getAdjacencyList();
-    
-    List<List<OpNode>> cyclicReferences = GraphAlgos.checkDirected(adjList);
-    if(cyclicReferences.size() > 0){
-      throw new IllegalArgumentException("A logical plan must be a valid DAG.  You have cyclic references in your graph.  " + cyclicReferences);
-    }
+
+     List<List<OpNode>> cyclicReferences = GraphAlgos.checkDirected(adjList);
+     if(cyclicReferences.size() > 0){
+     throw new
+     IllegalArgumentException("A logical plan must be a valid DAG.  You have cyclic references in your graph.  " +
+     cyclicReferences);
+     }
     sources = convert(adjList.getStartNodes(), SourceOperator.class, "Error determing list of source operators.");
-//    logger.debug("Source list {}", sources);
+    // logger.debug("Source list {}", sources);
     sinks = convert(adjList.getTerminalNodes(), SinkOperator.class, "Error determing list of source operators.");
-//    logger.debug("Sink list {}", sinks);
-    
+    // logger.debug("Sink list {}", sinks);
+
   }
-  
+
   public AdjacencyList<OpNode> getAdjList() {
     return adjList;
   }
@@ -73,51 +78,68 @@ public class OperatorGraph {
   }
 
   @SuppressWarnings("unchecked")
-  private <T extends LogicalOperator> Collection<T> convert(Collection<OpNode> nodes, Class<T> classIdentifier, String error){
+  private <T extends LogicalOperator> Collection<T> convert(Collection<OpNode> nodes, Class<T> classIdentifier,
+      String error) {
     List<T> out = new ArrayList<T>(nodes.size());
-    for(OpNode o : nodes){
+    for (OpNode o : nodes) {
       LogicalOperator lo = o.getNodeValue();
-      if(classIdentifier.isAssignableFrom(lo.getClass())){
-        out.add( (T) lo);
-      }else{
+      if (classIdentifier.isAssignableFrom(lo.getClass())) {
+        out.add((T) lo);
+      } else {
         throw new UnexpectedOperatorType(classIdentifier, lo, error);
       }
     }
     return out;
   }
-  
-  public class AdjacencyListBuilder implements OpVisitor{
+
+  public class AdjacencyListBuilder implements OpVisitor {
     Map<LogicalOperator, OpNode> ops = new HashMap<LogicalOperator, OpNode>();
-    
-    @Override
-    public void visit(LogicalOperator o) {
-      if(!ops.containsKey(o)){
-//        logger.debug("Adding node {}", o);
-        ops.put(o,  new OpNode(o));
-      }
+
+    public boolean enter(LogicalOperator o) {
+      visit(o);
+      return true;
     }
-    
-    public AdjacencyList<OpNode> getAdjacencyList(){
+
+    @Override
+    public void leave(LogicalOperator o) {
+//      for (LogicalOperator child : o) {
+//        child.accept(this);
+//      }
+    }
+
+    @Override
+    public boolean visit(LogicalOperator o) {
+      if(o == null) throw new IllegalArgumentException("Null operator.");
+      
+      if (!ops.containsKey(o)) {
+        ops.put(o, new OpNode(o));
+        return true;
+      }
+
+      return true;
+    }
+
+    public AdjacencyList<OpNode> getAdjacencyList() {
+      logger.debug("Values; {}", ops.values().toArray());
       AdjacencyList<OpNode> a = new AdjacencyList<OpNode>();
-      for(OpNode from : ops.values()){
-//        logger.debug("Adding edges for {}", from);
-        for(LogicalOperator t : from.getNodeValue()){
-//          logger.debug("\t\tAdding edges to {}", t);
+      for (OpNode from : ops.values()) {
+        for (LogicalOperator t : from.getNodeValue()) {
           OpNode to = ops.get(t);
           a.addEdge(from, to, 0);
         }
-        
+
       }
+      a.fix();
       return a;
     }
-    
+
   }
-  
-  public static class OpNode extends Node<LogicalOperator>{
+
+  public static class OpNode extends Node<LogicalOperator> {
 
     public OpNode(LogicalOperator operator) {
       super(operator);
     }
   }
-    
+
 }

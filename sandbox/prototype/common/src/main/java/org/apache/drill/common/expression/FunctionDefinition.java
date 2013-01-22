@@ -17,28 +17,81 @@
  ******************************************************************************/
 package org.apache.drill.common.expression;
 
+import java.util.Arrays;
+import java.util.List;
+
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.drill.common.expression.types.DataType;
+
 public class FunctionDefinition {
 
   private final String name;
-  private final Arg[] args;
-
-  public FunctionDefinition(String name, Arg...args){
+  private final String[] registeredNames;
+  private final ArgumentValidator argumentValidator;
+  private final OutputTypeDeterminer outputType;
+  private final boolean aggregating;
+  private final boolean isOperator;
+  
+  private FunctionDefinition(String name, ArgumentValidator argumentValidator, OutputTypeDeterminer outputType,
+      boolean aggregating, boolean isOperator, String[] registeredNames) {
     this.name = name;
-    this.args = args;
-  }
-  
-  public static class Arg {
-    private final String name;
-    private final DataType[] allowedTypes;
-    
-    public Arg(String name, DataType...allowedTypes){
-      this.name = name;
-      this.allowedTypes = allowedTypes;
-    }
-  }
-  
-  public Arg arg(String name, DataType...allowedTypes){
-    return new Arg(name, allowedTypes);
+    this.argumentValidator = argumentValidator;
+    this.outputType = outputType;
+    this.aggregating = aggregating;
+    this.registeredNames = ArrayUtils.isEmpty(registeredNames) ? new String[]{name} : registeredNames;
+    this.isOperator = isOperator;
   }
 
+  public DataType getDataType(List<LogicalExpression> args){
+    return outputType.getOutputType(args);
+  }
+  
+  public String[] getArgumentNames(){
+    return argumentValidator.getArgumentNamesByPosition();
+  }
+  
+  public static FunctionDefinition simple(String name, ArgumentValidator argumentValidator, OutputTypeDeterminer outputType, String... registeredNames){
+    return new FunctionDefinition(name, argumentValidator, outputType, false,  false, registeredNames);
+  }
+
+  public static FunctionDefinition aggregator(String name, ArgumentValidator argumentValidator, OutputTypeDeterminer outputType, String... registeredNames){
+    return new FunctionDefinition(name, argumentValidator, outputType, true,  false, registeredNames);
+  }
+
+  public static FunctionDefinition operator(String name, ArgumentValidator argumentValidator, OutputTypeDeterminer outputType, String... registeredNames){
+    return new FunctionDefinition(name, argumentValidator, outputType, false,  true, registeredNames);
+  }
+  
+  public boolean isOperator(){
+    return isOperator;
+  }
+  
+  public boolean isAggregating(){
+    return aggregating;
+  }
+  
+  public String[] getRegisteredNames(){
+    return this.registeredNames;
+  }
+  
+  public String getName(){
+    return this.name;
+  }
+  
+  public FunctionCall newCall(List<LogicalExpression> args){
+    return new FunctionCall(this, args);
+  }
+  
+  public void addRegisteredName(StringBuilder sb){
+    sb.append(registeredNames[0]);
+  }
+
+  @Override
+  public String toString() {
+    return "FunctionDefinition [name=" + name + ", registeredNames=" + Arrays.toString(registeredNames)
+        + ", aggregating=" + aggregating + ", isOperator=" + isOperator + "]";
+  }
+
+  
+  
 }

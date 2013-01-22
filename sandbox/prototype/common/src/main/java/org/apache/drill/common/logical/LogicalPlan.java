@@ -28,8 +28,11 @@ import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.common.logical.graph.GraphAlgos;
 import org.apache.drill.common.logical.sources.DataSource;
 import org.apache.drill.common.logical.sources.record.RecordMaker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.core.JsonParser.Feature;
@@ -43,28 +46,10 @@ import com.google.common.io.Files;
 
 @JsonPropertyOrder({"head", "sources", "query"})
 public class LogicalPlan {
+  private static final Logger logger = LoggerFactory.getLogger(LogicalPlan.class);
 	private final PlanProperties properties;
 	private final Map<String, DataSource> dataSources;
 	private final OperatorGraph graph;
-
-	public static void main(String[] args) throws Exception {
-		
-		
-		ObjectMapper mapper = new ObjectMapper();
-		
-		mapper.enable(SerializationFeature.INDENT_OUTPUT);
-		mapper.configure(Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
-		mapper.configure(Feature.ALLOW_COMMENTS, true);
-
-		mapper.registerSubtypes(LogicalOperator.SUB_TYPES);
-		mapper.registerSubtypes(DataSource.SUB_TYPES);
-		mapper.registerSubtypes(RecordMaker.SUB_TYPES);
-
-    String externalPlan = Files.toString(new File("src/test/resources/simple_plan.json"), Charsets.UTF_8);
-    LogicalPlan plan = mapper.readValue(externalPlan, LogicalPlan.class);
-    System.out.println(mapper.writeValueAsString(plan));	
-	}
-
 	
 	@JsonCreator
 	public LogicalPlan(@JsonProperty("head") PlanProperties head, @JsonProperty("sources") List<DataSource> sources, @JsonProperty("query") List<LogicalOperator> operators){
@@ -79,7 +64,7 @@ public class LogicalPlan {
 	}
 	
 	@JsonProperty("query")
-	public List<LogicalOperator> getOperators(){
+	public List<LogicalOperator> getSortedOperators(){
 	  List<OpNode> nodes = GraphAlgos.TopoSorter.sort(graph.getAdjList());
 	  Iterable<LogicalOperator> i = Iterables.transform(nodes, new Function<OpNode, LogicalOperator>(){
 	    public LogicalOperator apply(OpNode o){
@@ -89,7 +74,17 @@ public class LogicalPlan {
 	  return Lists.newArrayList(i);
 	}
 
-
+	public DataSource getDataSource(String name){
+	  DataSource ds = dataSources.get(name);
+	  if(ds == null) throw new IllegalArgumentException(String.format("Unknown data source named [%s].", name));
+	  return ds;
+	}
+	
+	@JsonIgnore
+	public OperatorGraph getGraph(){
+	  return graph;
+	}
+	
 	@JsonProperty("head")
   public PlanProperties getProperties() {
     return properties;
@@ -102,6 +97,23 @@ public class LogicalPlan {
   }
 	
 	
-	
+
+  public static void main(String[] args) throws Exception {
+    
+    
+    ObjectMapper mapper = new ObjectMapper();
+    
+    mapper.enable(SerializationFeature.INDENT_OUTPUT);
+    mapper.configure(Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
+    mapper.configure(Feature.ALLOW_COMMENTS, true);
+
+    mapper.registerSubtypes(LogicalOperator.SUB_TYPES);
+    mapper.registerSubtypes(DataSource.SUB_TYPES);
+    mapper.registerSubtypes(RecordMaker.SUB_TYPES);
+
+    String externalPlan = Files.toString(new File("src/test/resources/simple_plan.json"), Charsets.UTF_8);
+    LogicalPlan plan = mapper.readValue(externalPlan, LogicalPlan.class);
+    System.out.println(mapper.writeValueAsString(plan));  
+  }
 	
 }

@@ -73,7 +73,6 @@ public abstract class Sequence extends LogicalOperatorBase {
 
       while (true) {
         String fieldName = jp.getText();
-        // logger.debug("Working on field name '{}'", fieldName);
         t = jp.nextToken();
         switch (fieldName) { // switch on field names.
         case "@id":

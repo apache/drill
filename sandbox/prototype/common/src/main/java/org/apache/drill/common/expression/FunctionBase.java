@@ -17,12 +17,11 @@
  ******************************************************************************/
 package org.apache.drill.common.expression;
 
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.drill.common.expression.visitors.FunctionVisitor;
-import org.apache.drill.common.logical.ValidationError;
+import org.apache.drill.common.expression.types.DataType;
+import org.apache.drill.common.expression.visitors.ExprVisitor;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableList;
@@ -60,24 +59,20 @@ public abstract class FunctionBase extends LogicalExpressionBase implements Iter
 		this.expressions = (ImmutableList<LogicalExpression>) expressions;
 	}
 	
-	public static DataType getJointType(String parentName, LogicalExpression expr1, LogicalExpression expr2) throws ExpressionValidationError{
-		DataType dt = DataType.getCombinedCast(expr1.getDataType(), expr2.getDataType());
-		if(dt == null) throw new ExpressionValidationError();
-		
-		return dt;
-	}
-	
-	public LogicalExpression wrapWithCastIfNecessary(DataType dt) throws ExpressionValidationError{
-		if(this.getDataType() != dt) return new Cast(this, dt);
-		return this;
-	}	
+//	public static DataType getJointType(String parentName, LogicalExpression expr1, LogicalExpression expr2) throws ExpressionValidationException{
+//		DataType dt = DataType.getCombinedCast(expr1.getDataType(), expr2.getDataType());
+//		if(dt == null) throw new ExpressionValidationException();
+//		
+//		return dt;
+//	}
+//	
+//	public LogicalExpression wrapWithCastIfNecessary(DataType dt) throws ExpressionValidationException{
+//		if(this.getDataType() != dt) return new Cast(this, dt);
+//		return this;
+//	}	
 
 	
-	@Override
-	public Void accept(FunctionVisitor visitor) {
-		visitor.visit(this);
-		return null;
-	}
+
 
 	@Override
 	public Iterator<LogicalExpression> iterator() {
@@ -90,11 +85,6 @@ public abstract class FunctionBase extends LogicalExpressionBase implements Iter
 		throw new UnsupportedOperationException();	
 	}
 
-	@Override
-	public void resolveAndValidate(List<LogicalExpression> expressions,
-			Collection<ValidationError> errors) {
-		throw new UnsupportedOperationException();	
-	}
 	
 	
 	

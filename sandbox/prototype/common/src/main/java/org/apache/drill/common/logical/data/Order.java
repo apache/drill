@@ -30,7 +30,7 @@ public class Order extends SingleInputOperator {
   private final Ordering[] orderings;
 
   @JsonCreator
-  public Order(@JsonProperty("orders") Ordering... orderings) {
+  public Order(@JsonProperty("orderings") Ordering... orderings) {
     this.orderings = orderings;
   }
   
@@ -43,7 +43,8 @@ public class Order extends SingleInputOperator {
     private final Direction direction;
     private final LogicalExpression expr;
 
-    public Ordering(String strOrder, LogicalExpression expr) {
+    @JsonCreator
+    public Ordering(@JsonProperty("order") String strOrder, @JsonProperty("expr") LogicalExpression expr) {
       this.expr = expr;
       this.direction = Direction.DESC.description.equals(strOrder) ? Direction.DESC : Direction.ASC; // default
                                                                                                      // to

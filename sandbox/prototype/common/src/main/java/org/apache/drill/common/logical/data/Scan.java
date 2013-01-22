@@ -17,6 +17,9 @@
  ******************************************************************************/
 package org.apache.drill.common.logical.data;
 
+import org.apache.drill.common.expression.FieldReference;
+import org.apache.drill.common.logical.JSONOptions;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -24,13 +27,15 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 @JsonTypeName("scan")
 public class Scan extends SourceOperator{
 	private final String sourceName;
-	private final String selection;
+	private final JSONOptions selection;
+	private final FieldReference outputReference;
 	
 	@JsonCreator
-  public Scan(@JsonProperty("source") String sourceName, @JsonProperty("selection") String selection) {
+  public Scan(@JsonProperty("source") String sourceName, @JsonProperty("selection") JSONOptions selection, @JsonProperty("ref") FieldReference outputReference) {
     super();
     this.sourceName = sourceName;
     this.selection = selection;
+    this.outputReference = outputReference;
   }
 
   @JsonProperty("source")
@@ -38,9 +43,15 @@ public class Scan extends SourceOperator{
     return sourceName;
   }
 
-  public String getSelection() {
+  public JSONOptions getSelection() {
     return selection;
   }
+
+  @JsonProperty("ref")
+  public FieldReference getOutputReference() {
+    return outputReference;
+  }
 	
+  
 
 }

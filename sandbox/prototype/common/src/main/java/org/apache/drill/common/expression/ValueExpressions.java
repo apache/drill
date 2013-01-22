@@ -17,9 +17,33 @@
  ******************************************************************************/
 package org.apache.drill.common.expression;
 
+import org.apache.drill.common.expression.visitors.ExprVisitor;
+
+
+
+
 
 public class ValueExpressions {
 
+  public static LogicalExpression getNumericExpression(String s){
+    try{
+      long l = Long.parseLong(s);
+      return new LongExpression(l);
+    }catch(Exception e){
+      
+    }
+    
+    try{
+      double d = Double.parseDouble(s);
+      return new DoubleExpression(d);
+    }catch(Exception e){
+      
+    }
+    
+    throw new IllegalArgumentException(String.format("Unable to parse string %s as integer or floating point number.", s));
+    
+  }
+  
 	protected static abstract class ValueExpression<V> extends
 			LogicalExpressionBase {
 		public final V value;
@@ -47,22 +71,57 @@ public class ValueExpressions {
     public void addToString(StringBuilder sb) {
       sb.append(value.toString());
     }
+
+    @Override
+    public <T> T accept(ExprVisitor<T> visitor) {
+      return visitor.visitBoolean(this);
+    }
+    
+    public boolean getBoolean(){
+      return value;
+    }
 		
 	}
 
-	public static class NumberExpression extends ValueExpression<Number> {
-		public NumberExpression(String value) {
-			super(value);
-		}
+	 public static class DoubleExpression extends LogicalExpressionBase  {
+	   private double d;
+	    public DoubleExpression(double d) {
+	      this.d = d;
+	    }
 
-		@Override
-		protected Number parseValue(String s) {
-			return Integer.parseInt(s);
+	    public double getDouble(){
+	      return d;
+	    }
+	    
+	    @Override
+	    public void addToString(StringBuilder sb) {
+	      sb.append(d);
+	    }
+	    
+	    @Override
+	    public <T> T accept(ExprVisitor<T> visitor) {
+	      return visitor.visitDoubleExpression(this);
+	    }
+	  }
+	 
+	public static class LongExpression extends LogicalExpressionBase {
+	  private long l;
+		public LongExpression(long l) {
+		  this.l = l;
+		}
+		
+		public long getLong(){
+		  return l;
 		}
 		
     @Override
     public void addToString(StringBuilder sb) {
-      sb.append(value.toString());
+      sb.append(l);
+    }
+    
+    @Override
+    public <T> T accept(ExprVisitor<T> visitor) {
+      return visitor.visitLongExpression(this);
     }
 	}
 
@@ -82,23 +141,36 @@ public class ValueExpressions {
       sb.append(value.toString());
       sb.append("\"");
     }
+    
+    @Override
+    public <T> T accept(ExprVisitor<T> visitor) {
+      return visitor.visitQuotedString(this);
+    }
 	}
 
-	public static class Identifier extends ValueExpression<String> {
-		public Identifier(String value) {
-			super(value);
-		}
-
-		@Override
-		protected String parseValue(String s) {
-			return s;
-		}
-		
-    @Override
-    public void addToString(StringBuilder sb) {
-      sb.append("'");
-      sb.append(value.toString());
-      sb.append("'");
-    }
+	
+	public static enum CollisionBehavior{
+	  SKIP("-"),  // keep the old value.
+	  FAIL("!"), // give up on the record
+	  REPLACE("+"), // replace the old value with the new value.
+	  ARRAYIFY("]"), // replace the current position with an array.  Then place the old and new value in the array. 
+	  OBJECTIFY("}"),  // replace the current position with a map.  Give the two values names of 'old' and 'new'. 
+	  MERGE_OVERRIDE("%"); // do your best to do a deep merge of the old and new values.
+	  
+	  private String identifier;
+	  
+	  private CollisionBehavior(String identifier){
+	    this.identifier = identifier;
+	  }
+	  public static final CollisionBehavior DEFAULT = FAIL;
+	  
+	  public static final CollisionBehavior find(String c){
+	    if(c == null || c.isEmpty()) return DEFAULT;
+	    
+	    for(CollisionBehavior b : values()){
+	      if(b.identifier.equals(c)) return b;
+	    }
+	    return DEFAULT;
+	  }
 	}
 }

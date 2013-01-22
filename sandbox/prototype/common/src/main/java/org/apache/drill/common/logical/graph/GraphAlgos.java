@@ -33,12 +33,11 @@ public class GraphAlgos {
     final AdjacencyList<N> rGraph;
 
     private TopoSorter(AdjacencyList<N> graph) {
+      graph.clearVisited();
+      
       this.rGraph = graph.getReversedList();
       Collection<N> sourceNodes = rGraph.getStartNodes();
 
-      for (N n : graph.getNodeSet()) {
-        n.visited = false;
-      }
       for (N n : sourceNodes) {
         visit(n);
       }
@@ -80,8 +79,7 @@ public class GraphAlgos {
     List<List<N>> subgraphs = t.executeTarjan(graph);
     for (Iterator<List<N>> i = subgraphs.iterator(); i.hasNext();) {
       List<N> l = i.next();
-      if (l.size() == 1)
-        i.remove();
+      if (l.size() == 1)  i.remove();
     }
     return subgraphs;
   }

@@ -33,7 +33,7 @@ import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property="op")
 public interface LogicalOperator extends Iterable<LogicalOperator>{
 	
-	public static final Class<?>[] SUB_TYPES = {Aggregate.class, Cogroup.class, Filter.class, Flatten.class, Grouping.class, Join.class, Order.class, Project.class, Scan.class, Sequence.class, Transform.class, Union.class, WindowFrame.class};
+	public static final Class<?>[] SUB_TYPES = {Write.class, Aggregate.class, Group.class, Filter.class, Flatten.class, Join.class, Order.class, Project.class, Scan.class, Sequence.class, Transform.class, Union.class, WindowFrame.class};
 	
 	public void accept(OpVisitor visitor);
 	public void registerAsSubscriber(LogicalOperator operator);

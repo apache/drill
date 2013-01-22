@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.common.expression.IfExpression.IfCondition;
+import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,9 +44,8 @@ public class IfExpression extends LogicalExpressionBase implements Iterable<IfCo
 		public final LogicalExpression condition;
 		public final LogicalExpression expression;
 		
-		public IfCondition(LogicalExpression condition,
-				LogicalExpression expression) {
-			logger.debug("Generating IfCondition {}, {}", condition, expression);
+		public IfCondition(LogicalExpression condition, LogicalExpression expression) {
+			//logger.debug("Generating IfCondition {}, {}", condition, expression);
 			
 			this.condition = condition;
 			this.expression = expression;
@@ -53,7 +53,14 @@ public class IfExpression extends LogicalExpressionBase implements Iterable<IfCo
 
 	}
 	
-	public static class Builder{
+	
+	@Override
+  public <T> T accept(ExprVisitor<T> visitor) {
+    return visitor.visitIfExpression(this);
+  }
+
+
+  public static class Builder{
 		List<IfCondition> conditions = new ArrayList<IfCondition>();
 		private LogicalExpression elseExpression;
 		
