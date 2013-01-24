@@ -55,7 +55,7 @@
 		"name": "Old Fashioned",
 		"ppu": 0.55,
 		"sales": 300,
-		
+
 		"batters":
 			{
 				"batter":
@@ -78,7 +78,7 @@
 		"name": "Filled",
 		"ppu": 0.69,
 		"sales": 14,
-		
+
 		"batters":
 			{
 				"batter":
@@ -106,7 +106,7 @@
 				{ "id": "6003", "type": "Lemon" },
 				{ "id": "6004", "type": "Chocolate" },
 				{ "id": "6005", "type": "Kreme" }
-			]			
+			]
 	}
 		{
 		"id": "0005",
@@ -114,7 +114,7 @@
 		"name": "Apple Fritter",
 		"ppu": 1.00,
 		"sales": 700,
-		
+
 		"batters":
 			{
 				"batter":

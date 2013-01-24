@@ -81,7 +81,7 @@ public class ReferenceInterpreter {
   
   public static void main(String[] args) throws Exception{
 
-    
+    final String jsonFile = args[0];
     ObjectMapper mapper = new ObjectMapper();
     
     mapper.enable(SerializationFeature.INDENT_OUTPUT);
@@ -92,7 +92,7 @@ public class ReferenceInterpreter {
     mapper.registerSubtypes(DataSource.SUB_TYPES);
     mapper.registerSubtypes(RecordMaker.SUB_TYPES);
 
-    String externalPlan = Files.toString(new File("src/test/resources/simple_plan.json"), Charsets.UTF_8);
+    String externalPlan = Files.toString(new File(jsonFile), Charsets.UTF_8);
     LogicalPlan plan = mapper.readValue(externalPlan, LogicalPlan.class);
     IteratorRegistry ir = new IteratorRegistry();
     ReferenceInterpreter i = new ReferenceInterpreter(plan, ir, new BasicEvaluatorFactory(ir));

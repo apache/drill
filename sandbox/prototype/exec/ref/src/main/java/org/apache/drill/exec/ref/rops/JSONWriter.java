@@ -38,8 +38,22 @@ public class JSONWriter extends BaseSinkROP<Write> {
 
   @Override
   protected void setupSink() throws IOException {
-    FileSystem fs = FileSystem.get(new Configuration());
-    output = fs.create(new Path(config.getFileName()));
+    final Path sinkPath = new Path(config.getFileName());
+    final String sinkScheme = sinkPath.toUri().getScheme();
+
+    if ("console".equals(sinkScheme)) {
+      final String std = sinkPath.getName();
+      if ("stdout".equals(std)) {
+        output = new FSDataOutputStream(System.out);
+      } else if ("stderr".equals(std)) {
+        output = new FSDataOutputStream(System.err);
+      } else {
+        throw new IOException(std + ": Invalid console sink");
+      }
+    } else {
+      final FileSystem fs = FileSystem.get(new Configuration());
+      output = fs.create(new Path(config.getFileName()));
+    }
     writer = new JSONDataWriter(output);
   }
 

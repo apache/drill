@@ -10,7 +10,7 @@
   sources:[
     {
       type:"json",
-      name:"local-logs",
+      name:"donuts-json",
       files:[
         "src/test/resources/donuts.json"
       ]
@@ -24,16 +24,16 @@
 	      op: "scan",
 	      memo: "initial_scan",
 	      ref: "donuts",
-	      source: "local-logs",
+	      source: "donuts-json",
 	      selection: {data: "activity"}
 	    },
 	    {
 	      op: "transform",
 	      transforms: [
-	        { ref: "donuts.quanity", expr: "donuts.sales"}
+	        { ref: "donuts.quantity", expr: "donuts.sales"}
 	      ]
 	    },
-	    { 
+	    {
 	      op: "filter",
 	      expr: "donuts.ppu < 1.00"
 	    },
@@ -53,23 +53,23 @@
 	        { ref: "donuts.sales",  expr: "sum(donuts.ppu * donuts.sales)" }
 	      ]
 	    },
-	    { 
+	    {
 	      op: "order",
 	      orderings: [
 	        {order: "desc", expr: "donuts.ppu" }
 	      ]
-	    },	    
+	    },
 	    {
 	      op: "project",
 	      projections: [
 	        { ref: "output", expr: "donuts" }
 	      ]
-	    },	    
+	    },
 	    {
 	      op: "write",
-	      memo: "save file",
-	      file: "file:///opt/data/out.json"
-	    }     
+	      memo: "output sink",
+	      file: "console:///stdout"
+	    }
       ]
     }
   ]
