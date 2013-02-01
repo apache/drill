@@ -1,0 +1,54 @@
+{
+  head:{
+    type:"apache_drill_logical_plan",
+    version:"1",
+    generator:{
+      type:"manual",
+      info:"na"
+    }
+  },
+  sources:[
+    {
+      type:"json",
+      name:"donuts-json",
+      files:[
+        "src/test/resources/donuts.json"
+      ]
+    }
+  ],
+  query:[
+    {
+      op:"sequence",
+      do:[
+	    {
+	      op: "scan",
+	      memo: "initial_scan",
+	      ref: "donuts",
+	      source: "donuts-json",
+	      selection: {data: "activity"}
+	    },
+	    {
+	      op: "transform",
+	      transforms: [
+	        { ref: "donuts.quantity", expr: "donuts.sales"}
+	      ]
+	    },
+	    {
+	      op: "filter",
+	      expr: "donuts.ppu < 1.00"
+	    },
+        {
+          op: "flatten",
+          expr: "donuts.topping",
+          name: "donuts.t1",
+          drop: 1
+        },
+	    {
+	      op: "write",
+	      memo: "output sink",
+	      file: "console:///stdout"
+	    }
+      ]
+    }
+  ]
+}

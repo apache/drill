@@ -53,7 +53,7 @@ public class SimpleArrayValue extends BaseArrayValue{
   }
 
   @Override
-  protected DataValue getByArrayIndex(int index) {
+  public DataValue getByArrayIndex(int index) {
     if(index < items.length){
       DataValue ret = items[index];
       if(ret == null) return NULL_VALUE;
@@ -135,9 +135,13 @@ public class SimpleArrayValue extends BaseArrayValue{
     return Objects.hash((Object[]) items);
   }
   
-  
-  
-  
-  
+  @Override
+  public DataValue copy() {
+    SimpleArrayValue out = new SimpleArrayValue(this.size());
+    for(int i =0; i < this.size(); i++)
+      out.addToArray(i, this.getByArrayIndex(i));
+
+    return out;
+  }
   
 }

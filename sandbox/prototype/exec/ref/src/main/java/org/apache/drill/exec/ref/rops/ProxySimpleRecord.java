@@ -46,6 +46,11 @@ public class ProxySimpleRecord implements RecordPointer{
   }
 
   @Override
+  public void removeField(SchemaPath field) {
+    record.removeField(field);
+  }
+
+  @Override
   public void write(DataWriter writer) throws IOException {
     record.write(writer);
   }
