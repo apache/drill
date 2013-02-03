@@ -53,7 +53,7 @@ public class SimpleArrayValue extends BaseArrayValue{
   }
 
   @Override
-  protected DataValue getByArrayIndex(int index) {
+  public DataValue getByArrayIndex(int index) {
     if(index < items.length){
       DataValue ret = items[index];
       if(ret == null) return NULL_VALUE;

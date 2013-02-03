@@ -39,7 +39,7 @@
 	    },
         {
           op: "flatten",
-          expr: "donuts.sales",
+          expr: "donuts.topping",
           name: "donuts.flattened"
         },
 	    {
