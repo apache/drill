@@ -122,8 +122,9 @@ public class FlattenROP extends SingleInputROPBase<Flatten> {
 
         // little helper function to merge one of the values from a sub array into the parent record
         private NextOutcome mergeValue(DataValue v) {
+            outputRecord.clear();
             outputRecord.copyFrom(record);
-            outputRecord.addField(config.getName(), v);
+            //outputRecord.addField(config.getName(), v); //this doesn't work
             return NextOutcome.INCREMENTED_SCHEMA_CHANGED;
         }
 
