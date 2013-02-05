@@ -3,6 +3,26 @@ log-synth
 
 The basic idea here is to have a random log generator build fairly realistic log files for analysis. The analyses specified here are fairly typical use cases for trying to figure out where the load on a web-site is coming from.
 
+How to Run It
+============
+
+Install Java 7, maven and get this software using git.
+
+On a mac, this can help get the right version of Java
+
+    export JAVA_HOME=$(/usr/libexec/java_home)
+
+Then do this to build a jar file with all dependencies included
+
+    mvn package
+
+Then use this to write one million log lines into the file "log" and to write the associated user database into the file "users".
+
+    java -cp target/log-synth-0.1-SNAPSHOT-jar-with-dependencies.jar org.apache.drill.synth.Main 1M log users
+
+This program will produce a line of output on the standard output for each 10,000 lines of log produced.  Each line will contain the number of log lines produced so far and the number of unique users in the user profile database.
+
+
 The Data Source
 ==============
 The data source here is a set of heavily biased random numbers to generate traffic sources, response times and queries. In order to give a realistic long-tail experience the data are generated using special random number generators available in the Mahout library.

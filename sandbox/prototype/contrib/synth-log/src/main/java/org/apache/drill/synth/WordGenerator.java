@@ -11,8 +11,10 @@ import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.List;
@@ -66,12 +68,9 @@ public class WordGenerator {
         }
 
         try {
-            wordReader = Files.newBufferedReader(Paths.get(Resources.getResource(others).toURI()), Charsets.UTF_8);
+          wordReader = new BufferedReader(Resources.newReaderSupplier(Resources.getResource(others), Charsets.UTF_8).getInput());
         } catch (IOException e) {
             log.error("Can't read resource \"{}\", will continue without realistic words", others);
-            wordReader = null;
-        } catch (URISyntaxException e) {
-            log.error("Bad format for resource URI \"{}\", will continue without realistic words", others, e);
             wordReader = null;
         }
 
