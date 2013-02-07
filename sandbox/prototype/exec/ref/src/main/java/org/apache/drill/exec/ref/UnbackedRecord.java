@@ -62,6 +62,7 @@ public class UnbackedRecord implements RecordPointer{
 
   @Override
   public RecordPointer copy() {
+    // TODO: Make a deep copy.
     UnbackedRecord r = new UnbackedRecord();
     r.root = this.root;
     return r;
