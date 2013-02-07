@@ -61,6 +61,8 @@ public abstract class BaseDataValue implements DataValue{
 
   @Override
   public abstract int hashCode();
-  
+
+  @Override
+  public abstract DataValue copy();
 
 }

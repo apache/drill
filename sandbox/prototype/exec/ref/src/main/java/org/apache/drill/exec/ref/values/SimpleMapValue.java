@@ -94,4 +94,11 @@ public class SimpleMapValue extends BaseMapValue{
     return map.hashCode();
   }
 
+  public DataValue copy() {
+      SimpleMapValue out = new SimpleMapValue();
+      for(Map.Entry<CharSequence, DataValue> entry : map.entrySet()) {
+          out.setByName(entry.getKey().toString(), entry.getValue().copy());
+      }
+      return out;
+  }
 }

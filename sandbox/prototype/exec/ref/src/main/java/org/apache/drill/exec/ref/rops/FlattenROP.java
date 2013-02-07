@@ -32,106 +32,106 @@ import org.apache.drill.exec.ref.values.SimpleArrayValue;
 
 
 public class FlattenROP extends SingleInputROPBase<Flatten> {
-    static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProjectROP.class);
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProjectROP.class);
 
-    private UnbackedRecord outputRecord = new UnbackedRecord();
-    private BasicEvaluator evaluator;
-    private RecordIterator iter;
+  private RecordPointer outputRecord = new UnbackedRecord();
+  private BasicEvaluator evaluator;
+  private RecordIterator iter;
 
-    public FlattenROP(Flatten config) {
-        super(config);
+  public FlattenROP(Flatten config) {
+    super(config);
+  }
+
+  @Override
+  protected void setInput(RecordIterator incoming) {
+    this.iter = new FlattenIterator(incoming);
+  }
+
+  @Override
+  protected RecordIterator getIteratorInternal() {
+    return iter;
+  }
+
+  @Override
+  protected void setupEvals(EvaluatorFactory builder) {
+    evaluator = builder.getBasicEvaluator(record, config.getExpr());
+  }
+
+  private class ArrayValueIterator {
+    private BaseArrayValue arrayValue;
+    private int currentIndex = 0;
+
+    public ArrayValueIterator(BaseArrayValue arrayValue) {
+      this.arrayValue = arrayValue;
+    }
+
+    public ArrayValueIterator() {
+      this(new SimpleArrayValue());
+    }
+
+    public DataValue next() {
+      DataValue v = null;
+      if (currentIndex < arrayValue.size()) {
+        v = arrayValue.getByArrayIndex(currentIndex);
+      }
+
+      currentIndex++;
+      return v;
+
+    }
+  }
+
+  private class FlattenIterator implements RecordIterator {
+    RecordIterator incoming;
+    NextOutcome currentOutcome;
+    int currentIndex = 0;
+    ArrayValueIterator arrayValueIterator = new ArrayValueIterator();
+
+    public FlattenIterator(RecordIterator incoming) {
+      super();
+      this.incoming = incoming;
     }
 
     @Override
-    protected void setInput(RecordIterator incoming) {
-        this.iter = new FlattenIterator(incoming);
+    public RecordPointer getRecordPointer() {
+      return outputRecord;
     }
 
     @Override
-    protected RecordIterator getIteratorInternal() {
-        return iter;
+    public NextOutcome next() {
+      DataValue v;
+      if ((v = arrayValueIterator.next()) != null)  //if we are already iterating through a sub-array, keep going
+        return mergeValue(v);
+      else //otherwise, get the next record
+        currentOutcome = incoming.next();
+
+
+      if (currentOutcome != NextOutcome.NONE_LEFT) {
+        if (evaluator.eval().getDataType() == DataType.ARRAY) {
+          arrayValueIterator = new ArrayValueIterator(evaluator.eval().getAsContainer().getAsArray());
+
+          while ((v = arrayValueIterator.next()) != null) {
+            return mergeValue(v);
+          }
+        } else {
+          outputRecord.copyFrom(record);
+          outputRecord.addField(config.getName(), evaluator.eval());
+        }
+      }
+      return currentOutcome;
+    }
+
+    // helper function to merge one of the values from a sub array into the parent record
+    private NextOutcome mergeValue(DataValue v) {
+      outputRecord.copyFrom(record);
+      outputRecord.addField(config.getName(), v);
+      return NextOutcome.INCREMENTED_SCHEMA_CHANGED;
     }
 
     @Override
-    protected void setupEvals(EvaluatorFactory builder)  {
-        evaluator = builder.getBasicEvaluator(record, config.getExpr());
+    public ROP getParent() {
+      return FlattenROP.this;
     }
 
-    private class ArrayValueIterator {
-        private BaseArrayValue arrayValue;
-        private int currentIndex = 0;
-
-        public ArrayValueIterator(BaseArrayValue arrayValue) {
-            this.arrayValue = arrayValue;
-        }
-
-        public ArrayValueIterator() {
-            this(new SimpleArrayValue());
-        }
-
-        public DataValue next() {
-            DataValue v = null;
-            if (currentIndex < arrayValue.size()) {
-                v = arrayValue.getByArrayIndex(currentIndex);
-            }
-
-            currentIndex++;
-            return v;
-
-        }
-    }
-
-    private class FlattenIterator implements RecordIterator{
-        RecordIterator incoming;
-        NextOutcome currentOutcome;
-        int currentIndex = 0;
-        ArrayValueIterator arrayValueIterator = new ArrayValueIterator();
-
-        public FlattenIterator(RecordIterator incoming) {
-            super();
-            this.incoming = incoming;
-        }
-
-        @Override
-        public RecordPointer getRecordPointer() {
-            return outputRecord;
-        }
-
-        @Override
-        public NextOutcome next() {
-            DataValue v;
-            if ((v = arrayValueIterator.next()) != null)  //if we are already iterating through a sub-array, keep going
-                return mergeValue(v);
-            else //otherwise, get the next record
-                currentOutcome = incoming.next();
-
-
-            if(currentOutcome != NextOutcome.NONE_LEFT) {
-                if(evaluator.eval().getDataType() == DataType.ARRAY) {
-                    arrayValueIterator = new ArrayValueIterator(evaluator.eval().getAsContainer().getAsArray());
-
-                    while((v = arrayValueIterator.next()) != null) {
-                        return mergeValue(v);
-                    }
-                } else {
-                    outputRecord.addField(config.getName(), evaluator.eval());
-                }
-            }
-            return currentOutcome;
-        }
-
-        // little helper function to merge one of the values from a sub array into the parent record
-        private NextOutcome mergeValue(DataValue v) {
-            outputRecord.clear();
-            outputRecord.copyFrom(record);
-            //outputRecord.addField(config.getName(), v); //this doesn't work
-            return NextOutcome.INCREMENTED_SCHEMA_CHANGED;
-        }
-
-        @Override
-        public ROP getParent() {
-            return FlattenROP.this;
-        }
-
-    }
+  }
 }

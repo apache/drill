@@ -39,8 +39,8 @@
 	    },
         {
           op: "flatten",
-          expr: "donuts.topping",
-          name: "donuts.flattened"
+          expr: "donuts.batters.batter",
+          name: "donuts.t1"
         },
 	    {
 	      op: "write",

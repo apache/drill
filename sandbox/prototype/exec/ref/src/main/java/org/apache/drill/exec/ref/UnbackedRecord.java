@@ -61,10 +61,9 @@ public class UnbackedRecord implements RecordPointer{
   }
 
   @Override
-  public RecordPointer copy() {
-    // TODO: Make a deep copy.
+  public UnbackedRecord copy() {
     UnbackedRecord r = new UnbackedRecord();
-    r.root = this.root;
+    r.root = this.root.copy();
     return r;
   }
   
@@ -80,7 +79,7 @@ public class UnbackedRecord implements RecordPointer{
   @Override
   public void copyFrom(RecordPointer r) {
     if(r instanceof UnbackedRecord){
-      this.root = ((UnbackedRecord)r).root;
+      this.root = ((UnbackedRecord)r).root.copy();
     }else{
       throw new UnsupportedOperationException(String.format("Unable to copy from a record of type %s to an UnbackedRecord.", r.getClass().getCanonicalName()));
     }

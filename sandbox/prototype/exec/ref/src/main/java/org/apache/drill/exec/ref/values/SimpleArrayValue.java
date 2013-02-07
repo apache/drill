@@ -135,9 +135,13 @@ public class SimpleArrayValue extends BaseArrayValue{
     return Objects.hash((Object[]) items);
   }
   
-  
-  
-  
-  
+  @Override
+  public DataValue copy() {
+    SimpleArrayValue out = new SimpleArrayValue(this.size());
+    for(int i =0; i < this.size(); i++)
+      out.addToArray(i, this.getByArrayIndex(i));
+
+    return out;
+  }
   
 }
