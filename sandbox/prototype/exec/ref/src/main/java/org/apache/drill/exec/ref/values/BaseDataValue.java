@@ -36,6 +36,10 @@ public abstract class BaseDataValue implements DataValue{
     throw new IllegalArgumentException("You can't add a value to a non-container type.");
   }
 
+  public void removeValue(PathSegment segment) {
+    throw new IllegalArgumentException("You can't remove a value from a non-container type.");
+  }
+
   @Override
   public NumericValue getAsNumeric() {
     throw new DrillRuntimeException(String.format("A %s value is not a NumericValue.", this.getClass().getCanonicalName()));

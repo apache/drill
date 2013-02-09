@@ -44,6 +44,11 @@ public class UnbackedRecord implements RecordPointer{
   public void addField(PathSegment segment, DataValue value) {
     root.addValue(segment, value);
   }
+
+  @Override
+  public void removeField(SchemaPath field) {
+    root.removeValue(field.getRootSegment());
+  }
   
   @Override
   public void write(DataWriter writer) throws IOException {

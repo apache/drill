@@ -12,6 +12,7 @@ public interface RecordPointer {
   public DataValue getField(SchemaPath field);
   public void addField(SchemaPath field, DataValue value);
   public void addField(PathSegment segment, DataValue value);
+  public void removeField(SchemaPath segment);
   public void write(DataWriter writer) throws IOException;
   public RecordPointer copy();
   public void copyFrom(RecordPointer r);

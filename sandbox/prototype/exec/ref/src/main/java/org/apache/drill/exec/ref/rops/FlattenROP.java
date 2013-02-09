@@ -17,7 +17,9 @@
  ******************************************************************************/
 package org.apache.drill.exec.ref.rops;
 
+import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.PathSegment;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.types.DataType;
 import org.apache.drill.common.logical.data.NamedExpression;
 import org.apache.drill.common.logical.data.Flatten;
@@ -32,7 +34,7 @@ import org.apache.drill.exec.ref.values.SimpleArrayValue;
 
 
 public class FlattenROP extends SingleInputROPBase<Flatten> {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProjectROP.class);
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FlattenROP.class);
 
   private RecordPointer outputRecord = new UnbackedRecord();
   private BasicEvaluator evaluator;
@@ -116,6 +118,8 @@ public class FlattenROP extends SingleInputROPBase<Flatten> {
         } else {
           outputRecord.copyFrom(record);
           outputRecord.addField(config.getName(), evaluator.eval());
+          if(config.isDrop())
+            outputRecord.removeField((SchemaPath)config.getExpr());
         }
       }
       return currentOutcome;
@@ -125,6 +129,8 @@ public class FlattenROP extends SingleInputROPBase<Flatten> {
     private NextOutcome mergeValue(DataValue v) {
       outputRecord.copyFrom(record);
       outputRecord.addField(config.getName(), v);
+      if(config.isDrop())
+        outputRecord.removeField((SchemaPath)config.getExpr());
       return NextOutcome.INCREMENTED_SCHEMA_CHANGED;
     }
 

@@ -13,6 +13,7 @@ public interface DataValue {
 
   public DataValue getValue(PathSegment segment);
   public void addValue(PathSegment segment, DataValue v);
+  public void removeValue(PathSegment segment);
   public void write(DataWriter writer) throws IOException;
   public DataType getDataType();
   public NumericValue getAsNumeric();

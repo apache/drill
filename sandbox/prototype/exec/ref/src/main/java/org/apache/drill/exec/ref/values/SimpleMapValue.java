@@ -45,6 +45,11 @@ public class SimpleMapValue extends BaseMapValue{
   }
 
   @Override
+  protected void removeByName(CharSequence name) {
+    map.remove(name);
+  }
+
+  @Override
   public void write(DataWriter w) throws IOException {
     w.writeMapStart();
     
