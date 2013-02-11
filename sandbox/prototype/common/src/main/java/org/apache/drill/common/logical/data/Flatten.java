@@ -29,12 +29,7 @@ public class Flatten extends SingleInputOperator{
   private final FieldReference name;
   private final LogicalExpression expr;
   private final boolean drop;
-  
-  @JsonCreator
-  public Flatten(@JsonProperty("name") FieldReference name, @JsonProperty("expr") LogicalExpression expr) {
-    this(name, expr, true);
-  }
-  
+
   @JsonCreator
   public Flatten(@JsonProperty("name") FieldReference name, @JsonProperty("expr") LogicalExpression expr, @JsonProperty("drop") boolean drop) {
     this.name = name;

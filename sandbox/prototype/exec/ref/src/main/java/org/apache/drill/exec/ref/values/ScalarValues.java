@@ -107,6 +107,11 @@ public final class ScalarValues {
     public int hashCode() {
       return seq.hashCode();
     }
+
+    @Override
+    public DataValue copy() {
+        return new StringScalar(seq.toString());
+    }
   }
   
  
@@ -162,6 +167,11 @@ public final class ScalarValues {
     @Override
     public int hashCode() {
       return b ? 1 : 0;
+    }
+
+    @Override
+    public DataValue copy() {
+        return new BooleanScalar(b);
     }
   }
   
@@ -227,6 +237,10 @@ public final class ScalarValues {
       return getHashCode(l);
     }
 
+    @Override
+    public DataValue copy() {
+        return new LongScalar(l);
+    }
   }
   
   public static class IntegerScalar extends NumericValue{
@@ -296,7 +310,11 @@ public final class ScalarValues {
     public int hashCode() {
       return getHashCode(i);
     }
-    
+
+    @Override
+    public DataValue copy() {
+        return new IntegerScalar(i);
+    }
   }
   
 
@@ -345,6 +363,11 @@ public final class ScalarValues {
     @Override
     public int hashCode() {
       return getHashCode(f);
+    }
+
+    @Override
+    public DataValue copy() {
+      return new FloatScalar(f);
     }
   }
  
@@ -397,6 +420,10 @@ public final class ScalarValues {
       return getHashCode(d);
     }
 
+    @Override
+    public DataValue copy() {
+      return new DoubleScalar(d);
+    }
   }
   
   public static class BytesScalar extends BaseDataValue implements BytesValue{
@@ -466,6 +493,13 @@ public final class ScalarValues {
     public int hashCode() {
       return HASH.hashBytes(bytes).asInt();
     }
+
+    @Override
+    public DataValue copy() {
+      byte[] out = Arrays.copyOf(bytes, bytes.length);
+      return new BytesScalar(out);
+    }
+
   }
  
   
@@ -497,9 +531,11 @@ public final class ScalarValues {
     public int hashCode() {
       return 0;
     }
-    
-    
-    
+
+    @Override
+    public DataValue copy() {
+      return new NullValue();
+    }
     
   }
 

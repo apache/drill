@@ -49,9 +49,28 @@ public abstract class BaseMapValue extends BaseDataValue implements ContainerVal
 
   }
 
+  @Override
+  public void removeValue(PathSegment segment) {
+    if (segment.isArray())
+      throw new RecordException(
+          "You're attempted to remove something at a particular array location while the location of that setting was a Map.", null);
+
+    CharSequence name = segment.getNameSegment().getPath();
+    DataValue current = getByNameNoNulls(name);
+    if (!segment.isLastPath() && current != DataValue.NULL_VALUE) {
+      current.removeValue(segment.getChild());
+      return;
+    } else {
+      removeByName(name);
+    }
+
+  }
+
   protected abstract void setByName(CharSequence name, DataValue v);
 
   protected abstract DataValue getByName(CharSequence name);
+
+  protected abstract void removeByName(CharSequence name);
 
   private DataValue getByNameNoNulls(CharSequence name) {
     DataValue v = getByName(name);

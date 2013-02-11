@@ -44,6 +44,11 @@ public class UnbackedRecord implements RecordPointer{
   public void addField(PathSegment segment, DataValue value) {
     root.addValue(segment, value);
   }
+
+  @Override
+  public void removeField(SchemaPath field) {
+    root.removeValue(field.getRootSegment());
+  }
   
   @Override
   public void write(DataWriter writer) throws IOException {
@@ -80,7 +85,7 @@ public class UnbackedRecord implements RecordPointer{
   @Override
   public void copyFrom(RecordPointer r) {
     if(r instanceof UnbackedRecord){
-      this.root = ((UnbackedRecord)r).root;
+      this.root = ((UnbackedRecord)r).root.copy();
     }else{
       throw new UnsupportedOperationException(String.format("Unable to copy from a record of type %s to an UnbackedRecord.", r.getClass().getCanonicalName()));
     }

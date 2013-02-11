@@ -36,7 +36,7 @@ public abstract class BaseArrayValue extends BaseDataValue implements ContainerV
   }
 
   protected abstract void addToArray(int index, DataValue v);
-  protected abstract DataValue getByArrayIndex(int index);
+  public abstract DataValue getByArrayIndex(int index);
   protected abstract int getNextIndex();
   public abstract void append(BaseArrayValue container);
   public abstract int size();
