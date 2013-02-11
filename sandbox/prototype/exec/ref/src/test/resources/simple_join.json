@@ -1,0 +1,62 @@
+{
+   head: {
+      type: "apache_drill_logical_plan",
+      version: "1",
+      generator: {
+         type: "manual",
+         info: "na"
+      }
+   },
+   sources: [
+      {
+         type: "json",
+         name: "employees-json",
+         files: [
+            "src/test/resources/employees.json"
+         ]
+      },
+      {
+         type: "json",
+         name: "depts-json",
+         files: [
+            "src/test/resources/departments.json"
+         ]
+      }
+   ],
+   query: [
+      {
+         @id: 1,
+         op: "scan",
+         memo: "initial_scan",
+         ref: "employees",
+         source: "employees-json"
+      },
+      {
+         @id: 2,
+         op: "scan",
+         memo: "second_scan",
+         ref: "departments",
+         source: "depts-json"
+      },
+      {
+         @id: 3,
+         op: "join",
+         left: 1,
+         right: 2,
+         type: "outer",
+         conditions: [
+            {
+               relationship: "==",
+               left: "employees.deptId",
+               right: "departments.deptId"
+            }
+         ]
+      },
+      {
+         input: 3,
+         op: "write",
+         memo: "output sink",
+         file: "console:///stdout"
+      }
+   ]
+}

@@ -37,11 +37,6 @@ import org.apache.drill.exec.ref.values.ComparableValue;
 import org.apache.drill.exec.ref.values.DataValue;
 
 import java.util.List;
-import java.util.Map;
-
-import static com.google.common.base.Preconditions.checkNotNull;
-import static org.apache.drill.common.logical.data.JoinType.*;
-import static org.apache.drill.common.logical.data.JoinType.right;
 
 public class JoinROP extends ROPBase<Join> {
     static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JoinROP.class);
@@ -90,10 +85,15 @@ public class JoinROP extends ROPBase<Join> {
     private class RecordBuffer {
         final boolean schemaChanged;
         final RecordPointer pointer;
+        boolean hasJoined = false;
 
         private RecordBuffer(RecordPointer pointer, boolean schemaChanged) {
             this.pointer = pointer;
             this.schemaChanged = schemaChanged;
+        }
+
+        public void setHasJoined(boolean hasJoined) {
+            this.hasJoined = hasJoined;
         }
     }
 
@@ -103,6 +103,20 @@ public class JoinROP extends ROPBase<Join> {
         protected int bufferLength = 0;
 
         protected abstract int setupBuffer();
+
+        protected int setupBufferForIterator(RecordIterator iterator) {
+            int count = 0;
+            NextOutcome outcome = iterator.next();
+            while (outcome != NextOutcome.NONE_LEFT) {
+                buffer.add(new RecordBuffer(
+                        iterator.getRecordPointer().copy(),
+                        outcome == NextOutcome.INCREMENTED_SCHEMA_CHANGED)
+                );
+                ++count;
+                outcome = iterator.next();
+            }
+            return count;
+        }
 
         @Override
         public RecordPointer getRecordPointer() {
@@ -126,15 +140,23 @@ public class JoinROP extends ROPBase<Join> {
 
         public boolean eval(DataValue leftVal, DataValue rightVal, String relationship) {
             //Somehow utilize ComparisonEvaluators?
-            switch (relationship.toLowerCase()) {
-                case "equals":
+            switch (relationship) {
+                case "!=":
+                    return !leftVal.equals(rightVal);
+                case "==":
                     return leftVal.equals(rightVal);
-                case "less than":
+                case "<":
                     checkComparable(leftVal, rightVal);
                     return ((ComparableValue) leftVal).compareTo(rightVal) < 0;
-                case "greater than":
+                case "<=":
+                    checkComparable(leftVal, rightVal);
+                    return ((ComparableValue) leftVal).compareTo(rightVal) <= 0;
+                case ">":
                     checkComparable(leftVal, rightVal);
                     return ((ComparableValue) leftVal).compareTo(rightVal) > 0;
+                case ">=":
+                    checkComparable(leftVal, rightVal);
+                    return ((ComparableValue) leftVal).compareTo(rightVal) >= 0;
                 default:
                     throw new DrillRuntimeException("Relationship not yet supported: " + relationship);
             }
@@ -153,14 +175,47 @@ public class JoinROP extends ROPBase<Join> {
     }
 
     class InnerIterator extends JoinIterator {
+        NextOutcome rightOutcome;
+
         @Override
         protected int setupBuffer() {
-            return 0;
+            return setupBufferForIterator(left);
         }
 
         @Override
         public NextOutcome getNext() {
-            return null;
+            final RecordPointer rightPointer = right.getRecordPointer();
+            while (true) {
+                if (curIdx == 0) {
+                    rightOutcome = right.next();
+
+                    if (rightOutcome == NextOutcome.NONE_LEFT) {
+                        break;
+                    }
+                }
+
+                final RecordBuffer bufferObj = buffer.get(curIdx++);
+                Optional<Join.JoinCondition> option = Iterables.tryFind(Lists.newArrayList(config.getConditions()), new Predicate<Join.JoinCondition>() {
+                    @Override
+                    public boolean apply(Join.JoinCondition condition) {
+                        return eval(factory.getBasicEvaluator(rightPointer, condition.getRight()).eval(),
+                                factory.getBasicEvaluator(bufferObj.pointer, condition.getLeft()).eval(), condition.getRelationship());
+                    }
+                });
+
+                if (option.isPresent()) {
+                    setJoinedRecord(rightPointer, bufferObj.pointer);
+                    return (bufferObj.schemaChanged || rightOutcome == NextOutcome.INCREMENTED_SCHEMA_CHANGED) ?
+                            NextOutcome.INCREMENTED_SCHEMA_CHANGED :
+                            NextOutcome.INCREMENTED_SCHEMA_UNCHANGED;
+                }
+
+                if (curIdx >= bufferLength) {
+                    curIdx = 0;
+                }
+            }
+
+            return NextOutcome.NONE_LEFT;
         }
     }
 
@@ -169,17 +224,7 @@ public class JoinROP extends ROPBase<Join> {
 
         @Override
         protected int setupBuffer() {
-            int count = 0;
-            NextOutcome outcome = right.next();
-            while (outcome != NextOutcome.NONE_LEFT) {
-                buffer.add(new RecordBuffer(
-                        right.getRecordPointer().copy(),
-                        outcome == NextOutcome.INCREMENTED_SCHEMA_CHANGED)
-                );
-                ++count;
-                outcome = right.next();
-            }
-            return count;
+            return setupBufferForIterator(right);
         }
 
         @Override
@@ -232,17 +277,7 @@ public class JoinROP extends ROPBase<Join> {
 
         @Override
         protected int setupBuffer() {
-            int count = 0;
-            NextOutcome outcome = left.next();
-            while (outcome != NextOutcome.NONE_LEFT) {
-                buffer.add(new RecordBuffer(
-                        left.getRecordPointer().copy(),
-                        outcome == NextOutcome.INCREMENTED_SCHEMA_CHANGED)
-                );
-                ++count;
-                outcome = left.next();
-            }
-            return count;
+            return setupBufferForIterator(left);
         }
 
         @Override
@@ -275,6 +310,7 @@ public class JoinROP extends ROPBase<Join> {
                 });
 
                 if (option.isPresent()) {
+                    bufferObj.setHasJoined(true);
                     setJoinedRecord(rightPointer, bufferObj.pointer);
                     return (bufferObj.schemaChanged || rightOutcome == NextOutcome.INCREMENTED_SCHEMA_CHANGED) ?
                             NextOutcome.INCREMENTED_SCHEMA_CHANGED :
@@ -290,16 +326,35 @@ public class JoinROP extends ROPBase<Join> {
         }
     }
 
-    class OuterIterator extends JoinIterator {
-
-        @Override
-        protected int setupBuffer() {
-            return 0;
-        }
+    class OuterIterator extends RightIterator {
+        boolean innerJoinCompleted = false;
 
         @Override
         public NextOutcome getNext() {
-            return null;
+            if (innerJoinCompleted && curIdx >= bufferLength) {
+                return NextOutcome.NONE_LEFT;
+            }
+
+            if (!innerJoinCompleted) {
+                NextOutcome outcome = super.getNext();
+                if (outcome != NextOutcome.NONE_LEFT) {
+                    return outcome;
+                } else {
+                    innerJoinCompleted = true;
+                    curIdx = 0;
+                }
+            }
+
+            if (innerJoinCompleted) {
+                while (curIdx < bufferLength) {
+                    RecordBuffer recordBuffer = buffer.get(curIdx++);
+                    if (!recordBuffer.hasJoined) {
+                        setJoinedRecord(null, recordBuffer.pointer);
+                        return recordBuffer.schemaChanged ? NextOutcome.INCREMENTED_SCHEMA_CHANGED : NextOutcome.INCREMENTED_SCHEMA_UNCHANGED;
+                    }
+                }
+            }
+            return NextOutcome.NONE_LEFT;
         }
     }
 }
