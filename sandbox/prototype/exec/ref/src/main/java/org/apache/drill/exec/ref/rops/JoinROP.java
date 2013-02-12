@@ -139,6 +139,11 @@ public class JoinROP extends ROPBase<Join> {
         }
 
         public boolean eval(DataValue leftVal, DataValue rightVal, String relationship) {
+            // Skip join if no comparison can be made
+            if (!ComparisonEvaluators.isComparable(leftVal, rightVal)) {
+                return false;
+            }
+
             //Somehow utilize ComparisonEvaluators?
             switch (relationship) {
                 case "!=":
@@ -146,25 +151,15 @@ public class JoinROP extends ROPBase<Join> {
                 case "==":
                     return leftVal.equals(rightVal);
                 case "<":
-                    checkComparable(leftVal, rightVal);
                     return ((ComparableValue) leftVal).compareTo(rightVal) < 0;
                 case "<=":
-                    checkComparable(leftVal, rightVal);
                     return ((ComparableValue) leftVal).compareTo(rightVal) <= 0;
                 case ">":
-                    checkComparable(leftVal, rightVal);
                     return ((ComparableValue) leftVal).compareTo(rightVal) > 0;
                 case ">=":
-                    checkComparable(leftVal, rightVal);
                     return ((ComparableValue) leftVal).compareTo(rightVal) >= 0;
                 default:
                     throw new DrillRuntimeException("Relationship not yet supported: " + relationship);
-            }
-        }
-
-        private void checkComparable(DataValue a, DataValue b) {
-            if (!ComparisonEvaluators.isComparable(a, b)) {
-                throw new RecordException(String.format("Values cannot be compared.  A %s cannot be compared to a %s.", a, b), null);
             }
         }
 
