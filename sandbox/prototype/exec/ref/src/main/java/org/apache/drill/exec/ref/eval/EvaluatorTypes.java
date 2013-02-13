@@ -48,6 +48,7 @@ public interface EvaluatorTypes {
    */
   public interface AggregatingEvaluator extends BasicEvaluator{
     public void addRecord();
+    public DataValue runningEval();
   }
 
   
