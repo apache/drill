@@ -89,7 +89,9 @@ public class RunningAggregateROP extends SingleInputROPBase<RunningAggregate> {
 
             if (boundryEval != null) {
                 DataValue boundryValue = boundryEval.eval();
-                if (!boundryValue.equals(lastFoundBoundry)) {
+                boolean lastIsNull = lastFoundBoundry == null;
+                boolean curIsNull = boundryValue == null;
+                if (lastIsNull != curIsNull || (!curIsNull && !boundryValue.equals(lastFoundBoundry))) {
                     for (EvaluatorTypes.AggregatingEvaluator eval : evals) {
                         eval.eval();
                     }
