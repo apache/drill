@@ -18,11 +18,14 @@
 package org.apache.drill.common.logical;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.drill.common.logical.OperatorGraph.OpNode;
 import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.common.logical.graph.GraphAlgos;
@@ -95,14 +98,10 @@ public class LogicalPlan {
   public List<DataSource> getDataSources() {
     return new ArrayList<DataSource>(dataSources.values());
   }
-	
-	
 
-  public static void main(String[] args) throws Exception {
-    
-    
+  private static ObjectMapper createMapper() {
     ObjectMapper mapper = new ObjectMapper();
-    
+
     mapper.enable(SerializationFeature.INDENT_OUTPUT);
     mapper.configure(Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
     mapper.configure(Feature.ALLOW_COMMENTS, true);
@@ -110,10 +109,32 @@ public class LogicalPlan {
     mapper.registerSubtypes(LogicalOperator.SUB_TYPES);
     mapper.registerSubtypes(DataSource.SUB_TYPES);
     mapper.registerSubtypes(RecordMaker.SUB_TYPES);
-
-    String externalPlan = Files.toString(new File("src/test/resources/simple_plan.json"), Charsets.UTF_8);
-    LogicalPlan plan = mapper.readValue(externalPlan, LogicalPlan.class);
-    System.out.println(mapper.writeValueAsString(plan));  
+    return mapper;
   }
-	
+
+  public static void main(String[] args) throws Exception {
+    String externalPlan = Files.toString(new File("src/test/resources/simple_plan.json"), Charsets.UTF_8);
+    LogicalPlan plan = parse(externalPlan);
+  }
+
+  /** Parses a logical plan. */
+  public static LogicalPlan parse(String planString) {
+    ObjectMapper mapper = createMapper();
+    try {
+      LogicalPlan plan = mapper.readValue(planString, LogicalPlan.class);
+      System.out.println(mapper.writeValueAsString(plan));
+      return plan;
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  /** Converts a logical plan to a string. (Opposite of {@link #parse}.) */
+  public String unparse() {
+    try {
+      return createMapper().writeValueAsString(this);
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException(e);
+    }
+  }
 }

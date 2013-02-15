@@ -8,6 +8,7 @@
     <version>1.0-SNAPSHOT</version>
   </parent>
   <artifactId>sqlparser</artifactId>
+  <packaging>jar</packaging>
   <name>sqlparser</name>
   <url>http://maven.apache.org</url>
   <properties>
@@ -17,8 +18,39 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>3.8.1</version>
+      <version>4.11</version>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>net.hydromatic</groupId>
+      <artifactId>optiq</artifactId>
+      <version>0.1</version>
+    </dependency>
+    <dependency>
+      <groupId>net.hydromatic</groupId>
+      <artifactId>linq4j</artifactId>
+      <version>0.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.drill.exec</groupId>
+      <artifactId>ref</artifactId>
+      <version>1.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>org.codehaus.janino</groupId>
+      <artifactId>janino</artifactId>
+      <version>2.6.1</version>
+    </dependency>
+    <!-- Specify xalan and xerces versions to avoid setXIncludeAware error. -->
+    <dependency>
+      <groupId>xerces</groupId>
+      <artifactId>xercesImpl</artifactId>
+      <version>2.9.1</version>
+    </dependency>
+    <dependency>
+      <groupId>xalan</groupId>
+      <artifactId>xalan</artifactId>
+      <version>2.7.1</version>
     </dependency>
   </dependencies>
 </project>

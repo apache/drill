@@ -19,10 +19,7 @@ package org.apache.drill.exec.ref;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.logical.data.LogicalOperator;
@@ -48,10 +45,11 @@ public class ReferenceInterpreter {
   private ROPConverter converter;
   private IteratorRegistry registry;
   
-  public ReferenceInterpreter(LogicalPlan p, IteratorRegistry r, EvaluatorFactory builder){
+  public ReferenceInterpreter(LogicalPlan p, IteratorRegistry r,
+      EvaluatorFactory builder, List<Queue> sinkQueues){
     this.plan = p;
     this.registry = r;
-    this.converter = new ROPConverter(p, registry, builder);
+    this.converter = new ROPConverter(p, registry, builder, sinkQueues);
   }
   
   /** Generate Reference equivalents to each operation and then collect and store all the sinks. 
@@ -95,7 +93,8 @@ public class ReferenceInterpreter {
     String externalPlan = Files.toString(new File(jsonFile), Charsets.UTF_8);
     LogicalPlan plan = mapper.readValue(externalPlan, LogicalPlan.class);
     IteratorRegistry ir = new IteratorRegistry();
-    ReferenceInterpreter i = new ReferenceInterpreter(plan, ir, new BasicEvaluatorFactory(ir));
+    ReferenceInterpreter i = new ReferenceInterpreter(plan, ir, new BasicEvaluatorFactory(ir),
+        Collections.<Queue>emptyList());
     i.setup();
     Collection<RunOutcome> outcomes = i.run();
     

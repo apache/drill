@@ -21,6 +21,7 @@ import java.io.IOException;
 
 import org.apache.drill.common.logical.data.Write;
 import org.apache.drill.exec.ref.RecordPointer;
+import org.apache.drill.exec.ref.RunOutcome;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -64,7 +65,7 @@ public class JSONWriter extends BaseSinkROP<Write> {
   }
 
   @Override
-  public void cleanup() {
+  public void cleanup(RunOutcome.OutcomeType outcome) {
     try {
       writer.close();
       output.close();

@@ -96,7 +96,7 @@ public abstract class BaseSinkROP<T extends SinkOperator> extends SingleInputROP
       exception = e ;
     }
     
-    this.cleanup();
+    cleanup(outcome);
     return new RunOutcome(outcome, pos, recordCount, exception);
     
   }
