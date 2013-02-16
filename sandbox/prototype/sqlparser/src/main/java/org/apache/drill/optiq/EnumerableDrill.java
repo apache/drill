@@ -19,6 +19,8 @@ package org.apache.drill.optiq;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import net.hydromatic.linq4j.AbstractEnumerable;
 import net.hydromatic.linq4j.Enumerable;
@@ -38,11 +40,13 @@ import java.util.concurrent.*;
  * Runtime helper that executes a Drill query and converts it into an
  * {@link Enumerable}.
  */
-public class EnumerableDrill<E extends JsonNode>
+public class EnumerableDrill<E>
     extends AbstractEnumerable<E>
     implements Enumerable<E> {
   private final LogicalPlan plan;
   final BlockingQueue queue = new ArrayBlockingQueue(100);
+
+  private static final ObjectMapper mapper = createMapper();
 
   /** Creates a DrillEnumerable.
    *
@@ -95,7 +99,7 @@ public class EnumerableDrill<E extends JsonNode>
     // TODO: use a completion service from the container
     final ExecutorCompletionService<Collection<RunOutcome>> service =
         new ExecutorCompletionService<Collection<RunOutcome>>(
-            new ThreadPoolExecutor( 1, 1, 1, TimeUnit.SECONDS,
+            new ThreadPoolExecutor(1, 1, 1, TimeUnit.SECONDS,
                 new LinkedBlockingDeque<Runnable>(10)));
 
     // Run the plan using an executor. It runs in a different thread, writing
@@ -105,7 +109,6 @@ public class EnumerableDrill<E extends JsonNode>
     final Future<Collection<RunOutcome>> task = runPlan(service);
 
     return new Enumerator<E>() {
-      final ObjectMapper mapper = new ObjectMapper();
       private E current;
 
       @Override
@@ -141,15 +144,65 @@ public class EnumerableDrill<E extends JsonNode>
       public void reset() {
         throw new UnsupportedOperationException();
       }
-
-      JsonNode parseJson(byte[] bytes) {
-        try {
-          return mapper.readTree(bytes);
-        } catch (IOException e) {
-          throw new RuntimeException(e);
-        }
-      }
     };
+  }
+
+  private static ObjectMapper createMapper() {
+    return new ObjectMapper();
+  }
+
+  /** Converts a JSON document, represented as an array of bytes, into a Java
+   * object (consisting of Map, List, String, Integer, Double, Boolean). */
+  static Object parseJson(byte[] bytes) {
+    try {
+      return wrapper(mapper.readTree(bytes));
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  /** Converts a JSON node to Java objects ({@link List}, {@link Map},
+   * {@link String}, {@link Integer}, {@link Double}, {@link Boolean}. */
+  static Object wrapper(JsonNode node) {
+    switch (node.asToken()) {
+    case START_OBJECT:
+      return map((ObjectNode) node);
+    case START_ARRAY:
+      return array((ArrayNode) node);
+    case VALUE_STRING:
+      return node.asText();
+    case VALUE_NUMBER_INT:
+      return node.asInt();
+    case VALUE_NUMBER_FLOAT:
+      return node.asDouble();
+    case VALUE_TRUE:
+      return Boolean.TRUE;
+    case VALUE_FALSE:
+      return Boolean.FALSE;
+    case VALUE_NULL:
+      return null;
+    default:
+      throw new AssertionError("unexpected: " + node + ": " + node.asToken());
+    }
+  }
+
+  private static List array(ArrayNode node) {
+    final List<Object> list = new ArrayList<>();
+    for (JsonNode jsonNode : node) {
+      list.add(wrapper(jsonNode));
+    }
+    return Collections.unmodifiableList(list);
+  }
+
+  private static SortedMap<String, Object> map(ObjectNode node) {
+    // TreeMap makes the results deterministic.
+    final TreeMap<String, Object> map = new TreeMap<>();
+    final Iterator<Map.Entry<String, JsonNode>> fields = node.fields();
+    while (fields.hasNext()) {
+      Map.Entry<String, JsonNode> next = fields.next();
+      map.put(next.getKey(), wrapper(next.getValue()));
+    }
+    return Collections.unmodifiableSortedMap(map);
   }
 }
 
