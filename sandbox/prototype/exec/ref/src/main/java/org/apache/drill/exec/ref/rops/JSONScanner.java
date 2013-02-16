@@ -23,9 +23,7 @@ import java.util.Iterator;
 
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.data.Scan;
-import org.apache.drill.exec.ref.RecordIterator;
-import org.apache.drill.exec.ref.RecordPointer;
-import org.apache.drill.exec.ref.UnbackedRecord;
+import org.apache.drill.exec.ref.*;
 import org.apache.drill.exec.ref.exceptions.RecordException;
 import org.apache.drill.exec.ref.values.DataValue;
 import org.apache.drill.exec.ref.values.SimpleArrayValue;
@@ -170,7 +168,7 @@ public class JSONScanner extends ROPBase<Scan> {
   }
 
   @Override
-  public void cleanup() {
+  public void cleanup(RunOutcome.OutcomeType outcome) {
     try {
       parser.close();
       this.input.close();

@@ -22,6 +22,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Queue;
 
 import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.logical.data.Aggregate;
@@ -33,11 +34,7 @@ import org.apache.drill.common.logical.sources.DataSource;
 import org.apache.drill.common.logical.sources.JSONDataSource;
 import org.apache.drill.exec.ref.eval.EvaluatorFactory;
 import org.apache.drill.exec.ref.exceptions.SetupException;
-import org.apache.drill.exec.ref.rops.AggregateSimpleROP;
-import org.apache.drill.exec.ref.rops.JSONScanner;
-import org.apache.drill.exec.ref.rops.JSONWriter;
-import org.apache.drill.exec.ref.rops.ROP;
-import org.apache.drill.exec.ref.rops.UnionROP;
+import org.apache.drill.exec.ref.rops.*;
 
 class ROPConverter {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ROPConverter.class);
@@ -45,11 +42,13 @@ class ROPConverter {
   private LogicalPlan plan;
   private IteratorRegistry registry;
   private EvaluatorFactory builder;
+  private final List<Queue> sinkQueues;
 
-  public ROPConverter(LogicalPlan plan, IteratorRegistry registry, EvaluatorFactory builder) {
+  public ROPConverter(LogicalPlan plan, IteratorRegistry registry, EvaluatorFactory builder, List<Queue> sinkQueues) {
     this.plan = plan;
     this.registry = registry;
     this.builder = builder;
+    this.sinkQueues = sinkQueues;
   }
 
   public void convert(LogicalOperator o) throws SetupException {
@@ -100,8 +99,22 @@ class ROPConverter {
   }
 
   public void convertSpecific(Write write) throws SetupException {
-    JSONWriter writer = new JSONWriter(write);
-    writer.init(registry, builder);
+    if (write.getFileName().startsWith("socket:")) {
+      final String ordinalString =
+          write.getFileName().substring("socket:".length());
+      final Queue queue;
+      try {
+        int ordinal = Integer.valueOf(ordinalString);
+        queue = sinkQueues.get(ordinal);
+      } catch (IndexOutOfBoundsException | NumberFormatException e) {
+        throw new RuntimeException("bad socket ordinal " + ordinalString);
+      }
+      final QueueSinkROP queueSink = new QueueSinkROP(write, queue);
+      queueSink.init(registry, builder);
+    } else {
+      JSONWriter writer = new JSONWriter(write);
+      writer.init(registry, builder);
+    }
   }
 
   public void convertSpecific(Aggregate agg) throws SetupException {
