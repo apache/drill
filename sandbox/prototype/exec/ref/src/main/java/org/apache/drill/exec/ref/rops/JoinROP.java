@@ -73,8 +73,6 @@ public class JoinROP extends ROPBase<Join> {
 
     private RecordIterator createIteratorFromJoin(Join.JoinType type) {
         switch (type) {
-            case LEFT:
-                return new LeftIterator();
             case INNER:
                 return new InnerIterator();
             case OUTER:
@@ -210,59 +208,6 @@ public class JoinROP extends ROPBase<Join> {
                 if (option.isPresent()) {
                     setJoinedRecord(rightPointer, bufferObj.pointer);
                     return (bufferObj.schemaChanged || rightOutcome == NextOutcome.INCREMENTED_SCHEMA_CHANGED) ?
-                            NextOutcome.INCREMENTED_SCHEMA_CHANGED :
-                            NextOutcome.INCREMENTED_SCHEMA_UNCHANGED;
-                }
-
-                if (curIdx >= bufferLength) {
-                    curIdx = 0;
-                }
-            }
-
-            return NextOutcome.NONE_LEFT;
-        }
-    }
-
-    class LeftIterator extends JoinIterator {
-        private NextOutcome leftOutcome;
-
-        @Override
-        protected int setupBuffer() {
-            return setupBufferForIterator(right);
-        }
-
-        @Override
-        public NextOutcome getNext() {
-            final RecordPointer leftPointer = left.getRecordPointer();
-            boolean isFound = true;
-            while (true) {
-                if (curIdx == 0) {
-                    if (!isFound) {
-                        setJoinedRecord(leftPointer, null);
-                        return leftOutcome;
-                    }
-
-                    leftOutcome = left.next();
-
-                    if (leftOutcome == NextOutcome.NONE_LEFT) {
-                        break;
-                    }
-
-                    isFound = false;
-                }
-
-                final RecordBuffer bufferObj = buffer.get(curIdx++);
-                Optional<JoinCondition> option = Iterables.tryFind(Lists.newArrayList(config.getConditions()), new Predicate<JoinCondition>() {
-                    @Override
-                    public boolean apply(JoinCondition condition) {
-                        return eval(factory.getBasicEvaluator(leftPointer, condition.getLeft()).eval(),
-                                factory.getBasicEvaluator(bufferObj.pointer, condition.getRight()).eval(), condition.getRelationship());
-                    }
-                });
-
-                if (option.isPresent()) {
-                    setJoinedRecord(leftPointer, bufferObj.pointer);
-                    return (bufferObj.schemaChanged || leftOutcome == NextOutcome.INCREMENTED_SCHEMA_CHANGED) ?
                             NextOutcome.INCREMENTED_SCHEMA_CHANGED :
                             NextOutcome.INCREMENTED_SCHEMA_UNCHANGED;
                 }
