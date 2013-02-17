@@ -20,7 +20,7 @@ package org.apache.drill.common.expression;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.drill.common.expression.types.DataType;
 
 public class FunctionDefinition {

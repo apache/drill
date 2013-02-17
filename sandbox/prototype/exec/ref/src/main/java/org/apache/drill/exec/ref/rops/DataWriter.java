@@ -41,5 +41,9 @@ public interface DataWriter {
   public void writeNullValue() throws IOException;
   public void writeCharSequence(CharSequence value) throws IOException;
   public void endRecord() throws IOException;
-  public void close() throws IOException;
+  public void finish() throws IOException;
+  
+  public enum ConverterType{
+    JSON
+  }
 }

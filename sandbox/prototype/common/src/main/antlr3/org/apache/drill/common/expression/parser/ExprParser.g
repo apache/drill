@@ -39,6 +39,12 @@ import org.apache.drill.common.expression.*;
 }
 
 @members{
+  private FunctionRegistry registry;
+  
+  public void setRegistry(FunctionRegistry registry){
+    this.registry = registry;
+  }
+
   public static void p(String s){
     System.out.println(s);
   }
@@ -49,7 +55,7 @@ parse returns [LogicalExpression e]
   ;
  
 functionCall returns [LogicalExpression e]
-  :  Identifier OParen exprList? CParen {$e = FunctionRegistry.createExpression($Identifier.text, $exprList.listE);  }
+  :  Identifier OParen exprList? CParen {$e = registry.createExpression($Identifier.text, $exprList.listE);  }
   ;
 
 ifStatement returns [LogicalExpression e]
@@ -112,7 +118,7 @@ orExpr returns [LogicalExpression e]
 	  if(exprs.size() == 1){
 	    $e = exprs.get(0);
 	  }else{
-	    $e = FunctionRegistry.createExpression("||", exprs);
+	    $e = registry.createExpression("||", exprs);
 	  }
 	}
   :  a1=andExpr { exprs.add($a1.e); } (Or^ a2=andExpr { exprs.add($a2.e); })*
@@ -126,7 +132,7 @@ andExpr returns [LogicalExpression e]
 	  if(exprs.size() == 1){
 	    $e = exprs.get(0);
 	  }else{
-	    $e = FunctionRegistry.createExpression("&&", exprs);
+	    $e = registry.createExpression("&&", exprs);
 	  }
 	}
   :  e1=equExpr { exprs.add($e1.e);  } (And^ e2=equExpr { exprs.add($e2.e);  })*
@@ -138,13 +144,13 @@ equExpr returns [LogicalExpression e]
 	  List<String> cmps = new ArrayList();
 	}
 	@after{
-	  $e = FunctionRegistry.createByOp(exprs, cmps);
+	  $e = registry.createByOp(exprs, cmps);
 	}
   :  r1=relExpr {exprs.add($r1.e);} ( cmpr= (Equals | NEquals ) r2=relExpr {exprs.add($r2.e); cmps.add($cmpr.text); })*
   ;
 
 relExpr returns [LogicalExpression e]
-  :  left=addExpr {$e = $left.e; } (cmpr = (GTEquals | LTEquals | GT | LT) right=addExpr {$e = FunctionRegistry.createExpression($cmpr.text, $left.e, $right.e); } )? 
+  :  left=addExpr {$e = $left.e; } (cmpr = (GTEquals | LTEquals | GT | LT) right=addExpr {$e = registry.createExpression($cmpr.text, $left.e, $right.e); } )? 
   ;
 
 addExpr returns [LogicalExpression e]
@@ -153,7 +159,7 @@ addExpr returns [LogicalExpression e]
 	  List<String> ops = new ArrayList();
 	}
 	@after{
-	  $e = FunctionRegistry.createByOp(exprs, ops);
+	  $e = registry.createByOp(exprs, ops);
 	}
   :  m1=mulExpr  {exprs.add($m1.e);} ( op=(Plus|Minus) m2=mulExpr {exprs.add($m2.e); ops.add($op.text); })* 
   ;
@@ -164,7 +170,7 @@ mulExpr returns [LogicalExpression e]
 	  List<String> ops = new ArrayList();
 	}
 	@after{
-	  $e = FunctionRegistry.createByOp(exprs, ops);
+	  $e = registry.createByOp(exprs, ops);
 	}
   :  p1=powExpr  {exprs.add($p1.e);} (op=(Asterisk|ForwardSlash|Percent) p2=powExpr {exprs.add($p2.e); ops.add($op.text); } )*
   ;
@@ -175,14 +181,14 @@ powExpr returns [LogicalExpression e]
 	  List<String> ops = new ArrayList();
 	}
 	@after{
-	  $e = FunctionRegistry.createByOp(exprs, ops);
+	  $e = registry.createByOp(exprs, ops);
 	}
   :  u1=unaryExpr {exprs.add($u1.e);} (Caret u2=unaryExpr {exprs.add($u2.e); ops.add($Caret.text);} )*
   ;
   
 unaryExpr returns [LogicalExpression e]
-  :  Minus atom {$e = FunctionRegistry.createExpression("u-", $atom.e); }
-  |  Excl atom {$e= FunctionRegistry.createExpression("!", $atom.e); }
+  :  Minus atom {$e = registry.createExpression("u-", $atom.e); }
+  |  Excl atom {$e= registry.createExpression("!", $atom.e); }
   |  atom {$e = $atom.e; }
   ;
 

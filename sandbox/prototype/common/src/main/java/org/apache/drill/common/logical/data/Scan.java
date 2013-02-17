@@ -26,21 +26,21 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName("scan")
 public class Scan extends SourceOperator{
-	private final String sourceName;
+	private final String storageEngine;
 	private final JSONOptions selection;
 	private final FieldReference outputReference;
 	
 	@JsonCreator
-  public Scan(@JsonProperty("source") String sourceName, @JsonProperty("selection") JSONOptions selection, @JsonProperty("ref") FieldReference outputReference) {
+  public Scan(@JsonProperty("storageengine") String storageEngine, @JsonProperty("selection") JSONOptions selection, @JsonProperty("ref") FieldReference outputReference) {
     super();
-    this.sourceName = sourceName;
+    this.storageEngine = storageEngine;
     this.selection = selection;
     this.outputReference = outputReference;
   }
 
-  @JsonProperty("source")
-  public String getSourceName() {
-    return sourceName;
+  @JsonProperty("storageengine")
+  public String getStorageEngine() {
+    return storageEngine;
   }
 
   public JSONOptions getSelection() {

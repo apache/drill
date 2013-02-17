@@ -19,7 +19,7 @@ package org.apache.drill.common.expression;
 
 import java.util.List;
 
-import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.drill.common.expression.types.DataType;
 import org.apache.drill.common.expression.types.DataType.Comparability;
 

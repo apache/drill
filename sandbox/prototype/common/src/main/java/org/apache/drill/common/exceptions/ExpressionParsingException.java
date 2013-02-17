@@ -17,7 +17,7 @@
  ******************************************************************************/
 package org.apache.drill.common.exceptions;
 
-public class ExpressionParsingException extends DrillRuntimeException {
+public class ExpressionParsingException extends LogicalPlanParsingException {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExpressionParsingException.class);
 
   public ExpressionParsingException() {

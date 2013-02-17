@@ -22,18 +22,21 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.drill.common.config.CommonConstants;
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.visitors.OpVisitor;
 import org.apache.drill.common.logical.ValidationError;
+import org.apache.drill.common.util.PathScanner;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public abstract class LogicalOperatorBase implements LogicalOperator{
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LogicalOperatorBase.class);
+  
 	private List<LogicalOperator> children = new ArrayList<LogicalOperator>();
 	private String memo;
-	
-	public LogicalOperatorBase(){}
 	
 	public final int hashCode(){
 	  return super.hashCode();
@@ -80,6 +83,13 @@ public abstract class LogicalOperatorBase implements LogicalOperator{
     this.memo = memo;
   }
  
-	
+  public synchronized static Class<?>[] getSubTypes(DrillConfig config){
+    Class<?>[] ops = PathScanner.scanForImplementationsArr(LogicalOperator.class, config.getStringList(CommonConstants.LOGICAL_OPERATOR_SCAN_PACKAGES));
+    logger.debug("Adding Logical Operator sub types: {}", ((Object) ops) );
+    return ops;
+  }
+  
+  
+  
 
 }

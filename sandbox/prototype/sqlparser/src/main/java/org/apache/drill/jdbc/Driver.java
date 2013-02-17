@@ -17,13 +17,20 @@
  ******************************************************************************/
 package org.apache.drill.jdbc;
 
-import net.hydromatic.optiq.*;
-import net.hydromatic.optiq.impl.java.MapSchema;
-import net.hydromatic.optiq.jdbc.*;
-import org.apache.drill.common.logical.sources.JSONDataSource;
-
 import java.sql.SQLException;
 import java.util.Collections;
+
+import net.hydromatic.optiq.MutableSchema;
+import net.hydromatic.optiq.impl.java.MapSchema;
+import net.hydromatic.optiq.jdbc.DriverVersion;
+import net.hydromatic.optiq.jdbc.Handler;
+import net.hydromatic.optiq.jdbc.HandlerImpl;
+import net.hydromatic.optiq.jdbc.OptiqConnection;
+import net.hydromatic.optiq.jdbc.UnregisteredDriver;
+
+import org.apache.drill.exec.ref.rops.DataWriter.ConverterType;
+import org.apache.drill.exec.ref.rse.ClasspathRSE.ClasspathInputConfig;
+import org.apache.drill.exec.ref.rse.ClasspathRSE.ClasspathRSEConfig;
 
 /**
  * JDBC driver for Apache Drill.
@@ -66,11 +73,12 @@ public class Driver extends UnregisteredDriver {
           MapSchema.create(connection, rootSchema, schemaName);
 
       connection.setSchema(schemaName);
+      final ClasspathRSEConfig rseConfig = new ClasspathRSEConfig("donuts-json");
+      final ClasspathInputConfig inputConfig = new ClasspathInputConfig();
+      inputConfig.path = "/donuts.json";
+      inputConfig.type = ConverterType.JSON; 
+      
 
-      final JSONDataSource dataSource = new JSONDataSource();
-      dataSource.name = "donuts-json";
-      dataSource.files =
-          Collections.singletonList("src/test/resources/donuts.json");
 
       // "tables" is a temporary parameter. We should replace with
       // "schemaUri", which is the URI of a schema.json file, or the name of a
@@ -82,7 +90,7 @@ public class Driver extends UnregisteredDriver {
       final String[] tables2 = tables.split(",");
       for (String table : tables2) {
         DrillTable.addTable(connection.getTypeFactory(), schema, table,
-            dataSource);
+            rseConfig, inputConfig);
       }
     }
   }

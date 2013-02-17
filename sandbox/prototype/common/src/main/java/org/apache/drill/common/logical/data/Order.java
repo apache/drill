@@ -17,6 +17,7 @@
  ******************************************************************************/
 package org.apache.drill.common.logical.data;
 
+import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.LogicalExpression;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -28,14 +29,20 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 public class Order extends SingleInputOperator {
 
   private final Ordering[] orderings;
+  private final FieldReference within;
 
   @JsonCreator
-  public Order(@JsonProperty("orderings") Ordering... orderings) {
+  public Order(@JsonProperty("within") FieldReference within, @JsonProperty("orderings") Ordering... orderings) {
     this.orderings = orderings;
+    this.within = within;
   }
   
   public Ordering[] getOrderings() {
     return orderings;
+  }
+  
+  public FieldReference getWithin() {
+    return within;
   }
 
   public static class Ordering {

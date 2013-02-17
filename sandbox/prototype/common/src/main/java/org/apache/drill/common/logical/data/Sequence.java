@@ -46,9 +46,11 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
  */
 @JsonDeserialize(using = De.class)
 @JsonTypeName("sequence")
-public abstract class Sequence extends LogicalOperatorBase {
+public class Sequence extends LogicalOperatorBase {
   static final Logger logger = LoggerFactory.getLogger(Sequence.class);
 
+  private Sequence(){}
+  
   public boolean openTop;
   public LogicalOperator input;
   @JsonProperty("do")

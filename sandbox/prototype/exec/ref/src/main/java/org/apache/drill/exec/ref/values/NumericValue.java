@@ -54,7 +54,7 @@ public abstract class NumericValue extends BaseDataValue implements ComparableVa
     case INT:
       return Integer.compare(this.getAsInt(), other.getAsInt());
     case LONG:
-      return Long.compare(this.getAsInt(), other.getAsInt());
+      return Long.compare(this.getAsLong(), other.getAsLong());
     default:
       throw new UnsupportedOperationException();
     }

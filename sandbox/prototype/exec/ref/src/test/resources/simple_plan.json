@@ -7,13 +7,19 @@
       info:"na"
     }
   },
-  sources:[
+  storage:[
     {
-      type:"json",
-      name:"donuts-json",
-      files:[
-        "src/test/resources/donuts.json"
-      ]
+      type:"console",
+      name:"console"
+    },
+    {
+      type:"fs",
+      name:"fs1",
+      root:"file:///"
+    },
+    {
+      type:"classpath",
+      name:"cp"
     }
   ],
   query:[
@@ -24,33 +30,35 @@
 	      op: "scan",
 	      memo: "initial_scan",
 	      ref: "donuts",
-	      source: "donuts-json",
-	      selection: {data: "activity"}
+	      storageengine: "cp",
+	      selection: {
+	        path: "/donuts.json",
+	        type: "JSON"
+	      }
 	    },
-	    {
+        {
 	      op: "transform",
 	      transforms: [
-	        { ref: "donuts.quantity", expr: "donuts.sales"}
+	        { ref: "quantity", expr: "donuts.sales"}
 	      ]
 	    },
 	    {
 	      op: "filter",
 	      expr: "donuts.ppu < 1.00"
+	    }, 
+	    {
+	      op: "segment",
+	      ref: "ppusegment",
+	      exprs: ["donuts.ppu"]
 	    },
 	    {
-	      op: "group",
-	      groupings: [
-	        { ref: "donuts.ppu", expr: "donuts.ppu" }
-	      ]
-	    },
-	    {
-	      op: "aggregate",
-	      type: "simple",
-	      keys: ["donuts.ppu"],
+	      op: "collapsingaggregate",
+	      within: "ppusegment",
+	      carryovers: ["donuts.ppu"], 
 	      aggregations: [
 	        { ref: "donuts.typeCount",  expr: "count(1)" },
-	        { ref: "donuts.quantity",  expr: "sum(donuts.sales)" },
-	        { ref: "donuts.sales",  expr: "sum(donuts.ppu * donuts.sales)" }
+	        { ref: "donuts.quantity",  expr: "sum(quantity)" },
+	        { ref: "donuts.sales",  expr: "sum(donuts.ppu * quantity)" }
 	      ]
 	    },
 	    {
@@ -58,7 +66,7 @@
 	      orderings: [
 	        {order: "desc", expr: "donuts.ppu" }
 	      ]
-	    },
+	    }, 
 	    {
 	      op: "project",
 	      projections: [
@@ -68,12 +76,13 @@
  	    {
           op: "limit",
           first: 0,
-          last: 2
-        },
+          last: 100
+        }, 
 	    {
-	      op: "write",
+	      op: "store",
 	      memo: "output sink",
-	      file: "console:///stdout"
+	      storageengine: "console",
+	      target: {pipe: "STD_OUT"}
 	    }
       ]
     }

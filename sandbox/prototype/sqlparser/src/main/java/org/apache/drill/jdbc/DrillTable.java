@@ -17,15 +17,23 @@
  ******************************************************************************/
 package org.apache.drill.jdbc;
 
+import java.lang.reflect.Type;
+import java.util.Collections;
+
 import net.hydromatic.linq4j.BaseQueryable;
 import net.hydromatic.linq4j.Enumerator;
 import net.hydromatic.linq4j.Linq4j;
 import net.hydromatic.linq4j.expressions.Expression;
 import net.hydromatic.linq4j.expressions.Expressions;
 import net.hydromatic.linq4j.expressions.MethodCallExpression;
-import net.hydromatic.optiq.*;
+import net.hydromatic.optiq.BuiltinMethod;
+import net.hydromatic.optiq.DataContext;
+import net.hydromatic.optiq.MutableSchema;
+import net.hydromatic.optiq.Schema;
+import net.hydromatic.optiq.TranslatableTable;
 
-import org.apache.drill.common.logical.sources.DataSource;
+import org.apache.drill.common.logical.StorageEngineConfig;
+import org.apache.drill.exec.ref.rse.ClasspathRSE.ClasspathInputConfig;
 import org.apache.drill.optiq.DrillOptiq;
 import org.apache.drill.optiq.DrillScan;
 import org.eigenbase.rel.RelNode;
@@ -34,9 +42,6 @@ import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.sql.type.SqlTypeName;
 
-import java.lang.reflect.Type;
-import java.util.Collections;
-
 /** Optiq Table used by Drill. */
 public class DrillTable extends BaseQueryable<Object>
     implements TranslatableTable<Object>
@@ -44,7 +49,8 @@ public class DrillTable extends BaseQueryable<Object>
   private final Schema schema;
   private final String name;
   private final RelDataType rowType;
-  public final DataSource dataSource;
+  public final StorageEngineConfig storageEngineConfig;
+  public final Object selection;
 
   /** Creates a DrillTable. */
   public DrillTable(Schema schema,
@@ -52,16 +58,19 @@ public class DrillTable extends BaseQueryable<Object>
       Expression expression,
       RelDataType rowType,
       String name,
-      DataSource dataSource) {
+      StorageEngineConfig storageEngineConfig,
+      Object selection
+      ) {
     super(schema.getQueryProvider(), elementType, expression);
     this.schema = schema;
     this.name = name;
     this.rowType = rowType;
-    this.dataSource = dataSource;
+    this.storageEngineConfig = storageEngineConfig;
+    this.selection = selection;
   }
 
   static void addTable(RelDataTypeFactory typeFactory, MutableSchema schema,
-      String name, DataSource dataSource) {
+      String name, StorageEngineConfig storageEngineConfig, Object selection) {
     final MethodCallExpression call = Expressions.call(schema.getExpression(),
         BuiltinMethod.DATA_CONTEXT_GET_TABLE.method,
         Expressions.constant(name),
@@ -72,7 +81,7 @@ public class DrillTable extends BaseQueryable<Object>
                 typeFactory.createSqlType(SqlTypeName.ANY)),
             Collections.singletonList("_extra"));
     final DrillTable table =
-        new DrillTable(schema, Object.class, call, rowType, name, dataSource);
+        new DrillTable(schema, Object.class, call, rowType, name, storageEngineConfig, selection);
     schema.addTable(name, table);
   }
 

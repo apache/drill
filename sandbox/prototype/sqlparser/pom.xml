@@ -37,6 +37,14 @@
       <version>1.0-SNAPSHOT</version>
     </dependency>
     <dependency>
+      <groupId>org.apache.drill.exec</groupId>
+      <artifactId>ref</artifactId>
+      <version>1.0-SNAPSHOT</version>
+      <classifier>test</classifier>
+      <scope>test</scope>
+    </dependency>    
+    
+    <dependency>
       <groupId>org.codehaus.janino</groupId>
       <artifactId>janino</artifactId>
       <version>2.6.1</version>

@@ -17,24 +17,42 @@
  ******************************************************************************/
 package org.apache.drill.optiq;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletionService;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import net.hydromatic.linq4j.AbstractEnumerable;
 import net.hydromatic.linq4j.Enumerable;
 import net.hydromatic.linq4j.Enumerator;
 
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.exec.ref.IteratorRegistry;
 import org.apache.drill.exec.ref.ReferenceInterpreter;
 import org.apache.drill.exec.ref.RunOutcome;
 import org.apache.drill.exec.ref.eval.BasicEvaluatorFactory;
+import org.apache.drill.exec.ref.rse.RSERegistry;
 
-import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.*;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
  * Runtime helper that executes a Drill query and converts it into an
@@ -44,8 +62,9 @@ public class EnumerableDrill<E>
     extends AbstractEnumerable<E>
     implements Enumerable<E> {
   private final LogicalPlan plan;
-  final BlockingQueue queue = new ArrayBlockingQueue(100);
-
+  final BlockingQueue<Object> queue = new ArrayBlockingQueue<Object>(100);
+  final DrillConfig config;
+  
   private static final ObjectMapper mapper = createMapper();
 
   /** Creates a DrillEnumerable.
@@ -53,23 +72,26 @@ public class EnumerableDrill<E>
    * @param plan Logical plan
    * @param clazz Type of elements returned from enumerable
    */
-  public EnumerableDrill(LogicalPlan plan, Class<E> clazz) {
+  public EnumerableDrill(DrillConfig config, LogicalPlan plan, Class<E> clazz) {
     this.plan = plan;
+    this.config = config;
+    config.setSinkQueues(0, queue);
   }
 
   /** Creates a DrillEnumerable from a plan represented as a string. */
   public static <E extends JsonNode> EnumerableDrill<E> of(String plan,
       Class<E> clazz) {
-    return new EnumerableDrill<E>(LogicalPlan.parse(plan), clazz);
+    DrillConfig config = DrillConfig.create();
+    return new EnumerableDrill<E>(config, LogicalPlan.parse(config, plan), clazz);
   }
 
   /** Runs the plan as a background task. */
   Future<Collection<RunOutcome>> runPlan(
       CompletionService<Collection<RunOutcome>> service) {
     IteratorRegistry ir = new IteratorRegistry();
-
-    final ReferenceInterpreter i = new ReferenceInterpreter(plan, ir,
-        new BasicEvaluatorFactory(ir), Collections.singletonList((Queue) queue));
+    DrillConfig config = DrillConfig.create();
+    config.setSinkQueues(0, queue);
+    final ReferenceInterpreter i = new ReferenceInterpreter(plan, ir, new BasicEvaluatorFactory(ir), new RSERegistry(config));
     try {
       i.setup();
     } catch (IOException e) {
@@ -186,7 +208,7 @@ public class EnumerableDrill<E>
     }
   }
 
-  private static List array(ArrayNode node) {
+  private static List<Object> array(ArrayNode node) {
     final List<Object> list = new ArrayList<>();
     for (JsonNode jsonNode : node) {
       list.add(wrapper(jsonNode));

@@ -21,36 +21,23 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
+import org.apache.drill.common.config.CommonConstants;
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExpressionParsingException;
-import org.reflections.Reflections;
-import org.reflections.scanners.ResourcesScanner;
-import org.reflections.scanners.SubTypesScanner;
-import org.reflections.scanners.TypeAnnotationsScanner;
-import org.reflections.util.ClasspathHelper;
-import org.reflections.util.ConfigurationBuilder;
-import org.reflections.util.FilterBuilder;
+import org.apache.drill.common.util.PathScanner;
 
 import com.google.common.collect.Lists;
 
 public class FunctionRegistry {
 
-  private static final Map<String, FunctionDefinition> funcMap;
+  private final Map<String, FunctionDefinition> funcMap;
 
-  static {
-    try {
-      String s = FilterBuilder.Include.prefix("org.apache.drill");
-      
-      Reflections r = new Reflections(new ConfigurationBuilder()
-      .filterInputsBy(new FilterBuilder().include(s))
-      .setUrls(ClasspathHelper.forPackage("org.apache.drill"))
-      .setScanners(new SubTypesScanner(),
-                   new TypeAnnotationsScanner(),
-                   new ResourcesScanner()));
-      Set<Class<? extends CallProvider>> providerClasses = r.getSubTypesOf(CallProvider.class);
+  public FunctionRegistry(DrillConfig config){
+    try{
+      Set<Class<? extends CallProvider>> providerClasses = PathScanner.scanForImplementations(CallProvider.class, config.getStringList(CommonConstants.LOGICAL_FUNCTION_SCAN_PACKAGES));
       Map<String, FunctionDefinition> funcs = new HashMap<String, FunctionDefinition>();
       for (Class<? extends CallProvider> c : providerClasses) {
         CallProvider p = c.newInstance();
@@ -64,30 +51,23 @@ public class FunctionRegistry {
           }
         }
       }
-
       funcMap = funcs;
-    } catch (Exception e) {
+    }catch(Exception e){
       throw new RuntimeException("Failure while setting up FunctionRegistry.", e);
     }
   }
   
-  public static void main(String[] args){
-    for(Entry<String, FunctionDefinition> e : funcMap.entrySet()){
-      System.out.println(e.getKey() + " : " + e.getValue());
-    }
-  }
-  
-  public static LogicalExpression createExpression(String functionName, List<LogicalExpression> args){
+  public LogicalExpression createExpression(String functionName, List<LogicalExpression> args){
     FunctionDefinition d = funcMap.get(functionName);
     if(d == null) throw new ExpressionParsingException(String.format("Unable to find function definition for function named '%s'", functionName));
     return d.newCall(args);
   }
   
-  public static LogicalExpression createExpression(String unaryName, LogicalExpression... e){
+  public LogicalExpression createExpression(String unaryName, LogicalExpression... e){
     return funcMap.get(unaryName).newCall(Lists.newArrayList(e));
   }
   
-  public static LogicalExpression createByOp(List<LogicalExpression> args, List<String> opTypes) {
+  public LogicalExpression createByOp(List<LogicalExpression> args, List<String> opTypes) {
     // logger.debug("Generating new comparison expressions.");
     if (args.size() == 1) {
       return args.get(0);
@@ -101,7 +81,7 @@ public class FunctionRegistry {
       List<LogicalExpression> l2 = new ArrayList<LogicalExpression>();
       l2.add(first);
       l2.add(args.get(i + 1));
-      first = FunctionRegistry.createExpression(opTypes.get(i), args);
+      first = createExpression(opTypes.get(i), args);
     }
     return first;
   }

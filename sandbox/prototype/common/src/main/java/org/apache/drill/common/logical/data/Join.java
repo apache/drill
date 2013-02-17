@@ -17,9 +17,10 @@
  ******************************************************************************/
 package org.apache.drill.common.logical.data;
 
-import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.exceptions.ExpressionParsingException;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
@@ -27,14 +28,27 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 public class Join extends LogicalOperatorBase {
   private final LogicalOperator left;
   private final LogicalOperator right;
+  private final JoinType type;
   private final JoinCondition[] conditions;
 
+  public static enum JoinType{
+    LEFT, RIGHT, INNER, OUTER;
+    
+    public static JoinType resolve(String val){
+      for(JoinType jt : JoinType.values()){
+        if(jt.name().equalsIgnoreCase(val)) return jt;
+      }
+      throw new ExpressionParsingException(String.format("Unable to determine join type for value '%s'.", val));
+    }
+  }
+  
   @JsonCreator
-  public Join(@JsonProperty("left") LogicalOperator left, @JsonProperty("right") LogicalOperator right, @JsonProperty("conditions") JoinCondition[] conditions) {
+  public Join(@JsonProperty("left") LogicalOperator left, @JsonProperty("right") LogicalOperator right, @JsonProperty("conditions") JoinCondition[] conditions, @JsonProperty("type") String type) {
     super();
     this.conditions = conditions;
     this.left = left;
     this.right = right;
+    this.type = JoinType.resolve(type);
     left.registerAsSubscriber(this);
     right.registerAsSubscriber(this);
 
@@ -52,31 +66,12 @@ public class Join extends LogicalOperatorBase {
     return conditions;
   }
 
-  public static class JoinCondition {
-    private final String relationship;
-    private final LogicalExpression left;
-    private final LogicalExpression right;
-
-    @JsonCreator
-    public JoinCondition(@JsonProperty("relationship") String relationship,
-        @JsonProperty("left") LogicalExpression left, @JsonProperty("right") LogicalExpression right) {
-      super();
-      this.relationship = relationship;
-      this.left = left;
-      this.right = right;
-    }
-
-    public String getRelationship() {
-      return relationship;
-    }
-
-    public LogicalExpression getLeft() {
-      return left;
-    }
-
-    public LogicalExpression getRight() {
-      return right;
-    }
-
+  @JsonIgnore
+  public JoinType getJointType(){
+    return type;
+  }
+  
+  public String getType(){
+    return type.name();
   }
 }

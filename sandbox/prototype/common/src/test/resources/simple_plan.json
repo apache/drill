@@ -7,18 +7,16 @@
       info:"na"
     }
   },
-  sources:[
+  storage:[
     {
       type:"text",
-      name:"local-logs",
-      files:[
-        "local://logs/*.log"
-      ],
-      compress:"gzip",
-      line-delimiter:"\n",
-      record-maker:{
-        type:"first-row",
-        delimiter:","
+      name:"logs",
+	  file: "local://logs/*.log",
+	  compress:"gzip",
+	  line-delimiter:"\n",
+	  record-maker:{
+	    type:"first-row",
+	    delimiter:","
       }
     },
     {
@@ -37,8 +35,8 @@
       @id:"1",
       op:"scan",
       memo:"initial_scan",
-      source:"local-logs",
-      selection:"activity"
+      storageengine:"local-logs",
+      selection: {}
     },
     {
       @id:"2",
@@ -48,11 +46,11 @@
       transforms:[
         {
           ref:"userId",
-          expr:"regex('activity.cookie', \"persistent=([^;]*)\")"
+          expr:"regex_like('activity.cookie', \"persistent=([^;]*)\")"
         },
         {
           ref:"session",
-          expr:"regex('activity.cookie', \"session=([^;]*)\")"
+          expr:"regex_like('activity.cookie', \"session=([^;]*)\")"
         }
       ]
     },
@@ -64,11 +62,11 @@
       transforms:[
         {
           ref:"userId",
-          expr:"regex('activity.cookie', \"persistent=([^;]*)\")"
+          expr:"regex_like('activity.cookie', \"persistent=([^;]*)\")"
         },
         {
           ref:"session",
-          expr:"regex('activity.cookie', \"session=([^;]*)\")"
+          expr:"regex_like('activity.cookie', \"session=([^;]*)\")"
         }
       ]
     },
@@ -83,7 +81,7 @@
           transforms:[
             {
               ref:"happy",
-              expr:"regex('ep2', \"dink\")"
+              expr:"regex_like('ep2', \"dink\")"
             }
           ]
         }
@@ -108,33 +106,29 @@
       transforms:[
         {
           ref:"happy",
-          expr:"regex('ep2', \"dink\")"
+          expr:"regex_like('ep2', \"dink\")"
         }
       ]
     },
     {
       @id:12,
       op:"join",
+      type: "inner",
       left:"7",
       right:"10",
       conditions: [{relationship:"==", left: "1", right: "1" }]
     }
     ,
     {
-      input:"12",
-      op:"project",
-      memo:"prj1",
-      exprs:[
-        {
-          ref:"blue",
-          expr:"hello"
-        },
-        {
-          ref:"red",
-          expr:"users"
-        }
-      ]
+      input: 12,
+      op: "store",
+      memo: "output sink",
+      target: {
+        file: "console:///stdout"
+      }
+      
     }
+
     
   ]
 }

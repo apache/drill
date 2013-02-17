@@ -67,6 +67,16 @@ public abstract class BaseDataValue implements DataValue{
   public abstract int hashCode();
 
   @Override
+  public boolean equals(Object obj) {
+    if(obj instanceof DataValue){
+      return this.equals((DataValue) obj);
+    }else{
+      return false;
+    }
+  }
+  
+
+  @Override
   public abstract DataValue copy();
 
 }

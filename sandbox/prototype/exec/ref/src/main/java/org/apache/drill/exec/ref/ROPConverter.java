@@ -21,20 +21,25 @@ import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.List;
-import java.util.Queue;
+import java.util.Collection;
 
 import org.apache.drill.common.logical.LogicalPlan;
-import org.apache.drill.common.logical.data.Aggregate;
+import org.apache.drill.common.logical.StorageEngineConfig;
 import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.common.logical.data.Scan;
+import org.apache.drill.common.logical.data.Store;
 import org.apache.drill.common.logical.data.Union;
-import org.apache.drill.common.logical.data.Write;
-import org.apache.drill.common.logical.sources.DataSource;
-import org.apache.drill.common.logical.sources.JSONDataSource;
 import org.apache.drill.exec.ref.eval.EvaluatorFactory;
 import org.apache.drill.exec.ref.exceptions.SetupException;
-import org.apache.drill.exec.ref.rops.*;
+import org.apache.drill.exec.ref.rops.ROP;
+import org.apache.drill.exec.ref.rops.ScanROP;
+import org.apache.drill.exec.ref.rops.StoreROP;
+import org.apache.drill.exec.ref.rops.UnionROP;
+import org.apache.drill.exec.ref.rse.RSERegistry;
+import org.apache.drill.exec.ref.rse.ReferenceStorageEngine;
+import org.apache.drill.exec.ref.rse.ReferenceStorageEngine.ReadEntry;
+
+import com.typesafe.config.Config;
 
 class ROPConverter {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ROPConverter.class);
@@ -42,13 +47,14 @@ class ROPConverter {
   private LogicalPlan plan;
   private IteratorRegistry registry;
   private EvaluatorFactory builder;
-  private final List<Queue> sinkQueues;
+  private RSERegistry engineRegistry;
+  private Config config;
 
-  public ROPConverter(LogicalPlan plan, IteratorRegistry registry, EvaluatorFactory builder, List<Queue> sinkQueues) {
+  public ROPConverter(LogicalPlan plan, IteratorRegistry registry, EvaluatorFactory builder, RSERegistry engineRegistry) {
     this.plan = plan;
     this.registry = registry;
     this.builder = builder;
-    this.sinkQueues = sinkQueues;
+    this.engineRegistry = engineRegistry;
   }
 
   public void convert(LogicalOperator o) throws SetupException {
@@ -68,7 +74,7 @@ class ROPConverter {
       if (c instanceof SetupException) {
         throw (SetupException) c;
       } else {
-        throw new RuntimeException("Failure while trying to run convertSpecifc conversion of operator type "
+        throw new RuntimeException("Failure while trying to run convertSpecific conversion of operator type "
             + o.getClass().getSimpleName(), c);
       }
     }
@@ -98,67 +104,51 @@ class ROPConverter {
         + o.getClass().getCanonicalName());
   }
 
-  public void convertSpecific(Write write) throws SetupException {
-    if (write.getFileName().startsWith("socket:")) {
-      final String ordinalString =
-          write.getFileName().substring("socket:".length());
-      final Queue queue;
-      try {
-        int ordinal = Integer.valueOf(ordinalString);
-        queue = sinkQueues.get(ordinal);
-      } catch (IndexOutOfBoundsException | NumberFormatException e) {
-        throw new RuntimeException("bad socket ordinal " + ordinalString);
-      }
-      final QueueSinkROP queueSink = new QueueSinkROP(write, queue);
-      queueSink.init(registry, builder);
-    } else {
-      JSONWriter writer = new JSONWriter(write);
-      writer.init(registry, builder);
-    }
+  private ReferenceStorageEngine getEngine(String name){
+    StorageEngineConfig config = plan.getStorageEngine(name);
+    if(config == null) throw new SetupException(String.format("Unable to find define logical plan of name [%s].", name));
+    ReferenceStorageEngine engine = engineRegistry.getEngine(config);
+    return engine;
   }
-
-  public void convertSpecific(Aggregate agg) throws SetupException {
-    if(agg.getAggregateType().equals("simple")){
-      ROP r = new AggregateSimpleROP(agg);
-      r.init(registry, builder);
-    }else{
-      throw new SetupException(String.format("Currently, the reference interpreter does not support aggregators of type '%s'.  It only supports simple aggregators.", agg.getAggregateType()));
-    }
+  
+  public void convertSpecific(Store store) throws SetupException {
+    StoreROP rop = new StoreROP(store, getEngine(store.getStorageEngine()));
+    rop.init(registry, builder);
   }
 
   public void convertSpecific(Scan scan) throws SetupException {
+    StorageEngineConfig engineConfig = plan.getStorageEngine(scan.getStorageEngine());
+    ReferenceStorageEngine engine = engineRegistry.getEngine(engineConfig);
+    Collection<ReadEntry> readEntries;
     try {
-      DataSource ds = plan.getDataSource(scan.getSourceName());
+      readEntries = engine.getReadEntries(scan);
+    } catch (IOException e1) {
+      throw new SetupException("Failure reading input entries.", e1);
+    }
+    
+    switch(readEntries.size()){
+    case 0:
+      throw new SetupException(String.format("Scan provided did not correspond to any available data.", scan));
+    case 1:
+      ScanROP scanner = new ScanROP(scan, readEntries.iterator().next(), engine);
+      scanner.init(registry, builder);
+      return;
+    default:
+      Union logOp = new Union(null);
 
-      if (ds instanceof JSONDataSource) {
-        JSONDataSource js = (JSONDataSource) ds;
-        List<String> files = js.files;
-        if (files.size() > 1) {
-          Union logOp = new Union(null);
+      ROP parentUnion = new UnionROP(logOp);
+      ScanROP[] scanners = new ScanROP[readEntries.size()];
+      int i = 0;
+      for (ReadEntry e : readEntries) {
+        scanners[i] = new ScanROP(scan, e, engine);
+        scanners[i].init(registry, builder);
+        i++;
+      } 
 
-          ROP parentUnion = new UnionROP(logOp);
-          ROP[] scanners = new ROP[files.size()];
-          for (int i = 0; i < files.size(); i++) {
-            scanners[i] = new JSONScanner(scan, files.get(i));
-            scanners[i].init(registry, builder);
-          }
-
-          parentUnion.init(registry, builder);
-          registry.swap(logOp, scan); // make it so future things point to
-        } else {
-          JSONScanner scanner = new JSONScanner(scan, files.get(0));
-          scanner.init(registry, builder);
-        }
-      } else {
-        fail(ds);
-      }
-    } catch (IOException e) {
-      throw new SetupException("Failure while trying to set up JSON reading node.", e);
+      parentUnion.init(registry, builder);
+      registry.swap(logOp, scan); // make it so future things point to the union as the original scans.
+      return;
     }
   }
 
-  private void fail(Object o) {
-    throw new UnsupportedOperationException(String.format(
-        "Reference implementation doesn't support interactions with [%s].", o.getClass().getSimpleName()));
-  }
 }

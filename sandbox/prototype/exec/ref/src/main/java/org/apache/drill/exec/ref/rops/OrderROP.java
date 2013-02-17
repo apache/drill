@@ -13,14 +13,20 @@ import org.apache.drill.exec.ref.eval.EvaluatorFactory;
 import org.apache.drill.exec.ref.eval.EvaluatorTypes.BasicEvaluator;
 import org.apache.drill.exec.ref.values.ComparableValue;
 import org.apache.drill.exec.ref.values.DataValue;
+import org.apache.drill.exec.ref.values.ScalarValues;
 import org.apache.hadoop.util.IndexedSortable;
 import org.apache.hadoop.util.QuickSort;
 
-public class OrderROP extends AbstractBlockingOperator<Order>{
-  
+public class OrderROP extends AbstractBlockingOperator<Order> {
+
   private List<CompoundValue> records = new ArrayList<CompoundValue>();
   private SortDefinition[] defs;
-  
+  private int withinExtra = 0;
+  private boolean withinConstrained;
+  private BasicEvaluator within;
+  private DataValue previous;
+  private long withinMarkerValue;
+
   public OrderROP(Order config) {
     super(config);
   }
@@ -28,20 +34,41 @@ public class OrderROP extends AbstractBlockingOperator<Order>{
   @Override
   protected void setupEvals(EvaluatorFactory builder) {
     Ordering[] orderings = config.getOrderings();
+    withinConstrained = config.getWithin() != null;
+    if (withinConstrained) {
+      withinExtra = 1;
+      within = builder.getBasicEvaluator(record, config.getWithin());
+    }
+
     defs = new SortDefinition[orderings.length];
-    for(int i =0; i < orderings.length; i++){
-      defs[i] = new SortDefinition(builder.getBasicEvaluator(inputRecord, orderings[i].getExpr()), orderings[i].getDirection() == Direction.ASC);
+
+    for (int i = 0; i < orderings.length; i++) {
+      defs[i] = new SortDefinition(builder.getBasicEvaluator(inputRecord, orderings[i].getExpr()),
+          orderings[i].getDirection() == Direction.ASC);
     }
   }
 
-  
   @Override
   protected void consumeRecord() {
-    DataValue[] values = new DataValue[defs.length];
-    
+    DataValue[] values = new DataValue[defs.length + withinExtra];
+
     RecordPointer r = inputRecord.copy();
-    for(int i =0; i < defs.length; i++){
-      values[i] = defs[i].evaluator.eval();  
+
+    /**
+     * Rather than use a sort on the within value, we need to make sure that this operator correctly implements the
+     * reference implementation. Ordering only operates with sequential segment key values. If a segment key value
+     * repeats elsewhere in the stream, this operator should bring those together. together.
+     **/
+    if (withinConstrained) {
+      DataValue current = within.eval();
+      if (!current.equals(previous)) {
+        withinMarkerValue++;
+      }
+      values[0] = new ScalarValues.LongScalar(withinMarkerValue);
+    }
+
+    for (int i = 0; i < defs.length; i++) {
+      values[i + withinExtra] = defs[i].evaluator.eval();
     }
     CompoundValue v = new CompoundValue(r, values);
     records.add(v);
@@ -55,45 +82,33 @@ public class OrderROP extends AbstractBlockingOperator<Order>{
     return new OrderIterator();
   }
 
-  
-  public class SortDefinition{
+  public class SortDefinition {
     boolean forward;
     boolean nullsLast;
     BasicEvaluator evaluator;
-    
+
     public SortDefinition(BasicEvaluator evaluator, boolean forward) {
       this.evaluator = evaluator;
       this.forward = forward;
     }
   }
-  
-  private class CompoundValue{
+
+  private class CompoundValue {
     DataValue[] values;
     RecordPointer record;
+
     public CompoundValue(RecordPointer record, DataValue[] values) {
       super();
       this.record = record;
       this.values = values;
     }
-    
-    
+
   }
-  
-  private class StackedComparator implements IndexedSortable{
-//    private List<DataValue> values;
-//    private boolean[] nullsLast;
-//    private boolean[] forward;
 
-    public StackedComparator(SortDefinition[] defs){
-//      this.nullsLast = new boolean[defs.length];
-//      this.forward = new boolean[defs.length];
-//      for(int i =0; i < defs.length; i++){
-//        nullsLast[i] = defs[i].nullsLast;
-//        forward[i] = defs[i].forward;
-//      }
+  private class StackedComparator implements IndexedSortable {
+
+    public StackedComparator(SortDefinition[] defs) {
     }
-    
-
 
     @Override
     public void swap(int index0, int index1) {
@@ -107,48 +122,50 @@ public class OrderROP extends AbstractBlockingOperator<Order>{
       int result = 0;
       CompoundValue v1 = records.get(index0);
       CompoundValue v2 = records.get(index1);
-      
-      for(int i =0; i < defs.length; i++){
+
+      for (int i = 0; i < defs.length; i++) {
         boolean nullLast = defs[i].nullsLast;
         boolean asc = defs[i].forward;
         DataValue dv1 = v1.values[i];
         DataValue dv2 = v2.values[i];
-        if(dv1 == null){
-          if(dv2 == null){
+        if (dv1 == null) {
+          if (dv2 == null) {
             result = 0;
-          }else{
+          } else {
             result = nullLast ? 1 : -1;
           }
-        }else if(dv2 == null){
+        } else if (dv2 == null) {
           result = nullLast ? -1 : 1;
-        }else{
-          if(dv1 instanceof ComparableValue && ((ComparableValue) dv1).supportsCompare(dv2)){
-            result = ((ComparableValue)dv1).compareTo(dv2);
-            if(!asc) result = -result;
-          }else{
-            return 0;  // we break even though there may be more evaluators because we should always return the same ordering for non-comparable values no matter the compare order.
+        } else {
+          if (dv1 instanceof ComparableValue && ((ComparableValue) dv1).supportsCompare(dv2)) {
+            result = ((ComparableValue) dv1).compareTo(dv2);
+            if (!asc) result = -result;
+          } else {
+            return 0; // we break even though there may be more evaluators because we should always return the same
+                      // ordering for non-comparable values no matter the compare order.
           }
         }
-        if(result != 0) return result;
+        if (result != 0) return result;
       }
       return result;
     }
-    
+
   }
-  
-  public class OrderIterator implements RecordIterator{
+
+  public class OrderIterator implements RecordIterator {
     final Iterator<CompoundValue> iter;
+
     public OrderIterator() {
       this.iter = records.iterator();
     }
-    
+
     @Override
     public NextOutcome next() {
-      if(iter.hasNext()) {
+      if (iter.hasNext()) {
         outputRecord.setRecord(iter.next().record);
         return NextOutcome.INCREMENTED_SCHEMA_CHANGED;
       }
-      
+
       return NextOutcome.NONE_LEFT;
     }
 

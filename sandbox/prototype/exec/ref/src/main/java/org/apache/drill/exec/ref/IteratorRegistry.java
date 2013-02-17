@@ -52,13 +52,13 @@ public class IteratorRegistry {
   }
   
   public List<RecordIterator> getOperator(LogicalOperator o){
-    logger.debug("Getting iterator for Logical Operator {}", o);
+//    logger.debug("Getting iterator for Logical Operator {}", o);
     if(o == null) throw new SetupException("You requested a Iterator list for a null operator.  This doesn't make any sense.");
     List<ROP> refOps = map.get(o);
     List<RecordIterator> iterators = new ArrayList<RecordIterator>(refOps.size());
     for(ROP r : refOps){
       RecordIterator iterator = r.getOutput();
-      if(iterator == null) throw new SetupException(String.format("The provided operator for the reference operator %s is null.", r));
+      if(iterator == null) throw new SetupException(String.format("The provided iterator for the reference operator %s is null.", r));
       iterators.add(iterator);
     }
     return iterators;

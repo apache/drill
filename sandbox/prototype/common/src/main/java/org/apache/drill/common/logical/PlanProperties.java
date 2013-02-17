@@ -23,7 +23,6 @@ public class PlanProperties {
 	public int version;
 	public Generator generator = new Generator();
 	
-	
 	public static class Generator{
 		public String type;
 		public String info;

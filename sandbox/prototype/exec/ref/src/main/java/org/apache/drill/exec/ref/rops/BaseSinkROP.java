@@ -18,6 +18,7 @@
 package org.apache.drill.exec.ref.rops;
 
 import java.io.IOException;
+import java.util.concurrent.locks.ReadWriteLock;
 
 import org.apache.drill.common.logical.data.SinkOperator;
 import org.apache.drill.exec.ref.RunOutcome;
@@ -46,7 +47,6 @@ public abstract class BaseSinkROP<T extends SinkOperator> extends SingleInputROP
       throw new SetupException(String.format("failure setting up %s sink rop.", this.getClass()), e);
     }
   }
-
   
   @Override
   protected void setInput(RecordIterator incoming) {
@@ -101,6 +101,12 @@ public abstract class BaseSinkROP<T extends SinkOperator> extends SingleInputROP
     
   }
 
+  /**
+   * 
+   * @param r RecordPointer to record
+   * @return The approximate amount of bytes written.
+   * @throws IOException
+   */
   public abstract long sinkRecord(RecordPointer r) throws IOException;
   protected abstract void setupSink() throws IOException;
 

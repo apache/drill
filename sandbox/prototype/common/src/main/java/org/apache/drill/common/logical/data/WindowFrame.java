@@ -23,67 +23,61 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
-@JsonTypeName("window-frame")
-public class WindowFrame {
+@JsonTypeName("windowframe")
+public class WindowFrame extends SingleInputOperator{
   
-  public static final String ALL = "all";
-  public static final String HERE = "here";
   
-  private final FieldReference[] keys;
-  private final FieldReference ref;
-  private final int before;
-  private final int after;
+  private final FieldReference within;
+  private final FrameRef frame;
+  private final long start;
+  private final long end;
   
 
   @JsonCreator
-  public WindowFrame(@JsonProperty("keys") FieldReference[] keys, @JsonProperty("ref") FieldReference ref, @JsonProperty("before") String before, @JsonProperty("after") String after) {
+  public WindowFrame(@JsonProperty("within") FieldReference within, @JsonProperty("ref") FrameRef frame, @JsonProperty("start") Long start, @JsonProperty("end") Long end) {
     super();
-    this.keys = keys;
-    this.ref = ref;
-    this.before = getVal(before);
-    this.after = getVal(after);
-  }
-
-  private int getVal(String phrase){
-    if(ALL.equals(phrase)) return -1;
-    if(HERE.equals(phrase)) return 0;
-    return Integer.parseInt(phrase);
-  }
-
-  private String getStr(int val){
-    if(val == 0) return HERE;
-    if(val == -1) return ALL;
-    return Integer.toString(val);
-  }
-
-  public static String getAll() {
-    return ALL;
+    this.within = within;
+    this.frame = frame;
+    this.start = start == null ? Long.MIN_VALUE : start;
+    this.end = end == null ? Long.MIN_VALUE : end;
   }
 
 
-  public static String getHere() {
-    return HERE;
+  @JsonProperty("ref")
+  public FrameRef getFrame() {
+    return frame;
   }
 
-
-  public FieldReference[] getKeys() {
-    return keys;
+  public FieldReference getWithin() {
+    return within;
   }
 
-
-  public FieldReference getRef() {
-    return ref;
+  public long getStart() {
+    return start;
   }
 
-
-  public String getBefore() {
-    return getStr(before);
+  public long getEnd() {
+    return end;
   }
 
-
-  public String getAfter() {
-    return getStr(after);
+  public static class FrameRef{
+    private final FieldReference segment;
+    private final FieldReference position;
+    
+    @JsonCreator
+    public FrameRef(@JsonProperty("segment") FieldReference segment, @JsonProperty("position") FieldReference position) {
+      super();
+      this.segment = segment;
+      this.position = position;
+    }
+    
+    public FieldReference getSegment() {
+      return segment;
+    }
+    public FieldReference getPosition() {
+      return position;
+    }
+    
+    
   }
-  
-  
 }

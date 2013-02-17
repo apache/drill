@@ -17,31 +17,31 @@
 	</properties>
 	<dependencies>
 
-<!-- 		<dependency> -->
-<!-- 			<groupId>net.hydromatic</groupId> -->
-<!-- 			<artifactId>optiq</artifactId> -->
-<!-- 			<version>0.1-SNAPSHOT</version> -->
-<!-- 		</dependency> -->
-
-
 		<dependency>
 			<groupId>com.google.protobuf</groupId>
 			<artifactId>protobuf-java</artifactId>
 			<version>2.4.1</version>
 		</dependency>
 
-		<dependency>
-			<groupId>org.apache.hadoop</groupId>
-			<artifactId>hadoop-core</artifactId>
-			<version>1.1.0</version>
-		</dependency>
+		<!-- <dependency> -->
+		<!-- <groupId>org.apache.hadoop</groupId> -->
+		<!-- <artifactId>hadoop-core</artifactId> -->
+		<!-- <version>1.1.0</version> -->
+		<!-- </dependency> -->
 
+		<dependency>
+			<groupId>com.typesafe</groupId>
+			<artifactId>config</artifactId>
+			<version>1.0.0</version>
+		</dependency>
+		
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-classic</artifactId>
 			<version>1.0.7</version>
 			<scope>provided</scope>
 		</dependency>
+
 		<dependency>
 			<version>1.7.2</version>
 			<groupId>org.slf4j</groupId>
@@ -49,15 +49,23 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>3.1</version>
+		</dependency>
+
+		<dependency>
 			<groupId>org.msgpack</groupId>
 			<artifactId>msgpack</artifactId>
 			<version>0.6.6</version>
 		</dependency>
+
 		<dependency>
 			<groupId>org.reflections</groupId>
 			<artifactId>reflections</artifactId>
 			<version>0.9.8</version>
 		</dependency>
+
 		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
@@ -69,7 +77,11 @@
 			<artifactId>jackson-annotations</artifactId>
 			<version>2.1.1</version>
 		</dependency>
-
+		<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-validator</artifactId>
+			<version>4.3.1.Final</version>
+		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
@@ -86,7 +98,10 @@
 			<version>4.11</version>
 			<scope>test</scope>
 		</dependency>
+
 	</dependencies>
+
+
 
 	<build>
 		<plugins>

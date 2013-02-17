@@ -45,10 +45,10 @@ public abstract class AbstractBlockingOperator<T extends SingleInputOperator> ex
     
     @Override
     public NextOutcome next() {
-      if(iter == null){
-        iter = consumeData();
+      if(this.iter == null){
+        this.iter = consumeData();
       }
-      return iter.next();
+      return this.iter.next();
     }
     
     @Override

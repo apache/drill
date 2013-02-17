@@ -414,7 +414,7 @@ public final class ScalarValues {
     public String toString() {
       return "DoubleScalar [d=" + d + "]";
     }
-    
+ 
     @Override
     public int hashCode() {
       return getHashCode(d);

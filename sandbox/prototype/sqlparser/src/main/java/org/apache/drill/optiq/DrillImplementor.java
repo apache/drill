@@ -17,7 +17,10 @@
  ******************************************************************************/
 package org.apache.drill.optiq;
 
+import org.apache.drill.exec.ref.rse.QueueRSE.QueueOutputInfo;
+
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -51,15 +54,24 @@ public class DrillImplementor {
     // TODO: populate sources based on the sources of scans that occur in
     // the query
     final ArrayNode sourcesNode = mapper.createArrayNode();
-    rootNode.put("sources", sourcesNode);
-    final ObjectNode sourceNode = mapper.createObjectNode();
-    sourcesNode.add(sourceNode);
-    sourceNode.put("type", "json");
-    sourceNode.put("name", "donuts-json");
-    final ArrayNode filesNode = mapper.createArrayNode();
-    sourceNode.put("files", filesNode);
-    filesNode.add("src/test/resources/donuts.json");
+    rootNode.put("storage", sourcesNode);
+    
+    // input file source
+    {
+      final ObjectNode sourceNode = mapper.createObjectNode();
+      sourceNode.put("name", "donuts-json");
+      sourceNode.put("type", "classpath");
+      sourcesNode.add(sourceNode);
+    }
+    {
+      final ObjectNode sourceNode = mapper.createObjectNode();
+      sourceNode.put("name", "queue");
+      sourceNode.put("type", "queue");
+      sourcesNode.add(sourceNode);
+    }
+    
 
+    
     final ArrayNode queryNode = mapper.createArrayNode();
     rootNode.put("query", queryNode);
 
@@ -76,9 +88,12 @@ public class DrillImplementor {
 
     // Add a last node, to write to the output queue.
     final ObjectNode writeOp = mapper.createObjectNode();
-    writeOp.put("op", "write");
+    writeOp.put("op", "store");
+    writeOp.put("storageengine", "queue");
     writeOp.put("memo", "output sink");
-    writeOp.put("file", "socket:0");
+    QueueOutputInfo output = new QueueOutputInfo();
+    output.number = 0;
+    writeOp.put("target", mapper.convertValue(output, JsonNode.class));
     add(writeOp);
   }
 
