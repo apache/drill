@@ -25,10 +25,12 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.logical.data.Join;
+import org.apache.drill.common.logical.data.JoinCondition;
 import org.apache.drill.common.logical.data.JoinType;
 import org.apache.drill.exec.ref.IteratorRegistry;
 import org.apache.drill.exec.ref.RecordIterator;
 import org.apache.drill.exec.ref.RecordPointer;
+import org.apache.drill.exec.ref.UnbackedRecord;
 import org.apache.drill.exec.ref.eval.EvaluatorFactory;
 import org.apache.drill.exec.ref.eval.fn.ComparisonEvaluators;
 import org.apache.drill.exec.ref.exceptions.RecordException;
@@ -38,17 +40,19 @@ import org.apache.drill.exec.ref.values.DataValue;
 
 import java.util.List;
 
+import static org.apache.drill.common.logical.data.Join.JoinType.LEFT;
+
 public class JoinROP extends ROPBase<Join> {
     static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JoinROP.class);
 
     private RecordIterator left;
     private RecordIterator right;
-    private ProxyJoinedRecord record;
+    private RecordPointer record;
     private EvaluatorFactory factory;
 
     public JoinROP(Join config) {
         super(config);
-        record = new ProxyJoinedRecord();
+        record = new UnbackedRecord();
     }
 
     @Override
@@ -64,18 +68,18 @@ public class JoinROP extends ROPBase<Join> {
 
     @Override
     protected RecordIterator getIteratorInternal() {
-        return createIteratorFromJoin(config.getType());
+        return createIteratorFromJoin(config.getJointType());
     }
 
-    private RecordIterator createIteratorFromJoin(JoinType type) {
+    private RecordIterator createIteratorFromJoin(Join.JoinType type) {
         switch (type) {
-            case left:
+            case LEFT:
                 return new LeftIterator();
-            case inner:
+            case INNER:
                 return new InnerIterator();
-            case outer:
+            case OUTER:
                 return new OuterIterator();
-            case right:
+            case RIGHT:
                 return new RightIterator();
             default:
                 throw new UnsupportedOperationException("Type not supported: " + type);
@@ -135,7 +139,12 @@ public class JoinROP extends ROPBase<Join> {
         public abstract NextOutcome getNext();
 
         protected void setJoinedRecord(RecordPointer left, RecordPointer right) {
-            record.setRecord(left, right);
+            if (left != null) {
+                record.copyFrom(left);
+            }
+            if (right != null) {
+                record.copyFrom(right);
+            }
         }
 
         public boolean eval(DataValue leftVal, DataValue rightVal, String relationship) {
@@ -159,7 +168,7 @@ public class JoinROP extends ROPBase<Join> {
                 case ">=":
                     return ((ComparableValue) leftVal).compareTo(rightVal) >= 0;
                 default:
-                    throw new DrillRuntimeException("Relationship not yet supported: " + relationship);
+                    throw new DrillRuntimeException("Relationship not supported: " + relationship);
             }
         }
 
@@ -190,9 +199,9 @@ public class JoinROP extends ROPBase<Join> {
                 }
 
                 final RecordBuffer bufferObj = buffer.get(curIdx++);
-                Optional<Join.JoinCondition> option = Iterables.tryFind(Lists.newArrayList(config.getConditions()), new Predicate<Join.JoinCondition>() {
+                Optional<JoinCondition> option = Iterables.tryFind(Lists.newArrayList(config.getConditions()), new Predicate<JoinCondition>() {
                     @Override
-                    public boolean apply(Join.JoinCondition condition) {
+                    public boolean apply(JoinCondition condition) {
                         return eval(factory.getBasicEvaluator(rightPointer, condition.getRight()).eval(),
                                 factory.getBasicEvaluator(bufferObj.pointer, condition.getLeft()).eval(), condition.getRelationship());
                     }
@@ -229,7 +238,7 @@ public class JoinROP extends ROPBase<Join> {
             while (true) {
                 if (curIdx == 0) {
                     if (!isFound) {
-                        record.setRecord(leftPointer, null);
+                        setJoinedRecord(leftPointer, null);
                         return leftOutcome;
                     }
 
@@ -243,9 +252,9 @@ public class JoinROP extends ROPBase<Join> {
                 }
 
                 final RecordBuffer bufferObj = buffer.get(curIdx++);
-                Optional<Join.JoinCondition> option = Iterables.tryFind(Lists.newArrayList(config.getConditions()), new Predicate<Join.JoinCondition>() {
+                Optional<JoinCondition> option = Iterables.tryFind(Lists.newArrayList(config.getConditions()), new Predicate<JoinCondition>() {
                     @Override
-                    public boolean apply(Join.JoinCondition condition) {
+                    public boolean apply(JoinCondition condition) {
                         return eval(factory.getBasicEvaluator(leftPointer, condition.getLeft()).eval(),
                                 factory.getBasicEvaluator(bufferObj.pointer, condition.getRight()).eval(), condition.getRelationship());
                     }
@@ -282,7 +291,7 @@ public class JoinROP extends ROPBase<Join> {
             while (true) {
                 if (curIdx == 0) {
                     if (!isFound) {
-                        record.setRecord(null, rightPointer);
+                        setJoinedRecord(null, rightPointer);
                         return rightOutcome;
                     }
 
@@ -296,9 +305,9 @@ public class JoinROP extends ROPBase<Join> {
                 }
 
                 final RecordBuffer bufferObj = buffer.get(curIdx++);
-                Optional<Join.JoinCondition> option = Iterables.tryFind(Lists.newArrayList(config.getConditions()), new Predicate<Join.JoinCondition>() {
+                Optional<JoinCondition> option = Iterables.tryFind(Lists.newArrayList(config.getConditions()), new Predicate<JoinCondition>() {
                     @Override
-                    public boolean apply(Join.JoinCondition condition) {
+                    public boolean apply(JoinCondition condition) {
                         return eval(factory.getBasicEvaluator(rightPointer, condition.getRight()).eval(),
                                 factory.getBasicEvaluator(bufferObj.pointer, condition.getLeft()).eval(), condition.getRelationship());
                     }
