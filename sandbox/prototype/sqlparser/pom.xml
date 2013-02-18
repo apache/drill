@@ -13,8 +13,39 @@
   <url>http://maven.apache.org</url>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <dep.slf4j.version>1.7.2</dep.slf4j.version>
   </properties>
   <dependencies>
+	<dependency>
+		<groupId>ch.qos.logback</groupId>
+		<artifactId>logback-classic</artifactId>
+		<version>1.0.7</version>
+		<scope>provided</scope>
+	</dependency>
+	
+	<dependency>
+		<groupId>org.slf4j</groupId>
+		<artifactId>jul-to-slf4j</artifactId>
+		<version>${dep.slf4j.version}</version>
+	</dependency>
+	
+	<dependency>
+		<groupId>org.slf4j</groupId>
+		<artifactId>jcl-over-slf4j</artifactId>
+		<version>${dep.slf4j.version}</version>
+	</dependency>
+
+	<dependency>
+		<groupId>org.slf4j</groupId>
+		<artifactId>log4j-over-slf4j</artifactId>
+		<version>${dep.slf4j.version}</version>
+	</dependency>
+
+	<dependency>
+		<groupId>de.huxhorn.lilith</groupId>
+		<artifactId>de.huxhorn.lilith.logback.appender.multiplex-classic</artifactId>
+		<version>0.9.42.1</version>
+	</dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>

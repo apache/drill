@@ -14,6 +14,7 @@
 	<url>http://maven.apache.org</url>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<dep.slf4j.version>1.7.2</dep.slf4j.version>
 	</properties>
 	<dependencies>
 
@@ -41,13 +42,31 @@
 			<version>1.0.7</version>
 			<scope>provided</scope>
 		</dependency>
-
+		
 		<dependency>
-			<version>1.7.2</version>
 			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
+			<artifactId>jul-to-slf4j</artifactId>
+			<version>${dep.slf4j.version}</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>jcl-over-slf4j</artifactId>
+			<version>${dep.slf4j.version}</version>
 		</dependency>
 
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>log4j-over-slf4j</artifactId>
+			<version>${dep.slf4j.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>de.huxhorn.lilith</groupId>
+			<artifactId>de.huxhorn.lilith.logback.appender.multiplex-classic</artifactId>
+			<version>0.9.42.1</version>
+		</dependency>
+		
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
