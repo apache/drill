@@ -32,7 +32,7 @@ public class Join extends LogicalOperatorBase {
   private final JoinCondition[] conditions;
 
   public static enum JoinType{
-    RIGHT, INNER, OUTER;
+    LEFT, RIGHT, INNER, OUTER;
     
     public static JoinType resolve(String val){
       for(JoinType jt : JoinType.values()){
