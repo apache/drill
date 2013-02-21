@@ -1,0 +1,70 @@
+{
+   head: {
+      type: "apache_drill_logical_plan",
+      version: "1",
+      generator: {
+         type: "manual",
+         info: "na"
+      }
+   },
+   storage:[
+       {
+         type:"console",
+         name:"console"
+       },
+       {
+         type:"fs",
+         name:"fs1",
+         root:"file:///"
+       },
+       {
+         type:"classpath",
+         name:"cp"
+       }
+   ],
+   query: [
+      {
+         @id: 1,
+         op: "scan",
+         memo: "initial_scan",
+         ref: "employees",
+         storageengine: "cp",
+         selection: {
+         	 path: "/employees.json",
+         	 type: "JSON"
+         }
+      },
+      {
+         @id: 2,
+         op: "scan",
+         memo: "second_scan",
+         ref: "departments",
+         storageengine: "cp",
+         selection: {
+             path: "/departments.json",
+             type: "JSON"
+         }
+      },
+      {
+         @id: 3,
+         op: "join",
+         left: 1,
+         right: 2,
+         type: "outer",
+         conditions: [
+            {
+               relationship: "==",
+               left: "employees.deptId",
+               right: "departments.deptId"
+            }
+         ]
+      },
+      {
+         input: 3,
+         op: "write",
+         memo: "output sink",
+         storageengine: "console",
+         target: {pipe: "STD_OUT"}
+      }
+   ]
+}
