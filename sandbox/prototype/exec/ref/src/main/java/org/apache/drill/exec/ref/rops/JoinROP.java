@@ -18,36 +18,30 @@
 package org.apache.drill.exec.ref.rops;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.logical.data.Join;
 import org.apache.drill.common.logical.data.JoinCondition;
-import org.apache.drill.common.logical.data.JoinType;
 import org.apache.drill.exec.ref.IteratorRegistry;
 import org.apache.drill.exec.ref.RecordIterator;
 import org.apache.drill.exec.ref.RecordPointer;
 import org.apache.drill.exec.ref.UnbackedRecord;
 import org.apache.drill.exec.ref.eval.EvaluatorFactory;
 import org.apache.drill.exec.ref.eval.fn.ComparisonEvaluators;
-import org.apache.drill.exec.ref.exceptions.RecordException;
 import org.apache.drill.exec.ref.exceptions.SetupException;
 import org.apache.drill.exec.ref.values.ComparableValue;
 import org.apache.drill.exec.ref.values.DataValue;
 
 import java.util.List;
 
-import static org.apache.drill.common.logical.data.Join.JoinType.LEFT;
-
 public class JoinROP extends ROPBase<Join> {
     static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JoinROP.class);
 
     private RecordIterator left;
     private RecordIterator right;
-    private RecordPointer record;
+    private UnbackedRecord record;
     private EvaluatorFactory factory;
 
     public JoinROP(Join config) {
@@ -79,8 +73,6 @@ public class JoinROP extends ROPBase<Join> {
                 return new InnerIterator();
             case OUTER:
                 return new OuterIterator();
-            case RIGHT:
-                return new RightIterator();
             default:
                 throw new UnsupportedOperationException("Type not supported: " + type);
         }
@@ -138,12 +130,19 @@ public class JoinROP extends ROPBase<Join> {
 
         public abstract NextOutcome getNext();
 
-        protected void setJoinedRecord(RecordPointer left, RecordPointer right) {
-            if (left != null) {
-                record.copyFrom(left);
-            }
-            if (right != null) {
-                record.copyFrom(right);
+        protected void setOutputRecord(RecordPointer... inputs) {
+            boolean first = true;
+            for(RecordPointer input : inputs) {
+                if(input == null) {
+                    continue;
+                }
+
+                if(first) {
+                    first = false;
+                    record.copyFrom(input);
+                } else {
+                    record.merge(input);
+                }
             }
         }
 
@@ -208,7 +207,7 @@ public class JoinROP extends ROPBase<Join> {
                 });
 
                 if (option.isPresent()) {
-                    setJoinedRecord(rightPointer, bufferObj.pointer);
+                    setOutputRecord(rightPointer, bufferObj.pointer);
                     return (bufferObj.schemaChanged || rightOutcome == NextOutcome.INCREMENTED_SCHEMA_CHANGED) ?
                             NextOutcome.INCREMENTED_SCHEMA_CHANGED :
                             NextOutcome.INCREMENTED_SCHEMA_UNCHANGED;
@@ -238,7 +237,7 @@ public class JoinROP extends ROPBase<Join> {
             while (true) {
                 if (curIdx == 0) {
                     if (!isFound) {
-                        setJoinedRecord(leftPointer, null);
+                        setOutputRecord(leftPointer);
                         return leftOutcome;
                     }
 
@@ -261,7 +260,7 @@ public class JoinROP extends ROPBase<Join> {
                 });
 
                 if (option.isPresent()) {
-                    setJoinedRecord(leftPointer, bufferObj.pointer);
+                    setOutputRecord(leftPointer, bufferObj.pointer);
                     return (bufferObj.schemaChanged || leftOutcome == NextOutcome.INCREMENTED_SCHEMA_CHANGED) ?
                             NextOutcome.INCREMENTED_SCHEMA_CHANGED :
                             NextOutcome.INCREMENTED_SCHEMA_UNCHANGED;
@@ -276,61 +275,7 @@ public class JoinROP extends ROPBase<Join> {
         }
     }
 
-    class RightIterator extends JoinIterator {
-        NextOutcome rightOutcome;
-
-        @Override
-        protected int setupBuffer() {
-            return setupBufferForIterator(left);
-        }
-
-        @Override
-        public NextOutcome getNext() {
-            final RecordPointer rightPointer = right.getRecordPointer();
-            boolean isFound = true;
-            while (true) {
-                if (curIdx == 0) {
-                    if (!isFound) {
-                        setJoinedRecord(null, rightPointer);
-                        return rightOutcome;
-                    }
-
-                    rightOutcome = right.next();
-
-                    if (rightOutcome == NextOutcome.NONE_LEFT) {
-                        break;
-                    }
-
-                    isFound = false;
-                }
-
-                final RecordBuffer bufferObj = buffer.get(curIdx++);
-                Optional<JoinCondition> option = Iterables.tryFind(Lists.newArrayList(config.getConditions()), new Predicate<JoinCondition>() {
-                    @Override
-                    public boolean apply(JoinCondition condition) {
-                        return eval(factory.getBasicEvaluator(rightPointer, condition.getRight()).eval(),
-                                factory.getBasicEvaluator(bufferObj.pointer, condition.getLeft()).eval(), condition.getRelationship());
-                    }
-                });
-
-                if (option.isPresent()) {
-                    bufferObj.setHasJoined(true);
-                    setJoinedRecord(rightPointer, bufferObj.pointer);
-                    return (bufferObj.schemaChanged || rightOutcome == NextOutcome.INCREMENTED_SCHEMA_CHANGED) ?
-                            NextOutcome.INCREMENTED_SCHEMA_CHANGED :
-                            NextOutcome.INCREMENTED_SCHEMA_UNCHANGED;
-                }
-
-                if (curIdx >= bufferLength) {
-                    curIdx = 0;
-                }
-            }
-
-            return NextOutcome.NONE_LEFT;
-        }
-    }
-
-    class OuterIterator extends RightIterator {
+    class OuterIterator extends LeftIterator {
         boolean innerJoinCompleted = false;
 
         @Override
@@ -353,7 +298,7 @@ public class JoinROP extends ROPBase<Join> {
                 while (curIdx < bufferLength) {
                     RecordBuffer recordBuffer = buffer.get(curIdx++);
                     if (!recordBuffer.hasJoined) {
-                        setJoinedRecord(null, recordBuffer.pointer);
+                        setOutputRecord(recordBuffer.pointer, null);
                         return recordBuffer.schemaChanged ? NextOutcome.INCREMENTED_SCHEMA_CHANGED : NextOutcome.INCREMENTED_SCHEMA_UNCHANGED;
                     }
                 }

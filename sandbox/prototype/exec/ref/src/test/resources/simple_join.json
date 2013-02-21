@@ -7,21 +7,20 @@
          info: "na"
       }
    },
-   sources: [
-      {
-         type: "json",
-         name: "employees-json",
-         files: [
-            "src/test/resources/employees.json"
-         ]
-      },
-      {
-         type: "json",
-         name: "depts-json",
-         files: [
-            "src/test/resources/departments.json"
-         ]
-      }
+   storage:[
+       {
+         type:"console",
+         name:"console"
+       },
+       {
+         type:"fs",
+         name:"fs1",
+         root:"file:///"
+       },
+       {
+         type:"classpath",
+         name:"cp"
+       }
    ],
    query: [
       {
@@ -29,14 +28,22 @@
          op: "scan",
          memo: "initial_scan",
          ref: "employees",
-         source: "employees-json"
+         storageengine: "cp",
+         selection: {
+         	 path: "/employees.json",
+         	 type: "JSON"
+         }
       },
       {
          @id: 2,
          op: "scan",
          memo: "second_scan",
          ref: "departments",
-         source: "depts-json"
+         storageengine: "cp",
+         selection: {
+             path: "/departments.json",
+             type: "JSON"
+         }
       },
       {
          @id: 3,
@@ -56,7 +63,8 @@
          input: 3,
          op: "write",
          memo: "output sink",
-         file: "console:///stdout"
+         storageengine: "console",
+         target: {pipe: "STD_OUT"}
       }
    ]
 }
