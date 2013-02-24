@@ -40,7 +40,7 @@
       <groupId>org.apache.drill.exec</groupId>
       <artifactId>ref</artifactId>
       <version>1.0-SNAPSHOT</version>
-      <classifier>test</classifier>
+      <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>    
     
