@@ -59,8 +59,7 @@ public class DrillTable extends BaseQueryable<Object>
       RelDataType rowType,
       String name,
       StorageEngineConfig storageEngineConfig,
-      Object selection
-      ) {
+      Object selection) {
     super(schema.getQueryProvider(), elementType, expression);
     this.schema = schema;
     this.name = name;
@@ -78,10 +77,13 @@ public class DrillTable extends BaseQueryable<Object>
     final RelDataType rowType =
         typeFactory.createStructType(
             Collections.singletonList(
-                typeFactory.createSqlType(SqlTypeName.ANY)),
-            Collections.singletonList("_extra"));
+                typeFactory.createMapType(
+                    typeFactory.createSqlType(SqlTypeName.VARCHAR),
+                    typeFactory.createSqlType(SqlTypeName.ANY))),
+            Collections.singletonList("_MAP"));
     final DrillTable table =
-        new DrillTable(schema, Object.class, call, rowType, name, storageEngineConfig, selection);
+        new DrillTable(schema, Object.class, call, rowType, name,
+            storageEngineConfig, selection);
     schema.addTable(name, table);
   }
 

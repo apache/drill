@@ -23,6 +23,13 @@ import java.sql.*;
 
 /** Unit tests for Drill's JDBC driver. */
 public class JdbcTest extends TestCase {
+  private static final String EXPECTED =
+      "_MAP={donuts={batters={batter=[{id=1001, type=Regular}, {id=1002, type=Chocolate}, {id=1003, type=Blueberry}, {id=1004, type=Devil's Food}]}, id=0001, name=Cake, ppu=0.55, sales=35, topping=[{id=5001, type=None}, {id=5002, type=Glazed}, {id=5005, type=Sugar}, {id=5007, type=Powdered Sugar}, {id=5006, type=Chocolate with Sprinkles}, {id=5003, type=Chocolate}, {id=5004, type=Maple}], type=donut}}\n"
+      + "_MAP={donuts={batters={batter=[{id=1001, type=Regular}]}, id=0002, name=Raised, ppu=0.69, sales=145, topping=[{id=5001, type=None}, {id=5002, type=Glazed}, {id=5005, type=Sugar}, {id=5003, type=Chocolate}, {id=5004, type=Maple}], type=donut}}\n"
+      + "_MAP={donuts={batters={batter=[{id=1001, type=Regular}, {id=1002, type=Chocolate}]}, id=0003, name=Old Fashioned, ppu=0.55, sales=300, topping=[{id=5001, type=None}, {id=5002, type=Glazed}, {id=5003, type=Chocolate}, {id=5004, type=Maple}], type=donut}}\n"
+      + "_MAP={donuts={batters={batter=[{id=1001, type=Regular}, {id=1002, type=Chocolate}, {id=1003, type=Blueberry}, {id=1004, type=Devil's Food}]}, filling=[{id=6001, type=None}, {id=6002, type=Raspberry}, {id=6003, type=Lemon}, {id=6004, type=Chocolate}, {id=6005, type=Kreme}], id=0004, name=Filled, ppu=0.69, sales=14, topping=[{id=5001, type=None}, {id=5002, type=Glazed}, {id=5005, type=Sugar}, {id=5007, type=Powdered Sugar}, {id=5006, type=Chocolate with Sprinkles}, {id=5003, type=Chocolate}, {id=5004, type=Maple}], type=donut}}\n"
+      + "_MAP={donuts={batters={batter=[{id=1001, type=Regular}]}, id=0005, name=Apple Fritter, ppu=1.0, sales=700, topping=[{id=5002, type=Glazed}], type=donut}}\n";
+
   /** Load driver. */
   public void testLoadDriver() throws ClassNotFoundException {
     Class.forName("org.apache.drill.jdbc.Driver");
@@ -56,15 +63,80 @@ public class JdbcTest extends TestCase {
     final ResultSet resultSet = statement.executeQuery(
         "select * from donuts");
     assertEquals(
-        "_extra={donuts={batters={batter=[{id=1001, type=Regular}, {id=1002, type=Chocolate}, {id=1003, type=Blueberry}, {id=1004, type=Devil's Food}]}, id=0001, name=Cake, ppu=0.55, sales=35, topping=[{id=5001, type=None}, {id=5002, type=Glazed}, {id=5005, type=Sugar}, {id=5007, type=Powdered Sugar}, {id=5006, type=Chocolate with Sprinkles}, {id=5003, type=Chocolate}, {id=5004, type=Maple}], type=donut}}\n"
-        + "_extra={donuts={batters={batter=[{id=1001, type=Regular}]}, id=0002, name=Raised, ppu=0.69, sales=145, topping=[{id=5001, type=None}, {id=5002, type=Glazed}, {id=5005, type=Sugar}, {id=5003, type=Chocolate}, {id=5004, type=Maple}], type=donut}}\n"
-        + "_extra={donuts={batters={batter=[{id=1001, type=Regular}, {id=1002, type=Chocolate}]}, id=0003, name=Old Fashioned, ppu=0.55, sales=300, topping=[{id=5001, type=None}, {id=5002, type=Glazed}, {id=5003, type=Chocolate}, {id=5004, type=Maple}], type=donut}}\n"
-        + "_extra={donuts={batters={batter=[{id=1001, type=Regular}, {id=1002, type=Chocolate}, {id=1003, type=Blueberry}, {id=1004, type=Devil's Food}]}, filling=[{id=6001, type=None}, {id=6002, type=Raspberry}, {id=6003, type=Lemon}, {id=6004, type=Chocolate}, {id=6005, type=Kreme}], id=0004, name=Filled, ppu=0.69, sales=14, topping=[{id=5001, type=None}, {id=5002, type=Glazed}, {id=5005, type=Sugar}, {id=5007, type=Powdered Sugar}, {id=5006, type=Chocolate with Sprinkles}, {id=5003, type=Chocolate}, {id=5004, type=Maple}], type=donut}}\n"
-        + "_extra={donuts={batters={batter=[{id=1001, type=Regular}]}, id=0005, name=Apple Fritter, ppu=1.0, sales=700, topping=[{id=5002, type=Glazed}], type=donut}}\n",
+        EXPECTED,
         toString(resultSet));
     resultSet.close();
     statement.close();
     connection.close();
+  }
+
+  /** Query with project list. No field references yet. */
+  public void testProjectConstant() throws Exception {
+    assertSqlReturns(
+        "select 1 + 3 as c from donuts",
+        "C=4\n"
+        + "C=4\n"
+        + "C=4\n"
+        + "C=4\n"
+        + "C=4\n");
+  }
+
+  /** Query that projects an element from the map. */
+  public void testProject() throws Exception {
+    assertSqlReturns(
+        "select _MAP['donuts']['ppu'] as ppu from donuts",
+        "PPU=0.55\n"
+        + "PPU=0.69\n"
+        + "PPU=0.55\n"
+        + "PPU=0.69\n"
+        + "PPU=1.0\n");
+  }
+
+  /** Query with subquery, filter, and projection of one real and one
+   * nonexistent field from a map field. */
+  public void testProjectFilterSubquery() throws Exception {
+    assertSqlReturns(
+        "select d['name'] as name, d['xx'] as xx from (\n"
+        + " select _MAP['donuts'] as d from donuts)\n"
+        + "where cast(d['ppu'] as double) > 0.6",
+        "NAME=Raised; XX=null\n"
+        + "NAME=Filled; XX=null\n"
+        + "NAME=Apple Fritter; XX=null\n");
+  }
+
+  /** Query that projects one field. (Disabled; uses sugared syntax.) */
+  public void _testProjectNestedFieldSugared() throws Exception {
+    assertSqlReturns(
+        "select donuts.ppu from donuts",
+        "C=4\n"
+        + "C=4\n"
+        + "C=4\n"
+        + "C=4\n"
+        + "C=4\n");
+  }
+
+  /** Query with filter. No field references yet. */
+  public void testFilterConstant() throws Exception {
+    assertSqlReturns(
+        "select * from donuts where 3 > 4",
+        "");
+    assertSqlReturns(
+        "select * from donuts where 3 < 4",
+        EXPECTED);
+  }
+
+  private void assertSqlReturns(String sql,
+      String expected) throws ClassNotFoundException, SQLException
+  {
+    Class.forName("org.apache.drill.jdbc.Driver");
+    final Connection connection = DriverManager.getConnection(
+        "jdbc:drill:schema=DONUTS;tables=DONUTS");
+    try (Statement statement = connection.createStatement();
+         ResultSet resultSet = statement.executeQuery(sql)) {
+      assertEquals(expected, toString(resultSet));
+    } finally {
+      connection.close();
+    }
   }
 
   static String toString(ResultSet resultSet) throws SQLException {
