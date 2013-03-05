@@ -24,7 +24,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /**
  * SimpleOperator is an operator that has one inputs at most.
  */
-public abstract class SingleInputOperator extends LogicalOperatorBase{
+public abstract class SingleInputOperator extends LogicalOperatorBase {
 
   private LogicalOperator input;
   
