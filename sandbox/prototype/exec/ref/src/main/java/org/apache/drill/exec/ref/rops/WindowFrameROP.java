@@ -253,13 +253,13 @@ public class WindowFrameROP extends SingleInputROPBase<WindowFrame> {
                     curWindow.removeHoldersBeforeIndex(curWindow.getWindowId());
                 }
                 curWindow = new Window(start, end, curWindow);
-                if (curWindow.isCrossedWithinBoundary(recordPointer)) {
-                    holderBuffer.add(new WindowObjectHolder(recordPointer, 0, index, schemaChanged));
-                    return;
-                }
             }
 
-            curWindow.addRecord(recordPointer, index, schemaChanged);
+            if (curWindow.isCrossedWithinBoundary(recordPointer)) {
+                holderBuffer.add(new WindowObjectHolder(recordPointer, 0, index, schemaChanged));
+            } else {
+                curWindow.addRecord(recordPointer, index, schemaChanged);
+            }
         }
 
         public boolean hasMoreWindows(int curIndex) {

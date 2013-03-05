@@ -129,7 +129,7 @@ public class WindowFrameROPTest {
     }
 
     @Test
-    public void windowShouldNotCrossWithinAndRange() throws IOException {
+    public void windowShouldNotCrossWithins() throws IOException {
         String withinInput = "" +
                 "{id: 0, v: 0}" +
                 "{id: 1, v: 0}" +
@@ -151,6 +151,45 @@ public class WindowFrameROPTest {
                 new WindowObj(3, 2, 0),
                 new WindowObj(3, 3, 1),
                 new WindowObj(4, 4, 0)
+        );
+
+        verifyWindowOrder(windows, out);
+    }
+
+    @Test
+    public void windowShouldNotCrossWithinAndRange() throws IOException {
+        String withinInput = "" +
+                "{id: 0, v: 0}" +
+                "{id: 1, v: 0}" +
+                "{id: 2, v: 0}" +
+                "{id: 3, v: 0}" +
+                "{id: 4, v: 1}" +
+                "{id: 5, v: 1}" +
+                "{id: 6, v: 2}";
+        WindowFrameROP rop = new WindowFrameROP(new WindowFrame(new FieldReference("test.v"), null, -1L, 3L));
+        RecordIterator incoming = TestUtils.jsonToRecordIterator("test", withinInput);
+        rop.setInput(incoming);
+        RecordIterator out = rop.getOutput();
+
+        List<WindowObj> windows = Lists.newArrayList(
+                new WindowObj(0, 0, 0),
+                new WindowObj(0, 1, 1),
+                new WindowObj(0, 2, -1),
+                new WindowObj(0, 3, 2),
+                new WindowObj(1, 0, 0),
+                new WindowObj(1, 1, 1),
+                new WindowObj(1, 2, -1),
+                new WindowObj(1, 3, 2),
+                new WindowObj(2, 1, 0),
+                new WindowObj(2, 2, 1),
+                new WindowObj(2, 3, -1),
+                new WindowObj(3, 2, 0),
+                new WindowObj(3, 3, 1),
+                new WindowObj(4, 4, 0),
+                new WindowObj(4, 5, 1),
+                new WindowObj(5, 4, 0),
+                new WindowObj(5, 5, 1),
+                new WindowObj(6, 6, 0)
         );
 
         verifyWindowOrder(windows, out);
