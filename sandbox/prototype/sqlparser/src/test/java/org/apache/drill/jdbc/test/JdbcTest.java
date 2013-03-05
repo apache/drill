@@ -18,11 +18,30 @@
 package org.apache.drill.jdbc.test;
 
 import junit.framework.TestCase;
+import org.apache.drill.jdbc.DrillTable;
 
 import java.sql.*;
+import java.util.Properties;
 
 /** Unit tests for Drill's JDBC driver. */
 public class JdbcTest extends TestCase {
+  private static final String MODEL =
+      "{\n"
+      + "  version: '1.0',\n"
+      + "   schemas: [\n"
+      + "     {\n"
+      + "       name: 'DONUTS',\n"
+      + "       tables: [\n"
+      + "         {\n"
+      + "           name: 'DONUTS',\n"
+      + "           type: 'custom',\n"
+      + "           factory: '" + DrillTable.Factory.class.getName() + "'\n"
+      + "         }\n"
+      + "       ]\n"
+      + "     }\n"
+      + "   ]\n"
+      + "}";
+
   private static final String EXPECTED =
       "_MAP={donuts={batters={batter=[{id=1001, type=Regular}, {id=1002, type=Chocolate}, {id=1003, type=Blueberry}, {id=1004, type=Devil's Food}]}, id=0001, name=Cake, ppu=0.55, sales=35, topping=[{id=5001, type=None}, {id=5002, type=Glazed}, {id=5005, type=Sugar}, {id=5007, type=Powdered Sugar}, {id=5006, type=Chocolate with Sprinkles}, {id=5003, type=Chocolate}, {id=5004, type=Maple}], type=donut}}\n"
       + "_MAP={donuts={batters={batter=[{id=1001, type=Regular}]}, id=0002, name=Raised, ppu=0.69, sales=145, topping=[{id=5001, type=None}, {id=5002, type=Glazed}, {id=5005, type=Sugar}, {id=5003, type=Chocolate}, {id=5004, type=Maple}], type=donut}}\n"
@@ -57,8 +76,11 @@ public class JdbcTest extends TestCase {
   /** Simple query against JSON. */
   public void testSelectJson() throws Exception {
     Class.forName("org.apache.drill.jdbc.Driver");
-    final Connection connection = DriverManager.getConnection(
-        "jdbc:drill:schema=DONUTS;tables=DONUTS");
+    final Properties info = new Properties();
+    info.setProperty("schema", "DONUTS");
+    info.setProperty("model", "inline:" + MODEL);
+    final Connection connection =
+        DriverManager.getConnection("jdbc:drill:", info);
     final Statement statement = connection.createStatement();
     final ResultSet resultSet = statement.executeQuery(
         "select * from donuts");
@@ -125,12 +147,14 @@ public class JdbcTest extends TestCase {
         EXPECTED);
   }
 
-  private void assertSqlReturns(String sql,
-      String expected) throws ClassNotFoundException, SQLException
-  {
+  private void assertSqlReturns(String sql, String expected)
+      throws ClassNotFoundException, SQLException {
     Class.forName("org.apache.drill.jdbc.Driver");
-    final Connection connection = DriverManager.getConnection(
-        "jdbc:drill:schema=DONUTS;tables=DONUTS");
+    final Properties info = new Properties();
+    info.setProperty("schema", "DONUTS");
+    info.setProperty("model", "inline:" + MODEL);
+    final Connection connection =
+        DriverManager.getConnection("jdbc:drill:", info);
     try (Statement statement = connection.createStatement();
          ResultSet resultSet = statement.executeQuery(sql)) {
       assertEquals(expected, toString(resultSet));
