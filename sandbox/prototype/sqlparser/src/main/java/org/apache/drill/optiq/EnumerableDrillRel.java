@@ -23,6 +23,7 @@ import net.hydromatic.linq4j.expressions.Expressions;
 import net.hydromatic.optiq.impl.java.JavaTypeFactory;
 import net.hydromatic.optiq.rules.java.*;
 
+import org.apache.drill.common.util.Hook;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.SingleRel;
 import org.eigenbase.relopt.RelOptCluster;
@@ -88,6 +89,7 @@ public class EnumerableDrillRel extends SingleRel implements EnumerableRel {
       throw new RuntimeException(e);
     }
     String plan = drillImplementor.getJsonString();
+    Hook.LOGICAL_PLAN.run(plan);
     return new BlockBuilder()
         .append(
             Expressions.call(

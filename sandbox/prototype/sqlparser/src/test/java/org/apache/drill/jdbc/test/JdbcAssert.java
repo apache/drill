@@ -19,6 +19,7 @@ package org.apache.drill.jdbc.test;
 
 import com.google.common.base.Function;
 import junit.framework.Assert;
+import org.apache.drill.common.util.Hook;
 
 import java.sql.*;
 import java.util.Properties;
@@ -109,6 +110,28 @@ public class JdbcAssert {
         if (connection != null) {
           connection.close();
         }
+      }
+    }
+
+    public void plainContains(String expected) {
+      final String[] plan = {null};
+      Connection connection = null;
+      Statement statement = null;
+      Hook.Closeable x =
+          Hook.LOGICAL_PLAN.add(
+              new Function<String, Void>() {
+                public Void apply(String o) {
+                  plan[0] = o;
+                  return null;
+                }
+              });
+      try {
+        connection = connectionFactory.createConnection();
+        statement = connection.prepareStatement(sql);
+        statement.close();
+        Assert.assertTrue(plan[0].contains(expected));
+      } catch (Exception e) {
+        throw new RuntimeException(e);
       }
     }
   }

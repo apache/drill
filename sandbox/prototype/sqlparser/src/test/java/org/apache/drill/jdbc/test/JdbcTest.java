@@ -111,6 +111,17 @@ public class JdbcTest extends TestCase {
             + "PPU=1.0\n");
   }
 
+  /** Checks the logical plan. */
+  public void testProjectPlan() throws Exception {
+    JdbcAssert.withModel(MODEL, "DONUTS")
+        .sql("select _MAP['donuts']['ppu'] as ppu from donuts")
+        .plainContains("{\"head\":{\"type\":\"apache_drill_logical_plan\",\"version\":\"1\",\"generator\":{\"type\":\"manual\",\"info\":\"na\"}}," +
+            "\"storage\":[{\"name\":\"donuts-json\",\"type\":\"classpath\"},{\"name\":\"queue\",\"type\":\"queue\"}]," +
+            "\"query\":[" +
+            "{\"op\":\"sequence\",\"do\":[{\"op\":\"scan\",\"memo\":\"initial_scan\",\"ref\":\"donuts\",\"storageengine\":\"donuts-json\",\"selection\":{\"path\":\"/donuts.json\",\"type\":\"JSON\"}}," +
+            "{\"op\":\"store\",\"storageengine\":\"queue\",\"memo\":\"output sink\",\"target\":{\"number\":0}}]}]}");
+  }
+
   /** Query with subquery, filter, and projection of one real and one
    * nonexistent field from a map field. */
   public void testProjectFilterSubquery() throws Exception {
