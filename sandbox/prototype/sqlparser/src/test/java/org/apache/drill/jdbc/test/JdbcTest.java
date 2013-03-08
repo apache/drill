@@ -17,11 +17,13 @@
  ******************************************************************************/
 package org.apache.drill.jdbc.test;
 
+import com.google.common.base.Function;
+
 import junit.framework.TestCase;
+
 import org.apache.drill.jdbc.DrillTable;
 
 import java.sql.*;
-import java.util.Properties;
 
 /** Unit tests for Drill's JDBC driver. */
 public class JdbcTest extends TestCase {
@@ -58,126 +60,88 @@ public class JdbcTest extends TestCase {
   public void testConnect() throws Exception {
     Class.forName("org.apache.drill.jdbc.Driver");
     final Connection connection = DriverManager.getConnection(
-        "jdbc:drill:schema=DONUTS;tables=EMP,DEPT");
+        "jdbc:drill:schema=DONUTS");
     connection.close();
   }
 
   /** Load driver, make a connection, prepare a statement. */
-  public void _testPrepare() throws Exception {
-    Class.forName("org.apache.drill.jdbc.Driver");
-    final Connection connection = DriverManager.getConnection(
-        "jdbc:drill:schema=DONUTS;tables=EMP,DEPT");
-    final Statement statement = connection.prepareStatement(
-        "select * from emp where cast(name as varchar(10)) = 'Eric'");
-    statement.close();
-    connection.close();
+  public void testPrepare() throws Exception {
+    JdbcAssert.withModel(MODEL, "DONUTS")
+        .withConnection(
+            new Function<Connection, Void>() {
+              public Void apply(Connection connection) {
+                try {
+                  final Statement statement = connection.prepareStatement(
+                      "select * from donuts");
+                  statement.close();
+                  return null;
+                } catch (Exception e) {
+                  throw new RuntimeException(e);
+                }
+              }
+            });
   }
 
   /** Simple query against JSON. */
   public void testSelectJson() throws Exception {
-    Class.forName("org.apache.drill.jdbc.Driver");
-    final Properties info = new Properties();
-    info.setProperty("schema", "DONUTS");
-    info.setProperty("model", "inline:" + MODEL);
-    final Connection connection =
-        DriverManager.getConnection("jdbc:drill:", info);
-    final Statement statement = connection.createStatement();
-    final ResultSet resultSet = statement.executeQuery(
-        "select * from donuts");
-    assertEquals(
-        EXPECTED,
-        toString(resultSet));
-    resultSet.close();
-    statement.close();
-    connection.close();
+    JdbcAssert.withModel(MODEL, "DONUTS")
+        .sql("select * from donuts")
+        .returns(EXPECTED);
   }
 
   /** Query with project list. No field references yet. */
   public void testProjectConstant() throws Exception {
-    assertSqlReturns(
-        "select 1 + 3 as c from donuts",
-        "C=4\n"
-        + "C=4\n"
-        + "C=4\n"
-        + "C=4\n"
-        + "C=4\n");
+    JdbcAssert.withModel(MODEL, "DONUTS")
+        .sql("select 1 + 3 as c from donuts")
+        .returns("C=4\n"
+            + "C=4\n"
+            + "C=4\n"
+            + "C=4\n"
+            + "C=4\n");
   }
 
   /** Query that projects an element from the map. */
   public void testProject() throws Exception {
-    assertSqlReturns(
-        "select _MAP['donuts']['ppu'] as ppu from donuts",
-        "PPU=0.55\n"
-        + "PPU=0.69\n"
-        + "PPU=0.55\n"
-        + "PPU=0.69\n"
-        + "PPU=1.0\n");
+    JdbcAssert.withModel(MODEL, "DONUTS")
+        .sql("select _MAP['donuts']['ppu'] as ppu from donuts")
+        .returns("PPU=0.55\n"
+            + "PPU=0.69\n"
+            + "PPU=0.55\n"
+            + "PPU=0.69\n"
+            + "PPU=1.0\n");
   }
 
   /** Query with subquery, filter, and projection of one real and one
    * nonexistent field from a map field. */
   public void testProjectFilterSubquery() throws Exception {
-    assertSqlReturns(
-        "select d['name'] as name, d['xx'] as xx from (\n"
-        + " select _MAP['donuts'] as d from donuts)\n"
-        + "where cast(d['ppu'] as double) > 0.6",
-        "NAME=Raised; XX=null\n"
-        + "NAME=Filled; XX=null\n"
-        + "NAME=Apple Fritter; XX=null\n");
+    JdbcAssert.withModel(MODEL, "DONUTS")
+        .sql("select d['name'] as name, d['xx'] as xx from (\n"
+            + " select _MAP['donuts'] as d from donuts)\n"
+            + "where cast(d['ppu'] as double) > 0.6")
+        .returns("NAME=Raised; XX=null\n"
+            + "NAME=Filled; XX=null\n"
+            + "NAME=Apple Fritter; XX=null\n");
   }
 
   /** Query that projects one field. (Disabled; uses sugared syntax.) */
   public void _testProjectNestedFieldSugared() throws Exception {
-    assertSqlReturns(
-        "select donuts.ppu from donuts",
-        "C=4\n"
-        + "C=4\n"
-        + "C=4\n"
-        + "C=4\n"
-        + "C=4\n");
+    JdbcAssert.withModel(MODEL, "DONUTS")
+        .sql("select donuts.ppu from donuts")
+        .returns("C=4\n"
+            + "C=4\n"
+            + "C=4\n"
+            + "C=4\n"
+            + "C=4\n");
   }
 
   /** Query with filter. No field references yet. */
   public void testFilterConstant() throws Exception {
-    assertSqlReturns(
-        "select * from donuts where 3 > 4",
-        "");
-    assertSqlReturns(
-        "select * from donuts where 3 < 4",
-        EXPECTED);
-  }
-
-  private void assertSqlReturns(String sql, String expected)
-      throws ClassNotFoundException, SQLException {
-    Class.forName("org.apache.drill.jdbc.Driver");
-    final Properties info = new Properties();
-    info.setProperty("schema", "DONUTS");
-    info.setProperty("model", "inline:" + MODEL);
-    final Connection connection =
-        DriverManager.getConnection("jdbc:drill:", info);
-    try (Statement statement = connection.createStatement();
-         ResultSet resultSet = statement.executeQuery(sql)) {
-      assertEquals(expected, toString(resultSet));
-    } finally {
-      connection.close();
-    }
-  }
-
-  static String toString(ResultSet resultSet) throws SQLException {
-    StringBuilder buf = new StringBuilder();
-    while (resultSet.next()) {
-      int n = resultSet.getMetaData().getColumnCount();
-      String sep = "";
-      for (int i = 1; i <= n; i++) {
-        buf.append(sep)
-            .append(resultSet.getMetaData().getColumnLabel(i))
-            .append("=")
-            .append(resultSet.getObject(i));
-        sep = "; ";
-      }
-      buf.append("\n");
-    }
-    return buf.toString();
+    JdbcAssert.withModel(MODEL, "DONUTS")
+        .sql("select * from donuts where 3 > 4")
+        .returns("");
+    JdbcAssert.withModel(MODEL, "DONUTS")
+        .sql("select * from donuts where 3 < 4")
+        .returns(EXPECTED);
   }
 }
 
