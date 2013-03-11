@@ -135,7 +135,7 @@ public class LogicalPlan {
     ObjectMapper mapper = config.getMapper();
     try {
       LogicalPlan plan = mapper.readValue(planString, LogicalPlan.class);
-      System.out.println(mapper.writeValueAsString(plan));
+//      System.out.println(mapper.writeValueAsString(plan));
       return plan;
     } catch (IOException e) {
       throw new RuntimeException(e);
