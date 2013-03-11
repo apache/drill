@@ -1,0 +1,42 @@
+{
+  head:{
+    type:"apache_drill_logical_plan",
+    version:"1",
+    generator:{
+      type:"manual",
+      info:"na"
+    }
+  },
+  storage:[
+    {
+      type:"console",
+      name:"console"
+    },
+    {
+      type:"hbase",
+      name:"hbase"
+    }
+  ],
+  query:[
+    {
+      op:"sequence",
+      do:[
+	    {
+	      op: "scan",
+	      memo: "initial_scan",
+	      ref: "TestTable",
+	      storageengine: "hbase",
+	      selection: {
+	        table: "TestTable"
+	      }
+	    },
+	    {
+	      op: "store",
+	      memo: "output sink",
+	      storageengine: "console",
+	      target: {pipe: "STD_OUT"}
+	    }
+      ]
+    }
+  ]
+}
