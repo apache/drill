@@ -18,24 +18,8 @@
 package org.apache.drill.optiq;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
-import java.util.SortedMap;
-import java.util.TreeMap;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletionService;
-import java.util.concurrent.ExecutorCompletionService;
-import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
+import java.util.concurrent.*;
 
 import net.hydromatic.linq4j.AbstractEnumerable;
 import net.hydromatic.linq4j.Enumerable;
@@ -78,11 +62,43 @@ public class EnumerableDrill<E>
     config.setSinkQueues(0, queue);
   }
 
-  /** Creates a DrillEnumerable from a plan represented as a string. */
-  public static <E extends JsonNode> EnumerableDrill<E> of(String plan,
-      Class<E> clazz) {
+  /** Creates a DrillEnumerable from a plan represented as a string. Each record
+   * returned is a {@link JsonNode}. */
+  public static <E> EnumerableDrill<E> of(String plan, Class<E> clazz) {
     DrillConfig config = DrillConfig.create();
-    return new EnumerableDrill<E>(config, LogicalPlan.parse(config, plan), clazz);
+    final LogicalPlan parse = LogicalPlan.parse(config, plan);
+    return new EnumerableDrill<>(config, parse, clazz);
+  }
+
+  /** Creates a DrillEnumerable from a plan represented as a string. Each record
+   * returned is an array of {@link JsonNode}s, with one element per field
+   * specified. */
+  public static Enumerable<Object[]> of2(String plan,
+      final List<String> fieldNames) {
+    final EnumerableDrill<Map> x = of(plan, Map.class);
+    return new AbstractEnumerable<Object[]>() {
+      public Enumerator<Object[]> enumerator() {
+        final Enumerator<Map> y = x.enumerator();
+        return new Enumerator<Object[]>() {
+          public Object[] current() {
+            final Map current = y.current();
+            final Object[] objects = new Object[fieldNames.size()];
+            for (int i = 0; i < objects.length; i++) {
+              objects[i] = current.get(fieldNames.get(i));
+            }
+            return objects;
+          }
+
+          public boolean moveNext() {
+            return y.moveNext();
+          }
+
+          public void reset() {
+            y.reset();
+          }
+        };
+      }
+    };
   }
 
   /** Runs the plan as a background task. */

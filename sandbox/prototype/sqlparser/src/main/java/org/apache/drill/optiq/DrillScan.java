@@ -22,7 +22,7 @@ public class DrillScan extends TableAccessRelBase implements DrillRel {
       RelOptTable table)
   {
     super(cluster, traits, table);
-    assert traits.contains(DrillOptiq.CONVENTION);
+    assert getConvention() == CONVENTION;
     this.drillTable = table.unwrap(DrillTable.class);
     assert drillTable != null;
   }

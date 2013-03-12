@@ -134,6 +134,16 @@ public class JdbcTest extends TestCase {
             + "NAME=Apple Fritter; XX=null\n");
   }
 
+  public void testProjectFilterSubqueryPlan() throws Exception {
+    JdbcAssert.withModel(MODEL, "DONUTS")
+        .sql("select d['name'] as name, d['xx'] as xx from (\n"
+            + " select _MAP['donuts'] as d from donuts)\n"
+            + "where cast(d['ppu'] as double) > 0.6")
+        .plainContains("NAME=Raised; XX=null\n"
+            + "NAME=Filled; XX=null\n"
+            + "NAME=Apple Fritter; XX=null\n");
+  }
+
   /** Query that projects one field. (Disabled; uses sugared syntax.) */
   public void _testProjectNestedFieldSugared() throws Exception {
     JdbcAssert.withModel(MODEL, "DONUTS")

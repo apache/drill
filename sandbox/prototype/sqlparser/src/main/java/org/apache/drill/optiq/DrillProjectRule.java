@@ -17,18 +17,35 @@
  ******************************************************************************/
 package org.apache.drill.optiq;
 
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.Convention;
+import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
 
 /**
- * Relational expression that is implemented in Drill.
+ * Rule that converts a {@link org.eigenbase.rel.ProjectRel} to a Drill
+ * "project" operation.
  */
-public interface DrillRel extends RelNode {
-  /** Calling convention for relational expressions that are "implemented" by
-   * generating Drill logical plans. */
-  Convention CONVENTION = new Convention.Impl("DRILL", DrillRel.class);
+public class DrillProjectRule extends RelOptRule {
+  public static final RelOptRule INSTANCE = new DrillProjectRule();
 
-  void implement(DrillImplementor implementor);
+  private DrillProjectRule() {
+    super(
+        new RelOptRuleOperand(
+            ProjectRel.class,
+            Convention.NONE,
+            new RelOptRuleOperand(RelNode.class, ANY)),
+        "DrillProjectRule");
+  }
+
+  @Override
+  public void onMatch(RelOptRuleCall call) {
+    final ProjectRel project = (ProjectRel) call.getRels()[0];
+    final RelNode input = call.getRels()[1];
+    final RelTraitSet traits = project.getTraitSet().plus(DrillRel.CONVENTION);
+    final RelNode convertedInput = convert(input, traits);
+    call.transformTo(
+        new DrillProjectRel(project.getCluster(), traits, convertedInput,
+            project.getProjectExps(), project.getRowType()));
+  }
 }
 
-// End DrillRel.java
+// End DrillProjectRule.java

@@ -20,7 +20,6 @@ package org.apache.drill.optiq;
 import net.hydromatic.optiq.rules.java.EnumerableConvention;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.convert.ConverterRule;
-import org.eigenbase.relopt.volcano.AbstractConverter;
 
 /**
  * Rule that converts any Drill relational expression to enumerable format by
@@ -33,10 +32,10 @@ public class EnumerableDrillRule extends ConverterRule {
       new EnumerableDrillRule(EnumerableConvention.CUSTOM);
 
   private EnumerableDrillRule(EnumerableConvention outConvention) {
-    super(AbstractConverter.class,
-        DrillOptiq.CONVENTION,
+    super(RelNode.class,
+        DrillRel.CONVENTION,
         outConvention,
-        "Convert drill rels to Enumerable " + outConvention);
+        "EnumerableDrillRule." + outConvention);
   }
 
   @Override
@@ -46,10 +45,7 @@ public class EnumerableDrillRule extends ConverterRule {
 
   @Override
   public RelNode convert(RelNode rel) {
-    if (!rel.getTraitSet().contains(DrillOptiq.CONVENTION)) {
-      return null;
-    }
-
+    assert rel.getTraitSet().contains(DrillRel.CONVENTION);
     return new EnumerableDrillRel(rel.getCluster(),
         rel.getTraitSet().replace(getOutConvention()),
         rel);

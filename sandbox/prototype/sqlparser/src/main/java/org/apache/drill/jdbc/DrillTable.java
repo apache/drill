@@ -34,8 +34,7 @@ import org.apache.drill.common.logical.StorageEngineConfig;
 import org.apache.drill.exec.ref.rops.DataWriter;
 import org.apache.drill.exec.ref.rse.ClasspathRSE;
 import org.apache.drill.exec.ref.rse.ClasspathRSE.ClasspathInputConfig;
-import org.apache.drill.optiq.DrillOptiq;
-import org.apache.drill.optiq.DrillScan;
+import org.apache.drill.optiq.*;
 
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptTable;
@@ -107,7 +106,7 @@ public class DrillTable extends BaseQueryable<Object>
 
   public RelNode toRel(RelOptTable.ToRelContext context, RelOptTable table) {
     return new DrillScan(context.getCluster(),
-        context.getCluster().traitSetOf(DrillOptiq.CONVENTION),
+        context.getCluster().traitSetOf(DrillRel.CONVENTION),
         table);
   }
 

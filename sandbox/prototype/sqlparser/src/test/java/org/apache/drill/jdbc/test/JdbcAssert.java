@@ -114,14 +114,14 @@ public class JdbcAssert {
     }
 
     public void plainContains(String expected) {
-      final String[] plan = {null};
+      final String[] plan0 = {null};
       Connection connection = null;
       Statement statement = null;
       Hook.Closeable x =
           Hook.LOGICAL_PLAN.add(
               new Function<String, Void>() {
                 public Void apply(String o) {
-                  plan[0] = o;
+                  plan0[0] = o;
                   return null;
                 }
               });
@@ -129,7 +129,8 @@ public class JdbcAssert {
         connection = connectionFactory.createConnection();
         statement = connection.prepareStatement(sql);
         statement.close();
-        Assert.assertTrue(plan[0].contains(expected));
+        final String plan = plan0[0];
+        Assert.assertTrue(plan, plan.contains(expected));
       } catch (Exception e) {
         throw new RuntimeException(e);
       }
