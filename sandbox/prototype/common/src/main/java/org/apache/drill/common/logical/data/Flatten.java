@@ -17,6 +17,7 @@
  ******************************************************************************/
 package org.apache.drill.common.logical.data;
 
+import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.LogicalExpression;
 
@@ -48,8 +49,4 @@ public class Flatten extends SingleInputOperator{
   public boolean isDrop() {
     return drop;
   }
-  
-  
-
-	
 }

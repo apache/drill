@@ -18,6 +18,7 @@
 package org.apache.drill.common.logical.data;
 
 import org.apache.drill.common.exceptions.ExpressionParsingException;
+import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.PathSegment;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -47,5 +48,4 @@ public class Project extends SingleInputOperator {
   public NamedExpression[] getSelections() {
     return selections;
   }
-
 }

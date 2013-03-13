@@ -23,6 +23,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import org.apache.drill.common.expression.ErrorCollector;
 
 @JsonTypeName("join")
 public class Join extends LogicalOperatorBase {
@@ -31,7 +32,7 @@ public class Join extends LogicalOperatorBase {
   private final JoinType type;
   private final JoinCondition[] conditions;
 
-  public static enum JoinType{
+    public static enum JoinType{
     LEFT, INNER, OUTER;
     
     public static JoinType resolve(String val){
@@ -41,8 +42,8 @@ public class Join extends LogicalOperatorBase {
       throw new ExpressionParsingException(String.format("Unable to determine join type for value '%s'.", val));
     }
   }
-  
-  @JsonCreator
+
+    @JsonCreator
   public Join(@JsonProperty("left") LogicalOperator left, @JsonProperty("right") LogicalOperator right, @JsonProperty("conditions") JoinCondition[] conditions, @JsonProperty("type") String type) {
     super();
     this.conditions = conditions;

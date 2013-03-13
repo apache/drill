@@ -17,6 +17,7 @@
  ******************************************************************************/
 package org.apache.drill.common.logical.data;
 
+import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.expression.FieldReference;
 

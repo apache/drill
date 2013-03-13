@@ -17,6 +17,7 @@
  ******************************************************************************/
 package org.apache.drill.common.logical.data;
 
+import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.FieldReference;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -43,7 +44,4 @@ public class RunningAggregate extends SingleInputOperator{
   public NamedExpression[] getAggregations() {
     return aggregations;
   }
-
-
-
 }

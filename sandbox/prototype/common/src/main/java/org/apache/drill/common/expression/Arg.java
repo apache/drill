@@ -44,9 +44,9 @@ public class Arg {
     return name;
   }
   
-  public void confirmDataType(int argIndex, LogicalExpression e, ErrorCollector errors){
+  public void confirmDataType(String expr, int argIndex, LogicalExpression e, ErrorCollector errors){
     if(constantsOnly){
-      if(ConstantChecker.onlyIncludesConstants(e)) errors.addExpectedConstantValue(argIndex, name);
+      if(ConstantChecker.onlyIncludesConstants(e)) errors.addExpectedConstantValue(expr, argIndex, name);
     }
     DataType dt = e.getDataType();
     if(dt.isLateBind()){
@@ -57,7 +57,7 @@ public class Arg {
       }
       
       // didn't find an allowed type.
-      errors.addUnexpectedArgumentType(name, dt, allowedTypes, argIndex);
+      errors.addUnexpectedArgumentType(expr, name, dt, allowedTypes, argIndex);
       
     }
     

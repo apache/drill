@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -44,58 +44,65 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 //@JsonDeserialize(using = LogicalExpression.De.class)  // Excluded as we need to register this with the DrillConfig.
 @JsonSerialize(using = LogicalExpression.Se.class)
 public interface LogicalExpression {
-  static final Logger logger = LoggerFactory.getLogger(LogicalExpression.class);
+    static final Logger logger = LoggerFactory.getLogger(LogicalExpression.class);
 
-  public abstract DataType getDataType();
-  public void addToString(StringBuilder sb);
-  public void resolveAndValidate(ErrorCollector errors);
-  public <T> T accept(ExprVisitor<T> visitor);
+    public abstract DataType getDataType();
 
-  public static class De extends StdDeserializer<LogicalExpression> {
-    DrillConfig config;
-    public De(DrillConfig config) {
-      super(LogicalExpression.class);
-      this.config = config;
+    public void addToString(StringBuilder sb);
+
+    public void resolveAndValidate(String expr, ErrorCollector errors);
+
+    public <T> T accept(ExprVisitor<T> visitor);
+
+    public static class De extends StdDeserializer<LogicalExpression> {
+        DrillConfig config;
+        ErrorCollector errorCollector;
+
+        public De(DrillConfig config) {
+            super(LogicalExpression.class);
+            this.config = config;
+            this.errorCollector = config.getErrorCollector();
+        }
+
+        @Override
+        public LogicalExpression deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException,
+                JsonProcessingException {
+            String expr = jp.getText();
+
+            if (expr == null || expr.isEmpty())
+                return null;
+            try {
+                // logger.debug("Parsing expression string '{}'", expr);
+                ExprLexer lexer = new ExprLexer(new ANTLRStringStream(expr));
+
+                CommonTokenStream tokens = new CommonTokenStream(lexer);
+                ExprParser parser = new ExprParser(tokens);
+                parser.setRegistry(new FunctionRegistry(config));
+                parse_return ret = parser.parse();
+                // logger.debug("Found expression '{}'", ret.e);
+                ret.e.resolveAndValidate(expr, errorCollector);
+                return ret.e;
+            } catch (RecognitionException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
     }
 
-    @Override
-    public LogicalExpression deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException,
-        JsonProcessingException {
-      String expr = jp.getText();
+    public static class Se extends StdSerializer<LogicalExpression> {
 
-      if (expr == null || expr.isEmpty())
-        return null;
-      try {
-        // logger.debug("Parsing expression string '{}'", expr);
-        ExprLexer lexer = new ExprLexer(new ANTLRStringStream(expr));
+        protected Se() {
+            super(LogicalExpression.class);
+        }
 
-        CommonTokenStream tokens = new CommonTokenStream(lexer);
-        ExprParser parser = new ExprParser(tokens);
-        parser.setRegistry(new FunctionRegistry(config));
-        parse_return ret = parser.parse();
-        // logger.debug("Found expression '{}'", ret.e);
-        return ret.e;
-      } catch (RecognitionException e) {
-        throw new RuntimeException(e);
-      }
+        @Override
+        public void serialize(LogicalExpression value, JsonGenerator jgen, SerializerProvider provider) throws IOException,
+                JsonGenerationException {
+            StringBuilder sb = new StringBuilder();
+            value.addToString(sb);
+            jgen.writeString(sb.toString());
+        }
+
     }
-
-  }
-
-  public static class Se extends StdSerializer<LogicalExpression> {
-
-    protected Se() {
-      super(LogicalExpression.class);
-    }
-
-    @Override
-    public void serialize(LogicalExpression value, JsonGenerator jgen, SerializerProvider provider) throws IOException,
-        JsonGenerationException {
-      StringBuilder sb = new StringBuilder();
-      value.addToString(sb);
-      jgen.writeString(sb.toString());
-    }
-
-  }
 
 }

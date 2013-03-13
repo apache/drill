@@ -14,6 +14,7 @@
 	<properties>
 		<target.gen.source.path>${project.basedir}/target/generated-sources</target.gen.source.path>
 		<proto.cas.path>${project.basedir}/src/main/protobuf/</proto.cas.path>
+		<proto.common.path>${project.basedir}/../../common/src/main/protobuf</proto.common.path>
 	</properties>
 
 	<dependencies>
@@ -56,7 +57,7 @@
 			<groupId>org.apache.drill</groupId>
 			<artifactId>common</artifactId>
 			<version>1.0-SNAPSHOT</version>
-			<classifier>test</classifier>
+			<classifier>tests</classifier>
 		</dependency>
 		<dependency>
 			<groupId>com.beust</groupId>
@@ -155,6 +156,7 @@
 
 								<exec executable="protoc">
 									<arg value="--java_out=${target.gen.source.path}" />
+									<arg value="--proto_path=${proto.common.path}" />
 									<arg value="--proto_path=${proto.cas.path}" />
 									<arg line="${proto.files}" />
 								</exec>

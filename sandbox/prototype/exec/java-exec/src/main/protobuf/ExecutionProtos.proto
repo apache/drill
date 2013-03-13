@@ -81,7 +81,7 @@ message PlanFragment {
 
 message FragmentHandle {
 	optional int32 major_fragment_id = 1;
-	optional int32 minor_fragment_id = 1;
+	optional int32 minor_fragment_id = 2;
 }
 
 message WorkQueueStatus{

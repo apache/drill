@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,25 +17,27 @@
  ******************************************************************************/
 package org.apache.drill.common.logical.data;
 
+import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.LogicalExpression;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import org.apache.drill.common.logical.ValidationError;
+
+import java.util.Collection;
+import java.util.List;
 
 @JsonTypeName("filter")
-public class Filter extends SingleInputOperator{
-	private final LogicalExpression expr;
+public class Filter extends SingleInputOperator {
+    private final LogicalExpression expr;
 
-	@JsonCreator
-  public Filter(@JsonProperty("expr") LogicalExpression expr) {
-    this.expr = expr;
-  }
+    @JsonCreator
+    public Filter(@JsonProperty("expr") LogicalExpression expr) {
+        this.expr = expr;
+    }
 
-  public LogicalExpression getExpr() {
-    return expr;
-  }
-
-  
-	
+    public LogicalExpression getExpr() {
+        return expr;
+    }
 }

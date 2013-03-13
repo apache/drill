@@ -19,6 +19,7 @@ package org.apache.drill.common.logical.data;
 
 import java.io.IOException;
 
+import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.logical.data.Sequence.De;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,7 +57,7 @@ public class Sequence extends LogicalOperatorBase {
   @JsonProperty("do")
   public LogicalOperator[] stream;
 
-  public static class De extends StdDeserializer<LogicalOperator> {
+    public static class De extends StdDeserializer<LogicalOperator> {
 
     protected De() {
       super(Sequence.class);

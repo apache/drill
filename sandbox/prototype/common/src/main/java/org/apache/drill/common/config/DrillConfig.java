@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.apache.drill.common.expression.ErrorCollector;
+import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.exceptions.DrillConfigurationException;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.logical.StorageEngineConfigBase;
@@ -38,10 +40,12 @@ import com.google.common.annotations.VisibleForTesting;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
-public final class DrillConfig extends NestedConfig{
+public final class DrillConfig extends NestedConfig {
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillConfig.class);
   private final ObjectMapper mapper;
+
+  private final ErrorCollector errorCollector;
   
   @SuppressWarnings("unchecked")
   private volatile List<Queue<Object>> sinkQueues = new CopyOnWriteArrayList<Queue<Object>>(new Queue[1]);
@@ -49,6 +53,7 @@ public final class DrillConfig extends NestedConfig{
   @VisibleForTesting
   public DrillConfig(Config config) {
     super(config);
+    errorCollector = new ErrorCollectorImpl();
     mapper = new ObjectMapper();
     SimpleModule deserModule = new SimpleModule("LogicalExpressionDeserializationModule").addDeserializer(LogicalExpression.class, new LogicalExpression.De(this));
     mapper.registerModule(deserModule);
@@ -152,4 +157,8 @@ public final class DrillConfig extends NestedConfig{
   public String toString(){
     return this.root().render();
   }
+
+    public ErrorCollector getErrorCollector() {
+        return errorCollector;
+    }
 }

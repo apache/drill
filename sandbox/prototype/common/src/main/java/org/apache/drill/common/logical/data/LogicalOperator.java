@@ -20,6 +20,8 @@ package org.apache.drill.common.logical.data;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.drill.common.expression.ErrorCollector;
+import org.apache.drill.common.expression.visitors.OpVisitor;
 import org.apache.drill.common.graph.GraphValue;
 import org.apache.drill.common.logical.ValidationError;
 
