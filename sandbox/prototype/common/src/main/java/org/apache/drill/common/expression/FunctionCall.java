@@ -86,4 +86,9 @@ public class FunctionCall extends LogicalExpressionBase implements Iterable<Logi
       sb.append(") ");
     }
   }
+
+    @Override
+    public void resolveAndValidate(String expr, ErrorCollector errors) {
+        func.getArgumentValidator().validateArguments(expr, args, errors);
+    }
 }

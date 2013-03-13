@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.common.expression.IfExpression.IfCondition;
+import org.apache.drill.common.expression.types.DataType;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,8 +38,7 @@ public class IfExpression extends LogicalExpressionBase implements Iterable<IfCo
 	private IfExpression(List<IfCondition> conditions, LogicalExpression elseExpression){
 		this.conditions = ImmutableList.copyOf(conditions);
 		this.elseExpression = elseExpression;
-	};
-	
+	}
 	
 	public static class IfCondition{
 		public final LogicalExpression condition;
@@ -64,12 +64,21 @@ public class IfExpression extends LogicalExpressionBase implements Iterable<IfCo
 		List<IfCondition> conditions = new ArrayList<IfCondition>();
 		private LogicalExpression elseExpression;
 		
-		public void addCondition(IfCondition condition){
+		public Builder addCondition(IfCondition condition){
 			conditions.add(condition);
+            return this;
 		}
+
+        public Builder addConditions(Iterable<IfCondition> conditions) {
+            for(IfCondition condition : conditions) {
+                addCondition(condition);
+            }
+            return this;
+        }
 		
-		public void setElse(LogicalExpression elseExpression) {
+		public Builder setElse(LogicalExpression elseExpression) {
 			this.elseExpression = elseExpression;
+            return this;
 		}
 		
 		public IfExpression build(){
@@ -77,11 +86,14 @@ public class IfExpression extends LogicalExpressionBase implements Iterable<IfCo
 		}
 		
 	}
-	
-	
-	
-	
-	@Override
+
+
+    @Override
+    public DataType getDataType() {
+        return DataType.BOOLEAN;
+    }
+
+    @Override
   public void addToString(StringBuilder sb) {
 	  sb.append(" ( ");
 	  for(int i =0; i < conditions.size(); i++){
@@ -97,8 +109,12 @@ public class IfExpression extends LogicalExpressionBase implements Iterable<IfCo
 	  sb.append(" ) ");
   }
 
+    @Override
+    public void resolveAndValidate(String expr, ErrorCollector errors) {
+    }
 
-  public static Builder newBuilder(){
+
+    public static Builder newBuilder(){
 		return new Builder();
 	}
 

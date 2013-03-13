@@ -49,6 +49,10 @@ public class FunctionDefinition {
   public String[] getArgumentNames(){
     return argumentValidator.getArgumentNamesByPosition();
   }
+
+  public ArgumentValidator getArgumentValidator() {
+      return argumentValidator;
+  }
   
   public static FunctionDefinition simple(String name, ArgumentValidator argumentValidator, OutputTypeDeterminer outputType, String... registeredNames){
     return new FunctionDefinition(name, argumentValidator, outputType, false,  false, registeredNames);

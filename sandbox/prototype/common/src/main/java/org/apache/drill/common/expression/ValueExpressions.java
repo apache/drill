@@ -17,6 +17,7 @@
  ******************************************************************************/
 package org.apache.drill.common.expression;
 
+import org.apache.drill.common.expression.types.DataType;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
 
 
@@ -44,8 +45,7 @@ public class ValueExpressions {
     
   }
   
-	protected static abstract class ValueExpression<V> extends
-			LogicalExpressionBase {
+	protected static abstract class ValueExpression<V> extends LogicalExpressionBase {
 		public final V value;
 
 		protected ValueExpression(String value) {
@@ -67,12 +67,22 @@ public class ValueExpressions {
 			return Boolean.parseBoolean(s);
 		}
 
-    @Override
+        @Override
+        public DataType getDataType() {
+            return DataType.BOOLEAN;
+        }
+
+        @Override
     public void addToString(StringBuilder sb) {
       sb.append(value.toString());
     }
 
-    @Override
+        @Override
+        public void resolveAndValidate(String expr, ErrorCollector errors) {
+        }
+
+
+        @Override
     public <T> T accept(ExprVisitor<T> visitor) {
       return visitor.visitBoolean(this);
     }
@@ -92,13 +102,22 @@ public class ValueExpressions {
 	    public double getDouble(){
 	      return d;
 	    }
-	    
-	    @Override
+
+         @Override
+         public DataType getDataType() {
+             return DataType.FLOAT32;
+         }
+
+         @Override
 	    public void addToString(StringBuilder sb) {
 	      sb.append(d);
 	    }
-	    
-	    @Override
+
+         @Override
+         public void resolveAndValidate(String expr, ErrorCollector errors) {
+         }
+
+         @Override
 	    public <T> T accept(ExprVisitor<T> visitor) {
 	      return visitor.visitDoubleExpression(this);
 	    }
@@ -113,13 +132,22 @@ public class ValueExpressions {
 		public long getLong(){
 		  return l;
 		}
-		
-    @Override
+
+        @Override
+        public DataType getDataType() {
+            return DataType.INT64;
+        }
+
+        @Override
     public void addToString(StringBuilder sb) {
       sb.append(l);
     }
-    
-    @Override
+
+        @Override
+        public void resolveAndValidate(String expr, ErrorCollector errors) {
+        }
+
+        @Override
     public <T> T accept(ExprVisitor<T> visitor) {
       return visitor.visitLongExpression(this);
     }
@@ -134,15 +162,24 @@ public class ValueExpressions {
 		protected String parseValue(String s) {
 			return s;
 		}
-		
-    @Override
+
+        @Override
+        public DataType getDataType() {
+            return DataType.NVARCHAR;
+        }
+
+        @Override
     public void addToString(StringBuilder sb) {
       sb.append("\"");
       sb.append(value.toString());
       sb.append("\"");
     }
-    
-    @Override
+
+        @Override
+        public void resolveAndValidate(String expr, ErrorCollector errors) {
+        }
+
+        @Override
     public <T> T accept(ExprVisitor<T> visitor) {
       return visitor.visitQuotedString(this);
     }

@@ -34,12 +34,12 @@ public class BasicArgumentValidator implements ArgumentValidator {
   }
 
   @Override
-  public void validateArguments(List<LogicalExpression> expressions, ErrorCollector errors) {
-    if (expressions.size() != args.length) errors.addUnexpectedArgumentCount(expressions.size(), args.length);
+  public void validateArguments(String expr, List<LogicalExpression> expressions, ErrorCollector errors) {
+    if (expressions.size() != args.length) errors.addUnexpectedArgumentCount(expr, expressions.size(), args.length);
 
     int i = 0;
     for (LogicalExpression e : expressions) {
-      args[i].confirmDataType(i, e, errors);
+      args[i].confirmDataType(expr, i, e, errors);
 
       i++;
     }

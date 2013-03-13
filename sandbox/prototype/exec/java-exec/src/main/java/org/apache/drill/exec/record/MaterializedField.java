@@ -142,6 +142,17 @@ public class MaterializedField implements Comparable<MaterializedField> {
     // we've reviewed all path segments. confirm that we don't have any extra name parts.
     return !iter.hasNext();
 
+  private void check(String name, Object val1, Object expected) throws SchemaChangeException{
+    if(expected.equals(val1)) return;
+    throw new SchemaChangeException("Expected and actual field definitions don't match. Actual %s: %s, expected %s: %s", name, val1, name, expected);
+  }
+  
+  public void checkMaterialization(MaterializedField expected) throws SchemaChangeException{
+    if(this.type == expected.type || expected.type == DataType.LATEBIND) throw new SchemaChangeException("Expected and actual field definitions don't match. Actual DataType: %s, expected DataTypes: %s", this.type, expected.type);
+    if(expected.valueClass != null) check("valueClass", this.valueClass, expected.valueClass);
+    check("fieldId", this.fieldId, expected.fieldId);
+    check("nullability", this.nullable, expected.nullable);
+    check("valueMode", this.mode, expected.mode);
   }
 
   // private void check(String name, Object val1, Object expected) throws SchemaChangeException{
