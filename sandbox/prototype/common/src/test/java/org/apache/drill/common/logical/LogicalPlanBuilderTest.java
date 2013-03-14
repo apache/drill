@@ -27,6 +27,7 @@ import org.junit.Test;
 import java.io.IOException;
 
 import static junit.framework.TestCase.assertEquals;
+import static org.apache.drill.common.logical.LogicalPlan.LogicalPlanBuilder;
 
 public class LogicalPlanBuilderTest {
 
@@ -36,7 +37,6 @@ public class LogicalPlanBuilderTest {
     */
    @Test
    public void testBuildSimplePlan() throws IOException {
-
 
       PlanProperties planProperties = new PlanProperties();
       planProperties.version = 1;
@@ -48,18 +48,18 @@ public class LogicalPlanBuilderTest {
       Store store = new Store("mock-engine", null, null);
       store.setInput(scan);
 
-      LogicalPlanBuilder builder = new LogicalPlanBuilder()
-              .planProperties(planProperties)
-              .addStorageEngine(new MockStorageEngineConfig("mock-engine", "http://www.apache.org/"))
-              .addLogicalOperator(scan)
-              .addLogicalOperator(store);
+     LogicalPlanBuilder builder = LogicalPlan.builder()
+       .planProperties(planProperties)
+       .addStorageEngine(new MockStorageEngineConfig("mock-engine", "http://www.apache.org/"))
+       .addLogicalOperator(scan)
+       .addLogicalOperator(store);
 
-      LogicalPlan fromBuilder = builder.build();
+     LogicalPlan fromBuilder = builder.build();
 
-      DrillConfig config = DrillConfig.create();
-      LogicalPlan fromJson = LogicalPlan.parse(config, FileUtils.getResourceAsString("/storage_engine_plan.json"));
+     DrillConfig config = DrillConfig.create();
+     LogicalPlan fromJson = LogicalPlan.parse(config, FileUtils.getResourceAsString("/storage_engine_plan.json"));
 
-      assertEquals(fromJson.toJsonString(config), fromBuilder.toJsonString(config));
+     assertEquals(fromJson.toJsonString(config), fromBuilder.toJsonString(config));
 
    }
 }
