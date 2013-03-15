@@ -38,15 +38,14 @@ public class LogicalPlanBuilderTest {
    @Test
    public void testBuildSimplePlan() throws IOException {
 
-      PlanProperties planProperties = new PlanProperties();
-      planProperties.version = 1;
-      planProperties.generator = new PlanProperties.Generator();
-      planProperties.generator.type = "manual";
-      planProperties.generator.info = "na";
+     PlanProperties planProperties = PlanProperties.builder()
+       .generator("manual", "na")
+       .version(1)
+       .build();
 
-      Scan scan = new Scan("mock-engine", null, null);
-      Store store = new Store("mock-engine", null, null);
-      store.setInput(scan);
+     Scan scan = new Scan("mock-engine", null, null);
+     Store store = new Store("mock-engine", null, null);
+     store.setInput(scan);
 
      LogicalPlanBuilder builder = LogicalPlan.builder()
        .planProperties(planProperties)

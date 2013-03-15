@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -37,67 +37,74 @@ import org.apache.drill.common.logical.graph.GraphAlgos;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @JsonPropertyOrder({"head", "storage", "query"})
 public class LogicalPlan {
-  
-	private final PlanProperties properties;
-	private final Map<String, StorageEngineConfig> storageEngines;
+
+  private final PlanProperties properties;
+  private final Map<String, StorageEngineConfig> storageEngines;
   private final List<LogicalOperator> operators;
   private final OperatorGraph graph;
 
-  @SuppressWarnings("unchecked")
   @JsonCreator
-	public LogicalPlan(@JsonProperty("head") PlanProperties head, @JsonProperty("storage") List<StorageEngineConfig> storageEngines, @JsonProperty("query") List<LogicalOperator> operators){
-	  if(storageEngines == null) storageEngines = Collections.EMPTY_LIST;
-	  this.properties = head;
+  private LogicalPlan(@JsonProperty("head") PlanProperties head,
+                      @JsonProperty("storage") List<StorageEngineConfig> storageEngines,
+                      @JsonProperty("query") List<LogicalOperator> operators) {
+    if (storageEngines == null)
+      storageEngines = ImmutableList.of();
+    this.properties = head;
     this.storageEngines = new HashMap<>(storageEngines.size());
     this.operators = operators;
-    for(StorageEngineConfig store: storageEngines){
+    for (StorageEngineConfig store : storageEngines) {
       StorageEngineConfig old = this.storageEngines.put(store.getName(), store);
-      if(old != null) throw new LogicalPlanParsingException(String.format("Each storage engine must have a unique name.  You provided more than one data source with the same name of '%s'", store.getName()));
+      if (old != null)
+        throw new LogicalPlanParsingException(String.format("Each storage engine must have a unique name. " +
+          "You provided more than one data source with the same name of '%s'", store.getName()));
     }
-    
-    this.graph = new OperatorGraph(operators);
-	}
-	
-	@JsonProperty("query")
-	public List<LogicalOperator> getSortedOperators(){
-	  List<OpNode> nodes = GraphAlgos.TopoSorter.sort(graph.getAdjList());
-	  Iterable<LogicalOperator> i = Iterables.transform(nodes, new Function<OpNode, LogicalOperator>(){
-	    public LogicalOperator apply(OpNode o){
-	      return o.getNodeValue();
-	    }
-	  });
-	  return Lists.newArrayList(i);
-	}
 
-	public StorageEngineConfig getStorageEngine(String name){
-	  StorageEngineConfig ds = storageEngines.get(name);
-	  if(ds == null) throw new LogicalPlanParsingException(String.format("Unknown data source named [%s].", name));
-	  return ds;
-	}
-	
-	@JsonIgnore
-	public OperatorGraph getGraph(){
-	  return graph;
-	}
-	
-	@JsonProperty("head")
+    this.graph = new OperatorGraph(operators);
+  }
+
+  @JsonProperty("query")
+  public List<LogicalOperator> getSortedOperators() {
+    List<OpNode> nodes = GraphAlgos.TopoSorter.sort(graph.getAdjList());
+    Iterable<LogicalOperator> i = Iterables.transform(nodes, new Function<OpNode, LogicalOperator>() {
+      public LogicalOperator apply(OpNode o) {
+        return o.getNodeValue();
+      }
+    });
+    return Lists.newArrayList(i);
+  }
+
+  public StorageEngineConfig getStorageEngine(String name) {
+    StorageEngineConfig ds = storageEngines.get(name);
+    if (ds == null) throw new LogicalPlanParsingException(String.format("Unknown data source named [%s].", name));
+    return ds;
+  }
+
+  @JsonIgnore
+  public OperatorGraph getGraph() {
+    return graph;
+  }
+
+  @JsonProperty("head")
   public PlanProperties getProperties() {
     return properties;
   }
 
 
-	@JsonProperty("storage") 
+  @JsonProperty("storage")
   public List<StorageEngineConfig> getStorageEngines() {
     return new ArrayList<>(storageEngines.values());
   }
 
   public String toJsonString(DrillConfig config) throws JsonProcessingException {
-    return config.getMapper().writeValueAsString(this);  
-	}
+    return config.getMapper().writeValueAsString(this);
+  }
 
 
   public static void main(String[] args) throws Exception {
@@ -106,19 +113,22 @@ public class LogicalPlan {
     LogicalPlan plan = parse(config, externalPlan);
   }
 
-  /** Parses a logical plan. */
+  /**
+   * Parses a logical plan.
+   */
   public static LogicalPlan parse(DrillConfig config, String planString) {
     ObjectMapper mapper = config.getMapper();
     try {
       LogicalPlan plan = mapper.readValue(planString, LogicalPlan.class);
-//      System.out.println(mapper.writeValueAsString(plan));
       return plan;
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
   }
 
-  /** Converts a logical plan to a string. (Opposite of {@link #parse}.) */
+  /**
+   * Converts a logical plan to a string. (Opposite of {@link #parse}.)
+   */
   public String unparse(DrillConfig config) {
     try {
       return config.getMapper().writeValueAsString(this);

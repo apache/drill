@@ -18,13 +18,59 @@
 package org.apache.drill.common.logical;
 
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+/**
+ * Logical plan meta properties.
+ */
 public class PlanProperties {
-	public String type = "apache_drill_logical_plan";
-	public int version;
-	public Generator generator = new Generator();
-	
-	public static class Generator{
-		public String type;
-		public String info;
-	}
+
+  public static class Generator {
+    public final String type;
+    public final String info;
+
+    private Generator(@JsonProperty("type") String type, @JsonProperty("info") String info) {
+      this.type = type;
+      this.info = info;
+    }
+  }
+
+  public final String type = "apache_drill_logical_plan";
+  public final int version;
+  public final Generator generator;
+
+  private PlanProperties(@JsonProperty("version") int version, @JsonProperty("generator") Generator generator) {
+    this.version = version;
+    this.generator = generator;
+  }
+
+  public static PlanPropertiesBuilder builder() {
+    return new PlanPropertiesBuilder();
+  }
+
+  public PlanPropertiesBuilder toBuilder() {
+    return new PlanPropertiesBuilder()
+      .generator(this.generator.type, this.generator.info)
+      .version(this.version);
+  }
+
+  public static class PlanPropertiesBuilder {
+
+    private int version;
+    private Generator generator;
+
+    public PlanPropertiesBuilder version(int version) {
+      this.version = version;
+      return this;
+    }
+
+    public PlanPropertiesBuilder generator(String type, String info) {
+      this.generator = new Generator(type, info);
+      return this;
+    }
+
+    public PlanProperties build() {
+      return new PlanProperties(version, generator);
+    }
+  }
 }
