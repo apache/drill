@@ -33,6 +33,7 @@ public class MockStorageEngineConfig extends StorageEngineConfigBase{
   @JsonCreator
   public MockStorageEngineConfig(@JsonProperty("name") String name, @JsonProperty("url") String url) {
     super(name);
+     this.url = url;
   }
 
   public String getUrl() {
