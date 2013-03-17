@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.apache.drill.common.logical.graph;
+package org.apache.drill.common.graph;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -28,29 +28,28 @@ import org.slf4j.LoggerFactory;
 public class GraphAlgos {
   static final Logger logger = LoggerFactory.getLogger(GraphAlgos.class);
 
-  public static class TopoSorter<N extends Node<?>> {
-    final List<N> sorted = new LinkedList<N>();
-    final AdjacencyList<N> rGraph;
+  public static class TopoSorter<V extends GraphValue<V>> {
+    final List<AdjacencyList<V>.Node> sorted = new LinkedList<AdjacencyList<V>.Node>();
+    final AdjacencyList<V> rGraph;
 
-    private TopoSorter(AdjacencyList<N> graph) {
+    private TopoSorter(AdjacencyList<V> graph) {
       graph.clearVisited();
-      
-      this.rGraph = graph.getReversedList();
-      Collection<N> sourceNodes = rGraph.getStartNodes();
 
-      for (N n : sourceNodes) {
+      this.rGraph = graph.getReversedList();
+      Collection<AdjacencyList<V>.Node> sourceNodes = rGraph.getInternalRootNodes();
+
+      for (AdjacencyList<V>.Node n : sourceNodes) {
         visit(n);
       }
     }
 
-    private void visit(N n) {
-      if (n.visited)
-        return;
+    private void visit(AdjacencyList<V>.Node n) {
+      if (n.visited) return;
 
       n.visited = true;
-      List<Edge<N>> edges = rGraph.getAdjacent(n);
+      List<Edge<AdjacencyList<V>.Node>> edges = rGraph.getAdjacent(n);
       if (edges != null) {
-        for (Edge<N> e : edges) {
+        for (Edge<AdjacencyList<V>.Node> e : edges) {
           visit(e.to);
         }
       }
@@ -68,35 +67,44 @@ public class GraphAlgos {
      *          List of nodes that
      * @return
      */
-    public static <N extends Node<?>> List<N> sort(AdjacencyList<N> graph) {
-      TopoSorter<N> ts = new TopoSorter<N>(graph);
+    static <V extends GraphValue<V>> List<AdjacencyList<V>.Node> sortInternal(AdjacencyList<V> graph) {
+      TopoSorter<V> ts = new TopoSorter<V>(graph);
       return ts.sorted;
+    }
+
+    public static <V extends GraphValue<V>> List<V> sort(Graph<V, ?, ?> graph) {
+      AdjacencyList<V> l = graph.getAdjList();
+      return l.convert(sortInternal(l));
     }
   }
 
-  public static <N extends Node<?>> List<List<N>> checkDirected(AdjacencyList<N> graph) {
-    Tarjan<N> t = new Tarjan<N>();
-    List<List<N>> subgraphs = t.executeTarjan(graph);
-    for (Iterator<List<N>> i = subgraphs.iterator(); i.hasNext();) {
-      List<N> l = i.next();
-      if (l.size() == 1)  i.remove();
+  static <V extends GraphValue<V>> List<List<AdjacencyList<V>.Node>> checkDirected(AdjacencyList<V> graph) {
+    Tarjan<V> t = new Tarjan<V>();
+    List<List<AdjacencyList<V>.Node>> subgraphs = t.executeTarjan(graph);
+    for (Iterator<List<AdjacencyList<V>.Node>> i = subgraphs.iterator(); i.hasNext();) {
+      List<AdjacencyList<V>.Node> l = i.next();
+      if (l.size() == 1) i.remove();
     }
     return subgraphs;
   }
 
-  public static class Tarjan<N extends Node<?>> {
+  public static <V extends GraphValue<V>> List<List<AdjacencyList<V>.Node>> checkDirected(Graph<V, ?, ?> graph) {
+    return checkDirected(graph.getAdjList());
+  }
+
+  public static class Tarjan<V extends GraphValue<V>> {
 
     private int index = 0;
-    private List<N> stack = new LinkedList<N>();
-    private List<List<N>> SCC = new LinkedList<List<N>>();
+    private List<AdjacencyList<V>.Node> stack = new LinkedList<AdjacencyList<V>.Node>();
+    private List<List<AdjacencyList<V>.Node>> SCC = new LinkedList<List<AdjacencyList<V>.Node>>();
 
-    public List<List<N>> executeTarjan(AdjacencyList<N> graph) {
+    public List<List<AdjacencyList<V>.Node>> executeTarjan(AdjacencyList<V> graph) {
       SCC.clear();
       index = 0;
       stack.clear();
       if (graph != null) {
-        List<N> nodeList = new LinkedList<N>(graph.getNodeSet());
-        for (N node : nodeList) {
+        List<AdjacencyList<V>.Node> nodeList = new LinkedList<AdjacencyList<V>.Node>(graph.getNodeSet());
+        for (AdjacencyList<V>.Node node : nodeList) {
           if (node.index == -1) {
             tarjan(node, graph);
           }
@@ -105,15 +113,15 @@ public class GraphAlgos {
       return SCC;
     }
 
-    private List<List<N>> tarjan(N v, AdjacencyList<N> list) {
+    private List<List<AdjacencyList<V>.Node>> tarjan(AdjacencyList<V>.Node v, AdjacencyList<V> list) {
       v.index = index;
       v.lowlink = index;
       index++;
       stack.add(0, v);
-      List<Edge<N>> l = list.getAdjacent(v);
+      List<Edge<AdjacencyList<V>.Node>> l = list.getAdjacent(v);
       if (l != null) {
-        for (Edge<N> e : l) {
-          N n = e.to;
+        for (Edge<AdjacencyList<V>.Node> e : l) {
+          AdjacencyList<V>.Node n = e.to;
           if (n.index == -1) {
             tarjan(n, list);
             v.lowlink = Math.min(v.lowlink, n.lowlink);
@@ -123,8 +131,8 @@ public class GraphAlgos {
         }
       }
       if (v.lowlink == v.index) {
-        N n;
-        List<N> component = new LinkedList<N>();
+        AdjacencyList<V>.Node n;
+        List<AdjacencyList<V>.Node> component = new LinkedList<AdjacencyList<V>.Node>();
         do {
           n = stack.remove(0);
           component.add(n);

@@ -24,7 +24,7 @@ import java.util.List;
 
 import org.apache.drill.common.config.CommonConstants;
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.expression.visitors.OpVisitor;
+import org.apache.drill.common.graph.GraphVisitor;
 import org.apache.drill.common.logical.ValidationError;
 import org.apache.drill.common.util.PathScanner;
 
@@ -54,7 +54,7 @@ public abstract class LogicalOperatorBase implements LogicalOperator{
   }
 
   @Override
-  public void accept(OpVisitor visitor) {
+  public void accept(GraphVisitor<LogicalOperator> visitor) {
     if(visitor.enter(this)){
       for(LogicalOperator o : children){
         o.accept(visitor);

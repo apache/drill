@@ -1,0 +1,76 @@
+{
+    head:{
+        type:"APACHE_DRILL_PHYSICAL",
+        version:"1",
+        generator:{
+            type:"manual"
+        }
+    },
+    storage:{
+        fs1:{
+            type:"mock"
+        }
+    },
+    graph:[
+        {
+            @id:1,
+            pop:"scan",
+            storageengine:"fs1",
+            entries:[{}],
+            fields:[
+                { "name":"key", route: "OUT", type:"LATE"},
+                { "name":"value", route: "OUT", type:"LATE"}
+            ]
+        },
+        {
+            @id:2,
+            child: 1,
+            pop:"quicknwaysort",
+            orderings:[
+                {
+                    order: "DESC",
+                    expr: "data.key"
+                }
+            ],
+            fields:[
+                { "name":"key", route: "THROUGH", type:"LATE"},
+                { "name":"value", route: "OPAQUE", type:"LATE"}
+            ]
+
+        },
+        {
+            @id:3,
+            child: 2,
+            pop:"exchange",
+            partition:{
+                mode:"RANGE",
+                exprs:["key"]
+            },
+            stitch:{
+                mode:"RANDOM"
+            },
+            fields:[
+                { "name":"key", route: "THROUGH", type:"LATE"},
+                { "name":"value", route: "OPAQUE", type:"LATE"}
+            ]
+        },
+        {
+            @id:4,
+            child:3,
+            pop: "store",
+            mode: "SYSTEM_CHOICE",
+            storageengine: "fs1",
+            entries:[
+                {
+                    path:"/sort/sorted/${partition_number}.seq",
+                    key:"Text",
+                    type:"JAVA_SEQUENCE"
+                }
+            ],
+            fields:[
+                { "name":"key", route: "IN", type:"LATE"},
+                { "name":"value", route: "IN", type:"LATE"}
+            ] 
+        }           
+    ]
+}

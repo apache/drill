@@ -21,7 +21,7 @@ class LateBindType extends DataType {
 
   @Override
   public String getName() {
-    return "late";
+    return "LATE";
   }
 
   @Override

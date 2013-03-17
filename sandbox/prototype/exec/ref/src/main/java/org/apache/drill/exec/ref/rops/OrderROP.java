@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.drill.common.defs.OrderDef;
+import org.apache.drill.common.defs.OrderDef.Direction;
 import org.apache.drill.common.logical.data.Order;
-import org.apache.drill.common.logical.data.Order.Direction;
-import org.apache.drill.common.logical.data.Order.Ordering;
 import org.apache.drill.exec.ref.RecordIterator;
 import org.apache.drill.exec.ref.RecordPointer;
 import org.apache.drill.exec.ref.eval.EvaluatorFactory;
@@ -33,7 +33,7 @@ public class OrderROP extends AbstractBlockingOperator<Order> {
 
   @Override
   protected void setupEvals(EvaluatorFactory builder) {
-    Ordering[] orderings = config.getOrderings();
+    OrderDef[] orderings = config.getOrderings();
     withinConstrained = config.getWithin() != null;
     if (withinConstrained) {
       withinExtra = 1;

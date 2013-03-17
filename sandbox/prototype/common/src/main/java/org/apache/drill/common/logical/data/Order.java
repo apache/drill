@@ -17,27 +17,26 @@
  ******************************************************************************/
 package org.apache.drill.common.logical.data;
 
+import org.apache.drill.common.defs.OrderDef;
 import org.apache.drill.common.expression.FieldReference;
-import org.apache.drill.common.expression.LogicalExpression;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName("order")
 public class Order extends SingleInputOperator {
 
-  private final Ordering[] orderings;
+  private final OrderDef[] orderings;
   private final FieldReference within;
 
   @JsonCreator
-  public Order(@JsonProperty("within") FieldReference within, @JsonProperty("orderings") Ordering... orderings) {
+  public Order(@JsonProperty("within") FieldReference within, @JsonProperty("orderings") OrderDef... orderings) {
     this.orderings = orderings;
     this.within = within;
   }
   
-  public Ordering[] getOrderings() {
+  public OrderDef[] getOrderings() {
     return orderings;
   }
   
@@ -45,46 +44,6 @@ public class Order extends SingleInputOperator {
     return within;
   }
 
-  public static class Ordering {
-
-    private final Direction direction;
-    private final LogicalExpression expr;
-
-    @JsonCreator
-    public Ordering(@JsonProperty("order") String strOrder, @JsonProperty("expr") LogicalExpression expr) {
-      this.expr = expr;
-      this.direction = Direction.DESC.description.equals(strOrder) ? Direction.DESC : Direction.ASC; // default
-                                                                                                     // to
-                                                                                                     // ascending
-                                                                                                     // unless
-                                                                                                     // desc
-                                                                                                     // is
-                                                                                                     // provided.
-    }
-
-    @JsonIgnore
-    public Direction getDirection() {
-      return direction;
-    }
-
-    public LogicalExpression getExpr() {
-      return expr;
-    }
-
-    public String getOrder() {
-      return direction.description;
-    }
-
-  }
-
-  public static enum Direction {
-    ASC("asc"), DESC("desc");
-    public final String description;
-
-    Direction(String d) {
-      description = d;
-    }
-  }
   
   
 }

@@ -17,8 +17,8 @@
  ******************************************************************************/
 package org.apache.drill.common.logical.data;
 
+import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.expression.FieldReference;
-import org.apache.drill.common.logical.JSONOptions;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

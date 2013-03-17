@@ -17,9 +17,8 @@
  ******************************************************************************/
 package org.apache.drill.common.logical.data;
 
-import org.apache.drill.common.exceptions.ExpressionParsingException;
-import org.apache.drill.common.expression.LogicalExpression;
-import org.apache.drill.common.logical.JSONOptions;
+import org.apache.drill.common.JSONOptions;
+import org.apache.drill.common.defs.PartitionDef;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -31,10 +30,10 @@ public class Store extends SinkOperator{
   
   private final String storageEngine;
   private final JSONOptions target;
-  private final PartitionOptions partition;
+  private final PartitionDef partition;
 
   @JsonCreator
-  public Store(@JsonProperty("storageengine") String storageEngine, @JsonProperty("target") JSONOptions target, @JsonProperty("partition") PartitionOptions partition) {
+  public Store(@JsonProperty("storageengine") String storageEngine, @JsonProperty("target") JSONOptions target, @JsonProperty("partition") PartitionDef partition) {
     super();
     this.storageEngine = storageEngine;
     this.target = target;
@@ -49,48 +48,10 @@ public class Store extends SinkOperator{
     return target;
   }
 
-  public PartitionOptions getPartition() {
+  public PartitionDef getPartition() {
     return partition;
   }
 
-  public static enum PartitionType{ 
-    RANDOM, HASH, ORDERED;
-    
-    public static PartitionType resolve(String val){
-      for(PartitionType pt : PartitionType.values()){
-        if(pt.name().equalsIgnoreCase(val)) return pt;
-      }
-      throw new ExpressionParsingException(String.format("Unable to determine partitioning type type for value '%s'.", val));
-
-    }
-    
-  };
   
-  public static class PartitionOptions{
-    private final PartitionType partitionType;
-    private final LogicalExpression[] expressions;
-    private final LogicalExpression[] starts;
-    
-    @JsonCreator
-    public PartitionOptions(@JsonProperty("partitionType") String partitionType, @JsonProperty("exprs") LogicalExpression[] expressions, @JsonProperty("starts") LogicalExpression[] starts) {
-      this.partitionType = PartitionType.resolve(partitionType);
-      this.expressions = expressions;
-      this.starts = starts;
-    }
-
-    public PartitionType getPartitionType() {
-      return partitionType;
-    }
-
-    public LogicalExpression[] getExpressions() {
-      return expressions;
-    }
-
-    public LogicalExpression[] getStarts() {
-      return starts;
-    }
-    
-    
-  }
   
 }

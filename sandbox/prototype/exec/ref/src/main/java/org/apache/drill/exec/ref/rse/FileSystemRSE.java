@@ -67,9 +67,9 @@ public class FileSystemRSE extends RSEBase {
   @JsonTypeName("fs")
   public static class FileSystemRSEConfig extends StorageEngineConfigBase {
     private String root;
+
     @JsonCreator
-    public FileSystemRSEConfig(@JsonProperty("name") String name, @JsonProperty("root") String root) {
-      super(name);
+    public FileSystemRSEConfig(@JsonProperty("root") String root) {
       this.root = root;
     }
   }
@@ -112,7 +112,7 @@ public class FileSystemRSE extends RSEBase {
 
   @Override
   public RecordRecorder getWriter(Store store) throws IOException {
-    FileSystemOutputConfig config = store.getTarget().getWith(FileSystemOutputConfig.class);
+    FileSystemOutputConfig config = store.getTarget().getWith(dConfig, FileSystemOutputConfig.class);
     OutputStream out = fs.create(new Path(basePath, config.file));
     return new OutputStreamWriter(out, config.type, true);
   }
@@ -120,7 +120,7 @@ public class FileSystemRSE extends RSEBase {
   @Override
   public Collection<ReadEntry> getReadEntries(Scan scan) throws IOException {
     Set<ReadEntry> s = new HashSet<ReadEntry>();
-    for(FileSpec f : scan.getSelection().getWith(FileSystemInputConfig.class).files){
+    for(FileSpec f : scan.getSelection().getWith(dConfig, FileSystemInputConfig.class).files){
       s.add(new FSEntry(f, scan.getOutputReference()));
     }
     return s;

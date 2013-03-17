@@ -28,15 +28,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public abstract class StorageEngineConfigBase implements StorageEngineConfig{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StorageEngineConfigBase.class);
   
-  private final String name;
-  
-  public StorageEngineConfigBase(@JsonProperty("name") String name) {
-    this.name = name;
-  }
-
-  public String getName() {
-    return name;
-  }
   
   public synchronized static Class<?>[] getSubTypes(DrillConfig config){
     List<String> packages = config.getStringList(CommonConstants.STORAGE_ENGINE_CONFIG_SCAN_PACKAGES);

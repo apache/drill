@@ -15,16 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.apache.drill.common.logical;
+package org.apache.drill.common.physical.props;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-public class PlanProperties {
-	public String type = "apache_drill_logical_plan";
-	public int version;
-	public Generator generator = new Generator();
-	
-	public static class Generator{
-		public String type;
-		public String info;
-	}
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property="trait")
+public interface PhysicalProp {
 }

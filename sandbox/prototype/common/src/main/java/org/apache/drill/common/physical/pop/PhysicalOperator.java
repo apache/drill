@@ -15,28 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.apache.drill.common.logical.graph;
+package org.apache.drill.common.physical.pop;
 
+import org.apache.drill.common.graph.GraphValue;
+import org.apache.drill.common.physical.FieldSet;
+import org.apache.drill.common.physical.POPCost;
 
-public class Edge<N> implements Comparable<Edge<N>> {
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
-  final N from, to;
-  final int weight;
-
-  public Edge(final N argFrom, final N argTo, final int argWeight) {
-    from = argFrom;
-    to = argTo;
-    weight = argWeight;
-  }
-
-  public int compareTo(final Edge<N> argEdge) {
-    return weight - argEdge.weight;
-  }
-
-  @Override
-  public String toString() {
-    return "Edge [from=" + from + ", to=" + to + "]";
-  }
-  
-  
+@JsonPropertyOrder({"@id"})
+@JsonIdentityInfo(generator=ObjectIdGenerators.IntSequenceGenerator.class, property="@id")
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property="pop")
+public interface PhysicalOperator extends GraphValue<PhysicalOperator>{
+  public FieldSet getFieldSet();
+  public POPCost getCost();
 }

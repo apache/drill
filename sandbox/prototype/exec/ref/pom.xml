@@ -24,7 +24,7 @@
 		<dependency>
 			<groupId>org.apache.hadoop</groupId>
 			<artifactId>hadoop-core</artifactId>
-			<version>1.1.0</version>
+			<version>1.1.1</version>
 			<exclusions>
 				<exclusion>
 					<artifactId>jets3t</artifactId>
@@ -36,6 +36,7 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
+		
 
 		<dependency>
 			<groupId>com.carrotsearch</groupId>
@@ -43,6 +44,11 @@
 			<version>0.4.2</version>
 		</dependency>
 
+		<dependency>
+			<groupId>org.apache.hadoop</groupId>
+			<artifactId>hadoop-examples</artifactId>
+			<version>1.1.1</version>
+		</dependency>
 	</dependencies>
 
 
