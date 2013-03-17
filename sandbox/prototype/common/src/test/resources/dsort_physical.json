@@ -17,9 +17,9 @@
             pop:"scan",
             storageengine:"fs1",
             entries:[{}],
-            fields:[
-                { "name":"key", route: "OUT", type:"LATE"},
-                { "name":"value", route: "OUT", type:"LATE"}
+            output:[
+                { "name":"key", mode: "VECTOR", type:"LATE"},
+                { "name":"value", mode: "VECTOR", type:"LATE"}
             ]
         },
         {
@@ -32,9 +32,9 @@
                     expr: "data.key"
                 }
             ],
-            fields:[
-                { "name":"key", route: "THROUGH", type:"LATE"},
-                { "name":"value", route: "OPAQUE", type:"LATE"}
+            output:[
+                { "name":"key", mode: "VECTOR", type:"LATE"},
+                { "name":"value", mode: "VECTOR", type:"LATE"}
             ]
 
         },
@@ -50,8 +50,8 @@
                 mode:"RANDOM"
             },
             fields:[
-                { "name":"key", route: "THROUGH", type:"LATE"},
-                { "name":"value", route: "OPAQUE", type:"LATE"}
+                { "name":"key" mode: "VECTOR", type:"LATE"},
+                { "name":"value" mode: "VECTOR", type:"LATE"}
             ]
         },
         {
@@ -66,10 +66,6 @@
                     key:"Text",
                     type:"JAVA_SEQUENCE"
                 }
-            ],
-            fields:[
-                { "name":"key", route: "IN", type:"LATE"},
-                { "name":"value", route: "IN", type:"LATE"}
             ] 
         }           
     ]

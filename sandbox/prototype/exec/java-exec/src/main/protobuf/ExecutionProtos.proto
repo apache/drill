@@ -1,0 +1,65 @@
+package exec.bit;
+
+option java_package = "org.apache.drill.exec.proto";
+option java_outer_classname = "ExecProtos";
+option optimize_for = LITE_RUNTIME;
+import "SchemaDef.proto";
+import "Coordination.proto";
+
+
+////// UserToBit RPC ///////
+enum RpcType {
+    HANDSHAKE = 0;
+    ACK = 1;
+    GOODBYE = 2;
+    
+    // bit requests
+    REQ_INIATILIZE_FRAGMENT = 3; // Returns Handle
+    REQ_RECORD_BATCH = 4; // send record batch overview, returns Ack
+    REQ_BATCH_CHUNK = 5; // send additional batch chunk, returns Ack.
+    REQ_CANCEL_FRAGMENT = 6; // send a cancellation message for a fragment, returns Ack
+	REQ_FRAGMENT_STATUS = 7; // get a fragment status, returns FragmentStatus
+	REQ_BIT_STATUS = 8; // get bit status.
+	    
+    // bit responses
+    RESP_FRAGMENT_HANDLE = 9;
+    RESP_FRAGMENT_STATUS = 10;
+	RESP_BIT_STATUS = 11;
+	RESP_BATCH_CHUNK = 12;
+}
+
+
+message BitColumnData {
+
+    enum ColumnEncoding {
+      PROTOBUF = 0;
+    }
+    
+	message BitColumn {
+		optional int32 field = 1;
+		optional int32 length = 2;
+		optional ColumnEncoding mode = 3;
+	}	
+	
+	optional SchemaDef schema = 1;
+	optional int32 record_count = 2;
+	optional int32 total_size = 3;
+	repeated BitColumn column = 4;
+	
+}
+
+
+message BitHandshake{
+	optional DrillbitEndpoint endpoint = 1;
+}
+
+message BitBatchChunk {}
+message BitStatus {}
+message FragmentStatus {}
+message RecordBatchHeader {}
+message PlanFragment {}
+
+message FragmentHandle {
+	optional int64 fragment_id = 1;
+}
+

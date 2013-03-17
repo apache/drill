@@ -54,6 +54,8 @@ public abstract class DataType {
   public static final DataType LATEBIND = new LateBindType();
   public static final DataType BOOLEAN = new AtomType("BOOLEAN", Comparability.EQUAL, false);
   public static final DataType BYTES = new AtomType("BYTES", Comparability.ORDERED, false);
+  public static final DataType SIGNED_BYTE = new AtomType("SIGNED_BYTE", Comparability.ORDERED, true);
+  public static final DataType SIGNED_INT16 = new AtomType("SIGNED_INT16", Comparability.ORDERED, true);
   public static final DataType NVARCHAR = new AtomType("VARCHAR", Comparability.ORDERED, false);
   public static final DataType FLOAT32 = new AtomType("FLOAT32", Comparability.ORDERED, true);
   public static final DataType FLOAT64 = new AtomType("FLOAT64", Comparability.ORDERED, true);

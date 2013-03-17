@@ -18,7 +18,6 @@
 package org.apache.drill.common.physical;
 
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.List;
 
 import org.apache.drill.common.physical.FieldSet.De;
@@ -42,19 +41,10 @@ import com.google.common.collect.Lists;
 public class FieldSet {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FieldSet.class);
   
-  private List<RecordField> incoming = Lists.newArrayList();
-  private List<RecordField> outgoing = Lists.newArrayList();
+  private List<RecordField> fields;
   
   public FieldSet(Iterable<RecordField> fields){
-    for(RecordField f : fields){
-      if(f.getRoute().isIn()){
-        incoming.add(f);
-      }
-      
-      if(f.getRoute().isOut()){
-        outgoing.add(f);
-      }
-    }
+    this.fields = Lists.newArrayList(fields);
   }
   
 
@@ -83,14 +73,7 @@ public class FieldSet {
     @Override
     public void serialize(FieldSet value, JsonGenerator jgen, SerializerProvider provider) throws IOException,
         JsonGenerationException {
-      HashSet<RecordField> fields = new HashSet<RecordField>();
-      for(RecordField f: value.incoming){
-        fields.add(f);
-      }
-      for(RecordField f: value.outgoing){
-        fields.add(f);
-      }
-      jgen.writeObject(Lists.newArrayList(fields));
+      jgen.writeObject(value.fields);
     }
 
   }

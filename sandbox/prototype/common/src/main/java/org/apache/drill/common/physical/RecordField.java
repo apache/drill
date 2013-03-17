@@ -28,14 +28,14 @@ public class RecordField {
   
   private String name;
   private DataType type;
-  private Route route;
+  private ValueMode mode;
   
   @JsonCreator
-  public RecordField(@JsonProperty("name") String name, @JsonProperty("type") DataType type, @JsonProperty("route") Route route) {
+  public RecordField(@JsonProperty("name") String name, @JsonProperty("type") DataType type, @JsonProperty("mode") ValueMode mode) {
     super();
     this.name = name;
     this.type = type;
-    this.route = route;
+    this.mode = mode;
   }
 
   public String getName() {
@@ -46,34 +46,21 @@ public class RecordField {
     return type;
   }
 
-  public Route getRoute() {
-    return route;
+  public ValueMode getMode() {
+    return mode;
   }
   
+  public static enum ValueMode {
+    VECTOR,
+    DICT,
+    RLE
+  }
   
+  public static enum ValueType {
+    OPTIONAL,
+    REQUIRED, 
+    REPEATED
+  }
   
-  public static enum Route {
-    IN(true, false), 
-    OUT(false, true), 
-    THROUGH(true, true), 
-    OPAQUE(true, true);
-    
-    final boolean in;
-    final boolean out;
-    
-    Route(boolean in, boolean out){
-      this.in = in;
-      this.out = out;
-    }
-
-    public boolean isIn() {
-      return in;
-    }
-
-    public boolean isOut() {
-      return out;
-    }
-    
-  }  
   
 }
