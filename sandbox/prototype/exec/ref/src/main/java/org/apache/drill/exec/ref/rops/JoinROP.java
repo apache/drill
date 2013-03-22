@@ -206,6 +206,10 @@ public class JoinROP extends ROPBase<Join> {
                     }
                 });
 
+              if (curIdx >= bufferLength) {
+                  curIdx = 0;
+              }
+
                 if (option.isPresent()) {
                     setOutputRecord(rightPointer, bufferObj.pointer);
                     return (bufferObj.schemaChanged || rightOutcome == NextOutcome.INCREMENTED_SCHEMA_CHANGED) ?
@@ -213,9 +217,6 @@ public class JoinROP extends ROPBase<Join> {
                             NextOutcome.INCREMENTED_SCHEMA_UNCHANGED;
                 }
 
-                if (curIdx >= bufferLength) {
-                    curIdx = 0;
-                }
             }
 
             return NextOutcome.NONE_LEFT;
