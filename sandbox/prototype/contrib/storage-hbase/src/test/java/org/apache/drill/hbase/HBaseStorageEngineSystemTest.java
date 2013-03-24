@@ -41,15 +41,17 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.io.FileOutputStream;
 import java.util.Collection;
 
 import static junit.framework.Assert.assertEquals;
 
 public class HBaseStorageEngineSystemTest {
 
-  private static final byte[] TEST_TABLE = Bytes.toBytes("TestTable");
-  private static final byte[] TEST_FAMILY = Bytes.toBytes("TestFamily");
-  private static final byte[] TEST_QUALIFIER = Bytes.toBytes("TestQualifier");
+  private static final byte[] TEST_TABLE = Bytes.toBytes("testtable");
+  private static final byte[] TEST_FAMILYA = Bytes.toBytes("testfamilya");
+  private static final byte[] TEST_FAMILYB = Bytes.toBytes("testfamilyb");
+  private static final byte[] TEST_QUALIFIER = Bytes.toBytes("testcolumn");
   private static final byte[] TEST_MULTI_CQ = Bytes.toBytes("TestMultiCQ");
 
   private static byte[] ROW = Bytes.toBytes("testRow");
@@ -75,28 +77,28 @@ public class HBaseStorageEngineSystemTest {
     conf.set(HConstants.HBASE_REGION_SPLIT_POLICY_KEY,
       ConstantSizeRegionSplitPolicy.class.getName());
     util = new HBaseTestingUtility(conf);
-    HBaseStorageEngine.static_config = util.getConfiguration();
+    util.getConfiguration().writeXml(new FileOutputStream("config-in-test.xml"));
   }
 
   @Before
   public void startCluster() throws Exception {
     util.startMiniCluster(2);
     try {
-      util.createTable(TEST_TABLE, TEST_FAMILY);
-      table = util.createTable(TEST_TABLE, TEST_FAMILY);
-      util.createMultiRegions(util.getConfiguration(), table, TEST_FAMILY,
+      table = util.createTable(TEST_TABLE, new byte[][]{TEST_FAMILYA});
+      util.createMultiRegions(util.getConfiguration(), table, TEST_FAMILYA,
         new byte[][]{HConstants.EMPTY_BYTE_ARRAY, ROWS[rowSeperator1],
           ROWS[rowSeperator2]});
     } catch (TableExistsException tee) {
       table = new HTable(util.getConfiguration(), TEST_TABLE);
     }
+
     for (int i = 0; i < ROWSIZE; i++) {
       Put put = new Put(ROWS[i]);
-      Long l = new Long(i);
-      put.add(TEST_FAMILY, TEST_QUALIFIER, Bytes.toBytes(l));
+      Long l = (long) i;
+      put.add(TEST_FAMILYA, TEST_QUALIFIER, Bytes.toBytes(l));
       table.put(put);
       Put p2 = new Put(ROWS[i]);
-      p2.add(TEST_FAMILY, Bytes.add(TEST_MULTI_CQ, Bytes.toBytes(l)), Bytes
+      p2.add(TEST_FAMILYA, Bytes.add(TEST_MULTI_CQ, Bytes.toBytes(l)), Bytes
         .toBytes(l * 10));
       table.put(p2);
     }
@@ -104,11 +106,15 @@ public class HBaseStorageEngineSystemTest {
   }
 
   @Test
-  public void testScan() throws Exception {
+  public void testTableStorageEngine() throws Exception {
     DrillConfig config = DrillConfig.create();
     LogicalPlan plan = LogicalPlan.parse(config, Files.toString(FileUtils.getResourceAsFile("/simple_hbase_plan.json"), Charsets.UTF_8));
     IteratorRegistry ir = new IteratorRegistry();
-    ReferenceInterpreter i = new ReferenceInterpreter(plan, ir, new BasicEvaluatorFactory(ir), new RSERegistry(config));
+    RSERegistry rses = new RSERegistry(config);
+    HBaseStorageEngine engine = (HBaseStorageEngine) rses.getEngine(new HBaseStorageEngine.HBaseStorageEngineConfig("hbase"));
+    HBaseStorageEngine engine2 = (HBaseStorageEngine) rses.getEngine(new HBaseStorageEngine.HBaseStorageEngineConfig("hbase"));
+    engine.setHBaseConfiguration(util.getConfiguration());
+    ReferenceInterpreter i = new ReferenceInterpreter(plan, ir, new BasicEvaluatorFactory(ir), rses);
     i.setup();
     Collection<RunOutcome> outcomes = i.run();
     assertEquals(1, outcomes.size());
@@ -117,6 +123,7 @@ public class HBaseStorageEngineSystemTest {
 
   @After
   public void stopCluster() throws Exception {
+    util.deleteTable(TEST_TABLE);
     util.shutdownMiniCluster();
   }
 

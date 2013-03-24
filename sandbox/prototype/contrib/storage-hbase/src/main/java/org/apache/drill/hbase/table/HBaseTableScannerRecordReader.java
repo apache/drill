@@ -15,12 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.apache.drill.hbase;
+package org.apache.drill.hbase.table;
 
 import org.apache.drill.exec.ref.RecordIterator;
 import org.apache.drill.exec.ref.RecordPointer;
 import org.apache.drill.exec.ref.rops.ROP;
 import org.apache.drill.exec.ref.rse.RecordReader;
+import org.apache.drill.hbase.HBaseResultRecordPointer;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 
@@ -30,14 +31,14 @@ import java.util.Iterator;
 import static com.google.common.base.Throwables.propagate;
 
 /**
- * Scanning RecordReader, retrieves Records from HBase by scanning.
+ * Scanning RecordReader, retrieves Records from HBase by scanning the whole table.
  */
-public class HBaseScannerRecordReader implements RecordReader {
+public class HBaseTableScannerRecordReader implements RecordReader {
 
-  private final HBaseStorageEngine.HBaseTableScanner table;
+  private final HBaseTableScanner table;
   private final ROP parent;
 
-  HBaseScannerRecordReader(HBaseStorageEngine.HBaseTableScanner table, ROP parent) {
+  public HBaseTableScannerRecordReader(HBaseTableScanner table, ROP parent) {
     this.table = table;
     this.parent = parent;
   }

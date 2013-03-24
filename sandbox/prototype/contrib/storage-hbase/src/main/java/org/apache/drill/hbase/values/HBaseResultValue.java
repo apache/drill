@@ -24,8 +24,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.NavigableMap;
 
-import static org.apache.drill.hbase.DrillHBaseUtils.nameFromBytes;
-import static org.apache.drill.hbase.DrillHBaseUtils.nameToBytes;
+import static org.apache.drill.hbase.HbaseUtils.nameFromBytes;
+import static org.apache.drill.hbase.HbaseUtils.nameToBytes;
 
 /**
  * A DataValue corresponding the whole row.

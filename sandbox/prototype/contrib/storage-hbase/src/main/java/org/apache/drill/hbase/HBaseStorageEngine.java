@@ -28,12 +28,14 @@ import org.apache.drill.exec.ref.rops.ROP;
 import org.apache.drill.exec.ref.rse.RSEBase;
 import org.apache.drill.exec.ref.rse.RecordReader;
 import org.apache.drill.exec.ref.rse.RecordRecorder;
+import org.apache.drill.hbase.table.HBaseTableScanner;
+import org.apache.drill.hbase.table.HBaseTableScannerRecordReader;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.client.HTable;
-import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Collection;
 
@@ -42,8 +44,6 @@ import java.util.Collection;
  */
 public class HBaseStorageEngine extends RSEBase {
 
-  static Configuration static_config;
-
   @JsonTypeName("hbase")
   public static class HBaseStorageEngineConfig extends StorageEngineConfigBase {
 
@@ -51,31 +51,45 @@ public class HBaseStorageEngine extends RSEBase {
     public HBaseStorageEngineConfig(@JsonProperty("name") String name) {
       super(name);
     }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (!(o instanceof HBaseStorageEngineConfig)) return false;
+      HBaseStorageEngineConfig that = (HBaseStorageEngineConfig) o;
+      if (getName() != null ? !getName().equals(that.getName()) : that.getName() != null) return false;
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      return getName() != null ? getName().hashCode() : 0;
+    }
   }
 
   public static class HBaseStorageEngineInputConfig {
+
     public String table;
+
   }
 
-  public static class HBaseTableScanner implements ReadEntry {
-
-    public final HTable hTable;
-    public final Scan scan;
-
-    public HBaseTableScanner(HTable hTable, Scan scan) {
-      this.hTable = hTable;
-      this.scan = scan;
-    }
-
-    public ResultScanner newScanner() throws IOException {
-      return this.hTable.getScanner(scan);
-    }
-  }
-
-  private final Configuration config;
+  private Configuration config;
 
   public HBaseStorageEngine(HBaseStorageEngineConfig engineConfig, DrillConfig config) {
     this.config = HBaseConfiguration.create();
+  }
+
+  /**
+   * Allows to override HBase config. Mostly for testing purposes.
+   */
+  public void setHBaseConfiguration(Configuration config) {
+    System.err.println("changing the config on " + this.toString());
+    this.config = config;
+    try {
+      this.config.writeXml(new FileOutputStream("set-config-" + System.currentTimeMillis() + ".xml"));
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 
 
@@ -92,14 +106,15 @@ public class HBaseStorageEngine extends RSEBase {
   @Override
   public Collection<ReadEntry> getReadEntries(org.apache.drill.common.logical.data.Scan scan) throws IOException {
     HBaseStorageEngineInputConfig engine = scan.getSelection().getWith(HBaseStorageEngineInputConfig.class);
-    Configuration config = static_config;// HBaseConfiguration.create(this.config);
+    System.err.println("using the config on " + this.toString());
+    this.config.writeXml(new FileOutputStream("using-config-" + System.currentTimeMillis() + ".xml"));
     return ImmutableSet.<ReadEntry>of(new HBaseTableScanner(new HTable(config, engine.table), new Scan()));
   }
 
   @Override
   public RecordReader getReader(ReadEntry readEntry, ROP parentROP) throws IOException {
     HBaseTableScanner entry = getReadEntry(HBaseTableScanner.class, readEntry);
-    return new HBaseScannerRecordReader(entry, parentROP);
+    return new HBaseTableScannerRecordReader(entry, parentROP);
   }
 
   @Override

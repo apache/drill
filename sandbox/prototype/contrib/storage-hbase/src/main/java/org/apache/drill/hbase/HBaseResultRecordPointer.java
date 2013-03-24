@@ -32,10 +32,14 @@ import java.io.IOException;
  */
 public class HBaseResultRecordPointer implements RecordPointer {
 
-  private final HBaseResultValue result;
+  private HBaseResultValue result;
 
   public HBaseResultRecordPointer(Result result) {
     this.result = new HBaseResultValue(result);
+  }
+
+  private HBaseResultRecordPointer(HBaseResultValue result) {
+    this.result = result;
   }
 
   @Override
@@ -69,12 +73,15 @@ public class HBaseResultRecordPointer implements RecordPointer {
   }
 
   @Override
-  public RecordPointer copy() {
-    return null;
+  public HBaseResultRecordPointer copy() {
+    return new HBaseResultRecordPointer(this.result);
   }
 
   @Override
   public void copyFrom(RecordPointer r) {
+    if (HBaseResultRecordPointer.class.isAssignableFrom(r.getClass())) {
+      this.result = ((HBaseResultRecordPointer) r).result;
+    }
   }
 
 

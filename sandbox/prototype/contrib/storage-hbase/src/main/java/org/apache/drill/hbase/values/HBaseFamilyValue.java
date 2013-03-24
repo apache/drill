@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.NavigableMap;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static org.apache.drill.hbase.DrillHBaseUtils.nameToBytes;
+import static org.apache.drill.hbase.HbaseUtils.nameToBytes;
 
 /**
  * A DataValue corresponding to a single column family within a row.

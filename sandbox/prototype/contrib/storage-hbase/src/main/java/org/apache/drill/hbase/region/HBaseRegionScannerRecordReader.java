@@ -15,27 +15,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.apache.drill.hbase;
+package org.apache.drill.hbase.region;
 
-import java.io.UnsupportedEncodingException;
+import org.apache.drill.exec.ref.RecordIterator;
+import org.apache.drill.exec.ref.rse.RecordReader;
 
-import static com.google.common.base.Throwables.propagate;
+/**
+ * An implementation of ReferenceStorageEngine for HBase.
+ * <p/>
+ * This implementation interfaces with HBase at the RegionServer level and allows per-region pushdown of selected operators
+ * namely:
+ * - Filter
+ * - Project TODO
+ * - Partial Aggregation TODO
+ * - Local Join
+ * <p/>
+ * This implementation assumes that the daemon running this storage engine is colocated with the HBase RegionServer daemon.
+ */
+public class HBaseRegionScannerRecordReader implements RecordReader {
 
-public class DrillHBaseUtils {
 
-  public static byte[] nameToBytes(CharSequence name) {
-    try {
-      return name.toString().getBytes("UTF-8");
-    } catch (UnsupportedEncodingException e) {
-      throw propagate(e);
-    }
+  @Override
+  public RecordIterator getIterator() {
+    return null;
   }
 
-  public static String nameFromBytes(byte[] bytes) {
-    try {
-      return new String(bytes, "UTF-8");
-    } catch (UnsupportedEncodingException e) {
-      throw propagate(e);
-    }
+  @Override
+  public void setup() {
+  }
+
+  @Override
+  public void cleanup() {
   }
 }
