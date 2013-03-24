@@ -32,7 +32,7 @@ import org.apache.drill.exec.ref.rse.RecordReader;
  * <p/>
  * This implementation assumes that the daemon running this storage engine is colocated with the HBase RegionServer daemon.
  */
-public class HBaseRegionScannerRecordReader implements RecordReader {
+public class HBaseRegionRecordReader implements RecordReader {
 
 
   @Override

@@ -28,14 +28,13 @@ import org.apache.drill.exec.ref.rops.ROP;
 import org.apache.drill.exec.ref.rse.RSEBase;
 import org.apache.drill.exec.ref.rse.RecordReader;
 import org.apache.drill.exec.ref.rse.RecordRecorder;
+import org.apache.drill.hbase.table.HBaseTableRecordReader;
 import org.apache.drill.hbase.table.HBaseTableScanner;
-import org.apache.drill.hbase.table.HBaseTableScannerRecordReader;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Scan;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Collection;
 
@@ -83,13 +82,7 @@ public class HBaseStorageEngine extends RSEBase {
    * Allows to override HBase config. Mostly for testing purposes.
    */
   public void setHBaseConfiguration(Configuration config) {
-    System.err.println("changing the config on " + this.toString());
     this.config = config;
-    try {
-      this.config.writeXml(new FileOutputStream("set-config-" + System.currentTimeMillis() + ".xml"));
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
   }
 
 
@@ -106,15 +99,13 @@ public class HBaseStorageEngine extends RSEBase {
   @Override
   public Collection<ReadEntry> getReadEntries(org.apache.drill.common.logical.data.Scan scan) throws IOException {
     HBaseStorageEngineInputConfig engine = scan.getSelection().getWith(HBaseStorageEngineInputConfig.class);
-    System.err.println("using the config on " + this.toString());
-    this.config.writeXml(new FileOutputStream("using-config-" + System.currentTimeMillis() + ".xml"));
     return ImmutableSet.<ReadEntry>of(new HBaseTableScanner(new HTable(config, engine.table), new Scan()));
   }
 
   @Override
   public RecordReader getReader(ReadEntry readEntry, ROP parentROP) throws IOException {
     HBaseTableScanner entry = getReadEntry(HBaseTableScanner.class, readEntry);
-    return new HBaseTableScannerRecordReader(entry, parentROP);
+    return new HBaseTableRecordReader(entry, parentROP);
   }
 
   @Override

@@ -33,12 +33,12 @@ import static com.google.common.base.Throwables.propagate;
 /**
  * Scanning RecordReader, retrieves Records from HBase by scanning the whole table.
  */
-public class HBaseTableScannerRecordReader implements RecordReader {
+public class HBaseTableRecordReader implements RecordReader {
 
   private final HBaseTableScanner table;
   private final ROP parent;
 
-  public HBaseTableScannerRecordReader(HBaseTableScanner table, ROP parent) {
+  public HBaseTableRecordReader(HBaseTableScanner table, ROP parent) {
     this.table = table;
     this.parent = parent;
   }

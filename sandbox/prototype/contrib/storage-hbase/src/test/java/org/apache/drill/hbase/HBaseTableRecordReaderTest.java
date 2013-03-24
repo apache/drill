@@ -18,15 +18,12 @@
 package org.apache.drill.hbase;
 
 import com.google.common.collect.ImmutableSet;
-import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.logical.StorageEngineConfig;
 import org.apache.drill.exec.ref.RecordIterator;
 import org.apache.drill.exec.ref.RecordPointer;
-import org.apache.drill.exec.ref.rse.RSERegistry;
 import org.apache.drill.exec.ref.values.DataValue;
+import org.apache.drill.hbase.table.HBaseTableRecordReader;
 import org.apache.drill.hbase.table.HBaseTableScanner;
-import org.apache.drill.hbase.table.HBaseTableScannerRecordReader;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.junit.Before;
@@ -37,11 +34,12 @@ import java.util.NavigableMap;
 
 import static com.google.common.collect.Maps.newTreeMap;
 import static com.google.common.primitives.UnsignedBytes.lexicographicalComparator;
-import static junit.framework.Assert.*;
+import static junit.framework.Assert.assertNotNull;
+import static junit.framework.Assert.assertNull;
 import static org.apache.drill.hbase.HbaseUtils.nameToBytes;
 import static org.easymock.EasyMock.*;
 
-public class HBaseStorageEngineTest {
+public class HBaseTableRecordReaderTest {
 
   private NavigableMap<byte[], NavigableMap<byte[], NavigableMap<Long, byte[]>>> resultWithSingleVersion;
   private NavigableMap<byte[], NavigableMap<byte[], NavigableMap<Long, byte[]>>> resultWithTwoVersions;
@@ -90,7 +88,7 @@ public class HBaseStorageEngineTest {
 
     replay(resultA, scanner, table);
 
-    HBaseTableScannerRecordReader reader = new HBaseTableScannerRecordReader(table, null);
+    HBaseTableRecordReader reader = new HBaseTableRecordReader(table, null);
 
     RecordIterator iterator = reader.getIterator();
 
@@ -102,16 +100,6 @@ public class HBaseStorageEngineTest {
 
     DataValue value = pointerA.getField(new SchemaPath("row"));
     assertNotNull(value);
-  }
-
-  @Test
-  public void testEnginesWithTheSameNameAreEqual() {
-    DrillConfig config = DrillConfig.create();
-    RSERegistry rses = new RSERegistry(config);
-    StorageEngineConfig hconfig =  new HBaseStorageEngine.HBaseStorageEngineConfig("hbase");
-    HBaseStorageEngine engine = (HBaseStorageEngine) rses.getEngine(hconfig);
-    HBaseStorageEngine engine2 = (HBaseStorageEngine) rses.getEngine(hconfig);
-    assertEquals(engine, engine2);
   }
 
 }

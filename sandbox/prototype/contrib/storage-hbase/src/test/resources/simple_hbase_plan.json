@@ -24,10 +24,10 @@
 	    {
 	      op: "scan",
 	      memo: "initial_scan",
-	      ref: "TestTable",
+	      ref: "testtable",
 	      storageengine: "hbase",
 	      selection: {
-	        table: "TestTable"
+	        table: "testtable"
 	      }
 	    },
 	    {

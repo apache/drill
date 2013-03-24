@@ -41,7 +41,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.io.FileOutputStream;
 import java.util.Collection;
 
 import static junit.framework.Assert.assertEquals;
@@ -77,7 +76,6 @@ public class HBaseStorageEngineSystemTest {
     conf.set(HConstants.HBASE_REGION_SPLIT_POLICY_KEY,
       ConstantSizeRegionSplitPolicy.class.getName());
     util = new HBaseTestingUtility(conf);
-    util.getConfiguration().writeXml(new FileOutputStream("config-in-test.xml"));
   }
 
   @Before
@@ -112,7 +110,6 @@ public class HBaseStorageEngineSystemTest {
     IteratorRegistry ir = new IteratorRegistry();
     RSERegistry rses = new RSERegistry(config);
     HBaseStorageEngine engine = (HBaseStorageEngine) rses.getEngine(new HBaseStorageEngine.HBaseStorageEngineConfig("hbase"));
-    HBaseStorageEngine engine2 = (HBaseStorageEngine) rses.getEngine(new HBaseStorageEngine.HBaseStorageEngineConfig("hbase"));
     engine.setHBaseConfiguration(util.getConfiguration());
     ReferenceInterpreter i = new ReferenceInterpreter(plan, ir, new BasicEvaluatorFactory(ir), rses);
     i.setup();
