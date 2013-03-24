@@ -17,12 +17,10 @@
  ******************************************************************************/
 package org.apache.drill.hbase.values;
 
-import org.apache.drill.exec.ref.rops.DataWriter;
 import org.apache.drill.exec.ref.values.BaseArrayValue;
 import org.apache.drill.exec.ref.values.BaseMapValue;
 import org.apache.drill.exec.ref.values.DataValue;
 
-import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -48,11 +46,6 @@ public abstract class ImmutableHBaseMapValue extends BaseMapValue {
 
   @Override
   protected final void setByName(CharSequence name, DataValue v) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public void write(DataWriter writer) throws IOException {
     throw new UnsupportedOperationException();
   }
 

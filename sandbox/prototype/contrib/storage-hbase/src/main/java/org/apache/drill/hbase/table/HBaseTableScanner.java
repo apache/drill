@@ -17,6 +17,7 @@
  ******************************************************************************/
 package org.apache.drill.hbase.table;
 
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ref.rse.ReferenceStorageEngine;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.ResultScanner;
@@ -31,10 +32,12 @@ public class HBaseTableScanner implements ReferenceStorageEngine.ReadEntry {
 
   public final HTable hTable;
   public final Scan scan;
+  public final SchemaPath rootPath;
 
-  public HBaseTableScanner(HTable hTable, Scan scan) {
+  public HBaseTableScanner(HTable hTable, Scan scan, SchemaPath rootPath) {
     this.hTable = hTable;
     this.scan = scan;
+    this.rootPath = rootPath;
   }
 
   public ResultScanner newScanner() throws IOException {

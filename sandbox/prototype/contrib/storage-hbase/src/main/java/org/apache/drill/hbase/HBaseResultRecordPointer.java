@@ -34,20 +34,20 @@ public class HBaseResultRecordPointer implements RecordPointer {
 
   private HBaseResultValue result;
 
-  public HBaseResultRecordPointer(Result result) {
-    this.result = new HBaseResultValue(result);
+  public HBaseResultRecordPointer() {
   }
 
   private HBaseResultRecordPointer(HBaseResultValue result) {
     this.result = result;
   }
 
+  public void clearAndSet(SchemaPath rootPath, Result result) {
+    this.result = new HBaseResultValue(result);
+  }
+
   @Override
   public DataValue getField(SchemaPath field) {
-    if (field.getPath().toString().endsWith("row")) {
-      return result;
-    }
-    return null;
+    return this.result.getValue(field.getRootSegment());
   }
 
   @Override
@@ -68,7 +68,7 @@ public class HBaseResultRecordPointer implements RecordPointer {
   @Override
   public void write(DataWriter writer) throws IOException {
     writer.startRecord();
-    writer.writeCharSequence(result.toString());
+    result.write(writer);
     writer.endRecord();
   }
 
@@ -83,7 +83,6 @@ public class HBaseResultRecordPointer implements RecordPointer {
       this.result = ((HBaseResultRecordPointer) r).result;
     }
   }
-
 
   @Override
   public String toString() {

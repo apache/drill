@@ -20,13 +20,14 @@ package org.apache.drill.hbase;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.LogicalPlan;
-import org.apache.drill.common.util.FileUtils;
-import org.apache.drill.exec.ref.IteratorRegistry;
-import org.apache.drill.exec.ref.ReferenceInterpreter;
-import org.apache.drill.exec.ref.RunOutcome;
+import org.apache.drill.exec.ref.*;
 import org.apache.drill.exec.ref.eval.BasicEvaluatorFactory;
 import org.apache.drill.exec.ref.rse.RSERegistry;
+import org.apache.drill.exec.ref.values.DataValue;
+import org.apache.drill.exec.ref.values.ScalarValues;
+import org.apache.drill.exec.ref.values.SimpleMapValue;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HBaseTestingUtility;
@@ -41,24 +42,23 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.Map;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertTrue;
+import static org.apache.drill.common.util.FileUtils.getResourceAsFile;
 
 public class HBaseStorageEngineSystemTest {
 
-  private static final byte[] TEST_TABLE = Bytes.toBytes("testtable");
-  private static final byte[] TEST_FAMILYA = Bytes.toBytes("testfamilya");
-  private static final byte[] TEST_FAMILYB = Bytes.toBytes("testfamilyb");
-  private static final byte[] TEST_QUALIFIER = Bytes.toBytes("testcolumn");
-  private static final byte[] TEST_MULTI_CQ = Bytes.toBytes("TestMultiCQ");
-
-  private static byte[] ROW = Bytes.toBytes("testRow");
-  private static final int ROWSIZE = 20;
-  private static final int rowSeperator1 = 5;
-  private static final int rowSeperator2 = 12;
-  private static byte[][] ROWS = makeN(ROW, ROWSIZE);
+  private static final byte[] DONUTS_TABLE = Bytes.toBytes("donuts");
+  private static final byte[] DONUTS_METADATA_CF = Bytes.toBytes("metadata");
+  private static final byte[] DONUTS_BATTERS_CF = Bytes.toBytes("batters");
+  private static final byte[] DONUTS_REGION_SEPARATOR = Bytes.toBytes("0003");
   private HTable table;
+  private DrillConfig drillConfig;
 
   private static byte[][] makeN(byte[] base, int n) {
     byte[][] ret = new byte[n][];
@@ -76,51 +76,70 @@ public class HBaseStorageEngineSystemTest {
     conf.set(HConstants.HBASE_REGION_SPLIT_POLICY_KEY,
       ConstantSizeRegionSplitPolicy.class.getName());
     util = new HBaseTestingUtility(conf);
+
   }
 
   @Before
   public void startCluster() throws Exception {
+    drillConfig = DrillConfig.create();
     util.startMiniCluster(2);
     try {
-      table = util.createTable(TEST_TABLE, new byte[][]{TEST_FAMILYA});
-      util.createMultiRegions(util.getConfiguration(), table, TEST_FAMILYA,
-        new byte[][]{HConstants.EMPTY_BYTE_ARRAY, ROWS[rowSeperator1],
-          ROWS[rowSeperator2]});
+      table = util.createTable(DONUTS_TABLE, new byte[][]{DONUTS_METADATA_CF, DONUTS_BATTERS_CF});
+      util.createMultiRegions(util.getConfiguration(), table, DONUTS_METADATA_CF,
+        new byte[][]{HConstants.EMPTY_BYTE_ARRAY, DONUTS_REGION_SEPARATOR});
     } catch (TableExistsException tee) {
-      table = new HTable(util.getConfiguration(), TEST_TABLE);
+      table = new HTable(util.getConfiguration(), DONUTS_TABLE);
     }
-
-    for (int i = 0; i < ROWSIZE; i++) {
-      Put put = new Put(ROWS[i]);
-      Long l = (long) i;
-      put.add(TEST_FAMILYA, TEST_QUALIFIER, Bytes.toBytes(l));
-      table.put(put);
-      Put p2 = new Put(ROWS[i]);
-      p2.add(TEST_FAMILYA, Bytes.add(TEST_MULTI_CQ, Bytes.toBytes(l)), Bytes
-        .toBytes(l * 10));
-      table.put(p2);
-    }
+    loadDonuts();
     table.close();
   }
 
+  private void loadDonuts() throws IOException {
+    // loads the donuts from JSON
+    RecordIterator recordIterator = TestUtils.jsonToRecordIterator("donuts", Files.toString(getResourceAsFile("/simple_donuts.json"), Charsets.UTF_8));
+    while (recordIterator.next() != RecordIterator.NextOutcome.NONE_LEFT) {
+      RecordPointer pointer = recordIterator.getRecordPointer();
+      SimpleMapValue value = (SimpleMapValue) pointer.getField(new SchemaPath("donuts"));
+
+
+      Iterator<Map.Entry<CharSequence, DataValue>> iterator = value.iterator();
+      Map.Entry<CharSequence, DataValue> keyEntry = iterator.next();
+      assertTrue(keyEntry.getKey().equals("rowKey"));
+      ScalarValues.StringScalar key = (ScalarValues.StringScalar) keyEntry.getValue();
+      Put put = new Put(Bytes.toBytes(key.getString().toString()));
+      while (iterator.hasNext()) {
+        addColumns(iterator.next(), put);
+      }
+      table.put(put);
+    }
+  }
+
+  private void addColumns(Map.Entry<CharSequence, DataValue> entry, Put put) {
+    for (Map.Entry<CharSequence, DataValue> subEntry : (SimpleMapValue) entry.getValue()) {
+      put.add(Bytes.toBytes(entry.getKey().toString()),
+        Bytes.toBytes(subEntry.getKey().toString()),
+        HbaseUtils.toBytes(subEntry.getValue()));
+    }
+  }
+
+
   @Test
-  public void testTableStorageEngine() throws Exception {
-    DrillConfig config = DrillConfig.create();
-    LogicalPlan plan = LogicalPlan.parse(config, Files.toString(FileUtils.getResourceAsFile("/simple_hbase_plan.json"), Charsets.UTF_8));
+  public void testTableRecordReaderReadEntireTable() throws Exception {
+    LogicalPlan plan = LogicalPlan.parse(drillConfig, Files.toString(getResourceAsFile("/simple_hbase_table_plan.json"), Charsets.UTF_8));
     IteratorRegistry ir = new IteratorRegistry();
-    RSERegistry rses = new RSERegistry(config);
+    RSERegistry rses = new RSERegistry(drillConfig);
     HBaseStorageEngine engine = (HBaseStorageEngine) rses.getEngine(new HBaseStorageEngine.HBaseStorageEngineConfig("hbase"));
     engine.setHBaseConfiguration(util.getConfiguration());
     ReferenceInterpreter i = new ReferenceInterpreter(plan, ir, new BasicEvaluatorFactory(ir), rses);
     i.setup();
     Collection<RunOutcome> outcomes = i.run();
     assertEquals(1, outcomes.size());
-    assertEquals(19, outcomes.iterator().next().records);
+    assertEquals(5, outcomes.iterator().next().records);
   }
 
   @After
   public void stopCluster() throws Exception {
-    util.deleteTable(TEST_TABLE);
+    util.deleteTable(DONUTS_TABLE);
     util.shutdownMiniCluster();
   }
 

@@ -17,45 +17,88 @@
  ******************************************************************************/
 package org.apache.drill.hbase.values;
 
+import com.google.common.collect.Maps;
+import org.apache.drill.exec.ref.rops.DataWriter;
+import org.apache.drill.exec.ref.values.BytesValue;
 import org.apache.drill.exec.ref.values.DataValue;
+import org.apache.drill.hbase.HbaseUtils;
 import org.apache.hadoop.hbase.client.Result;
 
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NavigableMap;
 
 import static org.apache.drill.hbase.HbaseUtils.nameFromBytes;
-import static org.apache.drill.hbase.HbaseUtils.nameToBytes;
 
 /**
  * A DataValue corresponding the whole row.
  */
 public class HBaseResultValue extends ImmutableHBaseMapValue {
 
+  public static final String ROW_KEY = "rowKey";
+
   private final Result result;
+  private final BytesValue rowKey;
+  private final Map<String, HBaseFamilyValue> families = Maps.newLinkedHashMap();
 
   public HBaseResultValue(Result result) {
     this.result = result;
+    this.rowKey = new BytesDataValue(this.result.getRow());
+    for (NavigableMap.Entry<byte[], NavigableMap<byte[], NavigableMap<Long, byte[]>>> family : result.getMap().entrySet()) {
+      this.families.put(HbaseUtils.nameFromBytes(family.getKey()), new HBaseFamilyValue(family.getValue()));
+    }
   }
 
   @Override
   protected DataValue getByName(CharSequence name) {
-    return new HBaseFamilyValue(result.getMap().get(nameToBytes(name)));
+    if (name.equals(ROW_KEY)) {
+      return rowKey;
+    }
+    return families.get(name.toString());
   }
 
   @Override
-  public boolean equals(DataValue v) {
-    return false;
+  public DataValue copy() {
+    Result newResult = new Result();
+    newResult.copyFrom(result);
+    return new HBaseResultValue(newResult);
+  }
+
+  @Override
+  public void write(DataWriter writer) throws IOException {
+    writer.writeMapStart();
+    writer.writeMapKey(ROW_KEY);
+    writer.writeMapValueStart();
+    writer.writeBytes(rowKey.getAsArray());
+    writer.writeMapValueEnd();
+    for (Map.Entry<String, HBaseFamilyValue> familyEntry : families.entrySet()) {
+      writer.writeMapKey(familyEntry.getKey());
+      writer.writeMapValueStart();
+      familyEntry.getValue().write(writer);
+      writer.writeMapValueEnd();
+    }
+    writer.writeMapEnd();
+  }
+
+  @Override
+  public String toString() {
+    return "HBaseResultValue{" +
+      "result=" + result +
+      '}';
+  }
+
+  public boolean equals(DataValue o) {
+    if (this == o) return true;
+    if (!(o instanceof HBaseResultValue)) return false;
+    HBaseResultValue entries = (HBaseResultValue) o;
+    if (result != null ? !result.equals(entries.result) : entries.result != null) return false;
+    return true;
   }
 
   @Override
   public int hashCode() {
     return result.hashCode();
-  }
-
-  @Override
-  public DataValue copy() {
-    return null;
   }
 
   @Override
@@ -102,12 +145,5 @@ public class HBaseResultValue extends ImmutableHBaseMapValue {
     public void remove() {
       original.remove();
     }
-  }
-
-  @Override
-  public String toString() {
-    return "HBaseResultValue{" +
-      "result=" + result +
-      '}';
   }
 }

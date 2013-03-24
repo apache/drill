@@ -17,6 +17,13 @@
             <version>1.0-SNAPSHOT</version>
         </dependency>
         <dependency>
+            <artifactId>ref</artifactId>
+            <groupId>org.apache.drill.exec</groupId>
+            <version>1.0-SNAPSHOT</version>
+            <classifier>tests</classifier>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.apache.hbase</groupId>
             <artifactId>hbase</artifactId>
             <version>0.94.5</version>

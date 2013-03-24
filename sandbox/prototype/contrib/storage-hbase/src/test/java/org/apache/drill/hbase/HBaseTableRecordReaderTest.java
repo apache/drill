@@ -35,7 +35,6 @@ import java.util.NavigableMap;
 import static com.google.common.collect.Maps.newTreeMap;
 import static com.google.common.primitives.UnsignedBytes.lexicographicalComparator;
 import static junit.framework.Assert.assertNotNull;
-import static junit.framework.Assert.assertNull;
 import static org.apache.drill.hbase.HbaseUtils.nameToBytes;
 import static org.easymock.EasyMock.*;
 
@@ -89,16 +88,12 @@ public class HBaseTableRecordReaderTest {
     replay(resultA, scanner, table);
 
     HBaseTableRecordReader reader = new HBaseTableRecordReader(table, null);
-
     RecordIterator iterator = reader.getIterator();
-
     RecordPointer pointerA = iterator.getRecordPointer();
-
     assertNotNull(pointerA);
     iterator.next();
-    assertNull(iterator.getRecordPointer());
 
-    DataValue value = pointerA.getField(new SchemaPath("row"));
+    DataValue value = pointerA.getField(new SchemaPath("rowKey"));
     assertNotNull(value);
   }
 

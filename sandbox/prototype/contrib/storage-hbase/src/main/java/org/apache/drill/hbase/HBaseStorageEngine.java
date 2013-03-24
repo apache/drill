@@ -99,7 +99,7 @@ public class HBaseStorageEngine extends RSEBase {
   @Override
   public Collection<ReadEntry> getReadEntries(org.apache.drill.common.logical.data.Scan scan) throws IOException {
     HBaseStorageEngineInputConfig engine = scan.getSelection().getWith(HBaseStorageEngineInputConfig.class);
-    return ImmutableSet.<ReadEntry>of(new HBaseTableScanner(new HTable(config, engine.table), new Scan()));
+    return ImmutableSet.<ReadEntry>of(new HBaseTableScanner(new HTable(config, engine.table), new Scan(), scan.getOutputReference()));
   }
 
   @Override

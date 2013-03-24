@@ -17,6 +17,7 @@
  ******************************************************************************/
 package org.apache.drill.hbase.table;
 
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ref.RecordIterator;
 import org.apache.drill.exec.ref.RecordPointer;
 import org.apache.drill.exec.ref.rops.ROP;
@@ -31,58 +32,58 @@ import java.util.Iterator;
 import static com.google.common.base.Throwables.propagate;
 
 /**
- * Scanning RecordReader, retrieves Records from HBase by scanning the whole table.
+ * Scanning RecordReader, retrieves Records from an HBase Table..
  */
 public class HBaseTableRecordReader implements RecordReader {
 
   private final HBaseTableScanner table;
   private final ROP parent;
+  private final SchemaPath rootPath;
 
   public HBaseTableRecordReader(HBaseTableScanner table, ROP parent) {
     this.table = table;
     this.parent = parent;
+    this.rootPath = table.rootPath;
   }
-
 
   @Override
   public RecordIterator getIterator() {
     try {
-      return new HBaseScannerRecordIterator(table.newScanner(), parent);
+      return new HBaseTableScannerRecordIterator(this.rootPath, table.newScanner(), parent);
     } catch (IOException e) {
       throw propagate(e);
     }
   }
 
-  public static class HBaseScannerRecordIterator implements RecordIterator {
+  public static class HBaseTableScannerRecordIterator implements RecordIterator {
 
     private final ResultScanner scanner;
     private final Iterator<Result> resultIterator;
     private final ROP parent;
-    private RecordPointer currentRecord;
+    private HBaseResultRecordPointer record = new HBaseResultRecordPointer();
     private NextOutcome nextOutcome;
+    private final SchemaPath rootPath;
 
 
-    HBaseScannerRecordIterator(ResultScanner scanner, ROP parent) {
+    HBaseTableScannerRecordIterator(SchemaPath rootPath, ResultScanner scanner, ROP parent) {
       this.scanner = scanner;
       this.resultIterator = this.scanner.iterator();
       this.parent = parent;
+      this.rootPath = rootPath;
     }
 
     @Override
     public RecordPointer getRecordPointer() {
-      if (currentRecord == null) {
-        next();
-      }
-      return currentRecord;
+      return record;
     }
 
     @Override
     public NextOutcome next() {
       if (resultIterator.hasNext()) {
-        currentRecord = new HBaseResultRecordPointer(resultIterator.next());
+        record.clearAndSet(rootPath, resultIterator.next());
         nextOutcome = NextOutcome.INCREMENTED_SCHEMA_CHANGED;
       } else {
-        currentRecord = null;
+        record = null;
         nextOutcome = NextOutcome.NONE_LEFT;
       }
       return nextOutcome;

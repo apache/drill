@@ -17,35 +17,50 @@
  ******************************************************************************/
 package org.apache.drill.hbase.values;
 
+import com.google.common.collect.Maps;
+import org.apache.drill.exec.ref.rops.DataWriter;
 import org.apache.drill.exec.ref.values.DataValue;
 
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NavigableMap;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static org.apache.drill.hbase.HbaseUtils.nameToBytes;
+import static org.apache.drill.hbase.HbaseUtils.nameFromBytes;
 
 /**
  * A DataValue corresponding to a single column family within a row.
  */
 public class HBaseFamilyValue extends ImmutableHBaseMapValue {
 
-  private final NavigableMap<byte[], NavigableMap<Long, byte[]>> familyMap;
+  private final Map<String, HBaseColumnValue> columnsMap = Maps.newLinkedHashMap();
 
-  public HBaseFamilyValue(NavigableMap<byte[], NavigableMap<Long, byte[]>> familyMap) {
-    this.familyMap = checkNotNull(familyMap);
+  public HBaseFamilyValue(NavigableMap<byte[], NavigableMap<Long, byte[]>> columnsMap) {
+    for (NavigableMap.Entry<byte[], NavigableMap<Long, byte[]>> columnEntry : columnsMap.entrySet()) {
+      this.columnsMap.put(nameFromBytes(columnEntry.getKey()), new HBaseColumnValue(columnEntry.getValue()));
+    }
   }
 
   @Override
   protected DataValue getByName(CharSequence name) {
-    byte[] columnName = nameToBytes(name);
-    return new HBaseColumnValue(columnName, familyMap.get(columnName).firstEntry());
+    return columnsMap.get(name.toString());
   }
 
   @Override
   public Iterator<Map.Entry<CharSequence, DataValue>> iterator() {
     return null;
+  }
+
+  @Override
+  public void write(DataWriter writer) throws IOException {
+    writer.writeMapStart();
+    for (Map.Entry<String, HBaseColumnValue> column : columnsMap.entrySet()) {
+      writer.writeMapKey(column.getKey());
+      writer.writeMapValueStart();
+      column.getValue().write(writer);
+      writer.writeMapValueEnd();
+    }
+    writer.writeMapEnd();
   }
 
   @Override
@@ -55,7 +70,7 @@ public class HBaseFamilyValue extends ImmutableHBaseMapValue {
 
   @Override
   public int hashCode() {
-    return familyMap.hashCode();
+    return columnsMap.hashCode();
   }
 
   @Override

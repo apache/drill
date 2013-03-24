@@ -23,27 +23,35 @@ import org.apache.drill.exec.ref.values.BaseDataValue;
 import org.apache.drill.exec.ref.values.DataValue;
 
 import java.io.IOException;
-import java.util.Map;
-
-import static com.google.common.base.Preconditions.checkNotNull;
+import java.util.NavigableMap;
 
 /**
  * A DataValue corresponding to a single column within a column family.
  */
 public class HBaseColumnValue extends BaseDataValue {
 
-  private final byte[] value;
-  private final byte[] name;
-  private final Long version;
+  private final NavigableMap<Long, byte[]> versions;
 
-  public HBaseColumnValue(byte[] columnName, Map.Entry<Long, byte[]> bytes) {
-    this.name = checkNotNull(columnName);
-    this.version = checkNotNull(bytes.getKey());
-    this.value = checkNotNull(bytes.getValue());
+  public HBaseColumnValue(NavigableMap<Long, byte[]> versions) {
+    this.versions = versions;
   }
 
   @Override
   public void write(DataWriter writer) throws IOException {
+    if (versions.size() == 1) {
+      writer.writeMapStart();
+      writer.writeMapKey("timestamp");
+      writer.writeMapValueStart();
+      writer.writeSInt64(versions.lastEntry().getKey());
+      writer.writeMapValueEnd();
+      writer.writeMapKey("value");
+      writer.writeMapValueStart();
+      writer.writeBytes(versions.lastEntry().getValue());
+      writer.writeMapValueEnd();
+      writer.writeMapEnd();
+      return;
+    }
+    throw new UnsupportedOperationException("Multi-version columns are not supported yet");
   }
 
   @Override
