@@ -1,0 +1,41 @@
+
+	{
+		"id": "0001",
+		"type": "donut",
+		"name": "Cake",
+		"ppu": 0.55,
+		"sales": 35,
+		"distinct" : 1
+	}
+	{
+		"id": "0002",
+		"type": "donut",
+		"name": "Raised",
+		"ppu": 0.69,
+		"sales": 145,
+		"distinct" : 1
+	}
+	{
+		"id": "0003",
+		"type": "donut",
+		"name": "Old Fashioned",
+		"ppu": 0.55,
+		"sales": 300,
+    "distinct" : 1
+	}
+		{
+		"id": "0004",
+		"type": "donut",
+		"name": "Filled",
+		"ppu": 0.69,
+		"sales": 14,
+    "distinct" : 2
+	}
+		{
+		"id": "0005",
+		"type": "donut",
+		"name": "Apple Fritter",
+		"ppu": 1.00,
+		"sales": 700,
+    "distinct" : 1
+	}

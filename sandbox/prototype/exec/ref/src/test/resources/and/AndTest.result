@@ -1,0 +1,20 @@
+{
+  "donuts" : {
+    "id" : "0002",
+    "sales" : 145,
+    "name" : "Raised",
+    "ppu" : 0.69,
+    "type" : "donut",
+    "distinct" : 1
+  }
+} 
+{
+  "donuts" : {
+    "id" : "0003",
+    "sales" : 300,
+    "name" : "Old Fashioned",
+    "ppu" : 0.55,
+    "type" : "donut",
+    "distinct" : 1
+  }
+} 

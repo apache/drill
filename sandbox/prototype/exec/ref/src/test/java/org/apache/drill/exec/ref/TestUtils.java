@@ -17,6 +17,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -57,4 +58,33 @@ public class TestUtils {
     assertEquals(outcomes.iterator().next().records, recordCount);
   }
 
+  /**
+   * 
+   * @param logicPlanFile path for logical plan file
+   * @param resultFile path for expected result file                     
+   * @return true if we get the expected result
+   * @throws Exception
+   */
+  public static boolean executePlan(String logicPlanFile, String resultFile) throws Exception{
+    DrillConfig config = DrillConfig.create();
+    BlockingQueue<Object> queue = new LinkedBlockingQueue<Object>();
+    config.setSinkQueues(0, queue);
+
+    LogicalPlan plan = LogicalPlan.parse(config, Files.toString(FileUtils.getResourceAsFile(logicPlanFile), Charsets.UTF_8));
+    IteratorRegistry ir = new IteratorRegistry();
+    ReferenceInterpreter i = new ReferenceInterpreter(plan, ir, new BasicEvaluatorFactory(ir), new RSERegistry(config));
+
+    i.setup();
+    Collection<RunOutcome> outcomes = i.run();
+
+    StringBuilder sb = new StringBuilder();
+    while(queue.peek() != null && ! (queue.peek() instanceof RunOutcome.OutcomeType)){
+      String record = new String((byte[])queue.poll());
+      sb.append(record);
+    }
+    String result = Files.toString(FileUtils.getResourceAsFile(resultFile), Charsets.UTF_8);
+
+    return sb.toString().equals(result);
+  }
+  
 }
