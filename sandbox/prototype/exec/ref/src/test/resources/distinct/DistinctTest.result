@@ -1,0 +1,40 @@
+{
+  "ppusegment" : 3,
+  "donuts" : {
+    "id" : "0001",
+    "sales" : 35,
+    "name" : "Cake",
+    "ppu" : 0.55,
+    "type" : "donut"
+  }
+} 
+{
+  "ppusegment" : 1,
+  "donuts" : {
+    "id" : "0002",
+    "sales" : 145,
+    "name" : "Raised",
+    "ppu" : 0.69,
+    "type" : "donut"
+  }
+} 
+{
+  "ppusegment" : 1,
+  "donuts" : {
+    "id" : "0004",
+    "sales" : 14,
+    "name" : "Filled",
+    "ppu" : 0.69,
+    "type" : "small donut"
+  }
+} 
+{
+  "ppusegment" : 2,
+  "donuts" : {
+    "id" : "0005",
+    "sales" : 700,
+    "name" : "Apple Fritter",
+    "ppu" : 1.0,
+    "type" : "donut"
+  }
+} 

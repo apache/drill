@@ -44,6 +44,12 @@
         op: "filter",
         expr: "((donuts.sales > 35) && (donuts.sales < 700))"
       },
+	    {
+	      op: "order",
+	      orderings: [
+	        {order: "asc", expr: "donuts.id" }
+	      ]
+	    },      
       {
          input: 2,
          op: "store",

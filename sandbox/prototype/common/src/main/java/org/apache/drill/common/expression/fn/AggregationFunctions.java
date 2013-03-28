@@ -17,6 +17,7 @@
  ******************************************************************************/
 package org.apache.drill.common.expression.fn;
 
+import org.apache.drill.common.expression.ArgumentValidators;
 import org.apache.drill.common.expression.ArgumentValidators.AnyTypeAllowed;
 import org.apache.drill.common.expression.CallProvider;
 import org.apache.drill.common.expression.FunctionDefinition;
@@ -29,7 +30,8 @@ public class AggregationFunctions implements CallProvider {
   public FunctionDefinition[] getFunctionDefintions() {
     return new FunctionDefinition[] {
         FunctionDefinition.aggregator("count",  new AnyTypeAllowed(1), new OutputTypeDeterminer.SameAsFirstInput()),
-        FunctionDefinition.aggregator("sum",  new AnyTypeAllowed(1), new OutputTypeDeterminer.SameAsFirstInput())
+        FunctionDefinition.aggregator("sum",  new AnyTypeAllowed(1), new OutputTypeDeterminer.SameAsFirstInput()),
+        FunctionDefinition.aggregator("countDistinct",  new AnyTypeAllowed(1), new OutputTypeDeterminer.SameAsFirstInput())
     };
   }
 }

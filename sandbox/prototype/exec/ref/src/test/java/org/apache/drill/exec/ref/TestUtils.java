@@ -83,7 +83,7 @@ public class TestUtils {
       sb.append(record);
     }
     String result = Files.toString(FileUtils.getResourceAsFile(resultFile), Charsets.UTF_8);
-
+    System.out.println(sb.toString());
     return sb.toString().equals(result);
   }
   

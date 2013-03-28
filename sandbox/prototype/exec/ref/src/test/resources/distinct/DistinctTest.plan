@@ -1,0 +1,68 @@
+{
+  head:{
+    type:"apache_drill_logical_plan",
+    version:"1",
+    generator:{
+      type:"manual",
+      info:"na"
+    }
+  },
+  storage:[
+    {
+      type:"console",
+      name:"console"
+    },
+    {
+      type:"fs",
+      name:"fs1",
+      root:"file:///"
+    },
+    {
+      type:"classpath",
+      name:"cp"
+    },
+     {
+       type: "queue",
+       name: "queue"
+     }
+  ],
+  query:[
+    {
+      op:"sequence",
+      do:[
+	    {
+	      op: "scan",
+	      memo: "initial_scan",
+	      ref: "donuts",
+	      storageengine: "cp",
+	      selection: {
+	        path: "/distinct/donuts.json",
+	        type: "JSON"
+	      }
+	    },
+	    {
+	      op: "segment",
+	      ref: "ppusegment",
+	      exprs: ["donuts.ppu"]
+	    },
+      {
+        op: "distinct",
+        within:"ppusegment",
+        ref: "donuts.type"
+      },
+	    {
+	      op: "order",
+	      orderings: [
+	        {order: "asc", expr: "donuts.id" }
+	      ]
+	    },
+	    {
+	      op: "store",
+	      memo: "output sink",
+	      storageengine: "queue",
+	      target: {number:0}
+	    }
+      ]
+    }
+  ]
+}

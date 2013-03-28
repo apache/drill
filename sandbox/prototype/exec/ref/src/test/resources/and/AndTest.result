@@ -4,8 +4,7 @@
     "sales" : 145,
     "name" : "Raised",
     "ppu" : 0.69,
-    "type" : "donut",
-    "distinct" : 1
+    "type" : "donut"
   }
 } 
 {
@@ -14,7 +13,6 @@
     "sales" : 300,
     "name" : "Old Fashioned",
     "ppu" : 0.55,
-    "type" : "donut",
-    "distinct" : 1
+    "type" : "donut"
   }
 } 
