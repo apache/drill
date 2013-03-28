@@ -28,6 +28,24 @@ import org.apache.drill.exec.ref.values.ScalarValues.BooleanScalar;
 public class ComparisonEvaluators {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ComparisonEvaluators.class);
   
+  @FunctionEvaluator("and")
+  public static class And extends BaseBasicEvaluator{
+    private final BasicEvaluator left;
+    private final BasicEvaluator right;
+
+    public And(RecordPointer record, FunctionArguments args) {
+      super(args.isOnlyConstants(), record);
+      left = args.getEvaluator(0);
+      right = args.getEvaluator(1);
+    }
+
+    @Override
+    public BooleanScalar eval() {
+      return new BooleanScalar(left.eval().getAsBooleanValue().getBoolean() && right.eval().getAsBooleanValue().getBoolean());
+    }
+
+  }
+
   @FunctionEvaluator("equal")
   public static class EqualEvaluator extends BaseBasicEvaluator{
     private final BasicEvaluator left;
