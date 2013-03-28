@@ -6,44 +6,26 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.apache.drill.common.logical.data;
+package org.apache.drill.exec.ref.rops;
 
-import org.apache.drill.common.logical.UnexpectedOperatorType;
+import org.apache.drill.exec.ref.TestUtils;
+import org.junit.Test;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import static org.junit.Assert.assertTrue;
 
-/**
- * SimpleOperator is an operator that has one inputs at most.
- */
-public abstract class SingleInputOperator extends LogicalOperatorBase {
+public class DistinctROPTest {
 
-  private LogicalOperator input;
-  
-  @JsonProperty("input")
-  public LogicalOperator getInput() {
-    return input;
+  @Test
+  public void testDistinct() throws Exception{
+    assertTrue(TestUtils.executePlan("/distinct/DistinctTest.plan", "/distinct/DistinctTest.result"));
   }
-
-  @JsonProperty(value="input", required=true)
-  public void setInput(LogicalOperator input) {
-    if(input instanceof SinkOperator) throw new UnexpectedOperatorType("You have set the input of a sink node of type ["+input.getClass().getSimpleName()+ "] as the input for another node of type ["+this.getClass().getSimpleName()+ "].  This is invalid.");
-    if(this.input != null){
-      this.input.unregisterSubscriber(this);
-    }
-    this.input = input;
-    input.registerAsSubscriber(this);
-  }
-
-  
-  
-  
 }

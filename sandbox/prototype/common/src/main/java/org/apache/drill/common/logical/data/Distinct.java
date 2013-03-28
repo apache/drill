@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,33 +17,26 @@
  ******************************************************************************/
 package org.apache.drill.common.logical.data;
 
-import org.apache.drill.common.logical.UnexpectedOperatorType;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import org.apache.drill.common.expression.FieldReference;
 
-/**
- * SimpleOperator is an operator that has one inputs at most.
- */
-public abstract class SingleInputOperator extends LogicalOperatorBase {
+@JsonTypeName("distinct")
+public class Distinct extends SingleInputOperator {
+  private final FieldReference within;
+  private FieldReference ref;
 
-  private LogicalOperator input;
-  
-  @JsonProperty("input")
-  public LogicalOperator getInput() {
-    return input;
+  public Distinct(@JsonProperty("within") FieldReference within, @JsonProperty("ref") FieldReference ref) {
+    this.within = within;
+    this.ref = ref;
   }
 
-  @JsonProperty(value="input", required=true)
-  public void setInput(LogicalOperator input) {
-    if(input instanceof SinkOperator) throw new UnexpectedOperatorType("You have set the input of a sink node of type ["+input.getClass().getSimpleName()+ "] as the input for another node of type ["+this.getClass().getSimpleName()+ "].  This is invalid.");
-    if(this.input != null){
-      this.input.unregisterSubscriber(this);
-    }
-    this.input = input;
-    input.registerAsSubscriber(this);
+  public FieldReference getRef() {
+    return ref;
   }
 
-  
-  
-  
+  public FieldReference getWithin() {
+    return within;
+  }
 }

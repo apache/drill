@@ -36,7 +36,8 @@ public interface LogicalOperator extends Iterable<LogicalOperator>{
 	//public static final Class<?>[] SUB_TYPES = {Write.class, CollapsingAggregate.class, Segment.class, Filter.class, Flatten.class, Join.class, Order.class, Limit.class, Project.class, Scan.class, Sequence.class, Transform.class, Union.class, WindowFrame.class};
 	
 	public void accept(OpVisitor visitor);
-	public void registerAsSubscriber(LogicalOperator operator);
+  public void registerAsSubscriber(LogicalOperator operator);
+  public void unregisterSubscriber(LogicalOperator operator);
 	public void setupAndValidate(List<LogicalOperator> operators, Collection<ValidationError> errors);
 	
 	

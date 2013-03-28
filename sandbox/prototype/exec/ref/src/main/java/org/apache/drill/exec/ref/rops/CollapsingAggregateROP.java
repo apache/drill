@@ -47,6 +47,8 @@ public class CollapsingAggregateROP extends SingleInputROPBase<CollapsingAggrega
   private SchemaPath[] aggNames;
   private boolean boundaryCrossed = false;
   private final boolean targetMode;
+  private RecordPointer previousRecord;
+  private RecordPointer currentRecord;
   
   public CollapsingAggregateROP(CollapsingAggregate config) {
     super(config);
@@ -219,7 +221,10 @@ public class CollapsingAggregateROP extends SingleInputROPBase<CollapsingAggrega
 
           // if we've just crossed a boundary, we should output the previous values.
           if(checkBoundaryCrossing()){
+            currentRecord = record.copy();
+            record.copyFrom(previousRecord);
             boolean wroteSomething = writeOutputRecord();
+            record.copyFrom(currentRecord);
             
             // if there is no future input, we'll flag as !more.  Otherwise, will inform that there are pending records that should be consumed.
             if(whatNext == NextOutcome.NONE_LEFT){
@@ -239,6 +244,7 @@ public class CollapsingAggregateROP extends SingleInputROPBase<CollapsingAggrega
         
         // we don't consume the current record until after we've output a record associated with a boundary (as necessary).
         consumeCurrent();
+        previousRecord = record.copy();
         remainder = false;
       }
       

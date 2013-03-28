@@ -1,0 +1,18 @@
+{
+  "donuts" : {
+    "ppu" : 0.55,
+    "types" : 1
+  }
+} 
+{
+  "donuts" : {
+    "ppu" : 0.69,
+    "types" : 2
+  }
+} 
+{
+  "donuts" : {
+    "ppu" : 1.0,
+    "types" : 1
+  }
+} 

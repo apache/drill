@@ -1,0 +1,61 @@
+{
+   head: {
+      type: "apache_drill_logical_plan",
+      version: "1",
+      generator: {
+         type: "manual",
+         info: "na"
+      }
+   },
+   storage:[
+       {
+         type:"console",
+         name:"console"
+       },
+       {
+         type:"fs",
+         name:"fs1",
+         root:"file:///"
+       },
+       {
+         type:"classpath",
+         name:"cp"
+       },
+        {
+          type: "queue",
+          name: "queue"
+        }
+   ],
+   query: [
+      {
+         @id: 1,
+         op: "scan",
+         memo: "initial_scan",
+         ref: "donuts",
+         storageengine: "cp",
+         selection: {
+         	 path: "/and/donuts.json",
+         	 type: "JSON"
+         }
+      },
+      {
+        @id: 2,
+        input: 1,
+        op: "filter",
+        expr: "((donuts.sales > 35) && (donuts.sales < 700))"
+      },
+	    {
+	      op: "order",
+	      orderings: [
+	        {order: "asc", expr: "donuts.id" }
+	      ]
+	    },      
+      {
+         input: 2,
+         op: "store",
+         memo: "output sink",
+         storageengine: "queue",
+         target: {number:0}
+      }
+   ]
+}

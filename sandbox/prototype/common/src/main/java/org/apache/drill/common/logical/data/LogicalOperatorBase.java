@@ -54,6 +54,12 @@ public abstract class LogicalOperatorBase implements LogicalOperator{
   }
 
   @Override
+  public void unregisterSubscriber(LogicalOperator operator) {
+    if(operator == null) throw new IllegalArgumentException("You attempted to register a null operators.");
+    children.remove(operator);
+  }
+
+  @Override
   public void accept(OpVisitor visitor) {
     if(visitor.enter(this)){
       for(LogicalOperator o : children){
