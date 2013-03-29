@@ -21,7 +21,6 @@ import com.google.common.base.Function;
 
 import junit.framework.TestCase;
 
-import org.apache.drill.exec.ref.ReferenceInterpreter;
 import org.apache.drill.jdbc.DrillTable;
 
 import java.sql.*;
@@ -188,6 +187,15 @@ public class JdbcTest extends TestCase {
     JdbcAssert.withModel(MODEL, "DONUTS")
         .sql("select * from donuts where 3 < 4")
         .returns(EXPECTED);
+  }
+
+  public void testValues() throws Exception {
+    JdbcAssert.withModel(MODEL, "DONUTS")
+        .sql("values (1)")
+        .returns("EXPR$0=1\n");
+
+    // Enable when https://issues.apache.org/jira/browse/DRILL-57 fixed
+    // .planContains("store");
   }
 }
 

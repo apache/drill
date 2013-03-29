@@ -20,12 +20,10 @@ package org.apache.drill.jdbc;
 import java.io.IOException;
 import java.sql.SQLException;
 
-import net.hydromatic.optiq.jdbc.DriverVersion;
-import net.hydromatic.optiq.jdbc.Handler;
-import net.hydromatic.optiq.jdbc.HandlerImpl;
-import net.hydromatic.optiq.jdbc.OptiqConnection;
-import net.hydromatic.optiq.jdbc.UnregisteredDriver;
+import net.hydromatic.linq4j.function.Function0;
+import net.hydromatic.optiq.jdbc.*;
 import net.hydromatic.optiq.model.ModelHandler;
+import org.apache.drill.optiq.DrillPrepareImpl;
 
 /**
  * JDBC driver for Apache Drill.
@@ -46,6 +44,16 @@ public class Driver extends UnregisteredDriver {
   }
 
   @Override
+  protected Function0<OptiqPrepare> createPrepareFactory() {
+    return new Function0<OptiqPrepare>() {
+        @Override
+        public OptiqPrepare apply() {
+            return new DrillPrepareImpl();
+        }
+    };
+  }
+
+    @Override
   protected Handler createHandler() {
     return new DrillHandler();
   }
@@ -75,7 +83,7 @@ public class Driver extends UnregisteredDriver {
     }
   }
 
-/*
+    /*
 
 optiq work
 ==========
