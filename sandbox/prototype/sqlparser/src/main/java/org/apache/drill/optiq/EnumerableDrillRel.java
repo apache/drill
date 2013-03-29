@@ -52,17 +52,15 @@ public class EnumerableDrillRel extends SingleRel implements EnumerableRel {
         }
       };
 
-  private static final Method OF2_METHOD;
   private static final Method OF_METHOD;
 
   private PhysType physType;
 
   static {
     try {
-      OF2_METHOD =
-          EnumerableDrill.class.getMethod("of2", String.class, List.class);
       OF_METHOD =
-          EnumerableDrill.class.getMethod("of", String.class, Class.class);
+          EnumerableDrill.class.getMethod("of", String.class, String.class,
+              List.class, Class.class);
     } catch (NoSuchMethodException e) {
       throw new RuntimeException(e);
     }
@@ -103,26 +101,23 @@ public class EnumerableDrillRel extends SingleRel implements EnumerableRel {
     drillImplementor.go(input);
     String plan = drillImplementor.getJsonString();
     Hook.LOGICAL_PLAN.run(plan);
-    if (false)
-    return new BlockBuilder()
-        .append(
-            Expressions.call(
-                OF2_METHOD,
-                Expressions.constant(plan),
-                Expressions.call(
-                    Arrays.class,
-                    "asList",
-                    Expressions.newArrayInit(
-                        String.class,
-                        Functions.apply(RelOptUtil.getFieldNameList(rowType),
-                            TO_LITERAL)))))
-        .toBlock();
-    else
+    final List<String> fieldNameList = RelOptUtil.getFieldNameList(rowType);
+    String holder = input.getHolder();
+    if (fieldNameList.equals(Arrays.asList("_MAP")) && !holder.equals("xxx")) {
+      holder = null;
+    }
     return new BlockBuilder()
         .append(
             Expressions.call(
                 OF_METHOD,
                 Expressions.constant(plan),
+                Expressions.constant(holder),
+                Expressions.call(
+                    Arrays.class,
+                    "asList",
+                    Expressions.newArrayInit(
+                        String.class,
+                        Functions.apply(fieldNameList, TO_LITERAL))),
                 Expressions.constant(Object.class)))
         .toBlock();
   }

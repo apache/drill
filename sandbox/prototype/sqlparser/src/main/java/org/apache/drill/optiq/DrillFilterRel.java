@@ -43,6 +43,11 @@ public class DrillFilterRel extends FilterRelBase implements DrillRel {
   }
 
   @Override
+  public String getHolder() {
+    return ((DrillRel) getChild()).getHolder();
+  }
+
+  @Override
   public RelOptCost computeSelfCost(RelOptPlanner planner) {
     return super.computeSelfCost(planner).multiplyBy(0.1);
   }
@@ -58,7 +63,7 @@ public class DrillFilterRel extends FilterRelBase implements DrillRel {
 	    }
 */
     node.put("op", "filter");
-    node.put("expr", DrillOptiq.toDrill(getCondition(), "donuts"));
+    node.put("expr", DrillOptiq.toDrill(getCondition(), getHolder()));
     implementor.add(node);
   }
 }

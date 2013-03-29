@@ -23,7 +23,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.rex.RexNode;
+import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.util.Pair;
 
 import java.util.*;
@@ -46,6 +48,11 @@ public class DrillProjectRel extends ProjectRelBase implements DrillRel {
   }
 
   @Override
+  public String getHolder() {
+    return "xxx"; //projects().size() == 1 ? "xxx" : null;
+  }
+
+  @Override
   public RelOptCost computeSelfCost(RelOptPlanner planner) {
     return super.computeSelfCost(planner).multiplyBy(0.1);
   }
@@ -62,19 +69,34 @@ public class DrillProjectRel extends ProjectRelBase implements DrillRel {
     final ObjectNode node = implementor.mapper.createObjectNode();
 /*
     E.g. {
-      op: "transform",
-	    transforms: [
-	      { ref: "quantity", expr: "donuts.sales"}
+      op: "project",
+	    projections: [
+	      { ref: "output.quantity", expr: "donuts.sales"}
 	    ]
 */
-    node.put("op", "transform");
+    node.put("op", "project");
     final ArrayNode transforms = implementor.mapper.createArrayNode();
-    node.put("transforms", transforms);
+    node.put("projections", transforms);
+    String childHolder = ((DrillRel) getChild()).getHolder();
+    if (getChild().getRowType().getFieldCount() == 1
+        && getChild().getRowType().getFieldList().get(0).getName().equals("D")
+        && getChild().getRowType().getFieldList().get(0).getType().getSqlTypeName() == SqlTypeName.MAP) {
+      RelDataTypeField x = getChild().getRowType().getFieldList().get(0);
+      assert x.getType().getSqlTypeName() == SqlTypeName.MAP : x.getType().getSqlTypeName();
+      childHolder = childHolder + "." + getChild().getRowType().getFieldList().get(0).getName();
+    }
+    final String prefix = "output."
+                          + (getHolder() == null ? "" : getHolder() + ".");
     for (Pair<RexNode, String> pair : projects()) {
       final ObjectNode objectNode = implementor.mapper.createObjectNode();
       transforms.add(objectNode);
-      objectNode.put("expr", DrillOptiq.toDrill(pair.left, "donuts"));
-      objectNode.put("ref", pair.right);
+      String expr = DrillOptiq.toDrill(pair.left, childHolder);
+      if (expr.equals("xxx.ppu")) {
+//        expr = "xxx.D.ppu";
+      }
+      objectNode.put("expr", expr);
+      String ref = prefix + pair.right;
+      objectNode.put("ref", ref);
     }
     implementor.add(node);
   }

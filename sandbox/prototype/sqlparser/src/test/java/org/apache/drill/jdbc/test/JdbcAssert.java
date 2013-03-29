@@ -113,7 +113,7 @@ public class JdbcAssert {
       }
     }
 
-    public void plainContains(String expected) {
+    public void planContains(String expected) {
       final String[] plan0 = {null};
       Connection connection = null;
       Statement statement = null;
@@ -130,7 +130,10 @@ public class JdbcAssert {
         statement = connection.prepareStatement(sql);
         statement.close();
         final String plan = plan0[0];
-        Assert.assertTrue(plan, plan.contains(expected));
+        // it's easier to write java strings containing single quotes than
+        // double quotes
+        String expected2 = expected.replace("'", "\"");
+        Assert.assertTrue(plan, plan.contains(expected2));
       } catch (Exception e) {
         throw new RuntimeException(e);
       }

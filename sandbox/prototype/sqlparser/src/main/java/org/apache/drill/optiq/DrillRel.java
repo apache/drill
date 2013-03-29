@@ -29,6 +29,9 @@ public interface DrillRel extends RelNode {
   Convention CONVENTION = new Convention.Impl("DRILL", DrillRel.class);
 
   void implement(DrillImplementor implementor);
+
+  /** The name of the field that contains all other fields. */
+  String getHolder();
 }
 
 // End DrillRel.java

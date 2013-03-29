@@ -47,7 +47,8 @@ public class DrillOptiq {
   static String toDrill(RexNode expr, String inputName) {
     final RexToDrill visitor = new RexToDrill(inputName);
     expr.accept(visitor);
-    return visitor.buf.toString();
+    String s = visitor.buf.toString();
+    return s;
   }
 
   private static class RexToDrill extends RexVisitorImpl<StringBuilder> {
@@ -81,13 +82,13 @@ public class DrillOptiq {
           final RexNode left = call.getOperandList().get(0);
           final RexLiteral literal = (RexLiteral) call.getOperandList().get(1);
           final String field = (String) literal.getValue2();
-          if (left instanceof RexInputRef) {
-            return buf.append(field);
-          } else {
-            return left.accept(this)
-                .append('.')
-                .append(field);
+          final int length = buf.length();
+          left.accept(this);
+          if (buf.length() > length) {
+            // check before generating empty LHS if inputName is null
+            buf.append('.');
           }
+          return buf.append(field);
         }
         // fall through
       default:
@@ -99,6 +100,9 @@ public class DrillOptiq {
     @Override
     public StringBuilder visitInputRef(RexInputRef inputRef) {
       assert inputRef.getIndex() == 0;
+      if (inputName == null) {
+        return buf;
+      }
       return buf.append(inputName);
     }
 
