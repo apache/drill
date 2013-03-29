@@ -75,7 +75,13 @@ public class ReferenceInterpreter {
   public static void main(String[] args) throws Exception{
     DrillConfig config = DrillConfig.create();
     final String jsonFile = args[0];
-    LogicalPlan plan = LogicalPlan.parse(config, Files.toString(new File(jsonFile), Charsets.UTF_8));
+    final String planString;
+    if (jsonFile.startsWith("inline:")) {
+      planString = jsonFile.substring("inline:".length());
+    } else {
+      planString = Files.toString(new File(jsonFile), Charsets.UTF_8);
+    }
+    LogicalPlan plan = LogicalPlan.parse(config, planString);
     IteratorRegistry ir = new IteratorRegistry();
     ReferenceInterpreter i = new ReferenceInterpreter(plan, ir, new BasicEvaluatorFactory(ir), new RSERegistry(config));
     i.setup();
