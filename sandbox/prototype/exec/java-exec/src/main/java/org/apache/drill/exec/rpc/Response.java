@@ -19,16 +19,17 @@ package org.apache.drill.exec.rpc;
 
 import io.netty.buffer.ByteBuf;
 
+import com.google.protobuf.Internal.EnumLite;
 import com.google.protobuf.MessageLite;
 
 public class Response {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Response.class);
   
-  public Enum<?> rpcType;
+  public EnumLite rpcType;
   public MessageLite pBody;
   public ByteBuf dBody;
   
-  public Response(Enum<?> rpcType, MessageLite pBody, ByteBuf dBody) {
+  public Response(EnumLite rpcType, MessageLite pBody, ByteBuf dBody) {
     super();
     this.rpcType = rpcType;
     this.pBody = pBody;

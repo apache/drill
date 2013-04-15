@@ -27,7 +27,7 @@ public class DrillRpcFuture<V> extends AbstractCheckedFuture<V, RpcException> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillRpcFuture.class);
 
   final int coordinationId;
-  final Class<V> clazz;
+  private final Class<V> clazz;
 
   public DrillRpcFuture(ListenableFuture<V> delegate, int coordinationId, Class<V> clazz) {
     super(delegate);
@@ -35,6 +35,10 @@ public class DrillRpcFuture<V> extends AbstractCheckedFuture<V, RpcException> {
     this.clazz = clazz;
   }
 
+  public Class<V> getOutcomeClass(){
+    return clazz;
+  }
+  
   /**
    * Drill doesn't currently support rpc cancellations since nearly all requests should be either instance of
    * asynchronous. Business level cancellation is managed a separate call (e.g. canceling a query.). Calling this method

@@ -21,6 +21,7 @@ import io.netty.buffer.ByteBuf;
 
 import org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode;
 
+import com.google.protobuf.Internal.EnumLite;
 import com.google.protobuf.MessageLite;
 
 class OutboundRpcMessage extends RpcMessage{
@@ -28,8 +29,8 @@ class OutboundRpcMessage extends RpcMessage{
 
   final MessageLite pBody;
   
-  public OutboundRpcMessage(RpcMode mode, Enum<?> rpcType, int coordinationId, MessageLite pBody, ByteBuf dBody) {
-    super(mode, rpcType.ordinal(), coordinationId, dBody);
+  public OutboundRpcMessage(RpcMode mode, EnumLite rpcType, int coordinationId, MessageLite pBody, ByteBuf dBody) {
+    super(mode, rpcType.getNumber(), coordinationId, dBody);
     this.pBody = pBody;
   }
   

@@ -33,6 +33,7 @@ import org.apache.drill.exec.proto.GeneralRPCProtos.RpcFailure;
 import org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode;
 
 import com.google.common.base.Preconditions;
+import com.google.protobuf.Internal.EnumLite;
 import com.google.protobuf.MessageLite;
 import com.google.protobuf.Parser;
 
@@ -40,7 +41,7 @@ import com.google.protobuf.Parser;
  * The Rpc Bus deals with incoming and outgoing communication and is used on both the server and the client side of a system.
  * @param <T>
  */
-public abstract class RpcBus<T extends Enum<T>> implements Closeable{
+public abstract class RpcBus<T extends EnumLite> implements Closeable{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RpcBus.class);
   
   private CoordinationQueue queue = new CoordinationQueue(16, 16);

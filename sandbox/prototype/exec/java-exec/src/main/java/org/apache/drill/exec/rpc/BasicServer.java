@@ -19,8 +19,6 @@ package org.apache.drill.exec.rpc;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBufAllocator;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelInboundMessageHandlerAdapter;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
@@ -28,17 +26,18 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
-import io.netty.util.concurrent.GenericFutureListener;
 
 import java.io.IOException;
 
 import org.apache.drill.exec.exception.DrillbitStartupException;
 
+import com.google.protobuf.Internal.EnumLite;
+
 /**
  * A server is bound to a port and is responsible for responding to various type of requests. In some cases, the inbound
  * requests will generate more than one outbound request.
  */
-public abstract class BasicServer<T extends Enum<T>> extends RpcBus<T>{
+public abstract class BasicServer<T extends EnumLite> extends RpcBus<T>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BasicServer.class);
 
   private ServerBootstrap b;

@@ -26,9 +26,9 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 
-import java.util.concurrent.atomic.AtomicBoolean;
+import com.google.protobuf.Internal.EnumLite;
 
-public abstract class BasicClient<T extends Enum<T>> extends RpcBus<T> {
+public abstract class BasicClient<T extends EnumLite> extends RpcBus<T> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BasicClient.class);
 
   private Bootstrap b;
