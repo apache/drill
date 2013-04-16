@@ -43,9 +43,10 @@ public class ServiceEngine implements Closeable{
   DrillbitContext context;
   
   public ServiceEngine(DrillbitContext context){
+    this.context = context;
     ByteBufAllocator allocator = context.getAllocator().getUnderlyingAllocator();
-    userServer = new UserServer(allocator, new NioEventLoopGroup(1, new NamedThreadFactory("UserServer-")), context);
-    bitCom = new BitComImpl(context);
+    this.userServer = new UserServer(allocator, new NioEventLoopGroup(1, new NamedThreadFactory("UserServer-")), context);
+    this.bitCom = new BitComImpl(context);
   }
   
   public void start() throws DrillbitStartupException, InterruptedException{
