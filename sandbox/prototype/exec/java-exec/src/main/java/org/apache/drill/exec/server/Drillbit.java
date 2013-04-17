@@ -17,8 +17,7 @@
  ******************************************************************************/
 package org.apache.drill.exec.server;
 
-import java.net.InetAddress;
-
+import com.google.common.io.Closeables;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.BufferAllocator;
 import org.apache.drill.exec.ExecConstants;
@@ -31,31 +30,34 @@ import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.service.ServiceEngine;
 
-import com.google.common.io.Closeables;
+import java.net.InetAddress;
 
 public class Drillbit {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Drillbit.class);
 
-  public static void main(String[] cli) throws DrillbitStartupException, InterruptedException {
+  public static Drillbit start(StartupOptions options) throws DrillbitStartupException {
     Drillbit bit = null;
     try {
       logger.debug("Setting up Drillbit.");
-      StartupOptions options = StartupOptions.parse(cli);
       DrillConfig config = DrillConfig.create(options.getConfigLocation());
       bit = new Drillbit(config);
     } catch (Exception ex) {
       throw new DrillbitStartupException("Failure while initializing values in Drillbit.", ex);
     }
 
-    
+
     try {
       logger.debug("Starting Drillbit.");
       bit.run();
     } catch (Exception e) {
       throw new DrillbitStartupException("Failure during initial startup of Drillbit.", e);
     }
-    Thread.sleep(10000);
-    // at this point, the main thread can terminate as we have started all our working threads.
+    return bit;
+  }
+
+  public static void main(String[] cli) throws DrillbitStartupException {
+    StartupOptions options = StartupOptions.parse(cli);
+    start(options);
   }
 
   private final DrillbitContext context;
