@@ -65,14 +65,21 @@ public class HazelCache implements DistributedCache {
   
   public void run(DrillbitEndpoint endpoint) {
     Config c = new Config();
-    // todo, utilize cluster member ship to set up other nodes.
     c.setInstanceName(instanceName);
-    instance = Hazelcast.newHazelcastInstance(c);
+    instance = getInstanceOrCreateNew(c);
     workQueueLengths = instance.getTopic("queue-length");
     optimizedPlans = instance.getMap("plan-optimizations");
     this.endpoint = endpoint;
     endpoints = CacheBuilder.newBuilder().maximumSize(2000).build();
     workQueueLengths.addMessageListener(new Listener());
+  }
+
+  private HazelcastInstance getInstanceOrCreateNew(Config c) {
+    for (HazelcastInstance instance : Hazelcast.getAllHazelcastInstances()){
+      if (instance.getName().equals(this.instanceName))
+        return instance;
+    }
+    return Hazelcast.newHazelcastInstance(c);
   }
 
   @Override

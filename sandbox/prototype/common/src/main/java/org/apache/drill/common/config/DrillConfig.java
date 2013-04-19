@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.drill.common.exceptions.DrillConfigurationException;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.logical.StorageEngineConfigBase;
@@ -44,8 +45,9 @@ public final class DrillConfig extends NestedConfig{
   
   @SuppressWarnings("unchecked")
   private volatile List<Queue<Object>> sinkQueues = new CopyOnWriteArrayList<Queue<Object>>(new Queue[1]);
-  
-  private DrillConfig(Config config) {
+
+  @VisibleForTesting
+  public DrillConfig(Config config) {
     super(config);
     mapper = new ObjectMapper();
     SimpleModule deserModule = new SimpleModule("LogicalExpressionDeserializationModule").addDeserializer(LogicalExpression.class, new LogicalExpression.De(this));
@@ -144,5 +146,10 @@ public final class DrillConfig extends NestedConfig{
   
   public ObjectMapper getMapper(){
     return mapper;
+  }
+
+  @Override
+  public String toString(){
+    return this.root().render();
   }
 }

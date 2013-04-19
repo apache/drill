@@ -17,10 +17,10 @@
  ******************************************************************************/
 package org.apache.drill.exec.coord;
 
-import java.io.Closeable;
-import java.util.List;
-
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+
+import java.io.Closeable;
+import java.util.Collection;
 
 /**
  * Pluggable interface built to manage cluster coordination. Allows Drillbit or DrillClient to register its capabilities
@@ -36,10 +36,12 @@ public abstract class ClusterCoordinator implements Closeable {
   public abstract void unregister(RegistrationHandle handle);
 
   /**
-   * Get a list of avialable Drillbit endpoints.  Thread-safe.  Could be slightly out of date depending on refresh policy.
-   * @return A list of available endpoints.
+   * Get a collection of avialable Drillbit endpoints, Thread-safe.
+   * Could be slightly out of date depending on refresh policy.
+   *
+   * @return A collection of available endpoints.
    */
-  public abstract List<DrillbitEndpoint> getAvailableEndpoints();
+  public abstract Collection<DrillbitEndpoint> getAvailableEndpoints();
 
   public interface RegistrationHandle {
   }

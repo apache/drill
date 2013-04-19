@@ -19,6 +19,7 @@ package org.apache.drill.exec.server;
 
 import io.netty.channel.nio.NioEventLoopGroup;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.drill.common.config.DrillConfig;
@@ -45,7 +46,7 @@ public class DrillbitContext {
     return config;
   }
   
-  public List<DrillbitEndpoint> getBits(){
+  public Collection<DrillbitEndpoint> getBits(){
     return underlyingBit.coord.getAvailableEndpoints();
   }
 
