@@ -1,0 +1,70 @@
+
+	{
+		"rowKey": "0001",
+		metadata:
+    {
+		  "type": "donut",
+		  "name": "Cake",
+		  "ppu": 0.55,
+		  "sales": 35
+		},
+		"batters":
+		{
+		   "1001": "Regular",
+		   "1002": "Chocolate"
+    }
+	}
+	{
+	  "rowKey": "0002",
+		metadata:
+    {
+		  "type": "donut",
+		  "name": "Raised",
+		  "ppu": 0.69,
+		  "sales": 145
+		},
+		"batters":
+    {
+    	"1003": "Blueberry",
+      "1004": "Devil's Food"
+    }
+	}
+	{
+		"rowKey": "0003",
+		metadata:
+    {
+		  "type": "donut",
+		  "name": "Old Fashioned",
+		  "ppu": 0.55,
+		  "sales": 300
+	  },
+		"batters":
+    {
+    	"1001": "Regular"
+    }
+	}
+	{
+		"rowKey": "0004",
+		metadata:
+    {
+		  "type": "donut",
+		  "name": "Filled",
+		  "ppu": 0.69,
+		  "sales": 14
+		}
+	}
+	{
+		"rowKey": "0005",
+		metadata:
+		{
+		  "type": "donut",
+		  "name": "Apple Fritter",
+		  "ppu": 1.00,
+		  "sales": 700
+		},
+		"batters":
+    {
+    	"1001": "Regular",
+    	"1003": "Blueberry"
+    }
+	}
