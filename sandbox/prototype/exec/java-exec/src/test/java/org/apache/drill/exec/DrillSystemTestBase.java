@@ -18,27 +18,66 @@
 package org.apache.drill.exec;
 
 import com.google.common.collect.ImmutableList;
+import com.typesafe.config.ConfigValueFactory;
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.server.Drillbit;
-import org.apache.drill.exec.server.StartupOptions;
+import org.apache.drill.exec.util.MiniZooKeeperCluster;
+import org.junit.BeforeClass;
+import org.slf4j.Logger;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 import static com.google.common.base.Throwables.propagate;
 
 /**
  * Base class for Drill system tests.
- * Starts one or more Drillbits and provides a configured client for testing.
+ * Starts one or more Drillbits, an embedded ZooKeeper cluster and provides a configured client for testing.
  */
 public class DrillSystemTestBase {
 
-  private static List<Drillbit> servers;
+  static final Logger logger = org.slf4j.LoggerFactory.getLogger(DrillConfig.class);
 
-  public void startCluster(StartupOptions options, int numServers) {
+  private static File testDir = new File("target/test-data");
+  private static DrillConfig config;
+  private static String zkUrl;
+  private static int bitPort;
+  private static int userPort;
+
+  private List<Drillbit> servers;
+  private MiniZooKeeperCluster zkCluster;
+
+  @BeforeClass
+  public static void setUp() throws Exception {
+    config = DrillConfig.create();
+    bitPort = config.getInt(ExecConstants.INITIAL_BIT_PORT);
+    userPort = config.getInt(ExecConstants.INITIAL_USER_PORT);
+    zkUrl = config.getString(ExecConstants.ZK_CONNECTION);
+    setupTestDir();
+  }
+
+  private static void setupTestDir() {
+    if (!testDir.exists()) {
+      testDir.mkdirs();
+    }
+  }
+
+  private DrillConfig newConfigWithDifferentPorts() {
+    return new DrillConfig(config
+      .withValue(ExecConstants.INITIAL_BIT_PORT, ConfigValueFactory.fromAnyRef(bitPort++))
+      .withValue(ExecConstants.INITIAL_USER_PORT, ConfigValueFactory.fromAnyRef(userPort++)));
+  }
+
+  public void startCluster(int numServers) {
     try {
       ImmutableList.Builder<Drillbit> servers = ImmutableList.builder();
       for (int i = 0; i < numServers; i++) {
-        servers.add(Drillbit.start(options));
+        DrillConfig config = newConfigWithDifferentPorts();
+//        System.out.println("NEW CONFIG");
+//        System.out.println(config);
+        servers.add(Drillbit.start(config));
       }
       this.servers = servers.build();
     } catch (DrillbitStartupException e) {
@@ -46,16 +85,36 @@ public class DrillSystemTestBase {
     }
   }
 
-  public void startZookeeper() {
-
+  public void startZookeeper(int numServers) {
+    try {
+      this.zkCluster = new MiniZooKeeperCluster();
+      zkCluster.setDefaultClientPort(Integer.parseInt(this.zkUrl.split(":")[1]));
+      zkCluster.startup(testDir, numServers);
+    } catch (IOException e) {
+      propagate(e);
+    } catch (InterruptedException e) {
+      propagate(e);
+    }
   }
 
   public void stopCluster() {
-
+    if (servers != null) {
+      for (Drillbit server : servers) {
+        try {
+          server.close();
+        } catch (Exception e) {
+          logger.warn("Error shutting down Drillbit", e);
+        }
+      }
+    }
   }
 
   public void stopZookeeper() {
-
+    try {
+      this.zkCluster.shutdown();
+    } catch (IOException e) {
+      propagate(e);
+    }
   }
 
 }

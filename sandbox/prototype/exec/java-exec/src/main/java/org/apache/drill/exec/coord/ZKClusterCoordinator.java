@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,17 +17,7 @@
  ******************************************************************************/
 package org.apache.drill.exec.coord;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-
-import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
-
-import com.google.common.base.Throwables;
+import com.google.common.base.Function;
 import com.netflix.curator.RetryPolicy;
 import com.netflix.curator.framework.CuratorFramework;
 import com.netflix.curator.framework.CuratorFrameworkFactory;
@@ -38,8 +28,20 @@ import com.netflix.curator.x.discovery.ServiceDiscoveryBuilder;
 import com.netflix.curator.x.discovery.ServiceInstance;
 import com.netflix.curator.x.discovery.details.ServiceCache;
 import com.netflix.curator.x.discovery.details.ServiceCacheListener;
+import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
-/** Manages cluster coordination utilizing zookeeper. **/
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Collections;
+
+import static com.google.common.base.Throwables.propagate;
+import static com.google.common.collect.Collections2.transform;
+
+/**
+ * Manages cluster coordination utilizing zookeeper. *
+ */
 public class ZKClusterCoordinator extends ClusterCoordinator {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ZKClusterCoordinator.class);
 
@@ -47,24 +49,26 @@ public class ZKClusterCoordinator extends ClusterCoordinator {
   private CuratorFramework curator;
   private ServiceDiscovery<DrillbitEndpoint> discovery;
   private ServiceCache<DrillbitEndpoint> serviceCache;
-  private volatile List<DrillbitEndpoint> endpoints = Collections.emptyList();
+  private volatile Collection<DrillbitEndpoint> endpoints = Collections.emptyList();
   private final String serviceName;
+
   public ZKClusterCoordinator(DrillConfig config) throws IOException {
-    
+
     this.basePath = config.getString(ExecConstants.ZK_ROOT);
-    this.serviceName =  config.getString(ExecConstants.SERVICE_NAME);
-    
+    this.serviceName = config.getString(ExecConstants.SERVICE_NAME);
     RetryPolicy rp = new RetryNTimes(config.getInt(ExecConstants.ZK_RETRY_TIMES),
-        config.getInt(ExecConstants.ZK_RETRY_DELAY));
-    
+      config.getInt(ExecConstants.ZK_RETRY_DELAY));
     curator = CuratorFrameworkFactory.builder()
-        .connectionTimeoutMs(config.getInt(ExecConstants.ZK_TIMEOUT))
-        .retryPolicy(rp)
-        .connectString(config.getString(ExecConstants.ZK_CONNECTION))
-        .build(); 
-    
+      .connectionTimeoutMs(config.getInt(ExecConstants.ZK_TIMEOUT))
+      .retryPolicy(rp)
+      .connectString(config.getString(ExecConstants.ZK_CONNECTION))
+      .build();
     discovery = getDiscovery();
-    serviceCache = discovery.serviceCacheBuilder().name(serviceName).refreshPaddingMs(config.getInt(ExecConstants.ZK_REFRESH)).build();
+    serviceCache = discovery.
+      serviceCacheBuilder()
+      .name(serviceName)
+      .refreshPaddingMs(config.getInt(ExecConstants.ZK_REFRESH))
+      .build();
   }
 
   public void start() throws Exception {
@@ -73,10 +77,11 @@ public class ZKClusterCoordinator extends ClusterCoordinator {
     discovery.start();
     serviceCache.start();
     serviceCache.addListener(new ZKListener());
+    updateEndpoints();
   }
-  
-  private class ZKListener implements ServiceCacheListener{
-    
+
+  private class ZKListener implements ServiceCacheListener {
+
     @Override
     public void stateChanged(CuratorFramework client, ConnectionState newState) {
     }
@@ -84,62 +89,78 @@ public class ZKClusterCoordinator extends ClusterCoordinator {
     @Override
     public void cacheChanged() {
       logger.debug("Cache changed, updating.");
-      try {
-        Collection<ServiceInstance<DrillbitEndpoint>> instances = discovery.queryForInstances(serviceName);
-        List<DrillbitEndpoint> newEndpoints = new ArrayList<DrillbitEndpoint>(instances.size());
-        for(ServiceInstance<DrillbitEndpoint> si : instances){
-          newEndpoints.add(si.getPayload());
-        }
-        endpoints = newEndpoints;
-      } catch (Exception e) {
-        logger.error("Failure while update Drillbit service location cache.", e);
-      }
+      updateEndpoints();
     }
   }
 
-  public void close() throws IOException{
+  public void close() throws IOException {
     serviceCache.close();
     discovery.close();
     curator.close();
   }
-  
+
   @Override
   public RegistrationHandle register(DrillbitEndpoint data) {
     try {
-      ServiceInstance<DrillbitEndpoint> si = getSI(data);
-      discovery.registerService(si);
-      return new ZKRegistrationHandle(si.getId());
+      ServiceInstance<DrillbitEndpoint> serviceInstance = getServiceInstance(data);
+      discovery.registerService(serviceInstance);
+      return new ZKRegistrationHandle(serviceInstance.getId());
     } catch (Exception e) {
-      Throwables.propagate(e);
-      return null;
+      throw propagate(e);
     }
   }
 
   @Override
   public void unregister(RegistrationHandle handle) {
-    if( !( handle instanceof ZKRegistrationHandle)) throw new UnsupportedOperationException("Unknown handle type");
-    
+    if (!(handle instanceof ZKRegistrationHandle)) throw new UnsupportedOperationException("Unknown handle type");
+
     ZKRegistrationHandle h = (ZKRegistrationHandle) handle;
     try {
-      ServiceInstance<DrillbitEndpoint> si = ServiceInstance.<DrillbitEndpoint>builder().address("").port(0).id(h.id).name(ExecConstants.SERVICE_NAME).build();
-      discovery.unregisterService(si);
+      ServiceInstance<DrillbitEndpoint> serviceInstance = ServiceInstance.<DrillbitEndpoint>builder()
+        .address("")
+        .port(0)
+        .id(h.id)
+        .name(serviceName)
+        .build();
+      discovery.unregisterService(serviceInstance);
     } catch (Exception e) {
-      Throwables.propagate(e);
+      propagate(e);
     }
   }
 
   @Override
-  public List<DrillbitEndpoint> getAvailableEndpoints() {
+  public Collection<DrillbitEndpoint> getAvailableEndpoints() {
     return this.endpoints;
   }
-  
-  private ServiceInstance<DrillbitEndpoint> getSI(DrillbitEndpoint ep) throws Exception{
-    return ServiceInstance.<DrillbitEndpoint>builder().name(ExecConstants.SERVICE_NAME).payload(ep).build();
+
+  private void updateEndpoints() {
+    try {
+      endpoints = transform(discovery.queryForInstances(serviceName),
+        new Function<ServiceInstance<DrillbitEndpoint>, DrillbitEndpoint>() {
+          @Override
+          public DrillbitEndpoint apply(ServiceInstance<DrillbitEndpoint> input) {
+            return input.getPayload();
+          }
+        });
+    } catch (Exception e) {
+      logger.error("Failure while update Drillbit service location cache.", e);
+    }
   }
-  
-  
+
+  private ServiceInstance<DrillbitEndpoint> getServiceInstance(DrillbitEndpoint endpoint) throws Exception {
+    return ServiceInstance.<DrillbitEndpoint>builder()
+      .name(serviceName)
+      .payload(endpoint)
+      .build();
+  }
+
 
   public ServiceDiscovery<DrillbitEndpoint> getDiscovery() {
-    return ServiceDiscoveryBuilder.builder(DrillbitEndpoint.class).basePath(basePath).client(curator).serializer(DrillServiceInstanceHelper.SERIALIZER).build();
+    return ServiceDiscoveryBuilder
+      .builder(DrillbitEndpoint.class)
+      .basePath(basePath)
+      .client(curator)
+      .serializer(DrillServiceInstanceHelper.SERIALIZER)
+      .build();
   }
 }

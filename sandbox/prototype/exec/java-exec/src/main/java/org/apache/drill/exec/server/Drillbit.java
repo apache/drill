@@ -32,20 +32,24 @@ import org.apache.drill.exec.service.ServiceEngine;
 
 import java.net.InetAddress;
 
+/**
+ * Starts, tracks and stops all the required services for a Drillbit daemon to work.
+ */
 public class Drillbit {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Drillbit.class);
 
   public static Drillbit start(StartupOptions options) throws DrillbitStartupException {
-    Drillbit bit = null;
+    return start(DrillConfig.create(options.getConfigLocation()));
+  }
+
+  public static Drillbit start(DrillConfig config) throws DrillbitStartupException {
+    Drillbit bit;
     try {
       logger.debug("Setting up Drillbit.");
-      DrillConfig config = DrillConfig.create(options.getConfigLocation());
       bit = new Drillbit(config);
     } catch (Exception ex) {
       throw new DrillbitStartupException("Failure while initializing values in Drillbit.", ex);
     }
-
-
     try {
       logger.debug("Starting Drillbit.");
       bit.run();
@@ -80,9 +84,11 @@ public class Drillbit {
   public void run() throws Exception {
     coord.start();
     engine.start();
-    
-    DrillbitEndpoint md = DrillbitEndpoint.newBuilder().setAddress(InetAddress.getLocalHost().getHostAddress())
-        .setBitPort(engine.getBitPort()).setUserPort(engine.getUserPort()).build();
+    DrillbitEndpoint md = DrillbitEndpoint.newBuilder()
+      .setAddress(InetAddress.getLocalHost().getHostAddress())
+      .setBitPort(engine.getBitPort())
+      .setUserPort(engine.getUserPort())
+      .build();
     handle = coord.register(md);
     cache.run(md);
   }
