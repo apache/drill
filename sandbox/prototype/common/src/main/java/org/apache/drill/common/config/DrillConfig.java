@@ -24,7 +24,6 @@ import java.util.Queue;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.sun.media.jfxmedia.events.VideoTrackSizeListener;
 import org.apache.drill.common.exceptions.DrillConfigurationException;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.logical.StorageEngineConfigBase;

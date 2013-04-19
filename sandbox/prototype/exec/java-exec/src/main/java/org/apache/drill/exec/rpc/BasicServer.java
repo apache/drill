@@ -17,6 +17,7 @@
  ******************************************************************************/
 package org.apache.drill.exec.rpc;
 
+import com.google.protobuf.Internal.EnumLite;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.ChannelInitializer;
@@ -26,12 +27,10 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
-
-import java.io.IOException;
-
 import org.apache.drill.exec.exception.DrillbitStartupException;
 
-import com.google.protobuf.Internal.EnumLite;
+import java.io.IOException;
+import java.net.BindException;
 
 /**
  * A server is bound to a port and is responsible for responding to various type of requests. In some cases, the inbound
@@ -79,18 +78,17 @@ public abstract class BasicServer<T extends EnumLite> extends RpcBus<T>{
 
 
   public int bind(final int initialPort) throws InterruptedException, DrillbitStartupException{
-    boolean ok = false;
     int port = initialPort;
-    for(; port < Character.MAX_VALUE; port++){
-      if(b.bind(port).sync().isSuccess()){
-        ok = true;
+    while (true) {
+      try {
+        b.bind(port++).sync();
         break;
+      } catch (Exception e) {
+        if (e instanceof BindException)
+          continue;
+        throw new DrillbitStartupException("Could not bind Drillbit", e);
       }
     }
-    if(!ok){
-      throw new DrillbitStartupException(String.format("Unable to find available port for Drillbit server starting at port %d.", initialPort));
-    }
-    
     connect = !connect;
     return port;    
   }

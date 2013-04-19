@@ -18,7 +18,6 @@
 package org.apache.drill.exec;
 
 import com.google.common.collect.ImmutableList;
-import com.typesafe.config.ConfigValueFactory;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.server.Drillbit;
@@ -43,8 +42,6 @@ public class DrillSystemTestBase {
   private static File testDir = new File("target/test-data");
   private static DrillConfig config;
   private static String zkUrl;
-  private static int bitPort;
-  private static int userPort;
 
   private List<Drillbit> servers;
   private MiniZooKeeperCluster zkCluster;
@@ -52,8 +49,6 @@ public class DrillSystemTestBase {
   @BeforeClass
   public static void setUp() throws Exception {
     config = DrillConfig.create();
-    bitPort = config.getInt(ExecConstants.INITIAL_BIT_PORT);
-    userPort = config.getInt(ExecConstants.INITIAL_USER_PORT);
     zkUrl = config.getString(ExecConstants.ZK_CONNECTION);
     setupTestDir();
   }
@@ -64,19 +59,10 @@ public class DrillSystemTestBase {
     }
   }
 
-  private DrillConfig newConfigWithDifferentPorts() {
-    return new DrillConfig(config
-      .withValue(ExecConstants.INITIAL_BIT_PORT, ConfigValueFactory.fromAnyRef(bitPort++))
-      .withValue(ExecConstants.INITIAL_USER_PORT, ConfigValueFactory.fromAnyRef(userPort++)));
-  }
-
   public void startCluster(int numServers) {
     try {
       ImmutableList.Builder<Drillbit> servers = ImmutableList.builder();
       for (int i = 0; i < numServers; i++) {
-        DrillConfig config = newConfigWithDifferentPorts();
-//        System.out.println("NEW CONFIG");
-//        System.out.println(config);
         servers.add(Drillbit.start(config));
       }
       this.servers = servers.build();
