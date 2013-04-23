@@ -15,41 +15,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.apache.drill.common.physical.pop;
+package org.apache.drill.common.physical;
 
-import java.util.Iterator;
 import java.util.List;
 
-import org.apache.drill.common.JSONOptions;
-import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.physical.FieldSet;
-import org.apache.drill.common.physical.ReadEntry;
+import org.apache.drill.common.defs.PartitionDef;
+import org.apache.drill.common.physical.MockStorePOP.MockWriteEntry;
+import org.apache.drill.common.physical.pop.StorePOP;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Lists;
 
-public abstract class ScanPOP<T extends ReadEntry> extends POPBase implements SourcePOP{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScanPOP.class);
+@JsonTypeName("mock-store")
+public class MockStorePOP extends StorePOP<MockWriteEntry>{
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MockStorePOP.class);
+
+  private List<String> fieldNames;
+
   
-  private List<T> readEntries;
-  
-  public ScanPOP(List<T> readEntries, FieldSet fieldSet) {
-    super(fieldSet);
-    this.readEntries = readEntries;
+  @JsonCreator
+  public MockStorePOP(@JsonProperty("output") FieldSet fields, @JsonProperty("mode") StoreMode mode, @JsonProperty("entries") List<MockWriteEntry> entries, @JsonProperty("partition") PartitionDef partition, @JsonProperty("fieldNames") List<String> fieldNames) {
+    super(fields, mode, partition, entries);
+    this.fieldNames = fieldNames;
   }
 
-  @JsonProperty("entries")
-  public List<T> getReadEntries() {
-    return readEntries;
-  }
   
-  @Override
-  public Iterator<PhysicalOperator> iterator() {
-    return Iterators.emptyIterator();
+  public List<String> getFieldNames() {
+    return fieldNames;
   }
 
+  
+  public static class MockWriteEntry implements WriteEntry{
+    public String path;
+    public String key;
+    public String type;
+  }
   
 }
+

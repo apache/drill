@@ -26,20 +26,14 @@ public class RecordField {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RecordField.class);
 
   
-  private String name;
   private DataType type;
   private ValueMode mode;
   
   @JsonCreator
-  public RecordField(@JsonProperty("name") String name, @JsonProperty("type") DataType type, @JsonProperty("mode") ValueMode mode) {
+  public RecordField(@JsonProperty("type") DataType type, @JsonProperty("mode") ValueMode mode) {
     super();
-    this.name = name;
     this.type = type;
     this.mode = mode;
-  }
-
-  public String getName() {
-    return name;
   }
 
   public DataType getType() {

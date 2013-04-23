@@ -17,39 +17,37 @@
  ******************************************************************************/
 package org.apache.drill.common.physical.pop;
 
-import java.util.Iterator;
 import java.util.List;
 
-import org.apache.drill.common.JSONOptions;
-import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.defs.PartitionDef;
+import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.physical.FieldSet;
-import org.apache.drill.common.physical.ReadEntry;
+import org.apache.drill.common.physical.StitchDef;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Lists;
 
-public abstract class ScanPOP<T extends ReadEntry> extends POPBase implements SourcePOP{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScanPOP.class);
+@JsonTypeName("project")
+public class ProjectPOP extends SingleChildPOP{
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProjectPOP.class);
   
-  private List<T> readEntries;
+  private List<Integer> fieldIds;
+  private List<LogicalExpression> exprs;
   
-  public ScanPOP(List<T> readEntries, FieldSet fieldSet) {
-    super(fieldSet);
-    this.readEntries = readEntries;
+  @JsonCreator
+  public ProjectPOP(@JsonProperty("output") FieldSet fields, @JsonProperty("fields") List<Integer> fieldIds, @JsonProperty("exprs") List<LogicalExpression> exprs) {
+    super(fields);
+    this.fieldIds = fieldIds;
+    this.exprs = exprs;
   }
 
-  @JsonProperty("entries")
-  public List<T> getReadEntries() {
-    return readEntries;
-  }
-  
-  @Override
-  public Iterator<PhysicalOperator> iterator() {
-    return Iterators.emptyIterator();
+  public List<Integer> getFields() {
+    return fieldIds;
   }
 
-  
+  public List<LogicalExpression> getExprs() {
+    return exprs;
+  }
+    
 }

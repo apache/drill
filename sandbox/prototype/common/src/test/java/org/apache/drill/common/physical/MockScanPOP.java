@@ -15,41 +15,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.apache.drill.common.physical.pop;
+package org.apache.drill.common.physical;
 
-import java.util.Iterator;
 import java.util.List;
 
-import org.apache.drill.common.JSONOptions;
-import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.physical.FieldSet;
-import org.apache.drill.common.physical.ReadEntry;
+import org.apache.drill.common.physical.pop.ScanPOP;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Lists;
 
-public abstract class ScanPOP<T extends ReadEntry> extends POPBase implements SourcePOP{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScanPOP.class);
+@JsonTypeName("mock-scan")
+public class MockScanPOP extends ScanPOP<MockScanPOP.MockScanEntry>{
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MockScanPOP.class);
   
-  private List<T> readEntries;
+  private final String url;
   
-  public ScanPOP(List<T> readEntries, FieldSet fieldSet) {
-    super(fieldSet);
-    this.readEntries = readEntries;
-  }
-
-  @JsonProperty("entries")
-  public List<T> getReadEntries() {
-    return readEntries;
+  @JsonCreator
+  public MockScanPOP(@JsonProperty("url") String url, @JsonProperty("entries") List<MockScanEntry> readEntries, @JsonProperty("output") FieldSet fields) {
+    super(readEntries, fields);
+    this.url = url;
   }
   
-  @Override
-  public Iterator<PhysicalOperator> iterator() {
-    return Iterators.emptyIterator();
+  public String getUrl() {
+    return url;
   }
 
-  
+  public static class MockScanEntry implements ReadEntry{
+    public int id;
+  }
 }

@@ -37,17 +37,15 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 
-@JsonPropertyOrder({ "head", "storage", "graph" })
+@JsonPropertyOrder({ "head", "graph" })
 public class PhysicalPlan {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PhysicalPlan.class);
   
-  Map<String, StorageEngineConfig> storageEngines;
   PlanProperties properties;
   Graph<PhysicalOperator, SinkPOP, SourcePOP> graph;
   
   @JsonCreator
-  public PhysicalPlan(@JsonProperty("head") PlanProperties properties, @JsonProperty("storage") Map<String, StorageEngineConfig> storageEngines, @JsonProperty("graph") List<PhysicalOperator> operators){
-    this.storageEngines = storageEngines;
+  public PhysicalPlan(@JsonProperty("head") PlanProperties properties, @JsonProperty("graph") List<PhysicalOperator> operators){
     this.properties = properties;
     this.graph = Graph.newGraph(operators, SinkPOP.class, SourcePOP.class);
   }
@@ -58,12 +56,7 @@ public class PhysicalPlan {
     // reverse the list so that nested references are flattened rather than nested.
     return Lists.reverse(list);
   }
-  
-  
-  @JsonProperty("storage")
-  public Map<String, StorageEngineConfig> getStorageEngines() {
-    return storageEngines;
-  }
+
 
   @JsonProperty("head")
   public PlanProperties getProperties() {

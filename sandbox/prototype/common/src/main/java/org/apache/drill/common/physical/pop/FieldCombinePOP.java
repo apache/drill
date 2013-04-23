@@ -17,38 +17,12 @@
  ******************************************************************************/
 package org.apache.drill.common.physical.pop;
 
-import java.util.Iterator;
-
-import org.apache.drill.common.defs.PartitionDef;
-import org.apache.drill.common.physical.FieldSet;
-import org.apache.drill.common.physical.StitchDef;
-
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeName;
-
-@JsonTypeName("exchange")
-public class ExchangePOP extends SingleChildPOP{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExchangePOP.class);
+/**
+ * Creates a complex field out of two or more component fields
+ */
+public class FieldCombinePOP {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FieldCombinePOP.class);
   
-  private PartitionDef partition;
-  private StitchDef stitch;
-  
-  @JsonCreator
-  public ExchangePOP(@JsonProperty("fields") FieldSet fields, @JsonProperty("partition") PartitionDef partition, @JsonProperty("stitch") StitchDef stitch) {
-    super(fields);
-    this.partition = partition;
-    this.stitch = stitch;
-  }
-  
-  public PartitionDef getPartition() {
-    return partition;
-  }
-
-  public StitchDef getStitch() {
-    return stitch;
-  }
-
-
-  
+  // fieldsInSortOrder
+  private int[] fieldIds; 
 }

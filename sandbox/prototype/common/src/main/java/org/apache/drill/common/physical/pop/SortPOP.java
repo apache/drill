@@ -17,39 +17,38 @@
  ******************************************************************************/
 package org.apache.drill.common.physical.pop;
 
-import java.util.Iterator;
 import java.util.List;
 
-import org.apache.drill.common.JSONOptions;
-import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.defs.PartitionDef;
+import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.physical.FieldSet;
-import org.apache.drill.common.physical.ReadEntry;
+import org.apache.drill.common.physical.StitchDef;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Lists;
 
-public abstract class ScanPOP<T extends ReadEntry> extends POPBase implements SourcePOP{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScanPOP.class);
+@JsonTypeName("sort")
+public class SortPOP extends SingleChildPOP{
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SortPOP.class);
   
-  private List<T> readEntries;
+  private int field;
+  private boolean reverse = false;
   
-  public ScanPOP(List<T> readEntries, FieldSet fieldSet) {
-    super(fieldSet);
-    this.readEntries = readEntries;
+  @JsonCreator
+  public SortPOP(@JsonProperty("output") FieldSet fields, @JsonProperty("field") int field, @JsonProperty("reverse") boolean reverse) {
+    super(fields);
+    this.field = field;
+    this.reverse = reverse;
   }
 
-  @JsonProperty("entries")
-  public List<T> getReadEntries() {
-    return readEntries;
-  }
-  
-  @Override
-  public Iterator<PhysicalOperator> iterator() {
-    return Iterators.emptyIterator();
+  public int getField() {
+    return field;
   }
 
+  public boolean getReverse() {
+    return reverse;
+  }
+    
   
 }

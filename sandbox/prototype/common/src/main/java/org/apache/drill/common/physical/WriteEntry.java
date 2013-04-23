@@ -17,9 +17,6 @@
  ******************************************************************************/
 package org.apache.drill.common.physical;
 
-/** 
- * Describes a chunk of read work that will be done.
- */
-public interface ReadEntry {
-   
+public interface WriteEntry {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WriteEntry.class);
 }
