@@ -17,23 +17,26 @@
  ******************************************************************************/
 package org.apache.drill.common.physical;
 
+import java.util.Collections;
 import java.util.List;
 
-import org.apache.drill.common.physical.pop.ScanPOP;
+import org.apache.drill.common.physical.pop.base.AbstractScan;
+import org.apache.drill.common.physical.pop.base.Scan;
+import org.apache.drill.common.proto.CoordinationProtos.DrillbitEndpoint;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName("mock-scan")
-public class MockScanPOP extends ScanPOP<MockScanPOP.MockScanEntry>{
+public class MockScanPOP extends AbstractScan<MockScanPOP.MockScanEntry>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MockScanPOP.class);
   
   private final String url;
   
   @JsonCreator
-  public MockScanPOP(@JsonProperty("url") String url, @JsonProperty("entries") List<MockScanEntry> readEntries, @JsonProperty("output") FieldSet fields) {
-    super(readEntries, fields);
+  public MockScanPOP(@JsonProperty("url") String url, @JsonProperty("entries") List<MockScanEntry> readEntries) {
+    super(readEntries);
     this.url = url;
   }
   
@@ -44,4 +47,23 @@ public class MockScanPOP extends ScanPOP<MockScanPOP.MockScanEntry>{
   public static class MockScanEntry implements ReadEntry{
     public int id;
   }
+
+  @Override
+  public List<EndpointAffinity> getOperatorAffinity() {
+    return Collections.emptyList();
+  }
+
+  @Override
+  public void applyAssignments(List<DrillbitEndpoint> endpoints) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public Scan<?> getSpecificScan(int minorFragmentId) {
+    return this;
+  }
+  
+
+  
+  
 }

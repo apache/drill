@@ -17,40 +17,46 @@
  ******************************************************************************/
 package org.apache.drill.common.physical;
 
+import java.util.Collections;
 import java.util.List;
 
-import org.apache.drill.common.defs.PartitionDef;
-import org.apache.drill.common.physical.MockStorePOP.MockWriteEntry;
-import org.apache.drill.common.physical.pop.StorePOP;
+import org.apache.drill.common.physical.pop.base.AbstractStore;
+import org.apache.drill.common.physical.pop.base.PhysicalOperator;
+import org.apache.drill.common.physical.pop.base.Store;
+import org.apache.drill.common.proto.CoordinationProtos.DrillbitEndpoint;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName("mock-store")
-public class MockStorePOP extends StorePOP<MockWriteEntry>{
+public class MockStorePOP extends AbstractStore {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MockStorePOP.class);
 
-  private List<String> fieldNames;
-
-  
   @JsonCreator
-  public MockStorePOP(@JsonProperty("output") FieldSet fields, @JsonProperty("mode") StoreMode mode, @JsonProperty("entries") List<MockWriteEntry> entries, @JsonProperty("partition") PartitionDef partition, @JsonProperty("fieldNames") List<String> fieldNames) {
-    super(fields, mode, partition, entries);
-    this.fieldNames = fieldNames;
+  public MockStorePOP(@JsonProperty("child") PhysicalOperator child) {
+    super(child);
   }
 
-  
-  public List<String> getFieldNames() {
-    return fieldNames;
+  public int getMaxWidth() {
+    return 1;
   }
 
-  
-  public static class MockWriteEntry implements WriteEntry{
-    public String path;
-    public String key;
-    public String type;
+  @Override
+  public List<EndpointAffinity> getOperatorAffinity() {
+    return Collections.emptyList();
   }
-  
+
+  @Override
+  public void applyAssignments(List<DrillbitEndpoint> endpoints) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public Store getSpecificStore(PhysicalOperator child, int minorFragmentId) {
+    return this;
+  }
+
+
 }
-

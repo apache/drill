@@ -19,7 +19,7 @@ package org.apache.drill.exec.record.vector;
 
 import io.netty.buffer.ByteBuf;
 
-import org.apache.drill.exec.BufferAllocator;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.record.DeadBuf;
 
 public abstract class BaseValueVector<T extends BaseValueVector<T>> implements ValueVector<T>{
@@ -37,7 +37,9 @@ public abstract class BaseValueVector<T extends BaseValueVector<T>> implements V
 
   public final void allocateNew(int valueCount){
     int allocationSize = getAllocationSize(valueCount);
-    resetAllocation(valueCount, allocator.buffer(allocationSize));
+    ByteBuf newBuf =  allocator.buffer(allocationSize);
+    newBuf.retain();
+    resetAllocation(valueCount, newBuf);
   }
 
   protected abstract int getAllocationSize(int valueCount);

@@ -19,22 +19,22 @@ package org.apache.drill.common.physical;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.drill.common.PlanProperties;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.graph.Graph;
 import org.apache.drill.common.graph.GraphAlgos;
-import org.apache.drill.common.logical.StorageEngineConfig;
-import org.apache.drill.common.physical.pop.PhysicalOperator;
-import org.apache.drill.common.physical.pop.SinkPOP;
-import org.apache.drill.common.physical.pop.SourcePOP;
+import org.apache.drill.common.physical.pop.base.Leaf;
+import org.apache.drill.common.physical.pop.base.PhysicalOperator;
+import org.apache.drill.common.physical.pop.base.Root;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectReader;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.collect.Lists;
 
 @JsonPropertyOrder({ "head", "graph" })
@@ -42,19 +42,29 @@ public class PhysicalPlan {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PhysicalPlan.class);
   
   PlanProperties properties;
-  Graph<PhysicalOperator, SinkPOP, SourcePOP> graph;
+  
+  Graph<PhysicalOperator, Root, Leaf> graph;
   
   @JsonCreator
   public PhysicalPlan(@JsonProperty("head") PlanProperties properties, @JsonProperty("graph") List<PhysicalOperator> operators){
     this.properties = properties;
-    this.graph = Graph.newGraph(operators, SinkPOP.class, SourcePOP.class);
+    this.graph = Graph.newGraph(operators, Root.class, Leaf.class);
   }
   
   @JsonProperty("graph")
   public List<PhysicalOperator> getSortedOperators(){
-    List<PhysicalOperator> list = GraphAlgos.TopoSorter.sort(graph);
     // reverse the list so that nested references are flattened rather than nested.
-    return Lists.reverse(list);
+    return getSortedOperators(true);
+  }
+  
+  public List<PhysicalOperator> getSortedOperators(boolean reverse){
+    List<PhysicalOperator> list = GraphAlgos.TopoSorter.sort(graph);
+    if(reverse){
+      return Lists.reverse(list);
+    }else{
+      return list;
+    }
+    
   }
 
 
@@ -64,10 +74,9 @@ public class PhysicalPlan {
   }
 
   /** Parses a physical plan. */
-  public static PhysicalPlan parse(DrillConfig config, String planString) {
-    ObjectMapper mapper = config.getMapper();
+  public static PhysicalPlan parse(ObjectReader reader, String planString) {
     try {
-      PhysicalPlan plan = mapper.readValue(planString, PhysicalPlan.class);
+      PhysicalPlan plan = reader.readValue(planString);
       return plan;
     } catch (IOException e) {
       throw new RuntimeException(e);
@@ -75,9 +84,9 @@ public class PhysicalPlan {
   }
 
   /** Converts a physical plan to a string. (Opposite of {@link #parse}.) */
-  public String unparse(DrillConfig config) {
+  public String unparse(ObjectWriter writer) {
     try {
-      return config.getMapper().writeValueAsString(this);
+      return writer.writeValueAsString(this);
     } catch (JsonProcessingException e) {
       throw new RuntimeException(e);
     }

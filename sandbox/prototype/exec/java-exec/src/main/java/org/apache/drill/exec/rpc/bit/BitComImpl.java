@@ -21,12 +21,13 @@ import io.netty.channel.Channel;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.util.concurrent.Future;
 
+import java.util.Collection;
 import java.util.Map;
 
+import org.apache.drill.common.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.ExecProtos.FragmentStatus;
 import org.apache.drill.exec.proto.ExecProtos.PlanFragment;
@@ -81,10 +82,7 @@ public class BitComImpl implements BitCom {
 //    return null;
   }
 
-  @Override
-  public DrillRpcFuture<Ack> sendRecordBatch(FragmentContext context, DrillbitEndpoint node, RecordBatch batch) {
-    return null;
-  }
+  
 
   @Override
   public DrillRpcFuture<FragmentHandle> sendFragment(FragmentContext context, DrillbitEndpoint node,
@@ -129,7 +127,6 @@ public class BitComImpl implements BitCom {
         tunnels.put(endpoint, new BitTunnel(bus));
       }
     }
-
   }
 
   public void close() {
@@ -137,6 +134,21 @@ public class BitComImpl implements BitCom {
     for (BitTunnel bt : tunnels.values()) {
       bt.shutdownIfClient();
     }
+  }
+
+
+  @Override
+  public DrillRpcFuture<Ack> sendRecordBatch(FragmentContext context, DrillbitEndpoint node, RecordBatch batch) {
+    return null;
+  }
+
+  @Override
+  public RecordBatch getReceivingRecordBatchHandle(int majorFragmentId, int minorFragmentId) {
+    return null;
+  }
+
+  @Override
+  public void startQuery(Collection<DrillbitEndpoint> firstNodes, long queryId) {
   }
 
 }

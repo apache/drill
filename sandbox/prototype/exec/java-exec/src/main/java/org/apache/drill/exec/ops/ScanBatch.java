@@ -33,7 +33,7 @@ import com.carrotsearch.hppc.procedures.IntObjectProcedure;
 /**
  * Record batch used for a particular scan. Operators against one or more
  */
-public class ScanBatch implements RecordBatch {
+public abstract class ScanBatch implements RecordBatch {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScanBatch.class);
 
   private IntObjectOpenHashMap<ValueVector<?>> fields = new IntObjectOpenHashMap<ValueVector<?>>();

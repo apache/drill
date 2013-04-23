@@ -66,6 +66,7 @@ public interface ValueVector<T extends ValueVector<T>> extends Closeable {
    */
   public abstract int size();
 
+
   /**
    * Release supporting resources.
    */

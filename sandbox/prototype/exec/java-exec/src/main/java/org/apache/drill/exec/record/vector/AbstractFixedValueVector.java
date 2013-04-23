@@ -19,7 +19,7 @@ package org.apache.drill.exec.record.vector;
 
 import io.netty.buffer.ByteBuf;
 
-import org.apache.drill.exec.BufferAllocator;
+import org.apache.drill.exec.memory.BufferAllocator;
 
 /**
  * Abstract class that fixed value vectors are derived from.

@@ -17,10 +17,10 @@
  ******************************************************************************/
 package org.apache.drill.exec.coord;
 
-import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
-
 import java.io.Closeable;
 import java.util.Collection;
+
+import org.apache.drill.common.proto.CoordinationProtos.DrillbitEndpoint;
 
 /**
  * Pluggable interface built to manage cluster coordination. Allows Drillbit or DrillClient to register its capabilities

@@ -16,6 +16,20 @@
 
 	<name>prototype-parent</name>
 
+        <repositories>
+                <repository>
+                        <releases>
+                                <enabled>true</enabled>
+                                <updatePolicy>always</updatePolicy>
+                                <checksumPolicy>warn</checksumPolicy>
+                        </releases>
+                        <id>conjars</id>
+                        <name>Conjars</name>
+                        <url>http://conjars.org/repo</url>
+                        <layout>default</layout>
+                </repository>
+        </repositories>
+
 	<properties>
 		<dep.junit.version>4.11</dep.junit.version>
 		<dep.slf4j.version>1.7.2</dep.slf4j.version>

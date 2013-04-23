@@ -29,37 +29,63 @@ enum RpcType {
 }
 
 
-message BitColumnData {
-
-    enum ColumnEncoding {
-      PROTOBUF = 0;
-    }
-    
-	message BitColumn {
-		optional int32 field = 1;
-		optional int32 length = 2;
-		optional ColumnEncoding mode = 3;
-	}	
-	
-	optional SchemaDef schema = 1;
-	optional int32 record_count = 2;
-	optional int32 total_size = 3;
-	repeated BitColumn column = 4;
-	
-}
-
-
 message BitHandshake{
 	optional DrillbitEndpoint endpoint = 1;
 }
 
 message BitBatchChunk {}
-message BitStatus {}
-message FragmentStatus {}
-message RecordBatchHeader {}
-message PlanFragment {}
 
-message FragmentHandle {
-	optional int64 fragment_id = 1;
+message BitStatus {
+	repeated ActiveFragment fragment = 1;
 }
 
+message ActiveFragment {
+	optional FragmentStatus status = 1;
+	optional int64 fragment_id = 2;
+	optional int64 query_id = 3; 
+}
+
+message FragmentStatus {
+	
+	enum FragmentState {
+	  AWAITING_ALLOCATION = 0;
+	  RUNNING = 1;
+	  FINISHED = 2;
+	  CANCELLED = 3;
+	  FAILED = 4;
+	}
+	
+	optional int64 memory_use = 1;
+	optional int64 batches_completed = 2;
+	optional int64 records_completed = 3;
+	optional int32 estimated_completion_percentage = 4;
+	optional FragmentState state = 5;
+	optional int64 data_processed = 6;
+}
+
+message RecordBatchHeader {
+}
+
+message PlanFragment {
+	optional int64 query_id = 1;
+	optional int32 major_fragment_id = 2;
+	optional int32 minor_fragment_id = 3;
+	optional float network_cost = 4;
+	optional float cpu_cost = 5;
+	optional float disk_cost = 6;
+	optional float memory_cost = 7;
+	optional string fragment_json = 8;
+	optional bool self_driven = 9;
+	optional DrillbitEndpoint assignment = 10;
+}
+
+message FragmentHandle {
+	optional int32 major_fragment_id = 1;
+	optional int32 minor_fragment_id = 1;
+}
+
+message WorkQueueStatus{
+	optional DrillbitEndpoint endpoint = 1;
+	optional int32 queue_length = 2;
+	optional int64 report_time = 3;
+}

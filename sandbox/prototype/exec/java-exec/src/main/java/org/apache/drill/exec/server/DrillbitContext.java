@@ -20,13 +20,18 @@ package org.apache.drill.exec.server;
 import io.netty.channel.nio.NioEventLoopGroup;
 
 import java.util.Collection;
-import java.util.List;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.exec.BufferAllocator;
-import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.common.logical.StorageEngineConfig;
+import org.apache.drill.common.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.cache.DistributedCache;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.rpc.NamedThreadFactory;
 import org.apache.drill.exec.rpc.bit.BitCom;
+import org.apache.drill.exec.store.StorageEngine;
+
+import com.yammer.metrics.MetricRegistry;
 
 public class DrillbitContext {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillbitContext.class);
@@ -34,12 +39,14 @@ public class DrillbitContext {
   private final DrillConfig config;
   private final Drillbit underlyingBit;
   private final NioEventLoopGroup loop;
-
+  private final MetricRegistry metrics;
+  
   public DrillbitContext(DrillConfig config, Drillbit underlyingBit) {
     super();
     this.config = config;
     this.underlyingBit = underlyingBit;
     this.loop = new NioEventLoopGroup(1, new NamedThreadFactory("BitServer-"));
+    this.metrics = new MetricRegistry(config.getString(ExecConstants.METRICS_CONTEXT_NAME));
   }
   
   public DrillConfig getConfig() {
@@ -54,6 +61,9 @@ public class DrillbitContext {
     return underlyingBit.pool;
   }
   
+  public StorageEngine getStorageEngine(StorageEngineConfig config){
+    throw new UnsupportedOperationException();
+  }
   
   public NioEventLoopGroup getBitLoopGroup(){
     return loop;
@@ -62,5 +72,14 @@ public class DrillbitContext {
   public BitCom getBitCom(){
     return underlyingBit.engine.getBitCom();
   }
+  
+  public MetricRegistry getMetrics(){
+    return metrics;
+  }
+  
+  public DistributedCache getCache(){
+    return underlyingBit.cache;
+  }
+  
   
 }

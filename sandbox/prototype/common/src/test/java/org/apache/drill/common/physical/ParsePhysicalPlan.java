@@ -21,6 +21,8 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.FileUtils;
 import org.junit.Test;
 
+import com.fasterxml.jackson.databind.ObjectReader;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
@@ -31,7 +33,9 @@ public class ParsePhysicalPlan {
   @Test 
   public void parseSimplePlan() throws Exception{
     DrillConfig c = DrillConfig.create();
-    PhysicalPlan plan = PhysicalPlan.parse(c, Files.toString(FileUtils.getResourceAsFile("/dsort-physical.json"), Charsets.UTF_8));
-    System.out.println(plan.unparse(c));
+    ObjectReader r = c.getMapper().reader(PhysicalPlan.class);
+    ObjectWriter writer = c.getMapper().writer();
+    PhysicalPlan plan = PhysicalPlan.parse(r, Files.toString(FileUtils.getResourceAsFile("/physical_test1.json"), Charsets.UTF_8));
+    System.out.println(plan.unparse(writer));
   }
 }

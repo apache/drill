@@ -17,18 +17,42 @@
  ******************************************************************************/
 package org.apache.drill.exec.ops;
 
-import org.apache.drill.common.logical.StorageEngineConfig;
+import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.metrics.SingleThreadNestedCounter;
+import org.apache.drill.exec.planner.FragmentRunnable;
+import org.apache.drill.exec.proto.ExecProtos.PlanFragment;
 import org.apache.drill.exec.rpc.bit.BitCom;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.store.StorageEngine;
 
+import com.yammer.metrics.MetricRegistry;
+import com.yammer.metrics.Timer;
+
+/**
+ * Contextual objects required for execution of a particular fragment.  
+ */
 public class FragmentContext {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FragmentContext.class);
 
+  private final static String METRIC_TIMER_FRAGMENT_TIME = MetricRegistry.name(FragmentRunnable.class, "completionTimes");
+  private final static String METRIC_BATCHES_COMPLETED = MetricRegistry.name(FragmentRunnable.class, "batchesCompleted");
+  private final static String METRIC_RECORDS_COMPLETED = MetricRegistry.name(FragmentRunnable.class, "recordsCompleted");
+  private final static String METRIC_DATA_PROCESSED = MetricRegistry.name(FragmentRunnable.class, "dataProcessed");
+
   private final DrillbitContext context;
-  
-  public FragmentContext(DrillbitContext context) {
-    this.context = context;
+  private final PlanFragment fragment;
+  public final SingleThreadNestedCounter batchesCompleted;
+  public final SingleThreadNestedCounter recordsCompleted;
+  public final SingleThreadNestedCounter dataProcessed;
+  public final Timer fragmentTime;
+
+  public FragmentContext(DrillbitContext dbContext, PlanFragment fragment) {
+    this.fragmentTime = dbContext.getMetrics().timer(METRIC_TIMER_FRAGMENT_TIME);
+    this.batchesCompleted = new SingleThreadNestedCounter(dbContext, METRIC_BATCHES_COMPLETED);
+    this.recordsCompleted = new SingleThreadNestedCounter(dbContext, METRIC_RECORDS_COMPLETED);
+    this.dataProcessed = new SingleThreadNestedCounter(dbContext, METRIC_DATA_PROCESSED);
+    this.context = dbContext;
+    this.fragment = fragment;
   }
 
   public void fail(Throwable cause) {
@@ -39,9 +63,20 @@ public class FragmentContext {
     return context;
   }
   
-  public StorageEngine getStorageEngine(StorageEngineConfig config){
+  public PlanFragment getFragment() {
+    return fragment;
+  }
+  
+  public BufferAllocator getAllocator(){
+    // TODO: A local query allocator to ensure memory limits and accurately gauge memory usage.
+    return context.getAllocator();
+  }
+
+  
+  public FilteringRecordBatchTransformer getFilteringExpression(LogicalExpression expr){
     return null;
   }
+  
   
   public BitCom getCommunicator(){
     return null;

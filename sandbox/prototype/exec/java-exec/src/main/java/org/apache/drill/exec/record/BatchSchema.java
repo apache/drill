@@ -32,10 +32,12 @@ import com.google.common.collect.Lists;
 public class BatchSchema implements Iterable<MaterializedField>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BatchSchema.class);
   
-  private List<MaterializedField> fields = Lists.newArrayList();
+  private final List<MaterializedField> fields;
+  private final boolean hasSelectionVector;
   
-  private BatchSchema(List<MaterializedField> fields) {
+  private BatchSchema(boolean hasSelectionVector, List<MaterializedField> fields) {
     this.fields = fields;
+    this.hasSelectionVector = hasSelectionVector;
   }
 
   @Override
@@ -59,10 +61,13 @@ public class BatchSchema implements Iterable<MaterializedField>{
     private IntObjectOpenHashMap<MaterializedField> fields = new IntObjectOpenHashMap<MaterializedField>();
     private IntObjectOpenHashMap<MaterializedField> expectedFields = new IntObjectOpenHashMap<MaterializedField>();
     
+    private boolean hasSelectionVector;
+    
     public BatchSchemaBuilder(BatchSchema expected){
       for(MaterializedField f: expected){
         expectedFields.put(f.getFieldId(), f);
       }
+      hasSelectionVector = expected.hasSelectionVector;
     }
     
     public BatchSchemaBuilder(){
@@ -78,6 +83,10 @@ public class BatchSchema implements Iterable<MaterializedField>{
      */
     public void addLateBindField(short fieldId, boolean nullable, ValueMode mode) throws SchemaChangeException{
       addTypedField(fieldId, DataType.LATEBIND, nullable, mode, Void.class);
+    }
+    
+    public void setSelectionVector(boolean hasSelectionVector){
+      this.hasSelectionVector = hasSelectionVector;
     }
     
     private void setTypedField(short fieldId, DataType type, boolean nullable, ValueMode mode, Class<?> valueClass) throws SchemaChangeException{
@@ -99,13 +108,13 @@ public class BatchSchema implements Iterable<MaterializedField>{
       setTypedField(fieldId, type, nullable, mode, valueClass);
     }
     
-    public void addVector(ValueVector<?> v){
-      
-    }
-    
-    public void replaceVector(ValueVector<?> oldVector, ValueVector<?> newVector){
-      
-    }
+//    public void addVector(ValueVector<?> v){
+//      
+//    }
+//    
+//    public void replaceVector(ValueVector<?> oldVector, ValueVector<?> newVector){
+//      
+//    }
     
     
     public BatchSchema buildAndClear() throws SchemaChangeException{
@@ -116,7 +125,7 @@ public class BatchSchema implements Iterable<MaterializedField>{
         if(f != null) fieldList.add(f);
       }
       Collections.sort(fieldList);
-      return new BatchSchema(fieldList);
+      return new BatchSchema(this.hasSelectionVector, fieldList);
     }
   }
   

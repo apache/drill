@@ -23,9 +23,10 @@ import java.io.IOException;
 import java.util.List;
 
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
-import org.apache.drill.exec.proto.CoordinationProtos.WorkQueueStatus;
+import org.apache.drill.exec.proto.ExecProtos.PlanFragment;
+import org.apache.drill.exec.proto.ExecProtos.WorkQueueStatus;
 
 import com.beust.jcommander.internal.Lists;
 import com.google.common.cache.Cache;
@@ -132,6 +133,16 @@ public class HazelCache implements DistributedCache {
   @Override
   public void close() throws IOException {
     this.instance.getLifecycleService().shutdown();
+  }
+
+  @Override
+  public PlanFragment getFragment(long fragmentId) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public void storeFragment(PlanFragment fragment) {
+    throw new UnsupportedOperationException();
   }
   
 

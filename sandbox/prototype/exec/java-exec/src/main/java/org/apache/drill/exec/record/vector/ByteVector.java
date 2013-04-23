@@ -19,7 +19,7 @@ package org.apache.drill.exec.record.vector;
 
 import org.apache.drill.common.expression.types.DataType;
 import org.apache.drill.common.physical.RecordField.ValueMode;
-import org.apache.drill.exec.BufferAllocator;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.record.MaterializedField;
 
 

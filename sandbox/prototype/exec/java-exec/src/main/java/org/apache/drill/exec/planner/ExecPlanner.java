@@ -17,11 +17,18 @@
  ******************************************************************************/
 package org.apache.drill.exec.planner;
 
+import org.apache.drill.common.physical.PhysicalPlan;
+import org.apache.drill.exec.exception.FragmentSetupException;
+import org.apache.drill.exec.foreman.QueryWorkUnit;
+import org.apache.drill.exec.ops.QueryContext;
+
 
 /**
  * Decides level of paralellization.
  * Generates smaller physical plans
  */
-public class ExecPlanner {
+public interface ExecPlanner {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExecPlanner.class);
+  
+  public QueryWorkUnit getWorkUnit(QueryContext context, PhysicalPlan plan, int maxWidth) throws FragmentSetupException;
 }

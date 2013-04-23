@@ -43,6 +43,10 @@ public class UserClient extends BasicClient<RpcType> {
   }
 
 
+  public DrillRpcFuture<QueryHandle> submitQuery(RunQuery query) throws RpcException {
+    return this.send(RpcType.RUN_QUERY, query, QueryHandle.class, null);
+  }
+  
   public DrillRpcFuture<QueryHandle> submitQuery(RunQuery query, ByteBuf data) throws RpcException {
     return this.send(RpcType.RUN_QUERY, query, QueryHandle.class, data);
   }

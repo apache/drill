@@ -19,7 +19,7 @@ package org.apache.drill.exec.record.vector;
 
 import org.apache.drill.common.expression.types.DataType;
 import org.apache.drill.common.physical.RecordField.ValueMode;
-import org.apache.drill.exec.BufferAllocator;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.record.MaterializedField;
 
 /**
@@ -40,17 +40,25 @@ public class BitVector extends AbstractFixedValueVector<BitVector> {
     return field;
   }
   
-  /** Returns true or false for the specified bit index.
-   * The index should be less than the OpenBitSet size
-   */
-  public boolean get(int index) {
+//  /** Returns true or false for the specified bit index.
+//   * The index should be less than the OpenBitSet size
+//   */
+//  public boolean get(int index) {
+//    assert index >= 0 && index < this.valueCount;
+//    int i = index >> 3;               // div 8
+//    // signed shift will keep a negative index and force an
+//    // array-index-out-of-bounds-exception, removing the need for an explicit check.
+//    int bit = index & 0x3f;           // mod 64
+//    long bitmask = 1L << bit;
+//    return (data.getLong(i) & bitmask) != 0;
+//  }
+  
+  public int getBit(int index) {
+    
     assert index >= 0 && index < this.valueCount;
-    int i = index >> 3;               // div 8
-    // signed shift will keep a negative index and force an
-    // array-index-out-of-bounds-exception, removing the need for an explicit check.
-    int bit = index & 0x3f;           // mod 64
-    long bitmask = 1L << bit;
-    return (data.getLong(i) & bitmask) != 0;
+    int i = 8*(index >> 6); // div 8
+    int bit = index & 0x3f; // mod 64
+    return ((int) (data.getLong(i) >>> bit)) & 0x01;
   }
   
   /** Sets the bit at the specified index.
@@ -73,41 +81,42 @@ public class BitVector extends AbstractFixedValueVector<BitVector> {
    }
    
    
+   
    /** Clears a range of bits.  Clearing past the end does not change the size of the set.
    *
-   * @param startIndex lower index
-   * @param endIndex one-past the last bit to clear
+   * @param startBitIndex lower index
+   * @param lastBitIndex one-past the last bit to clear
    */
-  private void clear(int startIndex, int endIndex) {
-    if (endIndex <= startIndex) return;
+  private void clear2(int startBitIndex, int lastBitIndex) {
+    if (lastBitIndex <= startBitIndex) return;
 
-    int startWord = (startIndex>>3);
-    if (startWord >= this.longWords) return;
+    int firstWordStart = (startBitIndex>>3);
+    if (firstWordStart >= this.longWords) return;
 
     // since endIndex is one past the end, this is index of the last
     // word to be changed.
-    int endWord   = ((endIndex-1)>>3);
+    int lastWordStart   = ((lastBitIndex-1)>>3);
 
-    long startmask = -1L << startIndex;
-    long endmask = -1L >>> -endIndex;  // 64-(endIndex&0x3f) is the same as -endIndex due to wrap
+    long startmask = -1L << startBitIndex;
+    long endmask = -1L >>> -lastBitIndex;  // 64-(endIndex&0x3f) is the same as -endIndex due to wrap
 
     // invert masks since we are clearing
     startmask = ~startmask;
     endmask = ~endmask;
 
-    if (startWord == endWord) {
-      data.setLong(startWord,  data.getLong(startWord) & (startmask | endmask));
+    if (firstWordStart == lastWordStart) {
+      data.setLong(firstWordStart,  data.getLong(firstWordStart) & (startmask | endmask));
       return;
     }
+    data.setLong(firstWordStart,  data.getLong(firstWordStart) & startmask);
 
-    data.setLong(startWord,  data.getLong(startWord) & startmask);
-
-    int middle = Math.min(this.longWords, endWord);
-    for(int i =startWord+1; i < middle; i += 8){
+    int middle = Math.min(this.longWords, lastWordStart);
+    
+    for(int i =firstWordStart+8; i < middle; i += 8){
       data.setLong(i, 0L);
     }
-    if (endWord < this.longWords) {
-      data.setLong(endWord,  data.getLong(endWord) & endmask);
+    if (lastWordStart < this.longWords) {
+      data.setLong(lastWordStart,  data.getLong(lastWordStart) & endmask);
     }
   }
   
@@ -115,4 +124,43 @@ public class BitVector extends AbstractFixedValueVector<BitVector> {
     clear(0, valueCount);
   }
 
+  
+  public void clear(int startIndex, int endIndex) {
+    if (endIndex <= startIndex) return;
+
+    int startWord = (startIndex >> 6);
+    if (startWord >= longWords) return;
+
+    // since endIndex is one past the end, this is index of the last
+    // word to be changed.
+    int endWord = ((endIndex - 1) >> 6);
+
+    long startmask = -1L << startIndex;
+    long endmask = -1L >>> -endIndex; // 64-(endIndex&0x3f) is the same as -endIndex due to wrap
+
+    // invert masks since we are clearing
+    startmask = ~startmask;
+    endmask = ~endmask;
+    
+    int startWordPos = startWord * 8;
+    if (startWord == endWord) {
+      data.setLong(startWordPos, data.getLong(startWordPos) & (startmask | endmask));
+      return;
+    }
+
+    int endWordPos = endWord * 8;
+
+    data.setLong(startWordPos, data.getLong(startWordPos) & startmask);
+
+    int middle = Math.min(longWords, endWord)*8;
+    
+    
+    for(int i =startWordPos+8; i < middle; i += 8){
+      data.setLong(i, 0L);
+    }
+    
+    if (endWordPos < startWordPos) {
+      data.setLong(endWordPos, data.getLong(endWordPos) & endmask);
+    }
+  }
 }

@@ -22,9 +22,10 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.util.concurrent.GenericFutureListener;
 
 import java.io.Closeable;
+import java.util.Collection;
 
+import org.apache.drill.common.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.ExecProtos.FragmentStatus;
 import org.apache.drill.exec.proto.ExecProtos.PlanFragment;
@@ -41,13 +42,21 @@ import org.apache.drill.exec.rpc.RpcBus;
 public interface BitCom extends Closeable{
 
   /**
-   * Send a record batch to another node.  
+   * Routes the output of a RecordBatch to another node.  The record batch
    * @param node The node id to send the record batch to.
    * @param batch The record batch to send.
-   * @return A Future<Ack> object that can be used to determine the outcome of sending.
+   * @return A SendProgress object which can be used to monitor the sending of the batch.
    */
   public abstract DrillRpcFuture<Ack> sendRecordBatch(FragmentContext context, DrillbitEndpoint node, RecordBatch batch);
 
+  
+  /**
+   * Requests an iterator to access an incoming record batch.  
+   * @param fragmentId
+   * @return
+   */
+  public RecordBatch getReceivingRecordBatchHandle(int majorFragmentId, int minorFragmentId);
+  
   /**
    * Send a query PlanFragment to another bit.   
    * @param context
@@ -56,6 +65,9 @@ public interface BitCom extends Closeable{
    * @return
    */
   public abstract DrillRpcFuture<FragmentHandle> sendFragment(FragmentContext context, DrillbitEndpoint node, PlanFragment fragment);
+
+  public abstract void startQuery(Collection<DrillbitEndpoint> firstNodes, long queryId);
+    
   
   public abstract DrillRpcFuture<Ack> cancelFragment(FragmentContext context, DrillbitEndpoint node, FragmentHandle handle);
   
@@ -64,6 +76,14 @@ public interface BitCom extends Closeable{
   
   public interface TunnelListener extends GenericFutureListener<ChannelFuture> {
     public void connectionEstablished(SocketChannel channel, DrillbitEndpoint endpoint, RpcBus<?> bus);
+  }
+  
+  public interface SendManager{
+    /**
+     * Sender responsible for regularly checking this value to see whether it should continue to send or yield the process
+     * @return
+     */
+    public boolean canContinue();
   }
 
 }

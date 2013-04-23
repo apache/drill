@@ -19,10 +19,10 @@ package org.apache.drill.exec.record.vector;
 
 import org.apache.drill.common.expression.types.DataType;
 import org.apache.drill.common.physical.RecordField.ValueMode;
-import org.apache.drill.exec.BufferAllocator;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.record.MaterializedField;
 
-public class Int32Vector extends AbstractFixedValueVector<Int32Vector>{
+public final class Int32Vector extends AbstractFixedValueVector<Int32Vector>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Int32Vector.class);
   
   private final MaterializedField field;

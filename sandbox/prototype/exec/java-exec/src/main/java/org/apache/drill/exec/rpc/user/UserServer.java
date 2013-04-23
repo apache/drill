@@ -66,7 +66,7 @@ public class UserServer extends BasicServer<RpcType> {
   @Override
   protected Response handle(SocketChannel channel, int rpcType, ByteBuf pBody, ByteBuf dBody) throws RpcException {
     switch (rpcType) {
-    
+
     case RpcType.HANDSHAKE_VALUE:
 //      logger.debug("Received handshake, responding in kind.");
       return new Response(RpcType.HANDSHAKE, BitToUserHandshake.getDefaultInstance(), null);

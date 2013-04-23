@@ -24,8 +24,8 @@ public class StartDrillbit {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StartDrillbit.class);
   
   
-  @Test public void startDrillbit() throws DrillbitStartupException, InterruptedException{
+  @Test
+  public void startDrillbit() throws DrillbitStartupException, InterruptedException{
     Drillbit.main(new String[0]);
-    
   }
 }

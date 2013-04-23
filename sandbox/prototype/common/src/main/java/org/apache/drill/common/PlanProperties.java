@@ -17,6 +17,9 @@
  ******************************************************************************/
 package org.apache.drill.common;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
 
 public class PlanProperties {
   public static enum PlanType {APACHE_DRILL_LOGICAL, APACHE_DRILL_PHYSICAL}
@@ -25,6 +28,7 @@ public class PlanProperties {
   public int version;
 	public Generator generator = new Generator();
 	
+	@JsonInclude(Include.NON_NULL)
 	public static class Generator{
 		public String type;
 		public String info;

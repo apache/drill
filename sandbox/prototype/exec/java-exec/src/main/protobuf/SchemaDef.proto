@@ -27,11 +27,18 @@ message SchemaDef {
   repeated FieldDef field = 1;
 }
 
+enum ValueMode {
+	VALUE_VECTOR = 0;
+	RLE = 1;
+	DICT = 2;
+}
+
 message FieldDef {
   optional string name = 1;
-  optional DataMode mode = 2;
+  optional DataMode data_mode = 2;
+  optional ValueMode value_mode = 3;
   
   // If DataMode == 0-2, type should be populated and fields should be empty.  Otherwise, type should empty and fields should be defined. 
-  optional DataType type = 3;
-  repeated FieldDef fields = 4;
+  optional DataType type = 4;
+  repeated FieldDef fields = 5;
 }

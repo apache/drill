@@ -70,6 +70,10 @@ public class MaterializedField implements Comparable<MaterializedField>{
     check("valueMode", this.mode, expected.mode);
   }
 
+  public MaterializedField getNullableVersion(Class<?> valueClass){
+    return new MaterializedField(fieldId, type, true, mode, valueClass);
+  }
+  
   @Override
   public int compareTo(MaterializedField o) {
     return Integer.compare(this.fieldId, o.fieldId);

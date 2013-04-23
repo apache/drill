@@ -22,10 +22,11 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.drill.common.logical.data.Scan;
+import org.apache.drill.common.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
 import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Multimap;
 
 public interface StorageEngine {
   public boolean supportsRead();
@@ -58,13 +59,41 @@ public interface StorageEngine {
   public ListMultimap<ReadEntry, DrillbitEndpoint> getReadLocations(Collection<ReadEntry> entries);
 
   /**
+   * Apply read entry assignments based on the list of actually assigned Endpoints. A storage engine is allowed to
+   * update or modify the read entries based on the nature of the assignments. For example, if two blocks are initially
+   * considered separate read entries but then the storage engine realizes that the assignments for those two reads are
+   * on the same system, the storage engine may decide to collapse those entries into a single read entry that covers
+   * both original read entries.
+   * 
+   * @param assignments
+   * @param entries
+   * @return
+   */
+  public Multimap<DrillbitEndpoint, ReadEntry> getEntryAssignments(List<DrillbitEndpoint> assignments,
+      Collection<ReadEntry> entries);
+
+  /**
    * Get a particular reader for a fragment context.
+   * 
    * @param context
    * @param readEntry
    * @return
    * @throws IOException
    */
   public RecordReader getReader(FragmentContext context, ReadEntry readEntry) throws IOException;
+
+  /**
+   * Apply write entry assignments based on the list of actually assigned endpoints. A storage engine is allowed to
+   * rewrite the WriteEntries if desired based on the nature of the assignments. For example, a storage engine could
+   * hold off actually determining the specific level of partitioning required until it finds out exactly the number of
+   * nodes associated with the operation.
+   * 
+   * @param assignments
+   * @param entries
+   * @return
+   */
+  public Multimap<DrillbitEndpoint, WriteEntry> getWriteAssignments(List<DrillbitEndpoint> assignments,
+      Collection<ReadEntry> entries);
 
   /**
    * 
@@ -75,7 +104,6 @@ public interface StorageEngine {
    */
   public RecordRecorder getWriter(FragmentContext context, WriteEntry writeEntry) throws IOException;
 
-  
   public interface ReadEntry {
     public Cost getCostEstimate();
   }

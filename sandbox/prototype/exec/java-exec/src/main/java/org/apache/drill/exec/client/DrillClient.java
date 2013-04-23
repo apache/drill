@@ -17,26 +17,26 @@
  ******************************************************************************/
 package org.apache.drill.exec.client;
 
+import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.Iterables.get;
+import static org.apache.drill.exec.proto.UserProtos.QueryResultsMode.STREAM_FULL;
+import static org.apache.drill.exec.proto.UserProtos.RunQuery.newBuilder;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.nio.NioEventLoopGroup;
-import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.exec.coord.ClusterCoordinator;
-import org.apache.drill.exec.coord.ZKClusterCoordinator;
-import org.apache.drill.exec.rpc.DrillRpcFuture;
-import org.apache.drill.exec.rpc.NamedThreadFactory;
-import org.apache.drill.exec.rpc.RpcException;
-import org.apache.drill.exec.rpc.user.UserClient;
 
 import java.io.IOException;
 import java.util.Collection;
 
-import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.collect.Iterables.get;
-import static org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
-import static org.apache.drill.exec.proto.UserProtos.QueryHandle;
-import static org.apache.drill.exec.proto.UserProtos.QueryResultsMode.STREAM_FULL;
-import static org.apache.drill.exec.proto.UserProtos.RunQuery.newBuilder;
+import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.coord.ClusterCoordinator;
+import org.apache.drill.exec.coord.ZKClusterCoordinator;
+import org.apache.drill.exec.proto.UserProtos.QueryHandle;
+import org.apache.drill.exec.rpc.DrillRpcFuture;
+import org.apache.drill.exec.rpc.NamedThreadFactory;
+import org.apache.drill.exec.rpc.RpcException;
+import org.apache.drill.exec.rpc.user.UserClient;
 
 /**
  * Thin wrapper around a UserClient that handles connect/close and transforms String into ByteBuf

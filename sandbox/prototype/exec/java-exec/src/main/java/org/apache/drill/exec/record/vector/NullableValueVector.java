@@ -19,7 +19,8 @@ package org.apache.drill.exec.record.vector;
 
 import io.netty.buffer.ByteBuf;
 
-import org.apache.drill.exec.BufferAllocator;
+import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.record.MaterializedField;
 
 /**
  * Abstract class supports null versions.
@@ -29,24 +30,33 @@ abstract class NullableValueVector<T extends NullableValueVector<T, E>, E extend
 
   protected BitVector bits;
   protected E value;
+  private final MaterializedField field;
 
-  public NullableValueVector(int fieldId, BufferAllocator allocator) {
+  public NullableValueVector(int fieldId, BufferAllocator allocator, Class<T> valueClass) {
     super(fieldId, allocator);
     bits = new BitVector(fieldId, allocator);
     value = getNewValueVector(fieldId, allocator);
+    this.field = value.getField().getNullableVersion(valueClass);
   }
   
   protected abstract E getNewValueVector(int fieldId, BufferAllocator allocator);
 
+  public int isNull(int index){
+    return bits.getBit(index);
+  }
+  
   @Override
   protected int getAllocationSize(int valueCount) {
     return bits.getAllocationSize(valueCount) + value.getAllocationSize(valueCount);
   }
   
-  
+  @Override
+  public MaterializedField getField() {
+    return field;
+  }
+
   @Override
   protected void childResetAllocation(int valueCount, ByteBuf buf) {
-    super.resetAllocation(valueCount, buf);
     int firstSize = bits.getAllocationSize(valueCount);
     value.resetAllocation(valueCount, buf.slice(firstSize, value.getAllocationSize(valueCount)));
     bits.resetAllocation(valueCount, buf.slice(0, firstSize));

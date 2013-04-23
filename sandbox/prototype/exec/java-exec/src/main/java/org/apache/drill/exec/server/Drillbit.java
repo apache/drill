@@ -17,9 +17,10 @@
  ******************************************************************************/
 package org.apache.drill.exec.server;
 
-import com.google.common.io.Closeables;
+import java.net.InetAddress;
+
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.exec.BufferAllocator;
+import org.apache.drill.common.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.cache.DistributedCache;
 import org.apache.drill.exec.cache.HazelCache;
@@ -27,10 +28,10 @@ import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.coord.ClusterCoordinator.RegistrationHandle;
 import org.apache.drill.exec.coord.ZKClusterCoordinator;
 import org.apache.drill.exec.exception.DrillbitStartupException;
-import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.service.ServiceEngine;
 
-import java.net.InetAddress;
+import com.google.common.io.Closeables;
 
 /**
  * Starts, tracks and stops all the required services for a Drillbit daemon to work.
@@ -69,6 +70,7 @@ public class Drillbit {
   final ClusterCoordinator coord;
   final ServiceEngine engine;
   final DistributedCache cache;
+  final DrillConfig config;
   private RegistrationHandle handle;
 
   public Drillbit(DrillConfig config) throws Exception {
@@ -79,6 +81,7 @@ public class Drillbit {
     this.coord = new ZKClusterCoordinator(config);
     this.engine = new ServiceEngine(context);
     this.cache = new HazelCache(context.getConfig());
+    this.config = config;
   }
 
   public void run() throws Exception {

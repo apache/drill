@@ -26,13 +26,13 @@ public class PartitionDef {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PartitionDef.class);
 
   private final PartitionType partitionType;
-  private final LogicalExpression[] expressions;
+  private final LogicalExpression expr;
   private final LogicalExpression[] starts;
   
   @JsonCreator
-  public PartitionDef(@JsonProperty("mode") PartitionType partitionType, @JsonProperty("exprs") LogicalExpression[] expressions, @JsonProperty("starts") LogicalExpression[] starts) {
+  public PartitionDef(@JsonProperty("mode") PartitionType partitionType, @JsonProperty("expr") LogicalExpression expr, @JsonProperty("starts") LogicalExpression[] starts) {
     this.partitionType = partitionType;
-    this.expressions = expressions;
+    this.expr = expr;
     this.starts = starts;
   }
 
@@ -41,9 +41,9 @@ public class PartitionDef {
     return partitionType;
   }
 
-  @JsonProperty("exprs")
-  public LogicalExpression[] getExpressions() {
-    return expressions;
+  @JsonProperty("expr")
+  public LogicalExpression getExpr() {
+    return expr;
   }
 
   @JsonProperty("starts")
@@ -53,6 +53,6 @@ public class PartitionDef {
   
 
   public static enum PartitionType{ 
-    RANDOM, HASH, RANGE;
+    DUPLICATE, RANDOM, HASH, RANGE;
   };
 }
