@@ -72,7 +72,9 @@ public class RSERegistry {
     Constructor<? extends ReferenceStorageEngine> c = availableEngines.get(engineConfig.getClass());
     if(c == null) throw new SetupException(String.format("Failure finding StorageEngine constructor for config %s", engineConfig));
     try {
-      return c.newInstance(engineConfig, config);
+      engine = c.newInstance(engineConfig, config);
+      activeEngines.put(engineConfig,engine);
+      return engine;
     } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
       Throwable t = e instanceof InvocationTargetException ? ((InvocationTargetException)e).getTargetException() : e;
       if(t instanceof SetupException) throw ((SetupException) t);
