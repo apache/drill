@@ -100,6 +100,11 @@ public class DrillTable extends BaseQueryable<Object>
   }
 
   @Override
+  public Statistic getStatistic() {
+    return Statistics.UNKNOWN;
+  }
+
+  @Override
   public Enumerator<Object> enumerator() {
     return Linq4j.emptyEnumerator();
   }

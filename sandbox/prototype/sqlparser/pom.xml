@@ -29,7 +29,7 @@
 		<dependency>
 			<groupId>net.hydromatic</groupId>
 			<artifactId>optiq</artifactId>
-			<version>0.3</version>
+			<version>0.3-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>net.hydromatic</groupId>

@@ -19,7 +19,7 @@ package org.apache.drill.optiq;
 
 import net.hydromatic.optiq.prepare.OptiqPrepareImpl;
 import net.hydromatic.optiq.rules.java.JavaRules;
-import org.eigenbase.relopt.volcano.VolcanoPlanner;
+import org.eigenbase.relopt.RelOptPlanner;
 
 /**
  * Implementation of {@link net.hydromatic.optiq.jdbc.OptiqPrepare} for Drill.
@@ -30,8 +30,8 @@ public class DrillPrepareImpl extends OptiqPrepareImpl {
   }
 
   @Override
-  protected VolcanoPlanner createPlanner() {
-    final VolcanoPlanner planner = super.createPlanner();
+  protected RelOptPlanner createPlanner() {
+    final RelOptPlanner planner = super.createPlanner();
     planner.addRule(EnumerableDrillRule.ARRAY_INSTANCE);
     planner.addRule(EnumerableDrillRule.CUSTOM_INSTANCE);
 
