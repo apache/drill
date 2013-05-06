@@ -64,12 +64,21 @@ public class IfExpression extends LogicalExpressionBase implements Iterable<IfCo
 		List<IfCondition> conditions = new ArrayList<IfCondition>();
 		private LogicalExpression elseExpression;
 		
-		public void addCondition(IfCondition condition){
+		public Builder addCondition(IfCondition condition){
 			conditions.add(condition);
+            return this;
 		}
+
+        public Builder addConditions(Iterable<IfCondition> conditions) {
+            for(IfCondition condition : conditions) {
+                addCondition(condition);
+            }
+            return this;
+        }
 		
-		public void setElse(LogicalExpression elseExpression) {
+		public Builder setElse(LogicalExpression elseExpression) {
 			this.elseExpression = elseExpression;
+            return this;
 		}
 		
 		public IfExpression build(){

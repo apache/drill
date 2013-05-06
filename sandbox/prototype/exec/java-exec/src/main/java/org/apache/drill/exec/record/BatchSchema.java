@@ -21,6 +21,8 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import com.carrotsearch.hppc.cursors.IntObjectCursor;
+import com.google.common.collect.Iterables;
 import org.apache.drill.common.expression.types.DataType;
 import org.apache.drill.common.physical.RecordField.ValueMode;
 import org.apache.drill.exec.exception.SchemaChangeException;
@@ -57,13 +59,14 @@ public class BatchSchema implements Iterable<MaterializedField>{
   /**
    * Builder to build BatchSchema.  Can have a supporting expected object.  If the expected Schema object is defined, the builder will always check that this schema is a equal or more materialized version of the current schema.
    */
-  public class BatchSchemaBuilder{
+  public static class BatchSchemaBuilder{
     private IntObjectOpenHashMap<MaterializedField> fields = new IntObjectOpenHashMap<MaterializedField>();
-    private IntObjectOpenHashMap<MaterializedField> expectedFields = new IntObjectOpenHashMap<MaterializedField>();
+    private IntObjectOpenHashMap<MaterializedField> expectedFields;
     
     private boolean hasSelectionVector;
     
     public BatchSchemaBuilder(BatchSchema expected){
+      expectedFields = new IntObjectOpenHashMap<MaterializedField>();
       for(MaterializedField f: expected){
         expectedFields.put(f.getFieldId(), f);
       }
@@ -121,7 +124,8 @@ public class BatchSchema implements Iterable<MaterializedField>{
       // check if any fields are unaccounted for.
       
       List<MaterializedField> fieldList = Lists.newArrayList();
-      for(MaterializedField f : fields.values){
+      for(IntObjectCursor<MaterializedField> cursor : fields){
+        MaterializedField f = cursor.value;
         if(f != null) fieldList.add(f);
       }
       Collections.sort(fieldList);

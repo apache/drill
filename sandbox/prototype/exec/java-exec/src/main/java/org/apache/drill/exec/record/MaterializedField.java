@@ -17,6 +17,8 @@
  ******************************************************************************/
 package org.apache.drill.exec.record;
 
+import org.apache.drill.common.expression.FieldReference;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.types.DataType;
 import org.apache.drill.common.physical.RecordField.ValueMode;
 import org.apache.drill.exec.exception.SchemaChangeException;
@@ -78,6 +80,8 @@ public class MaterializedField implements Comparable<MaterializedField>{
   public int compareTo(MaterializedField o) {
     return Integer.compare(this.fieldId, o.fieldId);
   }
-  
-  
+
+    public boolean matches(SchemaPath path) {
+        return true;
+    }
 }
