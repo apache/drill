@@ -18,15 +18,20 @@
 package org.apache.drill.exec.rpc;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufInputStream;
+
+import java.io.InputStream;
 
 import org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode;
 
 public class InboundRpcMessage extends RpcMessage{
   public ByteBuf pBody;
+  public ByteBuf dBody;
   
   public InboundRpcMessage(RpcMode mode, int rpcType, int coordinationId, ByteBuf pBody, ByteBuf dBody) {
-    super(mode, rpcType, coordinationId, dBody);
+    super(mode, rpcType, coordinationId);
     this.pBody = pBody;
+    this.dBody = dBody;
   }
   
   public int getBodySize(){
@@ -37,7 +42,7 @@ public class InboundRpcMessage extends RpcMessage{
   
   void release(){
     pBody.release();
-    super.release();
+    if(dBody != null) dBody.release();
   }
 
   @Override
@@ -46,5 +51,7 @@ public class InboundRpcMessage extends RpcMessage{
         + coordinationId + ", dBody=" + dBody + "]";
   }
   
-  
+  public InputStream getProtobufBodyAsIS(){
+    return new ByteBufInputStream(pBody);
+  }
 }

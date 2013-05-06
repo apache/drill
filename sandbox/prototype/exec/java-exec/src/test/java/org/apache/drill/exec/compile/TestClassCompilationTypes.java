@@ -18,14 +18,15 @@
 package org.apache.drill.exec.compile;
 
 import org.codehaus.commons.compiler.jdk.ExpressionEvaluator;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class TestClassCompilationTypes {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestClassCompilationTypes.class);
 
-  @Test
+  @Ignore @Test
   public void comparePerfs() throws Exception {
-    for(int i =0; i < 50000; i++){
+    for(int i =0; i < 500; i++){
       int r = 0;
       long n0 = System.nanoTime();
       r += janino();

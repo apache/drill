@@ -27,19 +27,14 @@ public abstract class RpcMessage {
   public RpcMode mode;
   public int rpcType;
   public int coordinationId;
-  public ByteBuf dBody;
   
-  public RpcMessage(RpcMode mode, int rpcType, int coordinationId, ByteBuf dBody) {
+  public RpcMessage(RpcMode mode, int rpcType, int coordinationId) {
     this.mode = mode;
     this.rpcType = rpcType;
     this.coordinationId = coordinationId;
-    this.dBody = dBody;
   }
   
   public abstract int getBodySize();
-
-  void release(){
-    if(dBody != null) dBody.release();
-  }
+  abstract void release();
   
 }

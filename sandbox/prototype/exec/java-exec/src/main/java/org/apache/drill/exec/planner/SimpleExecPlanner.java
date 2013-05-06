@@ -17,14 +17,16 @@
  ******************************************************************************/
 package org.apache.drill.exec.planner;
 
-import java.util.List;
-
-import org.apache.drill.common.physical.PhysicalPlan;
-import org.apache.drill.common.physical.pop.base.PhysicalOperator;
-import org.apache.drill.exec.exception.FragmentSetupException;
-import org.apache.drill.exec.foreman.QueryWorkUnit;
+import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ops.QueryContext;
-import org.apache.drill.exec.proto.ExecProtos.PlanFragment;
+import org.apache.drill.exec.physical.PhysicalPlan;
+import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.planner.fragment.Fragment;
+import org.apache.drill.exec.planner.fragment.MakeFragmentsVisitor;
+import org.apache.drill.exec.planner.fragment.PlanningSet;
+import org.apache.drill.exec.planner.fragment.SimpleParallelizer;
+import org.apache.drill.exec.planner.fragment.StatsCollector;
+import org.apache.drill.exec.work.QueryWorkUnit;
 
 /**
  * Parallelization is based on available nodes with source or target data.  Nodes that are "overloaded" are excluded from execution.
@@ -32,22 +34,20 @@ import org.apache.drill.exec.proto.ExecProtos.PlanFragment;
 public class SimpleExecPlanner implements ExecPlanner{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SimpleExecPlanner.class);
   
-  private FragmentingPhysicalVisitor fragmenter = new FragmentingPhysicalVisitor();
+  private MakeFragmentsVisitor fragmenter = new MakeFragmentsVisitor();
   private SimpleParallelizer parallelizer = new SimpleParallelizer();
 
   @Override
-  public QueryWorkUnit getWorkUnit(QueryContext context, PhysicalPlan plan, int maxWidth) throws FragmentSetupException {
+  public QueryWorkUnit getWorkUnit(QueryContext context, PhysicalPlan plan, int maxWidth) throws ExecutionSetupException {
     
     // get the root physical operator and split the plan into sub fragments.
     PhysicalOperator root = plan.getSortedOperators(false).iterator().next();
-    FragmentNode fragmentRoot = root.accept(fragmenter, null);
+    Fragment fragmentRoot = root.accept(fragmenter, null);
     
     // generate a planning set and collect stats.
-    FragmentPlanningSet planningSet = new FragmentPlanningSet(context);
-    FragmentStatsCollector statsCollector = new FragmentStatsCollector(planningSet);
-    statsCollector.collectStats(fragmentRoot);
+    PlanningSet planningSet = StatsCollector.collectStats(fragmentRoot);
     
-    return parallelizer.getFragments(context, fragmentRoot, planningSet, maxWidth);
+    return parallelizer.getFragments(context.getCurrentEndpoint(), context.getQueryId(), context.getActiveEndpoints(), context.getPlanReader(), fragmentRoot, planningSet, maxWidth);
     
     
   }

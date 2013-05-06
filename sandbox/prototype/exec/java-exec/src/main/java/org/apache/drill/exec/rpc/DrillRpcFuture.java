@@ -17,80 +17,10 @@
  ******************************************************************************/
 package org.apache.drill.exec.rpc;
 
-import java.util.concurrent.ExecutionException;
+import com.google.common.util.concurrent.CheckedFuture;
 
-import com.google.common.util.concurrent.AbstractCheckedFuture;
-import com.google.common.util.concurrent.AbstractFuture;
-import com.google.common.util.concurrent.ListenableFuture;
-
-public class DrillRpcFuture<V> extends AbstractCheckedFuture<V, RpcException> {
+public interface DrillRpcFuture<T> extends CheckedFuture<T,RpcException> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillRpcFuture.class);
 
-  final int coordinationId;
-  private final Class<V> clazz;
-
-  public DrillRpcFuture(ListenableFuture<V> delegate, int coordinationId, Class<V> clazz) {
-    super(delegate);
-    this.coordinationId = coordinationId;
-    this.clazz = clazz;
-  }
-
-  public Class<V> getOutcomeClass(){
-    return clazz;
-  }
-  
-  /**
-   * Drill doesn't currently support rpc cancellations since nearly all requests should be either instance of
-   * asynchronous. Business level cancellation is managed a separate call (e.g. canceling a query.). Calling this method
-   * will result in an UnsupportedOperationException.
-   */
-  @Override
-  public boolean cancel(boolean mayInterruptIfRunning) {
-    throw new UnsupportedOperationException(
-        "Drill doesn't currently support rpc cancellations. See javadocs for more detail.");
-  }
-
-  @Override
-  protected RpcException mapException(Exception ex) {
-    if (ex instanceof RpcException)  return (RpcException) ex;
-    
-    if (ex instanceof ExecutionException) {
-      Throwable e2 = ex.getCause();
-      
-      if (e2 instanceof RpcException) {
-        return (RpcException) e2;
-      }
-    }
-    return new RpcException(ex);
-
-  }
-
-  @SuppressWarnings("unchecked")
-  void setValue(Object value) {
-    assert clazz.isAssignableFrom(value.getClass());
-    ((InnerFuture<V>) super.delegate()).setValue((V) value);
-  }
-
-  boolean setException(Throwable t) {
-    return ((InnerFuture<V>) super.delegate()).setException(t);
-  }
-
-  public static class InnerFuture<T> extends AbstractFuture<T> {
-    // we rewrite these so that the parent can see them
-
-    void setValue(T value) {
-      super.set(value);
-    }
-
-    protected boolean setException(Throwable t) {
-      return super.setException(t);
-    }
-  }
-
-  public static <V> DrillRpcFuture<V> getNewFuture(int coordinationId, Class<V> clazz) {
-    InnerFuture<V> f = new InnerFuture<V>();
-    return new DrillRpcFuture<V>(f, coordinationId, clazz);
-  }
-
-
+  public void addLightListener(RpcOutcomeListener<T> outcomeListener);
 }

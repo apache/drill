@@ -20,12 +20,16 @@ package org.apache.drill.exec.record.vector;
 import io.netty.buffer.ByteBufAllocator;
 
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.record.MaterializedField;
 
-public class SelectionVector extends UInt16Vector{
+/**
+ * Convenience/Clarification Fixed2 wrapper.
+ */
+public class SelectionVector extends Fixed2{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SelectionVector.class);
 
-  public SelectionVector(int fieldId, BufferAllocator allocator) {
-    super(fieldId, allocator);
+  public SelectionVector(MaterializedField field, BufferAllocator allocator) {
+    super(field, allocator);
   }
 
 }

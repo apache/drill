@@ -17,6 +17,8 @@
  ******************************************************************************/
 package org.apache.drill.exec.rpc;
 
+import java.util.Arrays;
+
 import io.netty.buffer.ByteBuf;
 
 import org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode;
@@ -24,28 +26,49 @@ import org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode;
 import com.google.protobuf.Internal.EnumLite;
 import com.google.protobuf.MessageLite;
 
-class OutboundRpcMessage extends RpcMessage{
+public class OutboundRpcMessage extends RpcMessage {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OutboundRpcMessage.class);
 
   final MessageLite pBody;
-  
-  public OutboundRpcMessage(RpcMode mode, EnumLite rpcType, int coordinationId, MessageLite pBody, ByteBuf dBody) {
-    super(mode, rpcType.getNumber(), coordinationId, dBody);
+  public ByteBuf[] dBodies;
+
+  public OutboundRpcMessage(RpcMode mode, EnumLite rpcType, int coordinationId, MessageLite pBody, ByteBuf... dBodies) {
+    super(mode, rpcType.getNumber(), coordinationId);
     this.pBody = pBody;
+    this.dBodies = dBodies;
   }
-  
-  public int getBodySize(){
+
+  public int getBodySize() {
     int len = pBody.getSerializedSize();
     len += RpcEncoder.getRawVarintSize(len);
-    if(dBody != null) len += dBody.capacity();
+    len += getRawBodySize();
     return len;
   }
 
+  public int getRawBodySize(){
+    if(dBodies == null) return 0;
+    int len = 0;
+    
+    for (int i = 0; i < dBodies.length; i++) {
+      if(RpcConstants.EXTRA_DEBUGGING) logger.debug("Reader Index {}, Writer Index {}", dBodies[i].readerIndex(), dBodies[i].writerIndex());
+      len += dBodies[i].readableBytes();
+    }
+    return len;
+  }
+  
   @Override
   public String toString() {
     return "OutboundRpcMessage [pBody=" + pBody + ", mode=" + mode + ", rpcType=" + rpcType + ", coordinationId="
-        + coordinationId + ", dBody=" + dBody + "]";
+        + coordinationId + ", dBodies=" + Arrays.toString(dBodies) + "]";
+  }
+  
+  void release(){
+    if(dBodies != null){
+      for(ByteBuf b : dBodies){
+        b.release();
+      }
+    }
   }
 
-  
+
 }

@@ -12,9 +12,8 @@
             pop:"mock-scan",
             url: "http://apache.org",
             entries:[
-            	{id:1}
-            ],
-            cost: { disk: 1.0, memory: 1.0, cpu: 1.0, network: 1.0}
+            	{id:1, records: 100, size: 100}
+            ]
         },
         {
             @id:2,

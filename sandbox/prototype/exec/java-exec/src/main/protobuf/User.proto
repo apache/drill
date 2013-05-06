@@ -2,8 +2,12 @@ package exec.user;
 
 option java_package = "org.apache.drill.exec.proto";
 option java_outer_classname = "UserProtos";
-option optimize_for = LITE_RUNTIME;
+option optimize_for = SPEED;
+
 import "SchemaDef.proto";
+import "UserBitShared.proto";
+
+
 
 ////// UserToBit RPC ///////
 enum RpcType {
@@ -13,7 +17,8 @@ enum RpcType {
     
     // user to bit
     RUN_QUERY = 3;
-    REQUEST_RESULTS = 4;
+    CANCEL_QUERY = 4;
+    REQUEST_RESULTS = 5;
     
     // bit to user
 	QUERY_RESULT = 6;
@@ -21,33 +26,36 @@ enum RpcType {
 }
 
 message UserToBitHandshake {
-    optional bool support_listening = 1;
-    optional int32 rpc_version = 2;
+    optional bool support_listening = 2;
+    optional int32 rpc_version = 3;
 }
 
 message RequestResults {
-  optional int64 query_id = 1;
+  optional exec.shared.QueryId query_id = 1;
   optional int32 maximum_responses = 2;
 }
 
 message RunQuery {
-  optional QueryResultsMode mode = 1;
-  optional string plan = 2;
+  optional QueryResultsMode results_mode = 1;
+  optional QueryType type = 2;
+  optional string plan = 3;
+}
+
+enum QueryType {
+  SQL = 1;
+  LOGICAL = 2;
+  PHYSICAL = 3;
 }
 
 enum QueryResultsMode {
 	STREAM_FULL = 1; // Server will inform the client regularly on the status of the query. Once the query is completed, service will inform the client as each query chunk is made available.
-	STREAM_FIRST = 2; // Server will inform the client regularly on the status of the query.  Once the query is completed, server will inform the client of the first query chunk.
-	QUERY_FOR_STATUS = 3; // Client will need to query for status of query.
+	// STREAM_FIRST = 2; // Server will inform the client regularly on the status of the query.  Once the query is completed, server will inform the client of the first query chunk.
+	// QUERY_FOR_STATUS = 3; // Client will need to query for status of query.
 }
 
 
 message BitToUserHandshake {
-	optional int32 rpc_version = 1;
-}
-
-message QueryHandle {
-  	optional int64 query_id = 1;
+	optional int32 rpc_version = 2;
 }
 
 message NodeStatus {
@@ -56,37 +64,26 @@ message NodeStatus {
 }
 
 message QueryResult {
-	enum Outcome {
-	  RUNNING = 0;
-	  FAILED = 1;
+	enum QueryState {
+	  PENDING = 0;
+	  RUNNING = 1;
 	  COMPLETED = 2;
-	  WAITING = 3;
+	  CANCELED = 3;
+	  FAILED = 4;
+	  UNKNOWN_QUERY = 5;
 	}
 	
-	optional Outcome outcome = 1;
-	optional SchemaDef schema = 2;
+	optional QueryState query_state = 1;
+	optional exec.shared.QueryId query_id = 2;
 	optional bool is_last_chunk = 3;
 	optional int32 row_count = 4;
 	optional int64 records_scan = 5;
 	optional int64 records_error = 6;
 	optional int64 submission_time = 7;
 	repeated NodeStatus node_status = 8;	
-	repeated Error error = 9;
-}
-
-message TextErrorLocation{
-    optional int32 start_column = 2;
-    optional int32 start_row = 3;
-    optional int32 end_column = 4;
-    optional int32 end_row = 5;
-}
-
-message Error{
-    optional int64 error_id = 1; // for debug tracing purposes
-    optional string host = 2;
-    optional int32 error_type = 3; 
-    optional string message = 4;
-    optional TextErrorLocation error = 5; //optional, used when providing location of error within a piece of text.
+	repeated exec.shared.DrillPBError error = 9;
+	optional exec.shared.RecordBatchDef def = 10;
+	optional bool schema_changed = 11;
 }
 
 

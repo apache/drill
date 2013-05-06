@@ -2,7 +2,9 @@ package exec.rpc;
 
 option java_package = "org.apache.drill.exec.proto";
 option java_outer_classname = "GeneralRPCProtos";
-option optimize_for = LITE_RUNTIME;
+option optimize_for = SPEED;
+
+import "Coordination.proto";
 
 message Ack{
 	optional bool ok = 1;
@@ -33,3 +35,5 @@ message RpcFailure {
   optional string short_error = 3;
   optional string long_error = 4;
 }
+
+

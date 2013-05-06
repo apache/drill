@@ -18,6 +18,7 @@
 package org.apache.drill.exec.rpc;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.MessageBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import io.netty.handler.codec.CorruptedFrameException;
@@ -30,12 +31,14 @@ import com.google.protobuf.CodedInputStream;
 public class ZeroCopyProtobufLengthDecoder extends ByteToMessageDecoder {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ZeroCopyProtobufLengthDecoder.class);
 
+  
   @Override
-  protected ByteBuf decode(ChannelHandlerContext ctx, ByteBuf in) throws Exception {
+  protected void decode(ChannelHandlerContext ctx, ByteBuf in, MessageBuf<Object> out) throws Exception {
+
     if(!ctx.channel().isOpen()){
       logger.info("Channel is closed, discarding remaining {} byte(s) in buffer.", in.readableBytes());
       in.skipBytes(in.readableBytes());
-      return null;
+      return;
     }
     
     in.markReaderIndex();
@@ -43,7 +46,7 @@ public class ZeroCopyProtobufLengthDecoder extends ByteToMessageDecoder {
     for (int i = 0; i < buf.length; i ++) {
         if (!in.isReadable()) {
             in.resetReaderIndex();
-            return null;
+            return;
         }
 
         buf[i] = in.readByte();
@@ -60,13 +63,14 @@ public class ZeroCopyProtobufLengthDecoder extends ByteToMessageDecoder {
 
             if (in.readableBytes() < length) {
                 in.resetReaderIndex();
-                return null;
+                return;
             } else {
-                ByteBuf out = in.slice(in.readerIndex(), length);
+                ByteBuf outBuf = in.slice(in.readerIndex(), length);
                 in.retain();
                 in.skipBytes(length);
                 if(RpcConstants.EXTRA_DEBUGGING) logger.debug(String.format("ReaderIndex is %d after length header of %d bytes and frame body of length %d bytes.", in.readerIndex(), i+1, length));
-                return out;
+                out.add(outBuf);
+                return;
             }
         }
     }

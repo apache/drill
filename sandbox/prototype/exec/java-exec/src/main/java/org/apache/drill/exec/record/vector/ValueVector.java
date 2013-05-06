@@ -21,6 +21,7 @@ import io.netty.buffer.ByteBuf;
 
 import java.io.Closeable;
 
+import org.apache.drill.exec.proto.UserBitShared.FieldMetadata;
 import org.apache.drill.exec.record.MaterializedField;
 
 /**
@@ -44,6 +45,13 @@ public interface ValueVector<T extends ValueVector<T>> extends Closeable {
   public abstract void allocateNew(int valueCount);
 
   /**
+   * Update the value vector to the provided record information.
+   * @param metadata
+   * @param data
+   */
+  public abstract void setTo(FieldMetadata metadata, ByteBuf data);
+  
+  /**
    * Zero copy move of data from this vector to the target vector. Any future access to this vector without being
    * populated by a new vector will cause problems.
    * 
@@ -52,19 +60,19 @@ public interface ValueVector<T extends ValueVector<T>> extends Closeable {
   public abstract void transferTo(T vector);
 
   /**
-   * Return the underlying buffer. Note that this doesn't impact the reference counts for this buffer so it only should be
+   * Return the underlying buffers associated with this vector. Note that this doesn't impact the reference counts for this buffer so it only should be
    * used for in context access. Also note that this buffer changes regularly thus external classes shouldn't hold a
-   * reference to it.
+   * reference to it (unless they change it).
    * 
    * @return The underlying ByteBuf.
    */
-  public abstract ByteBuf getBuffer();
+  public abstract ByteBuf[] getBuffers();
 
   /**
-   * Returns the number of value contained within this vector.
+   * Returns the maximum number of values contained within this vector.
    * @return Vector size
    */
-  public abstract int size();
+  public abstract int capacity();
 
 
   /**
@@ -79,4 +87,32 @@ public interface ValueVector<T extends ValueVector<T>> extends Closeable {
    */
   public abstract MaterializedField getField();
 
+  /**
+   * Define the number of records that are in this value vector.
+   * @param recordCount Number of records active in this vector.  Used for purposes such as getting a writable range of the data.
+   */
+  public abstract void setRecordCount(int recordCount);
+  public abstract int getRecordCount();
+  
+  
+  /**
+   * Get the metadata for this field.
+   * @return
+   */
+  public abstract FieldMetadata getMetadata();
+  
+  /**
+   * Debug interface to get values per record.
+   * @param index The record index.
+   * @return The value in the vector.
+   */
+  public Object getObject(int index);
+  
+  
+  /**
+   * Useful for generating random data.
+   */
+  public void randomizeData();
+    
+  
 }

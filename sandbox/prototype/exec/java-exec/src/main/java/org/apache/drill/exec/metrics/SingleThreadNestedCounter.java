@@ -22,34 +22,34 @@ import org.apache.drill.exec.server.DrillbitContext;
 import com.yammer.metrics.Counter;
 
 /**
- * Wraps a parent counter so that local in thread metrics can be collected while collecting for a global counter.
+ * Wraps a parent counter so that local in-thread metrics can be collected while collecting for a global counter. Note
+ * that this one writer, many reader safe.
  */
 public class SingleThreadNestedCounter {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SingleThreadNestedCounter.class);
-  
+
   private volatile long count;
   private final Counter counter;
-  
-  
+
   public SingleThreadNestedCounter(DrillbitContext context, String name) {
     super();
     this.counter = context.getMetrics().counter(name);
   }
 
-  public long inc(long n){
+  public long inc(long n) {
     counter.inc(n);
-    count+= n;
+    count += n;
     return count;
   }
-  
-  public long dec(long n){
+
+  public long dec(long n) {
     counter.dec(n);
     count -= n;
     return count;
   }
-  
-  public long get(){
+
+  public long get() {
     return count;
   }
-  
+
 }

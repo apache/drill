@@ -20,6 +20,7 @@ package org.apache.drill.exec.record.vector;
 import io.netty.buffer.ByteBuf;
 
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.proto.UserBitShared.FieldMetadata;
 import org.apache.drill.exec.record.MaterializedField;
 
 /**
@@ -28,18 +29,16 @@ import org.apache.drill.exec.record.MaterializedField;
 abstract class NullableValueVector<T extends NullableValueVector<T, E>, E extends BaseValueVector<E>> extends BaseValueVector<T> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NullableValueVector.class);
 
-  protected BitVector bits;
+  protected Bit bits;
   protected E value;
-  private final MaterializedField field;
 
-  public NullableValueVector(int fieldId, BufferAllocator allocator, Class<T> valueClass) {
-    super(fieldId, allocator);
-    bits = new BitVector(fieldId, allocator);
-    value = getNewValueVector(fieldId, allocator);
-    this.field = value.getField().getNullableVersion(valueClass);
+  public NullableValueVector(MaterializedField field, BufferAllocator allocator, Class<T> valueClass) {
+    super(field, allocator);
+    bits = new Bit(null, allocator);
+    value = getNewValueVector(allocator);
   }
   
-  protected abstract E getNewValueVector(int fieldId, BufferAllocator allocator);
+  protected abstract E getNewValueVector(BufferAllocator allocator);
 
   public int isNull(int index){
     return bits.getBit(index);
@@ -76,5 +75,26 @@ abstract class NullableValueVector<T extends NullableValueVector<T, E>, E extend
   }
 
   
+  @Override
+  public ByteBuf[] getBuffers() {
+    return new ByteBuf[]{bits.data, value.data};
+  }
+
+  @Override
+  public void setRecordCount(int recordCount) {
+    super.setRecordCount(recordCount);
+    bits.setRecordCount(recordCount);
+    value.setRecordCount(recordCount);
+  }
+
+  @Override
+  public Object getObject(int index) {
+    if(isNull(index) == 0){
+      return null;
+    }else{
+      return value.getObject(index);
+    }
+  }
+
 }
 

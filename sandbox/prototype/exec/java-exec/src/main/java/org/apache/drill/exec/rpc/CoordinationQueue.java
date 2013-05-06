@@ -29,21 +29,21 @@ public class CoordinationQueue {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CoordinationQueue.class);
 
   private final PositiveAtomicInteger circularInt = new PositiveAtomicInteger();
-  private final Map<Integer, DrillRpcFuture<?>> map;
+  private final Map<Integer, DrillRpcFutureImpl<?>> map;
 
   public CoordinationQueue(int segmentSize, int segmentCount) {
-    map = new ConcurrentHashMap<Integer, DrillRpcFuture<?>>(segmentSize, 0.75f, segmentCount);
+    map = new ConcurrentHashMap<Integer, DrillRpcFutureImpl<?>>(segmentSize, 0.75f, segmentCount);
   }
 
   void channelClosed(Exception ex) {
-    for (DrillRpcFuture<?> f : map.values()) {
+    for (DrillRpcFutureImpl<?> f : map.values()) {
       f.setException(ex);
     }
   }
 
-  public <V> DrillRpcFuture<V> getNewFuture(Class<V> clazz) {
+  public <V> DrillRpcFutureImpl<V> getNewFuture(Class<V> clazz) {
     int i = circularInt.getNext();
-    DrillRpcFuture<V> future = DrillRpcFuture.getNewFuture(i, clazz);
+    DrillRpcFutureImpl<V> future = DrillRpcFutureImpl.getNewFuture(i, clazz);
     // logger.debug("Writing to map coord {}, future {}", i, future);
     Object old = map.put(i, future);
     if (old != null)
@@ -52,8 +52,8 @@ public class CoordinationQueue {
     return future;
   }
 
-  private DrillRpcFuture<?> removeFromMap(int coordinationId) {
-    DrillRpcFuture<?> rpc = map.remove(coordinationId);
+  private DrillRpcFutureImpl<?> removeFromMap(int coordinationId) {
+    DrillRpcFutureImpl<?> rpc = map.remove(coordinationId);
     if (rpc == null) {
       logger.error("Rpc is null.");
       throw new IllegalStateException(
@@ -62,23 +62,25 @@ public class CoordinationQueue {
     return rpc;
   }
 
-  public <V> DrillRpcFuture<V> getFuture(int coordinationId, Class<V> clazz) {
+  public <V> DrillRpcFutureImpl<V> getFuture(int rpcType, int coordinationId, Class<V> clazz) {
     // logger.debug("Getting future for coordinationId {} and class {}", coordinationId, clazz);
-    DrillRpcFuture<?> rpc = removeFromMap(coordinationId);
+    DrillRpcFutureImpl<?> rpc = removeFromMap(coordinationId);
     // logger.debug("Got rpc from map {}", rpc);
     Class<?> outcomeClass = rpc.getOutcomeClass();
+
     if (outcomeClass != clazz) {
-      logger.error("Rpc class is not expected class. Original: {}, requested: {}", outcomeClass.getCanonicalName(), clazz.getCanonicalName());
+
       throw new IllegalStateException(
           String
               .format(
-                  "You attempted to request a future for a coordination id that has a different value class than was used when you "
-                      + "initially created the coordination id.  Requested class %s, originally expected class %s.  This shouldn't happen.  ",
-                  clazz.getCanonicalName(), outcomeClass.getCanonicalName()));
+                  "RPC Engine had a submission and response configuration mismatch.  The RPC request that you submitted was defined with an expected response type of %s.  However, "
+                      + "when the response returned, a call to getResponseDefaultInstance() with Rpc number %d provided an expected class of %s.  This means either your submission uses the wrong type definition"
+                      + "or your getResponseDefaultInstance() method responds the wrong instance type ",
+                  clazz.getCanonicalName(), rpcType, outcomeClass.getCanonicalName()));
     }
 
     @SuppressWarnings("unchecked")
-    DrillRpcFuture<V> crpc = (DrillRpcFuture<V>) rpc;
+    DrillRpcFutureImpl<V> crpc = (DrillRpcFutureImpl<V>) rpc;
 
     // logger.debug("Returning casted future");
     return crpc;
@@ -86,7 +88,7 @@ public class CoordinationQueue {
 
   public void updateFailedFuture(int coordinationId, RpcFailure failure) {
     // logger.debug("Updating failed future.");
-    DrillRpcFuture<?> rpc = removeFromMap(coordinationId);
+    DrillRpcFutureImpl<?> rpc = removeFromMap(coordinationId);
     rpc.setException(new RemoteRpcException(failure));
   }
 }

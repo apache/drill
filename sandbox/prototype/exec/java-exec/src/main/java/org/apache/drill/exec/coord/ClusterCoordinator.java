@@ -20,7 +20,7 @@ package org.apache.drill.exec.coord;
 import java.io.Closeable;
 import java.util.Collection;
 
-import org.apache.drill.common.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
 /**
  * Pluggable interface built to manage cluster coordination. Allows Drillbit or DrillClient to register its capabilities
@@ -29,7 +29,12 @@ import org.apache.drill.common.proto.CoordinationProtos.DrillbitEndpoint;
 public abstract class ClusterCoordinator implements Closeable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ClusterCoordinator.class);
 
-  public abstract void start() throws Exception;
+  /**
+   * Start the cluster coordinator.  Millis to wait is   
+   * @param millisToWait The maximum time to wait before throwing an exception if the cluster coordination service has not successfully started.  Use 0 to wait indefinitely.
+   * @throws Exception
+   */
+  public abstract void start(long millisToWait) throws Exception;
 
   public abstract RegistrationHandle register(DrillbitEndpoint data);
 

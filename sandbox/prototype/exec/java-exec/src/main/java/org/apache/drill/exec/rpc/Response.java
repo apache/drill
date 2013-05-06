@@ -17,6 +17,8 @@
  ******************************************************************************/
 package org.apache.drill.exec.rpc;
 
+import org.apache.drill.exec.proto.ExecProtos.RpcType;
+
 import io.netty.buffer.ByteBuf;
 
 import com.google.protobuf.Internal.EnumLite;
@@ -27,13 +29,13 @@ public class Response {
   
   public EnumLite rpcType;
   public MessageLite pBody;
-  public ByteBuf dBody;
+  public ByteBuf[] dBodies;
   
-  public Response(EnumLite rpcType, MessageLite pBody, ByteBuf dBody) {
+  public Response(EnumLite rpcType, MessageLite pBody, ByteBuf... dBodies) {
     super();
     this.rpcType = rpcType;
     this.pBody = pBody;
-    this.dBody = dBody;
+    this.dBodies = dBodies;
   }
   
   

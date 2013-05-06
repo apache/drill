@@ -20,8 +20,9 @@ package org.apache.drill.exec.cache;
 import java.io.Closeable;
 import java.util.List;
 
-import org.apache.drill.common.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.exception.DrillbitStartupException;
+import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.ExecProtos.PlanFragment;
 import org.apache.drill.exec.proto.ExecProtos.WorkQueueStatus;
 
@@ -29,14 +30,11 @@ import org.apache.drill.exec.proto.ExecProtos.WorkQueueStatus;
 public interface DistributedCache extends Closeable{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DistributedCache.class);
   
-  public void run(DrillbitEndpoint endpoint) throws DrillbitStartupException;
+  public void run() throws DrillbitStartupException;
   
-  public void saveOptimizedPlan(TemplatizedLogicalPlan logical, TemplatizedPhysicalPlan physical);
-  public TemplatizedPhysicalPlan getOptimizedPlan(TemplatizedLogicalPlan logical);
+//  public void updateLocalQueueLength(int length);
+//  public List<WorkQueueStatus> getQueueLengths(); 
   
-  public void updateLocalQueueLength(int length);
-  public List<WorkQueueStatus> getQueueLengths(); 
-  
-  public PlanFragment getFragment(long fragmentId);
+  public PlanFragment getFragment(FragmentHandle handle);
   public void storeFragment(PlanFragment fragment);
 }

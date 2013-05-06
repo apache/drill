@@ -19,33 +19,42 @@ package org.apache.drill.exec.ops;
 
 import java.util.Collection;
 
-import org.apache.drill.common.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.cache.DistributedCache;
+import org.apache.drill.exec.planner.PhysicalPlanReader;
+import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.server.DrillbitContext;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class QueryContext {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryContext.class);
   
-  private long queryId;
+  private QueryId queryId;
   private DrillbitContext drillbitContext;
   
-  public QueryContext(long queryId, DrillbitContext drllbitContext) {
+  public QueryContext(QueryId queryId, DrillbitContext drllbitContext) {
     super();
     this.queryId = queryId;
     this.drillbitContext = drllbitContext;
   }
   
-  public long getQueryId() {
-    return queryId;
+  public DrillbitEndpoint getCurrentEndpoint(){
+    return drillbitContext.getEndpoint();
   }
   
-  public ObjectMapper getMapper(){
-    return drillbitContext.getConfig().getMapper();
+  public QueryId getQueryId() {
+    return queryId;
+  }
+
+  public DistributedCache getCache(){
+    return drillbitContext.getCache();
   }
   
   public Collection<DrillbitEndpoint> getActiveEndpoints(){
     return drillbitContext.getBits();
+  }
+  
+  public PhysicalPlanReader getPlanReader(){
+    return drillbitContext.getPlanReader();
   }
   
 }

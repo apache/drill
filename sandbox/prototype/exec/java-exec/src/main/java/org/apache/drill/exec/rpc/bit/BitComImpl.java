@@ -17,138 +17,158 @@
  ******************************************************************************/
 package org.apache.drill.exec.rpc.bit;
 
-import io.netty.channel.Channel;
-import io.netty.channel.socket.SocketChannel;
-import io.netty.util.concurrent.Future;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
-import java.util.Collection;
-import java.util.Map;
-
-import org.apache.drill.common.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.DrillbitStartupException;
-import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
-import org.apache.drill.exec.proto.ExecProtos.FragmentStatus;
-import org.apache.drill.exec.proto.ExecProtos.PlanFragment;
-import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
-import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.rpc.DrillRpcFuture;
-import org.apache.drill.exec.rpc.RpcBus;
-import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.exec.exception.FragmentSetupException;
+import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.proto.ExecProtos.BitHandshake;
+import org.apache.drill.exec.proto.ExecProtos.RpcType;
+import org.apache.drill.exec.rpc.NamedThreadFactory;
+import org.apache.drill.exec.rpc.RpcException;
+import org.apache.drill.exec.server.BootStrapContext;
+import org.apache.drill.exec.work.batch.BitComHandler;
+import org.apache.drill.exec.work.fragment.IncomingFragmentHandler;
 
 import com.google.common.collect.Maps;
 import com.google.common.io.Closeables;
+import com.google.common.util.concurrent.AbstractCheckedFuture;
+import com.google.common.util.concurrent.CheckedFuture;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
 
+/**
+ * Manages communication tunnels between nodes.   
+ */
 public class BitComImpl implements BitCom {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BitComImpl.class);
 
-  private Map<DrillbitEndpoint, BitTunnel> tunnels = Maps.newConcurrentMap();
-  private Map<SocketChannel, DrillbitEndpoint> endpoints = Maps.newConcurrentMap();
-  private Object lock = new Object();
-  private BitServer server;
-  private DrillbitContext context;
+  private final ConcurrentMap<DrillbitEndpoint, BitConnection> registry = Maps.newConcurrentMap();
+  private final ListenerPool listeners;
+  private volatile BitServer server;
+  private final BitComHandler handler;
+  private final BootStrapContext context;
+  
+  // TODO: this executor should be removed.
+  private final Executor exec = Executors.newCachedThreadPool(new NamedThreadFactory("BitComImpl execution pool: "));
 
-  public BitComImpl(DrillbitContext context) {
+  public BitComImpl(BootStrapContext context, BitComHandler handler) {
+    super();
+    this.handler = handler;
     this.context = context;
+    this.listeners = new ListenerPool(8);
   }
 
   public int start() throws InterruptedException, DrillbitStartupException {
-    server = new BitServer(new BitComHandler(modifier), context.getAllocator().getUnderlyingAllocator(), context.getBitLoopGroup(), context);
+    server = new BitServer(handler, context, registry, listeners);
     int port = context.getConfig().getInt(ExecConstants.INITIAL_BIT_PORT);
     return server.bind(port);
   }
 
-  private Future<BitTunnel> getNode(DrillbitEndpoint endpoint) {
-    return null;
+  private CheckedFuture<BitConnection, RpcException> getNode(final DrillbitEndpoint endpoint, boolean check) {
     
-//    BitTunnel t = tunnels.get(endpoint);
-//    if (t == null) {
-//      synchronized (lock) {
-//        t = tunnels.get(endpoint);
-//        if (t != null) return t;
-//        BitClient c = new BitClient(new BitComHandler(modifier), context.getAllocator().getUnderlyingAllocator(),
-//            context.getBitLoopGroup(), context);
-//
-//        // need to figure what to do here with regards to waiting for handshake before returning. Probably need to add
-//        // future registry so that new endpoint registration ping the registry.
-//        throw new UnsupportedOperationException();
-//        c.connectAsClient(endpoint.getAddress(), endpoint.getBitPort()).await();
-//        t = new BitTunnel(c);
-//        tunnels.put(endpoint, t);
-//
-//      }
-//    }
-//    return null;
+    
+    SettableFuture<BitConnection> future = SettableFuture.create();
+    BitComFuture<BitConnection> checkedFuture = new BitComFuture<BitConnection>(future);
+    BitConnection t = null;
+
+    if (check) {
+      t = registry.get(endpoint);
+
+      if (t != null) {
+        future.set(t);
+        return checkedFuture;
+      }
+    }
+    
+    try {
+      AvailWatcher watcher = new AvailWatcher(future);
+      BitClient c = new BitClient(endpoint, watcher, handler, context, registry, listeners);
+      c.connect();
+      return checkedFuture;
+    } catch (InterruptedException | RpcException e) {
+      future.setException(new FragmentSetupException("Unable to open connection"));
+      return checkedFuture;
+    }
+
+  }
+
+  private class AvailWatcher implements AvailabilityListener{
+    final SettableFuture<BitConnection> future;
+    
+    public AvailWatcher(SettableFuture<BitConnection> future) {
+      super();
+      this.future = future;
+    }
+
+    @Override
+    public void isAvailable(BitConnection connection) {
+      future.set(connection);
+    }
+    
+  }
+  
+  BitConnection getConnection(DrillbitEndpoint endpoint) throws RpcException {
+    BitConnection t = registry.get(endpoint);
+    if(t != null) return t;
+    return this.getNode(endpoint, false).checkedGet();
   }
 
   
-
-  @Override
-  public DrillRpcFuture<FragmentHandle> sendFragment(FragmentContext context, DrillbitEndpoint node,
-      PlanFragment fragment) {
-    return null;
+  CheckedFuture<BitConnection, RpcException> getConnectionAsync(DrillbitEndpoint endpoint) {
+    return this.getNode(endpoint, true);
   }
 
+  
   @Override
-  public DrillRpcFuture<Ack> cancelFragment(FragmentContext context, DrillbitEndpoint node, FragmentHandle handle) {
-    return null;
+  public BitTunnel getTunnel(DrillbitEndpoint endpoint){
+    BitConnection t = registry.get(endpoint);
+    if(t == null){
+      return new BitTunnel(exec, endpoint, this, t);
+    }else{
+      return new BitTunnel(exec, endpoint, this,  this.getNode(endpoint, false));
+    }
   }
 
-  @Override
-  public DrillRpcFuture<FragmentStatus> getFragmentStatus(FragmentContext context, DrillbitEndpoint node,
-      FragmentHandle handle) {
-    return null;
-  }
-
-  private final TunnelModifier modifier = new TunnelModifier();
 
   /**
-   * Fully synchronized modifier. Contention should be low since endpoints shouldn't be constantly changing.
+   * A future which remaps exceptions to a BitComException.
+   * @param <T>
    */
-  class TunnelModifier {
-    public BitTunnel remove(Channel ch) {
-      synchronized (this) {
-        DrillbitEndpoint endpoint = endpoints.remove(ch);
-        if (endpoint == null) {
-          logger
-              .warn("We attempted to find a endpoint from a provided channel and found none.  This suggests a race condition or memory leak problem.");
-          return null;
-        }
+  private class BitComFuture<T> extends AbstractCheckedFuture<T, RpcException>{
 
-        BitTunnel tunnel = tunnels.remove(endpoint);
-        return tunnel;
-      }
+    protected BitComFuture(ListenableFuture<T> delegate) {
+      super(delegate);
     }
 
-    public void create(SocketChannel channel, DrillbitEndpoint endpoint, RpcBus<?> bus) {
-      synchronized (this) {
-        endpoints.put(channel, endpoint);
-        tunnels.put(endpoint, new BitTunnel(bus));
+    @Override
+    protected RpcException mapException(Exception e) {
+      Throwable t = e;
+      if(e instanceof ExecutionException){
+        t = e.getCause();
       }
+      
+      if(t instanceof RpcException) return (RpcException) t;
+      return new RpcException(t);
     }
   }
 
   public void close() {
     Closeables.closeQuietly(server);
-    for (BitTunnel bt : tunnels.values()) {
+    for (BitConnection bt : registry.values()) {
       bt.shutdownIfClient();
     }
   }
 
-
   @Override
-  public DrillRpcFuture<Ack> sendRecordBatch(FragmentContext context, DrillbitEndpoint node, RecordBatch batch) {
-    return null;
+  public void registerIncomingBatchHandler(IncomingFragmentHandler handler) {
+    this.handler.registerIncomingFragmentHandler(handler);
   }
-
-  @Override
-  public RecordBatch getReceivingRecordBatchHandle(int majorFragmentId, int minorFragmentId) {
-    return null;
-  }
-
-  @Override
-  public void startQuery(Collection<DrillbitEndpoint> firstNodes, long queryId) {
-  }
+  
+  
 
 }

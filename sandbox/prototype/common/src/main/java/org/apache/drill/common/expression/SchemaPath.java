@@ -104,7 +104,7 @@ public class SchemaPath extends LogicalExpressionBase{
 
 	}
 		
-	
+
 	
 	@Override
   public <T> T accept(ExprVisitor<T> visitor) {

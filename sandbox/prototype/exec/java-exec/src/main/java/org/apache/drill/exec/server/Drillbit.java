@@ -17,10 +17,9 @@
  ******************************************************************************/
 package org.apache.drill.exec.server;
 
-import java.net.InetAddress;
+import java.io.Closeable;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.cache.DistributedCache;
 import org.apache.drill.exec.cache.HazelCache;
@@ -28,15 +27,16 @@ import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.coord.ClusterCoordinator.RegistrationHandle;
 import org.apache.drill.exec.coord.ZKClusterCoordinator;
 import org.apache.drill.exec.exception.DrillbitStartupException;
-import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.service.ServiceEngine;
+import org.apache.drill.exec.work.WorkManager;
 
 import com.google.common.io.Closeables;
 
 /**
  * Starts, tracks and stops all the required services for a Drillbit daemon to work.
  */
-public class Drillbit {
+public class Drillbit implements Closeable{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Drillbit.class);
 
   public static Drillbit start(StartupOptions options) throws DrillbitStartupException {
@@ -47,7 +47,7 @@ public class Drillbit {
     Drillbit bit;
     try {
       logger.debug("Setting up Drillbit.");
-      bit = new Drillbit(config);
+      bit = new Drillbit(config, null);
     } catch (Exception ex) {
       throw new DrillbitStartupException("Failure while initializing values in Drillbit.", ex);
     }
@@ -65,35 +65,37 @@ public class Drillbit {
     start(options);
   }
 
-  private final DrillbitContext context;
-  final BufferAllocator pool;
   final ClusterCoordinator coord;
   final ServiceEngine engine;
   final DistributedCache cache;
-  final DrillConfig config;
-  private RegistrationHandle handle;
+  final WorkManager manager;
+  final BootStrapContext context;
+  
+  private volatile RegistrationHandle handle;
 
-  public Drillbit(DrillConfig config) throws Exception {
-    final DrillbitContext context = new DrillbitContext(config, this);
-    Runtime.getRuntime().addShutdownHook(new ShutdownThread(config));
-    this.context = context;
-    this.pool = BufferAllocator.getAllocator(context);
-    this.coord = new ZKClusterCoordinator(config);
-    this.engine = new ServiceEngine(context);
-    this.cache = new HazelCache(context.getConfig());
-    this.config = config;
+  public Drillbit(DrillConfig config, RemoteServiceSet serviceSet) throws Exception {
+    if(serviceSet != null){
+      this.context = new BootStrapContext(config);
+      this.manager = new WorkManager(context);
+      this.coord = serviceSet.getCoordinator();
+      this.engine = new ServiceEngine(manager.getBitComWorker(), manager.getUserWorker(), context);
+      this.cache = serviceSet.getCache();
+    }else{
+      Runtime.getRuntime().addShutdownHook(new ShutdownThread(config));
+      this.context = new BootStrapContext(config);
+      this.manager = new WorkManager(context);
+      this.coord = new ZKClusterCoordinator(config);
+      this.engine = new ServiceEngine(manager.getBitComWorker(), manager.getUserWorker(), context);
+      this.cache = new HazelCache(config);
+    }
   }
 
   public void run() throws Exception {
-    coord.start();
-    engine.start();
-    DrillbitEndpoint md = DrillbitEndpoint.newBuilder()
-      .setAddress(InetAddress.getLocalHost().getHostAddress())
-      .setBitPort(engine.getBitPort())
-      .setUserPort(engine.getUserPort())
-      .build();
+    coord.start(10000);
+    DrillbitEndpoint md = engine.start();
+    cache.run();
+    manager.start(md, cache, engine.getBitCom(), coord);
     handle = coord.register(md);
-    cache.run(md);
   }
 
   public void close() {
@@ -107,7 +109,8 @@ public class Drillbit {
 
     Closeables.closeQuietly(engine);
     Closeables.closeQuietly(coord);
-    Closeables.closeQuietly(pool);
+    Closeables.closeQuietly(manager);
+    Closeables.closeQuietly(context);
     logger.info("Shutdown completed.");
   }
 
@@ -123,5 +126,11 @@ public class Drillbit {
     }
 
   }
+  public ClusterCoordinator getCoordinator(){
+    return coord;
+  }
 
+  public DrillbitContext getContext(){
+    return this.manager.getContext();
+  }
 }

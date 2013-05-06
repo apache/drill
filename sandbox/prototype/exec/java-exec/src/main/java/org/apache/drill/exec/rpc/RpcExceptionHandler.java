@@ -25,28 +25,23 @@ public class RpcExceptionHandler implements ChannelHandler{
   
   public RpcExceptionHandler(){
   }
-  
-  @Override
-  public void beforeAdd(ChannelHandlerContext ctx) throws Exception {
-  }
 
-  @Override
-  public void afterAdd(ChannelHandlerContext ctx) throws Exception {
-  }
-
-  @Override
-  public void beforeRemove(ChannelHandlerContext ctx) throws Exception {
-  }
-
-  @Override
-  public void afterRemove(ChannelHandlerContext ctx) throws Exception {
-  }
 
   @Override
   public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
     if(!ctx.channel().isOpen()) return;
     logger.info("Exception in pipeline.  Closing channel between local " + ctx.channel().localAddress() + " and remote " + ctx.channel().remoteAddress(), cause);
     ctx.close();
+  }
+
+
+  @Override
+  public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
+  }
+
+
+  @Override
+  public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
   }
   
 }

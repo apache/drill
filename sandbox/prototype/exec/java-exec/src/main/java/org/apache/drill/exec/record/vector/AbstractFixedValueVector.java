@@ -20,6 +20,8 @@ package org.apache.drill.exec.record.vector;
 import io.netty.buffer.ByteBuf;
 
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.proto.UserBitShared.FieldMetadata;
+import org.apache.drill.exec.record.MaterializedField;
 
 /**
  * Abstract class that fixed value vectors are derived from.
@@ -27,12 +29,12 @@ import org.apache.drill.exec.memory.BufferAllocator;
 abstract class AbstractFixedValueVector<T extends AbstractFixedValueVector<T>> extends BaseValueVector<T> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractFixedValueVector.class);
 
-  private final int widthInBits;
+  protected final int widthInBits;
 
   protected int longWords = 0;
-
-  public AbstractFixedValueVector(int fieldId, BufferAllocator allocator, int widthInBits) {
-    super(fieldId, allocator);
+  
+  public AbstractFixedValueVector(MaterializedField field, BufferAllocator allocator, int widthInBits) {
+    super(field, allocator);
     this.widthInBits = widthInBits;
   }
   
@@ -56,5 +58,16 @@ abstract class AbstractFixedValueVector<T extends AbstractFixedValueVector<T>> e
     longWords = 0;
   }
 
+  @Override
+  public void setRecordCount(int recordCount) {
+    this.data.writerIndex(recordCount*(widthInBits/8));
+    super.setRecordCount(recordCount);
+  }
+
+
+
+
+
+  
 }
 

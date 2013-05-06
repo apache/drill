@@ -25,24 +25,34 @@ import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.nio.NioEventLoopGroup;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.List;
+import java.util.Vector;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.coord.ZKClusterCoordinator;
-import org.apache.drill.exec.proto.UserProtos.QueryHandle;
-import org.apache.drill.exec.rpc.DrillRpcFuture;
+import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.proto.UserProtos.QueryType;
+import org.apache.drill.exec.proto.UserProtos.RpcType;
+import org.apache.drill.exec.proto.UserProtos.UserToBitHandshake;
 import org.apache.drill.exec.rpc.NamedThreadFactory;
 import org.apache.drill.exec.rpc.RpcException;
+import org.apache.drill.exec.rpc.user.QueryResultBatch;
 import org.apache.drill.exec.rpc.user.UserClient;
+import org.apache.drill.exec.rpc.user.UserResultsListener;
+import org.apache.drill.exec.rpc.user.UserRpcConfig;
 
 /**
  * Thin wrapper around a UserClient that handles connect/close and transforms String into ByteBuf
  */
-public class DrillClient {
-
+public class DrillClient implements Closeable{
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillClient.class);
+  
   DrillConfig config;
   private UserClient client;
   private ClusterCoordinator clusterCoordinator;
@@ -56,8 +66,17 @@ public class DrillClient {
   }
 
   public DrillClient(DrillConfig config) {
-    this.config = config;
+    this(config, null);
   }
+  
+  public DrillClient(DrillConfig config, ClusterCoordinator coordinator){
+    this.config = config;
+    this.clusterCoordinator = coordinator;
+  }
+  
+  
+  
+
 
   /**
    * Connects the client to a Drillbit server
@@ -65,9 +84,11 @@ public class DrillClient {
    * @throws IOException
    */
   public void connect() throws Exception {
-    this.clusterCoordinator = new ZKClusterCoordinator(this.config);
-    this.clusterCoordinator.start();
-    Thread.sleep(10000);
+    if(clusterCoordinator == null){
+      this.clusterCoordinator = new ZKClusterCoordinator(this.config);
+      this.clusterCoordinator.start(10000);
+    }
+    
     Collection<DrillbitEndpoint> endpoints = clusterCoordinator.getAvailableEndpoints();
     checkState(!endpoints.isEmpty(), "No DrillbitEndpoint can be found");
     // just use the first endpoint for now
@@ -75,7 +96,8 @@ public class DrillClient {
     ByteBufAllocator bb = new PooledByteBufAllocator(true);
     this.client = new UserClient(bb, new NioEventLoopGroup(1, new NamedThreadFactory("Client-")));
     try {
-      this.client.connectAsClient(endpoint.getAddress(), endpoint.getUserPort());
+      logger.debug("Connecting to server {}:{}", endpoint.getAddress(), endpoint.getUserPort());
+      this.client.connect(endpoint);
     } catch (InterruptedException e) {
       throw new IOException(e);
     }
@@ -97,8 +119,37 @@ public class DrillClient {
    * @return a handle for the query result
    * @throws RpcException
    */
-  public DrillRpcFuture<QueryHandle> submitPlan(String plan) throws RpcException {
-    return this.client.submitQuery(newBuilder().setMode(STREAM_FULL).setPlan(plan).build(), null);
+  public List<QueryResultBatch> runQuery(QueryType type, String plan) throws RpcException {
+    try {
+      ListHoldingResultsListener listener = new ListHoldingResultsListener();
+      Future<Void> f = client.submitQuery(newBuilder().setResultsMode(STREAM_FULL).setType(type).setPlan(plan).build(), listener);
+      f.get();
+      if(listener.ex != null){
+        throw listener.ex;
+      }else{
+        return listener.results;
+      }
+    } catch (InterruptedException | ExecutionException e) {
+      throw new RpcException(e);
+    }
+  }
+  
+  private class ListHoldingResultsListener extends UserResultsListener{
+    private RpcException ex;
+    private Vector<QueryResultBatch> results = new Vector<QueryResultBatch>();
+    
+    @Override
+    public void submissionFailed(RpcException ex) {
+      logger.debug("Submission failed.", ex);
+      this.ex = ex;
+    }
+
+    @Override
+    public void resultArrived(QueryResultBatch result) {
+      logger.debug("Result arrived.  Is Last Chunk: {}.  Full Result: {}", result.getHeader().getIsLastChunk(), result);
+      results.add(result);
+    }
+    
   }
 
 }

@@ -103,4 +103,11 @@ public class DrillSystemTestBase {
     }
   }
 
+  public Drillbit getABit(){
+    return this.servers.iterator().next();
+  }
+  
+  public static DrillConfig getConfig(){
+    return config;
+  }
 }

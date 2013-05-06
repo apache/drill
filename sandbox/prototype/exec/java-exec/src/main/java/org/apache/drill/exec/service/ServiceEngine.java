@@ -17,49 +17,48 @@
  ******************************************************************************/
 package org.apache.drill.exec.service;
 
-import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.nio.NioEventLoopGroup;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.DrillbitStartupException;
+import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.rpc.NamedThreadFactory;
 import org.apache.drill.exec.rpc.bit.BitCom;
 import org.apache.drill.exec.rpc.bit.BitComImpl;
 import org.apache.drill.exec.rpc.user.UserServer;
-import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.exec.server.BootStrapContext;
+import org.apache.drill.exec.work.batch.BitComHandler;
+import org.apache.drill.exec.work.user.UserWorker;
 
 import com.google.common.io.Closeables;
 
 public class ServiceEngine implements Closeable{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ServiceEngine.class);
   
-  UserServer userServer;
-  BitComImpl bitCom;
-  int userPort;
-  int bitPort;
-  DrillbitContext context;
+  private final UserServer userServer;
+  private final BitCom bitCom;
+  private final DrillConfig config;
   
-  public ServiceEngine(DrillbitContext context){
-    this.context = context;
-    ByteBufAllocator allocator = context.getAllocator().getUnderlyingAllocator();
-    this.userServer = new UserServer(allocator, new NioEventLoopGroup(1, new NamedThreadFactory("UserServer-")), context);
-    this.bitCom = new BitComImpl(context);
+  public ServiceEngine(BitComHandler bitComWorker, UserWorker userWorker, BootStrapContext context){
+    this.userServer = new UserServer(context.getAllocator().getUnderlyingAllocator(), new NioEventLoopGroup(1, new NamedThreadFactory("UserServer-")), userWorker);
+    this.bitCom = new BitComImpl(context, bitComWorker);
+    this.config = context.getConfig();
   }
   
-  public void start() throws DrillbitStartupException, InterruptedException{
-    userPort = userServer.bind(context.getConfig().getInt(ExecConstants.INITIAL_USER_PORT));
-    bitPort = bitCom.start();
-  }
-  
-  public int getBitPort(){
-    return bitPort;
-  }
-  
-  public int getUserPort(){
-    return userPort;
+  public DrillbitEndpoint start() throws DrillbitStartupException, InterruptedException, UnknownHostException{
+    int userPort = userServer.bind(config.getInt(ExecConstants.INITIAL_USER_PORT));
+    int bitPort = bitCom.start();
+    return DrillbitEndpoint.newBuilder()
+        .setAddress(InetAddress.getLocalHost().getHostAddress())
+        .setBitPort(bitPort)
+        .setUserPort(userPort)
+        .build();
   }
 
   public BitCom getBitCom(){

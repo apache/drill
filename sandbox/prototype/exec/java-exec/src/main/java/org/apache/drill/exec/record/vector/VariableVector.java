@@ -21,6 +21,7 @@ import io.netty.buffer.ByteBuf;
 
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.record.DeadBuf;
+import org.apache.drill.exec.record.MaterializedField;
 
 /** 
  * A vector of variable length bytes.  Constructed as a vector of lengths or positions and a vector of values.  Random access is only possible if the variable vector stores positions as opposed to lengths.
@@ -29,18 +30,16 @@ public abstract class VariableVector<T extends VariableVector<T, E>, E extends B
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(VariableVector.class);
   
-  protected E lengthVector;
+  protected final E lengthVector;
   private ByteBuf values = DeadBuf.DEAD_BUFFER;
   protected int expectedValueLength;
-  private final boolean hasPositions;
   
-  public VariableVector(int fieldId, BufferAllocator allocator, boolean hasPositions) {
-    super(fieldId, allocator);
-    this.lengthVector = getNewLengthVector(fieldId, allocator);
-    this.hasPositions = hasPositions;
+  public VariableVector(MaterializedField field, BufferAllocator allocator) {
+    super(field, allocator);
+    this.lengthVector = getNewLengthVector(allocator);
   }
   
-  protected abstract E getNewLengthVector(int fieldId, BufferAllocator allocator);
+  protected abstract E getNewLengthVector(BufferAllocator allocator);
   
   @Override
   protected int getAllocationSize(int valueCount) {
@@ -67,12 +66,28 @@ public abstract class VariableVector<T extends VariableVector<T, E>, E extends B
       values.release();
       values = DeadBuf.DEAD_BUFFER;
     }
+  }
+
+  
+  @Override
+  public ByteBuf[] getBuffers() {
+    return new ByteBuf[]{lengthVector.data, values};
+  }
+
+  @Override
+  public void setRecordCount(int recordCount) {
+    super.setRecordCount(recordCount);
+    lengthVector.setRecordCount(recordCount);
   }  
   
-  public boolean hasPositions(){
-    return hasPositions;
+  public void setTotalBytes(int totalBytes){
+    values.writerIndex(totalBytes);
   }
-  
+
+  @Override
+  public Object getObject(int index) {
+    return null;
+  }
   
   
 }

@@ -74,6 +74,17 @@ public abstract class DataType {
   public static final DataType ARRAY = new AtomType("ARRAY", Comparability.NONE, false);
   public static final DataType NULL = new AtomType("NULL", Comparability.NONE, false);
   
+  //TODO: Hack to get some size data, needs to be fixed so that each type reveals it's size.
+  public int size(){
+    if(this == BOOLEAN){
+      return 1;
+    }else if(this == INT32){
+      return 4;
+    }else if(this == INT16){
+      return 4;
+    }
+    return 2;
+  }
   
   static final Map<String, DataType> TYPES;
   static {

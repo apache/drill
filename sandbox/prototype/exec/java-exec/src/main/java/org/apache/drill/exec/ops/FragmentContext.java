@@ -20,10 +20,15 @@ package org.apache.drill.exec.ops;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.metrics.SingleThreadNestedCounter;
-import org.apache.drill.exec.planner.FragmentRunnable;
-import org.apache.drill.exec.proto.ExecProtos.PlanFragment;
+import org.apache.drill.exec.physical.impl.FilteringRecordBatchTransformer;
+import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
+import org.apache.drill.exec.proto.ExecProtos.FragmentStatus;
 import org.apache.drill.exec.rpc.bit.BitCom;
+import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
 import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.exec.work.FragmentRunner;
+import org.apache.drill.exec.work.batch.IncomingBuffers;
 
 import com.yammer.metrics.MetricRegistry;
 import com.yammer.metrics.Timer;
@@ -34,51 +39,72 @@ import com.yammer.metrics.Timer;
 public class FragmentContext {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FragmentContext.class);
 
-  private final static String METRIC_TIMER_FRAGMENT_TIME = MetricRegistry.name(FragmentRunnable.class, "completionTimes");
-  private final static String METRIC_BATCHES_COMPLETED = MetricRegistry.name(FragmentRunnable.class, "batchesCompleted");
-  private final static String METRIC_RECORDS_COMPLETED = MetricRegistry.name(FragmentRunnable.class, "recordsCompleted");
-  private final static String METRIC_DATA_PROCESSED = MetricRegistry.name(FragmentRunnable.class, "dataProcessed");
+  private final static String METRIC_TIMER_FRAGMENT_TIME = MetricRegistry.name(FragmentRunner.class, "completionTimes");
+  private final static String METRIC_BATCHES_COMPLETED = MetricRegistry.name(FragmentRunner.class, "batchesCompleted");
+  private final static String METRIC_RECORDS_COMPLETED = MetricRegistry.name(FragmentRunner.class, "recordsCompleted");
+  private final static String METRIC_DATA_PROCESSED = MetricRegistry.name(FragmentRunner.class, "dataProcessed");
 
   private final DrillbitContext context;
-  private final PlanFragment fragment;
   public final SingleThreadNestedCounter batchesCompleted;
   public final SingleThreadNestedCounter recordsCompleted;
   public final SingleThreadNestedCounter dataProcessed;
   public final Timer fragmentTime;
+  private final FragmentHandle handle;
+  private final UserClientConnection connection;
+  private final IncomingBuffers buffers;
 
-  public FragmentContext(DrillbitContext dbContext, PlanFragment fragment) {
+  public FragmentContext(DrillbitContext dbContext, FragmentHandle handle, UserClientConnection connection, IncomingBuffers buffers) {
     this.fragmentTime = dbContext.getMetrics().timer(METRIC_TIMER_FRAGMENT_TIME);
     this.batchesCompleted = new SingleThreadNestedCounter(dbContext, METRIC_BATCHES_COMPLETED);
     this.recordsCompleted = new SingleThreadNestedCounter(dbContext, METRIC_RECORDS_COMPLETED);
     this.dataProcessed = new SingleThreadNestedCounter(dbContext, METRIC_DATA_PROCESSED);
     this.context = dbContext;
-    this.fragment = fragment;
+    this.connection = connection;
+    this.handle = handle;
+    this.buffers = buffers;
   }
 
   public void fail(Throwable cause) {
 
   }
 
+  
   public DrillbitContext getDrillbitContext(){
     return context;
   }
-  
-  public PlanFragment getFragment() {
-    return fragment;
+
+  public DrillbitEndpoint getIdentity(){
+    return context.getEndpoint();
   }
   
+  public FragmentHandle getHandle() {
+    return handle;
+  }
+
   public BufferAllocator getAllocator(){
     // TODO: A local query allocator to ensure memory limits and accurately gauge memory usage.
     return context.getAllocator();
   }
 
-  
   public FilteringRecordBatchTransformer getFilteringExpression(LogicalExpression expr){
     return null;
   }
   
+  public void addMetricsToStatus(FragmentStatus.Builder stats){
+    stats.setBatchesCompleted(batchesCompleted.get());
+    stats.setDataProcessed(dataProcessed.get());
+    stats.setRecordsCompleted(recordsCompleted.get());
+  }
   
+  public UserClientConnection getConnection() {
+    return connection;
+  }
+
   public BitCom getCommunicator(){
-    return null;
+    return context.getBitCom();
+  }
+  
+  public IncomingBuffers getBuffers(){
+    return buffers;
   }
 }

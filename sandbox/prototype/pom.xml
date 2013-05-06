@@ -137,7 +137,7 @@
 		<dependency>
 			<groupId>de.huxhorn.lilith</groupId>
 			<artifactId>de.huxhorn.lilith.logback.appender.multiplex-classic</artifactId>
-			<version>0.9.42.1</version>
+			<version>0.9.43</version>
 			<scope>test</scope>
 		</dependency>
 

@@ -23,42 +23,60 @@ import java.util.Collection;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.logical.StorageEngineConfig;
-import org.apache.drill.common.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.cache.DistributedCache;
+import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.planner.PhysicalPlanReader;
+import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.rpc.NamedThreadFactory;
 import org.apache.drill.exec.rpc.bit.BitCom;
 import org.apache.drill.exec.store.StorageEngine;
 
+import com.google.common.base.Preconditions;
 import com.yammer.metrics.MetricRegistry;
 
 public class DrillbitContext {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillbitContext.class);
+
+  private BootStrapContext context;
+
+  private PhysicalPlanReader reader;
+  private final ClusterCoordinator coord;
+  private final BitCom com;
+  private final DistributedCache cache;
+  private final DrillbitEndpoint endpoint;
   
-  private final DrillConfig config;
-  private final Drillbit underlyingBit;
-  private final NioEventLoopGroup loop;
-  private final MetricRegistry metrics;
-  
-  public DrillbitContext(DrillConfig config, Drillbit underlyingBit) {
+  public DrillbitContext(DrillbitEndpoint endpoint, BootStrapContext context, ClusterCoordinator coord, BitCom com, DistributedCache cache) {
     super();
-    this.config = config;
-    this.underlyingBit = underlyingBit;
-    this.loop = new NioEventLoopGroup(1, new NamedThreadFactory("BitServer-"));
-    this.metrics = new MetricRegistry(config.getString(ExecConstants.METRICS_CONTEXT_NAME));
+    Preconditions.checkNotNull(endpoint);
+    Preconditions.checkNotNull(context);
+    Preconditions.checkNotNull(context);
+    Preconditions.checkNotNull(com);
+    Preconditions.checkNotNull(com);
+    
+    this.context = context;
+    this.coord = coord;
+    this.com = com;
+    this.cache = cache;
+    this.endpoint = endpoint;
+    this.reader = new PhysicalPlanReader(context.getConfig(), context.getConfig().getMapper(), endpoint);
+  }
+  
+  public DrillbitEndpoint getEndpoint(){
+    return endpoint;
   }
   
   public DrillConfig getConfig() {
-    return config;
+    return context.getConfig();
   }
   
   public Collection<DrillbitEndpoint> getBits(){
-    return underlyingBit.coord.getAvailableEndpoints();
+    return coord.getAvailableEndpoints();
   }
 
   public BufferAllocator getAllocator(){
-    return underlyingBit.pool;
+    return context.getAllocator();
   }
   
   public StorageEngine getStorageEngine(StorageEngineConfig config){
@@ -66,19 +84,23 @@ public class DrillbitContext {
   }
   
   public NioEventLoopGroup getBitLoopGroup(){
-    return loop;
+    return context.getBitLoopGroup();
   }
   
   public BitCom getBitCom(){
-    return underlyingBit.engine.getBitCom();
+    return com;
   }
   
   public MetricRegistry getMetrics(){
-    return metrics;
+    return context.getMetrics();
   }
   
   public DistributedCache getCache(){
-    return underlyingBit.cache;
+    return cache;
+  }
+  
+  public PhysicalPlanReader getPlanReader(){
+    return reader;
   }
   
   

@@ -17,7 +17,7 @@
  ******************************************************************************/
 package org.apache.drill.exec.record;
 
-import org.apache.drill.exec.exception.ExecutionSetupException;
+import org.apache.drill.common.exceptions.ExecutionSetupException;
 
 public class InvalidValueAccessor extends ExecutionSetupException{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(InvalidValueAccessor.class);

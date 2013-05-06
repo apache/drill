@@ -19,20 +19,25 @@ package org.apache.drill.exec.record.vector;
 
 import io.netty.buffer.ByteBuf;
 
+import java.util.Random;
+
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.proto.UserBitShared.FieldMetadata;
 import org.apache.drill.exec.record.DeadBuf;
+import org.apache.drill.exec.record.MaterializedField;
 
 public abstract class BaseValueVector<T extends BaseValueVector<T>> implements ValueVector<T>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseValueVector.class);
   
   protected final BufferAllocator allocator;
   protected ByteBuf data = DeadBuf.DEAD_BUFFER;
-  protected int valueCount = 0;
-  protected final int fieldId;
+  protected int maxValueCount = 0;
+  protected final MaterializedField field;
+  private int recordCount;
   
-  public BaseValueVector(int fieldId, BufferAllocator allocator) {
+  public BaseValueVector(MaterializedField field, BufferAllocator allocator) {
     this.allocator = allocator;
-    this.fieldId = fieldId;
+    this.field = field;
   }
 
   public final void allocateNew(int valueCount){
@@ -42,35 +47,42 @@ public abstract class BaseValueVector<T extends BaseValueVector<T>> implements V
     resetAllocation(valueCount, newBuf);
   }
 
-  protected abstract int getAllocationSize(int valueCount);
+  protected abstract int getAllocationSize(int maxValueCount);
   protected abstract void childResetAllocation(int valueCount, ByteBuf buf);
   protected abstract void childCloneMetadata(T other);
   protected abstract void childClear();
   
-  protected final void resetAllocation(int valueCount, ByteBuf buf){
+  /**
+   * Update the current buffer allocation utilize the provided allocation.
+   * @param valueCount
+   * @param buf
+   */
+  protected final void resetAllocation(int maxValueCount, ByteBuf buf){
     clear();
-    this.valueCount = valueCount;
+    buf.retain();
+    this.maxValueCount = maxValueCount;
     this.data = buf;
-    childResetAllocation(valueCount, buf);
+    childResetAllocation(maxValueCount, buf);
   }
   
   public final void cloneMetadata(T other){
-    other.valueCount = this.valueCount;
+    other.maxValueCount = this.maxValueCount;
   }
+  
   
   @Override
   public final void cloneInto(T vector) {
-    vector.allocateNew(valueCount);
+    vector.allocateNew(maxValueCount);
     data.writeBytes(vector.data);
     cloneMetadata(vector);
-    childResetAllocation(valueCount, vector.data);
+    childResetAllocation(maxValueCount, vector.data);
   }
   
   @Override
   public final void transferTo(T vector) {
     vector.data = this.data;
     cloneMetadata(vector);
-    childResetAllocation(valueCount, data);
+    childResetAllocation(maxValueCount, data);
     clear();
   }
 
@@ -78,7 +90,7 @@ public abstract class BaseValueVector<T extends BaseValueVector<T>> implements V
     if(this.data != DeadBuf.DEAD_BUFFER){
       this.data.release();
       this.data = DeadBuf.DEAD_BUFFER;
-      this.valueCount = 0;
+      this.maxValueCount = 0;
     }
     childClear();
   }
@@ -88,8 +100,8 @@ public abstract class BaseValueVector<T extends BaseValueVector<T>> implements V
    * 
    * @return
    */
-  public int size() {
-    return valueCount;
+  public int capacity() {
+    return maxValueCount;
   }
   
   @Override
@@ -98,8 +110,48 @@ public abstract class BaseValueVector<T extends BaseValueVector<T>> implements V
   }
 
   @Override
-  public ByteBuf getBuffer() {
-    return data;
+  public ByteBuf[] getBuffers() {
+    return new ByteBuf[]{data};
+  }
+  
+  public MaterializedField getField(){
+    return field;
+  }
+  
+  
+  public int getRecordCount() {
+    return recordCount;
+  }
+
+  public void setRecordCount(int recordCount) {
+    this.recordCount = recordCount;
+  }
+
+  @Override
+  public FieldMetadata getMetadata() {
+    int len = 0;
+    for(ByteBuf b : getBuffers()){
+      len += b.writerIndex();
+    }
+    return FieldMetadata.newBuilder().setDef(getField().getDef()).setValueCount(getRecordCount()).setBufferLength(len).build();
+  }
+  
+  @Override
+  public void setTo(FieldMetadata metadata, ByteBuf data) {
+//    logger.debug("Updating value vector to {}, {}", metadata, data);
+    clear();
+    resetAllocation(metadata.getValueCount(), data);
+  }
+
+  @Override
+  public void randomizeData() {
+    if(this.data != DeadBuf.DEAD_BUFFER){
+      Random r = new Random();
+      for(int i =0; i < data.capacity()-8; i+=8){
+        data.setLong(i, r.nextLong());
+      }
+    }
+    
   }
   
   

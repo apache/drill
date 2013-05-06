@@ -34,7 +34,7 @@ import com.google.protobuf.WireFormat;
  * Converts an RPCMessage into wire format.
  */
 class RpcEncoder extends ChannelOutboundMessageHandlerAdapter<OutboundRpcMessage>{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RpcEncoder.class);
+  final org.slf4j.Logger logger;
   
   static final int HEADER_TAG = makeTag(CompleteRpcMessage.HEADER_FIELD_NUMBER, WireFormat.WIRETYPE_LENGTH_DELIMITED);
   static final int PROTOBUF_BODY_TAG = makeTag(CompleteRpcMessage.PROTOBUF_BODY_FIELD_NUMBER, WireFormat.WIRETYPE_LENGTH_DELIMITED);
@@ -43,6 +43,9 @@ class RpcEncoder extends ChannelOutboundMessageHandlerAdapter<OutboundRpcMessage
   static final int PROTOBUF_BODY_TAG_LENGTH = getRawVarintSize(PROTOBUF_BODY_TAG);
   static final int RAW_BODY_TAG_LENGTH = getRawVarintSize(RAW_BODY_TAG);
   
+  public RpcEncoder(String name){
+    this.logger = org.slf4j.LoggerFactory.getLogger(RpcEncoder.class.getCanonicalName() + "." + name);
+  }
   
   @Override
   public void flush(ChannelHandlerContext ctx, OutboundRpcMessage msg) throws Exception {
@@ -61,7 +64,7 @@ class RpcEncoder extends ChannelOutboundMessageHandlerAdapter<OutboundRpcMessage
       // figure out the full length
       int headerLength = header.getSerializedSize();
       int protoBodyLength = msg.pBody.getSerializedSize();
-      int rawBodyLength = msg.dBody == null ? 0 : msg.dBody.readableBytes();
+      int rawBodyLength = msg.getRawBodySize();
       int fullLength = //
           HEADER_TAG_LENGTH + getRawVarintSize(headerLength) + headerLength +   //
           PROTOBUF_BODY_TAG_LENGTH + getRawVarintSize(protoBodyLength) + protoBodyLength; //
@@ -89,11 +92,15 @@ class RpcEncoder extends ChannelOutboundMessageHandlerAdapter<OutboundRpcMessage
       msg.pBody.writeTo(cos);
 
       // if exists, write data body and tag.
-      if(msg.dBody != null && msg.dBody.readableBytes() > 0){
+      // TODO: is it possible to avoid this copy, i think so...
+      if(msg.getRawBodySize() > 0){
+        if(RpcConstants.EXTRA_DEBUGGING) logger.debug("Writing raw body of size {}", msg.getRawBodySize());
         cos.writeRawVarint32(RAW_BODY_TAG);
         cos.writeRawVarint32(rawBodyLength);
         cos.flush(); // need to flush so that dbody goes after if cos is caching.
-        buf.writeBytes(msg.dBody);
+        for(int i =0; i < msg.dBodies.length; i++){
+          buf.writeBytes(msg.dBodies[i]);  
+        }
       }else{
         cos.flush();
       }

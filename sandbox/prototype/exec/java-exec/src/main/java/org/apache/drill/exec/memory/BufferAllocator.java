@@ -19,11 +19,10 @@ package org.apache.drill.exec.memory;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
-import io.netty.buffer.PooledByteBufAllocator;
 
 import java.io.Closeable;
 
-import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.common.config.DrillConfig;
 
 /**
  * Wrapper class to deal with byte buffer allocation. Ensures users only use designated methods.  Also allows inser 
@@ -48,7 +47,7 @@ public abstract class BufferAllocator implements Closeable{
   @Override
   public abstract void close(); 
   
-  public static BufferAllocator getAllocator(DrillbitContext context){
+  public static BufferAllocator getAllocator(DrillConfig config){
     // TODO: support alternative allocators (including a debugging allocator that records all allocation locations for each buffer).
     return new DirectBufferAllocator();
   }

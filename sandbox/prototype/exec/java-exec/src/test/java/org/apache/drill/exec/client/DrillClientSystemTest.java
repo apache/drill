@@ -1,17 +1,20 @@
 package org.apache.drill.exec.client;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Resources;
+import java.util.List;
+
 import org.apache.drill.exec.DrillSystemTestBase;
-import org.apache.drill.exec.proto.UserProtos;
-import org.apache.drill.exec.rpc.DrillRpcFuture;
+import org.apache.drill.exec.proto.UserProtos.QueryType;
+import org.apache.drill.exec.rpc.user.QueryResultBatch;
 import org.junit.After;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
-/**
- * @author David Alves
- */
+import com.google.common.base.Charsets;
+import com.google.common.io.Resources;
+
+
+@Ignore
 public class DrillClientSystemTest extends DrillSystemTestBase {
 
   private static String plan;
@@ -34,8 +37,8 @@ public class DrillClientSystemTest extends DrillSystemTestBase {
     startCluster(1);
     DrillClient client = new DrillClient();
     client.connect();
-    DrillRpcFuture<UserProtos.QueryHandle> result = client.submitPlan(plan);
-    System.out.println(result.get());
+    List<QueryResultBatch> result = client.runQuery(QueryType.LOGICAL, plan);
+    System.out.println(result);
     client.close();
   }
 
@@ -45,8 +48,8 @@ public class DrillClientSystemTest extends DrillSystemTestBase {
     startCluster(2);
     DrillClient client = new DrillClient();
     client.connect();
-    DrillRpcFuture<UserProtos.QueryHandle> result = client.submitPlan(plan);
-    System.out.println(result.get());
+    List<QueryResultBatch> result = client.runQuery(QueryType.LOGICAL, plan);
+    System.out.println(result);
     client.close();
   }
 }

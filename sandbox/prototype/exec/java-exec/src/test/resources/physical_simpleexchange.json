@@ -12,30 +12,44 @@
             pop:"mock-scan",
             url: "http://apache.org",
             entries:[
-            	{id:1}
-            ],
-            cost: { disk: 1.0, memory: 1.0, cpu: 1.0, network: 1.0}
+            	{records: 100, types: [
+            	  {name: "blue", type: "INT", mode: "REQUIRED"},
+            	  {name: "red", type: "BIGINT", mode: "REQUIRED"},
+            	  {name: "green", type: "INT", mode: "REQUIRED"}
+            	]},
+            	{records: 100, types: [
+            	  {name: "blue", type: "INT", mode: "REQUIRED"},
+            	  {name: "red", type: "BIGINT", mode: "REQUIRED"},
+            	  {name: "green", type: "INT", mode: "REQUIRED"}
+            	]}
+            ]
         },
         {
             @id:2,
-            pop: "partition-to-random-exchange",
-            child: 1,
-            partition: {
-              mode: "DUPLICATE"
-            }
+            pop: "hash-to-random-exchange",
+            child: 1
         },
         {
             @id:3,
             child: 2,
             pop:"filter",
             expr: "b > 5",
-            cost: { disk: 1.0, memory: 1.0, cpu: 1.0, network: 1.0}
+            selectivity: 0.8
         },
         {
             @id: 4,
             child: 3,
-            pop: "mock-store",
-            cost: { disk: 1.0, memory: 1.0, cpu: 1.0, network: 1.0}
+            pop: "mock-store"
+        },
+        {
+            @id:5,
+            child: 4,
+            pop: "union-exchange"
+        },
+        {
+            @id: 6,
+            child: 5,
+            pop: "screen"
         }
     ]
 }
