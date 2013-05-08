@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,21 +26,18 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public abstract class SingleInputOperator extends LogicalOperatorBase {
 
-  private LogicalOperator input;
-  
-  @JsonProperty("input")
-  public LogicalOperator getInput() {
-    return input;
-  }
+    private LogicalOperator input;
 
-  @JsonProperty(value="input", required=true)
-  public void setInput(LogicalOperator input) {
-    if(input instanceof SinkOperator) throw new UnexpectedOperatorType("You have set the input of a sink node of type ["+input.getClass().getSimpleName()+ "] as the input for another node of type ["+this.getClass().getSimpleName()+ "].  This is invalid.");
-    this.input = input;
-    input.registerAsSubscriber(this);
-  }
+    @JsonProperty("input")
+    public LogicalOperator getInput() {
+        return input;
+    }
 
-  
-  
-  
+    @JsonProperty(value = "input", required = true)
+    public void setInput(LogicalOperator input) {
+        if (input instanceof SinkOperator)
+            throw new UnexpectedOperatorType("You have set the input of a sink node of type [" + input.getClass().getSimpleName() + "] as the input for another node of type [" + this.getClass().getSimpleName() + "].  This is invalid.");
+        this.input = input;
+        input.registerAsSubscriber(this);
+    }
 }

@@ -17,17 +17,11 @@
  ******************************************************************************/
 package org.apache.drill.common.config;
 
+import com.typesafe.config.*;
+
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
-
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigList;
-import com.typesafe.config.ConfigMergeable;
-import com.typesafe.config.ConfigObject;
-import com.typesafe.config.ConfigOrigin;
-import com.typesafe.config.ConfigResolveOptions;
-import com.typesafe.config.ConfigValue;
 
 abstract class NestedConfig implements Config {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NestedConfig.class);
@@ -187,15 +181,15 @@ abstract class NestedConfig implements Config {
   }
 
   public Config atPath(String path) {
-    return null;
+    return c.atPath(path);
   }
 
   public Config atKey(String key) {
-    return null;
+    return c.atKey(key);
   }
 
   public Config withValue(String path, ConfigValue value) {
-    return null;
+    return c.withValue(path, value);
   }
 
 }

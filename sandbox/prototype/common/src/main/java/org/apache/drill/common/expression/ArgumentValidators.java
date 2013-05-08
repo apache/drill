@@ -46,10 +46,10 @@ public class ArgumentValidators {
     }
 
     @Override
-    public void validateArguments(List<LogicalExpression> expressions, ErrorCollector errors) {
+    public void validateArguments(String expr, List<LogicalExpression> expressions, ErrorCollector errors) {
       // only need to check argument count since any type is allowed.
       if (!argumentCount.contains(expressions.size()))
-        errors.addUnexpectedArgumentCount(expressions.size(), argumentCount);
+        errors.addUnexpectedArgumentCount(expr, expressions.size(), argumentCount);
     }
 
     @Override
@@ -79,25 +79,26 @@ public class ArgumentValidators {
     }
 
     @Override
-    public void validateArguments(List<LogicalExpression> expressions, ErrorCollector errors) {
+    public void validateArguments(String expr, List<LogicalExpression> expressions, ErrorCollector errors) {
       int i = -1;
       DataType t = null;
       for (LogicalExpression le : expressions) {
         i++;
-        if (t == null) t = le.getDataType();
+          DataType dataType = le.getDataType();
+          if (t == null) t = dataType;
 
-        if (!predicate.apply(le.getDataType())) {
-          errors.addUnexpectedType(i, le.getDataType());
+        if (!predicate.apply(dataType)) {
+          errors.addUnexpectedType(expr, i, dataType);
           continue;
         }
 
-        if (allSame && t != le.getDataType()) {
-          errors.addUnexpectedType(i, le.getDataType());
+        if (allSame && t != DataType.LATEBIND && dataType != DataType.LATEBIND && t != dataType) {
+          errors.addUnexpectedType(expr, i, dataType);
         }
 
       }
       if (!argumentCount.contains(expressions.size()))
-        errors.addUnexpectedArgumentCount(expressions.size(), argumentCount);
+        errors.addUnexpectedArgumentCount(expr, expressions.size(), argumentCount);
     }
 
     @Override
@@ -119,7 +120,8 @@ public class ArgumentValidators {
     public static class ComparableChecker implements Predicate<DataType> {
 
       public boolean apply(DataType dt) {
-        return dt.getComparability().equals(Comparability.ORDERED);
+          Comparability comparability = dt.getComparability();
+          return comparability.equals(Comparability.ORDERED) || comparability.equals(Comparability.UNKNOWN);
       }
     }
   }

@@ -48,10 +48,6 @@ public class ClasspathRSE extends RSEBase {
   
   @JsonTypeName("classpath")
   public static class ClasspathRSEConfig extends StorageEngineConfigBase {
-    @JsonCreator
-    public ClasspathRSEConfig(@JsonProperty("name") String name) {
-      super(name);
-    }
   }
   
   public static class ClasspathInputConfig implements ReadEntry{
@@ -66,7 +62,7 @@ public class ClasspathRSE extends RSEBase {
 
   @Override
   public Collection<ReadEntry> getReadEntries(Scan scan) throws IOException {
-    ClasspathInputConfig c = scan.getSelection().getWith(ClasspathInputConfig.class);
+    ClasspathInputConfig c = scan.getSelection().getWith(dConfig, ClasspathInputConfig.class);
     c.rootPath = scan.getOutputReference();
     return Collections.singleton((ReadEntry) c);
   }

@@ -21,6 +21,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.drill.common.expression.ValueExpressions.CollisionBehavior;
+import org.apache.drill.common.expression.types.DataType;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
 
 public class SchemaPath extends LogicalExpressionBase{
@@ -119,17 +120,25 @@ public class SchemaPath extends LogicalExpressionBase{
 	public CharSequence getPath(){
 	  return originalPath;
 	}
-	
-  @Override
+
+    @Override
+    public DataType getDataType() {
+        return DataType.LATEBIND;
+    }
+
+    @Override
   public void addToString(StringBuilder sb) {
     sb.append("'");
     sb.append(originalPath);
     sb.append("'");
   }
 
+    @Override
+    public void resolveAndValidate(String expr, ErrorCollector errors) {
+    }
 
 
-  @Override
+    @Override
   public String toString() {
     return "SchemaPath [rootSegment=" + rootSegment + "]";
   }

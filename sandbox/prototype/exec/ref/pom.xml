@@ -8,9 +8,9 @@
 		<groupId>org.apache.drill.exec</groupId>
 		<version>1.0-SNAPSHOT</version>
 	</parent>
-	
+
 	<artifactId>ref</artifactId>
-	
+
 	<name>Logical Plan Execution Reference Implementation</name>
 
 	<dependencies>
@@ -24,7 +24,7 @@
 		<dependency>
 			<groupId>org.apache.hadoop</groupId>
 			<artifactId>hadoop-core</artifactId>
-			<version>1.1.0</version>
+			<version>1.1.1</version>
 			<exclusions>
 				<exclusion>
 					<artifactId>jets3t</artifactId>
@@ -37,12 +37,19 @@
 			</exclusions>
 		</dependency>
 
+
+		
 		<dependency>
 			<groupId>com.carrotsearch</groupId>
 			<artifactId>hppc</artifactId>
 			<version>0.4.2</version>
 		</dependency>
 
+		<dependency>
+			<groupId>org.apache.hadoop</groupId>
+			<artifactId>hadoop-examples</artifactId>
+			<version>1.1.1</version>
+		</dependency>
 	</dependencies>
 
 

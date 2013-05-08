@@ -60,8 +60,4 @@ public class AtomType extends DataType {
   public Comparability getComparability() {
     return comparability;
   }
-  
-  
-  
-  
 }

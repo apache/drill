@@ -1,0 +1,35 @@
+package exec.rpc;
+
+option java_package = "org.apache.drill.exec.proto";
+option java_outer_classname = "GeneralRPCProtos";
+option optimize_for = LITE_RUNTIME;
+
+message Ack{
+	optional bool ok = 1;
+}
+
+enum RpcMode {
+  REQUEST = 0;
+  RESPONSE = 1;
+  RESPONSE_FAILURE = 2;
+}
+
+message RpcHeader{
+	optional RpcMode mode = 1; 
+	optional int32 coordination_id = 2; // reusable coordination identifier.  Sender defines.  Server returns on return.  Irrelevant for purely single direction rpc.
+	optional int32 rpc_type = 3; // a rpc mode specific rpc type.
+}
+
+message CompleteRpcMessage {
+    optional RpcHeader header = 1; // required
+    optional bytes protobuf_body = 2; // required
+    optional bytes raw_body = 3; // optional
+}
+
+// Class to be used when an unexpected exception occurs while a rpc call is being evaluated.
+message RpcFailure {
+  optional int64 error_id = 1; // for server trackback.
+  optional int32 error_code = 2; // system defined error code.
+  optional string short_error = 3;
+  optional string long_error = 4;
+}

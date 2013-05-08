@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,16 +32,32 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import org.apache.drill.common.expression.types.DataType;
 
 @JsonSerialize(using = Se.class)
 @JsonDeserialize(using = De.class)
 public class FieldReference extends SchemaPath {
+  DataType overrideType;
 
   public FieldReference(String value) {
     super(value);
   }
 
-  public static class De extends StdDeserializer<FieldReference> {
+  public FieldReference(String value, DataType dataType) {
+    super(value);
+    this.overrideType = dataType;
+  }
+
+    @Override
+    public DataType getDataType() {
+        if(overrideType == null) {
+            return super.getDataType();
+        } else {
+            return overrideType;
+        }
+    }
+
+    public static class De extends StdDeserializer<FieldReference> {
 
     public De() {
       super(FieldReference.class);

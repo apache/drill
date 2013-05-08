@@ -18,5 +18,14 @@
 package org.apache.drill.common.expression;
 
 public class ExpressionValidationError {
+    String message;
 
+    public ExpressionValidationError(String message) {
+        this.message = message;
+    }
+
+    @Override
+    public String toString() {
+        return message;
+    }
 }

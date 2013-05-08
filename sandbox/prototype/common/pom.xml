@@ -8,17 +8,22 @@
 		<groupId>org.apache.drill</groupId>
 		<version>1.0-SNAPSHOT</version>
 	</parent>
-	
+
 	<artifactId>common</artifactId>
 	<packaging>jar</packaging>
 	<name>common</name>
+
+	<properties>
+		<target.gen.source.path>${project.basedir}/target/generated-sources</target.gen.source.path>
+		<proto.cas.path>${project.basedir}/src/main/protobuf/</proto.cas.path>
+	</properties>
 
 	<dependencies>
 
 		<dependency>
 			<groupId>com.google.protobuf</groupId>
 			<artifactId>protobuf-java</artifactId>
-			<version>2.4.1</version>
+			<version>2.5.0</version>
 		</dependency>
 
 		<dependency>
@@ -67,6 +72,7 @@
 		</dependency>
 
 
+
 	</dependencies>
 
 
@@ -84,6 +90,37 @@
 					<execution>
 						<goals>
 							<goal>antlr</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+						<plugin>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>generate-sources</id>
+						<phase>generate-sources</phase>
+						<configuration>
+							<tasks>
+								<mkdir dir="${target.gen.source.path}" />
+								<path id="proto.path.files">
+									<fileset dir="${proto.cas.path}">
+										<include name="*.proto" />
+									</fileset>
+								</path>
+								<pathconvert pathsep=" " property="proto.files"
+									refid="proto.path.files" />
+
+								<exec executable="protoc">
+									<arg value="--java_out=${target.gen.source.path}" />
+									<arg value="--proto_path=${proto.cas.path}" />
+									<arg line="${proto.files}" />
+								</exec>
+							</tasks>
+							<sourceRoot>${target.gen.source.path}</sourceRoot>
+						</configuration>
+						<goals>
+							<goal>run</goal>
 						</goals>
 					</execution>
 				</executions>

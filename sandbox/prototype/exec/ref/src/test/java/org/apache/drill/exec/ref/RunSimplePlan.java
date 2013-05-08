@@ -46,4 +46,28 @@ public class RunSimplePlan{
     assertEquals(outcomes.size(), 1);
     assertEquals(outcomes.iterator().next().records, 2);
   }
+  
+  @Test
+  public void joinPlan() throws Exception{
+    DrillConfig config = DrillConfig.create();
+    LogicalPlan plan = LogicalPlan.parse(config, Files.toString(FileUtils.getResourceAsFile("/simple_join.json"), Charsets.UTF_8));
+    IteratorRegistry ir = new IteratorRegistry();
+    ReferenceInterpreter i = new ReferenceInterpreter(plan, ir, new BasicEvaluatorFactory(ir), new RSERegistry(config));
+    i.setup();
+    Collection<RunOutcome> outcomes = i.run();
+    assertEquals(outcomes.size(), 1);
+    assertEquals(outcomes.iterator().next().outcome, RunOutcome.OutcomeType.SUCCESS);
+  }
+  
+  @Test
+  public void flattenPlan() throws Exception{
+    DrillConfig config = DrillConfig.create();
+    LogicalPlan plan = LogicalPlan.parse(config, Files.toString(FileUtils.getResourceAsFile("/simple_plan_flattened.json"), Charsets.UTF_8));
+    IteratorRegistry ir = new IteratorRegistry();
+    ReferenceInterpreter i = new ReferenceInterpreter(plan, ir, new BasicEvaluatorFactory(ir), new RSERegistry(config));
+    i.setup();
+    Collection<RunOutcome> outcomes = i.run();
+    assertEquals(outcomes.size(), 1);
+    assertEquals(outcomes.iterator().next().outcome, RunOutcome.OutcomeType.SUCCESS);
+  }
 }

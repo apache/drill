@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,27 +20,26 @@ package org.apache.drill.common.logical.data;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import org.apache.drill.common.expression.ErrorCollector;
 
 @JsonTypeName("limit")
-public class Limit extends SingleInputOperator{
-  
-  private final int first; 
-  private final int last;
-  
-  @JsonCreator
-  public Limit(@JsonProperty("first") int first, @JsonProperty("last") int last) {
-    super();
-    this.first = first;
-    this.last = last;
-  }
+public class Limit extends SingleInputOperator {
 
-  public int getFirst() {
-    return first;
-  }
+    private final int first;
+    private final int last;
 
-  public int getLast() {
-    return last;
-  }
-  
-  
+    @JsonCreator
+    public Limit(@JsonProperty("first") int first, @JsonProperty("last") int last) {
+        super();
+        this.first = first;
+        this.last = last;
+    }
+
+    public int getFirst() {
+        return first;
+    }
+
+    public int getLast() {
+        return last;
+    }
 }

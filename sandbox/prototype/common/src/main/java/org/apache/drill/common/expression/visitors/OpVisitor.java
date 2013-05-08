@@ -17,10 +17,8 @@
  ******************************************************************************/
 package org.apache.drill.common.expression.visitors;
 
+import org.apache.drill.common.graph.GraphVisitor;
 import org.apache.drill.common.logical.data.LogicalOperator;
 
-public interface OpVisitor {
-  public boolean enter(LogicalOperator o);
-  public void leave(LogicalOperator o);
-  public boolean visit(LogicalOperator o);
+public interface OpVisitor extends GraphVisitor<LogicalOperator> {
 }

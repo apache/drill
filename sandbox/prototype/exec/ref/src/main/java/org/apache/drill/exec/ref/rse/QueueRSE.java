@@ -31,8 +31,6 @@ import org.apache.drill.exec.ref.RecordPointer;
 import org.apache.drill.exec.ref.RunOutcome.OutcomeType;
 import org.apache.drill.exec.ref.exceptions.SetupException;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 public class QueueRSE extends RSEBase {
@@ -50,13 +48,7 @@ public class QueueRSE extends RSEBase {
     return sinkQueues.get(number);
   }
   
-  @JsonTypeName("queue")
-  public static class QueueRSEConfig extends StorageEngineConfigBase {
-    @JsonCreator
-    public QueueRSEConfig(@JsonProperty("name") String name) {
-      super(name);
-    }
-  }
+  @JsonTypeName("queue") public static class QueueRSEConfig extends StorageEngineConfigBase {}
   
   public static class QueueOutputInfo{
     public int number;
@@ -69,7 +61,7 @@ public class QueueRSE extends RSEBase {
   
   @Override
   public RecordRecorder getWriter(Store store) throws IOException {
-    QueueOutputInfo config = store.getTarget().getWith(QueueOutputInfo.class);
+    QueueOutputInfo config = store.getTarget().getWith(dConfig, QueueOutputInfo.class);
     Queue<Object> q = dConfig.getQueue(config.number);
     return new QueueRecordRecorder(q);
   }

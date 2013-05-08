@@ -73,7 +73,7 @@ public class Driver extends UnregisteredDriver {
           MapSchema.create(connection, rootSchema, schemaName);
 
       connection.setSchema(schemaName);
-      final ClasspathRSEConfig rseConfig = new ClasspathRSEConfig("donuts-json");
+      final ClasspathRSEConfig rseConfig = new ClasspathRSEConfig();
       final ClasspathInputConfig inputConfig = new ClasspathInputConfig();
       inputConfig.path = "/donuts.json";
       inputConfig.type = ConverterType.JSON; 
