@@ -20,6 +20,8 @@ package org.apache.drill.exec.ref;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.logical.LogicalPlan;
@@ -74,7 +76,16 @@ public class ReferenceInterpreter {
   
   public static void main(String[] args) throws Exception{
     DrillConfig config = DrillConfig.create();
-    final String jsonFile = args[0];
+    int arg = 0;
+    final BlockingQueue<Object> queue;
+    if (arg < args.length && args[arg].equals("--stdout")) {
+      ++arg;
+      queue = new ArrayBlockingQueue<>(100);
+      config.setSinkQueues(0, queue);
+    } else {
+      queue = null;
+    }
+    final String jsonFile = args[arg];
     final String planString;
     if (jsonFile.startsWith("inline:")) {
       planString = jsonFile.substring("inline:".length());
@@ -85,6 +96,47 @@ public class ReferenceInterpreter {
     IteratorRegistry ir = new IteratorRegistry();
     ReferenceInterpreter i = new ReferenceInterpreter(plan, ir, new BasicEvaluatorFactory(ir), new RSERegistry(config));
     i.setup();
+    final Object[] result = {null};
+    final Thread thread;
+    if (queue != null) {
+      thread = new Thread(
+          new Runnable() {
+            @Override
+            public void run() {
+              try {
+                result[0] = run0();
+              } catch (Throwable e) {
+                result[0] = e;
+              }
+            }
+            private boolean run0() throws IOException {
+              for (;;) {
+                try {
+                  Object o = queue.take();
+                  if (o instanceof RunOutcome.OutcomeType) {
+                    switch ((RunOutcome.OutcomeType) o) {
+                    case SUCCESS:
+                      return true; // end of data
+                    case CANCELED:
+                      throw new RuntimeException("canceled");
+                    case FAILED:
+                    default:
+                      throw new RuntimeException("failed");
+                    }
+                  } else {
+                    System.out.write((byte[]) o);
+                  }
+                } catch (InterruptedException e) {
+                  Thread.interrupted();
+                  throw new RuntimeException(e);
+                }
+              }
+            }
+          });
+      thread.start();
+    } else {
+      thread = null;
+    }
     Collection<RunOutcome> outcomes = i.run();
     
     for(RunOutcome outcome : outcomes){
@@ -93,9 +145,11 @@ public class ReferenceInterpreter {
       if(outcome.outcome == RunOutcome.OutcomeType.FAILED && outcome.exception != null){
         outcome.exception.printStackTrace();
       }
-      
     }
-     
+     if (thread != null) {
+       thread.join();
+       System.out.println("Result: " + result[0]);
+     }
   }
 }
 

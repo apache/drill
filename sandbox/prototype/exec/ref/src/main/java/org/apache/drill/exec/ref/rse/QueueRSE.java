@@ -19,9 +19,7 @@ package org.apache.drill.exec.ref.rse;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 
 import org.apache.drill.common.config.DrillConfig;
@@ -34,6 +32,8 @@ import org.apache.drill.exec.ref.exceptions.SetupException;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+
+import javax.validation.constraints.NotNull;
 
 public class QueueRSE extends RSEBase {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueueRSE.class);
@@ -95,7 +95,7 @@ public class QueueRSE extends RSEBase {
     private final Queue<Object> queue;
     
     public QueueRecordRecorder(Queue<Object> queue) {
-      this.queue = queue;
+      this.queue = Objects.requireNonNull(queue);
     }
 
     @Override
