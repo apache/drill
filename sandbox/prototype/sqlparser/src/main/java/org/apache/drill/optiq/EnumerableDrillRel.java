@@ -59,8 +59,7 @@ public class EnumerableDrillRel extends SingleRel implements EnumerableRel {
   static {
     try {
       OF_METHOD =
-          EnumerableDrill.class.getMethod("of", String.class, String.class,
-              List.class, Class.class);
+          EnumerableDrill.class.getMethod("of", String.class, List.class, Class.class);
     } catch (NoSuchMethodException e) {
       throw new RuntimeException(e);
     }
@@ -102,16 +101,11 @@ public class EnumerableDrillRel extends SingleRel implements EnumerableRel {
     String plan = drillImplementor.getJsonString();
     Hook.LOGICAL_PLAN.run(plan);
     final List<String> fieldNameList = RelOptUtil.getFieldNameList(rowType);
-    String holder = input.getHolder();
-    if (fieldNameList.equals(Arrays.asList("_MAP")) && !holder.equals("xxx")) {
-      holder = null;
-    }
     return new BlockBuilder()
         .append(
             Expressions.call(
                 OF_METHOD,
                 Expressions.constant(plan),
-                Expressions.constant(holder),
                 Expressions.call(
                     Arrays.class,
                     "asList",

@@ -133,7 +133,7 @@ public class JdbcTest extends TestCase {
             + "'query':["
             + "{'op':'sequence','do':["
             + "{'op':'scan','memo':'initial_scan','ref':'_MAP','storageengine':'donuts-json','selection':{'path':'/donuts.json','type':'JSON'}},"
-            + "{'op':'project','projections':[{'expr':'_MAP.ppu','ref':'output.xxx.PPU'}]},"
+            + "{'op':'project','projections':[{'expr':'_MAP.ppu','ref':'output.PPU'}]},"
             + "{'op':'store','storageengine':'queue','memo':'output sink','target':{'number':0}}]}]}");
   }
 
@@ -160,8 +160,8 @@ public class JdbcTest extends TestCase {
             + "{'op':'sequence','do':["
             + "{'op':'scan','memo':'initial_scan','ref':'_MAP','storageengine':'donuts-json','selection':{'path':'/donuts.json','type':'JSON'}},"
             + "{'op':'filter','expr':'(_MAP.donuts.ppu > 0.6)'},"
-            + "{'op':'project','projections':[{'expr':'_MAP.donuts','ref':'output.xxx.D'}]},"
-            + "{'op':'project','projections':[{'expr':'xxx.name','ref':'output.xxx.NAME'},{'expr':'xxx.xx','ref':'output.xxx.XX'}]},"
+            + "{'op':'project','projections':[{'expr':'_MAP.donuts','ref':'output.D'}]},"
+            + "{'op':'project','projections':[{'expr':'D.name','ref':'output.NAME'},{'expr':'D.xx','ref':'output.XX'}]},"
             + "{'op':'store','storageengine':'queue','memo':'output sink','target':{'number':0}}]}]}");
   }
 

@@ -48,11 +48,6 @@ public class DrillProjectRel extends ProjectRelBase implements DrillRel {
   }
 
   @Override
-  public String getHolder() {
-    return "xxx"; //projects().size() == 1 ? "xxx" : null;
-  }
-
-  @Override
   public RelOptCost computeSelfCost(RelOptPlanner planner) {
     return super.computeSelfCost(planner).multiplyBy(0.1);
   }
@@ -77,23 +72,11 @@ public class DrillProjectRel extends ProjectRelBase implements DrillRel {
     node.put("op", "project");
     final ArrayNode transforms = implementor.mapper.createArrayNode();
     node.put("projections", transforms);
-    String childHolder = ((DrillRel) getChild()).getHolder();
-    if (getChild().getRowType().getFieldCount() == 1
-        && getChild().getRowType().getFieldList().get(0).getName().equals("D")
-        && getChild().getRowType().getFieldList().get(0).getType().getSqlTypeName() == SqlTypeName.MAP) {
-      RelDataTypeField x = getChild().getRowType().getFieldList().get(0);
-      assert x.getType().getSqlTypeName() == SqlTypeName.MAP : x.getType().getSqlTypeName();
-      childHolder = childHolder + "." + getChild().getRowType().getFieldList().get(0).getName();
-    }
-    final String prefix = "output."
-                          + (getHolder() == null ? "" : getHolder() + ".");
+    final String prefix = "output.";
     for (Pair<RexNode, String> pair : projects()) {
       final ObjectNode objectNode = implementor.mapper.createObjectNode();
       transforms.add(objectNode);
-      String expr = DrillOptiq.toDrill(pair.left, childHolder);
-      if (expr.equals("xxx.ppu")) {
-//        expr = "xxx.D.ppu";
-      }
+      String expr = DrillOptiq.toDrill(getChild(), pair.left);
       objectNode.put("expr", expr);
       String ref = prefix + pair.right;
       objectNode.put("ref", ref);

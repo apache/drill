@@ -17,22 +17,12 @@
  ******************************************************************************/
 package org.apache.drill.optiq;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.eigenbase.rel.ValuesRelBase;
-import org.eigenbase.rel.RelCollation;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.rex.RexLiteral;
-import org.eigenbase.rex.RexNode;
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.util.Pair;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -51,11 +41,6 @@ public class DrillValuesRel extends ValuesRelBase implements DrillRel {
   public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
     assert inputs.isEmpty();
     return new DrillValuesRel(getCluster(), rowType, tuples, traitSet);
-  }
-
-  @Override
-  public String getHolder() {
-    return "xxx";
   }
 
   @Override

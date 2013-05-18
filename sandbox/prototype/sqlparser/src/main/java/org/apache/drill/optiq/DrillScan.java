@@ -15,7 +15,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  */
 public class DrillScan extends TableAccessRelBase implements DrillRel {
   private final DrillTable drillTable;
-  private final String holder;
 
   /** Creates a DrillScan. */
   public DrillScan(RelOptCluster cluster,
@@ -26,7 +25,6 @@ public class DrillScan extends TableAccessRelBase implements DrillRel {
     assert getConvention() == CONVENTION;
     this.drillTable = table.unwrap(DrillTable.class);
     assert drillTable != null;
-    this.holder = "_MAP";
   }
 
   @Override
@@ -35,15 +33,11 @@ public class DrillScan extends TableAccessRelBase implements DrillRel {
     DrillOptiq.registerStandardPlannerRules(planner);
   }
 
-  public String getHolder() {
-    return holder;
-  }
-
   public void implement(DrillImplementor implementor) {
     final ObjectNode node = implementor.mapper.createObjectNode();
     node.put("op", "scan");
     node.put("memo", "initial_scan");
-    node.put("ref", holder);
+    node.put("ref", "_MAP"); // output is a record with a single field, '_MAP'
     node.put("storageengine", drillTable.storageEngineConfig.getName());
     node.put("selection", implementor.mapper.convertValue(drillTable.selection, JsonNode.class));
     implementor.add(node);

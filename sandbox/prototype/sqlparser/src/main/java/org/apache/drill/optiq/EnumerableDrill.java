@@ -60,21 +60,21 @@ public class EnumerableDrill<E>
    * @param fields Names of fields, or null to return the whole blob
    */
   public EnumerableDrill(DrillConfig config, LogicalPlan plan, Class<E> clazz,
-      String holder, List<String> fields) {
+      List<String> fields) {
     this.plan = plan;
     this.config = config;
-    this.holder = holder;
+    this.holder = null;
     this.fields = fields;
     config.setSinkQueues(0, queue);
   }
 
   /** Creates a DrillEnumerable from a plan represented as a string. Each record
    * returned is a {@link JsonNode}. */
-  public static <E> EnumerableDrill<E> of(String plan, String holder,
+  public static <E> EnumerableDrill<E> of(String plan,
       final List<String> fieldNames, Class<E> clazz) {
     DrillConfig config = DrillConfig.create();
     final LogicalPlan parse = LogicalPlan.parse(config, plan);
-    return new EnumerableDrill<>(config, parse, clazz, holder, fieldNames);
+    return new EnumerableDrill<>(config, parse, clazz, fieldNames);
   }
 
   /** Runs the plan as a background task. */
@@ -124,7 +124,7 @@ public class EnumerableDrill<E>
     // TODO: use the result of task, and check for exceptions
     final Future<Collection<RunOutcome>> task = runPlan(service);
 
-    return new JsonEnumerator(queue, holder, fields);
+    return new JsonEnumerator(queue, fields);
   }
 
   private static ObjectMapper createMapper() {
@@ -191,10 +191,9 @@ public class EnumerableDrill<E>
     private final List<String> fields;
     private Object current;
 
-    public JsonEnumerator(BlockingQueue<Object> queue, String holder,
-        List<String> fields) {
+    public JsonEnumerator(BlockingQueue<Object> queue, List<String> fields) {
       this.queue = queue;
-      this.holder = holder;
+      this.holder = null;
       this.fields = fields;
     }
 

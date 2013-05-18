@@ -17,7 +17,9 @@
  ******************************************************************************/
 package org.apache.drill.optiq;
 
+import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptPlanner;
+import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.SqlSyntax;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
@@ -47,20 +49,19 @@ public class DrillOptiq {
 
   /** Converts a tree of {@link RexNode} operators into a scalar expression in
    * Drill syntax. */
-  static String toDrill(RexNode expr, String inputName) {
-    final RexToDrill visitor = new RexToDrill(inputName);
+  static String toDrill(RelNode input, RexNode expr) {
+    final RexToDrill visitor = new RexToDrill(input);
     expr.accept(visitor);
-    String s = visitor.buf.toString();
-    return s;
+    return visitor.buf.toString();
   }
 
   private static class RexToDrill extends RexVisitorImpl<StringBuilder> {
     final StringBuilder buf = new StringBuilder();
-    private final String inputName;
+    private final RelNode input;
 
-    RexToDrill(String inputName) {
+    RexToDrill(RelNode input) {
       super(true);
-      this.inputName = inputName;
+      this.input = input;
     }
 
     @Override
@@ -102,11 +103,10 @@ public class DrillOptiq {
 
     @Override
     public StringBuilder visitInputRef(RexInputRef inputRef) {
-      assert inputRef.getIndex() == 0;
-      if (inputName == null) {
-        return buf;
-      }
-      return buf.append(inputName);
+      final int index = inputRef.getIndex();
+      final RelDataTypeField field =
+          input.getRowType().getFieldList().get(index);
+      return buf.append(field.getName());
     }
 
     @Override
