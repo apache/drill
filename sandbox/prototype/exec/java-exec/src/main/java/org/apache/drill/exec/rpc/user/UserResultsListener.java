@@ -24,17 +24,8 @@ import org.apache.drill.exec.rpc.RpcException;
 
 import com.google.common.util.concurrent.SettableFuture;
 
-public abstract class UserResultsListener {
-  SettableFuture<Void> future = SettableFuture.create();
+public interface UserResultsListener {
   
-  final void set(){
-    future.set(null);
-  }
-  
-  Future<Void> getFuture(){
-    return future;
-  }
-
   public abstract void submissionFailed(RpcException ex); 
   public abstract void resultArrived(QueryResultBatch result);
 

@@ -72,7 +72,7 @@ public abstract class BasicServer<T extends EnumLite, C extends RemoteConnection
                 new ZeroCopyProtobufLengthDecoder(), //
                 new RpcDecoder(rpcConfig.getName()), //
                 new RpcEncoder(rpcConfig.getName()), //
-                getHandshakeHandler(),
+                getHandshakeHandler(connection),
                 new InboundHandler(connection), //
                 new RpcExceptionHandler() //
                 );            
@@ -88,7 +88,7 @@ public abstract class BasicServer<T extends EnumLite, C extends RemoteConnection
   }
 
   
-  protected abstract ServerHandshakeHandler<?> getHandshakeHandler();
+  protected abstract ServerHandshakeHandler<?> getHandshakeHandler(C connection);
 
   protected static abstract class ServerHandshakeHandler<T extends MessageLite> extends AbstractHandshakeHandler<T> {
 
@@ -103,9 +103,6 @@ public abstract class BasicServer<T extends EnumLite, C extends RemoteConnection
     }
     
     public abstract MessageLite getHandshakeResponse(T inbound) throws Exception;
-    
-
-      
     
   }
   

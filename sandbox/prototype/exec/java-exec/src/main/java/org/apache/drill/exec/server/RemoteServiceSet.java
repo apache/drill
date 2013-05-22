@@ -24,6 +24,7 @@ import org.apache.drill.exec.cache.DistributedCache;
 import org.apache.drill.exec.cache.LocalCache;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.coord.LocalClusterCoordinator;
+import org.apache.drill.exec.exception.DrillbitStartupException;
 
 public class RemoteServiceSet implements Closeable{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RemoteServiceSet.class);
@@ -36,6 +37,7 @@ public class RemoteServiceSet implements Closeable{
     this.cache = cache;
     this.coordinator = coordinator;
   }
+
 
   public DistributedCache getCache() {
     return cache;

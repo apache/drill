@@ -17,21 +17,32 @@
  ******************************************************************************/
 package org.apache.drill.exec.physical.impl;
 
+import io.netty.buffer.ByteBuf;
+
 import java.util.List;
 
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.Screen;
+import org.apache.drill.exec.physical.impl.materialize.QueryWritableBatch;
 import org.apache.drill.exec.physical.impl.materialize.RecordMaterializer;
 import org.apache.drill.exec.physical.impl.materialize.VectorRecordMaterializer;
+import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
+import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
+import org.apache.drill.exec.proto.UserBitShared.RecordBatchDef;
+import org.apache.drill.exec.proto.UserProtos.QueryResult;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
+import org.apache.drill.exec.rpc.BaseRpcOutcomeListener;
+import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
+import org.apache.drill.exec.work.foreman.ErrorHelper;
 
 import com.google.common.base.Preconditions;
 
 public class ScreenCreator implements RootCreator<Screen>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScreenCreator.class);
-
+  
+  
   @Override
   public RootExec getRoot(FragmentContext context, Screen config, List<RecordBatch> children) {
     Preconditions.checkArgument(children.size() == 1);
@@ -40,7 +51,9 @@ public class ScreenCreator implements RootCreator<Screen>{
   
   
   private static class ScreenRoot implements RootExec{
-
+    static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScreenRoot.class);
+    volatile boolean ok = true;
+    
     final RecordBatch incoming;
     final FragmentContext context;
     final UserClientConnection connection;
@@ -56,25 +69,53 @@ public class ScreenCreator implements RootCreator<Screen>{
     
     @Override
     public boolean next() {
-      IterOutcome outcome = incoming.next();
-      boolean isLast = false;
-      switch(outcome){
-      case NONE:
-      case STOP:
-        connection.sendResult(materializer.convertNext(true));
-        context.batchesCompleted.inc(1);
-        context.recordsCompleted.inc(incoming.getRecordCount());
+      if(!ok){
+        stop();
         return false;
-        
+      }
+      
+      IterOutcome outcome = incoming.next();
+      logger.debug("Screen Outcome {}", outcome);
+      switch(outcome){
+      case STOP: {
+          QueryResult header1 = QueryResult.newBuilder() //
+              .setQueryId(context.getHandle().getQueryId()) //
+              .setRowCount(0) //
+              .addError(ErrorHelper.logAndConvertError(context.getIdentity(), "Screen received stop request sent.", context.getFailureCause(), logger))
+              .setDef(RecordBatchDef.getDefaultInstance()) //
+              .setIsLastChunk(true) //
+              .build();
+          QueryWritableBatch batch1 = new QueryWritableBatch(header1);
+
+          connection.sendResult(listener, batch1);
+          return false;
+      }
+      case NONE: {
+        if(materializer == null){
+          // receive no results.
+          context.batchesCompleted.inc(1);
+          context.recordsCompleted.inc(incoming.getRecordCount());
+          QueryResult header2 = QueryResult.newBuilder() //
+              .setQueryId(context.getHandle().getQueryId()) //
+              .setRowCount(0) //
+              .setDef(RecordBatchDef.getDefaultInstance()) //
+              .setIsLastChunk(true) //
+              .build();
+          QueryWritableBatch batch2 = new QueryWritableBatch(header2);
+          connection.sendResult(listener, batch2);
+        }else{
+          connection.sendResult(listener, materializer.convertNext(true));
+        }
+        return false;
+      }
       case OK_NEW_SCHEMA:
         materializer = new VectorRecordMaterializer(context, incoming);
         // fall through.
-        // fall through
       case OK:
-        connection.sendResult(materializer.convertNext(false));
         context.batchesCompleted.inc(1);
         context.recordsCompleted.inc(incoming.getRecordCount());
-        return !isLast;
+        connection.sendResult(listener, materializer.convertNext(false));
+        return true;
       default:
         throw new UnsupportedOperationException();
       }
@@ -85,6 +126,20 @@ public class ScreenCreator implements RootCreator<Screen>{
       incoming.kill();
     }
 
+    private SendListener listener = new SendListener();
+    
+    private class SendListener extends BaseRpcOutcomeListener<Ack>{
+
+      @Override
+      public void failed(RpcException ex) {
+        logger.error("Failure while sending data to user.", ex);
+        ErrorHelper.logAndConvertError(context.getIdentity(), "Failure while sending fragment to client.", ex, logger);
+        ok = false;
+      }
+      
+    }
     
   }
+  
+
 }

@@ -57,7 +57,7 @@ import java.util.Map;
   }
 
   public AdjacencyList<V> getAdjacencyList() {
-    logger.debug("Values; {}", ops.values().toArray());
+//    logger.debug("Values; {}", ops.values().toArray());
     AdjacencyList<V> a = new AdjacencyList<V>();
 
     for (AdjacencyList<V>.Node from : ops.values()) {

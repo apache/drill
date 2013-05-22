@@ -76,7 +76,6 @@ public class MockRecordReader implements RecordReader {
       int batchRecordCount = 250000 / estimateRowSize;
 
       for (int i = 0; i < config.getTypes().length; i++) {
-        logger.debug("Adding field {} of type {}", i, config.getTypes()[i]);
         valueVectors[i] = getVector(i, config.getTypes()[i].getName(), config.getTypes()[i].getMajorType(), batchRecordCount);
         output.addField(i, valueVectors[i]);
       }

@@ -15,29 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.apache.drill.exec.work.batch;
+package org.apache.drill.exec.rpc;
 
-import java.util.concurrent.atomic.AtomicInteger;
+public class BaseRpcOutcomeListener<T> implements RpcOutcomeListener<T> {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseRpcOutcomeListener.class);
 
-import org.apache.drill.exec.physical.base.Receiver;
-
-public class PartitionedCollector extends AbstractFragmentCollector{
-
-  public PartitionedCollector(AtomicInteger parentAccounter, Receiver receiver) {
-    super(parentAccounter, receiver, receiver.getProvidingEndpoints().size());
+  @Override
+  public void failed(RpcException ex) {
   }
 
   @Override
-  protected RawBatchBuffer getBuffer(int minorFragmentId) {
-    return buffers[minorFragmentId];
+  public void success(T value) {
   }
-
-  @Override
-  public void streamFinished(int minorFragmentId) {
-    buffers[minorFragmentId].finished();
-  }
-
   
   
-
 }

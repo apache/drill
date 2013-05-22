@@ -64,12 +64,13 @@ class RunningFragmentManager implements FragmentStatusListener{
     this.foreman = foreman;
     this.tun = tun;
     this.remainingFragmentCount = new AtomicInteger(0);
+    
   }
 
   public void runFragments(WorkerBee bee, PlanFragment rootFragment, FragmentRoot rootOperator, UserClientConnection rootClient, List<PlanFragment> leafFragments) throws ExecutionSetupException{
     remainingFragmentCount.set(leafFragments.size()+1);
 
-    // set up the root framgnet first so we'll have incoming buffers available.
+    // set up the root fragment first so we'll have incoming buffers available.
     {
       IncomingBuffers buffers = new IncomingBuffers(rootOperator);
       
@@ -97,13 +98,13 @@ class RunningFragmentManager implements FragmentStatusListener{
   private void sendRemoteFragment(PlanFragment fragment){
     map.put(fragment.getHandle(), new FragmentData(fragment.getHandle(), fragment.getAssignment(), false));
     FragmentSubmitListener listener = new FragmentSubmitListener(fragment.getAssignment(), fragment);
-    tun.get(fragment.getAssignment()).sendFragment(fragment).addLightListener(listener);
+    tun.get(fragment.getAssignment()).sendFragment(listener, fragment);
   }
   
   
   @Override
   public void statusUpdate(FragmentStatus status) {
-    
+    logger.debug("New fragment status was provided to Foreman of {}", status);
     switch(status.getState()){
     case AWAITING_ALLOCATION:
       updateStatus(status);
@@ -205,6 +206,7 @@ class RunningFragmentManager implements FragmentStatusListener{
 
     @Override
     public void failed(RpcException ex) {
+      logger.debug("Failure while sending fragment.  Stopping query.", ex);
       stopQuery();
     }
 

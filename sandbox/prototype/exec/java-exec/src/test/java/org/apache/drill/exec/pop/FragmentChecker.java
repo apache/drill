@@ -17,16 +17,15 @@
  ******************************************************************************/
 package org.apache.drill.exec.pop;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
-import java.util.Collection;
-import java.util.Collections;
+import java.util.List;
 
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.planner.fragment.Fragment;
 import org.apache.drill.exec.planner.fragment.PlanningSet;
-import org.apache.drill.exec.planner.fragment.StatsCollector;
 import org.apache.drill.exec.planner.fragment.SimpleParallelizer;
+import org.apache.drill.exec.planner.fragment.StatsCollector;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.PlanFragment;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
@@ -41,26 +40,46 @@ public class FragmentChecker extends PopUnitTestBase{
   
   @Test
   public void checkSimpleExchangePlan() throws Exception{
+    print("/physical_simpleexchange.json", 2, 3);
+
+  }
+  
+  
+  private void print(String fragmentFile, int bitCount, int exepectedFragmentCount) throws Exception{
     
+    System.out.println(String.format("=================Building plan fragments for [%s].  Allowing %d total Drillbits.==================", fragmentFile, bitCount));
     PhysicalPlanReader ppr = new PhysicalPlanReader(CONFIG, CONFIG.getMapper(), DrillbitEndpoint.getDefaultInstance());
-    Fragment fragmentRoot = getRootFragment(ppr, "/physical_simpleexchange.json");
+    Fragment fragmentRoot = getRootFragment(ppr, fragmentFile);
     PlanningSet planningSet = StatsCollector.collectStats(fragmentRoot);
     SimpleParallelizer par = new SimpleParallelizer();
+    List<DrillbitEndpoint> endpoints = Lists.newArrayList();
+    DrillbitEndpoint localBit = null;
+    for(int i =0; i < bitCount; i++){
+      DrillbitEndpoint b1 = DrillbitEndpoint.newBuilder().setAddress("localhost").setBitPort(1234+i).build();
+      if(i ==0) localBit = b1; 
+      endpoints.add(b1);
+    }
     
-    DrillbitEndpoint b1 = DrillbitEndpoint.newBuilder().setAddress("localhost").setBitPort(1234).build();
-    DrillbitEndpoint b2 = DrillbitEndpoint.newBuilder().setAddress("localhost").setBitPort(2345).build();
     
-    QueryWorkUnit qwu = par.getFragments(b1, QueryId.getDefaultInstance(), Lists.newArrayList(b1, b2), ppr, fragmentRoot, planningSet, 10);
-    assertEquals(qwu.getFragments().size(), 3);
-    System.out.println("=========ROOT FRAGMENT=========");
+    QueryWorkUnit qwu = par.getFragments(localBit, QueryId.getDefaultInstance(), endpoints, ppr, fragmentRoot, planningSet, 10);
+    System.out.println(String.format("=========ROOT FRAGMENT [%d:%d] =========", qwu.getRootFragment().getHandle().getMajorFragmentId(), qwu.getRootFragment().getHandle().getMinorFragmentId()));
+    
     System.out.print(qwu.getRootFragment().getFragmentJson());
     
     
     for(PlanFragment f : qwu.getFragments()){
-      System.out.println("=========");
+      System.out.println(String.format("=========Fragment [%d:%d]=====", f.getHandle().getMajorFragmentId(), f.getHandle().getMinorFragmentId()));
       System.out.print(f.getFragmentJson());
     }
+    
+    //assertEquals(exepectedFragmentCount, qwu.getFragments().size());
+
     logger.debug("Planning Set {}", planningSet);
+  }
+  
+  @Test
+  public void validateSingleExchangeFragment() throws Exception{
+    print("/physical_single_exchange.json", 1, 2);
 
   }
 }

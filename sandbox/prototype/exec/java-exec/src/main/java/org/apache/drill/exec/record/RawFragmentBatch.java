@@ -41,4 +41,9 @@ public class RawFragmentBatch {
     return body;
   }
 
+  @Override
+  public String toString() {
+    return "RawFragmentBatch [header=" + header + ", body=" + body + "]";
+  }
+
 }

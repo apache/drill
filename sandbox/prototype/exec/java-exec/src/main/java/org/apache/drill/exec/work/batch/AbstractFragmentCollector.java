@@ -67,18 +67,23 @@ public abstract class AbstractFragmentCollector implements BatchCollector{
   
   public abstract void streamFinished(int minorFragmentId);
   
-  public void batchArrived(ConnectionThrottle throttle, int minorFragmentId, RawFragmentBatch batch) {
+  public boolean batchArrived(ConnectionThrottle throttle, int minorFragmentId, RawFragmentBatch batch) {
+    boolean decremented = false;
     if (remainders.compareAndSet(minorFragmentId, 0, 1)) {
       int rem = remainingRequired.decrementAndGet();
       if (rem == 0) {
         parentAccounter.decrementAndGet();
+        decremented = true;
       }
     }
     if(batch.getHeader().getIsLastBatch()){
       streamFinished(minorFragmentId);
     }
     getBuffer(minorFragmentId).enqueue(throttle, batch);
+    return decremented;
   }
+
+  
 
   protected abstract RawBatchBuffer getBuffer(int minorFragmentId);
 }

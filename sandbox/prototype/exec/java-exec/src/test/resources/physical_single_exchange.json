@@ -17,7 +17,6 @@
             	  {name: "red", type: "BIGINT", mode: "REQUIRED"},
             	  {name: "green", type: "INT", mode: "REQUIRED"}
             	]}
-            	
             ]
         },
         {

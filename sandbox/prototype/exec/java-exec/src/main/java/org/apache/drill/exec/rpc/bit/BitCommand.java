@@ -15,29 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.apache.drill.exec.work.batch;
+package org.apache.drill.exec.rpc.bit;
 
-import java.util.concurrent.atomic.AtomicInteger;
+import org.apache.drill.exec.rpc.RpcConnectionHandler;
 
-import org.apache.drill.exec.physical.base.Receiver;
+import com.google.protobuf.MessageLite;
 
-public class PartitionedCollector extends AbstractFragmentCollector{
+public interface BitCommand<T extends MessageLite> extends RpcConnectionHandler<BitConnection>{
 
-  public PartitionedCollector(AtomicInteger parentAccounter, Receiver receiver) {
-    super(parentAccounter, receiver, receiver.getProvidingEndpoints().size());
-  }
-
-  @Override
-  protected RawBatchBuffer getBuffer(int minorFragmentId) {
-    return buffers[minorFragmentId];
-  }
-
-  @Override
-  public void streamFinished(int minorFragmentId) {
-    buffers[minorFragmentId].finished();
-  }
-
-  
-  
+  public abstract void connectionAvailable(BitConnection connection);
 
 }

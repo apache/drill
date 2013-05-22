@@ -45,5 +45,12 @@ public class QueryResultBatch {
   public boolean hasData(){
     return data != null;
   }
+
+  @Override
+  public String toString() {
+    return "QueryResultBatch [header=" + header + ", data=" + data + "]";
+  }
+  
+  
   
 }

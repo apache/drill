@@ -24,8 +24,7 @@ import org.apache.drill.exec.rpc.RemoteConnection.ConnectionThrottle;
 
 interface BatchCollector {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BatchCollector.class);
-
-  public void batchArrived(ConnectionThrottle throttle, int minorFragmentId, RawFragmentBatch batch);
+  public boolean batchArrived(ConnectionThrottle throttle, int minorFragmentId, RawFragmentBatch batch);
   public int getOppositeMajorFragmentId();
   public RawBatchBuffer[] getBuffers();
 

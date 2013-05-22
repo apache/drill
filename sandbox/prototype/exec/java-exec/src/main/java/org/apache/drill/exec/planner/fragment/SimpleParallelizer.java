@@ -145,7 +145,7 @@ public class SimpleParallelizer {
       // figure out width.
       int width = Math.min(stats.getMaxWidth(), globalMaxWidth);
       float diskCost = stats.getDiskCost();
-      logger.debug("Frag max width: {} and diskCost: {}", stats.getMaxWidth(), diskCost);
+//      logger.debug("Frag max width: {} and diskCost: {}", stats.getMaxWidth(), diskCost);
 
       // TODO: right now we'll just assume that each task is cost 1 so we'll set the breadth at the lesser of the number
       // of tasks or the maximum width of the fragment.
@@ -154,7 +154,7 @@ public class SimpleParallelizer {
       }
 
       if (width < 1) width = 1;
-      logger.debug("Setting width {} on fragment {}", width, wrapper);
+//      logger.debug("Setting width {} on fragment {}", width, wrapper);
       wrapper.setWidth(width);
       // figure out endpoint assignments. also informs the exchanges about their respective endpoints.
       wrapper.assignEndpoints(allNodes);

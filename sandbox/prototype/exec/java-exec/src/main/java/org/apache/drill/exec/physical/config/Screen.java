@@ -64,7 +64,7 @@ public class Screen extends AbstractStore implements Root{
     // didn't get screwed up.
     if (endpoints.size() != 1) throw new PhysicalOperatorSetupException("A Screen operator can only be assigned to a single node.");
     DrillbitEndpoint endpoint = endpoints.iterator().next();
-    logger.debug("Endpoint this: {}, assignment: {}", this.endpoint, endpoint);
+//    logger.debug("Endpoint this: {}, assignment: {}", this.endpoint, endpoint);
     if (!endpoint.equals(this.endpoint)) {
       throw new PhysicalOperatorSetupException(String.format(
           "A Screen operator can only be assigned to its home node.  Expected endpoint %s, Actual endpoint: %s",

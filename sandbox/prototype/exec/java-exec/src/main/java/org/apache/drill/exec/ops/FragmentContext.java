@@ -52,7 +52,9 @@ public class FragmentContext {
   private final FragmentHandle handle;
   private final UserClientConnection connection;
   private final IncomingBuffers buffers;
-
+  private volatile Throwable failureCause;
+  private volatile boolean failed = false;
+  
   public FragmentContext(DrillbitContext dbContext, FragmentHandle handle, UserClientConnection connection, IncomingBuffers buffers) {
     this.fragmentTime = dbContext.getMetrics().timer(METRIC_TIMER_FRAGMENT_TIME);
     this.batchesCompleted = new SingleThreadNestedCounter(dbContext, METRIC_BATCHES_COMPLETED);
@@ -65,9 +67,10 @@ public class FragmentContext {
   }
 
   public void fail(Throwable cause) {
-
+    logger.debug("Fragment Context received failure. {}", cause);
+    failed = true;
+    failureCause = cause;
   }
-
   
   public DrillbitContext getDrillbitContext(){
     return context;
@@ -107,4 +110,14 @@ public class FragmentContext {
   public IncomingBuffers getBuffers(){
     return buffers;
   }
+
+  public Throwable getFailureCause() {
+    return failureCause;
+  }
+  
+  public boolean isFailed(){
+    return failed;
+  }
+  
+  
 }

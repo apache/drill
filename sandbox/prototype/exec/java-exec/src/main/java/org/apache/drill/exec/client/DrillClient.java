@@ -30,22 +30,23 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Vector;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.coord.ZKClusterCoordinator;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.UserProtos.QueryType;
-import org.apache.drill.exec.proto.UserProtos.RpcType;
-import org.apache.drill.exec.proto.UserProtos.UserToBitHandshake;
+import org.apache.drill.exec.rpc.BasicClientWithConnection.ServerConnection;
+import org.apache.drill.exec.rpc.DrillRpcFuture;
 import org.apache.drill.exec.rpc.NamedThreadFactory;
+import org.apache.drill.exec.rpc.RpcConnectionHandler;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.user.QueryResultBatch;
 import org.apache.drill.exec.rpc.user.UserClient;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
-import org.apache.drill.exec.rpc.user.UserRpcConfig;
+
+import com.google.common.util.concurrent.AbstractCheckedFuture;
+import com.google.common.util.concurrent.SettableFuture;
 
 /**
  * Thin wrapper around a UserClient that handles connect/close and transforms String into ByteBuf
@@ -75,9 +76,6 @@ public class DrillClient implements Closeable{
   }
   
   
-  
-
-
   /**
    * Connects the client to a Drillbit server
    *
@@ -97,7 +95,9 @@ public class DrillClient implements Closeable{
     this.client = new UserClient(bb, new NioEventLoopGroup(1, new NamedThreadFactory("Client-")));
     try {
       logger.debug("Connecting to server {}:{}", endpoint.getAddress(), endpoint.getUserPort());
-      this.client.connect(endpoint);
+      FutureHandler f = new FutureHandler();
+      this.client.connect(f, endpoint);
+      f.checkedGet();
     } catch (InterruptedException e) {
       throw new IOException(e);
     }
@@ -120,34 +120,63 @@ public class DrillClient implements Closeable{
    * @throws RpcException
    */
   public List<QueryResultBatch> runQuery(QueryType type, String plan) throws RpcException {
-    try {
-      ListHoldingResultsListener listener = new ListHoldingResultsListener();
-      Future<Void> f = client.submitQuery(newBuilder().setResultsMode(STREAM_FULL).setType(type).setPlan(plan).build(), listener);
-      f.get();
-      if(listener.ex != null){
-        throw listener.ex;
-      }else{
-        return listener.results;
-      }
-    } catch (InterruptedException | ExecutionException e) {
-      throw new RpcException(e);
-    }
+    ListHoldingResultsListener listener = new ListHoldingResultsListener();
+    client.submitQuery(listener, newBuilder().setResultsMode(STREAM_FULL).setType(type).setPlan(plan).build());
+    return listener.getResults();
+
   }
   
-  private class ListHoldingResultsListener extends UserResultsListener{
-    private RpcException ex;
+  private class ListHoldingResultsListener implements UserResultsListener {
     private Vector<QueryResultBatch> results = new Vector<QueryResultBatch>();
+    private SettableFuture<List<QueryResultBatch>> future = SettableFuture.create();
     
     @Override
     public void submissionFailed(RpcException ex) {
       logger.debug("Submission failed.", ex);
-      this.ex = ex;
+      future.setException(ex);
     }
 
     @Override
     public void resultArrived(QueryResultBatch result) {
       logger.debug("Result arrived.  Is Last Chunk: {}.  Full Result: {}", result.getHeader().getIsLastChunk(), result);
       results.add(result);
+      if(result.getHeader().getIsLastChunk()){
+        future.set(results);
+      }
+    }
+  
+    public List<QueryResultBatch> getResults() throws RpcException{
+      try{
+        return future.get();
+      }catch(Throwable t){
+        throw RpcException.mapException(t);
+      }
+    }
+  }
+  
+  private class FutureHandler extends AbstractCheckedFuture<Void, RpcException> implements RpcConnectionHandler<ServerConnection>, DrillRpcFuture<Void>{
+
+    protected FutureHandler() {
+      super( SettableFuture.<Void>create());
+    }
+
+    @Override
+    public void connectionSucceeded(ServerConnection connection) {
+      getInner().set(null);
+    }
+
+    @Override
+    public void connectionFailed(FailureType type, Throwable t) {
+      getInner().setException(new RpcException(String.format("Failure connecting to server. Failure of type %s.", type.name()), t));
+    }
+
+    private SettableFuture<Void> getInner(){
+      return (SettableFuture<Void>) delegate();
+    }
+    
+    @Override
+    protected RpcException mapException(Exception e) {
+      return RpcException.mapException(e);
     }
     
   }

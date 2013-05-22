@@ -15,29 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.apache.drill.exec.work.batch;
+package org.apache.drill.exec.rpc;
 
-import java.util.concurrent.atomic.AtomicInteger;
+import com.google.common.util.concurrent.AbstractCheckedFuture;
+import com.google.common.util.concurrent.ListenableFuture;
 
-import org.apache.drill.exec.physical.base.Receiver;
-
-public class PartitionedCollector extends AbstractFragmentCollector{
-
-  public PartitionedCollector(AtomicInteger parentAccounter, Receiver receiver) {
-    super(parentAccounter, receiver, receiver.getProvidingEndpoints().size());
+public class RpcCheckedFuture<T> extends AbstractCheckedFuture<T, RpcException> implements DrillRpcFuture<T>{
+  public RpcCheckedFuture(ListenableFuture<T> delegate) {
+    super(delegate);
   }
 
   @Override
-  protected RawBatchBuffer getBuffer(int minorFragmentId) {
-    return buffers[minorFragmentId];
+  protected RpcException mapException(Exception e) {
+    return RpcException.mapException(e);
   }
-
-  @Override
-  public void streamFinished(int minorFragmentId) {
-    buffers[minorFragmentId].finished();
-  }
-
-  
-  
 
 }

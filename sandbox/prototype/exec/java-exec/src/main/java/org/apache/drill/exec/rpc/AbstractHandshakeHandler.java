@@ -25,8 +25,7 @@ import com.google.protobuf.Internal.EnumLite;
 import com.google.protobuf.MessageLite;
 import com.google.protobuf.Parser;
 
-public abstract class AbstractHandshakeHandler<T extends MessageLite> extends
-    ChannelInboundMessageHandlerAdapter<InboundRpcMessage> {
+public abstract class AbstractHandshakeHandler<T extends MessageLite> extends ChannelInboundMessageHandlerAdapter<InboundRpcMessage> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractHandshakeHandler.class);
 
   protected final EnumLite handshakeType;
@@ -41,7 +40,7 @@ public abstract class AbstractHandshakeHandler<T extends MessageLite> extends
 
   @Override
   public final void messageReceived(ChannelHandlerContext ctx, InboundRpcMessage inbound) throws Exception {
-    coordinationId = inbound.coordinationId;
+    this.coordinationId = inbound.coordinationId;
     ctx.channel().pipeline().remove(this);
     if (inbound.rpcType != handshakeType.getNumber())
       throw new RpcException(String.format("Handshake failure.  Expected %s[%d] but received number [%d]",

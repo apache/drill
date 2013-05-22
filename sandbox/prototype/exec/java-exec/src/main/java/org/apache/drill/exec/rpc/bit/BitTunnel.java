@@ -17,95 +17,79 @@
  ******************************************************************************/
 package org.apache.drill.exec.rpc.bit;
 
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executor;
-
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.ExecProtos.FragmentStatus;
 import org.apache.drill.exec.proto.ExecProtos.PlanFragment;
+import org.apache.drill.exec.proto.ExecProtos.RpcType;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.record.FragmentWritableBatch;
-import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.rpc.DrillRpcFuture;
-import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
 
-import com.google.common.util.concurrent.AbstractCheckedFuture;
-import com.google.common.util.concurrent.CheckedFuture;
-import com.google.common.util.concurrent.MoreExecutors;
-import com.google.common.util.concurrent.SettableFuture;
 
-/**
- * Interface provided for communication between two bits. Underlying connection may be server or client based. Resilient
- * to connection loss. Right now, this has to jump through some hoops and bridge futures between the connection creation
- * and action. A better approach should be done.
- */
 public class BitTunnel {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BitTunnel.class);
 
-  private static final int MAX_ATTEMPTS = 3;
-
   private final BitConnectionManager manager;
-  private final Executor exec;
-  
+  private final DrillbitEndpoint endpoint;
 
-  public BitTunnel(Executor exec, DrillbitEndpoint endpoint, BitComImpl com, BitConnection connection) {
-    this.manager = new BitConnectionManager(endpoint, com, connection, null, MAX_ATTEMPTS);
-    this.exec = exec;
-  }
-
-  public BitTunnel(Executor exec, DrillbitEndpoint endpoint, BitComImpl com,
-      CheckedFuture<BitConnection, RpcException> future) {
-    this.manager = new BitConnectionManager(endpoint, com, (BitConnection) null, future, MAX_ATTEMPTS);
-    this.exec = exec;
+  public BitTunnel(DrillbitEndpoint endpoint, BitConnectionManager manager) {
+    this.manager = manager;
+    this.endpoint = endpoint;
   }
   
   public DrillbitEndpoint getEndpoint(){
     return manager.getEndpoint();
   }
 
-  private <T> DrillRpcFuture<T> submit(BitCommand<T> command) {
-    exec.execute(command);
-    return command;
+  public void sendRecordBatch(RpcOutcomeListener<Ack> outcomeListener, FragmentContext context, FragmentWritableBatch batch) {
+    SendBatch b = new SendBatch(outcomeListener, batch, context);
+    manager.runCommand(b);
   }
 
-  public DrillRpcFuture<Ack> sendRecordBatch(FragmentContext context, FragmentWritableBatch batch) {
-    return submit(new SendBatch(batch, context));
+  public void sendFragment(RpcOutcomeListener<Ack> outcomeListener, PlanFragment fragment){
+    SendFragment b = new SendFragment(outcomeListener, fragment);
+    manager.runCommand(b);
   }
-
-  public DrillRpcFuture<Ack> sendFragment(PlanFragment fragment) {
-    return submit(new SendFragment(fragment));
+  
+  public DrillRpcFuture<Ack> cancelFragment(FragmentHandle handle){
+    CancelFragment b = new CancelFragment(handle);
+    manager.runCommand(b);
+    return b.getFuture();
   }
-
-  public DrillRpcFuture<Ack> cancelFragment(FragmentHandle handle) {
-    return submit(new CancelFragment(handle));
-  }
-
+  
   public DrillRpcFuture<Ack> sendFragmentStatus(FragmentStatus status){
-    return submit(new SendFragmentStatus(status));
+    SendFragmentStatus b = new SendFragmentStatus(status);
+    manager.runCommand(b);
+    return b.getFuture();
   }
 
-  public class SendBatch extends BitCommand<Ack> {
+  public static class SendBatch extends ListeningBitCommand<Ack> {
     final FragmentWritableBatch batch;
     final FragmentContext context;
 
-    public SendBatch(FragmentWritableBatch batch, FragmentContext context) {
-      super();
+    public SendBatch(RpcOutcomeListener<Ack> listener, FragmentWritableBatch batch, FragmentContext context) {
+      super(listener);
       this.batch = batch;
       this.context = context;
     }
 
     @Override
-    public CheckedFuture<Ack, RpcException> doRpcCall(BitConnection connection) {
-      logger.debug("Sending record batch. {}", batch);
-      return connection.sendRecordBatch(context, batch);
+    public void doRpcCall(RpcOutcomeListener<Ack> outcomeListener, BitConnection connection) {
+      connection.send(outcomeListener, RpcType.REQ_RECORD_BATCH, batch.getHeader(), Ack.class, batch.getBuffers());
     }
 
+    @Override
+    public String toString() {
+      return "SendBatch [batch.header=" + batch.getHeader() + "]";
+    }
+    
+    
   }
 
-  public class SendFragmentStatus extends BitCommand<Ack> {
+  public static class SendFragmentStatus extends FutureBitCommand<Ack> {
     final FragmentStatus status;
 
     public SendFragmentStatus(FragmentStatus status) {
@@ -114,12 +98,13 @@ public class BitTunnel {
     }
 
     @Override
-    public CheckedFuture<Ack, RpcException> doRpcCall(BitConnection connection) {
-      return connection.sendFragmentStatus(status);
+    public void doRpcCall(RpcOutcomeListener<Ack> outcomeListener, BitConnection connection) {
+      connection.send(outcomeListener, RpcType.REQ_FRAGMENT_STATUS, status, Ack.class);
     }
+
   }
 
-  public class CancelFragment extends BitCommand<Ack> {
+  public static class CancelFragment extends FutureBitCommand<Ack> {
     final FragmentHandle handle;
 
     public CancelFragment(FragmentHandle handle) {
@@ -128,109 +113,23 @@ public class BitTunnel {
     }
 
     @Override
-    public CheckedFuture<Ack, RpcException> doRpcCall(BitConnection connection) {
-      return connection.cancelFragment(handle);
+    public void doRpcCall(RpcOutcomeListener<Ack> outcomeListener, BitConnection connection) {
+      connection.send(outcomeListener, RpcType.REQ_CANCEL_FRAGMENT, handle,  Ack.class);
     }
 
   }
 
-  public class SendFragment extends BitCommand<Ack> {
+  public static class SendFragment extends ListeningBitCommand<Ack> {
     final PlanFragment fragment;
 
-    public SendFragment(PlanFragment fragment) {
-      super();
+    public SendFragment(RpcOutcomeListener<Ack> listener, PlanFragment fragment) {
+      super(listener);
       this.fragment = fragment;
     }
 
     @Override
-    public CheckedFuture<Ack, RpcException> doRpcCall(BitConnection connection) {
-      return connection.sendFragment(fragment);
-    }
-
-  }
-
-
-  
-
-  private abstract class BitCommand<T> extends AbstractCheckedFuture<T, RpcException> implements Runnable, DrillRpcFuture<T> {
-
-    public void addLightListener(RpcOutcomeListener<T> outcomeListener){
-      this.addListener(new RpcOutcomeListenerWrapper(outcomeListener), MoreExecutors.sameThreadExecutor());
-    }
-
-    public BitCommand() {
-      super(SettableFuture.<T> create());
-    }
-
-    public abstract CheckedFuture<T, RpcException> doRpcCall(BitConnection connection);
-
-    public final void run() {
-      
-      try {
-        
-        BitConnection connection = manager.getConnection(0);
-        assert connection != null : "The connection manager should never return a null connection.  Worse case, it should throw an exception.";
-        CheckedFuture<T, RpcException> rpc = doRpcCall(connection);
-        rpc.addListener(new FutureBridge<T>((SettableFuture<T>) delegate(), rpc), MoreExecutors.sameThreadExecutor());
-      } catch (RpcException ex) {
-        ((SettableFuture<T>) delegate()).setException(ex);
-      }
-
-    }
-
-    @Override
-    protected RpcException mapException(Exception e) {
-      Throwable t = e;
-      if (e instanceof ExecutionException) {
-        t = e.getCause();
-      }
-      if (t instanceof RpcException) return (RpcException) t;
-      return new RpcException(t);
-    }
-
-    public class RpcOutcomeListenerWrapper implements Runnable{
-      final RpcOutcomeListener<T> inner;
-      
-      public RpcOutcomeListenerWrapper(RpcOutcomeListener<T> inner) {
-        this.inner = inner;
-      }
-
-      @Override
-      public void run() {
-        try{
-          inner.success(BitCommand.this.checkedGet());
-        }catch(RpcException e){
-          inner.failed(e);
-        }
-      }
-    }
-
-    @Override
-    public String toString() {
-      return "BitCommand ["+this.getClass().getSimpleName()+"]";
-    }
-    
-    
-    
-  }
-
-  private class FutureBridge<T> implements Runnable {
-    final SettableFuture<T> out;
-    final CheckedFuture<T, RpcException> in;
-
-    public FutureBridge(SettableFuture<T> out, CheckedFuture<T, RpcException> in) {
-      super();
-      this.out = out;
-      this.in = in;
-    }
-
-    @Override
-    public void run() {
-      try {
-        out.set(in.checkedGet());
-      } catch (RpcException ex) {
-        out.setException(ex);
-      }
+    public void doRpcCall(RpcOutcomeListener<Ack> outcomeListener, BitConnection connection) {
+      connection.send(outcomeListener, RpcType.REQ_INIATILIZE_FRAGMENT, fragment, Ack.class);
     }
 
   }

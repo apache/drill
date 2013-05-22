@@ -17,6 +17,8 @@
  ******************************************************************************/
 package org.apache.drill.exec.physical.impl.materialize;
 
+import java.util.Arrays;
+
 import io.netty.buffer.ByteBuf;
 
 import org.apache.drill.exec.proto.UserProtos.QueryResult;
@@ -42,5 +44,11 @@ public class QueryWritableBatch {
   public QueryResult getHeader() {
     return header;
   }
+
+  @Override
+  public String toString() {
+    return "QueryWritableBatch [header=" + header + ", buffers=" + Arrays.toString(buffers) + "]";
+  }
+  
   
 }

@@ -29,22 +29,30 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.concurrent.GenericFutureListener;
 
+import org.apache.drill.exec.rpc.RpcConnectionHandler.FailureType;
+
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.protobuf.Internal.EnumLite;
 import com.google.protobuf.MessageLite;
 import com.google.protobuf.Parser;
 
-public abstract class BasicClient<T extends EnumLite, R extends RemoteConnection> extends RpcBus<T, R> {
+public abstract class BasicClient<T extends EnumLite, R extends RemoteConnection, HANDSHAKE_SEND extends MessageLite, HANDSHAKE_RESPONSE extends MessageLite>
+    extends RpcBus<T, R> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BasicClient.class);
 
-  private Bootstrap b;
+  private final Bootstrap b;
   private volatile boolean connect = false;
   protected R connection;
-  private EventLoopGroup eventLoop;
+  private final T handshakeType;
+  private final Class<HANDSHAKE_RESPONSE> responseClass;
+  private final Parser<HANDSHAKE_RESPONSE> handshakeParser;
 
-  public BasicClient(RpcConfig rpcMapping, ByteBufAllocator alloc, EventLoopGroup eventLoopGroup) {
+  public BasicClient(RpcConfig rpcMapping, ByteBufAllocator alloc, EventLoopGroup eventLoopGroup, T handshakeType,
+      Class<HANDSHAKE_RESPONSE> responseClass, Parser<HANDSHAKE_RESPONSE> handshakeParser) {
     super(rpcMapping);
-    this.eventLoop = eventLoopGroup;
+    this.responseClass = responseClass;
+    this.handshakeType = handshakeType;
+    this.handshakeParser = handshakeParser;
     
     b = new Bootstrap() //
         .group(eventLoopGroup) //
@@ -59,12 +67,12 @@ public abstract class BasicClient<T extends EnumLite, R extends RemoteConnection
             logger.debug("initializing client connection.");
             connection = initRemoteConnection(ch);
             ch.closeFuture().addListener(getCloseHandler(connection));
-
+            
             ch.pipeline().addLast( //
                 new ZeroCopyProtobufLengthDecoder(), //
                 new RpcDecoder(rpcConfig.getName()), //
                 new RpcEncoder(rpcConfig.getName()), //
-                getHandshakeHandler(), //
+                new ClientHandshakeHandler(), //
                 new InboundHandler(connection), //
                 new RpcExceptionHandler() //
                 );
@@ -75,26 +83,9 @@ public abstract class BasicClient<T extends EnumLite, R extends RemoteConnection
     ;
   }
 
-  protected abstract ClientHandshakeHandler<?> getHandshakeHandler();
-
-  protected abstract class ClientHandshakeHandler<T extends MessageLite> extends AbstractHandshakeHandler<T> {
-    private Class<T> responseType;
-
-    public ClientHandshakeHandler(EnumLite handshakeType, Class<T> responseType, Parser<T> parser) {
-      super(handshakeType, parser);
-      this.responseType = responseType;
-    }
-
-    @Override
-    protected final void consumeHandshake(Channel c, T msg) throws Exception {
-      validateHandshake(msg);
-      queue.getFuture(handshakeType.getNumber(), coordinationId, responseType).setValue(msg);
-    }
-
-    protected abstract void validateHandshake(T msg) throws Exception;
-
-  }
-
+  protected abstract void validateHandshake(HANDSHAKE_RESPONSE validateHandshake) throws RpcException;
+  protected abstract void finalizeConnection(HANDSHAKE_RESPONSE handshake, R connection);
+  
   protected GenericFutureListener<ChannelFuture> getCloseHandler(Channel channel) {
     return new ChannelClosedHandler();
   }
@@ -103,6 +94,11 @@ public abstract class BasicClient<T extends EnumLite, R extends RemoteConnection
       T connection, T rpcType, SEND protobufBody, Class<RECEIVE> clazz, ByteBuf... dataBodies) throws RpcException {
     throw new UnsupportedOperationException(
         "This shouldn't be used in client mode as a client only has a single connection.");
+  }
+
+  protected <SEND extends MessageLite, RECEIVE extends MessageLite> void send(RpcOutcomeListener<RECEIVE> listener,
+      T rpcType, SEND protobufBody, Class<RECEIVE> clazz, ByteBuf... dataBodies) throws RpcException {
+    super.send(listener, connection, rpcType, protobufBody, clazz, dataBodies);
   }
 
   protected <SEND extends MessageLite, RECEIVE extends MessageLite> DrillRpcFuture<RECEIVE> send(T rpcType,
@@ -115,65 +111,91 @@ public abstract class BasicClient<T extends EnumLite, R extends RemoteConnection
     return true;
   }
 
-  /**
-   * TODO: This is a horrible hack to manage deadlock caused by creation of BitClient within BitCom.  Should be cleaned up.
-   */
-  private class HandshakeThread<SEND extends MessageLite, RECEIVE extends MessageLite> extends Thread {
-    final SettableFuture<RECEIVE> future;
-    T handshakeType;
-    SEND handshakeValue;
-    String host;
-    int port;
-    Class<RECEIVE> responseClass;
+  protected void connectAsClient(RpcConnectionHandler<R> connectionListener, HANDSHAKE_SEND handshakeValue, String host, int port){
+    ConnectionMultiListener cml = new ConnectionMultiListener(connectionListener, handshakeValue);
+    b.connect(host, port).addListener(cml.connectionHandler);
+  }
 
-    public HandshakeThread(T handshakeType, SEND handshakeValue, String host, int port, Class<RECEIVE> responseClass) {
-      super();
-      assert host != null && !host.isEmpty();
-      assert port > 0;
-      logger.debug("Creating new handshake thread to connec to {}:{}", host, port);
-      this.setName(String.format("handshake thread for %s", handshakeType.getClass().getCanonicalName()));
-      future = SettableFuture.create();
-      this.handshakeType = handshakeType;
+  private class ConnectionMultiListener {
+    private final RpcConnectionHandler<R> l;
+    private final HANDSHAKE_SEND handshakeValue;
+
+    public ConnectionMultiListener(RpcConnectionHandler<R> l, HANDSHAKE_SEND handshakeValue) {
+      assert l != null;
+      assert handshakeValue != null;
+          
+      this.l = l;
       this.handshakeValue = handshakeValue;
-      this.host = host;
-      this.port = port;
-      this.responseClass = responseClass;
     }
 
-    @Override
-    public void run() {
-      try {
-        logger.debug("Starting to get client connection on host {}, port {}.", host, port);
-        
-        ChannelFuture f = b.connect(host, port);
-        f.sync();
-        if (connection == null) throw new RpcException("Failure while attempting to connect to server.");
-        connect = !connect;
-        logger.debug("Client connected, sending handshake.");
-        DrillRpcFuture<RECEIVE> fut = send(handshakeType, handshakeValue, responseClass);
-        future.set(fut.checkedGet());
-        logger.debug("Got bit client connection.");
-      } catch (Exception e) {
-        logger.debug("Failed to get client connection.", e);
-        future.setException(e);
+    public final ConnectionHandler connectionHandler = new ConnectionHandler();
+    public final HandshakeSendHandler handshakeSendHandler = new HandshakeSendHandler();
+
+    /**
+     * Manages connection establishment outcomes.
+     */
+    private class ConnectionHandler implements GenericFutureListener<ChannelFuture> {
+
+      @Override
+      public void operationComplete(ChannelFuture future) throws Exception {
+//        logger.debug("Connection operation finished.  Success: {}", future.isSuccess());
+        try {
+          future.get();
+          if (future.isSuccess()) {
+            send(handshakeSendHandler, handshakeType, handshakeValue, responseClass);
+          } else {
+            l.connectionFailed(FailureType.CONNECTION, new RpcException("General connection failure."));
+          }
+//          logger.debug("Handshake queued for send.");
+        } catch (Exception ex) {
+          l.connectionFailed(FailureType.CONNECTION, ex);
+        }
       }
+    }
+
+    /**
+     * manages handshake outcomes.
+     */
+    private class HandshakeSendHandler implements RpcOutcomeListener<HANDSHAKE_RESPONSE> {
+
+      @Override
+      public void failed(RpcException ex) {
+        logger.debug("Failure while initiating handshake", ex);
+        l.connectionFailed(FailureType.HANDSHAKE_COMMUNICATION, ex);
+      }
+
+      @Override
+      public void success(HANDSHAKE_RESPONSE value) {
+//        logger.debug("Handshake received. {}", value);
+        try {
+          BasicClient.this.validateHandshake(value);
+          BasicClient.this.finalizeConnection(value, connection);
+          BasicClient.this.connect = true;
+          l.connectionSucceeded(connection);
+//          logger.debug("Handshake completed succesfully.");
+        } catch (RpcException ex) {
+          l.connectionFailed(FailureType.HANDSHAKE_VALIDATION, ex);
+        }
+      }
+
     }
 
   }
 
-  protected <SEND extends MessageLite, RECEIVE extends MessageLite> RECEIVE connectAsClient(T handshakeType,
-      SEND handshakeValue, String host, int port, Class<RECEIVE> responseClass) throws InterruptedException,
-      RpcException {
-    
-    
-    HandshakeThread<SEND, RECEIVE> ht = new HandshakeThread<SEND, RECEIVE>(handshakeType, handshakeValue, host, port, responseClass);
-    ht.start();
-    try{
-      return ht.future.get();  
-    }catch(Exception e){
-      throw new RpcException(e);
+  private class ClientHandshakeHandler extends AbstractHandshakeHandler<HANDSHAKE_RESPONSE> {
+
+    public ClientHandshakeHandler() {
+      super(BasicClient.this.handshakeType, BasicClient.this.handshakeParser);
     }
-    
+
+    @Override
+    protected final void consumeHandshake(Channel c, HANDSHAKE_RESPONSE msg) throws Exception {
+      // remove the handshake information from the queue so it doesn't sit there forever.
+      RpcOutcome<HANDSHAKE_RESPONSE> response = queue.getFuture(handshakeType.getNumber(), coordinationId,
+          responseClass);
+      response.set(msg);
+    }
+
   }
 
   public void close() {

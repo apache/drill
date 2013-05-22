@@ -159,14 +159,11 @@ public class BitComHandlerImpl implements BitComHandler {
     // Create a handler if there isn't already one.
     if(handler == null){
       
-      
-      
       PlanFragment fragment = bee.getContext().getCache().getFragment(handle);
       if(fragment == null){
         logger.error("Received batch where fragment was not in cache.");
         return Acks.FAIL;
       }
-      
 
       IncomingFragmentHandler newHandler = new RemoteFragmentHandler(fragment, bee.getContext(), bee.getContext().getBitCom().getTunnel(fragment.getForeman()));
       
@@ -174,7 +171,7 @@ public class BitComHandlerImpl implements BitComHandler {
       handler = handlers.putIfAbsent(fragment.getHandle(), newHandler);
           
       if(handler == null){
-        // we added a handler, inform foreman that we did so.  This way, the foreman can track status.  We also tell foreman that we don't need inform ourself.
+        // we added a handler, inform the bee that we did so.  This way, the foreman can track status. 
         bee.addFragmentPendingRemote(newHandler);
         handler = newHandler;
       }
@@ -182,10 +179,12 @@ public class BitComHandlerImpl implements BitComHandler {
     
     boolean canRun = handler.handle(connection.getConnectionThrottle(), new RawFragmentBatch(fragmentBatch, body));
     if(canRun){
+      logger.debug("Arriving batch means local batch can run, starting local batch.");
       // if we've reached the canRun threshold, we'll proceed.  This expects handler.handle() to only return a single true.
       bee.startFragmentPendingRemote(handler);
     }
-    if(handler.isDone()){
+    if(fragmentBatch.getIsLastBatch() && !handler.isWaiting()){
+      logger.debug("Removing handler.  Is Last Batch {}.  Is Waiting for more {}", fragmentBatch.getIsLastBatch(), handler.isWaiting());
       handlers.remove(handler.getHandle());
     }
     

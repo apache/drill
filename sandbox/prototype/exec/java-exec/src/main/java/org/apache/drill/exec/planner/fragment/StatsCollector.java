@@ -41,7 +41,7 @@ public class StatsCollector {
 
     Wrapper wrapper = planningSet.get(n);
     n.getRoot().accept(opStatCollector, wrapper);
-    logger.debug("Set stats to {}", wrapper.getStats());
+//    logger.debug("Set stats to {}", wrapper.getStats());
     // receivers...
     for (ExchangeFragmentPair child : n) {
       // get the fragment node that feeds this node.

@@ -43,11 +43,13 @@ public class LocalCache implements DistributedCache {
 
   @Override
   public PlanFragment getFragment(FragmentHandle handle) {
+    logger.debug("looking for fragment with handle: {}", handle);
     return handles.get(handle);
   }
 
   @Override
   public void storeFragment(PlanFragment fragment) {
+    logger.debug("Storing fragment: {}", fragment);
     handles.put(fragment.getHandle(), fragment);
   }
   

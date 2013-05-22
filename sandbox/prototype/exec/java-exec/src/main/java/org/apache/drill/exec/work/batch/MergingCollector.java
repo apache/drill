@@ -27,7 +27,7 @@ public class MergingCollector extends AbstractFragmentCollector{
   
   public MergingCollector(AtomicInteger parentAccounter, Receiver receiver) {
     super(parentAccounter, receiver, 1);
-    streamsRunning = new AtomicInteger(parentAccounter.get());
+    streamsRunning = new AtomicInteger(receiver.getProvidingEndpoints().size());
   }
 
   @Override
@@ -35,10 +35,11 @@ public class MergingCollector extends AbstractFragmentCollector{
     return buffers[0];
   }
 
-  @Override
+  
   public void streamFinished(int minorFragmentId) {
     if(streamsRunning.decrementAndGet() == 0) buffers[0].finished();
   }
+
   
   
 

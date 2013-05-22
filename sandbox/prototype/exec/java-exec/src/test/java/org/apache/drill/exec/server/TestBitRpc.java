@@ -19,26 +19,24 @@ package org.apache.drill.exec.server;
 
 import io.netty.buffer.ByteBuf;
 
-import java.util.concurrent.ConcurrentMap;
-
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
+import org.apache.drill.exec.proto.ExecProtos.FragmentStatus;
 import org.apache.drill.exec.proto.ExecProtos.PlanFragment;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.rpc.Response;
 import org.apache.drill.exec.rpc.RpcException;
-import org.apache.drill.exec.rpc.bit.BitClient;
-import org.apache.drill.exec.rpc.bit.BitComImpl;
 import org.apache.drill.exec.rpc.bit.BitConnection;
+import org.apache.drill.exec.rpc.bit.BitConnectionManager;
 import org.apache.drill.exec.rpc.bit.BitRpcConfig;
 import org.apache.drill.exec.rpc.bit.BitServer;
+import org.apache.drill.exec.rpc.bit.BitTunnel.SendFragmentStatus;
+import org.apache.drill.exec.rpc.bit.ConnectionManagerRegistry;
 import org.apache.drill.exec.rpc.bit.ListenerPool;
 import org.apache.drill.exec.work.batch.BitComHandler;
 import org.apache.drill.exec.work.fragment.IncomingFragmentHandler;
 import org.junit.Test;
-
-import com.google.common.collect.Maps;
 
 public class TestBitRpc {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestBitRpc.class);
@@ -47,13 +45,19 @@ public class TestBitRpc {
   public void testBasicConnectionAndHandshake() throws Exception{
     int port = 1234;
     BootStrapContext c = new BootStrapContext(DrillConfig.create());
-    ConcurrentMap<DrillbitEndpoint, BitConnection> registry = Maps.newConcurrentMap();
-    BitServer server = new BitServer(new BitComTestHandler(), c, registry, new ListenerPool(2));
+    final BitComTestHandler handler = new BitComTestHandler();
+    final ListenerPool listeners = new ListenerPool(2);
+    ConnectionManagerRegistry registry = new ConnectionManagerRegistry(handler, c, listeners);
+    BitServer server = new BitServer(handler, c, registry, listeners);
     port = server.bind(port);
+    DrillbitEndpoint ep = DrillbitEndpoint.newBuilder().setAddress("localhost").setBitPort(port).build();
+    registry.setEndpoint(ep);
     for(int i =0; i < 10; i++){
-      BitClient client = new BitClient(DrillbitEndpoint.newBuilder().setAddress("localhost").setBitPort(port).build(), null, new BitComTestHandler(), c, registry, new ListenerPool(2));
-      client.connect();
-      
+      try(BitConnectionManager cm = new BitConnectionManager(ep, ep, handler, c, listeners)){
+        SendFragmentStatus cmd = new SendFragmentStatus(FragmentStatus.getDefaultInstance());
+        cm.runCommand(cmd);
+        cmd.getFuture().checkedGet();
+      }
     }
     System.out.println("connected");
   }

@@ -15,29 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.apache.drill.exec.work.batch;
+package org.apache.drill.exec.rpc;
 
-import java.util.concurrent.atomic.AtomicInteger;
+import io.netty.channel.ChannelFuture;
+import io.netty.util.concurrent.GenericFutureListener;
 
-import org.apache.drill.exec.physical.base.Receiver;
-
-public class PartitionedCollector extends AbstractFragmentCollector{
-
-  public PartitionedCollector(AtomicInteger parentAccounter, Receiver receiver) {
-    super(parentAccounter, receiver, receiver.getProvidingEndpoints().size());
-  }
-
-  @Override
-  protected RawBatchBuffer getBuffer(int minorFragmentId) {
-    return buffers[minorFragmentId];
-  }
-
-  @Override
-  public void streamFinished(int minorFragmentId) {
-    buffers[minorFragmentId].finished();
-  }
-
-  
-  
-
+public interface ChannelListenerWithCoordinationId extends GenericFutureListener<ChannelFuture>{
+  public int getCoordinationId();
 }

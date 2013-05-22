@@ -17,8 +17,12 @@
  ******************************************************************************/
 package org.apache.drill.exec.rpc;
 
+import io.netty.channel.ChannelFuture;
+import io.netty.util.concurrent.GenericFutureListener;
+
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 
 import org.apache.drill.exec.proto.GeneralRPCProtos.RpcFailure;
 
@@ -29,31 +33,93 @@ public class CoordinationQueue {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CoordinationQueue.class);
 
   private final PositiveAtomicInteger circularInt = new PositiveAtomicInteger();
-  private final Map<Integer, DrillRpcFutureImpl<?>> map;
+  private final Map<Integer, RpcOutcome<?>> map;
 
   public CoordinationQueue(int segmentSize, int segmentCount) {
-    map = new ConcurrentHashMap<Integer, DrillRpcFutureImpl<?>>(segmentSize, 0.75f, segmentCount);
+    map = new ConcurrentHashMap<Integer, RpcOutcome<?>>(segmentSize, 0.75f, segmentCount);
   }
 
-  void channelClosed(Exception ex) {
-    for (DrillRpcFutureImpl<?> f : map.values()) {
-      f.setException(ex);
+  void channelClosed(Throwable ex) {
+    if(ex != null){
+      RpcException e;
+      if(ex instanceof RpcException){
+        e = (RpcException) ex;
+      }else{
+        e = new RpcException(ex);  
+      }
+      for (RpcOutcome<?> f : map.values()) {
+        f.setException(e);
+      }
     }
   }
 
-  public <V> DrillRpcFutureImpl<V> getNewFuture(Class<V> clazz) {
+  public <V> ChannelListenerWithCoordinationId get(RpcOutcomeListener<V> handler, Class<V> clazz){
     int i = circularInt.getNext();
-    DrillRpcFutureImpl<V> future = DrillRpcFutureImpl.getNewFuture(i, clazz);
-    // logger.debug("Writing to map coord {}, future {}", i, future);
+    RpcListener<V> future = new RpcListener<V>(handler, clazz, i);
     Object old = map.put(i, future);
     if (old != null)
       throw new IllegalStateException(
           "You attempted to reuse a coordination id when the previous coordination id has not been removed.  This is likely rpc future callback memory leak.");
     return future;
   }
+  
+  private class RpcListener<T> implements ChannelListenerWithCoordinationId, RpcOutcome<T>{
+    final RpcOutcomeListener<T> handler;
+    final Class<T> clazz;
+    final int coordinationId;
+    
+    public RpcListener(RpcOutcomeListener<T> handler, Class<T> clazz, int coordinationId) {
+      super();
+      this.handler = handler;
+      this.clazz = clazz;
+      this.coordinationId = coordinationId;
+    }
 
-  private DrillRpcFutureImpl<?> removeFromMap(int coordinationId) {
-    DrillRpcFutureImpl<?> rpc = map.remove(coordinationId);
+    @Override
+    public void operationComplete(ChannelFuture future) throws Exception {
+      if(!future.isSuccess()){
+        removeFromMap(coordinationId);
+      }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public void set(Object value) {
+      assert clazz.isAssignableFrom(value.getClass());
+      handler.success( (T) value);
+    }
+
+    @Override
+    public void setException(Throwable t) {
+      handler.failed(RpcException.mapException(t));
+    }
+
+    @Override
+    public Class<T> getOutcomeType() {
+      return clazz;
+    }
+
+    @Override
+    public int getCoordinationId() {
+      return coordinationId;
+    }
+    
+    
+  }
+//  
+//  public <V> DrillRpcFutureImpl<V> getNewFuture(Class<V> clazz) {
+//    int i = circularInt.getNext();
+//    DrillRpcFutureImpl<V> future = DrillRpcFutureImpl.getNewFuture(i, clazz);
+//    // logger.debug("Writing to map coord {}, future {}", i, future);
+//    Object old = map.put(i, future);
+//    if (old != null)
+//      throw new IllegalStateException(
+//          "You attempted to reuse a coordination id when the previous coordination id has not been removed.  This is likely rpc future callback memory leak.");
+//    return future;
+//  }
+
+  private RpcOutcome<?> removeFromMap(int coordinationId) {
+    RpcOutcome<?> rpc = map.remove(coordinationId);
     if (rpc == null) {
       logger.error("Rpc is null.");
       throw new IllegalStateException(
@@ -62,11 +128,11 @@ public class CoordinationQueue {
     return rpc;
   }
 
-  public <V> DrillRpcFutureImpl<V> getFuture(int rpcType, int coordinationId, Class<V> clazz) {
+  public <V> RpcOutcome<V> getFuture(int rpcType, int coordinationId, Class<V> clazz) {
     // logger.debug("Getting future for coordinationId {} and class {}", coordinationId, clazz);
-    DrillRpcFutureImpl<?> rpc = removeFromMap(coordinationId);
+    RpcOutcome<?> rpc = removeFromMap(coordinationId);
     // logger.debug("Got rpc from map {}", rpc);
-    Class<?> outcomeClass = rpc.getOutcomeClass();
+    Class<?> outcomeClass = rpc.getOutcomeType();
 
     if (outcomeClass != clazz) {
 
@@ -80,7 +146,7 @@ public class CoordinationQueue {
     }
 
     @SuppressWarnings("unchecked")
-    DrillRpcFutureImpl<V> crpc = (DrillRpcFutureImpl<V>) rpc;
+    RpcOutcome<V> crpc = (RpcOutcome<V>) rpc;
 
     // logger.debug("Returning casted future");
     return crpc;
@@ -88,7 +154,7 @@ public class CoordinationQueue {
 
   public void updateFailedFuture(int coordinationId, RpcFailure failure) {
     // logger.debug("Updating failed future.");
-    DrillRpcFutureImpl<?> rpc = removeFromMap(coordinationId);
+    RpcOutcome<?> rpc = removeFromMap(coordinationId);
     rpc.setException(new RemoteRpcException(failure));
   }
 }

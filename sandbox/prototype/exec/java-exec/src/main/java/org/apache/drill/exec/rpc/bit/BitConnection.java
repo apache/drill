@@ -17,6 +17,7 @@
  ******************************************************************************/
 package org.apache.drill.exec.rpc.bit;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.util.concurrent.GenericFutureListener;
@@ -35,30 +36,34 @@ import org.apache.drill.exec.record.FragmentWritableBatch;
 import org.apache.drill.exec.rpc.DrillRpcFuture;
 import org.apache.drill.exec.rpc.RemoteConnection;
 import org.apache.drill.exec.rpc.RpcBus;
+import org.apache.drill.exec.rpc.RpcConnectionHandler;
+import org.apache.drill.exec.rpc.RpcOutcomeListener;
 
 import com.google.common.base.Preconditions;
 import com.google.common.io.Closeables;
+import com.google.protobuf.MessageLite;
 
 public class BitConnection extends RemoteConnection{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BitConnection.class); 
   
   private final RpcBus<RpcType, BitConnection> bus;
-  private final ConcurrentMap<DrillbitEndpoint, BitConnection> registry;
   private final ListenerPool listeners;
-
-  private final AvailabilityListener listener;
   private volatile DrillbitEndpoint endpoint;
   private volatile boolean active = false;
   private final UUID id;
   
-  public BitConnection(AvailabilityListener listener, Channel channel, RpcBus<RpcType, BitConnection> bus, ConcurrentMap<DrillbitEndpoint, BitConnection> registry, ListenerPool listeners){
+  public BitConnection(Channel channel, RpcBus<RpcType, BitConnection> bus, ListenerPool listeners){
     super(channel);
     this.bus = bus;
-    this.registry = registry;
     // we use a local listener pool unless a global one is provided.
     this.listeners = listeners != null ? listeners : new ListenerPool(2);
-    this.listener = listener;
     this.id = UUID.randomUUID();
+  }
+  
+  void setEndpoint(DrillbitEndpoint endpoint){
+    assert this.endpoint == null : "Endpoint should only be set once (only in the case in incoming server requests).";
+    this.endpoint = endpoint;
+    active = true;
   }
 
   protected DrillbitEndpoint getEndpoint() {
@@ -69,48 +74,12 @@ public class BitConnection extends RemoteConnection{
     return listeners;
   }
   
-  protected void setEndpoint(DrillbitEndpoint endpoint) {
-    Preconditions.checkNotNull(endpoint);
-    Preconditions.checkArgument(this.endpoint == null);
-    
-    this.endpoint = endpoint;
-    BitServer.logger.debug("Adding new endpoint to available BitServer connections.  Endpoint: {}.", endpoint);
-    synchronized(this){
-      BitConnection c = registry.putIfAbsent(endpoint, this);
-      
-      if(c != null){ // the registry already has a connection like this
-        
-        // give the awaiting future an alternative connection.
-        if(listener != null){
-          listener.isAvailable(c);
-        }
-        
-        // shut this down if this is a client as it won't be available in the registry.
-        // otherwise we'll leave as, possibly allowing to bit coms to use different tunnels to talk to each other.  This shouldn't cause a problem.
-        logger.debug("Shutting down connection to {} since the registry already has an active connection that endpoint.", endpoint);
-        shutdownIfClient();
-        
-      }
-      active = true;
-      if(listener != null) listener.isAvailable(this);
-    }
-  }
-
-  public DrillRpcFuture<Ack> sendRecordBatch(FragmentContext context, FragmentWritableBatch batch){
-    return bus.send(this, RpcType.REQ_RECORD_BATCH, batch.getHeader(), Ack.class, batch.getBuffers());
+  
+  public <SEND extends MessageLite, RECEIVE extends MessageLite> void send(RpcOutcomeListener<RECEIVE> outcomeListener, RpcType rpcType,
+      SEND protobufBody, Class<RECEIVE> clazz, ByteBuf... dataBodies){
+    bus.send(outcomeListener, this, rpcType, protobufBody, clazz, dataBodies);
   }
   
-  public DrillRpcFuture<Ack> sendFragment(PlanFragment fragment){
-    return bus.send(this, RpcType.REQ_INIATILIZE_FRAGMENT, fragment, Ack.class);
-  }
-  
-  public DrillRpcFuture<Ack> cancelFragment(FragmentHandle handle){
-    return bus.send(this,  RpcType.REQ_CANCEL_FRAGMENT, handle, Ack.class);
-  }
-  
-  public DrillRpcFuture<Ack> sendFragmentStatus(FragmentStatus status){
-    return bus.send(this,  RpcType.REQ_FRAGMENT_STATUS, status, Ack.class);
-  }
 
   public void disable(){
     active = false;
@@ -140,27 +109,7 @@ public class BitConnection extends RemoteConnection{
     return true;
   }
 
-  public GenericFutureListener<ChannelFuture> getCloseHandler(GenericFutureListener<ChannelFuture> parent){
-    return new CloseHandler(this, parent);
-  }
-  
-  private class CloseHandler implements GenericFutureListener<ChannelFuture>{
-    private BitConnection connection;
-    private GenericFutureListener<ChannelFuture> parent;
-    
-    public CloseHandler(BitConnection connection, GenericFutureListener<ChannelFuture> parent) {
-      super();
-      this.connection = connection;
-      this.parent = parent;
-    }
 
-    @Override
-    public void operationComplete(ChannelFuture future) throws Exception {
-      if(connection.getEndpoint() != null) registry.remove(connection.getEndpoint(), connection);
-      parent.operationComplete(future);
-    }
-    
-  }
   
   public void shutdownIfClient(){
     if(bus.isClient()) Closeables.closeQuietly(bus);

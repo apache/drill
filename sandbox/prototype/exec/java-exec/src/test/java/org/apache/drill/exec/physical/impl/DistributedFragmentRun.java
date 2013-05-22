@@ -17,6 +17,8 @@
  ******************************************************************************/
 package org.apache.drill.exec.physical.impl;
 
+import static org.junit.Assert.*;
+
 import java.util.List;
 
 import org.apache.drill.common.util.FileUtils;
@@ -26,26 +28,29 @@ import org.apache.drill.exec.proto.UserProtos.QueryType;
 import org.apache.drill.exec.rpc.user.QueryResultBatch;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
-@Ignore
+//@Ignore
 public class DistributedFragmentRun extends PopUnitTestBase{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DistributedFragmentRun.class);
   
   
   @Test 
-  public void simpleDistributedQuery() throws Exception{
+  public void oneBitOneExchangeRun() throws Exception{
     RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
-    try(Drillbit bit1 = new Drillbit(CONFIG, serviceSet); Drillbit bit2 = new Drillbit(CONFIG, serviceSet); DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());){
+
+    try(Drillbit bit1 = new Drillbit(CONFIG, serviceSet); DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());){
       bit1.run();
-      bit2.run();
       client.connect();
       List<QueryResultBatch> results = client.runQuery(QueryType.PHYSICAL, Files.toString(FileUtils.getResourceAsFile("/physical_single_exchange.json"), Charsets.UTF_8));
-      System.out.println(results);
+      int count = 0;
+      for(QueryResultBatch b : results){
+        count += b.getHeader().getRowCount();
+      }
+      assertEquals(100, count);
     }
     
 

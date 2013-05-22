@@ -22,32 +22,35 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.ExecProtos.FragmentStatus;
+import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.work.foreman.FragmentStatusListener;
-import org.apache.drill.exec.work.fragment.RemoteFragmentHandler;
 
 public class ListenerPool {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ListenerPool.class);
   
-  private final ConcurrentMap<FragmentHandle, FragmentStatusListener> listeners;
+  private final ConcurrentMap<QueryId, FragmentStatusListener> listeners;
   
   public ListenerPool(int par){
-    listeners = new ConcurrentHashMap<FragmentHandle, FragmentStatusListener>(16, 0.75f, par);
+    listeners = new ConcurrentHashMap<QueryId, FragmentStatusListener>(16, 0.75f, par);
   }
   
   public void removeFragmentStatusListener(FragmentHandle handle) throws RpcException{
+    logger.debug("Removing framgent status listener for handle {}.", handle);
     listeners.remove(handle);
   }
   
   public void addFragmentStatusListener(FragmentHandle handle, FragmentStatusListener listener) throws RpcException{
-    FragmentStatusListener old = listeners.putIfAbsent(handle, listener);
+    logger.debug("Adding framgent status listener for handle {}.", handle);
+    FragmentStatusListener old = listeners.putIfAbsent(handle.getQueryId(), listener);
     if(old != null) throw new RpcException("Failure.  The provided handle already exists in the listener pool.  You need to remove one listener before adding another.");
   }
   
   public void status(FragmentStatus status){
-    FragmentStatusListener l = listeners.get(status.getHandle());
+    FragmentStatusListener l = listeners.get(status.getHandle().getQueryId());
     if(l == null){
-      logger.info("A fragment message arrived but there was no registered listener for that message.");
+      
+      logger.error("A fragment message arrived but there was no registered listener for that message for handle {}.", status.getHandle());
       return;
     }else{
       l.statusUpdate(status);

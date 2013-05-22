@@ -24,12 +24,9 @@ import java.util.List;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.exec.exception.FragmentSetupException;
-import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.physical.impl.ImplCreator;
-import org.apache.drill.exec.physical.impl.RootExec;
 import org.apache.drill.exec.physical.impl.materialize.QueryWritableBatch;
 import org.apache.drill.exec.planner.fragment.Fragment;
 import org.apache.drill.exec.planner.fragment.MakeFragmentsVisitor;
@@ -45,8 +42,8 @@ import org.apache.drill.exec.proto.UserProtos.QueryResult;
 import org.apache.drill.exec.proto.UserProtos.QueryResult.QueryState;
 import org.apache.drill.exec.proto.UserProtos.RequestResults;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
+import org.apache.drill.exec.rpc.BaseRpcOutcomeListener;
 import org.apache.drill.exec.rpc.RpcException;
-import org.apache.drill.exec.rpc.RpcOutcomeListener;
 import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.util.AtomicState;
@@ -126,14 +123,13 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
   
   void cleanupAndSendResult(QueryResult result){
     bee.retireForeman(this);
-    initiatingClient.sendResult(new QueryWritableBatch(result)).addLightListener(new ResponseSendListener());
+    initiatingClient.sendResult(new ResponseSendListener(), new QueryWritableBatch(result));
   }
 
-  private class ResponseSendListener extends RpcOutcomeListener<Ack> {
+  private class ResponseSendListener extends BaseRpcOutcomeListener<Ack> {
     @Override
     public void failed(RpcException ex) {
-      logger
-          .info(
+      logger.info(
               "Failure while trying communicate query result to initating client.  This would happen if a client is disconnected before response notice can be sent.",
               ex);
     }
@@ -193,12 +189,17 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
       fail("Failure while fragmenting query.", e);
       return;
     }
+    
+    
+
+    
     PlanningSet planningSet = StatsCollector.collectStats(rootFragment);
     SimpleParallelizer parallelizer = new SimpleParallelizer();
 
     try {
       QueryWorkUnit work = parallelizer.getFragments(context.getCurrentEndpoint(), queryId, context.getActiveEndpoints(), context.getPlanReader(), rootFragment, planningSet, 10);
 
+      this.context.getBitCom().getListeners().addFragmentStatusListener(work.getRootFragment().getHandle(), fragmentManager);
       List<PlanFragment> leafFragments = Lists.newArrayList();
 
       // store fragments in distributed grid.
@@ -213,7 +214,7 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
       fragmentManager.runFragments(bee, work.getRootFragment(), work.getRootOperator(), initiatingClient, leafFragments);
 
     
-    } catch (ExecutionSetupException e) {
+    } catch (ExecutionSetupException | RpcException e) {
       fail("Failure while setting up query.", e);
     }
 
@@ -245,9 +246,6 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
     return this.state.getState();
   }
 
-  public boolean rootCoorespondsTo(FragmentHandle handle){
-    throw new UnsupportedOperationException();
-  }
   
   class ForemanManagerListener{
     void fail(String message, Throwable t) {

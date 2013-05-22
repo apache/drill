@@ -40,11 +40,17 @@ public interface BitCom extends Closeable {
    */
   public BitTunnel getTunnel(DrillbitEndpoint node) ;
 
-  public int start() throws InterruptedException, DrillbitStartupException;
+  public DrillbitEndpoint start(DrillbitEndpoint partialEndpoint) throws InterruptedException, DrillbitStartupException;
 
   /**
    * Register an incoming batch handler for a local foreman.  
    * @param handler
    */
   public void registerIncomingBatchHandler(IncomingFragmentHandler handler);
+  
+  /**
+   * Get ListenerPool
+   * @return
+   */
+  public ListenerPool getListeners();
 }

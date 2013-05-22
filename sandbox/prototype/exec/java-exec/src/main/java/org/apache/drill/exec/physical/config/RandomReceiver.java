@@ -72,11 +72,6 @@ public class RandomReceiver extends AbstractReceiver{
     return new Size(1,1);
   }
 
-  @Override
-  public int getOppositeMajorFragmentId() {
-    return 0;
-  }
-
   
 
   

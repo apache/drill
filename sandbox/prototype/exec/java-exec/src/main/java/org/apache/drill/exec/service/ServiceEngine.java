@@ -53,12 +53,12 @@ public class ServiceEngine implements Closeable{
   
   public DrillbitEndpoint start() throws DrillbitStartupException, InterruptedException, UnknownHostException{
     int userPort = userServer.bind(config.getInt(ExecConstants.INITIAL_USER_PORT));
-    int bitPort = bitCom.start();
-    return DrillbitEndpoint.newBuilder()
+    DrillbitEndpoint partialEndpoint = DrillbitEndpoint.newBuilder()
         .setAddress(InetAddress.getLocalHost().getHostAddress())
-        .setBitPort(bitPort)
         .setUserPort(userPort)
         .build();
+
+    return bitCom.start(partialEndpoint);
   }
 
   public BitCom getBitCom(){

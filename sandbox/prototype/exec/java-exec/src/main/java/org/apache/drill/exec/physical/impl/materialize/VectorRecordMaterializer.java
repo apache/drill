@@ -20,6 +20,7 @@ package org.apache.drill.exec.physical.impl.materialize;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserProtos.QueryResult;
+import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.WritableBatch;
@@ -33,10 +34,12 @@ public class VectorRecordMaterializer implements RecordMaterializer{
   public VectorRecordMaterializer(FragmentContext context, RecordBatch batch) {
     this.queryId = context.getHandle().getQueryId();
     this.batch = batch;
-
-    for (MaterializedField f : batch.getSchema()) {
-      logger.debug("New Field: {}", f);
-    }
+    BatchSchema schema = batch.getSchema();
+    assert schema != null : "Schema must be defined.";
+    
+//    for (MaterializedField f : batch.getSchema()) {
+//      logger.debug("New Field: {}", f);
+//    }
   }
 
   public QueryWritableBatch convertNext(boolean isLast) {

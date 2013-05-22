@@ -23,6 +23,7 @@ import org.apache.drill.exec.cache.DistributedCache;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
+import org.apache.drill.exec.rpc.bit.BitCom;
 import org.apache.drill.exec.server.DrillbitContext;
 
 public class QueryContext {
@@ -57,4 +58,7 @@ public class QueryContext {
     return drillbitContext.getPlanReader();
   }
   
+  public BitCom getBitCom(){
+    return drillbitContext.getBitCom();
+  }
 }

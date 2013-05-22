@@ -29,17 +29,16 @@ import com.google.common.collect.Maps;
 public class LocalClusterCoordinator extends ClusterCoordinator{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LocalClusterCoordinator.class);
 
-  private volatile Map<RegistrationHandle, DrillbitEndpoint> endpoints;
+  private volatile Map<RegistrationHandle, DrillbitEndpoint> endpoints = Maps.newConcurrentMap();
   
   @Override
   public void close() throws IOException {
-    endpoints = null;
+    endpoints.clear();
   }
 
   @Override
   public void start(long millis) throws Exception {
     logger.debug("Local Cluster Coordinator started.");
-    endpoints = Maps.newConcurrentMap();
   }
 
   @Override
@@ -52,6 +51,8 @@ public class LocalClusterCoordinator extends ClusterCoordinator{
 
   @Override
   public void unregister(RegistrationHandle handle) {
+    if(handle == null) return;
+    
     endpoints.remove(handle);
   }
 

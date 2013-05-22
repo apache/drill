@@ -65,7 +65,7 @@ public class UnlmitedRawBatchBuffer implements RawBatchBuffer{
       }
     }
     
-    return null;
+    return b;
     
   }
 

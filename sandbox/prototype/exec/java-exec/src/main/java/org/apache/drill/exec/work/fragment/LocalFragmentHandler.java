@@ -60,8 +60,8 @@ public class LocalFragmentHandler implements IncomingFragmentHandler{
   }
 
   @Override
-  public boolean isDone() {
-    return cancel || isDone();
+  public boolean isWaiting() {
+    return !buffers.isDone() && !cancel;
   }
   
   

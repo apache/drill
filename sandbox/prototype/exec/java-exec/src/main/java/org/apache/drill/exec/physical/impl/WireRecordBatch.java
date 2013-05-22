@@ -38,6 +38,7 @@ public class WireRecordBatch implements RecordBatch{
   private RecordBatchLoader batchLoader;
   private RawFragmentBatchProvider fragProvider;
   private FragmentContext context;
+  private BatchSchema schema;
 
   
   public WireRecordBatch(FragmentContext context, RawFragmentBatchProvider fragProvider) {
@@ -53,7 +54,7 @@ public class WireRecordBatch implements RecordBatch{
 
   @Override
   public BatchSchema getSchema() {
-    return null;
+    return schema;
   }
 
   @Override
@@ -73,13 +74,16 @@ public class WireRecordBatch implements RecordBatch{
 
   @Override
   public IterOutcome next() {
-    RawFragmentBatch batch = this.fragProvider.getNext();
+    RawFragmentBatch batch = fragProvider.getNext();
     try{
       if(batch == null) return IterOutcome.NONE;
+
+      logger.debug("Next received batch {}", batch);
 
       RecordBatchDef rbd = batch.getHeader().getDef();
       boolean schemaChanged = batchLoader.load(rbd, batch.getBody());
       if(schemaChanged){
+        this.schema = batchLoader.getSchema();
         return IterOutcome.OK_NEW_SCHEMA;
       }else{
         return IterOutcome.OK;

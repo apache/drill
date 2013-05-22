@@ -33,6 +33,7 @@ import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
+import org.apache.drill.exec.rpc.NamedThreadFactory;
 import org.apache.drill.exec.rpc.bit.BitCom;
 import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.server.DrillbitContext;
@@ -40,7 +41,6 @@ import org.apache.drill.exec.work.batch.BitComHandler;
 import org.apache.drill.exec.work.batch.BitComHandlerImpl;
 import org.apache.drill.exec.work.foreman.Foreman;
 import org.apache.drill.exec.work.fragment.IncomingFragmentHandler;
-import org.apache.drill.exec.work.fragment.RemoteFragmentHandler;
 import org.apache.drill.exec.work.user.UserWorker;
 
 import com.google.common.collect.Maps;
@@ -63,7 +63,7 @@ public class WorkManager implements Closeable{
   private final BitComHandler bitComWorker;
   private final UserWorker userWorker;
   private final WorkerBee bee;
-  private Executor executor = Executors.newFixedThreadPool(4);
+  private Executor executor = Executors.newFixedThreadPool(4, new NamedThreadFactory("Working Thread - "));
   private final EventThread eventThread;
   
   public WorkManager(BootStrapContext context){
@@ -148,9 +148,10 @@ public class WorkManager implements Closeable{
   public void run() {
     try {
     while(true){
-      logger.debug("Checking for pending work tasks.");
+      logger.debug("Polling for pending work tasks.");
       Runnable r = pendingTasks.poll(10, TimeUnit.SECONDS);
       if(r != null){
+        logger.debug("Starting pending task {}", r);
         executor.execute(r);  
       }
       

@@ -64,6 +64,16 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
 
   public <SEND extends MessageLite, RECEIVE extends MessageLite> DrillRpcFuture<RECEIVE> send(C connection, T rpcType,
       SEND protobufBody, Class<RECEIVE> clazz, ByteBuf... dataBodies) {
+    DrillRpcFutureImpl<RECEIVE> rpcFuture = new DrillRpcFutureImpl<RECEIVE>();
+    this.send(rpcFuture, connection, rpcType, protobufBody, clazz, dataBodies);
+    return rpcFuture;
+  }  
+  
+  public <SEND extends MessageLite, RECEIVE extends MessageLite> void send(RpcOutcomeListener<RECEIVE> listener, C connection, T rpcType,
+      SEND protobufBody, Class<RECEIVE> clazz, ByteBuf... dataBodies) {
+  
+    
+
 
     assert !Arrays.asList(dataBodies).contains(null);
     assert rpcConfig.checkSend(rpcType, protobufBody.getClass(), clazz);
@@ -72,14 +82,12 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
     boolean completed = false;
 
     try {
-      // logger.debug("Seding message");
       Preconditions.checkNotNull(protobufBody);
-      DrillRpcFutureImpl<RECEIVE> rpcFuture = queue.getNewFuture(clazz);
-      OutboundRpcMessage m = new OutboundRpcMessage(RpcMode.REQUEST, rpcType, rpcFuture.coordinationId, protobufBody, dataBodies);
+      ChannelListenerWithCoordinationId futureListener = queue.get(listener, clazz);
+      OutboundRpcMessage m = new OutboundRpcMessage(RpcMode.REQUEST, rpcType, futureListener.getCoordinationId(), protobufBody, dataBodies);
       ChannelFuture channelFuture = connection.getChannel().write(m);
-      channelFuture.addListener(new Listener(rpcFuture.coordinationId, clazz));
+      channelFuture.addListener(futureListener);
       completed = true;
-      return rpcFuture;
     } finally {
       if (!completed) {
         if (pBuffer != null) pBuffer.release();
@@ -140,10 +148,10 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
       case RESPONSE:
         MessageLite m = getResponseDefaultInstance(msg.rpcType);
         assert rpcConfig.checkReceive(msg.rpcType, m.getClass());
-        DrillRpcFutureImpl<?> rpcFuture = queue.getFuture(msg.rpcType, msg.coordinationId, m.getClass());
+        RpcOutcome<?> rpcFuture = queue.getFuture(msg.rpcType, msg.coordinationId, m.getClass());
         Parser<?> parser = m.getParserForType();
         Object value = parser.parseFrom(new ByteBufInputStream(msg.pBody, msg.pBody.readableBytes()));
-        rpcFuture.setValue(value);
+        rpcFuture.set(value);
         if (RpcConstants.EXTRA_DEBUGGING) logger.debug("Updated rpc future {} with value {}", rpcFuture, value);
 
         break;
@@ -162,39 +170,39 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
 
   }
 
-  private class Listener implements GenericFutureListener<ChannelFuture> {
-
-    private int coordinationId;
-    private Class<?> clazz;
-
-    public Listener(int coordinationId, Class<?> clazz) {
-      this.coordinationId = coordinationId;
-      this.clazz = clazz;
-    }
-
-    @Override
-    public void operationComplete(ChannelFuture channelFuture) throws Exception {
-      // logger.debug("Completed channel write.");
-
-      if (channelFuture.isCancelled()) {
-        DrillRpcFutureImpl<?> rpcFuture = queue.getFuture(-1, coordinationId, clazz);
-        rpcFuture.setException(new CancellationException("Socket operation was canceled."));
-      } else if (!channelFuture.isSuccess()) {
-        try {
-          channelFuture.get();
-          throw new IllegalStateException("Future was described as completed and not succesful but did not throw an exception.");
-        } catch (Exception e) {
-          logger.error("Error occurred during Rpc", e);
-          DrillRpcFutureImpl<?> rpcFuture = queue.getFuture(-1, coordinationId, clazz);
-          rpcFuture.setException(e);
-        }
-      } else {
-        // send was successful. No need to modify DrillRpcFuture.
-        return;
-      }
-    }
-
-  }
+//  private class Listener implements GenericFutureListener<ChannelFuture> {
+//
+//    private int coordinationId;
+//    private Class<?> clazz;
+//
+//    public Listener(int coordinationId, Class<?> clazz) {
+//      this.coordinationId = coordinationId;
+//      this.clazz = clazz;
+//    }
+//
+//    @Override
+//    public void operationComplete(ChannelFuture channelFuture) throws Exception {
+//      // logger.debug("Completed channel write.");
+//
+//      if (channelFuture.isCancelled()) {
+//        RpcOutcome<?> rpcFuture = queue.getFuture(-1, coordinationId, clazz);
+//        rpcFuture.setException(new CancellationException("Socket operation was canceled."));
+//      } else if (!channelFuture.isSuccess()) {
+//        try {
+//          channelFuture.get();
+//          throw new IllegalStateException("Future was described as completed and not succesful but did not throw an exception.");
+//        } catch (Exception e) {
+//          logger.error("Error occurred during Rpc", e);
+//          RpcOutcome<?> rpcFuture = queue.getFuture(-1, coordinationId, clazz);
+//          rpcFuture.setException(e);
+//        }
+//      } else {
+//        // send was successful. No need to modify DrillRpcFuture.
+//        return;
+//      }
+//    }
+//
+//  }
 
   public static <T> T get(ByteBuf pBody, Parser<T> parser) throws RpcException{
     try {

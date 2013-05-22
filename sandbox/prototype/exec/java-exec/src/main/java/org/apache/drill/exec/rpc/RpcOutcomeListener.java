@@ -17,11 +17,10 @@
  ******************************************************************************/
 package org.apache.drill.exec.rpc;
 
-public abstract class RpcOutcomeListener<V> {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RpcOutcomeListener.class);
+public interface RpcOutcomeListener<V> {
   
-  public void failed(RpcException ex){};
-  public void success(V value){};
+  public void failed(RpcException ex);
+  public void success(V value);
   
   
 

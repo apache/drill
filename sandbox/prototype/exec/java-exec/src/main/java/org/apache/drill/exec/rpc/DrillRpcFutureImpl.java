@@ -22,22 +22,12 @@ import java.util.concurrent.ExecutionException;
 import com.google.common.util.concurrent.AbstractCheckedFuture;
 import com.google.common.util.concurrent.AbstractFuture;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.MoreExecutors;
 
-class DrillRpcFutureImpl<V> extends AbstractCheckedFuture<V, RpcException> implements DrillRpcFuture<V>{
+class DrillRpcFutureImpl<V> extends AbstractCheckedFuture<V, RpcException> implements DrillRpcFuture<V>, RpcOutcomeListener<V>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillRpcFutureImpl.class);
 
-  final int coordinationId;
-  private final Class<V> clazz;
-
-  public DrillRpcFutureImpl(ListenableFuture<V> delegate, int coordinationId, Class<V> clazz) {
-    super(delegate);
-    this.coordinationId = coordinationId;
-    this.clazz = clazz;
-  }
-
-  public Class<V> getOutcomeClass(){
-    return clazz;
+  public DrillRpcFutureImpl() {
+    super(new InnerFuture<V>());
   }
   
   /**
@@ -53,24 +43,7 @@ class DrillRpcFutureImpl<V> extends AbstractCheckedFuture<V, RpcException> imple
 
   @Override
   protected RpcException mapException(Exception ex) {
-    Throwable e = ex;
-    while(e instanceof ExecutionException){
-      e = e.getCause();
-    }
-    if (e instanceof RpcException)  return (RpcException) e;
-
-    return new RpcException(ex);
-
-  }
-
-  @SuppressWarnings("unchecked")
-  void setValue(Object value) {
-    assert clazz.isAssignableFrom(value.getClass());
-    ((InnerFuture<V>) super.delegate()).setValue((V) value);
-  }
-
-  boolean setException(Throwable t) {
-    return ((InnerFuture<V>) super.delegate()).setException(t);
+    return RpcException.mapException(ex);
   }
 
   public static class InnerFuture<T> extends AbstractFuture<T> {
@@ -85,34 +58,17 @@ class DrillRpcFutureImpl<V> extends AbstractCheckedFuture<V, RpcException> imple
     }
   }
 
-  public class RpcOutcomeListenerWrapper implements Runnable{
-    final RpcOutcomeListener<V> inner;
-    
-    public RpcOutcomeListenerWrapper(RpcOutcomeListener<V> inner) {
-      super();
-      this.inner = inner;
-    }
+  @Override
+  public void failed(RpcException ex) {
+    ( (InnerFuture<V>)delegate()).setException(ex);
+  }
 
-    @Override
-    public void run() {
-      try{
-        inner.success(DrillRpcFutureImpl.this.checkedGet());
-      }catch(RpcException e){
-        inner.failed(e);
-      }
-    }
-  }
-  
-  public void addLightListener(RpcOutcomeListener<V> outcomeListener){
-    this.addListener(new RpcOutcomeListenerWrapper(outcomeListener), MoreExecutors.sameThreadExecutor());
-  }
-  
-  
-  
-  public static <V> DrillRpcFutureImpl<V> getNewFuture(int coordinationId, Class<V> clazz) {
-    InnerFuture<V> f = new InnerFuture<V>();
-    return new DrillRpcFutureImpl<V>(f, coordinationId, clazz);
+  @Override
+  public void success(V value) {
+    ( (InnerFuture<V>)delegate()).setValue(value);
   }
 
 
+  
+  
 }

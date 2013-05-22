@@ -44,6 +44,6 @@ public interface IncomingFragmentHandler {
   public abstract FragmentRunner getRunnable();
 
   public abstract void cancel();
-  public boolean isDone();
+  public boolean isWaiting();
   public abstract FragmentHandle getHandle();
 }
