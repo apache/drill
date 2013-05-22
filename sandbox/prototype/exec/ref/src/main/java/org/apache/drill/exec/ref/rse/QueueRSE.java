@@ -40,9 +40,11 @@ public class QueueRSE extends RSEBase {
 
   private DrillConfig dConfig;
   private final List<Queue<Object>> sinkQueues;
+  private final QueueRSEConfig engineConfig;
   
   public QueueRSE(QueueRSEConfig engineConfig, DrillConfig dConfig) throws SetupException{
     this.dConfig = dConfig;
+    this.engineConfig = engineConfig;
     sinkQueues = Collections.singletonList( (Queue<Object>) (new ArrayBlockingQueue<Object>(100)));
   }
 
@@ -52,15 +54,28 @@ public class QueueRSE extends RSEBase {
   
   @JsonTypeName("queue")
   public static class QueueRSEConfig extends StorageEngineConfigBase {
+    
+    public static enum Encoding {JSON, RECORD};
+    
+    private final Encoding encoding;
+    
     @JsonCreator
-    public QueueRSEConfig(@JsonProperty("name") String name) {
+    public QueueRSEConfig(@JsonProperty("name") String name, @JsonProperty("encoding") Encoding encoding) {
       super(name);
+      this.encoding = encoding == null ? Encoding.JSON : encoding;
     }
+
+    public Encoding getEncoding() {
+      return encoding;
+    }
+    
+    
   }
   
   public static class QueueOutputInfo{
     public int number;
   }
+  
 
   public boolean supportsWrite() {
     return true;
@@ -89,12 +104,19 @@ public class QueueRSE extends RSEBase {
 
     @Override
     public long recordRecord(RecordPointer r) throws IOException {
-      final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-      final JSONDataWriter writer = new JSONDataWriter(baos);
-      r.write(writer);
-      writer.finish();
-      queue.add(baos.toByteArray());
-      return 0;
+      switch(engineConfig.encoding){
+      case RECORD:
+        queue.add(r.copy());
+        return 0;
+      default:
+        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        final JSONDataWriter writer = new JSONDataWriter(baos);
+        r.write(writer);
+        writer.finish();
+        queue.add(baos.toByteArray());
+        return 0;
+      }
+
     }
 
     @Override

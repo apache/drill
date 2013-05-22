@@ -49,17 +49,14 @@ public class Order extends SingleInputOperator {
 
     private final Direction direction;
     private final LogicalExpression expr;
-
+    private final NullCollation nulls;
+    
     @JsonCreator
-    public Ordering(@JsonProperty("order") String strOrder, @JsonProperty("expr") LogicalExpression expr) {
+    public Ordering(@JsonProperty("order") String strOrder, @JsonProperty("expr") LogicalExpression expr, @JsonProperty("nullCollation") String nullCollation) {
       this.expr = expr;
-      this.direction = Direction.DESC.description.equals(strOrder) ? Direction.DESC : Direction.ASC; // default
-                                                                                                     // to
-                                                                                                     // ascending
-                                                                                                     // unless
-                                                                                                     // desc
-                                                                                                     // is
-                                                                                                     // provided.
+      this.nulls = NullCollation.NULLS_LAST.description.equals(nullCollation) ? NullCollation.NULLS_LAST :  NullCollation.NULLS_FIRST; // default first
+      this.direction = Direction.DESC.description.equals(strOrder) ? Direction.DESC : Direction.ASC; // default asc
+                                                                                                     
     }
 
     @JsonIgnore
@@ -75,6 +72,21 @@ public class Order extends SingleInputOperator {
       return direction.description;
     }
 
+    public NullCollation getNullCollation() {
+      return nulls;
+    }
+    
+    
+
+  }
+  public static enum NullCollation {
+    NULLS_FIRST("first"), NULLS_LAST("last");
+    
+    public final String description;
+
+    NullCollation(String d) {
+      description = d;
+    }
   }
 
   public static enum Direction {

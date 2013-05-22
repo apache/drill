@@ -518,7 +518,7 @@ public final class ScalarValues {
 
     @Override
     public String toString() {
-      return "NullValue []";
+      return "NullValue";
     }
 
     @Override
@@ -534,7 +534,7 @@ public final class ScalarValues {
 
     @Override
     public DataValue copy() {
-      return new NullValue();
+      return this;
     }
     
   }
