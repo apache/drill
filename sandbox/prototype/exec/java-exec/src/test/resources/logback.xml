@@ -1,43 +1,28 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <configuration>
-<!-- 
-  <appender name="SOCKET" class="de.huxhorn.lilith.logback.appender.ClassicMultiplexSocketAppender">
-    <Compressing>true</Compressing> 
-    <ReconnectionDelay>10000</ReconnectionDelay>
-    <IncludeCallerData>true</IncludeCallerData>
-    <RemoteHosts>localhost</RemoteHosts>
-  </appender>
--->
- <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-    <encoder>
-      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
-    </encoder>
-  </appender>
+	<appender name="SOCKET"
+		class="de.huxhorn.lilith.logback.appender.ClassicMultiplexSocketAppender">
+		<Compressing>true</Compressing>
+		<ReconnectionDelay>10000</ReconnectionDelay>
+		<IncludeCallerData>true</IncludeCallerData>
+		<RemoteHosts>localhost</RemoteHosts>
+	</appender>
 
-<!-- 
-  <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-    <file>/logs/test-common.log</file>
-    <encoder>
-      <pattern>%date %level [%thread] %logger{10} [%file:%line] %msg%n</pattern>
-    </encoder>
-    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-	    <fileNamePattern>/logs/test-common.%d{yyyy-MM-dd}.log</fileNamePattern>
-	    <maxHistory>30</maxHistory>
-    </rollingPolicy>
-  </appender>
-  --> 
-  <logger name="org.apache.drill" additivity="false">
-    <level value="debug" />
-<!--     <appender-ref ref="SOCKET" /> -->
-    <appender-ref ref="STDOUT" />
-<!--     <appender-ref ref="FILE" /> -->
-  </logger>
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n
+			</pattern>
+		</encoder>
+	</appender>
 
-  <root>
-    <level value="error" />
-<!--     <appender-ref ref="SOCKET" /> -->
-    <appender-ref ref="STDOUT" />
-<!--     <appender-ref ref="FILE" /> -->
-  </root>
+	<logger name="org.apache.drill" additivity="false">
+		<level value="debug" />
+		<appender-ref ref="SOCKET" />
+	</logger>
+
+	<root>
+		<level value="error" />
+		<appender-ref ref="STDOUT" />
+	</root>
 
 </configuration>
