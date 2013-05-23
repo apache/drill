@@ -51,7 +51,7 @@ public class TestUtils {
   public static void assertProduceCount(String resourcePath, int recordCount) throws Exception {
     DrillConfig config = getConfigWithQueue(0);
     Collection<RunOutcome> outcomes = getOutcome(config, resourcePath);
-    assertEquals(outcomes.iterator().next().records, recordCount);
+    assertEquals(recordCount, outcomes.iterator().next().records);
   }
 
   /**

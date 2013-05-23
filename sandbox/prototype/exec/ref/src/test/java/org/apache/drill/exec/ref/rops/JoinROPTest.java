@@ -23,7 +23,17 @@ import org.junit.Test;
 public class JoinROPTest {
 
   @Test
-  public void testJoin() throws Exception{
+  public void testInnerJoin() throws Exception {
     TestUtils.assertProduceCount("/join/simple_join.json", 5);
+  }
+
+  @Test
+  public void testOuterJoin() throws Exception {
+    TestUtils.assertProduceCount("/join/full_join.json", 7);
+  }
+
+  @Test
+  public void testLeftJoin() throws Exception {
+    TestUtils.assertProduceCount("/join/left_join.json", 6);
   }
 }

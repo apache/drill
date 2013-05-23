@@ -16,9 +16,9 @@
 }
 {
     "lastName": "Smith",
-    "deptId": 36
+    "deptId": 34
 }
 {
-    "deptId": 35,
+    "deptId": null,
     "lastName": "John"
 }
