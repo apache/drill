@@ -22,6 +22,7 @@ public interface DataValue {
   public BooleanValue getAsBooleanValue();
   public BytesValue getAsBytesValue();
   public boolean equals(DataValue v);
+  public boolean equals(Object v);
   public int hashCode();
   public DataValue copy();
 }
