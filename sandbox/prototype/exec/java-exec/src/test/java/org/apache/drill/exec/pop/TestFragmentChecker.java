@@ -34,8 +34,8 @@ import org.junit.Test;
 
 import com.google.common.collect.Lists;
 
-public class FragmentChecker extends PopUnitTestBase{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FragmentChecker.class);
+public class TestFragmentChecker extends PopUnitTestBase{
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestFragmentChecker.class);
   
   
   @Test

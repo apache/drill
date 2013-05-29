@@ -1,24 +1,33 @@
 {
-    head:{
-        type:"APACHE_DRILL_PHYSICAL",
-        version:"1",
-        generator:{
-            type:"manual"
+    "head": {
+        "type": "APACHE_DRILL_PHYSICAL",
+        "version": "1",
+        "generator": {
+            "type": "manual"
         }
     },
-    graph:[
+    "graph": [
         {
-            @id:1,
-            pop:"mock-scan",
-            url: "http://apache.org",
-            entries:[
-            	{id:1, records: 100, size: 100}
+            "@id": 1,
+            "pop": "mock-scan",
+            "url": "http://apache.org",
+            "entries": [
+                {
+                    "records": 100,
+                    "types": [
+                        {
+                            "name": "blue",
+                            "type": "INT",
+                            "mode": "REQUIRED"
+                        }
+                    ]
+                }
             ]
         },
         {
-            @id:2,
-            pop: "screen",
-            child: 1
+            "@id": 2,
+            "pop": "screen",
+            "child": 1
         }
     ]
 }

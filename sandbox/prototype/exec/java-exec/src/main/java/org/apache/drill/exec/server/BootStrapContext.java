@@ -61,7 +61,7 @@ public class BootStrapContext implements Closeable{
   }
 
   public void close(){
-    loop.shutdown();
+    loop.shutdownGracefully();
     allocator.close();
   }
   

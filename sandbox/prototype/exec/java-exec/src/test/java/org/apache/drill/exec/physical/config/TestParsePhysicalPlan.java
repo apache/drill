@@ -20,6 +20,8 @@ package org.apache.drill.exec.physical.config;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.physical.PhysicalPlan;
+import org.apache.drill.exec.planner.PhysicalPlanReader;
+import org.apache.drill.exec.proto.CoordinationProtos;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.ObjectReader;
@@ -27,16 +29,17 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
-public class ParsePhysicalPlan {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParsePhysicalPlan.class);
+public class TestParsePhysicalPlan {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestParsePhysicalPlan.class);
   
   
   @Test 
   public void parseSimplePlan() throws Exception{
     DrillConfig c = DrillConfig.create();
+    PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
     ObjectReader r = c.getMapper().reader(PhysicalPlan.class);
     ObjectWriter writer = c.getMapper().writer();
-    PhysicalPlan plan = PhysicalPlan.parse(r, Files.toString(FileUtils.getResourceAsFile("/physical_test1.json"), Charsets.UTF_8));
+    PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/physical_test1.json"), Charsets.UTF_8));
     System.out.println(plan.unparse(writer));
   }
 }

@@ -28,16 +28,14 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.Screen;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
-import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.store.StorageEngineRegistry;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
-public class CheckInjectionValue {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CheckInjectionValue.class);
+public class TestInjectionValue {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestInjectionValue.class);
   
   static DrillConfig config;
   

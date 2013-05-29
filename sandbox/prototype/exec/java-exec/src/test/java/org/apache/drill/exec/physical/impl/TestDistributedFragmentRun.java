@@ -33,9 +33,9 @@ import org.junit.Test;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
-//@Ignore
-public class DistributedFragmentRun extends PopUnitTestBase{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DistributedFragmentRun.class);
+
+public class TestDistributedFragmentRun extends PopUnitTestBase{
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestDistributedFragmentRun.class);
   
   
   @Test 

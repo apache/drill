@@ -36,8 +36,8 @@ import com.carrotsearch.hppc.cursors.IntObjectCursor;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
-public class SimpleFragmentRun extends PopUnitTestBase {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SimpleFragmentRun.class);
+public class TestSimpleFragmentRun extends PopUnitTestBase {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestSimpleFragmentRun.class);
 
   @Test
   public void runNoExchangeFragment() throws Exception {
