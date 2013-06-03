@@ -14,12 +14,8 @@ public class NullableVarLen4 extends NullableValueVector<NullableVarLen4, VarLen
         return new VarLen4(field, allocator);
     }
 
-    @Override
-    public void setNull(int index) {
-        super.setNull(index);
-    }
-
     public void setBytes(int index, byte[] bytes) {
+        setNotNull(index);
         value.setBytes(index, bytes);
     }
 }

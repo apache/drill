@@ -34,15 +34,15 @@ public class VarLen4 extends VariableVector<VarLen4, Fixed4>{
     return new Fixed4(null, allocator);
   }
 
-    public void setBytes(int index, byte[] bytes) {
-        checkArgument(index >= 0);
-        if(index == 0) {
-            lengthVector.setInt(0, bytes.length);
-            data.setBytes(0, bytes);
-        } else {
-            int previousOffset = lengthVector.getInt(index - 1);
-            lengthVector.setInt(index, previousOffset + bytes.length);
-            data.setBytes(previousOffset, bytes);
-        }
+  public void setBytes(int index, byte[] bytes) {
+      checkArgument(index >= 0);
+      if(index == 0) {
+          lengthVector.setInt(0, bytes.length);
+          data.setBytes(0, bytes);
+      } else {
+          int previousOffset = lengthVector.getInt(index - 1);
+          lengthVector.setInt(index, previousOffset + bytes.length);
+          data.setBytes(previousOffset, bytes);
+      }
     }
 }

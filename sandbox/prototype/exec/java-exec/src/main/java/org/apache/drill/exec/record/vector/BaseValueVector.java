@@ -58,9 +58,7 @@ public abstract class BaseValueVector<T extends BaseValueVector<T>> implements V
    */
   protected final void resetAllocation(int maxValueCount, ByteBuf buf){
     clear();
-    if(buf != DeadBuf.DEAD_BUFFER) {
-       buf.retain();
-    }
+    buf.retain();
     this.maxValueCount = maxValueCount;
     this.data = buf;
     childResetAllocation(maxValueCount, buf);

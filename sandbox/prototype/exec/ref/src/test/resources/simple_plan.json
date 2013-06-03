@@ -1,33 +1,17 @@
 {
   head:{
-<<<<<<< HEAD
     type:"APACHE_DRILL_LOGICAL",
-=======
-    type:"apache_drill_logical_plan",
->>>>>>> Working Reference Interpreter.  Remove fake files.  Updates to common as reference interpreter clarified things.
     version:"1",
     generator:{
       type:"manual",
       info:"na"
     }
   },
-<<<<<<< HEAD
   storage:{
     console: {type: "console"},
     fs1: {type: "fs", root:"file:///"},
     cp: {type: "classpath"}
   },
-=======
-  sources:[
-    {
-      type:"json",
-      name:"local-logs",
-      files:[
-        "src/test/resources/donuts.json"
-      ]
-    }
-  ],
->>>>>>> Working Reference Interpreter.  Remove fake files.  Updates to common as reference interpreter clarified things.
   query:[
     {
       op:"sequence",
@@ -36,7 +20,6 @@
 	      op: "scan",
 	      memo: "initial_scan",
 	      ref: "donuts",
-<<<<<<< HEAD
 	      storageengine: "cp",
 	      selection: {
 	        path: "/donuts.json",
@@ -74,49 +57,11 @@
 	        {order: "DESC", expr: "donuts.ppu" }
 	      ]
 	    }, 
-=======
-	      source: "local-logs",
-	      selection: {data: "activity"}
-	    },
-	    {
-	      op: "transform",
-	      transforms: [
-	        { ref: "donuts.quanity", expr: "donuts.sales"}
-	      ]
-	    },
-	    { 
-	      op: "filter",
-	      expr: "donuts.ppu < 1.00"
-	    },
-	    {
-	      op: "group",
-	      groupings: [
-	        { ref: "donuts.ppu", expr: "donuts.ppu" }
-	      ]
-	    },
-	    {
-	      op: "aggregate",
-	      type: "simple",
-	      keys: ["donuts.ppu"],
-	      aggregations: [
-	        { ref: "donuts.typeCount",  expr: "count(1)" },
-	        { ref: "donuts.quantity",  expr: "sum(donuts.sales)" },
-	        { ref: "donuts.sales",  expr: "sum(donuts.ppu * donuts.sales)" }
-	      ]
-	    },
-	    { 
-	      op: "order",
-	      orderings: [
-	        {order: "desc", expr: "donuts.ppu" }
-	      ]
-	    },	    
->>>>>>> Working Reference Interpreter.  Remove fake files.  Updates to common as reference interpreter clarified things.
 	    {
 	      op: "project",
 	      projections: [
 	        { ref: "output", expr: "donuts" }
 	      ]
-<<<<<<< HEAD
 	    },
  	    {
           op: "limit",
@@ -133,15 +78,4 @@
     }
   ]
 }
-=======
-	    },	    
-	    {
-	      op: "write",
-	      memo: "save file",
-	      file: "file:///opt/data/out.json"
-	    }     
-      ]
-    }
-  ]
-}
->>>>>>> Working Reference Interpreter.  Remove fake files.  Updates to common as reference interpreter clarified things.
+

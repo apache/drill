@@ -99,6 +99,4 @@ public abstract class VariableVector<T extends VariableVector<T, E>, E extends B
       data.getBytes(startIdx, dst, 0, size);
       return dst;
   }
-
-
 }

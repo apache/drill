@@ -39,11 +39,6 @@ public class VectorHolder {
 
     public void incAndCheckLength(int newLength) {
         if (!hasEnoughSpace(newLength)) {
-            //ValueVector newVector = TypeHelper.getNewVector(new MaterializedField(vector.getMetadata().getDef()), allocator);
-            //length *= 2;
-            //newVector.allocateNew(length);
-            //newVector.transferTo(vector); //FIXME: How to transfer existing data? Or we're doing sth wrong?
-            //vector = newVector;
             throw new BatchExceededException(length, currentLength + newLength);
         }
         currentLength += newLength;
@@ -55,5 +50,10 @@ public class VectorHolder {
 
     public int getLength() {
         return length;
+    }
+
+    public void reset() {
+        currentLength = 0;
+        vector.allocateNew(length);
     }
 }

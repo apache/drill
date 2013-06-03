@@ -1,10 +1,10 @@
-
-	{
+{
 		"id": "0001",
 		"type": "donut",
 		"name": "Cake",
 		"ppu": 0.55,
 		"sales": 35,
+
 
 		"batters":
 			{
@@ -55,11 +55,8 @@
 		"name": "Old Fashioned",
 		"ppu": 0.55,
 		"sales": 300,
-<<<<<<< HEAD
 
-=======
-		
->>>>>>> Working Reference Interpreter.  Remove fake files.  Updates to common as reference interpreter clarified things.
+
 		"batters":
 			{
 				"batter":
@@ -82,11 +79,8 @@
 		"name": "Filled",
 		"ppu": 0.69,
 		"sales": 14,
-<<<<<<< HEAD
 
-=======
-		
->>>>>>> Working Reference Interpreter.  Remove fake files.  Updates to common as reference interpreter clarified things.
+
 		"batters":
 			{
 				"batter":
@@ -114,11 +108,7 @@
 				{ "id": "6003", "type": "Lemon" },
 				{ "id": "6004", "type": "Chocolate" },
 				{ "id": "6005", "type": "Kreme" }
-<<<<<<< HEAD
 			]
-=======
-			]			
->>>>>>> Working Reference Interpreter.  Remove fake files.  Updates to common as reference interpreter clarified things.
 	}
 		{
 		"id": "0005",
@@ -126,11 +116,8 @@
 		"name": "Apple Fritter",
 		"ppu": 1.00,
 		"sales": 700,
-<<<<<<< HEAD
 
-=======
-		
->>>>>>> Working Reference Interpreter.  Remove fake files.  Updates to common as reference interpreter clarified things.
+
 		"batters":
 			{
 				"batter":
@@ -142,8 +129,4 @@
 			[
 				{ "id": "5002", "type": "Glazed" }
 			]
-<<<<<<< HEAD
 	}
-=======
-	}
->>>>>>> Working Reference Interpreter.  Remove fake files.  Updates to common as reference interpreter clarified things.

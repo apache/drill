@@ -35,19 +35,17 @@ import static com.google.common.base.Preconditions.checkState;
 import static org.apache.drill.exec.proto.SchemaDefProtos.*;
 
 public abstract class Field {
-    final FieldType fieldType;
+    final MajorType fieldType;
     final int parentFieldId;
     final int fieldId;
     final String prefixFieldName;
     RecordSchema schema;
     RecordSchema parentSchema;
     boolean read;
-    private MaterializedField materializedField;
 
-
-    public Field(RecordSchema parentSchema, int parentFieldId, IdGenerator<Integer> generator, FieldType fieldType, String prefixFieldName) {
+    public Field(RecordSchema parentSchema, int parentFieldId, IdGenerator<Integer> generator, MajorType type, String prefixFieldName) {
         this.fieldId = generator.getNextId();
-        this.fieldType = fieldType;
+        fieldType = type;
         this.prefixFieldName = prefixFieldName;
         this.parentSchema = parentSchema;
         this.parentFieldId = parentFieldId;
@@ -85,10 +83,6 @@ public abstract class Field {
         return schema;
     }
 
-    public FieldType getFieldType() {
-        return fieldType;
-    }
-
     public void assignSchemaIfNull(RecordSchema newSchema) {
         if (!hasSchema()) {
             schema = newSchema;
@@ -103,112 +97,7 @@ public abstract class Field {
         return schema != null;
     }
 
-    private static MajorType buildMajorType(MinorType minorType) {
-        return MajorType.newBuilder().setMinorType(minorType).setMode(DataMode.REQUIRED).build();
-    }
-
-    private static MajorType buildRepeatedMajorType(MinorType minorType) {
-        return MajorType.newBuilder().setMinorType(minorType).setMode(DataMode.REPEATED).build();
-    }
-
-    public static enum FieldType {
-        INTEGER(1, buildMajorType(MinorType.INT)) {
-            @Override
-            public <T> boolean addValueToVector(int index, VectorHolder holder, BufferAllocator allocator, T val) {
-                holder.incAndCheckLength(32);
-                NullableFixed4 fixed4 = (NullableFixed4) holder.getValueVector();
-                if (val == null) {
-                    fixed4.setNull(index);
-                } else {
-                    fixed4.setInt(index, (Integer) val);
-                }
-                return holder.hasEnoughSpace(32);
-            }
-        },
-        FLOAT(2, buildMajorType(MinorType.FLOAT4)) {
-            @Override
-            public <T> boolean addValueToVector(int index, VectorHolder holder, BufferAllocator allocator, T val) {
-                holder.incAndCheckLength(32);
-                NullableFixed4 fixed4 = (NullableFixed4) holder.getValueVector();
-                if (val == null) {
-                    fixed4.setNull(index);
-                } else {
-                    fixed4.setFloat4(index, (Float) val);
-                }
-                return holder.hasEnoughSpace(32);
-            }
-        },
-        BOOLEAN(3, buildMajorType(MinorType.BOOLEAN)) {
-            @Override
-            public <T> boolean addValueToVector(int index, VectorHolder holder, BufferAllocator allocator, T val) {
-                holder.incAndCheckLength(1);
-                Bit bit = (Bit) holder.getValueVector();
-                if ((Boolean) val) {
-                    bit.set(index);
-                }
-                return holder.hasEnoughSpace(1);
-            }
-        },
-        STRING(4, buildMajorType(MinorType.VARCHAR4)) {
-            @Override
-            public <T> boolean addValueToVector(int index, VectorHolder holder, BufferAllocator allocator, T val) {
-                if (val == null) {
-                    ((NullableVarLen4) holder.getValueVector()).setNull(index);
-                    return (index + 1) * 4 <= holder.getLength();
-                } else {
-                    byte[] bytes = ((String) val).getBytes(Constants.UTF8_CHARSET);
-                    int length = bytes.length * 8;
-                    holder.incAndCheckLength(length);
-                    NullableVarLen4 varLen4 = (NullableVarLen4) holder.getValueVector();
-                    varLen4.setBytes(index, bytes);
-                    return holder.hasEnoughSpace(length);
-                }
-            }
-        },
-        ARRAY(5, buildRepeatedMajorType(MinorType.LATE), true) {
-            @Override
-            public <T> boolean addValueToVector(int index, VectorHolder holder, BufferAllocator allocator, T val) {
-                throw new UnsupportedOperationException("Array type not yet supported.");
-            }
-        },
-
-        MAP(6, buildMajorType(MinorType.MAP), true) {
-            @Override
-            public <T> boolean addValueToVector(int index, VectorHolder holder, BufferAllocator allocator, T val) {
-                throw new UnsupportedOperationException("Map type not yet supported.");
-            }
-        };
-
-        byte value;
-        boolean embedSchema;
-        MajorType majorType;
-
-        FieldType(int value, MajorType majorType, boolean embedSchema) {
-            this.value = (byte) value;
-            this.embedSchema = embedSchema;
-            this.majorType = majorType;
-        }
-
-        FieldType(int value, MajorType majorType) {
-            this(value, majorType, false);
-        }
-
-        public byte value() {
-            return value;
-        }
-
-        public boolean isEmbedSchema() {
-            return embedSchema;
-        }
-
-        public MajorType toMajorType() {
-            return majorType;
-        }
-
-        public abstract <T> boolean addValueToVector(int index, VectorHolder holder, BufferAllocator allocator, T val) throws BatchExceededException;
-
-        private static class Constants {
-            public static final Charset UTF8_CHARSET = Charset.forName("UTF-8");
-        }
+    public MajorType getFieldType() {
+        return fieldType;
     }
 }

@@ -44,6 +44,10 @@ abstract class NullableValueVector<T extends NullableValueVector<T, E>, E extend
       bits.set(index);
   }
 
+  public void setNotNull(int index) {
+      bits.clear(index);
+  }
+
   public int isNull(int index){
     return bits.getBit(index);
   }

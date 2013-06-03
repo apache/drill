@@ -19,19 +19,27 @@
 package org.apache.drill.exec.schema;
 
 import com.google.common.base.Objects;
+import org.apache.drill.exec.proto.SchemaDefProtos;
+import org.apache.drill.exec.schema.json.jackson.JacksonHelper;
 
 public class NamedField extends Field {
-    final FieldType keyType;
+    final SchemaDefProtos.MajorType keyType;
     String fieldName;
 
-    public NamedField(RecordSchema parentSchema, int parentFieldId, IdGenerator<Integer> generator, String prefixFieldName, String fieldName, Field.FieldType fieldType) {
-        this(parentSchema, parentFieldId, generator, prefixFieldName, fieldName, fieldType, FieldType.STRING);
+    public NamedField(RecordSchema parentSchema, int parentFieldId, IdGenerator<Integer> generator, String prefixFieldName, String fieldName, SchemaDefProtos.MajorType fieldType) {
+        this(parentSchema, parentFieldId, generator, prefixFieldName, fieldName, fieldType, JacksonHelper.STRING_TYPE);
     }
 
-    public NamedField(RecordSchema parentSchema, int parentFieldId, IdGenerator<Integer> generator, String prefixFieldName, String fieldName, Field.FieldType fieldType, FieldType keyType) {
+    public NamedField(RecordSchema parentSchema,
+                      int parentFieldId,
+                      IdGenerator<Integer> generator,
+                      String prefixFieldName,
+                      String fieldName,
+                      SchemaDefProtos.MajorType fieldType,
+                      SchemaDefProtos.MajorType keyType) {
         super(parentSchema, parentFieldId, generator, fieldType, prefixFieldName);
         this.fieldName = fieldName;
-        this.keyType = FieldType.STRING;
+        this.keyType = keyType;
     }
 
     public String getFieldName() {

@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,11 +25,11 @@ import org.apache.drill.exec.record.MaterializedField;
 
 public class TypeHelper {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TypeHelper.class);
-  
+
   private static final int WIDTH_ESTIMATE_1 = 10;
   private static final int WIDTH_ESTIMATE_2 = 50000;
   private static final int WIDTH_ESTIMATE_4 = 1024*1024;
-  
+
   public static int getSize(MajorType major){
     switch(major.getMinorType()){
     case TINYINT: return 1;
@@ -65,11 +65,11 @@ public class TypeHelper {
     case PROTO2: return 2 + WIDTH_ESTIMATE_2;
     case PROTO4: return 4 + WIDTH_ESTIMATE_4;
     case MSGPACK2: return 2 + WIDTH_ESTIMATE_2;
-    case MSGPACK4: return 4 + WIDTH_ESTIMATE_4;    
+    case MSGPACK4: return 4 + WIDTH_ESTIMATE_4;
     }
     return 4;
   }
-  
+
   public static Class<?> getValueVectorClass(MinorType type, DataMode mode){
     switch(mode){
     case OPTIONAL:
@@ -189,12 +189,12 @@ public class TypeHelper {
       break;
     default:
       break;
-    
+
     }
     throw new UnsupportedOperationException();
   }
-  
-  
+
+
   public static ValueVector<?> getNewVector(MaterializedField field, BufferAllocator allocator){
     MajorType type = field.getType();
     switch(type.getMode()){
@@ -202,7 +202,7 @@ public class TypeHelper {
       switch(type.getMinorType()){
       case TINYINT: return new Fixed1(field, allocator);
       case SMALLINT: return new Fixed2(field, allocator);
-      case INT: return new NullableFixed4(field, allocator);
+      case INT: return new Fixed4(field, allocator);
       case BIGINT: return new Fixed8(field, allocator);
       case DECIMAL4: return new Fixed4(field, allocator);
       case DECIMAL8: return new Fixed8(field, allocator);
@@ -221,7 +221,7 @@ public class TypeHelper {
       case FIXEDCHAR: return new FixedLen(field, allocator);
       case VARCHAR1: return new VarLen1(field, allocator);
       case VARCHAR2: return new VarLen2(field, allocator);
-      case VARCHAR4: return new NullableVarLen4(field, allocator);
+      case VARCHAR4: return new VarLen4(field, allocator);
       case FIXEDBINARY: return new FixedLen(field, allocator);
       case VARBINARY1: return new VarLen1(field, allocator);
       case VARBINARY2: return new VarLen2(field, allocator);
@@ -233,16 +233,21 @@ public class TypeHelper {
       case PROTO2: return new VarLen2(field, allocator);
       case PROTO4: return new VarLen4(field, allocator);
       case MSGPACK2: return new VarLen2(field, allocator);
-      case MSGPACK4: return new VarLen4(field, allocator);      
+      case MSGPACK4: return new VarLen4(field, allocator);
       }
       break;
     case REPEATED:
       break;
     case OPTIONAL:
+        switch(type.getMinorType()) {
+            case INT: return new NullableFixed4(field, allocator);
+            case FLOAT4: return new NullableFixed4(field, allocator);
+            case VARCHAR4: return new NullableVarLen4(field, allocator);
+        }
       break;
     default:
       break;
-    
+
     }
     throw new UnsupportedOperationException(type.getMinorType() + " type is not supported.");
   }

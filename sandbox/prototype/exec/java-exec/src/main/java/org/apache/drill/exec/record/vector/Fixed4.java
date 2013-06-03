@@ -18,6 +18,7 @@
 package org.apache.drill.exec.record.vector;
 
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.proto.SchemaDefProtos;
 import org.apache.drill.exec.record.MaterializedField;
 
 public class Fixed4 extends AbstractFixedValueVector<Fixed4>{
@@ -38,22 +39,21 @@ public class Fixed4 extends AbstractFixedValueVector<Fixed4>{
   }
   
   public final void setFloat4(int index, float value){
-    index*=8;
+    index*=4;
     data.setFloat(index, value);
   }
   
   public final float getFloat4(int index){
-    index*=8;
+    index*=4;
     return data.getFloat(index);
   }
   
   @Override
   public Object getObject(int index) {
-    return getInt(index);
-  }
-
-    public void setBytes(int index, byte[] bytes) {
-        index*=bytes.length;
-        data.setBytes(index, bytes);
+    if (field != null && field.getType().getMinorType() == SchemaDefProtos.MinorType.FLOAT4) {
+      return getFloat4(index);
+    } else {
+      return getInt(index);
     }
+  }
 }

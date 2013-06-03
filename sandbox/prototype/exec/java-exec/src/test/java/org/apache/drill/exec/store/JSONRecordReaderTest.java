@@ -60,7 +60,7 @@ public class JSONRecordReaderTest {
         SchemaDefProtos.FieldDef def = metadata.getDef();
         assertEquals(expectedMinorType, def.getMajorType().getMinorType());
         T val = (T) valueVector.getObject(index);
-        if(val instanceof byte[]) {
+        if (val instanceof byte[]) {
             assertTrue(Arrays.equals((byte[]) value, (byte[]) val));
         } else {
             assertEquals(value, val);
@@ -113,14 +113,14 @@ public class JSONRecordReaderTest {
         assertEquals(6, addFields.size());
         assertField(addFields.get(0), 0, SchemaDefProtos.MinorType.INT, 123, "test");
         assertField(addFields.get(1), 0, SchemaDefProtos.MinorType.INT, 1, "b");
-        assertField(addFields.get(2), 0, SchemaDefProtos.MinorType.INT, 2, "c");
+        assertField(addFields.get(2), 0, SchemaDefProtos.MinorType.FLOAT4, (float) 2.15, "c");
         assertField(addFields.get(3), 0, SchemaDefProtos.MinorType.VARCHAR4, "test1".getBytes(UTF_8), "str1");
         assertField(addFields.get(0), 1, SchemaDefProtos.MinorType.INT, 1234, "test");
         assertField(addFields.get(1), 1, SchemaDefProtos.MinorType.INT, 3, "b");
         assertField(addFields.get(3), 1, SchemaDefProtos.MinorType.VARCHAR4, "test2".getBytes(UTF_8), "str1");
         assertField(addFields.get(4), 1, SchemaDefProtos.MinorType.INT, 4, "d");
         assertField(addFields.get(0), 2, SchemaDefProtos.MinorType.INT, 12345, "test");
-        assertField(addFields.get(2), 2, SchemaDefProtos.MinorType.INT, 5, "c");
+        assertField(addFields.get(2), 2, SchemaDefProtos.MinorType.FLOAT4, (float) 5.16, "c");
         assertField(addFields.get(4), 2, SchemaDefProtos.MinorType.INT, 6, "d");
         assertField(addFields.get(5), 2, SchemaDefProtos.MinorType.VARCHAR4, "test3".getBytes(UTF_8), "str2");
         assertTrue(mutator.getRemovedFields().isEmpty());
@@ -146,25 +146,24 @@ public class JSONRecordReaderTest {
         assertEquals(4, addFields.size());
         assertField(addFields.get(0), 0, SchemaDefProtos.MinorType.INT, 123, "test");
         assertField(addFields.get(1), 0, SchemaDefProtos.MinorType.INT, 1, "b");
-        assertField(addFields.get(2), 0, SchemaDefProtos.MinorType.INT, 2, "c");
+        assertField(addFields.get(2), 0, SchemaDefProtos.MinorType.FLOAT4, (float) 2.15, "c");
         assertField(addFields.get(3), 0, SchemaDefProtos.MinorType.VARCHAR4, "test1".getBytes(UTF_8), "str1");
-        addFields.clear();
+        assertTrue(removedFields.isEmpty());
         assertEquals(1, jr.next());
-        assertEquals(4, addFields.size());
+        assertEquals(5, addFields.size());
         assertField(addFields.get(0), 0, SchemaDefProtos.MinorType.INT, 1234, "test");
         assertField(addFields.get(1), 0, SchemaDefProtos.MinorType.INT, 3, "b");
-        assertField(addFields.get(2), 0, SchemaDefProtos.MinorType.INT, 4, "d");
+        assertField(addFields.get(4), 0, SchemaDefProtos.MinorType.INT, 4, "d");
         assertField(addFields.get(3), 0, SchemaDefProtos.MinorType.VARCHAR4, "test2".getBytes(UTF_8), "str1");
         assertEquals(1, removedFields.size());
         assertEquals(3, (int) removedFields.get(0));
         removedFields.clear();
-        addFields.clear();
         assertEquals(1, jr.next());
-        assertEquals(4, addFields.size());
+        assertEquals(7, addFields.size()); // The reappearing of field 'c' is also included
         assertField(addFields.get(0), 0, SchemaDefProtos.MinorType.INT, 12345, "test");
-        assertField(addFields.get(1), 0, SchemaDefProtos.MinorType.INT, 5, "c");
-        assertField(addFields.get(2), 0, SchemaDefProtos.MinorType.INT, 6, "d");
-        assertField(addFields.get(3), 0, SchemaDefProtos.MinorType.VARCHAR4, "test3".getBytes(UTF_8), "str2");
+        assertField(addFields.get(5), 0, SchemaDefProtos.MinorType.FLOAT4, (float) 5.16, "c");
+        assertField(addFields.get(4), 0, SchemaDefProtos.MinorType.INT, 6, "d");
+        assertField(addFields.get(6), 0, SchemaDefProtos.MinorType.VARCHAR4, "test3".getBytes(UTF_8), "str2");
         assertEquals(2, removedFields.size());
         assertTrue(removedFields.contains(4));
         assertTrue(removedFields.contains(2));

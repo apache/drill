@@ -21,6 +21,7 @@ package org.apache.drill.exec.schema;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import org.apache.drill.exec.proto.SchemaDefProtos;
 
 import java.util.List;
 
@@ -36,7 +37,7 @@ public class ListSchema implements RecordSchema {
 
     @Override
     public void addField(Field field) {
-        if (field.fieldType.isEmbedSchema() || fields.isEmpty() || !isSingleTyped() ||
+        if (field.getFieldType().getMode() == SchemaDefProtos.DataMode.REPEATED || fields.isEmpty() || !isSingleTyped() ||
                 !Iterables.getOnlyElement(fields).equals(field.getFieldType())) {
             fields.add(field);
         }
@@ -96,7 +97,7 @@ public class ListSchema implements RecordSchema {
                 if (!field.isRead()) {
                     removedFields.add(field);
                     return true;
-                } else if(field.hasSchema()) {
+                } else if (field.hasSchema()) {
                     Iterables.addAll(removedFields, field.getAssignedSchema().removeUnreadFields());
                 }
 

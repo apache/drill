@@ -1,6 +1,8 @@
 package org.apache.drill.exec.store;
 
 import com.carrotsearch.hppc.IntObjectOpenHashMap;
+import com.carrotsearch.hppc.cursors.IntObjectCursor;
+import com.carrotsearch.hppc.cursors.ObjectCursor;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
@@ -10,6 +12,7 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import com.google.common.io.InputSupplier;
 import com.google.common.io.Resources;
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.exception.SchemaChangeException;
@@ -18,22 +21,22 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.proto.SchemaDefProtos;
 import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.record.vector.TypeHelper;
-import org.apache.drill.exec.record.vector.ValueVector;
+import org.apache.drill.exec.record.vector.*;
 import org.apache.drill.exec.schema.*;
 import org.apache.drill.exec.schema.json.jackson.JacksonHelper;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.util.List;
 
 import static com.fasterxml.jackson.core.JsonToken.*;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 public class JSONRecordReader implements RecordReader {
     static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JSONRecordReader.class);
     private static final int DEFAULT_LENGTH = 256 * 1024; // 256kb
+    public static final Charset UTF_8 = Charset.forName("UTF-8");
 
     private final String inputPath;
 
@@ -93,15 +96,11 @@ public class JSONRecordReader implements RecordReader {
             return 0;
         }
 
-        valueVectorMap.clear();
+        resetBatch();
 
         int nextRowIndex = 0;
 
         try {
-            currentSchema.resetMarkedFields();
-            diffSchema.reset();
-            removedFields.clear();
-
             while (ReadType.OBJECT.readRecord(null, this, null, nextRowIndex++)) {
                 parser.nextToken(); // Read to START_OBJECT token
 
@@ -127,6 +126,16 @@ public class JSONRecordReader implements RecordReader {
             logger.error("Error reading next in Json reader", e);
         }
         return nextRowIndex;
+    }
+
+    private void resetBatch() {
+        for (ObjectCursor<VectorHolder> holder : valueVectorMap.values()) {
+            holder.value.reset();
+        }
+
+        currentSchema.resetMarkedFields();
+        diffSchema.reset();
+        removedFields.clear();
     }
 
     @Override
@@ -165,7 +174,7 @@ public class JSONRecordReader implements RecordReader {
     public static enum ReadType {
         ARRAY(END_ARRAY) {
             @Override
-            public Field createField(RecordSchema parentSchema, int parentFieldId, IdGenerator<Integer> generator, String prefixFieldName, String fieldName, Field.FieldType fieldType, int index) {
+            public Field createField(RecordSchema parentSchema, int parentFieldId, IdGenerator<Integer> generator, String prefixFieldName, String fieldName, SchemaDefProtos.MajorType fieldType, int index) {
                 return new OrderedField(parentSchema, parentFieldId, generator, fieldType, prefixFieldName, index);
             }
 
@@ -176,7 +185,13 @@ public class JSONRecordReader implements RecordReader {
         },
         OBJECT(END_OBJECT) {
             @Override
-            public Field createField(RecordSchema parentSchema, int parentFieldId, IdGenerator<Integer> generator, String prefixFieldName, String fieldName, Field.FieldType fieldType, int index) {
+            public Field createField(RecordSchema parentSchema,
+                                     int parentFieldId,
+                                     IdGenerator<Integer> generator,
+                                     String prefixFieldName,
+                                     String fieldName,
+                                     SchemaDefProtos.MajorType fieldType,
+                                     int index) {
                 return new NamedField(parentSchema, parentFieldId, generator, prefixFieldName, fieldName, fieldType);
             }
 
@@ -196,7 +211,10 @@ public class JSONRecordReader implements RecordReader {
             return endObject;
         }
 
-        public boolean readRecord(Field parentField, JSONRecordReader reader, String prefixFieldName, int rowIndex) throws IOException, SchemaChangeException {
+        public boolean readRecord(Field parentField,
+                                  JSONRecordReader reader,
+                                  String prefixFieldName,
+                                  int rowIndex) throws IOException, SchemaChangeException {
             JsonParser parser = reader.getParser();
             JsonToken token = parser.nextToken();
             JsonToken endObject = getEndObject();
@@ -209,7 +227,7 @@ public class JSONRecordReader implements RecordReader {
                 }
 
                 String fieldName = parser.getCurrentName();
-                Field.FieldType fieldType = JacksonHelper.getFieldType(token);
+                SchemaDefProtos.MajorType fieldType = JacksonHelper.getFieldType(token);
                 ReadType readType = null;
                 switch (token) {
                     case START_ARRAY:
@@ -222,13 +240,13 @@ public class JSONRecordReader implements RecordReader {
                 if (fieldType != null) { // Including nulls
                     isFull = isFull ||
                             !recordData(
-                            parentField,
-                            readType,
-                            reader,
-                            fieldType,
-                            prefixFieldName,
-                            fieldName,
-                            rowIndex, colIndex);
+                                    parentField,
+                                    readType,
+                                    reader,
+                                    fieldType,
+                                    prefixFieldName,
+                                    fieldName,
+                                    rowIndex, colIndex);
                 }
                 token = parser.nextToken();
                 colIndex += 1;
@@ -252,7 +270,7 @@ public class JSONRecordReader implements RecordReader {
         private boolean recordData(Field parentField,
                                    JSONRecordReader.ReadType readType,
                                    JSONRecordReader reader,
-                                   Field.FieldType fieldType,
+                                   SchemaDefProtos.MajorType fieldType,
                                    String prefixFieldName,
                                    String fieldName,
                                    int rowIndex,
@@ -260,7 +278,7 @@ public class JSONRecordReader implements RecordReader {
             RecordSchema currentSchema = reader.getCurrentSchema();
             Field field = currentSchema.getField(fieldName, colIndex);
             List<Field> removedFields = reader.getRemovedFields();
-            if (field == null || field.getFieldType() != fieldType) {
+            if (field == null || !field.getFieldType().equals(fieldType)) {
                 if (field != null) {
                     if (field.hasSchema()) {
                         removeChildFields(removedFields, field);
@@ -299,35 +317,87 @@ public class JSONRecordReader implements RecordReader {
                 reader.setCurrentSchema(currentSchema);
             } else {
                 VectorHolder vector = getOrCreateVectorHolder(reader, field);
-                return fieldType.addValueToVector(
+                return addValueToVector(
                         rowIndex,
                         vector,
                         reader.getAllocator(),
-                        JacksonHelper.getValueFromFieldType(reader.getParser(),
-                                fieldType)
+                        JacksonHelper.getValueFromFieldType(
+                                reader.getParser(),
+                                fieldType.getMinorType()
+                        ),
+                        fieldType.getMinorType()
                 );
             }
 
             return true;
         }
 
+        private static <T> boolean addValueToVector(int index, VectorHolder holder, BufferAllocator allocator, T val, SchemaDefProtos.MinorType minorType) {
+            switch (minorType) {
+                case INT: {
+                    holder.incAndCheckLength(32);
+                    NullableFixed4 fixed4 = (NullableFixed4) holder.getValueVector();
+                    if (val == null) {
+                        fixed4.setNull(index);
+                    } else {
+                        fixed4.setInt(index, (Integer) val);
+                    }
+                    return holder.hasEnoughSpace(32);
+                }
+                case FLOAT4: {
+                    holder.incAndCheckLength(32);
+                    NullableFixed4 fixed4 = (NullableFixed4) holder.getValueVector();
+                    if (val == null) {
+                        fixed4.setNull(index);
+                    } else {
+                        fixed4.setFloat4(index, (Float) val);
+                    }
+                    return holder.hasEnoughSpace(32);
+                }
+                case VARCHAR4: {
+                    if (val == null) {
+                        ((NullableVarLen4) holder.getValueVector()).setNull(index);
+                        return (index + 1) * 4 <= holder.getLength();
+                    } else {
+                        byte[] bytes = ((String) val).getBytes(UTF_8);
+                        int length = bytes.length * 8;
+                        holder.incAndCheckLength(length);
+                        NullableVarLen4 varLen4 = (NullableVarLen4) holder.getValueVector();
+                        varLen4.setBytes(index, bytes);
+                        return holder.hasEnoughSpace(length);
+                    }
+                }
+                case BOOLEAN: {
+                    holder.incAndCheckLength(1);
+                    Bit bit = (Bit) holder.getValueVector();
+                    if ((Boolean) val) {
+                        bit.set(index);
+                    }
+                    return holder.hasEnoughSpace(1);
+                }
+                default:
+                    throw new DrillRuntimeException("Type not supported to add value. Type: " + minorType);
+            }
+        }
+
         private VectorHolder getOrCreateVectorHolder(JSONRecordReader reader, Field field) throws SchemaChangeException {
             return reader.getOrCreateVectorHolder(field);
         }
 
-        private VectorHolder getValueVector(JSONRecordReader reader, int fieldId) {
-            return checkNotNull(reader.getValueVector(fieldId));
-        }
-
         public abstract RecordSchema createSchema() throws IOException;
 
-        public abstract Field createField(RecordSchema parentSchema, int parentFieldId, IdGenerator<Integer> generator, String prefixFieldName, String fieldName, Field.FieldType fieldType, int index);
+        public abstract Field createField(RecordSchema parentSchema,
+                                          int parentFieldId,
+                                          IdGenerator<Integer> generator,
+                                          String prefixFieldName,
+                                          String fieldName,
+                                          SchemaDefProtos.MajorType fieldType,
+                                          int index);
     }
 
     private VectorHolder getOrCreateVectorHolder(Field field) throws SchemaChangeException {
-        if(!valueVectorMap.containsKey(field.getFieldId())) {
-            SchemaDefProtos.MajorType type = field.getFieldType().toMajorType();
-            if (type.getMode() != SchemaDefProtos.DataMode.REQUIRED) throw new UnsupportedOperationException();
+        if (!valueVectorMap.containsKey(field.getFieldId())) {
+            SchemaDefProtos.MajorType type = field.getFieldType();
             int fieldId = field.getFieldId();
             MaterializedField f = MaterializedField.create(new SchemaPath(field.getFieldName()), fieldId, 0, type);
             ValueVector<?> v = TypeHelper.getNewVector(f, allocator);
@@ -339,9 +409,4 @@ public class JSONRecordReader implements RecordReader {
         }
         return valueVectorMap.lget();
     }
-
-    private VectorHolder getValueVector(int fieldId) {
-        return valueVectorMap.get(fieldId);
-    }
-
 }
