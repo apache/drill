@@ -19,6 +19,7 @@ package org.apache.drill.jdbc;
 
 import java.lang.reflect.Type;
 import java.util.Collections;
+import java.util.Map;
 
 import net.hydromatic.linq4j.BaseQueryable;
 import net.hydromatic.linq4j.Enumerator;
@@ -28,7 +29,6 @@ import net.hydromatic.linq4j.expressions.Expressions;
 import net.hydromatic.linq4j.expressions.MethodCallExpression;
 
 import net.hydromatic.optiq.*;
-import net.hydromatic.optiq.impl.java.JavaTypeFactory;
 
 import org.apache.drill.common.logical.StorageEngineConfig;
 import org.apache.drill.exec.ref.rops.DataWriter;
@@ -115,22 +115,23 @@ public class DrillTable extends BaseQueryable<Object>
         table);
   }
 
+  private static <T> T last(T t0, T t1) {
+    return t0 != null ? t0 : t1;
+  }
+
   /** Factory for custom tables in Optiq schema. */
   @SuppressWarnings("UnusedDeclaration")
   public static class Factory implements TableFactory<DrillTable> {
-    public DrillTable create(
-        JavaTypeFactory typeFactory,
-        Schema schema,
-        String name,
-        Object operand,
-        RelDataType rowType) {
+    @Override
+    public DrillTable create(Schema schema, String name,
+        Map<String, Object> operand, RelDataType rowType) {
       final ClasspathRSE.ClasspathRSEConfig rseConfig =
           new ClasspathRSE.ClasspathRSEConfig("donuts-json");
       final ClasspathInputConfig inputConfig = new ClasspathInputConfig();
-      inputConfig.path = "/donuts.json";
+      inputConfig.path = last((String) operand.get("path"), "/donuts.json");
       inputConfig.type = DataWriter.ConverterType.JSON;
-      return createTable(typeFactory, (MutableSchema) schema, name, rseConfig,
-          inputConfig);
+      return createTable(schema.getTypeFactory(), (MutableSchema) schema, name,
+          rseConfig, inputConfig);
     }
   }
 }
