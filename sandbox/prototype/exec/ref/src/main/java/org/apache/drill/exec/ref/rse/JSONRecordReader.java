@@ -102,7 +102,7 @@ public class JSONRecordReader implements RecordReader {
 
   }
 
-  private DataValue convert(JsonNode node) {
+  public static DataValue convert(JsonNode node) {
     if (node == null || node.isNull() || node.isMissingNode()) {
       return DataValue.NULL_VALUE;
     } else if (node.isArray()) {

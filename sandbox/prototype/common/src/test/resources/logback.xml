@@ -22,13 +22,13 @@
       <pattern>%date %level [%thread] %logger{10} [%file:%line] %msg%n</pattern>
     </encoder>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-	    <!-- daily rollover -->
+
 	    <fileNamePattern>/logs/test-common.%d{yyyy-MM-dd}.log</fileNamePattern>
-	    <!-- keep 30 days' worth of history -->
+
 	    <maxHistory>30</maxHistory>
     </rollingPolicy>
   </appender>
-  
+
   <logger name="org.apache.drill" additivity="false">
     <level value="debug" />
     <appender-ref ref="SOCKET" />
