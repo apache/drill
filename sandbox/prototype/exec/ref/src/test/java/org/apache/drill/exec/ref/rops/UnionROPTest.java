@@ -1,3 +1,16 @@
+package org.apache.drill.exec.ref.rops;
+
+import static org.junit.Assert.assertEquals;
+
+import java.util.List;
+
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.ref.TestUtils;
+import org.apache.drill.exec.ref.UnbackedRecord;
+import org.apache.drill.exec.ref.values.DataValue;
+import org.apache.drill.exec.ref.values.ScalarValues.LongScalar;
+import org.junit.Test;
+
 /*******************************************************************************
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -15,39 +28,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.apache.drill.common.logical.data;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeName;
-
-@JsonTypeName("union")
-public class Union extends LogicalOperatorBase {
-  private final LogicalOperator[] inputs;
-  private final boolean distinct;
-
-//  @JsonCreator
-//  public Union(@JsonProperty("inputs") LogicalOperator[] inputs){
-//    this(inputs, false);
-//  }
-  
-  @JsonCreator
-  public Union(@JsonProperty("inputs") LogicalOperator[] inputs, @JsonProperty("distinct") Boolean distinct){
-    this.inputs = inputs;
-    for (LogicalOperator o : inputs) {
-      o.registerAsSubscriber(this);
-    }
-    this.distinct = distinct == null ? false : distinct;
-  }
-
-  public LogicalOperator[] getInputs() {
-    return inputs;
-  }
-
-  public boolean isDistinct() {
-    return distinct;
-  }
-
+public class UnionROPTest {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UnionROPTest.class);
   
   
+  @Test
+  public void checkDistinct() throws Exception{
+    TestUtils.assertProduceCount("/union/distinct.json", 5);
+  }
+
+  @Test
+  public void checkNonDistinct() throws Exception{
+    TestUtils.assertProduceCount("/union/nondistinct.json", 10);
+  }
+
 }

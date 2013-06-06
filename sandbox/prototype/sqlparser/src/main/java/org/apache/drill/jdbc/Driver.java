@@ -17,20 +17,13 @@
  ******************************************************************************/
 package org.apache.drill.jdbc;
 
+import java.io.IOException;
 import java.sql.SQLException;
-import java.util.Collections;
 
-import net.hydromatic.optiq.MutableSchema;
-import net.hydromatic.optiq.impl.java.MapSchema;
-import net.hydromatic.optiq.jdbc.DriverVersion;
-import net.hydromatic.optiq.jdbc.Handler;
-import net.hydromatic.optiq.jdbc.HandlerImpl;
-import net.hydromatic.optiq.jdbc.OptiqConnection;
-import net.hydromatic.optiq.jdbc.UnregisteredDriver;
-
-import org.apache.drill.exec.ref.rops.DataWriter.ConverterType;
-import org.apache.drill.exec.ref.rse.ClasspathRSE.ClasspathInputConfig;
-import org.apache.drill.exec.ref.rse.ClasspathRSE.ClasspathRSEConfig;
+import net.hydromatic.linq4j.function.Function0;
+import net.hydromatic.optiq.jdbc.*;
+import net.hydromatic.optiq.model.ModelHandler;
+import org.apache.drill.optiq.DrillPrepareImpl;
 
 /**
  * JDBC driver for Apache Drill.
@@ -51,6 +44,16 @@ public class Driver extends UnregisteredDriver {
   }
 
   @Override
+  protected Function0<OptiqPrepare> createPrepareFactory() {
+    return new Function0<OptiqPrepare>() {
+        @Override
+        public OptiqPrepare apply() {
+            return new DrillPrepareImpl();
+        }
+    };
+  }
+
+    @Override
   protected Handler createHandler() {
     return new DrillHandler();
   }
@@ -61,48 +64,33 @@ public class Driver extends UnregisteredDriver {
     {
       super.onConnectionInit(connection);
 
+      final String model = connection.getProperties().getProperty("model");
+      if (model != null) {
+        try {
+          new ModelHandler(connection, model);
+        } catch (IOException e) {
+          throw new SQLException(e);
+        }
+      }
+
       // The "schema" parameter currently gives a name to the schema. In future
       // it will choose a schema that (presumably) already exists.
       final String schemaName =
           connection.getProperties().getProperty("schema");
-      if (schemaName == null) {
-        throw new SQLException("schema connection property must be specified");
-      }
-      final MutableSchema rootSchema = connection.getRootSchema();
-      final MapSchema schema =
-          MapSchema.create(connection, rootSchema, schemaName);
-
-      connection.setSchema(schemaName);
-      final ClasspathRSEConfig rseConfig = new ClasspathRSEConfig();
-      final ClasspathInputConfig inputConfig = new ClasspathInputConfig();
-      inputConfig.path = "/donuts.json";
-      inputConfig.type = ConverterType.JSON; 
-      
-
-
-      // "tables" is a temporary parameter. We should replace with
-      // "schemaUri", which is the URI of a schema.json file, or the name of a
-      // schema from a server, if drill is running in a server.
-      final String tables = connection.getProperties().getProperty("tables");
-      if (tables == null) {
-        throw new SQLException("tables connection property must be specified");
-      }
-      final String[] tables2 = tables.split(",");
-      for (String table : tables2) {
-        DrillTable.addTable(connection.getTypeFactory(), schema, table,
-            rseConfig, inputConfig);
+      if (schemaName != null) {
+        connection.setSchema(schemaName);
       }
     }
   }
 
-/*
+    /*
 
 optiq work
 ==========
 
 1. todo: test can cast(<any> as varchar)  (or indeed to any type)
 
-2. We declare a variant record by adding a '_extra any' field. It's nice that
+2. We declare a variant record by adding a '_MAP any' field. It's nice that
 there can be some declared fields, and some undeclared. todo: Better syntactic
 sugar.
 

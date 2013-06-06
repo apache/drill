@@ -17,66 +17,91 @@
  ******************************************************************************/
 package org.apache.drill.exec.ref.rops;
 
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.common.logical.data.Union;
 import org.apache.drill.exec.ref.IteratorRegistry;
 import org.apache.drill.exec.ref.RecordIterator;
+import org.apache.drill.exec.ref.RecordIterator.NextOutcome;
 import org.apache.drill.exec.ref.RecordPointer;
-import org.apache.drill.exec.ref.eval.EvaluatorFactory;
+import org.apache.drill.exec.ref.UnbackedRecord;
+import org.apache.drill.exec.ref.exceptions.SetupException;
 
-public class UnionROP extends ROPBase<LogicalOperator>{
-  
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+
+public class UnionROP extends ROPBase<Union> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UnionROP.class);
-  
-  private List<RecordIterator> incoming;
-  private ProxySimpleRecord record;
+
+  private Collection<UnbackedRecord> records;
+  private List<RecordIterator> incoming = Lists.newArrayList();
+  private Iterator<UnbackedRecord> iterator;
   
   public UnionROP(Union config) {
     super(config);
+    // to make things simple, we'll just always make this a blocking operator.
+    if(config.isDistinct()){
+      records  = Sets.newHashSet();
+    }else{
+      records = Lists.newArrayList();
+    }
+  }
+  
+  @Override
+  protected void setupIterators(IteratorRegistry registry) throws SetupException {
+    for(LogicalOperator op : config.getInputs()){
+      List<RecordIterator> more = registry.getOperator(op);
+      if(more.size() != 1) throw new SetupException("Iterator list was incorrect size.");
+      incoming.addAll(more);
+    }
   }
 
-  @Override
-  protected void setupEvals(EvaluatorFactory builder) {
-  }
 
-  @Override
-  protected void setupIterators(IteratorRegistry builder) {
-    incoming = builder.getOperator(config);
-    record.setRecord(incoming.get(0).getRecordPointer());
+  protected void doWork() {
+    for(RecordIterator ri : incoming){
+      RecordPointer rp = ri.getRecordPointer();
+      while(ri.next() != NextOutcome.NONE_LEFT){
+        UnbackedRecord r = new UnbackedRecord();
+        r.copyFrom(rp);
+        records.add(r);
+      }
+    }
+    this.iterator = records.iterator();
   }
 
   @Override
   protected RecordIterator getIteratorInternal() {
-    return new MultiIterator();
+    return new ProxyIterator();
   }
   
-  private class MultiIterator implements RecordIterator{
-    private int current = 0;
+  private class ProxyIterator implements RecordIterator{
+    private ProxySimpleRecord proxyRecord = new ProxySimpleRecord();
+    
+    @Override
+    public RecordPointer getRecordPointer() {
+      return proxyRecord;
+    }
 
     @Override
     public NextOutcome next() {
-      for(; current < incoming.size(); current++, record.setRecord(incoming.get(current).getRecordPointer()))
-      while(current < incoming.size()){
+      if(iterator == null) doWork();
       
-        NextOutcome n = incoming.get(current).next();
-        if(n != NextOutcome.NONE_LEFT) return n;
-        
+      if(iterator.hasNext()){
+        proxyRecord.setRecord(iterator.next());
+        return NextOutcome.INCREMENTED_SCHEMA_CHANGED;
+      }else{
+        return NextOutcome.NONE_LEFT;
       }
-      return NextOutcome.NONE_LEFT;
+      
     }
 
     @Override
     public ROP getParent() {
       return UnionROP.this;
     }
-
-    @Override
-    public RecordPointer getRecordPointer() {
-      return record;
-    }
     
   }
-
 }

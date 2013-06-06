@@ -4,9 +4,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.drill.common.defs.OrderDef;
-import org.apache.drill.common.defs.OrderDef.Direction;
 import org.apache.drill.common.logical.data.Order;
+import org.apache.drill.common.logical.data.Order.Direction;
+import org.apache.drill.common.logical.data.Order.NullCollation;
+import org.apache.drill.common.logical.data.Order.Ordering;
 import org.apache.drill.exec.ref.RecordIterator;
 import org.apache.drill.exec.ref.RecordPointer;
 import org.apache.drill.exec.ref.eval.EvaluatorFactory;
@@ -33,7 +34,7 @@ public class OrderROP extends AbstractBlockingOperator<Order> {
 
   @Override
   protected void setupEvals(EvaluatorFactory builder) {
-    OrderDef[] orderings = config.getOrderings();
+    Ordering[] orderings = config.getOrderings();
     withinConstrained = config.getWithin() != null;
     if (withinConstrained) {
       withinExtra = 1;
@@ -44,7 +45,7 @@ public class OrderROP extends AbstractBlockingOperator<Order> {
 
     for (int i = 0; i < orderings.length; i++) {
       defs[i] = new SortDefinition(builder.getBasicEvaluator(inputRecord, orderings[i].getExpr()),
-          orderings[i].getDirection() == Direction.ASC);
+          orderings[i].getDirection() == Direction.ASC, orderings[i].getNullCollation() == NullCollation.NULLS_LAST);
     }
   }
 
@@ -87,9 +88,10 @@ public class OrderROP extends AbstractBlockingOperator<Order> {
     boolean nullsLast;
     BasicEvaluator evaluator;
 
-    public SortDefinition(BasicEvaluator evaluator, boolean forward) {
+    public SortDefinition(BasicEvaluator evaluator, boolean forward, boolean nullsLast) {
       this.evaluator = evaluator;
       this.forward = forward;
+      this.nullsLast = nullsLast;
     }
   }
 
@@ -128,13 +130,13 @@ public class OrderROP extends AbstractBlockingOperator<Order> {
         boolean asc = defs[i].forward;
         DataValue dv1 = v1.values[i];
         DataValue dv2 = v2.values[i];
-        if (dv1 == null) {
-          if (dv2 == null) {
+        if (dv1 == DataValue.NULL_VALUE) {
+          if (dv2 == DataValue.NULL_VALUE) {
             result = 0;
           } else {
             result = nullLast ? 1 : -1;
           }
-        } else if (dv2 == null) {
+        } else if (dv2 == DataValue.NULL_VALUE) {
           result = nullLast ? -1 : 1;
         } else {
           if (dv1 instanceof ComparableValue && ((ComparableValue) dv1).supportsCompare(dv2)) {

@@ -17,39 +17,42 @@
  ******************************************************************************/
 package org.apache.drill.optiq;
 
-import net.hydromatic.optiq.rules.java.EnumerableConvention;
+import org.eigenbase.rel.ValuesRelBase;
 import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.convert.ConverterRule;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.rex.RexLiteral;
+
+import java.util.List;
 
 /**
- * Rule that converts any Drill relational expression to enumerable format by
- * adding a {@link EnumerableDrillRel}.
+ * Values implemented in Drill.
  */
-public class EnumerableDrillRule extends ConverterRule {
-  public static final EnumerableDrillRule ARRAY_INSTANCE =
-      new EnumerableDrillRule(EnumerableConvention.ARRAY);
-  public static final EnumerableDrillRule CUSTOM_INSTANCE =
-      new EnumerableDrillRule(EnumerableConvention.CUSTOM);
-
-  private EnumerableDrillRule(EnumerableConvention outConvention) {
-    super(RelNode.class,
-        DrillRel.CONVENTION,
-        outConvention,
-        "EnumerableDrillRule." + outConvention);
+public class DrillValuesRel extends ValuesRelBase implements DrillRel {
+  protected DrillValuesRel(RelOptCluster cluster,
+      RelDataType rowType,
+      List<List<RexLiteral>> tuples,
+      RelTraitSet traits) {
+    super(cluster, rowType, tuples, traits);
+    assert getConvention() == CONVENTION;
   }
 
   @Override
-  public boolean isGuaranteed() {
-    return true;
+  public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
+    assert inputs.isEmpty();
+    return new DrillValuesRel(getCluster(), rowType, tuples, traitSet);
   }
 
   @Override
-  public RelNode convert(RelNode rel) {
-    assert rel.getTraitSet().contains(DrillRel.CONVENTION);
-    return new EnumerableDrillRel(rel.getCluster(),
-        rel.getTraitSet().replace(getOutConvention()),
-        rel);
+  public RelOptCost computeSelfCost(RelOptPlanner planner) {
+    return super.computeSelfCost(planner).multiplyBy(0.1);
+  }
+
+  @Override
+  public void implement(DrillImplementor implementor) {
+    // Update when https://issues.apache.org/jira/browse/DRILL-57 fixed
+    throw new UnsupportedOperationException();
   }
 }
 
-// End EnumerableDrillRule.java
+// End DrillValuesRel.java

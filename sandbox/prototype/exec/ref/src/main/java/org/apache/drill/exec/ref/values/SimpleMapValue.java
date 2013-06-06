@@ -18,6 +18,7 @@
 package org.apache.drill.exec.ref.values;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -106,4 +107,24 @@ public class SimpleMapValue extends BaseMapValue{
       }
       return out;
   }
+
+  @Override
+  public String toString() {
+    final int maxLen = 10;
+    return "SimpleMapValue [map=" + (map != null ? toString(map.entrySet(), maxLen) : null) + "]";
+  }
+
+  private String toString(Collection<?> collection, int maxLen) {
+    StringBuilder builder = new StringBuilder();
+    builder.append("[");
+    int i = 0;
+    for (Iterator<?> iterator = collection.iterator(); iterator.hasNext() && i < maxLen; i++) {
+      if (i > 0) builder.append(", ");
+      builder.append(iterator.next());
+    }
+    builder.append("]");
+    return builder.toString();
+  }
+  
+  
 }

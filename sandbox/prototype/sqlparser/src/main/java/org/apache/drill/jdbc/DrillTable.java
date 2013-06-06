@@ -19,6 +19,7 @@ package org.apache.drill.jdbc;
 
 import java.lang.reflect.Type;
 import java.util.Collections;
+import java.util.Map;
 
 import net.hydromatic.linq4j.BaseQueryable;
 import net.hydromatic.linq4j.Enumerator;
@@ -26,16 +27,15 @@ import net.hydromatic.linq4j.Linq4j;
 import net.hydromatic.linq4j.expressions.Expression;
 import net.hydromatic.linq4j.expressions.Expressions;
 import net.hydromatic.linq4j.expressions.MethodCallExpression;
-import net.hydromatic.optiq.BuiltinMethod;
-import net.hydromatic.optiq.DataContext;
-import net.hydromatic.optiq.MutableSchema;
-import net.hydromatic.optiq.Schema;
-import net.hydromatic.optiq.TranslatableTable;
+
+import net.hydromatic.optiq.*;
 
 import org.apache.drill.common.logical.StorageEngineConfig;
+import org.apache.drill.exec.ref.rops.DataWriter;
+import org.apache.drill.exec.ref.rse.ClasspathRSE;
 import org.apache.drill.exec.ref.rse.ClasspathRSE.ClasspathInputConfig;
-import org.apache.drill.optiq.DrillOptiq;
-import org.apache.drill.optiq.DrillScan;
+import org.apache.drill.optiq.*;
+
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptTable;
 import org.eigenbase.reltype.RelDataType;
@@ -48,6 +48,7 @@ public class DrillTable extends BaseQueryable<Object>
 {
   private final Schema schema;
   private final String name;
+  private final String storageEngineName;
   private final RelDataType rowType;
   public final StorageEngineConfig storageEngineConfig;
   public final Object selection;
@@ -59,7 +60,8 @@ public class DrillTable extends BaseQueryable<Object>
       RelDataType rowType,
       String name,
       StorageEngineConfig storageEngineConfig,
-      Object selection
+      Object selection,
+      String storageEngineName
       ) {
     super(schema.getQueryProvider(), elementType, expression);
     this.schema = schema;
@@ -67,10 +69,17 @@ public class DrillTable extends BaseQueryable<Object>
     this.rowType = rowType;
     this.storageEngineConfig = storageEngineConfig;
     this.selection = selection;
+    this.storageEngineName = storageEngineName;
   }
 
-  static void addTable(RelDataTypeFactory typeFactory, MutableSchema schema,
-      String name, StorageEngineConfig storageEngineConfig, Object selection) {
+  private static DrillTable createTable(
+      RelDataTypeFactory typeFactory,
+      MutableSchema schema,
+      String name,
+      StorageEngineConfig storageEngineConfig,
+      Object selection,
+      String storageEngineName
+      ) {
     final MethodCallExpression call = Expressions.call(schema.getExpression(),
         BuiltinMethod.DATA_CONTEXT_GET_TABLE.method,
         Expressions.constant(name),
@@ -78,11 +87,12 @@ public class DrillTable extends BaseQueryable<Object>
     final RelDataType rowType =
         typeFactory.createStructType(
             Collections.singletonList(
-                typeFactory.createSqlType(SqlTypeName.ANY)),
-            Collections.singletonList("_extra"));
-    final DrillTable table =
-        new DrillTable(schema, Object.class, call, rowType, name, storageEngineConfig, selection);
-    schema.addTable(name, table);
+                typeFactory.createMapType(
+                    typeFactory.createSqlType(SqlTypeName.VARCHAR),
+                    typeFactory.createSqlType(SqlTypeName.ANY))),
+            Collections.singletonList("_MAP"));
+      return new DrillTable(schema, Object.class, call, rowType, name,
+          storageEngineConfig, selection, storageEngineName);
   }
 
   @Override
@@ -96,14 +106,43 @@ public class DrillTable extends BaseQueryable<Object>
   }
 
   @Override
+  public Statistic getStatistic() {
+    return Statistics.UNKNOWN;
+  }
+
+  public String getStorageEngineName() {
+    return storageEngineName;
+  }
+
+  @Override
   public Enumerator<Object> enumerator() {
     return Linq4j.emptyEnumerator();
   }
 
   public RelNode toRel(RelOptTable.ToRelContext context, RelOptTable table) {
     return new DrillScan(context.getCluster(),
-        context.getCluster().traitSetOf(DrillOptiq.CONVENTION),
+        context.getCluster().traitSetOf(DrillRel.CONVENTION),
         table);
+  }
+
+  private static <T> T last(T t0, T t1) {
+    return t0 != null ? t0 : t1;
+  }
+
+  /** Factory for custom tables in Optiq schema. */
+  @SuppressWarnings("UnusedDeclaration")
+  public static class Factory implements TableFactory<DrillTable> {
+    @Override
+    public DrillTable create(Schema schema, String name,
+        Map<String, Object> operand, RelDataType rowType) {
+      final ClasspathRSE.ClasspathRSEConfig rseConfig =
+          new ClasspathRSE.ClasspathRSEConfig();
+      final ClasspathInputConfig inputConfig = new ClasspathInputConfig();
+      inputConfig.path = last((String) operand.get("path"), "/donuts.json");
+      inputConfig.type = DataWriter.ConverterType.JSON;
+      return createTable(schema.getTypeFactory(), (MutableSchema) schema, name,
+          rseConfig, inputConfig, "donuts-json");
+    }
   }
 }
 

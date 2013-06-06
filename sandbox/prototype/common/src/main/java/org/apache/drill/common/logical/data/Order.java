@@ -17,26 +17,27 @@
  ******************************************************************************/
 package org.apache.drill.common.logical.data;
 
-import org.apache.drill.common.defs.OrderDef;
 import org.apache.drill.common.expression.FieldReference;
+import org.apache.drill.common.expression.LogicalExpression;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName("order")
 public class Order extends SingleInputOperator {
 
-  private final OrderDef[] orderings;
+  private final Ordering[] orderings;
   private final FieldReference within;
 
   @JsonCreator
-  public Order(@JsonProperty("within") FieldReference within, @JsonProperty("orderings") OrderDef... orderings) {
+  public Order(@JsonProperty("within") FieldReference within, @JsonProperty("orderings") Ordering... orderings) {
     this.orderings = orderings;
     this.within = within;
   }
   
-  public OrderDef[] getOrderings() {
+  public Ordering[] getOrderings() {
     return orderings;
   }
   
@@ -44,6 +45,58 @@ public class Order extends SingleInputOperator {
     return within;
   }
 
+  public static class Ordering {
+
+    private final Direction direction;
+    private final LogicalExpression expr;
+    private final NullCollation nulls;
+    
+    @JsonCreator
+    public Ordering(@JsonProperty("order") String strOrder, @JsonProperty("expr") LogicalExpression expr, @JsonProperty("nullCollation") String nullCollation) {
+      this.expr = expr;
+      this.nulls = NullCollation.NULLS_LAST.description.equals(nullCollation) ? NullCollation.NULLS_LAST :  NullCollation.NULLS_FIRST; // default first
+      this.direction = Direction.DESC.description.equals(strOrder) ? Direction.DESC : Direction.ASC; // default asc
+                                                                                                     
+    }
+
+    @JsonIgnore
+    public Direction getDirection() {
+      return direction;
+    }
+
+    public LogicalExpression getExpr() {
+      return expr;
+    }
+
+    public String getOrder() {
+      return direction.description;
+    }
+
+    public NullCollation getNullCollation() {
+      return nulls;
+    }
+    
+    
+
+  }
+  public static enum NullCollation {
+    NULLS_FIRST("first"), NULLS_LAST("last");
+    
+    public final String description;
+
+    NullCollation(String d) {
+      description = d;
+    }
+  }
+
+  public static enum Direction {
+    ASC("asc"), DESC("desc");
+    public final String description;
+
+    Direction(String d) {
+      description = d;
+    }
+  }
   
   
 }

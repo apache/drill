@@ -6,48 +6,43 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.apache.drill.common.logical.data;
+package org.apache.drill.optiq;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeName;
+import org.eigenbase.rel.ValuesRel;
+import org.eigenbase.relopt.*;
 
-@JsonTypeName("union")
-public class Union extends LogicalOperatorBase {
-  private final LogicalOperator[] inputs;
-  private final boolean distinct;
+/**
+ * Rule that converts a {@link ValuesRel} to a Drill
+ * "values" operation.
+ */
+public class DrillValuesRule extends RelOptRule {
+  public static final RelOptRule INSTANCE = new DrillValuesRule();
 
-//  @JsonCreator
-//  public Union(@JsonProperty("inputs") LogicalOperator[] inputs){
-//    this(inputs, false);
-//  }
-  
-  @JsonCreator
-  public Union(@JsonProperty("inputs") LogicalOperator[] inputs, @JsonProperty("distinct") Boolean distinct){
-    this.inputs = inputs;
-    for (LogicalOperator o : inputs) {
-      o.registerAsSubscriber(this);
-    }
-    this.distinct = distinct == null ? false : distinct;
+  private DrillValuesRule() {
+    super(
+        new RelOptRuleOperand(
+            ValuesRel.class,
+            Convention.NONE),
+        "DrillValuesRule");
   }
 
-  public LogicalOperator[] getInputs() {
-    return inputs;
+  @Override
+  public void onMatch(RelOptRuleCall call) {
+    final ValuesRel values = (ValuesRel) call.getRels()[0];
+    final RelTraitSet traits = values.getTraitSet().plus(DrillRel.CONVENTION);
+    call.transformTo(
+        new DrillValuesRel(values.getCluster(), values.getRowType(),
+            values.getTuples(), traits));
   }
-
-  public boolean isDistinct() {
-    return distinct;
-  }
-
-  
-  
 }
+
+// End DrillValuesRule.java

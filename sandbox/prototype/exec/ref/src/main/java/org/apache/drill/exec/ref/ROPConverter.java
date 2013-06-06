@@ -35,6 +35,7 @@ import org.apache.drill.exec.ref.rops.ROP;
 import org.apache.drill.exec.ref.rops.ScanROP;
 import org.apache.drill.exec.ref.rops.StoreROP;
 import org.apache.drill.exec.ref.rops.UnionROP;
+import org.apache.drill.exec.ref.rops.UnionROP;
 import org.apache.drill.exec.ref.rse.RSERegistry;
 import org.apache.drill.exec.ref.rse.ReferenceStorageEngine;
 import org.apache.drill.exec.ref.rse.ReferenceStorageEngine.ReadEntry;
@@ -134,7 +135,7 @@ class ROPConverter {
       scanner.init(registry, builder);
       return;
     default:
-      Union logOp = new Union(null);
+      Union logOp = new Union(null, false);
 
       ROP parentUnion = new UnionROP(logOp);
       ScanROP[] scanners = new ScanROP[readEntries.size()];

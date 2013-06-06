@@ -6,48 +6,34 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.apache.drill.common.logical.data;
+package org.apache.drill.exec.ref.rops;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeName;
+import org.apache.drill.exec.ref.TestUtils;
+import org.junit.Test;
 
-@JsonTypeName("union")
-public class Union extends LogicalOperatorBase {
-  private final LogicalOperator[] inputs;
-  private final boolean distinct;
+public class JoinROPTest {
 
-//  @JsonCreator
-//  public Union(@JsonProperty("inputs") LogicalOperator[] inputs){
-//    this(inputs, false);
-//  }
-  
-  @JsonCreator
-  public Union(@JsonProperty("inputs") LogicalOperator[] inputs, @JsonProperty("distinct") Boolean distinct){
-    this.inputs = inputs;
-    for (LogicalOperator o : inputs) {
-      o.registerAsSubscriber(this);
-    }
-    this.distinct = distinct == null ? false : distinct;
+  @Test
+  public void testInnerJoin() throws Exception {
+    TestUtils.assertProduceCount("/join/simple_join.json", 5);
   }
 
-  public LogicalOperator[] getInputs() {
-    return inputs;
+  @Test
+  public void testOuterJoin() throws Exception {
+    TestUtils.assertProduceCount("/join/full_join.json", 7);
   }
 
-  public boolean isDistinct() {
-    return distinct;
+  @Test
+  public void testLeftJoin() throws Exception {
+    TestUtils.assertProduceCount("/join/left_join.json", 6);
   }
-
-  
-  
 }

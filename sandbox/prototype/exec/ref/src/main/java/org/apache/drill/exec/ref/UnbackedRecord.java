@@ -105,5 +105,27 @@ public class UnbackedRecord implements RecordPointer {
         return "UnbackedRecord [root=" + root + "]";
     }
 
+    @Override
+    public int hashCode() {
+      final int prime = 31;
+      int result = 1;
+      result = prime * result + ((root == null) ? 0 : root.hashCode());
+      return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj) return true;
+      if (obj == null) return false;
+      if (getClass() != obj.getClass()) return false;
+      UnbackedRecord other = (UnbackedRecord) obj;
+      if (root == null) {
+        if (other.root != null) return false;
+      } else if (!root.equals(other.root)) return false;
+      return true;
+    }
+    
+    
+
 
 }

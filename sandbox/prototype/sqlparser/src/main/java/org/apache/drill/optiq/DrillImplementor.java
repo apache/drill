@@ -25,6 +25,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.eigenbase.rel.RelNode;
 
 /**
  * Context for converting a tree of {@link DrillRel} nodes into a Drill logical
@@ -104,6 +105,10 @@ public class DrillImplementor {
     String s = rootNode.toString();
     System.out.println(s);
     return s;
+  }
+
+  public void visitChild(DrillRel parent, int ordinal, RelNode child) {
+    ((DrillRel) child).implement(this);
   }
 }
 

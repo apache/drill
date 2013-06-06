@@ -206,6 +206,10 @@ public class JoinROP extends ROPBase<Join> {
                     }
                 });
 
+                if (curIdx >= bufferLength) {
+                   curIdx = 0;
+                }
+
                 if (option.isPresent()) {
                     setOutputRecord(rightPointer, bufferObj.pointer);
                     return (bufferObj.schemaChanged || rightOutcome == NextOutcome.INCREMENTED_SCHEMA_CHANGED) ?
@@ -213,9 +217,6 @@ public class JoinROP extends ROPBase<Join> {
                             NextOutcome.INCREMENTED_SCHEMA_UNCHANGED;
                 }
 
-                if (curIdx >= bufferLength) {
-                    curIdx = 0;
-                }
             }
 
             return NextOutcome.NONE_LEFT;
@@ -234,6 +235,10 @@ public class JoinROP extends ROPBase<Join> {
         public NextOutcome getNext() {
             final RecordPointer leftPointer = left.getRecordPointer();
             boolean isFound = true;
+            if(curIdx >= bufferLength) {
+                return NextOutcome.NONE_LEFT;
+            }
+
             while (true) {
                 if (curIdx == 0) {
                     if (!isFound) {
@@ -261,6 +266,7 @@ public class JoinROP extends ROPBase<Join> {
 
                 if (option.isPresent()) {
                     setOutputRecord(leftPointer, bufferObj.pointer);
+                    bufferObj.setHasJoined(true);
                     return (bufferObj.schemaChanged || leftOutcome == NextOutcome.INCREMENTED_SCHEMA_CHANGED) ?
                             NextOutcome.INCREMENTED_SCHEMA_CHANGED :
                             NextOutcome.INCREMENTED_SCHEMA_UNCHANGED;
