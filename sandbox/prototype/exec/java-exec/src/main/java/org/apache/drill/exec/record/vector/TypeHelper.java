@@ -237,9 +237,13 @@ public class TypeHelper {
       }
       break;
     case REPEATED:
+        switch(type.getMinorType()) {
+            case MAP: return new RepeatMap(field, allocator);
+        }
       break;
     case OPTIONAL:
         switch(type.getMinorType()) {
+            case BOOLEAN: return new NullableBit(field, allocator);
             case INT: return new NullableFixed4(field, allocator);
             case FLOAT4: return new NullableFixed4(field, allocator);
             case VARCHAR4: return new NullableVarLen4(field, allocator);
@@ -249,7 +253,7 @@ public class TypeHelper {
       break;
 
     }
-    throw new UnsupportedOperationException(type.getMinorType() + " type is not supported.");
+    throw new UnsupportedOperationException(type.getMinorType() + " type is not supported. Mode: " + type.getMode());
   }
 
 }

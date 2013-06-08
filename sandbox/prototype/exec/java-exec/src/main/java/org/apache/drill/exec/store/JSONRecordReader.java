@@ -171,6 +171,10 @@ public class JSONRecordReader implements RecordReader {
         return allocator;
     }
 
+    public OutputMutator getOutputMutator() {
+        return outputMutator;
+    }
+
     public static enum ReadType {
         ARRAY(END_ARRAY) {
             @Override
@@ -277,9 +281,11 @@ public class JSONRecordReader implements RecordReader {
                                    int colIndex) throws IOException, SchemaChangeException {
             RecordSchema currentSchema = reader.getCurrentSchema();
             Field field = currentSchema.getField(fieldName, colIndex);
+            boolean isFieldFound = field != null;
             List<Field> removedFields = reader.getRemovedFields();
-            if (field == null || !field.getFieldType().equals(fieldType)) {
-                if (field != null) {
+            int parentFieldId = parentField == null ? 0 : parentField.getFieldId();
+            if (!isFieldFound || !field.getFieldType().equals(fieldType)) {
+                if (isFieldFound) {
                     if (field.hasSchema()) {
                         removeChildFields(removedFields, field);
                     }
@@ -289,7 +295,7 @@ public class JSONRecordReader implements RecordReader {
 
                 field = createField(
                         currentSchema,
-                        parentField == null ? 0 : parentField.getFieldId(),
+                        parentFieldId,
                         reader.getGenerator(),
                         prefixFieldName,
                         fieldName,
@@ -297,13 +303,13 @@ public class JSONRecordReader implements RecordReader {
                         colIndex
                 );
 
-                field.setRead(true);
-                reader.getDiffSchema().recordNewField(field);
+                reader.recordNewField(field);
                 currentSchema.addField(field);
-            } else {
-                field.setRead(true);
             }
 
+            field.setRead(true);
+
+            VectorHolder holder = getOrCreateVectorHolder(reader, field, parentFieldId);
             if (readType != null) {
                 RecordSchema fieldSchema = field.getAssignedSchema();
                 reader.setCurrentSchema(fieldSchema);
@@ -316,10 +322,9 @@ public class JSONRecordReader implements RecordReader {
 
                 reader.setCurrentSchema(currentSchema);
             } else {
-                VectorHolder vector = getOrCreateVectorHolder(reader, field);
                 return addValueToVector(
                         rowIndex,
-                        vector,
+                        holder,
                         reader.getAllocator(),
                         JacksonHelper.getValueFromFieldType(
                                 reader.getParser(),
@@ -369,8 +374,10 @@ public class JSONRecordReader implements RecordReader {
                 }
                 case BOOLEAN: {
                     holder.incAndCheckLength(1);
-                    Bit bit = (Bit) holder.getValueVector();
-                    if ((Boolean) val) {
+                    NullableBit bit = (NullableBit) holder.getValueVector();
+                    if (val == null) {
+                        bit.setNull(index);
+                    } else if ((Boolean) val) {
                         bit.set(index);
                     }
                     return holder.hasEnoughSpace(1);
@@ -380,8 +387,8 @@ public class JSONRecordReader implements RecordReader {
             }
         }
 
-        private VectorHolder getOrCreateVectorHolder(JSONRecordReader reader, Field field) throws SchemaChangeException {
-            return reader.getOrCreateVectorHolder(field);
+        private VectorHolder getOrCreateVectorHolder(JSONRecordReader reader, Field field, int parentFieldId) throws SchemaChangeException {
+            return reader.getOrCreateVectorHolder(field, parentFieldId);
         }
 
         public abstract RecordSchema createSchema() throws IOException;
@@ -395,11 +402,15 @@ public class JSONRecordReader implements RecordReader {
                                           int index);
     }
 
-    private VectorHolder getOrCreateVectorHolder(Field field) throws SchemaChangeException {
+    private void recordNewField(Field field) {
+        diffSchema.recordNewField(field);
+    }
+
+    private VectorHolder getOrCreateVectorHolder(Field field, int parentFieldId) throws SchemaChangeException {
         if (!valueVectorMap.containsKey(field.getFieldId())) {
             SchemaDefProtos.MajorType type = field.getFieldType();
             int fieldId = field.getFieldId();
-            MaterializedField f = MaterializedField.create(new SchemaPath(field.getFieldName()), fieldId, 0, type);
+            MaterializedField f = MaterializedField.create(new SchemaPath(field.getFieldName()), fieldId, parentFieldId, type);
             ValueVector<?> v = TypeHelper.getNewVector(f, allocator);
             v.allocateNew(batchSize);
             VectorHolder holder = new VectorHolder(batchSize, v);

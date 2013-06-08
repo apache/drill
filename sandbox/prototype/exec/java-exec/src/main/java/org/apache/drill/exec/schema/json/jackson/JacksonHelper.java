@@ -30,11 +30,12 @@ import static org.apache.drill.exec.proto.SchemaDefProtos.MinorType;
 public class JacksonHelper {
 
     public static final MajorType STRING_TYPE = MajorType.newBuilder().setMinorType(MinorType.VARCHAR4).setMode(SchemaDefProtos.DataMode.OPTIONAL).build();
-    public static final MajorType BOOLEAN_TYPE = MajorType.newBuilder().setMinorType(MinorType.BOOLEAN).setMode(SchemaDefProtos.DataMode.REQUIRED).build();
+    public static final MajorType BOOLEAN_TYPE = MajorType.newBuilder().setMinorType(MinorType.BOOLEAN).setMode(SchemaDefProtos.DataMode.OPTIONAL).build();
     public static final MajorType ARRAY_TYPE = MajorType.newBuilder().setMinorType(MinorType.LATE).setMode(SchemaDefProtos.DataMode.REPEATED).build();
     public static final MajorType MAP_TYPE = MajorType.newBuilder().setMinorType(MinorType.MAP).setMode(SchemaDefProtos.DataMode.REPEATED).build();
     public static final MajorType INT_TYPE = MajorType.newBuilder().setMinorType(MinorType.INT).setMode(SchemaDefProtos.DataMode.OPTIONAL).build();
     public static final MajorType FLOAT_TYPE = MajorType.newBuilder().setMinorType(MinorType.FLOAT4).setMode(SchemaDefProtos.DataMode.OPTIONAL).build();
+    public static final MajorType NULL_TYPE = MajorType.newBuilder().setMinorType(MinorType.LATE).setMode(SchemaDefProtos.DataMode.OPTIONAL).build();
 
     public static MajorType getFieldType(JsonToken token) {
         switch(token) {
@@ -52,9 +53,11 @@ public class JacksonHelper {
                 return INT_TYPE;
             case VALUE_NUMBER_FLOAT:
                 return FLOAT_TYPE;
+            case VALUE_NULL:
+                return NULL_TYPE;
         }
 
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("Unsupported Jackson type: " + token);
     }
 
     public static Object getValueFromFieldType(JsonParser parser, MinorType fieldType) throws IOException {
@@ -67,6 +70,8 @@ public class JacksonHelper {
                 return parser.getFloatValue();
             case BOOLEAN:
                 return parser.getBooleanValue();
+            case LATE:
+                return null;
             default:
                 throw new RuntimeException("Unexpected Field type to return value: " + fieldType.toString());
         }
