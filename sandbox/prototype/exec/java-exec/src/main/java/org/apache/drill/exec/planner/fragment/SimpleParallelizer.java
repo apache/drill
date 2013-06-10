@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -37,34 +37,40 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
+/**
+ * The simple parallelizer determines the level of parallelization of a plan based on the cost of the underlying
+ * operations.  It doesn't take into account system load or other factors.  Based on the cost of the query, the
+ * parallelization for each major fragment will be determined.  Once the amount of parallelization is done, assignment
+ * is done based on round robin assignment ordered by operator affinity (locality) to available execution Drillbits.
+ */
 public class SimpleParallelizer {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SimpleParallelizer.class);
-
   private final Materializer materializer = new Materializer();
 
   /**
    * Generate a set of assigned fragments based on the provided planningSet. Do not allow parallelization stages to go
    * beyond the global max width.
-   * 
-   * @param context
-   *          The current QueryContext.
-   * @param planningSet
-   *          The set of queries with collected statistics that we'll work with.
-   * @param globalMaxWidth
-   *          The maximum level or paralellization any stage of the query can do. Note that while this might be the
-   *          number of active Drillbits, realistically, this could be well beyond that number of we want to do things
-   *          like speed results return.
-   * @return The list of generatoe PlanFragment protobuf objects to be assigned out to the individual nodes.
-   * @throws FragmentSetupException
+   *
+   * @param foremanNode     The driving/foreman node for this query.  (this node)
+   * @param queryId         The queryId for this query.
+   * @param activeEndpoints The list of endpoints to consider for inclusion in planning this query.
+   * @param reader          Tool used to read JSON plans
+   * @param rootNode        The root node of the PhysicalPlan that we will parallelizing.
+   * @param planningSet     The set of queries with collected statistics that we'll work with.
+   * @param globalMaxWidth  The maximum level or parallelization any stage of the query can do. Note that while this
+   *                        might be the number of active Drillbits, realistically, this could be well beyond that
+   *                        number of we want to do things like speed results return.
+   * @return The list of generated PlanFragment protobuf objects to be assigned out to the individual nodes.
+   * @throws ExecutionSetupException
    */
   public QueryWorkUnit getFragments(DrillbitEndpoint foremanNode, QueryId queryId, Collection<DrillbitEndpoint> activeEndpoints, PhysicalPlanReader reader, Fragment rootNode, PlanningSet planningSet,
-      int globalMaxWidth) throws ExecutionSetupException {
+                                    int globalMaxWidth) throws ExecutionSetupException {
     assignEndpoints(activeEndpoints, planningSet, globalMaxWidth);
     return generateWorkUnit(foremanNode, queryId, reader, rootNode, planningSet);
   }
 
   private QueryWorkUnit generateWorkUnit(DrillbitEndpoint foremanNode, QueryId queryId, PhysicalPlanReader reader, Fragment rootNode,
-      PlanningSet planningSet) throws ExecutionSetupException {
+                                         PlanningSet planningSet) throws ExecutionSetupException {
 
     List<PlanFragment> fragments = Lists.newArrayList();
 
@@ -82,8 +88,8 @@ public class SimpleParallelizer {
       if (isRootNode && wrapper.getWidth() != 1)
         throw new FragmentSetupException(
             String.format(
-                    "Failure while trying to setup fragment.  The root fragment must always have parallelization one.  In the current case, the width was set to %d.",
-                    wrapper.getWidth()));
+                "Failure while trying to setup fragment.  The root fragment must always have parallelization one.  In the current case, the width was set to %d.",
+                wrapper.getWidth()));
       // a fragment is self driven if it doesn't rely on any other exchanges.
       boolean isLeafFragment = node.getReceivingExchangePairs().size() == 0;
 
@@ -92,7 +98,7 @@ public class SimpleParallelizer {
         IndexedFragmentNode iNode = new IndexedFragmentNode(minorFragmentId, wrapper);
         PhysicalOperator op = physicalOperatorRoot.accept(materializer, iNode);
         Preconditions.checkArgument(op instanceof FragmentRoot);
-        FragmentRoot root = (FragmentRoot) op; 
+        FragmentRoot root = (FragmentRoot) op;
 
         // get plan as JSON
         String plan;
@@ -101,7 +107,7 @@ public class SimpleParallelizer {
         } catch (JsonProcessingException e) {
           throw new FragmentSetupException("Failure while trying to convert fragment into json.", e);
         }
-        
+
         FragmentHandle handle = FragmentHandle //
             .newBuilder() //
             .setMajorFragmentId(wrapper.getMajorFragmentId()) //
@@ -134,7 +140,7 @@ public class SimpleParallelizer {
   }
 
   private void assignEndpoints(Collection<DrillbitEndpoint> allNodes, PlanningSet planningSet,
-      int globalMaxWidth) throws PhysicalOperatorSetupException {
+                               int globalMaxWidth) throws PhysicalOperatorSetupException {
     // First we determine the amount of parallelization for a fragment. This will be between 1 and maxWidth based on
     // cost. (Later could also be based on cluster operation.) then we decide endpoints based on affinity (later this
     // could be based on endpoint load)

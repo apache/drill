@@ -40,7 +40,7 @@ public class TestFragmentChecker extends PopUnitTestBase{
   
   @Test
   public void checkSimpleExchangePlan() throws Exception{
-    print("/physical_simpleexchange.json", 2, 3);
+    print("/physical_double_exchange.json", 2, 3);
 
   }
   

@@ -31,6 +31,26 @@
                             "mode": "REQUIRED"
                         }
                     ]
+                },
+                {
+                    "records": 100,
+                    "types": [
+                        {
+                            "name": "blue",
+                            "type": "INT",
+                            "mode": "REQUIRED"
+                        },
+                        {
+                            "name": "red",
+                            "type": "BIGINT",
+                            "mode": "REQUIRED"
+                        },
+                        {
+                            "name": "green",
+                            "type": "INT",
+                            "mode": "REQUIRED"
+                        }
+                    ]
                 }
             ]
         },

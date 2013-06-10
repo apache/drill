@@ -29,6 +29,7 @@ import org.apache.drill.exec.rpc.RemoteConnection.ConnectionThrottle;
 import com.google.common.base.Preconditions;
 
 public abstract class AbstractFragmentCollector implements BatchCollector{
+
   private final List<DrillbitEndpoint> incoming;
   private final int oppositeMajorFragmentId;
   private final AtomicIntegerArray remainders;
@@ -83,7 +84,11 @@ public abstract class AbstractFragmentCollector implements BatchCollector{
     return decremented;
   }
 
-  
+
+  @Override
+  public int getTotalIncomingFragments() {
+    return incoming.size();
+  }
 
   protected abstract RawBatchBuffer getBuffer(int minorFragmentId);
 }

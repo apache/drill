@@ -45,7 +45,7 @@ public class TestFragmenter extends PopUnitTestBase {
   @Test
   public void ensureThreeFragments() throws FragmentSetupException, IOException {
     PhysicalPlanReader ppr = new PhysicalPlanReader(CONFIG, CONFIG.getMapper(), DrillbitEndpoint.getDefaultInstance());
-    Fragment b = getRootFragment(ppr, "/physical_simpleexchange.json");
+    Fragment b = getRootFragment(ppr, "/physical_double_exchange.json");
     logger.debug("Fragment Node {}", b);
     assertEquals(3, getFragmentCount(b));
     assertEquals(1, b.getReceivingExchangePairs().size());

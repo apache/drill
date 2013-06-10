@@ -33,7 +33,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 /**
- * Determines when a particular fragment has enough data for each of its receiving exchanges to commence execution.
+ * Determines when a particular fragment has enough data for each of its receiving exchanges to commence execution.  Also monitors whether we've collected all incoming data.
  */
 public class IncomingBuffers {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(IncomingBuffers.class);
@@ -48,8 +48,15 @@ public class IncomingBuffers {
     root.accept(reqFrags, counts);
     
     logger.debug("Came up with a list of {} required fragments.  Fragments {}", remainingRequired.get(), counts);
-    streamsRemaining.set(remainingRequired.get());
     fragCounts = ImmutableMap.copyOf(counts);
+
+    // Determine the total number of incoming streams that will need to be completed before we are finished.
+    int totalStreams = 0;
+    for(BatchCollector bc : fragCounts.values()){
+      totalStreams += bc.getTotalIncomingFragments();
+    }
+    assert totalStreams >= remainingRequired.get() : String.format("Total Streams %d should be more than the minimum number of streams to commence (%d).  It isn't.", totalStreams, remainingRequired.get());
+    streamsRemaining.set(totalStreams);
   }
 
   public boolean batchArrived(ConnectionThrottle throttle, RawFragmentBatch batch) throws FragmentSetupException {

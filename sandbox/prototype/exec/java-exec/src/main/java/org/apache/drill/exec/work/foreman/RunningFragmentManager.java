@@ -96,6 +96,7 @@ class RunningFragmentManager implements FragmentStatusListener{
   }
     
   private void sendRemoteFragment(PlanFragment fragment){
+    logger.debug("Sending remote fragment to node {} with data {}", fragment.getAssignment(), fragment.getFragmentJson());
     map.put(fragment.getHandle(), new FragmentData(fragment.getHandle(), fragment.getAssignment(), false));
     FragmentSubmitListener listener = new FragmentSubmitListener(fragment.getAssignment(), fragment);
     tun.get(fragment.getAssignment()).sendFragment(listener, fragment);

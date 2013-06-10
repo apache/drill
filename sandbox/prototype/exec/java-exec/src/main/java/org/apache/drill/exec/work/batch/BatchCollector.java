@@ -27,5 +27,5 @@ interface BatchCollector {
   public boolean batchArrived(ConnectionThrottle throttle, int minorFragmentId, RawFragmentBatch batch);
   public int getOppositeMajorFragmentId();
   public RawBatchBuffer[] getBuffers();
-
+  public int getTotalIncomingFragments();
 }
