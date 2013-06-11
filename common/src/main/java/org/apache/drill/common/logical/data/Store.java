@@ -56,16 +56,18 @@ public class Store extends SinkOperator{
     return partition;
   }
 
-    @Override
-    public <T, X, E extends Throwable> T accept(LogicalVisitor<T, X, E> logicalVisitor, X value) throws E {
-        return logicalVisitor.visitStore(this, value);
-    }
+  @Override
+  public <T, X, E extends Throwable> T accept(LogicalVisitor<T, X, E> logicalVisitor, X value) throws E {
+      return logicalVisitor.visitStore(this, value);
+  }
 
-    @Override
-    public Iterator<LogicalOperator> iterator() {
-        return Iterators.singletonIterator(getInput());
-    }
+  @Override
+  public Iterator<LogicalOperator> iterator() {
+      return Iterators.singletonIterator(getInput());
+  }
 
-
-
+  public static StoreBuilder builder() {
+    return new StoreBuilder();
+  }
+  
 }

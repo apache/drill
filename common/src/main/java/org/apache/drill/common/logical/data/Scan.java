@@ -59,8 +59,8 @@ public class Scan extends SourceOperator{
       return logicalVisitor.visitScan(this, value);
   }
 
-
-
-
+  public static ScanBuilder builder() {
+    return new ScanBuilder();
+  }
 
 }

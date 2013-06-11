@@ -22,7 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.drill.common.PlanProperties;
+import org.apache.drill.common.logical.PlanProperties;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.graph.Graph;
 import org.apache.drill.common.graph.GraphAlgos;
@@ -104,4 +104,9 @@ public class LogicalPlan {
       throw new RuntimeException(e);
     }
   }
+
+  public static LogicalPlanBuilder builder() {
+    return new LogicalPlanBuilder();
+  }
+
 }

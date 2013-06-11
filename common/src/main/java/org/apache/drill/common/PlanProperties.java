@@ -26,11 +26,11 @@ public class PlanProperties {
 
   public PlanType type;
   public int version;
-	public Generator generator = new Generator();
-	
-	@JsonInclude(Include.NON_NULL)
-	public static class Generator{
-		public String type;
-		public String info;
-	}
+  public Generator generator = new Generator();
+
+  @JsonInclude(Include.NON_NULL)
+  public static class Generator{
+    public String type;
+    public String info;
+  }
 }

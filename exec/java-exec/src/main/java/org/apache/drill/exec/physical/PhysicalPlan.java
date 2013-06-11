@@ -20,7 +20,7 @@ package org.apache.drill.exec.physical;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.drill.common.PlanProperties;
+import org.apache.drill.common.logical.PlanProperties;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.graph.Graph;
 import org.apache.drill.common.graph.GraphAlgos;

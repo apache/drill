@@ -1,30 +1,32 @@
 {
-  head:{
-    type:"APACHE_DRILL_LOGICAL",
-    version:"1",
-    generator:{
-      type:"manual",
-      info:"na"
+  "head" : {
+    "type" : "APACHE_DRILL_LOGICAL",
+    "version" : 1,
+    "generator" : {
+      "type" : "manual",
+      "info" : "na"
     }
   },
-  storage:{
-    mock-engine: {
-      type:"mock",
-	  url: "http://www.apache.org/"
-    }
+  "storage" : {
+      "mock-engine": {
+        type : "mock",
+	      url : "http://www.apache.org/"
+      }
   },
-  query:[
+  "query" : [
     {
-      @id:"1",
-      op:"scan",
-      storageengine:"mock-engine",
-      selection: {}
-    },
-    {
-      input: 1,
-      op: "store",
-      storageengine:"mock-engine",
-      target: {}
+      "op" : "scan",
+      "@id" : 1,
+      "storageengine" : "mock-engine",
+      "selection" : null,
+      "ref" : null
+    }, {
+      "op" : "store",
+      "@id" : 2,
+      "input" : 1,
+      "target" : null,
+      "partition" : null,
+      "storageEngine" : "mock-engine"
     }
   ]
 }
