@@ -32,13 +32,21 @@ abstract class NullableValueVector<T extends NullableValueVector<T, E>, E extend
   protected Bit bits;
   protected E value;
 
-  public NullableValueVector(MaterializedField field, BufferAllocator allocator, Class<T> valueClass) {
+  public NullableValueVector(MaterializedField field, BufferAllocator allocator) {
     super(field, allocator);
     bits = new Bit(null, allocator);
     value = getNewValueVector(allocator);
   }
   
   protected abstract E getNewValueVector(BufferAllocator allocator);
+
+  public void setNull(int index) {
+      bits.set(index);
+  }
+
+  public void setNotNull(int index) {
+      bits.clear(index);
+  }
 
   public int isNull(int index){
     return bits.getBit(index);
@@ -89,7 +97,7 @@ abstract class NullableValueVector<T extends NullableValueVector<T, E>, E extend
 
   @Override
   public Object getObject(int index) {
-    if(isNull(index) == 0){
+    if(isNull(index) == 1){
       return null;
     }else{
       return value.getObject(index);

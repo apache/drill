@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,11 +25,11 @@ import org.apache.drill.exec.record.MaterializedField;
 
 public class TypeHelper {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TypeHelper.class);
-  
+
   private static final int WIDTH_ESTIMATE_1 = 10;
   private static final int WIDTH_ESTIMATE_2 = 50000;
   private static final int WIDTH_ESTIMATE_4 = 1024*1024;
-  
+
   public static int getSize(MajorType major){
     switch(major.getMinorType()){
     case TINYINT: return 1;
@@ -65,11 +65,11 @@ public class TypeHelper {
     case PROTO2: return 2 + WIDTH_ESTIMATE_2;
     case PROTO4: return 4 + WIDTH_ESTIMATE_4;
     case MSGPACK2: return 2 + WIDTH_ESTIMATE_2;
-    case MSGPACK4: return 4 + WIDTH_ESTIMATE_4;    
+    case MSGPACK4: return 4 + WIDTH_ESTIMATE_4;
     }
     return 4;
   }
-  
+
   public static Class<?> getValueVectorClass(MinorType type, DataMode mode){
     switch(mode){
     case OPTIONAL:
@@ -189,12 +189,12 @@ public class TypeHelper {
       break;
     default:
       break;
-    
+
     }
     throw new UnsupportedOperationException();
   }
-  
-  
+
+
   public static ValueVector<?> getNewVector(MaterializedField field, BufferAllocator allocator){
     MajorType type = field.getType();
     switch(type.getMode()){
@@ -233,18 +233,27 @@ public class TypeHelper {
       case PROTO2: return new VarLen2(field, allocator);
       case PROTO4: return new VarLen4(field, allocator);
       case MSGPACK2: return new VarLen2(field, allocator);
-      case MSGPACK4: return new VarLen4(field, allocator);      
+      case MSGPACK4: return new VarLen4(field, allocator);
       }
       break;
     case REPEATED:
+        switch(type.getMinorType()) {
+            case MAP: return new RepeatMap(field, allocator);
+        }
       break;
     case OPTIONAL:
+        switch(type.getMinorType()) {
+            case BOOLEAN: return new NullableBit(field, allocator);
+            case INT: return new NullableFixed4(field, allocator);
+            case FLOAT4: return new NullableFixed4(field, allocator);
+            case VARCHAR4: return new NullableVarLen4(field, allocator);
+        }
       break;
     default:
       break;
-    
+
     }
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException(type.getMinorType() + " type is not supported. Mode: " + type.getMode());
   }
 
 }

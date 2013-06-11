@@ -20,44 +20,45 @@ package org.apache.drill.exec.schema;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.proto.SchemaDefProtos;
+import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.vector.*;
+import org.apache.drill.exec.store.BatchExceededException;
+import org.apache.drill.exec.store.VectorHolder;
+
+import java.nio.charset.Charset;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
+import static org.apache.drill.exec.proto.SchemaDefProtos.*;
 
 public abstract class Field {
-    final FieldType fieldType;
-    int fieldId;
-    String prefixFieldName;
-    String fieldName;
+    final MajorType fieldType;
+    final int parentFieldId;
+    final int fieldId;
+    final String prefixFieldName;
     RecordSchema schema;
     RecordSchema parentSchema;
     boolean read;
 
-
-    public Field(RecordSchema parentSchema, IdGenerator<Integer> generator, FieldType fieldType, String prefixFieldName) {
+    public Field(RecordSchema parentSchema, int parentFieldId, IdGenerator<Integer> generator, MajorType type, String prefixFieldName) {
         this.fieldId = generator.getNextId();
-        this.fieldType = fieldType;
+        fieldType = type;
         this.prefixFieldName = prefixFieldName;
         this.parentSchema = parentSchema;
+        this.parentFieldId = parentFieldId;
     }
 
-    public Field assignSchema(RecordSchema newSchema) {
-        checkState(schema == null, "Schema already assigned to field: %s", fieldName);
-        checkState(fieldType.isEmbedSchema(), "Schema cannot be assigned to non-embedded types: %s", fieldType);
-        schema = newSchema;
-        return this;
-    }
+    public abstract String getFieldName();
 
     public String getFullFieldName() {
-        return Strings.isNullOrEmpty(prefixFieldName) ? fieldName : prefixFieldName + "." + fieldName;
+        return Strings.isNullOrEmpty(prefixFieldName) ? getFieldName() : prefixFieldName + "." + getFieldName();
     }
 
     public int getFieldId() {
         return fieldId;
-    }
-
-    public String getFieldName() {
-        return fieldName;
     }
 
     public void setRead(boolean read) {
@@ -78,16 +79,8 @@ public abstract class Field {
         return addAttributesToHelper(getAttributesStringHelper()).toString();
     }
 
-    public RecordSchema getParentSchema() {
-        return parentSchema;
-    }
-
     public RecordSchema getAssignedSchema() {
         return schema;
-    }
-
-    public FieldType getFieldType() {
-        return fieldType;
     }
 
     public void assignSchemaIfNull(RecordSchema newSchema) {
@@ -104,32 +97,7 @@ public abstract class Field {
         return schema != null;
     }
 
-    public static enum FieldType {
-        INTEGER(1),
-        FLOAT(2),
-        BOOLEAN(3),
-        STRING(4),
-        ARRAY(5, true),
-        MAP(6, true);
-
-        byte value;
-        boolean embedSchema;
-
-        FieldType(int value, boolean embedSchema) {
-            this.value = (byte) value;
-            this.embedSchema = embedSchema;
-        }
-
-        FieldType(int value) {
-            this(value, false);
-        }
-
-        public byte value() {
-            return value;
-        }
-
-        public boolean isEmbedSchema() {
-            return embedSchema;
-        }
+    public MajorType getFieldType() {
+        return fieldType;
     }
 }

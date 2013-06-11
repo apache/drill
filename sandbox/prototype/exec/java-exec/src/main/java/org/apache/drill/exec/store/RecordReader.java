@@ -25,10 +25,6 @@ public interface RecordReader {
   /**
    * Configure the RecordReader with the provided schema and the record batch that should be written to.
    * 
-   * @param knownSchema
-   *          The set of fields that should be written to as well as the expected types for those fields. In the case
-   *          that RecordReader has a known schema and the expectedSchema does not match the actual schema, a
-   *          ExceptionSetupException will be thrown.
    * @param output
    *          The place where output for a particular scan should be written. The record reader is responsible for
    *          mutating the set of schema values for that particular record.

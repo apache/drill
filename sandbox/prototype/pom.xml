@@ -123,6 +123,12 @@
 
 		<!-- Test Dependencies -->
 		<dependency>
+		  <groupId>com.googlecode.jmockit</groupId>
+		  <artifactId>jmockit</artifactId>
+		  <version>1.2</version>
+		  <scope>test</scope>
+		</dependency>
+		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>${dep.junit.version}</version>

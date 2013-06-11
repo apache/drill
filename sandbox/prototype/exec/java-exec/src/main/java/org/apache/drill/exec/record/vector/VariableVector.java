@@ -23,6 +23,9 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.record.DeadBuf;
 import org.apache.drill.exec.record.MaterializedField;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
+
 /** 
  * A vector of variable length bytes.  Constructed as a vector of lengths or positions and a vector of values.  Random access is only possible if the variable vector stores positions as opposed to lengths.
  */
@@ -31,12 +34,12 @@ public abstract class VariableVector<T extends VariableVector<T, E>, E extends B
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(VariableVector.class);
   
   protected final E lengthVector;
-  private ByteBuf values = DeadBuf.DEAD_BUFFER;
   protected int expectedValueLength;
   
-  public VariableVector(MaterializedField field, BufferAllocator allocator) {
+  public VariableVector(MaterializedField field, BufferAllocator allocator, int expectedValueLength) {
     super(field, allocator);
     this.lengthVector = getNewLengthVector(allocator);
+    this.expectedValueLength = expectedValueLength;
   }
   
   protected abstract E getNewLengthVector(BufferAllocator allocator);
@@ -50,7 +53,7 @@ public abstract class VariableVector<T extends VariableVector<T, E>, E extends B
   protected void childResetAllocation(int valueCount, ByteBuf buf) {
     int firstSize = lengthVector.getAllocationSize(valueCount);
     lengthVector.resetAllocation(valueCount, buf.slice(0, firstSize));
-    values = buf.slice(firstSize, expectedValueLength * valueCount);
+    data = buf.slice(firstSize, expectedValueLength * valueCount);
   }
 
   @Override
@@ -62,16 +65,15 @@ public abstract class VariableVector<T extends VariableVector<T, E>, E extends B
   @Override
   protected void childClear() {
     lengthVector.clear();
-    if(values != DeadBuf.DEAD_BUFFER){
-      values.release();
-      values = DeadBuf.DEAD_BUFFER;
+    if(data != DeadBuf.DEAD_BUFFER){
+      data.release();
+      data = DeadBuf.DEAD_BUFFER;
     }
   }
 
-  
   @Override
   public ByteBuf[] getBuffers() {
-    return new ByteBuf[]{lengthVector.data, values};
+    return new ByteBuf[]{lengthVector.data, data};
   }
 
   @Override
@@ -81,13 +83,20 @@ public abstract class VariableVector<T extends VariableVector<T, E>, E extends B
   }  
   
   public void setTotalBytes(int totalBytes){
-    values.writerIndex(totalBytes);
+    data.writerIndex(totalBytes);
   }
 
   @Override
   public Object getObject(int index) {
-    return null;
+      checkArgument(index >= 0);
+      int startIdx = 0;
+      if(index > 0) {
+          startIdx = (int) lengthVector.getObject(index - 1);
+      }
+      int size = (int) lengthVector.getObject(index) - startIdx;
+      checkState(size >= 0);
+      byte[] dst = new byte[size];
+      data.getBytes(startIdx, dst, 0, size);
+      return dst;
   }
-  
-  
 }
