@@ -90,7 +90,7 @@ public class DrillClient implements Closeable{
     Collection<DrillbitEndpoint> endpoints = clusterCoordinator.getAvailableEndpoints();
     checkState(!endpoints.isEmpty(), "No DrillbitEndpoint can be found");
     // just use the first endpoint for now
-    DrillbitEndpoint endpoint = get(endpoints, 0);
+    DrillbitEndpoint endpoint = endpoints.iterator().next();
     ByteBufAllocator bb = new PooledByteBufAllocator(true);
     this.client = new UserClient(bb, new NioEventLoopGroup(1, new NamedThreadFactory("Client-")));
     try {

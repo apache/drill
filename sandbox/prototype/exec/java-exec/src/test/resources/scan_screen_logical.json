@@ -1,0 +1,46 @@
+{
+  head:{
+    type:"APACHE_DRILL_LOGICAL",
+    version:"1",
+    generator:{
+      type:"manual",
+      info:"na"
+    }
+  },
+  query:[
+    {
+      @id:"1",
+      op:"scan",
+      memo:"initial_scan",
+      storageengine:"local-logs",
+      selection: [
+       {
+            records : 100,
+            types : [
+
+                    {
+                        name : "superhero_name",
+                        type : "VARCHAR1",
+                        mode : "REQUIRED",
+                        width : 100,
+                        precision : 1,
+                        scale : 2
+
+                    }
+             ]
+         }
+      ]
+    },
+    {
+      @id:"2",
+      input: 1,
+      op: "store",
+      memo: "output sink",
+      target: {
+        file: "console:///stdout"
+      }
+      
+    }
+    
+  ]
+}

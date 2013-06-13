@@ -32,10 +32,15 @@ public class GraphAlgos {
     final List<AdjacencyList<V>.Node> sorted = new LinkedList<AdjacencyList<V>.Node>();
     final AdjacencyList<V> rGraph;
 
-    private TopoSorter(AdjacencyList<V> graph) {
+    private TopoSorter(AdjacencyList<V> graph, boolean reverse) {
       graph.clearVisited();
 
-      this.rGraph = graph.getReversedList();
+      if (reverse){
+        this.rGraph = graph.getReversedList();
+      }
+      else{
+        this.rGraph = graph;
+      }
       Collection<AdjacencyList<V>.Node> sourceNodes = rGraph.getInternalRootNodes();
 
       for (AdjacencyList<V>.Node n : sourceNodes) {
@@ -67,15 +72,20 @@ public class GraphAlgos {
      *          List of nodes that
      * @return
      */
-    static <V extends GraphValue<V>> List<AdjacencyList<V>.Node> sortInternal(AdjacencyList<V> graph) {
-      TopoSorter<V> ts = new TopoSorter<V>(graph);
+    static <V extends GraphValue<V>> List<AdjacencyList<V>.Node> sortInternal(AdjacencyList<V> graph, boolean reverse) {
+      TopoSorter<V> ts = new TopoSorter<V>(graph, reverse);
       return ts.sorted;
     }
 
     public static <V extends GraphValue<V>> List<V> sort(Graph<V, ?, ?> graph) {
       AdjacencyList<V> l = graph.getAdjList();
-      return l.convert(sortInternal(l));
+      return l.convert(sortInternal(l, true));
     }
+
+      public static <V extends GraphValue<V>> List<V> sortLogical(Graph<V, ?, ?> graph) {
+          AdjacencyList<V> l = graph.getAdjList();
+          return l.convert(sortInternal(l, false));
+      }
   }
 
   static <V extends GraphValue<V>> List<List<AdjacencyList<V>.Node>> checkDirected(AdjacencyList<V> graph) {

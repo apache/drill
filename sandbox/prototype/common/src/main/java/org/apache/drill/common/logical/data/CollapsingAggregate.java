@@ -17,11 +17,16 @@
  ******************************************************************************/
 package org.apache.drill.common.logical.data;
 
+import com.google.common.collect.Iterators;
 import org.apache.drill.common.expression.FieldReference;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import org.apache.drill.common.logical.data.visitors.LogicalVisitor;
+
+import java.util.Iterator;
+import java.util.List;
 
 @JsonTypeName("collapsingaggregate")
 public class CollapsingAggregate extends SingleInputOperator{
@@ -56,4 +61,13 @@ public class CollapsingAggregate extends SingleInputOperator{
     return aggregations;
   }
 
+    @Override
+    public <T, X, E extends Throwable> T accept(LogicalVisitor<T, X, E> logicalVisitor, X value) throws E {
+        return logicalVisitor.visitCollapsingAggregate(this, value);
+    }
+
+    @Override
+    public Iterator<LogicalOperator> iterator() {
+        return Iterators.singletonIterator(getInput());
+    }
 }

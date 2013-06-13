@@ -18,7 +18,12 @@
 package org.apache.drill.common;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
+import com.fasterxml.jackson.core.*;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.drill.common.JSONOptions.De;
 import org.apache.drill.common.JSONOptions.Se;
 import org.apache.drill.common.config.DrillConfig;
@@ -26,12 +31,6 @@ import org.apache.drill.common.exceptions.LogicalPlanParsingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonGenerationException;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonLocation;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.TreeNode;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.SerializerProvider;
@@ -61,6 +60,12 @@ public class JSONOptions {
     } catch (JsonProcessingException e) {
       throw new LogicalPlanParsingException(String.format("Failure while trying to convert late bound json options to type of %s. Reference was originally located at line %d, column %d.", c.getCanonicalName(), location.getLineNr(), location.getColumnNr()), e);
     }
+  }
+
+  public <T> T getListWith(DrillConfig config, TypeReference<T> t) throws IOException {
+      ObjectMapper mapper = config.getMapper();
+      return mapper.treeAsTokens(root).readValueAs(t);
+     // return mapper.treeToValue(root,  mapper.getTypeFactory().constructCollectionType(List.class, c));
   }
   
   public JsonNode path(String name){

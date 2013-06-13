@@ -38,7 +38,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
 
 @JsonTypeName("screen")
-public class Screen extends AbstractStore implements Root{
+public class Screen extends AbstractStore {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Screen.class);
 
   private final DrillbitEndpoint endpoint;

@@ -26,7 +26,7 @@ public class Simple {
   
   public static void main(String[] args) throws Exception {
     DrillConfig c = DrillConfig.create();
-    LogicalPlan plan = LogicalPlan.parse(c, FileUtils.getResourceAsString("/simple_plan.json"));
+    LogicalPlan plan = LogicalPlan.parse(c, FileUtils.getResourceAsString("/jdbc_plan.json"));
     System.out.println(plan.toJsonString(c));
   }
   

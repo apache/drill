@@ -75,6 +75,24 @@ public class TestDistributedFragmentRun extends PopUnitTestBase{
 
   }
 
+    @Test
+    public void oneBitOneExchangeTwoEntryRunLogical() throws Exception{
+        RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
+
+        try(Drillbit bit1 = new Drillbit(CONFIG, serviceSet); DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());){
+            bit1.run();
+            client.connect();
+            List<QueryResultBatch> results = client.runQuery(QueryType.LOGICAL, Files.toString(FileUtils.getResourceAsFile("/scan_screen_logical.json"), Charsets.UTF_8));
+            int count = 0;
+            for(QueryResultBatch b : results){
+                count += b.getHeader().getRowCount();
+            }
+            assertEquals(100, count);
+        }
+
+
+    }
+
   @Test
     public void twoBitOneExchangeTwoEntryRun() throws Exception{
       RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();

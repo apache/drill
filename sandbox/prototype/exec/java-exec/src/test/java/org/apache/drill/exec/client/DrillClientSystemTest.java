@@ -21,8 +21,10 @@ public class DrillClientSystemTest extends DrillSystemTestBase {
 
   @BeforeClass
   public static void setUp() throws Exception {
+
     DrillSystemTestBase.setUp();
     plan = Resources.toString(Resources.getResource("simple_plan.json"), Charsets.UTF_8);
+
   }
 
   @After

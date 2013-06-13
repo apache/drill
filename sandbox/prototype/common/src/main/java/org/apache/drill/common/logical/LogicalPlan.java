@@ -47,7 +47,7 @@ public class LogicalPlan {
 
   private final PlanProperties properties;
   private final Map<String, StorageEngineConfig> storageEngineMap;
-  private final Graph<LogicalOperator, SourceOperator, SinkOperator> graph;
+  private final Graph<LogicalOperator, SinkOperator, SourceOperator> graph;
 
   @JsonCreator
   public LogicalPlan(@JsonProperty("head") PlanProperties head,
@@ -55,12 +55,12 @@ public class LogicalPlan {
       @JsonProperty("query") List<LogicalOperator> operators) {
     this.storageEngineMap = storageEngineMap;
     this.properties = head;
-    this.graph = Graph.newGraph(operators, SourceOperator.class, SinkOperator.class);
+    this.graph = Graph.newGraph(operators, SinkOperator.class, SourceOperator.class);
   }
 
   @JsonProperty("query")
   public List<LogicalOperator> getSortedOperators() {
-    return GraphAlgos.TopoSorter.sort(graph);
+    return GraphAlgos.TopoSorter.sortLogical(graph);
   }
 
   public StorageEngineConfig getStorageEngine(String name) {
@@ -68,7 +68,7 @@ public class LogicalPlan {
   }
 
   @JsonIgnore
-  public Graph<LogicalOperator, SourceOperator, SinkOperator> getGraph() {
+  public Graph<LogicalOperator, SinkOperator, SourceOperator> getGraph() {
     return graph;
   }
 
