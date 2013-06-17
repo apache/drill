@@ -42,8 +42,7 @@ public abstract class BaseValueVector<T extends BaseValueVector<T>> implements V
 
   public final void allocateNew(int valueCount){
     int allocationSize = getAllocationSize(valueCount);
-    ByteBuf newBuf =  allocator.buffer(allocationSize);
-    newBuf.retain();
+    ByteBuf newBuf = allocator.buffer(allocationSize);
     resetAllocation(valueCount, newBuf);
   }
 
@@ -54,7 +53,7 @@ public abstract class BaseValueVector<T extends BaseValueVector<T>> implements V
   
   /**
    * Update the current buffer allocation utilize the provided allocation.
-   * @param valueCount
+   * @param maxValueCount
    * @param buf
    */
   protected final void resetAllocation(int maxValueCount, ByteBuf buf){

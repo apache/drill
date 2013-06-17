@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,14 +24,21 @@ public final class NullableFixed4 extends NullableValueVector<NullableFixed4, Fi
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NullableFixed4.class);
 
   public NullableFixed4(MaterializedField field, BufferAllocator allocator) {
-    super(field, allocator, NullableFixed4.class);
+    super(field, allocator);
   }
 
   @Override
   protected Fixed4 getNewValueVector(BufferAllocator allocator) {
-    return new Fixed4(null, allocator);
+    return new Fixed4(this.field, allocator);
   }
 
+  public void setInt(int index, int newVal) {
+      setNotNull(index);
+      value.setInt(index, newVal);
+  }
 
-  
+  public void setFloat4(int index, float val) {
+      setNotNull(index);
+      value.setFloat4(index, val);
+  }
 }

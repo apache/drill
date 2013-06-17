@@ -6,31 +6,54 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.apache.drill.exec.record.vector;
+
+package org.apache.drill.exec.store;
 
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.vector.TypeHelper;
+import org.apache.drill.exec.record.vector.ValueVector;
 
-public class VarLen2 extends VariableVector<VarLen2, Fixed2>{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(VarLen2.class);
+public class VectorHolder {
+    private int length;
+    private ValueVector vector;
+    private int currentLength;
 
-  public VarLen2(MaterializedField field, BufferAllocator allocator) {
-    super(field, allocator, 2);
-  }
+    VectorHolder(int length, ValueVector<?> vector) {
+        this.length = length;
+        this.vector = vector;
+    }
 
-  @Override
-  protected Fixed2 getNewLengthVector(BufferAllocator allocator) {
-    return new Fixed2(null, allocator);
-  }
+    public ValueVector getValueVector() {
+        return vector;
+    }
 
+    public void incAndCheckLength(int newLength) {
+        if (!hasEnoughSpace(newLength)) {
+            throw new BatchExceededException(length, currentLength + newLength);
+        }
+        currentLength += newLength;
+    }
 
+    public boolean hasEnoughSpace(int newLength) {
+        return length >= currentLength + newLength;
+    }
+
+    public int getLength() {
+        return length;
+    }
+
+    public void reset() {
+        currentLength = 0;
+        vector.allocateNew(length);
+    }
 }

@@ -19,6 +19,7 @@
 package org.apache.drill.exec.schema;
 
 import com.google.common.collect.Lists;
+import org.apache.drill.exec.physical.impl.OutputMutator;
 
 import java.util.List;
 

@@ -20,42 +20,58 @@ package org.apache.drill.exec.schema.json.jackson;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
-import com.google.common.collect.Maps;
-
-import org.apache.drill.exec.schema.Field;
+import org.apache.drill.exec.proto.SchemaDefProtos;
 
 import java.io.IOException;
-import java.util.EnumMap;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static org.apache.drill.exec.proto.SchemaDefProtos.MajorType;
+import static org.apache.drill.exec.proto.SchemaDefProtos.MinorType;
 
 public class JacksonHelper {
-    private static final EnumMap<JsonToken, Field.FieldType> TYPE_LOOKUP = Maps.newEnumMap(JsonToken.class);
 
-    static {
-        TYPE_LOOKUP.put(JsonToken.VALUE_STRING, Field.FieldType.STRING);
-        TYPE_LOOKUP.put(JsonToken.VALUE_FALSE, Field.FieldType.BOOLEAN);
-        TYPE_LOOKUP.put(JsonToken.VALUE_TRUE, Field.FieldType.BOOLEAN);
-        TYPE_LOOKUP.put(JsonToken.START_ARRAY, Field.FieldType.ARRAY);
-        TYPE_LOOKUP.put(JsonToken.START_OBJECT, Field.FieldType.MAP);
-        TYPE_LOOKUP.put(JsonToken.VALUE_NUMBER_INT, Field.FieldType.INTEGER);
-        TYPE_LOOKUP.put(JsonToken.VALUE_NUMBER_FLOAT, Field.FieldType.FLOAT);
+    public static final MajorType STRING_TYPE = MajorType.newBuilder().setMinorType(MinorType.VARCHAR4).setMode(SchemaDefProtos.DataMode.OPTIONAL).build();
+    public static final MajorType BOOLEAN_TYPE = MajorType.newBuilder().setMinorType(MinorType.BOOLEAN).setMode(SchemaDefProtos.DataMode.OPTIONAL).build();
+    public static final MajorType ARRAY_TYPE = MajorType.newBuilder().setMinorType(MinorType.LATE).setMode(SchemaDefProtos.DataMode.REPEATED).build();
+    public static final MajorType MAP_TYPE = MajorType.newBuilder().setMinorType(MinorType.MAP).setMode(SchemaDefProtos.DataMode.REPEATED).build();
+    public static final MajorType INT_TYPE = MajorType.newBuilder().setMinorType(MinorType.INT).setMode(SchemaDefProtos.DataMode.OPTIONAL).build();
+    public static final MajorType FLOAT_TYPE = MajorType.newBuilder().setMinorType(MinorType.FLOAT4).setMode(SchemaDefProtos.DataMode.OPTIONAL).build();
+    public static final MajorType NULL_TYPE = MajorType.newBuilder().setMinorType(MinorType.LATE).setMode(SchemaDefProtos.DataMode.OPTIONAL).build();
+
+    public static MajorType getFieldType(JsonToken token) {
+        switch(token) {
+            case VALUE_STRING:
+                return STRING_TYPE;
+            case VALUE_FALSE:
+                return BOOLEAN_TYPE;
+            case VALUE_TRUE:
+                return BOOLEAN_TYPE;
+            case START_ARRAY:
+                return ARRAY_TYPE;
+            case START_OBJECT:
+                return MAP_TYPE;
+            case VALUE_NUMBER_INT:
+                return INT_TYPE;
+            case VALUE_NUMBER_FLOAT:
+                return FLOAT_TYPE;
+            case VALUE_NULL:
+                return NULL_TYPE;
+        }
+
+        throw new UnsupportedOperationException("Unsupported Jackson type: " + token);
     }
 
-    public static Field.FieldType getFieldType(JsonToken token) {
-        return TYPE_LOOKUP.get(token);
-    }
-
-    public static Object getValueFromFieldType(JsonParser parser, Field.FieldType fieldType) throws IOException {
-        switch(fieldType) {
-            case INTEGER:
+    public static Object getValueFromFieldType(JsonParser parser, MinorType fieldType) throws IOException {
+        switch (fieldType) {
+            case INT:
                 return parser.getIntValue();
-            case STRING:
+            case VARCHAR4:
                 return parser.getValueAsString();
-            case FLOAT:
+            case FLOAT4:
                 return parser.getFloatValue();
             case BOOLEAN:
                 return parser.getBooleanValue();
+            case LATE:
+                return null;
             default:
                 throw new RuntimeException("Unexpected Field type to return value: " + fieldType.toString());
         }

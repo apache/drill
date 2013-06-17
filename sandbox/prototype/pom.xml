@@ -28,7 +28,17 @@
                         <url>http://conjars.org/repo</url>
                         <layout>default</layout>
                 </repository>
-        </repositories>
+            <repository>
+                  <id>sonatype-nexus-snapshots</id>
+                  <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+                  <releases>
+                        <enabled>false</enabled>
+                  </releases>
+                  <snapshots>
+                        <enabled>true</enabled>
+                  </snapshots>
+             </repository>
+       </repositories>
 
 	<properties>
 		<dep.junit.version>4.11</dep.junit.version>
@@ -122,6 +132,12 @@
 		</dependency>
 
 		<!-- Test Dependencies -->
+		<dependency>
+		  <groupId>com.googlecode.jmockit</groupId>
+		  <artifactId>jmockit</artifactId>
+		  <version>1.2</version>
+		  <scope>test</scope>
+		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>

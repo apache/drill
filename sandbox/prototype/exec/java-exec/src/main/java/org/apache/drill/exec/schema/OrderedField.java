@@ -19,11 +19,24 @@
 package org.apache.drill.exec.schema;
 
 import com.google.common.base.Objects;
+import org.apache.drill.exec.proto.SchemaDefProtos;
 
 public class OrderedField extends Field {
-    public OrderedField(RecordSchema parentSchema, IdGenerator<Integer> generator, FieldType fieldType, String prefixFieldName, int index) {
-        super(parentSchema, generator, fieldType, prefixFieldName);
-        this.fieldName = "[" + index + "]";
+    private final int index;
+
+    public OrderedField(RecordSchema parentSchema,
+                        int parentFieldId,
+                        IdGenerator<Integer> generator,
+                        SchemaDefProtos.MajorType type,
+                        String prefixFieldName,
+                        int index) {
+        super(parentSchema, parentFieldId, generator, type, prefixFieldName);
+        this.index = index;
+    }
+
+    @Override
+    public String getFieldName() {
+        return "[" + index + "]";
     }
 
     @Override
