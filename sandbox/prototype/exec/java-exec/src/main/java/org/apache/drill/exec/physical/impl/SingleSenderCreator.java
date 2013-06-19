@@ -103,7 +103,7 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
       @Override
       public void success(Ack value) {
         if(value.getOk()) return;
-        
+
         logger.error("Downstream fragment was not accepted.  Stopping future sends.");
         // if we didn't get ack ok, we'll need to kill the query.
         context.fail(new RpcException("A downstream fragment batch wasn't accepted.  This fragment thus fails."));

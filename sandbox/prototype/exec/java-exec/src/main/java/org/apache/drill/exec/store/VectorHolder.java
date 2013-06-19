@@ -25,15 +25,15 @@ import org.apache.drill.exec.record.vector.ValueVector;
 
 public class VectorHolder {
     private int length;
-    private ValueVector vector;
+    private ValueVector.Base vector;
     private int currentLength;
 
-    VectorHolder(int length, ValueVector<?> vector) {
+    VectorHolder(int length, ValueVector.Base vector) {
         this.length = length;
         this.vector = vector;
     }
 
-    public ValueVector getValueVector() {
+    public ValueVector.Base getValueVector() {
         return vector;
     }
 

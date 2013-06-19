@@ -11,6 +11,7 @@ import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.proto.SchemaDefProtos;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.record.vector.ValueVector;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -30,7 +31,7 @@ public class JSONRecordReaderTest {
 
     class MockOutputMutator implements OutputMutator {
         List<Integer> removedFields = Lists.newArrayList();
-        List<ValueVector> addFields = Lists.newArrayList();
+        List<ValueVector.Base> addFields = Lists.newArrayList();
 
         @Override
         public void removeField(int fieldId) throws SchemaChangeException {
@@ -38,7 +39,7 @@ public class JSONRecordReaderTest {
         }
 
         @Override
-        public void addField(int fieldId, ValueVector<?> vector) throws SchemaChangeException {
+        public void addField(int fieldId, ValueVector.Base vector) throws SchemaChangeException {
             addFields.add(vector);
         }
 
@@ -50,16 +51,16 @@ public class JSONRecordReaderTest {
             return removedFields;
         }
 
-        List<ValueVector> getAddFields() {
+        List<ValueVector.Base> getAddFields() {
             return addFields;
         }
     }
 
-    private <T> void assertField(ValueVector valueVector, int index, SchemaDefProtos.MinorType expectedMinorType, T value, String name) {
+    private <T> void assertField(ValueVector.Base valueVector, int index, SchemaDefProtos.MinorType expectedMinorType, T value, String name) {
         assertField(valueVector, index, expectedMinorType, value, name, 0);
     }
 
-    private <T> void assertField(ValueVector valueVector, int index, SchemaDefProtos.MinorType expectedMinorType, T value, String name, int parentFieldId) {
+    private <T> void assertField(ValueVector.Base valueVector, int index, SchemaDefProtos.MinorType expectedMinorType, T value, String name, int parentFieldId) {
         UserBitShared.FieldMetadata metadata = valueVector.getMetadata();
         SchemaDefProtos.FieldDef def = metadata.getDef();
         assertEquals(expectedMinorType, def.getMajorType().getMinorType());
@@ -89,15 +90,15 @@ public class JSONRecordReaderTest {
         JSONRecordReader jr = new JSONRecordReader(context, getResource("scan_json_test_1.json"));
 
         MockOutputMutator mutator = new MockOutputMutator();
-        List<ValueVector> addFields = mutator.getAddFields();
+        List<ValueVector.Base> addFields = mutator.getAddFields();
         jr.setup(mutator);
         assertEquals(2, jr.next());
         assertEquals(3, addFields.size());
         assertField(addFields.get(0), 0, SchemaDefProtos.MinorType.INT, 123, "test");
-        assertField(addFields.get(1), 0, SchemaDefProtos.MinorType.BOOLEAN, 1, "b");
+        assertField(addFields.get(1), 0, SchemaDefProtos.MinorType.BOOLEAN, true, "b");
         assertField(addFields.get(2), 0, SchemaDefProtos.MinorType.VARCHAR4, "hi!".getBytes(UTF_8), "c");
         assertField(addFields.get(0), 1, SchemaDefProtos.MinorType.INT, 1234, "test");
-        assertField(addFields.get(1), 1, SchemaDefProtos.MinorType.BOOLEAN, 0, "b");
+        assertField(addFields.get(1), 1, SchemaDefProtos.MinorType.BOOLEAN, false, "b");
         assertField(addFields.get(2), 1, SchemaDefProtos.MinorType.VARCHAR4, "drill!".getBytes(UTF_8), "c");
 
         assertEquals(0, jr.next());
@@ -115,7 +116,7 @@ public class JSONRecordReaderTest {
 
         JSONRecordReader jr = new JSONRecordReader(context, getResource("scan_json_test_2.json"));
         MockOutputMutator mutator = new MockOutputMutator();
-        List<ValueVector> addFields = mutator.getAddFields();
+        List<ValueVector.Base> addFields = mutator.getAddFields();
 
         jr.setup(mutator);
         assertEquals(3, jr.next());
@@ -123,18 +124,18 @@ public class JSONRecordReaderTest {
         assertField(addFields.get(0), 0, SchemaDefProtos.MinorType.INT, 123, "test");
         assertField(addFields.get(1), 0, SchemaDefProtos.MinorType.INT, 1, "b");
         assertField(addFields.get(2), 0, SchemaDefProtos.MinorType.FLOAT4, (float) 2.15, "c");
-        assertField(addFields.get(3), 0, SchemaDefProtos.MinorType.BOOLEAN, 1, "bool");
+        assertField(addFields.get(3), 0, SchemaDefProtos.MinorType.BOOLEAN, true, "bool");
         assertField(addFields.get(4), 0, SchemaDefProtos.MinorType.VARCHAR4, "test1".getBytes(UTF_8), "str1");
 
         assertField(addFields.get(0), 1, SchemaDefProtos.MinorType.INT, 1234, "test");
         assertField(addFields.get(1), 1, SchemaDefProtos.MinorType.INT, 3, "b");
-        assertField(addFields.get(3), 1, SchemaDefProtos.MinorType.BOOLEAN, 0, "bool");
+        assertField(addFields.get(3), 1, SchemaDefProtos.MinorType.BOOLEAN, false, "bool");
         assertField(addFields.get(4), 1, SchemaDefProtos.MinorType.VARCHAR4, "test2".getBytes(UTF_8), "str1");
         assertField(addFields.get(5), 1, SchemaDefProtos.MinorType.INT, 4, "d");
 
         assertField(addFields.get(0), 2, SchemaDefProtos.MinorType.INT, 12345, "test");
         assertField(addFields.get(2), 2, SchemaDefProtos.MinorType.FLOAT4, (float) 5.16, "c");
-        assertField(addFields.get(3), 2, SchemaDefProtos.MinorType.BOOLEAN, 1, "bool");
+        assertField(addFields.get(3), 2, SchemaDefProtos.MinorType.BOOLEAN, true, "bool");
         assertField(addFields.get(5), 2, SchemaDefProtos.MinorType.INT, 6, "d");
         assertField(addFields.get(6), 2, SchemaDefProtos.MinorType.VARCHAR4, "test3".getBytes(UTF_8), "str2");
         assertTrue(mutator.getRemovedFields().isEmpty());
@@ -152,7 +153,7 @@ public class JSONRecordReaderTest {
 
         JSONRecordReader jr = new JSONRecordReader(context, getResource("scan_json_test_2.json"), 64); // batch only fits 1 int
         MockOutputMutator mutator = new MockOutputMutator();
-        List<ValueVector> addFields = mutator.getAddFields();
+        List<ValueVector.Base> addFields = mutator.getAddFields();
         List<Integer> removedFields = mutator.getRemovedFields();
 
         jr.setup(mutator);
@@ -161,14 +162,14 @@ public class JSONRecordReaderTest {
         assertField(addFields.get(0), 0, SchemaDefProtos.MinorType.INT, 123, "test");
         assertField(addFields.get(1), 0, SchemaDefProtos.MinorType.INT, 1, "b");
         assertField(addFields.get(2), 0, SchemaDefProtos.MinorType.FLOAT4, (float) 2.15, "c");
-        assertField(addFields.get(3), 0, SchemaDefProtos.MinorType.BOOLEAN, 1, "bool");
+        assertField(addFields.get(3), 0, SchemaDefProtos.MinorType.BOOLEAN, true, "bool");
         assertField(addFields.get(4), 0, SchemaDefProtos.MinorType.VARCHAR4, "test1".getBytes(UTF_8), "str1");
         assertTrue(removedFields.isEmpty());
         assertEquals(1, jr.next());
         assertEquals(6, addFields.size());
         assertField(addFields.get(0), 0, SchemaDefProtos.MinorType.INT, 1234, "test");
         assertField(addFields.get(1), 0, SchemaDefProtos.MinorType.INT, 3, "b");
-        assertField(addFields.get(3), 0, SchemaDefProtos.MinorType.BOOLEAN, 0, "bool");
+        assertField(addFields.get(3), 0, SchemaDefProtos.MinorType.BOOLEAN, false, "bool");
         assertField(addFields.get(4), 0, SchemaDefProtos.MinorType.VARCHAR4, "test2".getBytes(UTF_8), "str1");
         assertField(addFields.get(5), 0, SchemaDefProtos.MinorType.INT, 4, "d");
         assertEquals(1, removedFields.size());
@@ -177,7 +178,7 @@ public class JSONRecordReaderTest {
         assertEquals(1, jr.next());
         assertEquals(8, addFields.size()); // The reappearing of field 'c' is also included
         assertField(addFields.get(0), 0, SchemaDefProtos.MinorType.INT, 12345, "test");
-        assertField(addFields.get(3), 0, SchemaDefProtos.MinorType.BOOLEAN, 1, "bool");
+        assertField(addFields.get(3), 0, SchemaDefProtos.MinorType.BOOLEAN, true, "bool");
         assertField(addFields.get(5), 0, SchemaDefProtos.MinorType.INT, 6, "d");
         assertField(addFields.get(6), 0, SchemaDefProtos.MinorType.FLOAT4, (float) 5.16, "c");
         assertField(addFields.get(7), 0, SchemaDefProtos.MinorType.VARCHAR4, "test3".getBytes(UTF_8), "str2");
@@ -187,6 +188,7 @@ public class JSONRecordReaderTest {
         assertEquals(0, jr.next());
     }
 
+    @Ignore("Pending repeated map implementation")
     @Test
     public void testNestedFieldInSameBatch(@Injectable final FragmentContext context) throws ExecutionSetupException {
         new Expectations() {
@@ -199,7 +201,7 @@ public class JSONRecordReaderTest {
         JSONRecordReader jr = new JSONRecordReader(context, getResource("scan_json_test_3.json"));
 
         MockOutputMutator mutator = new MockOutputMutator();
-        List<ValueVector> addFields = mutator.getAddFields();
+        List<ValueVector.Base> addFields = mutator.getAddFields();
         jr.setup(mutator);
         assertEquals(2, jr.next());
         assertEquals(5, addFields.size());

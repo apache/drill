@@ -341,44 +341,42 @@ public class JSONRecordReader implements RecordReader {
             switch (minorType) {
                 case INT: {
                     holder.incAndCheckLength(32);
-                    NullableFixed4 fixed4 = (NullableFixed4) holder.getValueVector();
+                    ValueVector.NullableInt int4 = (ValueVector.NullableInt) holder.getValueVector();
                     if (val == null) {
-                        fixed4.setNull(index);
+                      int4.setNull(index);
                     } else {
-                        fixed4.setInt(index, (Integer) val);
+                      int4.set(index, (Integer) val);
                     }
                     return holder.hasEnoughSpace(32);
                 }
                 case FLOAT4: {
                     holder.incAndCheckLength(32);
-                    NullableFixed4 fixed4 = (NullableFixed4) holder.getValueVector();
+                    ValueVector.NullableFloat4 float4 = (ValueVector.NullableFloat4) holder.getValueVector();
                     if (val == null) {
-                        fixed4.setNull(index);
+                      float4.setNull(index);
                     } else {
-                        fixed4.setFloat4(index, (Float) val);
+                      float4.set(index, (Float) val);
                     }
                     return holder.hasEnoughSpace(32);
                 }
                 case VARCHAR4: {
                     if (val == null) {
-                        ((NullableVarLen4) holder.getValueVector()).setNull(index);
+                        ((ValueVector.NullableVarChar4) holder.getValueVector()).setNull(index);
                         return (index + 1) * 4 <= holder.getLength();
                     } else {
                         byte[] bytes = ((String) val).getBytes(UTF_8);
-                        int length = bytes.length * 8;
+                        int length = bytes.length;
                         holder.incAndCheckLength(length);
-                        NullableVarLen4 varLen4 = (NullableVarLen4) holder.getValueVector();
-                        varLen4.setBytes(index, bytes);
+                        ValueVector.NullableVarChar4 varLen4 = (ValueVector.NullableVarChar4) holder.getValueVector();
+                        varLen4.set(index, bytes);
                         return holder.hasEnoughSpace(length);
                     }
                 }
                 case BOOLEAN: {
                     holder.incAndCheckLength(1);
-                    NullableBit bit = (NullableBit) holder.getValueVector();
-                    if (val == null) {
-                        bit.setNull(index);
-                    } else if ((Boolean) val) {
-                        bit.set(index);
+                    ValueVector.NullableBit bit = (ValueVector.NullableBit) holder.getValueVector();
+                    if (val != null) {
+                        bit.set(index, (Boolean)val ? 1 : 0);
                     }
                     return holder.hasEnoughSpace(1);
                 }
@@ -411,7 +409,7 @@ public class JSONRecordReader implements RecordReader {
             SchemaDefProtos.MajorType type = field.getFieldType();
             int fieldId = field.getFieldId();
             MaterializedField f = MaterializedField.create(new SchemaPath(field.getFieldName()), fieldId, parentFieldId, type);
-            ValueVector<?> v = TypeHelper.getNewVector(f, allocator);
+            ValueVector.Base v = TypeHelper.getNewVector(f, allocator);
             v.allocateNew(batchSize);
             VectorHolder holder = new VectorHolder(batchSize, v);
             valueVectorMap.put(fieldId, holder);

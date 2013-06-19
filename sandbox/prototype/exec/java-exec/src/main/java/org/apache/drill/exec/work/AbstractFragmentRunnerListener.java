@@ -103,7 +103,8 @@ public class AbstractFragmentRunnerListener implements FragmentRunnerListener{
 
   protected void fail(FragmentHandle handle, FragmentStatus.Builder statusBuilder){
     statusChange(handle, statusBuilder.build());
+    // TODO: ensure the foreman handles the exception
   }
 
-  
+
 }

@@ -68,7 +68,7 @@ public interface RecordBatch {
   public void kill();
 
 
-  public abstract <T extends ValueVector<T>> T getValueVector(int fieldId, Class<T> clazz) throws InvalidValueAccessor;
+  public abstract <T extends ValueVector.Base> T getValueVector(int fieldId, Class<T> clazz) throws InvalidValueAccessor;
 
 //  public abstract void getDictReader(int fieldId, Class<?> clazz) throws InvalidValueAccessor;
 //

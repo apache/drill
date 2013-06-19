@@ -167,6 +167,26 @@
 					</execution>
 				</executions>
 			</plugin>
+			<plugin>
+				<groupId>com.googlecode.fmpp-maven-plugin</groupId>
+				<artifactId>fmpp-maven-plugin</artifactId>
+				<version>1.0</version>
+				<configuration>
+					<cfgFile>src/main/codegen/ValueVectors/config.fmpp</cfgFile>
+					<outputDirectory>target/generated-sources/org/apache/drill/exec/record/vector</outputDirectory>
+					<templateDirectory>src/main/codegen/ValueVectors/templates</templateDirectory>
+				</configuration>
+				<executions>
+					<execution>
+						<id>generate-sources</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
 			<!-- <plugin> -->
 			<!-- <groupId>com.github.igor-petruk.protobuf</groupId> -->
 			<!-- <artifactId>protobuf-maven-plugin</artifactId> -->

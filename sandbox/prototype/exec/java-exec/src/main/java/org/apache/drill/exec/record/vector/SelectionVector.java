@@ -25,7 +25,7 @@ import org.apache.drill.exec.record.MaterializedField;
 /**
  * Convenience/Clarification Fixed2 wrapper.
  */
-public class SelectionVector extends Fixed2{
+public class SelectionVector extends ValueVector.UInt2 {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SelectionVector.class);
 
   public SelectionVector(MaterializedField field, BufferAllocator allocator) {

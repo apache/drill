@@ -58,7 +58,7 @@ public abstract class FilterRecordBatch implements RecordBatch {
   }
 
   @Override
-  public <T extends ValueVector<T>> T getValueVector(int fieldId, Class<T> clazz) throws InvalidValueAccessor {
+  public <T extends ValueVector.Base> T getValueVector(int fieldId, Class<T> clazz) throws InvalidValueAccessor {
     return null;
   }
 

@@ -37,7 +37,7 @@ public class MockRecordReader implements RecordReader {
   private OutputMutator output;
   private MockScanEntry config;
   private FragmentContext context;
-  private ValueVector<?>[] valueVectors;
+  private ValueVector.Base[] valueVectors;
   private int recordsRead;
 
   public MockRecordReader(FragmentContext context, MockScanEntry config) {
@@ -53,16 +53,14 @@ public class MockRecordReader implements RecordReader {
     return x;
   }
 
-  private ValueVector<?> getVector(int fieldId, String name, MajorType type, int length) {
+  private ValueVector.Base getVector(int fieldId, String name, MajorType type, int length) {
     assert context != null : "Context shouldn't be null.";
-    
     if(type.getMode() != DataMode.REQUIRED) throw new UnsupportedOperationException();
     
     MaterializedField f = MaterializedField.create(new SchemaPath(name), fieldId, 0, type);
-    ValueVector<?> v;
+    ValueVector.Base v;
     v = TypeHelper.getNewVector(f, context.getAllocator());
     v.allocateNew(length);
-    
     return v;
 
   }
@@ -72,7 +70,7 @@ public class MockRecordReader implements RecordReader {
     try {
       this.output = output;
       int estimateRowSize = getEstimatedRecordSize(config.getTypes());
-      valueVectors = new ValueVector<?>[config.getTypes().length];
+      valueVectors = new ValueVector.Base[config.getTypes().length];
       int batchRecordCount = 250000 / estimateRowSize;
 
       for (int i = 0; i < config.getTypes().length; i++) {
@@ -90,7 +88,8 @@ public class MockRecordReader implements RecordReader {
   public int next() {
     int recordSetSize = Math.min(valueVectors[0].capacity(), this.config.getRecords()- recordsRead);
     recordsRead += recordSetSize;
-    for(ValueVector<?> v : valueVectors){
+    for(ValueVector.Base v : valueVectors){
+      logger.debug("MockRecordReader:  Generating random data for VV of type " + v.getClass().getName());
       v.randomizeData();
       v.setRecordCount(recordSetSize);
     }
@@ -103,7 +102,7 @@ public class MockRecordReader implements RecordReader {
       try {
         output.removeField(valueVectors[i].getField().getFieldId());
       } catch (SchemaChangeException e) {
-        logger.warn("Failure while trying tremove field.", e);
+        logger.warn("Failure while trying to remove field.", e);
       }
       valueVectors[i].close();
     }

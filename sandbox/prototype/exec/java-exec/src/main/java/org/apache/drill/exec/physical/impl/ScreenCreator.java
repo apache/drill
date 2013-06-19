@@ -73,7 +73,7 @@ public class ScreenCreator implements RootCreator<Screen>{
         stop();
         return false;
       }
-      
+
       IterOutcome outcome = incoming.next();
       logger.debug("Screen Outcome {}", outcome);
       switch(outcome){

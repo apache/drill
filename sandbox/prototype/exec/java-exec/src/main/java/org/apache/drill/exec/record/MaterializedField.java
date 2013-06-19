@@ -28,7 +28,6 @@ import org.apache.drill.exec.proto.SchemaDefProtos.FieldDef;
 import org.apache.drill.exec.proto.SchemaDefProtos.MajorType;
 import org.apache.drill.exec.proto.SchemaDefProtos.NamePart;
 import org.apache.drill.exec.proto.SchemaDefProtos.NamePart.Type;
-import org.apache.drill.exec.record.vector.TypeHelper;
 
 public class MaterializedField implements Comparable<MaterializedField> {
   private final FieldDef def;
@@ -105,10 +104,6 @@ public class MaterializedField implements Comparable<MaterializedField> {
 
   public DataMode getDataMode() {
     return def.getMajorType().getMode();
-  }
-
-  public Class<?> getValueClass() {
-    return TypeHelper.getValueVectorClass(getType().getMinorType(), getDataMode());
   }
 
   public boolean matches(SchemaPath path) {

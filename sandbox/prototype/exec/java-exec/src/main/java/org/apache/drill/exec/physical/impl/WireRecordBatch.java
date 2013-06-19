@@ -68,7 +68,7 @@ public class WireRecordBatch implements RecordBatch{
   }
 
   @Override
-  public <T extends ValueVector<T>> T getValueVector(int fieldId, Class<T> clazz) throws InvalidValueAccessor {
+  public <T extends ValueVector.Base> T getValueVector(int fieldId, Class<T> clazz) throws InvalidValueAccessor {
     return batchLoader.getValueVector(fieldId, clazz);
   }
 
@@ -76,7 +76,7 @@ public class WireRecordBatch implements RecordBatch{
   public IterOutcome next() {
     RawFragmentBatch batch = fragProvider.getNext();
     try{
-      if(batch == null) return IterOutcome.NONE;
+      if (batch == null) return IterOutcome.NONE;
 
       logger.debug("Next received batch {}", batch);
 
