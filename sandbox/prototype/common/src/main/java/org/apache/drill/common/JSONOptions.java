@@ -71,6 +71,10 @@ public class JSONOptions {
   public JsonNode path(String name){
     return root.path(name);
   }
+
+  public JsonNode getRoot(){
+      return root;
+  }
   
   public static class De extends StdDeserializer<JSONOptions> {
     

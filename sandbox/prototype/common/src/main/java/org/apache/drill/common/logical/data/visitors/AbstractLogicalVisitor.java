@@ -1,14 +1,25 @@
+/*******************************************************************************
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ******************************************************************************/
 package org.apache.drill.common.logical.data.visitors;
 
 import org.apache.drill.common.logical.data.*;
 
-/**
- * Created with IntelliJ IDEA.
- * User: jaltekruse
- * Date: 6/10/13
- * Time: 1:55 PM
- * To change this template use File | Settings | File Templates.
- */
+
 public abstract class AbstractLogicalVisitor<T, X, E extends Throwable> implements LogicalVisitor<T, X, E> {
 
     public T visitOp(LogicalOperator op, X value) throws E{
@@ -91,4 +102,11 @@ public abstract class AbstractLogicalVisitor<T, X, E extends Throwable> implemen
     public T visitWindowFrame(WindowFrame windowFrame, X value) throws E {
         return visitOp(windowFrame, value);
     }
+
+    @Override
+    public T visitConstant(Constant constant, X value) throws E {
+       return visitOp(constant, value);
+    }
+    
+    
 }
