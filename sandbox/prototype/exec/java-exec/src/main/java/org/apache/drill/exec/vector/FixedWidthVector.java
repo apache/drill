@@ -7,7 +7,6 @@ public interface FixedWidthVector extends ValueVector{
   /**
    * Allocate a new memory space for this vector.  Must be called prior to using the ValueVector.
    *
-   * @param totalBytes   Desired size of the underlying data buffer.
    * @param valueCount   Number of values in the vector.
    */
   public void allocateNew(int valueCount);

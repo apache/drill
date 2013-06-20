@@ -26,15 +26,7 @@ import org.apache.drill.exec.physical.base.AbstractPhysicalVisitor;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.Scan;
-import org.apache.drill.exec.physical.config.Filter;
-import org.apache.drill.exec.physical.config.MockScanBatchCreator;
-import org.apache.drill.exec.physical.config.MockScanPOP;
-import org.apache.drill.exec.physical.config.Project;
-import org.apache.drill.exec.physical.config.RandomReceiver;
-import org.apache.drill.exec.physical.config.Screen;
-import org.apache.drill.exec.physical.config.SelectionVectorRemover;
-import org.apache.drill.exec.physical.config.SingleSender;
-import org.apache.drill.exec.physical.config.Sort;
+import org.apache.drill.exec.physical.config.*;
 import org.apache.drill.exec.physical.impl.filter.FilterBatchCreator;
 import org.apache.drill.exec.physical.impl.project.ProjectBatchCreator;
 import org.apache.drill.exec.physical.impl.sort.SortBatchCreator;
@@ -74,7 +66,9 @@ public class ImplCreator extends AbstractPhysicalVisitor<RecordBatch, FragmentCo
     Preconditions.checkNotNull(context);
     
     if(scan instanceof MockScanPOP){
-      return msc.getBatch(context, (MockScanPOP) scan, Collections.<RecordBatch> emptyList());
+      return msc.getBatch(context, (MockScanPOP) scan, Collections.<RecordBatch>emptyList());
+    } else if(scan instanceof JSONScanPOP) {
+      return new JSONScanBatchCreator().getBatch(context, (JSONScanPOP)scan, Collections.<RecordBatch>emptyList());
     }else{
       return super.visitScan(scan, context);  
     }

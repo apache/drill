@@ -26,6 +26,7 @@ import java.util.List;
 public class DiffSchema {
     List<Field> addedFields;
     List<Field> removedFields;
+    boolean hasChanged = false;
 
     public DiffSchema() {
         this.addedFields = Lists.newArrayList();
@@ -34,27 +35,22 @@ public class DiffSchema {
 
     public void recordNewField(Field field) {
         addedFields.add(field);
-    }
-
-    public boolean hasDiffFields() {
-        return !addedFields.isEmpty() || !removedFields.isEmpty();
-    }
-
-    public List<Field> getAddedFields() {
-        return addedFields;
-    }
-
-    public List<Field> getRemovedFields() {
-        return removedFields;
+        hasChanged = true;
     }
 
     public void reset() {
         addedFields.clear();
         removedFields.clear();
+        hasChanged = false;
     }
 
     public void addRemovedField(Field field) {
         removedFields.add(field);
+        hasChanged = true;
+    }
+
+    public boolean isHasChanged() {
+        return hasChanged;
     }
 
     @Override

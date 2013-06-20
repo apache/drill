@@ -1,16 +1,15 @@
 package org.apache.drill.exec.store;
 
-import static com.fasterxml.jackson.core.JsonToken.END_ARRAY;
-import static com.fasterxml.jackson.core.JsonToken.END_OBJECT;
-import static com.fasterxml.jackson.core.JsonToken.FIELD_NAME;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.Charset;
-import java.util.List;
-import java.util.Map;
-
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
+import com.google.common.base.Charsets;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.io.Files;
+import com.google.common.io.InputSupplier;
+import com.google.common.io.Resources;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.ExpressionPosition;
@@ -22,27 +21,19 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.schema.DiffSchema;
-import org.apache.drill.exec.schema.Field;
-import org.apache.drill.exec.schema.ListSchema;
-import org.apache.drill.exec.schema.NamedField;
-import org.apache.drill.exec.schema.ObjectSchema;
-import org.apache.drill.exec.schema.OrderedField;
-import org.apache.drill.exec.schema.RecordSchema;
-import org.apache.drill.exec.schema.SchemaIdGenerator;
+import org.apache.drill.exec.schema.*;
 import org.apache.drill.exec.schema.json.jackson.JacksonHelper;
 import org.apache.drill.exec.vector.*;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
-import com.google.common.base.Charsets;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.io.Files;
-import com.google.common.io.InputSupplier;
-import com.google.common.io.Resources;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URI;
+import java.nio.charset.Charset;
+import java.util.List;
+import java.util.Map;
+
+import static com.fasterxml.jackson.core.JsonToken.*;
 
 public class JSONRecordReader implements RecordReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JSONRecordReader.class);
@@ -89,7 +80,7 @@ public class JSONRecordReader implements RecordReader {
       if (inputPath.startsWith("resource:")) {
         input = Resources.newReaderSupplier(Resources.getResource(inputPath.substring(9)), Charsets.UTF_8);
       } else {
-        input = Files.newReaderSupplier(new File(inputPath), Charsets.UTF_8);
+        input = Files.newReaderSupplier(new File(URI.create(inputPath)), Charsets.UTF_8);
       }
 
       JsonFactory factory = new JsonFactory();
@@ -112,7 +103,7 @@ public class JSONRecordReader implements RecordReader {
     int nextRowIndex = 0;
 
     try {
-      while (ReadType.OBJECT.readRecord(null, this, null, nextRowIndex++)) {
+      while (ReadType.OBJECT.readRecord(null, this, null, nextRowIndex++, 0)) {
         parser.nextToken(); // Read to START_OBJECT token
 
         if (!parser.hasCurrentToken()) {
@@ -133,9 +124,19 @@ public class JSONRecordReader implements RecordReader {
         outputMutator.removeField(field.getAsMaterializedField());
       }
 
+      if (diffSchema.isHasChanged()) {
+        outputMutator.setNewSchema();
+      }
+
+
     } catch (IOException | SchemaChangeException e) {
       logger.error("Error reading next in Json reader", e);
     }
+
+    for (VectorHolder holder : valueVectorMap.values()) {
+      holder.populateVectorLength();
+    }
+
     return nextRowIndex;
   }
 
@@ -171,16 +172,8 @@ public class JSONRecordReader implements RecordReader {
     return removedFields;
   }
 
-  private DiffSchema getDiffSchema() {
-    return diffSchema;
-  }
-
   public BufferAllocator getAllocator() {
     return allocator;
-  }
-
-  public OutputMutator getOutputMutator() {
-    return outputMutator;
   }
 
   public static enum ReadType {
@@ -221,10 +214,12 @@ public class JSONRecordReader implements RecordReader {
       return endObject;
     }
 
+    @SuppressWarnings("ConstantConditions")
     public boolean readRecord(Field parentField,
                               JSONRecordReader reader,
                               String prefixFieldName,
-                              int rowIndex) throws IOException, SchemaChangeException {
+                              int rowIndex,
+                              int groupCount) throws IOException, SchemaChangeException {
       JsonParser parser = reader.getParser();
       JsonToken token = parser.nextToken();
       JsonToken endObject = getEndObject();
@@ -242,23 +237,26 @@ public class JSONRecordReader implements RecordReader {
         switch (token) {
           case START_ARRAY:
             readType = ReadType.ARRAY;
+            groupCount++;
             break;
           case START_OBJECT:
             readType = ReadType.OBJECT;
+            groupCount = 0;
             break;
         }
+
         if (fieldType != null) { // Including nulls
-          boolean currentFieldNotFull = recordData(
-              parentField,
-              readType,
-              reader,
-              fieldType,
-              prefixFieldName,
-              fieldName,
-              rowIndex, colIndex);
-
-          isFull = isFull || !currentFieldNotFull;
-
+          isFull = isFull ||
+              !recordData(
+                  parentField,
+                  readType,
+                  reader,
+                  fieldType,
+                  prefixFieldName,
+                  fieldName,
+                  rowIndex,
+                  colIndex,
+                  groupCount);
         }
         token = parser.nextToken();
         colIndex += 1;
@@ -286,7 +284,8 @@ public class JSONRecordReader implements RecordReader {
                                String prefixFieldName,
                                String fieldName,
                                int rowIndex,
-                               int colIndex) throws IOException, SchemaChangeException {
+                               int colIndex,
+                               int groupCount) throws IOException, SchemaChangeException {
       RecordSchema currentSchema = reader.getCurrentSchema();
       Field field = currentSchema.getField(fieldName, colIndex);
       boolean isFieldFound = field != null;
@@ -323,10 +322,14 @@ public class JSONRecordReader implements RecordReader {
         field.assignSchemaIfNull(newSchema);
 
         if (fieldSchema == null) reader.setCurrentSchema(newSchema);
-        readType.readRecord(field, reader, field.getFullFieldName(), rowIndex);
+        if(readType == ReadType.ARRAY) {
+          readType.readRecord(field, reader, field.getFullFieldName(), rowIndex, groupCount);
+        } else {
+          readType.readRecord(field, reader, field.getFullFieldName(), rowIndex, groupCount);
+        }
 
         reader.setCurrentSchema(currentSchema);
-      } else if (holder != null) {
+      } else {
         return addValueToVector(
             rowIndex,
             holder,
@@ -335,32 +338,54 @@ public class JSONRecordReader implements RecordReader {
                 reader.getParser(),
                 fieldType.getMinorType()
             ),
-            fieldType.getMinorType()
+            fieldType.getMinorType(),
+            groupCount
         );
       }
 
       return true;
     }
 
-    private static <T> boolean addValueToVector(int index, VectorHolder holder, BufferAllocator allocator, T val, MinorType minorType) {
+    private static <T> boolean addValueToVector(int index, VectorHolder holder, BufferAllocator allocator, T val, MinorType minorType, int groupCount) {
       switch (minorType) {
         case INT: {
-          holder.incAndCheckLength(32 + 1);
-          NullableIntVector int4 = (NullableIntVector) holder.getValueVector();
-          NullableIntVector.Mutator m = int4.getMutator();
-          if (val != null) {
-            m.set(index, (Integer) val);
+          holder.incAndCheckLength(32);
+          if (groupCount == 0) {
+            if (val != null) {
+              NullableIntVector int4 = (NullableIntVector) holder.getValueVector();
+              NullableIntVector.Mutator m = int4.getMutator();
+              m.set(index, (Integer) val);
+            }
+          } else {
+            if (val == null) {
+              throw new UnsupportedOperationException("Nullable repeated int is not supported.");
+            }
+
+            RepeatedIntVector repeatedInt4 = (RepeatedIntVector) holder.getValueVector();
+            RepeatedIntVector.Mutator m = repeatedInt4.getMutator();
+            m.add(index, (Integer) val);
           }
-          return holder.hasEnoughSpace(32 + 1);
+
+          return holder.hasEnoughSpace(32);
         }
         case FLOAT4: {
-          holder.incAndCheckLength(32 + 1);
-          NullableFloat4Vector float4 = (NullableFloat4Vector) holder.getValueVector();
-          NullableFloat4Vector.Mutator m = float4.getMutator();
-          if (val != null) {
-            m.set(index, (Float) val);
+          holder.incAndCheckLength(32);
+          if (groupCount == 0) {
+            if (val != null) {
+              NullableFloat4Vector float4 = (NullableFloat4Vector) holder.getValueVector();
+              NullableFloat4Vector.Mutator m = float4.getMutator();
+              m.set(index, (Float) val);
+            }
+          } else {
+            if (val == null) {
+              throw new UnsupportedOperationException("Nullable repeated float is not supported.");
+            }
+
+            RepeatedFloat4Vector repeatedFloat4 = (RepeatedFloat4Vector) holder.getValueVector();
+            RepeatedFloat4Vector.Mutator m = repeatedFloat4.getMutator();
+            m.add(groupCount, (Float) val);
           }
-          return holder.hasEnoughSpace(32 + 1);
+          return holder.hasEnoughSpace(32);
         }
         case VARCHAR: {
           if (val == null) {
@@ -369,10 +394,16 @@ public class JSONRecordReader implements RecordReader {
             byte[] bytes = ((String) val).getBytes(UTF_8);
             int length = bytes.length;
             holder.incAndCheckLength(length);
-            NullableVarCharVector varLen4 = (NullableVarCharVector) holder.getValueVector();
-            NullableVarCharVector.Mutator m = varLen4.getMutator();
-            m.set(index, bytes);
-            return holder.hasEnoughSpace(length + 4 + 1);
+            if (groupCount == 0) {
+              NullableVarCharVector varLen4 = (NullableVarCharVector) holder.getValueVector();
+              NullableVarCharVector.Mutator m = varLen4.getMutator();
+              m.set(index, bytes);
+            } else {
+              RepeatedVarCharVector repeatedVarLen4 = (RepeatedVarCharVector) holder.getValueVector();
+              RepeatedVarCharVector.Mutator m = repeatedVarLen4.getMutator();
+              m.add(index, bytes);
+            }
+            return holder.hasEnoughSpace(length);
           }
         }
         case BIT: {

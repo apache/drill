@@ -249,7 +249,7 @@ import com.google.common.collect.Lists;
     }
   }
   
-  public final class Mutator implements ValueVector.Mutator{
+  public final class Mutator implements RepeatedMutator {
 
     
     private Mutator(){
@@ -262,10 +262,7 @@ import com.google.common.collect.Lists;
      * @param index   record of the element to add
      * @param value   value to add to the given row
      */
-    public void add(int index, <#if (type.width > 4)> ${minor.javaType!type.javaType}
-                               <#elseif type.major == "VarLen"> byte[]
-                               <#else> int
-                               </#if> value) {
+    public void add(int index, <#if type.major == "VarLen">byte[]<#elseif (type.width < 4)>int<#else>${minor.javaType!type.javaType}</#if> value) {
       int nextOffset = offsets.getAccessor().get(index+1);
       values.getMutator().set(nextOffset, value);
       offsets.getMutator().set(index+1, nextOffset+1);

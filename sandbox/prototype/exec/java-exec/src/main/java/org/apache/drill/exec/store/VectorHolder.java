@@ -18,58 +18,68 @@
 
 package org.apache.drill.exec.store;
 
-import org.apache.drill.exec.vector.FixedWidthVector;
-import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.VariableWidthVector;
+import org.apache.drill.exec.vector.*;
 
 public class VectorHolder {
-    private int length;
-    private ValueVector vector;
-    private ValueVector.Mutator mutator;
-    private int currentLength;
+  private int count;
+  private int groupCount;
+  private int length;
+  private ValueVector vector;
+  private int currentLength;
 
-    VectorHolder(int length, ValueVector vector) {
-        this.length = length;
-        this.vector = vector;
-        this.mutator = vector.getMutator();
-    }
+  VectorHolder(int length, ValueVector vector) {
+    this.length = length;
+    this.vector = vector;
+  }
 
-    public ValueVector getValueVector() {
-        return vector;
-    }
+  public ValueVector getValueVector() {
+    return vector;
+  }
 
-    public void incAndCheckLength(int newLength) {
-        if (!hasEnoughSpace(newLength)) {
-            throw new BatchExceededException(length, currentLength + newLength);
-        }
-        currentLength += newLength;
+  public void incAndCheckLength(int newLength) {
+    if (!hasEnoughSpace(newLength)) {
+      throw new BatchExceededException(length, currentLength + newLength);
     }
+    count += 1;
+    currentLength += newLength;
+  }
 
-    public boolean hasEnoughSpace(int newLength) {
-        return length >= currentLength + newLength;
-    }
+  public void setGroupCount(int groupCount) {
+    this.groupCount = groupCount;
+  }
 
-    public int getLength() {
-        return length;
-    }
+  public boolean hasEnoughSpace(int newLength) {
+    return length >= currentLength + newLength;
+  }
 
-    public void reset() {
-        currentLength = 0;
-        allocateNew(length);
-        
+  public int getLength() {
+    return length;
+  }
+
+  public void reset() {
+    currentLength = 0;
+    count = 0;
+    allocateNew(length);
+  }
+
+  public void populateVectorLength() {
+    ValueVector.Mutator mutator = vector.getMutator();
+    if(mutator instanceof NonRepeatedMutator) {
+      ((NonRepeatedMutator)mutator).setValueCount(count);
+    } else if(mutator instanceof RepeatedMutator) {
+      ((RepeatedMutator)mutator).setGroupAndValueCount(groupCount, count);
+    } else {
+      throw new UnsupportedOperationException("Mutator not supported: " + mutator.getClass().getName());
     }
-    
-    public void allocateNew(int valueLength){
-      if(vector instanceof FixedWidthVector){
-        ((FixedWidthVector)vector).allocateNew(valueLength);  
-      }else if(vector instanceof VariableWidthVector){
-        ((VariableWidthVector)vector).allocateNew(valueLength * 10, valueLength);  
-      }else{
-        throw new UnsupportedOperationException();
-      }
+  }
+
+  public void allocateNew(int valueLength) {
+    if (vector instanceof FixedWidthVector) {
+      ((FixedWidthVector) vector).allocateNew(valueLength);
+    } else if (vector instanceof VariableWidthVector) {
+      ((VariableWidthVector) vector).allocateNew(valueLength * 10, valueLength);
+    } else {
+      throw new UnsupportedOperationException();
     }
-    
-    public ValueVector.Mutator getMutator(){
-      return mutator;
-    }
+  }
 }
