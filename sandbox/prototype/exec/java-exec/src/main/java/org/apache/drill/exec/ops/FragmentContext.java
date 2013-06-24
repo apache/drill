@@ -17,7 +17,15 @@
  ******************************************************************************/
 package org.apache.drill.exec.ops;
 
+import java.io.IOException;
+
 import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.exec.compile.ClassTransformer;
+import org.apache.drill.exec.compile.QueryClassLoader;
+import org.apache.drill.exec.compile.TemplateClassDefinition;
+import org.apache.drill.exec.exception.ClassTransformationException;
+import org.apache.drill.exec.expr.CodeGenerator;
+import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.metrics.SingleThreadNestedCounter;
 import org.apache.drill.exec.physical.impl.FilteringRecordBatchTransformer;
@@ -54,8 +62,13 @@ public class FragmentContext {
   private final IncomingBuffers buffers;
   private volatile Throwable failureCause;
   private volatile boolean failed = false;
+  private final FunctionImplementationRegistry funcRegistry;
+  private final QueryClassLoader loader;
+  private final ClassTransformer transformer;
   
-  public FragmentContext(DrillbitContext dbContext, FragmentHandle handle, UserClientConnection connection, IncomingBuffers buffers) {
+  public FragmentContext(DrillbitContext dbContext, FragmentHandle handle, UserClientConnection connection, IncomingBuffers buffers, FunctionImplementationRegistry funcRegistry) {
+    this.loader = new QueryClassLoader(true);
+    this.transformer = new ClassTransformer();
     this.fragmentTime = dbContext.getMetrics().timer(METRIC_TIMER_FRAGMENT_TIME);
     this.batchesCompleted = new SingleThreadNestedCounter(dbContext, METRIC_BATCHES_COMPLETED);
     this.recordsCompleted = new SingleThreadNestedCounter(dbContext, METRIC_RECORDS_COMPLETED);
@@ -64,6 +77,7 @@ public class FragmentContext {
     this.connection = connection;
     this.handle = handle;
     this.buffers = buffers;
+    this.funcRegistry = funcRegistry;
   }
 
   public void fail(Throwable cause) {
@@ -89,6 +103,10 @@ public class FragmentContext {
     return context.getAllocator();
   }
 
+  public <T> T getImplementationClass(TemplateClassDefinition<T, Void> templateDefinition, CodeGenerator cg) throws ClassTransformationException, IOException{
+    return transformer.getImplementationClass(this.loader, templateDefinition, cg.generate(), null);
+  }
+  
   public FilteringRecordBatchTransformer getFilteringExpression(LogicalExpression expr){
     return null;
   }
@@ -119,5 +137,11 @@ public class FragmentContext {
     return failed;
   }
   
+  public FunctionImplementationRegistry getFunctionRegistry(){
+    return funcRegistry;
+  }
   
+  public QueryClassLoader getClassLoader(){
+    return loader;
+  }
 }

@@ -29,4 +29,5 @@ public interface ExecConstants {
   public static final String INITIAL_BIT_PORT = "drill.exec.rpc.bit.port";
   public static final String INITIAL_USER_PORT = "drill.exec.rpc.user.port";
   public static final String METRICS_CONTEXT_NAME = "drill.exec.metrics.context";
+  public static final String FUNCTION_PACKAGES = "drill.exec.functions";
 }

@@ -1,28 +1,28 @@
 package org.apache.drill.exec.opt;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.drill.common.JSONOptions;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 import org.apache.drill.common.PlanProperties;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.logical.LogicalPlan;
-import org.apache.drill.common.logical.data.*;
+import org.apache.drill.common.logical.data.Project;
+import org.apache.drill.common.logical.data.Scan;
+import org.apache.drill.common.logical.data.SinkOperator;
+import org.apache.drill.common.logical.data.Store;
 import org.apache.drill.common.logical.data.visitors.AbstractLogicalVisitor;
-import org.apache.drill.common.logical.data.visitors.LogicalVisitor;
+import org.apache.drill.common.types.TypeProtos.DataMode;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.exception.OptimizerException;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.MockScanPOP;
-import org.apache.drill.exec.physical.config.MockStorePOP;
 import org.apache.drill.exec.physical.config.Screen;
-import org.apache.drill.exec.proto.SchemaDefProtos;
-import org.apache.drill.exec.server.DrillbitContext;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 /**
  * Created with IntelliJ IDEA.
@@ -99,8 +99,8 @@ public class BasicOptimizer extends Optimizer{
                 }
                 else{
                     myObjects = new ArrayList<>();
-                    MockScanPOP.MockColumn[] cols = { new MockScanPOP.MockColumn("blah", SchemaDefProtos.MinorType.INT, SchemaDefProtos.DataMode.REQUIRED,4,4,4),
-                            new MockScanPOP.MockColumn("blah_2", SchemaDefProtos.MinorType.INT, SchemaDefProtos.DataMode.REQUIRED,4,4,4)};
+                    MockScanPOP.MockColumn[] cols = { new MockScanPOP.MockColumn("blah", MinorType.INT, DataMode.REQUIRED,4,4,4),
+                            new MockScanPOP.MockColumn("blah_2", MinorType.INT, DataMode.REQUIRED,4,4,4)};
                     myObjects.add(new MockScanPOP.MockScanEntry(50, cols));
                 }
             } catch (IOException e) {

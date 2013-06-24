@@ -30,11 +30,11 @@ public class MathFunctions implements CallProvider{
   @Override
   public FunctionDefinition[] getFunctionDefintions() {
     return new FunctionDefinition[]{
-        FunctionDefinition.operator("add", new ArgumentValidators.NumericTypeAllowed(1, Integer.MAX_VALUE, true), new OutputTypeDeterminer.SameAsFirstInput(), "+"),
-        FunctionDefinition.operator("subtract", new ArgumentValidators.NumericTypeAllowed(1, Integer.MAX_VALUE, true), new OutputTypeDeterminer.SameAsFirstInput(), "-"),
-        FunctionDefinition.operator("divide", new ArgumentValidators.NumericTypeAllowed(1, Integer.MAX_VALUE, true), new OutputTypeDeterminer.SameAsFirstInput(), "/"),
-        FunctionDefinition.operator("multiply", new ArgumentValidators.NumericTypeAllowed(1, Integer.MAX_VALUE, true), new OutputTypeDeterminer.SameAsFirstInput(), "*"),
-        FunctionDefinition.operator("modulo", new ArgumentValidators.NumericTypeAllowed(1, Integer.MAX_VALUE, true), new OutputTypeDeterminer.SameAsFirstInput(), "%"),
+        FunctionDefinition.operator("add", new ArgumentValidators.NumericTypeAllowed(1, Integer.MAX_VALUE, true), new OutputTypeDeterminer.SameAsAnySoft(), "+"),
+        FunctionDefinition.operator("subtract", new ArgumentValidators.NumericTypeAllowed(1, Integer.MAX_VALUE, true), new OutputTypeDeterminer.SameAsAnySoft(), "-"),
+        FunctionDefinition.operator("divide", new ArgumentValidators.NumericTypeAllowed(1, Integer.MAX_VALUE, true), new OutputTypeDeterminer.SameAsAnySoft(), "/"),
+        FunctionDefinition.operator("multiply", new ArgumentValidators.NumericTypeAllowed(1, Integer.MAX_VALUE, true), new OutputTypeDeterminer.SameAsAnySoft(), "*"),
+        FunctionDefinition.operator("modulo", new ArgumentValidators.NumericTypeAllowed(1, Integer.MAX_VALUE, true), new OutputTypeDeterminer.SameAsAnySoft(), "%"),
         
     };
 

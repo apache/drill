@@ -20,6 +20,7 @@ package org.apache.drill.exec.ref.eval;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
+import org.apache.drill.common.expression.visitors.SimpleExprVisitor;
 import org.apache.drill.common.logical.data.NamedExpression;
 import org.apache.drill.exec.ref.IteratorRegistry;
 import org.apache.drill.exec.ref.RecordPointer;
@@ -38,13 +39,13 @@ public class BasicEvaluatorFactory extends EvaluatorFactory{
     
   }
   
-  private ExprVisitor<BasicEvaluator> get(RecordPointer record){
+  private SimpleExprVisitor<BasicEvaluator> get(RecordPointer record){
     return new SimpleEvaluationVisitor(record);
   }
   
   @Override
   public BasicEvaluator getBasicEvaluator(RecordPointer inputRecord, LogicalExpression e) {
-    return e.accept(get(inputRecord));
+    return e.accept(get(inputRecord), null);
   }
   
 
@@ -52,13 +53,13 @@ public class BasicEvaluatorFactory extends EvaluatorFactory{
   @Override
   public AggregatingEvaluator getAggregatingOperator(RecordPointer record, LogicalExpression e) {
     SimpleEvaluationVisitor visitor = new SimpleEvaluationVisitor(record);
-    BasicEvaluator b = e.accept(visitor);
+    BasicEvaluator b = e.accept(visitor, null);
     return new AggregatingWrapperEvaluator(visitor.getAggregators(), b);
   }
 
   @Override
   public BooleanEvaluator getBooleanEvaluator(RecordPointer record, LogicalExpression e) {
-    return new BooleanEvaluatorImpl(e.accept(get(record)));
+    return new BooleanEvaluatorImpl(e.accept(get(record),  null));
   }
 
   @Override
@@ -89,7 +90,7 @@ public class BasicEvaluatorFactory extends EvaluatorFactory{
     public ConnectedEvaluatorImpl(RecordPointer record, NamedExpression e){
       this.outputPath = e.getRef();
       this.record = record;
-      this.eval = e.getExpr().accept(get(record));
+      this.eval = e.getExpr().accept(get(record), null);
     }
 
     @Override

@@ -17,8 +17,12 @@
  ******************************************************************************/
 package org.apache.drill.exec.record;
 
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.record.vector.SelectionVector2;
+import org.apache.drill.exec.record.vector.SelectionVector4;
+import org.apache.drill.exec.record.vector.ValueVector;
 
 /**
  * A record batch contains a set of field values for a particular range of records. In the case of a record batch
@@ -39,6 +43,12 @@ public interface RecordBatch {
     NOT_YET // used by batches that haven't received incoming data yet.
   }
 
+  public static enum SetupOutcome {
+    OK,
+    OK_NEW_SCHEMA,
+    FAILED
+  }
+  
   /**
    * Access the FragmentContext of the current query fragment. Useful for reporting failure information or other query
    * level information.
@@ -67,12 +77,18 @@ public interface RecordBatch {
    */
   public void kill();
 
-
-  public abstract <T extends ValueVector> T getValueVector(int fieldId, Class<T> clazz) throws InvalidValueAccessor;
-
-//  public abstract void getDictReader(int fieldId, Class<?> clazz) throws InvalidValueAccessor;
-//
-//  public abstract void getRleReader(int fieldId, Class<?> clazz) throws InvalidValueAccessor;
+  public abstract SelectionVector2 getSelectionVector2();
+  public abstract SelectionVector4 getSelectionVector4();
+  
+  /**
+   * Get the value vector 
+   * @param path The path where the vector should be located.
+   * @return The local field id associated with this vector.
+   */
+  public abstract TypedFieldId getValueVector(SchemaPath path);
+  
+  
+  public abstract <T extends ValueVector<T>> T getValueVectorById(int fieldId, Class<?> vvClass);
 
   /**
    * Update the data in each Field reading interface for the next range of records. Once a RecordBatch returns an
@@ -89,4 +105,41 @@ public interface RecordBatch {
    */
   public WritableBatch getWritableBatch();
 
+  public static class TypedFieldId{
+    final MajorType type;
+    final int fieldId;
+    public TypedFieldId(MajorType type, int fieldId) {
+      super();
+      this.type = type;
+      this.fieldId = fieldId;
+    }
+    public MajorType getType() {
+      return type;
+    }
+    public int getFieldId() {
+      return fieldId;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj)
+        return true;
+      if (obj == null)
+        return false;
+      if (getClass() != obj.getClass())
+        return false;
+      TypedFieldId other = (TypedFieldId) obj;
+      if (fieldId != other.fieldId)
+        return false;
+      if (type == null) {
+        if (other.type != null)
+          return false;
+      } else if (!type.equals(other.type))
+        return false;
+      return true;
+    }
+    
+    
+  }
+  
 }

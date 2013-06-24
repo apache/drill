@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.CommonTokenStream;
+import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.IfExpression;
 import org.apache.drill.common.expression.LogicalExpression;
@@ -34,7 +35,7 @@ import org.apache.drill.common.expression.parser.ExprLexer;
 import org.apache.drill.common.expression.parser.ExprParser;
 import org.apache.drill.common.expression.visitors.AggregateChecker;
 import org.apache.drill.common.expression.visitors.ConstantChecker;
-import org.apache.drill.common.expression.visitors.ExprVisitor;
+import org.apache.drill.common.expression.visitors.SimpleExprVisitor;
 import org.apache.drill.exec.ref.RecordPointer;
 import org.apache.drill.exec.ref.UnbackedRecord;
 import org.apache.drill.exec.ref.eval.EvaluatorTypes.AggregatingEvaluator;
@@ -49,7 +50,7 @@ import org.apache.drill.exec.ref.values.ScalarValues.IntegerScalar;
 import org.apache.drill.exec.ref.values.ScalarValues.LongScalar;
 import org.apache.drill.exec.ref.values.ScalarValues.StringScalar;
 
-public class SimpleEvaluationVisitor implements ExprVisitor<BasicEvaluator>{
+public class SimpleEvaluationVisitor extends SimpleExprVisitor<BasicEvaluator>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SimpleEvaluationVisitor.class);
 
   private RecordPointer record;
@@ -72,7 +73,7 @@ public class SimpleEvaluationVisitor implements ExprVisitor<BasicEvaluator>{
     for(LogicalExpression e : call){
       if(AggregateChecker.isAggregating(e)) includesAggregates = true;
       if(!ConstantChecker.onlyIncludesConstants(e)) onlyConstants = false;
-      evals.add(e.accept(this));
+      evals.add(e.accept(this, null));
     }
     FunctionArguments args = new FunctionArguments(onlyConstants, includesAggregates, evals, call);
 
@@ -102,26 +103,31 @@ public class SimpleEvaluationVisitor implements ExprVisitor<BasicEvaluator>{
   }
 
   @Override
-  public BasicEvaluator visitLongExpression(LongExpression longExpr) {
+  public BasicEvaluator visitLongConstant(LongExpression longExpr) {
     return new LongScalar(longExpr.getLong());
   }
 
   @Override
-  public BasicEvaluator visitDoubleExpression(DoubleExpression dExpr) {
+  public BasicEvaluator visitDoubleConstant(DoubleExpression dExpr) {
     return new DoubleScalar(dExpr.getDouble());
   }
 
   @Override
-  public BasicEvaluator visitBoolean(BooleanExpression e) {
+  public BasicEvaluator visitBooleanConstant(BooleanExpression e) {
     return new BooleanScalar(e.getBoolean());
   }
 
   @Override
-  public BasicEvaluator visitQuotedString(QuotedString e) {
+  public BasicEvaluator visitQuotedStringConstant(QuotedString e) {
     return new StringScalar(e.value);
   }
   
   
+  @Override
+  public BasicEvaluator visitUnknown(LogicalExpression e, Void value) throws RuntimeException {
+    throw new UnsupportedOperationException();
+  }
+
   public static void main(String[] args) throws Exception {
     String expr = "if( a == 1) then 4 else 2 end";
     ExprLexer lexer = new ExprLexer(new ANTLRStringStream(expr));
@@ -129,9 +135,9 @@ public class SimpleEvaluationVisitor implements ExprVisitor<BasicEvaluator>{
     ExprParser parser = new ExprParser(tokens);
     LogicalExpression e = parser.parse().e;
     RecordPointer r = new UnbackedRecord();
-    r.addField(new SchemaPath("a"), new IntegerScalar(3));
+    r.addField(new SchemaPath("a", ExpressionPosition.UNKNOWN), new IntegerScalar(3));
     SimpleEvaluationVisitor builder = new SimpleEvaluationVisitor(r);
-    BasicEvaluator eval = e.accept(builder);
+    BasicEvaluator eval = e.accept(builder, null);
     DataValue v = eval.eval();
     System.out.println(v);
   }

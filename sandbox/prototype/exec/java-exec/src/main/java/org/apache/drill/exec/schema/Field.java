@@ -18,47 +18,35 @@
 
 package org.apache.drill.exec.schema;
 
+import org.apache.drill.common.expression.ExpressionPosition;
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.exec.record.MaterializedField;
+
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
-import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.proto.SchemaDefProtos;
-import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.record.vector.*;
-import org.apache.drill.exec.store.BatchExceededException;
-import org.apache.drill.exec.store.VectorHolder;
-
-import java.nio.charset.Charset;
-
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkState;
-import static org.apache.drill.exec.proto.SchemaDefProtos.*;
 
 public abstract class Field {
     final MajorType fieldType;
-    final int parentFieldId;
-    final int fieldId;
     final String prefixFieldName;
     RecordSchema schema;
     RecordSchema parentSchema;
     boolean read;
 
-    public Field(RecordSchema parentSchema, int parentFieldId, IdGenerator<Integer> generator, MajorType type, String prefixFieldName) {
-        this.fieldId = generator.getNextId();
+    public Field(RecordSchema parentSchema, MajorType type, String prefixFieldName) {
         fieldType = type;
         this.prefixFieldName = prefixFieldName;
         this.parentSchema = parentSchema;
-        this.parentFieldId = parentFieldId;
     }
 
+    public MaterializedField getAsMaterializedField(){
+      return MaterializedField.create(new SchemaPath(getFieldName(), ExpressionPosition.UNKNOWN), fieldType);
+    }
+    
     public abstract String getFieldName();
 
     public String getFullFieldName() {
         return Strings.isNullOrEmpty(prefixFieldName) ? getFieldName() : prefixFieldName + "." + getFieldName();
-    }
-
-    public int getFieldId() {
-        return fieldId;
     }
 
     public void setRead(boolean read) {
@@ -69,7 +57,6 @@ public abstract class Field {
 
     Objects.ToStringHelper getAttributesStringHelper() {
         return Objects.toStringHelper(this).add("type", fieldType)
-                .add("id", fieldId)
                 .add("fullFieldName", getFullFieldName())
                 .add("schema", schema == null ? null : schema.toSchemaString()).omitNullValues();
     }

@@ -21,6 +21,7 @@ import java.io.IOException;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.exception.FragmentSetupException;
+import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.FragmentLeaf;
 import org.apache.drill.exec.physical.base.FragmentRoot;
@@ -56,7 +57,7 @@ public class RemoteFragmentHandler implements IncomingFragmentHandler {
       this.fragment = fragment;
       this.root = context.getPlanReader().readFragmentOperator(fragment.getFragmentJson());
       this.buffers = new IncomingBuffers(root);
-      this.context = new FragmentContext(context, fragment.getHandle(), null, buffers);
+      this.context = new FragmentContext(context, fragment.getHandle(), null, buffers, new FunctionImplementationRegistry(context.getConfig()));
       this.runnerListener = new RemotingFragmentRunnerListener(this.context, foremanTunnel);
       this.reader = context.getPlanReader();
       

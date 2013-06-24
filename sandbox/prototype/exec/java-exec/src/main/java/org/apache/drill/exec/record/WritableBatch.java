@@ -57,50 +57,27 @@ public class WritableBatch {
   public ByteBuf[] getBuffers(){
     return buffers;
   }
-  
-//  public static WritableBatch get(ValueVector[] vectors){
-//    WritableCreator c = new WritableCreator();
-//    for(int i =0; i < vectors.length; i++){
-//      c.apply(i, vectors[i]);
-//    }
-//    return c.get();
-//  }
-//  
-  
-  public static WritableBatch get(int recordCount, IntObjectOpenHashMap<ValueVector> fields){
-    WritableCreator creator = new WritableCreator(recordCount);
-    fields.forEach(creator);
-    return creator.get();
-    
-  }
-  
-  private static class WritableCreator implements IntObjectProcedure<ValueVector>{
+
+  public static WritableBatch get(int recordCount, List<ValueVector<?>> vectors){
     
     List<ByteBuf> buffers = Lists.newArrayList();
     List<FieldMetadata> metadata = Lists.newArrayList();
-    private int recordCount;
     
 
-    public WritableCreator(int recordCount) {
-      super();
-      this.recordCount = recordCount;
-    }
-    
-    @Override
-    public void apply(int key, ValueVector value) {
-      metadata.add(value.getMetadata());
-      for(ByteBuf b : value.getBuffers()){
+    for(ValueVector<?> vv : vectors){
+      metadata.add(vv.getMetadata());
+      for(ByteBuf b : vv.getBuffers()){
         buffers.add(b);
         b.retain();
       }
-      value.clear();
+      // allocate new buffer to release hold on old buffer.
+      vv.allocateNew(vv.capacity());
     }
 
-    public WritableBatch get(){
-      RecordBatchDef batchDef = RecordBatchDef.newBuilder().addAllField(metadata).setRecordCount(recordCount).build();
-      WritableBatch b = new WritableBatch(batchDef, buffers);
+    RecordBatchDef batchDef = RecordBatchDef.newBuilder().addAllField(metadata).setRecordCount(recordCount).build();
+    WritableBatch b = new WritableBatch(batchDef, buffers);
       return b;
-    }
     
   }
+  
 }

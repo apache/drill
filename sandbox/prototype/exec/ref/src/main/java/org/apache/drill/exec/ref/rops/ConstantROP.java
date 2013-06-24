@@ -17,7 +17,6 @@
  ******************************************************************************/
 package org.apache.drill.exec.ref.rops;
 
-import java.io.IOException;
 import java.util.Iterator;
 
 import org.apache.drill.common.logical.data.Constant;
@@ -28,14 +27,12 @@ import org.apache.drill.exec.ref.RunOutcome.OutcomeType;
 import org.apache.drill.exec.ref.UnbackedRecord;
 import org.apache.drill.exec.ref.exceptions.SetupException;
 import org.apache.drill.exec.ref.rse.JSONRecordReader;
-import org.apache.drill.exec.ref.rse.RecordReader;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
 public class ConstantROP extends ROPBase<Constant>{
     static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScanROP.class);
 
-    private ConstantIterator iter;
     private UnbackedRecord record;
 
     public ConstantROP(Constant config) {

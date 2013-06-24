@@ -20,8 +20,8 @@ package org.apache.drill.common.expression;
 import java.util.List;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.drill.common.expression.types.DataType;
-import org.apache.drill.common.expression.types.DataType.Comparability;
+import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.common.types.Types;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Range;
@@ -46,7 +46,7 @@ public class ArgumentValidators {
     }
 
     @Override
-    public void validateArguments(String expr, List<LogicalExpression> expressions, ErrorCollector errors) {
+    public void validateArguments(ExpressionPosition expr, List<LogicalExpression> expressions, ErrorCollector errors) {
       // only need to check argument count since any type is allowed.
       if (!argumentCount.contains(expressions.size()))
         errors.addUnexpectedArgumentCount(expr, expressions.size(), argumentCount);
@@ -61,17 +61,17 @@ public class ArgumentValidators {
 
   private static class PredicateValidator implements ArgumentValidator {
     private final Range<Integer> argumentCount;
-    private Predicate<DataType> predicate;
+    private Predicate<MajorType> predicate;
     private boolean allSame;
 
-    public PredicateValidator(int argCount, Predicate<DataType> predicate, boolean allSame) {
+    public PredicateValidator(int argCount, Predicate<MajorType> predicate, boolean allSame) {
       super();
       this.argumentCount = Ranges.singleton(argCount);
       this.predicate = predicate;
       this.allSame = allSame;
     }
 
-    public PredicateValidator(int minArguments, int maxArguments, Predicate<DataType> predicate, boolean allSame) {
+    public PredicateValidator(int minArguments, int maxArguments, Predicate<MajorType> predicate, boolean allSame) {
       super();
       this.argumentCount = Ranges.closedOpen(minArguments, maxArguments);
       this.predicate = predicate;
@@ -79,21 +79,21 @@ public class ArgumentValidators {
     }
 
     @Override
-    public void validateArguments(String expr, List<LogicalExpression> expressions, ErrorCollector errors) {
+    public void validateArguments(ExpressionPosition expr, List<LogicalExpression> expressions, ErrorCollector errors) {
       int i = -1;
-      DataType t = null;
+      MajorType t = null;
       for (LogicalExpression le : expressions) {
         i++;
-          DataType dataType = le.getDataType();
-          if (t == null) t = dataType;
+          MajorType majorType = le.getMajorType();
+          if (t == null) t = majorType;
 
-        if (!predicate.apply(dataType)) {
-          errors.addUnexpectedType(expr, i, dataType);
+        if (!predicate.apply(majorType)) {
+          errors.addUnexpectedType(expr, i, majorType);
           continue;
         }
 
-        if (allSame && t != DataType.LATEBIND && dataType != DataType.LATEBIND && t != dataType) {
-          errors.addUnexpectedType(expr, i, dataType);
+        if (allSame && !Types.isLateBind(t) && !Types.isLateBind(majorType) && !Types.softEquals(t, majorType, true)) {
+          errors.addUnexpectedType(expr, i, majorType);
         }
 
       }
@@ -109,50 +109,50 @@ public class ArgumentValidators {
 
   public static class ComparableArguments extends PredicateValidator {
 
-    public ComparableArguments(int argCount, DataType... allowedTypes) {
+    public ComparableArguments(int argCount, MajorType... allowedTypes) {
       super(argCount, new ComparableChecker(), true);
     }
 
-    public ComparableArguments(int minArguments, int maxArguments, DataType... allowedTypes) {
+    public ComparableArguments(int minArguments, int maxArguments, MajorType... allowedTypes) {
       super(minArguments, maxArguments, new ComparableChecker(), true);
     }
 
-    public static class ComparableChecker implements Predicate<DataType> {
+    public static class ComparableChecker implements Predicate<MajorType> {
 
-      public boolean apply(DataType dt) {
-          Comparability comparability = dt.getComparability();
-          return comparability.equals(Comparability.ORDERED) || comparability.equals(Comparability.UNKNOWN);
+      public boolean apply(MajorType dt) {
+          Types.Comparability comparability = Types.getComparability(dt);
+          return comparability.equals(Types.Comparability.ORDERED) || comparability.equals(Types.Comparability.UNKNOWN);
       }
     }
   }
 
   public static class AllowedTypeList extends PredicateValidator {
 
-    public AllowedTypeList(int argCount, DataType... allowedTypes) {
+    public AllowedTypeList(int argCount, MajorType... allowedTypes) {
       super(argCount, new AllowedTypeChecker(allowedTypes), false);
     }
 
-    public AllowedTypeList(int minArguments, int maxArguments, DataType... allowedTypes) {
+    public AllowedTypeList(int minArguments, int maxArguments, MajorType... allowedTypes) {
       super(minArguments, maxArguments, new AllowedTypeChecker(allowedTypes), false);
     }
 
-    public AllowedTypeList(int argCount, boolean allSame, DataType... allowedTypes) {
+    public AllowedTypeList(int argCount, boolean allSame, MajorType... allowedTypes) {
       super(argCount, new AllowedTypeChecker(allowedTypes), allSame);
     }
 
-    public AllowedTypeList(int minArguments, int maxArguments, boolean allSame, DataType... allowedTypes) {
+    public AllowedTypeList(int minArguments, int maxArguments, boolean allSame, MajorType... allowedTypes) {
       super(minArguments, maxArguments, new AllowedTypeChecker(allowedTypes), allSame);
     }
 
-    public static class AllowedTypeChecker implements Predicate<DataType> {
+    public static class AllowedTypeChecker implements Predicate<MajorType> {
 
-      private DataType[] allowedTypes;
+      private MajorType[] allowedTypes;
 
-      public AllowedTypeChecker(DataType... allowedTypes) {
+      public AllowedTypeChecker(MajorType... allowedTypes) {
         this.allowedTypes = allowedTypes;
       }
 
-      public boolean apply(DataType dt) {
+      public boolean apply(MajorType dt) {
         return ArrayUtils.contains(allowedTypes, dt);
       }
     }
@@ -170,10 +170,10 @@ public class ArgumentValidators {
       super(minArguments, maxArguments, new NumericTypeChecker(), allSame);
     }
 
-    public static class NumericTypeChecker implements Predicate<DataType> {
+    public static class NumericTypeChecker implements Predicate<MajorType> {
 
-      public boolean apply(DataType dt) {
-        return dt.isNumericType();
+      public boolean apply(MajorType dt) {
+        return Types.isNumericType(dt);
       }
     }
 

@@ -17,27 +17,29 @@
  ******************************************************************************/
 package org.apache.drill.common.expression;
 
-import org.apache.drill.common.expression.types.DataType;
+import org.apache.drill.common.types.TypeProtos.MajorType;
 
 import com.google.common.collect.Range;
 
 public interface ErrorCollector {
 
-    public void addGeneralError(String expr, String s);
+    public void addGeneralError(ExpressionPosition expr, String s);
 
-    public void addUnexpectedArgumentType(String expr, String name, DataType actual, DataType[] expected, int argumentIndex);
+    public void addUnexpectedArgumentType(ExpressionPosition expr, String name, MajorType actual, MajorType[] expected, int argumentIndex);
 
-    public void addUnexpectedArgumentCount(String expr, int actual, Range<Integer> expected);
+    public void addUnexpectedArgumentCount(ExpressionPosition expr, int actual, Range<Integer> expected);
 
-    public void addUnexpectedArgumentCount(String expr, int actual, int expected);
+    public void addUnexpectedArgumentCount(ExpressionPosition expr, int actual, int expected);
 
-    public void addNonNumericType(String expr, DataType actual);
+    public void addNonNumericType(ExpressionPosition expr, MajorType actual);
 
-    public void addUnexpectedType(String expr, int index, DataType actual);
+    public void addUnexpectedType(ExpressionPosition expr, int index, MajorType actual);
 
-    public void addExpectedConstantValue(String expr, int actual, String s);
+    public void addExpectedConstantValue(ExpressionPosition expr, int actual, String s);
 
     boolean hasErrors();
+    
+    public int getErrorCount();
 
     String toErrorString();
 }

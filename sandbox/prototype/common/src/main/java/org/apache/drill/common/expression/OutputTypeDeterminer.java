@@ -19,37 +19,51 @@ package org.apache.drill.common.expression;
 
 import java.util.List;
 
-import org.apache.drill.common.expression.types.DataType;
+import org.apache.drill.common.types.TypeProtos.DataMode;
+import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 
 public interface OutputTypeDeterminer {
 
-  public static OutputTypeDeterminer FIXED_BOOLEAN = new FixedType(DataType.BOOLEAN);
+  public static OutputTypeDeterminer FIXED_BOOLEAN = new FixedType(MajorType.newBuilder().setMinorType(MinorType.BOOLEAN).setMode(DataMode.REQUIRED).build());
   
-  public DataType getOutputType(List<LogicalExpression> expressions);
+  public MajorType getOutputType(List<LogicalExpression> expressions);
   
   
   public static class FixedType implements OutputTypeDeterminer{
-    public DataType outputType;
+    public MajorType outputType;
     
     
-    public FixedType(DataType outputType) {
+    public FixedType(MajorType outputType) {
       super();
       this.outputType = outputType;
     }
 
 
     @Override
-    public DataType getOutputType(List<LogicalExpression> expressions) {
-      return null;
+    public MajorType getOutputType(List<LogicalExpression> expressions) {
+      return outputType;
     }
     
   }
   
   public static class SameAsFirstInput implements OutputTypeDeterminer{
-
     @Override
-    public DataType getOutputType(List<LogicalExpression> expressions) {
-      return expressions.get(0).getDataType();
+    public MajorType getOutputType(List<LogicalExpression> expressions) {
+      return expressions.get(0).getMajorType();
     }
   }
+  
+  public static class SameAsAnySoft implements OutputTypeDeterminer{
+    @Override
+    public MajorType getOutputType(List<LogicalExpression> expressions) {
+      for(LogicalExpression e : expressions){
+        if(e.getMajorType().getMode() == DataMode.OPTIONAL){
+          return e.getMajorType();
+        }
+      }
+      return expressions.get(0).getMajorType();
+    }
+  }
+  
 }

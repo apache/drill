@@ -19,9 +19,9 @@ package org.apache.drill.exec.record;
 
 import java.io.IOException;
 
-import org.apache.drill.exec.proto.SchemaDefProtos.DataMode;
-import org.apache.drill.exec.proto.SchemaDefProtos.MajorType;
-import org.apache.drill.exec.proto.SchemaDefProtos.MinorType;
+import org.apache.drill.common.types.TypeProtos.DataMode;
+import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;

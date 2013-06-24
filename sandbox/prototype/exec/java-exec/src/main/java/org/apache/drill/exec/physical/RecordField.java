@@ -17,7 +17,7 @@
  ******************************************************************************/
 package org.apache.drill.exec.physical;
 
-import org.apache.drill.common.expression.types.DataType;
+import org.apache.drill.common.types.TypeProtos.MajorType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -26,17 +26,17 @@ public class RecordField {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RecordField.class);
 
   
-  private DataType type;
+  private MajorType type;
   private ValueMode mode;
   
   @JsonCreator
-  public RecordField(@JsonProperty("type") DataType type, @JsonProperty("mode") ValueMode mode) {
+  public RecordField(@JsonProperty("type") MajorType type, @JsonProperty("mode") ValueMode mode) {
     super();
     this.type = type;
     this.mode = mode;
   }
 
-  public DataType getType() {
+  public MajorType getType() {
     return type;
   }
 

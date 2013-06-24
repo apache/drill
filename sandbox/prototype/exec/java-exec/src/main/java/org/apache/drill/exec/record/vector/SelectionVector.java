@@ -37,5 +37,13 @@ public class SelectionVector {
   public void allocateNew(int count) {
 
   }
+<<<<<<< HEAD:sandbox/prototype/exec/java-exec/src/main/java/org/apache/drill/exec/record/vector/SelectionVector.java
+=======
+  
+  public final int getInt(int index){
+    index*=4;
+    return data.getInt(index);
+  }
+>>>>>>> Build working:sandbox/prototype/exec/java-exec/src/main/java/org/apache/drill/exec/record/vector/NullableFixed4.java
 
 }

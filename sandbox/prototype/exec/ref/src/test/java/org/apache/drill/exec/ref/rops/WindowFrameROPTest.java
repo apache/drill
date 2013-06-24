@@ -1,6 +1,8 @@
 package org.apache.drill.exec.ref.rops;
 
 import com.google.common.collect.Lists;
+
+import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.data.WindowFrame;
@@ -112,7 +114,7 @@ public class WindowFrameROPTest {
                 "{id: 2, v: 2}" +
                 "{id: 3, v: 3}" +
                 "{id: 4, v: 4}";
-        WindowFrameROP rop = new WindowFrameROP(new WindowFrame(new FieldReference("test.v"), null, -2L, 2L));
+        WindowFrameROP rop = new WindowFrameROP(new WindowFrame(new FieldReference("test.v", ExpressionPosition.UNKNOWN), null, -2L, 2L));
         RecordIterator incoming = TestUtils.jsonToRecordIterator("test", withinInput);
         rop.setInput(incoming);
         RecordIterator out = rop.getOutput();
@@ -136,7 +138,7 @@ public class WindowFrameROPTest {
                 "{id: 2, v: 1}" +
                 "{id: 3, v: 1}" +
                 "{id: 4, v: 2}";
-        WindowFrameROP rop = new WindowFrameROP(new WindowFrame(new FieldReference("test.v"), null, -1L, 2L));
+        WindowFrameROP rop = new WindowFrameROP(new WindowFrame(new FieldReference("test.v", ExpressionPosition.UNKNOWN), null, -1L, 2L));
         RecordIterator incoming = TestUtils.jsonToRecordIterator("test", withinInput);
         rop.setInput(incoming);
         RecordIterator out = rop.getOutput();
@@ -166,7 +168,7 @@ public class WindowFrameROPTest {
                 "{id: 4, v: 1}" +
                 "{id: 5, v: 1}" +
                 "{id: 6, v: 2}";
-        WindowFrameROP rop = new WindowFrameROP(new WindowFrame(new FieldReference("test.v"), null, -1L, 3L));
+        WindowFrameROP rop = new WindowFrameROP(new WindowFrame(new FieldReference("test.v", ExpressionPosition.UNKNOWN), null, -1L, 3L));
         RecordIterator incoming = TestUtils.jsonToRecordIterator("test", withinInput);
         rop.setInput(incoming);
         RecordIterator out = rop.getOutput();
@@ -196,14 +198,14 @@ public class WindowFrameROPTest {
     }
 
     private void verifyWindowOrder(List<WindowObj> expectedIds, RecordIterator out) {
-        verifyWindowOrder(expectedIds, out, new SchemaPath("ref.segment"), new SchemaPath("ref.position"));
+        verifyWindowOrder(expectedIds, out, new SchemaPath("ref.segment", ExpressionPosition.UNKNOWN), new SchemaPath("ref.position", ExpressionPosition.UNKNOWN));
     }
 
     private void verifyWindowOrder(List<WindowObj> expectedIds, RecordIterator out, SchemaPath segment, SchemaPath position) {
         RecordIterator.NextOutcome outcome = out.next();
         RecordPointer pointer = out.getRecordPointer();
         int count = 0;
-        SchemaPath id = new SchemaPath("test.id");
+        SchemaPath id = new SchemaPath("test.id", ExpressionPosition.UNKNOWN);
         int expectedSize = expectedIds.size();
         while (outcome != RecordIterator.NextOutcome.NONE_LEFT) {
             count += 1;

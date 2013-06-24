@@ -37,7 +37,7 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
 @JsonSerialize(using = DataType.Se.class)
 @JsonDeserialize(using = DataType.De.class)
-public abstract class DataType {
+abstract class DataType {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DataType.class);
   
   public static enum Comparability{

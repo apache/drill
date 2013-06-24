@@ -21,6 +21,7 @@ import java.io.IOException;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.logical.LogicalPlan;
+import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.coord.DrillbitEndpointSerDe;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.FragmentLeaf;
@@ -28,7 +29,6 @@ import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalOperatorUtil;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
-import org.apache.drill.exec.proto.SchemaDefProtos.MajorType;
 import org.apache.drill.exec.record.MajorTypeSerDe;
 
 import com.fasterxml.jackson.core.JsonProcessingException;

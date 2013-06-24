@@ -21,6 +21,7 @@ import java.io.IOException;
 
 import org.apache.drill.common.expression.FieldReference.De;
 import org.apache.drill.common.expression.FieldReference.Se;
+import org.apache.drill.common.types.TypeProtos.MajorType;
 
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -32,26 +33,25 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import org.apache.drill.common.expression.types.DataType;
 
 @JsonSerialize(using = Se.class)
 @JsonDeserialize(using = De.class)
 public class FieldReference extends SchemaPath {
-  DataType overrideType;
+  MajorType overrideType;
 
-  public FieldReference(String value) {
-    super(value);
+  public FieldReference(String value, ExpressionPosition pos) {
+    super(value, pos);
   }
 
-  public FieldReference(String value, DataType dataType) {
-    super(value);
+  public FieldReference(String value, ExpressionPosition pos, MajorType dataType) {
+    super(value, pos);
     this.overrideType = dataType;
   }
 
     @Override
-    public DataType getDataType() {
+    public MajorType getMajorType() {
         if(overrideType == null) {
-            return super.getDataType();
+            return super.getMajorType();
         } else {
             return overrideType;
         }
@@ -66,7 +66,7 @@ public class FieldReference extends SchemaPath {
     @Override
     public FieldReference deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException,
         JsonProcessingException {
-      return new FieldReference(this._parseString(jp, ctxt));
+      return new FieldReference(this._parseString(jp, ctxt), ExpressionPosition.UNKNOWN);
     }
 
   }

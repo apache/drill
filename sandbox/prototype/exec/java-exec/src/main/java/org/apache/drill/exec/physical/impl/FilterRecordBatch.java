@@ -17,12 +17,21 @@
  ******************************************************************************/
 package org.apache.drill.exec.physical.impl;
 
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.InvalidValueAccessor;
 import org.apache.drill.exec.record.RecordBatch;
+import org.apache.drill.exec.record.RecordBatch.TypedFieldId;
+import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.record.vector.SelectionVector;
+<<<<<<< HEAD
 import org.apache.drill.exec.vector.ValueVector;
+=======
+import org.apache.drill.exec.record.vector.SelectionVector2;
+import org.apache.drill.exec.record.vector.SelectionVector4;
+import org.apache.drill.exec.record.vector.ValueVector;
+>>>>>>> Build working
 
 public abstract class FilterRecordBatch implements RecordBatch {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FilterRecordBatch.class);
@@ -57,8 +66,33 @@ public abstract class FilterRecordBatch implements RecordBatch {
     incoming.kill();
   }
 
+
   @Override
+  public SelectionVector2 getSelectionVector2() {
+    return null;
+  }
+
+  @Override
+  public SelectionVector4 getSelectionVector4() {
+    return null;
+  }
+
+  @Override
+  public TypedFieldId getValueVector(SchemaPath path) {
+    return null;
+  }
+
+  @Override
+  public <T extends ValueVector<T>> T getValueVectorById(int fieldId, Class<?> vvClass) {
+    return null;
+  }
+
+  @Override
+<<<<<<< HEAD
   public <T extends ValueVector> T getValueVector(int fieldId, Class<T> clazz) throws InvalidValueAccessor {
+=======
+  public WritableBatch getWritableBatch() {
+>>>>>>> Build working
     return null;
   }
 

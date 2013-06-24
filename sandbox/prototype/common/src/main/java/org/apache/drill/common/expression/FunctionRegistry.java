@@ -57,17 +57,18 @@ public class FunctionRegistry {
     }
   }
   
-  public LogicalExpression createExpression(String functionName, List<LogicalExpression> args){
+  
+  public LogicalExpression createExpression(String functionName, ExpressionPosition ep, List<LogicalExpression> args){
     FunctionDefinition d = funcMap.get(functionName);
     if(d == null) throw new ExpressionParsingException(String.format("Unable to find function definition for function named '%s'", functionName));
-    return d.newCall(args);
+    return d.newCall(args, ep);
   }
   
-  public LogicalExpression createExpression(String unaryName, LogicalExpression... e){
-    return funcMap.get(unaryName).newCall(Lists.newArrayList(e));
+  public LogicalExpression createExpression(String unaryName, ExpressionPosition ep, LogicalExpression... e){
+    return funcMap.get(unaryName).newCall(Lists.newArrayList(e), ep);
   }
   
-  public LogicalExpression createByOp(List<LogicalExpression> args, List<String> opTypes) {
+  public LogicalExpression createByOp(List<LogicalExpression> args, ExpressionPosition ep, List<String> opTypes) {
     // logger.debug("Generating new comparison expressions.");
     if (args.size() == 1) {
       return args.get(0);
@@ -81,7 +82,7 @@ public class FunctionRegistry {
       List<LogicalExpression> l2 = new ArrayList<LogicalExpression>();
       l2.add(first);
       l2.add(args.get(i + 1));
-      first = createExpression(opTypes.get(i), args);
+      first = createExpression(opTypes.get(i), ep, args);
     }
     return first;
   }

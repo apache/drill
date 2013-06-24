@@ -18,15 +18,16 @@
 
 package org.apache.drill.exec.schema;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import org.apache.drill.exec.proto.SchemaDefProtos;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.List;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
+import org.apache.drill.common.types.TypeProtos.DataMode;
+
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
 public class ListSchema implements RecordSchema {
     private List<Field> fields;
@@ -37,7 +38,7 @@ public class ListSchema implements RecordSchema {
 
     @Override
     public void addField(Field field) {
-        if (field.getFieldType().getMode() == SchemaDefProtos.DataMode.REPEATED || fields.isEmpty() || !isSingleTyped() ||
+        if (field.getFieldType().getMode() == DataMode.REPEATED || fields.isEmpty() || !isSingleTyped() ||
                 !Iterables.getOnlyElement(fields).equals(field.getFieldType())) {
             fields.add(field);
         }
@@ -58,7 +59,7 @@ public class ListSchema implements RecordSchema {
     @Override
     public void removeField(Field field, int index) {
         checkArgument(fields.size() > index);
-        checkArgument(checkNotNull(fields.get(index)).getFieldId() == field.getFieldId());
+//        checkArgument(checkNotNull(fields.get(index)).getFieldId() == field.getFieldId());
         fields.remove(index);
     }
 

@@ -17,12 +17,9 @@
  ******************************************************************************/
 package org.apache.drill.exec.ref.rops;
 
-import org.apache.drill.common.expression.FieldReference;
-import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.expression.types.DataType;
-import org.apache.drill.common.logical.data.NamedExpression;
 import org.apache.drill.common.logical.data.Flatten;
+import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.exec.ref.RecordIterator;
 import org.apache.drill.exec.ref.RecordPointer;
 import org.apache.drill.exec.ref.UnbackedRecord;
@@ -109,7 +106,7 @@ public class FlattenROP extends SingleInputROPBase<Flatten> {
 
 
       if (currentOutcome != NextOutcome.NONE_LEFT) {
-        if (evaluator.eval().getDataType() == DataType.ARRAY) {
+        if (evaluator.eval().getDataType().getMode() == DataMode.REPEATED) {
           arrayValueIterator = new ArrayValueIterator(evaluator.eval().getAsContainer().getAsArray());
 
           while ((v = arrayValueIterator.next()) != null) {

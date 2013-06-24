@@ -22,7 +22,7 @@ import org.apache.drill.common.expression.ArgumentValidators.ComparableArguments
 import org.apache.drill.common.expression.CallProvider;
 import org.apache.drill.common.expression.FunctionDefinition;
 import org.apache.drill.common.expression.OutputTypeDeterminer;
-import org.apache.drill.common.expression.types.DataType;
+import org.apache.drill.common.types.Types;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,8 +32,8 @@ public class BooleanFunctions implements CallProvider {
   @Override
   public FunctionDefinition[] getFunctionDefintions() {
     return new FunctionDefinition[] {
-        FunctionDefinition.operator("or", new AllowedTypeList(2, Integer.MAX_VALUE, DataType.BOOLEAN), OutputTypeDeterminer.FIXED_BOOLEAN, "or", "||"),
-        FunctionDefinition.operator("and", new AllowedTypeList(2, Integer.MAX_VALUE, DataType.BOOLEAN), OutputTypeDeterminer.FIXED_BOOLEAN, "and", "&&"),
+        FunctionDefinition.operator("or", new AllowedTypeList(2, Integer.MAX_VALUE, Types.REQUIRED_BOOLEAN), OutputTypeDeterminer.FIXED_BOOLEAN, "or", "||"),
+        FunctionDefinition.operator("and", new AllowedTypeList(2, Integer.MAX_VALUE, Types.REQUIRED_BOOLEAN), OutputTypeDeterminer.FIXED_BOOLEAN, "and", "&&"),
         FunctionDefinition.operator("greater than", new ComparableArguments(2), OutputTypeDeterminer.FIXED_BOOLEAN, ">"),
         FunctionDefinition.operator("less than", new ComparableArguments(2), OutputTypeDeterminer.FIXED_BOOLEAN, "<"),
         FunctionDefinition.operator("equal", new ComparableArguments(2), OutputTypeDeterminer.FIXED_BOOLEAN, "==", "<>"),

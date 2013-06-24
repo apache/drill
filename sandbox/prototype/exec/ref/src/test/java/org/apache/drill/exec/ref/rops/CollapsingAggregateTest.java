@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
+import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ref.TestUtils;
 import org.apache.drill.exec.ref.UnbackedRecord;
@@ -38,8 +39,8 @@ public class CollapsingAggregateTest {
 
     DataValue[] depts = {DataValue.NULL_VALUE, new LongScalar(31), new LongScalar(33), new LongScalar(34)};
     DataValue[] cnts = {new LongScalar(1), new LongScalar(1), new LongScalar(2), new LongScalar(2)};
-    SchemaPath typeCount = new SchemaPath("typeCount");
-    SchemaPath dept = new SchemaPath("deptId");
+    SchemaPath typeCount = new SchemaPath("typeCount", ExpressionPosition.UNKNOWN);
+    SchemaPath dept = new SchemaPath("deptId", ExpressionPosition.UNKNOWN);
     for(int i =0; i < depts.length; i++){
       UnbackedRecord r = records.get(i);
       assertEquals(String.format("Invalid dept value for record %d.", i), depts[i], r.getField(dept));

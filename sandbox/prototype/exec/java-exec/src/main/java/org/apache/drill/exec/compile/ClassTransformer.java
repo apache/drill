@@ -79,6 +79,7 @@ public class ClassTransformer {
   }
 
   
+  
   @SuppressWarnings("unchecked")
   public <T, I> T getImplementationClass(QueryClassLoader classLoader,
       TemplateClassDefinition<T, I> templateDefinition, String internalClassBody, I initObject)

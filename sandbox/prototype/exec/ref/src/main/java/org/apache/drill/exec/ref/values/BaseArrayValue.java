@@ -18,13 +18,28 @@
 package org.apache.drill.exec.ref.values;
 
 import org.apache.drill.common.expression.PathSegment;
-import org.apache.drill.common.expression.types.DataType;
+import org.apache.drill.common.types.TypeProtos.DataMode;
+import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.tools.ant.types.DataType;
 
 
 public abstract class BaseArrayValue extends BaseDataValue implements ContainerValue{
 
+  private MajorType initiatingType;
+  private MajorType runningType = MajorType.newBuilder().setMode(DataMode.REPEATED).setMinorType(MinorType.LATE).build();
+  
   @Override
   public void addValue(PathSegment segment, DataValue v) {
+    if(initiatingType == null){
+      initiatingType = v.getDataType();
+      runningType = initiatingType.toBuilder().setMode(DataMode.REPEATED).build();
+    }else{
+      if(!v.getDataType().equals(initiatingType)){
+        throw new RuntimeException("The reference interpreter doesn't support polymorphic types.");
+      }
+    }
+    
     DataValue fullPathValue = ValueUtils.getIntermediateValues(segment.getChild(), v);
     if(segment.isArray()){ // we need to place this object in the given position.
       int index = segment.getArraySegment().getIndex();
@@ -60,8 +75,8 @@ public abstract class BaseArrayValue extends BaseDataValue implements ContainerV
   }
 
   @Override
-  public DataType getDataType() {
-    return DataType.ARRAY;
+  public MajorType getDataType() {
+    return runningType;
   }
   
   

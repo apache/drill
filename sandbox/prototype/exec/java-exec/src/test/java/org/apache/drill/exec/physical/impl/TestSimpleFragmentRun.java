@@ -29,7 +29,6 @@ import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.rpc.user.QueryResultBatch;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
-import org.apache.drill.exec.vector.ValueVector;
 import org.junit.Test;
 
 import com.carrotsearch.hppc.cursors.IntObjectCursor;
@@ -58,33 +57,37 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
       boolean schemaChanged = batchLoader.load(batch.getHeader().getDef(), batch.getData());
       boolean firstColumn = true;
 
-      // print headers.
-      if (schemaChanged) {
-        System.out.println("\n\n========NEW SCHEMA=========\n\n");
-        for (IntObjectCursor<ValueVector> v : batchLoader) {
+          // print headers.
+          if (schemaChanged) {
+            System.out.println("\n\n========NEW SCHEMA=========\n\n");
+            for (ValueVector<?> value : batchLoader) {
 
-          if (firstColumn) {
-            firstColumn = false;
-          } else {
-            System.out.print("\t");
+              if (firstColumn) {
+                firstColumn = false;
+              } else {
+                System.out.print("\t");
+              }
+              System.out.print(value.getField().getName());
+              System.out.print("[");
+              System.out.print(value.getField().getType().getMinorType());
+              System.out.print("]");
+            }
+            System.out.println();
           }
-          System.out.print(v.value.getField().getName());
-          System.out.print("[");
-          System.out.print(v.value.getField().getType().getMinorType());
-          System.out.print("]");
-        }
-        System.out.println();
-      }
 
 
-      for (int i = 0; i < batchLoader.getRecordCount(); i++) {
-        boolean first = true;
-        recordCount++;
-        for (IntObjectCursor<ValueVector> v : batchLoader) {
-          if (first) {
-            first = false;
-          } else {
-            System.out.print("\t");
+          for (int i = 0; i < batchLoader.getRecordCount(); i++) {
+            boolean first = true;
+            recordCount++;
+            for (ValueVector<?> value : batchLoader) {
+              if (first) {
+                first = false;
+              } else {
+                System.out.print("\t");
+              }
+              System.out.print(value.getObject(i));
+            }
+            if(!first) System.out.println();
           }
           System.out.print(v.value.getAccessor().getObject(i));
         }

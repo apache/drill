@@ -12,6 +12,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.util.FileUtils;
@@ -27,7 +28,7 @@ import com.google.common.io.Files;
 public class TestUtils {
   public static RecordIterator jsonToRecordIterator(String schemaPath, String j) throws IOException {
     InputStream is = new ByteArrayInputStream(j.getBytes());
-    JSONRecordReader reader = new JSONRecordReader(new SchemaPath(schemaPath), DrillConfig.create(), is, null);
+    JSONRecordReader reader = new JSONRecordReader(new SchemaPath(schemaPath, ExpressionPosition.UNKNOWN), DrillConfig.create(), is, null);
     return reader.getIterator();
   }
 

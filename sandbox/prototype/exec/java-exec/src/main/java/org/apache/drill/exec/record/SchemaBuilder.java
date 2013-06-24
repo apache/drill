@@ -17,15 +17,12 @@
  ******************************************************************************/
 package org.apache.drill.exec.record;
 
-import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
-import org.apache.drill.common.expression.types.DataType;
 import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.physical.RecordField.ValueMode;
 
-import com.carrotsearch.hppc.IntObjectOpenHashMap;
-import com.carrotsearch.hppc.cursors.ObjectCursor;
+import com.beust.jcommander.internal.Sets;
 import com.google.common.collect.Lists;
 
 /**
@@ -33,40 +30,39 @@ import com.google.common.collect.Lists;
  * builder will always check that this schema is a equal or more materialized version of the current schema.
  */
 public class SchemaBuilder {
-  private IntObjectOpenHashMap<MaterializedField> fields = new IntObjectOpenHashMap<MaterializedField>();
-  private IntObjectOpenHashMap<MaterializedField> expectedFields = new IntObjectOpenHashMap<MaterializedField>();
+  private Set<MaterializedField> fields = Sets.newHashSet();
 
-  private boolean hasSelectionVector;
-
-  public SchemaBuilder(BatchSchema expected) {
-    for (MaterializedField f : expected) {
-      expectedFields.put(f.getFieldId(), f);
-    }
-    hasSelectionVector = expected.hasSelectionVector;
-  }
+  private BatchSchema.SelectionVectorMode selectionVectorMode;
 
   SchemaBuilder() {
   }
 
-  /**
-   * Add a field where we don't have type information. In this case, DataType will be set to LATEBIND and valueClass
-   * will be set to null.
-   * 
-   * @param fieldId
-   *          The desired fieldId. Should be unique for this BatchSchema.
-   * @param nullable
-   *          Whether this field supports nullability.
-   * @param mode
-   * @throws SchemaChangeException
-   */
+//  /**
+//   * Add a field where we don't have type information. In this case, DataType will be set to LATEBIND and valueClass
+//   * will be set to null.
+//   *
+//   * @param fieldId
+//   *          The desired fieldId. Should be unique for this BatchSchema.
+//   * @param nullable
+//   *          Whether this field supports nullability.
+//   * @param mode
+//   * @throws SchemaChangeException
+//   */
 //  public void addLateBindField(short fieldId, boolean nullable, ValueMode mode) throws SchemaChangeException {
 //    addTypedField(fieldId, DataType.LATEBIND, nullable, mode, Void.class);
 //  }
 
-  public void setSelectionVector(boolean hasSelectionVector) {
-    this.hasSelectionVector = hasSelectionVector;
+  public SchemaBuilder setSelectionVectorMode(BatchSchema.SelectionVectorMode selectionVectorMode) {
+    this.selectionVectorMode = selectionVectorMode;
+    return this;
   }
 
+  public SchemaBuilder addFields(Iterable<MaterializedField> fields){
+    for(MaterializedField f : fields){
+      addField(f);
+    }
+    return this;
+  }
   
 //  private void setTypedField(short fieldId, DataType type, boolean nullable, ValueMode mode, Class<?> valueClass)
 //      throws SchemaChangeException {
@@ -83,8 +79,9 @@ public class SchemaBuilder {
 //    fields.put(f.getFieldId(), f);
 //  }
   
-  public void addField(MaterializedField f){
-    fields.put(f.getFieldId(), f);
+  public SchemaBuilder addField(MaterializedField f){
+    fields.add(f);
+    return this;
   }
 
 //  public void addTypedField(short fieldId, DataType type, boolean nullable, ValueMode mode, Class<?> valueClass)
@@ -104,9 +101,9 @@ public class SchemaBuilder {
 //    setTypedField(fieldId, type, nullable, mode, valueClass);
 //  }
   
-  public void removeField(short fieldId) throws SchemaChangeException{
-    MaterializedField f = fields.remove(fieldId);
-    if(f == null) throw new SchemaChangeException("You attempted to remove an nonexistent field.");
+  public SchemaBuilder removeField(MaterializedField f) throws SchemaChangeException{
+    if(!fields.remove(f)) throw new SchemaChangeException("You attempted to remove an nonexistent field.");
+    return this;
   }
 
   /**
@@ -114,14 +111,8 @@ public class SchemaBuilder {
    * @return
    * @throws SchemaChangeException
    */
-  public BatchSchema build() throws SchemaChangeException {
-    // check if any fields are unaccounted for.
-
-    List<MaterializedField> fieldList = Lists.newArrayList();
-    for (ObjectCursor<MaterializedField> f : fields.values()) {
-      if (f != null) fieldList.add(f.value);
-    }
-    Collections.sort(fieldList);
-    return new BatchSchema(this.hasSelectionVector, fieldList);
+  public BatchSchema build(){
+    List<MaterializedField> fieldList = Lists.newArrayList(fields);
+    return new BatchSchema(this.selectionVectorMode, fieldList);
   }
 }

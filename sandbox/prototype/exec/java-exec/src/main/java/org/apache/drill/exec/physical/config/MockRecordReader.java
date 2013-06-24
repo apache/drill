@@ -18,15 +18,18 @@
 package org.apache.drill.exec.physical.config;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.types.TypeProtos.DataMode;
+import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.MockScanPOP.MockColumn;
 import org.apache.drill.exec.physical.config.MockScanPOP.MockScanEntry;
 import org.apache.drill.exec.physical.impl.OutputMutator;
-import org.apache.drill.exec.proto.SchemaDefProtos.DataMode;
-import org.apache.drill.exec.proto.SchemaDefProtos.MajorType;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.vector.TypeHelper;
+import org.apache.drill.exec.record.vector.ValueVector;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.vector.FixedWidthVector;
 import org.apache.drill.exec.vector.NonRepeatedMutator;
@@ -57,12 +60,12 @@ public class MockRecordReader implements RecordReader {
     return x;
   }
 
-  private ValueVector getVector(int fieldId, String name, MajorType type, int length) {
+  private ValueVector<?> getVector(String name, MajorType type, int length) {
     assert context != null : "Context shouldn't be null.";
     if(type.getMode() != DataMode.REQUIRED) throw new UnsupportedOperationException();
     
-    MaterializedField f = MaterializedField.create(new SchemaPath(name), fieldId, 0, type);
-    ValueVector v;
+    MaterializedField f = MaterializedField.create(new SchemaPath(name, ExpressionPosition.UNKNOWN), type);
+    ValueVector<?> v;
     v = TypeHelper.getNewVector(f, context.getAllocator());
     if(v instanceof FixedWidthVector){
       ((FixedWidthVector)v).allocateNew(length);  
@@ -85,8 +88,8 @@ public class MockRecordReader implements RecordReader {
       batchRecordCount = 250000 / estimateRowSize;
 
       for (int i = 0; i < config.getTypes().length; i++) {
-        valueVectors[i] = getVector(i, config.getTypes()[i].getName(), config.getTypes()[i].getMajorType(), batchRecordCount);
-        output.addField(i, valueVectors[i]);
+        valueVectors[i] = getVector(config.getTypes()[i].getName(), config.getTypes()[i].getMajorType(), batchRecordCount);
+        output.addField(valueVectors[i]);
       }
       output.setNewSchema();
     } catch (SchemaChangeException e) {
@@ -128,7 +131,7 @@ public class MockRecordReader implements RecordReader {
   public void cleanup() {
     for (int i = 0; i < valueVectors.length; i++) {
       try {
-        output.removeField(valueVectors[i].getField().getFieldId());
+        output.removeField(valueVectors[i].getField());
       } catch (SchemaChangeException e) {
         logger.warn("Failure while trying to remove field.", e);
       }

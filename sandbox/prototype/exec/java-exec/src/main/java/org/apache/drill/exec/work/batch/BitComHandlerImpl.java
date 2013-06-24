@@ -25,6 +25,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.exception.FragmentSetupException;
+import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.impl.ImplCreator;
@@ -113,7 +114,7 @@ public class BitComHandlerImpl implements BitComHandler {
   @Override
   public void startNewRemoteFragment(PlanFragment fragment){
     logger.debug("Received remote fragment start instruction", fragment);
-    FragmentContext context = new FragmentContext(bee.getContext(), fragment.getHandle(), null, null);
+    FragmentContext context = new FragmentContext(bee.getContext(), fragment.getHandle(), null, null,new FunctionImplementationRegistry(bee.getContext().getConfig()));
     BitTunnel tunnel = bee.getContext().getBitCom().getTunnel(fragment.getForeman());
     RemotingFragmentRunnerListener listener = new RemotingFragmentRunnerListener(context, tunnel);
     try{

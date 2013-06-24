@@ -27,26 +27,26 @@ import org.apache.drill.common.expression.ValueExpressions.DoubleExpression;
 import org.apache.drill.common.expression.ValueExpressions.LongExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 
-public final class AggregateChecker implements ExprVisitor<Boolean>{
+public final class AggregateChecker extends SimpleExprVisitor<Boolean>{
 	
   public static final AggregateChecker INSTANCE = new AggregateChecker();
   
   private AggregateChecker(){};
   
   public static boolean isAggregating(LogicalExpression e){
-    return e.accept(INSTANCE);
+    return e.accept(INSTANCE, null);
   }
 
   @Override
   public Boolean visitFunctionCall(FunctionCall call) {
     if(call.getDefinition().isAggregating()){
       for(LogicalExpression e : call){
-        if(e.accept(this)) throw new IllegalArgumentException(String.format("Your aggregating function call %s also includes arguments that contain aggregations.  This isn't allowed.", call.getDefinition().toString()));
+        if(e.accept(this, null)) throw new IllegalArgumentException(String.format("Your aggregating function call %s also includes arguments that contain aggregations.  This isn't allowed.", call.getDefinition().toString()));
       }
       return true;
     }else{
       for(LogicalExpression e : call){
-        if(e.accept(this)) return true;
+        if(e.accept(this, null)) return true;
       }
       return false;
     }
@@ -55,9 +55,9 @@ public final class AggregateChecker implements ExprVisitor<Boolean>{
   @Override
   public Boolean visitIfExpression(IfExpression ifExpr) {
     for(IfCondition c : ifExpr){
-      if(c.condition.accept(this) || c.expression.accept(this)) return true;
+      if(c.condition.accept(this, null) || c.expression.accept(this, null)) return true;
     }
-    return ifExpr.elseExpression.accept(this);
+    return ifExpr.elseExpression.accept(this, null);
   }
 
   @Override
@@ -66,22 +66,27 @@ public final class AggregateChecker implements ExprVisitor<Boolean>{
   }
 
   @Override
-  public Boolean visitLongExpression(LongExpression intExpr) {
+  public Boolean visitLongConstant(LongExpression intExpr) {
     return false;
   }
 
   @Override
-  public Boolean visitDoubleExpression(DoubleExpression dExpr) {
+  public Boolean visitDoubleConstant(DoubleExpression dExpr) {
     return false;
   }
 
   @Override
-  public Boolean visitBoolean(BooleanExpression e) {
+  public Boolean visitBooleanConstant(BooleanExpression e) {
     return false;
   }
 
   @Override
-  public Boolean visitQuotedString(QuotedString e) {
+  public Boolean visitQuotedStringConstant(QuotedString e) {
+    return false;
+  }
+
+  @Override
+  public Boolean visitUnknown(LogicalExpression e, Void value) throws RuntimeException {
     return false;
   }
 	

@@ -26,8 +26,8 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.parser.ExprLexer;
 import org.apache.drill.common.expression.parser.ExprParser;
 import org.apache.drill.common.expression.parser.ExprParser.parse_return;
-import org.apache.drill.common.expression.types.DataType;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
+import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,65 +44,65 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 //@JsonDeserialize(using = LogicalExpression.De.class)  // Excluded as we need to register this with the DrillConfig.
 @JsonSerialize(using = LogicalExpression.Se.class)
 public interface LogicalExpression {
-    static final Logger logger = LoggerFactory.getLogger(LogicalExpression.class);
+  static final Logger logger = LoggerFactory.getLogger(LogicalExpression.class);
 
-    public abstract DataType getDataType();
+  public abstract MajorType getMajorType();
 
-    public void addToString(StringBuilder sb);
+  public <T, V, E extends Exception> T accept(ExprVisitor<T, V, E> visitor, V value) throws E;
 
-    public void resolveAndValidate(String expr, ErrorCollector errors);
+  public ExpressionPosition getPosition();
 
-    public <T> T accept(ExprVisitor<T> visitor);
+  public static class De extends StdDeserializer<LogicalExpression> {
+    DrillConfig config;
 
-    public static class De extends StdDeserializer<LogicalExpression> {
-        DrillConfig config;
-        ErrorCollector errorCollector;
-
-        public De(DrillConfig config) {
-            super(LogicalExpression.class);
-            this.config = config;
-            this.errorCollector = config.getErrorCollector();
-        }
-
-        @Override
-        public LogicalExpression deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException,
-                JsonProcessingException {
-            String expr = jp.getText();
-
-            if (expr == null || expr.isEmpty())
-                return null;
-            try {
-                // logger.debug("Parsing expression string '{}'", expr);
-                ExprLexer lexer = new ExprLexer(new ANTLRStringStream(expr));
-
-                CommonTokenStream tokens = new CommonTokenStream(lexer);
-                ExprParser parser = new ExprParser(tokens);
-                parser.setRegistry(new FunctionRegistry(config));
-                parse_return ret = parser.parse();
-                // logger.debug("Found expression '{}'", ret.e);
-                ret.e.resolveAndValidate(expr, errorCollector);
-                return ret.e;
-            } catch (RecognitionException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
+    public De(DrillConfig config) {
+      super(LogicalExpression.class);
+      this.config = config;
     }
 
-    public static class Se extends StdSerializer<LogicalExpression> {
+    @Override
+    public LogicalExpression deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException,
+        JsonProcessingException {
+      String expr = jp.getText();
 
-        protected Se() {
-            super(LogicalExpression.class);
-        }
+      if (expr == null || expr.isEmpty())
+        return null;
+      try {
+        // logger.debug("Parsing expression string '{}'", expr);
+        ExprLexer lexer = new ExprLexer(new ANTLRStringStream(expr));
+        CommonTokenStream tokens = new CommonTokenStream(lexer);
+        ExprParser parser = new ExprParser(tokens);
 
-        @Override
-        public void serialize(LogicalExpression value, JsonGenerator jgen, SerializerProvider provider) throws IOException,
-                JsonGenerationException {
-            StringBuilder sb = new StringBuilder();
-            value.addToString(sb);
-            jgen.writeString(sb.toString());
-        }
+        //TODO: move functionregistry and error collector to injectables.
+        //ctxt.findInjectableValue(valueId, forProperty, beanInstance)
 
+        parser.setRegistry(new FunctionRegistry(config));
+        parse_return ret = parser.parse();
+
+        // ret.e.resolveAndValidate(expr, errorCollector);
+        return ret.e;
+      } catch (RecognitionException e) {
+        throw new RuntimeException(e);
+      }
     }
+
+  }
+
+  public static class Se extends StdSerializer<LogicalExpression> {
+
+    protected Se() {
+      super(LogicalExpression.class);
+    }
+
+    @Override
+    public void serialize(LogicalExpression value, JsonGenerator jgen, SerializerProvider provider) throws IOException,
+        JsonGenerationException {
+      StringBuilder sb = new StringBuilder();
+      ExpressionStringBuilder esb = new ExpressionStringBuilder();
+      value.accept(esb, sb);
+      jgen.writeString(sb.toString());
+    }
+
+  }
 
 }

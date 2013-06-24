@@ -1,161 +1,186 @@
 <?xml version="1.0"?>
 <project
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
-	xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-	<modelVersion>4.0.0</modelVersion>
-	<parent>
-		<artifactId>exec-parent</artifactId>
-		<groupId>org.apache.drill.exec</groupId>
-		<version>1.0-SNAPSHOT</version>
-	</parent>
-	<artifactId>java-exec</artifactId>
-	<name>java-exec</name>
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+  xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <artifactId>exec-parent</artifactId>
+    <groupId>org.apache.drill.exec</groupId>
+    <version>1.0-SNAPSHOT</version>
+  </parent>
+  <artifactId>java-exec</artifactId>
+  <name>java-exec</name>
 
-	<properties>
-		<target.gen.source.path>${project.basedir}/target/generated-sources</target.gen.source.path>
-		<proto.cas.path>${project.basedir}/src/main/protobuf/</proto.cas.path>
-	</properties>
+  <dependencies>
+    <dependency>
+      <groupId>asm</groupId>
+      <artifactId>asm-util</artifactId>
+      <version>3.3.1</version>
+    </dependency>
+    <dependency>
+      <groupId>asm</groupId>
+      <artifactId>asm-commons</artifactId>
+      <version>3.3.1</version>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.codemodel</groupId>
+      <artifactId>codemodel</artifactId>
+      <version>2.6</version>
+    </dependency>
+    <dependency>
+      <groupId>org.codehaus.janino</groupId>
+      <artifactId>commons-compiler-jdk</artifactId>
+      <version>2.6.1</version>
+    </dependency>
+    <dependency>
+      <groupId>net.hydromatic</groupId>
+      <artifactId>optiq</artifactId>
+      <version>0.3.2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.freemarker</groupId>
+      <artifactId>freemarker</artifactId>
+      <version>2.3.19</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.caliper</groupId>
+      <artifactId>caliper</artifactId>
+      <version>1.0-beta-1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.twitter</groupId>
+      <artifactId>parquet-column</artifactId>
+      <version>1.0.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>com.yammer.metrics</groupId>
+      <artifactId>metrics-core</artifactId>
+      <version>3.0.0-BETA1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.drill</groupId>
+      <artifactId>common</artifactId>
+      <version>1.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.drill</groupId>
+      <artifactId>common</artifactId>
+      <version>1.0-SNAPSHOT</version>
+      <classifier>tests</classifier>
+    </dependency>
+    <dependency>
+      <groupId>com.beust</groupId>
+      <artifactId>jcommander</artifactId>
+      <version>1.30</version>
+    </dependency>
+    <dependency>
+      <groupId>com.netflix.curator</groupId>
+      <artifactId>curator-x-discovery</artifactId>
+      <version>1.1.9</version>
+      <exclusions>
+        <!-- <exclusion> -->
+        <!-- <artifactId>netty</artifactId> -->
+        <!-- <groupId>org.jboss.netty</groupId> -->
+        <!-- </exclusion> -->
+        <exclusion>
+          <artifactId>slf4j-log4j12</artifactId>
+          <groupId>org.slf4j</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>log4j</artifactId>
+          <groupId>log4j</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.xerial.snappy</groupId>
+      <artifactId>snappy-java</artifactId>
+      <version>1.0.5-M3</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-core</artifactId>
+      <version>1.1.0</version>
+      <exclusions>
+        <exclusion>
+          <artifactId>jets3t</artifactId>
+          <groupId>net.java.dev.jets3t</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>commons-logging</artifactId>
+          <groupId>commons-logging</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>com.carrotsearch</groupId>
+      <artifactId>hppc</artifactId>
+      <version>0.4.2</version>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-all</artifactId>
+      <version>4.0.0.CR2</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.protobuf</groupId>
+      <artifactId>protobuf-java</artifactId>
+      <version>2.5.0</version>
+    </dependency>
+    <dependency>
+      <groupId>com.hazelcast</groupId>
+      <artifactId>hazelcast</artifactId>
+      <version>2.5.1</version>
+    </dependency>
+  </dependencies>
 
-	<dependencies>
-		<dependency>
-			<groupId>asm</groupId>
-			<artifactId>asm-util</artifactId>
-			<version>3.3.1</version>
-		</dependency>
-		<dependency>
-			<groupId>asm</groupId>
-			<artifactId>asm-commons</artifactId>
-			<version>3.3.1</version>
-		</dependency>
-		<dependency>
-			<groupId>org.codehaus.janino</groupId>
-			<artifactId>commons-compiler-jdk</artifactId>
-			<version>2.6.1</version>
-		</dependency>
-		<dependency>
-			<groupId>net.hydromatic</groupId>
-			<artifactId>optiq</artifactId>
-			<version>0.3.2</version>
-		</dependency>
-		<dependency>
-			<groupId>com.twitter</groupId>
-			<artifactId>parquet-column</artifactId>
-			<version>1.0.0-SNAPSHOT</version>
-		</dependency>
-		<dependency>
-			<groupId>com.yammer.metrics</groupId>
-			<artifactId>metrics-core</artifactId>
-			<version>3.0.0-BETA1</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.drill</groupId>
-			<artifactId>common</artifactId>
-			<version>1.0-SNAPSHOT</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.drill</groupId>
-			<artifactId>common</artifactId>
-			<version>1.0-SNAPSHOT</version>
-			<classifier>tests</classifier>
-		</dependency>
-		<dependency>
-			<groupId>com.beust</groupId>
-			<artifactId>jcommander</artifactId>
-			<version>1.30</version>
-		</dependency>
-		<dependency>
-			<groupId>com.netflix.curator</groupId>
-			<artifactId>curator-x-discovery</artifactId>
-			<version>1.1.9</version>
-			<exclusions>
-				<!-- <exclusion> -->
-				<!-- <artifactId>netty</artifactId> -->
-				<!-- <groupId>org.jboss.netty</groupId> -->
-				<!-- </exclusion> -->
-				<exclusion>
-					<artifactId>slf4j-log4j12</artifactId>
-					<groupId>org.slf4j</groupId>
-				</exclusion>
-				<exclusion>
-					<artifactId>log4j</artifactId>
-					<groupId>log4j</groupId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>org.xerial.snappy</groupId>
-			<artifactId>snappy-java</artifactId>
-			<version>1.0.5-M3</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.hadoop</groupId>
-			<artifactId>hadoop-core</artifactId>
-			<version>1.1.0</version>
-			<exclusions>
-				<exclusion>
-					<artifactId>jets3t</artifactId>
-					<groupId>net.java.dev.jets3t</groupId>
-				</exclusion>
-				<exclusion>
-					<artifactId>commons-logging</artifactId>
-					<groupId>commons-logging</groupId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>com.carrotsearch</groupId>
-			<artifactId>hppc</artifactId>
-			<version>0.4.2</version>
-		</dependency>
-		<dependency>
-			<groupId>io.netty</groupId>
-			<artifactId>netty-all</artifactId>
-			<version>4.0.0.CR2</version>
-		</dependency>
-		<dependency>
-			<groupId>com.google.protobuf</groupId>
-			<artifactId>protobuf-java</artifactId>
-			<version>2.5.0</version>
-		</dependency>
-		<dependency>
-			<groupId>com.hazelcast</groupId>
-			<artifactId>hazelcast</artifactId>
-			<version>2.5.1</version>
-		</dependency>
-	</dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>2.6</version>
+        <executions>
+          <execution>
+            <id>copy-resources</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${basedir}/target/classes/</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>src/main/java</directory>
+                  <filtering>true</filtering>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>generate-sources</id>
+            <phase>generate-sources</phase>
+            <configuration>
+              <tasks>
+                <mkdir dir="${target.gen.source.path}" />
+                <path id="proto.path.files">
+                  <fileset dir="${proto.cas.path}">
+                    <include name="*.proto" />
+                  </fileset>
+                </path>
+                <pathconvert pathsep=" " property="proto.files"
+                  refid="proto.path.files" />
 
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>native-maven-plugin</artifactId>
-				<version>1.0-alpha-7</version>
-				<configuration>
-					<javahClassNames>
-						<javahClassName>org.apache.drill.exec.mem.ByteBufferAllocator</javahClassName>
-					</javahClassNames>
-				</configuration>
-			</plugin>
-			<plugin>
-				<artifactId>maven-antrun-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>generate-sources</id>
-						<phase>generate-sources</phase>
-						<configuration>
-							<tasks>
-								<mkdir dir="${target.gen.source.path}" />
-								<path id="proto.path.files">
-									<fileset dir="${proto.cas.path}">
-										<include name="*.proto" />
-									</fileset>
-								</path>
-								<pathconvert pathsep=" " property="proto.files"
-									refid="proto.path.files" />
-
-								<exec executable="protoc">
-									<arg value="--java_out=${target.gen.source.path}" />
-									<arg value="--proto_path=${proto.cas.path}" />
+                <exec executable="protoc">
+                  <arg value="--java_out=${target.gen.source.path}" />
+                  <arg value="--proto_path=${proto.cas.path}" />
+<<<<<<< HEAD
+                  <arg value="--proto_path=${project.basedir}/../../common/src/main/protobuf/" />
 									<arg line="${proto.files}" />
 								</exec>
 							</tasks>
@@ -201,5 +226,34 @@
 			<!-- </plugin> -->
 		</plugins>
 	</build>
+=======
+                  <arg
+                    value="--proto_path=${project.basedir}/../../common/src/main/protobuf/" />
+                  <arg line="${proto.files}" />
+                </exec>
+              </tasks>
+              <sourceRoot>${target.gen.source.path}</sourceRoot>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- <plugin> -->
+      <!-- <groupId>com.github.igor-petruk.protobuf</groupId> -->
+      <!-- <artifactId>protobuf-maven-plugin</artifactId> -->
+      <!-- <version>0.6.2</version> -->
+      <!-- <executions> -->
+      <!-- <execution> -->
+      <!-- <goals> -->
+      <!-- <goal>run</goal> -->
+      <!-- </goals> -->
+      <!-- </execution> -->
+      <!-- </executions> -->
+      <!-- </plugin> -->
+    </plugins>
+  </build>
+>>>>>>> Build working
 
 </project>
