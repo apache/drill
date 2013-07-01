@@ -67,9 +67,9 @@ public class CollapsingAggregateROP extends SingleInputROPBase<CollapsingAggrega
     aggs = new AggregatingEvaluator[config.getAggregations().length];
     carryovers = new BasicEvaluator[config.getCarryovers().length];
     carryoverNames = new FieldReference[config.getCarryovers().length];
-    
+    carryoverValues = new DataValue[config.getCarryovers().length];
+
     if(targetMode){
-      carryoverValues = new DataValue[config.getCarryovers().length];
       targetEvaluator = builder.getBasicEvaluator(record, config.getTarget());
     }
     aggNames = new SchemaPath[aggs.length];
@@ -165,6 +165,10 @@ public class CollapsingAggregateROP extends SingleInputROPBase<CollapsingAggrega
             carryoverValues[i] = carryovers[i].eval();
           }
         }
+      }else{
+        for(int i =0 ; i < carryovers.length; i++){
+          carryoverValues[i] = carryovers[i].eval();
+        }
       }
     }
     
@@ -193,7 +197,7 @@ public class CollapsingAggregateROP extends SingleInputROPBase<CollapsingAggrega
         }
       }else{
         for(int y = 0; y < carryoverNames.length; y++){
-          outputRecord.addField(carryoverNames[y], carryovers[y].eval());
+          outputRecord.addField(carryoverNames[y], carryoverValues[y]);
         }
         return true;
       }

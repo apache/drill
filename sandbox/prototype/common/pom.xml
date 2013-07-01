@@ -8,14 +8,11 @@
 		<groupId>org.apache.drill</groupId>
 		<version>1.0-SNAPSHOT</version>
 	</parent>
+	
 	<artifactId>common</artifactId>
 	<packaging>jar</packaging>
 	<name>common</name>
-	<url>http://maven.apache.org</url>
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<dep.slf4j.version>1.7.2</dep.slf4j.version>
-	</properties>
+
 	<dependencies>
 
 		<dependency>
@@ -24,49 +21,12 @@
 			<version>2.4.1</version>
 		</dependency>
 
-		<!-- <dependency> -->
-		<!-- <groupId>org.apache.hadoop</groupId> -->
-		<!-- <artifactId>hadoop-core</artifactId> -->
-		<!-- <version>1.1.0</version> -->
-		<!-- </dependency> -->
-
 		<dependency>
 			<groupId>com.typesafe</groupId>
 			<artifactId>config</artifactId>
 			<version>1.0.0</version>
 		</dependency>
-		
-		<dependency>
-			<groupId>ch.qos.logback</groupId>
-			<artifactId>logback-classic</artifactId>
-			<version>1.0.7</version>
-			<scope>provided</scope>
-		</dependency>
-		
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>jul-to-slf4j</artifactId>
-			<version>${dep.slf4j.version}</version>
-		</dependency>
-		
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>jcl-over-slf4j</artifactId>
-			<version>${dep.slf4j.version}</version>
-		</dependency>
 
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>log4j-over-slf4j</artifactId>
-			<version>${dep.slf4j.version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>de.huxhorn.lilith</groupId>
-			<artifactId>de.huxhorn.lilith.logback.appender.multiplex-classic</artifactId>
-			<version>0.9.42.1</version>
-		</dependency>
-		
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
@@ -83,12 +43,6 @@
 			<groupId>org.reflections</groupId>
 			<artifactId>reflections</artifactId>
 			<version>0.9.8</version>
-		</dependency>
-
-		<dependency>
-			<groupId>com.google.guava</groupId>
-			<artifactId>guava</artifactId>
-			<version>13.0.1</version>
 		</dependency>
 
 		<dependency>
@@ -111,12 +65,7 @@
 			<artifactId>antlr-runtime</artifactId>
 			<version>3.4</version>
 		</dependency>
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>4.11</version>
-			<scope>test</scope>
-		</dependency>
+
 
 	</dependencies>
 

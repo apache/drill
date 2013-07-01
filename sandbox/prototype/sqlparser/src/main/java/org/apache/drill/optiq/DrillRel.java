@@ -18,11 +18,16 @@
 package org.apache.drill.optiq;
 
 import org.eigenbase.rel.RelNode;
+import org.eigenbase.relopt.Convention;
 
 /**
  * Relational expression that is implemented in Drill.
  */
 public interface DrillRel extends RelNode {
+  /** Calling convention for relational expressions that are "implemented" by
+   * generating Drill logical plans. */
+  Convention CONVENTION = new Convention.Impl("DRILL", DrillRel.class);
+
   void implement(DrillImplementor implementor);
 }
 

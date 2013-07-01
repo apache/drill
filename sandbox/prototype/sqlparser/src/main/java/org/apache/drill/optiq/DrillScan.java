@@ -22,7 +22,7 @@ public class DrillScan extends TableAccessRelBase implements DrillRel {
       RelOptTable table)
   {
     super(cluster, traits, table);
-    assert traits.contains(DrillOptiq.CONVENTION);
+    assert getConvention() == CONVENTION;
     this.drillTable = table.unwrap(DrillTable.class);
     assert drillTable != null;
   }
@@ -37,7 +37,7 @@ public class DrillScan extends TableAccessRelBase implements DrillRel {
     final ObjectNode node = implementor.mapper.createObjectNode();
     node.put("op", "scan");
     node.put("memo", "initial_scan");
-    node.put("ref", "donuts");
+    node.put("ref", "_MAP"); // output is a record with a single field, '_MAP'
     node.put("storageengine", drillTable.storageEngineConfig.getName());
     node.put("selection", implementor.mapper.convertValue(drillTable.selection, JsonNode.class));
     implementor.add(node);

@@ -18,24 +18,8 @@
 package org.apache.drill.optiq;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
-import java.util.SortedMap;
-import java.util.TreeMap;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletionService;
-import java.util.concurrent.ExecutorCompletionService;
-import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
+import java.util.concurrent.*;
 
 import net.hydromatic.linq4j.AbstractEnumerable;
 import net.hydromatic.linq4j.Enumerable;
@@ -62,27 +46,35 @@ public class EnumerableDrill<E>
     extends AbstractEnumerable<E>
     implements Enumerable<E> {
   private final LogicalPlan plan;
-  final BlockingQueue<Object> queue = new ArrayBlockingQueue<Object>(100);
+  final BlockingQueue<Object> queue = new ArrayBlockingQueue<>(100);
   final DrillConfig config;
-  
+  private final String holder;
+  private final List<String> fields;
+
   private static final ObjectMapper mapper = createMapper();
 
   /** Creates a DrillEnumerable.
    *
    * @param plan Logical plan
    * @param clazz Type of elements returned from enumerable
+   * @param fields Names of fields, or null to return the whole blob
    */
-  public EnumerableDrill(DrillConfig config, LogicalPlan plan, Class<E> clazz) {
+  public EnumerableDrill(DrillConfig config, LogicalPlan plan, Class<E> clazz,
+      List<String> fields) {
     this.plan = plan;
     this.config = config;
+    this.holder = null;
+    this.fields = fields;
     config.setSinkQueues(0, queue);
   }
 
-  /** Creates a DrillEnumerable from a plan represented as a string. */
-  public static <E extends JsonNode> EnumerableDrill<E> of(String plan,
-      Class<E> clazz) {
+  /** Creates a DrillEnumerable from a plan represented as a string. Each record
+   * returned is a {@link JsonNode}. */
+  public static <E> EnumerableDrill<E> of(String plan,
+      final List<String> fieldNames, Class<E> clazz) {
     DrillConfig config = DrillConfig.create();
-    return new EnumerableDrill<E>(config, LogicalPlan.parse(config, plan), clazz);
+    final LogicalPlan parse = LogicalPlan.parse(config, plan);
+    return new EnumerableDrill<>(config, parse, clazz, fieldNames);
   }
 
   /** Runs the plan as a background task. */
@@ -91,7 +83,9 @@ public class EnumerableDrill<E>
     IteratorRegistry ir = new IteratorRegistry();
     DrillConfig config = DrillConfig.create();
     config.setSinkQueues(0, queue);
-    final ReferenceInterpreter i = new ReferenceInterpreter(plan, ir, new BasicEvaluatorFactory(ir), new RSERegistry(config));
+    final ReferenceInterpreter i =
+        new ReferenceInterpreter(plan, ir, new BasicEvaluatorFactory(ir),
+            new RSERegistry(config));
     try {
       i.setup();
     } catch (IOException e) {
@@ -130,43 +124,7 @@ public class EnumerableDrill<E>
     // TODO: use the result of task, and check for exceptions
     final Future<Collection<RunOutcome>> task = runPlan(service);
 
-    return new Enumerator<E>() {
-      private E current;
-
-      @Override
-      public E current() {
-        return current;
-      }
-
-      @Override
-      public boolean moveNext() {
-        try {
-          Object o = queue.take();
-          if (o instanceof RunOutcome.OutcomeType) {
-            switch ((RunOutcome.OutcomeType) o) {
-            case SUCCESS:
-              return false; // end of data
-            case CANCELED:
-              throw new RuntimeException("canceled");
-            case FAILED:
-            default:
-              throw new RuntimeException("failed");
-            }
-          } else {
-            current = (E) parseJson((byte[]) o);
-            return true;
-          }
-        } catch (InterruptedException e) {
-          Thread.interrupted();
-          throw new RuntimeException(e);
-        }
-      }
-
-      @Override
-      public void reset() {
-        throw new UnsupportedOperationException();
-      }
-    };
+    return new JsonEnumerator(queue, fields);
   }
 
   private static ObjectMapper createMapper() {
@@ -225,6 +183,67 @@ public class EnumerableDrill<E>
       map.put(next.getKey(), wrapper(next.getValue()));
     }
     return Collections.unmodifiableSortedMap(map);
+  }
+
+  private static class JsonEnumerator implements Enumerator {
+    private final BlockingQueue<Object> queue;
+    private final String holder;
+    private final List<String> fields;
+    private Object current;
+
+    public JsonEnumerator(BlockingQueue<Object> queue, List<String> fields) {
+      this.queue = queue;
+      this.holder = null;
+      this.fields = fields;
+    }
+
+    public Object current() {
+      return current;
+    }
+
+    public boolean moveNext() {
+      try {
+        Object o = queue.take();
+        if (o instanceof RunOutcome.OutcomeType) {
+          switch ((RunOutcome.OutcomeType) o) {
+          case SUCCESS:
+            return false; // end of data
+          case CANCELED:
+            throw new RuntimeException("canceled");
+          case FAILED:
+          default:
+            throw new RuntimeException("failed");
+          }
+        } else {
+          Object o1 = parseJson((byte[]) o);
+          if (holder != null) {
+            o1 = ((Map<String, Object>) o1).get(holder);
+          }
+          if (fields == null) {
+            current = o1;
+          } else {
+            final Map<String, Object> map = (Map<String, Object>) o1;
+            if (fields.size() == 1) {
+              current = map.get(fields.get(0));
+            } else {
+              Object[] os = new Object[fields.size()];
+              for (int i = 0; i < os.length; i++) {
+                os[i] = map.get(fields.get(i));
+              }
+              current = os;
+            }
+          }
+          return true;
+        }
+      } catch (InterruptedException e) {
+        Thread.interrupted();
+        throw new RuntimeException(e);
+      }
+    }
+
+    public void reset() {
+      throw new UnsupportedOperationException();
+    }
   }
 }
 

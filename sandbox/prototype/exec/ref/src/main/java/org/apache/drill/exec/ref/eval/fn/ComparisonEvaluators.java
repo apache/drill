@@ -45,6 +45,10 @@ public class ComparisonEvaluators {
     }
 
   }
+
+  public static boolean isComparable(DataValue a, DataValue b) {
+      return a instanceof ComparableValue && b instanceof ComparableValue && ((ComparableValue) a).supportsCompare(b);
+  }
   
   private abstract static class ComparisonEvaluator extends BaseBasicEvaluator{
     private final BasicEvaluator left;
@@ -63,7 +67,7 @@ public class ComparisonEvaluators {
       DataValue a = left.eval();
       DataValue b = right.eval();
       
-      if(a instanceof ComparableValue && b instanceof ComparableValue && ((ComparableValue) a).supportsCompare(b)){
+      if(isComparable(a, b)){
         int i = ((ComparableValue)a).compareTo(b);
         return new BooleanScalar(valid( i));
       }else{

@@ -3,29 +3,64 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-    <parent>
-      <groupId>org.apache</groupId>
-      <artifactId>apache</artifactId>
-      <version>9</version>
-    </parent>
-    
+	<parent>
+		<groupId>org.apache</groupId>
+		<artifactId>apache</artifactId>
+		<version>9</version>
+	</parent>
+
 	<groupId>org.apache.drill</groupId>
 	<artifactId>prototype-parent</artifactId>
 	<version>1.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<name>prototype-parent</name>
-	<url>http://maven.apache.org</url>
-
+     <repositories>
+        <repository>
+                <releases>
+                        <enabled>true</enabled>
+                        <updatePolicy>always</updatePolicy>
+                        <checksumPolicy>warn</checksumPolicy>
+                </releases>
+                <id>conjars</id>
+                <name>Conjars</name>
+                <url>http://conjars.org/repo</url>
+                <layout>default</layout>
+            </repository>
+        <repository>
+          <id>sonatype-nexus-snapshots</id>
+          <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+          <releases>
+                <enabled>false</enabled>
+          </releases>
+          <snapshots>
+                <enabled>true</enabled>
+          </snapshots>
+         </repository>
+     </repositories>
 	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<dep.junit.version>4.11</dep.junit.version>
+		<dep.slf4j.version>1.7.2</dep.slf4j.version>
 	</properties>
+
 	<build>
+
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<executions>
+					<execution>
+						<goals>
+							<goal>test-jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-resources-plugin</artifactId>
-				<version>2.5</version>
+				<version>2.6</version>
 				<configuration>
 					<encoding>UTF-8</encoding>
 				</configuration>
@@ -33,22 +68,97 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>2.0.2</version>
+				<version>3.0</version>
 				<configuration>
 					<source>1.7</source>
 					<target>1.7</target>
 				</configuration>
 			</plugin>
+			<plugin>
+				<artifactId>maven-enforcer-plugin</artifactId>
+				<version>1.2</version>
+				<executions>
+					<execution>
+						<id>no_commons_logging</id>
+						<goals>
+							<goal>enforce</goal>
+						</goals>
+						<configuration>
+							<rules>
+								<bannedDependencies>
+									<excludes>
+										<exclude>commons-logging</exclude>
+									</excludes>
+								</bannedDependencies>
+							</rules>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
 	<dependencies>
+
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>13.0.1</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>${dep.slf4j.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>jul-to-slf4j</artifactId>
+			<version>${dep.slf4j.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>jcl-over-slf4j</artifactId>
+			<version>${dep.slf4j.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>log4j-over-slf4j</artifactId>
+			<version>${dep.slf4j.version}</version>
+		</dependency>
+
+		<!-- Test Dependencies -->
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.11</version>
+			<version>${dep.junit.version}</version>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-classic</artifactId>
+			<version>1.0.7</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>de.huxhorn.lilith</groupId>
+			<artifactId>de.huxhorn.lilith.logback.appender.multiplex-classic</artifactId>
+			<version>0.9.42.1</version>
+			<scope>test</scope>
+		</dependency>
+
+
+
 	</dependencies>
+
+	<!-- Managed Dependencies -->
+	<dependencyManagement>
+		<dependencies>
+
+		</dependencies>
+	</dependencyManagement>
 	<modules>
 		<module>common</module>
 		<module>contrib</module>

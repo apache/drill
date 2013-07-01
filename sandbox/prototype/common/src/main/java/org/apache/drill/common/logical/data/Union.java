@@ -26,10 +26,10 @@ public class Union extends LogicalOperatorBase {
   private final LogicalOperator[] inputs;
   private final boolean distinct;
 
-  @JsonCreator
-  public Union(@JsonProperty("inputs") LogicalOperator[] inputs){
-    this(inputs, false);
-  }
+//  @JsonCreator
+//  public Union(@JsonProperty("inputs") LogicalOperator[] inputs){
+//    this(inputs, false);
+//  }
   
   @JsonCreator
   public Union(@JsonProperty("inputs") LogicalOperator[] inputs, @JsonProperty("distinct") Boolean distinct){
@@ -37,7 +37,7 @@ public class Union extends LogicalOperatorBase {
     for (LogicalOperator o : inputs) {
       o.registerAsSubscriber(this);
     }
-    this.distinct = distinct;
+    this.distinct = distinct == null ? false : distinct;
   }
 
   public LogicalOperator[] getInputs() {
