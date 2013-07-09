@@ -23,6 +23,7 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.expr.CodeGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
+import org.apache.drill.exec.physical.impl.project.Projector;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.TypedFieldId;
 import org.apache.drill.exec.record.vector.Fixed4;
@@ -48,7 +49,7 @@ public class ExpressionTest {
 
     new NonStrictExpectations() {
       {
-        batch.getValueVector(new SchemaPath("alpha", ExpressionPosition.UNKNOWN));
+        batch.getValueVectorId(new SchemaPath("alpha", ExpressionPosition.UNKNOWN));
         result = tfid;
         batch.getValueVectorById(tfid.getFieldId(), Fixed4.class);
         result = new Fixed4(null, null);
@@ -65,7 +66,7 @@ public class ExpressionTest {
 
     new Expectations() {
       {
-        batch.getValueVector(new SchemaPath("alpha", ExpressionPosition.UNKNOWN));
+        batch.getValueVectorId(new SchemaPath("alpha", ExpressionPosition.UNKNOWN));
         result = tfid;
         // batch.getValueVectorById(tfid); result = new Fixed4(null, null);
       }
@@ -95,7 +96,7 @@ public class ExpressionTest {
       assertEquals(0, error.getErrorCount());
     }
 
-    CodeGenerator cg = new CodeGenerator("setup", "eval", new FunctionImplementationRegistry(DrillConfig.create()));
+    CodeGenerator<Projector> cg = new CodeGenerator<Projector>(Projector.TEMPLATE_DEFINITION, new FunctionImplementationRegistry(DrillConfig.create()));
     cg.addNextWrite(new ValueVectorWriteExpression(-1, materializedExpr));
     return cg.generate();
   }

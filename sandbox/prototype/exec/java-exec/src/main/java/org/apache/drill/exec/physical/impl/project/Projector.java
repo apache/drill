@@ -9,12 +9,12 @@ import org.apache.drill.exec.record.RecordBatch;
 
 public interface Projector {
 
-  public abstract void setup(FragmentContext context, RecordBatch incoming, List<TransferPairing<?>> transfers)  throws SchemaChangeException;
+  public abstract void setup(FragmentContext context, RecordBatch incoming,  RecordBatch outgoing, List<TransferPairing<?>> transfers)  throws SchemaChangeException;
 
   
-  public abstract void projectRecords(int recordCount, int firstOutputIndex);
+  public abstract int projectRecords(int recordCount, int firstOutputIndex);
 
-  public static TemplateClassDefinition<Projector, Void> TEMPLATE_DEFINITION = new TemplateClassDefinition<Projector, Void>( //
-      Projector.class, "org.apache.drill.exec.physical.impl.project.ProjectTemplate", ProjectEvaluator.class, Void.class);
+  public static TemplateClassDefinition<Projector> TEMPLATE_DEFINITION = new TemplateClassDefinition<Projector>( //
+      Projector.class, "org.apache.drill.exec.physical.impl.project.ProjectorTemplate", ProjectEvaluator.class, "setupEvaluators", "doPerRecordWork");
 
 }

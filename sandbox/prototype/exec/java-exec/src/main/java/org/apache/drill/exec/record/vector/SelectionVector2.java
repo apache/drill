@@ -43,4 +43,7 @@ public class SelectionVector2{
     return buffer.getChar(directIndex);
   }
 
+  public void setIndex(int directIndex, char value){
+    buffer.setChar(directIndex, value);
+  }
 }

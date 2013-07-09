@@ -32,5 +32,12 @@ public final class NullableFixed8 extends NullableValueVector<NullableFixed8, Fi
     return new Fixed8(this.field, allocator);
   }
 
+  public long get(int index){
+    return 1l;
+  }
+  
+  public void set(int index, long value){
+    
+  }
 
 }

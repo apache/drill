@@ -78,7 +78,7 @@ public abstract class FilterRecordBatch implements RecordBatch {
   }
 
   @Override
-  public TypedFieldId getValueVector(SchemaPath path) {
+  public TypedFieldId getValueVectorId(SchemaPath path) {
     return null;
   }
 
@@ -111,7 +111,7 @@ public abstract class FilterRecordBatch implements RecordBatch {
       IterOutcome o = incoming.next();
       switch (o) {
       case OK_NEW_SCHEMA:
-        transformer = incoming.getContext().getFilteringExpression(null);
+        transformer = null;
         schema = transformer.getSchema();
         // fall through to ok.
       case OK:

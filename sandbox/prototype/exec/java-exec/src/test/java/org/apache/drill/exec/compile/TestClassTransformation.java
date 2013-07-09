@@ -37,15 +37,16 @@ public class TestClassTransformation {
   
   private void testBasicClassCompilation(boolean useJanino) throws ClassTransformationException{
     final String output = "hello world, the time is now " + System.currentTimeMillis();
-    @SuppressWarnings("unchecked")
-    TemplateClassDefinition<ExampleExternalInterface, Object> def = new TemplateClassDefinition(
+
+    TemplateClassDefinition<ExampleExternalInterface> def = new TemplateClassDefinition<ExampleExternalInterface>(
         ExampleExternalInterface.class, "org.apache.drill.exec.compile.ExampleTemplate",
-        ExampleInternalInterface.class, Object.class);
+        ExampleInternalInterface.class, "a", "b");
+    
+    
     ClassTransformer ct = new ClassTransformer();
     QueryClassLoader loader = new QueryClassLoader(useJanino);
-    ExampleExternalInterface instance = ct.getImplementationClass(loader, def,
-        "public String getInternalData(){return \"" + output + "\";}",
-        new Object());
+    ExampleExternalInterface instance = ct.getImplementationClassByBody(loader, def,
+        "public String getInternalData(){return \"" + output + "\";}");
     System.out.println(String.format("Generated a new class %s that provides the following getData response '%s'.",
         instance.getClass().getCanonicalName(), instance.getData()));
     assertEquals(instance.getData(), output);

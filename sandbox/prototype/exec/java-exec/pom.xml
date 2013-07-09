@@ -13,14 +13,14 @@
 
   <dependencies>
     <dependency>
-      <groupId>asm</groupId>
+      <groupId>org.ow2.asm</groupId>
       <artifactId>asm-util</artifactId>
-      <version>3.3.1</version>
+      <version>4.1</version>
     </dependency>
     <dependency>
-      <groupId>asm</groupId>
+      <groupId>org.ow2.asm</groupId>
       <artifactId>asm-commons</artifactId>
-      <version>3.3.1</version>
+      <version>4.1</version>
     </dependency>
     <dependency>
       <groupId>com.sun.codemodel</groupId>

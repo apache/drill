@@ -78,7 +78,7 @@ public class ExampleFilter implements RecordBatch {
   }
 
   @Override
-  public TypedFieldId getValueVector(SchemaPath path) {
+  public TypedFieldId getValueVectorId(SchemaPath path) {
     return null;
   }
 

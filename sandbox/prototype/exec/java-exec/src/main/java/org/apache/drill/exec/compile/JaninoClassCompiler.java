@@ -35,15 +35,16 @@ public class JaninoClassCompiler implements ClassCompiler{
 
   private IClassLoader compilationClassLoader;
 
-  private boolean debugLines;
-  private boolean debugVars;
-  private boolean debugSource;
+  private boolean debugLines = true;
+  private boolean debugVars = true;
+  private boolean debugSource = true;
 
   public JaninoClassCompiler(ClassLoader parentClassLoader) {
     this.compilationClassLoader = new ClassLoaderIClassLoader(parentClassLoader);
   }
 
   public byte[] getClassByteCode(final String className, final String code) throws CompileException, IOException, ClassNotFoundException, ClassTransformationException {
+    logger.debug("Compiling:\n {}", code);
     StringReader reader = new StringReader(code);
     Scanner scanner = new Scanner((String) null, reader);
     Java.CompilationUnit compilationUnit = new Parser(scanner).parseCompilationUnit();

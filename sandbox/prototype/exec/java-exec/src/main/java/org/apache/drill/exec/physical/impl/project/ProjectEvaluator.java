@@ -7,6 +7,6 @@ import org.apache.drill.exec.record.RecordBatch;
 public interface ProjectEvaluator {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProjectEvaluator.class);
   
-  public abstract void setupEvaluators(FragmentContext context, RecordBatch incoming) throws SchemaChangeException;
+  public abstract void setupEvaluators(FragmentContext context, RecordBatch incoming, RecordBatch outgoing) throws SchemaChangeException;
   public abstract void doPerRecordWork(int inIndex, int outIndex);
 }

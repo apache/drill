@@ -50,7 +50,7 @@ public class ScreenCreator implements RootCreator<Screen>{
   }
   
   
-  private static class ScreenRoot implements RootExec{
+  static class ScreenRoot implements RootExec{
     static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScreenRoot.class);
     volatile boolean ok = true;
     
@@ -138,6 +138,11 @@ public class ScreenCreator implements RootCreator<Screen>{
       }
       
     }
+
+    RecordBatch getIncoming() {
+      return incoming;
+    }
+    
     
   }
   

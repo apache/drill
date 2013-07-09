@@ -4,13 +4,14 @@ import java.io.IOException;
 
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.exec.compile.TemplateClassDefinition;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.expr.holders.ValueHolderImplmenetations.BooleanHolder;
-import org.apache.drill.exec.expr.holders.ValueHolderImplmenetations.IntHolder;
-import org.apache.drill.exec.expr.holders.ValueHolderImplmenetations.LongHolder;
-import org.apache.drill.exec.expr.holders.ValueHolderImplmenetations.NullableBooleanHolder;
-import org.apache.drill.exec.expr.holders.ValueHolderImplmenetations.NullableIntHolder;
-import org.apache.drill.exec.expr.holders.ValueHolderImplmenetations.NullableLongHolder;
+import org.apache.drill.exec.expr.holders.BooleanHolder;
+import org.apache.drill.exec.expr.holders.IntHolder;
+import org.apache.drill.exec.expr.holders.LongHolder;
+import org.apache.drill.exec.expr.holders.NullableBooleanHolder;
+import org.apache.drill.exec.expr.holders.NullableIntHolder;
+import org.apache.drill.exec.expr.holders.NullableLongHolder;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.RecordBatch;
 
@@ -26,7 +27,7 @@ import com.sun.codemodel.JMod;
 import com.sun.codemodel.JType;
 import com.sun.codemodel.JVar;
 
-public class CodeGenerator {
+public class CodeGenerator<T> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CodeGenerator.class);
   
   public JDefinedClass clazz;
@@ -37,17 +38,19 @@ public class CodeGenerator {
   private final EvaluationVisitor evaluationVisitor;
   private final String setupName;
   private final String perRecordName;
-  
+  private final TemplateClassDefinition<T> definition;
   private JCodeModel model;
   private int index = 0;
 
-  public CodeGenerator(String setupName, String perRecordName, FunctionImplementationRegistry funcRegistry) {
+  public CodeGenerator(TemplateClassDefinition<T> definition, FunctionImplementationRegistry funcRegistry) {
     super();
     try{
-      this.setupName = setupName;
-      this.perRecordName = perRecordName;
+      this.definition = definition;
+      this.setupName = definition.getSetupName();
+      this.perRecordName = definition.getEvalName();
       this.model = new JCodeModel();
       this.clazz = model._package("org.apache.drill.exec.test.generated")._class("Test1");
+      clazz._implements(definition.getInternalInterface());
       this.parentEvalBlock = new JBlock();
       this.parentSetupBlock = new JBlock();
       this.evaluationVisitor = new EvaluationVisitor(funcRegistry);
@@ -57,6 +60,7 @@ public class CodeGenerator {
   }
 
   public void addNextWrite(ValueVectorWriteExpression ex){
+    logger.debug("Adding next write {}", ex);
     currentEvalBlock = new JBlock();
     parentEvalBlock.add(currentEvalBlock);
     currentSetupBlock = new JBlock();
@@ -68,6 +72,10 @@ public class CodeGenerator {
     return currentEvalBlock;
   }
 
+  public String getMaterializedClassName(){
+    return "org.apache.drill.exec.test.generated.Test1";
+  }
+  
   public JBlock getSetupBlock(){
     return currentSetupBlock;
   }
@@ -134,7 +142,7 @@ public class CodeGenerator {
   }
   
   
-  public class HoldingContainer{
+  public static class HoldingContainer{
     private final JVar holder;
     private final JFieldRef value;
     private final JFieldRef isSet;

@@ -16,6 +16,7 @@ import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.WorkSpace;
 import org.apache.drill.exec.expr.fn.FunctionHolder.ValueReference;
+import org.apache.drill.exec.expr.fn.FunctionHolder.WorkspaceReference;
 import org.apache.drill.exec.expr.holders.ValueHolder;
 import org.codehaus.commons.compiler.CompileException;
 import org.codehaus.janino.Java;
@@ -43,7 +44,8 @@ public class FunctionConverter {
     
     // start by getting field information.
     List<ValueReference> params = Lists.newArrayList();
-    List<String> workspaceFields = Lists.newArrayList();
+    List<WorkspaceReference> workspaceFields = Lists.newArrayList();
+    
     ValueReference outputField = null;
     
     
@@ -96,7 +98,7 @@ public class FunctionConverter {
         
       }else{
         // workspace work.
-        workspaceFields.add(field.getName());
+        workspaceFields.add(new WorkspaceReference(field.getType(), field.getName()));
       }
       
     }
@@ -118,7 +120,8 @@ public class FunctionConverter {
 
     // return holder
     ValueReference[] ps = params.toArray(new ValueReference[params.size()]);
-    FunctionHolder fh = new FunctionHolder(template.scope(), template.nulls(), template.isBinaryCommutative(), template.name(), ps, outputField, methods);
+    WorkspaceReference[] works = workspaceFields.toArray(new WorkspaceReference[workspaceFields.size()]);
+    FunctionHolder fh = new FunctionHolder(template.scope(), template.nulls(), template.isBinaryCommutative(), template.name(), ps, outputField, works, methods);
     return fh;
   }
   

@@ -103,14 +103,11 @@ public class FragmentContext {
     return context.getAllocator();
   }
 
-  public <T> T getImplementationClass(TemplateClassDefinition<T, Void> templateDefinition, CodeGenerator cg) throws ClassTransformationException, IOException{
-    return transformer.getImplementationClass(this.loader, templateDefinition, cg.generate(), null);
+  public <T> T getImplementationClass(TemplateClassDefinition<T> templateDefinition, CodeGenerator<T> cg) throws ClassTransformationException, IOException{
+    return transformer.getImplementationClass(this.loader, templateDefinition, cg.generate(), cg.getMaterializedClassName());
   }
   
-  public FilteringRecordBatchTransformer getFilteringExpression(LogicalExpression expr){
-    return null;
-  }
-  
+
   public void addMetricsToStatus(FragmentStatus.Builder stats){
     stats.setBatchesCompleted(batchesCompleted.get());
     stats.setDataProcessed(dataProcessed.get());

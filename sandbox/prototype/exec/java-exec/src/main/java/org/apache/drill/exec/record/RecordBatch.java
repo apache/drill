@@ -85,10 +85,10 @@ public interface RecordBatch {
    * @param path The path where the vector should be located.
    * @return The local field id associated with this vector.
    */
-  public abstract TypedFieldId getValueVector(SchemaPath path);
+  public abstract TypedFieldId getValueVectorId(SchemaPath path);
   
   
-  public abstract <T extends ValueVector<T>> T getValueVectorById(int fieldId, Class<?> vvClass);
+  public abstract <T extends ValueVector<T>> T getValueVectorById(int fieldId, Class<?> clazz);
 
   /**
    * Update the data in each Field reading interface for the next range of records. Once a RecordBatch returns an

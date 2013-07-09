@@ -66,7 +66,7 @@ public class ExpressionTreeMaterializerTest {
     
     new NonStrictExpectations() {
       {
-        batch.getValueVector(new FieldReference("test", ExpressionPosition.UNKNOWN)); result = new TypedFieldId(Types.required(MinorType.BIGINT), -5);
+        batch.getValueVectorId(new FieldReference("test", ExpressionPosition.UNKNOWN)); result = new TypedFieldId(Types.required(MinorType.BIGINT), -5);
       }
     };
     
@@ -81,8 +81,8 @@ public class ExpressionTreeMaterializerTest {
   public void testMaterializingLateboundTree(final @Injectable RecordBatch batch) throws SchemaChangeException {
     new NonStrictExpectations() {
       {
-        batch.getValueVector(new FieldReference("test", ExpressionPosition.UNKNOWN)); result = new TypedFieldId(Types.required(MinorType.BOOLEAN), -4);
-        batch.getValueVector(new FieldReference("test1", ExpressionPosition.UNKNOWN)); result = new TypedFieldId(Types.required(MinorType.BIGINT), -5);
+        batch.getValueVectorId(new FieldReference("test", ExpressionPosition.UNKNOWN)); result = new TypedFieldId(Types.required(MinorType.BOOLEAN), -4);
+        batch.getValueVectorId(new FieldReference("test1", ExpressionPosition.UNKNOWN)); result = new TypedFieldId(Types.required(MinorType.BIGINT), -5);
       }
     };
     
@@ -175,7 +175,7 @@ public class ExpressionTreeMaterializerTest {
 
     new NonStrictExpectations() {
       {
-        batch.getValueVector(new FieldReference("test", ExpressionPosition.UNKNOWN)); result = new TypedFieldId(Types.required(MinorType.BIGINT), -5);
+        batch.getValueVectorId(new FieldReference("test", ExpressionPosition.UNKNOWN)); result = new TypedFieldId(Types.required(MinorType.BIGINT), -5);
       }
     };
     

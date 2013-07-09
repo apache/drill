@@ -1,5 +1,6 @@
 package org.apache.drill.exec.expr.fn;
 
+import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Map;
 
@@ -32,13 +33,15 @@ public class FunctionHolder {
   private String evalBody;
   private String addBody;
   private String setupBody;
+  private WorkspaceReference[] workspaceVars;
   private ValueReference[] parameters;
   private ValueReference returnValue;
   
-  public FunctionHolder(FunctionScope scope, NullHandling nullHandling, boolean isBinaryCommutative, String functionName, ValueReference[] parameters, ValueReference returnValue, Map<String, String> methods) {
+  public FunctionHolder(FunctionScope scope, NullHandling nullHandling, boolean isBinaryCommutative, String functionName, ValueReference[] parameters, ValueReference returnValue, WorkspaceReference[] workspaceVars, Map<String, String> methods) {
     super();
     this.scope = scope;
     this.nullHandling = nullHandling;
+    this.workspaceVars = workspaceVars;
     this.isBinaryCommutative = isBinaryCommutative;
     this.functionName = functionName;
     this.setupBody = methods.get("setup");
@@ -48,9 +51,9 @@ public class FunctionHolder {
     this.returnValue = returnValue;
   }
 
-  public HoldingContainer generateEvalBody(CodeGenerator g, HoldingContainer[] inputVariables){
+  public HoldingContainer generateEvalBody(CodeGenerator<?> g, HoldingContainer[] inputVariables){
     
-    g.getBlock().directStatement(String.format("//---- start of eval portion of %s function. ----//", functionName));
+    //g.getBlock().directStatement(String.format("//---- start of eval portion of %s function. ----//", functionName));
     
     JBlock sub = new JBlock(true, true);
     
@@ -87,6 +90,16 @@ public class FunctionHolder {
     // add the subblock after the out declaration.
     g.getBlock().add(sub);
     
+    JVar[] workspaceJVars = new JVar[workspaceVars.length];
+    for(int i =0 ; i < workspaceVars.length; i++){
+      workspaceJVars[i] = g.declareClassField("work", g.getModel()._ref(workspaceVars[i].type)));
+    }
+    
+    for(WorkspaceReference r : workspaceVars){
+      g.declareClassField(, t)
+    }
+  
+    g.declareClassField(prefix, t)
     // locally name external blocks.
     
     // internal out value.
@@ -99,12 +112,13 @@ public class FunctionHolder {
       sub.decl(JMod.FINAL, inputVariable.getHolder().type(), parameter.name, inputVariable.getHolder());  
     }
     
+    
     // add function body.
     sub.directStatement(evalBody);
     
     sub.assign(out.getHolder(), internalOutput);
 
-    g.getBlock().directStatement(String.format("//---- end of eval portion of %s function. ----//\n", functionName));
+    //g.getBlock().directStatement(String.format("//---- end of eval portion of %s function. ----//\n", functionName));
     return out;
   }
   
@@ -144,6 +158,16 @@ public class FunctionHolder {
     
   }
 
+  public static class WorkspaceReference{
+    Class<?> type;
+    String name;
+    public WorkspaceReference(Class<?> type, String name) {
+      super();
+      this.type = type;
+      this.name = name;
+    }
+    
+  }
   @Override
   public String toString() {
     final int maxLen = 10;

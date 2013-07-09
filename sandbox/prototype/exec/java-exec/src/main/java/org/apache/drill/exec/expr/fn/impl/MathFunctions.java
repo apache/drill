@@ -6,8 +6,8 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.holders.ValueHolderImplmenetations.IntHolder;
-import org.apache.drill.exec.expr.holders.ValueHolderImplmenetations.LongHolder;
+import org.apache.drill.exec.expr.holders.IntHolder;
+import org.apache.drill.exec.expr.holders.LongHolder;
 import org.apache.drill.exec.record.RecordBatch;
 
 public class MathFunctions{
