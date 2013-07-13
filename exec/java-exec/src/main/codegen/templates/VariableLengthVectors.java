@@ -298,6 +298,11 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
 
       return true;
     }
+
+    public void markZeroLength(int index) {
+      int currentOffset = offsetVector.getAccessor().get(index);
+      offsetVector.getMutator().set(index + 1, currentOffset);
+    }
     
     public void set(int index, int start, int length, ByteBuf buffer){
       assert index >= 0;
@@ -305,6 +310,13 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       offsetVector.getMutator().set(index + 1, currentOffset + length);
       ByteBuf bb = buffer.slice(start, length);
       data.setBytes(currentOffset, bb);
+    }
+
+    public void set(int index, int start, int length, byte[] bytes) {
+      assert index >= 0;
+      int currentOffset = offsetVector.getAccessor().get(index);
+      offsetVector.getMutator().set(index + 1, currentOffset + length);
+      data.setBytes(currentOffset, bytes, start, length);
     }
 
     void set(int index, Nullable${minor.class}Holder holder){

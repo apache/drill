@@ -41,7 +41,7 @@ package org.apache.drill.exec.vector;
  * NB: this class is automatically generated from ValueVectorTypes.tdd using FreeMarker.
  */
 @SuppressWarnings("unused")
-public final class ${className} extends BaseValueVector implements <#if type.major == "VarLen">VariableWidth<#else>FixedWidth</#if>Vector{
+public final class ${className} extends BaseValueVector implements <#if type.major == "VarLen">VariableWidth<#else>FixedWidth</#if>Vector, NullableVector {
 
   private int valueCount;
   final BitVector bits;
@@ -57,6 +57,10 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
   
   public int getValueCapacity(){
     return bits.getValueCapacity();
+  }
+
+  public BitVector getBits() {
+    return bits;
   }
   
   @Override
@@ -293,6 +297,19 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
       bits.getMutator().set(index, 1);
       values.getMutator().set(index, value);
     }
+
+    <#if type.major == "VarLen">
+    public void set(int index, int start, int length, byte[] bytes) {
+      assert index >= 0;
+      setCount++;
+      bits.getMutator().set(index, 1);
+      values.getMutator().set(index, start, length, bytes);
+    }
+
+    public void markNull(int index) {
+      values.getMutator().markZeroLength(index);
+    }
+    </#if>
     
     public void setSkipNull(int index, ${minor.class}Holder holder){
       values.getMutator().set(index, holder);
