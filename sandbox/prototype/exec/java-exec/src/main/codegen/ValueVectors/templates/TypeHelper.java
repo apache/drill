@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.apache.drill.exec.record.vector;
+package org.apache.drill.exec.vector;
 
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.SchemaDefProtos.DataMode;
@@ -57,21 +57,21 @@ public class TypeHelper {
       case BOOLEAN:
         switch (mode) {
           case REQUIRED:
-            return ValueVector.${minor.class}.class;
+            return ${minor.class}Vector.class;
           case OPTIONAL:
-            return ValueVector.Nullable${minor.class}.class;
+            return Nullable${minor.class}Vector.class;
           case REPEATED:
-            return ValueVector.Repeated${minor.class}.class;
+            return Repeated${minor.class}Vector.class;
         }
     <#else>
       case ${minor.class?upper_case}:
         switch (mode) {
           case REQUIRED:
-            return ValueVector.${minor.class}.class;
+            return ${minor.class}Vector.class;
           case OPTIONAL:
-            return ValueVector.Nullable${minor.class}.class;
+            return Nullable${minor.class}Vector.class;
           case REPEATED:
-            return ValueVector.Repeated${minor.class}.class;
+            return Repeated${minor.class}Vector.class;
         }
     </#if>
   </#list>
@@ -83,7 +83,7 @@ public class TypeHelper {
   }
 
 
-  public static ValueVector.Base getNewVector(MaterializedField field, BufferAllocator allocator){
+  public static ValueVector getNewVector(MaterializedField field, BufferAllocator allocator){
     MajorType type = field.getType();
 
     switch (type.getMinorType()) {
@@ -93,11 +93,11 @@ public class TypeHelper {
       case ${minor.class?upper_case}:
         switch (type.getMode()) {
           case REQUIRED:
-            return new ValueVector.${minor.class}(field, allocator);
+            return new ${minor.class}Vector(field, allocator);
           case OPTIONAL:
-            return new ValueVector.Nullable${minor.class}(field, allocator);
+            return new Nullable${minor.class}Vector(field, allocator);
           case REPEATED:
-            return new ValueVector.Repeated${minor.class}(field, allocator);
+            return new Repeated${minor.class}Vector(field, allocator);
         }
     </#if>
   </#list>
@@ -105,11 +105,11 @@ public class TypeHelper {
       case BOOLEAN:
         switch (type.getMode()) {
           case REQUIRED:
-            return new ValueVector.Bit(field, allocator);
+            return new BitVector(field, allocator);
           case OPTIONAL:
-            return new ValueVector.NullableBit(field, allocator);
+            return new NullableBitVector(field, allocator);
           case REPEATED:
-            return new ValueVector.RepeatedBit(field, allocator);
+            return new RepeatedBitVector(field, allocator);
         }
     }
     // All ValueVector types have been handled.

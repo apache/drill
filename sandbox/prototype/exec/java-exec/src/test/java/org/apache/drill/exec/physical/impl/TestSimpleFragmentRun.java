@@ -26,10 +26,10 @@ import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.pop.PopUnitTestBase;
 import org.apache.drill.exec.proto.UserProtos.QueryType;
 import org.apache.drill.exec.record.RecordBatchLoader;
-import org.apache.drill.exec.record.vector.ValueVector;
 import org.apache.drill.exec.rpc.user.QueryResultBatch;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
+import org.apache.drill.exec.vector.ValueVector;
 import org.junit.Test;
 
 import com.carrotsearch.hppc.cursors.IntObjectCursor;
@@ -61,7 +61,7 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
       // print headers.
       if (schemaChanged) {
         System.out.println("\n\n========NEW SCHEMA=========\n\n");
-        for (IntObjectCursor<ValueVector.Base> v : batchLoader) {
+        for (IntObjectCursor<ValueVector> v : batchLoader) {
 
           if (firstColumn) {
             firstColumn = false;
@@ -80,7 +80,7 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
       for (int i = 0; i < batchLoader.getRecordCount(); i++) {
         boolean first = true;
         recordCount++;
-        for (IntObjectCursor<ValueVector.Base> v : batchLoader) {
+        for (IntObjectCursor<ValueVector> v : batchLoader) {
           if (first) {
             first = false;
           } else {

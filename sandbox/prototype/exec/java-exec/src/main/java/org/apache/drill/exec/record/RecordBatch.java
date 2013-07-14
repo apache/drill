@@ -18,7 +18,7 @@
 package org.apache.drill.exec.record;
 
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.record.vector.ValueVector;
+import org.apache.drill.exec.vector.ValueVector;
 
 /**
  * A record batch contains a set of field values for a particular range of records. In the case of a record batch
@@ -68,7 +68,7 @@ public interface RecordBatch {
   public void kill();
 
 
-  public abstract <T extends ValueVector.Base> T getValueVector(int fieldId, Class<T> clazz) throws InvalidValueAccessor;
+  public abstract <T extends ValueVector> T getValueVector(int fieldId, Class<T> clazz) throws InvalidValueAccessor;
 
 //  public abstract void getDictReader(int fieldId, Class<?> clazz) throws InvalidValueAccessor;
 //

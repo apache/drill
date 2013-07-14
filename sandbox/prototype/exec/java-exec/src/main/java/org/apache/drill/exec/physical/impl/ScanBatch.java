@@ -17,27 +17,21 @@
  ******************************************************************************/
 package org.apache.drill.exec.physical.impl;
 
-import io.netty.buffer.ByteBuf;
-
 import java.util.Iterator;
-import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.proto.UserBitShared.FieldMetadata;
-import org.apache.drill.exec.proto.UserBitShared.RecordBatchDef;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.InvalidValueAccessor;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.SchemaBuilder;
 import org.apache.drill.exec.record.WritableBatch;
-import org.apache.drill.exec.record.vector.ValueVector;
 import org.apache.drill.exec.store.RecordReader;
+import org.apache.drill.exec.vector.ValueVector;
 
 import com.carrotsearch.hppc.IntObjectOpenHashMap;
 import com.carrotsearch.hppc.procedures.IntObjectProcedure;
-import com.google.common.collect.Lists;
 
 /**
  * Record batch used for a particular scan. Operators against one or more
@@ -45,7 +39,7 @@ import com.google.common.collect.Lists;
 public class ScanBatch implements RecordBatch {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScanBatch.class);
 
-  private IntObjectOpenHashMap<ValueVector.Base> fields = new IntObjectOpenHashMap<ValueVector.Base>();
+  private IntObjectOpenHashMap<ValueVector> fields = new IntObjectOpenHashMap<ValueVector>();
   private BatchSchema schema;
   private int recordCount;
   private boolean schemaChanged = true;
@@ -89,9 +83,9 @@ public class ScanBatch implements RecordBatch {
   }
 
   private void releaseAssets() {
-    fields.forEach(new IntObjectProcedure<ValueVector.Base>() {
+    fields.forEach(new IntObjectProcedure<ValueVector>() {
       @Override
-      public void apply(int key, ValueVector.Base value) {
+      public void apply(int key, ValueVector value) {
         value.close();
       }
     });
@@ -99,9 +93,9 @@ public class ScanBatch implements RecordBatch {
 
   @SuppressWarnings("unchecked")
   @Override
-  public <T extends ValueVector.Base> T getValueVector(int fieldId, Class<T> clazz) throws InvalidValueAccessor {
+  public <T extends ValueVector> T getValueVector(int fieldId, Class<T> clazz) throws InvalidValueAccessor {
     if (fields.containsKey(fieldId)) throw new InvalidValueAccessor(String.format("Unknown value accesor for field id %d."));
-    ValueVector.Base vector = this.fields.lget();
+    ValueVector vector = this.fields.lget();
     if (vector.getClass().isAssignableFrom(clazz)) {
       return (T) vector;
     } else {
@@ -143,14 +137,14 @@ public class ScanBatch implements RecordBatch {
     
     public void removeField(int fieldId) throws SchemaChangeException {
       schemaChanged();
-      ValueVector.Base v = fields.remove(fieldId);
+      ValueVector v = fields.remove(fieldId);
       if (v == null) throw new SchemaChangeException("Failure attempting to remove an unknown field.");
       v.close();
     }
 
-    public void addField(int fieldId, ValueVector.Base vector) {
+    public void addField(int fieldId, ValueVector vector) {
       schemaChanged();
-      ValueVector.Base v = fields.put(fieldId, vector);
+      ValueVector v = fields.put(fieldId, vector);
       vector.getField();
       builder.addField(vector.getField());
       if (v != null) v.close();

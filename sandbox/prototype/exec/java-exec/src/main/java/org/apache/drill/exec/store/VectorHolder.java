@@ -18,22 +18,19 @@
 
 package org.apache.drill.exec.store;
 
-import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.record.vector.TypeHelper;
-import org.apache.drill.exec.record.vector.ValueVector;
+import org.apache.drill.exec.vector.ValueVector;
 
 public class VectorHolder {
     private int length;
-    private ValueVector.Base vector;
+    private ValueVector vector;
     private int currentLength;
 
-    VectorHolder(int length, ValueVector.Base vector) {
+    VectorHolder(int length, ValueVector vector) {
         this.length = length;
         this.vector = vector;
     }
 
-    public ValueVector.Base getValueVector() {
+    public ValueVector getValueVector() {
         return vector;
     }
 

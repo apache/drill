@@ -27,9 +27,9 @@ import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.proto.SchemaDefProtos.DataMode;
 import org.apache.drill.exec.proto.SchemaDefProtos.MajorType;
 import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.record.vector.TypeHelper;
-import org.apache.drill.exec.record.vector.ValueVector;
 import org.apache.drill.exec.store.RecordReader;
+import org.apache.drill.exec.vector.TypeHelper;
+import org.apache.drill.exec.vector.ValueVector;
 
 public class MockRecordReader implements RecordReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MockRecordReader.class);
@@ -37,7 +37,7 @@ public class MockRecordReader implements RecordReader {
   private OutputMutator output;
   private MockScanEntry config;
   private FragmentContext context;
-  private ValueVector.Base[] valueVectors;
+  private ValueVector[] valueVectors;
   private int recordsRead;
 
   public MockRecordReader(FragmentContext context, MockScanEntry config) {
@@ -53,12 +53,12 @@ public class MockRecordReader implements RecordReader {
     return x;
   }
 
-  private ValueVector.Base getVector(int fieldId, String name, MajorType type, int length) {
+  private ValueVector getVector(int fieldId, String name, MajorType type, int length) {
     assert context != null : "Context shouldn't be null.";
     if(type.getMode() != DataMode.REQUIRED) throw new UnsupportedOperationException();
     
     MaterializedField f = MaterializedField.create(new SchemaPath(name), fieldId, 0, type);
-    ValueVector.Base v;
+    ValueVector v;
     v = TypeHelper.getNewVector(f, context.getAllocator());
     v.allocateNew(length);
     return v;
@@ -70,7 +70,7 @@ public class MockRecordReader implements RecordReader {
     try {
       this.output = output;
       int estimateRowSize = getEstimatedRecordSize(config.getTypes());
-      valueVectors = new ValueVector.Base[config.getTypes().length];
+      valueVectors = new ValueVector[config.getTypes().length];
       int batchRecordCount = 250000 / estimateRowSize;
 
       for (int i = 0; i < config.getTypes().length; i++) {
@@ -88,10 +88,11 @@ public class MockRecordReader implements RecordReader {
   public int next() {
     int recordSetSize = Math.min(valueVectors[0].capacity(), this.config.getRecords()- recordsRead);
     recordsRead += recordSetSize;
-    for(ValueVector.Base v : valueVectors){
+    for(ValueVector v : valueVectors){
       logger.debug("MockRecordReader:  Generating random data for VV of type " + v.getClass().getName());
       v.randomizeData();
-      v.setRecordCount(recordSetSize);
+      
+      v.getMutator().setRecordCount(recordSetSize);
     }
     return recordSetSize;
   }

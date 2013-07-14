@@ -1,7 +1,42 @@
 package org.apache.drill.exec.store;
 
+import static com.fasterxml.jackson.core.JsonToken.END_ARRAY;
+import static com.fasterxml.jackson.core.JsonToken.END_OBJECT;
+import static com.fasterxml.jackson.core.JsonToken.FIELD_NAME;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
+import java.util.List;
+
+import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.physical.impl.OutputMutator;
+import org.apache.drill.exec.proto.SchemaDefProtos;
+import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.schema.DiffSchema;
+import org.apache.drill.exec.schema.Field;
+import org.apache.drill.exec.schema.IdGenerator;
+import org.apache.drill.exec.schema.ListSchema;
+import org.apache.drill.exec.schema.NamedField;
+import org.apache.drill.exec.schema.ObjectSchema;
+import org.apache.drill.exec.schema.OrderedField;
+import org.apache.drill.exec.schema.RecordSchema;
+import org.apache.drill.exec.schema.SchemaIdGenerator;
+import org.apache.drill.exec.schema.json.jackson.JacksonHelper;
+import org.apache.drill.exec.vector.NullableBitVector;
+import org.apache.drill.exec.vector.NullableFloat4Vector;
+import org.apache.drill.exec.vector.NullableIntVector;
+import org.apache.drill.exec.vector.NullableVarChar4Vector;
+import org.apache.drill.exec.vector.TypeHelper;
+import org.apache.drill.exec.vector.ValueVector;
+
 import com.carrotsearch.hppc.IntObjectOpenHashMap;
-import com.carrotsearch.hppc.cursors.IntObjectCursor;
 import com.carrotsearch.hppc.cursors.ObjectCursor;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
@@ -12,26 +47,6 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import com.google.common.io.InputSupplier;
 import com.google.common.io.Resources;
-import org.apache.drill.common.exceptions.DrillRuntimeException;
-import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.physical.impl.OutputMutator;
-import org.apache.drill.exec.proto.SchemaDefProtos;
-import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.record.vector.*;
-import org.apache.drill.exec.schema.*;
-import org.apache.drill.exec.schema.json.jackson.JacksonHelper;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.Charset;
-import java.util.List;
-
-import static com.fasterxml.jackson.core.JsonToken.*;
 
 public class JSONRecordReader implements RecordReader {
     static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JSONRecordReader.class);
@@ -341,42 +356,40 @@ public class JSONRecordReader implements RecordReader {
             switch (minorType) {
                 case INT: {
                     holder.incAndCheckLength(32);
-                    ValueVector.NullableInt int4 = (ValueVector.NullableInt) holder.getValueVector();
-                    if (val == null) {
-                      int4.setNull(index);
-                    } else {
-                      int4.set(index, (Integer) val);
+                    NullableIntVector int4 = (NullableIntVector) holder.getValueVector();
+                    NullableIntVector.Mutator m = int4.getMutator();
+                    if (val != null) {
+                      m.set(index, (Integer) val);
                     }
                     return holder.hasEnoughSpace(32);
                 }
                 case FLOAT4: {
                     holder.incAndCheckLength(32);
-                    ValueVector.NullableFloat4 float4 = (ValueVector.NullableFloat4) holder.getValueVector();
-                    if (val == null) {
-                      float4.setNull(index);
-                    } else {
-                      float4.set(index, (Float) val);
+                    NullableFloat4Vector float4 = (NullableFloat4Vector) holder.getValueVector();
+                    NullableFloat4Vector.Mutator m = float4.getMutator();
+                    if (val != null) {
+                      m.set(index, (Float) val);
                     }
                     return holder.hasEnoughSpace(32);
                 }
                 case VARCHAR4: {
                     if (val == null) {
-                        ((ValueVector.NullableVarChar4) holder.getValueVector()).setNull(index);
                         return (index + 1) * 4 <= holder.getLength();
                     } else {
                         byte[] bytes = ((String) val).getBytes(UTF_8);
                         int length = bytes.length;
                         holder.incAndCheckLength(length);
-                        ValueVector.NullableVarChar4 varLen4 = (ValueVector.NullableVarChar4) holder.getValueVector();
-                        varLen4.set(index, bytes);
+                        NullableVarChar4Vector varLen4 = (NullableVarChar4Vector) holder.getValueVector();
+                        NullableVarChar4Vector.Mutator m = varLen4.getMutator();
+                        m.set(index, bytes);
                         return holder.hasEnoughSpace(length);
                     }
                 }
                 case BOOLEAN: {
                     holder.incAndCheckLength(1);
-                    ValueVector.NullableBit bit = (ValueVector.NullableBit) holder.getValueVector();
+                    NullableBitVector bit = (NullableBitVector) holder.getValueVector();
                     if (val != null) {
-                        bit.set(index, (Boolean)val ? 1 : 0);
+                        bit.getMutator().set(index, (Boolean)val ? 1 : 0);
                     }
                     return holder.hasEnoughSpace(1);
                 }
@@ -409,7 +422,7 @@ public class JSONRecordReader implements RecordReader {
             SchemaDefProtos.MajorType type = field.getFieldType();
             int fieldId = field.getFieldId();
             MaterializedField f = MaterializedField.create(new SchemaPath(field.getFieldName()), fieldId, parentFieldId, type);
-            ValueVector.Base v = TypeHelper.getNewVector(f, allocator);
+            ValueVector v = TypeHelper.getNewVector(f, allocator);
             v.allocateNew(batchSize);
             VectorHolder holder = new VectorHolder(batchSize, v);
             valueVectorMap.put(fieldId, holder);

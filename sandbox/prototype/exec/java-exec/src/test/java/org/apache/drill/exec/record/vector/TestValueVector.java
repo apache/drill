@@ -1,18 +1,20 @@
 package org.apache.drill.exec.record.vector;
 
-import io.netty.buffer.ByteBuf;
-import org.apache.drill.exec.memory.DirectBufferAllocator;
-import org.apache.drill.exec.proto.SchemaDefProtos;
-import org.apache.drill.exec.record.MaterializedField;
-
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
-import org.apache.hadoop.io.UTF8;
-import org.junit.Test;
-
 import java.nio.charset.Charset;
+
+import org.apache.drill.exec.memory.DirectBufferAllocator;
+import org.apache.drill.exec.proto.SchemaDefProtos;
+import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.vector.BitVector;
+import org.apache.drill.exec.vector.NullableFloat4Vector;
+import org.apache.drill.exec.vector.NullableUInt4Vector;
+import org.apache.drill.exec.vector.NullableVarChar2Vector;
+import org.apache.drill.exec.vector.TypeHelper;
+import org.apache.drill.exec.vector.UInt4Vector;
+import org.junit.Test;
 
 public class TestValueVector {
 
@@ -34,15 +36,16 @@ public class TestValueVector {
         MaterializedField field = MaterializedField.create(defBuilder.build());
 
     // Create a new value vector for 1024 integers
-    ValueVector.MutableUInt4 v = new ValueVector.MutableUInt4(field, allocator);
+    UInt4Vector v = new UInt4Vector(field, allocator);
+    UInt4Vector.Mutator m = v.getMutator();
     v.allocateNew(1024);
 
     // Put and set a few values
-    v.set(0, 100);
-    v.set(1, 101);
-    v.set(100, 102);
-    v.set(1022, 103);
-    v.set(1023, 104);
+    m.set(0, 100);
+    m.set(1, 101);
+    m.set(100, 102);
+    m.set(1022, 103);
+    m.set(1023, 104);
     assertEquals(100, v.get(0));
     assertEquals(101, v.get(1));
     assertEquals(102, v.get(100));
@@ -69,16 +72,17 @@ public class TestValueVector {
     MaterializedField field = MaterializedField.create(defBuilder.build());
 
     // Create a new value vector for 1024 integers
-    ValueVector.NullableVarChar2 v = new ValueVector.NullableVarChar2(field, allocator);
+    NullableVarChar2Vector v = new NullableVarChar2Vector(field, allocator);
+    NullableVarChar2Vector.Mutator m = v.getMutator();
     v.allocateNew(1024);
 
     // Create and set 3 sample strings
     String str1 = new String("AAAAA1");
     String str2 = new String("BBBBBBBBB2");
     String str3 = new String("CCCC3");
-    v.set(0, str1.getBytes(Charset.forName("UTF-8")));
-    v.set(1, str2.getBytes(Charset.forName("UTF-8")));
-    v.set(2, str3.getBytes(Charset.forName("UTF-8")));
+    m.set(0, str1.getBytes(Charset.forName("UTF-8")));
+    m.set(1, str2.getBytes(Charset.forName("UTF-8")));
+    m.set(2, str3.getBytes(Charset.forName("UTF-8")));
 
     // Check the sample strings
     assertEquals(str1, new String(v.get(0), Charset.forName("UTF-8")));
@@ -86,10 +90,16 @@ public class TestValueVector {
     assertEquals(str3, new String(v.get(2), Charset.forName("UTF-8")));
 
     // Ensure null value throws
+    boolean b = false;
     try {
       v.get(3);
-      assertFalse(false);
-    } catch(NullValueException e) { }
+    } catch(AssertionError e) { 
+      b = true;
+    }finally{
+      if(!b){
+        assert false;
+      }
+    }
 
   }
 
@@ -110,15 +120,16 @@ public class TestValueVector {
     MaterializedField field = MaterializedField.create(defBuilder.build());
 
     // Create a new value vector for 1024 integers
-    ValueVector.NullableUInt4 v = new ValueVector.NullableUInt4(field, allocator);
+    NullableUInt4Vector v = new NullableUInt4Vector(field, allocator);
+    NullableUInt4Vector.Mutator m = v.getMutator();
     v.allocateNew(1024);
 
     // Put and set a few values
-    v.set(0, 100);
-    v.set(1, 101);
-    v.set(100, 102);
-    v.set(1022, 103);
-    v.set(1023, 104);
+    m.set(0, 100);
+    m.set(1, 101);
+    m.set(100, 102);
+    m.set(1022, 103);
+    m.set(1023, 104);
     assertEquals(100, v.get(0));
     assertEquals(101, v.get(1));
     assertEquals(102, v.get(100));
@@ -126,22 +137,39 @@ public class TestValueVector {
     assertEquals(104, v.get(1023));
 
     // Ensure null values throw
-    try {
-      v.get(3);
-      assertFalse(false);
-    } catch(NullValueException e) { }
+    {
+      boolean b = false;
+      try {
+        v.get(3);
+      } catch(AssertionError e) { 
+        b = true;
+      }finally{
+        if(!b){
+          assert false;
+        }
+      }      
+    }
 
+    
     v.allocateNew(2048);
-    try {
-      v.get(0);
-      assertFalse(false);
-    } catch(NullValueException e) { }
-
-    v.set(0, 100);
-    v.set(1, 101);
-    v.set(100, 102);
-    v.set(1022, 103);
-    v.set(1023, 104);
+    {
+      boolean b = false;
+      try {
+        v.get(0);
+      } catch(AssertionError e) { 
+        b = true;
+      }finally{
+        if(!b){
+          assert false;
+        }
+      }   
+    }
+    
+    m.set(0, 100);
+    m.set(1, 101);
+    m.set(100, 102);
+    m.set(1022, 103);
+    m.set(1023, 104);
     assertEquals(100, v.get(0));
     assertEquals(101, v.get(1));
     assertEquals(102, v.get(100));
@@ -149,10 +177,19 @@ public class TestValueVector {
     assertEquals(104, v.get(1023));
 
     // Ensure null values throw
-    try {
-      v.get(3);
-      assertFalse(false);
-    } catch(NullValueException e) { }
+    
+    {
+      boolean b = false;
+      try {
+        v.get(3);
+      } catch(AssertionError e) { 
+        b = true;
+      }finally{
+        if(!b){
+          assert false;
+        }
+      }   
+    }
 
   }
 
@@ -172,16 +209,16 @@ public class TestValueVector {
     MaterializedField field = MaterializedField.create(defBuilder.build());
 
     // Create a new value vector for 1024 integers
-    ValueVector.NullableFloat4 v = (ValueVector.NullableFloat4) TypeHelper.getNewVector(field, allocator);
-
+    NullableFloat4Vector v = (NullableFloat4Vector) TypeHelper.getNewVector(field, allocator);
+    NullableFloat4Vector.Mutator m = v.getMutator();
     v.allocateNew(1024);
 
     // Put and set a few values
-    v.set(0, 100.1f);
-    v.set(1, 101.2f);
-    v.set(100, 102.3f);
-    v.set(1022, 103.4f);
-    v.set(1023, 104.5f);
+    m.set(0, 100.1f);
+    m.set(1, 101.2f);
+    m.set(100, 102.3f);
+    m.set(1022, 103.4f);
+    m.set(1023, 104.5f);
     assertEquals(100.1f, v.get(0), 0);
     assertEquals(101.2f, v.get(1), 0);
     assertEquals(102.3f, v.get(100), 0);
@@ -189,17 +226,32 @@ public class TestValueVector {
     assertEquals(104.5f, v.get(1023), 0);
 
     // Ensure null values throw
-    try {
-      v.get(3);
-      assertFalse(false);
-    } catch(NullValueException e) { }
-
+    {
+      boolean b = false;
+      try {
+        v.get(3);
+      } catch(AssertionError e) { 
+        b = true;
+      }finally{
+        if(!b){
+          assert false;
+        }
+      }   
+    }
+    
     v.allocateNew(2048);
-    try {
-      v.get(0);
-      assertFalse(false);
-    } catch(NullValueException e) { }
-
+    {
+      boolean b = false;
+      try {
+        v.get(0);
+      } catch(AssertionError e) { 
+        b = true;
+      }finally{
+        if(!b){
+          assert false;
+        }
+      }   
+    }
   }
 
   @Test
@@ -218,30 +270,31 @@ public class TestValueVector {
     MaterializedField field = MaterializedField.create(defBuilder.build());
 
     // Create a new value vector for 1024 integers
-    ValueVector.MutableBit v = new ValueVector.MutableBit(field, allocator);
+    BitVector v = new BitVector(field, allocator);
+    BitVector.Mutator m = v.getMutator();
     v.allocateNew(1024);
 
     // Put and set a few values
-    v.set(0, 1);
-    v.set(1, 0);
-    v.set(100, 0);
-    v.set(1022, 1);
+    m.set(0, 1);
+    m.set(1, 0);
+    m.set(100, 0);
+    m.set(1022, 1);
     assertEquals(1, v.get(0));
     assertEquals(0, v.get(1));
     assertEquals(0, v.get(100));
     assertEquals(1, v.get(1022));
 
     // test setting the same value twice
-    v.set(0, 1);
-    v.set(0, 1);
-    v.set(1, 0);
-    v.set(1, 0);
+    m.set(0, 1);
+    m.set(0, 1);
+    m.set(1, 0);
+    m.set(1, 0);
     assertEquals(1, v.get(0));
     assertEquals(0, v.get(1));
 
     // test toggling the values
-    v.set(0, 0);
-    v.set(1, 1);
+    m.set(0, 0);
+    m.set(1, 1);
     assertEquals(0, v.get(0));
     assertEquals(1, v.get(1));
 

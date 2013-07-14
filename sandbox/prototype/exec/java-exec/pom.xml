@@ -173,7 +173,7 @@
 				<version>1.0</version>
 				<configuration>
 					<cfgFile>src/main/codegen/ValueVectors/config.fmpp</cfgFile>
-					<outputDirectory>target/generated-sources/org/apache/drill/exec/record/vector</outputDirectory>
+					<outputDirectory>target/generated-sources/org/apache/drill/exec/vector</outputDirectory>
 					<templateDirectory>src/main/codegen/ValueVectors/templates</templateDirectory>
 				</configuration>
 				<executions>

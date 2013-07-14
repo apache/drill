@@ -23,7 +23,7 @@ import java.util.List;
 
 import org.apache.drill.exec.proto.UserBitShared.FieldMetadata;
 import org.apache.drill.exec.proto.UserBitShared.RecordBatchDef;
-import org.apache.drill.exec.record.vector.ValueVector;
+import org.apache.drill.exec.vector.ValueVector;
 
 import com.carrotsearch.hppc.IntObjectOpenHashMap;
 import com.carrotsearch.hppc.procedures.IntObjectProcedure;
@@ -58,7 +58,7 @@ public class WritableBatch {
     return buffers;
   }
   
-//  public static WritableBatch get(ValueVector.Base[] vectors){
+//  public static WritableBatch get(ValueVector[] vectors){
 //    WritableCreator c = new WritableCreator();
 //    for(int i =0; i < vectors.length; i++){
 //      c.apply(i, vectors[i]);
@@ -67,14 +67,14 @@ public class WritableBatch {
 //  }
 //  
   
-  public static WritableBatch get(int recordCount, IntObjectOpenHashMap<ValueVector.Base> fields){
+  public static WritableBatch get(int recordCount, IntObjectOpenHashMap<ValueVector> fields){
     WritableCreator creator = new WritableCreator(recordCount);
     fields.forEach(creator);
     return creator.get();
     
   }
   
-  private static class WritableCreator implements IntObjectProcedure<ValueVector.Base>{
+  private static class WritableCreator implements IntObjectProcedure<ValueVector>{
     
     List<ByteBuf> buffers = Lists.newArrayList();
     List<FieldMetadata> metadata = Lists.newArrayList();
@@ -87,7 +87,7 @@ public class WritableBatch {
     }
     
     @Override
-    public void apply(int key, ValueVector.Base value) {
+    public void apply(int key, ValueVector value) {
       metadata.add(value.getMetadata());
       for(ByteBuf b : value.getBuffers()){
         buffers.add(b);

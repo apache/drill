@@ -20,8 +20,6 @@ package org.apache.drill.exec.record;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.drill.exec.record.vector.ValueVector;
-
 
 public class BatchSchema implements Iterable<MaterializedField> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BatchSchema.class);

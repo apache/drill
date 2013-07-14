@@ -17,8 +17,6 @@
  ******************************************************************************/
 package org.apache.drill.exec.physical.impl;
 
-import java.util.Iterator;
-
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.UserBitShared.RecordBatchDef;
@@ -29,8 +27,7 @@ import org.apache.drill.exec.record.RawFragmentBatchProvider;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.WritableBatch;
-import org.apache.drill.exec.record.RecordBatch.IterOutcome;
-import org.apache.drill.exec.record.vector.ValueVector;
+import org.apache.drill.exec.vector.ValueVector;
 
 public class WireRecordBatch implements RecordBatch{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WireRecordBatch.class);
@@ -68,7 +65,7 @@ public class WireRecordBatch implements RecordBatch{
   }
 
   @Override
-  public <T extends ValueVector.Base> T getValueVector(int fieldId, Class<T> clazz) throws InvalidValueAccessor {
+  public <T extends ValueVector> T getValueVector(int fieldId, Class<T> clazz) throws InvalidValueAccessor {
     return batchLoader.getValueVector(fieldId, clazz);
   }
 
