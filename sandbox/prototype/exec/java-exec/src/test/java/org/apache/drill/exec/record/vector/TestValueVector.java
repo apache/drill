@@ -1,7 +1,6 @@
 package org.apache.drill.exec.record.vector;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 
 import java.nio.charset.Charset;
 
@@ -46,14 +45,14 @@ public class TestValueVector {
     m.set(100, 102);
     m.set(1022, 103);
     m.set(1023, 104);
-    assertEquals(100, v.get(0));
-    assertEquals(101, v.get(1));
-    assertEquals(102, v.get(100));
-    assertEquals(103, v.get(1022));
-    assertEquals(104, v.get(1023));
+    assertEquals(100, v.getAccessor().get(0));
+    assertEquals(101, v.getAccessor().get(1));
+    assertEquals(102, v.getAccessor().get(100));
+    assertEquals(103, v.getAccessor().get(1022));
+    assertEquals(104, v.getAccessor().get(1023));
 
     // Ensure unallocated space returns 0
-    assertEquals(0, v.get(3));
+    assertEquals(0, v.getAccessor().get(3));
   }
 
   @Test
@@ -74,7 +73,7 @@ public class TestValueVector {
     // Create a new value vector for 1024 integers
     NullableVarChar2Vector v = new NullableVarChar2Vector(field, allocator);
     NullableVarChar2Vector.Mutator m = v.getMutator();
-    v.allocateNew(1024);
+    v.allocateNew(1024*10, 1024);
 
     // Create and set 3 sample strings
     String str1 = new String("AAAAA1");
@@ -85,14 +84,14 @@ public class TestValueVector {
     m.set(2, str3.getBytes(Charset.forName("UTF-8")));
 
     // Check the sample strings
-    assertEquals(str1, new String(v.get(0), Charset.forName("UTF-8")));
-    assertEquals(str2, new String(v.get(1), Charset.forName("UTF-8")));
-    assertEquals(str3, new String(v.get(2), Charset.forName("UTF-8")));
+    assertEquals(str1, new String(v.getAccessor().get(0), Charset.forName("UTF-8")));
+    assertEquals(str2, new String(v.getAccessor().get(1), Charset.forName("UTF-8")));
+    assertEquals(str3, new String(v.getAccessor().get(2), Charset.forName("UTF-8")));
 
     // Ensure null value throws
     boolean b = false;
     try {
-      v.get(3);
+      v.getAccessor().get(3);
     } catch(AssertionError e) { 
       b = true;
     }finally{
@@ -130,17 +129,17 @@ public class TestValueVector {
     m.set(100, 102);
     m.set(1022, 103);
     m.set(1023, 104);
-    assertEquals(100, v.get(0));
-    assertEquals(101, v.get(1));
-    assertEquals(102, v.get(100));
-    assertEquals(103, v.get(1022));
-    assertEquals(104, v.get(1023));
+    assertEquals(100, v.getAccessor().get(0));
+    assertEquals(101, v.getAccessor().get(1));
+    assertEquals(102, v.getAccessor().get(100));
+    assertEquals(103, v.getAccessor().get(1022));
+    assertEquals(104, v.getAccessor().get(1023));
 
     // Ensure null values throw
     {
       boolean b = false;
       try {
-        v.get(3);
+        v.getAccessor().get(3);
       } catch(AssertionError e) { 
         b = true;
       }finally{
@@ -155,7 +154,7 @@ public class TestValueVector {
     {
       boolean b = false;
       try {
-        v.get(0);
+        v.getAccessor().get(0);
       } catch(AssertionError e) { 
         b = true;
       }finally{
@@ -170,18 +169,18 @@ public class TestValueVector {
     m.set(100, 102);
     m.set(1022, 103);
     m.set(1023, 104);
-    assertEquals(100, v.get(0));
-    assertEquals(101, v.get(1));
-    assertEquals(102, v.get(100));
-    assertEquals(103, v.get(1022));
-    assertEquals(104, v.get(1023));
+    assertEquals(100, v.getAccessor().get(0));
+    assertEquals(101, v.getAccessor().get(1));
+    assertEquals(102, v.getAccessor().get(100));
+    assertEquals(103, v.getAccessor().get(1022));
+    assertEquals(104, v.getAccessor().get(1023));
 
     // Ensure null values throw
     
     {
       boolean b = false;
       try {
-        v.get(3);
+        v.getAccessor().get(3);
       } catch(AssertionError e) { 
         b = true;
       }finally{
@@ -219,17 +218,17 @@ public class TestValueVector {
     m.set(100, 102.3f);
     m.set(1022, 103.4f);
     m.set(1023, 104.5f);
-    assertEquals(100.1f, v.get(0), 0);
-    assertEquals(101.2f, v.get(1), 0);
-    assertEquals(102.3f, v.get(100), 0);
-    assertEquals(103.4f, v.get(1022), 0);
-    assertEquals(104.5f, v.get(1023), 0);
+    assertEquals(100.1f, v.getAccessor().get(0), 0);
+    assertEquals(101.2f, v.getAccessor().get(1), 0);
+    assertEquals(102.3f, v.getAccessor().get(100), 0);
+    assertEquals(103.4f, v.getAccessor().get(1022), 0);
+    assertEquals(104.5f, v.getAccessor().get(1023), 0);
 
     // Ensure null values throw
     {
       boolean b = false;
       try {
-        v.get(3);
+        v.getAccessor().get(3);
       } catch(AssertionError e) { 
         b = true;
       }finally{
@@ -243,7 +242,7 @@ public class TestValueVector {
     {
       boolean b = false;
       try {
-        v.get(0);
+        v.getAccessor().get(0);
       } catch(AssertionError e) { 
         b = true;
       }finally{
@@ -279,27 +278,27 @@ public class TestValueVector {
     m.set(1, 0);
     m.set(100, 0);
     m.set(1022, 1);
-    assertEquals(1, v.get(0));
-    assertEquals(0, v.get(1));
-    assertEquals(0, v.get(100));
-    assertEquals(1, v.get(1022));
+    assertEquals(1, v.getAccessor().get(0));
+    assertEquals(0, v.getAccessor().get(1));
+    assertEquals(0, v.getAccessor().get(100));
+    assertEquals(1, v.getAccessor().get(1022));
 
     // test setting the same value twice
     m.set(0, 1);
     m.set(0, 1);
     m.set(1, 0);
     m.set(1, 0);
-    assertEquals(1, v.get(0));
-    assertEquals(0, v.get(1));
+    assertEquals(1, v.getAccessor().get(0));
+    assertEquals(0, v.getAccessor().get(1));
 
     // test toggling the values
     m.set(0, 0);
     m.set(1, 1);
-    assertEquals(0, v.get(0));
-    assertEquals(1, v.get(1));
+    assertEquals(0, v.getAccessor().get(0));
+    assertEquals(1, v.getAccessor().get(1));
 
     // Ensure unallocated space returns 0
-    assertEquals(0, v.get(3));
+    assertEquals(0, v.getAccessor().get(3));
   }
 
 }

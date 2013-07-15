@@ -7,12 +7,18 @@ import org.apache.drill.exec.vector.UInt4Vector;
 <@pp.changeOutputFile name="Repeated${minor.class}Vector.java" />
 package org.apache.drill.exec.vector;
 
+
+
+
+
+
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import io.netty.buffer.ByteBuf;
 
 import java.io.Closeable;
 import java.util.Random;
+import java.util.Vector;
 
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.SchemaDefProtos;
@@ -30,100 +36,216 @@ import org.apache.drill.exec.record.MaterializedField;
  * NB: this class is automatically generated from ValueVectorTypes.tdd using FreeMarker.
  */
 
- public final class Repeated${minor.class}Vector extends ValueVector {
+ public final class Repeated${minor.class}Vector extends BaseValueVector implements Repeated<#if type.major == "VarLen">VariableWidth<#else>FixedWidth</#if>Vector {
 
-  private final UInt2Vector countVector;    // number of repeated elements in each record
-  private final UInt4Vector offsetVector;   // offsets to start of each record
-  private final ${minor.class}Vector valuesVector;
-
+  private MaterializedField field;
+  
+  private int parentValueCount;
+  private int childValueCount;
+  
+  private final UInt2Vector counts;    // number of repeated elements in each record
+  private final UInt4Vector offsets;   // offsets to start of each record
+  private final ${minor.class}Vector values;
+  private final Mutator mutator = new Mutator();
+  private final Accessor accessor = new Accessor();
+  
+  
   public Repeated${minor.class}Vector(MaterializedField field, BufferAllocator allocator) {
     super(field, allocator);
-    this.countVector = new UInt2Vector(null, allocator);
-    this.offsetVector = new UInt4Vector(null, allocator);
-    this.valuesVector = new ${minor.class}Vector(null, allocator);
+    this.counts = new UInt2Vector(null, allocator);
+    this.offsets = new UInt4Vector(null, allocator);
+    this.values = new ${minor.class}Vector(null, allocator);
   }
 
-  public void allocateNew(int totalBytes, ByteBuf sourceBuffer, int valueCount) {
-    super.allocateNew(totalBytes, sourceBuffer, valueCount);
-    countVector.allocateNew(valueCount);
-    offsetVector.allocateNew(valueCount);
-  }
-
-
-  /**
-   * Get a value for the given record.  Each element in the repeated field is accessed by
-   * the positionIndex param.
-   *
-   * @param  index           record containing the repeated field
-   * @param  positionIndex   position within the repeated field
-   * @return element at the given position in the given record
-   */
-  public <#if type.major == "VarLen">byte[]
-         <#else>${minor.javaType!type.javaType}
-         </#if> get(int index, int positionIndex) {
-
-    assert positionIndex < countVector.get(index);
-    return valuesVector.get(offsetVector.get(index) + positionIndex);
-  }
-
-  public MaterializedField getField() {
-    return field;
-  }
-
-  /**
-   * Get the size requirement (in bytes) for the given number of values.  Only accurate
-   * for fixed width value vectors.
-   */
-  public int getTotalSizeFromCount(int valueCount) {
-    return valuesVector.getSizeFromCount(valueCount) +
-           countVector.getSizeFromCount(valueCount) +
-           offsetVector.getSizeFromCount(valueCount);
+  public int getValueCapacity(){
+    return values.getValueCapacity();
   }
   
-  public int getSizeFromCount(int valueCount){
-    return getTotalSizeFromCount(valueCount);
+  int getBufferSize(){
+    return counts.getBufferSize() + offsets.getBufferSize() + values.getBufferSize();
+  }
+  
+  <#if type.major == "VarLen">
+  @Override
+  public FieldMetadata getMetadata() {
+    return FieldMetadata.newBuilder()
+             .setDef(getField().getDef())
+             .setGroupCount(this.parentValueCount)
+             .setValueCount(this.childValueCount)
+             .setVarByteLength(values.getVarByteLength())
+             .setBufferLength(getBufferSize())
+             .build();
+  }
+  
+  public void allocateNew(int totalBytes, int parentValueCount, int childValueCount) {
+    counts.allocateNew(parentValueCount);
+    offsets.allocateNew(parentValueCount);
+    values.allocateNew(totalBytes, childValueCount);
+    mutator.reset();
+    accessor.reset();
   }
 
-  /**
-   * Get the explicitly specified size of the allocated buffer, if available.  Otherwise
-   * calculate the size based on width and record count.
-   */
-  public int getAllocatedSize() {
-    return valuesVector.getAllocatedSize() +
-           countVector.getAllocatedSize() +
-           offsetVector.getAllocatedSize();
+  
+
+  
+  @Override
+  public int load(int dataBytes, int parentValueCount, int childValueCount, ByteBuf buf){
+    clear();
+    this.parentValueCount = parentValueCount;
+    this.childValueCount = childValueCount;
+    int loaded = 0;
+    loaded += counts.load(parentValueCount, buf);
+    loaded += offsets.load(parentValueCount, buf.slice(loaded, buf.capacity() - loaded));
+    loaded += values.load(dataBytes, childValueCount, buf.slice(loaded, buf.capacity() - loaded));
+    return loaded;
+  }
+  
+  @Override
+  public void load(FieldMetadata metadata, ByteBuf buffer) {
+    assert this.field.getDef().equals(metadata.getDef());
+    int loaded = load(metadata.getVarByteLength(), metadata.getGroupCount(), metadata.getValueCount(), buffer);
+    assert metadata.getBufferLength() == loaded;
+  }
+  
+  public int getByteCapacity(){
+    return values.getByteCapacity();
   }
 
-  /**
-   * Get the elements at the given index.
-   */
-  public int getCount(int index) {
-    return countVector.get(index);
+  <#else>
+  
+  @Override
+  public FieldMetadata getMetadata() {
+    return FieldMetadata.newBuilder()
+             .setDef(getField().getDef())
+             .setGroupCount(this.parentValueCount)
+             .setValueCount(this.childValueCount)
+             .setBufferLength(getBufferSize())
+             .build();
   }
+  
+  public void allocateNew(int parentValueCount, int childValueCount) {
+    clear();
+    values.allocateNew(childValueCount);
+    counts.allocateNew(parentValueCount);
+    offsets.allocateNew(parentValueCount);
+    mutator.reset();
+    accessor.reset();
+  }
+  
+  public int load(int parentValueCount, int childValueCount, ByteBuf buf){
+    clear();
+    this.parentValueCount = parentValueCount;
+    this.childValueCount = childValueCount;
+    int loaded = 0;
+    loaded += counts.load(parentValueCount, buf);
+    loaded += offsets.load(parentValueCount, buf.slice(loaded, buf.capacity() - loaded));
+    loaded += values.load(childValueCount, buf.slice(loaded, buf.capacity() - loaded));
+    return loaded;
+  }
+  
+  @Override
+  public void load(FieldMetadata metadata, ByteBuf buffer) {
+    assert this.field.getDef().equals(metadata.getDef());
+    int loaded = load(metadata.getGroupCount(), metadata.getValueCount(), buffer);
+    assert metadata.getBufferLength() == loaded;
+  }
+  </#if>
+  
+//  /**
+//   * Get the size requirement (in bytes) for the given number of values.  Only accurate
+//   * for fixed width value vectors.
+//   */
+//  public int getTotalSizeFromCount(int valueCount) {
+//    return values.getSizeFromCount(valueCount) +
+//           counts.getSizeFromCount(valueCount) +
+//           offsets.getSizeFromCount(valueCount);
+//  }
+//  
+//  public int getSizeFromCount(int valueCount){
+//    return getTotalSizeFromCount(valueCount);
+//  }
+
+//  /**
+//   * Get the explicitly specified size of the allocated buffer, if available.  Otherwise
+//   * calculate the size based on width and record count.
+//   */
+//  public int getAllocatedSize() {
+//    return values.getAllocatedSize() +
+//           counts.getAllocatedSize() +
+//           offsets.getAllocatedSize();
+//  }
+
+
 
   public ByteBuf[] getBuffers() {
-    return new ByteBuf[]{countVector.data, offsetVector.data, data};
+    return new ByteBuf[]{counts.data, offsets.data, values.data};
   }
 
-  public Object getObject(int index) {
-    return data.slice(index, getSizeFromCount(countVector.get(index)));
+  public void clear(){
+    counts.clear();
+    offsets.clear();
+    values.clear();
+    parentValueCount = 0;
+    childValueCount = 0;
   }
 
   public Mutator getMutator(){
-    return new Mutator();
+    return mutator;
   }
   
-  public class Mutator implements ValueVector.Mutator{
+  public Accessor getAccessor(){
+    return accessor;
+  }
+  
+  public final class Accessor implements ValueVector.Accessor{
+    /**
+     * Get the elements at the given index.
+     */
+    public int getCount(int index) {
+      return counts.getAccessor().get(index);
+    }
+    
+    public Object getObject(int index) {
+      throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Get a value for the given record.  Each element in the repeated field is accessed by
+     * the positionIndex param.
+     *
+     * @param  index           record containing the repeated field
+     * @param  positionIndex   position within the repeated field
+     * @return element at the given position in the given record
+     */
+    public <#if type.major == "VarLen">byte[]
+           <#else>${minor.javaType!type.javaType}
+           </#if> get(int index, int positionIndex) {
+
+      assert positionIndex < counts.getAccessor().get(index);
+      return values.getAccessor().get(offsets.getAccessor().get(index) + positionIndex);
+    }
+
+    public MaterializedField getField() {
+      return field;
+    }
+    
+    public int getGroupCount(){
+      return parentValueCount;
+    }
+    
+    public int getValueCount(){
+      return childValueCount;
+    }
+    
+    public void reset(){
+      
+    }
+  }
+  
+  public final class Mutator implements ValueVector.Mutator{
 
     
-    private final UInt2Vector.Mutator countMutator;
-    private final ${minor.class}Vector.Mutator valuesMutator;
-    private final UInt4Vector.Mutator offsetMutator;
-    
     private Mutator(){
-      this.countMutator = countVector.getMutator();
-      this.offsetMutator = offsetVector.getMutator();
-      this.valuesMutator = valuesVector.getMutator();
     }
 
     /**
@@ -137,19 +259,26 @@ import org.apache.drill.exec.record.MaterializedField;
                                <#elseif type.major == "VarLen"> byte[]
                                <#else> int
                                </#if> value) {
-      countMutator.set(index, countVector.get(index) + 1);
-      offsetMutator.set(index, offsetVector.get(index - 1) + countVector.get(index-1));
-      valuesMutator.set(offsetVector.get(index), value);
+      counts.getMutator().set(index, counts.getAccessor().get(index) + 1);
+      offsets.getMutator().set(index, offsets.getAccessor().get(index - 1) + counts.getAccessor().get(index-1));
+      values.getMutator().set(offsets.getAccessor().get(index), value);
     }
+
     
-    public void setRecordCount(int recordCount) {
-      valuesMutator.setRecordCount(recordCount);
-      offsetMutator.setRecordCount(recordCount);
-      countMutator.setRecordCount(recordCount);
+    public void setGroupAndValueCount(int groupCount, int valueCount) {
+      parentValueCount = groupCount;
+      childValueCount = valueCount;
+      counts.getMutator().setValueCount(groupCount);
+      offsets.getMutator().setValueCount(groupCount);
+      values.getMutator().setValueCount(valueCount);
     }
     
     public void randomizeData(){
       throw new UnsupportedOperationException();
+    }
+    
+    public void reset(){
+      
     }
     
   }

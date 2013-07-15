@@ -10,12 +10,15 @@ import io.netty.buffer.ByteBuf;
 
 import java.io.Closeable;
 import java.util.Random;
+import java.util.Vector;
 
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.SchemaDefProtos;
 import org.apache.drill.exec.proto.UserBitShared.FieldMetadata;
 import org.apache.drill.exec.record.DeadBuf;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.vector.BaseValueVector;
+import org.apache.drill.exec.vector.BitVector;
 import org.apache.drill.exec.vector.UInt2Vector;
 import org.apache.drill.exec.vector.UInt4Vector;
 
@@ -27,93 +30,180 @@ import org.apache.drill.exec.vector.UInt4Vector;
  * NB: this class is automatically generated from ValueVectorTypes.tdd using FreeMarker.
  */
 @SuppressWarnings("unused")
-public final class Nullable${minor.class}Vector extends ValueVector {
+public final class Nullable${minor.class}Vector extends BaseValueVector implements <#if type.major == "VarLen">VariableWidth<#else>FixedWidth</#if>Vector {
 
+  private int recordCount;
   private final BitVector bits;
   private final ${minor.class}Vector values;
+  private final Accessor accessor = new Accessor();
+  private final Mutator mutator = new Mutator();
 
   public Nullable${minor.class}Vector(MaterializedField field, BufferAllocator allocator) {
     super(field, allocator);
-    bits = new BitVector(null, allocator);
-    values = new ${minor.class}Vector(null, allocator);
-  }
-
-  /**
-   * Get the element at the specified position.
-   *
-   * @param   index   position of the value
-   * @return  value of the element, if not null
-   * @throws  NullValueException if the value is null
-   */
-  public <#if type.major == "VarLen">byte[]<#else>${minor.javaType!type.javaType}</#if> get(int index) {
-    assert !isNull(index);
-    return values.get(index);
-  }
-
-
-  public boolean isNull(int index) {
-    return bits.get(index) == 0;
-  }
-
-  public int isSet(int index){
-    return bits.get(index);
+    this.bits = new BitVector(null, allocator);
+    this.values = new ${minor.class}Vector(null, allocator);
   }
   
-  /**
-   * Allocate a new memory space for this vector.  Must be called prior to using the ValueVector.
-   *
-   * @param valueCount   The number of values which may be contained by this vector.
-   */
-  public void allocateNew(int totalBytes, ByteBuf sourceBuffer, int valueCount) {
-    values.allocateNew(totalBytes, sourceBuffer, valueCount);
-    bits.allocateNew(valueCount);
-  }
-
-  @Override
-  public int getAllocatedSize() {
-    return bits.getAllocatedSize() + values.getAllocatedSize();
-  }
-
-  /**
-   * Get the size requirement (in bytes) for the given number of values.  Only accurate
-   * for fixed width value vectors.
-   */
-  public int getTotalSizeFromCount(int valueCount) {
-    return values.getSizeFromCount(valueCount) + bits.getSizeFromCount(valueCount);
+  public int getValueCapacity(){
+    return bits.getValueCapacity();
   }
   
-  public int getSizeFromCount(int valueCount){
-    return getTotalSizeFromCount(valueCount);
-  }
-
-  @Override
-  public MaterializedField getField() {
-    return field;
-  }
-
   @Override
   public ByteBuf[] getBuffers() {
     return new ByteBuf[]{bits.data, values.data};
   }
 
+  @Override
+  public void clear() {
+    recordCount = 0;
+    bits.clear();
+    values.clear();
+  }
+  
+  int getBufferSize(){
+    return values.getBufferSize() + bits.getBufferSize();
+  }
+
+  <#if type.major == "VarLen">
+  @Override
+  public FieldMetadata getMetadata() {
+    return FieldMetadata.newBuilder()
+             .setDef(getField().getDef())
+             .setValueCount(recordCount)
+             .setVarByteLength(values.getVarByteLength())
+             .setBufferLength(getBufferSize())
+             .build();
+  }
+  
+  @Override
+  public void allocateNew(int totalBytes, int valueCount) {
+    values.allocateNew(totalBytes, valueCount);
+    bits.allocateNew(valueCount);
+    mutator.reset();
+    accessor.reset();
+  }
 
   @Override
-  public Object getObject(int index) {
-    return isNull(index) ? null : values.getObject(index);
+  public int load(int dataBytes, int valueCount, ByteBuf buf){
+    clear();
+    this.recordCount = valueCount;
+    int loaded = bits.load(valueCount, buf);
+    
+    // remove bits part of buffer.
+    buf = buf.slice(loaded, buf.capacity() - loaded);
+    loaded += values.load(dataBytes, valueCount, buf);
+    return loaded;
+  }
+  
+  @Override
+  public void load(FieldMetadata metadata, ByteBuf buffer) {
+    assert this.field.getDef().equals(metadata.getDef());
+    int loaded = load(metadata.getVarByteLength(), metadata.getValueCount(), buffer);
+    assert metadata.getBufferLength() == loaded;
+  }
+  
+  @Override
+  public int getByteCapacity(){
+    return values.getByteCapacity();
+  }
+
+  <#else>
+  @Override
+  public FieldMetadata getMetadata() {
+    return FieldMetadata.newBuilder()
+             .setDef(getField().getDef())
+             .setValueCount(recordCount)
+             .setBufferLength(getBufferSize())
+             .build();
+  }
+  
+  @Override
+  public void allocateNew(int valueCount) {
+    values.allocateNew(valueCount);
+    bits.allocateNew(valueCount);
+    mutator.reset();
+    accessor.reset();
+  }
+  
+  @Override
+  public int load(int valueCount, ByteBuf buf){
+    clear();
+    this.recordCount = valueCount;
+    int loaded = bits.load(valueCount, buf);
+    
+    // remove bits part of buffer.
+    buf = buf.slice(loaded, buf.capacity() - loaded);
+    loaded += values.load(valueCount, buf);
+    return loaded;
+  }
+  
+  @Override
+  public void load(FieldMetadata metadata, ByteBuf buffer) {
+    assert this.field.getDef().equals(metadata.getDef());
+    int loaded = load(metadata.getValueCount(), buffer);
+    assert metadata.getBufferLength() == loaded;
+  }
+  
+  </#if>
+  
+  public Accessor getAccessor(){
+    return accessor;
   }
   
   public Mutator getMutator(){
-    return new Mutator();
+    return mutator;
   }
   
-  public class Mutator implements ValueVector.Mutator{
+  public ${minor.class}Vector convertToRequiredVector(){
+    ${minor.class}Vector v = new ${minor.class}Vector(getField().getOtherNullableVersion(), allocator);
+    v.data = values.data;
+    v.recordCount = this.recordCount;
+    v.data.retain();
+    clear();
+    return v;
+  }
+  
+  
+  
+  public final class Accessor implements ValueVector.Accessor{
 
-    private final BitVector.Mutator bitMutator;
-    private final ${minor.class}Vector.Mutator valueMutator;
+    /**
+     * Get the element at the specified position.
+     *
+     * @param   index   position of the value
+     * @return  value of the element, if not null
+     * @throws  NullValueException if the value is null
+     */
+    public <#if type.major == "VarLen">byte[]<#else>${minor.javaType!type.javaType}</#if> get(int index) {
+      assert !isNull(index);
+      return values.getAccessor().get(index);
+    }
+
+    public boolean isNull(int index) {
+      return isSet(index) == 0;
+    }
+
+    public int isSet(int index){
+      return bits.getAccessor().get(index);
+    }
+    
+    @Override
+    public Object getObject(int index) {
+      return isNull(index) ? null : values.getAccessor().getObject(index);
+    }
+    
+    public int getRecordCount(){
+      return recordCount;
+    }
+    
+    public void reset(){}
+  }
+  
+  public final class Mutator implements ValueVector.Mutator{
+    
+    private int setCount;
     
     private Mutator(){
-      bitMutator = bits.getMutator();
-      valueMutator = values.getMutator();
     }
 
     /**
@@ -123,26 +213,28 @@ public final class Nullable${minor.class}Vector extends ValueVector {
      * @param bytes   array of bytes to write
      */
     public void set(int index, <#if type.major == "VarLen">byte[]<#elseif (type.width < 4)>int<#else>${minor.javaType!type.javaType}</#if> value) {
-      setNotNull(index);
-      valueMutator.set(index, value);
+      setCount++;
+      bits.getMutator().set(index, 1);
+      values.getMutator().set(index, value);
     }
 
-    public void setNull(int index) {
-      bitMutator.set(index, 0);
-    }
-
-    private void setNotNull(int index) {
-      bitMutator.set(index, 1);
+    public void setValueCount(int recordCount) {
+      assert recordCount >= 0;
+      Nullable${minor.class}Vector.this.recordCount = recordCount;
+      values.getMutator().setValueCount(recordCount);
+      bits.getMutator().setValueCount(recordCount);
     }
     
-    @Override
-    public void setRecordCount(int recordCount) {
-      Nullable${minor.class}Vector.this.setRecordCount(recordCount);
-      bits.setRecordCount(recordCount);
+    public boolean noNulls(){
+      return recordCount == setCount;
     }
     
     public void randomizeData(){
       throw new UnsupportedOperationException();
+    }
+    
+    public void reset(){
+      setCount = 0;
     }
     
   }

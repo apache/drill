@@ -1,8 +1,11 @@
 package org.apache.drill.exec.vector;
 
+import io.netty.buffer.ByteBuf;
+
 import java.util.Random;
 
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.proto.UserBitShared.FieldMetadata;
 import org.apache.drill.exec.record.DeadBuf;
 import org.apache.drill.exec.record.MaterializedField;
 /**
@@ -13,64 +16,93 @@ import org.apache.drill.exec.record.MaterializedField;
  *
  * NB: this class is automatically generated from ValueVectorTypes.tdd using FreeMarker.
  */
-public final class BitVector extends ValueVector {
+public final class BitVector extends BaseDataValueVector implements FixedWidthVector{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BitVector.class);
 
+  private int valueCapacity;
+  
   public BitVector(MaterializedField field, BufferAllocator allocator) {
     super(field, allocator);
   }
 
-  /**
-   * Get the byte holding the desired bit, then mask all other bits.  Iff the result is 0, the
-   * bit was not set.
-   *
-   * @param  index   position of the bit in the vector
-   * @return 1 if set, otherwise 0
-   */
-  public int get(int index) {
-    // logger.debug("BIT GET: index: {}, byte: {}, mask: {}, masked byte: {}",
-    //             index,
-    //             data.getByte((int)Math.floor(index/8)),
-    //             (int)Math.pow(2, (index % 8)),
-    //             data.getByte((int)Math.floor(index/8)) & (int)Math.pow(2, (index % 8)));
-    return ((data.getByte((int)Math.floor(index/8)) & (int)Math.pow(2, (index % 8))) == 0) ? 0 : 1;
-  }
-
-  @Override
-  public Object getObject(int index) {
-    return new Boolean(get(index) != 0);
-  }
-
-  /**
-   * Get the size requirement (in bytes) for the given number of values.
-   */
-  @Override
-  public int getSizeFromCount(int valueCount) {
+  private int getSizeFromCount(int valueCount) {
     return (int) Math.ceil(valueCount / 8);
   }
-
+  
+  /**
+   * Allocate a new memory space for this vector.  Must be called prior to using the ValueVector.
+   *
+   * @param valueCount  The number of values which can be contained within this vector.
+   */
+  public void allocateNew(int valueCount) {
+    clear();
+    valueCapacity = valueCount;
+    int valueSize = getSizeFromCount(valueCount);
+    data = allocator.buffer(valueSize);
+    for (int i = 0; i < getSizeFromCount(valueCount); i++) {
+      data.setByte(i, 0);
+    }
+  }
+  
   @Override
-  public int getAllocatedSize() {
-    return totalBytes;
+  public int load(int valueCount, ByteBuf buf){
+    clear();
+    this.recordCount = valueCount;
+    int len = getSizeFromCount(valueCount);
+    data = buf.slice(0, len);
+    data.retain();
+    return len;
+  }
+  
+  @Override
+  public void load(FieldMetadata metadata, ByteBuf buffer) {
+    assert this.field.getDef().equals(metadata.getDef());
+    int loaded = load(metadata.getValueCount(), buffer);
+    assert metadata.getBufferLength() == loaded;
+  }
+  
+  @Override
+  public int getValueCapacity() {
+    return valueCapacity;
   }
 
   public Mutator getMutator() {
     return new Mutator();
   }
 
-  /**
-   * Allocate a new memory space for this vector.  Must be called prior to using the ValueVector.
-   *
-   * @param valueCount  The number of values which can be contained within this vector.
-   */
-  @Override
-  public void allocateNew(int valueCount) {
-    allocateNew(getSizeFromCount(valueCount), null, valueCount);
-    for (int i = 0; i < getSizeFromCount(valueCount); i++) {
-      data.setByte(i, 0);
-    }
+  public Accessor getAccessor(){
+    return new Accessor();
   }
+  
+  
+  public class Accessor extends BaseAccessor{
 
+    /**
+     * Get the byte holding the desired bit, then mask all other bits.  Iff the result is 0, the
+     * bit was not set.
+     *
+     * @param  index   position of the bit in the vector
+     * @return 1 if set, otherwise 0
+     */
+    public int get(int index) {
+      // logger.debug("BIT GET: index: {}, byte: {}, mask: {}, masked byte: {}",
+      //             index,
+      //             data.getByte((int)Math.floor(index/8)),
+      //             (int)Math.pow(2, (index % 8)),
+      //             data.getByte((int)Math.floor(index/8)) & (int)Math.pow(2, (index % 8)));
+      return ((data.getByte((int)Math.floor(index/8)) & (int)Math.pow(2, (index % 8))) == 0) ? 0 : 1;
+    }
+    
+    @Override
+    public Object getObject(int index) {
+      return new Boolean(get(index) != 0);
+    }
+    
+    public int getRecordCount() {
+      return recordCount;
+    }
+    
+  }
   
   /**
    * MutableBit implements a vector of bit-width values.  Elements in the vector are accessed
@@ -79,7 +111,7 @@ public final class BitVector extends ValueVector {
    *
    * NB: this class is automatically generated from ValueVectorTypes.tdd using FreeMarker.
    */
-  public class Mutator implements ValueVector.Mutator{
+  public class Mutator extends BaseMutator{
 
     private Mutator(){}
     
@@ -102,10 +134,9 @@ public final class BitVector extends ValueVector {
       data.setByte((int) Math.floor(index/8), currentByte);
     }
 
-    
-    @Override
-    public void setRecordCount(int recordCount) {
-      BitVector.this.setRecordCount(recordCount);
+    public void setValueCount(int recordCount) {
+      BitVector.this.recordCount = recordCount;
+      data.writerIndex(getSizeFromCount(recordCount));
     }
 
     @Override
@@ -119,5 +150,6 @@ public final class BitVector extends ValueVector {
         }
       }
     }
+
   }
 }

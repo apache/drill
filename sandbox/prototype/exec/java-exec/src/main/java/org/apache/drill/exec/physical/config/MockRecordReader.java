@@ -28,8 +28,11 @@ import org.apache.drill.exec.proto.SchemaDefProtos.DataMode;
 import org.apache.drill.exec.proto.SchemaDefProtos.MajorType;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.store.RecordReader;
+import org.apache.drill.exec.vector.FixedWidthVector;
+import org.apache.drill.exec.vector.NonRepeatedMutator;
 import org.apache.drill.exec.vector.TypeHelper;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.VariableWidthVector;
 
 public class MockRecordReader implements RecordReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MockRecordReader.class);
@@ -39,6 +42,7 @@ public class MockRecordReader implements RecordReader {
   private FragmentContext context;
   private ValueVector[] valueVectors;
   private int recordsRead;
+  private int batchRecordCount;
 
   public MockRecordReader(FragmentContext context, MockScanEntry config) {
     this.context = context;
@@ -60,7 +64,14 @@ public class MockRecordReader implements RecordReader {
     MaterializedField f = MaterializedField.create(new SchemaPath(name), fieldId, 0, type);
     ValueVector v;
     v = TypeHelper.getNewVector(f, context.getAllocator());
-    v.allocateNew(length);
+    if(v instanceof FixedWidthVector){
+      ((FixedWidthVector)v).allocateNew(length);  
+    }else if(v instanceof VariableWidthVector){
+      ((VariableWidthVector)v).allocateNew(50*length, length);
+    }else{
+      throw new UnsupportedOperationException(String.format("Unable to get allocate vector %s", v.getClass().getName()));
+    }
+    
     return v;
 
   }
@@ -71,7 +82,7 @@ public class MockRecordReader implements RecordReader {
       this.output = output;
       int estimateRowSize = getEstimatedRecordSize(config.getTypes());
       valueVectors = new ValueVector[config.getTypes().length];
-      int batchRecordCount = 250000 / estimateRowSize;
+      batchRecordCount = 250000 / estimateRowSize;
 
       for (int i = 0; i < config.getTypes().length; i++) {
         valueVectors[i] = getVector(i, config.getTypes()[i].getName(), config.getTypes()[i].getMajorType(), batchRecordCount);
@@ -86,13 +97,29 @@ public class MockRecordReader implements RecordReader {
 
   @Override
   public int next() {
-    int recordSetSize = Math.min(valueVectors[0].capacity(), this.config.getRecords()- recordsRead);
+    
+    int recordSetSize = Math.min(batchRecordCount, this.config.getRecords()- recordsRead);
+
     recordsRead += recordSetSize;
     for(ValueVector v : valueVectors){
-      logger.debug("MockRecordReader:  Generating random data for VV of type " + v.getClass().getName());
-      v.randomizeData();
+      if(v instanceof FixedWidthVector){
+        ((FixedWidthVector)v).allocateNew(recordSetSize);
+      }else if(v instanceof VariableWidthVector){
+        ((VariableWidthVector)v).allocateNew(50*recordSetSize, recordSetSize);
+      }else{
+        throw new UnsupportedOperationException();
+      }
       
-      v.getMutator().setRecordCount(recordSetSize);
+      logger.debug("MockRecordReader:  Generating random data for VV of type " + v.getClass().getName());
+      ValueVector.Mutator m = v.getMutator();
+      m.randomizeData();
+      
+      if(m instanceof NonRepeatedMutator){
+        ((NonRepeatedMutator)m).setValueCount(recordSetSize);  
+      }else{
+        throw new UnsupportedOperationException();
+      }
+      
     }
     return recordSetSize;
   }

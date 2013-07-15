@@ -52,7 +52,7 @@ public class RecordBatchLoader implements Iterable<IntObjectCursor<ValueVector>>
    * @param def
    *          The definition for the record batch.
    * @param buf
-   *          The buffer that holds the data ssociated with the record batch
+   *          The buffer that holds the data associated with the record batch
    * @return Whether or not the schema changed since the previous load.
    * @throws SchemaChangeException 
    */
@@ -71,7 +71,8 @@ public class RecordBatchLoader implements Iterable<IntObjectCursor<ValueVector>>
       ValueVector v = vectors.remove(fieldDef.getFieldId());
       if (v != null) {
         if (v.getField().getDef().equals(fieldDef)) {
-          v.allocateNew(fmd.getBufferLength(), buf.slice(bufOffset, fmd.getBufferLength()), recordCount);
+          ValueVector.Mutator m = v.getMutator();
+          v.load(fmd, buf.slice(bufOffset, fmd.getBufferLength()));
           newVectors.put(fieldDef.getFieldId(), v);
           continue;
         } else {
@@ -83,7 +84,7 @@ public class RecordBatchLoader implements Iterable<IntObjectCursor<ValueVector>>
       schemaChanged = true;
       MaterializedField m = new MaterializedField(fieldDef);
       v = TypeHelper.getNewVector(m, allocator);
-      v.allocateNew(fmd.getBufferLength(), buf.slice(bufOffset, fmd.getBufferLength()), recordCount);
+      v.load(fmd, buf.slice(bufOffset, fmd.getBufferLength()));
       newVectors.put(fieldDef.getFieldId(), v);
     }
     

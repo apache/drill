@@ -73,7 +73,7 @@ public class JSONRecordReaderTest {
             return;
         }
 
-        T val = (T) valueVector.getObject(index);
+        T val = (T) valueVector.getAccessor().getObject(index);
         if (val instanceof byte[]) {
             assertTrue(Arrays.equals((byte[]) value, (byte[]) val));
         } else {

@@ -105,6 +105,22 @@ public class MaterializedField implements Comparable<MaterializedField> {
   public DataMode getDataMode() {
     return def.getMajorType().getMode();
   }
+  
+  public MaterializedField getOtherNullableVersion(){
+    MajorType mt = def.getMajorType();
+    DataMode newDataMode = null;
+    switch(mt.getMode()){
+    case OPTIONAL:
+      newDataMode = DataMode.REQUIRED;
+      break;
+    case REQUIRED:
+      newDataMode = DataMode.OPTIONAL;
+      break;
+    default:
+      throw new UnsupportedOperationException();
+    }
+    return new MaterializedField(def.toBuilder().setMajorType(mt.toBuilder().setMode(newDataMode).build()).build());
+  }
 
   public boolean matches(SchemaPath path) {
     Iterator<NamePart> iter = def.getNameList().iterator();

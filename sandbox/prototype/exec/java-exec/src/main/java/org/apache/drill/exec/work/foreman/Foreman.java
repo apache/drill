@@ -230,8 +230,7 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
   }
 
   public QueryResult getResult(UserClientConnection connection, RequestResults req) {
-
-    return null;
+    throw new UnsupportedOperationException();
   }
 
 
@@ -254,7 +253,7 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
     }
     
     void cleanupAndSendResult(QueryResult result){
-      ForemanManagerListener.this.cleanupAndSendResult(result);
+      Foreman.this.cleanupAndSendResult(result);
     }
     
   }

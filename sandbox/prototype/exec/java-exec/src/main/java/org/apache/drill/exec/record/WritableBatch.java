@@ -93,8 +93,7 @@ public class WritableBatch {
         buffers.add(b);
         b.retain();
       }
-      // allocate new buffer to release hold on old buffer.
-      value.allocateNew(value.capacity());
+      value.clear();
     }
 
     public WritableBatch get(){

@@ -12,6 +12,7 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared.FieldMetadata;
 import org.apache.drill.exec.record.DeadBuf;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.MsgPack2Vector;
 
 import java.util.Random;
@@ -26,71 +27,100 @@ import java.util.Random;
  * NB: this class is automatically generated from ValueVectorTypes.tdd using FreeMarker.
  */
 @SuppressWarnings("unused")
-public final class ${minor.class}Vector extends ValueVector {
+public final class ${minor.class}Vector extends BaseDataValueVector implements FixedWidthVector{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(${minor.class}Vector.class);
 
+ 
+  private final Accessor accessor = new Accessor();
+  private final Mutator mutator = new Mutator();
+  
   public ${minor.class}Vector(MaterializedField field, BufferAllocator allocator) {
     super(field, allocator);
   }
 
+  public int getValueCapacity(){
+    return (int) (data.capacity() *1.0 / ${type.width});
+  }
+
+  public Accessor getAccessor(){
+    return accessor;
+  }
+  
+  public Mutator getMutator(){
+    return mutator;
+  }
+
   /**
-   * Allocate a new memory space for this vector.  Must be called prior to using the ValueVector.
-   *
+   * Allocate a new buffer that supports setting at least the provided number of values.  May actually be sized bigger depending on underlying buffer rounding size. Must be called prior to using the ValueVector.
    * @param valueCount
-   *          The number of values which can be contained within this vector.
    */
   public void allocateNew(int valueCount) {
-    totalBytes = valueCount * ${type.width};
-    allocateNew(totalBytes, allocator.buffer(totalBytes), valueCount);
+    clear();
+    this.data = allocator.buffer(valueCount * ${type.width});
+    this.data.retain();
+    this.data.readerIndex(0);
+  }
+  
+  @Override
+  public FieldMetadata getMetadata() {
+    return FieldMetadata.newBuilder()
+             .setDef(getField().getDef())
+             .setValueCount(recordCount)
+             .setBufferLength(recordCount * ${type.width})
+             .build();
   }
 
   @Override
-  public int getAllocatedSize() {
-    return (int) Math.ceil(totalBytes);
+  public int load(int valueCount, ByteBuf buf){
+    clear();
+    this.recordCount = valueCount;
+    int len = recordCount * ${type.width};
+    data = buf.slice(0, len);
+    data.retain();
+    return len;
   }
-
-  /**
-   * Get the size requirement (in bytes) for the given number of values.  Only accurate
-   * for fixed width value vectors.
-   */
+  
   @Override
-  public int getSizeFromCount(int valueCount) {
-    return valueCount * ${type.width};
+  public void load(FieldMetadata metadata, ByteBuf buffer) {
+    assert this.field.getDef().equals(metadata.getDef());
+    int loaded = load(metadata.getValueCount(), buffer);
+    assert metadata.getBufferLength() == loaded;
   }
+  
+  public final class Accessor extends BaseValueVector.BaseAccessor{
 
-  public Mutator getMutator() {
-    return new Mutator();
-  }
+    public int getRecordCount() {
+      return recordCount;
+    }
+    
+    <#if (type.width > 8)>
 
- <#if (type.width > 8)>
+    public ${minor.javaType!type.javaType} get(int index) {
+      ByteBuf dst = allocator.buffer(${type.width});
+      data.getBytes(index * ${type.width}, dst, 0, ${type.width});
+      return dst;
+    }
 
-  public ${minor.javaType!type.javaType} get(int index) {
-    ByteBuf dst = allocator.buffer(${type.width});
-    data.getBytes(index * ${type.width}, dst, 0, ${type.width});
-    return dst;
-  }
+    @Override
+    public Object getObject(int index) {
+      ByteBuf dst = allocator.buffer(${type.width});
+      data.getBytes(index, dst, 0, ${type.width});
+      return dst;
+    }
 
-  @Override
-  public Object getObject(int index) {
-    ByteBuf dst = allocator.buffer(${type.width});
-    data.getBytes(index, dst, 0, ${type.width});
-    return dst;
-  }
+    <#else> <#-- type.width <= 8 -->
 
+    public ${minor.javaType!type.javaType} get(int index) {
+      return data.get${(minor.javaType!type.javaType)?cap_first}(index * ${type.width});
+    }
 
- <#else> <#-- type.width <= 8 -->
-
-  public ${minor.javaType!type.javaType} get(int index) {
-    return data.get${(minor.javaType!type.javaType)?cap_first}(index * ${type.width});
-  }
-
-  public Object getObject(int index) {
-    return get(index);
-  }
+    public Object getObject(int index) {
+      return get(index);
+    }
 
 
- </#if> <#-- type.width -->
- 
+   </#if> <#-- type.width -->
+ }
  
  /**
   * ${minor.class}.Mutator implements a mutable vector of fixed width values.  Elements in the
@@ -101,7 +131,7 @@ public final class ${minor.class}Vector extends ValueVector {
   *
   * NB: this class is automatically generated from ValueVectorTypes.tdd using FreeMarker.
   */
-  public class Mutator implements ValueVector.Mutator{
+  public final class Mutator extends BaseValueVector.BaseMutator{
 
     private Mutator(){};
    /**
@@ -147,9 +177,9 @@ public final class ${minor.class}Vector extends ValueVector {
    }
   </#if> <#-- type.width -->
   
-   @Override
-   public void setRecordCount(int recordCount) {
-     ${minor.class}Vector.this.setRecordCount(recordCount);
+   public void setValueCount(int recordCount) {
+     ${minor.class}Vector.this.recordCount = recordCount;
+     data.writerIndex(${type.width} * recordCount);
    }
 
 

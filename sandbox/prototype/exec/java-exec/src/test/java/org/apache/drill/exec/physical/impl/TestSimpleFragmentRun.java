@@ -86,7 +86,7 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
           } else {
             System.out.print("\t");
           }
-          System.out.print(v.value.getObject(i));
+          System.out.print(v.value.getAccessor().getObject(i));
         }
         if(!first) System.out.println();
       }
