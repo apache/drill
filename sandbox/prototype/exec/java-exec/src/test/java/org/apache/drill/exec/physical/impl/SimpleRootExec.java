@@ -5,7 +5,7 @@ import org.apache.drill.exec.physical.impl.ScreenCreator.ScreenRoot;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 import org.apache.drill.exec.record.RecordBatch.TypedFieldId;
-import org.apache.drill.exec.record.vector.ValueVector;
+import org.apache.drill.exec.vector.ValueVector;
 
 public class SimpleRootExec implements RootExec{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SimpleRootExec.class);
@@ -22,7 +22,7 @@ public class SimpleRootExec implements RootExec{
   }
 
 
-  public <T extends ValueVector<T>> T getValueVectorById(SchemaPath path, Class<?> vvClass){
+  public <T extends ValueVector> T getValueVectorById(SchemaPath path, Class<?> vvClass){
     TypedFieldId tfid = incoming.getValueVectorId(path);
     return incoming.getValueVectorById(tfid.getFieldId(), vvClass);
   }

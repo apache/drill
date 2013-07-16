@@ -18,9 +18,9 @@ import org.apache.drill.exec.physical.impl.SimpleRootExec;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
-import org.apache.drill.exec.record.vector.Fixed8;
 import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
 import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.exec.vector.BigIntVector;
 import org.junit.After;
 import org.junit.Test;
 
@@ -50,13 +50,18 @@ public class TestSimpleProjection {
     FragmentContext context = new FragmentContext(bitContext, FragmentHandle.getDefaultInstance(), connection, null, registry);
     SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
     while(exec.next()){
-      Fixed8 c1 = exec.getValueVectorById(new SchemaPath("col1", ExpressionPosition.UNKNOWN), Fixed8.class);
-      Fixed8 c2 = exec.getValueVectorById(new SchemaPath("col2", ExpressionPosition.UNKNOWN), Fixed8.class);
+      BigIntVector c1 = exec.getValueVectorById(new SchemaPath("col1", ExpressionPosition.UNKNOWN), BigIntVector.class);
+      BigIntVector c2 = exec.getValueVectorById(new SchemaPath("col2", ExpressionPosition.UNKNOWN), BigIntVector.class);
       int x = 0;
-      for(int i =0; i < c1.getRecordCount(); i++){
-        assertEquals(c1.get(i)+1, c2.get(i));
-        x += c1.get(i);
+      BigIntVector.Accessor a1, a2;
+      a1 = c1.getAccessor();
+      a2 = c2.getAccessor();
+      
+      for(int i =0; i < c1.getAccessor().getRecordCount(); i++){
+        assertEquals(a1.get(i)+1, a2.get(i));
+        x += a1.get(i);
       }
+      
       System.out.println(x);
     }
   }

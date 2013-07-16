@@ -26,7 +26,7 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.proto.SchemaDefProtos.FieldDef;
 import org.apache.drill.exec.proto.SchemaDefProtos.NamePart;
 import org.apache.drill.exec.proto.SchemaDefProtos.NamePart.Type;
-import org.apache.drill.exec.record.vector.TypeHelper;
+import org.apache.drill.exec.vector.TypeHelper;
 
 public class MaterializedField{
   private final FieldDef def;
@@ -113,7 +113,8 @@ public class MaterializedField{
       throw new UnsupportedOperationException();
     }
     return new MaterializedField(def.toBuilder().setMajorType(mt.toBuilder().setMode(newDataMode).build()).build());
-
+  }
+  
   public Class<?> getValueClass() {
     return TypeHelper.getValueVectorClass(getType().getMinorType(), getDataMode());
   }

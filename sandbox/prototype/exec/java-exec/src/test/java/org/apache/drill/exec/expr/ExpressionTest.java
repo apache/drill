@@ -21,18 +21,13 @@ import org.apache.drill.common.expression.parser.ExprParser.parse_return;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.expr.CodeGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.physical.impl.project.Projector;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.TypedFieldId;
-import org.apache.drill.exec.record.vector.Fixed4;
+import org.apache.drill.exec.vector.IntVector;
 import org.junit.After;
 import org.junit.Test;
-import org.slf4j.ILoggerFactory;
-import org.slf4j.LoggerFactory;
-
-import ch.qos.logback.classic.LoggerContext;
 
 public class ExpressionTest {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExpressionTest.class);
@@ -51,8 +46,8 @@ public class ExpressionTest {
       {
         batch.getValueVectorId(new SchemaPath("alpha", ExpressionPosition.UNKNOWN));
         result = tfid;
-        batch.getValueVectorById(tfid.getFieldId(), Fixed4.class);
-        result = new Fixed4(null, null);
+        batch.getValueVectorById(tfid.getFieldId(), IntVector.class);
+        result = new IntVector(null, null);
       }
 
     };

@@ -19,16 +19,16 @@ package org.apache.drill.exec.physical.impl;
 
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.record.vector.SelectionVector;
+import org.apache.drill.exec.record.selection.SelectionVector2;
 
 public abstract class FilteringRecordBatchTransformer {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FilteringRecordBatchTransformer.class);
   
   final RecordBatch incoming;
-  final SelectionVector selectionVector;
+  final SelectionVector2 selectionVector;
   final BatchSchema schema;
   
-  public FilteringRecordBatchTransformer(RecordBatch incoming, OutputMutator output, SelectionVector selectionVector) {
+  public FilteringRecordBatchTransformer(RecordBatch incoming, OutputMutator output, SelectionVector2 selectionVector) {
     super();
     this.incoming = incoming;
     this.selectionVector = selectionVector;

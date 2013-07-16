@@ -8,6 +8,7 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared.FieldMetadata;
 import org.apache.drill.exec.record.DeadBuf;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.TransferPair;
 /**
  * Bit implements a vector of bit-width values.  Elements in the vector are accessed
  * by position from the logical start of the vector.
@@ -74,6 +75,32 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
     return new Accessor();
   }
   
+  public TransferPair getTransferPair(){
+    return new TransferImpl();
+  }
+  
+  public void transferTo(BitVector target){
+    target.data = data;
+    target.data.retain();
+    target.recordCount = recordCount;
+    clear();
+  }
+  
+  private class TransferImpl implements TransferPair{
+    BitVector to;
+    
+    public TransferImpl(){
+      this.to = new BitVector(getField(), allocator);
+    }
+    
+    public BitVector getTo(){
+      return to;
+    }
+    
+    public void transfer(){
+      transferTo(to);
+    }
+  }
   
   public class Accessor extends BaseAccessor{
 

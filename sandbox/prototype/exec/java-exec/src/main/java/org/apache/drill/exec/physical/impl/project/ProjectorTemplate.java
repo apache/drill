@@ -6,15 +6,16 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.record.vector.SelectionVector2;
-import org.apache.drill.exec.record.vector.SelectionVector4;
+import org.apache.drill.exec.record.TransferPair;
+import org.apache.drill.exec.record.selection.SelectionVector2;
+import org.apache.drill.exec.record.selection.SelectionVector4;
 
 import com.google.common.collect.ImmutableList;
 
 public abstract class ProjectorTemplate implements Projector {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProjectorTemplate.class);
   
-  private ImmutableList<TransferPairing<?>> transfers;
+  private ImmutableList<TransferPair> transfers;
   private SelectionVector2 vector2;
   private SelectionVector4 vector4;
   private SelectionVectorMode svMode;
@@ -39,7 +40,7 @@ public abstract class ProjectorTemplate implements Projector {
       
     case NONE:
       
-      for(TransferPairing<?> t : transfers){
+      for(TransferPair t : transfers){
         t.transfer();
       }
       final int countN = recordCount;
@@ -55,7 +56,7 @@ public abstract class ProjectorTemplate implements Projector {
   }
 
   @Override
-  public final void setup(FragmentContext context, RecordBatch incoming, RecordBatch outgoing, List<TransferPairing<?>> transfers)  throws SchemaChangeException{
+  public final void setup(FragmentContext context, RecordBatch incoming, RecordBatch outgoing, List<TransferPair> transfers)  throws SchemaChangeException{
 
     this.svMode = incoming.getSchema().getSelectionVector(); 
     switch(svMode){

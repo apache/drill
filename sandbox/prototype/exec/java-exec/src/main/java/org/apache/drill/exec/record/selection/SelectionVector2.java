@@ -6,38 +6,44 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
+ * 
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.apache.drill.exec.record.vector;
+package org.apache.drill.exec.record.selection;
+
+import io.netty.buffer.ByteBuf;
 
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.DeadBuf;
 
-public final class NullableFixed8 extends NullableValueVector<NullableFixed8, Fixed8>{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NullableFixed8.class);
+/**
+ * A selection vector that fronts, at most, a
+ */
+public class SelectionVector2{
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SelectionVector2.class);
 
-  public NullableFixed8(MaterializedField field, BufferAllocator allocator) {
-    super(field, allocator);
+  private final BufferAllocator allocator;
+  private ByteBuf buffer = DeadBuf.DEAD_BUFFER;
+
+  public SelectionVector2(BufferAllocator allocator) {
+    this.allocator = allocator;
   }
 
-  @Override
-  protected Fixed8 getNewValueVector(BufferAllocator allocator) {
-    return new Fixed8(this.field, allocator);
+  public int getCount(){
+    return -1;
   }
 
-  public long get(int index){
-    return 1l;
-  }
-  
-  public void set(int index, long value){
-    
+  public int getIndex(int directIndex){
+    return buffer.getChar(directIndex);
   }
 
+  public void setIndex(int directIndex, char value){
+    buffer.setChar(directIndex, value);
+  }
 }

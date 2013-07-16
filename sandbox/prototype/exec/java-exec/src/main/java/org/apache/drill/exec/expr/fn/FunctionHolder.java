@@ -1,6 +1,5 @@
 package org.apache.drill.exec.expr.fn;
 
-import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Map;
 
@@ -92,14 +91,16 @@ public class FunctionHolder {
     
     JVar[] workspaceJVars = new JVar[workspaceVars.length];
     for(int i =0 ; i < workspaceVars.length; i++){
-      workspaceJVars[i] = g.declareClassField("work", g.getModel()._ref(workspaceVars[i].type)));
+      workspaceJVars[i] = g.declareClassField("work", g.getModel()._ref(workspaceVars[i].type));
     }
     
-    for(WorkspaceReference r : workspaceVars){
-      g.declareClassField(, t)
-    }
-  
-    g.declareClassField(prefix, t)
+//    for(WorkspaceReference r : workspaceVars){
+//      g.declareClassField(, t)
+//    }
+//  
+//    g.declareClassField(prefix, t)
+    
+    
     // locally name external blocks.
     
     // internal out value.

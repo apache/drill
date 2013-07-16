@@ -18,19 +18,11 @@
 package org.apache.drill.exec.physical.impl;
 
 import org.apache.drill.exec.exception.SchemaChangeException;
-<<<<<<< HEAD
+import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.ValueVector;
 
 public interface OutputMutator {
-  public void removeField(int fieldId) throws SchemaChangeException;
-  public void addField(int fieldId, ValueVector vector) throws SchemaChangeException ;
-=======
-import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.record.vector.ValueVector;
-
-public interface OutputMutator {
   public void removeField(MaterializedField field) throws SchemaChangeException;
-  public void addField(ValueVector<?> vector) throws SchemaChangeException ;
->>>>>>> Build working
-  public void setNewSchema() throws SchemaChangeException ;
+  public void addField(ValueVector vector) throws SchemaChangeException ;
+  public void setNewSchema() throws SchemaChangeException;
 }

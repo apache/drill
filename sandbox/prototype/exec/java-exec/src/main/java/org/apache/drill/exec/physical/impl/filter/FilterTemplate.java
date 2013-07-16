@@ -1,7 +1,7 @@
 package org.apache.drill.exec.physical.impl.filter;
 
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.record.vector.SelectionVector2;
+import org.apache.drill.exec.record.selection.SelectionVector2;
 
 public abstract class FilterTemplate {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FilterTemplate.class);

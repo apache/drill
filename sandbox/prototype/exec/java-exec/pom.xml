@@ -179,7 +179,6 @@
                 <exec executable="protoc">
                   <arg value="--java_out=${target.gen.source.path}" />
                   <arg value="--proto_path=${proto.cas.path}" />
-<<<<<<< HEAD
                   <arg value="--proto_path=${project.basedir}/../../common/src/main/protobuf/" />
 									<arg line="${proto.files}" />
 								</exec>
@@ -226,34 +225,5 @@
 			<!-- </plugin> -->
 		</plugins>
 	</build>
-=======
-                  <arg
-                    value="--proto_path=${project.basedir}/../../common/src/main/protobuf/" />
-                  <arg line="${proto.files}" />
-                </exec>
-              </tasks>
-              <sourceRoot>${target.gen.source.path}</sourceRoot>
-            </configuration>
-            <goals>
-              <goal>run</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <!-- <plugin> -->
-      <!-- <groupId>com.github.igor-petruk.protobuf</groupId> -->
-      <!-- <artifactId>protobuf-maven-plugin</artifactId> -->
-      <!-- <version>0.6.2</version> -->
-      <!-- <executions> -->
-      <!-- <execution> -->
-      <!-- <goals> -->
-      <!-- <goal>run</goal> -->
-      <!-- </goals> -->
-      <!-- </execution> -->
-      <!-- </executions> -->
-      <!-- </plugin> -->
-    </plugins>
-  </build>
->>>>>>> Build working
 
 </project>

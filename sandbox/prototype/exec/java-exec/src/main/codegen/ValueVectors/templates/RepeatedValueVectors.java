@@ -7,11 +7,6 @@ import org.apache.drill.exec.vector.UInt4Vector;
 <@pp.changeOutputFile name="Repeated${minor.class}Vector.java" />
 package org.apache.drill.exec.vector;
 
-
-
-
-
-
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import io.netty.buffer.ByteBuf;
@@ -25,6 +20,7 @@ import org.apache.drill.exec.proto.SchemaDefProtos;
 import org.apache.drill.exec.proto.UserBitShared.FieldMetadata;
 import org.apache.drill.exec.record.DeadBuf;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.TransferPair;
 
 @SuppressWarnings("unused")
 /**
@@ -65,6 +61,35 @@ import org.apache.drill.exec.record.MaterializedField;
     return counts.getBufferSize() + offsets.getBufferSize() + values.getBufferSize();
   }
   
+  public TransferPair getTransferPair(){
+    return new TransferImpl();
+  }
+  
+  public void transferTo(Repeated${minor.class}Vector target){
+    counts.transferTo(target.counts);
+    offsets.transferTo(target.offsets);
+    values.transferTo(target.values);
+    target.parentValueCount = parentValueCount;
+    target.childValueCount = childValueCount;
+    clear();
+  }
+  
+  private class TransferImpl implements TransferPair{
+    Repeated${minor.class}Vector to;
+    
+    public TransferImpl(){
+      this.to = new Repeated${minor.class}Vector(getField(), allocator);
+    }
+    
+    public Repeated${minor.class}Vector getTo(){
+      return to;
+    }
+    
+    public void transfer(){
+      transferTo(to);
+    }
+  }
+  
   <#if type.major == "VarLen">
   @Override
   public FieldMetadata getMetadata() {
@@ -84,9 +109,6 @@ import org.apache.drill.exec.record.MaterializedField;
     mutator.reset();
     accessor.reset();
   }
-
-  
-
   
   @Override
   public int load(int dataBytes, int parentValueCount, int childValueCount, ByteBuf buf){

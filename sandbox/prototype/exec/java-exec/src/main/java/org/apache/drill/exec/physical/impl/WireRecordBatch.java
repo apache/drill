@@ -17,26 +17,20 @@
  ******************************************************************************/
 package org.apache.drill.exec.physical.impl;
 
-<<<<<<< HEAD
-=======
 import org.apache.drill.common.expression.SchemaPath;
->>>>>>> Build working
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.UserBitShared.RecordBatchDef;
 import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.record.InvalidValueAccessor;
 import org.apache.drill.exec.record.RawFragmentBatch;
 import org.apache.drill.exec.record.RawFragmentBatchProvider;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.WritableBatch;
-<<<<<<< HEAD
+import org.apache.drill.exec.record.selection.SelectionVector2;
+import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.ValueVector;
-=======
-import org.apache.drill.exec.record.vector.SelectionVector2;
-import org.apache.drill.exec.record.vector.SelectionVector4;
-import org.apache.drill.exec.record.vector.ValueVector;
->>>>>>> Build working
 
 public class WireRecordBatch implements RecordBatch{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WireRecordBatch.class);
@@ -90,14 +84,9 @@ public class WireRecordBatch implements RecordBatch{
   }
 
   @Override
-<<<<<<< HEAD
-  public <T extends ValueVector> T getValueVector(int fieldId, Class<T> clazz) throws InvalidValueAccessor {
-=======
-  public <T extends ValueVector<T>> T getValueVectorById(int fieldId, Class<?> clazz) {
->>>>>>> Build working
+  public <T extends ValueVector> T getValueVectorById(int fieldId, Class<?> clazz){
     return batchLoader.getValueVector(fieldId, clazz);
   }
-
   
   @Override
   public IterOutcome next() {

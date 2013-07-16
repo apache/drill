@@ -4,8 +4,11 @@ import static org.junit.Assert.assertEquals;
 
 import java.nio.charset.Charset;
 
+import org.apache.drill.common.types.TypeProtos.DataMode;
+import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.memory.DirectBufferAllocator;
-import org.apache.drill.exec.proto.SchemaDefProtos;
+import org.apache.drill.exec.proto.SchemaDefProtos.FieldDef;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.BitVector;
 import org.apache.drill.exec.vector.NullableFloat4Vector;
@@ -22,15 +25,13 @@ public class TestValueVector {
   @Test
   public void testFixedType() {
     // Build a required uint field definition
-    SchemaDefProtos.MajorType.Builder typeBuilder = SchemaDefProtos.MajorType.newBuilder();
-    SchemaDefProtos.FieldDef.Builder defBuilder = SchemaDefProtos.FieldDef.newBuilder();
+    MajorType.Builder typeBuilder = MajorType.newBuilder();
+    FieldDef.Builder defBuilder = FieldDef.newBuilder();
     typeBuilder
-        .setMinorType(SchemaDefProtos.MinorType.UINT4)
-        .setMode(SchemaDefProtos.DataMode.REQUIRED)
+        .setMinorType(MinorType.UINT4)
+        .setMode(DataMode.REQUIRED)
         .setWidth(4);
     defBuilder
-        .setFieldId(1)
-        .setParentId(0)
         .setMajorType(typeBuilder.build());
         MaterializedField field = MaterializedField.create(defBuilder.build());
 
@@ -58,15 +59,13 @@ public class TestValueVector {
   @Test
   public void testNullableVarLen2() {
     // Build an optional varchar field definition
-    SchemaDefProtos.MajorType.Builder typeBuilder = SchemaDefProtos.MajorType.newBuilder();
-    SchemaDefProtos.FieldDef.Builder defBuilder = SchemaDefProtos.FieldDef.newBuilder();
+    MajorType.Builder typeBuilder = MajorType.newBuilder();
+    FieldDef.Builder defBuilder = FieldDef.newBuilder();
     typeBuilder
-        .setMinorType(SchemaDefProtos.MinorType.VARCHAR2)
-        .setMode(SchemaDefProtos.DataMode.OPTIONAL)
+        .setMinorType(MinorType.VARCHAR2)
+        .setMode(DataMode.OPTIONAL)
         .setWidth(2);
     defBuilder
-        .setFieldId(1)
-        .setParentId(0)
         .setMajorType(typeBuilder.build());
     MaterializedField field = MaterializedField.create(defBuilder.build());
 
@@ -106,15 +105,13 @@ public class TestValueVector {
   @Test
   public void testNullableFixedType() {
     // Build an optional uint field definition
-    SchemaDefProtos.MajorType.Builder typeBuilder = SchemaDefProtos.MajorType.newBuilder();
-    SchemaDefProtos.FieldDef.Builder defBuilder = SchemaDefProtos.FieldDef.newBuilder();
+    MajorType.Builder typeBuilder = MajorType.newBuilder();
+    FieldDef.Builder defBuilder = FieldDef.newBuilder();
     typeBuilder
-        .setMinorType(SchemaDefProtos.MinorType.UINT4)
-        .setMode(SchemaDefProtos.DataMode.OPTIONAL)
+        .setMinorType(MinorType.UINT4)
+        .setMode(DataMode.OPTIONAL)
         .setWidth(4);
     defBuilder
-        .setFieldId(1)
-        .setParentId(0)
         .setMajorType(typeBuilder.build());
     MaterializedField field = MaterializedField.create(defBuilder.build());
 
@@ -195,15 +192,13 @@ public class TestValueVector {
   @Test
   public void testNullableFloat() {
     // Build an optional float field definition
-    SchemaDefProtos.MajorType.Builder typeBuilder = SchemaDefProtos.MajorType.newBuilder();
-    SchemaDefProtos.FieldDef.Builder defBuilder = SchemaDefProtos.FieldDef.newBuilder();
+    MajorType.Builder typeBuilder = MajorType.newBuilder();
+    FieldDef.Builder defBuilder = FieldDef.newBuilder();
     typeBuilder
-        .setMinorType(SchemaDefProtos.MinorType.FLOAT4)
-        .setMode(SchemaDefProtos.DataMode.OPTIONAL)
+        .setMinorType(MinorType.FLOAT4)
+        .setMode(DataMode.OPTIONAL)
         .setWidth(4);
     defBuilder
-        .setFieldId(1)
-        .setParentId(0)
         .setMajorType(typeBuilder.build());
     MaterializedField field = MaterializedField.create(defBuilder.build());
 
@@ -256,15 +251,13 @@ public class TestValueVector {
   @Test
   public void testBitVector() {
     // Build a required boolean field definition
-    SchemaDefProtos.MajorType.Builder typeBuilder = SchemaDefProtos.MajorType.newBuilder();
-    SchemaDefProtos.FieldDef.Builder defBuilder = SchemaDefProtos.FieldDef.newBuilder();
+    MajorType.Builder typeBuilder = MajorType.newBuilder();
+    FieldDef.Builder defBuilder = FieldDef.newBuilder();
     typeBuilder
-        .setMinorType(SchemaDefProtos.MinorType.BOOLEAN)
-        .setMode(SchemaDefProtos.DataMode.REQUIRED)
+        .setMinorType(MinorType.BOOLEAN)
+        .setMode(DataMode.REQUIRED)
         .setWidth(4);
     defBuilder
-        .setFieldId(1)
-        .setParentId(0)
         .setMajorType(typeBuilder.build());
     MaterializedField field = MaterializedField.create(defBuilder.build());
 

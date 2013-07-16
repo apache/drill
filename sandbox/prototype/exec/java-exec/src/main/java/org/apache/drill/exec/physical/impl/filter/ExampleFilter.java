@@ -22,13 +22,11 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.BatchSchema;
-import org.apache.drill.exec.record.InvalidValueAccessor;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.record.RecordBatch.TypedFieldId;
 import org.apache.drill.exec.record.WritableBatch;
-import org.apache.drill.exec.record.vector.SelectionVector2;
-import org.apache.drill.exec.record.vector.SelectionVector4;
-import org.apache.drill.exec.record.vector.ValueVector;
+import org.apache.drill.exec.record.selection.SelectionVector2;
+import org.apache.drill.exec.record.selection.SelectionVector4;
+import org.apache.drill.exec.vector.ValueVector;
 
 public class ExampleFilter implements RecordBatch {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExampleFilter.class);
@@ -83,7 +81,7 @@ public class ExampleFilter implements RecordBatch {
   }
 
   @Override
-  public <T extends ValueVector<T>> T getValueVectorById(int fieldId, Class<?> vvClass) {
+  public <T extends ValueVector> T getValueVectorById(int fieldId, Class<?> vvClass) {
     return null;
   }
 

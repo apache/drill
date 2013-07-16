@@ -28,8 +28,6 @@ import org.apache.drill.exec.physical.config.MockScanPOP.MockColumn;
 import org.apache.drill.exec.physical.config.MockScanPOP.MockScanEntry;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.record.vector.TypeHelper;
-import org.apache.drill.exec.record.vector.ValueVector;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.vector.FixedWidthVector;
 import org.apache.drill.exec.vector.NonRepeatedMutator;
@@ -60,12 +58,12 @@ public class MockRecordReader implements RecordReader {
     return x;
   }
 
-  private ValueVector<?> getVector(String name, MajorType type, int length) {
+  private ValueVector getVector(String name, MajorType type, int length) {
     assert context != null : "Context shouldn't be null.";
     if(type.getMode() != DataMode.REQUIRED) throw new UnsupportedOperationException();
     
     MaterializedField f = MaterializedField.create(new SchemaPath(name, ExpressionPosition.UNKNOWN), type);
-    ValueVector<?> v;
+    ValueVector v;
     v = TypeHelper.getNewVector(f, context.getAllocator());
     if(v instanceof FixedWidthVector){
       ((FixedWidthVector)v).allocateNew(length);  

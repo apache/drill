@@ -15,6 +15,7 @@ enum MinorType {
     BIGINT = 6;   //  eight byte signed integer
     DECIMAL4 = 7;   //  a decimal supporting precision between 1 and 8 (4 bits for decimal location, 1 sign)
     DECIMAL8 = 8;   //  a decimal supporting precision between 9 and 18 (5 bits for decimal location, 1 sign)
+    DECIMAL12 = 9;   //  a decimal supporting precision between 
     DECIMAL16 = 10;   //  a decimal supporting precision between 19 and 37 (6 bits for decimal location, 1 sign)
     MONEY = 11;   //  signed decimal with two digit precision
     DATE = 12;   //  days since 4713bc 

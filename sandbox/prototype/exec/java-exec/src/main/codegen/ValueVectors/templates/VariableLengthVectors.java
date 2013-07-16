@@ -19,6 +19,7 @@ import org.apache.drill.exec.proto.SchemaDefProtos;
 import org.apache.drill.exec.proto.UserBitShared.FieldMetadata;
 import org.apache.drill.exec.record.DeadBuf;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.vector.ByteHolder;
 
 /**
@@ -100,6 +101,34 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
   @Override
   public ByteBuf[] getBuffers() {
     return new ByteBuf[]{offsetVector.data, this.data};
+  }
+  
+  public TransferPair getTransferPair(){
+    return new TransferImpl();
+  }
+  
+  public void transferTo(${minor.class}Vector target){
+    this.offsetVector.transferTo(target.offsetVector);
+    target.data = data;
+    target.data.retain();
+    target.recordCount = recordCount;
+    clear();
+  }
+  
+  private class TransferImpl implements TransferPair{
+    ${minor.class}Vector to;
+    
+    public TransferImpl(){
+      this.to = new ${minor.class}Vector(getField(), allocator);
+    }
+    
+    public ${minor.class}Vector getTo(){
+      return to;
+    }
+    
+    public void transfer(){
+      transferTo(to);
+    }
   }
   
   public void allocateNew(int totalBytes, int valueCount) {

@@ -28,12 +28,14 @@ import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.SchemaBuilder;
+import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.WritableBatch;
-import org.apache.drill.exec.record.vector.SelectionVector2;
-import org.apache.drill.exec.record.vector.SelectionVector4;
-import org.apache.drill.exec.record.vector.TypeHelper;
-import org.apache.drill.exec.record.vector.ValueVector;
-
+import org.apache.drill.exec.record.selection.SelectionVector2;
+import org.apache.drill.exec.record.selection.SelectionVector4;
+import org.apache.drill.exec.vector.AllocationHelper;
+import org.apache.drill.exec.vector.NonRepeatedMutator;
+import org.apache.drill.exec.vector.TypeHelper;
+import org.apache.drill.exec.vector.ValueVector;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -46,8 +48,8 @@ public class ProjectRecordBatch implements RecordBatch{
   private final FragmentContext context;
   private BatchSchema outSchema;
   private Projector projector;
-  private List<ValueVector<?>> allocationVectors;
-  private List<ValueVector<?>> outputVectors;
+  private List<ValueVector> allocationVectors;
+  private List<ValueVector> outputVectors;
   private VectorHolder vh;
   
   
@@ -95,7 +97,7 @@ public class ProjectRecordBatch implements RecordBatch{
   }
 
   @Override
-  public <T extends ValueVector<T>> T getValueVectorById(int fieldId, Class<?> clazz) {
+  public <T extends ValueVector> T getValueVectorById(int fieldId, Class<?> clazz) {
     return vh.getValueVector(fieldId, clazz);
   }
 
@@ -121,12 +123,17 @@ public class ProjectRecordBatch implements RecordBatch{
       // fall through.
     case OK:
       int recordCount = incoming.getRecordCount();
-      for(ValueVector<?> v : this.allocationVectors){
-        v.allocateNew(recordCount);
+      for(ValueVector v : this.allocationVectors){
+        AllocationHelper.allocate(v, recordCount, 50);
       }
       projector.projectRecords(recordCount, 0);
-      for(ValueVector<?> v : this.outputVectors){
-        v.setRecordCount(recordCount);
+      for(ValueVector v : this.outputVectors){
+        ValueVector.Mutator m = v.getMutator();
+        if(m instanceof NonRepeatedMutator){
+          ((NonRepeatedMutator) m).setValueCount(recordCount);
+        }else{
+          throw new UnsupportedOperationException();
+        }
       }
       return upstream; // change if upstream changed, otherwise normal.
     default:
@@ -138,7 +145,7 @@ public class ProjectRecordBatch implements RecordBatch{
   private Projector createNewProjector() throws SchemaChangeException{
     this.allocationVectors = Lists.newArrayList();
     if(outputVectors != null){
-      for(ValueVector<?> v : outputVectors){
+      for(ValueVector v : outputVectors){
         v.close();
       }
     }
@@ -146,7 +153,7 @@ public class ProjectRecordBatch implements RecordBatch{
     this.vh = new VectorHolder(outputVectors);
     final List<NamedExpression> exprs = pop.getExprs();
     final ErrorCollector collector = new ErrorCollectorImpl();
-    final List<TransferPairing<?>> transfers = Lists.newArrayList();
+    final List<TransferPair> transfers = Lists.newArrayList();
     
     final CodeGenerator<Projector> cg = new CodeGenerator<Projector>(Projector.TEMPLATE_DEFINITION, context.getFunctionRegistry());
     
@@ -161,15 +168,15 @@ public class ProjectRecordBatch implements RecordBatch{
       // add value vector to transfer if direct reference and this is allowed, otherwise, add to evaluation stack.
       if(expr instanceof ValueVectorReadExpression && incoming.getSchema().getSelectionVector() == SelectionVectorMode.NONE){
         ValueVectorReadExpression vectorRead = (ValueVectorReadExpression) expr;
-        ValueVector<?> vvIn = incoming.getValueVectorById(vectorRead.getFieldId(), TypeHelper.getValueVectorClass(vectorRead.getMajorType()));
+        ValueVector vvIn = incoming.getValueVectorById(vectorRead.getFieldId(), TypeHelper.getValueVectorClass(vectorRead.getMajorType().getMinorType(), vectorRead.getMajorType().getMode()));
         Preconditions.checkNotNull(incoming);
 
-        TransferPairing<?> tp = vvIn.getTransferPair(outputField);
+        TransferPair tp = vvIn.getTransferPair();
         transfers.add(tp);
         outputVectors.add(tp.getTo());
       }else{
         // need to do evaluation.
-        ValueVector<?> vector = TypeHelper.getNewVector(outputField, context.getAllocator());
+        ValueVector vector = TypeHelper.getNewVector(outputField, context.getAllocator());
         allocationVectors.add(vector);
         outputVectors.add(vector);
         ValueVectorWriteExpression write = new ValueVectorWriteExpression(outputVectors.size() - 1, expr);
@@ -179,7 +186,7 @@ public class ProjectRecordBatch implements RecordBatch{
     }
     
     SchemaBuilder bldr = BatchSchema.newBuilder().setSelectionVectorMode(SelectionVectorMode.NONE);
-    for(ValueVector<?> v : outputVectors){
+    for(ValueVector v : outputVectors){
       bldr.addField(v.getField());
     }
     this.outSchema = bldr.build();

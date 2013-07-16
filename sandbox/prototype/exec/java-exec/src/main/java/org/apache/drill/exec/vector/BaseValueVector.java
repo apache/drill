@@ -25,8 +25,6 @@ abstract class BaseValueVector implements ValueVector{
   }
   
   abstract class BaseAccessor implements ValueVector.Accessor{
-
-    
     public void reset(){}
   }
   

@@ -21,9 +21,9 @@ import io.netty.buffer.ByteBuf;
 
 import java.io.Closeable;
 
-import org.apache.drill.exec.proto.SchemaDefProtos.FieldDef;
 import org.apache.drill.exec.proto.UserBitShared.FieldMetadata;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.TransferPair;
 
 /**
  * ValueVectorTypes defines a set of template-generated classes which implement type-specific
@@ -49,6 +49,9 @@ public interface ValueVector extends Closeable {
    */
   public void clear();
   
+  
+  public TransferPair getTransferPair();
+
   
   /**
    * Return the underlying buffers associated with this vector. Note that this doesn't impact the

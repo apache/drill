@@ -25,8 +25,6 @@ import org.apache.drill.exec.proto.UserBitShared.FieldMetadata;
 import org.apache.drill.exec.proto.UserBitShared.RecordBatchDef;
 import org.apache.drill.exec.vector.ValueVector;
 
-import com.carrotsearch.hppc.IntObjectOpenHashMap;
-import com.carrotsearch.hppc.procedures.IntObjectProcedure;
 import com.google.common.collect.Lists;
 
 /**
@@ -58,20 +56,20 @@ public class WritableBatch {
     return buffers;
   }
 
-  public static WritableBatch get(int recordCount, List<ValueVector<?>> vectors){
+  public static WritableBatch get(int recordCount, List<ValueVector> vectors){
     
     List<ByteBuf> buffers = Lists.newArrayList();
     List<FieldMetadata> metadata = Lists.newArrayList();
     
 
-    for(ValueVector<?> vv : vectors){
+    for(ValueVector vv : vectors){
       metadata.add(vv.getMetadata());
       for(ByteBuf b : vv.getBuffers()){
         buffers.add(b);
         b.retain();
       }
       // allocate new buffer to release hold on old buffer.
-      vv.allocateNew(vv.capacity());
+      vv.clear();
     }
 
     RecordBatchDef batchDef = RecordBatchDef.newBuilder().addAllField(metadata).setRecordCount(recordCount).build();

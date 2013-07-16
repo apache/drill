@@ -30,19 +30,17 @@ import org.apache.drill.exec.proto.SchemaDefProtos.FieldDef;
 import org.apache.drill.exec.proto.UserBitShared.FieldMetadata;
 import org.apache.drill.exec.proto.UserBitShared.RecordBatchDef;
 import org.apache.drill.exec.record.RecordBatch.TypedFieldId;
-import org.apache.drill.exec.record.vector.TypeHelper;
-import org.apache.drill.exec.record.vector.ValueVector;
+import org.apache.drill.exec.vector.TypeHelper;
+import org.apache.drill.exec.vector.ValueVector;
 
 import com.beust.jcommander.internal.Lists;
 import com.beust.jcommander.internal.Maps;
-import com.carrotsearch.hppc.IntObjectOpenHashMap;
-import com.carrotsearch.hppc.cursors.IntObjectCursor;
 import com.google.common.collect.ImmutableList;
 
-public class RecordBatchLoader implements Iterable<ValueVector<?>>{
+public class RecordBatchLoader implements Iterable<ValueVector>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RecordBatchLoader.class);
 
-  private List<ValueVector<?>> vectors = Lists.newArrayList();
+  private List<ValueVector> vectors = Lists.newArrayList();
   private final BufferAllocator allocator;
   private int recordCount; 
   private BatchSchema schema;
@@ -67,19 +65,19 @@ public class RecordBatchLoader implements Iterable<ValueVector<?>>{
     this.recordCount = def.getRecordCount();
     boolean schemaChanged = false;
 
-    Map<MaterializedField, ValueVector<?>> oldFields = Maps.newHashMap();
-    for(ValueVector<?> v : this.vectors){
+    Map<MaterializedField, ValueVector> oldFields = Maps.newHashMap();
+    for(ValueVector v : this.vectors){
       oldFields.put(v.getField(), v);
     }
     
-    List<ValueVector<?>> newVectors = Lists.newArrayList();
+    List<ValueVector> newVectors = Lists.newArrayList();
 
     List<FieldMetadata> fields = def.getFieldList();
     
     int bufOffset = 0;
     for (FieldMetadata fmd : fields) {
       FieldDef fieldDef = fmd.getDef();
-      ValueVector<?> v = oldFields.remove(fieldDef);
+      ValueVector v = oldFields.remove(fieldDef);
       if(v != null){
         newVectors.add(v);
         continue;
@@ -90,21 +88,19 @@ public class RecordBatchLoader implements Iterable<ValueVector<?>>{
       MaterializedField m = new MaterializedField(fieldDef);
       v = TypeHelper.getNewVector(m, allocator);
       v.load(fmd, buf.slice(bufOffset, fmd.getBufferLength()));
-      newVectors.put(fieldDef.getFieldId(), v);
-      v.setTo(fmd, buf.slice(bufOffset, fmd.getBufferLength()));
       newVectors.add(v);
     }
     
     if(!oldFields.isEmpty()){
       schemaChanged = true;
-      for(ValueVector<?> v : oldFields.values()){
+      for(ValueVector v : oldFields.values()){
         v.close();
       }
     }
     
     // rebuild the schema.
     SchemaBuilder b = BatchSchema.newBuilder();
-    for(ValueVector<?> v : newVectors){
+    for(ValueVector v : newVectors){
       b.addField(v.getField());
     }
     b.setSelectionVectorMode(BatchSchema.SelectionVectorMode.NONE);
@@ -116,15 +112,15 @@ public class RecordBatchLoader implements Iterable<ValueVector<?>>{
 
   public TypedFieldId getValueVector(SchemaPath path) {
     for(int i =0; i < vectors.size(); i++){
-      ValueVector<?> vv = vectors.get(i);
+      ValueVector vv = vectors.get(i);
       if(vv.getField().matches(path)) return new TypedFieldId(vv.getField().getType(), i); 
     }
     return null;
   }
   
   @SuppressWarnings("unchecked")
-  public <T extends ValueVector<T>> T getValueVector(int fieldId, Class<?> clazz) {
-    ValueVector<?> v = vectors.get(fieldId);
+  public <T extends ValueVector> T getValueVector(int fieldId, Class<?> clazz) {
+    ValueVector v = vectors.get(fieldId);
     assert v != null;
     if (v.getClass() != clazz){
       logger.warn(String.format(
@@ -145,7 +141,7 @@ public class RecordBatchLoader implements Iterable<ValueVector<?>>{
   }
 
   @Override
-  public Iterator<ValueVector<?>> iterator() {
+  public Iterator<ValueVector> iterator() {
     return this.vectors.iterator();
   }
 

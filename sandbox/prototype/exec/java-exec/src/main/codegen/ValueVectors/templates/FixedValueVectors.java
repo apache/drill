@@ -9,6 +9,7 @@ package org.apache.drill.exec.vector;
 import io.netty.buffer.ByteBuf;
 
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.proto.UserBitShared.FieldMetadata;
 import org.apache.drill.exec.record.DeadBuf;
 import org.apache.drill.exec.record.MaterializedField;
@@ -49,6 +50,8 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
   public Mutator getMutator(){
     return mutator;
   }
+  
+
 
   /**
    * Allocate a new buffer that supports setting at least the provided number of values.  May actually be sized bigger depending on underlying buffer rounding size. Must be called prior to using the ValueVector.
@@ -85,6 +88,33 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     assert this.field.getDef().equals(metadata.getDef());
     int loaded = load(metadata.getValueCount(), buffer);
     assert metadata.getBufferLength() == loaded;
+  }
+  
+  public TransferPair getTransferPair(){
+    return new TransferImpl();
+  }
+  
+  public void transferTo(${minor.class}Vector target){
+    target.data = data;
+    target.data.retain();
+    target.recordCount = recordCount;
+    clear();
+  }
+  
+  private class TransferImpl implements TransferPair{
+    ${minor.class}Vector to;
+    
+    public TransferImpl(){
+      this.to = new ${minor.class}Vector(getField(), allocator);
+    }
+    
+    public ${minor.class}Vector getTo(){
+      return to;
+    }
+    
+    public void transfer(){
+      transferTo(to);
+    }
   }
   
   public final class Accessor extends BaseValueVector.BaseAccessor{
@@ -181,6 +211,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
      ${minor.class}Vector.this.recordCount = recordCount;
      data.writerIndex(${type.width} * recordCount);
    }
+
 
 
 

@@ -17,6 +17,7 @@ import org.apache.drill.exec.proto.SchemaDefProtos;
 import org.apache.drill.exec.proto.UserBitShared.FieldMetadata;
 import org.apache.drill.exec.record.DeadBuf;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.BitVector;
 import org.apache.drill.exec.vector.UInt2Vector;
@@ -145,6 +146,33 @@ public final class Nullable${minor.class}Vector extends BaseValueVector implemen
   }
   
   </#if>
+  
+  public TransferPair getTransferPair(){
+    return new TransferImpl();
+  }
+  
+  public void transferTo(Nullable${minor.class}Vector target){
+    bits.transferTo(target.bits);
+    values.transferTo(target.values);
+    target.recordCount = recordCount;
+    clear();
+  }
+  
+  private class TransferImpl implements TransferPair{
+    Nullable${minor.class}Vector to;
+    
+    public TransferImpl(){
+      this.to = new Nullable${minor.class}Vector(getField(), allocator);
+    }
+    
+    public Nullable${minor.class}Vector getTo(){
+      return to;
+    }
+    
+    public void transfer(){
+      transferTo(to);
+    }
+  }
   
   public Accessor getAccessor(){
     return accessor;

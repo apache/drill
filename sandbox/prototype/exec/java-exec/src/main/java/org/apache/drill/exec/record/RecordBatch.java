@@ -20,9 +20,9 @@ package org.apache.drill.exec.record;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.record.vector.SelectionVector2;
-import org.apache.drill.exec.record.vector.SelectionVector4;
-import org.apache.drill.exec.record.vector.ValueVector;
+import org.apache.drill.exec.record.selection.SelectionVector2;
+import org.apache.drill.exec.record.selection.SelectionVector4;
+import org.apache.drill.exec.vector.ValueVector;
 
 /**
  * A record batch contains a set of field values for a particular range of records. In the case of a record batch
@@ -88,7 +88,7 @@ public interface RecordBatch {
   public abstract TypedFieldId getValueVectorId(SchemaPath path);
   
   
-  public abstract <T extends ValueVector<T>> T getValueVectorById(int fieldId, Class<?> clazz);
+  public abstract <T extends ValueVector> T getValueVectorById(int fieldId, Class<?> clazz);
 
   /**
    * Update the data in each Field reading interface for the next range of records. Once a RecordBatch returns an
