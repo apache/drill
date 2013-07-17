@@ -33,7 +33,7 @@ public abstract class ProjectorTemplate implements Projector {
     case TWO_BYTE:
       final int count = recordCount*2;
       for(int i = 0; i < count; i+=2, firstOutputIndex++){
-        doPerRecordWork(vector2.getIndex(i), firstOutputIndex);
+        doEval(vector2.getIndex(i), firstOutputIndex);
       }
       return recordCount;
       
@@ -45,7 +45,7 @@ public abstract class ProjectorTemplate implements Projector {
       }
       final int countN = recordCount;
       for (int i = 0; i < countN; i++, firstOutputIndex++) {
-        doPerRecordWork(i, firstOutputIndex);
+        doEval(i, firstOutputIndex);
       }
       return recordCount;
       
@@ -68,11 +68,11 @@ public abstract class ProjectorTemplate implements Projector {
       break;
     }
     this.transfers = ImmutableList.copyOf(transfers);
-    setupEvaluators(context, incoming, outgoing);
+    setupEval(context, incoming, outgoing);
   }
 
-  protected abstract void setupEvaluators(FragmentContext context, RecordBatch incoming, RecordBatch outgoing) throws SchemaChangeException;
-  protected abstract void doPerRecordWork(int inIndex, int outIndex);
+  protected abstract void setupEval(FragmentContext context, RecordBatch incoming, RecordBatch outgoing) throws SchemaChangeException;
+  protected abstract void doEval(int inIndex, int outIndex);
 
   
 

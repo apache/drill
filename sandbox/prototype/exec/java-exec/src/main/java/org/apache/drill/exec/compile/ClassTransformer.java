@@ -44,11 +44,11 @@ import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
 
-import com.beust.jcommander.internal.Sets;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
 
@@ -112,15 +112,16 @@ public class ClassTransformer {
       String materializedClassName) throws ClassTransformationException {
 
     try {
-
+      long t0 = System.nanoTime();
       final byte[] implementationClass = classLoader.getClassByteCode(materializedClassName, entireClass);
 
       // Get Template Class
       final String templateClassName = templateDefinition.getTemplateClassName().replaceAll("\\.", File.separator);
       final String templateClassPath = File.separator + templateClassName + ".class";
+      long t1 = System.nanoTime();
       final byte[] templateClass = getClassByteCodeFromPath(templateClassPath);
-      int fileNum = new Random().nextInt(100);
-      Files.write(templateClass, new File(String.format("/tmp/%d-template.class", fileNum)));
+//      int fileNum = new Random().nextInt(100);
+      //Files.write(templateClass, new File(String.format("/tmp/%d-template.class", fileNum)));
       // Generate Merge Class
 
       // Setup adapters for merging, remapping class names and class writing. This is done in reverse order of how they
@@ -130,7 +131,11 @@ public class ClassTransformer {
       RemapClasses remapper = new RemapClasses(oldTemplateSlashName, materializedSlashName);
       
       {
+        
         ClassNode impl = getClassNodeFromByteCode(implementationClass);
+        long t2 = System.nanoTime();
+        logger.debug("Compile {}, decode template {}", (t1 - t0)/1000/1000, (t2- t1)/1000/1000);
+        
         ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
 
         ClassVisitor remappingAdapter = new RemappingClassAdapter(cw, remapper);
@@ -139,7 +144,7 @@ public class ClassTransformer {
         ClassReader tReader = new ClassReader(templateClass);
         tReader.accept(mergingAdapter, ClassReader.EXPAND_FRAMES);
         byte[] outputClass = cw.toByteArray();
-        Files.write(outputClass, new File(String.format("/tmp/%d-output.class", fileNum)));
+//        Files.write(outputClass, new File(String.format("/tmp/%d-output.class", fileNum)));
         outputClass = cw.toByteArray();
 
         // Load the class
@@ -160,7 +165,7 @@ public class ClassTransformer {
         reader.accept(remap, ClassReader.EXPAND_FRAMES);
         byte[] newByteCode = subcw.toByteArray();
         classLoader.injectByteCode(s.replace(oldTemplateSlashName, materializedSlashName).replace('/', '.'), newByteCode);
-        Files.write(subcw.toByteArray(), new File(String.format("/tmp/%d-sub-%d.class", fileNum, i)));
+//        Files.write(subcw.toByteArray(), new File(String.format("/tmp/%d-sub-%d.class", fileNum, i)));
         i++;
       }
 

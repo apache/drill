@@ -31,7 +31,7 @@ import org.apache.drill.exec.proto.SchemaDefProtos.NamePart;
 import org.apache.drill.exec.record.RecordBatch.TypedFieldId;
 import org.junit.Test;
 
-import com.beust.jcommander.internal.Lists;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Range;
 
 public class ExpressionTreeMaterializerTest {

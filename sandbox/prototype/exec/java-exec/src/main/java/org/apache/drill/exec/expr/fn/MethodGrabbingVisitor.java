@@ -8,7 +8,8 @@ import org.codehaus.janino.Java.ClassDeclaration;
 import org.codehaus.janino.Java.MethodDeclarator;
 import org.codehaus.janino.util.Traverser;
 
-import com.beust.jcommander.internal.Maps;
+import com.google.common.collect.Maps;
+
 
 public class MethodGrabbingVisitor{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MethodGrabbingVisitor.class);

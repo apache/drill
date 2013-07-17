@@ -29,7 +29,7 @@ import org.apache.drill.exec.vector.ValueVector;
  * composed of ValueVectors, ideally a batch fits within L2 cache (~256k per core). The set of value vectors do not
  * change unless the next() IterOutcome is a *_NEW_SCHEMA type.
  */
-public interface RecordBatch {
+public interface RecordBatch extends Iterable<ValueVector>{
 
   /**
    * Describes the outcome of a RecordBatch being incremented forward.
@@ -86,6 +86,7 @@ public interface RecordBatch {
    * @return The local field id associated with this vector.
    */
   public abstract TypedFieldId getValueVectorId(SchemaPath path);
+  
   
   
   public abstract <T extends ValueVector> T getValueVectorById(int fieldId, Class<?> clazz);

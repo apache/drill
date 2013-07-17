@@ -19,16 +19,20 @@ package org.apache.drill.exec.record.selection;
 
 import io.netty.buffer.ByteBuf;
 
+import java.io.Closeable;
+import java.io.IOException;
+
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.record.DeadBuf;
 
 /**
  * A selection vector that fronts, at most, a
  */
-public class SelectionVector2{
+public class SelectionVector2 implements Closeable{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SelectionVector2.class);
 
   private final BufferAllocator allocator;
+  private int recordCount;
   private ByteBuf buffer = DeadBuf.DEAD_BUFFER;
 
   public SelectionVector2(BufferAllocator allocator) {
@@ -36,14 +40,40 @@ public class SelectionVector2{
   }
 
   public int getCount(){
-    return -1;
+    return recordCount;
   }
 
-  public int getIndex(int directIndex){
+  public char getIndex(int directIndex){
     return buffer.getChar(directIndex);
   }
 
   public void setIndex(int directIndex, char value){
     buffer.setChar(directIndex, value);
   }
+  
+  public void allocateNew(int size){
+    clear();
+    buffer = allocator.buffer(size * 2);
+  }
+  
+  
+  public void clear() {
+    if (buffer != DeadBuf.DEAD_BUFFER) {
+      buffer.release();
+      buffer = DeadBuf.DEAD_BUFFER;
+      recordCount = 0;
+    }
+  }
+  
+  public void setRecordCount(int recordCount){
+    logger.debug("Seting record count to {}", recordCount);
+    this.recordCount = recordCount;
+  }
+
+  @Override
+  public void close() throws IOException {
+    clear();
+  }
+  
+  
 }

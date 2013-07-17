@@ -24,7 +24,8 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.beust.jcommander.internal.Lists;
+import com.google.common.collect.Lists;
+
 
 public class JSONRecordReaderTest {
   private static final Charset UTF_8 = Charset.forName("UTF-8");

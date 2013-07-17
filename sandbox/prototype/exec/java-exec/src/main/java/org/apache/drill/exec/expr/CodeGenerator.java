@@ -1,10 +1,13 @@
 package org.apache.drill.exec.expr;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 
+import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.compile.TemplateClassDefinition;
+import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.expr.holders.BooleanHolder;
 import org.apache.drill.exec.expr.holders.IntHolder;
@@ -36,8 +39,6 @@ public class CodeGenerator<T> {
   private JBlock currentEvalBlock;
   private JBlock currentSetupBlock;
   private final EvaluationVisitor evaluationVisitor;
-  private final String setupName;
-  private final String perRecordName;
   private final TemplateClassDefinition<T> definition;
   private JCodeModel model;
   private int index = 0;
@@ -46,8 +47,6 @@ public class CodeGenerator<T> {
     super();
     try{
       this.definition = definition;
-      this.setupName = definition.getSetupName();
-      this.perRecordName = definition.getEvalName();
       this.model = new JCodeModel();
       this.clazz = model._package("org.apache.drill.exec.test.generated")._class("Test1");
       clazz._implements(definition.getInternalInterface());
@@ -59,7 +58,7 @@ public class CodeGenerator<T> {
     }
   }
 
-  public void addNextWrite(ValueVectorWriteExpression ex){
+  public void addExpr(LogicalExpression ex){
     logger.debug("Adding next write {}", ex);
     currentEvalBlock = new JBlock();
     parentEvalBlock.add(currentEvalBlock);
@@ -80,20 +79,27 @@ public class CodeGenerator<T> {
     return currentSetupBlock;
   }
   
+  
+  public TemplateClassDefinition<T> getDefinition() {
+    return definition;
+  }
+
   public String generate() throws IOException{
 
     {
       //setup method
-      JMethod m = clazz.method(JMod.PUBLIC, model.VOID, this.setupName);
+      JMethod m = clazz.method(JMod.PUBLIC, model.VOID, "doSetup");
       m.param(model._ref(FragmentContext.class), "context");
       m.param(model._ref(RecordBatch.class), "incoming");
       m.param(model._ref(RecordBatch.class), "outgoing");
+      m._throws(SchemaChangeException.class);
       m.body().add(parentSetupBlock);
     }
     
     {
       // eval method.
-      JMethod m = clazz.method(JMod.PUBLIC, model.VOID, this.perRecordName);
+      JType ret = definition.getEvalReturnType() == null ? model.VOID : model._ref(definition.getEvalReturnType());
+      JMethod m = clazz.method(JMod.PUBLIC, ret, "doEval");  
       m.param(model.INT, "inIndex");
       m.param(model.INT, "outIndex");
       m.body().add(parentEvalBlock);

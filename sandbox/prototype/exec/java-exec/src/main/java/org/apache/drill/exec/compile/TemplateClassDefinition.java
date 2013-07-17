@@ -17,7 +17,6 @@
  ******************************************************************************/
 package org.apache.drill.exec.compile;
 
-import java.lang.reflect.Method;
 
 
 public class TemplateClassDefinition<T>{
@@ -25,24 +24,19 @@ public class TemplateClassDefinition<T>{
   private final Class<T> externalInterface;
   private final String templateClassName;
   private final Class<?> internalInterface;
-  private final String setupName;
-  private final String evalName;
-  
+  private final Class<?> evalReturnType;
 
-  public TemplateClassDefinition(Class<T> externalInterface, String templateClassName, Class<?> internalInterface, String setupName, String evalName) {
+  public TemplateClassDefinition(Class<T> externalInterface, String templateClassName, Class<?> internalInterface, Class<?> evalReturnType) {
     super();
     this.externalInterface = externalInterface;
     this.templateClassName = templateClassName;
     this.internalInterface = internalInterface;
-    this.setupName = setupName;
-    this.evalName = evalName;
+    this.evalReturnType = evalReturnType;
   }
-
 
   public Class<T> getExternalInterface() {
     return externalInterface;
   }
-
   
   public Class<?> getInternalInterface() {
     return internalInterface;
@@ -52,16 +46,8 @@ public class TemplateClassDefinition<T>{
     return templateClassName;
   }
 
-  public String getSetupName() {
-    return setupName;
+  public Class<?> getEvalReturnType() {
+    return evalReturnType;
   }
-
-
-  public String getEvalName() {
-    return evalName;
-  }
-  
-  
-  
   
 }

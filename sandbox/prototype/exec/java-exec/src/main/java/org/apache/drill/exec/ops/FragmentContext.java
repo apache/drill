@@ -103,11 +103,14 @@ public class FragmentContext {
     return context.getAllocator();
   }
 
-  public <T> T getImplementationClass(TemplateClassDefinition<T> templateDefinition, CodeGenerator<T> cg) throws ClassTransformationException, IOException{
-    return transformer.getImplementationClass(this.loader, templateDefinition, cg.generate(), cg.getMaterializedClassName());
+  public <T> T getImplementationClass(CodeGenerator<T> cg) throws ClassTransformationException, IOException{
+    long t1 = System.nanoTime();
+    T t= transformer.getImplementationClass(this.loader, cg.getDefinition(), cg.generate(), cg.getMaterializedClassName());
+    System.out.println( (System.nanoTime() - t1)/1000/1000 );
+    return t;
+    
   }
   
-
   public void addMetricsToStatus(FragmentStatus.Builder stats){
     stats.setBatchesCompleted(batchesCompleted.get());
     stats.setDataProcessed(dataProcessed.get());

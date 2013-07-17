@@ -26,12 +26,14 @@ import org.apache.drill.exec.physical.base.AbstractPhysicalVisitor;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.Scan;
+import org.apache.drill.exec.physical.config.Filter;
 import org.apache.drill.exec.physical.config.MockScanBatchCreator;
 import org.apache.drill.exec.physical.config.MockScanPOP;
 import org.apache.drill.exec.physical.config.Project;
 import org.apache.drill.exec.physical.config.RandomReceiver;
 import org.apache.drill.exec.physical.config.Screen;
 import org.apache.drill.exec.physical.config.SingleSender;
+import org.apache.drill.exec.physical.impl.filter.FilterBatchCreator;
 import org.apache.drill.exec.physical.impl.project.ProjectBatchCreator;
 import org.apache.drill.exec.record.RecordBatch;
 
@@ -46,6 +48,7 @@ public class ImplCreator extends AbstractPhysicalVisitor<RecordBatch, FragmentCo
   private RandomReceiverCreator rrc = new RandomReceiverCreator();
   private SingleSenderCreator ssc = new SingleSenderCreator();
   private ProjectBatchCreator pbc = new ProjectBatchCreator();
+  private FilterBatchCreator fbc = new FilterBatchCreator();
   private RootExec root = null;
   
   private ImplCreator(){}
@@ -78,9 +81,12 @@ public class ImplCreator extends AbstractPhysicalVisitor<RecordBatch, FragmentCo
     root = sc.getRoot(context, op, getChildren(op, context));
     return null;
   }
+  
+  @Override
+  public RecordBatch visitFilter(Filter filter, FragmentContext context) throws ExecutionSetupException {
+    return fbc.getBatch(context, filter, getChildren(filter, context));
+  }
 
-  
-  
   @Override
   public RecordBatch visitSingleSender(SingleSender op, FragmentContext context) throws ExecutionSetupException {
     root = ssc.getRoot(context, op, getChildren(op, context));

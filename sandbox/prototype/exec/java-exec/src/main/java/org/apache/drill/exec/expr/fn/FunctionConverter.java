@@ -25,7 +25,7 @@ import org.codehaus.janino.Parser;
 import org.codehaus.janino.Scanner;
 import org.mortbay.util.IO;
 
-import com.beust.jcommander.internal.Lists;
+import com.google.common.collect.Lists;
 import com.google.common.io.InputSupplier;
 import com.google.common.io.Resources;
 

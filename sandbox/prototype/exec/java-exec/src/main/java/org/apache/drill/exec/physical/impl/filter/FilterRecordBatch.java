@@ -1,4 +1,4 @@
-package org.apache.drill.exec.physical.impl.project;
+package org.apache.drill.exec.physical.impl.filter;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -19,8 +19,10 @@ import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.ValueVectorReadExpression;
 import org.apache.drill.exec.expr.ValueVectorWriteExpression;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.physical.config.Filter;
 import org.apache.drill.exec.physical.config.Project;
 import org.apache.drill.exec.physical.impl.VectorHolder;
+import org.apache.drill.exec.physical.impl.project.Projector;
 import org.apache.drill.exec.proto.SchemaDefProtos.FieldDef;
 import org.apache.drill.exec.proto.SchemaDefProtos.NamePart;
 import org.apache.drill.exec.proto.SchemaDefProtos.NamePart.Type;
@@ -41,30 +43,26 @@ import org.apache.drill.exec.vector.ValueVector;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
-public class ProjectRecordBatch implements RecordBatch{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProjectRecordBatch.class);
+public class FilterRecordBatch implements RecordBatch{
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FilterRecordBatch.class);
 
-  private final Project pop;
+  private final Filter filterConfig;
   private final RecordBatch incoming;
   private final FragmentContext context;
+  private final SelectionVector2 sv;
   private BatchSchema outSchema;
-  private Projector projector;
-  private List<ValueVector> allocationVectors;
+  private Filterer filter;
   private List<ValueVector> outputVectors;
   private VectorHolder vh;
   
-  
-  public ProjectRecordBatch(Project pop, RecordBatch incoming, FragmentContext context){
-    this.pop = pop;
+  public FilterRecordBatch(Filter pop, RecordBatch incoming, FragmentContext context){
+    this.filterConfig = pop;
     this.incoming = incoming;
     this.context = context;
+    sv = new SelectionVector2(context.getAllocator());
   }
   
-  @Override
-  public Iterator<ValueVector> iterator() {
-    return outputVectors.iterator();
-  }
-
+  
   @Override
   public FragmentContext getContext() {
     return context;
@@ -78,7 +76,7 @@ public class ProjectRecordBatch implements RecordBatch{
 
   @Override
   public int getRecordCount() {
-    return incoming.getRecordCount();
+    return sv.getCount();
   }
 
   @Override
@@ -86,9 +84,15 @@ public class ProjectRecordBatch implements RecordBatch{
     incoming.kill();
   }
 
+  
+  @Override
+  public Iterator<ValueVector> iterator() {
+    return outputVectors.iterator();
+  }
+
   @Override
   public SelectionVector2 getSelectionVector2() {
-    throw new UnsupportedOperationException();
+    return sv;
   }
 
   @Override
@@ -118,7 +122,7 @@ public class ProjectRecordBatch implements RecordBatch{
       return upstream;
     case OK_NEW_SCHEMA:
       try{
-        projector = createNewProjector();
+        filter = createNewFilterer();
       }catch(SchemaChangeException ex){
         incoming.kill();
         logger.error("Failure during query", ex);
@@ -128,10 +132,8 @@ public class ProjectRecordBatch implements RecordBatch{
       // fall through.
     case OK:
       int recordCount = incoming.getRecordCount();
-      for(ValueVector v : this.allocationVectors){
-        AllocationHelper.allocate(v, recordCount, 50);
-      }
-      projector.projectRecords(recordCount, 0);
+      sv.allocateNew(recordCount);
+      filter.filterBatch(recordCount);
       for(ValueVector v : this.outputVectors){
         ValueVector.Mutator m = v.getMutator();
         if(m instanceof NonRepeatedMutator){
@@ -147,8 +149,7 @@ public class ProjectRecordBatch implements RecordBatch{
   }
   
 
-  private Projector createNewProjector() throws SchemaChangeException{
-    this.allocationVectors = Lists.newArrayList();
+  private Filterer createNewFilterer() throws SchemaChangeException{
     if(outputVectors != null){
       for(ValueVector v : outputVectors){
         v.close();
@@ -156,50 +157,35 @@ public class ProjectRecordBatch implements RecordBatch{
     }
     this.outputVectors = Lists.newArrayList();
     this.vh = new VectorHolder(outputVectors);
-    final List<NamedExpression> exprs = pop.getExprs();
+    LogicalExpression filterExpression = filterConfig.getExpr();
     final ErrorCollector collector = new ErrorCollectorImpl();
     final List<TransferPair> transfers = Lists.newArrayList();
+    final CodeGenerator<Filterer> cg = new CodeGenerator<Filterer>(Filterer.TEMPLATE_DEFINITION, context.getFunctionRegistry());
     
-    final CodeGenerator<Projector> cg = new CodeGenerator<Projector>(Projector.TEMPLATE_DEFINITION, context.getFunctionRegistry());
-    
-    for(int i =0; i < exprs.size(); i++){
-      final NamedExpression namedExpression = exprs.get(i);
-      final LogicalExpression expr = ExpressionTreeMaterializer.materialize(namedExpression.getExpr(), incoming, collector);
-      final MaterializedField outputField = getMaterializedField(namedExpression.getRef(), expr);
-      if(collector.hasErrors()){
-        throw new SchemaChangeException(String.format("Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));
-      }
-      
-      // add value vector to transfer if direct reference and this is allowed, otherwise, add to evaluation stack.
-      if(expr instanceof ValueVectorReadExpression && incoming.getSchema().getSelectionVector() == SelectionVectorMode.NONE){
-        ValueVectorReadExpression vectorRead = (ValueVectorReadExpression) expr;
-        ValueVector vvIn = incoming.getValueVectorById(vectorRead.getFieldId(), TypeHelper.getValueVectorClass(vectorRead.getMajorType().getMinorType(), vectorRead.getMajorType().getMode()));
-        Preconditions.checkNotNull(incoming);
-
-        TransferPair tp = vvIn.getTransferPair();
-        transfers.add(tp);
-        outputVectors.add(tp.getTo());
-      }else{
-        // need to do evaluation.
-        ValueVector vector = TypeHelper.getNewVector(outputField, context.getAllocator());
-        allocationVectors.add(vector);
-        outputVectors.add(vector);
-        ValueVectorWriteExpression write = new ValueVectorWriteExpression(outputVectors.size() - 1, expr);
-        cg.addExpr(write);
-      }
-      
+    final LogicalExpression expr = ExpressionTreeMaterializer.materialize(filterExpression, incoming, collector);
+    if(collector.hasErrors()){
+      throw new SchemaChangeException(String.format("Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));
     }
     
-    SchemaBuilder bldr = BatchSchema.newBuilder().setSelectionVectorMode(SelectionVectorMode.NONE);
+    cg.addExpr(new ReturnValueExpression(expr));
+    
+    for(ValueVector v : incoming){
+      TransferPair pair = v.getTransferPair();
+      outputVectors.add(pair.getTo());
+      transfers.add(pair);
+    }
+    
+    SchemaBuilder bldr = BatchSchema.newBuilder().setSelectionVectorMode(SelectionVectorMode.TWO_BYTE);
     for(ValueVector v : outputVectors){
       bldr.addField(v.getField());
     }
     this.outSchema = bldr.build();
     
     try {
-      Projector projector = context.getImplementationClass(cg);
-      projector.setup(context, incoming, this, transfers);
-      return projector;
+      TransferPair[] tx = transfers.toArray(new TransferPair[transfers.size()]);
+      Filterer filterer = context.getImplementationClass(cg);
+      filterer.setup(context, incoming, this, tx);
+      return filterer;
     } catch (ClassTransformationException | IOException e) {
       throw new SchemaChangeException("Failure while attempting to load generated class", e);
     }
@@ -207,32 +193,8 @@ public class ProjectRecordBatch implements RecordBatch{
   
   @Override
   public WritableBatch getWritableBatch() {
-    return WritableBatch.get(incoming.getRecordCount(), outputVectors);
+    return WritableBatch.get(sv.getCount(), outputVectors);
   }
   
-  private MaterializedField getMaterializedField(FieldReference reference, LogicalExpression expr){
-    return new MaterializedField(getFieldDef(reference, expr.getMajorType()));
-  }
-
-  private FieldDef getFieldDef(SchemaPath path, MajorType type){
-    return FieldDef //
-        .newBuilder() //
-        .addAllName(getNameParts(path.getRootSegment())) //
-        .setMajorType(type) //
-        .build();
-  }
-  
-  private List<NamePart> getNameParts(PathSegment seg){
-    List<NamePart> parts = Lists.newArrayList();
-    while(seg != null){
-      if(seg.isArray()){
-        parts.add(NamePart.newBuilder().setType(Type.ARRAY).build());
-      }else{
-        parts.add(NamePart.newBuilder().setType(Type.NAME).setName(seg.getNameSegment().getPath().toString()).build());
-      }
-      seg = seg.getChild();
-    }
-    return parts;
-  }
   
 }

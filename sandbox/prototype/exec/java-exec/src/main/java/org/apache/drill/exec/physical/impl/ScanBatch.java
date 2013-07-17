@@ -26,7 +26,6 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.BatchSchema;
-import org.apache.drill.exec.record.InvalidValueAccessor;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.SchemaBuilder;
@@ -36,9 +35,8 @@ import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.vector.ValueVector;
 
-import com.beust.jcommander.internal.Lists;
-import com.beust.jcommander.internal.Maps;
-import com.carrotsearch.hppc.procedures.IntObjectProcedure;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 /**
  * Record batch used for a particular scan. Operators against one or more
@@ -168,6 +166,11 @@ public class ScanBatch implements RecordBatch {
       ScanBatch.this.schemaChanged = true;
     }
 
+  }
+
+  @Override
+  public Iterator<ValueVector> iterator() {
+    return vectors.iterator();
   }
 
   @Override

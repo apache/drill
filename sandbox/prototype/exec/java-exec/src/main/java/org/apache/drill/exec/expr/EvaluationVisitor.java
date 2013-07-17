@@ -14,7 +14,7 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.CodeGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.fn.FunctionHolder;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.physical.impl.filter.SelectionVectorPopulationExpression;
+import org.apache.drill.exec.physical.impl.filter.ReturnValueExpression;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.vector.TypeHelper;
 
@@ -117,7 +117,7 @@ public class EvaluationVisitor extends AbstractExprVisitor<HoldingContainer, Cod
   @Override
   public HoldingContainer visitBooleanConstant(BooleanExpression e, CodeGenerator<?> generator) throws RuntimeException {
     HoldingContainer out = generator.declare(e.getMajorType());
-    generator.getBlock().assign(out.getValue(), JExpr.lit(e.getBoolean()));
+    generator.getBlock().assign(out.getValue(), JExpr.lit(e.getBoolean() ? 1 : 0));
     return out;
   }
   
@@ -127,8 +127,8 @@ public class EvaluationVisitor extends AbstractExprVisitor<HoldingContainer, Cod
       return visitValueVectorExpression((ValueVectorReadExpression) e, generator);
     }else if(e instanceof ValueVectorWriteExpression){
       return visitValueVectorWriteExpression((ValueVectorWriteExpression) e, generator);
-    }else if(e instanceof SelectionVectorPopulationExpression){
-      return visitSelectionVectorExpression((SelectionVectorPopulationExpression) e, generator);
+    }else if(e instanceof ReturnValueExpression){
+      return visitReturnValueExpression((ReturnValueExpression) e, generator);
     }else{
       return super.visitUnknown(e, generator);  
     }
@@ -196,21 +196,11 @@ public class EvaluationVisitor extends AbstractExprVisitor<HoldingContainer, Cod
   }
   
   
-  private HoldingContainer visitSelectionVectorExpression(SelectionVectorPopulationExpression e, CodeGenerator<?> generator){
-    JType svClass = generator.getModel()._ref(SelectionVector2.class);
-    JVar sv = generator.declareClassField("sv", svClass);
-    JVar index = generator.declareClassField("svIndex", generator.getModel().CHAR);
+  private HoldingContainer visitReturnValueExpression(ReturnValueExpression e, CodeGenerator<?> generator){
     LogicalExpression child = e.getChild();
     Preconditions.checkArgument(child.getMajorType().equals(Types.REQUIRED_BOOLEAN));
     HoldingContainer hc = child.accept(this, generator);
-    generator.getBlock()._return(hc.getValue());
-    
-//    JBlock blk = generator.getSetupBlock();
-//    blk.assign(sv, JExpr.direct("outgoing").invoke("getSelectionVector2"));
-//    JConditional jc = blk._if(hc.getValue());
-//    JBlock body = jc._then();
-//    body.add(sv.invoke("set").arg(index).arg(JExpr.direct("inIndex")));
-//    body.assign(index, index.plus(JExpr.lit(1)));
+    generator.getBlock()._return(hc.getValue().eq(JExpr.lit(1)));
     return null;
   }
   

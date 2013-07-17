@@ -92,7 +92,7 @@ public class ExpressionTest {
     }
 
     CodeGenerator<Projector> cg = new CodeGenerator<Projector>(Projector.TEMPLATE_DEFINITION, new FunctionImplementationRegistry(DrillConfig.create()));
-    cg.addNextWrite(new ValueVectorWriteExpression(-1, materializedExpr));
+    cg.addExpr(new ValueVectorWriteExpression(-1, materializedExpr));
     return cg.generate();
   }
 

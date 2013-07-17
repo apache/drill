@@ -17,6 +17,8 @@
  ******************************************************************************/
 package org.apache.drill.exec.physical.impl;
 
+import java.util.Iterator;
+
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -66,8 +68,12 @@ public class WireRecordBatch implements RecordBatch{
   public void kill() {
     fragProvider.kill(context);
   }
-
   
+  @Override
+  public Iterator<ValueVector> iterator() {
+    return batchLoader.iterator();
+  }
+
   @Override
   public SelectionVector2 getSelectionVector2() {
     throw new UnsupportedOperationException();
