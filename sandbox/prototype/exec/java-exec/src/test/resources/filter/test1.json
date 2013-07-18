@@ -23,7 +23,7 @@
             @id:2,
             child: 1,
             pop:"filter",
-            expr: "true"
+            expr: "alternate()"
         },
         {
             @id: 3,

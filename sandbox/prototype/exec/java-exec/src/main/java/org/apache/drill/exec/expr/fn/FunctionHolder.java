@@ -1,6 +1,7 @@
 package org.apache.drill.exec.expr.fn;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.drill.common.expression.FunctionCall;
@@ -14,6 +15,8 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.sun.codemodel.JBlock;
 import com.sun.codemodel.JConditional;
 import com.sun.codemodel.JExpr;
@@ -32,11 +35,12 @@ public class FunctionHolder {
   private String evalBody;
   private String addBody;
   private String setupBody;
+  private List<String> imports;
   private WorkspaceReference[] workspaceVars;
   private ValueReference[] parameters;
   private ValueReference returnValue;
   
-  public FunctionHolder(FunctionScope scope, NullHandling nullHandling, boolean isBinaryCommutative, String functionName, ValueReference[] parameters, ValueReference returnValue, WorkspaceReference[] workspaceVars, Map<String, String> methods) {
+  public FunctionHolder(FunctionScope scope, NullHandling nullHandling, boolean isBinaryCommutative, String functionName, ValueReference[] parameters, ValueReference returnValue, WorkspaceReference[] workspaceVars, Map<String, String> methods, List<String> imports) {
     super();
     this.scope = scope;
     this.nullHandling = nullHandling;
@@ -46,17 +50,66 @@ public class FunctionHolder {
     this.setupBody = methods.get("setup");
     this.addBody = methods.get("add");
     this.evalBody = methods.get("eval");
+    Preconditions.checkNotNull(evalBody);
     this.parameters = parameters;
     this.returnValue = returnValue;
+    this.imports = imports;
+  }
+  
+  public List<String> getImports() {
+    return imports;
   }
 
-  public HoldingContainer generateEvalBody(CodeGenerator<?> g, HoldingContainer[] inputVariables){
+  private void generateSetupBody(CodeGenerator<?> g){
+    if(!Strings.isNullOrEmpty(setupBody)){
+      JBlock sub = new JBlock(true, true);
+      addProtectedBlock(g, sub, setupBody, null);
+      g.getSetupBlock().directStatement(String.format("/** start setup for function %s **/", functionName));
+      g.getSetupBlock().add(sub);
+      g.getSetupBlock().directStatement(String.format("/** end setup for function %s **/", functionName));
+    }
+  }
+  
+  public void addProtectedBlock(CodeGenerator<?> g, JBlock sub, String body, HoldingContainer[] inputVariables){
+    
+    // create sub block with defined workspace variables.
+    JVar[] workspaceJVars = new JVar[workspaceVars.length];
+    for(int i =0 ; i < workspaceVars.length; i++){
+      workspaceJVars[i] = g.declareClassField("work", g.getModel()._ref(workspaceVars[i].type));
+    }
+
+    if(inputVariables != null){
+      for(int i =0; i < inputVariables.length; i++){
+        ValueReference parameter = parameters[i];
+        HoldingContainer inputVariable = inputVariables[i];
+        sub.decl(JMod.FINAL, inputVariable.getHolder().type(), parameter.name, inputVariable.getHolder());  
+      }
+    }
+
+    JVar[] internalVars = new JVar[workspaceJVars.length];
+    for(int i =0; i < workspaceJVars.length; i++){
+      internalVars[i] = sub.decl(JMod.FINAL, g.getModel()._ref(workspaceVars[i].type),  workspaceVars[i].name, workspaceJVars[i]);
+    }
+    
+    Preconditions.checkNotNull(body);
+    sub.directStatement(body);
+    
+    // reassign workspace variables back to global space.
+    for(int i =0; i < workspaceJVars.length; i++){
+      sub.assign(workspaceJVars[i], internalVars[i]);
+    }
+  }
+
+  public HoldingContainer renderFunction(CodeGenerator<?> g, HoldingContainer[] inputVariables){
+    generateSetupBody(g);
+    return generateEvalBody(g, inputVariables);
+  }
+  
+  private HoldingContainer generateEvalBody(CodeGenerator<?> g, HoldingContainer[] inputVariables){
     
     //g.getBlock().directStatement(String.format("//---- start of eval portion of %s function. ----//", functionName));
     
     JBlock sub = new JBlock(true, true);
-    
-    
     
     HoldingContainer out = null;
 
@@ -89,39 +142,15 @@ public class FunctionHolder {
     // add the subblock after the out declaration.
     g.getBlock().add(sub);
     
-    JVar[] workspaceJVars = new JVar[workspaceVars.length];
-    for(int i =0 ; i < workspaceVars.length; i++){
-      workspaceJVars[i] = g.declareClassField("work", g.getModel()._ref(workspaceVars[i].type));
-    }
     
-//    for(WorkspaceReference r : workspaceVars){
-//      g.declareClassField(, t)
-//    }
-//  
-//    g.declareClassField(prefix, t)
-    
-    
-    // locally name external blocks.
-    
-    // internal out value.
     JVar internalOutput = sub.decl(JMod.FINAL, g.getHolderType(returnValue.type), returnValue.name, JExpr._new(g.getHolderType(returnValue.type)));
-    
-    for(int i =0; i < inputVariables.length; i++){
-      
-      ValueReference parameter = parameters[i];
-      HoldingContainer inputVariable = inputVariables[i];
-      sub.decl(JMod.FINAL, inputVariable.getHolder().type(), parameter.name, inputVariable.getHolder());  
-    }
-    
-    
-    // add function body.
-    sub.directStatement(evalBody);
-    
+    addProtectedBlock(g, sub, evalBody, inputVariables);
     sub.assign(out.getHolder(), internalOutput);
 
-    //g.getBlock().directStatement(String.format("//---- end of eval portion of %s function. ----//\n", functionName));
     return out;
   }
+  
+  
   
   public boolean matches(FunctionCall call){
     if(!softCompare(call.getMajorType(), returnValue.type)) return false;
@@ -148,6 +177,8 @@ public class FunctionHolder {
     String name;
     public ValueReference(MajorType type, String name) {
       super();
+      Preconditions.checkNotNull(type);
+      Preconditions.checkNotNull(name);
       this.type = type;
       this.name = name;
     }
@@ -155,15 +186,18 @@ public class FunctionHolder {
     public String toString() {
       return "ValueReference [type=" + type + ", name=" + name + "]";
     }
-    
-    
   }
 
+  
   public static class WorkspaceReference{
     Class<?> type;
     String name;
+
+
     public WorkspaceReference(Class<?> type, String name) {
       super();
+      Preconditions.checkNotNull(type);
+      Preconditions.checkNotNull(name);
       this.type = type;
       this.name = name;
     }

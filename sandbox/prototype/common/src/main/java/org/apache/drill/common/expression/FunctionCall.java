@@ -24,6 +24,7 @@ import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 public class FunctionCall extends LogicalExpressionBase implements Iterable<LogicalExpression> {
   private final FunctionDefinition func;
@@ -33,6 +34,9 @@ public class FunctionCall extends LogicalExpressionBase implements Iterable<Logi
   public FunctionCall(FunctionDefinition func, List<LogicalExpression> args, ExpressionPosition pos) {
     super(pos);
     this.func = func;
+    
+    if(args == null) args = Lists.newArrayList();
+    
     if (!(args instanceof ImmutableList)) {
       args = ImmutableList.copyOf(args);
     }

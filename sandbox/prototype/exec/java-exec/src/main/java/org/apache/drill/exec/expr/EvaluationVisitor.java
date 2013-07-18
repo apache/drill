@@ -42,7 +42,8 @@ public class EvaluationVisitor extends AbstractExprVisitor<HoldingContainer, Cod
       args[i] = call.args.get(i).accept(this, generator);
     }
     FunctionHolder holder = registry.getFunction(call);
-    return holder.generateEvalBody(generator, args);
+    
+    return holder.renderFunction(generator, args);
   }
   
   @Override
@@ -198,7 +199,7 @@ public class EvaluationVisitor extends AbstractExprVisitor<HoldingContainer, Cod
   
   private HoldingContainer visitReturnValueExpression(ReturnValueExpression e, CodeGenerator<?> generator){
     LogicalExpression child = e.getChild();
-    Preconditions.checkArgument(child.getMajorType().equals(Types.REQUIRED_BOOLEAN));
+//    Preconditions.checkArgument(child.getMajorType().equals(Types.REQUIRED_BOOLEAN));
     HoldingContainer hc = child.accept(this, generator);
     generator.getBlock()._return(hc.getValue().eq(JExpr.lit(1)));
     return null;

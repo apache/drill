@@ -32,7 +32,8 @@ import org.apache.drill.common.util.PathScanner;
 import com.google.common.collect.Lists;
 
 public class FunctionRegistry {
-
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FunctionRegistry.class);
+  
   private final Map<String, FunctionDefinition> funcMap;
 
   public FunctionRegistry(DrillConfig config){
@@ -44,7 +45,9 @@ public class FunctionRegistry {
         FunctionDefinition[] defs = p.getFunctionDefintions();
         for(FunctionDefinition d : defs){
           for(String rn : d.getRegisteredNames()){
+            
             FunctionDefinition d2 = funcs.put(rn, d);
+            logger.debug("Registering function {}", d);
             if(d2 != null){
               throw new ExceptionInInitializerError(String.format("Failure while registering functions.  The function %s tried to register with the name %s but the function %s already registered with that name.", d.getName(), rn, d2.getName()) );
             }

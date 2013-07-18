@@ -57,6 +57,8 @@ public class CodeGenerator<T> {
       throw new IllegalStateException(e);
     }
   }
+  
+
 
   public void addExpr(LogicalExpression ex){
     logger.debug("Adding next write {}", ex);

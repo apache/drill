@@ -37,12 +37,12 @@ public class ArgumentValidators {
 
     public AnyTypeAllowed(int argCount) {
       super();
-      argumentCount = Ranges.singleton(argCount);
+      argumentCount = Range.singleton(argCount);
     }
 
     public AnyTypeAllowed(int minArguments, int maxArguments) {
       super();
-      argumentCount = Ranges.closedOpen(minArguments, maxArguments);
+      argumentCount = Range.closedOpen(minArguments, maxArguments);
     }
 
     @Override
@@ -66,14 +66,14 @@ public class ArgumentValidators {
 
     public PredicateValidator(int argCount, Predicate<MajorType> predicate, boolean allSame) {
       super();
-      this.argumentCount = Ranges.singleton(argCount);
+      this.argumentCount = Range.singleton(argCount);
       this.predicate = predicate;
       this.allSame = allSame;
     }
 
     public PredicateValidator(int minArguments, int maxArguments, Predicate<MajorType> predicate, boolean allSame) {
       super();
-      this.argumentCount = Ranges.closedOpen(minArguments, maxArguments);
+      this.argumentCount = Range.closedOpen(minArguments, maxArguments);
       this.predicate = predicate;
       this.allSame = allSame;
     }

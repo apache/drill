@@ -116,7 +116,6 @@ public interface ValueVector extends Closeable {
      * @param index   Index of the value to get
      */
     public abstract Object getObject(int index);
-    
     public void reset();
   }
   

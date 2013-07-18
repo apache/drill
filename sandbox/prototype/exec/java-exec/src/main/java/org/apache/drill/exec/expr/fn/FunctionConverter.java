@@ -14,7 +14,7 @@ import org.apache.drill.exec.expr.DrillFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.annotations.WorkSpace;
+import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.fn.FunctionHolder.ValueReference;
 import org.apache.drill.exec.expr.fn.FunctionHolder.WorkspaceReference;
 import org.apache.drill.exec.expr.holders.ValueHolder;
@@ -53,16 +53,16 @@ public class FunctionConverter {
 
       Param param = field.getAnnotation(Param.class);
       Output output = field.getAnnotation(Output.class);
-      WorkSpace workspace = field.getAnnotation(WorkSpace.class);
+      Workspace workspace = field.getAnnotation(Workspace.class);
       
       int i =0;
       if(param != null) i++;
       if(output != null) i++;
       if(workspace != null) i++;
       if(i == 0){
-        return failure("The field must be either a @Param, @Output or @WorkSpace field.", clazz, field);
+        return failure("The field must be either a @Param, @Output or @Workspace field.", clazz, field);
       }else if(i > 1){
-        return failure("The field must be only one of @Param, @Output or @WorkSpace.  It currently has more than one of these annotations.", clazz, field);
+        return failure("The field must be only one of @Param, @Output or @Workspace.  It currently has more than one of these annotations.", clazz, field);
       }
 
       
@@ -98,13 +98,14 @@ public class FunctionConverter {
         
       }else{
         // workspace work.
+        logger.debug("Found workspace field {}:{}", field.getType(), field.getName());
         workspaceFields.add(new WorkspaceReference(field.getType(), field.getName()));
       }
       
     }
     
     
-    if(!workspaceFields.isEmpty()) return failure("This function declares one or more workspace fields.  However, those have not yet been implemented.", clazz);
+   // if(!workspaceFields.isEmpty()) return failure("This function declares one or more workspace fields.  However, those have not yet been implemented.", clazz);
     if(outputField == null)  return failure("This function declares zero output fields.  A function must declare one output field.", clazz);
     
     // get function body.     
@@ -117,12 +118,21 @@ public class FunctionConverter {
     }
     
     Map<String, String> methods = MethodGrabbingVisitor.getMethods(cu, clazz);
-
+    List<String> imports = ImportGrabber.getMethods(cu);
     // return holder
     ValueReference[] ps = params.toArray(new ValueReference[params.size()]);
     WorkspaceReference[] works = workspaceFields.toArray(new WorkspaceReference[workspaceFields.size()]);
-    FunctionHolder fh = new FunctionHolder(template.scope(), template.nulls(), template.isBinaryCommutative(), template.name(), ps, outputField, works, methods);
-    return fh;
+    if(!methods.containsKey("eval")){
+      return failure("Failure finding eval method for function.", clazz);
+    }
+    
+    try{
+      FunctionHolder fh = new FunctionHolder(template.scope(), template.nulls(), template.isBinaryCommutative(), template.name(), ps, outputField, works, methods, imports);
+      return fh;
+    }catch(Exception ex){
+      return failure("Failure while creating function holder.", ex, clazz);
+    }
+    
   }
   
   
@@ -141,7 +151,7 @@ public class FunctionConverter {
       String body = IO.toString(is);
       
       //TODO: Hack to remove annotations so Janino doesn't choke.  Need to reconsider this problem...
-      body = body.replaceAll("@(?:Output|Param|FunctionTemplate\\([^\\\\]*?\\))", "");
+      body = body.replaceAll("@(?:Output|Param|Workspace|Override|FunctionTemplate\\([^\\\\]*?\\))", "");
       return new Parser(new Scanner(null, new StringReader(body))).parseCompilationUnit();
     }
     
