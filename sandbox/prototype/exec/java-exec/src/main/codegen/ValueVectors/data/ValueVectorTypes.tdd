@@ -12,10 +12,16 @@
     {
       major: "Fixed",
       width: 2,
+      javaType: "char",
+      minor: [
+        { class: "UInt2" }
+      ]
+    },    {
+      major: "Fixed",
+      width: 2,
       javaType: "short",
       minor: [
         { class: "SmallInt" },
-        { class: "UInt2" }
       ]
     },
     {
@@ -61,15 +67,6 @@
       javaType: "ByteBuf",
       minor: [
         { class: "Decimal16", maxPrecisionDigits: 37, scale: 1}
-      ]
-    },
-    {
-      major: "VarLen",
-      width: 1,
-      javaType: "byte",
-      minor: [
-        { class: "VarBinary1" },
-        { class: "VarChar1" }
       ]
     },
     {

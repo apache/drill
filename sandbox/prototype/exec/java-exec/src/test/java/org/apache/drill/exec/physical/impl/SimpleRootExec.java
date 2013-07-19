@@ -1,5 +1,7 @@
 package org.apache.drill.exec.physical.impl;
 
+import java.util.Iterator;
+
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.impl.ScreenCreator.ScreenRoot;
 import org.apache.drill.exec.record.RecordBatch;
@@ -8,7 +10,7 @@ import org.apache.drill.exec.record.RecordBatch.TypedFieldId;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.vector.ValueVector;
 
-public class SimpleRootExec implements RootExec{
+public class SimpleRootExec implements RootExec, Iterable<ValueVector>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SimpleRootExec.class);
 
   private RecordBatch incoming;
@@ -40,5 +42,14 @@ public class SimpleRootExec implements RootExec{
   public void stop() {
   }
 
+  @Override
+  public Iterator<ValueVector> iterator() {
+    return incoming.iterator();
+  }
+
+  public int getRecordCount(){
+    return incoming.getRecordCount();
+  }
+  
   
 }

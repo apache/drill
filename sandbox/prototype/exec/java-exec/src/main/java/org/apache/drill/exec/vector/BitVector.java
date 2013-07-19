@@ -20,6 +20,9 @@ import org.apache.drill.exec.record.TransferPair;
 public final class BitVector extends BaseDataValueVector implements FixedWidthVector{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BitVector.class);
 
+  private final Accessor accessor = new Accessor();
+  private final Mutator mutator = new Mutator();
+
   private int valueCapacity;
   
   public BitVector(MaterializedField field, BufferAllocator allocator) {
@@ -48,11 +51,15 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
   @Override
   public int load(int valueCount, ByteBuf buf){
     clear();
-    this.recordCount = valueCount;
+    this.valueCount = valueCount;
     int len = getSizeFromCount(valueCount);
     data = buf.slice(0, len);
     data.retain();
     return len;
+  }
+  
+  public void copyValue(int inIndex, int outIndex, BitVector target){
+    target.mutator.set(outIndex, this.accessor.get(inIndex));
   }
   
   @Override
@@ -82,7 +89,7 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
   public void transferTo(BitVector target){
     target.data = data;
     target.data.retain();
-    target.recordCount = recordCount;
+    target.valueCount = valueCount;
     clear();
   }
   
@@ -125,8 +132,8 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
       return new Boolean(get(index) != 0);
     }
     
-    public int getRecordCount() {
-      return recordCount;
+    public int getValueCount() {
+      return valueCount;
     }
     
   }
@@ -161,9 +168,9 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
       data.setByte((int) Math.floor(index/8), currentByte);
     }
 
-    public void setValueCount(int recordCount) {
-      BitVector.this.recordCount = recordCount;
-      data.writerIndex(getSizeFromCount(recordCount));
+    public void setValueCount(int valueCount) {
+      BitVector.this.valueCount = valueCount;
+      data.writerIndex(getSizeFromCount(valueCount));
     }
 
     @Override

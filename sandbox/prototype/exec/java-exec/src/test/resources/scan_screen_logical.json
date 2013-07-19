@@ -20,7 +20,7 @@
 
                     {
                         name : "superhero_name",
-                        type : "VARCHAR1",
+                        type : "VARCHAR2",
                         mode : "REQUIRED",
                         width : 100,
                         precision : 1,

@@ -51,7 +51,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     return mutator;
   }
   
-
+  
 
   /**
    * Allocate a new buffer that supports setting at least the provided number of values.  May actually be sized bigger depending on underlying buffer rounding size. Must be called prior to using the ValueVector.
@@ -68,16 +68,16 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
   public FieldMetadata getMetadata() {
     return FieldMetadata.newBuilder()
              .setDef(getField().getDef())
-             .setValueCount(recordCount)
-             .setBufferLength(recordCount * ${type.width})
+             .setValueCount(valueCount)
+             .setBufferLength(valueCount * ${type.width})
              .build();
   }
 
   @Override
   public int load(int valueCount, ByteBuf buf){
     clear();
-    this.recordCount = valueCount;
-    int len = recordCount * ${type.width};
+    this.valueCount = valueCount;
+    int len = valueCount * ${type.width};
     data = buf.slice(0, len);
     data.retain();
     return len;
@@ -97,7 +97,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
   public void transferTo(${minor.class}Vector target){
     target.data = data;
     target.data.retain();
-    target.recordCount = recordCount;
+    target.valueCount = valueCount;
     clear();
   }
   
@@ -117,10 +117,20 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     }
   }
   
+  public void copyValue(int inIndex, int outIndex, ${minor.class}Vector v){
+    <#if (type.width > 8)>
+    data.getBytes(inIndex * ${type.width}, v.data, outIndex * ${type.width}, ${type.width});
+    <#else> <#-- type.width <= 8 -->
+    data.set${(minor.javaType!type.javaType)?cap_first}(outIndex * ${type.width}, 
+        data.get${(minor.javaType!type.javaType)?cap_first}(inIndex * ${type.width})
+    );
+    </#if> <#-- type.width -->
+  }
+  
   public final class Accessor extends BaseValueVector.BaseAccessor{
 
-    public int getRecordCount() {
-      return recordCount;
+    public int getValueCount() {
+      return valueCount;
     }
     
     <#if (type.width > 8)>
@@ -207,9 +217,9 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
    }
   </#if> <#-- type.width -->
   
-   public void setValueCount(int recordCount) {
-     ${minor.class}Vector.this.recordCount = recordCount;
-     data.writerIndex(${type.width} * recordCount);
+   public void setValueCount(int valueCount) {
+     ${minor.class}Vector.this.valueCount = valueCount;
+     data.writerIndex(${type.width} * valueCount);
    }
 
 

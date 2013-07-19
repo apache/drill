@@ -1,7 +1,7 @@
 package org.apache.drill.exec.expr;
 
 import java.io.IOException;
-import java.lang.reflect.Method;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.types.TypeProtos.DataMode;
@@ -42,13 +42,19 @@ public class CodeGenerator<T> {
   private final TemplateClassDefinition<T> definition;
   private JCodeModel model;
   private int index = 0;
-
+  private static AtomicLong classCreator = new AtomicLong(0);
+  private String className;
+  private String fqcn;
+  private String packageName = "org.apache.drill.exec.test.generated";
+  
   public CodeGenerator(TemplateClassDefinition<T> definition, FunctionImplementationRegistry funcRegistry) {
     super();
+    className = "Gen" + classCreator.incrementAndGet();
+    fqcn = packageName + "." + className;
     try{
       this.definition = definition;
       this.model = new JCodeModel();
-      this.clazz = model._package("org.apache.drill.exec.test.generated")._class("Test1");
+      this.clazz = model._package(packageName)._class(className);
       clazz._implements(definition.getInternalInterface());
       this.parentEvalBlock = new JBlock();
       this.parentSetupBlock = new JBlock();
@@ -62,11 +68,16 @@ public class CodeGenerator<T> {
 
   public void addExpr(LogicalExpression ex){
     logger.debug("Adding next write {}", ex);
+    rotateBlock();
+    ex.accept(evaluationVisitor, this);
+  }
+  
+  public void rotateBlock(){
     currentEvalBlock = new JBlock();
     parentEvalBlock.add(currentEvalBlock);
     currentSetupBlock = new JBlock();
     parentSetupBlock.add(currentSetupBlock);
-    ex.accept(evaluationVisitor, this);
+
   }
   
   public JBlock getBlock() {
@@ -74,7 +85,7 @@ public class CodeGenerator<T> {
   }
 
   public String getMaterializedClassName(){
-    return "org.apache.drill.exec.test.generated.Test1";
+    return fqcn;
   }
   
   public JBlock getSetupBlock(){

@@ -20,4 +20,6 @@ public interface FixedWidthVector extends ValueVector{
    */
   public int load(int valueCount, ByteBuf buf);
   
+  
+  public abstract NonRepeatedMutator getMutator();
 }

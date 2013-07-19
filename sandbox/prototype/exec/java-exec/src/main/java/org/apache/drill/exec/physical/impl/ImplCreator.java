@@ -32,9 +32,11 @@ import org.apache.drill.exec.physical.config.MockScanPOP;
 import org.apache.drill.exec.physical.config.Project;
 import org.apache.drill.exec.physical.config.RandomReceiver;
 import org.apache.drill.exec.physical.config.Screen;
+import org.apache.drill.exec.physical.config.SelectionVectorRemover;
 import org.apache.drill.exec.physical.config.SingleSender;
 import org.apache.drill.exec.physical.impl.filter.FilterBatchCreator;
 import org.apache.drill.exec.physical.impl.project.ProjectBatchCreator;
+import org.apache.drill.exec.physical.impl.svremover.SVRemoverCreator;
 import org.apache.drill.exec.record.RecordBatch;
 
 import com.google.common.base.Preconditions;
@@ -49,6 +51,7 @@ public class ImplCreator extends AbstractPhysicalVisitor<RecordBatch, FragmentCo
   private SingleSenderCreator ssc = new SingleSenderCreator();
   private ProjectBatchCreator pbc = new ProjectBatchCreator();
   private FilterBatchCreator fbc = new FilterBatchCreator();
+  private SVRemoverCreator svc = new SVRemoverCreator();
   private RootExec root = null;
   
   private ImplCreator(){}
@@ -73,6 +76,16 @@ public class ImplCreator extends AbstractPhysicalVisitor<RecordBatch, FragmentCo
       return super.visitScan(scan, context);  
     }
     
+  }
+
+  
+  @Override
+  public RecordBatch visitOp(PhysicalOperator op, FragmentContext context) throws ExecutionSetupException {
+    if(op instanceof SelectionVectorRemover){
+      return svc.getBatch(context, (SelectionVectorRemover) op, getChildren(op, context));
+    }else{
+      return super.visitOp(op, context);  
+    }
   }
 
   @Override

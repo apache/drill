@@ -25,12 +25,15 @@ abstract class BaseValueVector implements ValueVector{
   }
   
   abstract class BaseAccessor implements ValueVector.Accessor{
+    public abstract int getValueCount();
     public void reset(){}
   }
   
   abstract class BaseMutator implements NonRepeatedMutator{
     public void reset(){}
   }
+  
+  
   
 }
 

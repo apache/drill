@@ -35,7 +35,6 @@ public class TestSimpleProjection {
   
   @Test
   public void project(@Injectable final DrillbitContext bitContext, @Injectable UserClientConnection connection) throws Exception{
-    System.out.println(System.getProperty("java.class.path"));
 
 
     new NonStrictExpectations(){{
@@ -57,7 +56,7 @@ public class TestSimpleProjection {
       a1 = c1.getAccessor();
       a2 = c2.getAccessor();
       
-      for(int i =0; i < c1.getAccessor().getRecordCount(); i++){
+      for(int i =0; i < c1.getAccessor().getValueCount(); i++){
         assertEquals(a1.get(i)+1, a2.get(i));
         x += a1.get(i);
       }

@@ -26,4 +26,6 @@ public interface VariableWidthVector extends ValueVector{
    * @return The number of bytes of the buffer that were consumed.
    */
   public int load(int dataBytes, int valueCount, ByteBuf buf);
+  
+  public abstract NonRepeatedMutator getMutator();
 }

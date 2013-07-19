@@ -10,7 +10,7 @@ import org.apache.drill.exec.record.MaterializedField;
 abstract class BaseDataValueVector extends BaseValueVector{
 
   protected ByteBuf data = DeadBuf.DEAD_BUFFER;
-  protected int recordCount;
+  protected int valueCount;
   
   public BaseDataValueVector(MaterializedField field, BufferAllocator allocator) {
     super(field, allocator);
@@ -25,7 +25,7 @@ abstract class BaseDataValueVector extends BaseValueVector{
     if (data != DeadBuf.DEAD_BUFFER) {
       data.release();
       data = DeadBuf.DEAD_BUFFER;
-      recordCount = 0;
+      valueCount = 0;
     }
   }
   

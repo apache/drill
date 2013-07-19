@@ -193,7 +193,7 @@ public class FilterRecordBatch implements RecordBatch{
   
   @Override
   public WritableBatch getWritableBatch() {
-    return WritableBatch.get(sv.getCount(), outputVectors);
+    return WritableBatch.get(this);
   }
   
   

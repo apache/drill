@@ -39,11 +39,27 @@ public class Types {
     }
   }
   
+  public static boolean isFixedWidthType(MajorType type){
+    switch(type.getMinorType()){
+    case MSGPACK2:
+    case MSGPACK4:
+    case PROTO2:
+    case PROTO4:
+    case VARBINARY2:
+    case VARBINARY4:
+    case VARCHAR2:
+    case VARCHAR4:
+      return false;
+    default:
+      return true;
+    }
+  }
+  
+  
   public static boolean isStringScalarType(MajorType type){
     if(type.getMode() == DataMode.REPEATED) return false;
     switch(type.getMinorType()){
     case FIXEDCHAR:
-    case VARCHAR1:
     case VARCHAR2:
     case VARCHAR4:
       return true;
@@ -56,7 +72,6 @@ public class Types {
     if(type.getMode() == DataMode.REPEATED) return false;
     switch(type.getMinorType()){
     case FIXEDBINARY:
-    case VARBINARY1:
     case VARBINARY2:
     case VARBINARY4:
       return true;

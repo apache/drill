@@ -190,7 +190,7 @@ public class ProjectRecordBatch implements RecordBatch{
       
     }
     
-    SchemaBuilder bldr = BatchSchema.newBuilder().setSelectionVectorMode(SelectionVectorMode.NONE);
+    SchemaBuilder bldr = BatchSchema.newBuilder().setSelectionVectorMode(incoming.getSchema().getSelectionVector());
     for(ValueVector v : outputVectors){
       bldr.addField(v.getField());
     }
@@ -207,7 +207,7 @@ public class ProjectRecordBatch implements RecordBatch{
   
   @Override
   public WritableBatch getWritableBatch() {
-    return WritableBatch.get(incoming.getRecordCount(), outputVectors);
+    return WritableBatch.get(this);
   }
   
   private MaterializedField getMaterializedField(FieldReference reference, LogicalExpression expr){

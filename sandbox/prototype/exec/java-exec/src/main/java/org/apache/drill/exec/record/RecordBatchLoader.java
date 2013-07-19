@@ -137,7 +137,7 @@ public class RecordBatchLoader implements Iterable<ValueVector>{
 
 
   public WritableBatch getWritableBatch(){
-    return WritableBatch.get(recordCount, vectors);
+    return WritableBatch.getBatchNoSV(recordCount, vectors);
   }
 
   @Override

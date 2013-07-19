@@ -90,6 +90,11 @@ import org.apache.drill.exec.record.TransferPair;
     }
   }
   
+  public void copyValue(int inIndex, int outIndex, Repeated${minor.class}Vector v){
+    throw new UnsupportedOperationException();
+  }
+
+  
   <#if type.major == "VarLen">
   @Override
   public FieldMetadata getMetadata() {

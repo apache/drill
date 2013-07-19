@@ -28,11 +28,9 @@ enum MinorType {
     FLOAT8 = 19;   //  8 byte ieee 754
     BOOLEAN = 20;   //  single bit value
     FIXEDCHAR = 21;   //  utf8 fixed length string, padded with spaces
-    VARCHAR1 = 22;   //  utf8 variable length string (up to 2^8 in length)
     VARCHAR2 = 23;   //  utf8 variable length string (up to 2^16 in length)
     VARCHAR4 = 24;   //  utf8 variable length string (up to 2^32 in length)
     FIXEDBINARY = 25;   //  fixed length binary, padded with 0 bytes
-    VARBINARY1 = 26;   //  variable length binary (up to 2^8 in length)
     VARBINARY2 = 27;   //  variable length binary (up to 2^16 in length)
     VARBINARY4 = 28;   //  variable length binary (up to 2^32 in length)
     UINT1 = 29;   //  unsigned 1 byte integer

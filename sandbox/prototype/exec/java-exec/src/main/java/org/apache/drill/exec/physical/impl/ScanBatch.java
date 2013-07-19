@@ -175,7 +175,7 @@ public class ScanBatch implements RecordBatch {
 
   @Override
   public WritableBatch getWritableBatch() {
-    return WritableBatch.get(this.getRecordCount(), vectors);
+    return WritableBatch.get(this);
   }
 
 }

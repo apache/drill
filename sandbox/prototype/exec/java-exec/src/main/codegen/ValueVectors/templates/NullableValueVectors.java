@@ -33,7 +33,7 @@ import org.apache.drill.exec.vector.UInt4Vector;
 @SuppressWarnings("unused")
 public final class Nullable${minor.class}Vector extends BaseValueVector implements <#if type.major == "VarLen">VariableWidth<#else>FixedWidth</#if>Vector {
 
-  private int recordCount;
+  private int valueCount;
   private final BitVector bits;
   private final ${minor.class}Vector values;
   private final Accessor accessor = new Accessor();
@@ -56,7 +56,7 @@ public final class Nullable${minor.class}Vector extends BaseValueVector implemen
 
   @Override
   public void clear() {
-    recordCount = 0;
+    valueCount = 0;
     bits.clear();
     values.clear();
   }
@@ -70,7 +70,7 @@ public final class Nullable${minor.class}Vector extends BaseValueVector implemen
   public FieldMetadata getMetadata() {
     return FieldMetadata.newBuilder()
              .setDef(getField().getDef())
-             .setValueCount(recordCount)
+             .setValueCount(valueCount)
              .setVarByteLength(values.getVarByteLength())
              .setBufferLength(getBufferSize())
              .build();
@@ -87,7 +87,7 @@ public final class Nullable${minor.class}Vector extends BaseValueVector implemen
   @Override
   public int load(int dataBytes, int valueCount, ByteBuf buf){
     clear();
-    this.recordCount = valueCount;
+    this.valueCount = valueCount;
     int loaded = bits.load(valueCount, buf);
     
     // remove bits part of buffer.
@@ -113,7 +113,7 @@ public final class Nullable${minor.class}Vector extends BaseValueVector implemen
   public FieldMetadata getMetadata() {
     return FieldMetadata.newBuilder()
              .setDef(getField().getDef())
-             .setValueCount(recordCount)
+             .setValueCount(valueCount)
              .setBufferLength(getBufferSize())
              .build();
   }
@@ -129,7 +129,7 @@ public final class Nullable${minor.class}Vector extends BaseValueVector implemen
   @Override
   public int load(int valueCount, ByteBuf buf){
     clear();
-    this.recordCount = valueCount;
+    this.valueCount = valueCount;
     int loaded = bits.load(valueCount, buf);
     
     // remove bits part of buffer.
@@ -154,7 +154,7 @@ public final class Nullable${minor.class}Vector extends BaseValueVector implemen
   public void transferTo(Nullable${minor.class}Vector target){
     bits.transferTo(target.bits);
     values.transferTo(target.values);
-    target.recordCount = recordCount;
+    target.valueCount = valueCount;
     clear();
   }
   
@@ -185,13 +185,17 @@ public final class Nullable${minor.class}Vector extends BaseValueVector implemen
   public ${minor.class}Vector convertToRequiredVector(){
     ${minor.class}Vector v = new ${minor.class}Vector(getField().getOtherNullableVersion(), allocator);
     v.data = values.data;
-    v.recordCount = this.recordCount;
+    v.valueCount = this.valueCount;
     v.data.retain();
     clear();
     return v;
   }
+
   
-  
+  public void copyValue(int inIndex, int outIndex, Nullable${minor.class}Vector v){
+    bits.copyValue(inIndex, outIndex, v.bits);
+    values.copyValue(inIndex, outIndex, v.values);
+  }
   
   public final class Accessor implements ValueVector.Accessor{
 
@@ -220,14 +224,14 @@ public final class Nullable${minor.class}Vector extends BaseValueVector implemen
       return isNull(index) ? null : values.getAccessor().getObject(index);
     }
     
-    public int getRecordCount(){
-      return recordCount;
+    public int getValueCount(){
+      return valueCount;
     }
     
     public void reset(){}
   }
   
-  public final class Mutator implements ValueVector.Mutator{
+  public final class Mutator implements NonRepeatedMutator{
     
     private int setCount;
     
@@ -246,15 +250,15 @@ public final class Nullable${minor.class}Vector extends BaseValueVector implemen
       values.getMutator().set(index, value);
     }
 
-    public void setValueCount(int recordCount) {
-      assert recordCount >= 0;
-      Nullable${minor.class}Vector.this.recordCount = recordCount;
-      values.getMutator().setValueCount(recordCount);
-      bits.getMutator().setValueCount(recordCount);
+    public void setValueCount(int valueCount) {
+      assert valueCount >= 0;
+      Nullable${minor.class}Vector.this.valueCount = valueCount;
+      values.getMutator().setValueCount(valueCount);
+      bits.getMutator().setValueCount(valueCount);
     }
     
     public boolean noNulls(){
-      return recordCount == setCount;
+      return valueCount == setCount;
     }
     
     public void randomizeData(){
