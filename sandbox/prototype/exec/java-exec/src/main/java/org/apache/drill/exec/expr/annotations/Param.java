@@ -14,5 +14,4 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD})
 public @interface Param {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Param.class);
 }

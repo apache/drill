@@ -11,8 +11,4 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD})
 public @interface Output {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Output.class);
-
-  
-
 }
