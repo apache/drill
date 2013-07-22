@@ -17,6 +17,8 @@
  ******************************************************************************/
 package org.apache.drill.exec.work.foreman;
 
+import io.netty.buffer.ByteBuf;
+
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -185,7 +187,7 @@ class RunningFragmentManager implements FragmentStatusListener{
     }
 
     @Override
-    public void success(Ack value) {
+    public void success(Ack value, ByteBuf buf) {
       if(!value.getOk()){
         logger.warn("Remote node {} responded negative on cancellation request for fragment {}.", endpoint, value);
       }

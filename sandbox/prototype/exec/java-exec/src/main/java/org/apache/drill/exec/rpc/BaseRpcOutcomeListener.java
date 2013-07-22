@@ -17,6 +17,8 @@
  ******************************************************************************/
 package org.apache.drill.exec.rpc;
 
+import io.netty.buffer.ByteBuf;
+
 public class BaseRpcOutcomeListener<T> implements RpcOutcomeListener<T> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseRpcOutcomeListener.class);
 
@@ -25,7 +27,7 @@ public class BaseRpcOutcomeListener<T> implements RpcOutcomeListener<T> {
   }
 
   @Override
-  public void success(T value) {
+  public void success(T value, ByteBuf buffer) {
   }
   
   

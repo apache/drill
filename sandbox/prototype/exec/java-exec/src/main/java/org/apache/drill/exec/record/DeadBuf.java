@@ -17,6 +17,10 @@
  ******************************************************************************/
 package org.apache.drill.exec.record;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufAllocator;
+import io.netty.buffer.ByteBufProcessor;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -26,12 +30,7 @@ import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
 import java.nio.charset.Charset;
 
-import io.netty.buffer.BufType;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufAllocator;
-import io.netty.buffer.ByteBufIndexFinder;
-
-public class DeadBuf implements ByteBuf {
+public class DeadBuf extends ByteBuf {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DeadBuf.class);
   
   private static final String ERROR_MESSAGE = "Attemped to access a DeadBuf. This would happen if you attempted to interact with a buffer that has been moved or not yet initialized.";
@@ -39,12 +38,8 @@ public class DeadBuf implements ByteBuf {
   public static final DeadBuf DEAD_BUFFER = new DeadBuf();
 
   private DeadBuf(){}
-  
-  @Override
-  public BufType type() {
-    throw new UnsupportedOperationException(ERROR_MESSAGE);
-  }
 
+  
   @Override
   public boolean isReadable(int size) {
     throw new UnsupportedOperationException(ERROR_MESSAGE);
@@ -156,19 +151,7 @@ public class DeadBuf implements ByteBuf {
   }
 
   @Override
-  @Deprecated
-  public boolean readable() {
-    throw new UnsupportedOperationException(ERROR_MESSAGE);
-  }
-
-  @Override
   public boolean isWritable() {
-    throw new UnsupportedOperationException(ERROR_MESSAGE);
-  }
-
-  @Override
-  @Deprecated
-  public boolean writable() {
     throw new UnsupportedOperationException(ERROR_MESSAGE);
   }
 
@@ -209,12 +192,6 @@ public class DeadBuf implements ByteBuf {
 
   @Override
   public ByteBuf ensureWritable(int minWritableBytes) {
-    throw new UnsupportedOperationException(ERROR_MESSAGE);
-  }
-
-  @Override
-  @Deprecated
-  public ByteBuf ensureWritableBytes(int minWritableBytes) {
     throw new UnsupportedOperationException(ERROR_MESSAGE);
   }
 
@@ -677,48 +654,27 @@ public class DeadBuf implements ByteBuf {
 
   }
 
-  @Override
-  public int indexOf(int fromIndex, int toIndex, ByteBufIndexFinder indexFinder) {
-    throw new UnsupportedOperationException(ERROR_MESSAGE);
-
-  }
-
+  
   @Override
   public int bytesBefore(byte value) {
     throw new UnsupportedOperationException(ERROR_MESSAGE);
 
   }
 
-  @Override
-  public int bytesBefore(ByteBufIndexFinder indexFinder) {
-    throw new UnsupportedOperationException(ERROR_MESSAGE);
-
-  }
-
-  @Override
+    @Override
   public int bytesBefore(int length, byte value) {
     throw new UnsupportedOperationException(ERROR_MESSAGE);
 
   }
 
-  @Override
-  public int bytesBefore(int length, ByteBufIndexFinder indexFinder) {
-    throw new UnsupportedOperationException(ERROR_MESSAGE);
-
-  }
-
+  
   @Override
   public int bytesBefore(int index, int length, byte value) {
     throw new UnsupportedOperationException(ERROR_MESSAGE);
 
   }
 
-  @Override
-  public int bytesBefore(int index, int length, ByteBufIndexFinder indexFinder) {
-    throw new UnsupportedOperationException(ERROR_MESSAGE);
-
-  }
-
+  
   @Override
   public ByteBuf copy() {
     throw new UnsupportedOperationException(ERROR_MESSAGE);
@@ -822,16 +778,6 @@ public class DeadBuf implements ByteBuf {
   }
 
   @Override
-  public ByteBuf suspendIntermediaryDeallocations() {
-    throw new UnsupportedOperationException(ERROR_MESSAGE);
-  }
-
-  @Override
-  public ByteBuf resumeIntermediaryDeallocations() {
-    throw new UnsupportedOperationException(ERROR_MESSAGE);
-  }
-
-  @Override
   public int compareTo(ByteBuf buffer) {
     throw new UnsupportedOperationException(ERROR_MESSAGE);
   }
@@ -845,4 +791,54 @@ public class DeadBuf implements ByteBuf {
   public ByteBuf retain() {
     throw new UnsupportedOperationException(ERROR_MESSAGE);
   }
+
+
+  @Override
+  public boolean equals(Object arg0) {
+    return false;
+  }
+
+
+  @Override
+  public int forEachByte(ByteBufProcessor arg0) {
+    return 0;
+  }
+
+
+  @Override
+  public int forEachByte(int arg0, int arg1, ByteBufProcessor arg2) {
+    return 0;
+  }
+
+
+  @Override
+  public int forEachByteDesc(ByteBufProcessor arg0) {
+    return 0;
+  }
+
+
+  @Override
+  public int forEachByteDesc(int arg0, int arg1, ByteBufProcessor arg2) {
+    return 0;
+  }
+
+
+  @Override
+  public int hashCode() {
+    return 0;
+  }
+
+
+  @Override
+  public ByteBuffer internalNioBuffer(int arg0, int arg1) {
+    return null;
+  }
+
+
+  @Override
+  public String toString() {
+    return null;
+  }
+  
+  
 }

@@ -20,9 +20,10 @@ package org.apache.drill.exec.rpc;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufOutputStream;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelOutboundMessageHandlerAdapter;
+import io.netty.handler.codec.MessageToMessageEncoder;
 
 import java.io.OutputStream;
+import java.util.List;
 
 import org.apache.drill.exec.proto.GeneralRPCProtos.CompleteRpcMessage;
 import org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader;
@@ -33,7 +34,7 @@ import com.google.protobuf.WireFormat;
 /**
  * Converts an RPCMessage into wire format.
  */
-class RpcEncoder extends ChannelOutboundMessageHandlerAdapter<OutboundRpcMessage>{
+class RpcEncoder extends MessageToMessageEncoder<OutboundRpcMessage>{
   final org.slf4j.Logger logger;
   
   static final int HEADER_TAG = makeTag(CompleteRpcMessage.HEADER_FIELD_NUMBER, WireFormat.WIRETYPE_LENGTH_DELIMITED);
@@ -44,12 +45,16 @@ class RpcEncoder extends ChannelOutboundMessageHandlerAdapter<OutboundRpcMessage
   static final int RAW_BODY_TAG_LENGTH = getRawVarintSize(RAW_BODY_TAG);
   
   public RpcEncoder(String name){
-    this.logger = org.slf4j.LoggerFactory.getLogger(RpcEncoder.class.getCanonicalName() + "." + name);
+    this.logger = org.slf4j.LoggerFactory.getLogger(RpcEncoder.class.getCanonicalName() + "-" + name);
   }
   
   @Override
-  public void flush(ChannelHandlerContext ctx, OutboundRpcMessage msg) throws Exception {
+  protected void encode(ChannelHandlerContext ctx, OutboundRpcMessage msg, List<Object> out) throws Exception {
+    if(RpcConstants.EXTRA_DEBUGGING) logger.debug("Rpc Encoder called with msg {}", msg);
+    
     if(!ctx.channel().isOpen()){
+      //output.add(ctx.alloc().buffer(0));
+      logger.debug("Channel closed, skipping encode.");
       return;
     }
     
@@ -73,8 +78,7 @@ class RpcEncoder extends ChannelOutboundMessageHandlerAdapter<OutboundRpcMessage
         fullLength += (RAW_BODY_TAG_LENGTH + getRawVarintSize(rawBodyLength) + rawBodyLength);
       }
 
-      // set up buffers.
-      ByteBuf buf = ctx.nextOutboundByteBuffer();
+      ByteBuf buf = ctx.alloc().buffer();
       OutputStream os = new ByteBufOutputStream(buf);
       CodedOutputStream cos = CodedOutputStream.newInstance(os);
 
@@ -90,26 +94,31 @@ class RpcEncoder extends ChannelOutboundMessageHandlerAdapter<OutboundRpcMessage
       cos.writeRawVarint32(PROTOBUF_BODY_TAG);
       cos.writeRawVarint32(protoBodyLength);
       msg.pBody.writeTo(cos);
-
+      
       // if exists, write data body and tag.
-      // TODO: is it possible to avoid this copy, i think so...
       if(msg.getRawBodySize() > 0){
         if(RpcConstants.EXTRA_DEBUGGING) logger.debug("Writing raw body of size {}", msg.getRawBodySize());
+        
         cos.writeRawVarint32(RAW_BODY_TAG);
         cos.writeRawVarint32(rawBodyLength);
         cos.flush(); // need to flush so that dbody goes after if cos is caching.
-        for(int i =0; i < msg.dBodies.length; i++){
-          buf.writeBytes(msg.dBodies[i]);  
+        
+        out.add(buf);
+        for(ByteBuf b : msg.dBodies){
+          out.add(b);
         }
+        
       }else{
         cos.flush();
+        out.add(buf);
       }
-      if(RpcConstants.EXTRA_DEBUGGING) logger.debug("Wrote message with length header of {} bytes and body of {} bytes.", getRawVarintSize(fullLength), fullLength);
+      
+      if(RpcConstants.SOME_DEBUGGING) logger.debug("Wrote message length {}:{} bytes (head:body).  Message: " + msg, getRawVarintSize(fullLength), fullLength);
       if(RpcConstants.EXTRA_DEBUGGING) logger.debug("Sent message.  Ending writer index was {}.", buf.writerIndex());
-    
+      
     }finally{
-      // make sure to release Rpc Messages unerlying byte buffers.
-      msg.release();
+      // make sure to release Rpc Messages underlying byte buffers.
+      //msg.release();
     }
   }
   

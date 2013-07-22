@@ -22,5 +22,6 @@ public class RpcConstants {
   
   private RpcConstants(){}
   
+  public static final boolean SOME_DEBUGGING = false;
   public static final boolean EXTRA_DEBUGGING = false;
 }

@@ -19,7 +19,7 @@ package org.apache.drill.exec.rpc;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBufAllocator;
-import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
@@ -67,11 +67,11 @@ public abstract class BasicServer<T extends EnumLite, C extends RemoteConnection
             
             C connection = initRemoteConnection(ch);
             ch.closeFuture().addListener(getCloseHandler(connection));
-
+            
             ch.pipeline().addLast( //
                 new ZeroCopyProtobufLengthDecoder(), //
-                new RpcDecoder(rpcConfig.getName()), //
-                new RpcEncoder(rpcConfig.getName()), //
+                new RpcDecoder("s-" + rpcConfig.getName()), //
+                new RpcEncoder("s-" + rpcConfig.getName()), //
                 getHandshakeHandler(connection),
                 new InboundHandler(connection), //
                 new RpcExceptionHandler() //
@@ -97,9 +97,9 @@ public abstract class BasicServer<T extends EnumLite, C extends RemoteConnection
     }
 
     @Override
-    protected final void consumeHandshake(Channel c, T inbound) throws Exception {
+    protected final void consumeHandshake(ChannelHandlerContext ctx, T inbound) throws Exception {
       OutboundRpcMessage msg = new OutboundRpcMessage(RpcMode.RESPONSE, this.handshakeType, coordinationId, getHandshakeResponse(inbound));
-      c.write(msg);
+      ctx.writeAndFlush(msg);
     }
     
     public abstract MessageLite getHandshakeResponse(T inbound) throws Exception;

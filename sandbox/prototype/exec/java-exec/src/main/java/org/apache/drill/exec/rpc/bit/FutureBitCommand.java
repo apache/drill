@@ -17,13 +17,13 @@
  ******************************************************************************/
 package org.apache.drill.exec.rpc.bit;
 
+import io.netty.buffer.ByteBuf;
+
 import org.apache.drill.exec.rpc.DrillRpcFuture;
 import org.apache.drill.exec.rpc.RpcCheckedFuture;
-import org.apache.drill.exec.rpc.RpcConnectionHandler;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
 
-import com.google.common.util.concurrent.CheckedFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.protobuf.MessageLite;
 
@@ -59,7 +59,7 @@ public abstract class FutureBitCommand<T extends MessageLite> implements BitComm
     }
 
     @Override
-    public void success(T value) {
+    public void success(T value, ByteBuf buf) {
       settableFuture.set(value);
     }
 

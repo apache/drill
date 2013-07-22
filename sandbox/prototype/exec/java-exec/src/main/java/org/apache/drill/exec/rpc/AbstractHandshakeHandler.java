@@ -17,20 +17,21 @@
  ******************************************************************************/
 package org.apache.drill.exec.rpc;
 
-import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundMessageHandlerAdapter;
+import io.netty.handler.codec.MessageToMessageDecoder;
+
+import java.util.List;
 
 import com.google.protobuf.Internal.EnumLite;
 import com.google.protobuf.MessageLite;
 import com.google.protobuf.Parser;
 
-public abstract class AbstractHandshakeHandler<T extends MessageLite> extends ChannelInboundMessageHandlerAdapter<InboundRpcMessage> {
+public abstract class AbstractHandshakeHandler<T extends MessageLite> extends MessageToMessageDecoder<InboundRpcMessage> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractHandshakeHandler.class);
 
   protected final EnumLite handshakeType;
   protected final Parser<T> parser;
-  protected int coordinationId;
+  protected volatile int coordinationId;
 
   public AbstractHandshakeHandler(EnumLite handshakeType, Parser<T> parser) {
     super();
@@ -38,8 +39,10 @@ public abstract class AbstractHandshakeHandler<T extends MessageLite> extends Ch
     this.parser = parser;
   }
 
+  
   @Override
-  public final void messageReceived(ChannelHandlerContext ctx, InboundRpcMessage inbound) throws Exception {
+  protected void decode(ChannelHandlerContext ctx, InboundRpcMessage inbound, List<Object> outputs) throws Exception {
+    if(RpcConstants.EXTRA_DEBUGGING) logger.debug("Received handshake {}", inbound);
     this.coordinationId = inbound.coordinationId;
     ctx.channel().pipeline().remove(this);
     if (inbound.rpcType != handshakeType.getNumber())
@@ -47,10 +50,10 @@ public abstract class AbstractHandshakeHandler<T extends MessageLite> extends Ch
           handshakeType, handshakeType.getNumber(), inbound.rpcType));
   
     T msg = parser.parseFrom(inbound.getProtobufBodyAsIS());
-    consumeHandshake(ctx.channel(), msg);
+    consumeHandshake(ctx, msg);
     
   }
 
-  protected abstract void consumeHandshake(Channel c, T msg) throws Exception;
+  protected abstract void consumeHandshake(ChannelHandlerContext ctx, T msg) throws Exception;
 
 }

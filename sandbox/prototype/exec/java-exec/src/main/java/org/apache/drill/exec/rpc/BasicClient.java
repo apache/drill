@@ -22,6 +22,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
@@ -31,7 +32,6 @@ import io.netty.util.concurrent.GenericFutureListener;
 
 import org.apache.drill.exec.rpc.RpcConnectionHandler.FailureType;
 
-import com.google.common.util.concurrent.SettableFuture;
 import com.google.protobuf.Internal.EnumLite;
 import com.google.protobuf.MessageLite;
 import com.google.protobuf.Parser;
@@ -70,8 +70,8 @@ public abstract class BasicClient<T extends EnumLite, R extends RemoteConnection
             
             ch.pipeline().addLast( //
                 new ZeroCopyProtobufLengthDecoder(), //
-                new RpcDecoder(rpcConfig.getName()), //
-                new RpcEncoder(rpcConfig.getName()), //
+                new RpcDecoder("c-" + rpcConfig.getName()), //
+                new RpcEncoder("c-" + rpcConfig.getName()), //
                 new ClientHandshakeHandler(), //
                 new InboundHandler(connection), //
                 new RpcExceptionHandler() //
@@ -165,7 +165,7 @@ public abstract class BasicClient<T extends EnumLite, R extends RemoteConnection
       }
 
       @Override
-      public void success(HANDSHAKE_RESPONSE value) {
+      public void success(HANDSHAKE_RESPONSE value, ByteBuf buffer) {
 //        logger.debug("Handshake received. {}", value);
         try {
           BasicClient.this.validateHandshake(value);
@@ -189,11 +189,11 @@ public abstract class BasicClient<T extends EnumLite, R extends RemoteConnection
     }
 
     @Override
-    protected final void consumeHandshake(Channel c, HANDSHAKE_RESPONSE msg) throws Exception {
+    protected final void consumeHandshake(ChannelHandlerContext ctx, HANDSHAKE_RESPONSE msg) throws Exception {
       // remove the handshake information from the queue so it doesn't sit there forever.
       RpcOutcome<HANDSHAKE_RESPONSE> response = queue.getFuture(handshakeType.getNumber(), coordinationId,
           responseClass);
-      response.set(msg);
+      response.set(msg, null);
     }
 
   }

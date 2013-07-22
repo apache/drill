@@ -17,8 +17,12 @@
  ******************************************************************************/
 package org.apache.drill.exec.rpc;
 
+import io.netty.buffer.ByteBuf;
+
 import com.google.common.util.concurrent.CheckedFuture;
 
 public interface DrillRpcFuture<T> extends CheckedFuture<T,RpcException> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillRpcFuture.class);
+  
+  public ByteBuf getBuffer();
 }

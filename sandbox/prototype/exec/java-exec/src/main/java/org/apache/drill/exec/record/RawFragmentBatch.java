@@ -31,6 +31,7 @@ public class RawFragmentBatch {
     super();
     this.header = header;
     this.body = body;
+    if(body != null) body.retain();
   }
 
   public FragmentRecordBatch getHeader() {

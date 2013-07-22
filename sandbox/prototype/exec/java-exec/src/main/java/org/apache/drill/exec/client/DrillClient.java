@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.get;
 import static org.apache.drill.exec.proto.UserProtos.QueryResultsMode.STREAM_FULL;
 import static org.apache.drill.exec.proto.UserProtos.RunQuery.newBuilder;
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -177,6 +178,11 @@ public class DrillClient implements Closeable{
     @Override
     protected RpcException mapException(Exception e) {
       return RpcException.mapException(e);
+    }
+
+    @Override
+    public ByteBuf getBuffer() {
+      return null;
     }
     
   }

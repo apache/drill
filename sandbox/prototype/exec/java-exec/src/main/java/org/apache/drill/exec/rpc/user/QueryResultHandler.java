@@ -123,7 +123,7 @@ public class QueryResultHandler {
     }
 
     @Override
-    public void success(QueryId queryId) {
+    public void success(QueryId queryId, ByteBuf buf) {
       logger.debug("Received QueryId {} succesfully.  Adding listener {}", queryId, listener);
       UserResultsListener oldListener = resultsListener.putIfAbsent(queryId, listener);
 

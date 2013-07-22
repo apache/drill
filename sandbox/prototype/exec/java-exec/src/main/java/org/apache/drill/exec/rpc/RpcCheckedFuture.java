@@ -17,17 +17,31 @@
  ******************************************************************************/
 package org.apache.drill.exec.rpc;
 
+import io.netty.buffer.ByteBuf;
+
 import com.google.common.util.concurrent.AbstractCheckedFuture;
 import com.google.common.util.concurrent.ListenableFuture;
 
 public class RpcCheckedFuture<T> extends AbstractCheckedFuture<T, RpcException> implements DrillRpcFuture<T>{
+  
+  volatile ByteBuf buffer;
+  
   public RpcCheckedFuture(ListenableFuture<T> delegate) {
     super(delegate);
   }
 
+  public void set(T obj, ByteBuf buffer){
+    this.buffer = buffer;
+  }
+  
   @Override
   protected RpcException mapException(Exception e) {
     return RpcException.mapException(e);
+  }
+
+  @Override
+  public ByteBuf getBuffer() {
+    return null;
   }
 
 }

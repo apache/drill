@@ -17,6 +17,8 @@
  ******************************************************************************/
 package org.apache.drill.exec.physical.impl;
 
+import io.netty.buffer.ByteBuf;
+
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -101,7 +103,7 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
       }
 
       @Override
-      public void success(Ack value) {
+      public void success(Ack value, ByteBuf buf) {
         if(value.getOk()) return;
 
         logger.error("Downstream fragment was not accepted.  Stopping future sends.");

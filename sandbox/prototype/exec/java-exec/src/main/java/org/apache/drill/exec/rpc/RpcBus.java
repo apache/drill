@@ -22,16 +22,15 @@ import io.netty.buffer.ByteBufInputStream;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundMessageHandlerAdapter;
+import io.netty.handler.codec.MessageToMessageDecoder;
 import io.netty.util.concurrent.GenericFutureListener;
 
 import java.io.Closeable;
 import java.util.Arrays;
-import java.util.concurrent.CancellationException;
+import java.util.List;
 
 import org.apache.drill.exec.proto.GeneralRPCProtos.RpcFailure;
 import org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode;
-import org.slf4j.Logger;
 
 import com.google.common.base.Preconditions;
 import com.google.protobuf.Internal.EnumLite;
@@ -85,8 +84,7 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
       Preconditions.checkNotNull(protobufBody);
       ChannelListenerWithCoordinationId futureListener = queue.get(listener, clazz);
       OutboundRpcMessage m = new OutboundRpcMessage(RpcMode.REQUEST, rpcType, futureListener.getCoordinationId(), protobufBody, dataBodies);
-      logger.debug("Outbound RPC message: {}.    DATA BODIES: {}", m, dataBodies);
-      ChannelFuture channelFuture = connection.getChannel().write(m);
+      ChannelFuture channelFuture = connection.getChannel().writeAndFlush(m);
       channelFuture.addListener(futureListener);
       completed = true;
     } finally {
@@ -115,14 +113,14 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
   }
 
   protected void closeQueueDueToChannelClose() {
-    if (this.isClient()) queue.channelClosed(new ChannelClosedException());
+    if (this.isClient()) queue.channelClosed(new ChannelClosedException("Queue closed due to channel closure."));
   }
 
   protected GenericFutureListener<ChannelFuture> getCloseHandler(C clientConnection) {
     return new ChannelClosedHandler();
   }
 
-  protected class InboundHandler extends ChannelInboundMessageHandlerAdapter<InboundRpcMessage> {
+  protected class InboundHandler extends MessageToMessageDecoder<InboundRpcMessage> {
 
     private final C connection;
     public InboundHandler(C connection) {
@@ -131,29 +129,37 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
     }
 
     @Override
-    public void messageReceived(ChannelHandlerContext ctx, InboundRpcMessage msg) throws Exception {
+    protected void decode(ChannelHandlerContext ctx, InboundRpcMessage msg, List<Object> output) throws Exception {
       if (!ctx.channel().isOpen()) return;
       if (RpcConstants.EXTRA_DEBUGGING) logger.debug("Received message {}", msg);
       switch (msg.mode) {
       case REQUEST:
         // handle message and ack.
         Response r = handle(connection, msg.rpcType, msg.pBody, msg.dBody);
+        msg.pBody.release();
+        if(msg.dBody != null) msg.dBody.release(); // we release our ownership.  Handle could have taken over ownership.
         assert rpcConfig.checkResponseSend(r.rpcType, r.pBody.getClass());
         OutboundRpcMessage outMessage = new OutboundRpcMessage(RpcMode.RESPONSE, r.rpcType, msg.coordinationId,
             r.pBody, r.dBodies);
         if (RpcConstants.EXTRA_DEBUGGING) logger.debug("Adding message to outbound buffer. {}", outMessage);
-        ctx.write(outMessage);
+        ctx.writeAndFlush(outMessage);
         break;
 
       case RESPONSE:
+        try{
         MessageLite m = getResponseDefaultInstance(msg.rpcType);
         assert rpcConfig.checkReceive(msg.rpcType, m.getClass());
         RpcOutcome<?> rpcFuture = queue.getFuture(msg.rpcType, msg.coordinationId, m.getClass());
         Parser<?> parser = m.getParserForType();
         Object value = parser.parseFrom(new ByteBufInputStream(msg.pBody, msg.pBody.readableBytes()));
-        rpcFuture.set(value);
+        msg.pBody.release();
+        rpcFuture.set(value, msg.dBody);
+        if(msg.dBody != null) msg.dBody.release();
         if (RpcConstants.EXTRA_DEBUGGING) logger.debug("Updated rpc future {} with value {}", rpcFuture, value);
-
+        }catch(Exception ex){
+          logger.error("Failure while handling response.", ex);
+          throw ex;
+        }
         break;
 
       case RESPONSE_FAILURE:

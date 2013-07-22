@@ -47,7 +47,7 @@ public class FunctionRegistry {
           for(String rn : d.getRegisteredNames()){
             
             FunctionDefinition d2 = funcs.put(rn, d);
-            logger.debug("Registering function {}", d);
+//            logger.debug("Registering function {}", d);
             if(d2 != null){
               throw new ExceptionInInitializerError(String.format("Failure while registering functions.  The function %s tried to register with the name %s but the function %s already registered with that name.", d.getName(), rn, d2.getName()) );
             }

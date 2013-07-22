@@ -17,14 +17,11 @@
  ******************************************************************************/
 package org.apache.drill.exec.rpc.bit;
 
-import org.apache.drill.exec.rpc.DrillRpcFuture;
-import org.apache.drill.exec.rpc.RpcCheckedFuture;
-import org.apache.drill.exec.rpc.RpcConnectionHandler;
+import io.netty.buffer.ByteBuf;
+
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
 
-import com.google.common.util.concurrent.CheckedFuture;
-import com.google.common.util.concurrent.SettableFuture;
 import com.google.protobuf.MessageLite;
 
 public abstract class ListeningBitCommand<T extends MessageLite> implements BitCommand<T> {
@@ -57,8 +54,8 @@ public abstract class ListeningBitCommand<T extends MessageLite> implements BitC
     }
 
     @Override
-    public void success(T value) {
-      listener.success(value);
+    public void success(T value, ByteBuf buf) {
+      listener.success(value, buf);
     }
 
   }

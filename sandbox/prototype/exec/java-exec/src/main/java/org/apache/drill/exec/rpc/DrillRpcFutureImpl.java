@@ -17,15 +17,16 @@
  ******************************************************************************/
 package org.apache.drill.exec.rpc;
 
-import java.util.concurrent.ExecutionException;
+import io.netty.buffer.ByteBuf;
 
 import com.google.common.util.concurrent.AbstractCheckedFuture;
 import com.google.common.util.concurrent.AbstractFuture;
-import com.google.common.util.concurrent.ListenableFuture;
 
 class DrillRpcFutureImpl<V> extends AbstractCheckedFuture<V, RpcException> implements DrillRpcFuture<V>, RpcOutcomeListener<V>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillRpcFutureImpl.class);
-
+  
+  private volatile ByteBuf buffer;
+  
   public DrillRpcFutureImpl() {
     super(new InnerFuture<V>());
   }
@@ -46,7 +47,7 @@ class DrillRpcFutureImpl<V> extends AbstractCheckedFuture<V, RpcException> imple
     return RpcException.mapException(ex);
   }
 
-  public static class InnerFuture<T> extends AbstractFuture<T> {
+  private static class InnerFuture<T> extends AbstractFuture<T> {
     // we rewrite these so that the parent can see them
 
     void setValue(T value) {
@@ -64,10 +65,20 @@ class DrillRpcFutureImpl<V> extends AbstractCheckedFuture<V, RpcException> imple
   }
 
   @Override
-  public void success(V value) {
+  public void success(V value, ByteBuf buffer) {
+    this.buffer = buffer;
+    if(buffer != null) buffer.retain();
     ( (InnerFuture<V>)delegate()).setValue(value);
   }
 
+  @Override
+  public ByteBuf getBuffer() {
+    return buffer;
+  }
+
+  public void release(){
+    if(buffer != null) buffer.release();
+  }
 
   
   
