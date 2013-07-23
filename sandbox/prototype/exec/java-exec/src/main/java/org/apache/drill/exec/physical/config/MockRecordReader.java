@@ -29,6 +29,7 @@ import org.apache.drill.exec.physical.config.MockScanPOP.MockScanEntry;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.store.RecordReader;
+import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.FixedWidthVector;
 import org.apache.drill.exec.vector.NonRepeatedMutator;
 import org.apache.drill.exec.vector.TypeHelper;
@@ -65,13 +66,7 @@ public class MockRecordReader implements RecordReader {
     MaterializedField f = MaterializedField.create(new SchemaPath(name, ExpressionPosition.UNKNOWN), type);
     ValueVector v;
     v = TypeHelper.getNewVector(f, context.getAllocator());
-    if(v instanceof FixedWidthVector){
-      ((FixedWidthVector)v).allocateNew(length);  
-    }else if(v instanceof VariableWidthVector){
-      ((VariableWidthVector)v).allocateNew(50*length, length);
-    }else{
-      throw new UnsupportedOperationException(String.format("Unable to get allocate vector %s", v.getClass().getName()));
-    }
+    AllocationHelper.allocate(v, length, 50);
     
     return v;
 
