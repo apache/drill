@@ -142,7 +142,7 @@ public class FunctionConverter {
     path = path.replaceFirst("\\$.*", "");
     path = path.replace(".", File.separator);
     path = "/" + path + ".java";
-    URL u = Resources.getResource(FunctionConverter.class, path);
+    URL u = Resources.getResource(c, path);
     InputSupplier<InputStream> supplier = Resources.newInputStreamSupplier(u);
     try(InputStream is = supplier.getInput()){
       if(is == null){

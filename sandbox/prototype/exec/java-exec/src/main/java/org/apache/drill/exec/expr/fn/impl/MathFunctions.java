@@ -45,4 +45,21 @@ public class MathFunctions{
 
   }
   
+  /** 
+   * Define the actual absolute value implementation
+   */
+  @FunctionTemplate(name = "negative", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  public static class Negative implements DrillFunc{
+    
+    @Param LongHolder input;
+    @Output LongHolder out;
+
+    public void setup(RecordBatch b){}
+    
+    public void eval(){
+      out.value = -input.value;
+    }
+
+  }
+  
 }

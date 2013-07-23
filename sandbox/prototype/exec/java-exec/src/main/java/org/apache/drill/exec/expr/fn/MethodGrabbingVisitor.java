@@ -28,7 +28,7 @@ public class MethodGrabbingVisitor{
 
     @Override
     public void traverseClassDeclaration(ClassDeclaration cd) {
-      logger.debug("Traversing: {}", cd.getClassName());
+//      logger.debug("Traversing: {}", cd.getClassName());
       boolean prevCapture = captureMethods;
       captureMethods = c.getName().equals(cd.getClassName());
       super.traverseClassDeclaration(cd);
@@ -37,7 +37,7 @@ public class MethodGrabbingVisitor{
 
     @Override
     public void traverseMethodDeclarator(MethodDeclarator md) {
-      logger.debug(c.getName() + ": Found {}, include {}", md.name, captureMethods);
+//      logger.debug(c.getName() + ": Found {}, include {}", md.name, captureMethods);
       if(captureMethods){
         StringWriter writer = new StringWriter();
         ModifiedUnparseVisitor v = new ModifiedUnparseVisitor(writer);

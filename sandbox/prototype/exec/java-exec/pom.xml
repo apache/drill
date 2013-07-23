@@ -160,6 +160,18 @@
         </executions>
       </plugin>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>2.2</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
         <artifactId>maven-antrun-plugin</artifactId>
         <executions>
           <execution>
@@ -179,51 +191,52 @@
                 <exec executable="protoc">
                   <arg value="--java_out=${target.gen.source.path}" />
                   <arg value="--proto_path=${proto.cas.path}" />
-                  <arg value="--proto_path=${project.basedir}/../../common/src/main/protobuf/" />
-									<arg line="${proto.files}" />
-								</exec>
-							</tasks>
-							<sourceRoot>${target.gen.source.path}</sourceRoot>
-						</configuration>
-						<goals>
-							<goal>run</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>com.googlecode.fmpp-maven-plugin</groupId>
-				<artifactId>fmpp-maven-plugin</artifactId>
-				<version>1.0</version>
-				<configuration>
-					<cfgFile>src/main/codegen/ValueVectors/config.fmpp</cfgFile>
-					<outputDirectory>target/generated-sources/org/apache/drill/exec/vector</outputDirectory>
-					<templateDirectory>src/main/codegen/ValueVectors/templates</templateDirectory>
-				</configuration>
-				<executions>
-					<execution>
-						<id>generate-sources</id>
-						<phase>generate-sources</phase>
-						<goals>
-							<goal>generate</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
+                  <arg
+                    value="--proto_path=${project.basedir}/../../common/src/main/protobuf/" />
+                  <arg line="${proto.files}" />
+                </exec>
+              </tasks>
+              <sourceRoot>${target.gen.source.path}</sourceRoot>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>com.googlecode.fmpp-maven-plugin</groupId>
+        <artifactId>fmpp-maven-plugin</artifactId>
+        <version>1.0</version>
+        <configuration>
+          <cfgFile>src/main/codegen/ValueVectors/config.fmpp</cfgFile>
+          <outputDirectory>target/generated-sources/org/apache/drill/exec/vector</outputDirectory>
+          <templateDirectory>src/main/codegen/ValueVectors/templates</templateDirectory>
+        </configuration>
+        <executions>
+          <execution>
+            <id>generate-sources</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>generate</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
 
-			<!-- <plugin> -->
-			<!-- <groupId>com.github.igor-petruk.protobuf</groupId> -->
-			<!-- <artifactId>protobuf-maven-plugin</artifactId> -->
-			<!-- <version>0.6.2</version> -->
-			<!-- <executions> -->
-			<!-- <execution> -->
-			<!-- <goals> -->
-			<!-- <goal>run</goal> -->
-			<!-- </goals> -->
-			<!-- </execution> -->
-			<!-- </executions> -->
-			<!-- </plugin> -->
-		</plugins>
-	</build>
+      <!-- <plugin> -->
+      <!-- <groupId>com.github.igor-petruk.protobuf</groupId> -->
+      <!-- <artifactId>protobuf-maven-plugin</artifactId> -->
+      <!-- <version>0.6.2</version> -->
+      <!-- <executions> -->
+      <!-- <execution> -->
+      <!-- <goals> -->
+      <!-- <goal>run</goal> -->
+      <!-- </goals> -->
+      <!-- </execution> -->
+      <!-- </executions> -->
+      <!-- </plugin> -->
+    </plugins>
+  </build>
 
 </project>
