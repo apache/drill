@@ -31,7 +31,7 @@ public class TestSimpleFilter {
   
   
   @Test
-  public void testFilter(@Injectable final DrillbitContext bitContext, @Injectable UserClientConnection connection) throws Exception{
+  public void testFilter(@Injectable final DrillbitContext bitContext, @Injectable UserClientConnection connection) throws Throwable{
 //    System.out.println(System.getProperty("java.class.path"));
 
     
@@ -49,6 +49,12 @@ public class TestSimpleFilter {
     while(exec.next()){
       assertEquals(50, exec.getSelectionVector2().getCount());
     }
+    
+    if(context.getFailureCause() != null){
+      throw context.getFailureCause();
+    }
+    assertTrue(!context.isFailed());
+
   }
   
   @After

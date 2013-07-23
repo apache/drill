@@ -1,6 +1,7 @@
 package org.apache.drill.exec.physical.impl.svremover;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import mockit.Injectable;
 import mockit.NonStrictExpectations;
 
@@ -32,7 +33,7 @@ public class TestSVRemover {
   
   
   @Test
-  public void testSelectionVectorRemoval(@Injectable final DrillbitContext bitContext, @Injectable UserClientConnection connection) throws Exception{
+  public void testSelectionVectorRemoval(@Injectable final DrillbitContext bitContext, @Injectable UserClientConnection connection) throws Throwable{
 //    System.out.println(System.getProperty("java.class.path"));
 
 
@@ -54,6 +55,12 @@ public class TestSVRemover {
         assertEquals(count, a.getValueCount());
       }
     }
+    
+    if(context.getFailureCause() != null){
+      throw context.getFailureCause();
+    }
+    assertTrue(!context.isFailed());
+
   }
   
   @After

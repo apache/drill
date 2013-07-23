@@ -1,6 +1,7 @@
 package org.apache.drill.exec.physical.impl.project;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import mockit.Injectable;
 import mockit.NonStrictExpectations;
 
@@ -34,7 +35,7 @@ public class TestSimpleProjection {
   
   
   @Test
-  public void project(@Injectable final DrillbitContext bitContext, @Injectable UserClientConnection connection) throws Exception{
+  public void project(@Injectable final DrillbitContext bitContext, @Injectable UserClientConnection connection) throws Throwable{
 
 
     new NonStrictExpectations(){{
@@ -48,6 +49,7 @@ public class TestSimpleProjection {
     FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
     FragmentContext context = new FragmentContext(bitContext, FragmentHandle.getDefaultInstance(), connection, null, registry);
     SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
+
     while(exec.next()){
       BigIntVector c1 = exec.getValueVectorById(new SchemaPath("col1", ExpressionPosition.UNKNOWN), BigIntVector.class);
       BigIntVector c2 = exec.getValueVectorById(new SchemaPath("col2", ExpressionPosition.UNKNOWN), BigIntVector.class);
@@ -63,6 +65,11 @@ public class TestSimpleProjection {
       
       System.out.println(x);
     }
+
+    if(context.getFailureCause() != null){
+      throw context.getFailureCause();
+    }
+    assertTrue(!context.isFailed());
   }
   
   @After

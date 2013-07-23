@@ -68,10 +68,10 @@ public abstract class ProjectorTemplate implements Projector {
       break;
     }
     this.transfers = ImmutableList.copyOf(transfers);
-    setupEval(context, incoming, outgoing);
+    doSetup(context, incoming, outgoing);
   }
 
-  protected abstract void setupEval(FragmentContext context, RecordBatch incoming, RecordBatch outgoing) throws SchemaChangeException;
+  protected abstract void doSetup(FragmentContext context, RecordBatch incoming, RecordBatch outgoing) throws SchemaChangeException;
   protected abstract void doEval(int inIndex, int outIndex);
 
   

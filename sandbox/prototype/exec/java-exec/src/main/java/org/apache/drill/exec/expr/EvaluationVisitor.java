@@ -153,11 +153,11 @@ public class EvaluationVisitor extends AbstractExprVisitor<HoldingContainer, Cod
     generator.getSetupBlock().assign(vv, JExpr.cast(vvType, obj));
     
     if(hc.isOptional()){
-      vv.invoke("set").arg(JExpr.direct("outIndex"));
+      vv.invoke("getMutator").invoke("set").arg(JExpr.direct("outIndex"));
       JConditional jc = block._if(hc.getIsSet().eq(JExpr.lit(0)).not());
       block = jc._then();
     }
-    block.add(vv.invoke("set").arg(JExpr.direct("outIndex")).arg(hc.getValue()));
+    block.add(vv.invoke("getMutator").invoke("set").arg(JExpr.direct("outIndex")).arg(hc.getValue()));
 
     return null;
   }
@@ -185,13 +185,13 @@ public class EvaluationVisitor extends AbstractExprVisitor<HoldingContainer, Cod
       blk.assign(out.getIsSet(), vv1.invoke("isSet").arg(JExpr.direct("inIndex")));
       JConditional jc = blk._if(out.getIsSet());
       jc._then() //
-        .assign(out.getValue(), vv1.invoke("get").arg(JExpr.direct("inIndex"))); //
+        .assign(out.getValue(), vv1.invoke("getAccessor").invoke("get").arg(JExpr.direct("inIndex"))); //
         //.assign(out.getIsSet(), JExpr.lit(1));
       //jc._else()
         //.assign(out.getIsSet(), JExpr.lit(0));
       
     }else{
-      generator.getBlock().assign(out.getValue(), vv1.invoke("get").arg(JExpr.direct("inIndex")));
+      generator.getBlock().assign(out.getValue(), vv1.invoke("getAccessor").invoke("get").arg(JExpr.direct("inIndex")));
     }
     return out;
   }
