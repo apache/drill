@@ -8,6 +8,8 @@ import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.List;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 import mockit.Expectations;
 import mockit.Injectable;
 
@@ -65,7 +67,11 @@ public class JSONRecordReaderTest {
     UserBitShared.FieldMetadata metadata = valueVector.getMetadata();
     SchemaDefProtos.FieldDef def = metadata.getDef();
     assertEquals(expectedMinorType, def.getMajorType().getMinorType());
-    assertEquals(name, def.getNameList().get(0).getName());
+    String[] parts = name.split("\\.");
+    assertEquals(parts.length, def.getNameList().size());
+    for(int i = 0; i < parts.length; ++i) {
+      assertEquals(parts[i], def.getName(i).getName());
+    }
 
     if (expectedMinorType == MinorType.MAP) {
       return;
@@ -144,7 +150,7 @@ public class JSONRecordReaderTest {
     assertEquals(0, jr.next());
   }
 
-  @Test @Ignore
+  @Test
   public void testChangedSchemaInTwoBatches(@Injectable final FragmentContext context) throws IOException,
       ExecutionSetupException {
     new Expectations() {
@@ -177,7 +183,7 @@ public class JSONRecordReaderTest {
     assertField(addFields.get(4), 0, MinorType.VARCHAR, "test2".getBytes(UTF_8), "str1");
     assertField(addFields.get(5), 0, MinorType.INT, 4, "d");
     assertEquals(1, removedFields.size());
-    //assertEquals(3, (int) removedFields.get(0));
+    assertEquals("c", removedFields.get(0).getName());
     removedFields.clear();
     assertEquals(1, jr.next());
     assertEquals(8, addFields.size()); // The reappearing of field 'c' is also included
@@ -187,12 +193,22 @@ public class JSONRecordReaderTest {
     assertField(addFields.get(6), 0, MinorType.FLOAT4, (float) 5.16, "c");
     assertField(addFields.get(7), 0, MinorType.VARCHAR, "test3".getBytes(UTF_8), "str2");
     assertEquals(2, removedFields.size());
-//    assertTrue(removedFields.contains(5));
-//    assertTrue(removedFields.contains(2));
+    Iterables.find(removedFields, new Predicate<MaterializedField>() {
+      @Override
+      public boolean apply(MaterializedField materializedField) {
+        return materializedField.getName().equals("str1");
+      }
+    });
+    Iterables.find(removedFields, new Predicate<MaterializedField>() {
+      @Override
+      public boolean apply(MaterializedField materializedField) {
+        return materializedField.getName().equals("b");
+      }
+    });
     assertEquals(0, jr.next());
   }
 
-  @Test @Ignore
+  @Test
   public void testNestedFieldInSameBatch(@Injectable final FragmentContext context) throws ExecutionSetupException {
     new Expectations() {
       {
@@ -207,61 +223,15 @@ public class JSONRecordReaderTest {
     List<ValueVector> addFields = mutator.getAddFields();
     jr.setup(mutator);
     assertEquals(2, jr.next());
-    assertEquals(5, addFields.size());
+    assertEquals(3, addFields.size());
     assertField(addFields.get(0), 0, MinorType.INT, 123, "test");
-    assertField(addFields.get(1), 0, MinorType.MAP, null, "a");
-    assertField(addFields.get(2), 0, MinorType.VARCHAR, "test".getBytes(UTF_8), "b");
-    assertField(addFields.get(3), 0, MinorType.MAP, null, "a");
-    assertField(addFields.get(4), 0, MinorType.BIT, true, "d");
+    assertField(addFields.get(1), 0, MinorType.VARCHAR, "test".getBytes(UTF_8), "a.b");
+    assertField(addFields.get(2), 0, MinorType.BIT, true, "a.a.d");
     assertField(addFields.get(0), 1, MinorType.INT, 1234, "test");
-    assertField(addFields.get(1), 1, MinorType.MAP, null, "a");
-    assertField(addFields.get(2), 1, MinorType.VARCHAR, "test2".getBytes(UTF_8), "b");
-    assertField(addFields.get(3), 1, MinorType.MAP, null, "a");
-    assertField(addFields.get(4), 1, MinorType.BIT, true, "d");
+    assertField(addFields.get(1), 1, MinorType.VARCHAR, "test2".getBytes(UTF_8), "a.b");
+    assertField(addFields.get(2), 1, MinorType.BIT, false, "a.a.d");
 
     assertEquals(0, jr.next());
     assertTrue(mutator.getRemovedFields().isEmpty());
   }
-
-  /*
-   * 
-   * @Test public void testScanJsonRemovedOneField() throws IOException { ScanJson sj = new
-   * ScanJson(getResource("scan_json_test_3.json")); PhysicalOperatorIterator iterator = sj.getIterator();
-   * expectSchemaChanged(iterator); DiffSchema diffSchema = expectSchemaChanged(iterator).getSchemaChanges();
-   * assertEquals(0, diffSchema.getAddedFields().size()); assertEquals(1, diffSchema.getRemovedFields().size());
-   * assertEquals(PhysicalOperatorIterator.NextOutcome.NONE_LEFT, iterator.next()); }
-   * 
-   * @Test public void testScanJsonAddOneRemoveOne() throws IOException { ScanJson sj = new
-   * ScanJson(getResource("scan_json_test_4.json")); PhysicalOperatorIterator iterator = sj.getIterator();
-   * expectSchemaChanged(iterator); DiffSchema diffSchema = expectSchemaChanged(iterator).getSchemaChanges();
-   * assertEquals(1, diffSchema.getAddedFields().size()); assertEquals(1, diffSchema.getRemovedFields().size());
-   * assertEquals(PhysicalOperatorIterator.NextOutcome.NONE_LEFT, iterator.next()); }
-   * 
-   * @Test public void testScanJsonCycleAdditions() throws IOException { ScanJson sj = new
-   * ScanJson(getResource("scan_json_test_5.json")); PhysicalOperatorIterator iterator = sj.getIterator();
-   * expectSchemaChanged(iterator); DiffSchema diffSchema = expectSchemaChanged(iterator).getSchemaChanges();
-   * assertEquals(1, diffSchema.getAddedFields().size()); assertEquals(1, diffSchema.getRemovedFields().size());
-   * diffSchema = expectSchemaChanged(iterator).getSchemaChanges(); assertEquals(1, diffSchema.getAddedFields().size());
-   * assertEquals(Field.FieldType.FLOAT, diffSchema.getAddedFields().get(0).getFieldType()); assertEquals("test2",
-   * diffSchema.getAddedFields().get(0).getFieldName()); assertEquals(1, diffSchema.getRemovedFields().size());
-   * assertEquals(Field.FieldType.BOOLEAN, diffSchema.getRemovedFields().get(0).getFieldType()); assertEquals("test3",
-   * diffSchema.getRemovedFields().get(0).getFieldName()); assertEquals(PhysicalOperatorIterator.NextOutcome.NONE_LEFT,
-   * iterator.next()); }
-   * 
-   * @Test public void testScanJsonModifiedOneFieldType() throws IOException { ScanJson sj = new
-   * ScanJson(getResource("scan_json_test_6.json")); PhysicalOperatorIterator iterator = sj.getIterator();
-   * expectSchemaChanged(iterator); DiffSchema diffSchema = expectSchemaChanged(iterator).getSchemaChanges();
-   * List<Field> addedFields = diffSchema.getAddedFields(); assertEquals(4, addedFields.size()); List<Field>
-   * removedFields = diffSchema.getRemovedFields(); assertEquals(4, removedFields.size()); assertFieldExists("test",
-   * Field.FieldType.STRING, addedFields); assertFieldExists("test2", Field.FieldType.BOOLEAN, addedFields);
-   * assertFieldExists("b", Field.FieldType.ARRAY, addedFields); assertFieldExists("[0]", Field.FieldType.INTEGER,
-   * addedFields); assertFieldExists("test", Field.FieldType.INTEGER, removedFields); assertFieldExists("test2",
-   * Field.FieldType.ARRAY, removedFields); assertFieldExists("b", Field.FieldType.INTEGER, removedFields);
-   * assertFieldExists("[0]", Field.FieldType.INTEGER, removedFields);
-   * assertEquals(PhysicalOperatorIterator.NextOutcome.NONE_LEFT, iterator.next()); }
-   * 
-   * private void expectSchemaChanged(PhysicalOperatorIterator iterator) throws IOException { }
-   * 
-   * private void expectDataRecord(PhysicalOperatorIterator iterator) throws IOException { }
-   */
 }
