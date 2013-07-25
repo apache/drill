@@ -31,12 +31,12 @@ public class IfEvaluator implements BasicEvaluator{
   private final IfCond[] conditions;
   private final BasicEvaluator elseExpression;
   
-  public IfEvaluator(IfExpression expression, ExprVisitor<BasicEvaluator> evalBuilder, RecordPointer record){
+  public IfEvaluator(IfExpression expression, ExprVisitor<BasicEvaluator, Void, RuntimeException> evalBuilder, RecordPointer record){
     this.conditions = new IfCond[expression.conditions.size()];
     for(int i =0; i < conditions.length; i++){
       conditions[i] = new IfCond(expression.conditions.get(i), evalBuilder);
     }
-    elseExpression = expression.elseExpression.accept(evalBuilder);
+    elseExpression = expression.elseExpression.accept(evalBuilder, null);
   }
   
   @Override
@@ -51,9 +51,9 @@ public class IfEvaluator implements BasicEvaluator{
     private final BasicEvaluator condition;
     private final BasicEvaluator valueExpression;
 
-    public IfCond(IfCondition c, ExprVisitor<BasicEvaluator> evalBuilder){
-      this.condition = c.condition.accept(evalBuilder);
-      this.valueExpression = c.expression.accept(evalBuilder);
+    public IfCond(IfCondition c, ExprVisitor<BasicEvaluator, Void, RuntimeException> evalBuilder){
+      this.condition = c.condition.accept(evalBuilder, null);
+      this.valueExpression = c.expression.accept(evalBuilder, null);
     }
     
     public boolean matches(RecordPointer r){

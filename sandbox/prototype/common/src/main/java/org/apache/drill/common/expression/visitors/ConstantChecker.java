@@ -27,20 +27,20 @@ import org.apache.drill.common.expression.ValueExpressions.DoubleExpression;
 import org.apache.drill.common.expression.ValueExpressions.LongExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 
-public final class ConstantChecker implements ExprVisitor<Boolean>{
+public final class ConstantChecker extends SimpleExprVisitor<Boolean>{
 	
   private final static ConstantChecker INSTANCE = new ConstantChecker();
   
   private ConstantChecker(){}
   
   public static boolean onlyIncludesConstants(LogicalExpression e){
-    return e.accept(INSTANCE);
+    return e.accept(INSTANCE, null);
   }
 
   @Override
   public Boolean visitFunctionCall(FunctionCall call) {
     for(LogicalExpression e : call){
-      if(!e.accept(this)) return false;
+      if(!e.accept(this, null)) return false;
     }
     return true;
   }
@@ -48,7 +48,7 @@ public final class ConstantChecker implements ExprVisitor<Boolean>{
   @Override
   public Boolean visitIfExpression(IfExpression ifExpr) {
     for(IfCondition c : ifExpr){
-      if(!c.condition.accept(this) || !c.expression.accept(this)) return false;
+      if(!c.condition.accept(this, null) || !c.expression.accept(this, null)) return false;
     }
     return true;
   }
@@ -59,23 +59,28 @@ public final class ConstantChecker implements ExprVisitor<Boolean>{
   }
 
   @Override
-  public Boolean visitLongExpression(LongExpression intExpr) {
+  public Boolean visitLongConstant(LongExpression intExpr) {
     return true;
   }
 
   @Override
-  public Boolean visitDoubleExpression(DoubleExpression dExpr) {
+  public Boolean visitDoubleConstant(DoubleExpression dExpr) {
     return true;
   }
 
   @Override
-  public Boolean visitBoolean(BooleanExpression e) {
+  public Boolean visitBooleanConstant(BooleanExpression e) {
     return true;
   }
 
   @Override
-  public Boolean visitQuotedString(QuotedString e) {
+  public Boolean visitQuotedStringConstant(QuotedString e) {
     return true;
+  }
+
+  @Override
+  public Boolean visitUnknown(LogicalExpression e, Void value) throws RuntimeException {
+    return false;
   }
 	
   

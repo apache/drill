@@ -24,19 +24,19 @@ import org.apache.drill.common.logical.StorageEngineConfigBase;
 import org.apache.drill.common.logical.data.Store;
 import org.apache.drill.exec.ref.rops.DataWriter.ConverterType;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 public class ConsoleRSE extends RSEBase {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ConsoleRSE.class);
-
+  
+  private final DrillConfig dConfig;
+  
   public static enum Pipe {
     STD_OUT, STD_ERR
   };
 
-  public ConsoleRSE(ConsoleRSEConfig engineConfig, DrillConfig config){
-    
+  public ConsoleRSE(ConsoleRSEConfig engineConfig, DrillConfig dConfig){
+    this.dConfig = dConfig;
   }
   
   public static class ConsoleOutputConfig {
@@ -44,21 +44,15 @@ public class ConsoleRSE extends RSEBase {
     public ConverterType type = ConverterType.JSON;
   }
   
-  @JsonTypeName("console")
-  public static class ConsoleRSEConfig extends StorageEngineConfigBase {
-
-    @JsonCreator
-    public ConsoleRSEConfig(@JsonProperty("name") String name) {
-      super(name);
-    }
-  }
+  @JsonTypeName("console") public static class ConsoleRSEConfig extends StorageEngineConfigBase {}
+  
   public boolean supportsWrite() {
     return true;
   }
 
   @Override
   public RecordRecorder getWriter(Store store) {
-    ConsoleOutputConfig config = store.getTarget().getWith(ConsoleOutputConfig.class);
+    ConsoleOutputConfig config = store.getTarget().getWith(dConfig, ConsoleOutputConfig.class);
     OutputStream out = config.pipe == Pipe.STD_OUT ? System.out : System.err;
     return new OutputStreamWriter(out, config.type, false);
   }

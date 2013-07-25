@@ -38,7 +38,7 @@ public class DrillScan extends TableAccessRelBase implements DrillRel {
     node.put("op", "scan");
     node.put("memo", "initial_scan");
     node.put("ref", "_MAP"); // output is a record with a single field, '_MAP'
-    node.put("storageengine", drillTable.storageEngineConfig.getName());
+    node.put("storageengine", drillTable.getStorageEngineName());
     node.put("selection", implementor.mapper.convertValue(drillTable.selection, JsonNode.class));
     implementor.add(node);
   }

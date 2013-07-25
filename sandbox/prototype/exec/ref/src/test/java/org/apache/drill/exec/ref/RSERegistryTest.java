@@ -32,7 +32,7 @@ public class RSERegistryTest {
   public void testEnginesWithTheSameNameAreEqual() {
     DrillConfig config = DrillConfig.create();
     RSERegistry rses = new RSERegistry(config);
-    StorageEngineConfig hconfig = new ConsoleRSE.ConsoleRSEConfig("console");
+    StorageEngineConfig hconfig = new ConsoleRSE.ConsoleRSEConfig();
     ConsoleRSE engine = (ConsoleRSE) rses.getEngine(hconfig);
     ConsoleRSE engine2 = (ConsoleRSE) rses.getEngine(hconfig);
     assertSame(engine, engine2);

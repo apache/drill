@@ -23,6 +23,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Queues;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.logical.data.WindowFrame;
 import org.apache.drill.exec.ref.RecordIterator;
@@ -52,11 +53,11 @@ public class WindowFrameROP extends SingleInputROPBase<WindowFrame> {
         }
 
         if (positionRef == null) {
-            positionRef = new FieldReference("ref.position");
+            positionRef = new FieldReference("ref.position", ExpressionPosition.UNKNOWN);
         }
 
         if (segmentRef == null) {
-            segmentRef = new FieldReference("ref.segment");
+            segmentRef = new FieldReference("ref.segment", ExpressionPosition.UNKNOWN);
         }
 
         withinRef = config.getWithin();

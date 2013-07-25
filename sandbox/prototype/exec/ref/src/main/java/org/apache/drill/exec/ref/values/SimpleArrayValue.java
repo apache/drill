@@ -21,7 +21,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Objects;
 
-import org.apache.drill.common.expression.types.DataType;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.ref.rops.DataWriter;
 
 
@@ -119,7 +119,7 @@ public class SimpleArrayValue extends BaseArrayValue{
 
   @Override
   public boolean equals(DataValue v) {
-    if(v.getDataType() != DataType.MAP) return false;
+    if(v.getDataType().getMinorType() == MinorType.REPEATMAP) return false;
     BaseArrayValue other = v.getAsContainer().getAsArray();
     if(this.size() != other.size()) return false;
     for(int i =0; i < this.size(); i++){

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<configuration>
+	<appender name="SOCKET"
+		class="de.huxhorn.lilith.logback.appender.ClassicMultiplexSocketAppender">
+		<Compressing>true</Compressing>
+		<ReconnectionDelay>10000</ReconnectionDelay>
+		<IncludeCallerData>true</IncludeCallerData>
+		<RemoteHosts>localhost</RemoteHosts>
+	</appender>
+
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n
+			</pattern>
+		</encoder>
+	</appender>
+
+	<logger name="org.apache.drill" additivity="false">
+		<level value="debug" />
+		<appender-ref ref="SOCKET" />
+	</logger>
+
+	<root>
+		<level value="error" />
+		<appender-ref ref="STDOUT" />
+	</root>
+
+</configuration>

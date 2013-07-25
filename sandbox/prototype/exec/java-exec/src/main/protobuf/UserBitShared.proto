@@ -1,0 +1,46 @@
+package exec.shared;
+
+option java_package = "org.apache.drill.exec.proto";
+option java_outer_classname = "UserBitShared";
+option optimize_for = SPEED;
+
+import "Coordination.proto";
+import "SchemaDef.proto";
+
+message QueryId {
+  	optional sfixed64 part1 = 1;
+  	optional sfixed64 part2 = 2;
+}
+
+message DrillPBError{
+    optional string error_id = 1; // for debug tracing purposes
+    optional DrillbitEndpoint endpoint = 2;
+    optional int32 error_type = 3; 
+    optional string message = 4;
+    repeated ParsingError parsing_error = 5; //optional, used when providing location of error within a piece of text.
+}
+
+message ParsingError{
+    optional int32 start_column = 2;
+    optional int32 start_row = 3;
+    optional int32 end_column = 4;
+    optional int32 end_row = 5;
+}
+
+message RecordBatch{
+    
+}
+
+message RecordBatchDef {
+	repeated FieldMetadata field = 1;
+	optional int32 record_count = 2;
+	
+}
+
+message FieldMetadata {
+  optional FieldDef def = 1;
+  optional int32 value_count = 2;
+  optional int32 var_byte_length = 3;
+  optional int32 group_count = 4; // number of groups.  (number of repeated records)
+  optional int32 buffer_length = 5;
+}

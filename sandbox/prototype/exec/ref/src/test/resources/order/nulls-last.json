@@ -1,25 +1,33 @@
 {
   "head" : {
-    "type" : "apache_drill_logical_plan",
+    "type" : "APACHE_DRILL_LOGICAL",
     "version" : 1,
     "generator" : {
       "type" : "manual",
       "info" : "na"
     }
   },
-  "storage" : [ {
-    "type" : "queue",
-    "name" : "queue",
-    "encoding" : "RECORD"
-  }, {
-    "type" : "classpath",
-    "name" : "donuts-json"
-  } ],
+  "storage" : {
+      "queue" : {
+          "type" : "queue",
+          "encoding" : "RECORD"
+      },
+      "cp" : {
+          "type": "classpath"
+      },
+      "fs1" : {
+          "type" : "fs",
+          "root" : "file:///"
+      },
+      "console" : {
+          "type" : "console"
+      }
+  },
   "query" : [ {
     "op" : "scan",
     "@id" : 1,
     "memo" : "initial_scan",
-    "storageengine" : "donuts-json",
+    "storageengine" : "cp",
     "selection" : {
       "path" : "/employees.json",
       "type" : "JSON"

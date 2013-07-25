@@ -1,0 +1,9 @@
+#!/bin/bash
+
+PROJECT_ROOT=../../../
+
+mvn dependency:build-classpath -f=$PROJECT_ROOT/pom.xml -Dmdep.outputFile=target/sh/cp.txt
+CP=`cat $PROJECT_ROOT/target/sh/cp.txt`
+CP=$CP:$PROJECT_ROOT/target/classes:$PROJECT_ROOT/target/test-classes
+java -javaagent:/src/jrebel/jrebel.jar -cp $CP org.apache.drill.exec.server.Drillbit
+

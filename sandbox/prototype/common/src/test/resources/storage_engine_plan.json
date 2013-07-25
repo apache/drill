@@ -1,19 +1,18 @@
 {
   head:{
-    type:"apache_drill_logical_plan",
+    type:"APACHE_DRILL_LOGICAL",
     version:"1",
     generator:{
       type:"manual",
       info:"na"
     }
   },
-  storage:[
-    {
+  storage:{
+    mock-engine: {
       type:"mock",
-      name:"mock-engine",
 	  url: "http://www.apache.org/"
     }
-  ],
+  },
   query:[
     {
       @id:"1",

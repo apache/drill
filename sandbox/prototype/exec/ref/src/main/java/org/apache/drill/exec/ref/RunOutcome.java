@@ -31,6 +31,7 @@ public class RunOutcome {
   
   public RunOutcome(OutcomeType outcome, long bytes, long records, Throwable exception) {
     super();
+    if(outcome != OutcomeType.SUCCESS) logger.warn("Creating failed outcome.", exception);
     this.outcome = outcome;
     this.bytes = bytes;
     this.records = records;

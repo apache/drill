@@ -23,6 +23,6 @@ import java.util.List;
  * Validates whether the set of arguments are acceptable
  */
 public interface ArgumentValidator {
-  public void validateArguments(List<LogicalExpression> expressions, ErrorCollector errors);
+  public void validateArguments(ExpressionPosition expr, List<LogicalExpression> expressions, ErrorCollector errors);
   public String[] getArgumentNamesByPosition();
 }

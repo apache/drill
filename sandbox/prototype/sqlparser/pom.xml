@@ -39,12 +39,12 @@
 		<dependency>
 			<groupId>org.apache.drill.exec</groupId>
 			<artifactId>ref</artifactId>
-			<version>1.0-SNAPSHOT</version>
+      <version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.drill.exec</groupId>
 			<artifactId>ref</artifactId>
-			<version>1.0-SNAPSHOT</version>
+      <version>${project.version}</version>
 			<classifier>tests</classifier>
 			<scope>test</scope>
 		</dependency>

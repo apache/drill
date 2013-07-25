@@ -21,6 +21,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ref.eval.EvaluatorTypes.BasicEvaluator;
 import org.apache.drill.exec.ref.values.ScalarValues.DoubleScalar;
 import org.apache.drill.exec.ref.values.ScalarValues.FloatScalar;
@@ -83,7 +84,7 @@ public abstract class NumericValue extends BaseDataValue implements ComparableVa
   @Override
   public boolean equals(DataValue v) {
     if(v == null) return false;
-    if(v.getDataType().isNumericType()){
+    if(Types.isNumericType(v.getDataType())){
       return this.compareTo(v) == 0;
     }else{
       return false;
@@ -140,7 +141,7 @@ public abstract class NumericValue extends BaseDataValue implements ComparableVa
   
   @Override
   public boolean supportsCompare(DataValue dv2) {
-    return dv2.getDataType().isNumericType();
+    return Types.isNumericType(dv2.getDataType());
   }
 
   
@@ -152,22 +153,22 @@ public abstract class NumericValue extends BaseDataValue implements ComparableVa
   }
 
   public long getAsLong(){
-    throw new DrillRuntimeException(String.format("A %s value can not be implicitly cast to a long.", this.getDataType().getName()));
+    throw new DrillRuntimeException(String.format("A %s value can not be implicitly cast to a long.", this.getDataType()));
   }
   public int getAsInt(){
-    throw new DrillRuntimeException(String.format("A %s value can not be implicitly cast to an int.", this.getDataType().getName()));
+    throw new DrillRuntimeException(String.format("A %s value can not be implicitly cast to an int.", this.getDataType()));
   }
   public float getAsFloat(){
-    throw new DrillRuntimeException(String.format("A %s value can not be implicitly cast to an float.", this.getDataType().getName()));
+    throw new DrillRuntimeException(String.format("A %s value can not be implicitly cast to an float.", this.getDataType()));
   }
   public double getAsDouble(){
-    throw new DrillRuntimeException(String.format("A %s value can not be implicitly cast to a double.", this.getDataType().getName()));
+    throw new DrillRuntimeException(String.format("A %s value can not be implicitly cast to a double.", this.getDataType()));
   }
   public BigDecimal getAsBigDecimal(){
-    throw new DrillRuntimeException(String.format("A %s value can not be implicitly cast to an big decimal.", this.getDataType().getName()));
+    throw new DrillRuntimeException(String.format("A %s value can not be implicitly cast to an big decimal.", this.getDataType()));
   }
   public BigInteger getAsBigInteger(){
-    throw new DrillRuntimeException(String.format("A %s value can not be implicitly cast to a big integer.", this.getDataType().getName()));
+    throw new DrillRuntimeException(String.format("A %s value can not be implicitly cast to a big integer.", this.getDataType()));
   }
   
 

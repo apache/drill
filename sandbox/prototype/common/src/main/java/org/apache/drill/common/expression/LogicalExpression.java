@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,8 +26,8 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.parser.ExprLexer;
 import org.apache.drill.common.expression.parser.ExprParser;
 import org.apache.drill.common.expression.parser.ExprParser.parse_return;
-import org.apache.drill.common.expression.types.DataType;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
+import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,13 +46,15 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 public interface LogicalExpression {
   static final Logger logger = LoggerFactory.getLogger(LogicalExpression.class);
 
-  public abstract DataType getDataType();
-  public void addToString(StringBuilder sb);
-  public void resolveAndValidate(ErrorCollector errors);
-  public <T> T accept(ExprVisitor<T> visitor);
+  public abstract MajorType getMajorType();
+
+  public <T, V, E extends Exception> T accept(ExprVisitor<T, V, E> visitor, V value) throws E;
+
+  public ExpressionPosition getPosition();
 
   public static class De extends StdDeserializer<LogicalExpression> {
     DrillConfig config;
+
     public De(DrillConfig config) {
       super(LogicalExpression.class);
       this.config = config;
@@ -68,12 +70,16 @@ public interface LogicalExpression {
       try {
         // logger.debug("Parsing expression string '{}'", expr);
         ExprLexer lexer = new ExprLexer(new ANTLRStringStream(expr));
-
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         ExprParser parser = new ExprParser(tokens);
+
+        //TODO: move functionregistry and error collector to injectables.
+        //ctxt.findInjectableValue(valueId, forProperty, beanInstance)
+
         parser.setRegistry(new FunctionRegistry(config));
         parse_return ret = parser.parse();
-        // logger.debug("Found expression '{}'", ret.e);
+
+        // ret.e.resolveAndValidate(expr, errorCollector);
         return ret.e;
       } catch (RecognitionException e) {
         throw new RuntimeException(e);
@@ -92,7 +98,8 @@ public interface LogicalExpression {
     public void serialize(LogicalExpression value, JsonGenerator jgen, SerializerProvider provider) throws IOException,
         JsonGenerationException {
       StringBuilder sb = new StringBuilder();
-      value.addToString(sb);
+      ExpressionStringBuilder esb = new ExpressionStringBuilder();
+      value.accept(esb, sb);
       jgen.writeString(sb.toString());
     }
 

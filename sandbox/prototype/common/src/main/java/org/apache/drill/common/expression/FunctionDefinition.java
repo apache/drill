@@ -21,7 +21,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.drill.common.expression.types.DataType;
+import org.apache.drill.common.types.TypeProtos.MajorType;
 
 public class FunctionDefinition {
 
@@ -42,12 +42,16 @@ public class FunctionDefinition {
     this.isOperator = isOperator;
   }
 
-  public DataType getDataType(List<LogicalExpression> args){
+  public MajorType getDataType(List<LogicalExpression> args){
     return outputType.getOutputType(args);
   }
   
   public String[] getArgumentNames(){
     return argumentValidator.getArgumentNamesByPosition();
+  }
+
+  public ArgumentValidator getArgumentValidator() {
+      return argumentValidator;
   }
   
   public static FunctionDefinition simple(String name, ArgumentValidator argumentValidator, OutputTypeDeterminer outputType, String... registeredNames){
@@ -78,8 +82,8 @@ public class FunctionDefinition {
     return this.name;
   }
   
-  public FunctionCall newCall(List<LogicalExpression> args){
-    return new FunctionCall(this, args);
+  public FunctionCall newCall(List<LogicalExpression> args, ExpressionPosition pos){
+    return new FunctionCall(this, args, pos);
   }
   
   public void addRegisteredName(StringBuilder sb){

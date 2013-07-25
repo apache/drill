@@ -24,7 +24,7 @@ import java.util.List;
 
 import org.apache.drill.common.config.CommonConstants;
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.expression.visitors.OpVisitor;
+import org.apache.drill.common.graph.GraphVisitor;
 import org.apache.drill.common.logical.ValidationError;
 import org.apache.drill.common.util.PathScanner;
 
@@ -34,8 +34,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public abstract class LogicalOperatorBase implements LogicalOperator{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LogicalOperatorBase.class);
-  
-	private List<LogicalOperator> children = new ArrayList<LogicalOperator>();
+
+    private List<LogicalOperator> children = new ArrayList<LogicalOperator>();
 	private String memo;
 	
 	public final int hashCode(){
@@ -48,25 +48,20 @@ public abstract class LogicalOperatorBase implements LogicalOperator{
 	}
 
   @Override
-  public void registerAsSubscriber(LogicalOperator operator) {
-    if(operator == null) throw new IllegalArgumentException("You attempted to register a null operators.");
-    children.add(operator);
-  }
-
-  @Override
-  public void accept(OpVisitor visitor) {
+  public void accept(GraphVisitor<LogicalOperator> visitor) {
     if(visitor.enter(this)){
-      for(LogicalOperator o : children){
-        o.accept(visitor);
-      }
+        for(LogicalOperator o : children){
+            o.accept(visitor);
+        }
     }
     visitor.leave(this);
   }
 
-  @Override
-  public Iterator<LogicalOperator> iterator() {
-    return children.iterator();
-  }
+    @Override
+    public void registerAsSubscriber(LogicalOperator operator) {
+        if(operator == null) throw new IllegalArgumentException("You attempted to register a null operators.");
+        children.add(operator);
+    }
 
   @Override
   public String toString() {

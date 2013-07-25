@@ -17,12 +17,16 @@
  ******************************************************************************/
 package org.apache.drill.common.logical.data;
 
+import com.google.common.collect.Iterators;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.LogicalExpression;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import org.apache.drill.common.logical.data.visitors.LogicalVisitor;
+
+import java.util.Iterator;
 
 @JsonTypeName("flatten")
 public class Flatten extends SingleInputOperator{
@@ -48,6 +52,16 @@ public class Flatten extends SingleInputOperator{
   public boolean isDrop() {
     return drop;
   }
+
+    @Override
+    public <T, X, E extends Throwable> T accept(LogicalVisitor<T, X, E> logicalVisitor, X value) throws E {
+        return logicalVisitor.visitFlatten(this, value);
+    }
+
+    @Override
+    public Iterator<LogicalOperator> iterator() {
+        return Iterators.singletonIterator(getInput());
+    }
   
   
 

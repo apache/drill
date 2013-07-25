@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.logical.data.Constant;
@@ -50,9 +51,9 @@ public class ConstantROPTest {
             while (iter.next() != RecordIterator.NextOutcome.NONE_LEFT){
                 System.out.println(ptr);
                 org.junit.Assert.assertEquals("Integer value in record " + i + " is incorrect.",
-                        ptr.getField(new SchemaPath("c1")), new ScalarValues.IntegerScalar(i));
+                        ptr.getField(new SchemaPath("c1", ExpressionPosition.UNKNOWN)), new ScalarValues.IntegerScalar(i));
                 org.junit.Assert.assertEquals("String value in record " + i + " is incorrect.",
-                        ptr.getField(new SchemaPath("c2")), new ScalarValues.StringScalar("string " + i));
+                        ptr.getField(new SchemaPath("c2", ExpressionPosition.UNKNOWN)), new ScalarValues.StringScalar("string " + i));
                 i++;
             }
             org.junit.Assert.assertEquals("Incorrect number of records returned by 'constant' record iterator.", 3, i - 1);
@@ -70,14 +71,12 @@ public class ConstantROPTest {
             final String jsonFile = "/constant2.json";
             LogicalPlan plan = LogicalPlan.parse(config, FileUtils.getResourceAsString(jsonFile));
             org.junit.Assert.assertEquals("Constant operator not read in properly or not recognized as a source operator.",
-                    plan.getGraph().getSources().toString(), "[Constant [memo=null]]");
+                    plan.getGraph().getLeaves().toString(), "[Constant [memo=null]]");
 
             org.junit.Assert.assertEquals("Edge between constant operator and sink not recognized.",
-                    plan.getGraph().getSinks().toString(), "[Store [memo=output sink]]");
+                    plan.getGraph().getRoots().toString(), "[Store [memo=output sink]]");
 
-            org.junit.Assert.assertEquals("Constant operator not read in properly or not recognized as a sink operator.",
-                    plan.getGraph().getAdjList().getAllEdges().toString(), "[Edge [from=Node [val=Constant [memo=null]], to=Node [val=Store [memo=output sink]]]]");
-
+            
             IteratorRegistry ir = new IteratorRegistry();
             ReferenceInterpreter i = new ReferenceInterpreter(plan, ir, new BasicEvaluatorFactory(ir), new RSERegistry(config));
             i.setup();

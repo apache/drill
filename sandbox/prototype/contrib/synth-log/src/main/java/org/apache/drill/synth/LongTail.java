@@ -1,17 +1,14 @@
 package org.apache.drill.synth;
 
 import com.google.common.collect.Lists;
-import org.apache.mahout.math.random.ChineseRestaurant;
 import org.apache.mahout.math.random.Sampler;
 
 import java.util.List;
 
 /**
- * Created with IntelliJ IDEA.
- * User: tdunning
- * Date: 2/2/13
- * Time: 6:05 PM
- * To change this template use File | Settings | File Templates.
+ * Samples from a set of things based on a long-tailed distribution.  This converts
+ * the ChineseRestaurant distribution from a distribution over integers into a distribution
+ * over more plausible looking things like words.
  */
 public abstract class LongTail<T> implements Sampler<T> {
     private ChineseRestaurant base;

@@ -60,8 +60,7 @@ public class QueueRSE extends RSEBase {
     private final Encoding encoding;
     
     @JsonCreator
-    public QueueRSEConfig(@JsonProperty("name") String name, @JsonProperty("encoding") Encoding encoding) {
-      super(name);
+    public QueueRSEConfig(@JsonProperty("encoding") Encoding encoding) {
       this.encoding = encoding == null ? Encoding.JSON : encoding;
     }
 
@@ -84,7 +83,7 @@ public class QueueRSE extends RSEBase {
   
   @Override
   public RecordRecorder getWriter(Store store) throws IOException {
-    QueueOutputInfo config = store.getTarget().getWith(QueueOutputInfo.class);
+    QueueOutputInfo config = store.getTarget().getWith(dConfig, QueueOutputInfo.class);
     Queue<Object> q = dConfig.getQueue(config.number);
     return new QueueRecordRecorder(q);
   }

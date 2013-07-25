@@ -22,7 +22,7 @@ import org.apache.drill.common.expression.BasicArgumentValidator;
 import org.apache.drill.common.expression.CallProvider;
 import org.apache.drill.common.expression.FunctionDefinition;
 import org.apache.drill.common.expression.OutputTypeDeterminer.FixedType;
-import org.apache.drill.common.expression.types.DataType;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 
 public class StringFunctions implements CallProvider{
 
@@ -30,8 +30,9 @@ public class StringFunctions implements CallProvider{
   @Override
   public FunctionDefinition[] getFunctionDefintions() {
     return new FunctionDefinition[]{
-        FunctionDefinition.simple("regex_like", new BasicArgumentValidator(new Arg(true, "pattern", DataType.NVARCHAR), new Arg("value", DataType.NVARCHAR) ), new FixedType(DataType.BOOLEAN)),
-        //new FunctionDefinition("startsWith", new ArgumentValidators.BasicArgumentValidator(DataTypeImpls.NVARCHAR), new FixedType(DataTypeImpls.BOOLEAN), false, false),
+        FunctionDefinition.simple("regex_like", new BasicArgumentValidator( //
+            new Arg(true, false, "pattern", MinorType.VARCHAR2, MinorType.VARCHAR4), //
+            new Arg(false, true, "value", MinorType.FIXEDCHAR, MinorType.VARCHAR2, MinorType.VARCHAR4) ), FixedType.FIXED_BOOLEAN),
     };
 
   }

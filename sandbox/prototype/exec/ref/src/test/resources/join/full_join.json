@@ -1,32 +1,30 @@
 {
    head: {
-      type: "apache_drill_logical_plan",
+      type: "APACHE_DRILL_LOGICAL",
       version: "1",
       generator: {
          type: "manual",
          info: "na"
       }
    },
-   storage:[
-       {
-         type:"console",
-         name:"console"
-       },
-       {
-         type:"fs",
-         name:"fs1",
-         root:"file:///"
-       },
-       {
-         type:"classpath",
-         name:"cp"
-       },
-       {
-         type: "queue",
-         name: "queue"
-       }
-   ],
-   query: [
+    "storage" : {
+        "queue" : {
+            "type" : "queue",
+            "encoding" : "RECORD"
+        },
+        "cp" : {
+            "type": "classpath"
+        },
+        "fs1" : {
+            "type" : "fs",
+            "root" : "file:///"
+        },
+        "console" : {
+            "type" : "console"
+        }
+    },
+
+   "query": [
       {
          @id: 1,
          op: "scan",

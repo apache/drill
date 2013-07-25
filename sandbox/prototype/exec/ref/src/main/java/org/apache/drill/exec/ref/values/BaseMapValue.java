@@ -21,8 +21,11 @@ import java.util.Map;
 
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.ValueExpressions.CollisionBehavior;
-import org.apache.drill.common.expression.types.DataType;
+import org.apache.drill.common.types.TypeProtos.DataMode;
+import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.ref.exceptions.RecordException;
+import org.apache.tools.ant.types.DataType;
 
 public abstract class BaseMapValue extends BaseDataValue implements ContainerValue,
     Iterable<Map.Entry<CharSequence, DataValue>> {
@@ -91,8 +94,8 @@ public abstract class BaseMapValue extends BaseDataValue implements ContainerVal
   }
 
   @Override
-  public DataType getDataType() {
-    return DataType.MAP;
+  public MajorType getDataType() {
+    return MajorType.newBuilder().setMinorType(MinorType.REPEATMAP).setMode(DataMode.REPEATED).build();
   }
 
   public void merge(BaseMapValue otherMap) {

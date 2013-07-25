@@ -48,6 +48,7 @@ public class DrillTable extends BaseQueryable<Object>
 {
   private final Schema schema;
   private final String name;
+  private final String storageEngineName;
   private final RelDataType rowType;
   public final StorageEngineConfig storageEngineConfig;
   public final Object selection;
@@ -59,13 +60,16 @@ public class DrillTable extends BaseQueryable<Object>
       RelDataType rowType,
       String name,
       StorageEngineConfig storageEngineConfig,
-      Object selection) {
+      Object selection,
+      String storageEngineName
+      ) {
     super(schema.getQueryProvider(), elementType, expression);
     this.schema = schema;
     this.name = name;
     this.rowType = rowType;
     this.storageEngineConfig = storageEngineConfig;
     this.selection = selection;
+    this.storageEngineName = storageEngineName;
   }
 
   private static DrillTable createTable(
@@ -73,7 +77,9 @@ public class DrillTable extends BaseQueryable<Object>
       MutableSchema schema,
       String name,
       StorageEngineConfig storageEngineConfig,
-      Object selection) {
+      Object selection,
+      String storageEngineName
+      ) {
     final MethodCallExpression call = Expressions.call(schema.getExpression(),
         BuiltinMethod.DATA_CONTEXT_GET_TABLE.method,
         Expressions.constant(name),
@@ -86,7 +92,7 @@ public class DrillTable extends BaseQueryable<Object>
                     typeFactory.createSqlType(SqlTypeName.ANY))),
             Collections.singletonList("_MAP"));
       return new DrillTable(schema, Object.class, call, rowType, name,
-          storageEngineConfig, selection);
+          storageEngineConfig, selection, storageEngineName);
   }
 
   @Override
@@ -102,6 +108,10 @@ public class DrillTable extends BaseQueryable<Object>
   @Override
   public Statistic getStatistic() {
     return Statistics.UNKNOWN;
+  }
+
+  public String getStorageEngineName() {
+    return storageEngineName;
   }
 
   @Override
@@ -126,12 +136,12 @@ public class DrillTable extends BaseQueryable<Object>
     public DrillTable create(Schema schema, String name,
         Map<String, Object> operand, RelDataType rowType) {
       final ClasspathRSE.ClasspathRSEConfig rseConfig =
-          new ClasspathRSE.ClasspathRSEConfig("donuts-json");
+          new ClasspathRSE.ClasspathRSEConfig();
       final ClasspathInputConfig inputConfig = new ClasspathInputConfig();
       inputConfig.path = last((String) operand.get("path"), "/donuts.json");
       inputConfig.type = DataWriter.ConverterType.JSON;
       return createTable(schema.getTypeFactory(), (MutableSchema) schema, name,
-          rseConfig, inputConfig);
+          rseConfig, inputConfig, "donuts-json");
     }
   }
 }

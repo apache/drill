@@ -19,8 +19,11 @@ package org.apache.drill.exec.ref.values;
 
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.ValueExpressions.CollisionBehavior;
-import org.apache.drill.common.expression.types.DataType;
+import org.apache.drill.common.types.TypeProtos.DataMode;
+import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.ref.exceptions.RecordException;
+import org.apache.tools.ant.types.DataType;
 
 public class ValueUtils {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ValueUtils.class);
@@ -47,17 +50,17 @@ public class ValueUtils {
       a.addToArray(1, newValue);
       return a;
     case MERGE_OVERRIDE:
-      DataType oldT = oldValue.getDataType();
-      DataType newT = oldValue.getDataType();
-      if(oldT == DataType.MAP && newT == DataType.MAP){
+      MajorType oldT = oldValue.getDataType();
+      MajorType newT = newValue.getDataType();
+      if(oldT.getMinorType() == MinorType.REPEATMAP && newT.getMinorType() == MinorType.REPEATMAP){
         oldValue.getAsContainer().getAsMap().merge(newValue.getAsContainer().getAsMap());
         return oldValue;
-      }else if(oldT == DataType.ARRAY && newT == DataType.ARRAY){
+      }else if(oldT.getMode() == DataMode.REPEATED && newT.getMode() == DataMode.REPEATED){
         logger.debug("Merging two arrays. {} and {}", oldValue, newValue);
         oldValue.getAsContainer().getAsArray().append(newValue.getAsContainer().getAsArray());
         return oldValue;
-      }else if(oldT == DataType.ARRAY || newT == DataType.ARRAY || oldT == DataType.MAP || newT == DataType.MAP){
-        throw new RecordException(String.format("Failure while doing query.  You requested a merge of values that were incompatibile.  Examples include merging an array and a map or merging a map/array with a scalar.  Merge Types were %s and %s.", oldT.getName(), newT.getName()), null);
+      }else if(oldT.getMode() == DataMode.REPEATED || newT.getMode() == DataMode.REPEATED || oldT.getMinorType() == MinorType.REPEATMAP || newT.getMinorType() == MinorType.REPEATMAP){
+        throw new RecordException(String.format("Failure while doing query.  You requested a merge of values that were incompatibile.  Examples include merging an array and a map or merging a map/array with a scalar.  Merge Types were %s and %s.", oldT, newT), null);
       }else{
         // scalar type, just override the value.
         return newValue;

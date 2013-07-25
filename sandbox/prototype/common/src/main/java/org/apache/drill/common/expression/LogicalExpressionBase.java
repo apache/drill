@@ -17,8 +17,7 @@
  ******************************************************************************/
 package org.apache.drill.common.expression;
 
-import org.apache.drill.common.expression.types.DataType;
-import org.apache.drill.common.expression.visitors.ExprVisitor;
+import org.apache.drill.common.types.TypeProtos.MajorType;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -27,36 +26,28 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonPropertyOrder({ "type" })
 public abstract class LogicalExpressionBase implements LogicalExpression{
 
-	
-//	public static DataType getJointType(String parentName, LogicalExpression expr1, LogicalExpression expr2) throws ExpressionValidationException{
-//		DataType dt = DataType.getCombinedCast(expr1.getDataType(), expr2.getDataType());
-//		if(dt == null) throw new ExpressionValidationException();
-//		
-//		return dt;
-//	}
-	
+  private final ExpressionPosition pos;
 
-	protected void i(StringBuilder sb, int indent){
+	protected LogicalExpressionBase(ExpressionPosition pos) {
+    super();
+    this.pos = pos;
+  }
+
+  @Override
+  public ExpressionPosition getPosition() {
+    return pos;
+  }
+
+  protected void i(StringBuilder sb, int indent){
 		for(int i = 0; i < indent; i++){
 			sb.append("  ");
 		}
 	}
 	
-//	@Override
-//	public <T> T accept(ExprVisitor<T> visitor) {
-//		return visitor.visit(this);
-//	}
-
 	@Override
-	public DataType getDataType() {
-		throw new UnsupportedOperationException();
+	public MajorType getMajorType() {
+		throw new UnsupportedOperationException(String.format("The type of %s doesn't currently support LogicalExpression.getDataType().", this.getClass().getCanonicalName()));
 	}
-
-
-  @Override
-  public void resolveAndValidate(ErrorCollector errors) {
-  }
-
 
   @JsonProperty("type")
 	public String getDescription(){

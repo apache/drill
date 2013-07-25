@@ -24,9 +24,10 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.apache.drill.common.expression.types.DataType;
+import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.exec.ref.exceptions.RecordException;
 import org.apache.drill.exec.ref.rops.DataWriter;
+import org.apache.tools.ant.types.DataType;
 
 public class SimpleMapValue extends BaseMapValue{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SimpleMapValue.class);
@@ -86,7 +87,7 @@ public class SimpleMapValue extends BaseMapValue{
   @Override
   public boolean equals(DataValue v) {
     if(v == null) return false;
-    if(v.getDataType() != DataType.MAP) return false;
+    if(v.getDataType().getMode() != DataMode.REPEATED) return false;
     BaseMapValue other = v.getAsContainer().getAsMap();
     for(Entry<CharSequence, DataValue> e : this){
       DataValue v2 = other.getByName(e.getKey());

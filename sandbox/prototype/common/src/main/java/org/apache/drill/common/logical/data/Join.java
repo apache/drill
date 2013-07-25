@@ -17,12 +17,16 @@
  ******************************************************************************/
 package org.apache.drill.common.logical.data;
 
+import com.google.common.collect.Iterators;
 import org.apache.drill.common.exceptions.ExpressionParsingException;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import org.apache.drill.common.logical.data.visitors.LogicalVisitor;
+
+import java.util.Iterator;
 
 @JsonTypeName("join")
 public class Join extends LogicalOperatorBase {
@@ -48,9 +52,9 @@ public class Join extends LogicalOperatorBase {
     this.conditions = conditions;
     this.left = left;
     this.right = right;
-    this.type = JoinType.resolve(type);
     left.registerAsSubscriber(this);
     right.registerAsSubscriber(this);
+    this.type = JoinType.resolve(type);
 
   }
 
@@ -74,4 +78,14 @@ public class Join extends LogicalOperatorBase {
   public String getType(){
     return type.name();
   }
+
+    @Override
+    public <T, X, E extends Throwable> T accept(LogicalVisitor<T, X, E> logicalVisitor, X value) throws E {
+        return logicalVisitor.visitJoin(this, value);
+    }
+
+    @Override
+    public Iterator<LogicalOperator> iterator() {
+        return Iterators.forArray(getLeft(), getRight());
+    }
 }

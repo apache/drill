@@ -19,8 +19,8 @@ package org.apache.drill.exec.ref.rops;
 
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.expression.types.DataType;
 import org.apache.drill.common.logical.data.CollapsingAggregate;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.ref.RecordIterator;
 import org.apache.drill.exec.ref.RecordPointer;
 import org.apache.drill.exec.ref.UnbackedRecord;
@@ -159,7 +159,7 @@ public class CollapsingAggregateROP extends SingleInputROPBase<CollapsingAggrega
       // if we're in target mode and this row matches the target criteria, we're going to copy carry over values and mark foundTarget = true.
       if(targetMode){
         DataValue v = targetEvaluator.eval();
-        if(v.getDataType() == DataType.BOOLEAN && v.getAsBooleanValue().getBoolean()){
+        if(v.getDataType().getMinorType() == MinorType.BOOLEAN && v.getAsBooleanValue().getBoolean()){
           foundTarget = true;
           for(int i =0 ; i < carryovers.length; i++){
             carryoverValues[i] = carryovers[i].eval();

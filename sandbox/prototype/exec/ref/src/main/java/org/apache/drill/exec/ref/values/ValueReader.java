@@ -18,35 +18,37 @@
 package org.apache.drill.exec.ref.values;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
-import org.apache.drill.common.expression.types.DataType;
+import org.apache.drill.common.types.TypeProtos.DataMode;
+import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.types.Types;
 
 public class ValueReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ValueReader.class);
   
   public static boolean getBoolean(DataValue v){
-    if(v.getDataType() == DataType.BOOLEAN){
+    if(v.getDataType().getMinorType() == MinorType.BOOLEAN && v.getDataType().getMode() != DataMode.REPEATED){
       return v.getAsBooleanValue().getBoolean();
     }else{
-      throw new DrillRuntimeException(String.format("Unable to get boolean.  Type os a %s", v.getClass().getCanonicalName()));
+      throw new DrillRuntimeException(String.format("Unable to get boolean.  Type was a %s", v.getClass().getCanonicalName()));
     }
   }
   
   public static long getLong(DataValue v){
-    if(v.getDataType().isNumericType()){
+    if(Types.isNumericType(v.getDataType())){
       return v.getAsNumeric().getAsLong();
     }else{
       throw new DrillRuntimeException(String.format("Unable to get value.  %s is not a numeric type.", v.getClass().getCanonicalName()));
     }
   }
   public static double getDouble(DataValue v){
-    if(v.getDataType().isNumericType()){
+    if(Types.isNumericType(v.getDataType())){
       return v.getAsNumeric().getAsDouble();
     }else{
       throw new DrillRuntimeException(String.format("Unable to get value.  %s is not a numeric type.", v.getClass().getCanonicalName()));
     }
   }
   public static CharSequence getChars(DataValue v){
-    if(v.getDataType() == DataType.NVARCHAR){
+    if(Types.isStringScalarType(v.getDataType())){
       return v.getAsStringValue().getString();
     }else{
       throw new DrillRuntimeException(String.format("Unable to get value.  %s is not a StringValue type.", v.getClass().getCanonicalName()));

@@ -44,7 +44,7 @@ public class DrillImplementor {
   public DrillImplementor() {
     final ObjectNode headNode = mapper.createObjectNode();
     rootNode.put("head", headNode);
-    headNode.put("type", "apache_drill_logical_plan");
+    headNode.put("type", "APACHE_DRILL_LOGICAL");
     headNode.put("version", "1");
 
     final ObjectNode generatorNode = mapper.createObjectNode();
@@ -54,21 +54,19 @@ public class DrillImplementor {
 
     // TODO: populate sources based on the sources of scans that occur in
     // the query
-    final ArrayNode sourcesNode = mapper.createArrayNode();
+    final ObjectNode sourcesNode = mapper.createObjectNode();
     rootNode.put("storage", sourcesNode);
     
     // input file source
     {
       final ObjectNode sourceNode = mapper.createObjectNode();
-      sourceNode.put("name", "donuts-json");
       sourceNode.put("type", "classpath");
-      sourcesNode.add(sourceNode);
+      sourcesNode.put("donuts-json", sourceNode);
     }
     {
       final ObjectNode sourceNode = mapper.createObjectNode();
-      sourceNode.put("name", "queue");
       sourceNode.put("type", "queue");
-      sourcesNode.add(sourceNode);
+      sourcesNode.put("queue", sourceNode);
     }
     
 

@@ -8,7 +8,7 @@
 # Build classpath on first call. (To force rebuild, remove .classpath.)
 if [ ! -f .classpath ]; then
     (cd sqlparser; mvn dependency:build-classpath -Dmdep.outputFile=../.classpath)
-    find . -type d -name classes |awk 'BEGIN {ORS=":"} {print}' >> .classpath
+    echo -n :sqlparser/target/classes/ >> .classpath
 fi
 
 exec java -cp "$(cat .classpath)" sqlline.SqlLine "$@"

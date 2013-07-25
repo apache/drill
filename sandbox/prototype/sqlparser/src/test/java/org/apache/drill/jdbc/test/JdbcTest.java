@@ -131,8 +131,8 @@ public class JdbcTest extends TestCase {
     JdbcAssert.withModel(MODEL, "DONUTS")
         .sql("select _MAP['ppu'] as ppu from donuts")
         .planContains(
-            "{'head':{'type':'apache_drill_logical_plan','version':'1','generator':{'type':'manual','info':'na'}},"
-            + "'storage':[{'name':'donuts-json','type':'classpath'},{'name':'queue','type':'queue'}],"
+            "{'head':{'type':'APACHE_DRILL_LOGICAL','version':'1','generator':{'type':'manual','info':'na'}},"
+            + "'storage':{'donuts-json':{'type':'classpath'},'queue':{'type':'queue'}},"
             + "'query':["
             + "{'op':'sequence','do':["
             + "{'op':'scan','memo':'initial_scan','ref':'_MAP','storageengine':'donuts-json','selection':{'path':'/donuts.json','type':'JSON'}},"
@@ -158,7 +158,7 @@ public class JdbcTest extends TestCase {
             + " select _MAP['donuts'] as d from donuts)\n"
             + "where cast(d['ppu'] as double) > 0.6")
         .planContains(
-            "{'head':{'type':'apache_drill_logical_plan','version':'1','generator':{'type':'manual','info':'na'}},'storage':[{'name':'donuts-json','type':'classpath'},{'name':'queue','type':'queue'}],"
+            "{'head':{'type':'APACHE_DRILL_LOGICAL','version':'1','generator':{'type':'manual','info':'na'}},'storage':{'donuts-json':{'type':'classpath'},'queue':{'type':'queue'}},"
             + "'query':["
             + "{'op':'sequence','do':["
             + "{'op':'scan','memo':'initial_scan','ref':'_MAP','storageengine':'donuts-json','selection':{'path':'/donuts.json','type':'JSON'}},"

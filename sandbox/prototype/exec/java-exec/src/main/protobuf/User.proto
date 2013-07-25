@@ -1,0 +1,90 @@
+package exec.user;
+
+option java_package = "org.apache.drill.exec.proto";
+option java_outer_classname = "UserProtos";
+option optimize_for = SPEED;
+
+import "SchemaDef.proto";
+import "UserBitShared.proto";
+
+
+
+////// UserToBit RPC ///////
+enum RpcType {
+    HANDSHAKE = 0;
+    ACK = 1;
+    GOODBYE = 2;
+    
+    // user to bit
+    RUN_QUERY = 3;
+    CANCEL_QUERY = 4;
+    REQUEST_RESULTS = 5;
+    
+    // bit to user
+	QUERY_RESULT = 6;
+	QUERY_HANDLE = 7;
+}
+
+message UserToBitHandshake {
+    optional bool support_listening = 2;
+    optional int32 rpc_version = 3;
+}
+
+message RequestResults {
+  optional exec.shared.QueryId query_id = 1;
+  optional int32 maximum_responses = 2;
+}
+
+message RunQuery {
+  optional QueryResultsMode results_mode = 1;
+  optional QueryType type = 2;
+  optional string plan = 3;
+}
+
+enum QueryType {
+  SQL = 1;
+  LOGICAL = 2;
+  PHYSICAL = 3;
+}
+
+enum QueryResultsMode {
+	STREAM_FULL = 1; // Server will inform the client regularly on the status of the query. Once the query is completed, service will inform the client as each query chunk is made available.
+	// STREAM_FIRST = 2; // Server will inform the client regularly on the status of the query.  Once the query is completed, server will inform the client of the first query chunk.
+	// QUERY_FOR_STATUS = 3; // Client will need to query for status of query.
+}
+
+
+message BitToUserHandshake {
+	optional int32 rpc_version = 2;
+}
+
+message NodeStatus {
+	optional int32 node_id = 1;
+	optional int64 memory_footprint = 2;
+}
+
+message QueryResult {
+	enum QueryState {
+	  PENDING = 0;
+	  RUNNING = 1;
+	  COMPLETED = 2;
+	  CANCELED = 3;
+	  FAILED = 4;
+	  UNKNOWN_QUERY = 5;
+	}
+	
+	optional QueryState query_state = 1;
+	optional exec.shared.QueryId query_id = 2;
+	optional bool is_last_chunk = 3;
+	optional int32 row_count = 4;
+	optional int64 records_scan = 5;
+	optional int64 records_error = 6;
+	optional int64 submission_time = 7;
+	repeated NodeStatus node_status = 8;	
+	repeated exec.shared.DrillPBError error = 9;
+	optional exec.shared.RecordBatchDef def = 10;
+	optional bool schema_changed = 11;
+}
+
+
+

@@ -22,15 +22,15 @@ import org.apache.drill.common.expression.BasicArgumentValidator;
 import org.apache.drill.common.expression.CallProvider;
 import org.apache.drill.common.expression.FunctionDefinition;
 import org.apache.drill.common.expression.OutputTypeDeterminer;
-import org.apache.drill.common.expression.types.DataType;
+import org.apache.drill.common.types.Types;
 
 public class UnaryFunctions implements CallProvider{
 
   @Override
   public FunctionDefinition[] getFunctionDefintions() {
     return new FunctionDefinition[]{
-        FunctionDefinition.operator("isNull", new ArgumentValidators.AnyTypeAllowed(1), new OutputTypeDeterminer.FixedType(DataType.BOOLEAN)),
-        FunctionDefinition.operator("not", new BasicArgumentValidator(DataType.BOOLEAN), new OutputTypeDeterminer.FixedType(DataType.BOOLEAN), "!"),
+        FunctionDefinition.operator("isNull", new ArgumentValidators.AnyTypeAllowed(1), new OutputTypeDeterminer.FixedType(Types.REQUIRED_BOOLEAN)),
+        FunctionDefinition.operator("not", new BasicArgumentValidator(Types.REQUIRED_BOOLEAN), new OutputTypeDeterminer.FixedType(Types.REQUIRED_BOOLEAN), "!"),
         FunctionDefinition.operator("negative", new ArgumentValidators.NumericTypeAllowed(1, true), new OutputTypeDeterminer.SameAsFirstInput(), "u-"),
     };
 

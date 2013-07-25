@@ -20,26 +20,38 @@ package org.apache.drill.common.expression;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.drill.common.expression.types.DataType;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
+import org.apache.drill.common.types.TypeProtos.MajorType;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 public class FunctionCall extends LogicalExpressionBase implements Iterable<LogicalExpression> {
   private final FunctionDefinition func;
   public final ImmutableList<LogicalExpression> args;
+  private final ExpressionPosition pos;
 
-  public FunctionCall(FunctionDefinition func, List<LogicalExpression> args) {
+  public FunctionCall(FunctionDefinition func, List<LogicalExpression> args, ExpressionPosition pos) {
+    super(pos);
     this.func = func;
+    
+    if(args == null) args = Lists.newArrayList();
+    
     if (!(args instanceof ImmutableList)) {
       args = ImmutableList.copyOf(args);
     }
     this.args = (ImmutableList<LogicalExpression>) args;
+    this.pos = pos;
   }
 
   @Override
-  public <T> T accept(ExprVisitor<T> visitor) {
-    return visitor.visitFunctionCall(this);
+  public ExpressionPosition getPosition() {
+    return pos;
+  }
+
+  @Override
+  public <T, V, E extends Exception> T accept(ExprVisitor<T, V, E> visitor, V value) throws E{
+    return visitor.visitFunctionCall(this, value);
   }
 
   @Override
@@ -52,38 +64,16 @@ public class FunctionCall extends LogicalExpressionBase implements Iterable<Logi
   }
   
   @Override
-  public DataType getDataType() {
+  public MajorType getMajorType() {
     return func.getDataType(this.args);
   }
 
   @Override
-  public void addToString(StringBuilder sb) {
-    if (func.isOperator()) {
-      if (args.size() == 1) { // unary
-        func.addRegisteredName(sb);
-        sb.append("(");
-        args.get(0).addToString(sb);
-        sb.append(")");
-      } else {
-        for (int i = 0; i < args.size(); i++) {
-          if (i != 0) {
-            sb.append(" ");
-            func.addRegisteredName(sb);
-          }
-          sb.append(" (");
-          args.get(i).addToString(sb);
-          sb.append(") ");
-        }
-      }
-    } else { // normal function
-
-      func.addRegisteredName(sb);
-      sb.append("(");
-      for (int i = 0; i < args.size(); i++) {
-        if (i != 0) sb.append(", ");
-        args.get(i).addToString(sb);
-      }
-      sb.append(") ");
-    }
+  public String toString() {
+    final int maxLen = 10;
+    return "FunctionCall [func=" + func + ", args="
+        + (args != null ? args.subList(0, Math.min(args.size(), maxLen)) : null) + ", pos=" + pos + "]";
   }
+
+  
 }

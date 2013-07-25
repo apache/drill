@@ -22,9 +22,11 @@ import java.util.List;
 
 import org.apache.drill.common.expression.IfExpression.IfCondition;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
+import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.UnmodifiableIterator;
 
@@ -34,11 +36,11 @@ public class IfExpression extends LogicalExpressionBase implements Iterable<IfCo
 	public final ImmutableList<IfCondition> conditions;
 	public final LogicalExpression elseExpression;
 	
-	private IfExpression(List<IfCondition> conditions, LogicalExpression elseExpression){
+	private IfExpression(ExpressionPosition pos, List<IfCondition> conditions, LogicalExpression elseExpression){
+	  super(pos);
 		this.conditions = ImmutableList.copyOf(conditions);
 		this.elseExpression = elseExpression;
-	};
-	
+	}
 	
 	public static class IfCondition{
 		public final LogicalExpression condition;
@@ -53,50 +55,51 @@ public class IfExpression extends LogicalExpressionBase implements Iterable<IfCo
 
 	}
 	
-	
 	@Override
-  public <T> T accept(ExprVisitor<T> visitor) {
-    return visitor.visitIfExpression(this);
+  public <T, V, E extends Exception> T accept(ExprVisitor<T, V, E> visitor, V value) throws E{
+    return visitor.visitIfExpression(this, value);
   }
-
 
   public static class Builder{
 		List<IfCondition> conditions = new ArrayList<IfCondition>();
 		private LogicalExpression elseExpression;
+		private ExpressionPosition pos = ExpressionPosition.UNKNOWN;
 		
-		public void addCondition(IfCondition condition){
-			conditions.add(condition);
+		public Builder setPosition(ExpressionPosition pos){
+		  this.pos = pos;
+		  return this;
 		}
 		
-		public void setElse(LogicalExpression elseExpression) {
+		public Builder addCondition(IfCondition condition){
+			conditions.add(condition);
+            return this;
+		}
+
+    public Builder addConditions(Iterable<IfCondition> conditions) {
+      for (IfCondition condition : conditions) {
+        addCondition(condition);
+      }
+      return this;
+    }
+		
+		public Builder setElse(LogicalExpression elseExpression) {
 			this.elseExpression = elseExpression;
+            return this;
 		}
 		
 		public IfExpression build(){
-			return new IfExpression(conditions, elseExpression);
+		  Preconditions.checkNotNull(pos);
+		  Preconditions.checkNotNull(conditions);
+		  Preconditions.checkNotNull(conditions);
+			return new IfExpression(pos, conditions, elseExpression);
 		}
 		
 	}
-	
-	
-	
-	
-	@Override
-  public void addToString(StringBuilder sb) {
-	  sb.append(" ( ");
-	  for(int i =0; i < conditions.size(); i++){
-	    IfCondition c = conditions.get(i);
-	    if(i !=0) sb.append(" else ");
-	    sb.append("if (");
-	    c.condition.addToString(sb);
-	    sb.append(" ) then (");
-	    c.expression.addToString(sb);
-	    sb.append(" ) ");
-	  }
-	  sb.append(" end ");
-	  sb.append(" ) ");
-  }
 
+  @Override
+  public MajorType getMajorType() {
+    return this.elseExpression.getMajorType();
+  }
 
   public static Builder newBuilder(){
 		return new Builder();

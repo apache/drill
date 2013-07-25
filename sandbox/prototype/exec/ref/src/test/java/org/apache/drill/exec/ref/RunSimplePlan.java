@@ -24,6 +24,7 @@ import java.util.Collection;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.exec.ref.RunOutcome.OutcomeType;
 import org.apache.drill.exec.ref.eval.BasicEvaluatorFactory;
 import org.apache.drill.exec.ref.rse.RSERegistry;
 import org.junit.Test;
@@ -36,7 +37,7 @@ public class RunSimplePlan{
   
   
   @Test
-  public void parseSimplePlan() throws Exception{
+  public void parseSimplePlan() throws Throwable{
     DrillConfig config = DrillConfig.create();
     LogicalPlan plan = LogicalPlan.parse(config, Files.toString(FileUtils.getResourceAsFile("/simple_plan.json"), Charsets.UTF_8));
     IteratorRegistry ir = new IteratorRegistry();
@@ -45,5 +46,32 @@ public class RunSimplePlan{
     Collection<RunOutcome> outcomes = i.run();
     assertEquals(outcomes.size(), 1);
     assertEquals(outcomes.iterator().next().records, 2);
+  }
+  
+  @Test
+  public void joinPlan() throws Throwable{
+    DrillConfig config = DrillConfig.create();
+    LogicalPlan plan = LogicalPlan.parse(config, Files.toString(FileUtils.getResourceAsFile("/simple_join.json"), Charsets.UTF_8));
+    IteratorRegistry ir = new IteratorRegistry();
+    ReferenceInterpreter i = new ReferenceInterpreter(plan, ir, new BasicEvaluatorFactory(ir), new RSERegistry(config));
+    i.setup();
+    Collection<RunOutcome> outcomes = i.run();
+    assertEquals(outcomes.size(), 1);
+    RunOutcome out = outcomes.iterator().next();
+    if(out.outcome != OutcomeType.FAILED && out.exception != null) logger.error("Failure while running {}", out.exception);
+  }
+  
+  @Test
+  public void flattenPlan() throws Throwable{
+    DrillConfig config = DrillConfig.create();
+    LogicalPlan plan = LogicalPlan.parse(config, Files.toString(FileUtils.getResourceAsFile("/simple_plan_flattened.json"), Charsets.UTF_8));
+    IteratorRegistry ir = new IteratorRegistry();
+    ReferenceInterpreter i = new ReferenceInterpreter(plan, ir, new BasicEvaluatorFactory(ir), new RSERegistry(config));
+    i.setup();
+    Collection<RunOutcome> outcomes = i.run();
+    assertEquals(outcomes.size(), 1);
+    RunOutcome out = outcomes.iterator().next();
+    if(out.outcome != OutcomeType.FAILED && out.exception != null) logger.error("Failure while running {}", out.exception);
+    assertEquals(out.outcome, RunOutcome.OutcomeType.SUCCESS);
   }
 }

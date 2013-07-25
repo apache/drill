@@ -1,21 +1,17 @@
 {
   head:{
-    type:"apache_drill_logical_plan",
+    type:"APACHE_DRILL_LOGICAL",
     version:"1",
     generator:{
       type:"manual",
       info:"na"
     }
   },
-  sources:[
-    {
-      type:"json",
-      name:"donuts-json",
-      files:[
-        "src/test/resources/donuts.json"
-      ]
-    }
-  ],
+  storage:{
+    console: {type:"console"},
+    fs1: {type:"fs", root:"file:///"},
+	cp: {type:"classpath"}  
+  },
   query:[
     {
       op:"sequence",
@@ -24,8 +20,11 @@
 	      op: "scan",
 	      memo: "initial_scan",
 	      ref: "donuts",
-	      source: "donuts-json",
-	      selection: {data: "activity"}
+	      storageengine: "cp",
+	      selection: {
+	        path: "/donuts.json",
+	        type: "JSON"
+	      }
 	    },
 	    {
 	      op: "transform",
@@ -44,9 +43,10 @@
           drop: 1
         },
 	    {
-	      op: "write",
+	      op: "store",
 	      memo: "output sink",
-	      file: "console:///stdout"
+	      storageengine: "console",
+          target: {pipe: "STD_OUT"}
 	    }
       ]
     }

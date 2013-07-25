@@ -17,13 +17,15 @@
  ******************************************************************************/
 package org.apache.drill.common.logical.data;
 
-import com.google.common.base.Preconditions;
-import org.apache.drill.common.expression.FieldReference;
-import org.apache.drill.common.logical.JSONOptions;
+import java.util.Iterator;
+
+import org.apache.drill.common.JSONOptions;
+import org.apache.drill.common.logical.data.visitors.LogicalVisitor;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.google.common.base.Preconditions;
 
 @JsonTypeName("constant")
 public class Constant extends SourceOperator{
@@ -41,4 +43,10 @@ public class Constant extends SourceOperator{
         return content;
     }
 
+    @Override
+    public <T, X, E extends Throwable> T accept(LogicalVisitor<T, X, E> logicalVisitor, X value) throws E {
+      return logicalVisitor.visitConstant(this, value);
+    }
+
+    
 }

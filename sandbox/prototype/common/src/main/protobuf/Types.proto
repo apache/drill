@@ -1,0 +1,63 @@
+package common;
+
+option java_package = "org.apache.drill.common.types";
+option java_outer_classname = "TypeProtos";
+option optimize_for = SPEED;
+
+
+enum MinorType {
+    LATE = 0;   //  late binding type
+    MAP = 1;   //  an empty map column.  Useful for conceptual setup.  Children listed within here
+    REPEATMAP = 2;   //  a repeated map column (means that multiple children sit below this)
+    TINYINT = 3;   //  single byte signed integer
+    SMALLINT = 4;   //  two byte signed integer
+    INT = 5;   //  four byte signed integer
+    BIGINT = 6;   //  eight byte signed integer
+    DECIMAL4 = 7;   //  a decimal supporting precision between 1 and 8 (4 bits for decimal location, 1 sign)
+    DECIMAL8 = 8;   //  a decimal supporting precision between 9 and 18 (5 bits for decimal location, 1 sign)
+    DECIMAL12 = 9;   //  a decimal supporting precision between 
+    DECIMAL16 = 10;   //  a decimal supporting precision between 19 and 37 (6 bits for decimal location, 1 sign)
+    MONEY = 11;   //  signed decimal with two digit precision
+    DATE = 12;   //  days since 4713bc 
+    TIME = 13;   //  time in micros before or after 2000/1/1
+    TIMETZ = 14;   //  time in micros before or after 2000/1/1 with timezone
+    TIMESTAMP = 15;   //  unix epoch time in millis
+    DATETIME = 16;   //  TBD
+    INTERVAL = 17;   //  TBD
+    FLOAT4 = 18;   //  4 byte ieee 754 
+    FLOAT8 = 19;   //  8 byte ieee 754
+    BOOLEAN = 20;   //  single bit value
+    FIXEDCHAR = 21;   //  utf8 fixed length string, padded with spaces
+    VARCHAR2 = 23;   //  utf8 variable length string (up to 2^16 in length)
+    VARCHAR4 = 24;   //  utf8 variable length string (up to 2^32 in length)
+    FIXEDBINARY = 25;   //  fixed length binary, padded with 0 bytes
+    VARBINARY2 = 27;   //  variable length binary (up to 2^16 in length)
+    VARBINARY4 = 28;   //  variable length binary (up to 2^32 in length)
+    UINT1 = 29;   //  unsigned 1 byte integer
+    UINT2 = 30;   //  unsigned 2 byte integer
+    UINT4 = 31;   //  unsigned 4 byte integer
+    UINT8 = 32;   //  unsigned 8 byte integer
+    PROTO2 = 33;   //  protobuf encoded complex type. (up to 2^16 in length)
+    PROTO4 = 34;   //  protobuf encoded complex type. (up to 2^32 in length)
+    MSGPACK2 = 35;   //  msgpack encoded complex type. (up to 2^16 in length)
+    MSGPACK4 = 36;   //  msgpack encoded complex type. (up to 2^32 in length)
+    NULL = 37; // a value of unknown type (e.g. a missing reference).
+    
+}
+
+message MajorType {
+  optional MinorType minor_type = 1;
+  optional DataMode mode = 2;
+  optional int32 width = 3; // optional width for fixed size values.
+  optional int32 precision = 4; // used for decimal types
+  optional int32 scale = 5; // used for decimal types 
+}
+
+
+
+enum DataMode {
+  OPTIONAL = 0; // nullable
+  REQUIRED = 1; // non-nullable
+  REPEATED = 2; // single, repeated-field
+}
+

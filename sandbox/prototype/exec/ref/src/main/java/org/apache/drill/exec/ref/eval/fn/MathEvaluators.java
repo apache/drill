@@ -17,6 +17,7 @@
  ******************************************************************************/
 package org.apache.drill.exec.ref.eval.fn;
 
+import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ref.RecordPointer;
 import org.apache.drill.exec.ref.eval.BaseBasicEvaluator;
 import org.apache.drill.exec.ref.eval.EvaluatorTypes.BasicEvaluator;
@@ -43,7 +44,7 @@ public class MathEvaluators {
       NumericValue[] values = new NumericValue[args.length];
       for(int i =0; i < values.length; i++){
         DataValue v = args[i].eval();
-        if(v.getDataType().isNumericType()){
+        if(Types.isNumericType(v.getDataType())){
           values[i] = v.getAsNumeric();
         }
       }
@@ -71,7 +72,7 @@ public class MathEvaluators {
       for(int i =0; i < args.length; i++){
         final DataValue v = args[i].eval();
 //        logger.debug("DataValue {}", v);
-        if(v.getDataType().isNumericType()){
+        if(Types.isNumericType(v.getDataType())){
           NumericValue n = v.getAsNumeric();
           NumericType nt = n.getNumericType();
 //          logger.debug("Numeric Type: {}", nt);

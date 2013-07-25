@@ -19,13 +19,13 @@ package org.apache.drill.common.expression;
 
 import java.util.List;
 
-import org.apache.drill.common.expression.types.DataType;
+import org.apache.drill.common.types.TypeProtos.MajorType;
 
 public class BasicArgumentValidator implements ArgumentValidator {
 
   private final Arg[] args;
 
-  public BasicArgumentValidator(DataType... types) {
+  public BasicArgumentValidator(MajorType... types) {
     this.args = new Arg[] { new Arg("single", types) };
   }
 
@@ -34,18 +34,18 @@ public class BasicArgumentValidator implements ArgumentValidator {
   }
 
   @Override
-  public void validateArguments(List<LogicalExpression> expressions, ErrorCollector errors) {
-    if (expressions.size() != args.length) errors.addUnexpectedArgumentCount(expressions.size(), args.length);
+  public void validateArguments(ExpressionPosition expr, List<LogicalExpression> expressions, ErrorCollector errors) {
+    if (expressions.size() != args.length) errors.addUnexpectedArgumentCount(expr, expressions.size(), args.length);
 
     int i = 0;
     for (LogicalExpression e : expressions) {
-      args[i].confirmDataType(i, e, errors);
+      args[i].confirmDataType(expr, i, e, errors);
 
       i++;
     }
   }
 
-  public Arg arg(String name, DataType... allowedTypes) {
+  public Arg arg(String name, MajorType... allowedTypes) {
     return new Arg(name, allowedTypes);
   }
 

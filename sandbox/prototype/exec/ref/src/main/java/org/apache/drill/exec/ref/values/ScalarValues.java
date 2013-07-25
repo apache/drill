@@ -22,10 +22,14 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
 
-import org.apache.drill.common.expression.types.DataType;
+import org.apache.drill.common.types.TypeProtos.DataMode;
+import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ref.eval.EvaluatorTypes.BasicEvaluator;
 import org.apache.drill.exec.ref.rops.DataWriter;
 import org.apache.hadoop.io.BytesWritable;
+import org.apache.tools.ant.types.DataType;
 
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
@@ -38,7 +42,8 @@ public final class ScalarValues {
   
   public static class StringScalar extends BaseDataValue implements StringValue, ComparableValue, BasicEvaluator {
     private CharSequence seq;
-
+    private MajorType type = MajorType.newBuilder().setMinorType(MinorType.VARCHAR4).setMode(DataMode.OPTIONAL).build();
+    
     public StringScalar(CharSequence seq){
       this.seq = seq;
     }
@@ -60,7 +65,7 @@ public final class ScalarValues {
 
     @Override
     public boolean supportsCompare(DataValue dv2) {
-      return dv2.getDataType() == DataType.NVARCHAR;
+      return Types.isStringScalarType(dv2.getDataType());
     }
 
     @Override
@@ -69,8 +74,8 @@ public final class ScalarValues {
     }
 
     @Override
-    public DataType getDataType() {
-      return DataType.NVARCHAR;
+    public MajorType getDataType() {
+      return type;
     }
 
     @Override
@@ -99,7 +104,7 @@ public final class ScalarValues {
 
     @Override
     public boolean equals(DataValue v) {
-      if(v.getDataType() != this.getDataType()) return false;
+      if(!v.getDataType().equals(this.getDataType())) return false;
       return seq.equals(v.getAsStringValue().getString());
     }
 
@@ -118,6 +123,8 @@ public final class ScalarValues {
   
   public static class BooleanScalar extends BaseDataValue implements BooleanValue, BasicEvaluator{
     private boolean b;
+    private MajorType type = MajorType.newBuilder().setMinorType(MinorType.BOOLEAN).setMode(DataMode.OPTIONAL).build();
+    
     public BooleanScalar(boolean b){
       this.b = b;
     }
@@ -138,8 +145,8 @@ public final class ScalarValues {
     }
 
     @Override
-    public DataType getDataType() {
-      return DataType.BOOLEAN;
+    public MajorType getDataType() {
+      return type;
     }
 
     @Override
@@ -159,7 +166,7 @@ public final class ScalarValues {
     
     @Override
     public boolean equals(DataValue v) {
-      if(v.getDataType() != this.getDataType()) return false;
+      if(v.getDataType().equals(this.getDataType())) return false;
       return b == v.getAsBooleanValue().getBoolean();
     }
 
@@ -176,6 +183,8 @@ public final class ScalarValues {
   }
   
   public static class LongScalar extends NumericValue{
+    
+    private MajorType type = MajorType.newBuilder().setMinorType(MinorType.BIGINT).setMode(DataMode.OPTIONAL).build();
     long l;
     public LongScalar(long l) {
       this.l = l;
@@ -212,8 +221,8 @@ public final class ScalarValues {
     }
 
     @Override
-    public DataType getDataType() {
-      return DataType.INT64;
+    public MajorType getDataType() {
+      return type;
     }
 
     @Override
@@ -244,6 +253,7 @@ public final class ScalarValues {
   }
   
   public static class IntegerScalar extends NumericValue{
+    private MajorType type = MajorType.newBuilder().setMinorType(MinorType.INT).setMode(DataMode.OPTIONAL).build();
     int i;
     
     public IntegerScalar(int i){
@@ -266,8 +276,8 @@ public final class ScalarValues {
     }
 
     @Override
-    public DataType getDataType() {
-      return DataType.INT32;
+    public MajorType getDataType() {
+      return type;
     }
 
     @Override
@@ -320,6 +330,8 @@ public final class ScalarValues {
 
   
   public static class FloatScalar extends NumericValue{
+    
+    private MajorType type = MajorType.newBuilder().setMinorType(MinorType.FLOAT4).setMode(DataMode.OPTIONAL).build();
     float f;
     public FloatScalar(float f){
       this.f = f;
@@ -336,8 +348,8 @@ public final class ScalarValues {
     }
 
     @Override
-    public DataType getDataType() {
-      return DataType.FLOAT32;
+    public MajorType getDataType() {
+      return type;
     }
 
     @Override
@@ -373,14 +385,16 @@ public final class ScalarValues {
  
   
   public static class DoubleScalar extends NumericValue{
+    private MajorType type = MajorType.newBuilder().setMinorType(MinorType.FLOAT8).setMode(DataMode.OPTIONAL).build();
     private double d;
+    
     public DoubleScalar(double d){
       this.d = d;
     }
 
     @Override
-    public DataType getDataType() {
-      return DataType.FLOAT64;
+    public MajorType getDataType() {
+      return type;
     }
 
     @Override
@@ -427,6 +441,7 @@ public final class ScalarValues {
   }
   
   public static class BytesScalar extends BaseDataValue implements BytesValue{
+    private MajorType type = MajorType.newBuilder().setMinorType(MinorType.VARBINARY4).setMode(DataMode.OPTIONAL).build();
     private BytesWritable.Comparator comparator = new BytesWritable.Comparator();
     private final static HashFunction HASH = Hashing.murmur3_32();
 
@@ -442,7 +457,7 @@ public final class ScalarValues {
 
     @Override
     public boolean supportsCompare(DataValue dv2) {
-      return dv2.getDataType() == DataType.BYTES;
+      return Types.isBytesScalarType(dv2.getDataType());
     }
 
 
@@ -454,8 +469,8 @@ public final class ScalarValues {
     }
 
     @Override
-    public DataType getDataType() {
-      return DataType.BYTES;
+    public MajorType getDataType() {
+      return type;
     }
 
     @Override
@@ -480,7 +495,7 @@ public final class ScalarValues {
 
     @Override
     public boolean equals(DataValue v) {
-      if(v.getDataType() != this.getDataType()) return false;
+      if(!v.getDataType().equals(this.getDataType())) return false;
       BytesValue other = v.getAsBytesValue();
       if(this.getLength() != other.getLength()) return false;
       for(int i =0; i < this.getLength(); i++){
@@ -505,15 +520,18 @@ public final class ScalarValues {
   
   
   static class NullValue extends BaseDataValue{
-
+    
+    // not sure what to do here... 
+    MajorType type = MajorType.newBuilder().setMode(DataMode.OPTIONAL).setMinorType(MinorType.LATE).build();
+    
     @Override
     public void write(DataWriter writer) throws IOException {
       writer.writeNullValue();
     }
 
     @Override
-    public DataType getDataType() {
-      return DataType.NULL;
+    public MajorType getDataType() {
+      return type;
     }
 
     @Override
