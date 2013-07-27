@@ -88,6 +88,7 @@ public class RecordBatchLoader implements Iterable<ValueVector>{
       MaterializedField m = new MaterializedField(fieldDef);
       v = TypeHelper.getNewVector(m, allocator);
       v.load(fmd, buf.slice(bufOffset, fmd.getBufferLength()));
+      bufOffset += fmd.getBufferLength();
       newVectors.add(v);
     }
     
