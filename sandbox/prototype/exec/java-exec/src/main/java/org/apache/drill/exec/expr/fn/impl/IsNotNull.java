@@ -25,12 +25,13 @@ import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
+import org.apache.drill.exec.vector.BitHolder;
 
 @FunctionTemplate(name = "isNotNull", scope = FunctionTemplate.FunctionScope.SIMPLE)
 public class IsNotNull implements DrillFunc {
 
   @Param NullableFloat8Holder input;
-  @Output BooleanHolder out;
+  @Output BitHolder out;
 
   public void setup(RecordBatch incoming) { }
 
@@ -43,7 +44,10 @@ public class IsNotNull implements DrillFunc {
     @Override
     public FunctionDefinition[] getFunctionDefintions() {
       return new FunctionDefinition[] {
-          FunctionDefinition.simple("isNotNull", new ArgumentValidators.AnyTypeAllowed(1), OutputTypeDeterminer.FIXED_BOOLEAN, "isnotnull")
+          FunctionDefinition.simple("isNotNull",
+                                    new ArgumentValidators.AnyTypeAllowed(1),
+                                    OutputTypeDeterminer.FIXED_BIT,
+                                    "isnotnull")
       };
     }
 
