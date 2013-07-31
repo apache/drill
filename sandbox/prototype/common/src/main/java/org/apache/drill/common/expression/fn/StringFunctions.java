@@ -31,8 +31,8 @@ public class StringFunctions implements CallProvider{
   public FunctionDefinition[] getFunctionDefintions() {
     return new FunctionDefinition[]{
         FunctionDefinition.simple("regex_like", new BasicArgumentValidator( //
-            new Arg(true, false, "pattern", MinorType.VARCHAR2, MinorType.VARCHAR4), //
-            new Arg(false, true, "value", MinorType.FIXEDCHAR, MinorType.VARCHAR2, MinorType.VARCHAR4) ), FixedType.FIXED_BOOLEAN),
+            new Arg(true, false, "pattern", MinorType.VARCHAR, MinorType.VARCHAR), //
+            new Arg(false, true, "value", MinorType.FIXEDCHAR, MinorType.VARCHAR, MinorType.VARCHAR) ), FixedType.FIXED_BIT),
     };
 
   }

@@ -58,7 +58,7 @@ public abstract class ProjectorTemplate implements Projector {
   @Override
   public final void setup(FragmentContext context, RecordBatch incoming, RecordBatch outgoing, List<TransferPair> transfers)  throws SchemaChangeException{
 
-    this.svMode = incoming.getSchema().getSelectionVector(); 
+    this.svMode = incoming.getSchema().getSelectionVectorMode(); 
     switch(svMode){
     case FOUR_BYTE:
       this.vector4 = incoming.getSelectionVector4();

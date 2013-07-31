@@ -26,7 +26,7 @@ public class ValueReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ValueReader.class);
   
   public static boolean getBoolean(DataValue v){
-    if(v.getDataType().getMinorType() == MinorType.BOOLEAN && v.getDataType().getMode() != DataMode.REPEATED){
+    if(v.getDataType().getMinorType() == MinorType.BIT && v.getDataType().getMode() != DataMode.REPEATED){
       return v.getAsBooleanValue().getBoolean();
     }else{
       throw new DrillRuntimeException(String.format("Unable to get boolean.  Type was a %s", v.getClass().getCanonicalName()));

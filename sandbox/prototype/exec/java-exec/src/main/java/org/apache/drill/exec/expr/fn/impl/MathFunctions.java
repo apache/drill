@@ -6,9 +6,9 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.holders.IntHolder;
-import org.apache.drill.exec.expr.holders.LongHolder;
 import org.apache.drill.exec.record.RecordBatch;
+import org.apache.drill.exec.vector.BigIntHolder;
+import org.apache.drill.exec.vector.IntHolder;
 
 public class MathFunctions{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MathFunctions.class);
@@ -33,9 +33,9 @@ public class MathFunctions{
   @FunctionTemplate(name = "add", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
   public static class LongAdd1 implements DrillFunc{
     
-    @Param LongHolder left;
-    @Param LongHolder right;
-    @Output LongHolder out;
+    @Param BigIntHolder left;
+    @Param BigIntHolder right;
+    @Output BigIntHolder out;
 
     public void setup(RecordBatch b){}
     
@@ -45,14 +45,11 @@ public class MathFunctions{
 
   }
   
-  /** 
-   * Define the actual absolute value implementation
-   */
   @FunctionTemplate(name = "negative", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
   public static class Negative implements DrillFunc{
     
-    @Param LongHolder input;
-    @Output LongHolder out;
+    @Param BigIntHolder input;
+    @Output BigIntHolder out;
 
     public void setup(RecordBatch b){}
     

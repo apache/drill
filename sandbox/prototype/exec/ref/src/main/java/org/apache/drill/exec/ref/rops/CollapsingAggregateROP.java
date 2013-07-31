@@ -159,7 +159,7 @@ public class CollapsingAggregateROP extends SingleInputROPBase<CollapsingAggrega
       // if we're in target mode and this row matches the target criteria, we're going to copy carry over values and mark foundTarget = true.
       if(targetMode){
         DataValue v = targetEvaluator.eval();
-        if(v.getDataType().getMinorType() == MinorType.BOOLEAN && v.getAsBooleanValue().getBoolean()){
+        if(v.getDataType().getMinorType() == MinorType.BIT && v.getAsBooleanValue().getBoolean()){
           foundTarget = true;
           for(int i =0 ; i < carryovers.length; i++){
             carryoverValues[i] = carryovers[i].eval();

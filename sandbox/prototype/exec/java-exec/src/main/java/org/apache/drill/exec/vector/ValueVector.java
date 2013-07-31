@@ -26,33 +26,52 @@ import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
 
 /**
- * ValueVectorTypes defines a set of template-generated classes which implement type-specific
- * value vectors.  The template approach was chosen due to the lack of multiple inheritence.  It
- * is also important that all related logic be as efficient as possible.
+ * ValueVectorTypes defines a set of template-generated classes which implement type-specific value vectors. The
+ * template approach was chosen due to the lack of multiple inheritence. It is also important that all related logic be
+ * as efficient as possible.
  */
 public interface ValueVector extends Closeable {
 
-//  /**
-//   * Get the explicitly specified size of the allocated buffer, if available.  Otherwise
-//   * calculate the size based on width and record count.
-//   */
-//  public abstract int getAllocatedSize();
-
-
   /**
-   * Alternative to clear().  Allows use as closeable in try-with-resources.
+   * Alternative to clear(). Allows use as closeable in try-with-resources.
    */
   public void close();
-  
+
   /**
    * Release the underlying ByteBuf and reset the ValueVector to empty.
    */
   public void clear();
-  
-  
+
+  /**
+   * Get information about how this field is materialized.
+   * 
+   * @return
+   */
+  public MaterializedField getField();
+
+  /**
+   * Get a transfer pair to allow transferring this vectors data between this vector and a destination vector of the same
+   * type. Will also generate a second instance of this vector class that is connected through the TransferPair.
+   * 
+   * @return 
+   */
   public TransferPair getTransferPair();
 
-  
+  /**
+   * Given the current buffer allocation, return the maximum number of values that this buffer can contain.
+   * 
+   * @return Maximum values buffer can contain. In the case of a Repeated field, this is the number of atoms, not
+   *         repeated groups.
+   */
+  public int getValueCapacity();
+
+  /**
+   * Get Accessor to read value vector data.
+   * 
+   * @return
+   */
+  public abstract Accessor getAccessor();
+
   /**
    * Return the underlying buffers associated with this vector. Note that this doesn't impact the
    * reference counts for this buffer so it only should be used for in-context access. Also note
@@ -69,19 +88,6 @@ public interface ValueVector extends Closeable {
    * @param buffer The buffer that contains the ValueVector.
    */
   public void load(FieldMetadata metadata, ByteBuf buffer);
-
-
-  /**
-   * Given the current buffer allocation, return the maximum number of values that this buffer can contain.
-   * @return Maximum values buffer can contain.  In the case of a Repeated field, this is the number of atoms, not repeated groups.
-   */
-  public int getValueCapacity();
-  
-  /**
-   * Get information about how this field is materialized.
-   * @return
-   */
-  public MaterializedField getField();
   
   /**
    * Get the metadata for this field.  Used in serialization
@@ -90,44 +96,43 @@ public interface ValueVector extends Closeable {
   public FieldMetadata getMetadata();
   
   /**
-   * Get Accessor to read value vector data.
-   * @return 
-   */
-  public abstract Accessor getAccessor();
-  
-  /**
    * Get a Mutator to update this vectors data.
+   * 
    * @return
    */
   public abstract Mutator getMutator();
 
-  
-  public interface Accessor{
+  public interface Accessor {
 
-//    /**
-//     * Get the number of records allocated for this value vector.
-//     * @return number of allocated records
-//     */
-//    public int getRecordCount();
+    // /**
+    // * Get the number of records allocated for this value vector.
+    // * @return number of allocated records
+    // */
+    // public int getRecordCount();
 
     /**
-     * Get the Java Object representation of the element at the specified position.  Useful for testing.
-     *
-     * @param index   Index of the value to get
+     * Get the Java Object representation of the element at the specified position. Useful for testing.
+     * 
+     * @param index
+     *          Index of the value to get
      */
     public abstract Object getObject(int index);
-    
+
     public int getValueCount();
+
     public void reset();
   }
-  
-  
-    
-  
-  
-  public interface Mutator{
+
+  public interface Mutator {
+    /**
+     * Set the top number values (optional/required) or number of value groupings (repeated) in this vector.
+     * 
+     * @param valueCount
+     */
+    public void setValueCount(int valueCount);
+
     public void reset();
-    public void randomizeData();
+
+    public void generateTestData();
   }
 }
-

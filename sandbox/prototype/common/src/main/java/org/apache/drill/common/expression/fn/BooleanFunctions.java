@@ -32,13 +32,13 @@ public class BooleanFunctions implements CallProvider {
   @Override
   public FunctionDefinition[] getFunctionDefintions() {
     return new FunctionDefinition[] {
-        FunctionDefinition.operator("or", new AllowedTypeList(2, Integer.MAX_VALUE, Types.REQUIRED_BOOLEAN), OutputTypeDeterminer.FIXED_BOOLEAN, "or", "||"),
-        FunctionDefinition.operator("and", new AllowedTypeList(2, Integer.MAX_VALUE, Types.REQUIRED_BOOLEAN), OutputTypeDeterminer.FIXED_BOOLEAN, "and", "&&"),
-        FunctionDefinition.operator("greater than", new ComparableArguments(2), OutputTypeDeterminer.FIXED_BOOLEAN, ">"),
-        FunctionDefinition.operator("less than", new ComparableArguments(2), OutputTypeDeterminer.FIXED_BOOLEAN, "<"),
-        FunctionDefinition.operator("equal", new ComparableArguments(2), OutputTypeDeterminer.FIXED_BOOLEAN, "==", "<>"),
-        FunctionDefinition.operator("greater than or equal to", new ComparableArguments(2), OutputTypeDeterminer.FIXED_BOOLEAN, ">="),
-        FunctionDefinition.operator("less than or equal to", new ComparableArguments(2), OutputTypeDeterminer.FIXED_BOOLEAN, "<="), };
+        FunctionDefinition.operator("or", new AllowedTypeList(2, Integer.MAX_VALUE, Types.REQUIRED_BIT), OutputTypeDeterminer.FIXED_BIT, "or", "||"),
+        FunctionDefinition.operator("and", new AllowedTypeList(2, Integer.MAX_VALUE, Types.REQUIRED_BIT), OutputTypeDeterminer.FIXED_BIT, "and", "&&"),
+        FunctionDefinition.operator("greater than", new ComparableArguments(2), OutputTypeDeterminer.FIXED_BIT, ">"),
+        FunctionDefinition.operator("less than", new ComparableArguments(2), OutputTypeDeterminer.FIXED_BIT, "<"),
+        FunctionDefinition.operator("equal", new ComparableArguments(2), OutputTypeDeterminer.FIXED_BIT, "==", "<>"),
+        FunctionDefinition.operator("greater than or equal to", new ComparableArguments(2), OutputTypeDeterminer.FIXED_BIT, ">="),
+        FunctionDefinition.operator("less than or equal to", new ComparableArguments(2), OutputTypeDeterminer.FIXED_BIT, "<="), };
 
   }
 

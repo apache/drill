@@ -140,6 +140,33 @@ public class MaterializedField{
     return !iter.hasNext();
   }
   
+  
+  
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + ((def == null) ? 0 : def.hashCode());
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj)
+      return true;
+    if (obj == null)
+      return false;
+    if (getClass() != obj.getClass())
+      return false;
+    MaterializedField other = (MaterializedField) obj;
+    if (def == null) {
+      if (other.def != null)
+        return false;
+    } else if (!def.equals(other.def))
+      return false;
+    return true;
+  }
+
   @Override
   public String toString() {
     return "MaterializedField [" + def.toString() + "]";

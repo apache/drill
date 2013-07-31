@@ -22,6 +22,7 @@ import java.util.List;
 import org.apache.drill.common.exceptions.PhysicalOperatorSetupException;
 import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -89,4 +90,14 @@ public interface Exchange extends PhysicalOperator {
    * @return
    */
   public PhysicalOperator getChild();
+  
+  
+  
+  /**
+   * Informs the planner whether or not this particular exchange supports an incoming stream that has an attached selection vector. 
+   * @param mode
+   * @return
+   */
+  @JsonIgnore
+  public boolean supportsSelectionVector();
 }

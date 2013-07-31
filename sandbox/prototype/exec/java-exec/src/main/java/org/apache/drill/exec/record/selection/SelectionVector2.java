@@ -56,6 +56,13 @@ public class SelectionVector2 implements Closeable{
     buffer = allocator.buffer(size * 2);
   }
   
+  public SelectionVector2 clone(){
+    SelectionVector2 newSV = new SelectionVector2(allocator);
+    newSV.recordCount = recordCount;
+    newSV.buffer = buffer;
+    clear();
+    return newSV;
+  }
   
   public void clear() {
     if (buffer != DeadBuf.DEAD_BUFFER) {

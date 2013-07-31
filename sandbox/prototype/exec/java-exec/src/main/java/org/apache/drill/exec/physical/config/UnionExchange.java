@@ -74,6 +74,11 @@ public class UnionExchange extends AbstractExchange{
   protected PhysicalOperator getNewWithChild(PhysicalOperator child) {
     return new UnionExchange(child);
   }
+
+  @Override
+  public boolean supportsSelectionVector() {
+    return false;
+  }
   
   
 }

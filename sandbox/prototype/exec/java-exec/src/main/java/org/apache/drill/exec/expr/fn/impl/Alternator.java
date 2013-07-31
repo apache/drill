@@ -11,8 +11,8 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Workspace;
-import org.apache.drill.exec.expr.holders.LongHolder;
 import org.apache.drill.exec.record.RecordBatch;
+import org.apache.drill.exec.vector.BigIntHolder;
 
 
 
@@ -20,7 +20,7 @@ import org.apache.drill.exec.record.RecordBatch;
 public class Alternator implements DrillFunc{
 
   @Workspace int val;
-  @Output LongHolder out;
+  @Output BigIntHolder out;
   
   public void setup(RecordBatch incoming) {
     val = 0;

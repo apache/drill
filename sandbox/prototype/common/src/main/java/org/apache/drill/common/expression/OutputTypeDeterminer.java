@@ -22,10 +22,11 @@ import java.util.List;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.types.Types;
 
 public interface OutputTypeDeterminer {
 
-  public static OutputTypeDeterminer FIXED_BOOLEAN = new FixedType(MajorType.newBuilder().setMinorType(MinorType.BOOLEAN).setMode(DataMode.REQUIRED).build());
+  public static OutputTypeDeterminer FIXED_BIT = new FixedType(Types.required(MinorType.BIT));
   
   public MajorType getOutputType(List<LogicalExpression> expressions);
   

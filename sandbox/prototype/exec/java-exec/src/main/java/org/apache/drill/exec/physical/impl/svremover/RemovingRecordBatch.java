@@ -19,7 +19,6 @@ import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.FixedWidthVector;
-import org.apache.drill.exec.vector.NonRepeatedMutator;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VariableWidthVector;
 
@@ -119,11 +118,7 @@ public class RemovingRecordBatch implements RecordBatch{
       copier.copyRecords();
       for(ValueVector v : this.outputVectors){
         ValueVector.Mutator m = v.getMutator();
-        if(m instanceof NonRepeatedMutator){
-          ((NonRepeatedMutator) m).setValueCount(recordCount);
-        }else{
-          throw new UnsupportedOperationException();
-        }
+        m.setValueCount(recordCount);
       }
       return upstream; // change if upstream changed, otherwise normal.
     default:
@@ -169,7 +164,7 @@ public class RemovingRecordBatch implements RecordBatch{
   }
   
   private Copier getGeneratedCopier() throws SchemaChangeException{
-    Preconditions.checkArgument(incoming.getSchema().getSelectionVector() == SelectionVectorMode.TWO_BYTE);
+    Preconditions.checkArgument(incoming.getSchema().getSelectionVectorMode() == SelectionVectorMode.TWO_BYTE);
     
     List<VectorAllocator> allocators = Lists.newArrayList();
     for(ValueVector i : incoming){
@@ -205,7 +200,7 @@ public class RemovingRecordBatch implements RecordBatch{
     }
     this.outSchema = bldr.build();
     
-    switch(incoming.getSchema().getSelectionVector()){
+    switch(incoming.getSchema().getSelectionVectorMode()){
     case NONE:
       return getStraightCopier();
     case TWO_BYTE:

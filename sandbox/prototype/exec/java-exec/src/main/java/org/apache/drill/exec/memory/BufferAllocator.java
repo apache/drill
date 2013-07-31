@@ -41,6 +41,38 @@ public abstract class BufferAllocator implements Closeable{
   
   public abstract BufferAllocator getChildAllocator(long initialReservation, long maximumReservation);
   
+  protected abstract boolean pre(int bytes);
+  
+  public PreAllocator getPreAllocator(){
+    return new PreAllocator(); 
+  }
+  
+  public class PreAllocator{
+    int bytes = 0;
+    public boolean preAllocate(int bytes){
+      if(!pre(bytes)) return false;
+      
+      this.bytes += bytes;
+      return true;
+   
+    }
+    
+    public ByteBuf getAllocation(){
+      return buffer(bytes);
+    }
+  }
+  
+  
+  /**
+   * @param bytes
+   * @return
+   */
+  
+  /**
+   * 
+   */
+  
+  
   /**
    * Close and release all buffers generated from this buffer pool.
    */

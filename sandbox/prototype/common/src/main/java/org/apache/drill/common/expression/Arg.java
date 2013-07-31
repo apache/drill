@@ -20,6 +20,7 @@ package org.apache.drill.common.expression;
 import java.util.List;
 
 import org.apache.drill.common.expression.visitors.ConstantChecker;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -84,8 +85,8 @@ public class Arg {
   private static MajorType[] getMajorTypes(boolean allowNulls, MinorType... types){
     List<MajorType> mts = Lists.newArrayList();
     for(MinorType t : types){
-      if(allowNulls) mts.add(MajorType.newBuilder().setMinorType(t).setMode(DataMode.OPTIONAL).build());
-      mts.add(MajorType.newBuilder().setMinorType(t).setMode(DataMode.REQUIRED).build());
+      if(allowNulls) mts.add(Types.optional(t));
+      mts.add(Types.required(t));
     }
     return mts.toArray(new MajorType[mts.size()]);
   }

@@ -27,7 +27,7 @@ public class TypeFunctions implements CallProvider{
   @Override
   public FunctionDefinition[] getFunctionDefintions() {
     return new FunctionDefinition[]{
-        FunctionDefinition.simple("isNumber", new AnyTypeAllowed(1), OutputTypeDeterminer.FIXED_BOOLEAN),
+        FunctionDefinition.simple("isNumber", new AnyTypeAllowed(1), OutputTypeDeterminer.FIXED_BIT),
     };
 
   }

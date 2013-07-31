@@ -77,7 +77,7 @@ public class WritableBatch {
   }
   
   public static WritableBatch get(RecordBatch batch) {
-    if(batch.getSchema() != null && batch.getSchema().getSelectionVector() != SelectionVectorMode.NONE) throw new UnsupportedOperationException("Only batches without selections vectors are writable.");
+    if(batch.getSchema() != null && batch.getSchema().getSelectionVectorMode() != SelectionVectorMode.NONE) throw new UnsupportedOperationException("Only batches without selections vectors are writable.");
     return getBatchNoSV(batch.getRecordCount(), batch);
   }
 

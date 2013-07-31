@@ -21,6 +21,9 @@ import org.apache.drill.exec.record.DeadBuf;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.vector.ByteHolder;
+import org.mortbay.jetty.servlet.Holder;
+
+import com.google.common.base.Charsets;
 
 import antlr.collections.impl.Vector;
 
@@ -172,6 +175,18 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       return dst;
     }
     
+    public void get(int index, ${minor.class}Holder holder){
+      holder.start = offsetVector.getAccessor().get(index);
+      holder.end = offsetVector.getAccessor().get(index + 1);
+      holder.buffer = data;
+    }
+    
+    void get(int index, Nullable${minor.class}Holder holder){
+      holder.start = offsetVector.getAccessor().get(index);
+      holder.end = offsetVector.getAccessor().get(index + 1);
+      holder.buffer = data;
+    }
+
     public void get(int index, ByteHolder holder){
       assert index >= 0;
       holder.start = offsetVector.getAccessor().get(index);
@@ -222,14 +237,37 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       data.setBytes(currentOffset, bb);
     }
 
+    void set(int index, Nullable${minor.class}Holder holder){
+      int length = holder.end - holder.start;
+      int currentOffset = offsetVector.getAccessor().get(index);
+      offsetVector.getMutator().set(index + 1, currentOffset + length);
+      data.setBytes(currentOffset, holder.buffer, holder.start, length);
+    }
+    
+    public void set(int index, ${minor.class}Holder holder){
+      int length = holder.end - holder.start;
+      int currentOffset = offsetVector.getAccessor().get(index);
+      offsetVector.getMutator().set(index + 1, currentOffset + length);
+      data.setBytes(currentOffset, holder.buffer, holder.start, length);
+    }
+    
     public void setValueCount(int valueCount) {
       ${minor.class}Vector.this.valueCount = valueCount;
-      data.writerIndex(valueCount * ${type.width});
+      data.writerIndex(offsetVector.getAccessor().get(valueCount));
       offsetVector.getMutator().setValueCount(valueCount+1);
     }
 
     @Override
-    public void randomizeData(){}
+    public void generateTestData(){
+      boolean even = true;
+      for(int i =0; i < valueCount; i++, even = !even){
+        if(even){
+          set(i, new String("aaaaa").getBytes(Charsets.UTF_8));
+        }else{
+          set(i, new String("bbbbbbbbbb").getBytes(Charsets.UTF_8));
+        }
+      }
+    }
   }
   
 }

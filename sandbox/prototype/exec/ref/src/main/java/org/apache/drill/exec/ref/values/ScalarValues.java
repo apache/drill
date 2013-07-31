@@ -42,7 +42,7 @@ public final class ScalarValues {
   
   public static class StringScalar extends BaseDataValue implements StringValue, ComparableValue, BasicEvaluator {
     private CharSequence seq;
-    private MajorType type = MajorType.newBuilder().setMinorType(MinorType.VARCHAR4).setMode(DataMode.OPTIONAL).build();
+    private MajorType type = MajorType.newBuilder().setMinorType(MinorType.VARCHAR).setMode(DataMode.OPTIONAL).build();
     
     public StringScalar(CharSequence seq){
       this.seq = seq;
@@ -123,7 +123,7 @@ public final class ScalarValues {
   
   public static class BooleanScalar extends BaseDataValue implements BooleanValue, BasicEvaluator{
     private boolean b;
-    private MajorType type = MajorType.newBuilder().setMinorType(MinorType.BOOLEAN).setMode(DataMode.OPTIONAL).build();
+    private MajorType type = MajorType.newBuilder().setMinorType(MinorType.BIT).setMode(DataMode.OPTIONAL).build();
     
     public BooleanScalar(boolean b){
       this.b = b;
@@ -441,7 +441,7 @@ public final class ScalarValues {
   }
   
   public static class BytesScalar extends BaseDataValue implements BytesValue{
-    private MajorType type = MajorType.newBuilder().setMinorType(MinorType.VARBINARY4).setMode(DataMode.OPTIONAL).build();
+    private MajorType type = MajorType.newBuilder().setMinorType(MinorType.VARBINARY).setMode(DataMode.OPTIONAL).build();
     private BytesWritable.Comparator comparator = new BytesWritable.Comparator();
     private final static HashFunction HASH = Hashing.murmur3_32();
 

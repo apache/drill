@@ -29,7 +29,7 @@ abstract class BaseValueVector implements ValueVector{
     public void reset(){}
   }
   
-  abstract class BaseMutator implements NonRepeatedMutator{
+  abstract class BaseMutator implements Mutator{
     public void reset(){}
   }
   

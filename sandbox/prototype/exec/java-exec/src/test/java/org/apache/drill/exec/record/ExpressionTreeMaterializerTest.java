@@ -38,7 +38,7 @@ public class ExpressionTreeMaterializerTest {
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExpressionTreeMaterializerTest.class);
 
-  final MajorType boolConstant = MajorType.newBuilder().setMode(DataMode.REQUIRED).setMinorType(MinorType.BOOLEAN).build();
+  final MajorType boolConstant = MajorType.newBuilder().setMode(DataMode.REQUIRED).setMinorType(MinorType.BIT).build();
   final MajorType bigIntType = MajorType.newBuilder().setMode(DataMode.REQUIRED).setMinorType(MinorType.BIGINT).build();
   final MajorType intType = MajorType.newBuilder().setMode(DataMode.REQUIRED).setMinorType(MinorType.INT).build();
 
@@ -81,7 +81,7 @@ public class ExpressionTreeMaterializerTest {
   public void testMaterializingLateboundTree(final @Injectable RecordBatch batch) throws SchemaChangeException {
     new NonStrictExpectations() {
       {
-        batch.getValueVectorId(new FieldReference("test", ExpressionPosition.UNKNOWN)); result = new TypedFieldId(Types.required(MinorType.BOOLEAN), -4);
+        batch.getValueVectorId(new FieldReference("test", ExpressionPosition.UNKNOWN)); result = new TypedFieldId(Types.required(MinorType.BIT), -4);
         batch.getValueVectorId(new FieldReference("test1", ExpressionPosition.UNKNOWN)); result = new TypedFieldId(Types.required(MinorType.BIGINT), -5);
       }
     };
@@ -190,7 +190,7 @@ public class ExpressionTreeMaterializerTest {
           public String[] getArgumentNamesByPosition() {
             return new String[0];
           }
-        }, OutputTypeDeterminer.FIXED_BOOLEAN), Lists.newArrayList((LogicalExpression) new FieldReference("test",
+        }, OutputTypeDeterminer.FIXED_BIT), Lists.newArrayList((LogicalExpression) new FieldReference("test",
         ExpressionPosition.UNKNOWN)), ExpressionPosition.UNKNOWN);
     LogicalExpression newExpr = ExpressionTreeMaterializer.materialize(functionCallExpr, batch, ec);
     assertTrue(newExpr instanceof FunctionCall);

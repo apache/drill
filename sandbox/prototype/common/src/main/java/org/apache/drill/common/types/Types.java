@@ -9,7 +9,7 @@ public class Types {
   
   public static final MajorType NULL = required(MinorType.NULL);
   public static final MajorType LATE_BIND_TYPE = optional(MinorType.LATE);
-  public static final MajorType REQUIRED_BOOLEAN = required(MinorType.BOOLEAN);
+  public static final MajorType REQUIRED_BIT = required(MinorType.BIT);
   
   public static enum Comparability{
     UNKNOWN, NONE, EQUAL, ORDERED;
@@ -41,14 +41,9 @@ public class Types {
   
   public static boolean isFixedWidthType(MajorType type){
     switch(type.getMinorType()){
-    case MSGPACK2:
-    case MSGPACK4:
-    case PROTO2:
-    case PROTO4:
-    case VARBINARY2:
-    case VARBINARY4:
-    case VARCHAR2:
-    case VARCHAR4:
+    case VARBINARY:
+    case VAR16CHAR:
+    case VARCHAR:
       return false;
     default:
       return true;
@@ -60,8 +55,9 @@ public class Types {
     if(type.getMode() == DataMode.REPEATED) return false;
     switch(type.getMinorType()){
     case FIXEDCHAR:
-    case VARCHAR2:
-    case VARCHAR4:
+    case FIXED16CHAR:
+    case VARCHAR:
+    case VAR16CHAR:
       return true;
     default: 
       return false;
@@ -72,8 +68,7 @@ public class Types {
     if(type.getMode() == DataMode.REPEATED) return false;
     switch(type.getMinorType()){
     case FIXEDBINARY:
-    case VARBINARY2:
-    case VARBINARY4:
+    case VARBINARY:
       return true;
     default: 
       return false;
@@ -91,11 +86,7 @@ public class Types {
     case REPEATMAP:
       return Comparability.NONE;
     case INTERVAL:
-    case BOOLEAN:
-    case MSGPACK2:
-    case MSGPACK4:
-    case PROTO2:
-    case PROTO4:
+    case BIT:
       return Comparability.EQUAL;
     default:
       return Comparability.ORDERED;

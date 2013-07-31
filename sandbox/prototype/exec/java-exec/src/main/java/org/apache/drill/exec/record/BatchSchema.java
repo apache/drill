@@ -23,13 +23,13 @@ import java.util.List;
 
 public class BatchSchema implements Iterable<MaterializedField> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BatchSchema.class);
-  final SelectionVectorMode selectionVector;
+  final SelectionVectorMode selectionVectorMode;
   ;
   private final List<MaterializedField> fields;
 
   BatchSchema(SelectionVectorMode selectionVector, List<MaterializedField> fields) {
     this.fields = fields;
-    this.selectionVector = selectionVector;
+    this.selectionVectorMode = selectionVector;
   }
 
   public static SchemaBuilder newBuilder() {
@@ -41,13 +41,13 @@ public class BatchSchema implements Iterable<MaterializedField> {
     return fields.iterator();
   }
 
-  public SelectionVectorMode getSelectionVector() {
-    return selectionVector;
+  public SelectionVectorMode getSelectionVectorMode() {
+    return selectionVectorMode;
   }
 
   @Override
   public String toString() {
-    return "BatchSchema [fields=" + fields + ", selectionVector=" + selectionVector + "]";
+    return "BatchSchema [fields=" + fields + ", selectionVector=" + selectionVectorMode + "]";
   }
 
   public static enum SelectionVectorMode {
@@ -59,6 +59,35 @@ public class BatchSchema implements Iterable<MaterializedField> {
       this.size = size;
     }
   }
+
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + ((fields == null) ? 0 : fields.hashCode());
+    result = prime * result + ((selectionVectorMode == null) ? 0 : selectionVectorMode.hashCode());
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj)
+      return true;
+    if (obj == null)
+      return false;
+    if (getClass() != obj.getClass())
+      return false;
+    BatchSchema other = (BatchSchema) obj;
+    if (fields == null) {
+      if (other.fields != null)
+        return false;
+    } else if (!fields.equals(other.fields))
+      return false;
+    if (selectionVectorMode != other.selectionVectorMode)
+      return false;
+    return true;
+  }
+  
 
 
 }

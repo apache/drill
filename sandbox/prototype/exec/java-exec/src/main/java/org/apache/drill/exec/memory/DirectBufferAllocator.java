@@ -31,6 +31,16 @@ public class DirectBufferAllocator extends BufferAllocator{
     // TODO: wrap it
     return buffer.directBuffer(size);
   }
+  
+  
+
+  @Override
+  protected boolean pre(int bytes) {
+    // TODO: check allocation
+    return true;
+  }
+
+
 
   @Override
   public long getAllocatedMemory() {

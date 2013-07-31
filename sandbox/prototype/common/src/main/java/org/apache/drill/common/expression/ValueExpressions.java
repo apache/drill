@@ -71,7 +71,7 @@ public class ValueExpressions {
 
     @Override
     public MajorType getMajorType() {
-      return Types.REQUIRED_BOOLEAN;
+      return Types.REQUIRED_BIT;
     }
 
     @Override
@@ -88,8 +88,7 @@ public class ValueExpressions {
   public static class DoubleExpression extends LogicalExpressionBase {
     private double d;
 
-    private static final MajorType DOUBLE_CONSTANT = MajorType.newBuilder().setMinorType(MinorType.FLOAT8)
-        .setMode(DataMode.REQUIRED).build();
+    private static final MajorType DOUBLE_CONSTANT = Types.required(MinorType.FLOAT8);
 
     public DoubleExpression(double d, ExpressionPosition pos) {
       super(pos);
@@ -114,8 +113,7 @@ public class ValueExpressions {
 
   public static class LongExpression extends LogicalExpressionBase {
 
-    private static final MajorType LONG_CONSTANT = MajorType.newBuilder().setMinorType(MinorType.BIGINT)
-        .setMode(DataMode.REQUIRED).build();
+    private static final MajorType LONG_CONSTANT = Types.required(MinorType.BIGINT);
 
     private long l;
 
@@ -141,8 +139,7 @@ public class ValueExpressions {
 
   public static class QuotedString extends ValueExpression<String> {
 
-    private static final MajorType QUOTED_STRING_CONSTANT = MajorType.newBuilder().setMinorType(MinorType.VARCHAR2)
-        .setMode(DataMode.REQUIRED).build();
+    private static final MajorType QUOTED_STRING_CONSTANT = Types.required(MinorType.VARCHAR);
 
     public QuotedString(String value, ExpressionPosition pos) {
       super(value, pos);

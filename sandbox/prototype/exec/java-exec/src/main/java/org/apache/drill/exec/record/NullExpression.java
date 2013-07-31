@@ -3,6 +3,7 @@ package org.apache.drill.exec.record;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -12,7 +13,7 @@ public class NullExpression implements LogicalExpression{
 
   public static final NullExpression INSTANCE = new NullExpression();
   
-  final MajorType t = MajorType.newBuilder().setMode(DataMode.OPTIONAL).setMinorType(MinorType.NULL).build();
+  final MajorType t = Types.optional(MinorType.NULL);
   
   @Override
   public MajorType getMajorType() {

@@ -31,7 +31,6 @@ import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.FixedWidthVector;
-import org.apache.drill.exec.vector.NonRepeatedMutator;
 import org.apache.drill.exec.vector.TypeHelper;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VariableWidthVector;
@@ -98,23 +97,13 @@ public class MockRecordReader implements RecordReader {
 
     recordsRead += recordSetSize;
     for(ValueVector v : valueVectors){
-      if(v instanceof FixedWidthVector){
-        ((FixedWidthVector)v).allocateNew(recordSetSize);
-      }else if(v instanceof VariableWidthVector){
-        ((VariableWidthVector)v).allocateNew(50*recordSetSize, recordSetSize);
-      }else{
-        throw new UnsupportedOperationException();
-      }
+      AllocationHelper.allocate(v, recordSetSize, 50);
       
       logger.debug("MockRecordReader:  Generating random data for VV of type " + v.getClass().getName());
       ValueVector.Mutator m = v.getMutator();
-      m.randomizeData();
+      m.generateTestData();
       
-      if(m instanceof NonRepeatedMutator){
-        ((NonRepeatedMutator)m).setValueCount(recordSetSize);  
-      }else{
-        throw new UnsupportedOperationException();
-      }
+      m.setValueCount(recordSetSize);
       
     }
     return recordSetSize;

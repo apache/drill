@@ -19,7 +19,7 @@ public abstract class FilterTemplate implements Filterer{
   public void setup(FragmentContext context, RecordBatch incoming, RecordBatch outgoing, TransferPair[] transfers) throws SchemaChangeException{
     this.transfers = transfers;
     this.outgoingSelectionVector = outgoing.getSelectionVector2();
-    this.svMode = incoming.getSchema().getSelectionVector();
+    this.svMode = incoming.getSchema().getSelectionVectorMode();
     
     switch(svMode){
     case NONE:

@@ -18,6 +18,7 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.parser.ExprLexer;
 import org.apache.drill.common.expression.parser.ExprParser;
 import org.apache.drill.common.expression.parser.ExprParser.parse_return;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -39,8 +40,7 @@ public class ExpressionTest {
 
   @Test
   public void testSpecial(final @Injectable RecordBatch batch) throws Exception {
-    final TypedFieldId tfid = new TypedFieldId(MajorType.newBuilder().setMode(DataMode.OPTIONAL)
-        .setMinorType(MinorType.INT).build(), 0);
+    final TypedFieldId tfid = new TypedFieldId(Types.optional(MinorType.INT),0);
 
     new NonStrictExpectations() {
       {
@@ -56,8 +56,7 @@ public class ExpressionTest {
 
   @Test
   public void testSchemaExpression(final @Injectable RecordBatch batch) throws Exception {
-    final TypedFieldId tfid = new TypedFieldId(MajorType.newBuilder().setMode(DataMode.OPTIONAL)
-        .setMinorType(MinorType.BIGINT).build(), 0);
+    final TypedFieldId tfid = new TypedFieldId(Types.optional(MinorType.BIGINT), 0);
 
     new Expectations() {
       {

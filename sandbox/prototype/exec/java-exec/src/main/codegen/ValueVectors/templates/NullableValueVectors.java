@@ -1,7 +1,11 @@
 <@pp.dropOutputFile />
 <#list types as type>
 <#list type.minor as minor>
-<@pp.changeOutputFile name="Nullable${minor.class}Vector.java" />
+
+<#assign className = "Nullable${minor.class}Vector" />
+<#assign valuesName = "${minor.class}Vector" />
+<@pp.changeOutputFile name="${className}.java" />
+
 package org.apache.drill.exec.vector;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -9,8 +13,7 @@ import static com.google.common.base.Preconditions.checkState;
 import io.netty.buffer.ByteBuf;
 
 import java.io.Closeable;
-import java.util.Random;
-import java.util.Vector;
+import java.util.List;
 
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.SchemaDefProtos;
@@ -23,6 +26,8 @@ import org.apache.drill.exec.vector.BitVector;
 import org.apache.drill.exec.vector.UInt2Vector;
 import org.apache.drill.exec.vector.UInt4Vector;
 
+import com.google.common.collect.Lists;
+
 /**
  * Nullable${minor.class} implements a vector of values which could be null.  Elements in the vector
  * are first checked against a fixed length vector of boolean values.  Then the element is retrieved
@@ -31,15 +36,15 @@ import org.apache.drill.exec.vector.UInt4Vector;
  * NB: this class is automatically generated from ValueVectorTypes.tdd using FreeMarker.
  */
 @SuppressWarnings("unused")
-public final class Nullable${minor.class}Vector extends BaseValueVector implements <#if type.major == "VarLen">VariableWidth<#else>FixedWidth</#if>Vector {
+public final class ${className} extends BaseValueVector implements <#if type.major == "VarLen">VariableWidth<#else>FixedWidth</#if>Vector{
 
   private int valueCount;
-  private final BitVector bits;
-  private final ${minor.class}Vector values;
+  final BitVector bits;
+  final ${valuesName} values;
   private final Accessor accessor = new Accessor();
   private final Mutator mutator = new Mutator();
 
-  public Nullable${minor.class}Vector(MaterializedField field, BufferAllocator allocator) {
+  public ${className}(MaterializedField field, BufferAllocator allocator) {
     super(field, allocator);
     this.bits = new BitVector(null, allocator);
     this.values = new ${minor.class}Vector(null, allocator);
@@ -53,7 +58,7 @@ public final class Nullable${minor.class}Vector extends BaseValueVector implemen
   public ByteBuf[] getBuffers() {
     return new ByteBuf[]{bits.data, values.data};
   }
-
+  
   @Override
   public void clear() {
     valueCount = 0;
@@ -75,7 +80,7 @@ public final class Nullable${minor.class}Vector extends BaseValueVector implemen
              .setBufferLength(getBufferSize())
              .build();
   }
-  
+
   @Override
   public void allocateNew(int totalBytes, int valueCount) {
     values.allocateNew(totalBytes, valueCount);
@@ -219,6 +224,11 @@ public final class Nullable${minor.class}Vector extends BaseValueVector implemen
       return bits.getAccessor().get(index);
     }
     
+    public void get(int index, Nullable${minor.class}Holder holder){
+      holder.isSet = bits.getAccessor().get(index);
+      values.getAccessor().get(index, holder);
+    }
+    
     @Override
     public Object getObject(int index) {
       return isNull(index) ? null : values.getAccessor().getObject(index);
@@ -231,7 +241,7 @@ public final class Nullable${minor.class}Vector extends BaseValueVector implemen
     public void reset(){}
   }
   
-  public final class Mutator implements NonRepeatedMutator{
+  public final class Mutator implements ValueVector.Mutator{
     
     private int setCount;
     
@@ -250,6 +260,25 @@ public final class Nullable${minor.class}Vector extends BaseValueVector implemen
       values.getMutator().set(index, value);
     }
 
+
+    public void setSkipNull(int index, ${minor.class}Holder holder){
+      values.getMutator().set(index, holder);
+    }
+
+    public void setSkipNull(int index, Nullable${minor.class}Holder holder){
+      values.getMutator().set(index, holder);
+    }
+    
+    public void set(int index, Nullable${minor.class}Holder holder){
+      bits.getMutator().set(index, holder.isSet);
+      values.getMutator().set(index, holder);
+    }
+
+    public void set(int index, ${minor.class}Holder holder){
+      bits.getMutator().set(index, 1);
+      values.getMutator().set(index, holder);
+    }
+    
     public void setValueCount(int valueCount) {
       assert valueCount >= 0;
       Nullable${minor.class}Vector.this.valueCount = valueCount;
@@ -261,8 +290,9 @@ public final class Nullable${minor.class}Vector extends BaseValueVector implemen
       return valueCount == setCount;
     }
     
-    public void randomizeData(){
-      throw new UnsupportedOperationException();
+    public void generateTestData(){
+      bits.getMutator().generateTestData();
+      values.getMutator().generateTestData();
     }
     
     public void reset(){

@@ -1,11 +1,13 @@
-import org.apache.drill.exec.vector.UInt2Vector;
-import org.apache.drill.exec.vector.UInt4Vector;
+
 
 <@pp.dropOutputFile />
 <#list types as type>
 <#list type.minor as minor>
 <@pp.changeOutputFile name="Repeated${minor.class}Vector.java" />
 package org.apache.drill.exec.vector;
+
+import org.apache.drill.exec.vector.UInt2Vector;
+import org.apache.drill.exec.vector.UInt4Vector;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
@@ -21,6 +23,8 @@ import org.apache.drill.exec.proto.UserBitShared.FieldMetadata;
 import org.apache.drill.exec.record.DeadBuf;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
+import java.util.List;
+import com.google.common.collect.Lists;
 
 @SuppressWarnings("unused")
 /**
@@ -39,7 +43,6 @@ import org.apache.drill.exec.record.TransferPair;
   private int parentValueCount;
   private int childValueCount;
   
-  private final UInt2Vector counts;    // number of repeated elements in each record
   private final UInt4Vector offsets;   // offsets to start of each record
   private final ${minor.class}Vector values;
   private final Mutator mutator = new Mutator();
@@ -48,7 +51,6 @@ import org.apache.drill.exec.record.TransferPair;
   
   public Repeated${minor.class}Vector(MaterializedField field, BufferAllocator allocator) {
     super(field, allocator);
-    this.counts = new UInt2Vector(null, allocator);
     this.offsets = new UInt4Vector(null, allocator);
     this.values = new ${minor.class}Vector(null, allocator);
   }
@@ -58,7 +60,7 @@ import org.apache.drill.exec.record.TransferPair;
   }
   
   int getBufferSize(){
-    return counts.getBufferSize() + offsets.getBufferSize() + values.getBufferSize();
+    return offsets.getBufferSize() + values.getBufferSize();
   }
   
   public TransferPair getTransferPair(){
@@ -66,7 +68,6 @@ import org.apache.drill.exec.record.TransferPair;
   }
   
   public void transferTo(Repeated${minor.class}Vector target){
-    counts.transferTo(target.counts);
     offsets.transferTo(target.offsets);
     values.transferTo(target.values);
     target.parentValueCount = parentValueCount;
@@ -108,8 +109,7 @@ import org.apache.drill.exec.record.TransferPair;
   }
   
   public void allocateNew(int totalBytes, int parentValueCount, int childValueCount) {
-    counts.allocateNew(parentValueCount);
-    offsets.allocateNew(parentValueCount);
+    offsets.allocateNew(parentValueCount+1);
     values.allocateNew(totalBytes, childValueCount);
     mutator.reset();
     accessor.reset();
@@ -121,8 +121,7 @@ import org.apache.drill.exec.record.TransferPair;
     this.parentValueCount = parentValueCount;
     this.childValueCount = childValueCount;
     int loaded = 0;
-    loaded += counts.load(parentValueCount, buf);
-    loaded += offsets.load(parentValueCount, buf.slice(loaded, buf.capacity() - loaded));
+    loaded += offsets.load(parentValueCount+1, buf.slice(loaded, buf.capacity() - loaded));
     loaded += values.load(dataBytes, childValueCount, buf.slice(loaded, buf.capacity() - loaded));
     return loaded;
   }
@@ -152,9 +151,8 @@ import org.apache.drill.exec.record.TransferPair;
   
   public void allocateNew(int parentValueCount, int childValueCount) {
     clear();
+    offsets.allocateNew(parentValueCount+1);
     values.allocateNew(childValueCount);
-    counts.allocateNew(parentValueCount);
-    offsets.allocateNew(parentValueCount);
     mutator.reset();
     accessor.reset();
   }
@@ -164,8 +162,7 @@ import org.apache.drill.exec.record.TransferPair;
     this.parentValueCount = parentValueCount;
     this.childValueCount = childValueCount;
     int loaded = 0;
-    loaded += counts.load(parentValueCount, buf);
-    loaded += offsets.load(parentValueCount, buf.slice(loaded, buf.capacity() - loaded));
+    loaded += offsets.load(parentValueCount+1, buf.slice(loaded, buf.capacity() - loaded));
     loaded += values.load(childValueCount, buf.slice(loaded, buf.capacity() - loaded));
     return loaded;
   }
@@ -177,39 +174,12 @@ import org.apache.drill.exec.record.TransferPair;
     assert metadata.getBufferLength() == loaded;
   }
   </#if>
-  
-//  /**
-//   * Get the size requirement (in bytes) for the given number of values.  Only accurate
-//   * for fixed width value vectors.
-//   */
-//  public int getTotalSizeFromCount(int valueCount) {
-//    return values.getSizeFromCount(valueCount) +
-//           counts.getSizeFromCount(valueCount) +
-//           offsets.getSizeFromCount(valueCount);
-//  }
-//  
-//  public int getSizeFromCount(int valueCount){
-//    return getTotalSizeFromCount(valueCount);
-//  }
-
-//  /**
-//   * Get the explicitly specified size of the allocated buffer, if available.  Otherwise
-//   * calculate the size based on width and record count.
-//   */
-//  public int getAllocatedSize() {
-//    return values.getAllocatedSize() +
-//           counts.getAllocatedSize() +
-//           offsets.getAllocatedSize();
-//  }
-
-
 
   public ByteBuf[] getBuffers() {
-    return new ByteBuf[]{counts.data, offsets.data, values.data};
+    return new ByteBuf[]{offsets.data, values.data};
   }
 
   public void clear(){
-    counts.clear();
     offsets.clear();
     values.clear();
     parentValueCount = 0;
@@ -229,11 +199,17 @@ import org.apache.drill.exec.record.TransferPair;
      * Get the elements at the given index.
      */
     public int getCount(int index) {
-      return counts.getAccessor().get(index);
+      return offsets.getAccessor().get(index+1) - offsets.getAccessor().get(index);
     }
     
     public Object getObject(int index) {
-      throw new UnsupportedOperationException();
+      List<Object> vals = Lists.newArrayList();
+      int start = offsets.getAccessor().get(index);
+      int end = offsets.getAccessor().get(index+1);
+      for(int i = start; i < end; i++){
+        vals.add(values.getAccessor().getObject(i));
+      }
+      return vals;
     }
 
     /**
@@ -247,8 +223,6 @@ import org.apache.drill.exec.record.TransferPair;
     public <#if type.major == "VarLen">byte[]
            <#else>${minor.javaType!type.javaType}
            </#if> get(int index, int positionIndex) {
-
-      assert positionIndex < counts.getAccessor().get(index);
       return values.getAccessor().get(offsets.getAccessor().get(index) + positionIndex);
     }
 
@@ -286,21 +260,40 @@ import org.apache.drill.exec.record.TransferPair;
                                <#elseif type.major == "VarLen"> byte[]
                                <#else> int
                                </#if> value) {
-      counts.getMutator().set(index, counts.getAccessor().get(index) + 1);
-      offsets.getMutator().set(index, offsets.getAccessor().get(index - 1) + counts.getAccessor().get(index-1));
-      values.getMutator().set(offsets.getAccessor().get(index), value);
+      int nextOffset = offsets.getAccessor().get(index+1);
+      values.getMutator().set(nextOffset, value);
+      offsets.getMutator().set(index+1, nextOffset+1);
     }
 
-    
-    public void setGroupAndValueCount(int groupCount, int valueCount) {
-      parentValueCount = groupCount;
-      childValueCount = valueCount;
-      counts.getMutator().setValueCount(groupCount);
-      offsets.getMutator().setValueCount(groupCount);
-      values.getMutator().setValueCount(valueCount);
+    public void add(int index, ${minor.class}Holder holder){
+      int nextOffset = offsets.getAccessor().get(index+1);
+      values.getMutator().set(nextOffset, holder);
+      offsets.getMutator().set(index+1, nextOffset+1);
     }
     
-    public void randomizeData(){
+    public void add(int index, Repeated${minor.class}Holder holder){
+      
+      ${minor.class}Vector.Accessor accessor = holder.vector.getAccessor();
+      ${minor.class}Holder innerHolder = new ${minor.class}Holder();
+      
+      for(int i = holder.start; i < holder.end; i++){
+        accessor.get(i, innerHolder);
+        add(index, innerHolder);
+      }
+    }
+    
+    /**
+     * Set the number of value groups in this repeated field.
+     * @param groupCount Count of Value Groups.
+     */
+    public void setValueCount(int groupCount) {
+      parentValueCount = groupCount;
+      childValueCount = offsets.getAccessor().get(groupCount+1);
+      offsets.getMutator().setValueCount(groupCount);
+      values.getMutator().setValueCount(childValueCount);
+    }
+    
+    public void generateTestData(){
       throw new UnsupportedOperationException();
     }
     

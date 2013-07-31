@@ -27,5 +27,5 @@ public interface VariableWidthVector extends ValueVector{
    */
   public int load(int dataBytes, int valueCount, ByteBuf buf);
   
-  public abstract NonRepeatedMutator getMutator();
+  public abstract Mutator getMutator();
 }

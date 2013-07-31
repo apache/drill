@@ -1,62 +1,77 @@
 {
+  modes: [
+    {name: "Optional", prefix: "Nullable"},
+    {name: "Required", prefix: ""},
+    {name: "Repeated", prefix: "Repeated"}
+    ],
   types: [
     {
       major: "Fixed",
       width: 1,
       javaType: "byte",
+      boxedType: "Byte",
       minor: [
-        { class: "TinyInt" },
-        { class: "UInt1" }
+        { class: "TinyInt", valueHolder: "IntHolder"},
+        { class: "UInt1", valueHolder: "UInt1Holder"}
       ]
     },
     {
       major: "Fixed",
       width: 2,
       javaType: "char",
+      boxedType: "Character",
       minor: [
-        { class: "UInt2" }
+        { class: "UInt2", valueHolder: "UInt2Holder"}
       ]
     },    {
       major: "Fixed",
       width: 2,
       javaType: "short",
+      boxedType: "Short",
       minor: [
-        { class: "SmallInt" },
+        { class: "SmallInt", valueHolder: "Int2Holder"},
       ]
     },
     {
       major: "Fixed",
       width: 4,
       javaType: "int",
+      boxedType: "Integer",
       minor: [
-        { class: "Int" },
-        { class: "UInt4" },
-        { class: "Decimal4", maxPrecisionDigits: 8, scale: 1, javaType: "float"},
+        { class: "Int", valueHolder: "IntHolder" },
+        { class: "UInt4", valueHolder: "UInt4Holder" },
         { class: "Float4", javaType: "float" },
+        <#-- 
+        { class: "Decimal4", maxPrecisionDigits: 8, scale: 4, javaType: "float"},
         { class: "Date" }
+        -->
       ]
     },
     {
       major: "Fixed",
       width: 8,
       javaType: "long",
+      boxedType: "Long",
       minor: [
         { class: "BigInt" },
         { class: "UInt8" },
-        { class: "Decimal8", maxPrecisionDigits: 18, scale: 1, javaType: "double"},
-        { class: "Float8", javaType: "double" },
-        { class: "Money", maxPrecisionDigits: 2, scale: 1, javaType: "double" }
+        { class: "Float8", javaType: "double" , boxedType: "Double"},
+        <#-- 
+        { class: "Decimal8", maxPrecisionDigits: 18, scale: 4, javaType: "double", boxedType: "Double"},
+        { class: "Money", maxPrecisionDigits: 2, scale: 1, }, 
         { class: "Time" },
         { class: "TimeStamp" },
         { class: "DateTime" }
+        -->
       ]
     },
+    <#--
     {
       major: "Fixed",
       width: 12,
       javaType: "ByteBuf",
       minor: [
-        { class: "Decimal12", maxPrecisionDigits: 28, scale: 1},
+        { class: "Decimal12", maxPrecisionDigits: 28, scale: 5},
         { class: "TimeTZ" },
         { class: "Interval" }
       ]
@@ -66,29 +81,18 @@
       width: 16,
       javaType: "ByteBuf",
       minor: [
-        { class: "Decimal16", maxPrecisionDigits: 37, scale: 1}
+        { class: "Decimal16", maxPrecisionDigits: 37, scale: 6}
       ]
     },
-    {
-      major: "VarLen",
-      width: 2,
-      javaType: "short",
-      minor: [
-        { class: "VarBinary2" },
-        { class: "VarChar2" },
-        { class: "Proto2" },
-        { class: "MsgPack2" }
-      ]
-    },
+    -->
     {
       major: "VarLen",
       width: 4,
       javaType: "int",
       minor: [
-        { class: "VarBinary4" },
-        { class: "VarChar4" }
-        { class: "Proto4" },
-        { class: "MsgPack4" }
+        { class: "VarBinary" },
+        { class: "VarChar" }
+        { class: "Var16Char" }
       ]
     },
     {

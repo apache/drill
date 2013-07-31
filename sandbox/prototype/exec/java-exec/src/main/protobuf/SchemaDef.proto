@@ -26,6 +26,6 @@ message NamePart {
 message FieldDef {
   repeated NamePart name = 1; // multipart description of entire field name
   optional common.MajorType major_type = 2; // the type associated with this field.
-  repeated FieldDef field = 3; // only in the cases of type == MAP or REPEATMAP
+  //repeated FieldDef field = 3; // only in the cases of type == MAP or REPEATMAP
   
 }

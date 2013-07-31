@@ -9,16 +9,9 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.compile.TemplateClassDefinition;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.expr.holders.BooleanHolder;
-import org.apache.drill.exec.expr.holders.Float8Holder;
-import org.apache.drill.exec.expr.holders.IntHolder;
-import org.apache.drill.exec.expr.holders.LongHolder;
-import org.apache.drill.exec.expr.holders.NullableBooleanHolder;
-import org.apache.drill.exec.expr.holders.NullableFloat8Holder;
-import org.apache.drill.exec.expr.holders.NullableIntHolder;
-import org.apache.drill.exec.expr.holders.NullableLongHolder;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.RecordBatch;
+import org.apache.drill.exec.vector.TypeHelper;
 
 import com.google.common.base.Preconditions;
 import com.sun.codemodel.JBlock;
@@ -200,35 +193,6 @@ public class CodeGenerator<T> {
   }
   
   public JType getHolderType(MajorType t){
-    switch(t.getMode()){
-    case REQUIRED:
-      switch(t.getMinorType()){
-      case BOOLEAN:
-        return model._ref(BooleanHolder.class);
-      case INT:
-        return model._ref(IntHolder.class);
-      case BIGINT:  
-        return model._ref(LongHolder.class);
-      case FLOAT8:
-        return model._ref(Float8Holder.class);
-      
-      }
-      
-    case OPTIONAL:
-      switch(t.getMinorType()){
-      case BOOLEAN:
-        return model._ref(NullableBooleanHolder.class);
-      case INT:
-        return model._ref(NullableIntHolder.class);
-      case BIGINT:  
-        return model._ref(NullableLongHolder.class);
-      case FLOAT8:
-        return model._ref(NullableFloat8Holder.class);
-      }
-
-    }
-    
-    
-    throw new UnsupportedOperationException();
+    return TypeHelper.getHolderType(model, t.getMinorType(), t.getMode());
   }
 }

@@ -14,9 +14,10 @@ import org.apache.drill.exec.proto.UserBitShared.FieldMetadata;
 import org.apache.drill.exec.record.DeadBuf;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.BaseValueVector;
-import org.apache.drill.exec.vector.MsgPack2Vector;
 
+import java.util.Arrays;
 import java.util.Random;
+
 
 /**
  * ${minor.class} implements a vector of fixed width values.  Elements in the vector are accessed
@@ -141,6 +142,16 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
       return dst;
     }
 
+    public void get(int index, ${minor.class}Holder holder){
+      holder.buffer = data;
+      holder.start = index * ${type.width};
+    }
+    
+    void get(int index, Nullable${minor.class}Holder holder){
+      holder.buffer = data;
+      holder.start = index * ${type.width};
+    }
+
     @Override
     public Object getObject(int index) {
       ByteBuf dst = allocator.buffer(${type.width});
@@ -156,6 +167,14 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
 
     public Object getObject(int index) {
       return get(index);
+    }
+    
+    public void get(int index, ${minor.class}Holder holder){
+      holder.value = data.get${(minor.javaType!type.javaType)?cap_first}(index * ${type.width});
+    }
+
+    void get(int index, Nullable${minor.class}Holder holder){
+      holder.value = data.get${(minor.javaType!type.javaType)?cap_first}(index * ${type.width});
     }
 
 
@@ -186,14 +205,22 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
      data.setBytes(index * ${type.width}, value);
    }
    
+   public void set(int index, ${minor.class}Holder holder){
+     data.setBytes(index * ${type.width}, holder.buffer, holder.start, ${type.width});
+   }
+   
+   void set(int index, Nullable${minor.class}Holder holder){
+     data.setBytes(index * ${type.width}, holder.buffer, holder.start, ${type.width});
+   }
+   
    @Override
-   public void randomizeData() {
-     if (data != DeadBuf.DEAD_BUFFER) {
-       Random r = new Random();
-       for(int i =0; i < data.capacity()-${type.width}; i += ${type.width}){
-         byte[] bytes = new byte[${type.width}];
-         r.nextBytes(bytes);
-         data.setByte(i, bytes[0]);
+   public void generateTestData() {
+     setValueCount(getValueCapacity());
+     boolean even = true;
+     for(int i =0; i < valueCount; i++, even = !even){
+       byte b = even ? Byte.MIN_VALUE : Byte.MAX_VALUE;
+       for(int w = 0; w < ${type.width}; w++){
+         data.setByte(i + w, b);
        }
      }
    }
@@ -203,19 +230,30 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
      data.set${(minor.javaType!type.javaType)?cap_first}(index * ${type.width}, value);
    }
    
+   public void set(int index, ${minor.class}Holder holder){
+     data.set${(minor.javaType!type.javaType)?cap_first}(index * ${type.width}, holder.value);
+   }
+
+   void set(int index, Nullable${minor.class}Holder holder){
+     data.set${(minor.javaType!type.javaType)?cap_first}(index * ${type.width}, holder.value);
+   }
+
    @Override
-   public void randomizeData() {
-     if (data != DeadBuf.DEAD_BUFFER) {
-       Random r = new Random();
-       for(int i =0; i < data.capacity()-${type.width}; i += ${type.width}){
-         data.set${(minor.javaType!type.javaType)?cap_first}(i,
-             r.next<#if (type.width >= 4)>${(minor.javaType!type.javaType)?cap_first}
-                   <#else>Int
-                   </#if>());
+   public void generateTestData() {
+     setValueCount(getValueCapacity());
+     boolean even = true;
+     for(int i =0; i < valueCount; i++, even = !even){
+       if(even){
+         set(i, ${minor.boxedType!type.boxedType}.MIN_VALUE);
+       }else{
+         set(i, ${minor.boxedType!type.boxedType}.MAX_VALUE);
        }
      }
    }
+
   </#if> <#-- type.width -->
+  
+
   
    public void setValueCount(int valueCount) {
      ${minor.class}Vector.this.valueCount = valueCount;

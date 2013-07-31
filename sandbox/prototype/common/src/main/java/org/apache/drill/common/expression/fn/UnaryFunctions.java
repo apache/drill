@@ -29,8 +29,8 @@ public class UnaryFunctions implements CallProvider{
   @Override
   public FunctionDefinition[] getFunctionDefintions() {
     return new FunctionDefinition[]{
-        FunctionDefinition.operator("isNull", new ArgumentValidators.AnyTypeAllowed(1), new OutputTypeDeterminer.FixedType(Types.REQUIRED_BOOLEAN)),
-        FunctionDefinition.operator("not", new BasicArgumentValidator(Types.REQUIRED_BOOLEAN), new OutputTypeDeterminer.FixedType(Types.REQUIRED_BOOLEAN), "!"),
+        FunctionDefinition.operator("isNull", new ArgumentValidators.AnyTypeAllowed(1), new OutputTypeDeterminer.FixedType(Types.REQUIRED_BIT)),
+        FunctionDefinition.operator("not", new BasicArgumentValidator(Types.REQUIRED_BIT), new OutputTypeDeterminer.FixedType(Types.REQUIRED_BIT), "!"),
         FunctionDefinition.operator("negative", new ArgumentValidators.NumericTypeAllowed(1, true), new OutputTypeDeterminer.SameAsFirstInput(), "u-"),
     };
 

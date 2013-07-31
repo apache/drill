@@ -13,7 +13,7 @@ import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.BitVector;
 import org.apache.drill.exec.vector.NullableFloat4Vector;
 import org.apache.drill.exec.vector.NullableUInt4Vector;
-import org.apache.drill.exec.vector.NullableVarChar2Vector;
+import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.TypeHelper;
 import org.apache.drill.exec.vector.UInt4Vector;
 import org.junit.Test;
@@ -62,7 +62,7 @@ public class TestValueVector {
     MajorType.Builder typeBuilder = MajorType.newBuilder();
     FieldDef.Builder defBuilder = FieldDef.newBuilder();
     typeBuilder
-        .setMinorType(MinorType.VARCHAR2)
+        .setMinorType(MinorType.VARCHAR)
         .setMode(DataMode.OPTIONAL)
         .setWidth(2);
     defBuilder
@@ -70,8 +70,8 @@ public class TestValueVector {
     MaterializedField field = MaterializedField.create(defBuilder.build());
 
     // Create a new value vector for 1024 integers
-    NullableVarChar2Vector v = new NullableVarChar2Vector(field, allocator);
-    NullableVarChar2Vector.Mutator m = v.getMutator();
+    NullableVarCharVector v = new NullableVarCharVector(field, allocator);
+    NullableVarCharVector.Mutator m = v.getMutator();
     v.allocateNew(1024*10, 1024);
 
     // Create and set 3 sample strings
@@ -254,7 +254,7 @@ public class TestValueVector {
     MajorType.Builder typeBuilder = MajorType.newBuilder();
     FieldDef.Builder defBuilder = FieldDef.newBuilder();
     typeBuilder
-        .setMinorType(MinorType.BOOLEAN)
+        .setMinorType(MinorType.BIT)
         .setMode(DataMode.REQUIRED)
         .setWidth(4);
     defBuilder

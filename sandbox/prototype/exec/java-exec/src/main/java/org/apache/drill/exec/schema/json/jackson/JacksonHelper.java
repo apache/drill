@@ -20,6 +20,7 @@ package org.apache.drill.exec.schema.json.jackson;
 
 import java.io.IOException;
 
+import org.apache.drill.common.types.Types;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -29,13 +30,13 @@ import com.fasterxml.jackson.core.JsonToken;
 
 public class JacksonHelper {
 
-    public static final MajorType STRING_TYPE = MajorType.newBuilder().setMinorType(MinorType.VARCHAR4).setMode(DataMode.OPTIONAL).build();
-    public static final MajorType BOOLEAN_TYPE = MajorType.newBuilder().setMinorType(MinorType.BOOLEAN).setMode(DataMode.OPTIONAL).build();
-    public static final MajorType ARRAY_TYPE = MajorType.newBuilder().setMinorType(MinorType.LATE).setMode(DataMode.REPEATED).build();
-    public static final MajorType MAP_TYPE = MajorType.newBuilder().setMinorType(MinorType.MAP).setMode(DataMode.REPEATED).build();
-    public static final MajorType INT_TYPE = MajorType.newBuilder().setMinorType(MinorType.INT).setMode(DataMode.OPTIONAL).build();
-    public static final MajorType FLOAT_TYPE = MajorType.newBuilder().setMinorType(MinorType.FLOAT4).setMode(DataMode.OPTIONAL).build();
-    public static final MajorType NULL_TYPE = MajorType.newBuilder().setMinorType(MinorType.LATE).setMode(DataMode.OPTIONAL).build();
+    public static final MajorType STRING_TYPE = Types.optional(MinorType.VARCHAR);
+    public static final MajorType BOOLEAN_TYPE = Types.optional(MinorType.BIT);
+    public static final MajorType ARRAY_TYPE = Types.repeated(MinorType.LATE);
+    public static final MajorType MAP_TYPE = Types.repeated(MinorType.MAP);
+    public static final MajorType INT_TYPE = Types.optional(MinorType.INT);
+    public static final MajorType FLOAT_TYPE = Types.optional(MinorType.FLOAT4);
+    public static final MajorType NULL_TYPE = Types.optional(MinorType.LATE);
 
     public static MajorType getFieldType(JsonToken token) {
         switch(token) {
@@ -64,11 +65,11 @@ public class JacksonHelper {
         switch (fieldType) {
             case INT:
                 return parser.getIntValue();
-            case VARCHAR4:
+            case VARCHAR:
                 return parser.getValueAsString();
             case FLOAT4:
                 return parser.getFloatValue();
-            case BOOLEAN:
+            case BIT:
                 return parser.getBooleanValue();
             case LATE:
                 return null;

@@ -34,7 +34,6 @@ import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.AllocationHelper;
-import org.apache.drill.exec.vector.NonRepeatedMutator;
 import org.apache.drill.exec.vector.TypeHelper;
 import org.apache.drill.exec.vector.ValueVector;
 
@@ -134,11 +133,7 @@ public class ProjectRecordBatch implements RecordBatch{
       projector.projectRecords(recordCount, 0);
       for(ValueVector v : this.outputVectors){
         ValueVector.Mutator m = v.getMutator();
-        if(m instanceof NonRepeatedMutator){
-          ((NonRepeatedMutator) m).setValueCount(recordCount);
-        }else{
-          throw new UnsupportedOperationException();
-        }
+        m.setValueCount(recordCount);
       }
       return upstream; // change if upstream changed, otherwise normal.
     default:
@@ -171,7 +166,7 @@ public class ProjectRecordBatch implements RecordBatch{
       }
       
       // add value vector to transfer if direct reference and this is allowed, otherwise, add to evaluation stack.
-      if(expr instanceof ValueVectorReadExpression && incoming.getSchema().getSelectionVector() == SelectionVectorMode.NONE){
+      if(expr instanceof ValueVectorReadExpression && incoming.getSchema().getSelectionVectorMode() == SelectionVectorMode.NONE){
         ValueVectorReadExpression vectorRead = (ValueVectorReadExpression) expr;
         ValueVector vvIn = incoming.getValueVectorById(vectorRead.getFieldId(), TypeHelper.getValueVectorClass(vectorRead.getMajorType().getMinorType(), vectorRead.getMajorType().getMode()));
         Preconditions.checkNotNull(incoming);
@@ -190,7 +185,7 @@ public class ProjectRecordBatch implements RecordBatch{
       
     }
     
-    SchemaBuilder bldr = BatchSchema.newBuilder().setSelectionVectorMode(incoming.getSchema().getSelectionVector());
+    SchemaBuilder bldr = BatchSchema.newBuilder().setSelectionVectorMode(incoming.getSchema().getSelectionVectorMode());
     for(ValueVector v : outputVectors){
       bldr.addField(v.getField());
     }

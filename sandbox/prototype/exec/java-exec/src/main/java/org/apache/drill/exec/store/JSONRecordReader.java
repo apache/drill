@@ -35,10 +35,9 @@ import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.NullableBitVector;
 import org.apache.drill.exec.vector.NullableFloat4Vector;
 import org.apache.drill.exec.vector.NullableIntVector;
-import org.apache.drill.exec.vector.NullableVarChar4Vector;
+import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.TypeHelper;
 import org.apache.drill.exec.vector.ValueVector;
-
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
@@ -367,20 +366,20 @@ public class JSONRecordReader implements RecordReader {
                     }
                     return holder.hasEnoughSpace(32);
                 }
-                case VARCHAR4: {
+                case VARCHAR: {
                     if (val == null) {
                         return (index + 1) * 4 <= holder.getLength();
                     } else {
                         byte[] bytes = ((String) val).getBytes(UTF_8);
                         int length = bytes.length;
                         holder.incAndCheckLength(length);
-                        NullableVarChar4Vector varLen4 = (NullableVarChar4Vector) holder.getValueVector();
-                        NullableVarChar4Vector.Mutator m = varLen4.getMutator();
+                        NullableVarCharVector varLen4 = (NullableVarCharVector) holder.getValueVector();
+                        NullableVarCharVector.Mutator m = varLen4.getMutator();
                         m.set(index, bytes);
                         return holder.hasEnoughSpace(length);
                     }
                 }
-                case BOOLEAN: {
+                case BIT: {
                     holder.incAndCheckLength(1);
                     NullableBitVector bit = (NullableBitVector) holder.getValueVector();
                     if (val != null) {
