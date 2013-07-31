@@ -182,8 +182,8 @@ public class EvaluationVisitor extends AbstractExprVisitor<HoldingContainer, Cod
     
     if(out.isOptional()){
       JBlock blk = generator.getBlock();
-      blk.assign(out.getIsSet(), vv1.invoke("isSet").arg(JExpr.direct("inIndex")));
-      JConditional jc = blk._if(out.getIsSet());
+      blk.assign(out.getIsSet(), vv1.invoke("getAccessor").invoke("isSet").arg(JExpr.direct("inIndex")));
+      JConditional jc = blk._if(out.getIsSet().eq(JExpr.lit(1)));
       jc._then() //
         .assign(out.getValue(), vv1.invoke("getAccessor").invoke("get").arg(JExpr.direct("inIndex"))); //
         //.assign(out.getIsSet(), JExpr.lit(1));

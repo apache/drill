@@ -60,7 +60,8 @@ public class MockRecordReader implements RecordReader {
 
   private ValueVector getVector(String name, MajorType type, int length) {
     assert context != null : "Context shouldn't be null.";
-    if(type.getMode() != DataMode.REQUIRED) throw new UnsupportedOperationException();
+    // TODO: ensure supporting implementations are in place before removing:
+//    if(type.getMode() != DataMode.REQUIRED) throw new UnsupportedOperationException();
     
     MaterializedField f = MaterializedField.create(new SchemaPath(name, ExpressionPosition.UNKNOWN), type);
     ValueVector v;

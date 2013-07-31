@@ -1,3 +1,5 @@
+import java.lang.UnsupportedOperationException;
+
 <@pp.dropOutputFile />
 <#list types as type>
 <#list type.minor as minor>
