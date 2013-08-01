@@ -40,12 +40,12 @@ public abstract class ProjectorTemplate implements Projector {
       
     case NONE:
       
-      for(TransferPair t : transfers){
-        t.transfer();
-      }
       final int countN = recordCount;
       for (int i = 0; i < countN; i++, firstOutputIndex++) {
         doEval(i, firstOutputIndex);
+      }
+      for(TransferPair t : transfers){
+          t.transfer();
       }
       return recordCount;
       

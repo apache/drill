@@ -110,7 +110,7 @@ public class FunctionHolder {
     //g.getBlock().directStatement(String.format("//---- start of eval portion of %s function. ----//", functionName));
     
     JBlock sub = new JBlock(true, true);
-    
+    JBlock topSub = sub;
     HoldingContainer out = null;
 
     // add outside null handling if it is defined.
@@ -129,7 +129,7 @@ public class FunctionHolder {
       if(e != null){
         // if at least one expression must be checked, set up the conditional.
         returnValue.type = returnValue.type.toBuilder().setMode(DataMode.OPTIONAL).build();
-        out = g.declare(returnValue.type, false);
+        out = g.declare(returnValue.type);
         e = e.eq(JExpr.lit(0));
         JConditional jc = sub._if(e);
         jc._then().assign(out.getIsSet(), JExpr.lit(0));
@@ -140,11 +140,12 @@ public class FunctionHolder {
     if(out == null) out = g.declare(returnValue.type);
     
     // add the subblock after the out declaration.
-    g.getBlock().add(sub);
+    g.getBlock().add(topSub);
     
     
     JVar internalOutput = sub.decl(JMod.FINAL, g.getHolderType(returnValue.type), returnValue.name, JExpr._new(g.getHolderType(returnValue.type)));
     addProtectedBlock(g, sub, evalBody, inputVariables);
+    if (sub != topSub) sub.assign(internalOutput.ref("isSet"),JExpr.lit(1));// Assign null if NULL_IF_NULL mode
     sub.assign(out.getHolder(), internalOutput);
 
     return out;
