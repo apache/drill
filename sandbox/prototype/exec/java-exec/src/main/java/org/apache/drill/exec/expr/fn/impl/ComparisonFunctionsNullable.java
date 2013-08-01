@@ -85,4 +85,148 @@ public class ComparisonFunctionsNullable {
             }
         }
     }
+
+    @FunctionTemplate(name = "less than", scope = FunctionTemplate.FunctionScope.SIMPLE)
+    public static class NullableIntLessThan implements DrillFunc {
+
+        @Param NullableIntHolder left;
+        @Param NullableIntHolder right;
+        @Output BitHolder out;
+
+        public void setup(RecordBatch b) {}
+
+        public void eval() {
+            if (left.isSet  == 0 || right.isSet == 0) {
+                out.value = 0;
+            } else {
+                out.value = (left.value < right.value) ? 1 : 0;
+            }
+        }
+    }
+
+    @FunctionTemplate(name = "less than", scope = FunctionTemplate.FunctionScope.SIMPLE)
+    public static class NullableBigIntLessThan implements DrillFunc {
+
+        @Param NullableBigIntHolder left;
+        @Param NullableBigIntHolder right;
+        @Output BitHolder out;
+
+        public void setup(RecordBatch b) {}
+
+        public void eval() {
+            if (left.isSet  == 0 || right.isSet == 0) {
+                out.value = 0;
+            } else {
+                out.value = (left.value < right.value) ? 1 : 0;
+            }
+        }
+    }
+
+    @FunctionTemplate(name = "less than or equal to", scope = FunctionTemplate.FunctionScope.SIMPLE)
+    public static class NullableIntLessThanEqual implements DrillFunc {
+
+        @Param NullableIntHolder left;
+        @Param NullableIntHolder right;
+        @Output BitHolder out;
+
+        public void setup(RecordBatch b) {}
+
+        public void eval() {
+            if (left.isSet  == 0 || right.isSet == 0) {
+                out.value = 0;
+            } else {
+                out.value = (left.value <= right.value) ? 1 : 0;
+            }
+        }
+    }
+
+    @FunctionTemplate(name = "less than or equal to", scope = FunctionTemplate.FunctionScope.SIMPLE)
+    public static class NullableBigIntLessThanEqual implements DrillFunc {
+
+        @Param NullableBigIntHolder left;
+        @Param NullableBigIntHolder right;
+        @Output BitHolder out;
+
+        public void setup(RecordBatch b) {}
+
+        public void eval() {
+            if (left.isSet  == 0 || right.isSet == 0) {
+                out.value = 0;
+            } else {
+                out.value = (left.value <= right.value) ? 1 : 0;
+            }
+        }
+    }
+
+    @FunctionTemplate(name = "greater than", scope = FunctionTemplate.FunctionScope.SIMPLE)
+    public static class NullableIntGreaterThan implements DrillFunc {
+
+        @Param NullableIntHolder left;
+        @Param NullableIntHolder right;
+        @Output BitHolder out;
+
+        public void setup(RecordBatch b) {}
+
+        public void eval() {
+            if (left.isSet  == 0 || right.isSet == 0) {
+                out.value = 0;
+            } else {
+                out.value = (left.value > right.value) ? 1 : 0;
+            }
+        }
+    }
+
+    @FunctionTemplate(name = "greater than", scope = FunctionTemplate.FunctionScope.SIMPLE)
+    public static class NullableBigIntGreaterThan implements DrillFunc {
+
+        @Param NullableBigIntHolder left;
+        @Param NullableBigIntHolder right;
+        @Output BitHolder out;
+
+        public void setup(RecordBatch b) {}
+
+        public void eval() {
+            if (left.isSet  == 0 || right.isSet == 0) {
+                out.value = 0;
+            } else {
+                out.value = (left.value > right.value) ? 1 : 0;
+            }
+        }
+    }
+
+    @FunctionTemplate(name = "greater than or equal to", scope = FunctionTemplate.FunctionScope.SIMPLE)
+    public static class NullableIntGreaterThanEqual implements DrillFunc {
+
+        @Param NullableIntHolder left;
+        @Param NullableIntHolder right;
+        @Output BitHolder out;
+
+        public void setup(RecordBatch b) {}
+
+        public void eval() {
+            if (left.isSet  == 0 || right.isSet == 0) {
+                out.value = 0;
+            } else {
+                out.value = (left.value >= right.value) ? 1 : 0;
+            }
+        }
+    }
+
+    @FunctionTemplate(name = "greater than or equal to", scope = FunctionTemplate.FunctionScope.SIMPLE)
+    public static class NullableBigIntGreaterThanEqual implements DrillFunc {
+
+        @Param NullableBigIntHolder left;
+        @Param NullableBigIntHolder right;
+        @Output BitHolder out;
+
+        public void setup(RecordBatch b) {}
+
+        public void eval() {
+            if (left.isSet  == 0 || right.isSet == 0) {
+                out.value = 0;
+            } else {
+                out.value = (left.value >= right.value) ? 1 : 0;
+            }
+        }
+    }
 }
