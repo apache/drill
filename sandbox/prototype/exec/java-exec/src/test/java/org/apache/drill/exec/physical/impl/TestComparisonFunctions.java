@@ -56,7 +56,7 @@ public class TestComparisonFunctions {
     }
 
     @Test
-    public void testLongEqual(@Injectable final DrillbitContext bitContext,
+    public void testBigIntEqual(@Injectable final DrillbitContext bitContext,
                               @Injectable UserServer.UserClientConnection connection) throws Throwable{
 
         new NonStrictExpectations(){{
@@ -66,6 +66,60 @@ public class TestComparisonFunctions {
 
         PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
         PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/functions/longEqual.json"), Charsets.UTF_8));
+        FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
+        FragmentContext context = new FragmentContext(bitContext, ExecProtos.FragmentHandle.getDefaultInstance(), connection, null, registry);
+        SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
+
+        while(exec.next()){
+            assertEquals(100, exec.getSelectionVector2().getCount());
+        }
+
+        if(context.getFailureCause() != null){
+            throw context.getFailureCause();
+        }
+
+        assertTrue(!context.isFailed());
+
+    }
+
+    @Test
+    public void testFloat4Equal(@Injectable final DrillbitContext bitContext,
+                                @Injectable UserServer.UserClientConnection connection) throws Throwable{
+
+        new NonStrictExpectations(){{
+            bitContext.getMetrics(); result = new MetricRegistry("test");
+            bitContext.getAllocator(); result = BufferAllocator.getAllocator(c);
+        }};
+
+        PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
+        PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/functions/float4Equal.json"), Charsets.UTF_8));
+        FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
+        FragmentContext context = new FragmentContext(bitContext, ExecProtos.FragmentHandle.getDefaultInstance(), connection, null, registry);
+        SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
+
+        while(exec.next()){
+            assertEquals(100, exec.getSelectionVector2().getCount());
+        }
+
+        if(context.getFailureCause() != null){
+            throw context.getFailureCause();
+        }
+
+        assertTrue(!context.isFailed());
+
+    }
+
+    @Test
+    public void testFloat8Equal(@Injectable final DrillbitContext bitContext,
+                                @Injectable UserServer.UserClientConnection connection) throws Throwable{
+
+        new NonStrictExpectations(){{
+            bitContext.getMetrics(); result = new MetricRegistry("test");
+            bitContext.getAllocator(); result = BufferAllocator.getAllocator(c);
+        }};
+
+        PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
+        PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/functions/float8Equal.json"), Charsets.UTF_8));
         FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
         FragmentContext context = new FragmentContext(bitContext, ExecProtos.FragmentHandle.getDefaultInstance(), connection, null, registry);
         SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
@@ -110,7 +164,7 @@ public class TestComparisonFunctions {
     }
 
     @Test
-    public void testLongNotEqual(@Injectable final DrillbitContext bitContext,
+    public void testBigIntNotEqual(@Injectable final DrillbitContext bitContext,
                                 @Injectable UserServer.UserClientConnection connection) throws Throwable{
 
         new NonStrictExpectations(){{
@@ -120,6 +174,60 @@ public class TestComparisonFunctions {
 
         PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
         PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/functions/longNotEqual.json"), Charsets.UTF_8));
+        FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
+        FragmentContext context = new FragmentContext(bitContext, ExecProtos.FragmentHandle.getDefaultInstance(), connection, null, registry);
+        SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
+
+        while(exec.next()){
+            assertEquals(0, exec.getSelectionVector2().getCount());
+        }
+
+        if(context.getFailureCause() != null){
+            throw context.getFailureCause();
+        }
+
+        assertTrue(!context.isFailed());
+
+    }
+
+    @Test
+    public void testFloat4NotEqual(@Injectable final DrillbitContext bitContext,
+                                   @Injectable UserServer.UserClientConnection connection) throws Throwable{
+
+        new NonStrictExpectations(){{
+            bitContext.getMetrics(); result = new MetricRegistry("test");
+            bitContext.getAllocator(); result = BufferAllocator.getAllocator(c);
+        }};
+
+        PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
+        PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/functions/float4NotEqual.json"), Charsets.UTF_8));
+        FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
+        FragmentContext context = new FragmentContext(bitContext, ExecProtos.FragmentHandle.getDefaultInstance(), connection, null, registry);
+        SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
+
+        while(exec.next()){
+            assertEquals(0, exec.getSelectionVector2().getCount());
+        }
+
+        if(context.getFailureCause() != null){
+            throw context.getFailureCause();
+        }
+
+        assertTrue(!context.isFailed());
+
+    }
+
+    @Test
+    public void testFloat8NotEqual(@Injectable final DrillbitContext bitContext,
+                                   @Injectable UserServer.UserClientConnection connection) throws Throwable{
+
+        new NonStrictExpectations(){{
+            bitContext.getMetrics(); result = new MetricRegistry("test");
+            bitContext.getAllocator(); result = BufferAllocator.getAllocator(c);
+        }};
+
+        PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
+        PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/functions/float8NotEqual.json"), Charsets.UTF_8));
         FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
         FragmentContext context = new FragmentContext(bitContext, ExecProtos.FragmentHandle.getDefaultInstance(), connection, null, registry);
         SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
@@ -164,7 +272,7 @@ public class TestComparisonFunctions {
     }
 
     @Test
-    public void testLongGreaterThan(@Injectable final DrillbitContext bitContext,
+    public void testBigIntGreaterThan(@Injectable final DrillbitContext bitContext,
                                    @Injectable UserServer.UserClientConnection connection) throws Throwable{
 
         new NonStrictExpectations(){{
@@ -174,6 +282,60 @@ public class TestComparisonFunctions {
 
         PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
         PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/functions/longGreaterThan.json"), Charsets.UTF_8));
+        FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
+        FragmentContext context = new FragmentContext(bitContext, ExecProtos.FragmentHandle.getDefaultInstance(), connection, null, registry);
+        SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
+
+        while(exec.next()){
+            assertEquals(0, exec.getSelectionVector2().getCount());
+        }
+
+        if(context.getFailureCause() != null){
+            throw context.getFailureCause();
+        }
+
+        assertTrue(!context.isFailed());
+
+    }
+
+    @Test
+    public void testFloat4GreaterThan(@Injectable final DrillbitContext bitContext,
+                                      @Injectable UserServer.UserClientConnection connection) throws Throwable{
+
+        new NonStrictExpectations(){{
+            bitContext.getMetrics(); result = new MetricRegistry("test");
+            bitContext.getAllocator(); result = BufferAllocator.getAllocator(c);
+        }};
+
+        PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
+        PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/functions/float4GreaterThan.json"), Charsets.UTF_8));
+        FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
+        FragmentContext context = new FragmentContext(bitContext, ExecProtos.FragmentHandle.getDefaultInstance(), connection, null, registry);
+        SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
+
+        while(exec.next()){
+            assertEquals(0, exec.getSelectionVector2().getCount());
+        }
+
+        if(context.getFailureCause() != null){
+            throw context.getFailureCause();
+        }
+
+        assertTrue(!context.isFailed());
+
+    }
+
+    @Test
+    public void testFloat8GreaterThan(@Injectable final DrillbitContext bitContext,
+                                      @Injectable UserServer.UserClientConnection connection) throws Throwable{
+
+        new NonStrictExpectations(){{
+            bitContext.getMetrics(); result = new MetricRegistry("test");
+            bitContext.getAllocator(); result = BufferAllocator.getAllocator(c);
+        }};
+
+        PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
+        PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/functions/Float8GreaterThan.json"), Charsets.UTF_8));
         FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
         FragmentContext context = new FragmentContext(bitContext, ExecProtos.FragmentHandle.getDefaultInstance(), connection, null, registry);
         SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
@@ -218,7 +380,7 @@ public class TestComparisonFunctions {
     }
 
     @Test
-    public void testLongGreaterThanEqual(@Injectable final DrillbitContext bitContext,
+    public void testBigIntGreaterThanEqual(@Injectable final DrillbitContext bitContext,
                                         @Injectable UserServer.UserClientConnection connection) throws Throwable{
 
         new NonStrictExpectations(){{
@@ -228,6 +390,60 @@ public class TestComparisonFunctions {
 
         PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
         PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/functions/longGreaterThanEqual.json"), Charsets.UTF_8));
+        FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
+        FragmentContext context = new FragmentContext(bitContext, ExecProtos.FragmentHandle.getDefaultInstance(), connection, null, registry);
+        SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
+
+        while(exec.next()){
+            assertEquals(100, exec.getSelectionVector2().getCount());
+        }
+
+        if(context.getFailureCause() != null){
+            throw context.getFailureCause();
+        }
+
+        assertTrue(!context.isFailed());
+
+    }
+
+    @Test
+    public void testFloat4GreaterThanEqual(@Injectable final DrillbitContext bitContext,
+                                           @Injectable UserServer.UserClientConnection connection) throws Throwable{
+
+        new NonStrictExpectations(){{
+            bitContext.getMetrics(); result = new MetricRegistry("test");
+            bitContext.getAllocator(); result = BufferAllocator.getAllocator(c);
+        }};
+
+        PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
+        PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/functions/float4GreaterThanEqual.json"), Charsets.UTF_8));
+        FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
+        FragmentContext context = new FragmentContext(bitContext, ExecProtos.FragmentHandle.getDefaultInstance(), connection, null, registry);
+        SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
+
+        while(exec.next()){
+            assertEquals(100, exec.getSelectionVector2().getCount());
+        }
+
+        if(context.getFailureCause() != null){
+            throw context.getFailureCause();
+        }
+
+        assertTrue(!context.isFailed());
+
+    }
+
+    @Test
+    public void testFloat8GreaterThanEqual(@Injectable final DrillbitContext bitContext,
+                                           @Injectable UserServer.UserClientConnection connection) throws Throwable{
+
+        new NonStrictExpectations(){{
+            bitContext.getMetrics(); result = new MetricRegistry("test");
+            bitContext.getAllocator(); result = BufferAllocator.getAllocator(c);
+        }};
+
+        PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
+        PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/functions/float8GreaterThanEqual.json"), Charsets.UTF_8));
         FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
         FragmentContext context = new FragmentContext(bitContext, ExecProtos.FragmentHandle.getDefaultInstance(), connection, null, registry);
         SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
@@ -272,7 +488,7 @@ public class TestComparisonFunctions {
     }
 
     @Test
-    public void testLongLessThan(@Injectable final DrillbitContext bitContext,
+    public void testBigIntLessThan(@Injectable final DrillbitContext bitContext,
                                 @Injectable UserServer.UserClientConnection connection) throws Throwable{
 
         new NonStrictExpectations(){{
@@ -282,6 +498,60 @@ public class TestComparisonFunctions {
 
         PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
         PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/functions/longLessThan.json"), Charsets.UTF_8));
+        FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
+        FragmentContext context = new FragmentContext(bitContext, ExecProtos.FragmentHandle.getDefaultInstance(), connection, null, registry);
+        SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
+
+        while(exec.next()){
+            assertEquals(0, exec.getSelectionVector2().getCount());
+        }
+
+        if(context.getFailureCause() != null){
+            throw context.getFailureCause();
+        }
+
+        assertTrue(!context.isFailed());
+
+    }
+
+    @Test
+    public void testFloat4LessThan(@Injectable final DrillbitContext bitContext,
+                                   @Injectable UserServer.UserClientConnection connection) throws Throwable{
+
+        new NonStrictExpectations(){{
+            bitContext.getMetrics(); result = new MetricRegistry("test");
+            bitContext.getAllocator(); result = BufferAllocator.getAllocator(c);
+        }};
+
+        PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
+        PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/functions/float4LessThan.json"), Charsets.UTF_8));
+        FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
+        FragmentContext context = new FragmentContext(bitContext, ExecProtos.FragmentHandle.getDefaultInstance(), connection, null, registry);
+        SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
+
+        while(exec.next()){
+            assertEquals(0, exec.getSelectionVector2().getCount());
+        }
+
+        if(context.getFailureCause() != null){
+            throw context.getFailureCause();
+        }
+
+        assertTrue(!context.isFailed());
+
+    }
+
+    @Test
+    public void testFloat8LessThan(@Injectable final DrillbitContext bitContext,
+                                   @Injectable UserServer.UserClientConnection connection) throws Throwable{
+
+        new NonStrictExpectations(){{
+            bitContext.getMetrics(); result = new MetricRegistry("test");
+            bitContext.getAllocator(); result = BufferAllocator.getAllocator(c);
+        }};
+
+        PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
+        PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/functions/float8LessThan.json"), Charsets.UTF_8));
         FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
         FragmentContext context = new FragmentContext(bitContext, ExecProtos.FragmentHandle.getDefaultInstance(), connection, null, registry);
         SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
@@ -326,7 +596,7 @@ public class TestComparisonFunctions {
     }
 
     @Test
-    public void testLongLessThanEqual(@Injectable final DrillbitContext bitContext,
+    public void testBigIntLessThanEqual(@Injectable final DrillbitContext bitContext,
                                      @Injectable UserServer.UserClientConnection connection) throws Throwable{
 
         new NonStrictExpectations(){{
@@ -336,6 +606,60 @@ public class TestComparisonFunctions {
 
         PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
         PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/functions/longLessThanEqual.json"), Charsets.UTF_8));
+        FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
+        FragmentContext context = new FragmentContext(bitContext, ExecProtos.FragmentHandle.getDefaultInstance(), connection, null, registry);
+        SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
+
+        while(exec.next()){
+            assertEquals(100, exec.getSelectionVector2().getCount());
+        }
+
+        if(context.getFailureCause() != null){
+            throw context.getFailureCause();
+        }
+
+        assertTrue(!context.isFailed());
+
+    }
+
+    @Test
+    public void testFloat4LessThanEqual(@Injectable final DrillbitContext bitContext,
+                                        @Injectable UserServer.UserClientConnection connection) throws Throwable{
+
+        new NonStrictExpectations(){{
+            bitContext.getMetrics(); result = new MetricRegistry("test");
+            bitContext.getAllocator(); result = BufferAllocator.getAllocator(c);
+        }};
+
+        PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
+        PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/functions/float4LessThanEqual.json"), Charsets.UTF_8));
+        FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
+        FragmentContext context = new FragmentContext(bitContext, ExecProtos.FragmentHandle.getDefaultInstance(), connection, null, registry);
+        SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
+
+        while(exec.next()){
+            assertEquals(100, exec.getSelectionVector2().getCount());
+        }
+
+        if(context.getFailureCause() != null){
+            throw context.getFailureCause();
+        }
+
+        assertTrue(!context.isFailed());
+
+    }
+
+    @Test
+    public void testFloat8LessThanEqual(@Injectable final DrillbitContext bitContext,
+                                        @Injectable UserServer.UserClientConnection connection) throws Throwable{
+
+        new NonStrictExpectations(){{
+            bitContext.getMetrics(); result = new MetricRegistry("test");
+            bitContext.getAllocator(); result = BufferAllocator.getAllocator(c);
+        }};
+
+        PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
+        PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/functions/float8LessThanEqual.json"), Charsets.UTF_8));
         FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
         FragmentContext context = new FragmentContext(bitContext, ExecProtos.FragmentHandle.getDefaultInstance(), connection, null, registry);
         SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
