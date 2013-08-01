@@ -22,20 +22,14 @@ import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.convert.ConverterRule;
 
 /**
- * Rule that converts any Drill relational expression to enumerable format by
- * adding a {@link EnumerableDrillRel}.
+ * Rule that converts any Drill relational expression to enumerable format by adding a {@link EnumerableDrillRel}.
  */
 public class EnumerableDrillRule extends ConverterRule {
-  public static final EnumerableDrillRule ARRAY_INSTANCE =
-      new EnumerableDrillRule(EnumerableConvention.ARRAY);
-  public static final EnumerableDrillRule CUSTOM_INSTANCE =
-      new EnumerableDrillRule(EnumerableConvention.CUSTOM);
+  public static final EnumerableDrillRule ARRAY_INSTANCE = new EnumerableDrillRule(EnumerableConvention.ARRAY);
+  public static final EnumerableDrillRule CUSTOM_INSTANCE = new EnumerableDrillRule(EnumerableConvention.CUSTOM);
 
   private EnumerableDrillRule(EnumerableConvention outConvention) {
-    super(RelNode.class,
-        DrillRel.CONVENTION,
-        outConvention,
-        "EnumerableDrillRule." + outConvention);
+    super(RelNode.class, DrillRel.CONVENTION, outConvention, "EnumerableDrillRule." + outConvention);
   }
 
   @Override
@@ -46,9 +40,7 @@ public class EnumerableDrillRule extends ConverterRule {
   @Override
   public RelNode convert(RelNode rel) {
     assert rel.getTraitSet().contains(DrillRel.CONVENTION);
-    return new EnumerableDrillRel(rel.getCluster(),
-        rel.getTraitSet().replace(getOutConvention()),
-        rel);
+    return new EnumerableDrillRel(rel.getCluster(), rel.getTraitSet().replace(getOutConvention()), rel);
   }
 }
 

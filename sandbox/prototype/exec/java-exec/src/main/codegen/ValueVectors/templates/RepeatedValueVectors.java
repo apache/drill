@@ -91,7 +91,7 @@ import com.google.common.collect.Lists;
     }
   }
   
-  public void copyValue(int inIndex, int outIndex, Repeated${minor.class}Vector v){
+  public void copyFrom(int inIndex, int outIndex, Repeated${minor.class}Vector v){
     throw new UnsupportedOperationException();
   }
 

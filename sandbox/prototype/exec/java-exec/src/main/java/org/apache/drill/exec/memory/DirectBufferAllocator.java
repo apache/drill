@@ -19,28 +19,27 @@ package org.apache.drill.exec.memory;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
-import io.netty.buffer.PooledByteBufAllocator;
+import io.netty.buffer.PooledByteBufAllocatorL;
 
-public class DirectBufferAllocator extends BufferAllocator{
+public class DirectBufferAllocator extends BufferAllocator {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DirectBufferAllocator.class);
 
-  private final PooledByteBufAllocator buffer = new PooledByteBufAllocator(true);
-  
+  private final PooledByteBufAllocatorL buffer = new PooledByteBufAllocatorL(true);
+
+  public DirectBufferAllocator() {
+  }
+
   @Override
   public ByteBuf buffer(int size) {
     // TODO: wrap it
     return buffer.directBuffer(size);
   }
-  
-  
 
   @Override
   protected boolean pre(int bytes) {
     // TODO: check allocation
     return true;
   }
-
-
 
   @Override
   public long getAllocatedMemory() {
@@ -52,11 +51,9 @@ public class DirectBufferAllocator extends BufferAllocator{
     return buffer;
   }
 
-  
-
   @Override
   public BufferAllocator getChildAllocator(long initialReservation, long maximumReservation) {
-    //TODO: Add child account allocator.
+    // TODO: Add child account allocator.
     return this;
   }
 
@@ -64,5 +61,5 @@ public class DirectBufferAllocator extends BufferAllocator{
   public void close() {
     // TODO: collect all buffers and release them away using a weak hashmap so we don't impact pool work
   }
-  
+
 }

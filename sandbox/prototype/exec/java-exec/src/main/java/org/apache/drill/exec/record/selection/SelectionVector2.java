@@ -43,12 +43,12 @@ public class SelectionVector2 implements Closeable{
     return recordCount;
   }
 
-  public char getIndex(int directIndex){
-    return buffer.getChar(directIndex);
+  public char getIndex(int index){
+    return buffer.getChar(index);
   }
 
-  public void setIndex(int directIndex, char value){
-    buffer.setChar(directIndex, value);
+  public void setIndex(int index, char value){
+    buffer.setChar(index*2, value);
   }
   
   public void allocateNew(int size){

@@ -31,7 +31,7 @@ public abstract class CopierTemplate implements Copier{
     allocateVectors(recordCount);
     int outgoingPosition = 0;
     
-    for(int svIndex = 0; svIndex < recordCount * 2; svIndex++, outgoingPosition++){
+    for(int svIndex = 0; svIndex < recordCount; svIndex++, outgoingPosition++){
       doEval(svIndex, outgoingPosition);
     }
   }

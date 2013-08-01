@@ -57,8 +57,8 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
     return len;
   }
 
-  public void copyValue(int inIndex, int outIndex, BitVector target) {
-    target.mutator.set(outIndex, this.accessor.get(inIndex));
+  public void copyFrom(int inIndex, int outIndex, BitVector from) {
+    this.mutator.set(outIndex, from.accessor.get(inIndex));
   }
 
   @Override

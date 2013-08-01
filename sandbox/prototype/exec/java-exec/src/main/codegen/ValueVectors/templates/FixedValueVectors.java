@@ -118,12 +118,12 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     }
   }
   
-  public void copyValue(int inIndex, int outIndex, ${minor.class}Vector v){
+  public void copyFrom(int inIndex, int outIndex, ${minor.class}Vector v){
     <#if (type.width > 8)>
     data.getBytes(inIndex * ${type.width}, v.data, outIndex * ${type.width}, ${type.width});
     <#else> <#-- type.width <= 8 -->
     data.set${(minor.javaType!type.javaType)?cap_first}(outIndex * ${type.width}, 
-        data.get${(minor.javaType!type.javaType)?cap_first}(inIndex * ${type.width})
+        v.data.get${(minor.javaType!type.javaType)?cap_first}(inIndex * ${type.width})
     );
     </#if> <#-- type.width -->
   }

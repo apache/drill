@@ -20,10 +20,12 @@ package org.apache.drill.optiq;
 import net.hydromatic.linq4j.expressions.*;
 import net.hydromatic.linq4j.function.Function1;
 import net.hydromatic.linq4j.function.Functions;
+import net.hydromatic.optiq.DataContext;
 import net.hydromatic.optiq.impl.java.JavaTypeFactory;
 import net.hydromatic.optiq.rules.java.*;
 
 import org.apache.drill.common.util.Hook;
+import org.apache.drill.optiq.EnumerableDrillFullEngine;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.SingleRel;
 import org.eigenbase.relopt.*;
@@ -44,7 +46,7 @@ public class EnumerableDrillRel extends SingleRel implements EnumerableRel {
   private static final Logger LOG =
       LoggerFactory.getLogger(EnumerableDrillRel.class);
 
-  private static final Function1<String,Expression> TO_LITERAL =
+  private static final Function1<String, Expression> TO_LITERAL =
       new Function1<String, Expression>() {
         @Override
         public Expression apply(String a0) {
@@ -59,16 +61,16 @@ public class EnumerableDrillRel extends SingleRel implements EnumerableRel {
   static {
     try {
       OF_METHOD =
-          EnumerableDrill.class.getMethod("of", String.class, List.class, Class.class);
+          EnumerableDrillFullEngine.class.getMethod("of", String.class, List.class, Class.class, DataContext.class);
+      //EnumerableDrillFullEngine.class.getMethod("of", String.class, List.class, Class.class);
     } catch (NoSuchMethodException e) {
       throw new RuntimeException(e);
     }
   }
 
   public EnumerableDrillRel(RelOptCluster cluster,
-      RelTraitSet traitSet,
-      RelNode input)
-  {
+                            RelTraitSet traitSet,
+                            RelNode input) {
     super(cluster, traitSet, input);
     assert getConvention() instanceof EnumerableConvention;
     assert input.getConvention() == DrillRel.CONVENTION;
@@ -100,7 +102,11 @@ public class EnumerableDrillRel extends SingleRel implements EnumerableRel {
     drillImplementor.go(input);
     String plan = drillImplementor.getJsonString();
     Hook.LOGICAL_PLAN.run(plan);
+
+    // not quite sure where this list was supposed to be set earlier, leaving it null got me back the full result set
+
     final List<String> fieldNameList = RelOptUtil.getFieldNameList(rowType);
+    //final List<String> fieldNameList = null;
     return new BlockBuilder()
         .append(
             Expressions.call(
@@ -112,7 +118,9 @@ public class EnumerableDrillRel extends SingleRel implements EnumerableRel {
                     Expressions.newArrayInit(
                         String.class,
                         Functions.apply(fieldNameList, TO_LITERAL))),
-                Expressions.constant(Object.class)))
+                Expressions.constant(Object.class),
+                Expressions.variable(DataContext.class, "root")
+            ))
         .toBlock();
   }
 }

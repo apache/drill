@@ -199,9 +199,9 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
   }
 
   
-  public void copyValue(int inIndex, int outIndex, Nullable${minor.class}Vector v){
-    bits.copyValue(inIndex, outIndex, v.bits);
-    values.copyValue(inIndex, outIndex, v.values);
+  public void copyFrom(int inIndex, int outIndex, Nullable${minor.class}Vector v){
+    bits.copyFrom(inIndex, outIndex, v.bits);
+    values.copyFrom(inIndex, outIndex, v.values);
   }
   
   public final class Accessor implements ValueVector.Accessor{

@@ -55,15 +55,15 @@ public abstract class FilterTemplate implements Filterer{
   
   private void filterBatchSV2(int recordCount){
     int svIndex = 0;
-    final int count = recordCount*2;
-    for(int i = 0; i < count; i+=2){
+    final int count = recordCount;
+    for(int i = 0; i < count; i++){
       char index = incomingSelectionVector.getIndex(i);
       if(doEval(i, 0)){
         outgoingSelectionVector.setIndex(svIndex, index);
-        svIndex+=2;
+        svIndex++;
       }
     }
-    outgoingSelectionVector.setRecordCount(svIndex/2);
+    outgoingSelectionVector.setRecordCount(svIndex);
   }
   
   private void filterBatchNoSV(int recordCount){
@@ -72,10 +72,10 @@ public abstract class FilterTemplate implements Filterer{
       
       if(doEval(i, 0)){
         outgoingSelectionVector.setIndex(svIndex, i);
-        svIndex+=2;
+        svIndex++;
       }
     }
-    outgoingSelectionVector.setRecordCount(svIndex/2);
+    outgoingSelectionVector.setRecordCount(svIndex);
   }
   
   protected abstract void doSetup(FragmentContext context, RecordBatch incoming, RecordBatch outgoing) throws SchemaChangeException;

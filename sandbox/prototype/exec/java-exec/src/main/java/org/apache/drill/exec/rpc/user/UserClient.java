@@ -45,8 +45,12 @@ public class UserClient extends BasicClientWithConnection<RpcType, UserToBitHand
     super(UserRpcConfig.MAPPING, alloc, eventLoopGroup, RpcType.HANDSHAKE, BitToUserHandshake.class, BitToUserHandshake.PARSER);
   }
 
-  public void submitQuery(UserResultsListener resultsListener, RunQuery query) throws RpcException {
-    send(queryResultHandler.getWrappedListener(resultsListener), RpcType.RUN_QUERY, query, QueryId.class);
+  public void submitQuery(UserResultsListener resultsListener, RunQuery query) {
+    try{
+      send(queryResultHandler.getWrappedListener(resultsListener), RpcType.RUN_QUERY, query, QueryId.class);  
+    }catch(RpcException ex){
+      resultsListener.submissionFailed(ex);
+    }
   }
 
   public void connect(RpcConnectionHandler<ServerConnection> handler, DrillbitEndpoint endpoint) throws RpcException, InterruptedException {

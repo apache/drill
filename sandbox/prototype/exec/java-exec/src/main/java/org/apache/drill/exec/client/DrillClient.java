@@ -18,12 +18,11 @@
 package org.apache.drill.exec.client;
 
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.collect.Iterables.get;
 import static org.apache.drill.exec.proto.UserProtos.QueryResultsMode.STREAM_FULL;
 import static org.apache.drill.exec.proto.UserProtos.RunQuery.newBuilder;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
-import io.netty.buffer.PooledByteBufAllocator;
+import io.netty.buffer.PooledByteBufAllocatorL;
 import io.netty.channel.nio.NioEventLoopGroup;
 
 import java.io.Closeable;
@@ -57,8 +56,9 @@ public class DrillClient implements Closeable{
   
   DrillConfig config;
   private UserClient client;
-  private ClusterCoordinator clusterCoordinator;
-
+  private volatile ClusterCoordinator clusterCoordinator;
+  private volatile boolean connected = false;
+  
   public DrillClient() {
     this(DrillConfig.create());
   }
@@ -82,25 +82,33 @@ public class DrillClient implements Closeable{
    *
    * @throws IOException
    */
-  public void connect() throws Exception {
+  public synchronized void connect() throws RpcException {
+    if(connected) return;
+    
     if(clusterCoordinator == null){
-      this.clusterCoordinator = new ZKClusterCoordinator(this.config);
-      this.clusterCoordinator.start(10000);
+      try {
+        this.clusterCoordinator = new ZKClusterCoordinator(this.config);
+        this.clusterCoordinator.start(10000);
+      } catch (Exception e) {
+        throw new RpcException("Failure setting up ZK for client.", e);
+      }
+      
     }
     
     Collection<DrillbitEndpoint> endpoints = clusterCoordinator.getAvailableEndpoints();
     checkState(!endpoints.isEmpty(), "No DrillbitEndpoint can be found");
     // just use the first endpoint for now
     DrillbitEndpoint endpoint = endpoints.iterator().next();
-    ByteBufAllocator bb = new PooledByteBufAllocator(true);
+    ByteBufAllocator bb = new PooledByteBufAllocatorL(true);
     this.client = new UserClient(bb, new NioEventLoopGroup(1, new NamedThreadFactory("Client-")));
     try {
       logger.debug("Connecting to server {}:{}", endpoint.getAddress(), endpoint.getUserPort());
       FutureHandler f = new FutureHandler();
       this.client.connect(f, endpoint);
       f.checkedGet();
+      connected = true;
     } catch (InterruptedException e) {
-      throw new IOException(e);
+      throw new RpcException(e);
     }
   }
 
@@ -111,6 +119,7 @@ public class DrillClient implements Closeable{
    */
   public void close() throws IOException {
     this.client.close();
+    connected = false;
   }
 
   /**
@@ -124,7 +133,17 @@ public class DrillClient implements Closeable{
     ListHoldingResultsListener listener = new ListHoldingResultsListener();
     client.submitQuery(listener, newBuilder().setResultsMode(STREAM_FULL).setType(type).setPlan(plan).build());
     return listener.getResults();
-
+  }
+  
+  /**
+   * Submits a Logical plan for direct execution (bypasses parsing)
+   *
+   * @param plan the plan to execute
+   * @return a handle for the query result
+   * @throws RpcException
+   */
+  public void runQuery(QueryType type, String plan, UserResultsListener resultsListener){
+    client.submitQuery(resultsListener, newBuilder().setResultsMode(STREAM_FULL).setType(type).setPlan(plan).build());
   }
   
   private class ListHoldingResultsListener implements UserResultsListener {

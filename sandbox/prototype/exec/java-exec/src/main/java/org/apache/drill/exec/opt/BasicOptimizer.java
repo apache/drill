@@ -2,35 +2,29 @@ package org.apache.drill.exec.opt;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
 import org.apache.drill.common.PlanProperties;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.expression.*;
 import org.apache.drill.common.logical.LogicalPlan;
+import org.apache.drill.common.logical.data.*;
+import org.apache.drill.common.logical.data.Filter;
 import org.apache.drill.common.logical.data.Project;
-import org.apache.drill.common.logical.data.Scan;
-import org.apache.drill.common.logical.data.SinkOperator;
-import org.apache.drill.common.logical.data.Store;
 import org.apache.drill.common.logical.data.visitors.AbstractLogicalVisitor;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.exception.OptimizerException;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.physical.config.MockScanPOP;
-import org.apache.drill.exec.physical.config.Screen;
+import org.apache.drill.exec.physical.config.*;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 
-/**
- * Created with IntelliJ IDEA.
- * User: jaltekruse
- * Date: 6/11/13
- * Time: 5:32 PM
- * To change this template use File | Settings | File Templates.
- */
 public class BasicOptimizer extends Optimizer{
 
     private DrillConfig config;
@@ -58,9 +52,9 @@ public class BasicOptimizer extends Optimizer{
                 System.out.println(pop);
                 physOps.add(pop);
             } catch (OptimizerException e) {
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                e.printStackTrace();
             } catch (Throwable throwable) {
-                throwable.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                throwable.printStackTrace();
             }
         }
 
@@ -99,9 +93,11 @@ public class BasicOptimizer extends Optimizer{
                 }
                 else{
                     myObjects = new ArrayList<>();
-                    MockScanPOP.MockColumn[] cols = { new MockScanPOP.MockColumn("blah", MinorType.INT, DataMode.REQUIRED,4,4,4),
-                            new MockScanPOP.MockColumn("blah_2", MinorType.INT, DataMode.REQUIRED,4,4,4)};
-                    myObjects.add(new MockScanPOP.MockScanEntry(50, cols));
+                    MockScanPOP.MockColumn[] cols = {
+                        new MockScanPOP.MockColumn("RED", MinorType.BIGINT, DataMode.REQUIRED, null, null, null),
+                        new MockScanPOP.MockColumn("GREEN", MinorType.BIGINT, DataMode.REQUIRED,null, null, null)
+                    };
+                    myObjects.add(new MockScanPOP.MockScanEntry(100, cols));
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -121,7 +117,22 @@ public class BasicOptimizer extends Optimizer{
 
         @Override
         public PhysicalOperator visitProject(Project project, Object obj) throws OptimizerException {
-            return project.getInput().accept(this, obj);
+          return project.getInput().accept(this, obj);
+//            return new org.apache.drill.exec.physical.config.Project(
+//                Arrays.asList(project.getSelections()), project.iterator().next().accept(this, obj));
         }
+
+      @Override
+      public PhysicalOperator visitFilter(Filter filter, Object obj) throws OptimizerException {
+        TypeProtos.MajorType.Builder b = TypeProtos.MajorType.getDefaultInstance().newBuilderForType();
+        b.setMode(DataMode.REQUIRED);
+        b.setMinorType(MinorType.BIGINT);
+
+        return new SelectionVectorRemover(new org.apache.drill.exec.physical.config.Filter(
+            filter.iterator().next().accept(this, obj), /*filter.getExpr() */
+            new FunctionCall(FunctionDefinition.simple("alternate", new NoArgValidator(),
+                new OutputTypeDeterminer.FixedType(b.build())), null, new ExpressionPosition("asdf", 1)),
+            1.0f));
+      }
     }
 }

@@ -22,9 +22,9 @@ public class FunctionImplementationRegistry {
       FunctionHolder holder = converter.getHolder(clazz);
       if(holder != null){
         methods.put(holder.getFunctionName(), holder);
-        logger.debug("Registering function {}", holder);
+//        logger.debug("Registering function {}", holder);
       }else{
-        logger.debug("Unable to initialize function for class {}", clazz.getName());
+        logger.warn("Unable to initialize function for class {}", clazz.getName());
       }
     }
   }

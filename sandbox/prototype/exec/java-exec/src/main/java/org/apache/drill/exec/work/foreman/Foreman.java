@@ -51,6 +51,7 @@ import org.apache.drill.exec.util.AtomicState;
 import org.apache.drill.exec.work.QueryWorkUnit;
 import org.apache.drill.exec.work.WorkManager.WorkerBee;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 
 /**
@@ -163,7 +164,9 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
   private void parseAndRunLogicalPlan(String json) {
     try {
       LogicalPlan logicalPlan = context.getPlanReader().readLogicalPlan(json);
+      logger.debug("Logical {}", logicalPlan.unparse(DrillConfig.create()));
       PhysicalPlan physicalPlan = convert(logicalPlan);
+      logger.debug("Physical {}", new ObjectMapper().writeValueAsString(physicalPlan));
       runPhysicalPlan(physicalPlan);
     } catch (IOException e) {
       fail("Failure while parsing logical plan.", e);

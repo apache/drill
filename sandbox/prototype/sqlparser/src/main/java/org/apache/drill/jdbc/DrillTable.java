@@ -17,6 +17,7 @@
  ******************************************************************************/
 package org.apache.drill.jdbc;
 
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.Map;
@@ -30,46 +31,73 @@ import net.hydromatic.linq4j.expressions.MethodCallExpression;
 
 import net.hydromatic.optiq.*;
 
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.logical.StorageEngineConfig;
+import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.ref.rops.DataWriter;
 import org.apache.drill.exec.ref.rse.ClasspathRSE;
 import org.apache.drill.exec.ref.rse.ClasspathRSE.ClasspathInputConfig;
-import org.apache.drill.optiq.*;
 
+import org.apache.drill.exec.server.Drillbit;
+import org.apache.drill.exec.server.RemoteServiceSet;
+import org.apache.drill.optiq.DrillRel;
+import org.apache.drill.optiq.DrillScan;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptTable;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.sql.type.SqlTypeName;
 
-/** Optiq Table used by Drill. */
+/**
+ * Optiq Table used by Drill.
+ */
 public class DrillTable extends BaseQueryable<Object>
-    implements TranslatableTable<Object>
-{
+    implements TranslatableTable<Object> {
   private final Schema schema;
   private final String name;
   private final String storageEngineName;
   private final RelDataType rowType;
   public final StorageEngineConfig storageEngineConfig;
   public final Object selection;
+  private boolean useReferenceInterpreter;
 
-  /** Creates a DrillTable. */
+  // full engine connection information
+  public Drillbit bit;
+  public DrillClient client;
+
+  /**
+   * Creates a DrillTable.
+   */
   public DrillTable(Schema schema,
-      Type elementType,
-      Expression expression,
-      RelDataType rowType,
-      String name,
-      StorageEngineConfig storageEngineConfig,
-      Object selection,
-      String storageEngineName
-      ) {
+                    Type elementType,
+                    Expression expression,
+                    RelDataType rowType,
+                    String name,
+                    StorageEngineConfig storageEngineConfig,
+                    Object selection,
+                    String storageEngineName,
+                    boolean useReferenceInterpreter
+  ) {
+
     super(schema.getQueryProvider(), elementType, expression);
+    DrillConfig config = DrillConfig.create();
+    RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
+    try {
+      bit = new Drillbit(config, serviceSet);
+      client = new DrillClient(config, serviceSet.getCoordinator());
+      bit.run();
+    } catch (IOException e) {
+      System.out.println("Error creating drill client or connecting to drillbit.");
+    } catch (Exception e) {
+      System.out.println("Error creating drill client or connecting to drillbit.");
+    }
     this.schema = schema;
     this.name = name;
     this.rowType = rowType;
     this.storageEngineConfig = storageEngineConfig;
     this.selection = selection;
     this.storageEngineName = storageEngineName;
+    this.useReferenceInterpreter = useReferenceInterpreter;
   }
 
   private static DrillTable createTable(
@@ -78,8 +106,9 @@ public class DrillTable extends BaseQueryable<Object>
       String name,
       StorageEngineConfig storageEngineConfig,
       Object selection,
-      String storageEngineName
-      ) {
+      String storageEngineName,
+      boolean useReferenceInterpreter
+  ) {
     final MethodCallExpression call = Expressions.call(schema.getExpression(),
         BuiltinMethod.DATA_CONTEXT_GET_TABLE.method,
         Expressions.constant(name),
@@ -91,8 +120,8 @@ public class DrillTable extends BaseQueryable<Object>
                     typeFactory.createSqlType(SqlTypeName.VARCHAR),
                     typeFactory.createSqlType(SqlTypeName.ANY))),
             Collections.singletonList("_MAP"));
-      return new DrillTable(schema, Object.class, call, rowType, name,
-          storageEngineConfig, selection, storageEngineName);
+    return new DrillTable(schema, Object.class, call, rowType, name,
+        storageEngineConfig, selection, storageEngineName, useReferenceInterpreter);
   }
 
   @Override
@@ -129,19 +158,32 @@ public class DrillTable extends BaseQueryable<Object>
     return t0 != null ? t0 : t1;
   }
 
-  /** Factory for custom tables in Optiq schema. */
+  public boolean useReferenceInterpreter() {
+    return useReferenceInterpreter;
+  }
+
+  /**
+   * Factory for custom tables in Optiq schema.
+   */
   @SuppressWarnings("UnusedDeclaration")
   public static class Factory implements TableFactory<DrillTable> {
     @Override
     public DrillTable create(Schema schema, String name,
-        Map<String, Object> operand, RelDataType rowType) {
+                             Map<String, Object> operand, RelDataType rowType) {
       final ClasspathRSE.ClasspathRSEConfig rseConfig =
           new ClasspathRSE.ClasspathRSEConfig();
       final ClasspathInputConfig inputConfig = new ClasspathInputConfig();
       inputConfig.path = last((String) operand.get("path"), "/donuts.json");
+      boolean useReferenceInterpreter;
+      if (operand.get("useReferenceInterpreter") != null){
+        useReferenceInterpreter = operand.get("useReferenceInterpreter").equals("true") ? true : false;
+      }
+      else{
+        useReferenceInterpreter = false;
+      }
       inputConfig.type = DataWriter.ConverterType.JSON;
       return createTable(schema.getTypeFactory(), (MutableSchema) schema, name,
-          rseConfig, inputConfig, "donuts-json");
+          rseConfig, inputConfig, "donuts-json", useReferenceInterpreter);
     }
   }
 }

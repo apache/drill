@@ -40,7 +40,7 @@ public class RemovingRecordBatch implements RecordBatch{
   private Copier copier;
   private List<ValueVector> outputVectors;
   private VectorHolder vh;
-  
+  private int recordCount;
   
   public RemovingRecordBatch(RecordBatch incoming, FragmentContext context){
     this.incoming = incoming;
@@ -65,7 +65,7 @@ public class RemovingRecordBatch implements RecordBatch{
 
   @Override
   public int getRecordCount() {
-    return incoming.getRecordCount();
+    return recordCount;
   }
 
   @Override
@@ -95,7 +95,7 @@ public class RemovingRecordBatch implements RecordBatch{
 
   @Override
   public IterOutcome next() {
-    
+    recordCount = 0;
     IterOutcome upstream = incoming.next();
     logger.debug("Upstream... {}", upstream);
     switch(upstream){
@@ -114,7 +114,7 @@ public class RemovingRecordBatch implements RecordBatch{
       }
       // fall through.
     case OK:
-      int recordCount = incoming.getRecordCount();
+      recordCount = incoming.getRecordCount();
       copier.copyRecords();
       for(ValueVector v : this.outputVectors){
         ValueVector.Mutator m = v.getMutator();
@@ -195,7 +195,7 @@ public class RemovingRecordBatch implements RecordBatch{
     this.vh = new VectorHolder(outputVectors);
 
     SchemaBuilder bldr = BatchSchema.newBuilder().setSelectionVectorMode(SelectionVectorMode.NONE);
-    for(ValueVector v : outputVectors){
+    for(ValueVector v : incoming){
       bldr.addField(v.getField());
     }
     this.outSchema = bldr.build();
@@ -225,7 +225,7 @@ public class RemovingRecordBatch implements RecordBatch{
       JVar inVV = declareVVSetup("incoming", g, fieldId, vvClass);
       JVar outVV = declareVVSetup("outgoing", g, fieldId, vvClass);
       
-      g.getBlock().add(inVV.invoke("copyValue").arg(inIndex).arg(outIndex).arg(outVV));
+      g.getBlock().add(outVV.invoke("copyFrom").arg(inIndex).arg(outIndex).arg(inVV));
       
       fieldId++;
     }

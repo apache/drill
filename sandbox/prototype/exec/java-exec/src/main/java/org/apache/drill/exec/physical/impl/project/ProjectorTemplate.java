@@ -31,8 +31,8 @@ public abstract class ProjectorTemplate implements Projector {
       
       
     case TWO_BYTE:
-      final int count = recordCount*2;
-      for(int i = 0; i < count; i+=2, firstOutputIndex++){
+      final int count = recordCount;
+      for(int i = 0; i < count; i++, firstOutputIndex++){
         doEval(vector2.getIndex(i), firstOutputIndex);
       }
       return recordCount;

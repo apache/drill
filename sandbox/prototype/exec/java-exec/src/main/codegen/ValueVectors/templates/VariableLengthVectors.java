@@ -119,7 +119,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     clear();
   }
   
-  public void copyValue(int inIndex, int outIndex, ${minor.class}Vector v){
+  public void copyFrom(int inIndex, int outIndex, ${minor.class}Vector v){
     int start = offsetVector.data.get${(minor.javaType!type.javaType)?cap_first}(inIndex);
     int end =   offsetVector.data.get${(minor.javaType!type.javaType)?cap_first}(inIndex+1);
     int len = end - start;

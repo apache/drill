@@ -21,45 +21,85 @@ import com.google.common.base.Function;
 
 import junit.framework.TestCase;
 
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.jdbc.DrillTable;
+import org.junit.Rule;
+import org.junit.rules.TestName;
+import org.junit.rules.TestRule;
+import org.junit.rules.Timeout;
 
 import java.sql.*;
 
-/** Unit tests for Drill's JDBC driver. */
+/**
+ * Unit tests for Drill's JDBC driver.
+ */
 public class JdbcTest extends TestCase {
+
+  // Determine if we are in Eclipse Debug mode.
+  static final boolean IS_DEBUG = java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments().toString().indexOf("-agentlib:jdwp") > 0;
+
+  // Set a timeout unless we're debugging.
+  @Rule public TestRule globalTimeout = IS_DEBUG ? new TestName() : new Timeout(10000);
+
+  
   private static final String MODEL =
       "{\n"
-      + "  version: '1.0',\n"
-      + "   schemas: [\n"
-      + "     {\n"
-      + "       name: 'DONUTS',\n"
-      + "       tables: [\n"
-      + "         {\n"
-      + "           name: 'DONUTS',\n"
-      + "           type: 'custom',\n"
-      + "           factory: '" + DrillTable.Factory.class.getName() + "'\n,"
-      + "           operand: {\n"
-      + "             path: '/donuts.json'\n"
-      + "           }\n"
-      + "         }\n"
-      + "       ]\n"
-      + "     }\n"
-      + "   ]\n"
-      + "}";
+          + "  version: '1.0',\n"
+          + "   schemas: [\n"
+          + "     {\n"
+          + "       name: 'DONUTS',\n"
+          + "       tables: [\n"
+          + "         {\n"
+          + "           name: 'DONUTS',\n"
+          + "           type: 'custom',\n"
+          + "           factory: '" + DrillTable.Factory.class.getName() + "'\n,"
+          + "           operand: {\n"
+          + "             path: '/donuts.json',\n"
+          + "             useReferenceInterpreter: 'true'\n"
+          + "           }\n"
+          + "         }\n"
+          + "       ]\n"
+          + "     }\n"
+          + "   ]\n"
+          + "}";
+
+  private static final String MODEL_FULL_ENGINE =
+      "{\n"
+          + "  version: '1.0',\n"
+          + "   schemas: [\n"
+          + "     {\n"
+          + "       name: 'DONUTS',\n"
+          + "       tables: [\n"
+          + "         {\n"
+          + "           name: 'DONUTS',\n"
+          + "           type: 'custom',\n"
+          + "           factory: '" + DrillTable.Factory.class.getName() + "'\n,"
+          + "           operand: {\n"
+          + "             path: '/donuts.json'\n"
+          + "           }\n"
+          + "         }\n"
+          + "       ]\n"
+          + "     }\n"
+          + "   ]\n"
+          + "}";
 
   private static final String EXPECTED =
       "_MAP={batters={batter=[{id=1001, type=Regular}, {id=1002, type=Chocolate}, {id=1003, type=Blueberry}, {id=1004, type=Devil's Food}]}, id=0001, name=Cake, ppu=0.55, sales=35, topping=[{id=5001, type=None}, {id=5002, type=Glazed}, {id=5005, type=Sugar}, {id=5007, type=Powdered Sugar}, {id=5006, type=Chocolate with Sprinkles}, {id=5003, type=Chocolate}, {id=5004, type=Maple}], type=donut}\n"
-      + "_MAP={batters={batter=[{id=1001, type=Regular}]}, id=0002, name=Raised, ppu=0.69, sales=145, topping=[{id=5001, type=None}, {id=5002, type=Glazed}, {id=5005, type=Sugar}, {id=5003, type=Chocolate}, {id=5004, type=Maple}], type=donut}\n"
-      + "_MAP={batters={batter=[{id=1001, type=Regular}, {id=1002, type=Chocolate}]}, id=0003, name=Old Fashioned, ppu=0.55, sales=300, topping=[{id=5001, type=None}, {id=5002, type=Glazed}, {id=5003, type=Chocolate}, {id=5004, type=Maple}], type=donut}\n"
-      + "_MAP={batters={batter=[{id=1001, type=Regular}, {id=1002, type=Chocolate}, {id=1003, type=Blueberry}, {id=1004, type=Devil's Food}]}, filling=[{id=6001, type=None}, {id=6002, type=Raspberry}, {id=6003, type=Lemon}, {id=6004, type=Chocolate}, {id=6005, type=Kreme}], id=0004, name=Filled, ppu=0.69, sales=14, topping=[{id=5001, type=None}, {id=5002, type=Glazed}, {id=5005, type=Sugar}, {id=5007, type=Powdered Sugar}, {id=5006, type=Chocolate with Sprinkles}, {id=5003, type=Chocolate}, {id=5004, type=Maple}], type=donut}\n"
-      + "_MAP={batters={batter=[{id=1001, type=Regular}]}, id=0005, name=Apple Fritter, ppu=1.0, sales=700, topping=[{id=5002, type=Glazed}], type=donut}\n";
+          + "_MAP={batters={batter=[{id=1001, type=Regular}]}, id=0002, name=Raised, ppu=0.69, sales=145, topping=[{id=5001, type=None}, {id=5002, type=Glazed}, {id=5005, type=Sugar}, {id=5003, type=Chocolate}, {id=5004, type=Maple}], type=donut}\n"
+          + "_MAP={batters={batter=[{id=1001, type=Regular}, {id=1002, type=Chocolate}]}, id=0003, name=Old Fashioned, ppu=0.55, sales=300, topping=[{id=5001, type=None}, {id=5002, type=Glazed}, {id=5003, type=Chocolate}, {id=5004, type=Maple}], type=donut}\n"
+          + "_MAP={batters={batter=[{id=1001, type=Regular}, {id=1002, type=Chocolate}, {id=1003, type=Blueberry}, {id=1004, type=Devil's Food}]}, filling=[{id=6001, type=None}, {id=6002, type=Raspberry}, {id=6003, type=Lemon}, {id=6004, type=Chocolate}, {id=6005, type=Kreme}], id=0004, name=Filled, ppu=0.69, sales=14, topping=[{id=5001, type=None}, {id=5002, type=Glazed}, {id=5005, type=Sugar}, {id=5007, type=Powdered Sugar}, {id=5006, type=Chocolate with Sprinkles}, {id=5003, type=Chocolate}, {id=5004, type=Maple}], type=donut}\n"
+          + "_MAP={batters={batter=[{id=1001, type=Regular}]}, id=0005, name=Apple Fritter, ppu=1.0, sales=700, topping=[{id=5002, type=Glazed}], type=donut}\n";
 
-  /** Load driver. */
+  /**
+   * Load driver.
+   */
   public void testLoadDriver() throws ClassNotFoundException {
     Class.forName("org.apache.drill.jdbc.Driver");
   }
 
-  /** Load driver and make a connection. */
+  /**
+   * Load driver and make a connection.
+   */
   public void testConnect() throws Exception {
     Class.forName("org.apache.drill.jdbc.Driver");
     final Connection connection = DriverManager.getConnection(
@@ -67,7 +107,9 @@ public class JdbcTest extends TestCase {
     connection.close();
   }
 
-  /** Load driver, make a connection, prepare a statement. */
+  /**
+   * Load driver, make a connection, prepare a statement.
+   */
   public void testPrepare() throws Exception {
     JdbcAssert.withModel(MODEL, "DONUTS")
         .withConnection(
@@ -85,14 +127,32 @@ public class JdbcTest extends TestCase {
             });
   }
 
-  /** Simple query against JSON. */
+  /**
+   * Simple query against JSON.
+   */
   public void testSelectJson() throws Exception {
     JdbcAssert.withModel(MODEL, "DONUTS")
         .sql("select * from donuts")
         .returns(EXPECTED);
   }
 
-  /** Query with project list. No field references yet. */
+  public void testFullSelectStarEngine() throws Exception {
+    JdbcAssert.withModel(MODEL_FULL_ENGINE, "DONUTS")
+        //.sql("select cast(_MAP['red'] as bigint) + 1 as red_inc from donuts ")
+        .sql("select * from donuts ")
+        .displayResults(50);
+  }
+  
+  public void testFullEngine() throws Exception {
+    JdbcAssert.withModel(MODEL_FULL_ENGINE, "DONUTS")
+        //.sql("select cast(_MAP['red'] as bigint) + 1 as red_inc from donuts ")
+        .sql("select cast(_MAP['RED'] as bigint)  as RED, cast(_MAP['GREEN'] as bigint)  as GREEN from donuts where cast(_MAP['red'] as BIGINT) > 1 ")
+        .displayResults(50);
+  }
+
+  /**
+   * Query with project list. No field references yet.
+   */
   public void testProjectConstant() throws Exception {
     JdbcAssert.withModel(MODEL, "DONUTS")
         .sql("select 1 + 3 as c from donuts")
@@ -103,7 +163,9 @@ public class JdbcTest extends TestCase {
             + "C=4\n");
   }
 
-  /** Query that projects an element from the map. */
+  /**
+   * Query that projects an element from the map.
+   */
   public void testProject() throws Exception {
     JdbcAssert.withModel(MODEL, "DONUTS")
         .sql("select _MAP['ppu'] as ppu from donuts")
@@ -114,11 +176,13 @@ public class JdbcTest extends TestCase {
             + "PPU=1.0\n");
   }
 
-  /** Same logic as {@link #testProject()}, but using a subquery. */
+  /**
+   * Same logic as {@link #testProject()}, but using a subquery.
+   */
   public void testProjectOnSubquery() throws Exception {
     JdbcAssert.withModel(MODEL, "DONUTS")
         .sql("select d['ppu'] as ppu from (\n"
-             + " select _MAP as d from donuts)")
+            + " select _MAP as d from donuts)")
         .returns("PPU=0.55\n"
             + "PPU=0.69\n"
             + "PPU=0.55\n"
@@ -126,22 +190,26 @@ public class JdbcTest extends TestCase {
             + "PPU=1.0\n");
   }
 
-  /** Checks the logical plan. */
+  /**
+   * Checks the logical plan.
+   */
   public void testProjectPlan() throws Exception {
     JdbcAssert.withModel(MODEL, "DONUTS")
         .sql("select _MAP['ppu'] as ppu from donuts")
         .planContains(
             "{'head':{'type':'APACHE_DRILL_LOGICAL','version':'1','generator':{'type':'manual','info':'na'}},"
-            + "'storage':{'donuts-json':{'type':'classpath'},'queue':{'type':'queue'}},"
-            + "'query':["
-            + "{'op':'sequence','do':["
-            + "{'op':'scan','memo':'initial_scan','ref':'_MAP','storageengine':'donuts-json','selection':{'path':'/donuts.json','type':'JSON'}},"
-            + "{'op':'project','projections':[{'expr':'_MAP.ppu','ref':'output.PPU'}]},"
-            + "{'op':'store','storageengine':'queue','memo':'output sink','target':{'number':0}}]}]}");
+                + "'storage':{'donuts-json':{'type':'classpath'},'queue':{'type':'queue'}},"
+                + "'query':["
+                + "{'op':'sequence','do':["
+                + "{'op':'scan','memo':'initial_scan','ref':'_MAP','storageengine':'donuts-json','selection':{'path':'/donuts.json','type':'JSON'}},"
+                + "{'op':'project','projections':[{'expr':'_MAP.ppu','ref':'output.PPU'}]},"
+                + "{'op':'store','storageengine':'queue','memo':'output sink','target':{'number':0}}]}]}");
   }
 
-  /** Query with subquery, filter, and projection of one real and one
-   * nonexistent field from a map field. */
+  /**
+   * Query with subquery, filter, and projection of one real and one
+   * nonexistent field from a map field.
+   */
   public void testProjectFilterSubquery() throws Exception {
     JdbcAssert.withModel(MODEL, "DONUTS")
         .sql("select d['name'] as name, d['xx'] as xx from (\n"
@@ -159,16 +227,18 @@ public class JdbcTest extends TestCase {
             + "where cast(d['ppu'] as double) > 0.6")
         .planContains(
             "{'head':{'type':'APACHE_DRILL_LOGICAL','version':'1','generator':{'type':'manual','info':'na'}},'storage':{'donuts-json':{'type':'classpath'},'queue':{'type':'queue'}},"
-            + "'query':["
-            + "{'op':'sequence','do':["
-            + "{'op':'scan','memo':'initial_scan','ref':'_MAP','storageengine':'donuts-json','selection':{'path':'/donuts.json','type':'JSON'}},"
-            + "{'op':'filter','expr':'(_MAP.donuts.ppu > 0.6)'},"
-            + "{'op':'project','projections':[{'expr':'_MAP.donuts','ref':'output.D'}]},"
-            + "{'op':'project','projections':[{'expr':'D.name','ref':'output.NAME'},{'expr':'D.xx','ref':'output.XX'}]},"
-            + "{'op':'store','storageengine':'queue','memo':'output sink','target':{'number':0}}]}]}");
+                + "'query':["
+                + "{'op':'sequence','do':["
+                + "{'op':'scan','memo':'initial_scan','ref':'_MAP','storageengine':'donuts-json','selection':{'path':'/donuts.json','type':'JSON'}},"
+                + "{'op':'filter','expr':'(_MAP.donuts.ppu > 0.6)'},"
+                + "{'op':'project','projections':[{'expr':'_MAP.donuts','ref':'output.D'}]},"
+                + "{'op':'project','projections':[{'expr':'D.name','ref':'output.NAME'},{'expr':'D.xx','ref':'output.XX'}]},"
+                + "{'op':'store','storageengine':'queue','memo':'output sink','target':{'number':0}}]}]}");
   }
 
-  /** Query that projects one field. (Disabled; uses sugared syntax.) */
+  /**
+   * Query that projects one field. (Disabled; uses sugared syntax.)
+   */
   public void _testProjectNestedFieldSugared() throws Exception {
     JdbcAssert.withModel(MODEL, "DONUTS")
         .sql("select donuts.ppu from donuts")
@@ -179,7 +249,9 @@ public class JdbcTest extends TestCase {
             + "C=4\n");
   }
 
-  /** Query with filter. No field references yet. */
+  /**
+   * Query with filter. No field references yet.
+   */
   public void testFilterConstantFalse() throws Exception {
     JdbcAssert.withModel(MODEL, "DONUTS")
         .sql("select * from donuts where 3 > 4")

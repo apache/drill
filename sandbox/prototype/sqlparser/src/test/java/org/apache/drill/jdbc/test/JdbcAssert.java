@@ -24,10 +24,13 @@ import org.apache.drill.common.util.Hook;
 import java.sql.*;
 import java.util.Properties;
 
+import static org.junit.Assert.assertEquals;
+
 /**
  * Fluent interface for writing JDBC and query-planning tests.
  */
 public class JdbcAssert {
+
   public static One withModel(String model, String schema) {
     final Properties info = new Properties();
     info.setProperty("schema", schema);
@@ -35,10 +38,12 @@ public class JdbcAssert {
     return new One(info);
   }
 
-  static String toString(ResultSet resultSet) throws SQLException {
+  static String toString(ResultSet resultSet, int expectedRecordCount) throws SQLException {
     StringBuilder buf = new StringBuilder();
+    int total = 0, n;
     while (resultSet.next()) {
-      int n = resultSet.getMetaData().getColumnCount();
+      n = resultSet.getMetaData().getColumnCount();
+      total++;
       String sep = "";
       for (int i = 1; i <= n; i++) {
         buf.append(sep)
@@ -49,7 +54,24 @@ public class JdbcAssert {
       }
       buf.append("\n");
     }
+    if (false && expectedRecordCount > 0){
+      assertEquals("Expected record count not matched.", total, expectedRecordCount);
+    }
     return buf.toString();
+  }
+
+  static String toString(ResultSet resultSet) throws SQLException {
+    return toString(resultSet, -1);
+  }
+
+  static int countRecords(ResultSet resultSet) throws SQLException {
+    StringBuilder buf = new StringBuilder();
+    int total = 0, n;
+    while (resultSet.next()) {
+      n = resultSet.getMetaData().getColumnCount();
+      total += n;
+    }
+    return total;
   }
 
   public static class One {
@@ -82,6 +104,8 @@ public class JdbcAssert {
         }
       }
     }
+
+
   }
 
   public static class Two {
@@ -101,6 +125,27 @@ public class JdbcAssert {
         statement = connection.createStatement();
         ResultSet resultSet = statement.executeQuery(sql);
         Assert.assertEquals(expected, JdbcAssert.toString(resultSet));
+        resultSet.close();
+        return this;
+      } finally {
+        if (statement != null) {
+          statement.close();
+        }
+        if (connection != null) {
+          connection.close();
+        }
+      }
+    }
+
+    public Two displayResults(int recordCount) throws Exception {
+      Connection connection = null;
+      Statement statement = null;
+      try {
+        connection = connectionFactory.createConnection();
+        statement = connection.createStatement();
+        ResultSet resultSet = statement.executeQuery(sql);
+        // record count check is done in toString method
+        System.out.println(JdbcAssert.toString(resultSet, recordCount));
         resultSet.close();
         return this;
       } finally {

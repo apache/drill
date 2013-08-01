@@ -43,6 +43,7 @@ public class VectorRecordMaterializer implements RecordMaterializer{
   }
 
   public QueryWritableBatch convertNext(boolean isLast) {
+    //batch.getWritableBatch().getDef().getRecordCount()
     WritableBatch w = batch.getWritableBatch();
 
     QueryResult header = QueryResult.newBuilder() //
