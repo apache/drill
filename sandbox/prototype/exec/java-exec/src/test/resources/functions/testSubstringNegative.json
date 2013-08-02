@@ -25,7 +25,7 @@
             child: 1,
             pop:"project",
             exprs: [
-              { ref: "col3", expr:"substring(yellow, 1, 4)" }
+              { ref: "col3", expr:"substring(yellow, -3, 2)" }
             ]
         },
         {

@@ -30,8 +30,22 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.vector.*;
 
 // TODO: implement optional length parameter
-//       implement negative start position
+//       implement UTF-8 and UTF-16 support
 
+/**
+ * Evaluate a substring expression for a given value; specifying the start
+ * position, and optionally the end position.
+ *
+ *  - If the start position is negative, start from abs(start) characters from
+ *    the end of the buffer.
+ *
+ *  - If no length is specified, continue to the end of the string.
+ *
+ *  - If the substring expression's length exceeds the value's upward bound, the
+ *    value's length will be used.
+ *
+ *  - If the substring is invalid, return an empty string.
+ */
 @FunctionTemplate(name = "substring",
                   scope = FunctionTemplate.FunctionScope.SIMPLE,
                   nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
@@ -48,8 +62,25 @@ public class Substring implements DrillFunc {
   @Override
   public void eval() {
     out.buffer = string.buffer;
-    out.start = (int)offset.value;
-    out.end = (int)length.value;
+
+    // handle invalid values; e.g. SUBSTRING(value, 0, x) or SUBSTRING(value, x, 0)
+    if (offset.value == 0 || length.value <= 0) {
+      out.start = 0;
+      out.end = 0;
+      return;
+    }
+
+    // handle negative and positive offset values
+    if (offset.value < 0)
+      out.start = string.end + (int)offset.value;
+    else
+      out.start = (int)offset.value - 1;
+
+    // calculate end position from length and truncate to upper value bounds
+    if (out.start + length.value > string.end)
+      out.end = string.end;
+    else
+      out.end = out.start + (int)length.value;
   }
 
   public static class Provider implements CallProvider {

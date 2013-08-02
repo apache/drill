@@ -143,6 +143,44 @@ public class TestSimpleFunctions {
 
   }
 
+  @Test
+  public void testSubstringNegative(@Injectable final DrillbitContext bitContext,
+                                    @Injectable UserServer.UserClientConnection connection) throws Throwable{
+
+    new NonStrictExpectations(){{
+      bitContext.getMetrics(); result = new MetricRegistry("test");
+      bitContext.getAllocator(); result = BufferAllocator.getAllocator(c);
+    }};
+
+    PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
+    PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/functions/testSubstringNegative.json"), Charsets.UTF_8));
+    FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
+    FragmentContext context = new FragmentContext(bitContext, ExecProtos.FragmentHandle.getDefaultInstance(), connection, null, registry);
+    SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
+
+    while(exec.next()){
+      NullableVarCharVector c1 = exec.getValueVectorById(new SchemaPath("col3", ExpressionPosition.UNKNOWN), NullableVarCharVector.class);
+      NullableVarCharVector.Accessor a1;
+      a1 = c1.getAccessor();
+
+      int count = 0;
+      for(int i = 0; i < c1.getAccessor().getValueCount(); i++){
+        if (!a1.isNull(i)) {
+          NullableVarCharHolder holder = new NullableVarCharHolder();
+          a1.get(i, holder);
+          assertEquals("aa", holder.toString());
+          ++count;
+        }
+      }
+      assertEquals(50, count);
+    }
+
+    if(context.getFailureCause() != null){
+      throw context.getFailureCause();
+    }
+    assertTrue(!context.isFailed());
+
+  }
 
   @After
   public void tearDown() throws Exception{
