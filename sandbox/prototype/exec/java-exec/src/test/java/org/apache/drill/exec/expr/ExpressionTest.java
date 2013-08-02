@@ -18,16 +18,14 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.parser.ExprLexer;
 import org.apache.drill.common.expression.parser.ExprParser;
 import org.apache.drill.common.expression.parser.ExprParser.parse_return;
-import org.apache.drill.common.types.Types;
-import org.apache.drill.common.types.TypeProtos.DataMode;
-import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.physical.impl.project.Projector;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.TypedFieldId;
 import org.apache.drill.exec.vector.IntVector;
-import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Test;
 
 public class ExpressionTest {
@@ -95,8 +93,8 @@ public class ExpressionTest {
     return cg.generate();
   }
 
-  @After
-  public void tearDown() throws Exception{
+  @AfterClass
+  public static void tearDown() throws Exception{
     // pause to get logger to catch up.
     Thread.sleep(1000);
   }

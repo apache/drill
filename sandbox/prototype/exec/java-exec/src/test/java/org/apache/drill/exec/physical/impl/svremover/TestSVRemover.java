@@ -21,6 +21,7 @@ import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.vector.ValueVector;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
@@ -63,8 +64,8 @@ public class TestSVRemover {
 
   }
   
-  @After
-  public void tearDown() throws Exception{
+  @AfterClass
+  public static void tearDown() throws Exception{
     // pause to get logger to catch up.
     Thread.sleep(1000);
   }

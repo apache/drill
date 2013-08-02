@@ -3,8 +3,10 @@ package org.apache.drill.exec.physical.impl;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.yammer.metrics.MetricRegistry;
+
 import mockit.Injectable;
 import mockit.NonStrictExpectations;
+
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
@@ -18,6 +20,7 @@ import org.apache.drill.exec.proto.ExecProtos;
 import org.apache.drill.exec.rpc.user.UserServer;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -648,7 +651,7 @@ public class TestComparisonFunctions {
         assertTrue(!context.isFailed());
 
     }
-
+    
     @Test
     public void testFloat8LessThanEqual(@Injectable final DrillbitContext bitContext,
                                         @Injectable UserServer.UserClientConnection connection) throws Throwable{
@@ -676,8 +679,8 @@ public class TestComparisonFunctions {
 
     }
 
-    @After
-    public void tearDown() throws Exception{
+    @AfterClass
+    public static void tearDown() throws Exception{
         // pause to get logger to catch up.
         Thread.sleep(1000);
     }
