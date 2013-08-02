@@ -24,6 +24,8 @@ import com.yammer.metrics.MetricRegistry;
 import mockit.Injectable;
 import mockit.NonStrictExpectations;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.expression.ExpressionPosition;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -35,6 +37,8 @@ import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.proto.ExecProtos;
 import org.apache.drill.exec.rpc.user.UserServer;
 import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.exec.vector.NullableVarCharHolder;
+import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.junit.After;
 import org.junit.Test;
 
@@ -96,6 +100,45 @@ public class TestSimpleFunctions {
       throw context.getFailureCause();
     }
 
+    assertTrue(!context.isFailed());
+
+  }
+
+  @Test
+  public void testSubstring(@Injectable final DrillbitContext bitContext,
+                            @Injectable UserServer.UserClientConnection connection) throws Throwable{
+
+    new NonStrictExpectations(){{
+      bitContext.getMetrics(); result = new MetricRegistry("test");
+      bitContext.getAllocator(); result = BufferAllocator.getAllocator(c);
+    }};
+
+    PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
+    PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/functions/testSubstring.json"), Charsets.UTF_8));
+    FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
+    FragmentContext context = new FragmentContext(bitContext, ExecProtos.FragmentHandle.getDefaultInstance(), connection, null, registry);
+    SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
+
+    while(exec.next()){
+      NullableVarCharVector c1 = exec.getValueVectorById(new SchemaPath("col3", ExpressionPosition.UNKNOWN), NullableVarCharVector.class);
+      NullableVarCharVector.Accessor a1;
+      a1 = c1.getAccessor();
+
+      int count = 0;
+      for(int i = 0; i < c1.getAccessor().getValueCount(); i++){
+        if (!a1.isNull(i)) {
+          NullableVarCharHolder holder = new NullableVarCharHolder();
+          a1.get(i, holder);
+          assertEquals("aaaa", holder.toString());
+          ++count;
+        }
+      }
+      assertEquals(50, count);
+    }
+
+    if(context.getFailureCause() != null){
+      throw context.getFailureCause();
+    }
     assertTrue(!context.isFailed());
 
   }

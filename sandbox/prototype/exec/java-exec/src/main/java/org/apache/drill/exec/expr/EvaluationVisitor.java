@@ -10,6 +10,7 @@ import org.apache.drill.common.expression.ValueExpressions.DoubleExpression;
 import org.apache.drill.common.expression.ValueExpressions.LongExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.CodeGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.fn.FunctionHolder;
@@ -157,8 +158,11 @@ public class EvaluationVisitor extends AbstractExprVisitor<HoldingContainer, Cod
       JConditional jc = block._if(hc.getIsSet().eq(JExpr.lit(0)).not());
       block = jc._then();
     }
-    block.add(vv.invoke("getMutator").invoke("set").arg(JExpr.direct("outIndex")).arg(hc.getValue()));
-
+    if (hc.getMinorType() == TypeProtos.MinorType.VARCHAR) {
+      block.add(vv.invoke("getMutator").invoke("set").arg(JExpr.direct("outIndex")).arg(hc.getHolder()));
+    } else {
+      block.add(vv.invoke("getMutator").invoke("set").arg(JExpr.direct("outIndex")).arg(hc.getValue()));
+    }
     return null;
   }
   
@@ -173,7 +177,7 @@ public class EvaluationVisitor extends AbstractExprVisitor<HoldingContainer, Cod
     JVar obj = generator.getSetupBlock().decl( //
         generator.getModel()._ref(Object.class), //
         generator.getNextVar("obj"), // 
-        JExpr.direct("outgoing").invoke("getValueVectorById").arg(JExpr.lit(e.getFieldId())).arg( ((JClass)vvType).dotclass()));
+        JExpr.direct("incoming").invoke("getValueVectorById").arg(JExpr.lit(e.getFieldId())).arg( ((JClass)vvType).dotclass()));
     generator.getSetupBlock().assign(vv1, JExpr.cast(vvType, obj));
 
     // evaluation work.
@@ -184,14 +188,19 @@ public class EvaluationVisitor extends AbstractExprVisitor<HoldingContainer, Cod
       JBlock blk = generator.getBlock();
       blk.assign(out.getIsSet(), vv1.invoke("getAccessor").invoke("isSet").arg(JExpr.direct("inIndex")));
       JConditional jc = blk._if(out.getIsSet().eq(JExpr.lit(1)));
-      jc._then() //
-        .assign(out.getValue(), vv1.invoke("getAccessor").invoke("get").arg(JExpr.direct("inIndex"))); //
-        //.assign(out.getIsSet(), JExpr.lit(1));
-      //jc._else()
-        //.assign(out.getIsSet(), JExpr.lit(0));
-      
+      if (e.getMajorType().getMinorType() == TypeProtos.MinorType.VARCHAR) {
+        jc._then()
+            .add(vv1.invoke("getAccessor").invoke("get").arg(JExpr.direct("inIndex")).arg(out.getHolder()));
+      } else {
+        jc._then()
+            .assign(out.getValue(), vv1.invoke("getAccessor").invoke("get").arg(JExpr.direct("inIndex")));
+      }
     }else{
-      generator.getBlock().assign(out.getValue(), vv1.invoke("getAccessor").invoke("get").arg(JExpr.direct("inIndex")));
+      if (e.getMajorType().getMinorType() == TypeProtos.MinorType.VARCHAR) {
+        generator.getBlock().add(vv1.invoke("getAccessor").invoke("get").arg(JExpr.direct("inIndex")).arg(out.getHolder()));
+      } else {
+        generator.getBlock().assign(out.getValue(), vv1.invoke("getAccessor").invoke("get").arg(JExpr.direct("inIndex")));
+      }
     }
     return out;
   }

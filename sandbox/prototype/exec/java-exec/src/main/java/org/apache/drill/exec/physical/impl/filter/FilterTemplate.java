@@ -40,7 +40,6 @@ public abstract class FilterTemplate implements Filterer{
   }
   
   public void filterBatch(int recordCount){
-    doTransfers();
     switch(svMode){
     case NONE:
       filterBatchNoSV(recordCount);
@@ -51,6 +50,7 @@ public abstract class FilterTemplate implements Filterer{
     default:
       throw new UnsupportedOperationException();
     }
+    doTransfers();
   }
   
   private void filterBatchSV2(int recordCount){

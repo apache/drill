@@ -20,7 +20,6 @@ import org.apache.drill.exec.proto.UserBitShared.FieldMetadata;
 import org.apache.drill.exec.record.DeadBuf;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
-import org.apache.drill.exec.vector.ByteHolder;
 import org.mortbay.jetty.servlet.Holder;
 
 import com.google.common.base.Charsets;
@@ -185,14 +184,6 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       holder.start = offsetVector.getAccessor().get(index);
       holder.end = offsetVector.getAccessor().get(index + 1);
       holder.buffer = data;
-    }
-
-    public void get(int index, ByteHolder holder){
-      assert index >= 0;
-      holder.start = offsetVector.getAccessor().get(index);
-      holder.length = offsetVector.getAccessor().get(index + 1) - holder.start;
-      assert holder.length >= 0;
-      holder.buffer = offsetVector.data;
     }
     
     public Object getObject(int index) {

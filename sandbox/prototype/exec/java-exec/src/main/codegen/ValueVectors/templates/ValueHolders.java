@@ -43,7 +43,19 @@ public final class ${className} implements ValueHolder{
       
       /** The buffer holding actual values. **/
       public ByteBuf buffer;
+
+      public String toString() {
+      <#if mode.name == "Optional">
+        if (isSet == 0)
+          return "<NULL>";
       </#if>
+        byte[] buf = new byte[end-start];
+        buffer.getBytes(start, buf, 0, end-start);
+        return new String(buf);
+      }
+
+      </#if>
+
     <#else> 
     
       /** The first index (inclusive) into the Vector. **/

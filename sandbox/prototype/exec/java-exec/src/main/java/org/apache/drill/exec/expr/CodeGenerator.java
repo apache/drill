@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.compile.TemplateClassDefinition;
@@ -189,6 +190,10 @@ public class CodeGenerator<T> {
     
     public boolean isRepeated(){
       return type.getMode() == DataMode.REPEATED;
+    }
+
+    public TypeProtos.MinorType getMinorType() {
+      return type.getMinorType();
     }
   }
   
