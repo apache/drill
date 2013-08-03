@@ -42,7 +42,7 @@ public class SchemaPath extends LogicalExpressionBase {
       ")*$";
 
   // reads well in RegexBuddy
-  private static final String SEGMENT_REGEX = "(?:\n" + "(\\[\\d+\\])\n" + "|\n" + "'?\n"
+  private static final String SEGMENT_REGEX = "(?:\n" + "\\[(\\d+)\\]\n" + "|\n" + "'?\n"
       + "([^\\.\\[\\+\\-\\!\\]\\}]+)  # identifier\n" + "'?\n" + ")\n"
       + "([\\+\\-\\!\\]\\}]?)         # collision type";
   private static final int GROUP_INDEX = 1;

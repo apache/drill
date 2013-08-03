@@ -64,22 +64,18 @@ public class VectorHolder {
 
   public void populateVectorLength() {
     ValueVector.Mutator mutator = vector.getMutator();
-    if(mutator instanceof NonRepeatedMutator) {
-      ((NonRepeatedMutator)mutator).setValueCount(count);
-    } else if(mutator instanceof RepeatedMutator) {
-      ((RepeatedMutator)mutator).setGroupAndValueCount(groupCount, count);
+    if(vector instanceof RepeatedFixedWidthVector || vector instanceof RepeatedVariableWidthVector) {
+      mutator.setValueCount(groupCount);
     } else {
-      throw new UnsupportedOperationException("Mutator not supported: " + mutator.getClass().getName());
+      mutator.setValueCount(count);
     }
   }
 
   public void allocateNew(int valueLength) {
-    if (vector instanceof FixedWidthVector) {
-      ((FixedWidthVector) vector).allocateNew(valueLength);
-    } else if (vector instanceof VariableWidthVector) {
-      ((VariableWidthVector) vector).allocateNew(valueLength * 10, valueLength);
-    } else {
-      throw new UnsupportedOperationException();
-    }
+    AllocationHelper.allocate(vector, valueLength, 10, 5);
+  }
+
+  public void allocateNew(int valueLength, int repeatedPerTop) {
+    AllocationHelper.allocate(vector, valueLength, 10, repeatedPerTop);
   }
 }

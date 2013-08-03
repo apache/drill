@@ -87,7 +87,6 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
         System.out.println();
       }
 
-
       for (int i = 0; i < batchLoader.getRecordCount(); i++) {
         boolean first = true;
         recordCount++;
@@ -101,12 +100,86 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
         }
         if(!first) System.out.println();
       }
-    
-  
-
     }
     logger.debug("Received results {}", results);
     assertEquals(recordCount, 200);
+    }
+  }
+
+
+  @Test
+  public void runJSONScanPopFragment() throws Exception {
+    try (RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
+         Drillbit bit = new Drillbit(CONFIG, serviceSet);
+         DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
+
+      // run query.
+      bit.run();
+      client.connect();
+      List<QueryResultBatch> results = client.runQuery(QueryType.PHYSICAL, Files.toString(FileUtils.getResourceAsFile("/physical_json_scan_test1.json"), Charsets.UTF_8));
+
+      // look at records
+      RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
+      int recordCount = 0;
+
+      int expectedBatchCount = 2;
+
+      assertEquals(expectedBatchCount, results.size());
+
+      for (int i = 0; i < results.size(); ++i) {
+        QueryResultBatch batch = results.get(i);
+        if (i == 0) {
+          assertTrue(batch.hasData());
+        } else {
+          assertFalse(batch.hasData());
+          return;
+        }
+
+        assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
+        boolean firstColumn = true;
+
+        // print headers.
+        System.out.println("\n\n========NEW SCHEMA=========\n\n");
+        for (VectorWrapper<?> v : batchLoader) {
+
+          if (firstColumn) {
+            firstColumn = false;
+          } else {
+            System.out.print("\t");
+          }
+          System.out.print(v.getField().getName());
+          System.out.print("[");
+          System.out.print(v.getField().getType().getMinorType());
+          System.out.print("]");
+        }
+
+        System.out.println();
+
+
+        for (int r = 0; i < batchLoader.getRecordCount(); r++) {
+          boolean first = true;
+          recordCount++;
+          for (VectorWrapper<?> v : batchLoader) {
+            if (first) {
+              first = false;
+            } else {
+              System.out.print("\t");
+            }
+
+            ValueVector.Accessor accessor = v.getValueVector().getAccessor();
+
+            if (v.getField().getType().getMinorType() == TypeProtos.MinorType.VARCHAR) {
+              System.out.println(new String((byte[]) accessor.getObject(r), UTF_8));
+            } else {
+              System.out.print(accessor.getObject(r));
+            }
+          }
+          if (!first) System.out.println();
+        }
+
+      }
+
+      assertEquals(2, recordCount);
     }
   }
 

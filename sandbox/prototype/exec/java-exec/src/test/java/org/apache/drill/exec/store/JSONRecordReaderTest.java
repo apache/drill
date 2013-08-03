@@ -5,6 +5,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -68,7 +69,12 @@ public class JSONRecordReaderTest {
     SchemaDefProtos.FieldDef def = metadata.getDef();
     assertEquals(expectedMinorType, def.getMajorType().getMinorType());
     String[] parts = name.split("\\.");
-    assertEquals(parts.length, def.getNameList().size());
+    int expected = parts.length;
+    boolean expectingArray = List.class.isAssignableFrom(value.getClass());
+    if (expectingArray) {
+      expected += 1;
+    }
+    assertEquals(expected, def.getNameList().size());
     for(int i = 0; i < parts.length; ++i) {
       assertEquals(parts[i], def.getName(i).getName());
     }
@@ -78,10 +84,21 @@ public class JSONRecordReaderTest {
     }
 
     T val = (T) valueVector.getAccessor().getObject(index);
-    if (val instanceof byte[]) {
-      assertTrue(Arrays.equals((byte[]) value, (byte[]) val));
+    assertValue(value, val);
+  }
+
+  private void assertValue(Object expected, Object found) {
+    if (found instanceof byte[]) {
+      assertTrue(Arrays.equals((byte[]) expected, (byte[]) found));
+    } else if(found instanceof ArrayList) {
+      List expectedArray = (List) expected;
+      List foundArray = (List) found;
+      assertEquals(expectedArray.size(), foundArray.size());
+      for(int i = 0; i < expectedArray.size(); ++i) {
+        assertValue(expectedArray.get(i), foundArray.get(i));
+      }
     } else {
-      assertEquals(value, val);
+      assertEquals(expected, found);
     }
   }
 
@@ -230,6 +247,37 @@ public class JSONRecordReaderTest {
     assertField(addFields.get(0), 1, MinorType.INT, 1234, "test");
     assertField(addFields.get(1), 1, MinorType.VARCHAR, "test2".getBytes(UTF_8), "a.b");
     assertField(addFields.get(2), 1, MinorType.BIT, false, "a.a.d");
+
+    assertEquals(0, jr.next());
+    assertTrue(mutator.getRemovedFields().isEmpty());
+  }
+
+  @Test
+  public void testRepeatedFields(@Injectable final FragmentContext context) throws ExecutionSetupException {
+    new Expectations() {
+      {
+        context.getAllocator();
+        returns(new DirectBufferAllocator());
+      }
+    };
+
+    JSONRecordReader jr = new JSONRecordReader(context, getResource("scan_json_test_4.json"));
+
+    MockOutputMutator mutator = new MockOutputMutator();
+    List<ValueVector> addFields = mutator.getAddFields();
+    jr.setup(mutator);
+    assertEquals(2, jr.next());
+    assertEquals(7, addFields.size());
+    assertField(addFields.get(0), 0, MinorType.INT, 123, "test");
+    assertField(addFields.get(1), 0, MinorType.INT, Arrays.asList(1, 2, 3), "test2");
+    assertField(addFields.get(2), 0, MinorType.INT, Arrays.asList(4, 5, 6), "test3.a");
+    assertField(addFields.get(3), 0, MinorType.INT, Arrays.asList(7, 8, 9), "test3.b");
+    assertField(addFields.get(4), 0, MinorType.INT, Arrays.asList(10, 11, 12), "test3.c.d");
+    assertField(addFields.get(5), 0, MinorType.FLOAT4, Arrays.<Float>asList((float) 1.1, (float) 1.2, (float) 1.3), "testFloat");
+    assertField(addFields.get(6), 0, MinorType.VARCHAR, Arrays.asList("hello".getBytes(UTF_8), "drill".getBytes(UTF_8)), "testStr");
+    assertField(addFields.get(1), 1, MinorType.INT, Arrays.asList(1, 2), "test2");
+    assertField(addFields.get(2), 1, MinorType.INT, Arrays.asList(7, 7, 7, 8), "test3.a");
+    assertField(addFields.get(5), 1, MinorType.FLOAT4, Arrays.<Float>asList((float) 2.2, (float) 2.3,(float) 2.4), "testFloat");
 
     assertEquals(0, jr.next());
     assertTrue(mutator.getRemovedFields().isEmpty());

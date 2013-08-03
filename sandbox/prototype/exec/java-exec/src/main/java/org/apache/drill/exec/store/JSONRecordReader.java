@@ -103,7 +103,7 @@ public class JSONRecordReader implements RecordReader {
     int nextRowIndex = 0;
 
     try {
-      while (ReadType.OBJECT.readRecord(null, this, null, nextRowIndex++, 0)) {
+      while (ReadType.OBJECT.readRecord(this, null, nextRowIndex++, 0)) {
         parser.nextToken(); // Read to START_OBJECT token
 
         if (!parser.hasCurrentToken()) {
@@ -180,12 +180,14 @@ public class JSONRecordReader implements RecordReader {
     ARRAY(END_ARRAY) {
       @Override
       public Field createField(RecordSchema parentSchema, String prefixFieldName, String fieldName, MajorType fieldType, int index) {
-        return new OrderedField(parentSchema, fieldType, prefixFieldName, index);
+        return new NamedField(parentSchema, prefixFieldName, fieldName, fieldType);
+        //return new OrderedField(parentSchema, fieldType, prefixFieldName, index);
       }
 
       @Override
       public RecordSchema createSchema() throws IOException {
-        return new ListSchema();
+        return new ObjectSchema();
+        //return new ListSchema();
       }
     },
     OBJECT(END_OBJECT) {
@@ -215,8 +217,7 @@ public class JSONRecordReader implements RecordReader {
     }
 
     @SuppressWarnings("ConstantConditions")
-    public boolean readRecord(Field parentField,
-                              JSONRecordReader reader,
+    public boolean readRecord(JSONRecordReader reader,
                               String prefixFieldName,
                               int rowIndex,
                               int groupCount) throws IOException, SchemaChangeException {
@@ -232,7 +233,7 @@ public class JSONRecordReader implements RecordReader {
         }
 
         String fieldName = parser.getCurrentName();
-        MajorType fieldType = JacksonHelper.getFieldType(token);
+        MajorType fieldType = JacksonHelper.getFieldType(token, this == ReadType.ARRAY);
         ReadType readType = null;
         switch (token) {
           case START_ARRAY:
@@ -246,17 +247,17 @@ public class JSONRecordReader implements RecordReader {
         }
 
         if (fieldType != null) { // Including nulls
-          isFull = isFull ||
-              !recordData(
-                  parentField,
-                  readType,
-                  reader,
-                  fieldType,
-                  prefixFieldName,
-                  fieldName,
-                  rowIndex,
-                  colIndex,
-                  groupCount);
+          boolean currentFieldFull = !recordData(
+              readType,
+              reader,
+              fieldType,
+              prefixFieldName,
+              fieldName,
+              rowIndex,
+              colIndex,
+              groupCount);
+
+          isFull = isFull || currentFieldFull;
         }
         token = parser.nextToken();
         colIndex += 1;
@@ -277,8 +278,7 @@ public class JSONRecordReader implements RecordReader {
       }
     }
 
-    private boolean recordData(Field parentField,
-                               JSONRecordReader.ReadType readType,
+    private boolean recordData(JSONRecordReader.ReadType readType,
                                JSONRecordReader reader,
                                MajorType fieldType,
                                String prefixFieldName,
@@ -322,18 +322,13 @@ public class JSONRecordReader implements RecordReader {
         field.assignSchemaIfNull(newSchema);
 
         if (fieldSchema == null) reader.setCurrentSchema(newSchema);
-        if(readType == ReadType.ARRAY) {
-          readType.readRecord(field, reader, field.getFullFieldName(), rowIndex, groupCount);
-        } else {
-          readType.readRecord(field, reader, field.getFullFieldName(), rowIndex, groupCount);
-        }
+        readType.readRecord(reader, field.getFullFieldName(), rowIndex, groupCount);
 
         reader.setCurrentSchema(currentSchema);
       } else {
         return addValueToVector(
             rowIndex,
             holder,
-            reader.getAllocator(),
             JacksonHelper.getValueFromFieldType(
                 reader.getParser(),
                 fieldType.getMinorType()
@@ -346,10 +341,10 @@ public class JSONRecordReader implements RecordReader {
       return true;
     }
 
-    private static <T> boolean addValueToVector(int index, VectorHolder holder, BufferAllocator allocator, T val, MinorType minorType, int groupCount) {
+    private static <T> boolean addValueToVector(int index, VectorHolder holder, T val, MinorType minorType, int groupCount) {
       switch (minorType) {
         case INT: {
-          holder.incAndCheckLength(32);
+          holder.incAndCheckLength(32 + 1);
           if (groupCount == 0) {
             if (val != null) {
               NullableIntVector int4 = (NullableIntVector) holder.getValueVector();
@@ -363,13 +358,14 @@ public class JSONRecordReader implements RecordReader {
 
             RepeatedIntVector repeatedInt4 = (RepeatedIntVector) holder.getValueVector();
             RepeatedIntVector.Mutator m = repeatedInt4.getMutator();
+            holder.setGroupCount(index);
             m.add(index, (Integer) val);
           }
 
-          return holder.hasEnoughSpace(32);
+          return holder.hasEnoughSpace(32 + 1);
         }
         case FLOAT4: {
-          holder.incAndCheckLength(32);
+          holder.incAndCheckLength(32 + 1);
           if (groupCount == 0) {
             if (val != null) {
               NullableFloat4Vector float4 = (NullableFloat4Vector) holder.getValueVector();
@@ -383,9 +379,10 @@ public class JSONRecordReader implements RecordReader {
 
             RepeatedFloat4Vector repeatedFloat4 = (RepeatedFloat4Vector) holder.getValueVector();
             RepeatedFloat4Vector.Mutator m = repeatedFloat4.getMutator();
-            m.add(groupCount, (Float) val);
+            holder.setGroupCount(index);
+            m.add(index, (Float) val);
           }
-          return holder.hasEnoughSpace(32);
+          return holder.hasEnoughSpace(32 + 1);
         }
         case VARCHAR: {
           if (val == null) {
@@ -401,16 +398,29 @@ public class JSONRecordReader implements RecordReader {
             } else {
               RepeatedVarCharVector repeatedVarLen4 = (RepeatedVarCharVector) holder.getValueVector();
               RepeatedVarCharVector.Mutator m = repeatedVarLen4.getMutator();
+              holder.setGroupCount(index);
               m.add(index, bytes);
             }
-            return holder.hasEnoughSpace(length);
+            return holder.hasEnoughSpace(length + 4 + 1);
           }
         }
         case BIT: {
-          holder.incAndCheckLength(1);
-          NullableBitVector bit = (NullableBitVector) holder.getValueVector();
-          if (val != null) {
-            bit.getMutator().set(index, (Boolean) val ? 1 : 0);
+          holder.incAndCheckLength(1 + 1);
+          if (groupCount == 0) {
+            if (val != null) {
+              NullableBitVector bit = (NullableBitVector) holder.getValueVector();
+              NullableBitVector.Mutator m = bit.getMutator();
+              m.set(index, (Boolean) val ? 1 : 0);
+            }
+          } else {
+            if (val == null) {
+              throw new UnsupportedOperationException("Nullable repeated boolean is not supported.");
+            }
+
+            RepeatedBitVector repeatedBit = (RepeatedBitVector) holder.getValueVector();
+            RepeatedBitVector.Mutator m = repeatedBit.getMutator();
+            holder.setGroupCount(index);
+            m.add(index, (Boolean) val ? 1 : 0);
           }
           return holder.hasEnoughSpace(1 + 1);
         }
@@ -443,7 +453,9 @@ public class JSONRecordReader implements RecordReader {
       MajorType type = field.getFieldType();
       MaterializedField f = MaterializedField.create(new SchemaPath(field.getFullFieldName(), ExpressionPosition.UNKNOWN), type);
 
-      if (f.getType().getMinorType().equals(MinorType.MAP)) {
+      MinorType minorType = f.getType().getMinorType();
+
+      if (minorType.equals(MinorType.MAP) || minorType.equals(MinorType.LATE)) {
         return null;
       }
 
