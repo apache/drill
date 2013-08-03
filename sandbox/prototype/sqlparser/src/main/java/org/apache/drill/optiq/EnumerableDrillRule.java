@@ -25,8 +25,7 @@ import org.eigenbase.rel.convert.ConverterRule;
  * Rule that converts any Drill relational expression to enumerable format by adding a {@link EnumerableDrillRel}.
  */
 public class EnumerableDrillRule extends ConverterRule {
-  public static final EnumerableDrillRule ARRAY_INSTANCE = new EnumerableDrillRule(EnumerableConvention.ARRAY);
-  public static final EnumerableDrillRule CUSTOM_INSTANCE = new EnumerableDrillRule(EnumerableConvention.CUSTOM);
+  public static final EnumerableDrillRule ARRAY_INSTANCE = new EnumerableDrillRule(EnumerableConvention.INSTANCE);
 
   private EnumerableDrillRule(EnumerableConvention outConvention) {
     super(RelNode.class, DrillRel.CONVENTION, outConvention, "EnumerableDrillRule." + outConvention);
@@ -43,5 +42,3 @@ public class EnumerableDrillRule extends ConverterRule {
     return new EnumerableDrillRel(rel.getCluster(), rel.getTraitSet().replace(getOutConvention()), rel);
   }
 }
-
-// End EnumerableDrillRule.java

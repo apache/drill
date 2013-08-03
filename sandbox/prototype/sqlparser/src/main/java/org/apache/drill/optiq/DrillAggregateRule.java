@@ -17,26 +17,37 @@
  ******************************************************************************/
 package org.apache.drill.optiq;
 
-import org.eigenbase.rel.FilterRel;
+import org.eigenbase.rel.AggregateRel;
+import org.eigenbase.rel.InvalidRelException;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.*;
+import org.eigenbase.trace.EigenbaseTrace;
+
+import java.util.logging.Logger;
 
 /**
- * Rule that converts a {@link org.eigenbase.rel.FilterRel} to a Drill "filter" operation.
+ * Rule that converts an {@link AggregateRel} to a {@link DrillAggregateRel}, implemented by a Drill "segment" operation
+ * followed by a "collapseaggregate" operation.
  */
-public class DrillFilterRule extends RelOptRule {
-  public static final RelOptRule INSTANCE = new DrillFilterRule();
+public class DrillAggregateRule extends RelOptRule {
+  public static final RelOptRule INSTANCE = new DrillAggregateRule();
+  protected static final Logger tracer = EigenbaseTrace.getPlannerTracer();
 
-  private DrillFilterRule() {
-    super(RelOptRule.some(FilterRel.class, Convention.NONE, RelOptRule.any(RelNode.class)), "DrillFilterRule");
+  private DrillAggregateRule() {
+    super(RelOptRule.some(AggregateRel.class, Convention.NONE, RelOptRule.any(RelNode.class)), "DrillAggregateRule");
   }
 
   @Override
   public void onMatch(RelOptRuleCall call) {
-    final FilterRel filter = (FilterRel) call.getRels()[0];
-    final RelNode input = call.getRels()[1];
-    final RelTraitSet traits = filter.getTraitSet().plus(DrillRel.CONVENTION);
+    final AggregateRel aggregate = (AggregateRel) call.rel(0);
+    final RelNode input = call.rel(1);
+    final RelTraitSet traits = aggregate.getTraitSet().plus(DrillRel.CONVENTION);
     final RelNode convertedInput = convert(input, traits);
-    call.transformTo(new DrillFilterRel(filter.getCluster(), traits, convertedInput, filter.getCondition()));
+    try {
+      call.transformTo(new DrillAggregateRel(aggregate.getCluster(), traits, convertedInput, aggregate.getGroupSet(),
+          aggregate.getAggCallList()));
+    } catch (InvalidRelException e) {
+      tracer.warning(e.toString());
+    }
   }
 }

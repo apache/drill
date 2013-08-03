@@ -23,9 +23,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.rex.RexNode;
-import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.util.Pair;
 
 import java.util.*;
@@ -34,17 +32,21 @@ import java.util.*;
  * Project implemented in Drill.
  */
 public class DrillProjectRel extends ProjectRelBase implements DrillRel {
-  protected DrillProjectRel(RelOptCluster cluster, RelTraitSet traits,
-      RelNode child, RexNode[] exps, RelDataType rowType) {
-    super(cluster, traits, child, exps, rowType, Flags.Boxed,
-        Collections.<RelCollation>emptyList());
+  protected DrillProjectRel(RelOptCluster cluster, RelTraitSet traits, RelNode child, List<RexNode> exps,
+      RelDataType rowType) {
+    super(cluster, traits, child, exps, rowType, Flags.Boxed, Collections.<RelCollation> emptyList());
     assert getConvention() == CONVENTION;
+  }
+
+  public DrillProjectRel(RelOptCluster cluster, RelTraitSet traits, RelNode child, List<RexNode> exps,
+      RelDataType rowType, int flags, List<RelCollation> collationList) {
+    super(cluster, traits, child, exps, rowType, flags, collationList);
+
   }
 
   @Override
   public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
-    return new DrillProjectRel(getCluster(), traitSet, sole(inputs),
-        exps.clone(), rowType);
+    return new DrillProjectRel(getCluster(), traitSet, sole(inputs), new ArrayList<RexNode>(exps), rowType);
   }
 
   @Override
@@ -53,36 +55,28 @@ public class DrillProjectRel extends ProjectRelBase implements DrillRel {
   }
 
   private List<Pair<RexNode, String>> projects() {
-    return Pair.zip(
-        Arrays.asList(exps),
-        RelOptUtil.getFieldNameList(getRowType()));
+    return Pair.zip(exps, getRowType().getFieldNames());
   }
 
   @Override
-  public void implement(DrillImplementor implementor) {
-    implementor.visitChild(this, 0, getChild());
-    final ObjectNode node = implementor.mapper.createObjectNode();
-/*
-    E.g. {
-      op: "project",
-	    projections: [
-	      { ref: "output.quantity", expr: "donuts.sales"}
-	    ]
-*/
-    node.put("op", "project");
+  public int implement(DrillImplementor implementor) {
+    int inputId = implementor.visitChild(this, 0, getChild());
+    final ObjectNode project = implementor.mapper.createObjectNode();
+    /*
+     * E.g. { op: "project", projections: [ { ref: "output.quantity", expr: "donuts.sales"} ]
+     */
+    project.put("op", "project");
+    project.put("input", inputId);
     final ArrayNode transforms = implementor.mapper.createArrayNode();
-    node.put("projections", transforms);
-    final String prefix = "output.";
+    project.put("projections", transforms);
     for (Pair<RexNode, String> pair : projects()) {
       final ObjectNode objectNode = implementor.mapper.createObjectNode();
       transforms.add(objectNode);
       String expr = DrillOptiq.toDrill(getChild(), pair.left);
       objectNode.put("expr", expr);
-      String ref = prefix + pair.right;
+      String ref = "output." + pair.right;
       objectNode.put("ref", ref);
     }
-    implementor.add(node);
+    return implementor.add(project);
   }
 }
-
-// End DrillProjectRel.java

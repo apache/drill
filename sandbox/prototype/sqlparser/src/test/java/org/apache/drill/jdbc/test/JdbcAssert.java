@@ -17,25 +17,34 @@
  ******************************************************************************/
 package org.apache.drill.jdbc.test;
 
-import com.google.common.base.Function;
-import junit.framework.Assert;
-import org.apache.drill.common.util.Hook;
-
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
-import static org.junit.Assert.assertEquals;
+import net.hydromatic.linq4j.Ord;
+
+import org.apache.drill.common.util.Hook;
+import org.junit.Assert;
+
+import com.google.common.base.Function;
 
 /**
  * Fluent interface for writing JDBC and query-planning tests.
  */
 public class JdbcAssert {
-
-  public static One withModel(String model, String schema) {
+  public static ModelAndSchema withModel(String model, String schema) {
     final Properties info = new Properties();
     info.setProperty("schema", schema);
     info.setProperty("model", "inline:" + model);
-    return new One(info);
+    return new ModelAndSchema(info);
   }
 
   static String toString(ResultSet resultSet, int expectedRecordCount) throws SQLException {
@@ -54,46 +63,65 @@ public class JdbcAssert {
       }
       buf.append("\n");
     }
-    if (false && expectedRecordCount > 0){
-      assertEquals("Expected record count not matched.", total, expectedRecordCount);
+    return buf.toString();
+  }
+  
+  static String toString(ResultSet resultSet) throws SQLException {
+    StringBuilder buf = new StringBuilder();
+    final List<Ord<String>> columns = columnLabels(resultSet);
+    while (resultSet.next()) {
+      for (Ord<String> column : columns) {
+        buf.append(column.i == 1 ? "" : "; ").append(column.e).append("=").append(resultSet.getObject(column.i));
+      }
+      buf.append("\n");
     }
     return buf.toString();
   }
 
-  static String toString(ResultSet resultSet) throws SQLException {
-    return toString(resultSet, -1);
-  }
 
-  static int countRecords(ResultSet resultSet) throws SQLException {
+
+  static List<String> toStrings(ResultSet resultSet) throws SQLException {
+    final List<String> list = new ArrayList<>();
     StringBuilder buf = new StringBuilder();
-    int total = 0, n;
+    final List<Ord<String>> columns = columnLabels(resultSet);
     while (resultSet.next()) {
-      n = resultSet.getMetaData().getColumnCount();
-      total += n;
+      buf.setLength(0);
+      for (Ord<String> column : columns) {
+        buf.append(column.i == 1 ? "" : "; ").append(column.e).append("=").append(resultSet.getObject(column.i));
+      }
+      list.add(buf.toString());
     }
-    return total;
+    return list;
   }
 
-  public static class One {
+  private static List<Ord<String>> columnLabels(ResultSet resultSet) throws SQLException {
+    int n = resultSet.getMetaData().getColumnCount();
+    List<Ord<String>> columns = new ArrayList<>();
+    for (int i = 1; i <= n; i++) {
+      columns.add(Ord.of(i, resultSet.getMetaData().getColumnLabel(i)));
+    }
+    return columns;
+  }
+
+  public static class ModelAndSchema {
     private final Properties info;
     private final ConnectionFactory connectionFactory;
 
-    public One(Properties info) {
+    public ModelAndSchema(Properties info) {
       this.info = info;
       this.connectionFactory = new ConnectionFactory() {
         public Connection createConnection() throws Exception {
           Class.forName("org.apache.drill.jdbc.Driver");
-          return DriverManager.getConnection("jdbc:drill:", One.this.info);
+          return DriverManager.getConnection("jdbc:drill:", ModelAndSchema.this.info);
         }
       };
     }
 
-    public Two sql(String sql) {
-      return new Two(connectionFactory, sql);
+    public TestDataConnection sql(String sql) {
+      return new TestDataConnection(connectionFactory, sql);
     }
 
-    public <T> T withConnection(Function<Connection, T> function)
-        throws Exception {
+    public <T> T withConnection(Function<Connection, T> function) throws Exception {
       Connection connection = null;
       try {
         connection = connectionFactory.createConnection();
@@ -104,27 +132,30 @@ public class JdbcAssert {
         }
       }
     }
-
-
   }
 
-  public static class Two {
+  public static class TestDataConnection {
     private final ConnectionFactory connectionFactory;
     private final String sql;
 
-    Two(ConnectionFactory connectionFactory, String sql) {
+    TestDataConnection(ConnectionFactory connectionFactory, String sql) {
       this.connectionFactory = connectionFactory;
       this.sql = sql;
     }
 
-    public Two returns(String expected) throws Exception {
+    /** Checks that the current SQL statement returns the expected result. */
+    public TestDataConnection returns(String expected) throws Exception {
       Connection connection = null;
       Statement statement = null;
       try {
         connection = connectionFactory.createConnection();
         statement = connection.createStatement();
         ResultSet resultSet = statement.executeQuery(sql);
-        Assert.assertEquals(expected, JdbcAssert.toString(resultSet));
+        expected = expected.trim();
+        String result = JdbcAssert.toString(resultSet).trim();
+        
+        Assert.assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected), expected.equals(result));
+        Assert.assertEquals(expected, result);
         resultSet.close();
         return this;
       } finally {
@@ -136,15 +167,42 @@ public class JdbcAssert {
         }
       }
     }
+    
 
-    public Two displayResults(int recordCount) throws Exception {
+
+    /**
+     * Checks that the current SQL statement returns the expected result lines. Lines are compared unordered; the test
+     * succeeds if the query returns these lines in any order.
+     */
+    public TestDataConnection returnsUnordered(String... expecteds) throws Exception {
       Connection connection = null;
       Statement statement = null;
       try {
         connection = connectionFactory.createConnection();
         statement = connection.createStatement();
         ResultSet resultSet = statement.executeQuery(sql);
-        // record count check is done in toString method
+        Assert.assertEquals(unsortedList(Arrays.asList(expecteds)), unsortedList(JdbcAssert.toStrings(resultSet)));
+        resultSet.close();
+        return this;
+      } finally {
+        if (statement != null) {
+          statement.close();
+        }
+        if (connection != null) {
+          connection.close();
+        }
+      }
+    }
+    
+    public TestDataConnection displayResults(int recordCount) throws Exception {
+      // record count check is done in toString method
+      
+      Connection connection = null;
+      Statement statement = null;
+      try {
+        connection = connectionFactory.createConnection();
+        statement = connection.createStatement();
+        ResultSet resultSet = statement.executeQuery(sql);
         System.out.println(JdbcAssert.toString(resultSet, recordCount));
         resultSet.close();
         return this;
@@ -156,31 +214,57 @@ public class JdbcAssert {
           connection.close();
         }
       }
+      
     }
 
-    public void planContains(String expected) {
-      final String[] plan0 = {null};
+    private SortedSet<String> unsortedList(List<String> strings) {
+      final SortedSet<String> set = new TreeSet<>();
+      for (String string : strings) {
+        set.add(string + "\n");
+      }
+      return set;
+    }
+    
+
+
+    public TestDataConnection planContains(String expected) {
+      final String[] plan0 = { null };
       Connection connection = null;
       Statement statement = null;
-      Hook.Closeable x =
-          Hook.LOGICAL_PLAN.add(
-              new Function<String, Void>() {
-                public Void apply(String o) {
-                  plan0[0] = o;
-                  return null;
-                }
-              });
+      final Hook.Closeable x = Hook.LOGICAL_PLAN.add(new Function<String, Void>() {
+        public Void apply(String o) {
+          plan0[0] = o;
+          return null;
+        }
+      });
       try {
         connection = connectionFactory.createConnection();
         statement = connection.prepareStatement(sql);
         statement.close();
-        final String plan = plan0[0];
+        final String plan = plan0[0].trim();
         // it's easier to write java strings containing single quotes than
         // double quotes
-        String expected2 = expected.replace("'", "\"");
-        Assert.assertTrue(plan, plan.contains(expected2));
+        String expected2 = expected.replace("'", "\"").trim();
+        Assert.assertTrue(String.format("Plan of: \n%s \n does not contain expected string of: \n%s",plan, expected2), plan.contains(expected2));
+        return this;
       } catch (Exception e) {
         throw new RuntimeException(e);
+      } finally {
+        if (statement != null) {
+          try {
+            statement.close();
+          } catch (SQLException e) {
+            // ignore
+          }
+        }
+        if (connection != null) {
+          try {
+            connection.close();
+          } catch (SQLException e) {
+            // ignore
+          }
+        }
+        x.close();
       }
     }
   }

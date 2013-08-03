@@ -45,4 +45,8 @@ import org.apache.drill.exec.server.DrillbitContext;
     public void reset() {
       throw new UnsupportedOperationException();
     }
+    
+    public void close(){
+      
+    }
   }

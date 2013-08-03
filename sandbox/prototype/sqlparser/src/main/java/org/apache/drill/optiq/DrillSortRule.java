@@ -17,23 +17,26 @@
  ******************************************************************************/
 package org.apache.drill.optiq;
 
-import org.eigenbase.rel.ValuesRel;
+import org.eigenbase.rel.SortRel;
+import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.*;
 
 /**
- * Rule that converts a {@link ValuesRel} to a Drill "values" operation.
+ * Rule that converts an {@link SortRel} to a {@link DrillSortRel}, implemented by a Drill "order" operation.
  */
-public class DrillValuesRule extends RelOptRule {
-  public static final RelOptRule INSTANCE = new DrillValuesRule();
+public class DrillSortRule extends RelOptRule {
+  public static final RelOptRule INSTANCE = new DrillSortRule();
 
-  private DrillValuesRule() {
-    super(RelOptRule.any(ValuesRel.class, Convention.NONE), "DrillValuesRule");
+  private DrillSortRule() {
+    super(RelOptRule.some(SortRel.class, Convention.NONE, RelOptRule.any(RelNode.class)), "DrillSortRule");
   }
 
   @Override
   public void onMatch(RelOptRuleCall call) {
-    final ValuesRel values = (ValuesRel) call.rel(0);
-    final RelTraitSet traits = values.getTraitSet().plus(DrillRel.CONVENTION);
-    call.transformTo(new DrillValuesRel(values.getCluster(), values.getRowType(), values.getTuples(), traits));
+    final SortRel sort = (SortRel) call.rel(0);
+    final RelNode input = call.rel(1);
+    final RelTraitSet traits = sort.getTraitSet().plus(DrillRel.CONVENTION);
+    final RelNode convertedInput = convert(input, traits);
+    call.transformTo(new DrillSortRel(sort.getCluster(), traits, convertedInput, sort.getCollation()));
   }
 }

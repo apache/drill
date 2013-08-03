@@ -93,7 +93,8 @@ public class LogicalPlan {
       LogicalPlan plan = mapper.readValue(planString, LogicalPlan.class);
       return plan;
     } catch (IOException e) {
-      throw new RuntimeException(e);
+      
+      throw new RuntimeException(String.format("Failure while parsing plan: \n %s}", planString), e);
     }
   }
 

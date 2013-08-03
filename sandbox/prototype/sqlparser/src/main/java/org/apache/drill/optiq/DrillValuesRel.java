@@ -29,10 +29,7 @@ import java.util.List;
  * Values implemented in Drill.
  */
 public class DrillValuesRel extends ValuesRelBase implements DrillRel {
-  protected DrillValuesRel(RelOptCluster cluster,
-      RelDataType rowType,
-      List<List<RexLiteral>> tuples,
-      RelTraitSet traits) {
+  protected DrillValuesRel(RelOptCluster cluster, RelDataType rowType, List<List<RexLiteral>> tuples, RelTraitSet traits) {
     super(cluster, rowType, tuples, traits);
     assert getConvention() == CONVENTION;
   }
@@ -49,10 +46,8 @@ public class DrillValuesRel extends ValuesRelBase implements DrillRel {
   }
 
   @Override
-  public void implement(DrillImplementor implementor) {
+  public int implement(DrillImplementor implementor) {
     // Update when https://issues.apache.org/jira/browse/DRILL-57 fixed
     throw new UnsupportedOperationException();
   }
 }
-
-// End DrillValuesRel.java

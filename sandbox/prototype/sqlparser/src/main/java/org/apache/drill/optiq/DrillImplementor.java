@@ -28,8 +28,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.eigenbase.rel.RelNode;
 
 /**
- * Context for converting a tree of {@link DrillRel} nodes into a Drill logical
- * plan.
+ * Context for converting a tree of {@link DrillRel} nodes into a Drill logical plan.
  */
 public class DrillImplementor {
   final ObjectMapper mapper = new ObjectMapper();
@@ -49,14 +48,14 @@ public class DrillImplementor {
 
     final ObjectNode generatorNode = mapper.createObjectNode();
     headNode.put("generator", generatorNode);
-    generatorNode.put("type", "manual");
+    generatorNode.put("type", "optiq");
     generatorNode.put("info", "na");
 
     // TODO: populate sources based on the sources of scans that occur in
     // the query
     final ObjectNode sourcesNode = mapper.createObjectNode();
     rootNode.put("storage", sourcesNode);
-    
+
     // input file source
     {
       final ObjectNode sourceNode = mapper.createObjectNode();
@@ -68,36 +67,33 @@ public class DrillImplementor {
       sourceNode.put("type", "queue");
       sourcesNode.put("queue", sourceNode);
     }
-    
 
-    
     final ArrayNode queryNode = mapper.createArrayNode();
     rootNode.put("query", queryNode);
 
-    final ObjectNode sequenceOpNode = mapper.createObjectNode();
-    queryNode.add(sequenceOpNode);
-    sequenceOpNode.put("op", "sequence");
-
-    this.operatorsNode = mapper.createArrayNode();
-    sequenceOpNode.put("do", operatorsNode);
+    this.operatorsNode = queryNode;
   }
 
-  public void go(DrillRel root) {
-    root.implement(this);
+  public int go(DrillRel root) {
+    int inputId = root.implement(this);
 
     // Add a last node, to write to the output queue.
     final ObjectNode writeOp = mapper.createObjectNode();
     writeOp.put("op", "store");
+    writeOp.put("input", inputId);
     writeOp.put("storageengine", "queue");
     writeOp.put("memo", "output sink");
     QueueOutputInfo output = new QueueOutputInfo();
     output.number = 0;
     writeOp.put("target", mapper.convertValue(output, JsonNode.class));
-    add(writeOp);
+    return add(writeOp);
   }
 
-  public void add(ObjectNode operator) {
+  public int add(ObjectNode operator) {
     operatorsNode.add(operator);
+    final int id = operatorsNode.size();
+    operator.put("@id", id);
+    return id;
   }
 
   /** Returns the generated plan. */
@@ -107,9 +103,8 @@ public class DrillImplementor {
     return s;
   }
 
-  public void visitChild(DrillRel parent, int ordinal, RelNode child) {
+  public int visitChild(DrillRel parent, int ordinal, RelNode child) {
     ((DrillRel) child).implement(this);
+    return operatorsNode.size();
   }
 }
-
-// End DrillImplementor.java

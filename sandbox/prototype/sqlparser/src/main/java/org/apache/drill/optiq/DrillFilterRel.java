@@ -30,16 +30,14 @@ import java.util.List;
  * Filter implemented in Drill.
  */
 public class DrillFilterRel extends FilterRelBase implements DrillRel {
-  protected DrillFilterRel(RelOptCluster cluster, RelTraitSet traits,
-      RelNode child, RexNode condition) {
+  protected DrillFilterRel(RelOptCluster cluster, RelTraitSet traits, RelNode child, RexNode condition) {
     super(cluster, traits, child, condition);
     assert getConvention() == CONVENTION;
   }
 
   @Override
   public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
-    return new DrillFilterRel(getCluster(), traitSet, sole(inputs),
-        getCondition());
+    return new DrillFilterRel(getCluster(), traitSet, sole(inputs), getCondition());
   }
 
   @Override
@@ -48,19 +46,15 @@ public class DrillFilterRel extends FilterRelBase implements DrillRel {
   }
 
   @Override
-  public void implement(DrillImplementor implementor) {
-    implementor.visitChild(this, 0, getChild());
-    final ObjectNode node = implementor.mapper.createObjectNode();
-/*
-      E.g. {
-	      op: "filter",
-	      expr: "donuts.ppu < 1.00"
-	    }
-*/
-    node.put("op", "filter");
-    node.put("expr", DrillOptiq.toDrill(getChild(), getCondition()));
-    implementor.add(node);
+  public int implement(DrillImplementor implementor) {
+    final int inputId = implementor.visitChild(this, 0, getChild());
+    final ObjectNode filter = implementor.mapper.createObjectNode();
+    /*
+     * E.g. { op: "filter", expr: "donuts.ppu < 1.00" }
+     */
+    filter.put("op", "filter");
+    filter.put("input", inputId);
+    filter.put("expr", DrillOptiq.toDrill(getChild(), getCondition()));
+    return implementor.add(filter);
   }
 }
-
-// End DrillFilterRel.java

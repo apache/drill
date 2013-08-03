@@ -28,7 +28,5 @@ public interface DrillRel extends RelNode {
    * generating Drill logical plans. */
   Convention CONVENTION = new Convention.Impl("DRILL", DrillRel.class);
 
-  void implement(DrillImplementor implementor);
+  int implement(DrillImplementor implementor);
 }
-
-// End DrillRel.java

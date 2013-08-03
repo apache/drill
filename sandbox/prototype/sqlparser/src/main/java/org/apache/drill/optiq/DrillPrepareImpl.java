@@ -33,7 +33,6 @@ public class DrillPrepareImpl extends OptiqPrepareImpl {
   protected RelOptPlanner createPlanner() {
     final RelOptPlanner planner = super.createPlanner();
     planner.addRule(EnumerableDrillRule.ARRAY_INSTANCE);
-    planner.addRule(EnumerableDrillRule.CUSTOM_INSTANCE);
 
     // Enable when https://issues.apache.org/jira/browse/DRILL-57 fixed
     if (false) {
@@ -43,5 +42,3 @@ public class DrillPrepareImpl extends OptiqPrepareImpl {
     return planner;
   }
 }
-
-// End DrillPrepareImpl.java

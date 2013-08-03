@@ -74,6 +74,10 @@ public class DrillRefImpl<E> {
       this.fields = fields;
     }
 
+    public void close(){
+      
+    }
+    
     public Object current() {
       return current;
     }
@@ -237,4 +241,5 @@ public class DrillRefImpl<E> {
     return Collections.unmodifiableSortedMap(map);
   }
 
+  
 }

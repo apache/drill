@@ -17,6 +17,7 @@
  ******************************************************************************/
 package org.apache.drill.optiq;
 
+import net.hydromatic.linq4j.Ord;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.reltype.RelDataTypeField;
@@ -30,25 +31,25 @@ import org.eigenbase.sql.fun.SqlStdOperatorTable;
 public class DrillOptiq {
   static void registerStandardPlannerRules(RelOptPlanner planner) {
     planner.addRule(EnumerableDrillRule.ARRAY_INSTANCE);
-    planner.addRule(EnumerableDrillRule.CUSTOM_INSTANCE);
 
-//    planner.addRule(DrillTableModificationConverterRule.INSTANCE);
-//    planner.addRule(DrillAggregateConverterRule.INSTANCE);
-//    planner.addRule(DrillCalcConverterRule.INSTANCE);
+    // planner.addRule(DrillTableModificationConverterRule.INSTANCE);
+    // planner.addRule(DrillCalcConverterRule.INSTANCE);
 
     planner.addRule(DrillFilterRule.INSTANCE);
     planner.addRule(DrillProjectRule.INSTANCE);
+    planner.addRule(DrillAggregateRule.INSTANCE);
 
     // Enable when https://issues.apache.org/jira/browse/DRILL-57 fixed
     if (false) planner.addRule(DrillValuesRule.INSTANCE);
-//    planner.addRule(DrillSortRule.INSTANCE);
-//    planner.addRule(DrillJoinRule.INSTANCE);
-//    planner.addRule(DrillUnionRule.INSTANCE);
-//    planner.addRule(AbstractConverter.ExpandConversionRule.instance);
+    planner.addRule(DrillSortRule.INSTANCE);
+    planner.addRule(DrillJoinRule.INSTANCE);
+    planner.addRule(DrillUnionRule.INSTANCE);
+    // planner.addRule(AbstractConverter.ExpandConversionRule.instance);
   }
 
-  /** Converts a tree of {@link RexNode} operators into a scalar expression in
-   * Drill syntax. */
+  /**
+   * Converts a tree of {@link RexNode} operators into a scalar expression in Drill syntax.
+   */
   static String toDrill(RelNode input, RexNode expr) {
     final RexToDrill visitor = new RexToDrill(input);
     expr.accept(visitor);
@@ -70,21 +71,24 @@ public class DrillOptiq {
       switch (syntax) {
       case Binary:
         buf.append("(");
-        call.getOperandList().get(0).accept(this)
-            .append(" ")
-            .append(call.getOperator().getName())
-            .append(" ");
-        return call.getOperandList().get(1).accept(this)
-            .append(")");
+        call.getOperands().get(0).accept(this).append(" ").append(call.getOperator().getName()).append(" ");
+        return call.getOperands().get(1).accept(this).append(")");
+      case Function:
+        buf.append(call.getOperator().getName().toLowerCase()).append("(");
+        for (Ord<RexNode> operand : Ord.zip(call.getOperands())) {
+          buf.append(operand.i > 0 ? ", " : "");
+          operand.e.accept(this);
+        }
+        return buf.append(")");
       case Special:
         switch (call.getKind()) {
         case Cast:
           // Ignore casts. Drill is type-less.
-          return call.getOperandList().get(0).accept(this);
+          return call.getOperands().get(0).accept(this);
         }
         if (call.getOperator() == SqlStdOperatorTable.itemOp) {
-          final RexNode left = call.getOperandList().get(0);
-          final RexLiteral literal = (RexLiteral) call.getOperandList().get(1);
+          final RexNode left = call.getOperands().get(0);
+          final RexLiteral literal = (RexLiteral) call.getOperands().get(1);
           final String field = (String) literal.getValue2();
           final int length = buf.length();
           left.accept(this);
@@ -96,16 +100,14 @@ public class DrillOptiq {
         }
         // fall through
       default:
-        throw new AssertionError("todo: implement syntax " + syntax + "(" + call
-            + ")");
+        throw new AssertionError("todo: implement syntax " + syntax + "(" + call + ")");
       }
     }
 
     @Override
     public StringBuilder visitInputRef(RexInputRef inputRef) {
       final int index = inputRef.getIndex();
-      final RelDataTypeField field =
-          input.getRowType().getFieldList().get(index);
+      final RelDataTypeField field = input.getRowType().getFieldList().get(index);
       return buf.append(field.getName());
     }
 
@@ -115,5 +117,3 @@ public class DrillOptiq {
     }
   }
 }
-
-// End DrillOptiq.java

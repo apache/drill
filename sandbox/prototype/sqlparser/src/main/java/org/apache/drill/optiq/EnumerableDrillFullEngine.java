@@ -53,7 +53,8 @@ public class EnumerableDrillFullEngine<E> extends AbstractEnumerable<E> implemen
    * @param fields
    *          Names of fields, or null to return the whole blob
    */
-  public EnumerableDrillFullEngine(DrillConfig config, String plan, Class<E> clazz, List<String> fields, DataContext drillConnectionDataContext) {
+  public EnumerableDrillFullEngine(DrillConfig config, String plan, Class<E> clazz, List<String> fields,
+      DataContext drillConnectionDataContext) {
     this.plan = plan;
     this.config = config;
     this.fields = fields;
@@ -73,7 +74,7 @@ public class EnumerableDrillFullEngine<E> extends AbstractEnumerable<E> implemen
   @Override
   public Enumerator<E> enumerator() {
     DrillTable table = (DrillTable) drillConnectionDataContext.getSubSchema("DONUTS").getTable("DONUTS", Object.class);
-    if(table.useReferenceInterpreter()){
+    if (table.useReferenceInterpreter()) {
       DrillRefImpl<E> impl = new DrillRefImpl<E>(plan, config, fields, queue);
       return impl.enumerator(table);
     } else {

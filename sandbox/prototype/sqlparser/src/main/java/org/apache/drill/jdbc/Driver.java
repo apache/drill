@@ -64,6 +64,7 @@ public class Driver extends UnregisteredDriver {
     {
       super.onConnectionInit(connection);
 
+      
       final String model = connection.getProperties().getProperty("model");
       if (model != null) {
         try {

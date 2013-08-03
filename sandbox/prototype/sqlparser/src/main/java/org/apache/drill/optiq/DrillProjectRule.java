@@ -17,35 +17,30 @@
  ******************************************************************************/
 package org.apache.drill.optiq;
 
-import org.eigenbase.rel.*;
-import org.eigenbase.relopt.*;
+import org.eigenbase.rel.ProjectRel;
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.relopt.Convention;
+import org.eigenbase.relopt.RelOptRule;
+import org.eigenbase.relopt.RelOptRuleCall;
+import org.eigenbase.relopt.RelTraitSet;
 
 /**
- * Rule that converts a {@link org.eigenbase.rel.ProjectRel} to a Drill
- * "project" operation.
+ * Rule that converts a {@link org.eigenbase.rel.ProjectRel} to a Drill "project" operation.
  */
 public class DrillProjectRule extends RelOptRule {
   public static final RelOptRule INSTANCE = new DrillProjectRule();
 
   private DrillProjectRule() {
-    super(
-        new RelOptRuleOperand(
-            ProjectRel.class,
-            Convention.NONE,
-            new RelOptRuleOperand(RelNode.class, ANY)),
-        "DrillProjectRule");
+    super(RelOptRule.some(ProjectRel.class, Convention.NONE, RelOptRule.any(RelNode.class)), "DrillProjectRule");
   }
 
   @Override
   public void onMatch(RelOptRuleCall call) {
-    final ProjectRel project = (ProjectRel) call.getRels()[0];
-    final RelNode input = call.getRels()[1];
+    final ProjectRel project = (ProjectRel) call.rel(0);
+    final RelNode input = call.rel(1);
     final RelTraitSet traits = project.getTraitSet().plus(DrillRel.CONVENTION);
     final RelNode convertedInput = convert(input, traits);
-    call.transformTo(
-        new DrillProjectRel(project.getCluster(), traits, convertedInput,
-            project.getProjectExps(), project.getRowType()));
+    call.transformTo(new DrillProjectRel(project.getCluster(), traits, convertedInput, project.getProjects(), project
+        .getRowType()));
   }
 }
-
-// End DrillProjectRule.java
