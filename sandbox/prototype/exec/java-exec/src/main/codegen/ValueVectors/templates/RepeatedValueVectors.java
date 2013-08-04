@@ -59,7 +59,7 @@ import com.google.common.collect.Lists;
     return values.getValueCapacity();
   }
   
-  int getBufferSize(){
+  public int getBufferSize(){
     return offsets.getBufferSize() + values.getBufferSize();
   }
   

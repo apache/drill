@@ -1,7 +1,5 @@
 package org.apache.drill.exec.expr;
 
-import com.google.common.base.Charsets;
-import com.sun.codemodel.*;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.IfExpression;
 import org.apache.drill.common.expression.IfExpression.IfCondition;
@@ -13,15 +11,17 @@ import org.apache.drill.common.expression.ValueExpressions.LongExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.CodeGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.fn.FunctionHolder;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.physical.impl.filter.ReturnValueExpression;
-import org.apache.drill.exec.record.selection.SelectionVector2;
-import org.apache.drill.exec.vector.TypeHelper;
 
-import com.google.common.base.Preconditions;
+import com.sun.codemodel.JBlock;
+import com.sun.codemodel.JConditional;
+import com.sun.codemodel.JExpr;
+import com.sun.codemodel.JExpression;
+import com.sun.codemodel.JInvocation;
+import com.sun.codemodel.JVar;
 
 public class EvaluationVisitor extends AbstractExprVisitor<HoldingContainer, CodeGenerator<?>, RuntimeException> {
 
@@ -122,7 +122,7 @@ public class EvaluationVisitor extends AbstractExprVisitor<HoldingContainer, Cod
   @Override
   public HoldingContainer visitUnknown(LogicalExpression e, CodeGenerator<?> generator) throws RuntimeException {
     if(e instanceof ValueVectorReadExpression){
-      return visitValueVectorExpression((ValueVectorReadExpression) e, generator);
+      return visitValueVectorReadExpression((ValueVectorReadExpression) e, generator);
     }else if(e instanceof ValueVectorWriteExpression){
       return visitValueVectorWriteExpression((ValueVectorWriteExpression) e, generator);
     }else if(e instanceof ReturnValueExpression){
@@ -138,16 +138,7 @@ public class EvaluationVisitor extends AbstractExprVisitor<HoldingContainer, Cod
     HoldingContainer hc = child.accept(this, generator);
     JBlock block = generator.getBlock();
     
-    Class<?> vvClass = TypeHelper.getValueVectorClass(child.getMajorType().getMinorType(), child.getMajorType().getMode());
-    JType vvType = generator.getModel()._ref(vvClass);
-    JVar vv = generator.declareClassField("vv", vvType);
-    
-    // get value vector in setup block.
-    JVar obj = generator.getSetupBlock().decl( //
-        generator.getModel()._ref(Object.class), //
-        generator.getNextVar("obj"), // 
-        JExpr.direct("outgoing").invoke("getValueVectorById").arg(JExpr.lit(e.getFieldId())).arg( ((JClass)vvType).dotclass()));
-    generator.getSetupBlock().assign(vv, JExpr.cast(vvType, obj));
+    JVar vv = generator.declareVectorValueSetupAndMember("outgoing", e.getFieldId());
     
     if(hc.isOptional()){
       vv.invoke("getMutator").invoke("set").arg(JExpr.direct("outIndex"));
@@ -162,42 +153,42 @@ public class EvaluationVisitor extends AbstractExprVisitor<HoldingContainer, Cod
     return null;
   }
   
-  private HoldingContainer visitValueVectorExpression(ValueVectorReadExpression e, CodeGenerator<?> generator) throws RuntimeException{
+  private HoldingContainer visitValueVectorReadExpression(ValueVectorReadExpression e, CodeGenerator<?> generator) throws RuntimeException{
     // declare value vector
-    Class<?> vvClass = TypeHelper.getValueVectorClass(e.getMajorType().getMinorType(), e.getMajorType().getMode());
-    JType vvType = generator.getModel()._ref(vvClass);
-    JVar vv1 = generator.declareClassField("vv", vvType);
     
-    // get value vector from incoming batch and 
-    // get value vector in setup block.
-    JVar obj = generator.getSetupBlock().decl( //
-        generator.getModel()._ref(Object.class), //
-        generator.getNextVar("obj"), // 
-        JExpr.direct("incoming").invoke("getValueVectorById").arg(JExpr.lit(e.getFieldId())).arg( ((JClass)vvType).dotclass()));
-    generator.getSetupBlock().assign(vv1, JExpr.cast(vvType, obj));
-
+    JVar vv1 = generator.declareVectorValueSetupAndMember("incoming", e.getFieldId());
+    final String indexVariableName = e.isNamed() ? e.getIndexVariableName() : "inIndex";
+    JExpression indexVariable = JExpr.direct(indexVariableName);
+    
+    JInvocation getValueAccessor = vv1.invoke("getAccessor").invoke("get");
+    if(e.isSuperReader()){
+      
+      getValueAccessor = ((JExpression) vv1.component(indexVariable.shrz(JExpr.lit(16)))).invoke("getAccessor").invoke("get");
+      indexVariable = indexVariable.band(JExpr.lit((int) Character.MAX_VALUE));
+    }
+    
+    
     // evaluation work.
     HoldingContainer out = generator.declare(e.getMajorType());
     
-    
     if(out.isOptional()){
       JBlock blk = generator.getBlock();
-      blk.assign(out.getIsSet(), vv1.invoke("getAccessor").invoke("isSet").arg(JExpr.direct("inIndex")));
+      blk.assign(out.getIsSet(), vv1.invoke("getAccessor").invoke("isSet").arg(indexVariable));
       JConditional jc = blk._if(out.getIsSet().eq(JExpr.lit(1)));
       if (e.getMajorType().getMinorType() == TypeProtos.MinorType.VARCHAR ||
           e.getMajorType().getMinorType() == TypeProtos.MinorType.VARBINARY) {
         jc._then()
-            .add(vv1.invoke("getAccessor").invoke("get").arg(JExpr.direct("inIndex")).arg(out.getHolder()));
+            .add(getValueAccessor.arg(JExpr.direct("inIndex")).arg(out.getHolder()));
       } else {
         jc._then()
-            .assign(out.getValue(), vv1.invoke("getAccessor").invoke("get").arg(JExpr.direct("inIndex")));
+            .assign(out.getValue(), getValueAccessor.arg(indexVariable));
       }
     }else{
       if (e.getMajorType().getMinorType() == TypeProtos.MinorType.VARCHAR ||
           e.getMajorType().getMinorType() == TypeProtos.MinorType.VARBINARY) {
-        generator.getBlock().add(vv1.invoke("getAccessor").invoke("get").arg(JExpr.direct("inIndex")).arg(out.getHolder()));
+        generator.getBlock().add(getValueAccessor.arg(indexVariable).arg(out.getHolder()));
       } else {
-        generator.getBlock().assign(out.getValue(), vv1.invoke("getAccessor").invoke("get").arg(JExpr.direct("inIndex")));
+        generator.getBlock().assign(out.getValue(), getValueAccessor.arg(indexVariable));
       }
     }
     return out;
@@ -215,6 +206,7 @@ public class EvaluationVisitor extends AbstractExprVisitor<HoldingContainer, Cod
   @Override
   public HoldingContainer visitQuotedStringConstant(QuotedString e, CodeGenerator<?> CodeGenerator) throws RuntimeException {
     throw new UnsupportedOperationException("We don't yet support string literals as we need to build the string value holders.");
+    
 //    JExpr stringLiteral = JExpr.lit(e.value);
 //    CodeGenerator.block.decl(stringLiteral.invoke("getBytes").arg(JExpr.ref(Charsets.UTF_8));
   }

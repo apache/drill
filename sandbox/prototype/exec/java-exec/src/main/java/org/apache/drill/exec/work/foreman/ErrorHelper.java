@@ -31,11 +31,24 @@ public class ErrorHelper {
     DrillPBError.Builder builder = DrillPBError.newBuilder();
     builder.setEndpoint(endpoint);
     builder.setErrorId(id);
+    StringBuilder sb = new StringBuilder();
     if(message != null){
-      builder.setMessage(message);  
-    }else{
-      builder.setMessage(t.getMessage());
+      sb.append(message);
     }
+      
+    do{
+      sb.append(" < ");
+      sb.append(t.getClass().getSimpleName());
+      if(t.getMessage() != null){
+        sb.append(":[ ");
+        sb.append(t.getMessage());
+        sb.append(" ]");
+      }
+    }while(t.getCause() != null && t.getCause() != t);
+    
+    builder.setMessage(sb.toString());
+    
+
     builder.setErrorType(0);
     
     // record the error to the log for later reference.

@@ -18,7 +18,6 @@
 package org.apache.drill.exec.physical.impl;
 
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -29,13 +28,15 @@ import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.SchemaBuilder;
+import org.apache.drill.exec.record.TypedFieldId;
+import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.vector.ValueVector;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 /**
@@ -44,10 +45,9 @@ import com.google.common.collect.Maps;
 public class ScanBatch implements RecordBatch {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScanBatch.class);
 
-  final List<ValueVector> vectors = Lists.newLinkedList();
   final Map<MaterializedField, ValueVector> fieldVectorMap = Maps.newHashMap();
 
-  private VectorHolder holder = new VectorHolder(vectors);
+  private VectorContainer holder = new VectorContainer();
   private BatchSchema schema;
   private int recordCount;
   private boolean schemaChanged = true;
@@ -91,9 +91,7 @@ public class ScanBatch implements RecordBatch {
   }
 
   private void releaseAssets() {
-    for (ValueVector v : vectors) {
-      v.close();
-    }
+    holder.clear();
   }
 
   @Override
@@ -139,9 +137,11 @@ public class ScanBatch implements RecordBatch {
   }
 
   @Override
-  public <T extends ValueVector> T getValueVectorById(int fieldId, Class<?> clazz) {
-    return holder.getValueVector(fieldId, clazz);
+  public VectorWrapper<?> getValueAccessorById(int fieldId, Class<?> clazz) {
+    return holder.getVectorAccessor(fieldId, clazz);
   }
+
+
 
   private class Mutator implements OutputMutator {
     private SchemaBuilder builder = BatchSchema.newBuilder();
@@ -150,12 +150,12 @@ public class ScanBatch implements RecordBatch {
       schemaChanged();
       ValueVector vector = fieldVectorMap.remove(field);
       if (vector == null) throw new SchemaChangeException("Failure attempting to remove an unknown field.");
-      vectors.remove(vector);
+      holder.remove(vector);
       vector.close();
     }
 
     public void addField(ValueVector vector) {
-      vectors.add(vector);
+      holder.add(vector);
       fieldVectorMap.put(vector.getField(), vector);
       builder.addField(vector.getField());
     }
@@ -169,8 +169,8 @@ public class ScanBatch implements RecordBatch {
   }
 
   @Override
-  public Iterator<ValueVector> iterator() {
-    return vectors.iterator();
+  public Iterator<VectorWrapper<?>> iterator() {
+    return holder.iterator();
   }
 
   @Override

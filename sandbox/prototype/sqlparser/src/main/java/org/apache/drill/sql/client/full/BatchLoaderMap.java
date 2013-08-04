@@ -10,6 +10,7 @@ import jline.internal.Preconditions;
 
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.record.RecordBatchLoader;
+import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.user.QueryResultBatch;
 import org.apache.drill.exec.server.DrillbitContext;
@@ -46,8 +47,8 @@ public class BatchLoaderMap implements Map<String, Object> {
     boolean schemaChanged = loader.load(batch.getHeader().getDef(), batch.getData());
     if (schemaChanged) {
       fields.clear();
-      for (ValueVector v : loader) {
-        fields.put(v.getField().getName(), v);
+      for (VectorWrapper<?> v : loader) {
+        fields.put(v.getField().getName(), v.getValueVector());
       }
     } else {
       logger.debug("Schema didn't change. {}", batch);

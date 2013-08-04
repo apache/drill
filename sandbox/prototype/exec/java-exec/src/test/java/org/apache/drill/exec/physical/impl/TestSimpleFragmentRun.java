@@ -17,7 +17,7 @@
  ******************************************************************************/
 package org.apache.drill.exec.physical.impl;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
@@ -26,6 +26,7 @@ import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.pop.PopUnitTestBase;
 import org.apache.drill.exec.proto.UserProtos.QueryType;
 import org.apache.drill.exec.record.RecordBatchLoader;
+import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.rpc.user.QueryResultBatch;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
@@ -53,14 +54,14 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
     RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
     int recordCount = 0;
     for (QueryResultBatch batch : results) {
-      if(!batch.hasData()) continue;
+
       boolean schemaChanged = batchLoader.load(batch.getHeader().getDef(), batch.getData());
       boolean firstColumn = true;
 
       // print headers.
       if (schemaChanged) {
         System.out.println("\n\n========NEW SCHEMA=========\n\n");
-        for (ValueVector value : batchLoader) {
+        for (VectorWrapper<?> value : batchLoader) {
 
           if (firstColumn) {
             firstColumn = false;
@@ -79,13 +80,13 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
       for (int i = 0; i < batchLoader.getRecordCount(); i++) {
         boolean first = true;
         recordCount++;
-        for (ValueVector value : batchLoader) {
+        for (VectorWrapper<?> value : batchLoader) {
           if (first) {
             first = false;
           } else {
             System.out.print("\t");
           }
-          System.out.print(value.getAccessor().getObject(i));
+          System.out.print(value.getValueVector().getAccessor().getObject(i));
         }
         if(!first) System.out.println();
       }

@@ -68,7 +68,7 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
     values.clear();
   }
   
-  int getBufferSize(){
+  public int getBufferSize(){
     return values.getBufferSize() + bits.getBufferSize();
   }
 

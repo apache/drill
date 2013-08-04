@@ -18,7 +18,6 @@
 package org.apache.drill.exec.record;
 
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
@@ -32,7 +31,7 @@ import org.apache.drill.exec.vector.ValueVector;
  * A key thing to know is that the Iterator provided by record batch must align with the rank positions of the field ids
  * provided utilizing getValueVectorId();
  */
-public interface RecordBatch extends Iterable<ValueVector> {
+public interface RecordBatch extends Iterable<VectorWrapper<?>> {
 
   /**
    * Describes the outcome of a RecordBatch being incremented forward.
@@ -93,8 +92,7 @@ public interface RecordBatch extends Iterable<ValueVector> {
    *         TypedFieldId
    */
   public abstract TypedFieldId getValueVectorId(SchemaPath path);
-
-  public abstract <T extends ValueVector> T getValueVectorById(int fieldId, Class<?> clazz);
+  public abstract VectorWrapper<?> getValueAccessorById(int fieldId, Class<?> clazz);
 
   /**
    * Update the data in each Field reading interface for the next range of records. Once a RecordBatch returns an
@@ -111,44 +109,5 @@ public interface RecordBatch extends Iterable<ValueVector> {
    * @return
    */
   public WritableBatch getWritableBatch();
-
-  public static class TypedFieldId {
-    final MajorType type;
-    final int fieldId;
-
-    public TypedFieldId(MajorType type, int fieldId) {
-      super();
-      this.type = type;
-      this.fieldId = fieldId;
-    }
-
-    public MajorType getType() {
-      return type;
-    }
-
-    public int getFieldId() {
-      return fieldId;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (this == obj)
-        return true;
-      if (obj == null)
-        return false;
-      if (getClass() != obj.getClass())
-        return false;
-      TypedFieldId other = (TypedFieldId) obj;
-      if (fieldId != other.fieldId)
-        return false;
-      if (type == null) {
-        if (other.type != null)
-          return false;
-      } else if (!type.equals(other.type))
-        return false;
-      return true;
-    }
-
-  }
 
 }

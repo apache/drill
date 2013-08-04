@@ -30,7 +30,7 @@ import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.expression.visitors.SimpleExprVisitor;
 import org.apache.drill.exec.record.NullExpression;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.record.RecordBatch.TypedFieldId;
+import org.apache.drill.exec.record.TypedFieldId;
 
 import com.google.common.collect.Lists;
 

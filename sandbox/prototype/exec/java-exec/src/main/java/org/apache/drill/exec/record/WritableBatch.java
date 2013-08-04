@@ -26,6 +26,7 @@ import org.apache.drill.exec.proto.UserBitShared.RecordBatchDef;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.vector.ValueVector;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 /**
@@ -57,6 +58,15 @@ public class WritableBatch {
     return buffers;
   }
 
+  public static WritableBatch getBatchNoSVWrap(int recordCount, Iterable<VectorWrapper<?>> vws) {
+    List<ValueVector> vectors = Lists.newArrayList();
+    for(VectorWrapper<?> vw : vws){
+      Preconditions.checkArgument(!vw.isHyper());
+      vectors.add(vw.getValueVector());
+    }
+    return getBatchNoSV(recordCount, vectors);
+  }
+  
   public static WritableBatch getBatchNoSV(int recordCount, Iterable<ValueVector> vectors) {
     List<ByteBuf> buffers = Lists.newArrayList();
     List<FieldMetadata> metadata = Lists.newArrayList();
@@ -83,7 +93,7 @@ public class WritableBatch {
   
   public static WritableBatch get(RecordBatch batch) {
     if(batch.getSchema() != null && batch.getSchema().getSelectionVectorMode() != SelectionVectorMode.NONE) throw new UnsupportedOperationException("Only batches without selections vectors are writable.");
-    return getBatchNoSV(batch.getRecordCount(), batch);
+    return getBatchNoSVWrap(batch.getRecordCount(), batch);
   }
 
 }

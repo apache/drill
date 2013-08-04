@@ -29,18 +29,17 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.SchemaDefProtos.FieldDef;
 import org.apache.drill.exec.proto.UserBitShared.FieldMetadata;
 import org.apache.drill.exec.proto.UserBitShared.RecordBatchDef;
-import org.apache.drill.exec.record.RecordBatch.TypedFieldId;
 import org.apache.drill.exec.vector.TypeHelper;
 import org.apache.drill.exec.vector.ValueVector;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
+import com.beust.jcommander.internal.Lists;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 
-public class RecordBatchLoader implements Iterable<ValueVector>{
+public class RecordBatchLoader implements Iterable<VectorWrapper<?>>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RecordBatchLoader.class);
 
-  private List<ValueVector> vectors = Lists.newArrayList();
+  private VectorContainer container = new VectorContainer();
   private final BufferAllocator allocator;
   private int recordCount; 
   private BatchSchema schema;
@@ -66,11 +65,12 @@ public class RecordBatchLoader implements Iterable<ValueVector>{
     boolean schemaChanged = false;
 
     Map<MaterializedField, ValueVector> oldFields = Maps.newHashMap();
-    for(ValueVector v : this.vectors){
+    for(VectorWrapper<?> w : container){
+      ValueVector v = w.getValueVector();
       oldFields.put(v.getField(), v);
     }
     
-    List<ValueVector> newVectors = Lists.newArrayList();
+    VectorContainer newVectors = new VectorContainer();
 
     List<FieldMetadata> fields = def.getFieldList();
     
@@ -79,7 +79,7 @@ public class RecordBatchLoader implements Iterable<ValueVector>{
       FieldDef fieldDef = fmd.getDef();
       ValueVector v = oldFields.remove(fieldDef);
       if(v != null){
-        newVectors.add(v);
+        container.add(v);
         continue;
       }
       
@@ -101,49 +101,51 @@ public class RecordBatchLoader implements Iterable<ValueVector>{
     
     // rebuild the schema.
     SchemaBuilder b = BatchSchema.newBuilder();
-    for(ValueVector v : newVectors){
+    for(VectorWrapper<?> v : newVectors){
       b.addField(v.getField());
     }
     b.setSelectionVectorMode(BatchSchema.SelectionVectorMode.NONE);
     this.schema = b.build();
-    vectors = ImmutableList.copyOf(newVectors);
+    container = newVectors;
     return schemaChanged;
 
   }
 
-  public TypedFieldId getValueVector(SchemaPath path) {
-    for(int i =0; i < vectors.size(); i++){
-      ValueVector vv = vectors.get(i);
-      if(vv.getField().matches(path)) return new TypedFieldId(vv.getField().getType(), i); 
-    }
-    return null;
+  public TypedFieldId getValueVectorId(SchemaPath path) {
+    return container.getValueVector(path);
   }
   
-  @SuppressWarnings("unchecked")
-  public <T extends ValueVector> T getValueVector(int fieldId, Class<?> clazz) {
-    ValueVector v = vectors.get(fieldId);
-    assert v != null;
-    if (v.getClass() != clazz){
-      logger.warn(String.format(
-          "Failure while reading vector.  Expected vector class of %s but was holding vector class %s.",
-          clazz.getCanonicalName(), v.getClass().getCanonicalName()));
-      return null;
-    }
-    return (T) v;
-  }
+  
+  
+//  
+//  @SuppressWarnings("unchecked")
+//  public <T extends ValueVector> T getValueVector(int fieldId, Class<?> clazz) {
+//    ValueVector v = container.get(fieldId);
+//    assert v != null;
+//    if (v.getClass() != clazz){
+//      logger.warn(String.format(
+//          "Failure while reading vector.  Expected vector class of %s but was holding vector class %s.",
+//          clazz.getCanonicalName(), v.getClass().getCanonicalName()));
+//      return null;
+//    }
+//    return (T) v;
+//  }
 
   public int getRecordCount() {
     return recordCount;
   }
 
-
+  public VectorWrapper<?> getValueAccessorById(int fieldId, Class<?> clazz){
+    return container.getVectorAccessor(fieldId, clazz);
+  }
+  
   public WritableBatch getWritableBatch(){
-    return WritableBatch.getBatchNoSV(recordCount, vectors);
+    return WritableBatch.getBatchNoSVWrap(recordCount, container);
   }
 
   @Override
-  public Iterator<ValueVector> iterator() {
-    return this.vectors.iterator();
+  public Iterator<VectorWrapper<?>> iterator() {
+    return this.container.iterator();
   }
 
   public BatchSchema getSchema(){

@@ -17,7 +17,6 @@
  ******************************************************************************/
 package org.apache.drill.exec.physical.impl;
 
-import org.apache.drill.exec.exception.FragmentSetupException;
 
 /**
  * A FragmentRoot is a node which is the last processing node in a query plan. FragmentTerminals include Exchange

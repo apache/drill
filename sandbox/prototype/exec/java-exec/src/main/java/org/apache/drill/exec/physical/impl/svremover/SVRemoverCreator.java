@@ -16,7 +16,7 @@ public class SVRemoverCreator implements BatchCreator<SelectionVectorRemover>{
   @Override
   public RecordBatch getBatch(FragmentContext context, SelectionVectorRemover config, List<RecordBatch> children) throws ExecutionSetupException {
     Preconditions.checkArgument(children.size() == 1);
-    return new RemovingRecordBatch(children.iterator().next(), context);
+    return new RemovingRecordBatch(config, context, children.iterator().next());
   }
   
   

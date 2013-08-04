@@ -34,8 +34,10 @@ import org.apache.drill.exec.physical.config.RandomReceiver;
 import org.apache.drill.exec.physical.config.Screen;
 import org.apache.drill.exec.physical.config.SelectionVectorRemover;
 import org.apache.drill.exec.physical.config.SingleSender;
+import org.apache.drill.exec.physical.config.Sort;
 import org.apache.drill.exec.physical.impl.filter.FilterBatchCreator;
 import org.apache.drill.exec.physical.impl.project.ProjectBatchCreator;
+import org.apache.drill.exec.physical.impl.sort.SortBatchCreator;
 import org.apache.drill.exec.physical.impl.svremover.SVRemoverCreator;
 import org.apache.drill.exec.record.RecordBatch;
 
@@ -52,6 +54,7 @@ public class ImplCreator extends AbstractPhysicalVisitor<RecordBatch, FragmentCo
   private ProjectBatchCreator pbc = new ProjectBatchCreator();
   private FilterBatchCreator fbc = new FilterBatchCreator();
   private SVRemoverCreator svc = new SVRemoverCreator();
+  private SortBatchCreator sbc = new SortBatchCreator();
   private RootExec root = null;
   
   private ImplCreator(){}
@@ -86,6 +89,12 @@ public class ImplCreator extends AbstractPhysicalVisitor<RecordBatch, FragmentCo
     }else{
       return super.visitOp(op, context);  
     }
+  }
+
+  
+  @Override
+  public RecordBatch visitSort(Sort sort, FragmentContext context) throws ExecutionSetupException {
+    return sbc.getBatch(context, sort, getChildren(sort, context));
   }
 
   @Override

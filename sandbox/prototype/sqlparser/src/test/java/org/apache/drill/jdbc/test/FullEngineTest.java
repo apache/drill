@@ -3,7 +3,11 @@ package org.apache.drill.jdbc.test;
 import java.io.IOException;
 
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestName;
+import org.junit.rules.TestRule;
+import org.junit.rules.Timeout;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
@@ -13,6 +17,12 @@ public class FullEngineTest {
 
   private static String MODEL_FULL_ENGINE;
 
+  // Determine if we are in Eclipse Debug mode.
+  static final boolean IS_DEBUG = java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments().toString().indexOf("-agentlib:jdwp") > 0;
+
+  // Set a timeout unless we're debugging.
+  @Rule public TestRule globalTimeout = IS_DEBUG ? new TestName() : new Timeout(10000);
+  
   @BeforeClass
   public static void setupFixtures() throws IOException {
     MODEL_FULL_ENGINE = Resources.toString(Resources.getResource("full-model.json"), Charsets.UTF_8);

@@ -35,6 +35,7 @@ import org.apache.drill.exec.proto.ExecProtos.FragmentStatus;
 import org.apache.drill.exec.proto.ExecProtos.FragmentStatus.FragmentState;
 import org.apache.drill.exec.proto.ExecProtos.PlanFragment;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
+import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserProtos.QueryResult;
 import org.apache.drill.exec.proto.UserProtos.QueryResult.QueryState;
 import org.apache.drill.exec.rpc.RpcException;
@@ -61,6 +62,7 @@ class RunningFragmentManager implements FragmentStatusListener{
   private ForemanManagerListener foreman;
   private AtomicInteger remainingFragmentCount;
   private FragmentRunner rootRunner;
+  private volatile QueryId queryId;
   
   public RunningFragmentManager(ForemanManagerListener foreman, TunnelManager tun) {
     super();
@@ -72,6 +74,7 @@ class RunningFragmentManager implements FragmentStatusListener{
 
   public void runFragments(WorkerBee bee, PlanFragment rootFragment, FragmentRoot rootOperator, UserClientConnection rootClient, List<PlanFragment> leafFragments) throws ExecutionSetupException{
     remainingFragmentCount.set(leafFragments.size()+1);
+    queryId = rootFragment.getHandle().getQueryId();
 
     // set up the root fragment first so we'll have incoming buffers available.
     {
@@ -146,7 +149,7 @@ class RunningFragmentManager implements FragmentStatusListener{
   private void fail(FragmentStatus status){
     updateStatus(status);
     stopQuery();
-    QueryResult result = QueryResult.newBuilder().setQueryState(QueryState.FAILED).build();
+    QueryResult result = QueryResult.newBuilder().setQueryId(queryId).setQueryState(QueryState.FAILED).addError(status.getError()).build();
     foreman.cleanupAndSendResult(result);
   }
  
@@ -262,7 +265,7 @@ class RunningFragmentManager implements FragmentStatusListener{
 
     @Override
     protected void statusChange(FragmentHandle handle, FragmentStatus status) {
-      RunningFragmentManager.this.updateStatus(status);
+      RunningFragmentManager.this.statusUpdate(status);
     }
 
 

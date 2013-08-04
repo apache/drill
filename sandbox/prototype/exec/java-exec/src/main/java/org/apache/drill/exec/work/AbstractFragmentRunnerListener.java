@@ -23,7 +23,7 @@ import org.apache.drill.exec.proto.ExecProtos.FragmentStatus;
 import org.apache.drill.exec.proto.ExecProtos.FragmentStatus.FragmentState;
 import org.apache.drill.exec.work.foreman.ErrorHelper;
 
-public class AbstractFragmentRunnerListener implements FragmentRunnerListener{
+public abstract class AbstractFragmentRunnerListener implements FragmentRunnerListener{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractFragmentRunnerListener.class);
   
   private FragmentContext context;
@@ -90,9 +90,9 @@ public class AbstractFragmentRunnerListener implements FragmentRunnerListener{
     statusChange(handle, statusBuilder.build());
   }
   
-  protected void statusChange(FragmentHandle handle, FragmentStatus status){
+  protected abstract void statusChange(FragmentHandle handle, FragmentStatus status);
     
-  }
+  
   
   @Override
   public final void fail(FragmentHandle handle, String message, Throwable excep) {
@@ -103,7 +103,6 @@ public class AbstractFragmentRunnerListener implements FragmentRunnerListener{
 
   protected void fail(FragmentHandle handle, FragmentStatus.Builder statusBuilder){
     statusChange(handle, statusBuilder.build());
-    // TODO: ensure the foreman handles the exception
   }
 
 

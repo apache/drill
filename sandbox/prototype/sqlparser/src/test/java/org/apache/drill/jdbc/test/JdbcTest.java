@@ -25,7 +25,11 @@ import java.sql.Statement;
 import org.apache.drill.exec.ref.ReferenceInterpreter;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestName;
+import org.junit.rules.TestRule;
+import org.junit.rules.Timeout;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
@@ -35,6 +39,7 @@ import com.google.common.io.Resources;
 public class JdbcTest {
   private static String MODEL;
   private static String EXPECTED;
+
 
   @BeforeClass
   public static void setupFixtures() throws IOException {

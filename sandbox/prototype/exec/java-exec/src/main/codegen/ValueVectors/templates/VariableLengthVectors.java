@@ -49,7 +49,10 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     this.offsetVector = new UInt${type.width}Vector(null, allocator);
   }
 
-
+  public int getBufferSize(){
+    return offsetVector.getBufferSize() + data.writerIndex();
+  }
+  
   int getSizeFromCount(int valueCount) {
     return valueCount * ${type.width};
   }

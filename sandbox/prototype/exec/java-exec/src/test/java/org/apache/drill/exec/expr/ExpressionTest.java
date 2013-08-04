@@ -3,6 +3,7 @@ package org.apache.drill.exec.expr;
 import static org.junit.Assert.assertEquals;
 import mockit.Expectations;
 import mockit.Injectable;
+import mockit.NonStrict;
 import mockit.NonStrictExpectations;
 
 import org.antlr.runtime.ANTLRStringStream;
@@ -23,8 +24,10 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.physical.impl.project.Projector;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.record.RecordBatch.TypedFieldId;
+import org.apache.drill.exec.record.TypedFieldId;
+import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.vector.IntVector;
+import org.apache.drill.exec.vector.ValueVector;
 import org.junit.AfterClass;
 import org.junit.Test;
 
@@ -37,15 +40,18 @@ public class ExpressionTest {
   }
 
   @Test
-  public void testSpecial(final @Injectable RecordBatch batch) throws Exception {
-    final TypedFieldId tfid = new TypedFieldId(Types.optional(MinorType.INT),0);
-
+  public void testSpecial(final @Injectable RecordBatch batch, @Injectable ValueVector vector) throws Exception {
+    final TypedFieldId tfid = new TypedFieldId(Types.optional(MinorType.INT),0, false);
+    
     new NonStrictExpectations() {
+      @NonStrict VectorWrapper<?> wrapper;
       {
         batch.getValueVectorId(new SchemaPath("alpha", ExpressionPosition.UNKNOWN));
         result = tfid;
-        batch.getValueVectorById(tfid.getFieldId(), IntVector.class);
-        result = new IntVector(null, null);
+        batch.getValueAccessorById(tfid.getFieldId(), IntVector.class);
+        result = wrapper;
+        wrapper.getValueVector(); 
+        result = new IntVector(null, null); 
       }
 
     };
@@ -54,7 +60,7 @@ public class ExpressionTest {
 
   @Test
   public void testSchemaExpression(final @Injectable RecordBatch batch) throws Exception {
-    final TypedFieldId tfid = new TypedFieldId(Types.optional(MinorType.BIGINT), 0);
+    final TypedFieldId tfid = new TypedFieldId(Types.optional(MinorType.BIGINT), 0, false);
 
     new Expectations() {
       {
@@ -89,7 +95,7 @@ public class ExpressionTest {
     }
 
     CodeGenerator<Projector> cg = new CodeGenerator<Projector>(Projector.TEMPLATE_DEFINITION, new FunctionImplementationRegistry(DrillConfig.create()));
-    cg.addExpr(new ValueVectorWriteExpression(-1, materializedExpr));
+    cg.addExpr(new ValueVectorWriteExpression(new TypedFieldId(materializedExpr.getMajorType(), -1), materializedExpr));
     return cg.generate();
   }
 

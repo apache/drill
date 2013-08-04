@@ -41,4 +41,5 @@ public interface Sender extends FragmentRoot {
    */
   @JsonProperty("receiver-major-fragment")
   public int getOppositeMajorFragmentId();
+
 }

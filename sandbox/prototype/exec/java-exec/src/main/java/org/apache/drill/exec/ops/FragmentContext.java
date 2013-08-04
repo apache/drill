@@ -19,16 +19,13 @@ package org.apache.drill.exec.ops;
 
 import java.io.IOException;
 
-import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.exec.compile.ClassTransformer;
 import org.apache.drill.exec.compile.QueryClassLoader;
-import org.apache.drill.exec.compile.TemplateClassDefinition;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.metrics.SingleThreadNestedCounter;
-import org.apache.drill.exec.physical.impl.FilteringRecordBatchTransformer;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.ExecProtos.FragmentStatus;
@@ -106,7 +103,7 @@ public class FragmentContext {
   public <T> T getImplementationClass(CodeGenerator<T> cg) throws ClassTransformationException, IOException{
     long t1 = System.nanoTime();
     T t= transformer.getImplementationClass(this.loader, cg.getDefinition(), cg.generate(), cg.getMaterializedClassName());
-    logger.debug("Compile time: {} micros.", (System.nanoTime() - t1)/1000/1000 );
+    logger.debug("Compile time: {} millis.", (System.nanoTime() - t1)/1000/1000 );
     return t;
     
   }

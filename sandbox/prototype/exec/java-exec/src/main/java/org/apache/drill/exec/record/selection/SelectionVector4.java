@@ -20,22 +20,58 @@ package org.apache.drill.exec.record.selection;
 
 import io.netty.buffer.ByteBuf;
 
-import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.record.DeadBuf;
+import org.apache.drill.exec.exception.SchemaChangeException;
 
 public class SelectionVector4 {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SelectionVector4.class);
 
-  private final BufferAllocator allocator;
-  private ByteBuf buffer = DeadBuf.DEAD_BUFFER;
-
-  public SelectionVector4(BufferAllocator allocator) {
-    this.allocator = allocator;
+  private final ByteBuf vector;
+  private final int recordCount;
+  private int start;
+  private int length;
+  
+  public SelectionVector4(ByteBuf vector, int recordCount, int batchRecordCount) throws SchemaChangeException {
+    if(recordCount > Integer.MAX_VALUE /4) throw new SchemaChangeException(String.format("Currently, Drill can only support allocations up to 2gb in size.  You requested an allocation of %d bytes.", recordCount * 4));
+    this.recordCount = recordCount;
+    this.start = 0;
+    this.length = Math.min(batchRecordCount, recordCount);
+    this.vector = vector;
+  }
+  
+  public int getTotalCount(){
+    return recordCount;
+  }
+  
+  public int getCurrentCount(){
+    return length;
+  }
+  
+  public void set(int index, int compound){
+    vector.setInt(index*4, compound);
+  }
+  public void set(int index, int recordBatch, int recordIndex){
+    vector.setInt(index*4, (recordBatch << 16) | (recordIndex & 65535));
+  }
+  
+  public int get(int index){
+    return vector.getInt(index*4);
   }
 
-  public int getCount(){
-    return -1;
+  public int getStart() {
+    return start;
   }
 
-
+  public int getLength() {
+    return length;
+  }
+  
+  public boolean next(){
+    if(start + length == recordCount) return false;
+    start = start+length;
+    int newEnd = Math.min(start+length, recordCount);
+    length = newEnd - start;
+    return true;
+  }
+  
+  
 }

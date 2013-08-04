@@ -28,7 +28,6 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.proto.SchemaDefProtos.FieldDef;
 import org.apache.drill.exec.proto.SchemaDefProtos.NamePart;
-import org.apache.drill.exec.record.RecordBatch.TypedFieldId;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;

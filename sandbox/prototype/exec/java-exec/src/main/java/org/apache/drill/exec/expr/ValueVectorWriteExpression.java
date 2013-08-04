@@ -5,19 +5,26 @@ import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.record.TypedFieldId;
 
 public class ValueVectorWriteExpression implements LogicalExpression {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ValueVectorWriteExpression.class);
 
-  private final int fieldId;
+  private final TypedFieldId fieldId;
   private final LogicalExpression child;
+  private final String indexVariableName;
   
-  public ValueVectorWriteExpression(int fieldId, LogicalExpression child){
-    this.fieldId = fieldId;
-    this.child = child;
+  public ValueVectorWriteExpression(TypedFieldId fieldId, LogicalExpression child){
+    this(fieldId, child, null);
   }
   
-  public int getFieldId() {
+  public ValueVectorWriteExpression(TypedFieldId fieldId, LogicalExpression child, String indexVariableName){
+    this.fieldId = fieldId;
+    this.child = child;
+    this.indexVariableName = indexVariableName;
+  }
+  
+  public TypedFieldId getFieldId() {
     return fieldId;
   }
 

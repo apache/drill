@@ -16,23 +16,47 @@ import org.apache.drill.exec.vector.BigIntHolder;
 
 
 
-@FunctionTemplate(name = "alternate", scope = FunctionScope.SIMPLE)
-public class Alternator implements DrillFunc{
-
-  @Workspace int val;
-  @Output BigIntHolder out;
+public class Alternator {
   
-  public void setup(RecordBatch incoming) {
-    val = 0;
+  @FunctionTemplate(name = "alternate", scope = FunctionScope.SIMPLE)
+  public static class Alternate2 implements DrillFunc{
+    @Workspace int val;
+    @Output BigIntHolder out;
+    
+    public void setup(RecordBatch incoming) {
+      val = 0;
+    }
+
+
+    public void eval() {
+      out.value = val;
+      if(val == 0){
+        val = 1;
+      }else{
+        val = 0;
+      }
+    }
   }
 
-
-  public void eval() {
-    out.value = val;
-    if(val == 0){
-      val = 1;
-    }else{
+  @FunctionTemplate(name = "alternate3", scope = FunctionScope.SIMPLE)
+  public static class Alternate3 implements DrillFunc{
+    @Workspace int val;
+    @Output BigIntHolder out;
+    
+    public void setup(RecordBatch incoming) {
       val = 0;
+    }
+
+
+    public void eval() {
+      out.value = val;
+      if(val == 0){
+        val = 1;
+      }else if(val == 1){
+        val = 2;
+      }else{
+        val = 0;
+      }
     }
   }
   
@@ -41,7 +65,8 @@ public class Alternator implements DrillFunc{
     @Override
     public FunctionDefinition[] getFunctionDefintions() {
       return new FunctionDefinition[]{
-          FunctionDefinition.simple("alternate", NoArgValidator.VALIDATOR, new OutputTypeDeterminer.FixedType(Types.required(MinorType.BIGINT)), "alternate")
+          FunctionDefinition.simple("alternate", NoArgValidator.VALIDATOR, new OutputTypeDeterminer.FixedType(Types.required(MinorType.BIGINT)), "alternate"),
+          FunctionDefinition.simple("alternate3", NoArgValidator.VALIDATOR, new OutputTypeDeterminer.FixedType(Types.required(MinorType.BIGINT)), "alternate3")
       };
     }
     

@@ -17,12 +17,6 @@
  ******************************************************************************/
 package org.apache.drill.exec.physical.impl.materialize;
 
-import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.proto.UserBitShared.QueryId;
-import org.apache.drill.exec.proto.UserProtos.QueryResult;
-import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.record.WritableBatch;
 
 public interface RecordMaterializer {
   

@@ -17,8 +17,6 @@
  ******************************************************************************/
 package org.apache.drill.exec.physical.impl;
 
-import io.netty.buffer.ByteBuf;
-
 import java.util.List;
 
 import org.apache.drill.exec.ops.FragmentContext;
@@ -27,7 +25,6 @@ import org.apache.drill.exec.physical.impl.materialize.QueryWritableBatch;
 import org.apache.drill.exec.physical.impl.materialize.RecordMaterializer;
 import org.apache.drill.exec.physical.impl.materialize.VectorRecordMaterializer;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
-import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
 import org.apache.drill.exec.proto.UserBitShared.RecordBatchDef;
 import org.apache.drill.exec.proto.UserProtos.QueryResult;
 import org.apache.drill.exec.record.RecordBatch;
@@ -45,6 +42,7 @@ public class ScreenCreator implements RootCreator<Screen>{
   
   @Override
   public RootExec getRoot(FragmentContext context, Screen config, List<RecordBatch> children) {
+    Preconditions.checkNotNull(children);
     Preconditions.checkArgument(children.size() == 1);
     return new ScreenRoot(context, children.iterator().next());
   }

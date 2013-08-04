@@ -12,14 +12,18 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.RecordBatch;
+import org.apache.drill.exec.record.TypedFieldId;
+import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.vector.TypeHelper;
 
 import com.google.common.base.Preconditions;
 import com.sun.codemodel.JBlock;
+import com.sun.codemodel.JClass;
 import com.sun.codemodel.JClassAlreadyExistsException;
 import com.sun.codemodel.JCodeModel;
 import com.sun.codemodel.JDefinedClass;
 import com.sun.codemodel.JExpr;
+import com.sun.codemodel.JExpression;
 import com.sun.codemodel.JFieldRef;
 import com.sun.codemodel.JMethod;
 import com.sun.codemodel.JMod;
@@ -61,11 +65,42 @@ public class CodeGenerator<T> {
   }
   
 
+  public JVar declareVectorValueSetupAndMember(String batchName, TypedFieldId fieldId){
+    Class<?> valueVectorClass = TypeHelper.getValueVectorClass(fieldId.getType().getMinorType(), fieldId.getType().getMode());
+    JClass vvClass = model.ref(valueVectorClass);
+    JClass retClass = vvClass;
+    String vectorAccess = "getValueVector";
+    if(fieldId.isHyperReader()){
+      retClass = retClass.array();
+      vectorAccess = "getValueVectors";
+    }
+    
+    JVar vv = declareClassField("vv", retClass);
+    JClass t = model.ref(SchemaChangeException.class);
+    JType wrapperClass = model.ref(VectorWrapper.class);
+    JType objClass = model.ref(Object.class);
+    JBlock b = getSetupBlock();
+    JVar obj = b.decl( //
+        objClass, //
+        getNextVar("tmp"), // 
+        JExpr.direct(batchName)
+          .invoke("getValueAccessorById") //
+          .arg(JExpr.lit(fieldId.getFieldId())) //
+          .arg( vvClass.dotclass())
+          .invoke(vectorAccess)//
+          );
+        
+        b._if(obj.eq(JExpr._null()))._then()._throw(JExpr._new(t).arg(JExpr.lit(String.format("Failure while loading vector %s with id: %s.", vv.name(), fieldId.toString()))));
+        //b.assign(vv, JExpr.cast(retClass, ((JExpression) JExpr.cast(wrapperClass, obj) ).invoke(vectorAccess)));
+        b.assign(vv, JExpr.cast(retClass, obj ));
+        
+    return vv;
+  }
 
-  public void addExpr(LogicalExpression ex){
+  public HoldingContainer addExpr(LogicalExpression ex){
     logger.debug("Adding next write {}", ex);
     rotateBlock();
-    ex.accept(evaluationVisitor, this);
+    return ex.accept(evaluationVisitor, this);
   }
   
   public void rotateBlock(){

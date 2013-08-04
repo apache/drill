@@ -24,6 +24,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserProtos.QueryResult;
+import org.apache.drill.exec.proto.UserProtos.QueryResult.QueryState;
 import org.apache.drill.exec.rpc.BaseRpcOutcomeListener;
 import org.apache.drill.exec.rpc.RpcBus;
 import org.apache.drill.exec.rpc.RpcException;
@@ -54,29 +55,40 @@ public class QueryResultHandler {
     final QueryResult result = RpcBus.get(pBody, QueryResult.PARSER);
     final QueryResultBatch batch = new QueryResultBatch(result, dBody);
     UserResultsListener l = resultsListener.get(result.getQueryId());
+    
+    boolean failed = batch.getHeader().getQueryState() == QueryState.FAILED;
     // logger.debug("For QueryId [{}], retrieved result listener {}", result.getQueryId(), l);
-    if (l != null) {
-      // logger.debug("Results listener available, using existing.");
-      l.resultArrived(batch);
-      if (result.getIsLastChunk()) {
-        resultsListener.remove(result.getQueryId(), l);
-      }
-    } else {
-      logger.debug("Results listener not available, creating a buffering listener.");
-      // manage race condition where we start getting results before we receive the queryid back.
+    if (l == null) {
       BufferingListener bl = new BufferingListener();
       l = resultsListener.putIfAbsent(result.getQueryId(), bl);
-      if (l != null) {
-        l.resultArrived(batch);
-      } else {
-        bl.resultArrived(batch);
-      }
+      // if we had a succesful insert, use that reference.  Otherwise, just throw away the new bufering listener.
+      if (l == null) l = bl;
     }
+      
+    if(failed){
+      l.submissionFailed(new RpcException("Remote failure while running query." + batch.getHeader().getErrorList()));
+      resultsListener.remove(result.getQueryId(), l);
+    }else{
+      l.resultArrived(batch);
+    }
+    
+    if (
+        (failed || result.getIsLastChunk())
+        && 
+        (!(l instanceof BufferingListener) || ((BufferingListener)l).output != null)
+        ) {
+      resultsListener.remove(result.getQueryId(), l);
+    }
+
   }
 
+  
+  
   private class BufferingListener implements UserResultsListener {
 
     private ConcurrentLinkedQueue<QueryResultBatch> results = Queues.newConcurrentLinkedQueue();
+    private volatile boolean finished = false;
+    private volatile RpcException ex;
     private volatile UserResultsListener output;
 
     public boolean transferTo(UserResultsListener l) {
@@ -87,12 +99,19 @@ public class QueryResultHandler {
           l.resultArrived(r);
           last = r.getHeader().getIsLastChunk();
         }
+        if(ex != null){
+          l.submissionFailed(ex);
+          return true;
+        }
         return last;
       }
     }
 
+    
     @Override
     public void resultArrived(QueryResultBatch result) {
+      if(result.getHeader().getIsLastChunk()) finished = true;
+      
       synchronized (this) {
         if (output == null) {
           this.results.add(result);
@@ -104,7 +123,18 @@ public class QueryResultHandler {
 
     @Override
     public void submissionFailed(RpcException ex) {
-      throw new UnsupportedOperationException("You cannot report failed submissions to a buffering listener.");
+      finished = true;
+      synchronized (this) {
+        if (output == null){
+          this.ex = ex;
+        } else{
+          output.submissionFailed(ex);
+        }
+      }
+    }
+    
+    public boolean isFinished(){
+      return finished;
     }
 
   }

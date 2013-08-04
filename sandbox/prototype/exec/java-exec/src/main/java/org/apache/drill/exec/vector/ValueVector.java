@@ -32,6 +32,8 @@ import org.apache.drill.exec.record.TransferPair;
  */
 public interface ValueVector extends Closeable {
 
+  public int getBufferSize();
+  
   /**
    * Alternative to clear(). Allows use as closeable in try-with-resources.
    */

@@ -1,24 +1,22 @@
 package org.apache.drill.exec.physical.impl.svremover;
 
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.List;
 
-import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.physical.impl.VectorHolder;
-import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.physical.config.SelectionVectorRemover;
+import org.apache.drill.exec.record.AbstractSingleRecordBatch;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.record.SchemaBuilder;
 import org.apache.drill.exec.record.TransferPair;
+import org.apache.drill.exec.record.TypedFieldId;
+import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.WritableBatch;
-import org.apache.drill.exec.record.selection.SelectionVector2;
-import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.FixedWidthVector;
+import org.apache.drill.exec.vector.TypeHelper;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VariableWidthVector;
 
@@ -31,36 +29,14 @@ import com.sun.codemodel.JExpression;
 import com.sun.codemodel.JType;
 import com.sun.codemodel.JVar;
 
-public class RemovingRecordBatch implements RecordBatch{
+public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVectorRemover>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RemovingRecordBatch.class);
 
-  private final RecordBatch incoming;
-  private final FragmentContext context;
-  private BatchSchema outSchema;
   private Copier copier;
-  private List<ValueVector> outputVectors;
-  private VectorHolder vh;
   private int recordCount;
   
-  public RemovingRecordBatch(RecordBatch incoming, FragmentContext context){
-    this.incoming = incoming;
-    this.context = context;
-  }
-  
-  @Override
-  public Iterator<ValueVector> iterator() {
-    return outputVectors.iterator();
-  }
-
-  @Override
-  public FragmentContext getContext() {
-    return context;
-  }
-
-  @Override
-  public BatchSchema getSchema() {
-    Preconditions.checkNotNull(outSchema);
-    return outSchema;
+  public RemovingRecordBatch(SelectionVectorRemover popConfig, FragmentContext context, RecordBatch incoming) {
+    super(popConfig, context, incoming);
   }
 
   @Override
@@ -69,64 +45,36 @@ public class RemovingRecordBatch implements RecordBatch{
   }
 
   @Override
-  public void kill() {
-    incoming.kill();
-  }
-
-  @Override
-  public SelectionVector2 getSelectionVector2() {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public SelectionVector4 getSelectionVector4() {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public TypedFieldId getValueVectorId(SchemaPath path) {
-    return vh.getValueVector(path);
-  }
-
-  @Override
-  public <T extends ValueVector> T getValueVectorById(int fieldId, Class<?> clazz) {
-    return vh.getValueVector(fieldId, clazz);
-  }
-
-  @Override
-  public IterOutcome next() {
-    recordCount = 0;
-    IterOutcome upstream = incoming.next();
-    logger.debug("Upstream... {}", upstream);
-    switch(upstream){
+  protected void setupNewSchema() throws SchemaChangeException {
+    container.clear();
+    
+    switch(incoming.getSchema().getSelectionVectorMode()){
     case NONE:
-    case NOT_YET:
-    case STOP:
-      return upstream;
-    case OK_NEW_SCHEMA:
-      try{
-        copier = createCopier();
-      }catch(SchemaChangeException ex){
-        incoming.kill();
-        logger.error("Failure during query", ex);
-        context.fail(ex);
-        return IterOutcome.STOP;
-      }
-      // fall through.
-    case OK:
-      recordCount = incoming.getRecordCount();
-      copier.copyRecords();
-      for(ValueVector v : this.outputVectors){
-        ValueVector.Mutator m = v.getMutator();
-        m.setValueCount(recordCount);
-      }
-      return upstream; // change if upstream changed, otherwise normal.
+      this.copier = getStraightCopier();
+      break;
+    case TWO_BYTE:
+      this.copier = getGenerated2Copier();
+      break;
+    case FOUR_BYTE:
+      this.copier = getGenerated4Copier();
+      break;
     default:
       throw new UnsupportedOperationException();
     }
+    
+    container.buildSchema(SelectionVectorMode.NONE);
+
   }
-  
-  
+
+  @Override
+  protected void doWork() {
+    recordCount = incoming.getRecordCount();
+    copier.copyRecords();
+    for(VectorWrapper<?> v : container){
+      ValueVector.Mutator m = v.getValueVector().getMutator();
+      m.setValueCount(recordCount);
+    }
+  }
 
   
   private class StraightCopier implements Copier{
@@ -136,8 +84,8 @@ public class RemovingRecordBatch implements RecordBatch{
     
     @Override
     public void setupRemover(FragmentContext context, RecordBatch incoming, RecordBatch outgoing, VectorAllocator[] allocators){
-      for(ValueVector vv : incoming){
-        TransferPair tp = vv.getTransferPair();
+      for(VectorWrapper<?> vv : incoming){
+        TransferPair tp = vv.getValueVector().getTransferPair();
         pairs.add(tp);
         out.add(tp.getTo());
       }
@@ -159,23 +107,23 @@ public class RemovingRecordBatch implements RecordBatch{
   private Copier getStraightCopier(){
     StraightCopier copier = new StraightCopier();
     copier.setupRemover(context, incoming, this, null);
-    outputVectors.addAll(copier.getOut());
+    container.addCollection(copier.getOut());
     return copier;
   }
   
-  private Copier getGeneratedCopier() throws SchemaChangeException{
+  private Copier getGenerated2Copier() throws SchemaChangeException{
     Preconditions.checkArgument(incoming.getSchema().getSelectionVectorMode() == SelectionVectorMode.TWO_BYTE);
     
     List<VectorAllocator> allocators = Lists.newArrayList();
-    for(ValueVector i : incoming){
-      TransferPair t = i.getTransferPair();
-      outputVectors.add(t.getTo());
-      allocators.add(getAllocator(i, t.getTo()));
+    for(VectorWrapper<?> i : incoming){
+      ValueVector v = TypeHelper.getNewVector(i.getField(), context.getAllocator());
+      container.add(v);
+      allocators.add(getAllocator(i.getValueVector(), v));
     }
 
     try {
-      final CodeGenerator<Copier> cg = new CodeGenerator<Copier>(Copier.TEMPLATE_DEFINITION, context.getFunctionRegistry());
-      generateCopies(cg);
+      final CodeGenerator<Copier> cg = new CodeGenerator<Copier>(Copier.TEMPLATE_DEFINITION2, context.getFunctionRegistry());
+      generateCopies(cg, false);
       Copier copier = context.getImplementationClass(cg);
       copier.setupRemover(context, incoming, this, allocators.toArray(new VectorAllocator[allocators.size()]));
       return copier;
@@ -184,72 +132,76 @@ public class RemovingRecordBatch implements RecordBatch{
     }
   }
   
-  
-  private Copier createCopier() throws SchemaChangeException{
-    if(outputVectors != null){
-      for(ValueVector v : outputVectors){
-        v.close();
-      }
-    }
-    this.outputVectors = Lists.newArrayList();
-    this.vh = new VectorHolder(outputVectors);
-
-    SchemaBuilder bldr = BatchSchema.newBuilder().setSelectionVectorMode(SelectionVectorMode.NONE);
-    for(ValueVector v : incoming){
-      bldr.addField(v.getField());
-    }
-    this.outSchema = bldr.build();
+  private Copier getGenerated4Copier() throws SchemaChangeException{
+    Preconditions.checkArgument(incoming.getSchema().getSelectionVectorMode() == SelectionVectorMode.FOUR_BYTE);
     
-    switch(incoming.getSchema().getSelectionVectorMode()){
-    case NONE:
-      return getStraightCopier();
-    case TWO_BYTE:
-      return getGeneratedCopier();
-    default:
-      throw new UnsupportedOperationException();
+    List<VectorAllocator> allocators = Lists.newArrayList();
+    for(VectorWrapper<?> i : incoming){
+      
+      ValueVector v = TypeHelper.getNewVector(i.getField(), context.getAllocator());
+      container.add(v);
+      allocators.add(getAllocator4(v));
     }
 
+    try {
+      final CodeGenerator<Copier> cg = new CodeGenerator<Copier>(Copier.TEMPLATE_DEFINITION4, context.getFunctionRegistry());
+      generateCopies(cg, true);
+      Copier copier = context.getImplementationClass(cg);
+      copier.setupRemover(context, incoming, this, allocators.toArray(new VectorAllocator[allocators.size()]));
+      return copier;
+    } catch (ClassTransformationException | IOException e) {
+      throw new SchemaChangeException("Failure while attempting to load generated class", e);
+    }
   }
   
-  private void generateCopies(CodeGenerator<Copier> g){
+  private void generateCopies(CodeGenerator<Copier> g, boolean hyper){
     // we have parallel ids for each value vector so we don't actually have to deal with managing the ids at all.
     int fieldId = 0;
     
-
-
     JExpression inIndex = JExpr.direct("inIndex");
     JExpression outIndex = JExpr.direct("outIndex");
     g.rotateBlock();
-    for(ValueVector vv : incoming){
-      JClass vvClass = (JClass) g.getModel()._ref(vv.getClass());
-      JVar inVV = declareVVSetup("incoming", g, fieldId, vvClass);
-      JVar outVV = declareVVSetup("outgoing", g, fieldId, vvClass);
+    for(VectorWrapper<?> vv : incoming){
+      JVar inVV = g.declareVectorValueSetupAndMember("incoming", new TypedFieldId(vv.getField().getType(), fieldId, vv.isHyper()));
+      JVar outVV = g.declareVectorValueSetupAndMember("outgoing", new TypedFieldId(vv.getField().getType(), fieldId, false));
+
+      if(hyper){
+        
+        g.getBlock().add( 
+            outVV
+            .invoke("copyFrom")
+            .arg(
+                inIndex.band(JExpr.lit((int) Character.MAX_VALUE)))
+            .arg(outIndex)
+            .arg(
+                inVV.component(inIndex.shrz(JExpr.lit(16)))
+                )
+            );  
+      }else{
+        g.getBlock().add(outVV.invoke("copyFrom").arg(inIndex).arg(outIndex).arg(inVV));
+      }
       
-      g.getBlock().add(outVV.invoke("copyFrom").arg(inIndex).arg(outIndex).arg(inVV));
       
       fieldId++;
     }
   }
   
-  private JVar declareVVSetup(String varName, CodeGenerator<?> g, int fieldId, JClass vvClass){
-    JVar vv = g.declareClassField("vv", vvClass);
-    JClass t = (JClass) g.getModel()._ref(SchemaChangeException.class);
-    JType objClass = g.getModel()._ref(Object.class);
-    JBlock b = g.getSetupBlock();
-    JVar obj = b.decl( //
-        objClass, //
-        g.getNextVar("tmp"), // 
-        JExpr.direct(varName).invoke("getValueVectorById").arg(JExpr.lit(fieldId)).arg( vvClass.dotclass()));
-        b._if(obj.eq(JExpr._null()))._then()._throw(JExpr._new(t).arg(JExpr.lit(String.format("Failure while loading vector %s with id %d", vv.name(), fieldId))));
-        b.assign(vv, JExpr.cast(vvClass, obj));
-        
-    return vv;
-  }
-  
+
   @Override
   public WritableBatch getWritableBatch() {
     return WritableBatch.get(this);
   }
+  
+  private VectorAllocator getAllocator4(ValueVector outgoing){
+    if(outgoing instanceof FixedWidthVector){
+      return new FixedVectorAllocator((FixedWidthVector) outgoing);
+    }else if(outgoing instanceof VariableWidthVector ){
+      return new VariableEstimatedVector( (VariableWidthVector) outgoing, 50);
+    }else{
+      throw new UnsupportedOperationException();
+    }
+  }
+  
   
   private VectorAllocator getAllocator(ValueVector in, ValueVector outgoing){
     if(outgoing instanceof FixedWidthVector){
@@ -273,11 +225,23 @@ public class RemovingRecordBatch implements RecordBatch{
       out.allocateNew(recordCount);
       out.getMutator().setValueCount(recordCount);
     }
-
-    
-    
   }
   
+  private class VariableEstimatedVector implements VectorAllocator{
+    VariableWidthVector out;
+    int avgWidth;
+    
+    public VariableEstimatedVector(VariableWidthVector out, int avgWidth) {
+      super();
+      this.out = out;
+      this.avgWidth = avgWidth;
+    }
+    
+    public void alloc(int recordCount){
+      out.allocateNew(avgWidth * recordCount, recordCount);
+      out.getMutator().setValueCount(recordCount);
+    }
+  }
   private class VariableVectorAllocator implements VectorAllocator{
     VariableWidthVector in;
     VariableWidthVector out;
