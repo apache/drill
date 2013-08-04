@@ -185,7 +185,7 @@ public class TestSimpleFunctions {
   }
 
   @Test
-  public void testSubstringBinary(@Injectable final DrillbitContext bitContext,
+  public void testByteSubstring(@Injectable final DrillbitContext bitContext,
                                   @Injectable UserServer.UserClientConnection connection) throws Throwable{
 
     new NonStrictExpectations(){{
@@ -194,7 +194,7 @@ public class TestSimpleFunctions {
     }};
 
     PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
-    PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/functions/testSubstringBinary.json"), Charsets.UTF_8));
+    PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/functions/testByteSubstring.json"), Charsets.UTF_8));
     FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
     FragmentContext context = new FragmentContext(bitContext, ExecProtos.FragmentHandle.getDefaultInstance(), connection, null, registry);
     SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));

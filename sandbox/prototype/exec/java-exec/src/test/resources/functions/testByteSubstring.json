@@ -25,7 +25,7 @@
             child: 1,
             pop:"project",
             exprs: [
-              { ref: "col3", expr:"bin_substring(yellow, -3, 2)" }
+              { ref: "col3", expr:"byte_substr(yellow, -3, 2)" }
             ]
         },
         {

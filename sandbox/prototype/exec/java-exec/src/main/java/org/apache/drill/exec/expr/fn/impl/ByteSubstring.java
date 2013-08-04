@@ -45,10 +45,10 @@ import org.apache.drill.exec.vector.*;
  *
  *  - If the substring is invalid, return an empty string.
  */
-@FunctionTemplate(name = "binsubstring",
+@FunctionTemplate(name = "bytesubstring",
                   scope = FunctionTemplate.FunctionScope.SIMPLE,
                   nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
-public class BinSubstring implements DrillFunc {
+public class ByteSubstring implements DrillFunc {
 
   @Param VarBinaryHolder string;
   @Param BigIntHolder offset;
@@ -90,14 +90,13 @@ public class BinSubstring implements DrillFunc {
     @Override
     public FunctionDefinition[] getFunctionDefintions() {
       return new FunctionDefinition[] {
-          FunctionDefinition.simple("binsubstring",
+          FunctionDefinition.simple("bytesubstring",
                                     new BasicArgumentValidator(new Arg(Types.required(TypeProtos.MinorType.VARBINARY),
                                                                        Types.optional(TypeProtos.MinorType.VARBINARY)),
                                                                new Arg(false, false, "offset", TypeProtos.MinorType.BIGINT),
                                                                new Arg(false, false, "length", TypeProtos.MinorType.BIGINT)),
                                     new OutputTypeDeterminer.SameAsFirstInput(),
-                                    "bin_substring",
-                                    "bin_substr")
+                                    "byte_substr")
       };
     }
   }
