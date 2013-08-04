@@ -1,5 +1,7 @@
 package org.apache.drill.exec.expr;
 
+import com.google.common.base.Charsets;
+import com.sun.codemodel.*;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.IfExpression;
 import org.apache.drill.common.expression.IfExpression.IfCondition;
@@ -20,12 +22,6 @@ import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.vector.TypeHelper;
 
 import com.google.common.base.Preconditions;
-import com.sun.codemodel.JBlock;
-import com.sun.codemodel.JClass;
-import com.sun.codemodel.JConditional;
-import com.sun.codemodel.JExpr;
-import com.sun.codemodel.JType;
-import com.sun.codemodel.JVar;
 
 public class EvaluationVisitor extends AbstractExprVisitor<HoldingContainer, CodeGenerator<?>, RuntimeException> {
 
@@ -158,7 +154,7 @@ public class EvaluationVisitor extends AbstractExprVisitor<HoldingContainer, Cod
       JConditional jc = block._if(hc.getIsSet().eq(JExpr.lit(0)).not());
       block = jc._then();
     }
-    if (hc.getMinorType() == TypeProtos.MinorType.VARCHAR) {
+    if (hc.getMinorType() == TypeProtos.MinorType.VARCHAR || hc.getMinorType() == TypeProtos.MinorType.VARBINARY) {
       block.add(vv.invoke("getMutator").invoke("set").arg(JExpr.direct("outIndex")).arg(hc.getHolder()));
     } else {
       block.add(vv.invoke("getMutator").invoke("set").arg(JExpr.direct("outIndex")).arg(hc.getValue()));
@@ -188,7 +184,8 @@ public class EvaluationVisitor extends AbstractExprVisitor<HoldingContainer, Cod
       JBlock blk = generator.getBlock();
       blk.assign(out.getIsSet(), vv1.invoke("getAccessor").invoke("isSet").arg(JExpr.direct("inIndex")));
       JConditional jc = blk._if(out.getIsSet().eq(JExpr.lit(1)));
-      if (e.getMajorType().getMinorType() == TypeProtos.MinorType.VARCHAR) {
+      if (e.getMajorType().getMinorType() == TypeProtos.MinorType.VARCHAR ||
+          e.getMajorType().getMinorType() == TypeProtos.MinorType.VARBINARY) {
         jc._then()
             .add(vv1.invoke("getAccessor").invoke("get").arg(JExpr.direct("inIndex")).arg(out.getHolder()));
       } else {
@@ -196,7 +193,8 @@ public class EvaluationVisitor extends AbstractExprVisitor<HoldingContainer, Cod
             .assign(out.getValue(), vv1.invoke("getAccessor").invoke("get").arg(JExpr.direct("inIndex")));
       }
     }else{
-      if (e.getMajorType().getMinorType() == TypeProtos.MinorType.VARCHAR) {
+      if (e.getMajorType().getMinorType() == TypeProtos.MinorType.VARCHAR ||
+          e.getMajorType().getMinorType() == TypeProtos.MinorType.VARBINARY) {
         generator.getBlock().add(vv1.invoke("getAccessor").invoke("get").arg(JExpr.direct("inIndex")).arg(out.getHolder()));
       } else {
         generator.getBlock().assign(out.getValue(), vv1.invoke("getAccessor").invoke("get").arg(JExpr.direct("inIndex")));

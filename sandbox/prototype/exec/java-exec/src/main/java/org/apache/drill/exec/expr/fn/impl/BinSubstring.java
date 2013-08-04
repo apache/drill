@@ -18,10 +18,10 @@
 
 package org.apache.drill.exec.expr.fn.impl;
 
-import org.apache.drill.common.expression.ArgumentValidators;
-import org.apache.drill.common.expression.CallProvider;
-import org.apache.drill.common.expression.FunctionDefinition;
-import org.apache.drill.common.expression.OutputTypeDeterminer;
+import org.apache.drill.common.expression.*;
+import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.DrillFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.Output;
@@ -30,7 +30,6 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.vector.*;
 
 // TODO: implement optional length parameter
-//       implement UTF-8 and UTF-16 support
 
 /**
  * Evaluate a substring expression for a given value; specifying the start
@@ -46,15 +45,15 @@ import org.apache.drill.exec.vector.*;
  *
  *  - If the substring is invalid, return an empty string.
  */
-@FunctionTemplate(name = "substring",
+@FunctionTemplate(name = "binsubstring",
                   scope = FunctionTemplate.FunctionScope.SIMPLE,
                   nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
-public class Substring implements DrillFunc {
+public class BinSubstring implements DrillFunc {
 
-  @Param VarCharHolder string;
+  @Param VarBinaryHolder string;
   @Param BigIntHolder offset;
   @Param BigIntHolder length;
-  @Output VarCharHolder out;
+  @Output VarBinaryHolder out;
 
   @Override
   public void setup(RecordBatch incoming) { }
@@ -65,22 +64,25 @@ public class Substring implements DrillFunc {
 
     // handle invalid values; e.g. SUBSTRING(value, 0, x) or SUBSTRING(value, x, 0)
     if (offset.value == 0 || length.value <= 0) {
+
       out.start = 0;
       out.end = 0;
-      return;
+
+    } else {
+
+      // handle negative and positive offset values
+      if (offset.value < 0)
+        out.start = string.end + (int)offset.value;
+      else
+        out.start = (int)offset.value - 1;
+  
+      // calculate end position from length and truncate to upper value bounds
+      if (out.start + length.value > string.end)
+        out.end = string.end;
+      else
+        out.end = out.start + (int)length.value;
+
     }
-
-    // handle negative and positive offset values
-    if (offset.value < 0)
-      out.start = string.end + (int)offset.value;
-    else
-      out.start = (int)offset.value - 1;
-
-    // calculate end position from length and truncate to upper value bounds
-    if (out.start + length.value > string.end)
-      out.end = string.end;
-    else
-      out.end = out.start + (int)length.value;
   }
 
   public static class Provider implements CallProvider {
@@ -88,11 +90,14 @@ public class Substring implements DrillFunc {
     @Override
     public FunctionDefinition[] getFunctionDefintions() {
       return new FunctionDefinition[] {
-          FunctionDefinition.simple("substring",
-                                    new ArgumentValidators.AnyTypeAllowed(3),
+          FunctionDefinition.simple("binsubstring",
+                                    new BasicArgumentValidator(new Arg(Types.required(TypeProtos.MinorType.VARBINARY),
+                                                                       Types.optional(TypeProtos.MinorType.VARBINARY)),
+                                                               new Arg(false, false, "offset", TypeProtos.MinorType.BIGINT),
+                                                               new Arg(false, false, "length", TypeProtos.MinorType.BIGINT)),
                                     new OutputTypeDeterminer.SameAsFirstInput(),
-                                    "substring",
-                                    "substr")
+                                    "bin_substring",
+                                    "bin_substr")
       };
     }
   }
