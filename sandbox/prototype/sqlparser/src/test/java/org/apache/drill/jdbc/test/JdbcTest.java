@@ -338,15 +338,15 @@ public class JdbcTest {
         .planContains("'op':'union','distinct':false");
   }
 
-  @Test @Ignore
+  @Test
   public void testUnion() throws Exception {
     JdbcAssert.withModel(MODEL, "HR").sql("select deptId from dept\n" + "union\n" + "select deptId from emp")
         .returnsUnordered("DEPTID=31", "DEPTID=33", "DEPTID=34", "DEPTID=35", "DEPTID=null")
         .planContains("'op':'union','distinct':true");
   }
 
-  @Test @Ignore
-  public void testOrderBy() throws Exception {
+  @Test
+  public void testOrderByDescNullsFirst() throws Exception {
     // desc nulls last
     JdbcAssert
         .withModel(MODEL, "HR")
@@ -355,6 +355,10 @@ public class JdbcTest {
             "DEPTID=null; LASTNAME=John\n" + "DEPTID=34; LASTNAME=Robinson\n" + "DEPTID=34; LASTNAME=Smith\n"
                 + "DEPTID=33; LASTNAME=Jones\n" + "DEPTID=33; LASTNAME=Steinberg\n" + "DEPTID=31; LASTNAME=Rafferty\n")
         .planContains("'op':'order'");
+  }
+
+  @Test
+  public void testOrderByDescNullsLast() throws Exception {
     // desc nulls first
     JdbcAssert
         .withModel(MODEL, "HR")
@@ -363,7 +367,12 @@ public class JdbcTest {
             "DEPTID=34; LASTNAME=Robinson\n" + "DEPTID=34; LASTNAME=Smith\n" + "DEPTID=33; LASTNAME=Jones\n"
                 + "DEPTID=33; LASTNAME=Steinberg\n" + "DEPTID=31; LASTNAME=Rafferty\n" + "DEPTID=null; LASTNAME=John\n")
         .planContains("'op':'order'");
-    // desc is implicitly "nulls first"
+  }
+
+  @Test @Ignore
+  public void testOrderByDesc() throws Exception {
+    // desc is implicitly "nulls first" (i.e. null sorted as +inf)
+    // Current behavior is to sort nulls last. This is wrong.
     JdbcAssert
         .withModel(MODEL, "HR")
         .sql("select * from emp order by deptId desc")
@@ -371,13 +380,21 @@ public class JdbcTest {
             "DEPTID=null; LASTNAME=John\n" + "DEPTID=34; LASTNAME=Robinson\n" + "DEPTID=34; LASTNAME=Smith\n"
                 + "DEPTID=33; LASTNAME=Jones\n" + "DEPTID=33; LASTNAME=Steinberg\n" + "DEPTID=31; LASTNAME=Rafferty\n")
         .planContains("'op':'order'");
+  }
+
+  @Test
+  public void testOrderBy() throws Exception {
     // no sort order specified is implicitly "asc", and asc is "nulls last"
     JdbcAssert
         .withModel(MODEL, "HR")
         .sql("select * from emp order by deptId")
         .returns(
-            "DEPTID=null; LASTNAME=John\n" + "DEPTID=31; LASTNAME=Rafferty\n" + "DEPTID=33; LASTNAME=Jones\n"
-                + "DEPTID=33; LASTNAME=Steinberg\n" + "DEPTID=34; LASTNAME=Robinson\n" + "DEPTID=34; LASTNAME=Smith\n")
+            "DEPTID=31; LASTNAME=Rafferty\n"
+            + "DEPTID=33; LASTNAME=Jones\n"
+            + "DEPTID=33; LASTNAME=Steinberg\n"
+            + "DEPTID=34; LASTNAME=Robinson\n"
+            + "DEPTID=34; LASTNAME=Smith\n"
+            + "DEPTID=null; LASTNAME=John\n")
         .planContains("'op':'order'");
   }
 }

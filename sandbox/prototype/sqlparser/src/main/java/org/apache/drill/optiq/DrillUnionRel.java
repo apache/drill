@@ -22,8 +22,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import net.hydromatic.linq4j.Ord;
 import org.eigenbase.rel.UnionRelBase;
 import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelTraitSet;
+import org.eigenbase.relopt.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,6 +44,12 @@ public class DrillUnionRel extends UnionRelBase implements DrillRel {
   }
 
   @Override
+  public RelOptCost computeSelfCost(RelOptPlanner planner) {
+    // divide cost by two to ensure cheaper than EnumerableDrillRel
+    return super.computeSelfCost(planner).multiplyBy(.5);
+  }
+
+  @Override
   public int implement(DrillImplementor implementor) {
     List<Integer> inputIds = new ArrayList<>();
     for (Ord<RelNode> input : Ord.zip(inputs)) {
@@ -54,8 +59,8 @@ public class DrillUnionRel extends UnionRelBase implements DrillRel {
     E.g. {
       op: "union",
       distinct: true,
-	    inputs: [2, 4]
-	  }
+	  inputs: [2, 4]
+	}
 */
     final ObjectNode union = implementor.mapper.createObjectNode();
     union.put("op", "union");
