@@ -7,7 +7,7 @@ import org.apache.drill.exec.proto.UserBitShared.FieldMetadata;
 import org.apache.drill.exec.record.DeadBuf;
 import org.apache.drill.exec.record.MaterializedField;
 
-abstract class BaseDataValueVector extends BaseValueVector{
+public abstract class BaseDataValueVector extends BaseValueVector{
 
   protected ByteBuf data = DeadBuf.DEAD_BUFFER;
   protected int valueCount;
@@ -46,6 +46,10 @@ abstract class BaseDataValueVector extends BaseValueVector{
   @Override
   public FieldMetadata getMetadata() {
     return null;
+  }
+
+  public ByteBuf getData(){
+    return data;
   }
   
   

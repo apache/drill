@@ -27,10 +27,11 @@ public class VectorHolder {
   private ValueVector vector;
   private int currentLength;
 
-  VectorHolder(ValueVector vector) {
-    this.length = vector.getValueCapacity();
-    this.vector = vector;
-  }
+    public VectorHolder(int length, ValueVector vector) {
+        this.length = length;
+        this.vector = vector;
+        this.mutator = vector.getMutator();
+    }
 
   public ValueVector getValueVector() {
     return vector;

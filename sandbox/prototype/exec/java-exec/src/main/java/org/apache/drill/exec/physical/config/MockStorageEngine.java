@@ -22,11 +22,10 @@ import java.util.Collection;
 
 import org.apache.drill.common.logical.data.Scan;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.physical.ReadEntry;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.store.AbstractStorageEngine;
 import org.apache.drill.exec.store.RecordReader;
-import org.apache.drill.exec.store.StorageEngine;
-import org.apache.drill.exec.store.StorageEngine.ReadEntry;
 
 import com.google.common.collect.ListMultimap;
 
@@ -36,11 +35,6 @@ public class MockStorageEngine extends AbstractStorageEngine{
   @Override
   public boolean supportsRead() {
     return true;
-  }
-
-  @Override
-  public Collection<ReadEntry> getReadEntries(Scan scan) throws IOException {
-    return null;
   }
 
   @Override

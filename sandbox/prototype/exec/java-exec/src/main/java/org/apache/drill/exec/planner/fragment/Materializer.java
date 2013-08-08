@@ -22,11 +22,8 @@ import java.util.List;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.PhysicalOperatorSetupException;
 import org.apache.drill.exec.exception.FragmentSetupException;
-import org.apache.drill.exec.physical.base.AbstractPhysicalVisitor;
-import org.apache.drill.exec.physical.base.Exchange;
-import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.physical.base.Scan;
-import org.apache.drill.exec.physical.base.Store;
+import org.apache.drill.exec.physical.base.*;
+import org.apache.drill.exec.physical.base.GroupScan;
 
 import com.google.common.collect.Lists;
 
@@ -53,8 +50,14 @@ public class Materializer extends AbstractPhysicalVisitor<PhysicalOperator, Mate
   }
 
   @Override
-  public PhysicalOperator visitScan(Scan<?> scan, IndexedFragmentNode iNode) throws ExecutionSetupException {
-    return scan.getSpecificScan(iNode.getMinorFragmentId());
+  public PhysicalOperator visitGroupScan(GroupScan groupScan, IndexedFragmentNode iNode) throws ExecutionSetupException {
+    return groupScan.getSpecificScan(iNode.getMinorFragmentId());
+  }
+
+  @Override
+  public PhysicalOperator visitSubScan(SubScan subScan, IndexedFragmentNode value) throws ExecutionSetupException {
+    // TODO - implement this
+    return super.visitOp(subScan, value);
   }
 
   @Override

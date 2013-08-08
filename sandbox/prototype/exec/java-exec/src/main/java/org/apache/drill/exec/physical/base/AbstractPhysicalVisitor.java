@@ -62,8 +62,13 @@ public abstract class AbstractPhysicalVisitor<T, X, E extends Throwable> impleme
   }
 
   @Override
-  public T visitScan(Scan<?> scan, X value) throws E{
-    return visitOp(scan, value);
+  public T visitGroupScan(GroupScan groupScan, X value) throws E{
+    return visitOp(groupScan, value);
+  }
+
+  @Override
+  public T visitSubScan(SubScan subScan, X value) throws E{
+    return visitOp(subScan, value);
   }
 
   @Override

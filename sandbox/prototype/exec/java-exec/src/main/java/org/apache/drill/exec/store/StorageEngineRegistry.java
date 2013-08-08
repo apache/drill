@@ -38,19 +38,19 @@ public class StorageEngineRegistry {
 
   private DrillbitContext context;
   public StorageEngineRegistry(DrillbitContext context){
+    init(context.getConfig());
     this.context = context;
-    setup(context.getConfig());
   }
   
   @SuppressWarnings("unchecked")
-  public void setup(DrillConfig config){
+  public void init(DrillConfig config){
     Collection<Class<? extends StorageEngine>> engines = PathScanner.scanForImplementations(StorageEngine.class, config.getStringList(ExecConstants.STORAGE_ENGINE_SCAN_PACKAGES));
     logger.debug("Loading storage engines {}", engines);
     for(Class<? extends StorageEngine> engine: engines){
       int i =0;
       for(Constructor<?> c : engine.getConstructors()){
         Class<?>[] params = c.getParameterTypes();
-        if(params.length != 2 || params[1] == DrillbitContext.class || !StorageEngineConfig.class.isAssignableFrom(params[0])){
+        if(params.length != 2 || params[1] != DrillbitContext.class || !StorageEngineConfig.class.isAssignableFrom(params[0])){
           logger.debug("Skipping StorageEngine constructor {} for engine class {} since it doesn't implement a [constructor(StorageEngineConfig, DrillbitContext)]", c, engine);
           continue;
         }

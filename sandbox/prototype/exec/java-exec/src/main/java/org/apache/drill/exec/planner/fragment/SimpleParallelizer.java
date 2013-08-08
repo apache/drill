@@ -127,9 +127,11 @@ public class SimpleParallelizer {
             .build();
 
         if (isRootNode) {
+          logger.debug("Root fragment {}", fragment);
           rootFragment = fragment;
           rootOperator = root;
         } else {
+          logger.debug("Remote fragment {}", fragment);
           fragments.add(fragment);
         }
       }

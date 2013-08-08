@@ -35,7 +35,6 @@ import org.apache.drill.exec.ref.rops.ROP;
 import org.apache.drill.exec.ref.rops.ScanROP;
 import org.apache.drill.exec.ref.rops.StoreROP;
 import org.apache.drill.exec.ref.rops.UnionROP;
-import org.apache.drill.exec.ref.rops.UnionROP;
 import org.apache.drill.exec.ref.rse.RSERegistry;
 import org.apache.drill.exec.ref.rse.ReferenceStorageEngine;
 import org.apache.drill.exec.ref.rse.ReferenceStorageEngine.ReadEntry;
@@ -106,7 +105,7 @@ class ROPConverter {
   }
 
   private ReferenceStorageEngine getEngine(String name){
-    StorageEngineConfig config = plan.getStorageEngine(name);
+    StorageEngineConfig config = plan.getStorageEngineConfig(name);
     if(config == null) throw new SetupException(String.format("Unable to find define logical plan of name [%s].", name));
     ReferenceStorageEngine engine = engineRegistry.getEngine(config);
     return engine;
@@ -118,7 +117,7 @@ class ROPConverter {
   }
 
   public void convertSpecific(Scan scan) throws SetupException {
-    StorageEngineConfig engineConfig = plan.getStorageEngine(scan.getStorageEngine());
+    StorageEngineConfig engineConfig = plan.getStorageEngineConfig(scan.getStorageEngine());
     ReferenceStorageEngine engine = engineRegistry.getEngine(engineConfig);
     Collection<ReadEntry> readEntries;
     try {

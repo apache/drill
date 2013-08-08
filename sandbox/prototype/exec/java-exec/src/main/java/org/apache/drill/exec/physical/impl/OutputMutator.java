@@ -24,5 +24,6 @@ import org.apache.drill.exec.vector.ValueVector;
 public interface OutputMutator {
   public void removeField(MaterializedField field) throws SchemaChangeException;
   public void addField(ValueVector vector) throws SchemaChangeException ;
+  public void removeAllFields();
   public void setNewSchema() throws SchemaChangeException;
 }

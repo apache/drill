@@ -27,10 +27,9 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.ReadEntry;
-import org.apache.drill.exec.physical.base.AbstractScan;
-import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.physical.base.Scan;
-import org.apache.drill.exec.physical.base.Size;
+import org.apache.drill.exec.physical.base.*;
+import org.apache.drill.exec.physical.base.AbstractGroupScan;
+import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.vector.TypeHelper;
 
@@ -43,15 +42,26 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
 
 @JsonTypeName("mock-scan")
-public class MockScanPOP extends AbstractScan<MockScanPOP.MockScanEntry> {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MockScanPOP.class);
+public class MockGroupScanPOP extends AbstractGroupScan {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MockGroupScanPOP.class);
 
   private final String url;
+  protected final List<MockScanEntry> readEntries;
+  private final OperatorCost cost;
+  private final Size size;
   private  LinkedList<MockScanEntry>[] mappings;
 
   @JsonCreator
-  public MockScanPOP(@JsonProperty("url") String url, @JsonProperty("entries") List<MockScanEntry> readEntries) {
-    super(readEntries);
+  public MockGroupScanPOP(@JsonProperty("url") String url, @JsonProperty("entries") List<MockScanEntry> readEntries) {
+    this.readEntries = readEntries;
+    OperatorCost cost = new OperatorCost(0,0,0,0);
+    Size size = new Size(0,0);
+    for(MockScanEntry r : readEntries){
+      cost = cost.add(r.getCost());
+      size = size.add(r.getSize());
+    }
+    this.cost = cost;
+    this.size = size;
     this.url = url;
   }
 
@@ -59,6 +69,10 @@ public class MockScanPOP extends AbstractScan<MockScanPOP.MockScanEntry> {
     return url;
   }
 
+  @JsonProperty("entries")
+  public List<MockScanEntry> getReadEntries() {
+    return readEntries;
+  }
   
   public static class MockScanEntry implements ReadEntry {
 
@@ -82,7 +96,6 @@ public class MockScanPOP extends AbstractScan<MockScanPOP.MockScanEntry> {
     public OperatorCost getCost() {
       return new OperatorCost(1, 2, 1, 1);
     }
-
     
     public int getRecords() {
       return records;
@@ -177,16 +190,31 @@ public class MockScanPOP extends AbstractScan<MockScanPOP.MockScanEntry> {
   }
 
   @Override
-  public Scan<?> getSpecificScan(int minorFragmentId) {
+  public SubScan getSpecificScan(int minorFragmentId) {
     assert minorFragmentId < mappings.length : String.format("Mappings length [%d] should be longer than minor fragment id [%d] but it isn't.", mappings.length, minorFragmentId);
-    return new MockScanPOP(url, mappings[minorFragmentId]);
+    return new MockSubScanPOP(url, mappings[minorFragmentId]);
+  }
+
+  @Override
+  public int getMaxParallelizationWidth() {
+    return readEntries.size();
+  }
+
+  @Override
+  public OperatorCost getCost() {
+    return cost;
+  }
+
+  @Override
+  public Size getSize() {
+    return size;
   }
 
   @Override
   @JsonIgnore
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
     Preconditions.checkArgument(children.isEmpty());
-    return new MockScanPOP(url, readEntries);
+    return new MockGroupScanPOP(url, readEntries);
 
   }
 

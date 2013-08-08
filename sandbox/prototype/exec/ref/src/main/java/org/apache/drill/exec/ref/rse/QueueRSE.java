@@ -54,7 +54,24 @@ public class QueueRSE extends RSEBase {
   
   @JsonTypeName("queue")
   public static class QueueRSEConfig extends StorageEngineConfigBase {
-    
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+
+      QueueRSEConfig that = (QueueRSEConfig) o;
+
+      if (encoding != that.encoding) return false;
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      return encoding != null ? encoding.hashCode() : 0;
+    }
+
     public static enum Encoding {JSON, RECORD};
     
     private final Encoding encoding;

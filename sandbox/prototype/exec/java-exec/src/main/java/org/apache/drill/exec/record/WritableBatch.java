@@ -71,7 +71,6 @@ public class WritableBatch {
     List<ByteBuf> buffers = Lists.newArrayList();
     List<FieldMetadata> metadata = Lists.newArrayList();
 
-    
     for (ValueVector vv : vectors) {
       metadata.add(vv.getMetadata());
       

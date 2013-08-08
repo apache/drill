@@ -44,7 +44,13 @@ public class ConsoleRSE extends RSEBase {
     public ConverterType type = ConverterType.JSON;
   }
   
-  @JsonTypeName("console") public static class ConsoleRSEConfig extends StorageEngineConfigBase {}
+  @JsonTypeName("console") public static class ConsoleRSEConfig extends StorageEngineConfigBase {
+    @Override
+    public boolean equals(Object o) {
+      // if fields are added to this class this method needs to be updated
+      return true;
+    }
+  }
   
   public boolean supportsWrite() {
     return true;

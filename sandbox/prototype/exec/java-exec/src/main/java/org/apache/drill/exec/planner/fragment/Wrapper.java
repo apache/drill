@@ -25,12 +25,10 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.drill.common.exceptions.PhysicalOperatorSetupException;
+import org.apache.drill.exec.exception.FragmentSetupException;
 import org.apache.drill.exec.physical.EndpointAffinity;
-import org.apache.drill.exec.physical.base.AbstractPhysicalVisitor;
-import org.apache.drill.exec.physical.base.Exchange;
-import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.physical.base.Scan;
-import org.apache.drill.exec.physical.base.Store;
+import org.apache.drill.exec.physical.base.*;
+import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.planner.fragment.Fragment.ExchangeFragmentPair;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
@@ -113,9 +111,15 @@ public class Wrapper {
     }
 
     @Override
-    public Void visitScan(Scan<?> scan, List<DrillbitEndpoint> value) throws PhysicalOperatorSetupException {
-      scan.applyAssignments(value);
-      return super.visitScan(scan, value);
+    public Void visitGroupScan(GroupScan groupScan, List<DrillbitEndpoint> value) throws PhysicalOperatorSetupException {
+      groupScan.applyAssignments(value);
+      return super.visitGroupScan(groupScan, value);
+    }
+
+    @Override
+    public Void visitSubScan(SubScan subScan, List<DrillbitEndpoint> value) throws PhysicalOperatorSetupException {
+      // TODO - implement this
+      return visitOp(subScan, value);
     }
 
     @Override

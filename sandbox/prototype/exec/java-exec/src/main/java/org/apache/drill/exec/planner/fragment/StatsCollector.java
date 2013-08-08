@@ -17,11 +17,8 @@
  ******************************************************************************/
 package org.apache.drill.exec.planner.fragment;
 
-import org.apache.drill.exec.physical.base.Exchange;
-import org.apache.drill.exec.physical.base.HasAffinity;
-import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.physical.base.Scan;
-import org.apache.drill.exec.physical.base.Store;
+import org.apache.drill.exec.physical.base.*;
+import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.planner.AbstractOpWrapperVisitor;
 import org.apache.drill.exec.planner.fragment.Fragment.ExchangeFragmentPair;
 
@@ -75,10 +72,16 @@ public class StatsCollector {
     }
 
     @Override
-    public Void visitScan(Scan<?> scan, Wrapper wrapper) {
+    public Void visitGroupScan(GroupScan groupScan, Wrapper wrapper) {
       Stats stats = wrapper.getStats();      
-      stats.addMaxWidth(scan.getReadEntries().size());
-      return super.visitScan(scan, wrapper);
+      stats.addMaxWidth(groupScan.getMaxParallelizationWidth());
+      return super.visitGroupScan(groupScan, wrapper);
+    }
+
+    @Override
+    public Void visitSubScan(SubScan subScan, Wrapper value) throws RuntimeException {
+      // TODO - implement this
+      return super.visitOp(subScan, value);
     }
 
     @Override

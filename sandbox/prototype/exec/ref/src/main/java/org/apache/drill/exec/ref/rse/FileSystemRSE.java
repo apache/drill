@@ -72,6 +72,23 @@ public class FileSystemRSE extends RSEBase {
     public FileSystemRSEConfig(@JsonProperty("root") String root) {
       this.root = root;
     }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+
+      FileSystemRSEConfig that = (FileSystemRSEConfig) o;
+
+      if (root != null ? !root.equals(that.root) : that.root != null) return false;
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      return root != null ? root.hashCode() : 0;
+    }
   }
   
   public static class FileSystemInputConfig {

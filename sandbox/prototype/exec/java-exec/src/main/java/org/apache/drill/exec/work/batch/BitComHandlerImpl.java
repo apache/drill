@@ -48,10 +48,10 @@ import org.apache.drill.exec.rpc.bit.BitConnection;
 import org.apache.drill.exec.rpc.bit.BitRpcConfig;
 import org.apache.drill.exec.rpc.bit.BitTunnel;
 import org.apache.drill.exec.work.FragmentRunner;
-import org.apache.drill.exec.work.RemotingFragmentRunnerListener;
+import org.apache.drill.exec.work.RemoteFragmentRunnerListener;
+import org.apache.drill.exec.work.fragment.RemoteFragmentHandler;
 import org.apache.drill.exec.work.WorkManager.WorkerBee;
 import org.apache.drill.exec.work.fragment.IncomingFragmentHandler;
-import org.apache.drill.exec.work.fragment.RemoteFragmentHandler;
 
 import com.google.common.collect.Maps;
 import com.google.protobuf.MessageLite;
@@ -116,7 +116,7 @@ public class BitComHandlerImpl implements BitComHandler {
     logger.debug("Received remote fragment start instruction", fragment);
     FragmentContext context = new FragmentContext(bee.getContext(), fragment.getHandle(), null, null,new FunctionImplementationRegistry(bee.getContext().getConfig()));
     BitTunnel tunnel = bee.getContext().getBitCom().getTunnel(fragment.getForeman());
-    RemotingFragmentRunnerListener listener = new RemotingFragmentRunnerListener(context, tunnel);
+    RemoteFragmentRunnerListener listener = new RemoteFragmentRunnerListener(context, tunnel);
     try{
       FragmentRoot rootOperator = bee.getContext().getPlanReader().readFragmentOperator(fragment.getFragmentJson());
       RootExec exec = ImplCreator.getExec(context, rootOperator);

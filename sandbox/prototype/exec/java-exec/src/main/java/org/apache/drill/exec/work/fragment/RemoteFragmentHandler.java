@@ -36,7 +36,7 @@ import org.apache.drill.exec.rpc.bit.BitTunnel;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.work.FragmentRunner;
 import org.apache.drill.exec.work.FragmentRunnerListener;
-import org.apache.drill.exec.work.RemotingFragmentRunnerListener;
+import org.apache.drill.exec.work.RemoteFragmentRunnerListener;
 import org.apache.drill.exec.work.batch.IncomingBuffers;
 
 /**
@@ -58,7 +58,7 @@ public class RemoteFragmentHandler implements IncomingFragmentHandler {
       this.root = context.getPlanReader().readFragmentOperator(fragment.getFragmentJson());
       this.buffers = new IncomingBuffers(root);
       this.context = new FragmentContext(context, fragment.getHandle(), null, buffers, new FunctionImplementationRegistry(context.getConfig()));
-      this.runnerListener = new RemotingFragmentRunnerListener(this.context, foremanTunnel);
+      this.runnerListener = new RemoteFragmentRunnerListener(this.context, foremanTunnel);
       this.reader = context.getPlanReader();
       
     }catch(IOException e){

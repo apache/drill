@@ -52,6 +52,11 @@ public class JSONRecordReaderTest {
     }
 
     @Override
+    public void removeAllFields() {
+      addFields.clear();
+    }
+
+    @Override
     public void setNewSchema() throws SchemaChangeException {
     }
 

@@ -35,5 +35,7 @@ public abstract class StorageEngineConfigBase implements StorageEngineConfig{
     logger.debug("Adding Storage Engine Configs including {}", (Object) sec );
     return sec;
   }
+
+  public abstract boolean equals(Object o);
   
 }

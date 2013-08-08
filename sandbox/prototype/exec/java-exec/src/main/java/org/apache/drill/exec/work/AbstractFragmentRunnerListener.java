@@ -91,9 +91,7 @@ public abstract class AbstractFragmentRunnerListener implements FragmentRunnerLi
   }
   
   protected abstract void statusChange(FragmentHandle handle, FragmentStatus status);
-    
-  
-  
+
   @Override
   public final void fail(FragmentHandle handle, String message, Throwable excep) {
     FragmentStatus.Builder status = getBuilder(FragmentState.FAILED);

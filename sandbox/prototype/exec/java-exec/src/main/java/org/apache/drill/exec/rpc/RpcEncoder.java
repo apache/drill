@@ -19,6 +19,7 @@ package org.apache.drill.exec.rpc;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufOutputStream;
+import io.netty.buffer.CompositeByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageEncoder;
 
@@ -28,6 +29,7 @@ import java.util.List;
 import org.apache.drill.exec.proto.GeneralRPCProtos.CompleteRpcMessage;
 import org.apache.drill.exec.proto.GeneralRPCProtos.RpcHeader;
 
+import com.google.common.base.Preconditions;
 import com.google.protobuf.CodedOutputStream;
 import com.google.protobuf.WireFormat;
 
@@ -103,10 +105,16 @@ class RpcEncoder extends MessageToMessageEncoder<OutboundRpcMessage>{
         cos.writeRawVarint32(rawBodyLength);
         cos.flush(); // need to flush so that dbody goes after if cos is caching.
         
-        out.add(buf);
+        CompositeByteBuf cbb = new CompositeByteBuf(buf.alloc(), true, msg.dBodies.length + 1);
+        cbb.addComponent(buf);
+        int bufLength = buf.readableBytes();
         for(ByteBuf b : msg.dBodies){
-          out.add(b);
+          cbb.addComponent(b);
+          bufLength += b.readableBytes();
         }
+        cbb.writerIndex(bufLength);
+        out.add(cbb);
+        
         
       }else{
         cos.flush();

@@ -11,7 +11,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
- * Scan of a Drill table.
+ * GroupScan of a Drill table.
  */
 public class DrillScan extends TableAccessRelBase implements DrillRel {
   private final DrillTable drillTable;

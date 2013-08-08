@@ -63,7 +63,7 @@ public class LogicalPlan {
     return GraphAlgos.TopoSorter.sortLogical(graph);
   }
 
-  public StorageEngineConfig getStorageEngine(String name) {
+  public StorageEngineConfig getStorageEngineConfig(String name) {
     return storageEngineMap.get(name);
   }
 

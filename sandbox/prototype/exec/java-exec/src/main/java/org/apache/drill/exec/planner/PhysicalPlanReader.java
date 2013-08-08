@@ -36,6 +36,8 @@ import com.fasterxml.jackson.databind.InjectableValues;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.exec.store.StorageEngineRegistry;
 
 public class PhysicalPlanReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PhysicalPlanReader.class);
@@ -45,7 +47,8 @@ public class PhysicalPlanReader {
   private final ObjectReader operatorReader;
   private final ObjectReader logicalPlanReader;
 
-  public PhysicalPlanReader(DrillConfig config, ObjectMapper mapper, final DrillbitEndpoint endpoint) {
+  public PhysicalPlanReader(DrillConfig config, ObjectMapper mapper, final DrillbitEndpoint endpoint,
+                            final StorageEngineRegistry engineRegistry) {
 
     // Endpoint serializer/deserializer.
     SimpleModule deserModule = new SimpleModule("PhysicalOperatorModule") //
@@ -58,12 +61,21 @@ public class PhysicalPlanReader {
     mapper.registerModule(deserModule);
     mapper.registerSubtypes(PhysicalOperatorUtil.getSubTypes(config));
     InjectableValues injectables = new InjectableValues.Std() //
+            .addValue(StorageEngineRegistry.class, engineRegistry) //
         .addValue(DrillbitEndpoint.class, endpoint); //
 
     this.mapper = mapper;
     this.physicalPlanReader = mapper.reader(PhysicalPlan.class).with(injectables);
     this.operatorReader = mapper.reader(PhysicalOperator.class).with(injectables);
     this.logicalPlanReader = mapper.reader(LogicalPlan.class).with(injectables);
+  }
+
+  // TODO - we do not want to storage engine registry generated here in production, this was created to keep old
+  // tests passing, this constructor should be removed and the tests should be updated to use the contstructor
+  // that takes a storage engine registry
+  @Deprecated
+  public PhysicalPlanReader(DrillConfig config, ObjectMapper mapper, final DrillbitEndpoint endpoint) {
+    this(config, mapper, endpoint, null);
   }
 
   public String writeJson(PhysicalOperator op) throws JsonProcessingException{

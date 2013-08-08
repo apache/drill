@@ -9,7 +9,7 @@
     graph:[
         {
             @id:1,
-            pop:"mock-scan",
+            pop:"mock-sub-scan",
             url: "http://apache.org",
             entries:[
             	{records: 100, types: [

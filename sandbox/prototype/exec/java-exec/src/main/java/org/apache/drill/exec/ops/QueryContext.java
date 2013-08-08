@@ -19,12 +19,15 @@ package org.apache.drill.exec.ops;
 
 import java.util.Collection;
 
+import org.apache.drill.common.logical.StorageEngineConfig;
 import org.apache.drill.exec.cache.DistributedCache;
+import org.apache.drill.exec.exception.SetupException;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.rpc.bit.BitCom;
 import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.exec.store.StorageEngine;
 
 public class QueryContext {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryContext.class);
@@ -44,6 +47,10 @@ public class QueryContext {
   
   public QueryId getQueryId() {
     return queryId;
+  }
+
+  public StorageEngine getStorageEngine(StorageEngineConfig config) throws SetupException {
+    return drillbitContext.getStorageEngine(config);
   }
 
   public DistributedCache getCache(){

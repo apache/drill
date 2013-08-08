@@ -65,7 +65,10 @@ public class JSONOptions {
   public <T> T getListWith(DrillConfig config, TypeReference<T> t) throws IOException {
       ObjectMapper mapper = config.getMapper();
       return mapper.treeAsTokens(root).readValueAs(t);
-     // return mapper.treeToValue(root,  mapper.getTypeFactory().constructCollectionType(List.class, c));
+  }
+
+  public <T> T getListWith(ObjectMapper mapper, TypeReference<T> t) throws IOException {
+    return mapper.treeAsTokens(root).readValueAs(t);
   }
   
   public JsonNode path(String name){

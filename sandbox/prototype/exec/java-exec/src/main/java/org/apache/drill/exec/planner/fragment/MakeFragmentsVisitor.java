@@ -21,6 +21,7 @@ import org.apache.drill.exec.exception.FragmentSetupException;
 import org.apache.drill.exec.physical.base.AbstractPhysicalVisitor;
 import org.apache.drill.exec.physical.base.Exchange;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.physical.base.SubScan;
 
 /**
  * Responsible for breaking a plan into its constituent Fragments.
@@ -42,7 +43,13 @@ public class MakeFragmentsVisitor extends AbstractPhysicalVisitor<Fragment, Frag
     exchange.getChild().accept(this, next);
     return value;
   }
-  
+
+  @Override
+  public Fragment visitSubScan(SubScan subScan, Fragment value) throws FragmentSetupException {
+    // TODO - implement this
+    return super.visitOp(subScan, value);
+  }
+
   @Override
   public Fragment visitOp(PhysicalOperator op, Fragment value)  throws FragmentSetupException{
 //    logger.debug("Visiting Other {}", op);

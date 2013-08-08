@@ -166,7 +166,7 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
       LogicalPlan logicalPlan = context.getPlanReader().readLogicalPlan(json);
       logger.debug("Logical {}", logicalPlan.unparse(DrillConfig.create()));
       PhysicalPlan physicalPlan = convert(logicalPlan);
-      logger.debug("Physical {}", new ObjectMapper().writeValueAsString(physicalPlan));
+      //logger.debug("Physical {}", new ObjectMapper().writeValueAsString(physicalPlan));
       runPhysicalPlan(physicalPlan);
     } catch (IOException e) {
       fail("Failure while parsing logical plan.", e);

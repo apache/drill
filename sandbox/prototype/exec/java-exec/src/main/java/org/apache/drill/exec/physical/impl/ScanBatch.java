@@ -161,6 +161,12 @@ public class ScanBatch implements RecordBatch {
     }
 
     @Override
+    public void removeAllFields() {
+      holder.clear();
+      fieldVectorMap.clear();
+    }
+
+    @Override
     public void setNewSchema() throws SchemaChangeException {
       ScanBatch.this.schema = this.builder.build();
       ScanBatch.this.schemaChanged = true;

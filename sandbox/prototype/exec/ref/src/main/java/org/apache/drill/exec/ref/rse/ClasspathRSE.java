@@ -48,6 +48,11 @@ public class ClasspathRSE extends RSEBase {
   
   @JsonTypeName("classpath")
   public static class ClasspathRSEConfig extends StorageEngineConfigBase {
+    @Override
+    public boolean equals(Object o) {
+      // if fields are added to this class this method should be changed
+      return true;
+    }
   }
   
   public static class ClasspathInputConfig implements ReadEntry{
