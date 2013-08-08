@@ -20,6 +20,6 @@ public @interface FunctionTemplate {
   }
   
   public static enum FunctionScope{
-    SIMPLE, AGGREGATE, RUNNING;
+    SIMPLE, POINT_AGGREGATE, HOLISTIC_AGGREGATE, RANGE_AGGREGATE;
   }
 }

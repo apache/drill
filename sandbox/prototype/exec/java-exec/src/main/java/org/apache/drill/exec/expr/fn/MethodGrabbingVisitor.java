@@ -6,6 +6,7 @@ import java.util.Map;
 import org.codehaus.janino.Java;
 import org.codehaus.janino.Java.ClassDeclaration;
 import org.codehaus.janino.Java.MethodDeclarator;
+import org.codehaus.janino.UnparseVisitor;
 import org.codehaus.janino.util.Traverser;
 
 import com.google.common.collect.Maps;
@@ -38,10 +39,15 @@ public class MethodGrabbingVisitor{
     @Override
     public void traverseMethodDeclarator(MethodDeclarator md) {
 //      logger.debug(c.getName() + ": Found {}, include {}", md.name, captureMethods);
+      
       if(captureMethods){
         StringWriter writer = new StringWriter();
         ModifiedUnparseVisitor v = new ModifiedUnparseVisitor(writer);
+//        UnparseVisitor v = new UnparseVisitor(writer);
+        
         md.accept(v);
+        v.close();
+        writer.flush();
         methods.put(md.name, writer.getBuffer().toString());  
       }
     } 

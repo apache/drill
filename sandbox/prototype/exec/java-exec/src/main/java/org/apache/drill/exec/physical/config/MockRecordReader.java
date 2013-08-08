@@ -20,7 +20,6 @@ package org.apache.drill.exec.physical.config;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -30,10 +29,8 @@ import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.vector.AllocationHelper;
-import org.apache.drill.exec.vector.FixedWidthVector;
 import org.apache.drill.exec.vector.TypeHelper;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.VariableWidthVector;
 
 public class MockRecordReader implements RecordReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MockRecordReader.class);
@@ -63,7 +60,7 @@ public class MockRecordReader implements RecordReader {
     MaterializedField f = MaterializedField.create(new SchemaPath(name, ExpressionPosition.UNKNOWN), type);
     ValueVector v;
     v = TypeHelper.getNewVector(f, context.getAllocator());
-    AllocationHelper.allocate(v, length, 50);
+    AllocationHelper.allocate(v, length, 50, 4);
     
     return v;
 
@@ -95,7 +92,7 @@ public class MockRecordReader implements RecordReader {
 
     recordsRead += recordSetSize;
     for(ValueVector v : valueVectors){
-      AllocationHelper.allocate(v, recordSetSize, 50);
+      AllocationHelper.allocate(v, recordSetSize, 50, 5);
       
       logger.debug("MockRecordReader:  Generating random data for VV of type " + v.getClass().getName());
       ValueVector.Mutator m = v.getMutator();

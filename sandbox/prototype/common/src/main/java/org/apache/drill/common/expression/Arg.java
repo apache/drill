@@ -67,11 +67,11 @@ public class Arg {
       if(ConstantChecker.onlyIncludesConstants(e)) errors.addExpectedConstantValue(expr, argIndex, name);
     }
     MajorType dt = e.getMajorType();
-    if(dt.getMinorType() == MinorType.LATE){
+    if(dt.getMinorType() != MinorType.LATE){
       
       // change among allowed types.
       for(MajorType a : allowedTypes){
-        if(dt == a) return;
+        if(dt.equals(a)) return;
       }
       
       // didn't find an allowed type.

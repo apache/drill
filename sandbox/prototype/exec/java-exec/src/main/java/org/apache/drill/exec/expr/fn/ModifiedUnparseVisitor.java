@@ -189,17 +189,21 @@ public class ModifiedUnparseVisitor implements ComprehensiveVisitor {
         }
     }
     public void visitMethodDeclarator(Java.MethodDeclarator md) {
-        if (md.optionalStatements == null) {
-            this.pw.print(';');
-        } else
-        if (md.optionalStatements.isEmpty()) {
-            this.pw.print(" ");
-        } else
-        {
-            this.pw.print(AutoIndentWriter.INDENT);
-            this.unparseStatements(md.optionalStatements);
-            this.pw.print(AutoIndentWriter.UNINDENT);
-        }
+        // modified to remove method declaration printing.
+         if (md.optionalStatements == null) {
+             this.pw.print(';');
+         } else
+         if (md.optionalStatements.isEmpty()) {
+         this.pw.print(" {}");
+         } else
+         {
+         this.pw.println(' ');
+         this.pw.print(AutoIndentWriter.INDENT);
+         this.unparseStatements(md.optionalStatements);
+         this.pw.print(AutoIndentWriter.UNINDENT);
+         this.pw.print(' ');
+         }
+
     }
     public void visitFieldDeclaration(Java.FieldDeclaration fd) {
         this.unparseDocComment(fd);

@@ -11,6 +11,7 @@ import org.apache.drill.common.expression.ValueExpressions.LongExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.CodeGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.fn.FunctionHolder;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
@@ -175,8 +176,7 @@ public class EvaluationVisitor extends AbstractExprVisitor<HoldingContainer, Cod
       JBlock blk = generator.getBlock();
       blk.assign(out.getIsSet(), vv1.invoke("getAccessor").invoke("isSet").arg(indexVariable));
       JConditional jc = blk._if(out.getIsSet().eq(JExpr.lit(1)));
-      if (e.getMajorType().getMinorType() == TypeProtos.MinorType.VARCHAR ||
-          e.getMajorType().getMinorType() == TypeProtos.MinorType.VARBINARY) {
+      if (Types.usesHolderForGet(e.getMajorType())) {
         jc._then()
             .add(getValueAccessor.arg(JExpr.direct("inIndex")).arg(out.getHolder()));
       } else {
@@ -184,8 +184,7 @@ public class EvaluationVisitor extends AbstractExprVisitor<HoldingContainer, Cod
             .assign(out.getValue(), getValueAccessor.arg(indexVariable));
       }
     }else{
-      if (e.getMajorType().getMinorType() == TypeProtos.MinorType.VARCHAR ||
-          e.getMajorType().getMinorType() == TypeProtos.MinorType.VARBINARY) {
+      if (Types.usesHolderForGet(e.getMajorType())) {
         generator.getBlock().add(getValueAccessor.arg(indexVariable).arg(out.getHolder()));
       } else {
         generator.getBlock().assign(out.getValue(), getValueAccessor.arg(indexVariable));

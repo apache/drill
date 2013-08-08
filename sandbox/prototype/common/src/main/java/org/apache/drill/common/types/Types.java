@@ -39,6 +39,30 @@ public class Types {
     }
   }
   
+  public static boolean usesHolderForGet(MajorType type){
+    if(type.getMode() == DataMode.REPEATED) return true;
+    switch(type.getMinorType()){
+    case BIGINT:
+    case DECIMAL4:
+    case DECIMAL8:
+    case FLOAT4:
+    case FLOAT8:
+    case INT:
+    case MONEY:
+    case SMALLINT:
+    case TINYINT:
+    case UINT1:
+    case UINT2:
+    case UINT4:
+    case UINT8:
+      return false;
+    
+    default: 
+      return true;
+    }
+    
+  }
+  
   public static boolean isFixedWidthType(MajorType type){
     switch(type.getMinorType()){
     case VARBINARY:
@@ -105,19 +129,10 @@ public class Types {
         case OPTIONAL:
         case REQUIRED:
           return true;
-        default:
-          return false;
         }
-      default:
-        return false;
-      }
-    }else{
-      if(a.getMode() != b.getMode()){
-        return false;
-      }else{
-        return true;
       }
     }
+    return a.getMode() == b.getMode();
   }
   
   public static boolean isLateBind(MajorType type){

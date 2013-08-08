@@ -51,9 +51,11 @@ public class FunctionHolder {
     this.addBody = methods.get("add");
     this.evalBody = methods.get("eval");
     Preconditions.checkNotNull(evalBody);
+    Preconditions.checkArgument(!evalBody.isEmpty());
     this.parameters = parameters;
     this.returnValue = returnValue;
     this.imports = imports;
+    
   }
   
   public List<String> getImports() {
@@ -154,12 +156,21 @@ public class FunctionHolder {
   
   
   public boolean matches(FunctionCall call){
-    if(!softCompare(call.getMajorType(), returnValue.type)) return false;
-    if(call.args.size() != parameters.length) return false;
+    if(!softCompare(call.getMajorType(), returnValue.type)){
+//      logger.debug(String.format("Call [%s] didn't match as return type [%s] was different than expected [%s]. ", call.getDefinition().getName(), returnValue.type, call.getMajorType()));
+      return false;
+    }
+    if(call.args.size() != parameters.length){
+//      logger.debug(String.format("Call [%s] didn't match as the number of arguments provided [%d] were different than expected [%d]. ", call.getDefinition().getName(), parameters.length, call.args.size()));
+      return false;
+    }
     for(int i =0; i < parameters.length; i++){
       ValueReference param = parameters[i];
       LogicalExpression arg = call.args.get(i);
-      if(!softCompare(param.type, arg.getMajorType())) return false;
+      if(!softCompare(param.type, arg.getMajorType())){
+//        logger.debug(String.format("Call [%s] didn't match as the argument [%s] didn't match the expected type [%s]. ", call.getDefinition().getName(), arg.getMajorType(), param.type));
+        return false;
+      }
     }
     
     return true;

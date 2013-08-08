@@ -225,6 +225,12 @@ import com.google.common.collect.Lists;
            </#if> get(int index, int positionIndex) {
       return values.getAccessor().get(offsets.getAccessor().get(index) + positionIndex);
     }
+           
+    public void get(int index, Repeated${minor.class}Holder holder){
+      holder.start = offsets.getAccessor().get(index);
+      holder.end =  offsets.getAccessor().get(index+1);
+      holder.vector = values;
+    }
 
     public MaterializedField getField() {
       return field;
@@ -288,13 +294,22 @@ import com.google.common.collect.Lists;
      */
     public void setValueCount(int groupCount) {
       parentValueCount = groupCount;
-      childValueCount = offsets.getAccessor().get(groupCount+1);
-      offsets.getMutator().setValueCount(groupCount);
+      childValueCount = offsets.getAccessor().get(groupCount);
+      offsets.getMutator().setValueCount(groupCount+1);
       values.getMutator().setValueCount(childValueCount);
     }
     
     public void generateTestData(){
-      throw new UnsupportedOperationException();
+      setValueCount(offsets.getAccessor().getValueCount() - 1);
+      int valCount = offsets.getValueCapacity();
+      int[] sizes = {1,2,0,6};
+      int size = 0;
+      int runningOffset = 0;
+      for(int i =1; i < valCount; i++, size++){
+        runningOffset += sizes[size % sizes.length];
+        offsets.getMutator().set(i, runningOffset);  
+      }
+      values.getMutator().generateTestData();
     }
     
     public void reset(){
