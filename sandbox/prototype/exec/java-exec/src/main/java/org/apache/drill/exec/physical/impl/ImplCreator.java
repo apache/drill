@@ -26,7 +26,11 @@ import org.apache.drill.exec.physical.base.AbstractPhysicalVisitor;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.SubScan;
+import org.apache.drill.exec.physical.base.Scan;
+import org.apache.drill.exec.physical.config.HashPartitionSender;
 import org.apache.drill.exec.physical.config.Filter;
+import org.apache.drill.exec.physical.config.MockScanBatchCreator;
+import org.apache.drill.exec.physical.config.MockScanPOP;
 import org.apache.drill.exec.physical.config.Project;
 import org.apache.drill.exec.physical.config.RandomReceiver;
 import org.apache.drill.exec.physical.config.Screen;
@@ -34,6 +38,7 @@ import org.apache.drill.exec.physical.config.SelectionVectorRemover;
 import org.apache.drill.exec.physical.config.SingleSender;
 import org.apache.drill.exec.physical.config.Sort;
 import org.apache.drill.exec.physical.impl.filter.FilterBatchCreator;
+import org.apache.drill.exec.physical.impl.partitionsender.PartitionSenderCreator;
 import org.apache.drill.exec.physical.impl.project.ProjectBatchCreator;
 import org.apache.drill.exec.physical.impl.sort.SortBatchCreator;
 import org.apache.drill.exec.physical.impl.svremover.SVRemoverCreator;
@@ -49,24 +54,28 @@ import org.apache.drill.exec.store.parquet.ParquetScanBatchCreator;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
-public class ImplCreator extends AbstractPhysicalVisitor<RecordBatch, FragmentContext, ExecutionSetupException> {
+/**
+ * Implementation of the physical operator visitor
+ */
+public class ImplCreator extends AbstractPhysicalVisitor<RecordBatch, FragmentContext, ExecutionSetupException>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ImplCreator.class);
 
+  // Element creators supported by this visitor
   private MockScanBatchCreator msc = new MockScanBatchCreator();
   private ParquetScanBatchCreator parquetScan = new ParquetScanBatchCreator();
   private ScreenCreator sc = new ScreenCreator();
   private RandomReceiverCreator rrc = new RandomReceiverCreator();
+  private PartitionSenderCreator hsc = new PartitionSenderCreator();
   private SingleSenderCreator ssc = new SingleSenderCreator();
   private ProjectBatchCreator pbc = new ProjectBatchCreator();
   private FilterBatchCreator fbc = new FilterBatchCreator();
   private SVRemoverCreator svc = new SVRemoverCreator();
   private SortBatchCreator sbc = new SortBatchCreator();
   private RootExec root = null;
-
-  private ImplCreator() {
-  }
-
-  public RootExec getRoot() {
+  
+  private ImplCreator(){}
+  
+  public RootExec getRoot(){
     return root;
   }
 
@@ -113,6 +122,12 @@ public class ImplCreator extends AbstractPhysicalVisitor<RecordBatch, FragmentCo
     return null;
   }
 
+  @Override
+  public RecordBatch visitHashPartitionSender(HashPartitionSender op, FragmentContext context) throws ExecutionSetupException {
+    root = hsc.getRoot(context, op, getChildren(op, context));
+    return null;
+  }
+  
   @Override
   public RecordBatch visitFilter(Filter filter, FragmentContext context) throws ExecutionSetupException {
     return fbc.getBatch(context, filter, getChildren(filter, context));

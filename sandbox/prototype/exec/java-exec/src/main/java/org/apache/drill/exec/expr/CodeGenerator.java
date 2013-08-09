@@ -11,6 +11,7 @@ import org.apache.drill.exec.compile.TemplateClassDefinition;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.physical.impl.partitionsender.OutgoingRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorWrapper;
@@ -153,7 +154,32 @@ public class CodeGenerator<T> {
     model.build(w);
     return w.getCode().toString();
   }
-  
+
+  public String generateMultipleOutputs() throws IOException{
+
+    {
+      //setup method
+      JMethod m = clazz.method(JMod.PUBLIC, model.VOID, "doSetup");
+      m.param(model._ref(FragmentContext.class), "context");
+      m.param(model._ref(RecordBatch.class), "incoming");
+      m.param(model._ref(OutgoingRecordBatch.class).array(), "outgoing");
+      m._throws(SchemaChangeException.class);
+      m.body().add(parentSetupBlock);
+    }
+
+    {
+      // eval method.
+      JType ret = definition.getEvalReturnType() == null ? model.VOID : model._ref(definition.getEvalReturnType());
+      JMethod m = clazz.method(JMod.PUBLIC, ret, "doEval");
+      m.param(model.INT, "inIndex");
+      m.param(model.INT, "outIndex");
+      m.body().add(parentEvalBlock);
+    }
+
+    SingleClassStringWriter w = new SingleClassStringWriter();
+    model.build(w);
+    return w.getCode().toString();
+  }
   
   public JCodeModel getModel() {
     return model;

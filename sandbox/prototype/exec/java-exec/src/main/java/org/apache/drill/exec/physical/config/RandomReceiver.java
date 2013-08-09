@@ -39,12 +39,14 @@ public class RandomReceiver extends AbstractReceiver{
   private List<DrillbitEndpoint> senders;
   
   @JsonCreator
-  public RandomReceiver(@JsonProperty("sender-major-fragment") int oppositeMajorFragmentId, @JsonProperty("senders") List<DrillbitEndpoint> senders){
+  public RandomReceiver(@JsonProperty("sender-major-fragment") int oppositeMajorFragmentId,
+                        @JsonProperty("senders") List<DrillbitEndpoint> senders) {
     super(oppositeMajorFragmentId);
     this.senders = senders;
   }
   
   @Override
+  @JsonProperty("senders")
   public List<DrillbitEndpoint> getProvidingEndpoints() {
     return senders;
   }

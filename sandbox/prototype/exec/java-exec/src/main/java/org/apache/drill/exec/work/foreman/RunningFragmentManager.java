@@ -72,7 +72,7 @@ class RunningFragmentManager implements FragmentStatusListener{
     
   }
 
-  public void runFragments(WorkerBee bee, PlanFragment rootFragment, FragmentRoot rootOperator, UserClientConnection rootClient, List<PlanFragment> leafFragments) throws ExecutionSetupException{
+  public void runFragments(WorkerBee bee, PlanFragment rootFragment, FragmentRoot rootOperator, UserClientConnection rootClient, List<PlanFragment> leafFragments, List<PlanFragment> intermediateFragments) throws ExecutionSetupException{
     remainingFragmentCount.set(leafFragments.size()+1);
     queryId = rootFragment.getHandle().getQueryId();
 
@@ -93,8 +93,14 @@ class RunningFragmentManager implements FragmentStatusListener{
       }
       
     }
-    
-    // send remote fragments.
+
+    // keep track of intermediate fragments (not root or leaf)
+    for (PlanFragment f : intermediateFragments) {
+      logger.debug("Tracking intermediate remote node {} with data {}", f.getAssignment(), f.getFragmentJson());
+      map.put(f.getHandle(), new FragmentData(f.getHandle(), f.getAssignment(), false));
+    }
+
+    // send remote (leaf) fragments.
     for (PlanFragment f : leafFragments) {
       sendRemoteFragment(f);
     }
@@ -267,7 +273,6 @@ class RunningFragmentManager implements FragmentStatusListener{
     protected void statusChange(FragmentHandle handle, FragmentStatus status) {
       RunningFragmentManager.this.statusUpdate(status);
     }
-
 
     
   }

@@ -107,6 +107,14 @@ public class FragmentContext {
     return t;
     
   }
+
+  public <T> T getImplementationClassMultipleOutput(CodeGenerator<T> cg) throws ClassTransformationException, IOException{
+    long t1 = System.nanoTime();
+    T t = transformer.getImplementationClass(this.loader, cg.getDefinition(), cg.generateMultipleOutputs(), cg.getMaterializedClassName());
+    logger.debug("Compile time: {} millis.", (System.nanoTime() - t1)/1000/1000 );
+    return t;
+
+  }
   
   public void addMetricsToStatus(FragmentStatus.Builder stats){
     stats.setBatchesCompleted(batchesCompleted.get());

@@ -205,17 +205,19 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
 
       this.context.getBitCom().getListeners().addFragmentStatusListener(work.getRootFragment().getHandle(), fragmentManager);
       List<PlanFragment> leafFragments = Lists.newArrayList();
+      List<PlanFragment> intermediateFragments = Lists.newArrayList();
 
       // store fragments in distributed grid.
       for (PlanFragment f : work.getFragments()) {
         if (f.getLeafFragment()) {
           leafFragments.add(f);
         } else {
+          intermediateFragments.add(f);
           context.getCache().storeFragment(f);
         }
       }
 
-      fragmentManager.runFragments(bee, work.getRootFragment(), work.getRootOperator(), initiatingClient, leafFragments);
+      fragmentManager.runFragments(bee, work.getRootFragment(), work.getRootOperator(), initiatingClient, leafFragments, intermediateFragments);
 
     
     } catch (ExecutionSetupException | RpcException e) {
