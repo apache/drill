@@ -58,7 +58,12 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
   
   @Override
   public ByteBuf[] getBuffers() {
+    <#if type.major == "VarLen">
+    ByteBuf[] valueBuffers = values.getBuffers();
+    return new ByteBuf[]{bits.data, valueBuffers[0], valueBuffers[1]};
+    <#else>
     return new ByteBuf[]{bits.data, values.data};
+    </#if>
   }
   
   @Override

@@ -116,7 +116,10 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
       // run query.
       bit.run();
       client.connect();
-      List<QueryResultBatch> results = client.runQuery(QueryType.PHYSICAL, Files.toString(FileUtils.getResourceAsFile("/physical_json_scan_test1.json"), Charsets.UTF_8));
+      List<QueryResultBatch> results = client.runQuery(QueryType.PHYSICAL,
+          Files.toString(FileUtils.getResourceAsFile("/physical_json_scan_test1.json"), Charsets.UTF_8)
+              .replace("#{TEST_FILE}", FileUtils.getResourceAsFile("/scan_json_test_1.json").toURI().toString())
+      );
 
       // look at records
       RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
@@ -156,7 +159,7 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
         System.out.println();
 
 
-        for (int r = 0; i < batchLoader.getRecordCount(); r++) {
+        for (int r = 0; r < batchLoader.getRecordCount(); r++) {
           boolean first = true;
           recordCount++;
           for (VectorWrapper<?> v : batchLoader) {

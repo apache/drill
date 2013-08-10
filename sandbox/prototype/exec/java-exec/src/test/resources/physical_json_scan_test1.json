@@ -11,7 +11,7 @@
             @id:1,
             pop:"json-scan",
             entries:[
-            	{url: "file:////home/tnachen/src/incubator-drill/sandbox/prototype/exec/java-exec/src/test/resources/scan_json_test_1.json"}
+            	{url: "#{TEST_FILE}"}
             ]
         },
         {

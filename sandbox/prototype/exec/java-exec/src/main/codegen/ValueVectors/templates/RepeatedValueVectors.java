@@ -249,10 +249,14 @@ import com.google.common.collect.Lists;
     }
   }
   
-  public final class Mutator implements ValueVector.Mutator {
+  public final class Mutator implements RepeatedMutator {
 
     
     private Mutator(){
+    }
+
+    public void startNewGroup(int index) {
+      offsets.getMutator().set(index+1, offsets.getAccessor().get(index));
     }
 
     /**
@@ -264,18 +268,12 @@ import com.google.common.collect.Lists;
      */
     public void add(int index, <#if type.major == "VarLen">byte[]<#elseif (type.width < 4)>int<#else>${minor.javaType!type.javaType}</#if> value) {
       int nextOffset = offsets.getAccessor().get(index+1);
-      if (index > 0 && nextOffset == 0) {
-        nextOffset = offsets.getAccessor().get(index);
-      }
       values.getMutator().set(nextOffset, value);
       offsets.getMutator().set(index+1, nextOffset+1);
     }
 
     public void add(int index, ${minor.class}Holder holder){
       int nextOffset = offsets.getAccessor().get(index+1);
-      if (index > 0 && nextOffset == 0) {
-        nextOffset = offsets.getAccessor().get(index);
-      }
       values.getMutator().set(nextOffset, holder);
       offsets.getMutator().set(index+1, nextOffset+1);
     }

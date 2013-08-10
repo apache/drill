@@ -45,7 +45,13 @@ public class VectorHolder {
   }
 
   public void setGroupCount(int groupCount) {
-    this.groupCount = groupCount;
+    if(this.groupCount < groupCount) {
+      RepeatedMutator mutator = (RepeatedMutator) vector.getMutator();
+      while(this.groupCount < groupCount) {
+        mutator.startNewGroup(this.groupCount + 1);
+        this.groupCount++;
+      }
+    }
   }
 
   public boolean hasEnoughSpace(int newLength) {
