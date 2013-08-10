@@ -8,5 +8,5 @@ public interface ProjectEvaluator {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProjectEvaluator.class);
   
   public abstract void doSetup(FragmentContext context, RecordBatch incoming, RecordBatch outgoing) throws SchemaChangeException;
-  public abstract void doEval(int inIndex, int outIndex);
+  public abstract void doEval(int inIndex, int outIndex) throws SchemaChangeException;
 }

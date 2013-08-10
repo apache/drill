@@ -17,6 +17,7 @@
  ******************************************************************************/
 package org.apache.drill.common.expression;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -26,6 +27,7 @@ import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.Types;
 
+import com.google.common.collect.Iterators;
 import com.google.protobuf.DescriptorProtos.UninterpretedOption.NamePart;
 
 public class SchemaPath extends LogicalExpressionBase {
@@ -129,6 +131,11 @@ public class SchemaPath extends LogicalExpressionBase {
     } else if (!rootSegment.equals(other.rootSegment))
       return false;
     return true;
+  }
+
+  @Override
+  public Iterator<LogicalExpression> iterator() {
+    return Iterators.emptyIterator();
   }
 
   @Override

@@ -14,6 +14,7 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.CodeGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
+import org.apache.drill.exec.expr.HoldingContainerExpression;
 import org.apache.drill.exec.expr.fn.impl.ComparatorFunctions;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.Sort;
@@ -123,22 +124,26 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
   }
 
   
+  
   private Sorter createNewSorter() throws ClassTransformationException, IOException, SchemaChangeException{
     CodeGenerator<Sorter> g = new CodeGenerator<Sorter>(Sorter.TEMPLATE_DEFINITION, context.getFunctionRegistry());
+    g.setMappingSet(SortSignature.MAIN_MAPPING);
     
     for(OrderDef od : popConfig.getOrderings()){
       // first, we rewrite the evaluation stack for each side of the comparison.
       ErrorCollector collector = new ErrorCollectorImpl(); 
       final LogicalExpression expr = ExpressionTreeMaterializer.materialize(od.getExpr(), this, collector);
       if(collector.hasErrors()) throw new SchemaChangeException("Failure while materializing expression. " + collector.toErrorString());
-      ReadIndexRewriter rewriter = new ReadIndexRewriter();
-      LogicalExpression left = expr.accept(rewriter, "inIndex");
-      LogicalExpression right = expr.accept(rewriter, "outIndex");
+      g.setMappingSet(SortSignature.LEFT_MAPPING);
+      HoldingContainer left = g.addExpr(expr, false);
+      g.setMappingSet(SortSignature.RIGHT_MAPPING);
+      HoldingContainer right = g.addExpr(expr, false);
+      g.setMappingSet(SortSignature.MAIN_MAPPING);
       
       // next we wrap the two comparison sides and add the expression block for the comparison.
-      FunctionCall f = new FunctionCall(ComparatorFunctions.COMPARE_TO, ImmutableList.of(left, right), ExpressionPosition.UNKNOWN);
-      HoldingContainer out = g.addExpr(f);
-      JConditional jc = g.getBlock()._if(out.getValue().ne(JExpr.lit(0)));
+      FunctionCall f = new FunctionCall(ComparatorFunctions.COMPARE_TO, ImmutableList.of((LogicalExpression) new HoldingContainerExpression(left), new HoldingContainerExpression(right)), ExpressionPosition.UNKNOWN);
+      HoldingContainer out = g.addExpr(f, false);
+      JConditional jc = g.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)));
       
       //TODO: is this the right order...
       if(od.getDirection() == Direction.ASC){
@@ -148,7 +153,7 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
       }
     }
     
-    g.getBlock()._return(JExpr.lit(0));
+    g.getEvalBlock()._return(JExpr.lit(0));
     
     return context.getImplementationClass(g);
 

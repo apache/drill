@@ -54,7 +54,7 @@ public final class AggregateChecker extends SimpleExprVisitor<Boolean>{
 
   @Override
   public Boolean visitIfExpression(IfExpression ifExpr) {
-    for(IfCondition c : ifExpr){
+    for(IfCondition c : ifExpr.conditions){
       if(c.condition.accept(this, null) || c.expression.accept(this, null)) return true;
     }
     return ifExpr.elseExpression.accept(this, null);

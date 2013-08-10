@@ -34,12 +34,12 @@ public abstract class SortTemplate implements Sorter, IndexedSortable{
   }
   
   @Override
-  public int compare(int inIndex, int outIndex) {
-    int sv1 = vector4.get(inIndex);
-    int sv2 = vector4.get(outIndex);
+  public int compare(int leftIndex, int rightIndex) {
+    int sv1 = vector4.get(leftIndex);
+    int sv2 = vector4.get(rightIndex);
     return doEval(sv1, sv2);
   }
 
   public abstract void doSetup(FragmentContext context, RecordBatch incoming, RecordBatch outgoing) throws SchemaChangeException;
-  public abstract int doEval(int inIndex, int outIndex);
+  public abstract int doEval(int leftIndex, int rightIndex);
 }

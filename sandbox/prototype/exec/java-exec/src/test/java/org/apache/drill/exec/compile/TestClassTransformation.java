@@ -40,7 +40,7 @@ public class TestClassTransformation {
 
     TemplateClassDefinition<ExampleExternalInterface> def = new TemplateClassDefinition<ExampleExternalInterface>(
         ExampleExternalInterface.class, "org.apache.drill.exec.compile.ExampleTemplate",
-        ExampleInternalInterface.class, null);
+        ExampleInternalInterface.class);
     
     
     ClassTransformer ct = new ClassTransformer();

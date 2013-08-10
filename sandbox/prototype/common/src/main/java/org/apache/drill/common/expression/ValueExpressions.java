@@ -17,11 +17,15 @@
  ******************************************************************************/
 package org.apache.drill.common.expression;
 
+import java.util.Iterator;
+
 import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
+
+import com.google.common.collect.Iterators;
 
 public class ValueExpressions {
 
@@ -54,6 +58,12 @@ public class ValueExpressions {
     }
 
     protected abstract V parseValue(String s);
+    
+    @Override
+    public Iterator<LogicalExpression> iterator() {
+      return Iterators.emptyIterator();
+    }
+
 
   }
 
@@ -109,6 +119,11 @@ public class ValueExpressions {
       return visitor.visitDoubleConstant(this, value);
     }
 
+    @Override
+    public Iterator<LogicalExpression> iterator() {
+      return Iterators.emptyIterator();
+    }
+
   }
 
   public static class LongExpression extends LogicalExpressionBase {
@@ -135,6 +150,12 @@ public class ValueExpressions {
     public <T, V, E extends Exception> T accept(ExprVisitor<T, V, E> visitor, V value) throws E {
       return visitor.visitLongConstant(this, value);
     }
+    
+    @Override
+    public Iterator<LogicalExpression> iterator() {
+      return Iterators.emptyIterator();
+    }
+
   }
 
   public static class QuotedString extends ValueExpression<String> {

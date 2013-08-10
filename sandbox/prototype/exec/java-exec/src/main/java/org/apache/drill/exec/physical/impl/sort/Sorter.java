@@ -12,6 +12,6 @@ public interface Sorter {
   public void sort(SelectionVector4 vector4, VectorContainer container);
   
   public static TemplateClassDefinition<Sorter> TEMPLATE_DEFINITION = new TemplateClassDefinition<Sorter>( //
-      Sorter.class, "org.apache.drill.exec.physical.impl.sort.SortTemplate", Comparator.class, int.class);
+      Sorter.class, "org.apache.drill.exec.physical.impl.sort.SortTemplate", Comparator.class, SortSignature.class);
 
 }

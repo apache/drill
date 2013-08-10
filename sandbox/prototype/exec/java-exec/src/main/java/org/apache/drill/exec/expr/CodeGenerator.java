@@ -8,13 +8,15 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.compile.TemplateClassDefinition;
+import org.apache.drill.exec.compile.sig.CodeGeneratorArgument;
+import org.apache.drill.exec.compile.sig.CodeGeneratorMethod;
+import org.apache.drill.exec.compile.sig.DefaultGeneratorSignature;
+import org.apache.drill.exec.compile.sig.GeneratorMapping;
+import org.apache.drill.exec.compile.sig.MappingSet;
+import org.apache.drill.exec.compile.sig.SignatureHolder;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.physical.impl.partitionsender.OutgoingRecordBatch;
-import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TypedFieldId;
-import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.vector.TypeHelper;
 
 import com.google.common.base.Preconditions;
@@ -24,22 +26,19 @@ import com.sun.codemodel.JClassAlreadyExistsException;
 import com.sun.codemodel.JCodeModel;
 import com.sun.codemodel.JDefinedClass;
 import com.sun.codemodel.JExpr;
-import com.sun.codemodel.JExpression;
 import com.sun.codemodel.JFieldRef;
 import com.sun.codemodel.JMethod;
 import com.sun.codemodel.JMod;
 import com.sun.codemodel.JType;
 import com.sun.codemodel.JVar;
 
-public class CodeGenerator<T> {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CodeGenerator.class);
+public class CodeGenerator<T>{
   
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CodeGenerator.class);
+
   public JDefinedClass clazz;
-  private JBlock parentEvalBlock;
-  private JBlock parentSetupBlock;
-  private JBlock currentEvalBlock;
-  private JBlock currentSetupBlock;
-  private final EvaluationVisitor evaluationVisitor;
+  private JBlock[] parentBlocks;
+  private JBlock[] childBlocks;
   private final TemplateClassDefinition<T> definition;
   private JCodeModel model;
   private int index = 0;
@@ -47,25 +46,69 @@ public class CodeGenerator<T> {
   private String className;
   private String fqcn;
   private String packageName = "org.apache.drill.exec.test.generated";
+  private final SignatureHolder sig;
+  private MappingSet mappings;
+  private final EvaluationVisitor evaluationVisitor;
+  
   
   public CodeGenerator(TemplateClassDefinition<T> definition, FunctionImplementationRegistry funcRegistry) {
-    super();
-    className = "Gen" + classCreator.incrementAndGet();
-    fqcn = packageName + "." + className;
+    this(DefaultGeneratorSignature.DEFAULT_MAPPING, definition, funcRegistry);
+  }
+  
+  public CodeGenerator(MappingSet mappingSet, TemplateClassDefinition<T> definition, FunctionImplementationRegistry funcRegistry) {
+    Preconditions.checkNotNull(definition.getSignature(), "The signature for defintion %s was incorrectly initialized.", definition);
+    this.sig = definition.getSignature();
+    this.mappings = mappingSet;
+    this.className = "Gen" + classCreator.incrementAndGet();
+    this.fqcn = packageName + "." + className;
     try{
       this.definition = definition;
       this.model = new JCodeModel();
       this.clazz = model._package(packageName)._class(className);
       clazz._implements(definition.getInternalInterface());
-      this.parentEvalBlock = new JBlock();
-      this.parentSetupBlock = new JBlock();
+      parentBlocks = new JBlock[sig.size()];
+      for(int i =0; i < sig.size(); i++){
+        parentBlocks[i] = new JBlock(false, false);
+      }
+      childBlocks = new JBlock[sig.size()];
       this.evaluationVisitor = new EvaluationVisitor(funcRegistry);
+      rotateBlock();
     } catch (JClassAlreadyExistsException e) {
       throw new IllegalStateException(e);
     }
   }
   
-
+  public MappingSet getMappingSet(){
+    return mappings;
+  }
+  
+  public void setMappingSet(MappingSet mappings){
+    this.mappings = mappings;
+  }
+  
+  private GeneratorMapping getCurrentMapping(){
+    return mappings.getCurrentMapping();
+  }
+  
+  private JBlock getBlock(String methodName){
+    JBlock blk = this.childBlocks[sig.get(methodName)];
+    Preconditions.checkNotNull(blk, "Requested method name of %s was not available for signature %s.",  methodName, this.sig);
+    return blk;
+  }
+  
+  public JBlock getSetupBlock(){
+    return getBlock(getCurrentMapping().getSetup());
+  }
+  public JBlock getEvalBlock(){
+    return getBlock(getCurrentMapping().getEval());
+  }
+//  public JBlock getResetBlock(){
+//    return getBlock(getCurrentMapping().getReset());
+//  }
+//  public JBlock getCleanupBlock(){
+//    return getBlock(getCurrentMapping().getCleanup());
+//  }
+    
   public JVar declareVectorValueSetupAndMember(String batchName, TypedFieldId fieldId){
     Class<?> valueVectorClass = TypeHelper.getValueVectorClass(fieldId.getType().getMinorType(), fieldId.getType().getMode());
     JClass vvClass = model.ref(valueVectorClass);
@@ -78,7 +121,6 @@ public class CodeGenerator<T> {
     
     JVar vv = declareClassField("vv", retClass);
     JClass t = model.ref(SchemaChangeException.class);
-    JType wrapperClass = model.ref(VectorWrapper.class);
     JType objClass = model.ref(Object.class);
     JBlock b = getSetupBlock();
     JVar obj = b.decl( //
@@ -99,87 +141,51 @@ public class CodeGenerator<T> {
   }
 
   public HoldingContainer addExpr(LogicalExpression ex){
+    return addExpr(ex, true);
+  }
+  
+  public HoldingContainer addExpr(LogicalExpression ex, boolean rotate){
     logger.debug("Adding next write {}", ex);
-    rotateBlock();
-    return ex.accept(evaluationVisitor, this);
+    if(rotate) rotateBlock();
+    return evaluationVisitor.addExpr(ex, this);
   }
   
   public void rotateBlock(){
-    currentEvalBlock = new JBlock();
-    parentEvalBlock.add(currentEvalBlock);
-    currentSetupBlock = new JBlock();
-    parentSetupBlock.add(currentSetupBlock);
-
+    for(int i =0; i < childBlocks.length; i++){
+      this.childBlocks[i] = new JBlock(true, true);
+      
+      this.parentBlocks[i].add(childBlocks[i]);
+    }
   }
   
-  public JBlock getBlock() {
-    return currentEvalBlock;
-  }
-
   public String getMaterializedClassName(){
     return fqcn;
   }
-  
-  public JBlock getSetupBlock(){
-    return currentSetupBlock;
-  }
-  
-  
+    
   public TemplateClassDefinition<T> getDefinition() {
     return definition;
   }
 
   public String generate() throws IOException{
+    int i =0;
+    for(CodeGeneratorMethod method : sig){
+      JMethod m = clazz.method(JMod.PUBLIC, model._ref(method.getReturnType()), method.getMethodName());
+      for(CodeGeneratorArgument arg : method){
+        m.param(arg.getType(), arg.getName());
+      }
+      for(Class<?> c : method.getThrowsIterable()){
+        m._throws(model.ref(c));
+      }
 
-    {
-      //setup method
-      JMethod m = clazz.method(JMod.PUBLIC, model.VOID, "doSetup");
-      m.param(model._ref(FragmentContext.class), "context");
-      m.param(model._ref(RecordBatch.class), "incoming");
-      m.param(model._ref(RecordBatch.class), "outgoing");
       m._throws(SchemaChangeException.class);
-      m.body().add(parentSetupBlock);
-    }
-    
-    {
-      // eval method.
-      JType ret = definition.getEvalReturnType() == null ? model.VOID : model._ref(definition.getEvalReturnType());
-      JMethod m = clazz.method(JMod.PUBLIC, ret, "doEval");  
-      m.param(model.INT, "inIndex");
-      m.param(model.INT, "outIndex");
-      m.body().add(parentEvalBlock);
+      m.body().add(this.parentBlocks[i++]);
     }
     
     SingleClassStringWriter w = new SingleClassStringWriter();
     model.build(w);
     return w.getCode().toString();
   }
-
-  public String generateMultipleOutputs() throws IOException{
-
-    {
-      //setup method
-      JMethod m = clazz.method(JMod.PUBLIC, model.VOID, "doSetup");
-      m.param(model._ref(FragmentContext.class), "context");
-      m.param(model._ref(RecordBatch.class), "incoming");
-      m.param(model._ref(OutgoingRecordBatch.class).array(), "outgoing");
-      m._throws(SchemaChangeException.class);
-      m.body().add(parentSetupBlock);
-    }
-
-    {
-      // eval method.
-      JType ret = definition.getEvalReturnType() == null ? model.VOID : model._ref(definition.getEvalReturnType());
-      JMethod m = clazz.method(JMod.PUBLIC, ret, "doEval");
-      m.param(model.INT, "inIndex");
-      m.param(model.INT, "outIndex");
-      m.body().add(parentEvalBlock);
-    }
-
-    SingleClassStringWriter w = new SingleClassStringWriter();
-    model.build(w);
-    return w.getCode().toString();
-  }
+  
   
   public JCodeModel getModel() {
     return model;
@@ -205,9 +211,9 @@ public class CodeGenerator<T> {
     JType holderType = getHolderType(t);
     JVar var;
     if(includeNewInstance){
-      var = currentEvalBlock.decl(holderType, "out" + index, JExpr._new(holderType));
+      var = getEvalBlock().decl(holderType, "out" + index, JExpr._new(holderType));
     }else{
-      var = currentEvalBlock.decl(holderType, "out" + index);
+      var = getEvalBlock().decl(holderType, "out" + index);
     }
     JFieldRef outputSet = null;
     if(t.getMode() == DataMode.OPTIONAL){
@@ -238,6 +244,10 @@ public class CodeGenerator<T> {
 
     public JFieldRef getValue() {
       return value;
+    }
+    
+    public MajorType getMajorType(){
+      return type;
     }
 
     public JFieldRef getIsSet() {

@@ -30,7 +30,7 @@ import org.apache.drill.exec.proto.SchemaDefProtos.FieldDef;
 import org.apache.drill.exec.proto.SchemaDefProtos.NamePart;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Range;
 
 public class ExpressionTreeMaterializerTest {
@@ -42,16 +42,16 @@ public class ExpressionTreeMaterializerTest {
   final MajorType intType = MajorType.newBuilder().setMode(DataMode.REQUIRED).setMinorType(MinorType.INT).build();
 
   private MaterializedField getField(int fieldId, String name, MajorType type) {
-    return new MaterializedField(FieldDef.newBuilder().setMajorType(type)
-        .addName(NamePart.newBuilder().setName(name)).build());
+    return new MaterializedField(FieldDef.newBuilder().setMajorType(type).addName(NamePart.newBuilder().setName(name))
+        .build());
   }
-
 
   @Test
   public void testMaterializingConstantTree(@Injectable RecordBatch batch) throws SchemaChangeException {
-    
+
     ErrorCollector ec = new ErrorCollectorImpl();
-    LogicalExpression expr = ExpressionTreeMaterializer.materialize(new ValueExpressions.LongExpression(1L, ExpressionPosition.UNKNOWN), batch, ec);
+    LogicalExpression expr = ExpressionTreeMaterializer.materialize(new ValueExpressions.LongExpression(1L,
+        ExpressionPosition.UNKNOWN), batch, ec);
     assertTrue(expr instanceof ValueExpressions.LongExpression);
     assertEquals(1L, ValueExpressions.LongExpression.class.cast(expr).getLong());
     assertFalse(ec.hasErrors());
@@ -62,13 +62,14 @@ public class ExpressionTreeMaterializerTest {
     final SchemaBuilder builder = BatchSchema.newBuilder();
     builder.addField(getField(2, "test", bigIntType));
     final BatchSchema schema = builder.build();
-    
+
     new NonStrictExpectations() {
       {
-        batch.getValueVectorId(new FieldReference("test", ExpressionPosition.UNKNOWN)); result = new TypedFieldId(Types.required(MinorType.BIGINT), -5);
+        batch.getValueVectorId(new FieldReference("test", ExpressionPosition.UNKNOWN));
+        result = new TypedFieldId(Types.required(MinorType.BIGINT), -5);
       }
     };
-    
+
     ErrorCollector ec = new ErrorCollectorImpl();
     LogicalExpression expr = ExpressionTreeMaterializer.materialize(new FieldReference("test",
         ExpressionPosition.UNKNOWN), batch, ec);
@@ -80,23 +81,26 @@ public class ExpressionTreeMaterializerTest {
   public void testMaterializingLateboundTree(final @Injectable RecordBatch batch) throws SchemaChangeException {
     new NonStrictExpectations() {
       {
-        batch.getValueVectorId(new FieldReference("test", ExpressionPosition.UNKNOWN)); result = new TypedFieldId(Types.required(MinorType.BIT), -4);
-        batch.getValueVectorId(new FieldReference("test1", ExpressionPosition.UNKNOWN)); result = new TypedFieldId(Types.required(MinorType.BIGINT), -5);
+        batch.getValueVectorId(new FieldReference("test", ExpressionPosition.UNKNOWN));
+        result = new TypedFieldId(Types.required(MinorType.BIT), -4);
+        batch.getValueVectorId(new FieldReference("test1", ExpressionPosition.UNKNOWN));
+        result = new TypedFieldId(Types.required(MinorType.BIGINT), -5);
       }
     };
-    
+
     ErrorCollector ec = new ErrorCollectorImpl();
 
-    
-      LogicalExpression expr = new IfExpression.Builder()
+    LogicalExpression expr = new IfExpression.Builder()
         .addCondition(
             new IfExpression.IfCondition( //
                 new FieldReference("test", ExpressionPosition.UNKNOWN), //
-                new IfExpression.Builder() //
+                new IfExpression.Builder()
+                    //
                     .addCondition( //
-                        new IfExpression.IfCondition( //
-                            new ValueExpressions.BooleanExpression("true", ExpressionPosition.UNKNOWN), new FieldReference(
-                                "test1", ExpressionPosition.UNKNOWN)))
+                        new IfExpression.IfCondition(
+                            //
+                            new ValueExpressions.BooleanExpression("true", ExpressionPosition.UNKNOWN),
+                            new FieldReference("test1", ExpressionPosition.UNKNOWN)))
                     .setElse(new ValueExpressions.LongExpression(1L, ExpressionPosition.UNKNOWN)).build()) //
         ) //
         .setElse(new ValueExpressions.LongExpression(1L, ExpressionPosition.UNKNOWN)).build();
@@ -111,7 +115,8 @@ public class ExpressionTreeMaterializerTest {
     ifCondition = newIfExpr.conditions.get(0);
     assertEquals(bigIntType, ifCondition.expression.getMajorType());
     assertEquals(true, ((ValueExpressions.BooleanExpression) ifCondition.condition).value);
-    if (ec.hasErrors()) System.out.println(ec.toErrorString());
+    if (ec.hasErrors())
+      System.out.println(ec.toErrorString());
     assertFalse(ec.hasErrors());
   }
 
@@ -126,8 +131,8 @@ public class ExpressionTreeMaterializerTest {
       }
 
       @Override
-      public void addUnexpectedArgumentType(ExpressionPosition expr, String name, MajorType actual, MajorType[] expected,
-          int argumentIndex) {
+      public void addUnexpectedArgumentType(ExpressionPosition expr, String name, MajorType actual,
+          MajorType[] expected, int argumentIndex) {
         errorCount++;
       }
 
@@ -174,14 +179,17 @@ public class ExpressionTreeMaterializerTest {
 
     new NonStrictExpectations() {
       {
-        batch.getValueVectorId(new FieldReference("test", ExpressionPosition.UNKNOWN)); result = new TypedFieldId(Types.required(MinorType.BIGINT), -5);
+        batch.getValueVectorId(new FieldReference("test", ExpressionPosition.UNKNOWN));
+        result = new TypedFieldId(Types.required(MinorType.BIGINT), -5);
       }
     };
+
     
     LogicalExpression functionCallExpr = new FunctionCall(FunctionDefinition.simple("testFunc",
         new ArgumentValidator() {
           @Override
-          public void validateArguments(ExpressionPosition expr, List<LogicalExpression> expressions, ErrorCollector errors) {
+          public void validateArguments(ExpressionPosition expr, List<LogicalExpression> expressions,
+              ErrorCollector errors) {
             errors.addGeneralError(expr, "Error!");
           }
 
@@ -189,8 +197,8 @@ public class ExpressionTreeMaterializerTest {
           public String[] getArgumentNamesByPosition() {
             return new String[0];
           }
-        }, OutputTypeDeterminer.FIXED_BIT), Lists.newArrayList((LogicalExpression) new FieldReference("test",
-        ExpressionPosition.UNKNOWN)), ExpressionPosition.UNKNOWN);
+        }, OutputTypeDeterminer.FIXED_BIT), ImmutableList.of((LogicalExpression) // 
+            new FieldReference("test", ExpressionPosition.UNKNOWN) ), ExpressionPosition.UNKNOWN);
     LogicalExpression newExpr = ExpressionTreeMaterializer.materialize(functionCallExpr, batch, ec);
     assertTrue(newExpr instanceof FunctionCall);
     FunctionCall funcExpr = (FunctionCall) newExpr;

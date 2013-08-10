@@ -35,5 +35,5 @@ public interface Partitioner {
       new TemplateClassDefinition<>(Partitioner.class,
                                     "org.apache.drill.exec.physical.impl.partitionsender.PartitionerTemplate",
                                     PartitionerEvaluator.class,
-                                    null);
+                                    PartitionerInnerSignature.class);
 }

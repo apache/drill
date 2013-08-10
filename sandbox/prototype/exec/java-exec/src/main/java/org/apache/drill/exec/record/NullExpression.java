@@ -1,12 +1,15 @@
 package org.apache.drill.exec.record;
 
+import java.util.Iterator;
+
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
-import org.apache.drill.common.types.Types;
-import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.types.Types;
+
+import com.google.common.collect.Iterators;
 
 public class NullExpression implements LogicalExpression{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NullExpression.class);
@@ -29,5 +32,11 @@ public class NullExpression implements LogicalExpression{
   public ExpressionPosition getPosition() {
     return ExpressionPosition.UNKNOWN;
   }
+
+  @Override
+  public Iterator<LogicalExpression> iterator() {
+    return Iterators.emptyIterator();
+  }
+  
   
 }

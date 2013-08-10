@@ -1,11 +1,15 @@
 package org.apache.drill.exec.expr;
 
+import java.util.Iterator;
+
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.record.TypedFieldId;
+
+import com.google.common.collect.Iterators;
 
 public class ValueVectorWriteExpression implements LogicalExpression {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ValueVectorWriteExpression.class);
@@ -47,5 +51,10 @@ public class ValueVectorWriteExpression implements LogicalExpression {
     return child;
   }
   
+  @Override
+  public Iterator<LogicalExpression> iterator() {
+    return Iterators.singletonIterator(child);
+  }
+
   
 }

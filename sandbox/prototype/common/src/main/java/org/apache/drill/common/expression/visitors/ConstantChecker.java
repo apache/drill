@@ -47,9 +47,10 @@ public final class ConstantChecker extends SimpleExprVisitor<Boolean>{
 
   @Override
   public Boolean visitIfExpression(IfExpression ifExpr) {
-    for(IfCondition c : ifExpr){
+    for(IfCondition c : ifExpr.conditions){
       if(!c.condition.accept(this, null) || !c.expression.accept(this, null)) return false;
     }
+    if(!ifExpr.elseExpression.accept(this, null)) return false;
     return true;
   }
 

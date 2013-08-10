@@ -171,7 +171,7 @@ class PartitionSenderRootExec implements RootExec {
 
     // generate evaluate expression to determine the hash
     CodeGenerator.HoldingContainer exprHolder = cg.addExpr(materializedExpr);
-    cg.getBlock().decl(JType.parse(cg.getModel(), "int"), "bucket", exprHolder.getValue().mod(JExpr.lit(outgoing.length)));
+    cg.getEvalBlock().decl(JType.parse(cg.getModel(), "int"), "bucket", exprHolder.getValue().mod(JExpr.lit(outgoing.length)));
 
     // declare and assign the array of outgoing record batches
     JVar outgoingBatches = cg.clazz.field(JMod.NONE,
@@ -230,7 +230,7 @@ class PartitionSenderRootExec implements RootExec {
       // ((IntVector) outgoingVectors[bucket][0]).copyFrom(inIndex,
       //                                                     outgoingBatches[bucket].getRecordCount(),
       //                                                     vv1);
-      cg.getBlock().add(
+      cg.getEvalBlock().add(
         ((JExpression) JExpr.cast(vvClass,
               ((JExpression)
                      outgoingVectors
@@ -244,11 +244,12 @@ class PartitionSenderRootExec implements RootExec {
       ++fieldId;
     }
     // generate the OutgoingRecordBatch helper invocations
-    cg.getBlock().add(((JExpression) outgoingBatches.component(bucket)).invoke("incRecordCount"));
-    cg.getBlock().add(((JExpression) outgoingBatches.component(bucket)).invoke("flushIfNecessary"));
+    cg.getEvalBlock().add(((JExpression) outgoingBatches.component(bucket)).invoke("incRecordCount"));
+    cg.getEvalBlock().add(((JExpression) outgoingBatches.component(bucket)).invoke("flushIfNecessary"));
     try {
       // compile and setup generated code
-      partitioner = context.getImplementationClassMultipleOutput(cg);
+//      partitioner = context.getImplementationClassMultipleOutput(cg);
+      partitioner = context.getImplementationClass(cg);
       partitioner.setup(context, incoming, outgoing);
 
     } catch (ClassTransformationException | IOException e) {

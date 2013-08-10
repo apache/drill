@@ -127,8 +127,18 @@ public class FunctionConverter {
     }
     
     try{
-      FunctionHolder fh = new FunctionHolder(template.scope(), template.nulls(), template.isBinaryCommutative(), template.name(), ps, outputField, works, methods, imports);
-      return fh;
+      switch(template.scope()){
+      case POINT_AGGREGATE:
+        return new DrillAggFuncHolder(template.scope(), template.nulls(), template.isBinaryCommutative(), template.name(), ps, outputField, works, methods, imports);
+      case SIMPLE:
+        FunctionHolder fh = new DrillFuncHolder(template.scope(), template.nulls(), template.isBinaryCommutative(), template.name(), ps, outputField, works, methods, imports);
+        return fh;
+
+      case HOLISTIC_AGGREGATE:
+      case RANGE_AGGREGATE:
+      default:
+        return failure("Unsupported Function Type.", clazz);
+      }
     }catch(Exception ex){
       return failure("Failure while creating function holder.", ex, clazz);
     }

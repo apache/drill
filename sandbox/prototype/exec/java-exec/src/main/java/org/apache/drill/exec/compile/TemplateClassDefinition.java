@@ -17,21 +17,36 @@
  ******************************************************************************/
 package org.apache.drill.exec.compile;
 
-
+import org.apache.drill.exec.compile.sig.CodeGeneratorSignature;
+import org.apache.drill.exec.compile.sig.DefaultGeneratorSignature;
+import org.apache.drill.exec.compile.sig.SignatureHolder;
 
 public class TemplateClassDefinition<T>{
+  
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TemplateClassDefinition.class);
   
   private final Class<T> externalInterface;
   private final String templateClassName;
   private final Class<?> internalInterface;
-  private final Class<?> evalReturnType;
-
-  public TemplateClassDefinition(Class<T> externalInterface, String templateClassName, Class<?> internalInterface, Class<?> evalReturnType) {
+  private final SignatureHolder signature;
+  
+  public TemplateClassDefinition(Class<T> externalInterface, String templateClassName, Class<?> internalInterface) {
+    this(externalInterface, templateClassName, internalInterface, DefaultGeneratorSignature.class);
+  }
+  
+  public <X extends CodeGeneratorSignature> TemplateClassDefinition(Class<T> externalInterface, String templateClassName, Class<?> internalInterface, Class<X> signature) {
     super();
     this.externalInterface = externalInterface;
     this.templateClassName = templateClassName;
     this.internalInterface = internalInterface;
-    this.evalReturnType = evalReturnType;
+    SignatureHolder holder = null;
+    try{
+      holder = new SignatureHolder(signature);
+    }catch(Exception ex){
+      logger.error("Failure while trying to build signature holder for signature. {}", signature.getSimpleName(), ex);
+    }
+    this.signature = holder;
+
   }
 
   public Class<T> getExternalInterface() {
@@ -46,8 +61,15 @@ public class TemplateClassDefinition<T>{
     return templateClassName;
   }
 
-  public Class<?> getEvalReturnType() {
-    return evalReturnType;
+  public SignatureHolder getSignature(){
+    return signature;
   }
+
+  @Override
+  public String toString() {
+    return "TemplateClassDefinition [externalInterface=" + externalInterface + ", templateClassName="
+        + templateClassName + ", internalInterface=" + internalInterface + ", signature=" + signature + "]";
+  }
+  
   
 }

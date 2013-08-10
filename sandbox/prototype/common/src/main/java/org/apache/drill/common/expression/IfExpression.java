@@ -18,6 +18,7 @@
 package org.apache.drill.common.expression;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.drill.common.expression.IfExpression.IfCondition;
@@ -28,9 +29,12 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
 import com.google.common.collect.UnmodifiableIterator;
 
-public class IfExpression extends LogicalExpressionBase implements Iterable<IfCondition>{
+public class IfExpression extends LogicalExpressionBase{
 	static final Logger logger = LoggerFactory.getLogger(IfExpression.class);
 	
 	public final ImmutableList<IfCondition> conditions;
@@ -106,9 +110,22 @@ public class IfExpression extends LogicalExpressionBase implements Iterable<IfCo
 	}
 
 
-	@Override
-	public UnmodifiableIterator<IfCondition> iterator() {
-		return conditions.iterator();
-	}
-	
+  public Iterable<IfCondition> conditionIterable(){
+    
+    return ImmutableList.copyOf(conditions);
+  }
+
+  @Override
+  public Iterator<LogicalExpression> iterator() {
+    List<LogicalExpression> children = Lists.newLinkedList();
+    
+    for(IfCondition ic : conditions){
+      children.add(ic.condition);
+      children.add(ic.expression);
+    }
+    children.add(this.elseExpression);
+    return children.iterator();
+  }
+
+  
 }

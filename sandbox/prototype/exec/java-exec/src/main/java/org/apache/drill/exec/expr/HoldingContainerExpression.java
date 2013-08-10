@@ -1,31 +1,32 @@
-package org.apache.drill.exec.physical.impl.filter;
+package org.apache.drill.exec.expr;
 
 import java.util.Iterator;
 
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
-import org.apache.drill.common.types.Types;
 import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.exec.expr.CodeGenerator.HoldingContainer;
 
 import com.google.common.collect.Iterators;
 
-public class ReturnValueExpression implements LogicalExpression{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ReturnValueExpression.class);
+public class HoldingContainerExpression implements LogicalExpression{
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HoldingContainerExpression.class);
 
-  private LogicalExpression child;
+  final HoldingContainer container;
   
-  public ReturnValueExpression(LogicalExpression child) {
-    this.child = child;
+  public HoldingContainerExpression(HoldingContainer container) {
+    this.container = container;
   }
 
-  public LogicalExpression getChild() {
-    return child;
+  @Override
+  public Iterator<LogicalExpression> iterator() {
+    return Iterators.emptyIterator();
   }
 
   @Override
   public MajorType getMajorType() {
-    return Types.NULL;
+    return container.getMajorType();
   }
 
   @Override
@@ -33,15 +34,13 @@ public class ReturnValueExpression implements LogicalExpression{
     return visitor.visitUnknown(this, value);
   }
 
+  
+  public HoldingContainer getContainer() {
+    return container;
+  }
+
   @Override
   public ExpressionPosition getPosition() {
     return ExpressionPosition.UNKNOWN;
   }
-  
-  @Override
-  public Iterator<LogicalExpression> iterator() {
-    return Iterators.singletonIterator(child);
-  }
-
-  
 }

@@ -167,7 +167,7 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
 
       if(hyper){
         
-        g.getBlock().add( 
+        g.getEvalBlock().add( 
             outVV
             .invoke("copyFrom")
             .arg(
@@ -178,7 +178,7 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
                 )
             );  
       }else{
-        g.getBlock().add(outVV.invoke("copyFrom").arg(inIndex).arg(outIndex).arg(inVV));
+        g.getEvalBlock().add(outVV.invoke("copyFrom").arg(inIndex).arg(outIndex).arg(inVV));
       }
       
       

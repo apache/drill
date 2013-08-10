@@ -45,7 +45,7 @@ public class ReadIndexRewriter implements ExprVisitor<LogicalExpression, String,
 
   @Override
   public LogicalExpression visitIfExpression(IfExpression ifExpr, String newIndexName) {
-    List<IfExpression.IfCondition> conditions = Lists.newArrayList(ifExpr.iterator());
+    List<IfExpression.IfCondition> conditions = Lists.newArrayList(ifExpr.conditions);
     LogicalExpression newElseExpr = ifExpr.elseExpression.accept(this, null);
 
     for (int i = 0; i < conditions.size(); ++i) {
