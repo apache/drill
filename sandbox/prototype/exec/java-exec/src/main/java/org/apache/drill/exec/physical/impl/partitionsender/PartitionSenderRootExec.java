@@ -86,15 +86,20 @@ class PartitionSenderRootExec implements RootExec {
         if (incoming.getRecordCount() > 0)
           partitioner.partitionBatch(incoming);
 
-        // send all pending batches
         try {
-          flushOutgoingBatches(true, false);
+          // send any pending batches
+          for (OutgoingRecordBatch batch : outgoing) {
+            batch.setIsLast();
+            batch.flush();
+          }
         } catch (SchemaChangeException e) {
           incoming.kill();
           logger.error("Error while creating partitioning sender or flushing outgoing batches", e);
           context.fail(e);
           return false;
         }
+        context.batchesCompleted.inc(1);
+        context.recordsCompleted.inc(incoming.getRecordCount());
         return false;
 
       case OK_NEW_SCHEMA:
@@ -111,6 +116,8 @@ class PartitionSenderRootExec implements RootExec {
         }
       case OK:
         partitioner.partitionBatch(incoming);
+        context.batchesCompleted.inc(1);
+        context.recordsCompleted.inc(incoming.getRecordCount());
         return true;
       case NOT_YET:
       default:

@@ -79,9 +79,12 @@ public class OutgoingRecordBatch implements RecordBatch {
   
   public void flush() throws SchemaChangeException {
     if (recordCount == 0) {
-      logger.warn("Attempted to flush an empty record batch");
+      // TODO:  recordCount of 0 with isLast causes recordLoader to throw an NPE.  Probably
+      //        need to send notification rather than an actual batch.
+      logger.warn("Attempted to flush an empty record batch" + (isLast ? " (last batch)" : ""));
+      return;
     }
-    logger.debug("Flushing record batch.  count is: " + recordCount + ", capacity is " + recordCapacity);
+
     final ExecProtos.FragmentHandle handle = context.getHandle();
     FragmentWritableBatch writableBatch = new FragmentWritableBatch(isLast,
                                                                     handle.getQueryId(),
@@ -90,7 +93,7 @@ public class OutgoingRecordBatch implements RecordBatch {
                                                                     operator.getOppositeMajorFragmentId(),
                                                                     0,
                                                                     getWritableBatch());
-     tunnel.sendRecordBatch(statusHandler, context, writableBatch);
+    tunnel.sendRecordBatch(statusHandler, context, writableBatch);
 
     // reset values and reallocate the buffer for each value vector.  NOTE: the value vector is directly
     // referenced by generated code and must not be replaced.
