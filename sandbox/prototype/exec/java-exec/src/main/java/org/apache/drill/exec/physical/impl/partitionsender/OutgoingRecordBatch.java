@@ -98,7 +98,7 @@ public class OutgoingRecordBatch implements RecordBatch {
     for (VectorWrapper v : vectorContainer) {
       logger.debug("Reallocating vv to capacity " + recordCapacity + " after flush. " + v.getValueVector());
       getAllocator(v.getValueVector(),
-                   TypeHelper.getNewVector(v.getField(), context.getAllocator())).alloc(recordCapacity);
+                   v.getValueVector()).alloc(recordCapacity);
     }
     if (!ok) { throw new SchemaChangeException("Flush ended NOT OK!"); }
   }
