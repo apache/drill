@@ -18,7 +18,6 @@
 
 package org.apache.drill.exec.physical.impl.partitionsender;
 
-import com.beust.jcommander.internal.Lists;
 import com.sun.codemodel.*;
 import org.apache.drill.common.expression.*;
 import org.apache.drill.exec.exception.ClassTransformationException;
@@ -32,9 +31,10 @@ import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorWrapper;
+import org.apache.drill.exec.vector.TypeHelper;
+import org.apache.drill.exec.vector.ValueVector;
 
 import java.io.IOException;
-import java.util.List;
 
 class PartitionSenderRootExec implements RootExec {
 
@@ -56,10 +56,10 @@ class PartitionSenderRootExec implements RootExec {
     this.outgoing = new OutgoingRecordBatch[operator.getDestinations().size()];
     int fieldId = 0;
     for (CoordinationProtos.DrillbitEndpoint endpoint : operator.getDestinations())
-      outgoing[fieldId] = new OutgoingRecordBatch(operator,
-                             context.getCommunicator().getTunnel(endpoint),
-                             incoming,
-                             context);
+      outgoing[fieldId++] = new OutgoingRecordBatch(operator,
+                                                    context.getCommunicator().getTunnel(endpoint),
+                                                    incoming,
+                                                    context);
     try {
       createPartitioner();
     } catch (SchemaChangeException e) {
@@ -87,19 +87,25 @@ class PartitionSenderRootExec implements RootExec {
           partitioner.partitionBatch(incoming);
 
         // send all pending batches
-        flushOutgoingBatches(true, false);
+        try {
+          flushOutgoingBatches(true, false);
+        } catch (SchemaChangeException e) {
+          incoming.kill();
+          logger.error("Error while creating partitioning sender or flushing outgoing batches", e);
+          context.fail(e);
+          return false;
+        }
         return false;
 
       case OK_NEW_SCHEMA:
-        // send all existing batches
-        flushOutgoingBatches(false, true);
-        // update OutgoingRecordBatch's schema and value vectors
         try {
+          // send all existing batches
+          flushOutgoingBatches(false, true);
+          // update OutgoingRecordBatch's schema and generate partitioning code
           createPartitioner();
-          partitioner.setup(context, incoming, outgoing);
         } catch (SchemaChangeException e) {
           incoming.kill();
-          logger.error("Failed to create partitioning sender during query ", e);
+          logger.error("Error while creating partitioning sender or flushing outgoing batches", e);
           context.fail(e);
           return false;
         }
@@ -133,54 +139,85 @@ class PartitionSenderRootExec implements RootExec {
     }
 
     // generate code to copy from an incoming value vector to the destination partition's outgoing value vector
-    int fieldId = 0;
     JExpression inIndex = JExpr.direct("inIndex");
     JExpression outIndex = JExpr.direct("outIndex");
+    JType outgoingVectorArrayType = cg.getModel().ref(ValueVector.class).array().array();
+    JType outgoingBatchArrayType = cg.getModel().ref(OutgoingRecordBatch.class).array();
     cg.rotateBlock();
 
-    // declare array of record batches for each partition
+    // declare and assign the array of outgoing record batches
     JVar outgoingBatches = cg.clazz.field(JMod.NONE,
-                                          cg.getModel().ref(OutgoingRecordBatch.class).array(),
+                                          outgoingBatchArrayType,
                                           "outgoingBatches");
-
     cg.getSetupBlock().assign(outgoingBatches, JExpr.direct("outgoing"));
 
-    // declare incoming value vectors
-    List<JVar> incomingVVs = Lists.newArrayList();
-    for (VectorWrapper<?> vvIn : incoming)
-      incomingVVs.add(cg.declareVectorValueSetupAndMember("incoming", new TypedFieldId(vvIn.getField().getType(),
-                                                                                       fieldId++,
-                                                                                       vvIn.isHyper())));
+    // declare a two-dimensional array of value vectors; batch is first dimension, ValueVector is the second
+    JVar outgoingVectors = cg.clazz.field(JMod.NONE,
+                                          outgoingVectorArrayType,
+                                          "outgoingVectors");
 
+    // create 2d array and build initialization list.  For example:
+    //     outgoingVectors = new ValueVector[][] { 
+    //                              new ValueVector[] {vv1, vv2},
+    //                              new ValueVector[] {vv3, vv4}
+    //                       });
+    JArray outgoingVectorInit = JExpr.newArray(cg.getModel().ref(ValueVector.class).array());
+
+    int fieldId = 0;
     int batchId = 0;
-    fieldId = 0;
-    // generate switch statement for each destination batch
-    JSwitch switchStatement = cg.getBlock()._switch(outIndex);
     for (OutgoingRecordBatch batch : outgoing) {
 
-      // generate case statement for this batch
-      JBlock caseBlock = switchStatement._case(JExpr.lit(batchId)).body();
-
+      JArray outgoingVectorInitBatch = JExpr.newArray(cg.getModel().ref(ValueVector.class));
       for (VectorWrapper<?> vv : batch) {
-        // declare outgoing value vector and a corresponding counter
+        // declare outgoing value vector and assign it to the array
         JVar outVV = cg.declareVectorValueSetupAndMember("outgoing[" + batchId + "]",
                                                          new TypedFieldId(vv.getField().getType(),
                                                                           fieldId,
                                                                           false));
-
-        caseBlock.add(outVV.invoke("copyFrom")
-                              .arg(inIndex)
-                              .arg(JExpr.direct("outgoingBatches[" + batchId + "]").invoke("getRecordCount"))
-                              .arg(incomingVVs.get(fieldId)));
+        // add vv to initialization list (e.g. { vv1, vv2, vv3 } )
+        outgoingVectorInitBatch.add(outVV);
         ++fieldId;
       }
-      caseBlock.add(JExpr.direct("outgoingBatches[" + batchId + "]").invoke("incRecordCount"));
-      caseBlock.add(JExpr.direct("outgoingBatches[" + batchId + "]").invoke("flushIfNecessary"));
-      fieldId = 0;
-      caseBlock._break();
+
+      // add VV array to initialization list (e.g. new ValueVector[] { ... })
+      outgoingVectorInit.add(outgoingVectorInitBatch);
       ++batchId;
+      fieldId = 0;
     }
 
+    // generate outgoing value vector 2d array initialization list.
+    cg.getSetupBlock().assign(outgoingVectors, outgoingVectorInit);
+
+    for (VectorWrapper<?> vvIn : incoming) {
+      // declare incoming value vectors
+      JVar incomingVV = cg.declareVectorValueSetupAndMember("incoming", new TypedFieldId(vvIn.getField().getType(),
+                                                                                         fieldId,
+                                                                                         vvIn.isHyper()));
+
+      // generate the copyFrom() invocation with explicit cast to the appropriate type
+      Class<?> vvType = TypeHelper.getValueVectorClass(vvIn.getField().getType().getMinorType(),
+                                                       vvIn.getField().getType().getMode());
+      JClass vvClass = cg.getModel().ref(vvType);
+      // the following block generates calls to copyFrom(); e.g.:
+      // ((IntVector) outgoingVectors[outIndex][0]).copyFrom(inIndex,
+      //                                                     outgoingBatches[outIndex].getRecordCount(),
+      //                                                     vv1);
+      cg.getBlock().add(
+        ((JExpression) JExpr.cast(vvClass,
+              ((JExpression)
+                     outgoingVectors
+                       .component(outIndex))
+                       .component(JExpr.lit(fieldId))))
+                       .invoke("copyFrom")
+                       .arg(inIndex)
+                       .arg(((JExpression) outgoingBatches.component(outIndex)).invoke("getRecordCount"))
+                       .arg(incomingVV));
+
+      // generate the OutgoingRecordBatch helper invocations
+      cg.getBlock().add(((JExpression) outgoingBatches.component(outIndex)).invoke("incRecordCount"));
+      cg.getBlock().add(((JExpression) outgoingBatches.component(outIndex)).invoke("flushIfNecessary"));
+      ++fieldId;
+    }
     try {
       // compile and setup generated code
       partitioner = context.getImplementationClassMultipleOutput(cg);
@@ -199,7 +236,7 @@ class PartitionSenderRootExec implements RootExec {
    * @param isLastBatch    true if this is the last incoming batch
    * @param schemaChanged  true if the schema has changed
    */
-  public void flushOutgoingBatches(boolean isLastBatch, boolean schemaChanged) {
+  public void flushOutgoingBatches(boolean isLastBatch, boolean schemaChanged) throws SchemaChangeException {
     for (OutgoingRecordBatch batch : outgoing) {
       logger.debug("Attempting to flush all outgoing batches");
       if (isLastBatch)

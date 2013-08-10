@@ -20,17 +20,20 @@ package org.apache.drill.exec.work;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.ExecProtos.FragmentStatus;
+import org.apache.drill.exec.proto.ExecProtos.FragmentStatus.Builder;
+import org.apache.drill.exec.proto.ExecProtos.FragmentStatus.FragmentState;
 import org.apache.drill.exec.rpc.bit.BitTunnel;
+import org.apache.drill.exec.work.foreman.ErrorHelper;
 
 /**
  * Informs remote node as fragment changes state.
  */
-public class RemoteFragmentRunnerListener extends AbstractFragmentRunnerListener{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RemoteFragmentRunnerListener.class);
+public class RemotingFragmentRunnerListener extends AbstractFragmentRunnerListener{
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RemotingFragmentRunnerListener.class);
   
   private final BitTunnel tunnel;
 
-  public RemoteFragmentRunnerListener(FragmentContext context, BitTunnel tunnel) {
+  public RemotingFragmentRunnerListener(FragmentContext context, BitTunnel tunnel) {
     super(context);
     this.tunnel = tunnel;
   }
@@ -38,7 +41,7 @@ public class RemoteFragmentRunnerListener extends AbstractFragmentRunnerListener
   
   @Override
   protected void statusChange(FragmentHandle handle, FragmentStatus status) {
-    logger.debug("Sending remote status message. {}", status);
+    logger.debug("Sending status change message message to remote node: " + status);
     tunnel.sendFragmentStatus(status);
   }
   

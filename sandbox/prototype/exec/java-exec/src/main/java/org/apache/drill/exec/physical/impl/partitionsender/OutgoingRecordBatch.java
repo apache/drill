@@ -19,11 +19,10 @@
 package org.apache.drill.exec.physical.impl.partitionsender;
 
 import java.util.Iterator;
-import java.util.List;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.HashPartitionSender;
 import org.apache.drill.exec.proto.ExecProtos;
@@ -52,7 +51,6 @@ public class OutgoingRecordBatch implements RecordBatch {
   private RecordBatch incoming;
   private FragmentContext context;
   private BatchSchema outSchema;
-  private List<ValueVector> valueVectors;
   private VectorContainer vectorContainer;
   private int recordCount;
   private int recordCapacity;
@@ -65,29 +63,25 @@ public class OutgoingRecordBatch implements RecordBatch {
     initializeBatch();
   }
 
-  public OutgoingRecordBatch() {  }
-
-  public void init(HashPartitionSender operator, BitTunnel tunnel, RecordBatch incoming, FragmentContext context) {
-    this.incoming = incoming;
-    this.context = context;
-    this.operator = operator;
-    this.tunnel = tunnel;
-    resetBatch();
-  }
-
   public void flushIfNecessary() {
-    if (recordCount == recordCapacity - 1) flush();
+    if (recordCount == recordCapacity) logger.debug("Flush is necesary:  Count is " + recordCount + ", capacity is " + recordCapacity);
+    try {
+      if (recordCount == recordCapacity) flush();
+    } catch (SchemaChangeException e) {
+      // TODO:
+      logger.error("Unable to flush outgoing record batch: " + e);
+    }
   }
 
   public void incRecordCount() {
     ++recordCount;
   }
   
-  public void flush() {
+  public void flush() throws SchemaChangeException {
     if (recordCount == 0) {
       logger.warn("Attempted to flush an empty record batch");
-      return;
     }
+    logger.debug("Flushing record batch.  count is: " + recordCount + ", capacity is " + recordCapacity);
     final ExecProtos.FragmentHandle handle = context.getHandle();
     FragmentWritableBatch writableBatch = new FragmentWritableBatch(isLast,
                                                                     handle.getQueryId(),
@@ -96,23 +90,26 @@ public class OutgoingRecordBatch implements RecordBatch {
                                                                     operator.getOppositeMajorFragmentId(),
                                                                     0,
                                                                     getWritableBatch());
-    tunnel.sendRecordBatch(statusHandler, context, writableBatch);
+     tunnel.sendRecordBatch(statusHandler, context, writableBatch);
 
     // reset values and reallocate the buffer for each value vector.  NOTE: the value vector is directly
     // referenced by generated code and must not be replaced.
     recordCount = 0;
     for (VectorWrapper v : vectorContainer) {
-      getAllocator(TypeHelper.getNewVector(v.getField(), context.getAllocator()),
-                   v.getValueVector()).alloc(recordCapacity);
+      logger.debug("Reallocating vv to capacity " + recordCapacity + " after flush. " + v.getValueVector());
+      getAllocator(v.getValueVector(),
+                   TypeHelper.getNewVector(v.getField(), context.getAllocator())).alloc(recordCapacity);
     }
+    if (!ok) { throw new SchemaChangeException("Flush ended NOT OK!"); }
   }
+
 
   /**
    * Create a new output schema and allocate space for value vectors based on the incoming record batch.
    */
   public void initializeBatch() {
+    isLast = false;
     recordCapacity = incoming.getRecordCount();
-    valueVectors = Lists.newArrayList();
     vectorContainer = new VectorContainer();
 
     SchemaBuilder bldr = BatchSchema.newBuilder().setSelectionVectorMode(BatchSchema.SelectionVectorMode.NONE);
@@ -122,12 +119,13 @@ public class OutgoingRecordBatch implements RecordBatch {
       bldr.addField(v.getField());
 
       // allocate a new value vector
-      vectorContainer.add(v.getValueVector());
       ValueVector outgoingVector = TypeHelper.getNewVector(v.getField(), context.getAllocator());
-      getAllocator(outgoingVector, v.getValueVector()).alloc(recordCapacity);
-      valueVectors.add(outgoingVector);
+      getAllocator(v.getValueVector(), outgoingVector).alloc(recordCapacity);
+      vectorContainer.add(outgoingVector);
+      logger.debug("Reallocating to cap " + recordCapacity + " because of newly init'd vector : " + v.getValueVector());
     }
     outSchema = bldr.build();
+    logger.debug("Initialized OutgoingRecordBatch.  RecordCount: " + recordCount + ", cap: " + recordCapacity + " Schema: " + outSchema);
   }
 
   /**
@@ -135,13 +133,11 @@ public class OutgoingRecordBatch implements RecordBatch {
    * on the incoming record batch.
    */
   public void resetBatch() {
+    isLast = false;
     recordCount = 0;
     recordCapacity = 0;
-    if (valueVectors != null) {
-      for(ValueVector v : valueVectors){
-        v.close();
-      }
-    }
+    for (VectorWrapper v : vectorContainer)
+      v.getValueVector().clear();
     initializeBatch();
   }
 
