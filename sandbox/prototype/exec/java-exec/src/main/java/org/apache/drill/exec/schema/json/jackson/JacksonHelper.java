@@ -92,6 +92,7 @@ public class JacksonHelper {
       case BIT:
         return parser.getBooleanValue();
       case LATE:
+      case NULL:
         return null;
       default:
         throw new RuntimeException("Unexpected Field type to return value: " + fieldType.toString());

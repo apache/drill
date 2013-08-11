@@ -16,6 +16,7 @@ import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -42,7 +43,7 @@ public class JSONRecordReader implements RecordReader {
 
   private final String inputPath;
 
-  private final Map<Field, VectorHolder> valueVectorMap;
+  private final Map<String, VectorHolder> valueVectorMap;
 
   private JsonParser parser;
   private SchemaIdGenerator generator;
@@ -181,13 +182,11 @@ public class JSONRecordReader implements RecordReader {
       @Override
       public Field createField(RecordSchema parentSchema, String prefixFieldName, String fieldName, MajorType fieldType, int index) {
         return new NamedField(parentSchema, prefixFieldName, fieldName, fieldType);
-        //return new OrderedField(parentSchema, fieldType, prefixFieldName, index);
       }
 
       @Override
       public RecordSchema createSchema() throws IOException {
         return new ObjectSchema();
-        //return new ListSchema();
       }
     },
     OBJECT(END_OBJECT) {
@@ -287,18 +286,30 @@ public class JSONRecordReader implements RecordReader {
                                int colIndex,
                                int groupCount) throws IOException, SchemaChangeException {
       RecordSchema currentSchema = reader.getCurrentSchema();
-      Field field = currentSchema.getField(fieldName, colIndex);
+      Field field = currentSchema.getField(fieldName == null ? prefixFieldName : fieldName, colIndex);
       boolean isFieldFound = field != null;
       List<Field> removedFields = reader.getRemovedFields();
-      if (!isFieldFound || !field.getFieldType().equals(fieldType)) {
-        if (isFieldFound) {
+      boolean newFieldLateBound = fieldType.getMinorType().equals(MinorType.LATE);
+
+      if (isFieldFound && !field.getFieldType().equals(fieldType)) {
+        boolean existingFieldLateBound = field.getFieldType().getMinorType().equals(MinorType.LATE);
+
+        if (newFieldLateBound && !existingFieldLateBound) {
+          fieldType = Types.overrideMinorType(fieldType, field.getFieldType().getMinorType());
+        } else if (!newFieldLateBound && existingFieldLateBound) {
+          field.setFieldType(Types.overrideMinorType(field.getFieldType(), fieldType.getMinorType()));
+        } else if (!newFieldLateBound && !existingFieldLateBound) {
           if (field.hasSchema()) {
             removeChildFields(removedFields, field);
           }
           removedFields.add(field);
           currentSchema.removeField(field, colIndex);
-        }
 
+          isFieldFound = false;
+        }
+      }
+
+      if (!isFieldFound) {
         field = createField(
             currentSchema,
             prefixFieldName,
@@ -316,16 +327,19 @@ public class JSONRecordReader implements RecordReader {
       VectorHolder holder = getOrCreateVectorHolder(reader, field);
       if (readType != null) {
         RecordSchema fieldSchema = field.getAssignedSchema();
-        reader.setCurrentSchema(fieldSchema);
-
         RecordSchema newSchema = readType.createSchema();
-        field.assignSchemaIfNull(newSchema);
 
-        if (fieldSchema == null) reader.setCurrentSchema(newSchema);
-        readType.readRecord(reader, field.getFullFieldName(), rowIndex, groupCount);
+        if (readType != ReadType.ARRAY) {
+          reader.setCurrentSchema(fieldSchema);
+          if (fieldSchema == null) reader.setCurrentSchema(newSchema);
+          readType.readRecord(reader, field.getFullFieldName(), rowIndex, groupCount);
+        } else {
+          readType.readRecord(reader, field.getFullFieldName(), rowIndex, groupCount);
+        }
 
         reader.setCurrentSchema(currentSchema);
-      } else {
+
+      } else if (holder != null && !newFieldLateBound && fieldType.getMinorType() != MinorType.LATE) {
         return addValueToVector(
             rowIndex,
             holder,
@@ -447,22 +461,23 @@ public class JSONRecordReader implements RecordReader {
   }
 
   private VectorHolder getOrCreateVectorHolder(Field field) throws SchemaChangeException {
-    VectorHolder holder = valueVectorMap.get(field);
+    String fullFieldName = field.getFullFieldName();
+    VectorHolder holder = valueVectorMap.get(fullFieldName);
 
     if (holder == null) {
       MajorType type = field.getFieldType();
-      MaterializedField f = MaterializedField.create(new SchemaPath(field.getFullFieldName(), ExpressionPosition.UNKNOWN), type);
-
-      MinorType minorType = f.getType().getMinorType();
+      MinorType minorType = type.getMinorType();
 
       if (minorType.equals(MinorType.MAP) || minorType.equals(MinorType.LATE)) {
         return null;
       }
 
+      MaterializedField f = MaterializedField.create(new SchemaPath(fullFieldName, ExpressionPosition.UNKNOWN), type);
+
       ValueVector v = TypeHelper.getNewVector(f, allocator);
       AllocationHelper.allocate(v, batchSize, 50);
       holder = new VectorHolder(batchSize, v);
-      valueVectorMap.put(field, holder);
+      valueVectorMap.put(fullFieldName, holder);
       outputMutator.addField(v);
       return holder;
     }

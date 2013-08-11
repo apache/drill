@@ -4,6 +4,8 @@ import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 
+import static org.apache.drill.common.types.TypeProtos.DataMode.REPEATED;
+
 public class Types {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Types.class);
   
@@ -16,7 +18,7 @@ public class Types {
   }
   
   public static boolean isNumericType(MajorType type){
-    if(type.getMode() == DataMode.REPEATED) return false;
+    if(type.getMode() == REPEATED) return false;
     
     switch(type.getMinorType()){
     case BIGINT:
@@ -40,7 +42,7 @@ public class Types {
   }
   
   public static boolean usesHolderForGet(MajorType type){
-    if(type.getMode() == DataMode.REPEATED) return true;
+    if(type.getMode() == REPEATED) return true;
     switch(type.getMinorType()){
     case BIGINT:
     case DECIMAL4:
@@ -76,7 +78,7 @@ public class Types {
   
   
   public static boolean isStringScalarType(MajorType type){
-    if(type.getMode() == DataMode.REPEATED) return false;
+    if(type.getMode() == REPEATED) return false;
     switch(type.getMinorType()){
     case FIXEDCHAR:
     case FIXED16CHAR:
@@ -89,7 +91,7 @@ public class Types {
   }
   
   public static boolean isBytesScalarType(MajorType type){
-    if(type.getMode() == DataMode.REPEATED) return false;
+    if(type.getMode() == REPEATED) return false;
     switch(type.getMinorType()){
     case FIXEDBINARY:
     case VARBINARY:
@@ -100,7 +102,7 @@ public class Types {
   }
   
   public static Comparability getComparability(MajorType type){
-    if(type.getMode() == DataMode.REPEATED) return Comparability.NONE;
+    if(type.getMode() == REPEATED) return Comparability.NONE;
     if(type.getMinorType() == MinorType.LATE) return Comparability.UNKNOWN;
     
     switch(type.getMinorType()){
@@ -144,11 +146,24 @@ public class Types {
   }
   
   public static MajorType repeated(MinorType type){
-    return MajorType.newBuilder().setMode(DataMode.REPEATED).setMinorType(type).build();
+    return MajorType.newBuilder().setMode(REPEATED).setMinorType(type).build();
   }
   
   public static MajorType optional(MinorType type){
     return MajorType.newBuilder().setMode(DataMode.OPTIONAL).setMinorType(type).build();
+  }
+
+  public static MajorType overrideMinorType(MajorType originalMajorType, MinorType overrideMinorType) {
+    switch(originalMajorType.getMode()) {
+      case REPEATED:
+        return repeated(overrideMinorType);
+      case OPTIONAL:
+        return optional(overrideMinorType);
+      case REQUIRED:
+        return required(overrideMinorType);
+      default:
+        throw new UnsupportedOperationException();
+    }
   }
   
   

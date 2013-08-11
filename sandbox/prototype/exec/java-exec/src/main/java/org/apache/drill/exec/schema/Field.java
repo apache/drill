@@ -20,6 +20,7 @@ package org.apache.drill.exec.schema;
 
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.record.MaterializedField;
 
@@ -27,64 +28,80 @@ import com.google.common.base.Objects;
 import com.google.common.base.Strings;
 
 public abstract class Field {
-    final MajorType fieldType;
-    final String prefixFieldName;
-    RecordSchema schema;
-    RecordSchema parentSchema;
-    boolean read;
+  final String prefixFieldName;
+  MajorType fieldType;
+  RecordSchema schema;
+  RecordSchema parentSchema;
+  boolean read;
 
-    public Field(RecordSchema parentSchema, MajorType type, String prefixFieldName) {
-        fieldType = type;
-        this.prefixFieldName = prefixFieldName;
-        this.parentSchema = parentSchema;
+  public Field(RecordSchema parentSchema, MajorType type, String prefixFieldName) {
+    fieldType = type;
+    this.prefixFieldName = prefixFieldName;
+    this.parentSchema = parentSchema;
+  }
+
+  public MaterializedField getAsMaterializedField() {
+    return MaterializedField.create(new SchemaPath(getFieldName(), ExpressionPosition.UNKNOWN), fieldType);
+  }
+
+  public abstract String getFieldName();
+
+  public String getFullFieldName() {
+    String fieldName = getFieldName();
+    if(Strings.isNullOrEmpty(prefixFieldName)) {
+      return fieldName;
+    } else if(Strings.isNullOrEmpty(fieldName)) {
+      return prefixFieldName;
+    } else {
+      return prefixFieldName + "." + getFieldName();
     }
+  }
 
-    public MaterializedField getAsMaterializedField(){
-      return MaterializedField.create(new SchemaPath(getFieldName(), ExpressionPosition.UNKNOWN), fieldType);
+  public void setRead(boolean read) {
+    this.read = read;
+  }
+
+  protected abstract Objects.ToStringHelper addAttributesToHelper(Objects.ToStringHelper helper);
+
+  Objects.ToStringHelper getAttributesStringHelper() {
+    return Objects.toStringHelper(this).add("type", fieldType)
+        .add("fullFieldName", getFullFieldName())
+        .add("schema", schema == null ? null : schema.toSchemaString()).omitNullValues();
+  }
+
+  @Override
+  public String toString() {
+    return addAttributesToHelper(getAttributesStringHelper()).toString();
+  }
+
+  public RecordSchema getAssignedSchema() {
+    return schema;
+  }
+
+  public void assignSchemaIfNull(RecordSchema newSchema) {
+    if (!hasSchema()) {
+      schema = newSchema;
     }
-    
-    public abstract String getFieldName();
+  }
 
-    public String getFullFieldName() {
-        return Strings.isNullOrEmpty(prefixFieldName) ? getFieldName() : prefixFieldName + "." + getFieldName();
-    }
+  public boolean isRead() {
+    return read;
+  }
 
-    public void setRead(boolean read) {
-        this.read = read;
-    }
+  public boolean hasSchema() {
+    return schema != null;
+  }
 
-    protected abstract Objects.ToStringHelper addAttributesToHelper(Objects.ToStringHelper helper);
+  public MajorType getFieldType() {
+    return fieldType;
+  }
 
-    Objects.ToStringHelper getAttributesStringHelper() {
-        return Objects.toStringHelper(this).add("type", fieldType)
-                .add("fullFieldName", getFullFieldName())
-                .add("schema", schema == null ? null : schema.toSchemaString()).omitNullValues();
-    }
+  public void setFieldType(MajorType fieldType) {
+    this.fieldType = fieldType;
+  }
 
-    @Override
-    public String toString() {
-        return addAttributesToHelper(getAttributesStringHelper()).toString();
-    }
-
-    public RecordSchema getAssignedSchema() {
-        return schema;
-    }
-
-    public void assignSchemaIfNull(RecordSchema newSchema) {
-        if (!hasSchema()) {
-            schema = newSchema;
-        }
-    }
-
-    public boolean isRead() {
-        return read;
-    }
-
-    public boolean hasSchema() {
-        return schema != null;
-    }
-
-    public MajorType getFieldType() {
-        return fieldType;
-    }
+  @Override
+  public int hashCode() {
+    return getFullFieldName().hashCode();
+  }
 }
