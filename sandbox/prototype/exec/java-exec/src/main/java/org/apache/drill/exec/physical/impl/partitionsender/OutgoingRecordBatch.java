@@ -19,7 +19,9 @@
 package org.apache.drill.exec.physical.impl.partitionsender;
 
 import java.util.Iterator;
+import java.util.List;
 
+import com.beust.jcommander.internal.Lists;
 import com.google.common.base.Preconditions;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.exception.SchemaChangeException;
@@ -76,34 +78,58 @@ public class OutgoingRecordBatch implements RecordBatch {
   public void incRecordCount() {
     ++recordCount;
   }
-  
-  public void flush() throws SchemaChangeException {
-    if (recordCount == 0) {
-      // TODO:  recordCount of 0 with isLast causes recordLoader to throw an NPE.  Probably
-      //        need to send notification rather than an actual batch.
-      logger.warn("Attempted to flush an empty record batch" + (isLast ? " (last batch)" : ""));
-      return;
+
+  /**
+   * Send the record batch to the target node, then reset the value vectors
+   * 
+   * @return true if a flush was needed; otherwise false
+   * @throws SchemaChangeException
+   */
+  public boolean flush() throws SchemaChangeException {
+    logger.error("Creating FragmentWritableBatch.  IsLast? " + (isLast ? " (last batch)" : ""));
+    final ExecProtos.FragmentHandle handle = context.getHandle();
+
+    if (recordCount != 0) {
+      FragmentWritableBatch writableBatch = new FragmentWritableBatch(isLast,
+                                                                      handle.getQueryId(),
+                                                                      handle.getMajorFragmentId(),
+                                                                      handle.getMinorFragmentId(),
+                                                                      operator.getOppositeMajorFragmentId(),
+                                                                      0,
+                                                                      getWritableBatch());
+      tunnel.sendRecordBatch(statusHandler, context, writableBatch);
+    } else {
+      logger.debug("Flush requested on an empty outgoing record batch" + (isLast ? " (last batch)" : ""));
+
+      if (isLast) {
+
+        // if the last batch is empty, it must not contain any value vectors.
+        vectorContainer = new VectorContainer();
+
+        // send final batch
+        FragmentWritableBatch writableBatch = new FragmentWritableBatch(isLast,
+                                                                        handle.getQueryId(),
+                                                                        handle.getMajorFragmentId(),
+                                                                        handle.getMinorFragmentId(),
+                                                                        operator.getOppositeMajorFragmentId(),
+                                                                        0,
+                                                                        getWritableBatch());
+        tunnel.sendRecordBatch(statusHandler, context, writableBatch);
+        return true;
+
+      }
     }
 
-    final ExecProtos.FragmentHandle handle = context.getHandle();
-    FragmentWritableBatch writableBatch = new FragmentWritableBatch(isLast,
-                                                                    handle.getQueryId(),
-                                                                    handle.getMajorFragmentId(),
-                                                                    handle.getMinorFragmentId(),
-                                                                    operator.getOppositeMajorFragmentId(),
-                                                                    0,
-                                                                    getWritableBatch());
-    tunnel.sendRecordBatch(statusHandler, context, writableBatch);
-
-    // reset values and reallocate the buffer for each value vector.  NOTE: the value vector is directly
-    // referenced by generated code and must not be replaced.
+    // reset values and reallocate the buffer for each value vector based on the incoming batch.
+    // NOTE: the value vector is directly referenced by generated code; therefore references
+    // must remain valid.
     recordCount = 0;
     for (VectorWrapper v : vectorContainer) {
-      logger.debug("Reallocating vv to capacity " + recordCapacity + " after flush. " + v.getValueVector());
-      getAllocator(v.getValueVector(),
-                   v.getValueVector()).alloc(recordCapacity);
+      logger.debug("Reallocating vv to capacity " + incoming.getRecordCount() + " after flush.");
+      getAllocator(v.getValueVector(), v.getValueVector()).alloc(incoming.getRecordCount());
     }
     if (!ok) { throw new SchemaChangeException("Flush ended NOT OK!"); }
+    return true;
   }
 
 
@@ -141,7 +167,6 @@ public class OutgoingRecordBatch implements RecordBatch {
     recordCapacity = 0;
     for (VectorWrapper v : vectorContainer)
       v.getValueVector().clear();
-    initializeBatch();
   }
 
   public void setIsLast() {
