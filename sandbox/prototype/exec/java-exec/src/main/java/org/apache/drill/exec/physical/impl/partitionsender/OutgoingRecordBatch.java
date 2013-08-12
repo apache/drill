@@ -70,8 +70,9 @@ public class OutgoingRecordBatch implements RecordBatch {
     try {
       if (recordCount == recordCapacity) flush();
     } catch (SchemaChangeException e) {
-      // TODO:
-      logger.error("Unable to flush outgoing record batch: " + e);
+      incoming.kill();
+      logger.error("Error flushing outgoing batches", e);
+      context.fail(e);
     }
   }
 
@@ -86,7 +87,6 @@ public class OutgoingRecordBatch implements RecordBatch {
    * @throws SchemaChangeException
    */
   public boolean flush() throws SchemaChangeException {
-    logger.error("Creating FragmentWritableBatch.  IsLast? " + (isLast ? " (last batch)" : ""));
     final ExecProtos.FragmentHandle handle = context.getHandle();
 
     if (recordCount != 0) {
@@ -100,9 +100,7 @@ public class OutgoingRecordBatch implements RecordBatch {
       tunnel.sendRecordBatch(statusHandler, context, writableBatch);
     } else {
       logger.debug("Flush requested on an empty outgoing record batch" + (isLast ? " (last batch)" : ""));
-
       if (isLast) {
-
         // if the last batch is empty, it must not contain any value vectors.
         vectorContainer = new VectorContainer();
 
@@ -116,7 +114,6 @@ public class OutgoingRecordBatch implements RecordBatch {
                                                                         getWritableBatch());
         tunnel.sendRecordBatch(statusHandler, context, writableBatch);
         return true;
-
       }
     }
 

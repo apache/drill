@@ -43,12 +43,10 @@ public abstract class PartitionerTemplate implements Partitioner {
     for (int recordId = 0; recordId < incoming.getRecordCount(); ++recordId) {
       // for each record
 
-      // TODO: evaluate partitioning expression
-      int partition = 0;
       // TODO: if attempting to insert too large of a value into a vector:
       //         - send the batch
       //         - reallocate (at least the size of the current value) and try again
-      doEval(recordId, partition);
+      doEval(recordId, 0);
     }
 
   }

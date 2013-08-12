@@ -18,6 +18,7 @@
 
 package org.apache.drill.exec.physical.impl.partitionsender;
 
+import com.google.common.collect.Lists;
 import com.sun.codemodel.*;
 import org.apache.drill.common.expression.*;
 import org.apache.drill.exec.exception.ClassTransformationException;
@@ -27,14 +28,15 @@ import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.HashPartitionSender;
 import org.apache.drill.exec.physical.impl.RootExec;
+import org.apache.drill.exec.physical.impl.filter.Filterer;
+import org.apache.drill.exec.physical.impl.filter.ReturnValueExpression;
 import org.apache.drill.exec.proto.CoordinationProtos;
-import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.record.TypedFieldId;
-import org.apache.drill.exec.record.VectorWrapper;
+import org.apache.drill.exec.record.*;
 import org.apache.drill.exec.vector.TypeHelper;
 import org.apache.drill.exec.vector.ValueVector;
 
 import java.io.IOException;
+import java.util.List;
 
 class PartitionSenderRootExec implements RootExec {
 
@@ -122,6 +124,29 @@ class PartitionSenderRootExec implements RootExec {
     ok = false;
     incoming.kill();
   }
+  
+  private void generatePartitionFunction() throws SchemaChangeException {
+
+    LogicalExpression filterExpression = operator.getExpr();
+    final ErrorCollector collector = new ErrorCollectorImpl();
+    final CodeGenerator<Partitioner> cg = new CodeGenerator<Partitioner>(Partitioner.TEMPLATE_DEFINITION, context.getFunctionRegistry());
+
+    final LogicalExpression expr = ExpressionTreeMaterializer.materialize(filterExpression, incoming, collector);
+    if(collector.hasErrors()){
+      throw new SchemaChangeException(String.format("Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));
+    }
+
+    cg.addExpr(new ReturnValueExpression(expr));
+    
+    try {
+      Partitioner p = context.getImplementationClass(cg);
+      p.setup(context, incoming, outgoing);
+    } catch (ClassTransformationException | IOException e) {
+      throw new SchemaChangeException("Failure while attempting to load generated class", e);
+    }
+
+
+  }
 
   private void createPartitioner() throws SchemaChangeException {
 
@@ -131,7 +156,7 @@ class PartitionSenderRootExec implements RootExec {
     final CodeGenerator<Partitioner> cg = new CodeGenerator<Partitioner>(Partitioner.TEMPLATE_DEFINITION,
                                                                          context.getFunctionRegistry());
 
-    final LogicalExpression logicalExp = ExpressionTreeMaterializer.materialize(expr, incoming, collector);
+    final LogicalExpression materializedExpr = ExpressionTreeMaterializer.materialize(expr, incoming, collector);
     if (collector.hasErrors()) {
       throw new SchemaChangeException(String.format(
           "Failure while trying to materialize incoming schema.  Errors:\n %s.",
@@ -140,15 +165,18 @@ class PartitionSenderRootExec implements RootExec {
 
     // generate code to copy from an incoming value vector to the destination partition's outgoing value vector
     JExpression inIndex = JExpr.direct("inIndex");
-    JExpression outIndex = JExpr.direct("outIndex");
+    JExpression bucket = JExpr.direct("bucket");
     JType outgoingVectorArrayType = cg.getModel().ref(ValueVector.class).array().array();
     JType outgoingBatchArrayType = cg.getModel().ref(OutgoingRecordBatch.class).array();
-    cg.rotateBlock();
+
+    // generate evaluate expression to determine the hash
+    CodeGenerator.HoldingContainer exprHolder = cg.addExpr(materializedExpr);
+    cg.getBlock().decl(JType.parse(cg.getModel(), "int"), "bucket", exprHolder.getValue().mod(JExpr.lit(outgoing.length)));
 
     // declare and assign the array of outgoing record batches
     JVar outgoingBatches = cg.clazz.field(JMod.NONE,
-                                          outgoingBatchArrayType,
-                                          "outgoingBatches");
+        outgoingBatchArrayType,
+        "outgoingBatches");
     cg.getSetupBlock().assign(outgoingBatches, JExpr.direct("outgoing"));
 
     // declare a two-dimensional array of value vectors; batch is first dimension, ValueVector is the second
@@ -199,25 +227,25 @@ class PartitionSenderRootExec implements RootExec {
                                                        vvIn.getField().getType().getMode());
       JClass vvClass = cg.getModel().ref(vvType);
       // the following block generates calls to copyFrom(); e.g.:
-      // ((IntVector) outgoingVectors[outIndex][0]).copyFrom(inIndex,
-      //                                                     outgoingBatches[outIndex].getRecordCount(),
+      // ((IntVector) outgoingVectors[bucket][0]).copyFrom(inIndex,
+      //                                                     outgoingBatches[bucket].getRecordCount(),
       //                                                     vv1);
       cg.getBlock().add(
         ((JExpression) JExpr.cast(vvClass,
               ((JExpression)
                      outgoingVectors
-                       .component(outIndex))
+                       .component(bucket))
                        .component(JExpr.lit(fieldId))))
                        .invoke("copyFrom")
                        .arg(inIndex)
-                       .arg(((JExpression) outgoingBatches.component(outIndex)).invoke("getRecordCount"))
+                       .arg(((JExpression) outgoingBatches.component(bucket)).invoke("getRecordCount"))
                        .arg(incomingVV));
 
       ++fieldId;
     }
     // generate the OutgoingRecordBatch helper invocations
-    cg.getBlock().add(((JExpression) outgoingBatches.component(outIndex)).invoke("incRecordCount"));
-    cg.getBlock().add(((JExpression) outgoingBatches.component(outIndex)).invoke("flushIfNecessary"));
+    cg.getBlock().add(((JExpression) outgoingBatches.component(bucket)).invoke("incRecordCount"));
+    cg.getBlock().add(((JExpression) outgoingBatches.component(bucket)).invoke("flushIfNecessary"));
     try {
       // compile and setup generated code
       partitioner = context.getImplementationClassMultipleOutput(cg);
