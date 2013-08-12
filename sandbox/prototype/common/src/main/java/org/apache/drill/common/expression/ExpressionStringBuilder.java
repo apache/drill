@@ -66,9 +66,7 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
 
   @Override
   public Void visitSchemaPath(SchemaPath path, StringBuilder sb) throws RuntimeException {
-    sb.append("'");
     sb.append(path.getPath());
-    sb.append("'");
     return null;
   }
 

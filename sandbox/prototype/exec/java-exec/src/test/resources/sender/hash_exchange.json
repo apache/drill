@@ -28,7 +28,7 @@
             @id: 2,
             child: 1,
             pop: "hash-to-random-exchange",
-            expr: "hash(1)"
+            expr: "hash(red)"
         },
         {
              @id: 3,

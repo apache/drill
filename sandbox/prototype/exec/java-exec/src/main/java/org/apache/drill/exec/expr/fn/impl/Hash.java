@@ -18,7 +18,6 @@
 
 package org.apache.drill.exec.expr.fn.impl;
 
-import com.google.common.hash.Hashing;
 import org.apache.drill.common.expression.*;
 import org.apache.drill.exec.expr.DrillFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
@@ -40,7 +39,7 @@ public class Hash implements DrillFunc {
 
   public void eval() {
     // TODO: implement hash function for other types
-    out.value = Hashing.murmur3_128().hashLong(in.value).asInt();
+    out.value = com.google.common.hash.Hashing.murmur3_128().hashLong(in.value).asInt();
   }
 
   public static class Provider implements CallProvider{
