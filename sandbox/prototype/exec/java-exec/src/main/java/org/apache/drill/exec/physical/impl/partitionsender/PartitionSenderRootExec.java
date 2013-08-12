@@ -213,11 +213,11 @@ class PartitionSenderRootExec implements RootExec {
                        .arg(((JExpression) outgoingBatches.component(outIndex)).invoke("getRecordCount"))
                        .arg(incomingVV));
 
-      // generate the OutgoingRecordBatch helper invocations
-      cg.getBlock().add(((JExpression) outgoingBatches.component(outIndex)).invoke("incRecordCount"));
-      cg.getBlock().add(((JExpression) outgoingBatches.component(outIndex)).invoke("flushIfNecessary"));
       ++fieldId;
     }
+    // generate the OutgoingRecordBatch helper invocations
+    cg.getBlock().add(((JExpression) outgoingBatches.component(outIndex)).invoke("incRecordCount"));
+    cg.getBlock().add(((JExpression) outgoingBatches.component(outIndex)).invoke("flushIfNecessary"));
     try {
       // compile and setup generated code
       partitioner = context.getImplementationClassMultipleOutput(cg);
