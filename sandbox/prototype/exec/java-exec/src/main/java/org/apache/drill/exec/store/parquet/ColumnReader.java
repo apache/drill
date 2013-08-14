@@ -39,8 +39,6 @@ public abstract class ColumnReader {
 
   long readPositionInBuffer;
 
-  int compressedSize;
-
   // quick reference to see if the field is fixed length (as this requires an instanceof)
   boolean isFixedLength;
   // counter for the total number of values read from one or more pages
@@ -89,7 +87,6 @@ public abstract class ColumnReader {
       // if no page has been read, or all of the records have been read out of a page, read the next one
       if (pageReadStatus.currentPage == null
           || pageReadStatus.valuesRead == pageReadStatus.currentPage.getValueCount()) {
-        totalValuesRead += pageReadStatus.valuesRead;
         if (!pageReadStatus.next()) {
           break;
         }
@@ -107,7 +104,7 @@ public abstract class ColumnReader {
       }
     }
     while (valuesReadInCurrentPass < recordsToReadInThisPass && pageReadStatus.currentPage != null);
-    ((BaseDataValueVector) valueVecHolder.getValueVector()).getMutator().setValueCount(
+    valueVecHolder.getValueVector().getMutator().setValueCount(
         valuesReadInCurrentPass);
   }
 

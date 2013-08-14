@@ -5,6 +5,7 @@ import io.netty.buffer.ByteBuf;
 import java.util.Random;
 
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.FieldMetadata;
 import org.apache.drill.exec.record.DeadBuf;
 import org.apache.drill.exec.record.MaterializedField;
@@ -27,8 +28,17 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
     super(field, allocator);
   }
 
+  @Override
+  public FieldMetadata getMetadata() {
+    return FieldMetadata.newBuilder()
+        .setDef(getField().getDef())
+        .setValueCount(valueCount)
+        .setBufferLength( (int) Math.ceil(valueCount / 8.0))
+        .build();
+  }
+
   private int getSizeFromCount(int valueCount) {
-    return (int) Math.ceil((float)valueCount / 8);
+    return (int) Math.ceil((float)valueCount / 8.0);
   }
 
   /**
@@ -42,6 +52,7 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
     valueCapacity = valueCount;
     int valueSize = getSizeFromCount(valueCount);
     data = allocator.buffer(valueSize);
+    this.data.retain();
     for (int i = 0; i < valueSize; i++) {
       data.setByte(i, 0);
     }

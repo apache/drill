@@ -52,11 +52,10 @@ public final class BitReader extends ColumnReader {
       vectorData = ((BaseDataValueVector) valueVecHolder.getValueVector()).getData();
       nextByte = bytes[(int) Math.max(0, Math.ceil(pageReadStatus.valuesRead / 8.0) - 1)];
       readLengthInBits = recordsReadInThisIteration + pageReadStatus.bitShift;
-      //recordsReadInThisIteration -= (8 - pageReadStatus.bitShift);
 
       int i = 0;
       // read individual bytes with appropriate shifting
-      for (; i <= (int) readLength; i++) {
+      for (; i < (int) readLength; i++) {
         currentByte = nextByte;
         currentByte = (byte) (currentByte >>> pageReadStatus.bitShift);
         // mask the bits about to be added from the next byte

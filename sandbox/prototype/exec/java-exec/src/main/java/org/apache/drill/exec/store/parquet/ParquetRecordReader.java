@@ -203,8 +203,6 @@ public class ParquetRecordReader implements RecordReader {
 
   @Override
   public void setup(OutputMutator output) throws ExecutionSetupException {
-    long tA = System.nanoTime(), tB;
-    System.out.println( new SimpleDateFormat("mm:ss S").format(new Date()) + " :Start of ParquetRecordReader.setup");
     output.removeAllFields();
 
     try {
@@ -232,6 +230,9 @@ public class ParquetRecordReader implements RecordReader {
     else{
       start = rowGroupOffset;
     }
+    // TODO - the methods for get total size and get total uncompressed size seem to have the opposite results of
+    // what they should
+    // I found the bug in the mainline and made a issue for it, hopefully it will be fixed soon
     for (ColumnReader crs : columnStatuses){
       totalByteLength += crs.columnChunkMetaData.getTotalSize();
     }
@@ -256,7 +257,6 @@ public class ParquetRecordReader implements RecordReader {
     } catch (IOException e) {
       throw new ExecutionSetupException("Error opening or reading metatdata for parquet file at location: " + hadoopPath.getName());
     }
-    System.out.println( "Total time in method: " + ((float) (System.nanoTime() - tA) / 1e9));
   }
 
   private static String toFieldName(String[] paths) {

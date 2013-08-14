@@ -80,7 +80,7 @@ public final class PageReadStatus {
     // because it is needed, but there might be a problem with it
     ByteBufInputStream f = new ByteBufInputStream(parentColumnReader.parentReader.getBufferWithAllData().slice(
         (int) parentColumnReader.readPositionInBuffer,
-        Math.min(50, parentColumnReader.parentReader.getBufferWithAllData().capacity() - (int) parentColumnReader.readPositionInBuffer)));
+        Math.min(200, parentColumnReader.parentReader.getBufferWithAllData().capacity() - (int) parentColumnReader.readPositionInBuffer)));
     int before = f.available();
     PageHeader pageHeader = readPageHeader(f);
     int length = before - f.available();

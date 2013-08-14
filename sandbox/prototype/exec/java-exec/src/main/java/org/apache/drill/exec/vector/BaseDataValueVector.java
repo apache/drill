@@ -44,9 +44,7 @@ public abstract class BaseDataValueVector extends BaseValueVector{
   }
 
   @Override
-  public FieldMetadata getMetadata() {
-    return null;
-  }
+  public abstract FieldMetadata getMetadata();
 
   public ByteBuf getData(){
     return data;
