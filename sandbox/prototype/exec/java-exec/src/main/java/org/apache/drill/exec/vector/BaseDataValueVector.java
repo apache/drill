@@ -34,6 +34,7 @@ abstract class BaseDataValueVector extends BaseValueVector{
   public ByteBuf[] getBuffers(){
     ByteBuf[] out = new ByteBuf[]{data};
     data.readerIndex(0);
+    data.retain();
     clear();
     return out;
   }

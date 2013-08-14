@@ -14,6 +14,7 @@ import java.io.Closeable;
 import java.nio.ByteBuffer;
 import java.util.Random;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.SchemaDefProtos;
 import org.apache.drill.exec.proto.UserBitShared.FieldMetadata;
@@ -107,7 +108,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
 
   @Override
   public ByteBuf[] getBuffers() {
-    return new ByteBuf[]{offsetVector.data, this.data};
+    return ArrayUtils.addAll(offsetVector.getBuffers(), super.getBuffers());
   }
   
   public TransferPair getTransferPair(){
