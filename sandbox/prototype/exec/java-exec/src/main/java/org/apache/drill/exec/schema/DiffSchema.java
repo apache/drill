@@ -19,14 +19,13 @@
 package org.apache.drill.exec.schema;
 
 import com.google.common.collect.Lists;
-import org.apache.drill.exec.physical.impl.OutputMutator;
 
 import java.util.List;
 
 public class DiffSchema {
     List<Field> addedFields;
     List<Field> removedFields;
-    boolean hasChanged = false;
+    boolean changed = false;
 
     public DiffSchema() {
         this.addedFields = Lists.newArrayList();
@@ -35,22 +34,22 @@ public class DiffSchema {
 
     public void recordNewField(Field field) {
         addedFields.add(field);
-        hasChanged = true;
+        changed = true;
     }
 
     public void reset() {
         addedFields.clear();
         removedFields.clear();
-        hasChanged = false;
+        changed = false;
     }
 
     public void addRemovedField(Field field) {
         removedFields.add(field);
-        hasChanged = true;
+        changed = true;
     }
 
-    public boolean isHasChanged() {
-        return hasChanged;
+    public boolean isChanged() {
+        return changed;
     }
 
     @Override

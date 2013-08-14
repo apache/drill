@@ -125,7 +125,7 @@ public class JSONRecordReader implements RecordReader {
         outputMutator.removeField(field.getAsMaterializedField());
       }
 
-      if (diffSchema.isHasChanged()) {
+      if (diffSchema.isChanged()) {
         outputMutator.setNewSchema();
       }
 
@@ -358,7 +358,7 @@ public class JSONRecordReader implements RecordReader {
     private static <T> boolean addValueToVector(int index, VectorHolder holder, T val, MinorType minorType, int groupCount) {
       switch (minorType) {
         case INT: {
-          holder.incAndCheckLength(32 + 1);
+          holder.incAndCheckLength(NullableIntHolder.WIDTH * 8 + 1);
           if (groupCount == 0) {
             if (val != null) {
               NullableIntVector int4 = (NullableIntVector) holder.getValueVector();
@@ -376,10 +376,10 @@ public class JSONRecordReader implements RecordReader {
             m.add(index, (Integer) val);
           }
 
-          return holder.hasEnoughSpace(32 + 1);
+          return holder.hasEnoughSpace(NullableIntHolder.WIDTH * 8 + 1);
         }
         case FLOAT4: {
-          holder.incAndCheckLength(32 + 1);
+          holder.incAndCheckLength(NullableFloat4Holder.WIDTH * 8 + 1);
           if (groupCount == 0) {
             if (val != null) {
               NullableFloat4Vector float4 = (NullableFloat4Vector) holder.getValueVector();
@@ -396,7 +396,7 @@ public class JSONRecordReader implements RecordReader {
             holder.setGroupCount(index);
             m.add(index, (Float) val);
           }
-          return holder.hasEnoughSpace(32 + 1);
+          return holder.hasEnoughSpace(NullableFloat4Holder.WIDTH * 8 + 1);
         }
         case VARCHAR: {
           if (val == null) {
@@ -419,7 +419,7 @@ public class JSONRecordReader implements RecordReader {
           }
         }
         case BIT: {
-          holder.incAndCheckLength(1 + 1);
+          holder.incAndCheckLength(NullableBitHolder.WIDTH + 1);
           if (groupCount == 0) {
             if (val != null) {
               NullableBitVector bit = (NullableBitVector) holder.getValueVector();
@@ -436,7 +436,7 @@ public class JSONRecordReader implements RecordReader {
             holder.setGroupCount(index);
             m.add(index, (Boolean) val ? 1 : 0);
           }
-          return holder.hasEnoughSpace(1 + 1);
+          return holder.hasEnoughSpace(NullableBitHolder.WIDTH + 1);
         }
         default:
           throw new DrillRuntimeException("Type not supported to add value. Type: " + minorType);
@@ -476,7 +476,7 @@ public class JSONRecordReader implements RecordReader {
 
       ValueVector v = TypeHelper.getNewVector(f, allocator);
       AllocationHelper.allocate(v, batchSize, 50);
-      holder = new VectorHolder(batchSize, v);
+      holder = new VectorHolder(v);
       valueVectorMap.put(fullFieldName, holder);
       outputMutator.addField(v);
       return holder;

@@ -17,6 +17,7 @@ import io.netty.buffer.ByteBuf;
 import java.io.Closeable;
 import java.util.List;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.SchemaDefProtos;
 import org.apache.drill.exec.proto.UserBitShared.FieldMetadata;
@@ -58,12 +59,7 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
   
   @Override
   public ByteBuf[] getBuffers() {
-    <#if type.major == "VarLen">
-    ByteBuf[] valueBuffers = values.getBuffers();
-    return new ByteBuf[]{bits.data, valueBuffers[0], valueBuffers[1]};
-    <#else>
-    return new ByteBuf[]{bits.data, values.data};
-    </#if>
+    return ArrayUtils.addAll(bits.getBuffers(), values.getBuffers());
   }
   
   @Override

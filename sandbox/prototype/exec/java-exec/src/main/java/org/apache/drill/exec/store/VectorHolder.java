@@ -27,8 +27,8 @@ public class VectorHolder {
   private ValueVector vector;
   private int currentLength;
 
-  VectorHolder(int length, ValueVector vector) {
-    this.length = length;
+  VectorHolder(ValueVector vector) {
+    this.length = vector.getValueCapacity();
     this.vector = vector;
   }
 
@@ -38,18 +38,18 @@ public class VectorHolder {
 
   public void incAndCheckLength(int newLength) {
     if (!hasEnoughSpace(newLength)) {
-      throw new BatchExceededException(length, currentLength + newLength);
+      throw new BatchExceededException(length, vector.getBufferSize() + newLength);
     }
-    count += 1;
+
     currentLength += newLength;
+    count += 1;
   }
 
   public void setGroupCount(int groupCount) {
     if(this.groupCount < groupCount) {
       RepeatedMutator mutator = (RepeatedMutator) vector.getMutator();
       while(this.groupCount < groupCount) {
-        mutator.startNewGroup(this.groupCount + 1);
-        this.groupCount++;
+        mutator.startNewGroup(++this.groupCount);
       }
     }
   }

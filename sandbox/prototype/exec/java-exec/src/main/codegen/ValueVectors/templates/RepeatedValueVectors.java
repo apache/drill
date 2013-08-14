@@ -17,6 +17,7 @@ import java.io.Closeable;
 import java.util.Random;
 import java.util.Vector;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.SchemaDefProtos;
 import org.apache.drill.exec.proto.UserBitShared.FieldMetadata;
@@ -176,7 +177,7 @@ import com.google.common.collect.Lists;
   </#if>
 
   public ByteBuf[] getBuffers() {
-    return new ByteBuf[]{offsets.data, values.data};
+    return ArrayUtils.addAll(offsets.getBuffers(), values.getBuffers());
   }
 
   public void clear(){
