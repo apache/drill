@@ -63,7 +63,7 @@ public class WorkManager implements Closeable{
   private final BitComHandler bitComWorker;
   private final UserWorker userWorker;
   private final WorkerBee bee;
-  private Executor executor = Executors.newFixedThreadPool(4, new NamedThreadFactory("Working Thread - "));
+  private Executor executor = Executors.newFixedThreadPool(4, new NamedThreadFactory("WorkManager-"));
   private final EventThread eventThread;
   
   public WorkManager(BootStrapContext context){

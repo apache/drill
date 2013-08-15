@@ -65,7 +65,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
-      <version>4.0.3.Final</version>
+      <version>4.0.7.Final</version>
       <artifactId>netty-bufferl</artifactId>
     </dependency>
     <dependency>
@@ -166,8 +166,8 @@
     </dependency>
     <dependency>
       <groupId>io.netty</groupId>
-      <artifactId>netty-all</artifactId>
-      <version>4.0.3.Final</version>
+      <artifactId>netty-handler</artifactId>
+      <version>4.0.7.Final</version>
     </dependency>
     <dependency>
       <groupId>com.google.protobuf</groupId>

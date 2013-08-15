@@ -7,12 +7,18 @@
       info:"na"
     }
   },
+  "storage" : {
+  "mock" : {
+      "type" : "mock"
+  }
+},
+  
   query:[
     {
       @id:"1",
       op:"scan",
       memo:"initial_scan",
-      storageengine:"local-logs",
+      storageengine:"mock",
       selection: [
        {
             records : 100,

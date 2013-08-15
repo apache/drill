@@ -4,6 +4,6 @@ PROJECT_ROOT=../../../
 
 mvn dependency:build-classpath -f=$PROJECT_ROOT/pom.xml -Dmdep.outputFile=target/sh/cp.txt
 CP=`cat $PROJECT_ROOT/target/sh/cp.txt`
-CP=$CP:$PROJECT_ROOT/target/classes:$PROJECT_ROOT/target/test-classes
-java -XX:MaxDirectMemorySize=8192M  -cp $CP org.apache.drill.exec.server.Drillbit
+CP=./:$CP:$PROJECT_ROOT/target/classes:$PROJECT_ROOT/target/test-classes
+java -Dlogback.configurationFile=logback.xml -XX:MaxDirectMemorySize=8192M  -cp $CP org.apache.drill.exec.server.Drillbit 
 

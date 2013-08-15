@@ -23,6 +23,7 @@ import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
 
 import com.google.common.base.Charsets;
+import com.google.common.collect.ObjectArrays;
 
 
 /**
@@ -74,7 +75,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
   
   @Override
   public FieldMetadata getMetadata() {
-    int len = valueCount * ${type.width} + getVarByteLength();
+    int len = (valueCount+1) * ${type.width} + getVarByteLength();
     return FieldMetadata.newBuilder()
              .setDef(getField().getDef())
              .setValueCount(valueCount)
@@ -104,9 +105,12 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     offsetVector.clear();
   }
 
+  
   @Override
   public ByteBuf[] getBuffers() {
-    return ArrayUtils.addAll(offsetVector.getBuffers(), super.getBuffers());
+    ByteBuf[] buffers = ObjectArrays.concat(offsetVector.getBuffers(), super.getBuffers(), ByteBuf.class);
+    clear();
+    return buffers;
   }
   
   public TransferPair getTransferPair(){
@@ -151,7 +155,6 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     clear();
     assert totalBytes >= 0;
     data = allocator.buffer(totalBytes);
-    data.retain();
     data.readerIndex(0);
     offsetVector.allocateNew(valueCount+1);
   }

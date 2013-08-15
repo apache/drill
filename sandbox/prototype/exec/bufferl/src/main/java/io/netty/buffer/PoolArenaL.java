@@ -354,8 +354,7 @@ abstract class PoolArenaL<T> {
 
         @Override
         protected PooledByteBufL<byte[]> newByteBuf(int maxCapacity) {
-          throw new UnsupportedOperationException();
-//            return PooledHeapByteBufL.newInstance(maxCapacity);
+            return PooledHeapByteBufL.newInstance(maxCapacity);
         }
 
         @Override

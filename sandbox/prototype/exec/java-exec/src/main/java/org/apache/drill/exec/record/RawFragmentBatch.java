@@ -46,5 +46,9 @@ public class RawFragmentBatch {
   public String toString() {
     return "RawFragmentBatch [header=" + header + ", body=" + body + "]";
   }
+  
+  public void release(){
+    if(body != null) body.release();
+  }
 
 }

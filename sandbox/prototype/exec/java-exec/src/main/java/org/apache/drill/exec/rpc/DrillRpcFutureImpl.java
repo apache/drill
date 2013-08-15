@@ -67,7 +67,6 @@ class DrillRpcFutureImpl<V> extends AbstractCheckedFuture<V, RpcException> imple
   @Override
   public void success(V value, ByteBuf buffer) {
     this.buffer = buffer;
-    if(buffer != null) buffer.retain();
     ( (InnerFuture<V>)delegate()).setValue(value);
   }
 

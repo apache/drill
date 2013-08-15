@@ -62,7 +62,7 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
     List<QueryResultBatch> results = client.runQuery(QueryType.PHYSICAL, Files.toString(FileUtils.getResourceAsFile("/physical_test2.json"), Charsets.UTF_8));
 
     // look at records
-    RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
+    RecordBatchLoader batchLoader = new RecordBatchLoader(client.getAllocator());
     int recordCount = 0;
     for (QueryResultBatch batch : results) {
 

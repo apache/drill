@@ -82,11 +82,15 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
 
     try {
       Preconditions.checkNotNull(protobufBody);
-      ChannelListenerWithCoordinationId futureListener = queue.get(listener, clazz);
+      ChannelListenerWithCoordinationId futureListener = queue.get(listener, clazz, connection);
       OutboundRpcMessage m = new OutboundRpcMessage(RpcMode.REQUEST, rpcType, futureListener.getCoordinationId(), protobufBody, dataBodies);
+      connection.acquirePermit();
       ChannelFuture channelFuture = connection.getChannel().writeAndFlush(m);
       channelFuture.addListener(futureListener);
       completed = true;
+    } catch (InterruptedException e) {
+      completed = true;
+      listener.failed(new RpcException("Interrupted while attempting to acquire outbound queue.", e));
     } finally {
       if (!completed) {
         if (pBuffer != null) pBuffer.release();
@@ -136,8 +140,7 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
       case REQUEST:
         // handle message and ack.
         Response r = handle(connection, msg.rpcType, msg.pBody, msg.dBody);
-        msg.pBody.release();
-        if(msg.dBody != null) msg.dBody.release(); // we release our ownership.  Handle could have taken over ownership.
+        msg.release();  // we release our ownership.  Handle could have taken over ownership.
         assert rpcConfig.checkResponseSend(r.rpcType, r.pBody.getClass());
         OutboundRpcMessage outMessage = new OutboundRpcMessage(RpcMode.RESPONSE, r.rpcType, msg.coordinationId,
             r.pBody, r.dBodies);
@@ -152,9 +155,8 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
         RpcOutcome<?> rpcFuture = queue.getFuture(msg.rpcType, msg.coordinationId, m.getClass());
         Parser<?> parser = m.getParserForType();
         Object value = parser.parseFrom(new ByteBufInputStream(msg.pBody, msg.pBody.readableBytes()));
-        msg.pBody.release();
         rpcFuture.set(value, msg.dBody);
-        if(msg.dBody != null) msg.dBody.release();
+        msg.release();  // we release our ownership.  Handle could have taken over ownership.
         if (RpcConstants.EXTRA_DEBUGGING) logger.debug("Updated rpc future {} with value {}", rpcFuture, value);
         }catch(Exception ex){
           logger.error("Failure while handling response.", ex);

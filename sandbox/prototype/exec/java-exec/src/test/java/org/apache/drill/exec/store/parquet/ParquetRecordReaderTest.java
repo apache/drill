@@ -1,0 +1,347 @@
+/*******************************************************************************
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ******************************************************************************/
+package org.apache.drill.exec.store.parquet;
+
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Vector;
+
+import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.exec.client.DrillClient;
+import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.physical.impl.OutputMutator;
+import org.apache.drill.exec.proto.UserProtos;
+import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.RecordBatchLoader;
+import org.apache.drill.exec.record.VectorWrapper;
+import org.apache.drill.exec.rpc.RpcException;
+import org.apache.drill.exec.rpc.user.QueryResultBatch;
+import org.apache.drill.exec.rpc.user.UserResultsListener;
+import org.apache.drill.exec.server.Drillbit;
+import org.apache.drill.exec.server.RemoteServiceSet;
+import org.apache.drill.exec.store.parquet.TestFileGenerator.FieldInfo;
+import org.apache.drill.exec.vector.BaseDataValueVector;
+import org.apache.drill.exec.vector.ValueVector;
+import org.junit.Test;
+
+import parquet.bytes.BytesInput;
+import parquet.column.page.Page;
+import parquet.column.page.PageReadStore;
+import parquet.column.page.PageReader;
+import parquet.hadoop.Footer;
+import parquet.hadoop.metadata.ParquetMetadata;
+import parquet.schema.MessageType;
+
+import com.google.common.base.Charsets;
+import com.google.common.collect.Lists;
+import com.google.common.io.Files;
+import com.google.common.util.concurrent.SettableFuture;
+
+public class ParquetRecordReaderTest {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetRecordReaderTest.class);
+
+  private boolean VERBOSE_DEBUG = false;
+
+  
+  public static void main(String[] args) throws Exception{
+    new ParquetRecordReaderTest().testMultipleRowGroupsAndReadsEvent();
+  }
+
+  @Test
+  public void testMultipleRowGroupsAndReadsEvent() throws Exception {
+    String planName = "/parquet_scan_screen.json";
+    String fileName = "/tmp/testParquetFile_many_types_3";
+    int numberRowGroups = 20;
+    int recordsPerRowGroup = 300000;
+    //TestFileGenerator.generateParquetFile(fileName, numberRowGroups, recordsPerRowGroup);
+    testParquetFullEngineLocal(planName, fileName, 2, numberRowGroups, recordsPerRowGroup);
+  }
+
+  private class ParquetResultListener implements UserResultsListener {
+    private Vector<QueryResultBatch> results = new Vector<QueryResultBatch>();
+    private SettableFuture<Void> future = SettableFuture.create();
+    int count = 0;
+    RecordBatchLoader batchLoader;
+    byte[] bytes;
+
+    int numberRowGroups;
+    int numberOfTimesRead;
+    int batchCounter = 1;
+    int columnValCounter = 0;
+    int i = 0;
+    private FieldInfo currentField;
+    private final HashMap<String, Long> valuesChecked = new HashMap<>();
+    private final int recordsPerRowGroup;
+    private final Map<String, FieldInfo> fields;
+    private final long totalRecords;
+    
+    ParquetResultListener(int recordsPerRowGroup, RecordBatchLoader batchLoader, int numberRowGroups, int numberOfTimesRead){
+      this.batchLoader = batchLoader;
+      this.fields = TestFileGenerator.getFieldMap(recordsPerRowGroup);
+      this.recordsPerRowGroup = recordsPerRowGroup;
+      this.numberRowGroups = numberRowGroups;
+      this.numberOfTimesRead = numberOfTimesRead;
+      this.totalRecords = recordsPerRowGroup * numberRowGroups * numberOfTimesRead;
+    }
+
+    @Override
+    public void submissionFailed(RpcException ex) {
+      logger.debug("Submission failed.", ex);
+      future.setException(ex);
+    }
+
+    @Override
+    public void resultArrived(QueryResultBatch result) {
+      long columnValCounter = 0;
+      int i = 0;
+      FieldInfo currentField;
+      count += result.getHeader().getRowCount();
+      boolean schemaChanged = false;
+      try {
+        schemaChanged = batchLoader.load(result.getHeader().getDef(), result.getData());
+      } catch (SchemaChangeException e) {
+        logger.error("Failure while loading batch", e);
+      }
+
+      int recordCount = 0;
+      // print headers.
+      if (schemaChanged) {
+      } // do not believe any change is needed for when the schema changes, with the current mock scan use case
+
+      for (VectorWrapper vw : batchLoader) {
+        ValueVector vv = vw.getValueVector();
+        currentField = fields.get(vv.getField().getName());
+        if (VERBOSE_DEBUG){
+          System.out.println("\n" + (String) currentField.name);
+        }
+        if ( ! valuesChecked.containsKey(vv.getField().getName())){
+          valuesChecked.put(vv.getField().getName(), (long) 0);
+          columnValCounter = 0;
+        } else {
+          columnValCounter = valuesChecked.get(vv.getField().getName());
+        }
+        for (int j = 0; j < ((BaseDataValueVector)vv).getAccessor().getValueCount(); j++) {
+          if (VERBOSE_DEBUG){
+            System.out.print(vv.getAccessor().getObject(j) + ", " + (j % 25 == 0 ? "\n batch:" + batchCounter + " v:" + j + " - " : ""));
+          }
+          assertField(vv, j, (TypeProtos.MinorType) currentField.type,
+              currentField.values[(int) (columnValCounter % 3)], (String) currentField.name + "/");
+          columnValCounter++;
+        }
+        if (VERBOSE_DEBUG){
+          System.out.println("\n" + ((BaseDataValueVector)vv).getAccessor().getValueCount());
+        }
+        valuesChecked.remove(vv.getField().getName());
+        valuesChecked.put(vv.getField().getName(), columnValCounter);
+      }
+      
+      
+      if (VERBOSE_DEBUG){
+        for (i = 0; i < batchLoader.getRecordCount(); i++) {
+          recordCount++;
+          if (i % 50 == 0){
+            System.out.println();
+            for (VectorWrapper<?> vw : batchLoader) {
+              ValueVector v = vw.getValueVector();
+              System.out.print(pad(v.getField().getName(), 20) + " ");
+            }
+            System.out.println();
+            System.out.println();
+          }
+
+          for (VectorWrapper<?> vw : batchLoader) {
+            ValueVector v = vw.getValueVector();
+            System.out.print(pad(v.getAccessor().getObject(i).toString(), 20) + " ");
+          }
+          System.out.println(
+
+          );
+        }
+      }
+
+      for(VectorWrapper<?> vw : batchLoader){
+        vw.release();
+      }
+      result.release();
+      
+      batchCounter++;
+      if(result.getHeader().getIsLastChunk()){
+        for (String s : valuesChecked.keySet()) {
+          assertEquals("Record count incorrect for column: " + s, totalRecords, (long) valuesChecked.get(s));
+        }
+        
+        assert valuesChecked.keySet().size() > 0;
+        future.set(null);
+      }
+    }
+
+    public void get() throws RpcException{
+      try{
+        future.get();
+        return;
+      }catch(Throwable t){
+        throw RpcException.mapException(t);
+      }
+    }
+  }
+
+  
+  public void testParquetFullEngineRemote(String plan, String filename, int numberOfTimesRead /* specified in json plan */, int numberOfRowGroups, int recordsPerRowGroup) throws Exception{
+    
+    DrillConfig config = DrillConfig.create();
+
+    try(DrillClient client = new DrillClient(config);){
+      client.connect();
+      RecordBatchLoader batchLoader = new RecordBatchLoader(client.getAllocator());
+      ParquetResultListener resultListener = new ParquetResultListener(recordsPerRowGroup, batchLoader, numberOfRowGroups, numberOfTimesRead);
+      client.runQuery(UserProtos.QueryType.LOGICAL, Files.toString(FileUtils.getResourceAsFile(plan), Charsets.UTF_8), resultListener);
+      resultListener.get();
+    }
+    
+  }
+  
+  // specific tests should call this method, but it is not marked as a test itself intentionally
+  public void testParquetFullEngineLocal(String plan, String filename, int numberOfTimesRead /* specified in json plan */, int numberOfRowGroups, int recordsPerRowGroup) throws Exception{
+    
+    RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
+
+    DrillConfig config = DrillConfig.create();
+
+    try(Drillbit bit1 = new Drillbit(config, serviceSet); DrillClient client = new DrillClient(config, serviceSet.getCoordinator());){
+      bit1.run();
+      client.connect();
+      RecordBatchLoader batchLoader = new RecordBatchLoader(client.getAllocator());
+      ParquetResultListener resultListener = new ParquetResultListener(recordsPerRowGroup, batchLoader, numberOfRowGroups, numberOfTimesRead);
+      client.runQuery(UserProtos.QueryType.LOGICAL, Files.toString(FileUtils.getResourceAsFile(plan), Charsets.UTF_8), resultListener);
+      resultListener.get();
+    }
+    
+  }
+
+
+
+  public String pad(String value, int length) {
+    return pad(value, length, " ");
+  }
+
+  public String pad(String value, int length, String with) {
+    StringBuilder result = new StringBuilder(length);
+    result.append(value);
+
+    while (result.length() < length) {
+      result.insert(0, with);
+    }
+
+    return result.toString();
+  }
+
+  class MockOutputMutator implements OutputMutator {
+    List<MaterializedField> removedFields = Lists.newArrayList();
+    List<ValueVector> addFields = Lists.newArrayList();
+
+    @Override
+    public void removeField(MaterializedField field) throws SchemaChangeException {
+      removedFields.add(field);
+    }
+
+    @Override
+    public void addField(ValueVector vector) throws SchemaChangeException {
+      addFields.add(vector);
+    }
+
+    @Override
+    public void removeAllFields() {
+      addFields.clear();
+    }
+
+    @Override
+    public void setNewSchema() throws SchemaChangeException {
+    }
+
+    List<MaterializedField> getRemovedFields() {
+      return removedFields;
+    }
+
+    List<ValueVector> getAddFields() {
+      return addFields;
+    }
+  }
+
+  private <T> void assertField(ValueVector valueVector, int index, TypeProtos.MinorType expectedMinorType, Object value, String name) {
+    assertField(valueVector, index, expectedMinorType, value, name, 0);
+  }
+
+  @SuppressWarnings("unchecked")
+  private <T> void assertField(ValueVector valueVector, int index, TypeProtos.MinorType expectedMinorType, T value, String name, int parentFieldId) {
+//    UserBitShared.FieldMetadata metadata = valueVector.getMetadata();
+//    SchemaDefProtos.FieldDef def = metadata.getDef();
+//    assertEquals(expectedMinorType, def.getMajorType().getMinorType());
+//    assertEquals(name, def.getNameList().get(0).getName());
+//    assertEquals(parentFieldId, def.getParentId());
+
+    if (expectedMinorType == TypeProtos.MinorType.MAP) {
+      return;
+    }
+    
+    T val = (T) valueVector.getAccessor().getObject(index);
+    if (val instanceof byte[]) {
+      assertTrue(Arrays.equals((byte[]) value, (byte[]) val));
+    } else {
+      assertEquals(value, val);
+    }
+  }
+
+  private void validateFooters(final List<Footer> metadata) {
+    logger.debug(metadata.toString());
+    assertEquals(3, metadata.size());
+    for (Footer footer : metadata) {
+      final File file = new File(footer.getFile().toUri());
+      assertTrue(file.getName(), file.getName().startsWith("part"));
+      assertTrue(file.getPath(), file.exists());
+      final ParquetMetadata parquetMetadata = footer.getParquetMetadata();
+      assertEquals(2, parquetMetadata.getBlocks().size());
+      final Map<String, String> keyValueMetaData = parquetMetadata.getFileMetaData().getKeyValueMetaData();
+      assertEquals("bar", keyValueMetaData.get("foo"));
+      assertEquals(footer.getFile().getName(), keyValueMetaData.get(footer.getFile().getName()));
+    }
+  }
+
+  private void validateContains(MessageType schema, PageReadStore pages, String[] path, int values, BytesInput bytes)
+      throws IOException {
+    PageReader pageReader = pages.getPageReader(schema.getColumnDescription(path));
+    Page page = pageReader.readPage();
+    assertEquals(values, page.getValueCount());
+    assertArrayEquals(bytes.toByteArray(), page.getBytes().toByteArray());
+  }
+
+  private String getResource(String resourceName) {
+    return "resource:" + resourceName;
+  }
+
+  
+}

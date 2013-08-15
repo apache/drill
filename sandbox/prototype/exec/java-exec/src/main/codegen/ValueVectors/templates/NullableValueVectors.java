@@ -10,6 +10,7 @@ import java.lang.UnsupportedOperationException;
 
 package org.apache.drill.exec.vector;
 
+
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import io.netty.buffer.ByteBuf;
@@ -30,6 +31,7 @@ import org.apache.drill.exec.vector.UInt2Vector;
 import org.apache.drill.exec.vector.UInt4Vector;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.ObjectArrays;
 
 /**
  * Nullable${minor.class} implements a vector of values which could be null.  Elements in the vector
@@ -59,7 +61,9 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
   
   @Override
   public ByteBuf[] getBuffers() {
-    return ArrayUtils.addAll(bits.getBuffers(), values.getBuffers());
+    ByteBuf[] buffers = ObjectArrays.concat(bits.getBuffers(), values.getBuffers(), ByteBuf.class);
+    clear();
+    return buffers;
   }
   
   @Override

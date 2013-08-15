@@ -162,6 +162,9 @@ public class ScanBatch implements RecordBatch {
 
     @Override
     public void removeAllFields() {
+      for(VectorWrapper<?> vw : holder){
+        vw.release();
+      }
       holder.clear();
       fieldVectorMap.clear();
     }

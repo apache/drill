@@ -24,21 +24,24 @@ import java.util.Collection;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.data.Scan;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.ReadEntry;
 import org.apache.drill.exec.physical.ReadEntryWithPath;
-import org.apache.drill.exec.physical.config.MockStorageEngine;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStorageEngine;
 import org.apache.drill.exec.store.RecordReader;
+import org.apache.drill.exec.store.mock.MockStorageEngine;
 
 import com.google.common.collect.ListMultimap;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.FileSystem;
+
 import parquet.format.converter.ParquetMetadataConverter;
 import parquet.hadoop.CodecFactoryExposer;
 import parquet.hadoop.ParquetFileReader;

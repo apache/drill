@@ -13,6 +13,7 @@ import org.apache.drill.common.expression.FunctionDefinition;
 import org.apache.drill.common.expression.NoArgValidator;
 import org.apache.drill.common.expression.OutputTypeDeterminer;
 import org.apache.drill.common.logical.LogicalPlan;
+import org.apache.drill.common.logical.StorageEngineConfig;
 import org.apache.drill.common.logical.data.Filter;
 import org.apache.drill.common.logical.data.Project;
 import org.apache.drill.common.logical.data.Scan;
@@ -27,7 +28,10 @@ import org.apache.drill.exec.exception.SetupException;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.physical.config.*;
+import org.apache.drill.exec.physical.config.MockGroupScanPOP;
+import org.apache.drill.exec.physical.config.Screen;
+import org.apache.drill.exec.physical.config.SelectionVectorRemover;
+import org.apache.drill.exec.store.StorageEngine;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 
@@ -99,32 +103,15 @@ public class BasicOptimizer extends Optimizer{
 
     @Override
     public PhysicalOperator visitScan(Scan scan, Object obj) throws OptimizerException {
-      List<MockGroupScanPOP.MockScanEntry> myObjects;
-
+      StorageEngineConfig config = logicalPlan.getStorageEngineConfig(scan.getStorageEngine());
+      if(config == null) throw new OptimizerException(String.format("Logical plan referenced the storage engine config %s but the logical plan didn't have that available as a config.", scan.getStorageEngine()));
+      StorageEngine engine;
       try {
-        if (scan.getStorageEngine().equals("parquet")) {
-          return context.getStorageEngine(logicalPlan.getStorageEngineConfig(scan.getStorageEngine())).getPhysicalScan(scan);
-        }
-        if (scan.getStorageEngine().equals("local-logs")) {
-          myObjects = scan.getSelection().getListWith(config,
-              new TypeReference<ArrayList<MockGroupScanPOP.MockScanEntry>>() {
-              });
-        } else {
-          myObjects = new ArrayList<>();
-          MockGroupScanPOP.MockColumn[] cols = {
-              new MockGroupScanPOP.MockColumn("blah", MinorType.INT, DataMode.REQUIRED, 4, 4, 4),
-              new MockGroupScanPOP.MockColumn("blah_2", MinorType.INT, DataMode.REQUIRED, 4, 4, 4) };
-          myObjects.add(new MockGroupScanPOP.MockScanEntry(50, cols));
-        }
-      } catch (IOException e) {
-        throw new OptimizerException(
-            "Error reading selection attribute of GroupScan node in Logical to Physical plan conversion.", e);
-      } catch (SetupException e) {
-        throw new OptimizerException(
-            "Storage engine not found: " + scan.getStorageEngine(), e);
+        engine = context.getStorageEngine(config);
+        return engine.getPhysicalScan(scan);
+      } catch (SetupException | IOException e) {
+        throw new OptimizerException("Failure while attempting to retrieve storage engine.", e);
       }
-
-      return new MockGroupScanPOP("http://apache.org", myObjects);
     }
 
     @Override

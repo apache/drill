@@ -79,7 +79,6 @@ public class WritableBatch {
       
       for (ByteBuf b : vv.getBuffers()) {
         buffers.add(b);
-        b.retain();
       }
       // remove vv access to buffers.
       vv.clear();

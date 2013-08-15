@@ -60,8 +60,8 @@ public class ParquetRecordReader implements RecordReader {
   private static final long DEFAULT_BATCH_LENGTH_IN_BITS = DEFAULT_BATCH_LENGTH * 8; // 256kb
 
   // TODO - should probably find a smarter way to set this, currently 2 megabytes
-  private static final int VAR_LEN_FIELD_LENGTH = 1024 * 1024 * 2;
-  public static final int PARQUET_PAGE_MAX_SIZE = 1024 * 1024 * 5;
+  private static final int VAR_LEN_FIELD_LENGTH = 1024 * 1024 * 1;
+  public static final int PARQUET_PAGE_MAX_SIZE = 1024 * 1024 * 1;
   private static final String SEPERATOR = System.getProperty("file.separator");
 
 
@@ -398,6 +398,7 @@ public class ParquetRecordReader implements RecordReader {
   @Override
   public void cleanup() {
     columnStatuses.clear();
-    bufferWithAllData.clear();
+    this.varLengthReader.columns.clear();
+    bufferWithAllData.release();
   }
 }

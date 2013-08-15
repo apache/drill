@@ -56,6 +56,15 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <excludes>
+            <exclude>**/logging.properties</exclude>
+            <exclude>**/logback-test.xml</exclude>
+            <exclude>**/logback.out.xml</exclude>
+            <exclude>**/logback.xml</exclude>
+          </excludes>
+        </configuration>
+        
         <executions>
           <execution>
             <goals>
@@ -64,6 +73,7 @@
           </execution>
         </executions>
       </plugin>
+      
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-resources-plugin</artifactId>

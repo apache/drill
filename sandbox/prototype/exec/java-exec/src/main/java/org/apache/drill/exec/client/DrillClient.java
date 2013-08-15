@@ -34,6 +34,7 @@ import java.util.Vector;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.coord.ZKClusterCoordinator;
+import org.apache.drill.exec.memory.DirectBufferAllocator;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.UserProtos.QueryType;
 import org.apache.drill.exec.rpc.BasicClientWithConnection.ServerConnection;
@@ -58,6 +59,7 @@ public class DrillClient implements Closeable{
   private UserClient client;
   private volatile ClusterCoordinator clusterCoordinator;
   private volatile boolean connected = false;
+  private final DirectBufferAllocator allocator = new DirectBufferAllocator();
   
   public DrillClient() {
     this(DrillConfig.create());
@@ -99,8 +101,7 @@ public class DrillClient implements Closeable{
     checkState(!endpoints.isEmpty(), "No DrillbitEndpoint can be found");
     // just use the first endpoint for now
     DrillbitEndpoint endpoint = endpoints.iterator().next();
-    ByteBufAllocator bb = new PooledByteBufAllocatorL(true);
-    this.client = new UserClient(bb, new NioEventLoopGroup(1, new NamedThreadFactory("Client-")));
+    this.client = new UserClient(allocator.getUnderlyingAllocator(), new NioEventLoopGroup(1, new NamedThreadFactory("Client-")));
     try {
       logger.debug("Connecting to server {}:{}", endpoint.getAddress(), endpoint.getUserPort());
       FutureHandler f = new FutureHandler();
@@ -110,6 +111,12 @@ public class DrillClient implements Closeable{
     } catch (InterruptedException e) {
       throw new RpcException(e);
     }
+  }
+
+  
+  
+  public DirectBufferAllocator getAllocator() {
+    return allocator;
   }
 
   /**

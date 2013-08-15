@@ -52,9 +52,9 @@ public class CoordinationQueue {
     }
   }
 
-  public <V> ChannelListenerWithCoordinationId get(RpcOutcomeListener<V> handler, Class<V> clazz){
+  public <V> ChannelListenerWithCoordinationId get(RpcOutcomeListener<V> handler, Class<V> clazz, RemoteConnection connection){
     int i = circularInt.getNext();
-    RpcListener<V> future = new RpcListener<V>(handler, clazz, i);
+    RpcListener<V> future = new RpcListener<V>(handler, clazz, i, connection);
     Object old = map.put(i, future);
     if (old != null)
       throw new IllegalStateException(
@@ -66,17 +66,19 @@ public class CoordinationQueue {
     final RpcOutcomeListener<T> handler;
     final Class<T> clazz;
     final int coordinationId;
+    final RemoteConnection connection;
     
-    public RpcListener(RpcOutcomeListener<T> handler, Class<T> clazz, int coordinationId) {
+    public RpcListener(RpcOutcomeListener<T> handler, Class<T> clazz, int coordinationId, RemoteConnection connection) {
       super();
       this.handler = handler;
       this.clazz = clazz;
       this.coordinationId = coordinationId;
+      this.connection = connection;
     }
 
     @Override
     public void operationComplete(ChannelFuture future) throws Exception {
-      
+      connection.releasePermit();
       if(!future.isSuccess()){
         removeFromMap(coordinationId);
         future.get();

@@ -30,7 +30,7 @@ import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
 
 final class PooledUnsafeDirectByteBufL extends PooledByteBufL<ByteBuffer> {
-
+  
     private static final boolean NATIVE_ORDER = ByteOrder.nativeOrder() == ByteOrder.LITTLE_ENDIAN;
 
     private static final Recycler<PooledUnsafeDirectByteBufL> RECYCLER = new Recycler<PooledUnsafeDirectByteBufL>() {
@@ -42,6 +42,7 @@ final class PooledUnsafeDirectByteBufL extends PooledByteBufL<ByteBuffer> {
 
     static PooledUnsafeDirectByteBufL newInstance(int maxCapacity) {
         PooledUnsafeDirectByteBufL buf = RECYCLER.get();
+        buf.setRefCnt(1);
         buf.maxCapacity(maxCapacity);
         return buf;
     }

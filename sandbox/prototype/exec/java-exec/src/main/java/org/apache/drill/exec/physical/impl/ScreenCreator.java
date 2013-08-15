@@ -17,6 +17,8 @@
  ******************************************************************************/
 package org.apache.drill.exec.physical.impl;
 
+import io.netty.buffer.ByteBuf;
+
 import java.util.List;
 
 import org.apache.drill.exec.ops.FragmentContext;
@@ -76,16 +78,16 @@ public class ScreenCreator implements RootCreator<Screen>{
       logger.debug("Screen Outcome {}", outcome);
       switch(outcome){
       case STOP: {
-          QueryResult header1 = QueryResult.newBuilder() //
+          QueryResult header = QueryResult.newBuilder() //
               .setQueryId(context.getHandle().getQueryId()) //
               .setRowCount(0) //
               .addError(ErrorHelper.logAndConvertError(context.getIdentity(), "Screen received stop request sent.", context.getFailureCause(), logger))
               .setDef(RecordBatchDef.getDefaultInstance()) //
               .setIsLastChunk(true) //
               .build();
-          QueryWritableBatch batch1 = new QueryWritableBatch(header1);
+          QueryWritableBatch batch = new QueryWritableBatch(header);
+          connection.sendResult(listener, batch);
 
-          connection.sendResult(listener, batch1);
           return false;
       }
       case NONE: {
@@ -93,16 +95,18 @@ public class ScreenCreator implements RootCreator<Screen>{
           // receive no results.
           context.batchesCompleted.inc(1);
           context.recordsCompleted.inc(incoming.getRecordCount());
-          QueryResult header2 = QueryResult.newBuilder() //
+          QueryResult header = QueryResult.newBuilder() //
               .setQueryId(context.getHandle().getQueryId()) //
               .setRowCount(0) //
               .setDef(RecordBatchDef.getDefaultInstance()) //
               .setIsLastChunk(true) //
               .build();
-          QueryWritableBatch batch2 = new QueryWritableBatch(header2);
-          connection.sendResult(listener, batch2);
+          QueryWritableBatch batch = new QueryWritableBatch(header);
+          connection.sendResult(listener, batch);
+
         }else{
-          connection.sendResult(listener, materializer.convertNext(true));
+          QueryWritableBatch batch = materializer.convertNext(true);
+          connection.sendResult(listener, batch);
         }
         return false;
       }
@@ -112,7 +116,8 @@ public class ScreenCreator implements RootCreator<Screen>{
       case OK:
         context.batchesCompleted.inc(1);
         context.recordsCompleted.inc(incoming.getRecordCount());
-        connection.sendResult(listener, materializer.convertNext(false));
+        QueryWritableBatch batch = materializer.convertNext(false);
+        connection.sendResult(listener, batch);
         return true;
       default:
         throw new UnsupportedOperationException();
@@ -127,6 +132,8 @@ public class ScreenCreator implements RootCreator<Screen>{
     private SendListener listener = new SendListener();
     
     private class SendListener extends BaseRpcOutcomeListener<Ack>{
+
+
 
       @Override
       public void failed(RpcException ex) {

@@ -31,9 +31,13 @@ import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 
-public class AbstractStorageEngine implements StorageEngine{
+public abstract class AbstractStorageEngine implements StorageEngine{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractStorageEngine.class);
 
+  protected AbstractStorageEngine(){
+  }
+  
+  
   @Override
   public boolean supportsRead() {
     return false;

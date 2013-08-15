@@ -24,8 +24,11 @@ import org.apache.drill.exec.proto.UserBitShared.FieldMetadata;
 import org.apache.drill.exec.record.DeadBuf;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
+
 import java.util.List;
+
 import com.google.common.collect.Lists;
+import com.google.common.collect.ObjectArrays;
 
 @SuppressWarnings("unused")
 /**
@@ -176,8 +179,11 @@ import com.google.common.collect.Lists;
   }
   </#if>
 
+  @Override
   public ByteBuf[] getBuffers() {
-    return ArrayUtils.addAll(offsets.getBuffers(), values.getBuffers());
+    ByteBuf[] buffers = ObjectArrays.concat(offsets.getBuffers(), values.getBuffers(), ByteBuf.class);
+    clear();
+    return buffers;
   }
 
   public void clear(){

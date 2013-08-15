@@ -105,6 +105,7 @@ public class WireRecordBatch implements RecordBatch{
 
       RecordBatchDef rbd = batch.getHeader().getDef();
       boolean schemaChanged = batchLoader.load(rbd, batch.getBody());
+      batch.release();
       if(schemaChanged){
         this.schema = batchLoader.getSchema();
         return IterOutcome.OK_NEW_SCHEMA;

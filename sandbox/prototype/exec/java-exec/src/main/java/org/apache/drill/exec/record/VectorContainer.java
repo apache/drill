@@ -70,6 +70,7 @@ public class VectorContainer implements Iterable<VectorWrapper<?>> {
     for (Iterator<VectorWrapper<?>> iter = wrappers.iterator(); iter.hasNext();) {
       VectorWrapper<?> w = iter.next();
       if (!w.isHyper() && v == w.getValueVector()) {
+        w.release();
         iter.remove();
         return;
       }

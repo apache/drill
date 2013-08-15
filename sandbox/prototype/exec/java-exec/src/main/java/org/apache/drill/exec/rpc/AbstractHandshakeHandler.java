@@ -51,6 +51,8 @@ public abstract class AbstractHandshakeHandler<T extends MessageLite> extends Me
   
     T msg = parser.parseFrom(inbound.getProtobufBodyAsIS());
     consumeHandshake(ctx, msg);
+    inbound.pBody.release();
+    if(inbound.dBody != null) inbound.dBody.release();
     
   }
 

@@ -17,8 +17,8 @@
  ******************************************************************************/
 package org.apache.drill.common.logical;
 
-import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -38,8 +38,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
 
 @JsonPropertyOrder({ "head", "storage", "query" })
 public class LogicalPlan {
@@ -53,7 +51,7 @@ public class LogicalPlan {
   public LogicalPlan(@JsonProperty("head") PlanProperties head,
       @JsonProperty("storage") Map<String, StorageEngineConfig> storageEngineMap,
       @JsonProperty("query") List<LogicalOperator> operators) {
-    this.storageEngineMap = storageEngineMap;
+    this.storageEngineMap = storageEngineMap != null ? storageEngineMap : new HashMap<String, StorageEngineConfig>();
     this.properties = head;
     this.graph = Graph.newGraph(operators, SinkOperator.class, SourceOperator.class);
   }

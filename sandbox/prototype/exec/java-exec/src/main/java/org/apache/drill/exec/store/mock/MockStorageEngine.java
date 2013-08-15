@@ -15,38 +15,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.apache.drill.exec.physical.config;
+package org.apache.drill.exec.store.mock;
 
 import java.io.IOException;
-import java.util.Collection;
+import java.util.ArrayList;
 
 import org.apache.drill.common.logical.data.Scan;
-import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.physical.ReadEntry;
-import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.physical.base.AbstractGroupScan;
+import org.apache.drill.exec.physical.config.MockGroupScanPOP;
+import org.apache.drill.exec.physical.config.MockGroupScanPOP.MockScanEntry;
+import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStorageEngine;
-import org.apache.drill.exec.store.RecordReader;
+import org.apache.drill.storage.MockStorageEngineConfig;
 
-import com.google.common.collect.ListMultimap;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class MockStorageEngine extends AbstractStorageEngine{
+public class MockStorageEngine extends AbstractStorageEngine {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MockStorageEngine.class);
 
-  @Override
-  public boolean supportsRead() {
-    return true;
+  public MockStorageEngine(MockStorageEngineConfig configuration, DrillbitContext context) {
+
   }
 
   @Override
-  public ListMultimap<ReadEntry, DrillbitEndpoint> getReadLocations(Collection<ReadEntry> entries) {
-    return null;
+  public AbstractGroupScan getPhysicalScan(Scan scan) throws IOException {
+
+    ArrayList<MockScanEntry> readEntries = scan.getSelection().getListWith(new ObjectMapper(),
+        new TypeReference<ArrayList<MockScanEntry>>() {
+        });
+    
+    return new MockGroupScanPOP(null, readEntries);
   }
 
-  @Override
-  public RecordReader getReader(FragmentContext context, ReadEntry readEntry) throws IOException {
-    return null;
-  }
-
-  
-  
 }

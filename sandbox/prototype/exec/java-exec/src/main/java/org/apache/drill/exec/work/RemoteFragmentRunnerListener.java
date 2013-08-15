@@ -38,7 +38,7 @@ public class RemoteFragmentRunnerListener extends AbstractFragmentRunnerListener
   
   @Override
   protected void statusChange(FragmentHandle handle, FragmentStatus status) {
-    logger.debug("Sending remote failure.");
+    logger.debug("Sending remote status message. {}", status);
     tunnel.sendFragmentStatus(status);
   }
   

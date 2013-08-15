@@ -61,7 +61,6 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
   public void allocateNew(int valueCount) {
     clear();
     this.data = allocator.buffer(valueCount * ${type.width});
-    this.data.retain();
     this.data.readerIndex(0);
   }
   

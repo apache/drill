@@ -19,12 +19,32 @@ package org.apache.drill.exec.rpc;
 
 import io.netty.channel.Channel;
 
+import java.util.concurrent.Semaphore;
+
 public class RemoteConnection{
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RemoteConnection.class);
   private final Channel channel;
   
-  public RemoteConnection(Channel channel) {
+  final Semaphore throttle;
+  
+  public void acquirePermit() throws InterruptedException{
+    if(RpcConstants.EXTRA_DEBUGGING) logger.debug("Acquiring send permit.");
+    this.throttle.acquire();
+    if(RpcConstants.EXTRA_DEBUGGING) logger.debug("Send permit acquired.");
+  }
+  
+  public void releasePermit() {
+    throttle.release();
+  }
+  
+  public RemoteConnection(Channel channel, int maxOutstanding) {
     super();
     this.channel = channel;
+    this.throttle  = new Semaphore(maxOutstanding);
+  }
+  
+  public RemoteConnection(Channel channel) {
+    this(channel, 100);
   }
 
 

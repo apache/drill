@@ -31,7 +31,7 @@ public class QueryResultBatch {
 //    logger.debug("New Result Batch with header {} and data {}", header, data);
     this.header = header;
     this.data = data;
-    if(data != null) data.retain();
+    if(this.data != null) data.retain();
   }
 
   public QueryResult getHeader() {
@@ -47,6 +47,10 @@ public class QueryResultBatch {
     return data != null;
   }
 
+  public void release(){
+    if(data != null) data.release();
+  }
+  
   @Override
   public String toString() {
     return "QueryResultBatch [header=" + header + ", data=" + data + "]";

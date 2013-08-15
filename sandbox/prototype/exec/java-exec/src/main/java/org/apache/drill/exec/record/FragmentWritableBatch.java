@@ -55,11 +55,7 @@ public class FragmentWritableBatch{
     return header;
   }
   
-  public void release(){
-    for(ByteBuf b : buffers){
-      b.release();
-    }
-  }
+
   
   
 }

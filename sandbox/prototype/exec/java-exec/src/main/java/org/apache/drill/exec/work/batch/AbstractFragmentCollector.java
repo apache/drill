@@ -49,7 +49,7 @@ public abstract class AbstractFragmentCollector implements BatchCollector{
     this.oppositeMajorFragmentId = receiver.getOppositeMajorFragmentId();
     this.buffers = new RawBatchBuffer[minInputsRequired];
     for(int i = 0; i < buffers.length; i++){
-      buffers[i] = new UnlmitedRawBatchBuffer();
+      buffers[i] = new UnlimitedRawBatchBuffer();
     }
     if (receiver.supportsOutOfOrderExchange()) {
       this.remainingRequired = new AtomicInteger(1);

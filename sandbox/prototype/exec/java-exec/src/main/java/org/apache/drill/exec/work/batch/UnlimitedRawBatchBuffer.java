@@ -26,8 +26,8 @@ import org.apache.drill.exec.rpc.RemoteConnection.ConnectionThrottle;
 
 import com.google.common.collect.Queues;
 
-public class UnlmitedRawBatchBuffer implements RawBatchBuffer{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UnlmitedRawBatchBuffer.class);
+public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UnlimitedRawBatchBuffer.class);
 
   private final LinkedBlockingDeque<RawFragmentBatch> buffer = Queues.newLinkedBlockingDeque();
   private volatile boolean finished = false;
