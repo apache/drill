@@ -19,9 +19,10 @@ package org.apache.drill.exec.ops;
 
 import java.util.Collection;
 
+import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.StorageEngineConfig;
 import org.apache.drill.exec.cache.DistributedCache;
-import org.apache.drill.exec.exception.SetupException;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
@@ -49,7 +50,7 @@ public class QueryContext {
     return queryId;
   }
 
-  public StorageEngine getStorageEngine(StorageEngineConfig config) throws SetupException {
+  public StorageEngine getStorageEngine(StorageEngineConfig config) throws ExecutionSetupException {
     return drillbitContext.getStorageEngine(config);
   }
 
@@ -68,4 +69,9 @@ public class QueryContext {
   public BitCom getBitCom(){
     return drillbitContext.getBitCom();
   }
+  
+  public DrillConfig getConfig(){
+    return drillbitContext.getConfig();
+  }
+  
 }

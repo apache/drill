@@ -27,7 +27,8 @@ import net.hydromatic.linq4j.Enumerator;
 import net.hydromatic.optiq.DataContext;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.jdbc.DrillTable;
+import org.apache.drill.exec.client.DrillClient;
+import org.apache.drill.jdbc.DrillHandler.FakeSchema;
 import org.apache.drill.sql.client.full.DrillFullImpl;
 import org.apache.drill.sql.client.ref.DrillRefImpl;
 
@@ -41,8 +42,9 @@ public class EnumerableDrillFullEngine<E> extends AbstractEnumerable<E> implemen
   final BlockingQueue<Object> queue = new ArrayBlockingQueue<>(100);
   final DrillConfig config;
   private final List<String> fields;
-  private DataContext drillConnectionDataContext;
-
+  private DrillClient client;
+  private DataContext context;
+  
   /**
    * Creates a DrillEnumerable.
    * 
@@ -54,11 +56,12 @@ public class EnumerableDrillFullEngine<E> extends AbstractEnumerable<E> implemen
    *          Names of fields, or null to return the whole blob
    */
   public EnumerableDrillFullEngine(DrillConfig config, String plan, Class<E> clazz, List<String> fields,
-      DataContext drillConnectionDataContext) {
+      DrillClient client, DataContext context) {
     this.plan = plan;
     this.config = config;
     this.fields = fields;
-    this.drillConnectionDataContext = drillConnectionDataContext;
+    this.client = client;
+    this.context = context;
     config.setSinkQueues(0, queue);
   }
 
@@ -66,20 +69,20 @@ public class EnumerableDrillFullEngine<E> extends AbstractEnumerable<E> implemen
    * Creates a DrillEnumerable from a plan represented as a string. Each record returned is a {@link JsonNode}.
    */
   public static <E> EnumerableDrillFullEngine<E> of(String plan, final List<String> fieldNames, Class<E> clazz,
-      DataContext drillTable) {
+      DataContext context) {
     DrillConfig config = DrillConfig.create();
-    return new EnumerableDrillFullEngine<>(config, plan, clazz, fieldNames, drillTable);
+    return new EnumerableDrillFullEngine<>(config, plan, clazz, fieldNames, ((FakeSchema) context.getSubSchema("--FAKE--")).getClient(), context);
   }
 
   @Override
   public Enumerator<E> enumerator() {
-    DrillTable table = (DrillTable) drillConnectionDataContext.getSubSchema("DONUTS").getTable("DONUTS", Object.class);
-    if (table.useReferenceInterpreter()) {
+    
+    if (client == null) {
       DrillRefImpl<E> impl = new DrillRefImpl<E>(plan, config, fields, queue);
-      return impl.enumerator(table);
+      return impl.enumerator();
     } else {
-      DrillFullImpl<E> impl = new DrillFullImpl<E>(plan, config, fields);
-      return impl.enumerator(table);
+      DrillFullImpl<E> impl = new DrillFullImpl<E>(plan, config, fields, context);
+      return impl.enumerator(client);
     }
   }
 

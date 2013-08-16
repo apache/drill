@@ -39,6 +39,7 @@ When     : 'when';
 Or       : '||';
 And      : '&&';
 Equals   : '==';
+Equals2   : '=';
 NEquals  : '<>';
 NEquals2 : '!=';
 GTEquals : '>=';
@@ -82,7 +83,7 @@ Number
 //  ;
   
 Identifier
-  :  ('a'..'z' | 'A'..'Z' | '_') ('a'..'z' | 'A'..'Z' | '_' | Digit)* ('.' ('a'..'z' | 'A'..'Z' | '_') ('a'..'z' | 'A'..'Z' | '_' | Digit)*)*
+  :  ('a'..'z' | 'A'..'Z' | '_' | '$') ('a'..'z' | 'A'..'Z' | '_' | '$' | Digit)* ('.' ('a'..'z' | 'A'..'Z' | '_' | '$' ) ('a'..'z' | 'A'..'Z' | '_' | '$' | Digit)*)*
   ;
 
 String

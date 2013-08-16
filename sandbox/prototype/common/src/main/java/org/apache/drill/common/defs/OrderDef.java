@@ -18,6 +18,8 @@
 package org.apache.drill.common.defs;
 
 import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.logical.data.Order.Direction;
+import org.apache.drill.common.logical.data.Order.Ordering;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -49,12 +51,7 @@ public class OrderDef {
     return direction.description;
   }
 
-  public static enum Direction {
-    ASC("asc"), DESC("desc");
-    public final String description;
-
-    Direction(String d) {
-      description = d;
-    }
+  public static OrderDef create(Ordering o){
+    return new OrderDef(o.getDirection(), o.getExpr());
   }
 }

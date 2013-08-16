@@ -19,6 +19,7 @@ package org.apache.drill.exec.physical.base;
 
 import java.util.List;
 
+import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.graph.GraphValue;
 import org.apache.drill.exec.physical.OperatorCost;
 
@@ -75,6 +76,6 @@ public interface  PhysicalOperator extends GraphValue<PhysicalOperator> {
    * @return
    */
   @JsonIgnore
-  public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children);
+  public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException;
 
 }

@@ -17,23 +17,35 @@
  ******************************************************************************/
 package org.apache.drill.optiq;
 
-import net.hydromatic.linq4j.expressions.*;
+import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.List;
+
+import net.hydromatic.linq4j.expressions.BlockBuilder;
+import net.hydromatic.linq4j.expressions.BlockStatement;
+import net.hydromatic.linq4j.expressions.Expression;
+import net.hydromatic.linq4j.expressions.Expressions;
 import net.hydromatic.linq4j.function.Function1;
 import net.hydromatic.linq4j.function.Functions;
 import net.hydromatic.optiq.DataContext;
 import net.hydromatic.optiq.impl.java.JavaTypeFactory;
-import net.hydromatic.optiq.rules.java.*;
+import net.hydromatic.optiq.rules.java.EnumerableConvention;
+import net.hydromatic.optiq.rules.java.EnumerableRel;
+import net.hydromatic.optiq.rules.java.EnumerableRelImplementor;
+import net.hydromatic.optiq.rules.java.JavaRowFormat;
+import net.hydromatic.optiq.rules.java.PhysType;
+import net.hydromatic.optiq.rules.java.PhysTypeImpl;
 
 import org.apache.drill.common.util.Hook;
-import org.apache.drill.optiq.EnumerableDrillFullEngine;
+import org.apache.drill.exec.client.DrillClient;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.SingleRel;
-import org.eigenbase.relopt.*;
+import org.eigenbase.relopt.RelOptCluster;
+import org.eigenbase.relopt.RelOptCost;
+import org.eigenbase.relopt.RelOptPlanner;
+import org.eigenbase.relopt.RelTraitSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.lang.reflect.Method;
-import java.util.*;
 
 /**
  * Relational expression that converts from Drill to Enumerable. At runtime it executes a Drill query and returns the
@@ -52,7 +64,8 @@ public class EnumerableDrillRel extends SingleRel implements EnumerableRel {
   private static final Method OF_METHOD;
 
   private PhysType physType;
-
+  private DrillClient client;
+  
   static {
     try {
       OF_METHOD = EnumerableDrillFullEngine.class.getMethod("of", String.class, List.class, Class.class,
@@ -63,10 +76,11 @@ public class EnumerableDrillRel extends SingleRel implements EnumerableRel {
     }
   }
 
-  public EnumerableDrillRel(RelOptCluster cluster, RelTraitSet traitSet, RelNode input) {
+  public EnumerableDrillRel(DrillClient client, RelOptCluster cluster, RelTraitSet traitSet, RelNode input) {
     super(cluster, traitSet, input);
     assert getConvention() instanceof EnumerableConvention;
     assert input.getConvention() == DrillRel.CONVENTION;
+    this.client = client;
     physType = PhysTypeImpl.of((JavaTypeFactory) cluster.getTypeFactory(), input.getRowType(), JavaRowFormat.ARRAY);
   }
 
@@ -81,7 +95,7 @@ public class EnumerableDrillRel extends SingleRel implements EnumerableRel {
 
   @Override
   public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
-    return new EnumerableDrillRel(getCluster(), traitSet, sole(inputs));
+    return new EnumerableDrillRel(client, getCluster(), traitSet, sole(inputs));
   }
 
   public Result implement(EnumerableRelImplementor implementor, Prefer pref) {
@@ -101,10 +115,12 @@ public class EnumerableDrillRel extends SingleRel implements EnumerableRel {
     BlockStatement expr = new BlockBuilder().append(
         Expressions.call(
             OF_METHOD,
-            Expressions.constant(plan),
-            Expressions.call(Arrays.class, "asList",
-                Expressions.newArrayInit(String.class, Functions.apply(fieldNameList, TO_LITERAL))),
-            Expressions.constant(Object.class), Expressions.variable(DataContext.class, "root"))).toBlock();
+            Expressions.constant(plan), //
+            Expressions.call(Arrays.class, "asList", //
+                Expressions.newArrayInit(String.class, Functions.apply(fieldNameList, TO_LITERAL)) //
+                ),
+            Expressions.constant(Object.class), //
+            Expressions.variable(DataContext.class, "root"))).toBlock();
     final PhysType physType = PhysTypeImpl.of(implementor.getTypeFactory(), getRowType(),
         pref.prefer(JavaRowFormat.ARRAY));
     return new Result(expr, physType, JavaRowFormat.ARRAY);

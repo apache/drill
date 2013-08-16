@@ -1,0 +1,19 @@
+{
+  "storage":{
+    "parquet-local" :
+      {
+        "type":"parquet",
+        "dfsName" : "file:///"
+      },
+    "jsonl" :
+      {
+        "type":"json",
+        "dfsName" : "file:///"
+      },
+    "parquet" :
+      {
+        "type":"parquet",
+        "dfsName" : "maprfs://10.10.30.52/"
+      }
+  }
+}

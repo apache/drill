@@ -16,17 +16,21 @@ import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.expr.CodeGenerator.BlockType;
 import org.apache.drill.exec.expr.CodeGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.physical.impl.filter.ReturnValueExpression;
 import org.apache.drill.exec.record.NullExpression;
+import org.apache.drill.exec.vector.ValueHolderHelper;
 
 import com.sun.codemodel.JBlock;
+import com.sun.codemodel.JClass;
 import com.sun.codemodel.JConditional;
 import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JExpression;
 import com.sun.codemodel.JInvocation;
+import com.sun.codemodel.JType;
 import com.sun.codemodel.JVar;
 
 public class EvaluationVisitor {
@@ -239,18 +243,26 @@ public class EvaluationVisitor {
       LogicalExpression child = e.getChild();
       // Preconditions.checkArgument(child.getMajorType().equals(Types.REQUIRED_BOOLEAN));
       HoldingContainer hc = child.accept(this, generator);
-      generator.getEvalBlock()._return(hc.getValue().eq(JExpr.lit(1)));
+      if(e.isReturnTrueOnOne()){
+        generator.getEvalBlock()._return(hc.getValue().eq(JExpr.lit(1)));  
+      }else{
+        generator.getEvalBlock()._return(hc.getValue());
+      }
+      
       return null;
     }
 
     @Override
     public HoldingContainer visitQuotedStringConstant(QuotedString e, CodeGenerator<?> generator)
         throws RuntimeException {
-      throw new UnsupportedOperationException(
-          "We don't yet support string literals as we need to build the string value holders.");
-
-      // JExpr stringLiteral = JExpr.lit(e.value);
-      // CodeGenerator.block.decl(stringLiteral.invoke("getBytes").arg(JExpr.ref(Charsets.UTF_8));
+      MajorType majorType = Types.required(MinorType.VARCHAR);
+      JBlock setup = generator.getBlock(BlockType.SETUP);
+      JType holderType = generator.getHolderType(majorType);
+      JVar var = generator.declareClassField("string", holderType);
+      JExpression stringLiteral = JExpr.lit(e.value);
+      setup.assign(var, ((JClass)generator.getModel().ref(ValueHolderHelper.class)).staticInvoke("getVarCharHolder").arg(stringLiteral));
+      return new HoldingContainer(majorType, var, null, null);
+      
     }
   }
 

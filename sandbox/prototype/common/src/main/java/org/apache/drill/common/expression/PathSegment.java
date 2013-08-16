@@ -23,12 +23,14 @@ import org.apache.drill.common.expression.ValueExpressions.CollisionBehavior;
 
 public abstract class PathSegment{
 
-  private final ValueExpressions.CollisionBehavior collision;
-  private PathSegment child;
+  protected final ValueExpressions.CollisionBehavior collision;
+  protected PathSegment child;
 
   protected PathSegment(CollisionBehavior collision){
     this.collision = collision;
   }
+  
+  public abstract PathSegment clone();
   
   public static class ArraySegment extends PathSegment{
     private final int index;
@@ -61,8 +63,13 @@ public abstract class PathSegment{
       return "ArraySegment [index=" + index + ", getCollisionBehavior()=" + getCollisionBehavior() + ", getChild()="
           + getChild() + "]";
     }
-    
-    
+
+    @Override
+    public PathSegment clone() {
+      PathSegment seg = new ArraySegment(index, collision);
+      if(child != null) seg.setChild(child.clone());
+      return seg;
+    }
     
   }
   
@@ -122,6 +129,13 @@ public abstract class PathSegment{
       } else if (!path.equals(other.path))
         return false;
       return true;
+    }
+
+    @Override
+    public PathSegment clone() {
+      PathSegment s = new NameSegment(this.path, this.collision);
+      if(child != null) s.setChild(child.clone());
+      return s;
     }
     
     

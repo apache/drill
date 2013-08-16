@@ -21,8 +21,6 @@ import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.ExecProtos.FragmentStatus.FragmentState;
 
 public interface FragmentRunnerListener {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FragmentRunnerListener.class);
-  
   void fail(FragmentHandle handle, String message, Throwable excep);
   void stateChanged(FragmentHandle handle, FragmentState newState);
 }

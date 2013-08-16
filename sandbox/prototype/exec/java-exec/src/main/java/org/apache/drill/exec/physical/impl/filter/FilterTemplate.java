@@ -73,6 +73,7 @@ public abstract class FilterTemplate implements Filterer{
     for(char i =0; i < recordCount; i++){
       
       if(doEval(i, 0)){
+        logger.debug("Setting svIndex {} to {}", svIndex, (int) i);
         outgoingSelectionVector.setIndex(svIndex, i);
         svIndex++;
       }

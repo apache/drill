@@ -22,6 +22,7 @@ import java.io.Closeable;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.DrillConfigurationException;
 import org.apache.drill.common.logical.LogicalPlan;
+import org.apache.drill.exec.exception.OptimizerException;
 import org.apache.drill.exec.physical.PhysicalPlan;
 
 public abstract class Optimizer implements Closeable{
@@ -30,7 +31,7 @@ public abstract class Optimizer implements Closeable{
   
   public abstract void init(DrillConfig config);
   
-  public abstract PhysicalPlan optimize(OptimizationContext context, LogicalPlan plan);
+  public abstract PhysicalPlan optimize(OptimizationContext context, LogicalPlan plan) throws OptimizerException;
   public abstract void close();
   
   public static Optimizer getOptimizer(DrillConfig config) throws DrillConfigurationException{

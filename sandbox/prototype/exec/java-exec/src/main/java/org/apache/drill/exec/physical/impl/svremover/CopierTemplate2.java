@@ -34,7 +34,7 @@ public abstract class CopierTemplate2 implements Copier{
     int outgoingPosition = 0;
     
     for(int svIndex = 0; svIndex < recordCount; svIndex++, outgoingPosition++){
-      doEval(svIndex, outgoingPosition);
+      doEval(sv2.getIndex(svIndex), outgoingPosition);
     }
   }
   

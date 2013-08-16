@@ -21,9 +21,9 @@ public class MergeJoinPOP extends AbstractBase{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MergeJoinPOP.class);
 
   
-  private PhysicalOperator left;
-  private PhysicalOperator right;
-  private List<JoinCondition> conditions;
+  private final PhysicalOperator left;
+  private final PhysicalOperator right;
+  private final List<JoinCondition> conditions;
   
   @Override
   public OperatorCost getCost() {
@@ -60,6 +60,14 @@ public class MergeJoinPOP extends AbstractBase{
   @Override
   public Iterator<PhysicalOperator> iterator() {
     return Iterators.forArray(left, right);
+  }
+
+  public PhysicalOperator getLeft() {
+    return left;
+  }
+
+  public PhysicalOperator getRight() {
+    return right;
   }
 
   public List<JoinCondition> getConditions() {

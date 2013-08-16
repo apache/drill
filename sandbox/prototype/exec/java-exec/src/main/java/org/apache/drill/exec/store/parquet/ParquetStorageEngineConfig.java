@@ -17,15 +17,17 @@
  ******************************************************************************/
 package org.apache.drill.exec.store.parquet;
 
+import java.util.HashMap;
+
+import org.apache.drill.common.logical.StorageEngineConfigBase;
+import org.apache.drill.exec.store.DistributedStorageEngine;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import org.apache.drill.common.logical.StorageEngineConfigBase;
-
-import java.util.HashMap;
 
 @JsonTypeName("parquet")
-public class ParquetStorageEngineConfig extends StorageEngineConfigBase {
+public class ParquetStorageEngineConfig extends StorageEngineConfigBase implements DistributedStorageEngine{
 
   public String getDfsName() {
     return dfsName;

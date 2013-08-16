@@ -7,14 +7,17 @@ import java.util.Map;
 import java.util.Set;
 
 import jline.internal.Preconditions;
+import net.hydromatic.optiq.DataContext;
 
+import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.user.QueryResultBatch;
-import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.VarBinaryVector;
+import org.apache.drill.exec.vector.VarCharVector;
 
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -35,12 +38,16 @@ public class BatchLoaderMap implements Map<String, Object> {
   private final Map<String, ValueVector> fields = Maps.newHashMap();
   private int index;
   private Object[] objArr;
+  private JsonHelper helper;
+  private boolean loaded;
 
-  public BatchLoaderMap(List<String> requestedFields, BatchListener listener, DrillbitContext context) {
+  public BatchLoaderMap(List<String> requestedFields, BatchListener listener, DrillClient client, DataContext context) {
     this.listener = listener;
     this.requestedFields = requestedFields;
     this.objArr = new Object[requestedFields.size()];
-    this.loader = new RecordBatchLoader(context.getAllocator());
+    this.loader = new RecordBatchLoader(client.getAllocator());
+    this.helper = new JsonHelper(client.getConfig());
+    FileSystemSchema fsSchema = (FileSystemSchema) context;
   }
 
   private void load(QueryResultBatch batch) throws SchemaChangeException {
@@ -80,20 +87,39 @@ public class BatchLoaderMap implements Map<String, Object> {
     }
   }
 
-  public Object getCurrentAsObjectArray() {
-    
+
+  
+  public Object getCurrentObject() {
+    if(requestedFields.size() == 1){
+      if(requestedFields.iterator().next().equals("_MAP")){
+        return helper.get(fields, index); 
+      }else{
+        return getObj(fields.get(requestedFields.get(0)));
+      }
+      
+    }
+      
     for (int i = 0; i < requestedFields.size(); i++) {
       ValueVector vv = fields.get(requestedFields.get(i));
       if (vv == null) {
+        logger.debug("Failure while retrieving field of {}.  Didn't exist in returned set of {}", requestedFields.get(i), fields.keySet());
         objArr[i] = null;
       } else {
-        objArr[i] = vv.getAccessor().getObject(index);
+        objArr[i] = getObj(vv);
       }
     }
     return objArr;
 
   }
 
+  private Object getObj(ValueVector vv){
+    if(vv instanceof VarBinaryVector || vv instanceof VarCharVector){
+      return new String( (byte[]) vv.getAccessor().getObject(index));
+    }else{
+      return vv.getAccessor().getObject(index);  
+    }
+  }
+  
   @Override
   public int size() {
     return fields.size();

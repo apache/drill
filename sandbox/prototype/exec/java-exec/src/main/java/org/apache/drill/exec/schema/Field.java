@@ -19,8 +19,8 @@
 package org.apache.drill.exec.schema;
 
 import org.apache.drill.common.expression.ExpressionPosition;
+import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.record.MaterializedField;
 
@@ -40,8 +40,8 @@ public abstract class Field {
     this.parentSchema = parentSchema;
   }
 
-  public MaterializedField getAsMaterializedField() {
-    return MaterializedField.create(new SchemaPath(getFieldName(), ExpressionPosition.UNKNOWN), fieldType);
+  public MaterializedField getAsMaterializedField(FieldReference ref) {
+    return MaterializedField.create(new SchemaPath(ref.getPath() + "." + getFieldName(), ExpressionPosition.UNKNOWN), fieldType);
   }
 
   public abstract String getFieldName();

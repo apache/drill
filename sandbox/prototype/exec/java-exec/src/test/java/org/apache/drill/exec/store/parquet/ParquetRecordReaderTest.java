@@ -71,8 +71,8 @@ public class ParquetRecordReaderTest {
   private boolean VERBOSE_DEBUG = false;
   private boolean checkValues = true;
 
-  static final int numberRowGroups = 20;
-  static final int recordsPerRowGroup = 300000;
+  static final int numberRowGroups = 1;
+  static final int recordsPerRowGroup = 300;
   static final String fileName = "/tmp/parquet_test_file_many_types";
 
   @BeforeClass

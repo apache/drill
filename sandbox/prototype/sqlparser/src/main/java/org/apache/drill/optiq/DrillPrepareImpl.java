@@ -19,20 +19,25 @@ package org.apache.drill.optiq;
 
 import net.hydromatic.optiq.prepare.OptiqPrepareImpl;
 import net.hydromatic.optiq.rules.java.JavaRules;
+
+import org.apache.drill.jdbc.DrillHandler;
+import org.apache.drill.jdbc.Driver;
 import org.eigenbase.relopt.RelOptPlanner;
 
 /**
  * Implementation of {@link net.hydromatic.optiq.jdbc.OptiqPrepare} for Drill.
  */
 public class DrillPrepareImpl extends OptiqPrepareImpl {
-  public DrillPrepareImpl() {
+  final Driver driver;
+  public DrillPrepareImpl(Driver driver) {
     super();
+    this.driver = driver;
   }
 
   @Override
   protected RelOptPlanner createPlanner() {
     final RelOptPlanner planner = super.createPlanner();
-    planner.addRule(EnumerableDrillRule.ARRAY_INSTANCE);
+    planner.addRule(EnumerableDrillRule.getInstance(driver.getClient()));
 
     // Enable when https://issues.apache.org/jira/browse/DRILL-57 fixed
     if (false) {

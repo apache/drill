@@ -25,6 +25,7 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.exec.exception.FragmentSetupException;
+import org.apache.drill.exec.exception.OptimizerException;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.opt.BasicOptimizer;
 import org.apache.drill.exec.physical.PhysicalPlan;
@@ -145,32 +146,38 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
    */
   public void run() {
     // convert a run query request into action
-
-    switch (queryRequest.getType()) {
-
-    case LOGICAL:
-      parseAndRunLogicalPlan(queryRequest.getPlan());
-      break;
-    case PHYSICAL:
-      parseAndRunPhysicalPlan(queryRequest.getPlan());
-      break;
-    case SQL:
-      runSQL(queryRequest.getPlan());
-      break;
-    default:
-      throw new UnsupportedOperationException();
+    try{
+      switch (queryRequest.getType()) {
+      
+      case LOGICAL:
+        parseAndRunLogicalPlan(queryRequest.getPlan());
+        break;
+      case PHYSICAL:
+        parseAndRunPhysicalPlan(queryRequest.getPlan());
+        break;
+      case SQL:
+        runSQL(queryRequest.getPlan());
+        break;
+      default:
+        throw new UnsupportedOperationException();
+      }
+    }catch(Exception ex){
+      fail("Failure while setting up Foreman.", ex);
     }
   }
 
   private void parseAndRunLogicalPlan(String json) {
+    
     try {
       LogicalPlan logicalPlan = context.getPlanReader().readLogicalPlan(json);
-      logger.debug("Logical {}", logicalPlan.unparse(DrillConfig.create()));
+      if(logger.isDebugEnabled()) logger.debug("Logical {}", logicalPlan.unparse(context.getConfig()));
       PhysicalPlan physicalPlan = convert(logicalPlan);
-      //logger.debug("Physical {}", new ObjectMapper().writeValueAsString(physicalPlan));
+      if(logger.isDebugEnabled()) logger.debug("Physical {}", context.getConfig().getMapper().writeValueAsString(physicalPlan));
       runPhysicalPlan(physicalPlan);
     } catch (IOException e) {
       fail("Failure while parsing logical plan.", e);
+    } catch (OptimizerException e) {
+      fail("Failure while converting logical plan to physical plan.", e);
     }
   }
 
@@ -231,7 +238,7 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
     throw new UnsupportedOperationException();
   }
 
-  private PhysicalPlan convert(LogicalPlan plan) {
+  private PhysicalPlan convert(LogicalPlan plan) throws OptimizerException {
     return new BasicOptimizer(DrillConfig.create(), context).optimize(new BasicOptimizer.BasicOptimizationContext(), plan);
   }
 

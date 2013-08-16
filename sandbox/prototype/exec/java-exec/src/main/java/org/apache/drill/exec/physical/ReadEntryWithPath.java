@@ -23,6 +23,14 @@ public class ReadEntryWithPath implements ReadEntry {
 
   protected String path;
 
+  
+  public ReadEntryWithPath(String path) {
+    super();
+    this.path = path;
+  }
+
+  public ReadEntryWithPath(){}
+  
   public String getPath(){
    return path;
   }

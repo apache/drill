@@ -39,6 +39,11 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 public class FieldReference extends SchemaPath {
   MajorType overrideType;
 
+  public FieldReference(SchemaPath sp){
+    super(sp);
+  }
+  
+  
   public FieldReference(String value, ExpressionPosition pos) {
     super(value, pos);
   }

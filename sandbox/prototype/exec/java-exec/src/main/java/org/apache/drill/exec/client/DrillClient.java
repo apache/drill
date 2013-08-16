@@ -78,6 +78,9 @@ public class DrillClient implements Closeable{
     this.clusterCoordinator = coordinator;
   }
   
+  public DrillConfig getConfig(){
+    return config;
+  }
   
   /**
    * Connects the client to a Drillbit server
@@ -121,10 +124,8 @@ public class DrillClient implements Closeable{
 
   /**
    * Closes this client's connection to the server
-   *
-   * @throws IOException
    */
-  public void close() throws IOException {
+  public void close(){
     this.client.close();
     connected = false;
   }

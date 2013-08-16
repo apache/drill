@@ -1,19 +1,17 @@
 package org.apache.drill.exec.expr.fn.impl;
 
-import org.apache.drill.common.expression.ArgumentValidators;
-import org.apache.drill.common.expression.CallProvider;
-import org.apache.drill.common.expression.FunctionDefinition;
-import org.apache.drill.common.expression.OutputTypeDeterminer;
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.vector.IntHolder;
+import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.vector.BigIntHolder;
+import org.apache.drill.exec.vector.BitHolder;
 import org.apache.drill.exec.vector.Float4Holder;
 import org.apache.drill.exec.vector.Float8Holder;
-import org.apache.drill.exec.vector.BitHolder;
-import org.apache.drill.exec.record.RecordBatch;
+import org.apache.drill.exec.vector.IntHolder;
+import org.apache.drill.exec.vector.VarBinaryHolder;
+import org.apache.drill.exec.vector.VarCharHolder;
 
 public class ComparisonFunctions {
     static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MathFunctions.class);
@@ -355,4 +353,215 @@ public class ComparisonFunctions {
             out.value = (left.value <= right.value) ? 1 : 0;
         }
     }
+    
+    @FunctionTemplate(name = "equal", scope = FunctionTemplate.FunctionScope.SIMPLE)
+    public static class VarBinaryEqual implements DrillSimpleFunc {
+
+        @Param VarBinaryHolder left;
+        @Param VarBinaryHolder right;
+        @Output BitHolder out;
+
+        public void setup(RecordBatch b) {}
+
+        public void eval() {
+            out.value = org.apache.drill.exec.expr.fn.impl.VarHelpers.compare(left, right) == 0 ? 1 : 0;
+        }
+    }
+    
+    @FunctionTemplate(name = "equal", scope = FunctionTemplate.FunctionScope.SIMPLE)
+    public static class VarCharEqual implements DrillSimpleFunc {
+
+        @Param VarCharHolder left;
+        @Param VarCharHolder right;
+        @Output BitHolder out;
+
+        public void setup(RecordBatch b) {}
+
+        public void eval() {
+            out.value = org.apache.drill.exec.expr.fn.impl.VarHelpers.compare(left, right) == 0 ? 1 : 0;
+        }
+    }
+    
+    @FunctionTemplate(name = "equal", scope = FunctionTemplate.FunctionScope.SIMPLE)
+    public static class VarBinaryCharEqual implements DrillSimpleFunc {
+
+        @Param VarBinaryHolder left;
+        @Param VarCharHolder right;
+        @Output BitHolder out;
+
+        public void setup(RecordBatch b) {}
+
+        public void eval() {
+            out.value = org.apache.drill.exec.expr.fn.impl.VarHelpers.compare(left, right) == 0 ? 1 : 0;
+        }
+    }
+    
+    @FunctionTemplate(name = "greater than or equal to", scope = FunctionTemplate.FunctionScope.SIMPLE)
+    public static class VarBinaryGTE implements DrillSimpleFunc {
+
+        @Param VarBinaryHolder left;
+        @Param VarBinaryHolder right;
+        @Output BitHolder out;
+
+        public void setup(RecordBatch b) {}
+
+        public void eval() {
+            out.value = org.apache.drill.exec.expr.fn.impl.VarHelpers.compare(left, right) > -1 ? 1 : 0;
+        }
+    }
+    
+    @FunctionTemplate(name = "greater than or equal to", scope = FunctionTemplate.FunctionScope.SIMPLE)
+    public static class VarCharGTE implements DrillSimpleFunc {
+
+        @Param VarCharHolder left;
+        @Param VarCharHolder right;
+        @Output BitHolder out;
+
+        public void setup(RecordBatch b) {}
+
+        public void eval() {
+            out.value = org.apache.drill.exec.expr.fn.impl.VarHelpers.compare(left, right) > -1 ? 1 : 0;
+        }
+    }
+    
+    @FunctionTemplate(name = "greater than or equal to", scope = FunctionTemplate.FunctionScope.SIMPLE)
+    public static class VarBinaryCharGTE implements DrillSimpleFunc {
+
+        @Param VarBinaryHolder left;
+        @Param VarCharHolder right;
+        @Output BitHolder out;
+
+        public void setup(RecordBatch b) {}
+
+        public void eval() {
+            out.value = org.apache.drill.exec.expr.fn.impl.VarHelpers.compare(left, right) > -1 ? 1 : 0;
+        }
+    }
+    
+    @FunctionTemplate(name = "greater than", scope = FunctionTemplate.FunctionScope.SIMPLE)
+    public static class VarBinaryGT implements DrillSimpleFunc {
+
+        @Param VarBinaryHolder left;
+        @Param VarBinaryHolder right;
+        @Output BitHolder out;
+
+        public void setup(RecordBatch b) {}
+
+        public void eval() {
+            out.value = org.apache.drill.exec.expr.fn.impl.VarHelpers.compare(left, right) == 1 ? 1 : 0;
+        }
+    }
+    
+    @FunctionTemplate(name = "greater than", scope = FunctionTemplate.FunctionScope.SIMPLE)
+    public static class VarCharGT implements DrillSimpleFunc {
+
+        @Param VarCharHolder left;
+        @Param VarCharHolder right;
+        @Output BitHolder out;
+
+        public void setup(RecordBatch b) {}
+
+        public void eval() {
+            out.value = org.apache.drill.exec.expr.fn.impl.VarHelpers.compare(left, right) == 1 ? 1 : 0;
+        }
+    }
+    
+    @FunctionTemplate(name = "greater than", scope = FunctionTemplate.FunctionScope.SIMPLE)
+    public static class VarBinaryCharGT implements DrillSimpleFunc {
+
+        @Param VarBinaryHolder left;
+        @Param VarCharHolder right;
+        @Output BitHolder out;
+
+        public void setup(RecordBatch b) {}
+
+        public void eval() {
+            out.value = org.apache.drill.exec.expr.fn.impl.VarHelpers.compare(left, right) == 1? 1 : 0;
+        }
+    }
+    
+    @FunctionTemplate(name = "less than or equal to", scope = FunctionTemplate.FunctionScope.SIMPLE)
+    public static class VarBinaryLTE implements DrillSimpleFunc {
+
+        @Param VarBinaryHolder left;
+        @Param VarBinaryHolder right;
+        @Output BitHolder out;
+
+        public void setup(RecordBatch b) {}
+
+        public void eval() {
+            out.value = org.apache.drill.exec.expr.fn.impl.VarHelpers.compare(left, right) < 1 ? 1 : 0;
+        }
+    }
+    
+    @FunctionTemplate(name = "less than or equal to", scope = FunctionTemplate.FunctionScope.SIMPLE)
+    public static class VarCharLTE implements DrillSimpleFunc {
+
+        @Param VarCharHolder left;
+        @Param VarCharHolder right;
+        @Output BitHolder out;
+
+        public void setup(RecordBatch b) {}
+
+        public void eval() {
+            out.value = org.apache.drill.exec.expr.fn.impl.VarHelpers.compare(left, right) < 1 ? 1 : 0;
+        }
+    }
+    
+    @FunctionTemplate(name = "less than or equal to", scope = FunctionTemplate.FunctionScope.SIMPLE)
+    public static class VarBinaryCharLTE implements DrillSimpleFunc {
+
+        @Param VarBinaryHolder left;
+        @Param VarCharHolder right;
+        @Output BitHolder out;
+
+        public void setup(RecordBatch b) {}
+
+        public void eval() {
+            out.value = org.apache.drill.exec.expr.fn.impl.VarHelpers.compare(left, right) < 1? 1 : 0;
+        }
+    }
+    
+    @FunctionTemplate(name = "less than", scope = FunctionTemplate.FunctionScope.SIMPLE)
+    public static class VarBinaryLT implements DrillSimpleFunc {
+
+        @Param VarBinaryHolder left;
+        @Param VarBinaryHolder right;
+        @Output BitHolder out;
+
+        public void setup(RecordBatch b) {}
+
+        public void eval() {
+            out.value = org.apache.drill.exec.expr.fn.impl.VarHelpers.compare(left, right) == -1 ? 1 : 0;
+        }
+    }
+    
+    @FunctionTemplate(name = "less than", scope = FunctionTemplate.FunctionScope.SIMPLE)
+    public static class VarCharLT implements DrillSimpleFunc {
+
+        @Param VarCharHolder left;
+        @Param VarCharHolder right;
+        @Output BitHolder out;
+
+        public void setup(RecordBatch b) {}
+
+        public void eval() {
+            out.value = org.apache.drill.exec.expr.fn.impl.VarHelpers.compare(left, right) == -1 ? 1 : 0;
+        }
+    }
+    
+    @FunctionTemplate(name = "less than", scope = FunctionTemplate.FunctionScope.SIMPLE)
+    public static class VarBinaryCharLT implements DrillSimpleFunc {
+
+        @Param VarBinaryHolder left;
+        @Param VarCharHolder right;
+        @Output BitHolder out;
+
+        public void setup(RecordBatch b) {}
+
+        public void eval() {
+            out.value = org.apache.drill.exec.expr.fn.impl.VarHelpers.compare(left, right) == -1 ? 1 : 0;
+        }
+    }
+    
 }

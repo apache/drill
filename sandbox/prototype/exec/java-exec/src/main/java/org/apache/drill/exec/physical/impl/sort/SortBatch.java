@@ -3,12 +3,12 @@ package org.apache.drill.exec.physical.impl.sort;
 import java.io.IOException;
 
 import org.apache.drill.common.defs.OrderDef;
-import org.apache.drill.common.defs.OrderDef.Direction;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.logical.data.Order.Direction;
 import org.apache.drill.exec.compile.sig.MappingSet;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.SchemaChangeException;

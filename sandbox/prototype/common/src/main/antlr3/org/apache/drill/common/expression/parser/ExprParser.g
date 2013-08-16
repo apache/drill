@@ -159,7 +159,7 @@ equExpr returns [LogicalExpression e]
 	  $e = registry.createByOp(exprs, p, cmps);
 	}
   :  r1=relExpr { exprs.add($r1.e); p = pos( $r1.start );
-    } ( cmpr= (Equals | NEquals | NEquals2 ) r2=relExpr {exprs.add($r2.e); cmps.add($cmpr.text); })*
+    } ( cmpr= (Equals2 | Equals | NEquals | NEquals2 ) r2=relExpr {exprs.add($r2.e); cmps.add($cmpr.text); })*
   ;
 
 relExpr returns [LogicalExpression e]

@@ -18,6 +18,9 @@
 package org.apache.drill.optiq;
 
 import net.hydromatic.optiq.rules.java.EnumerableConvention;
+
+import org.apache.drill.exec.client.DrillClient;
+import org.apache.drill.jdbc.DrillHandler;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.convert.ConverterRule;
 
@@ -25,10 +28,16 @@ import org.eigenbase.rel.convert.ConverterRule;
  * Rule that converts any Drill relational expression to enumerable format by adding a {@link EnumerableDrillRel}.
  */
 public class EnumerableDrillRule extends ConverterRule {
-  public static final EnumerableDrillRule ARRAY_INSTANCE = new EnumerableDrillRule(EnumerableConvention.INSTANCE);
 
-  private EnumerableDrillRule(EnumerableConvention outConvention) {
+  private final DrillClient client;
+  
+  public static EnumerableDrillRule getInstance(DrillClient client){
+    return new EnumerableDrillRule(EnumerableConvention.INSTANCE, client);
+  }
+  
+  private EnumerableDrillRule(EnumerableConvention outConvention, DrillClient client) {
     super(RelNode.class, DrillRel.CONVENTION, outConvention, "EnumerableDrillRule." + outConvention);
+    this.client = client;
   }
 
   @Override
@@ -39,6 +48,6 @@ public class EnumerableDrillRule extends ConverterRule {
   @Override
   public RelNode convert(RelNode rel) {
     assert rel.getTraitSet().contains(DrillRel.CONVENTION);
-    return new EnumerableDrillRel(rel.getCluster(), rel.getTraitSet().replace(getOutConvention()), rel);
+    return new EnumerableDrillRel(client, rel.getCluster(), rel.getTraitSet().replace(getOutConvention()), rel);
   }
 }

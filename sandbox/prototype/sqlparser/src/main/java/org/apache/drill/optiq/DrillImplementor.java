@@ -17,7 +17,11 @@
  ******************************************************************************/
 package org.apache.drill.optiq;
 
+import java.util.Set;
+
 import org.apache.drill.exec.ref.rse.QueueRSE.QueueOutputInfo;
+import org.apache.drill.jdbc.DrillTable;
+import org.eigenbase.rel.RelNode;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -25,7 +29,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.eigenbase.rel.RelNode;
+import com.google.common.collect.Sets;
 
 /**
  * Context for converting a tree of {@link DrillRel} nodes into a Drill logical plan.
@@ -39,7 +43,9 @@ public class DrillImplementor {
   }
   private final ObjectNode rootNode = mapper.createObjectNode();
   private final ArrayNode operatorsNode;
-
+  private final ObjectNode sourcesNode;
+  private Set<DrillTable> tables = Sets.newHashSet();
+  
   public DrillImplementor() {
     final ObjectNode headNode = mapper.createObjectNode();
     rootNode.put("head", headNode);
@@ -53,25 +59,31 @@ public class DrillImplementor {
 
     // TODO: populate sources based on the sources of scans that occur in
     // the query
-    final ObjectNode sourcesNode = mapper.createObjectNode();
+    sourcesNode = mapper.createObjectNode();
     rootNode.put("storage", sourcesNode);
 
     // input file source
-    {
-      final ObjectNode sourceNode = mapper.createObjectNode();
-      sourceNode.put("type", "classpath");
-      sourcesNode.put("donuts-json", sourceNode);
-    }
-    {
-      final ObjectNode sourceNode = mapper.createObjectNode();
-      sourceNode.put("type", "queue");
-      sourcesNode.put("queue", sourceNode);
-    }
+//    {
+//      final ObjectNode sourceNode = mapper.createObjectNode();
+//      sourceNode.put("type", "classpath");
+//      sourcesNode.put("donuts-json", sourceNode);
+//    }
+//    {
+//      final ObjectNode sourceNode = mapper.createObjectNode();
+//      sourceNode.put("type", "queue");
+//      sourcesNode.put("queue", sourceNode);
+//    }
 
     final ArrayNode queryNode = mapper.createArrayNode();
     rootNode.put("query", queryNode);
 
     this.operatorsNode = queryNode;
+  }
+  
+  public void registerSource(DrillTable table){
+    if(tables.add(table)){
+      sourcesNode.put(table.getStorageEngineName(), mapper.convertValue(table.getStorageEngineConfig(), JsonNode.class));  
+    }
   }
 
   public int go(DrillRel root) {

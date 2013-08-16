@@ -36,7 +36,7 @@ public class BooleanFunctions implements CallProvider {
         FunctionDefinition.operator("and", new AllowedTypeList(2, Integer.MAX_VALUE, Types.REQUIRED_BIT), OutputTypeDeterminer.FIXED_BIT, "and", "&&"),
         FunctionDefinition.operator("greater than", new ComparableArguments(2), OutputTypeDeterminer.FIXED_BIT, ">"),
         FunctionDefinition.operator("less than", new ComparableArguments(2), OutputTypeDeterminer.FIXED_BIT, "<"),
-        FunctionDefinition.operator("equal", new ComparableArguments(2), OutputTypeDeterminer.FIXED_BIT, "=="),
+        FunctionDefinition.operator("equal", new ComparableArguments(2), OutputTypeDeterminer.FIXED_BIT, "==", "="),
         FunctionDefinition.operator("not equal", new ComparableArguments(2), OutputTypeDeterminer.FIXED_BIT, "<>", "!="),
         FunctionDefinition.operator("greater than or equal to", new ComparableArguments(2), OutputTypeDeterminer.FIXED_BIT, ">="),
         FunctionDefinition.operator("less than or equal to", new ComparableArguments(2), OutputTypeDeterminer.FIXED_BIT, "<="), };

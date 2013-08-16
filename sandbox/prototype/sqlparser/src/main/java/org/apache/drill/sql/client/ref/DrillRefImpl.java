@@ -166,7 +166,7 @@ public class DrillRefImpl<E> {
 
   
   
-  public Enumerator<E> enumerator(DrillTable table) {
+  public Enumerator<E> enumerator() {
     // TODO: use a completion service from the container
     final ExecutorCompletionService<Collection<RunOutcome>> service = new ExecutorCompletionService<Collection<RunOutcome>>(
         new ThreadPoolExecutor(1, 1, 1, TimeUnit.SECONDS, new LinkedBlockingDeque<Runnable>(10)));

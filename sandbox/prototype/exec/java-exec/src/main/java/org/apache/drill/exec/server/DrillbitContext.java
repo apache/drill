@@ -22,6 +22,7 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import java.util.Collection;
 
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.StorageEngineConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.cache.DistributedCache;
@@ -36,6 +37,7 @@ import org.apache.drill.exec.store.StorageEngine;
 
 import com.google.common.base.Preconditions;
 import com.yammer.metrics.MetricRegistry;
+
 import org.apache.drill.exec.store.StorageEngineRegistry;
 
 public class DrillbitContext {
@@ -81,7 +83,7 @@ public class DrillbitContext {
     return context.getAllocator();
   }
   
-  public StorageEngine getStorageEngine(StorageEngineConfig config) throws SetupException {
+  public StorageEngine getStorageEngine(StorageEngineConfig config) throws ExecutionSetupException {
     return storageEngineRegistry.getEngine(config);
   }
   

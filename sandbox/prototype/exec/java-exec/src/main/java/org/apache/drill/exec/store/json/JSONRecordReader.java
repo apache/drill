@@ -1,19 +1,18 @@
 package org.apache.drill.exec.store.json;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
-import com.google.common.base.Charsets;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.io.Files;
-import com.google.common.io.InputSupplier;
-import com.google.common.io.Resources;
+import static com.fasterxml.jackson.core.JsonToken.END_ARRAY;
+import static com.fasterxml.jackson.core.JsonToken.END_OBJECT;
+import static com.fasterxml.jackson.core.JsonToken.FIELD_NAME;
+
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.ExpressionPosition;
+import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -23,24 +22,38 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.schema.*;
+import org.apache.drill.exec.schema.DiffSchema;
+import org.apache.drill.exec.schema.Field;
+import org.apache.drill.exec.schema.NamedField;
+import org.apache.drill.exec.schema.ObjectSchema;
+import org.apache.drill.exec.schema.RecordSchema;
+import org.apache.drill.exec.schema.SchemaIdGenerator;
 import org.apache.drill.exec.schema.json.jackson.JacksonHelper;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.VectorHolder;
-import org.apache.drill.exec.vector.*;
-import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.drill.exec.vector.AllocationHelper;
+import org.apache.drill.exec.vector.NullableBitHolder;
+import org.apache.drill.exec.vector.NullableBitVector;
+import org.apache.drill.exec.vector.NullableFloat4Holder;
+import org.apache.drill.exec.vector.NullableFloat4Vector;
+import org.apache.drill.exec.vector.NullableIntHolder;
+import org.apache.drill.exec.vector.NullableIntVector;
+import org.apache.drill.exec.vector.NullableVarCharVector;
+import org.apache.drill.exec.vector.RepeatedBitVector;
+import org.apache.drill.exec.vector.RepeatedFloat4Vector;
+import org.apache.drill.exec.vector.RepeatedIntVector;
+import org.apache.drill.exec.vector.RepeatedVarCharVector;
+import org.apache.drill.exec.vector.TypeHelper;
+import org.apache.drill.exec.vector.ValueVector;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URI;
-import java.nio.charset.Charset;
-import java.util.List;
-import java.util.Map;
-
-import static com.fasterxml.jackson.core.JsonToken.*;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 public class JSONRecordReader implements RecordReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JSONRecordReader.class);
@@ -59,17 +72,19 @@ public class JSONRecordReader implements RecordReader {
   private OutputMutator outputMutator;
   private BufferAllocator allocator;
   private int batchSize;
+  private final FieldReference ref;
 
-  public JSONRecordReader(FragmentContext fragmentContext, String inputPath, FileSystem fileSystem, int batchSize) {
+  public JSONRecordReader(FragmentContext fragmentContext, String inputPath, FileSystem fileSystem, int batchSize, FieldReference ref) {
     this.hadoopPath = new Path(inputPath);
     this.fileSystem = fileSystem;
     this.allocator = fragmentContext.getAllocator();
     this.batchSize = batchSize;
     valueVectorMap = Maps.newHashMap();
+    this.ref = ref;
   }
 
-  public JSONRecordReader(FragmentContext fragmentContext, String inputPath, FileSystem fileSystem) {
-    this(fragmentContext, inputPath, fileSystem, DEFAULT_LENGTH);
+  public JSONRecordReader(FragmentContext fragmentContext, String inputPath, FileSystem fileSystem, FieldReference ref) {
+    this(fragmentContext, inputPath, fileSystem, DEFAULT_LENGTH, ref);
   }
 
   private JsonParser getParser() {
@@ -122,7 +137,7 @@ public class JSONRecordReader implements RecordReader {
       // Garbage collect fields never referenced in this batch
       for (Field field : Iterables.concat(currentSchema.removeUnreadFields(), removedFields)) {
         diffSchema.addRemovedField(field);
-        outputMutator.removeField(field.getAsMaterializedField());
+        outputMutator.removeField(field.getAsMaterializedField(ref));
       }
 
       if (diffSchema.isChanged()) {
@@ -461,7 +476,7 @@ public class JSONRecordReader implements RecordReader {
   }
 
   private VectorHolder getOrCreateVectorHolder(Field field) throws SchemaChangeException {
-    String fullFieldName = field.getFullFieldName();
+    String fullFieldName = ref.getPath() + "." + field.getFullFieldName();
     VectorHolder holder = valueVectorMap.get(fullFieldName);
 
     if (holder == null) {

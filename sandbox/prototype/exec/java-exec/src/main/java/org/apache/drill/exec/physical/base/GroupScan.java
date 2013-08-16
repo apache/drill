@@ -19,11 +19,10 @@ package org.apache.drill.exec.physical.base;
 
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.apache.drill.exec.physical.ReadEntry;
+import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
  * A GroupScan operator represents all data which will be scanned by a given physical
@@ -33,7 +32,7 @@ public interface GroupScan extends Scan, HasAffinity{
 
   public abstract void applyAssignments(List<DrillbitEndpoint> endpoints);
 
-  public abstract SubScan getSpecificScan(int minorFragmentId);
+  public abstract SubScan getSpecificScan(int minorFragmentId) throws ExecutionSetupException;
 
   @JsonIgnore
   public int getMaxParallelizationWidth();

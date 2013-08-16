@@ -17,12 +17,13 @@
  ******************************************************************************/
 package org.apache.drill.jdbc;
 
-import java.io.IOException;
-import java.sql.SQLException;
-
 import net.hydromatic.linq4j.function.Function0;
-import net.hydromatic.optiq.jdbc.*;
-import net.hydromatic.optiq.model.ModelHandler;
+import net.hydromatic.optiq.jdbc.DriverVersion;
+import net.hydromatic.optiq.jdbc.Handler;
+import net.hydromatic.optiq.jdbc.OptiqPrepare;
+import net.hydromatic.optiq.jdbc.UnregisteredDriver;
+
+import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.optiq.DrillPrepareImpl;
 
 /**
@@ -31,6 +32,8 @@ import org.apache.drill.optiq.DrillPrepareImpl;
 public class Driver extends UnregisteredDriver {
   public static final String CONNECT_STRING_PREFIX = "jdbc:drill:";
 
+  private volatile DrillHandler handler;
+  
   static {
     new Driver().register();
   }
@@ -46,56 +49,23 @@ public class Driver extends UnregisteredDriver {
   @Override
   protected Function0<OptiqPrepare> createPrepareFactory() {
     return new Function0<OptiqPrepare>() {
-        @Override
-        public OptiqPrepare apply() {
-            return new DrillPrepareImpl();
-        }
+      @Override
+      public OptiqPrepare apply() {
+        return new DrillPrepareImpl(Driver.this);
+      }
     };
   }
 
-    @Override
+  public DrillClient getClient(){
+    return handler.getClient();
+  }
+  
+  @Override
   protected Handler createHandler() {
-    return new DrillHandler();
+    this.handler = new DrillHandler();
+    return handler;
   }
-
-  private static class DrillHandler extends HandlerImpl {
-    public void onConnectionInit(OptiqConnection connection)
-        throws SQLException
-    {
-      super.onConnectionInit(connection);
-
-      
-      final String model = connection.getProperties().getProperty("model");
-      if (model != null) {
-        try {
-          new ModelHandler(connection, model);
-        } catch (IOException e) {
-          throw new SQLException(e);
-        }
-      }
-
-      // The "schema" parameter currently gives a name to the schema. In future
-      // it will choose a schema that (presumably) already exists.
-      final String schemaName =
-          connection.getProperties().getProperty("schema");
-      if (schemaName != null) {
-        connection.setSchema(schemaName);
-      }
-    }
-  }
-
-    /*
-
-optiq work
-==========
-
-1. todo: test can cast(<any> as varchar)  (or indeed to any type)
-
-2. We declare a variant record by adding a '_MAP any' field. It's nice that
-there can be some declared fields, and some undeclared. todo: Better syntactic
-sugar.
-
-*/
+  
 }
 
 // End Driver.java

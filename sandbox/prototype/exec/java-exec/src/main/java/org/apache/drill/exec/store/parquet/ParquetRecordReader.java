@@ -17,10 +17,17 @@
  ******************************************************************************/
 package org.apache.drill.exec.store.parquet;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import io.netty.buffer.ByteBuf;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.ExpressionPosition;
+import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
@@ -35,6 +42,7 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+
 import parquet.column.ColumnDescriptor;
 import parquet.hadoop.CodecFactoryExposer;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
@@ -42,14 +50,7 @@ import parquet.hadoop.metadata.ParquetMetadata;
 import parquet.schema.MessageType;
 import parquet.schema.PrimitiveType;
 
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
+import com.google.common.base.Joiner;
 
 public class ParquetRecordReader implements RecordReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetRecordReader.class);
@@ -74,6 +75,7 @@ public class ParquetRecordReader implements RecordReader {
   private boolean allFieldsFixedLength;
   private int recordsPerBatch;
   private ByteBuf bufferWithAllData;
+  private final FieldReference ref;
   long totalRecords;
   long rowGroupOffset;
 
@@ -94,18 +96,19 @@ public class ParquetRecordReader implements RecordReader {
 
   public ParquetRecordReader(FragmentContext fragmentContext,
                              String path, int rowGroupIndex, FileSystem fs,
-                             CodecFactoryExposer codecFactoryExposer, ParquetMetadata footer) throws ExecutionSetupException {
-    this(fragmentContext, DEFAULT_BATCH_LENGTH_IN_BITS, path, rowGroupIndex, fs, codecFactoryExposer, footer);
+                             CodecFactoryExposer codecFactoryExposer, ParquetMetadata footer, FieldReference ref) throws ExecutionSetupException {
+    this(fragmentContext, DEFAULT_BATCH_LENGTH_IN_BITS, path, rowGroupIndex, fs, codecFactoryExposer, footer, ref);
   }
 
 
   public ParquetRecordReader(FragmentContext fragmentContext, long batchSize,
                              String path, int rowGroupIndex, FileSystem fs,
-                             CodecFactoryExposer codecFactoryExposer, ParquetMetadata footer) throws ExecutionSetupException {
+                             CodecFactoryExposer codecFactoryExposer, ParquetMetadata footer, FieldReference ref) throws ExecutionSetupException {
     this.allocator = fragmentContext.getAllocator();
 
     hadoopPath = new Path(path);
     fileSystem = fs;
+    this.ref = ref;
     this.codecFactoryExposer = codecFactoryExposer;
     this.rowGroupIndex = rowGroupIndex;
     this.batchSize = batchSize;
@@ -122,7 +125,7 @@ public class ParquetRecordReader implements RecordReader {
     // loop to add up the length of the fixed width columns and build the schema
     for (int i = 0; i < columns.size(); ++i) {
       column = columns.get(i);
-
+      logger.debug("Found Parquet column {} of type {}", column.getPath(), column.getType());
       // sum the lengths of all of the fixed length fields
       if (column.getType() != PrimitiveType.PrimitiveTypeName.BINARY) {
         // There is not support for the fixed binary type yet in parquet, leaving a task here as a reminder
@@ -151,7 +154,7 @@ public class ParquetRecordReader implements RecordReader {
       for (int i = 0; i < columns.size(); ++i) {
         column = columns.get(i);
         columnChunkMetaData = footer.getBlocks().get(0).getColumns().get(i);
-        field = MaterializedField.create(new SchemaPath(toFieldName(column.getPath()), ExpressionPosition.UNKNOWN),
+        field = MaterializedField.create(toFieldName(column.getPath()),
             toMajorType(column.getType(), getDataMode(column, footer.getFileMetaData().getSchema())));
         fieldFixedLength = column.getType() != PrimitiveType.PrimitiveTypeName.BINARY;
         ValueVector v = TypeHelper.getNewVector(field, allocator);
@@ -259,8 +262,13 @@ public class ParquetRecordReader implements RecordReader {
     }
   }
 
-  private static String toFieldName(String[] paths) {
-    return join(SEPERATOR, paths);
+  private SchemaPath toFieldName(String[] paths) {
+    if(this.ref == null){
+      return new SchemaPath(Joiner.on('/').join(paths), ExpressionPosition.UNKNOWN);
+    }else{
+      return ref.getChild(paths);
+    }
+    
   }
 
   private TypeProtos.DataMode getDataMode(ColumnDescriptor column, MessageType schema) {

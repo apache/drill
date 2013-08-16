@@ -47,6 +47,7 @@ public class JdbcAssert {
     return new ModelAndSchema(info);
   }
 
+  
   static String toString(ResultSet resultSet, int expectedRecordCount) throws SQLException {
     StringBuilder buf = new StringBuilder();
     int total = 0, n;

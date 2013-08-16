@@ -7,10 +7,11 @@
 
 # Build classpath on first call. (To force rebuild, remove .classpath.)
 if [ ! -f .classpath ]; then
-    (cd sqlparser; mvn dependency:build-classpath -Dmdep.outputFile=../.classpath)
-    echo -n :sqlparser/target/classes/ >> .classpath
+    (cd contrib/sqlline; mvn dependency:build-classpath -Dmdep.outputFile=../../.classpath)
 fi
 
-exec java -cp "$(cat .classpath)" sqlline.SqlLine "$@"
+#exec java -Drebel.log=true -javaagent:/src/jrebel/jrebel.jar -Dlogback.configurationFile=/src/drill/sandbox/prototype/sqlparser/src/test/resources/logback.xml -cp ./:"$(cat .classpath)" sqlline.SqlLine "$@"
+exec java -Dlogback.configurationFile=/src/drill/sandbox/prototype/sqlparser/src/test/resources/logback.xml -cp ./:"$(cat .classpath)" sqlline.SqlLine "$@"
+
 
 # End sqlline

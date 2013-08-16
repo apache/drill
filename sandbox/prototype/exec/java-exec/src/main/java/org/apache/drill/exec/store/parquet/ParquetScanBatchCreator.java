@@ -63,7 +63,8 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
             new ParquetRecordReader(
                 context, e.getPath(), e.getRowGroupIndex(), rowGroupScan.getStorageEngine().getFileSystem(),
                 rowGroupScan.getStorageEngine().getCodecFactoryExposer(),
-                ParquetFileReader.readFooter( rowGroupScan.getStorageEngine().getFileSystem().getConf(), new Path(e.getPath()))
+                ParquetFileReader.readFooter( rowGroupScan.getStorageEngine().getFileSystem().getConf(), new Path(e.getPath())),
+                rowGroupScan.getRef()
             )
         );
       } catch (IOException e1) {

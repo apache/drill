@@ -18,15 +18,21 @@
 package org.apache.drill.exec.store.parquet;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.exec.exception.SetupException;
+import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.expression.FieldReference;
+import org.apache.drill.common.logical.StorageEngineConfig;
 import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.ReadEntryFromHDFS;
@@ -37,7 +43,6 @@ import org.apache.drill.exec.physical.base.Size;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.store.AffinityCalculator;
 import org.apache.drill.exec.store.StorageEngineRegistry;
-import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
@@ -52,6 +57,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Stopwatch;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
 
 
 @JsonTypeName("parquet-scan")
@@ -79,13 +88,15 @@ public class ParquetGroupScan extends AbstractGroupScan {
   private ParquetStorageEngineConfig engineConfig;
   private FileSystem fs;
   private String fileName;
+  private final FieldReference ref;
   private List<EndpointAffinity> endpointAffinities;
 
   @JsonCreator
   public ParquetGroupScan(@JsonProperty("entries") List<ReadEntryWithPath> entries,
                           @JsonProperty("storageengine") ParquetStorageEngineConfig storageEngineConfig,
-                          @JacksonInject StorageEngineRegistry engineRegistry
-                           )throws SetupException,IOException {
+                          @JacksonInject StorageEngineRegistry engineRegistry,
+                          @JsonProperty("ref") FieldReference ref
+                           )throws IOException, ExecutionSetupException {
     engineRegistry.init(DrillConfig.create());
     this.storageEngine = (ParquetStorageEngine) engineRegistry.getEngine(storageEngineConfig);
     this.availableEndpoints = storageEngine.getContext().getBits();
@@ -93,17 +104,19 @@ public class ParquetGroupScan extends AbstractGroupScan {
     this.engineConfig = storageEngineConfig;
     this.engineRegistry = engineRegistry;
     this.entries = entries;
+    this.ref = ref;
     readFooter();
     this.fileName = rowGroupInfos.get(0).getPath();
     calculateEndpointBytes();
   }
 
   public ParquetGroupScan(ArrayList<ReadEntryWithPath> entries,
-                          ParquetStorageEngine storageEngine) throws IOException {
+                          ParquetStorageEngine storageEngine, FieldReference ref) throws IOException {
     this.storageEngine = storageEngine;
     this.availableEndpoints = storageEngine.getContext().getBits();
     this.fs = storageEngine.getFileSystem();
     this.entries = entries;
+    this.ref = ref;
     readFooter();
     this.fileName = rowGroupInfos.get(0).getPath();
     calculateEndpointBytes();
@@ -322,11 +335,12 @@ public class ParquetGroupScan extends AbstractGroupScan {
       logger.debug("minorFragmentId: {} Path: {} RowGroupIndex: {}",minorFragmentId, rg.getPath(),rg.getRowGroupIndex());
     }
     Preconditions.checkArgument(!mappings.get(minorFragmentId).isEmpty(), String.format("MinorFragmentId %d has no read entries assigned", minorFragmentId));
-    try {
-      return new ParquetRowGroupScan(storageEngine, engineConfig, mappings.get(minorFragmentId));
-    } catch (SetupException e) {
-      throw new RuntimeException("Error setting up ParquetRowGroupScan", e);
-    }
+    return new ParquetRowGroupScan(storageEngine, engineConfig, mappings.get(minorFragmentId), ref);
+  }
+
+  
+  public FieldReference getRef() {
+    return ref;
   }
 
   @Override
@@ -346,6 +360,11 @@ public class ParquetGroupScan extends AbstractGroupScan {
     return new Size(10,10);
   }
 
+  @JsonProperty("storageengine")
+  public StorageEngineConfig getStorageEngineConfig(){
+    return this.engineConfig;
+  }
+  
   @Override
   @JsonIgnore
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {

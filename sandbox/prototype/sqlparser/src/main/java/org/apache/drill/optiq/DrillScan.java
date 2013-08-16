@@ -27,7 +27,7 @@ public class DrillScan extends TableAccessRelBase implements DrillRel {
   @Override
   public void register(RelOptPlanner planner) {
     super.register(planner);
-    DrillOptiq.registerStandardPlannerRules(planner);
+    DrillOptiq.registerStandardPlannerRules(planner, drillTable.client);
   }
 
   public int implement(DrillImplementor implementor) {
@@ -36,7 +36,8 @@ public class DrillScan extends TableAccessRelBase implements DrillRel {
     node.put("memo", "initial_scan");
     node.put("ref", "_MAP"); // output is a record with a single field, '_MAP'
     node.put("storageengine", drillTable.getStorageEngineName());
-    node.put("selection", implementor.mapper.convertValue(drillTable.selection, JsonNode.class));
+    node.put("selection", implementor.mapper.convertValue(drillTable.getSelection(), JsonNode.class));
+    implementor.registerSource(drillTable);
     return implementor.add(node);
   }
 }

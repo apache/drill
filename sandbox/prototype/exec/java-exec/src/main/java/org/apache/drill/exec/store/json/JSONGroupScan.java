@@ -18,57 +18,62 @@
 
 package org.apache.drill.exec.store.json;
 
-import com.fasterxml.jackson.annotation.*;
-import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.logical.StorageEngineConfig;
-import org.apache.drill.exec.exception.SetupException;
+import static com.google.common.base.Preconditions.checkArgument;
+
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+
+import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.ReadEntry;
-import org.apache.drill.exec.physical.ReadEntryWithPath;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.Size;
 import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.store.StorageEngineRegistry;
-import org.apache.drill.exec.store.parquet.ParquetStorageEngineConfig;
 
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-
-import static com.google.common.base.Preconditions.checkArgument;
+import com.fasterxml.jackson.annotation.JacksonInject;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName("json-scan")
 public class JSONGroupScan extends AbstractGroupScan {
   private static int ESTIMATED_RECORD_SIZE = 1024; // 1kb
-  private final StorageEngineRegistry registry;
-  private final StorageEngineConfig engineConfig;
+  private final JSONStorageEngine engine;
 
   private LinkedList<JSONGroupScan.ScanEntry>[] mappings;
   private final List<JSONGroupScan.ScanEntry> readEntries;
   private final OperatorCost cost;
   private final Size size;
+  private final FieldReference ref;
 
   @JsonCreator
   public JSONGroupScan(@JsonProperty("entries") List<ScanEntry> entries,
                        @JsonProperty("storageengine") JSONStorageEngineConfig storageEngineConfig,
-                       @JacksonInject StorageEngineRegistry engineRegistry) throws SetupException {
-    engineRegistry.init(DrillConfig.create());
-    this.registry = engineRegistry;
-    this.engineConfig = storageEngineConfig;
+                       @JacksonInject StorageEngineRegistry engineRegistry, FieldReference ref) throws ExecutionSetupException {
+    this(entries, (JSONStorageEngine) engineRegistry.getEngine(storageEngineConfig), ref);
+  }
+
+  public JSONGroupScan(List<ScanEntry> entries, JSONStorageEngine engine, FieldReference ref) {
+    this.engine = engine;
     this.readEntries = entries;
     OperatorCost cost = new OperatorCost(0, 0, 0, 0);
     Size size = new Size(0, 0);
     for (JSONGroupScan.ScanEntry r : readEntries) {
-      cost = cost.add(r.getCost());
-      size = size.add(r.getSize());
+    cost = cost.add(r.getCost());
+    size = size.add(r.getSize());
     }
     this.cost = cost;
     this.size = size;
+    this.ref = ref;
   }
-
+  
   @SuppressWarnings("unchecked")
   @Override
   public void applyAssignments(List<CoordinationProtos.DrillbitEndpoint> endpoints) {
@@ -91,14 +96,9 @@ public class JSONGroupScan extends AbstractGroupScan {
 
   @SuppressWarnings("unchecked")
   @Override
-  public SubScan getSpecificScan(int minorFragmentId) {
+  public SubScan getSpecificScan(int minorFragmentId) throws ExecutionSetupException{
     checkArgument(minorFragmentId < mappings.length, "Mappings length [%s] should be longer than minor fragment id [%s] but it isn't.", mappings.length, minorFragmentId);
-    try {
-      return new JSONSubScan(registry, engineConfig, mappings[minorFragmentId]);
-    } catch (SetupException e) {
-      e.printStackTrace();
-    }
-    return null;
+    return new JSONSubScan(mappings[minorFragmentId], engine, ref);
   }
 
   @Override
@@ -109,12 +109,7 @@ public class JSONGroupScan extends AbstractGroupScan {
   @Override
   @JsonIgnore
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
-    try {
-      return new JSONGroupScan(readEntries, (JSONStorageEngineConfig) engineConfig, registry);
-    } catch (SetupException e) {
-      e.printStackTrace();
-    }
-    return null;
+    return new JSONGroupScan(readEntries, engine, ref);
   }
 
   public static class ScanEntry implements ReadEntry {

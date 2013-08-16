@@ -130,20 +130,20 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
   }
   
   public void copyFrom(int fromIndex, int thisIndex, ${minor.class}Vector from){
-    int start = from.offsetVector.data.get${(minor.javaType!type.javaType)?cap_first}(fromIndex);
-    int end =   from.offsetVector.data.get${(minor.javaType!type.javaType)?cap_first}(fromIndex+1);
+    int start = from.offsetVector.getAccessor().get(fromIndex);
+    int end =   from.offsetVector.getAccessor().get(fromIndex+1);
     int len = end - start;
     
     int outputStart = offsetVector.data.get${(minor.javaType!type.javaType)?cap_first}(thisIndex * ${type.width});
-    from.data.getBytes(start, from.data, outputStart, len);
-    offsetVector.data.set${(minor.javaType!type.javaType)?cap_first}( (thisIndex+1) * ${type.width}, len);
+    from.data.getBytes(start, data, outputStart, len);
+    offsetVector.data.set${(minor.javaType!type.javaType)?cap_first}( (thisIndex+1) * ${type.width}, outputStart + len);
   }
   
   public boolean copyFromSafe(int fromIndex, int thisIndex, ${minor.class}Vector from){
     if(thisIndex >= getValueCapacity()) return false;
     
-    int start = from.offsetVector.data.get${(minor.javaType!type.javaType)?cap_first}(fromIndex);
-    int end =   from.offsetVector.data.get${(minor.javaType!type.javaType)?cap_first}(fromIndex+1);
+    int start = from.offsetVector.getAccessor().get(fromIndex);
+    int end =   from.offsetVector.getAccessor().get(fromIndex+1);
     int len = end - start;
     
     int outputStart = offsetVector.data.get${(minor.javaType!type.javaType)?cap_first}(thisIndex * ${type.width});
@@ -151,7 +151,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     if(data.capacity() < outputStart + len) return false;
     
     from.data.getBytes(start, data, outputStart, len);
-    offsetVector.data.set${(minor.javaType!type.javaType)?cap_first}( (thisIndex+1) * ${type.width}, len);
+    offsetVector.data.set${(minor.javaType!type.javaType)?cap_first}( (thisIndex+1) * ${type.width}, outputStart + len);
 
     return true;
   }

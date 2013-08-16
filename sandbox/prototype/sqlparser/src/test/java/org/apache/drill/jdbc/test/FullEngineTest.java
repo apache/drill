@@ -13,7 +13,7 @@ import org.junit.rules.Timeout;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
-@Ignore
+
 public class FullEngineTest {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FullEngineTest.class);
 
@@ -34,16 +34,16 @@ public class FullEngineTest {
   public void fullSelectStarEngine() throws Exception {
     JdbcAssert.withModel(MODEL_FULL_ENGINE, "DONUTS")
     // .sql("select cast(_MAP['red'] as bigint) + 1 as red_inc from donuts ")
-        .sql("select * from donuts ").displayResults(50);
+        .sql("select _MAP['d'] as d, _MAP['b'] as b from \"parquet-local\".\"/tmp/parquet_test_file_many_types\" ").displayResults(50);
   }
 
-  @Test
-  public void fullEngine() throws Exception {
-    JdbcAssert
-        .withModel(MODEL_FULL_ENGINE, "DONUTS")
-        // .sql("select cast(_MAP['red'] as bigint) + 1 as red_inc from donuts ")
-        .sql(
-            "select cast(_MAP['RED'] as bigint)  as RED, cast(_MAP['GREEN'] as bigint)  as GREEN from donuts where cast(_MAP['red'] as BIGINT) > 1 ")
-        .displayResults(50);
-  }
+//  @Test
+//  public void fullEngine() throws Exception {
+//    JdbcAssert
+//        .withModel(MODEL_FULL_ENGINE, "DONUTS")
+//        // .sql("select cast(_MAP['red'] as bigint) + 1 as red_inc from donuts ")
+//        .sql(
+//            "select cast(_MAP['RED'] as bigint)  as RED, cast(_MAP['GREEN'] as bigint)  as GREEN from 'monkeys' where cast(_MAP['red'] as BIGINT) > 1 ")
+//        .displayResults(50);
+//  }
 }

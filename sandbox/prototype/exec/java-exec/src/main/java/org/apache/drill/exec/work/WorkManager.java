@@ -148,7 +148,7 @@ public class WorkManager implements Closeable{
   public void run() {
     try {
     while(true){
-      logger.debug("Polling for pending work tasks.");
+//      logger.debug("Polling for pending work tasks.");
       Runnable r = pendingTasks.poll(10, TimeUnit.SECONDS);
       if(r != null){
         logger.debug("Starting pending task {}", r);

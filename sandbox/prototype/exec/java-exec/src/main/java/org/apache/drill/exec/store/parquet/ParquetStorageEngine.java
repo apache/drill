@@ -22,10 +22,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import com.beust.jcommander.internal.Lists;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.logical.StorageEngineConfig;
 import org.apache.drill.common.logical.data.Scan;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.ReadEntry;
@@ -34,6 +36,7 @@ import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStorageEngine;
 import org.apache.drill.exec.store.RecordReader;
+import org.apache.drill.exec.store.SchemaProvider;
 import org.apache.drill.exec.store.mock.MockStorageEngine;
 
 import com.google.common.collect.ListMultimap;
@@ -53,35 +56,25 @@ public class ParquetStorageEngine extends AbstractStorageEngine{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MockStorageEngine.class);
 
   private final DrillbitContext context;
-  private final ParquetStorageEngineConfig configuration;
-  private FileSystem fs;
-  private Configuration conf;
   static final ParquetMetadataConverter parquetMetadataConverter = new ParquetMetadataConverter();
   private CodecFactoryExposer codecFactoryExposer;
   final ParquetMetadata footer;
-  public static final String HADOOP_DEFAULT_NAME = "fs.default.name";
-
+  private final ParquetSchemaProvider schemaProvider;
 
   public ParquetStorageEngine(ParquetStorageEngineConfig configuration, DrillbitContext context){
     this.context = context;
-    this.configuration = configuration;
+    this.schemaProvider = new ParquetSchemaProvider(configuration, context.getConfig());
+    codecFactoryExposer = new CodecFactoryExposer(schemaProvider.conf);
+
     this.footer = null;
-    try {
-      this.conf = new Configuration();
-      this.conf.set(HADOOP_DEFAULT_NAME, configuration.getDfsName());
-      this.fs = FileSystem.get(conf);
-      codecFactoryExposer = new CodecFactoryExposer(conf);
-    } catch (IOException ie) {
-      throw new RuntimeException("Error setting up filesystem");
-    }
   }
 
   public Configuration getHadoopConfig() {
-    return this.conf;
+    return schemaProvider.conf;
   }
 
   public FileSystem getFileSystem() {
-    return this.fs;
+    return schemaProvider.fs;
   }
 
   public DrillbitContext getContext() {
@@ -99,7 +92,7 @@ public class ParquetStorageEngine extends AbstractStorageEngine{
     ArrayList<ReadEntryWithPath> readEntries = scan.getSelection().getListWith(new ObjectMapper(),
         new TypeReference<ArrayList<ReadEntryWithPath>>() {});
 
-    return new ParquetGroupScan(readEntries, this);
+    return new ParquetGroupScan(readEntries, this, scan.getOutputReference());
   }
 
   @Override
@@ -115,5 +108,10 @@ public class ParquetStorageEngine extends AbstractStorageEngine{
 
   public CodecFactoryExposer getCodecFactoryExposer() {
     return codecFactoryExposer;
+  }
+
+  @Override
+  public ParquetSchemaProvider getSchemaProvider() {
+    return schemaProvider;
   }
 }

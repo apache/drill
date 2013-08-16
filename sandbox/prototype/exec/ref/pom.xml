@@ -27,11 +27,11 @@
 			<version>0.4.2</version>
 		</dependency>
 
-		<dependency>
-			<groupId>org.apache.hadoop</groupId>
-			<artifactId>hadoop-examples</artifactId>
-			<version>1.1.1</version>
-		</dependency>
+<!-- 		<dependency> -->
+<!-- 			<groupId>org.apache.hadoop</groupId> -->
+<!-- 			<artifactId>hadoop-examples</artifactId> -->
+<!-- 			<version>1.2.1</version> -->
+<!-- 		</dependency> -->
 	</dependencies>
 
   <profiles>
@@ -78,7 +78,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
-        <version>2.4</version>
 
         <executions>
           <execution>

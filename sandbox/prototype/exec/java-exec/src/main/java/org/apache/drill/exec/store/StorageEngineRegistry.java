@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.StorageEngineConfig;
 import org.apache.drill.common.util.PathScanner;
 import org.apache.drill.exec.ExecConstants;
@@ -63,17 +64,17 @@ public class StorageEngineRegistry {
     }
   }
   
-  public StorageEngine getEngine(StorageEngineConfig engineConfig) throws SetupException{
+  public StorageEngine getEngine(StorageEngineConfig engineConfig) throws ExecutionSetupException{
     StorageEngine engine = activeEngines.get(engineConfig);
     if(engine != null) return engine;
     Constructor<? extends StorageEngine> c = availableEngines.get(engineConfig.getClass());
-    if(c == null) throw new SetupException(String.format("Failure finding StorageEngine constructor for config %s", engineConfig));
+    if(c == null) throw new ExecutionSetupException(String.format("Failure finding StorageEngine constructor for config %s", engineConfig));
     try {
       return c.newInstance(engineConfig, context);
     } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
       Throwable t = e instanceof InvocationTargetException ? ((InvocationTargetException)e).getTargetException() : e;
-      if(t instanceof SetupException) throw ((SetupException) t);
-      throw new SetupException(String.format("Failure setting up new storage engine configuration for config %s", engineConfig), t);
+      if(t instanceof ExecutionSetupException) throw ((ExecutionSetupException) t);
+      throw new ExecutionSetupException(String.format("Failure setting up new storage engine configuration for config %s", engineConfig), t);
     }
   }
   

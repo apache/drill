@@ -87,13 +87,13 @@ public class TestFileGenerator {
 
   public static HashMap<String, FieldInfo> getFieldMap(int recordsPerRowGroup) {
     HashMap<String, FieldInfo> fields = new HashMap<>();
-    fields.put("integer/", new FieldInfo(recordsPerRowGroup, "int32", "integer", 32, intVals, TypeProtos.MinorType.INT));
-    fields.put("bigInt/", new FieldInfo(recordsPerRowGroup, "int64", "bigInt", 64, longVals, TypeProtos.MinorType.BIGINT));
-    fields.put("f/", new FieldInfo(recordsPerRowGroup, "float", "f", 32, floatVals, TypeProtos.MinorType.FLOAT4));
-    fields.put("d/", new FieldInfo(recordsPerRowGroup, "double", "d", 64, doubleVals, TypeProtos.MinorType.FLOAT8));
-    fields.put("b/", new FieldInfo(recordsPerRowGroup, "boolean", "b", 1, boolVals, TypeProtos.MinorType.BIT));
-    fields.put("bin/", new FieldInfo(recordsPerRowGroup, "binary", "bin", -1, binVals, TypeProtos.MinorType.VARBINARY));
-    fields.put("bin2/", new FieldInfo(recordsPerRowGroup, "binary", "bin2", -1, bin2Vals, TypeProtos.MinorType.VARBINARY));
+    fields.put("integer", new FieldInfo(recordsPerRowGroup, "int32", "integer", 32, intVals, TypeProtos.MinorType.INT));
+    fields.put("bigInt", new FieldInfo(recordsPerRowGroup, "int64", "bigInt", 64, longVals, TypeProtos.MinorType.BIGINT));
+    fields.put("f", new FieldInfo(recordsPerRowGroup, "float", "f", 32, floatVals, TypeProtos.MinorType.FLOAT4));
+    fields.put("d", new FieldInfo(recordsPerRowGroup, "double", "d", 64, doubleVals, TypeProtos.MinorType.FLOAT8));
+    fields.put("b", new FieldInfo(recordsPerRowGroup, "boolean", "b", 1, boolVals, TypeProtos.MinorType.BIT));
+    fields.put("bin", new FieldInfo(recordsPerRowGroup, "binary", "bin", -1, binVals, TypeProtos.MinorType.VARBINARY));
+    fields.put("bin2", new FieldInfo(recordsPerRowGroup, "binary", "bin2", -1, bin2Vals, TypeProtos.MinorType.VARBINARY));
     return fields;
   }
 
@@ -102,8 +102,9 @@ public class TestFileGenerator {
 
     int currentBooleanByte = 0;
     WrapAroundCounter booleanBitCounter = new WrapAroundCounter(7);
+    
     Configuration configuration = new Configuration();
-    configuration.set(ParquetStorageEngine.HADOOP_DEFAULT_NAME, "file:///");
+    configuration.set(ParquetSchemaProvider.HADOOP_DEFAULT_NAME, "file:///");
     // "message m { required int32 integer; required int64 integer64; required boolean b; required float f; required double d;}"
 
     FileSystem fs = FileSystem.get(configuration);

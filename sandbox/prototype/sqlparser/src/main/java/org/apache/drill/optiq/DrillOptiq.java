@@ -18,10 +18,23 @@
 package org.apache.drill.optiq;
 
 import net.hydromatic.linq4j.Ord;
+
+import org.apache.drill.exec.client.DrillClient;
+import org.apache.drill.exec.work.FragmentRunnerListener;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.reltype.RelDataTypeField;
-import org.eigenbase.rex.*;
+import org.eigenbase.rex.RexCall;
+import org.eigenbase.rex.RexCorrelVariable;
+import org.eigenbase.rex.RexDynamicParam;
+import org.eigenbase.rex.RexFieldAccess;
+import org.eigenbase.rex.RexInputRef;
+import org.eigenbase.rex.RexLiteral;
+import org.eigenbase.rex.RexLocalRef;
+import org.eigenbase.rex.RexNode;
+import org.eigenbase.rex.RexOver;
+import org.eigenbase.rex.RexRangeRef;
+import org.eigenbase.rex.RexVisitorImpl;
 import org.eigenbase.sql.SqlSyntax;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 
@@ -29,8 +42,10 @@ import org.eigenbase.sql.fun.SqlStdOperatorTable;
  * Utilities for Drill's planner.
  */
 public class DrillOptiq {
-  static void registerStandardPlannerRules(RelOptPlanner planner) {
-    planner.addRule(EnumerableDrillRule.ARRAY_INSTANCE);
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillOptiq.class);
+  
+  static void registerStandardPlannerRules(RelOptPlanner planner, DrillClient client) {
+    planner.addRule(EnumerableDrillRule.getInstance(client));
 
     // planner.addRule(DrillTableModificationConverterRule.INSTANCE);
     // planner.addRule(DrillCalcConverterRule.INSTANCE);
@@ -67,13 +82,16 @@ public class DrillOptiq {
 
     @Override
     public StringBuilder visitCall(RexCall call) {
+      logger.debug("RexCall {}, {}", call);
       final SqlSyntax syntax = call.getOperator().getSyntax();
       switch (syntax) {
       case Binary:
+        logger.debug("Binary");
         buf.append("(");
         call.getOperands().get(0).accept(this).append(" ").append(call.getOperator().getName()).append(" ");
         return call.getOperands().get(1).accept(this).append(")");
       case Function:
+        logger.debug("Function");
         buf.append(call.getOperator().getName().toLowerCase()).append("(");
         for (Ord<RexNode> operand : Ord.zip(call.getOperands())) {
           buf.append(operand.i > 0 ? ", " : "");
@@ -81,39 +99,81 @@ public class DrillOptiq {
         }
         return buf.append(")");
       case Special:
+        logger.debug("Special");
         switch (call.getKind()) {
         case Cast:
+          logger.debug("Cast {}", buf);
           // Ignore casts. Drill is type-less.
+          logger.debug("Ignoring cast {}, {}", call.getOperands().get(0), call.getOperands().get(0).getClass());
           return call.getOperands().get(0).accept(this);
         }
         if (call.getOperator() == SqlStdOperatorTable.itemOp) {
           final RexNode left = call.getOperands().get(0);
           final RexLiteral literal = (RexLiteral) call.getOperands().get(1);
           final String field = (String) literal.getValue2();
+//          buf.append('\'');
           final int length = buf.length();
           left.accept(this);
           if (buf.length() > length) {
             // check before generating empty LHS if inputName is null
             buf.append('.');
           }
-          return buf.append(field);
+          buf.append(field);
+//          buf.append('\'');
+          return buf;
         }
+        logger.debug("Not cast.");
         // fall through
       default:
         throw new AssertionError("todo: implement syntax " + syntax + "(" + call + ")");
       }
     }
 
+    private StringBuilder doUnknown(Object o){
+      logger.warn("Doesn't currently support consumption of {}.", o);
+      return buf;
+    }
+    @Override
+    public StringBuilder visitLocalRef(RexLocalRef localRef) {
+      return doUnknown(localRef);
+    }
+
+    @Override
+    public StringBuilder visitOver(RexOver over) {
+      return doUnknown(over);
+    }
+
+    @Override
+    public StringBuilder visitCorrelVariable(RexCorrelVariable correlVariable) {
+      return doUnknown(correlVariable);
+    }
+
+    @Override
+    public StringBuilder visitDynamicParam(RexDynamicParam dynamicParam) {
+      return doUnknown(dynamicParam);
+    }
+
+    @Override
+    public StringBuilder visitRangeRef(RexRangeRef rangeRef) {
+      return doUnknown(rangeRef);
+    }
+
+    @Override
+    public StringBuilder visitFieldAccess(RexFieldAccess fieldAccess) {
+      return super.visitFieldAccess(fieldAccess);
+    }
+
     @Override
     public StringBuilder visitInputRef(RexInputRef inputRef) {
       final int index = inputRef.getIndex();
       final RelDataTypeField field = input.getRowType().getFieldList().get(index);
-      return buf.append(field.getName());
+      buf.append(field.getName());
+      return buf;
     }
 
     @Override
     public StringBuilder visitLiteral(RexLiteral literal) {
-      return buf.append(literal);
+      return buf.append(literal.toString());
     }
   }
 }

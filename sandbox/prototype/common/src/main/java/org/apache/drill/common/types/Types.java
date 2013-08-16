@@ -122,7 +122,17 @@ public class Types {
   
   
   public static boolean softEquals(MajorType a, MajorType b, boolean allowNullSwap){
-    if(a.getMinorType() != b.getMinorType()) return false;
+    if(a.getMinorType() != b.getMinorType()){
+      if(
+          (a.getMinorType() == MinorType.VARBINARY && b.getMinorType() == MinorType.VARCHAR) ||
+          (b.getMinorType() == MinorType.VARBINARY && a.getMinorType() == MinorType.VARCHAR) 
+          ){
+        // fall through;
+      }else{
+        return false;  
+      }
+      
+    }
     if(allowNullSwap){
       switch(a.getMode()){
       case OPTIONAL:

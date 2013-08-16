@@ -57,8 +57,13 @@ public class ZKClusterCoordinator extends ClusterCoordinator {
   private final String serviceName;
   private final CountDownLatch initialConnection = new CountDownLatch(1);
 
-  public ZKClusterCoordinator(DrillConfig config) throws IOException {
-
+  
+  public ZKClusterCoordinator(DrillConfig config) throws IOException{
+    this(config, null);
+  }
+  
+  public ZKClusterCoordinator(DrillConfig config, String connect) throws IOException {
+    connect = connect == null || connect.isEmpty() ? config.getString(ExecConstants.ZK_CONNECTION) : connect;
     this.basePath = config.getString(ExecConstants.ZK_ROOT);
     this.serviceName = config.getString(ExecConstants.SERVICE_NAME);
     RetryPolicy rp = new RetryNTimes(config.getInt(ExecConstants.ZK_RETRY_TIMES),
@@ -66,7 +71,7 @@ public class ZKClusterCoordinator extends ClusterCoordinator {
     curator = CuratorFrameworkFactory.builder()
       .connectionTimeoutMs(config.getInt(ExecConstants.ZK_TIMEOUT))
       .retryPolicy(rp)
-      .connectString(config.getString(ExecConstants.ZK_CONNECTION))
+      .connectString(connect)
       .build();
     curator.getConnectionStateListenable().addListener(new InitialConnectionListener());
     discovery = getDiscovery();

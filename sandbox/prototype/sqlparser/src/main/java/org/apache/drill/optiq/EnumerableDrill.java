@@ -18,8 +18,23 @@
 package org.apache.drill.optiq;
 
 import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletionService;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import net.hydromatic.linq4j.AbstractEnumerable;
 import net.hydromatic.linq4j.Enumerable;
@@ -32,6 +47,7 @@ import org.apache.drill.exec.ref.ReferenceInterpreter;
 import org.apache.drill.exec.ref.RunOutcome;
 import org.apache.drill.exec.ref.eval.BasicEvaluatorFactory;
 import org.apache.drill.exec.ref.rse.RSERegistry;
+import org.apache.drill.jdbc.DrillHandler;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -71,7 +87,7 @@ public class EnumerableDrill<E> extends AbstractEnumerable<E> implements Enumera
   /**
    * Creates a DrillEnumerable from a plan represented as a string. Each record returned is a {@link JsonNode}.
    */
-  public static <E> EnumerableDrill<E> of(String plan, final List<String> fieldNames, Class<E> clazz) {
+  public static <E> EnumerableDrill<E> of(DrillHandler handler, String plan, final List<String> fieldNames, Class<E> clazz) {
     DrillConfig config = DrillConfig.create();
     final LogicalPlan parse = LogicalPlan.parse(config, plan);
     return new EnumerableDrill<>(config, parse, clazz, fieldNames);

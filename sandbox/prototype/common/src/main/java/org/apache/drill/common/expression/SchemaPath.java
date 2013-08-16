@@ -27,6 +27,7 @@ import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.Types;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.Iterators;
 import com.google.protobuf.DescriptorProtos.UninterpretedOption.NamePart;
 
@@ -57,6 +58,12 @@ public class SchemaPath extends LogicalExpressionBase {
   private final CharSequence originalPath;
   private final PathSegment rootSegment;
 
+  public SchemaPath(SchemaPath path){
+    super(path.getPosition());
+    this.originalPath = path.originalPath;
+    this.rootSegment = path.rootSegment;
+  }
+  
   public SchemaPath(CharSequence str, ExpressionPosition pos) {
     super(pos);
 
@@ -89,12 +96,26 @@ public class SchemaPath extends LogicalExpressionBase {
     rootSegment = r;
 
   }
+  
+  private SchemaPath(SchemaPath parent, String[] childPaths){
+    super(ExpressionPosition.UNKNOWN);
+    SchemaPath p = new SchemaPath(Joiner.on('.').join(childPaths), ExpressionPosition.UNKNOWN);
+    this.originalPath = parent.originalPath + "." + p.originalPath;
+    PathSegment seg = parent.getRootSegment().clone();
+    this.rootSegment = seg;
+    while(!seg.isLastPath()) seg = seg.getChild();
+    seg.setChild(p.getRootSegment());
+  }
 
   @Override
   public <T, V, E extends Exception> T accept(ExprVisitor<T, V, E> visitor, V value) throws E {
     return visitor.visitSchemaPath(this, value);
   }
 
+  public SchemaPath getChild(String[] childPaths){
+    return new SchemaPath(this, childPaths);
+  }
+  
   public PathSegment getRootSegment() {
     return rootSegment;
   }

@@ -44,7 +44,8 @@ public class SelectionVector2 implements Closeable{
   }
 
   public char getIndex(int index){
-    return buffer.getChar(index);
+    
+    return buffer.getChar(index*2);
   }
 
   public void setIndex(int index, char value){

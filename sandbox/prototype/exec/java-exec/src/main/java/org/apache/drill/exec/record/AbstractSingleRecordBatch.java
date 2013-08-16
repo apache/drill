@@ -8,6 +8,7 @@ public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> exte
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractSingleRecordBatch.class);
   
   protected final RecordBatch incoming;
+  private boolean first = true;
   
   public AbstractSingleRecordBatch(T popConfig, FragmentContext context, RecordBatch incoming) {
     super(popConfig, context);
@@ -22,7 +23,8 @@ public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> exte
   @Override
   public IterOutcome next() {
     IterOutcome upstream = incoming.next();
-    
+    if(first && upstream == IterOutcome.OK) upstream = IterOutcome.OK_NEW_SCHEMA;
+    first = false;
     switch(upstream){
     case NONE:
     case NOT_YET:
