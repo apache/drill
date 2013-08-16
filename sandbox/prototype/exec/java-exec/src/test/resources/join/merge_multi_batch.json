@@ -1,0 +1,47 @@
+{
+  head:{
+    type:"APACHE_DRILL_PHYSICAL",
+    version:"1",
+    generator:{
+      type:"manual"
+    }
+  },
+  graph:[
+    {
+      @id:1,
+      pop:"json-sub-scan",
+      readEntries:[
+        {path: "#{LEFT_FILE}"}
+      ],
+      engineConfig:{
+         "type":"json",
+         "dfsName" : "file:///"
+      }
+      
+    },
+    {
+      @id:2,
+      pop:"json-sub-scan",
+      readEntries:[
+        {path: "#{RIGHT_FILE}"}
+      ],
+      engineConfig:{
+         "type":"json",
+         "dfsName" : "file:///"
+      }
+      
+    },
+    {
+      @id: 3,
+      left: 1,
+      right: 2,
+      pop: "merge-join",
+      join-conditions: [ { relationship: "==", left: "a", right: "aa" } ]
+    },
+    {
+      @id: 4,
+      child: 3,
+      pop: "screen"
+    }
+  ]
+}

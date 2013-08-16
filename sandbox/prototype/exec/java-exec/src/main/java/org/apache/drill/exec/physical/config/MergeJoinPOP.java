@@ -61,4 +61,8 @@ public class MergeJoinPOP extends AbstractBase{
   public Iterator<PhysicalOperator> iterator() {
     return Iterators.forArray(left, right);
   }
+
+  public List<JoinCondition> getConditions() {
+    return conditions;
+  }
 }

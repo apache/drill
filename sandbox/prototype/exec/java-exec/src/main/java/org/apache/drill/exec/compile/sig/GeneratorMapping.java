@@ -12,6 +12,7 @@ public class GeneratorMapping {
   private String reset;
   private String cleanup;
   
+
   public GeneratorMapping(String setup, String eval, String reset, String cleanup) {
     super();
     this.setup = setup;
@@ -20,6 +21,10 @@ public class GeneratorMapping {
     this.cleanup = cleanup;
   }
 
+  public static GeneratorMapping GM(String setup, String eval){
+    return create(setup, eval, null, null);
+  }
+  
   public static GeneratorMapping GM(String setup, String eval, String reset, String cleanup){
     return create(setup, eval, reset, cleanup);
   }

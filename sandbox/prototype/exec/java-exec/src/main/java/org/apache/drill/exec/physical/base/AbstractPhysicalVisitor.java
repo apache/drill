@@ -27,6 +27,8 @@ import org.apache.drill.exec.physical.config.RangeSender;
 import org.apache.drill.exec.physical.config.Screen;
 import org.apache.drill.exec.physical.config.SingleSender;
 import org.apache.drill.exec.physical.config.Sort;
+import org.apache.drill.exec.physical.config.StreamingAggregate;
+import org.apache.drill.exec.physical.config.Union;
 import org.apache.drill.exec.physical.config.UnionExchange;
 
 public abstract class AbstractPhysicalVisitor<T, X, E extends Throwable> implements PhysicalVisitor<T, X, E> {
@@ -38,7 +40,7 @@ public abstract class AbstractPhysicalVisitor<T, X, E extends Throwable> impleme
   }
 
   @Override
-  public T visitUnion(UnionExchange union, X value) throws E {
+  public T visitUnion(Union union, X value) throws E {
     return visitOp(union, value);
   }
 

@@ -1,9 +1,10 @@
 package org.apache.drill.exec.physical.impl.join;
 
-import org.apache.drill.exec.record.RecordBatch;
+import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.record.VectorContainer;
 
 public interface JoinEvaluator {
-  public abstract void setup(RecordBatch left, RecordBatch right, RecordBatch outgoing);
-  public abstract boolean copy(int leftPosition, int rightPosition, int outputPosition);
-  public abstract int compare(int leftPosition, int rightPosition);
+  public abstract void doSetup(FragmentContext context, JoinStatus status, VectorContainer outgoing) throws SchemaChangeException;
+
 }

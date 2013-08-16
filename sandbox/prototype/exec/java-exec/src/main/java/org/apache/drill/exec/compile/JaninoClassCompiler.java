@@ -44,7 +44,9 @@ public class JaninoClassCompiler implements ClassCompiler{
   }
 
   public byte[] getClassByteCode(final String className, final String code) throws CompileException, IOException, ClassNotFoundException, ClassTransformationException {
-    logger.debug("Compiling:\n {}", code);
+    if(logger.isDebugEnabled()){
+      logger.debug("Compiling:\n {}", prefixLineNumbers(code));
+    }
     StringReader reader = new StringReader(code);
     Scanner scanner = new Scanner((String) null, reader);
     Java.CompilationUnit compilationUnit = new Parser(scanner).parseCompilationUnit();
@@ -53,6 +55,25 @@ public class JaninoClassCompiler implements ClassCompiler{
     if (classFiles.length != 1)
       throw new ClassTransformationException("Only one class file should have been generated from source code.");
     return classFiles[0].toByteArray();
+  }
+
+
+  private String prefixLineNumbers(String code) {
+    if (!debugLines) return code;
+    StringBuilder out = new StringBuilder();
+    int i = 1;
+    for (String line : code.split("\n")) {
+      int start = out.length();
+      out.append(i++);
+      int numLength = out.length() - start;
+      out.append(":");
+      for (int spaces = 0; spaces < 7 - numLength; ++spaces){
+        out.append(" ");
+      }
+      out.append(line);
+      out.append('\n');
+    }
+    return out.toString();
   }
 
   public void setDebuggingInformation(boolean debugSource, boolean debugLines, boolean debugVars) {

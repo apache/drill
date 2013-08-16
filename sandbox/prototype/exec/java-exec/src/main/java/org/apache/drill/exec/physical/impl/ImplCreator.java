@@ -28,6 +28,7 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.physical.config.Filter;
 import org.apache.drill.exec.physical.config.HashPartitionSender;
+import org.apache.drill.exec.physical.config.MergeJoinPOP;
 import org.apache.drill.exec.physical.config.Project;
 import org.apache.drill.exec.physical.config.RandomReceiver;
 import org.apache.drill.exec.physical.config.Screen;
@@ -37,7 +38,9 @@ import org.apache.drill.exec.physical.config.Sort;
 import org.apache.drill.exec.physical.config.StreamingAggregate;
 import org.apache.drill.exec.physical.config.Union;
 import org.apache.drill.exec.physical.impl.aggregate.AggBatchCreator;
+import org.apache.drill.exec.physical.config.Union;
 import org.apache.drill.exec.physical.impl.filter.FilterBatchCreator;
+import org.apache.drill.exec.physical.impl.join.MergeJoinCreator;
 import org.apache.drill.exec.physical.impl.partitionsender.PartitionSenderCreator;
 import org.apache.drill.exec.physical.impl.project.ProjectBatchCreator;
 import org.apache.drill.exec.physical.impl.sort.SortBatchCreator;
@@ -73,6 +76,7 @@ public class ImplCreator extends AbstractPhysicalVisitor<RecordBatch, FragmentCo
   private SVRemoverCreator svc = new SVRemoverCreator();
   private SortBatchCreator sbc = new SortBatchCreator();
   private AggBatchCreator abc = new AggBatchCreator();
+  private MergeJoinCreator mjc = new MergeJoinCreator();
   private RootExec root = null;
   
   private ImplCreator(){}
@@ -115,6 +119,11 @@ public class ImplCreator extends AbstractPhysicalVisitor<RecordBatch, FragmentCo
   @Override
   public RecordBatch visitSort(Sort sort, FragmentContext context) throws ExecutionSetupException {
     return sbc.getBatch(context, sort, getChildren(sort, context));
+  }
+
+  @Override
+  public RecordBatch visitMergeJoin(MergeJoinPOP op, FragmentContext context) throws ExecutionSetupException {
+    return mjc.getBatch(context, op, getChildren(op, context));
   }
 
   @Override

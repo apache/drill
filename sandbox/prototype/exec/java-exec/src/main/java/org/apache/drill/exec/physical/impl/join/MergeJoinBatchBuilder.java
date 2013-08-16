@@ -40,19 +40,20 @@ public class MergeJoinBatchBuilder {
   private JoinStatus status;
 
   public MergeJoinBatchBuilder(FragmentContext context, JoinStatus status) {
+    this.container = new VectorContainer();
     this.status = status;
     this.svAllocator = context.getAllocator().getPreAllocator();
   }
 
   public boolean add(RecordBatch batch) {
     if (batch.getSchema().getSelectionVectorMode() == BatchSchema.SelectionVectorMode.FOUR_BYTE)
-      throw new UnsupportedOperationException("A sort cannot currently work against a sv4 batch.");
+      throw new UnsupportedOperationException("A merge join cannot currently work against a sv4 batch.");
     if (batch.getRecordCount() == 0) return true; // skip over empty record batches.
 
     // resource checks
     long batchBytes = getSize(batch);
     if (batchBytes + runningBytes > Integer.MAX_VALUE) return false;      // TODO: 2GB is arbitrary
-    if (runningBatches + 1 > Character.MAX_VALUE) return false;           // allowed in batch.
+    if (runningBatches++ >= Character.MAX_VALUE) return false;            // allowed in batch.
     if (!svAllocator.preAllocate(batch.getRecordCount()*4)) return false; // sv allocation available.
 
     // transfer VVs to a new RecordBatchData
@@ -73,7 +74,6 @@ public class MergeJoinBatchBuilder {
 
   public void build() throws SchemaChangeException {
     container.clear();
-//    if (queuedRightBatches.keySet().size() > 1) throw new SchemaChangeException("Join currently only supports a single schema.");
     if (queuedRightBatches.size() > Character.MAX_VALUE) throw new SchemaChangeException("Join cannot work on more than %d batches at a time.", (int) Character.MAX_VALUE);
     status.sv4 = new SelectionVector4(svAllocator.getAllocation(), recordCount, Character.MAX_VALUE);
     BatchSchema schema = queuedRightBatches.keySet().iterator().next();
