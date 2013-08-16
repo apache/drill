@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.apache.drill.exec.physical.config;
+package org.apache.drill.exec.store.mock;
 
 import java.util.Collections;
 import java.util.List;

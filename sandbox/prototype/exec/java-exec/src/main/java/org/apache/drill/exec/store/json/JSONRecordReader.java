@@ -1,4 +1,4 @@
-package org.apache.drill.exec.store;
+package org.apache.drill.exec.store.json;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
@@ -10,6 +10,7 @@ import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import com.google.common.io.InputSupplier;
 import com.google.common.io.Resources;
+
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.ExpressionPosition;
@@ -24,6 +25,8 @@ import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.schema.*;
 import org.apache.drill.exec.schema.json.jackson.JacksonHelper;
+import org.apache.drill.exec.store.RecordReader;
+import org.apache.drill.exec.store.VectorHolder;
 import org.apache.drill.exec.vector.*;
 
 import java.io.File;

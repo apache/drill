@@ -27,7 +27,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Vector;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.types.TypeProtos;
@@ -72,40 +71,30 @@ public class ParquetRecordReaderTest {
     new ParquetRecordReaderTest().testMultipleRowGroupsAndReadsEvent();
   }
 
+ 
   @Test
   public void testMultipleRowGroupsAndReadsEvent() throws Exception {
     String planName = "/parquet_scan_screen.json";
-    String fileName = "/tmp/testParquetFile_many_types_3";
+    String fileName = "/tmp/parquet_test_file_many_types";
     int numberRowGroups = 20;
     int recordsPerRowGroup = 300000;
-    //TestFileGenerator.generateParquetFile(fileName, numberRowGroups, recordsPerRowGroup);
+    File f = new File(fileName);
+    if(!f.exists()) TestFileGenerator.generateParquetFile(fileName, numberRowGroups, recordsPerRowGroup);
     testParquetFullEngineLocal(planName, fileName, 2, numberRowGroups, recordsPerRowGroup);
   }
 
   private class ParquetResultListener implements UserResultsListener {
-    private Vector<QueryResultBatch> results = new Vector<QueryResultBatch>();
     private SettableFuture<Void> future = SettableFuture.create();
-    int count = 0;
     RecordBatchLoader batchLoader;
-    byte[] bytes;
 
-    int numberRowGroups;
-    int numberOfTimesRead;
     int batchCounter = 1;
-    int columnValCounter = 0;
-    int i = 0;
-    private FieldInfo currentField;
     private final HashMap<String, Long> valuesChecked = new HashMap<>();
-    private final int recordsPerRowGroup;
     private final Map<String, FieldInfo> fields;
     private final long totalRecords;
     
     ParquetResultListener(int recordsPerRowGroup, RecordBatchLoader batchLoader, int numberRowGroups, int numberOfTimesRead){
       this.batchLoader = batchLoader;
       this.fields = TestFileGenerator.getFieldMap(recordsPerRowGroup);
-      this.recordsPerRowGroup = recordsPerRowGroup;
-      this.numberRowGroups = numberRowGroups;
-      this.numberOfTimesRead = numberOfTimesRead;
       this.totalRecords = recordsPerRowGroup * numberRowGroups * numberOfTimesRead;
     }
 
@@ -120,7 +109,7 @@ public class ParquetRecordReaderTest {
       long columnValCounter = 0;
       int i = 0;
       FieldInfo currentField;
-      count += result.getHeader().getRowCount();
+
       boolean schemaChanged = false;
       try {
         schemaChanged = batchLoader.load(result.getHeader().getDef(), result.getData());
@@ -128,12 +117,11 @@ public class ParquetRecordReaderTest {
         logger.error("Failure while loading batch", e);
       }
 
-      int recordCount = 0;
       // print headers.
       if (schemaChanged) {
       } // do not believe any change is needed for when the schema changes, with the current mock scan use case
 
-      for (VectorWrapper vw : batchLoader) {
+      for (VectorWrapper<?> vw : batchLoader) {
         ValueVector vv = vw.getValueVector();
         currentField = fields.get(vv.getField().getName());
         if (VERBOSE_DEBUG){
@@ -163,7 +151,6 @@ public class ParquetRecordReaderTest {
       
       if (VERBOSE_DEBUG){
         for (i = 0; i < batchLoader.getRecordCount(); i++) {
-          recordCount++;
           if (i % 50 == 0){
             System.out.println();
             for (VectorWrapper<?> vw : batchLoader) {
@@ -298,11 +285,6 @@ public class ParquetRecordReaderTest {
 
   @SuppressWarnings("unchecked")
   private <T> void assertField(ValueVector valueVector, int index, TypeProtos.MinorType expectedMinorType, T value, String name, int parentFieldId) {
-//    UserBitShared.FieldMetadata metadata = valueVector.getMetadata();
-//    SchemaDefProtos.FieldDef def = metadata.getDef();
-//    assertEquals(expectedMinorType, def.getMajorType().getMinorType());
-//    assertEquals(name, def.getNameList().get(0).getName());
-//    assertEquals(parentFieldId, def.getParentId());
 
     if (expectedMinorType == TypeProtos.MinorType.MAP) {
       return;
@@ -339,9 +321,6 @@ public class ParquetRecordReaderTest {
     assertArrayEquals(bytes.toByteArray(), page.getBytes().toByteArray());
   }
 
-  private String getResource(String resourceName) {
-    return "resource:" + resourceName;
-  }
 
   
 }

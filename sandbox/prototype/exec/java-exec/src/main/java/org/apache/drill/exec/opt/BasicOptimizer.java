@@ -28,10 +28,10 @@ import org.apache.drill.exec.exception.SetupException;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.physical.config.MockGroupScanPOP;
 import org.apache.drill.exec.physical.config.Screen;
 import org.apache.drill.exec.physical.config.SelectionVectorRemover;
 import org.apache.drill.exec.store.StorageEngine;
+import org.apache.drill.exec.store.mock.MockGroupScanPOP;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 

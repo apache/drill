@@ -36,7 +36,10 @@ public final class PageReadStatus {
   // store references to the pages that have been uncompressed, but not copied to ValueVectors yet
   Page currentPage;
   // buffer to store bytes of current page, set to max size of parquet page
-  byte[] pageDataByteArray = new byte[ParquetRecordReader.PARQUET_PAGE_MAX_SIZE];
+  // TODO: add this back once toByteArray accepts an input.  byte[] pageDataByteArray = new byte[ParquetRecordReader.PARQUET_PAGE_MAX_SIZE];
+  byte[] pageDataByteArray;
+  
+  
   PageReader pageReader;
   // read position in the current page, stored in the ByteBuf in ParquetRecordReader called bufferWithAllData
   long readPosInBytes;
@@ -103,11 +106,13 @@ public final class PageReadStatus {
     }
 
     // if the buffer holding each page's data is not large enough to hold the current page, re-allocate, with a little extra space
-    if (pageHeader.getUncompressed_page_size() > pageDataByteArray.length) {
-      pageDataByteArray = new byte[pageHeader.getUncompressed_page_size() + 100];
-    }
+//    if (pageHeader.getUncompressed_page_size() > pageDataByteArray.length) {
+//      pageDataByteArray = new byte[pageHeader.getUncompressed_page_size() + 100];
+//    }
     // TODO - would like to get this into the mainline, hopefully before alpha
-    currentPage.getBytes().toByteArray(pageDataByteArray, 0, byteLength);
+    pageDataByteArray = currentPage.getBytes().toByteArray();
+    //TODO: Fix once parquet supports buffer work or at least passing in array.
+    //pageDataByteArray = currentPage.getBytes().toByteArray(pageDataByteArray, 0, byteLength);
 
     readPosInBytes = 0;
     valuesRead = 0;

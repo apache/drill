@@ -27,11 +27,16 @@ public class VectorHolder {
   private ValueVector vector;
   private int currentLength;
 
-    public VectorHolder(int length, ValueVector vector) {
-        this.length = length;
-        this.vector = vector;
-        this.mutator = vector.getMutator();
-    }
+  
+  public VectorHolder(int length, ValueVector vector) {
+    this.length = length;
+    this.vector = vector;
+  }
+  
+  public VectorHolder(ValueVector vector) {
+    this.length = vector.getValueCapacity();
+    this.vector = vector;
+  }
 
   public ValueVector getValueVector() {
     return vector;
@@ -47,9 +52,9 @@ public class VectorHolder {
   }
 
   public void setGroupCount(int groupCount) {
-    if(this.groupCount < groupCount) {
+    if (this.groupCount < groupCount) {
       RepeatedMutator mutator = (RepeatedMutator) vector.getMutator();
-      while(this.groupCount < groupCount) {
+      while (this.groupCount < groupCount) {
         mutator.startNewGroup(++this.groupCount);
       }
     }
@@ -71,7 +76,7 @@ public class VectorHolder {
 
   public void populateVectorLength() {
     ValueVector.Mutator mutator = vector.getMutator();
-    if(vector instanceof RepeatedFixedWidthVector || vector instanceof RepeatedVariableWidthVector) {
+    if (vector instanceof RepeatedFixedWidthVector || vector instanceof RepeatedVariableWidthVector) {
       mutator.setValueCount(groupCount);
     } else {
       mutator.setValueCount(count);

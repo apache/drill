@@ -62,7 +62,7 @@ public abstract class ColumnReader {
   ColumnReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
                boolean fixedLength, ValueVector v){
     this.parentReader = parentReader;
-    if (allocateSize > 1) valueVecHolder = new VectorHolder(allocateSize, (BaseDataValueVector) v);
+    if (allocateSize > 1) valueVecHolder = new VectorHolder(allocateSize, v);
     else valueVecHolder = new VectorHolder(5000, (BaseDataValueVector) v);
 
     columnDescriptor = descriptor;

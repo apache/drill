@@ -25,30 +25,31 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.AbstractPhysicalVisitor;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.physical.base.Scan;
+import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.physical.config.Filter;
-import org.apache.drill.exec.physical.config.MockScanBatchCreator;
 import org.apache.drill.exec.physical.config.Project;
 import org.apache.drill.exec.physical.config.RandomReceiver;
 import org.apache.drill.exec.physical.config.Screen;
 import org.apache.drill.exec.physical.config.SelectionVectorRemover;
 import org.apache.drill.exec.physical.config.SingleSender;
 import org.apache.drill.exec.physical.config.Sort;
-import org.apache.drill.exec.physical.base.*;
-import org.apache.drill.exec.physical.config.*;
 import org.apache.drill.exec.physical.impl.filter.FilterBatchCreator;
 import org.apache.drill.exec.physical.impl.project.ProjectBatchCreator;
 import org.apache.drill.exec.physical.impl.sort.SortBatchCreator;
 import org.apache.drill.exec.physical.impl.svremover.SVRemoverCreator;
 import org.apache.drill.exec.record.RecordBatch;
-
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import org.apache.drill.exec.store.parquet.ParquetGroupScan;
+import org.apache.drill.exec.store.json.JSONScanBatchCreator;
+import org.apache.drill.exec.store.json.JSONSubScan;
+import org.apache.drill.exec.store.mock.MockGroupScanPOP;
+import org.apache.drill.exec.store.mock.MockScanBatchCreator;
+import org.apache.drill.exec.store.mock.MockSubScanPOP;
 import org.apache.drill.exec.store.parquet.ParquetRowGroupScan;
 import org.apache.drill.exec.store.parquet.ParquetScanBatchCreator;
 
-public class ImplCreator extends AbstractPhysicalVisitor<RecordBatch, FragmentContext, ExecutionSetupException>{
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+
+public class ImplCreator extends AbstractPhysicalVisitor<RecordBatch, FragmentContext, ExecutionSetupException> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ImplCreator.class);
 
   private MockScanBatchCreator msc = new MockScanBatchCreator();
@@ -62,9 +63,10 @@ public class ImplCreator extends AbstractPhysicalVisitor<RecordBatch, FragmentCo
   private SortBatchCreator sbc = new SortBatchCreator();
   private RootExec root = null;
 
-  private ImplCreator(){}
+  private ImplCreator() {
+  }
 
-  public RootExec getRoot(){
+  public RootExec getRoot() {
     return root;
   }
 
@@ -78,20 +80,13 @@ public class ImplCreator extends AbstractPhysicalVisitor<RecordBatch, FragmentCo
     Preconditions.checkNotNull(subScan);
     Preconditions.checkNotNull(context);
 
-    if(subScan instanceof MockSubScanPOP){
+    if (subScan instanceof MockSubScanPOP) {
       return msc.getBatch(context, (MockSubScanPOP) subScan, Collections.<RecordBatch> emptyList());
-    
-    if(scan instanceof MockScanPOP){
-      return msc.getBatch(context, (MockScanPOP) scan, Collections.<RecordBatch>emptyList());
-    } else if(scan instanceof JSONScanPOP) {
-      return new JSONScanBatchCreator().getBatch(context, (JSONScanPOP)scan, Collections.<RecordBatch>emptyList());
-    }else{
-      return super.visitScan(scan, context);  
-    }
-    else if (subScan instanceof ParquetRowGroupScan){
-      return parquetScan.getBatch(context, (ParquetRowGroupScan) subScan,  Collections.<RecordBatch> emptyList());
-    }
-    else{
+    } else if (subScan instanceof JSONSubScan) {
+      return new JSONScanBatchCreator().getBatch(context, (JSONSubScan) subScan, Collections.<RecordBatch> emptyList());
+    } else if (subScan instanceof ParquetRowGroupScan) {
+      return parquetScan.getBatch(context, (ParquetRowGroupScan) subScan, Collections.<RecordBatch> emptyList());
+    } else {
       return super.visitSubScan(subScan, context);
     }
 
@@ -99,14 +94,13 @@ public class ImplCreator extends AbstractPhysicalVisitor<RecordBatch, FragmentCo
 
   @Override
   public RecordBatch visitOp(PhysicalOperator op, FragmentContext context) throws ExecutionSetupException {
-    if(op instanceof SelectionVectorRemover){
+    if (op instanceof SelectionVectorRemover) {
       return svc.getBatch(context, (SelectionVectorRemover) op, getChildren(op, context));
-    }else{
+    } else {
       return super.visitOp(op, context);
     }
   }
 
-  
   @Override
   public RecordBatch visitSort(Sort sort, FragmentContext context) throws ExecutionSetupException {
     return sbc.getBatch(context, sort, getChildren(sort, context));
@@ -135,18 +129,20 @@ public class ImplCreator extends AbstractPhysicalVisitor<RecordBatch, FragmentCo
     return rrc.getBatch(context, op, null);
   }
 
-  private List<RecordBatch> getChildren(PhysicalOperator op, FragmentContext context) throws ExecutionSetupException{
+  private List<RecordBatch> getChildren(PhysicalOperator op, FragmentContext context) throws ExecutionSetupException {
     List<RecordBatch> children = Lists.newArrayList();
-    for(PhysicalOperator child : op){
+    for (PhysicalOperator child : op) {
       children.add(child.accept(this, context));
     }
     return children;
   }
 
-  public static RootExec getExec(FragmentContext context, FragmentRoot root) throws ExecutionSetupException{
+  public static RootExec getExec(FragmentContext context, FragmentRoot root) throws ExecutionSetupException {
     ImplCreator i = new ImplCreator();
     root.accept(i, context);
-    if(i.root == null) throw new ExecutionSetupException("The provided fragment did not have a root node that correctly created a RootExec value.");
+    if (i.root == null)
+      throw new ExecutionSetupException(
+          "The provided fragment did not have a root node that correctly created a RootExec value.");
     return i.getRoot();
   }
 }

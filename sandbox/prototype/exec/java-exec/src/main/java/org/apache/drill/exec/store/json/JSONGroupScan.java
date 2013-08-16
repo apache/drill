@@ -16,19 +16,9 @@
  * limitations under the License.
  ******************************************************************************/
 
-package org.apache.drill.exec.physical.config;
+package org.apache.drill.exec.store.json;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import org.apache.drill.exec.physical.EndpointAffinity;
-import org.apache.drill.exec.physical.OperatorCost;
-import org.apache.drill.exec.physical.ReadEntry;
-import org.apache.drill.exec.physical.base.AbstractScan;
-import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.physical.base.Scan;
-import org.apache.drill.exec.physical.base.Size;
-import org.apache.drill.exec.proto.CoordinationProtos;
+import static com.google.common.base.Preconditions.checkArgument;
 
 import java.io.File;
 import java.net.URI;
@@ -36,28 +26,50 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-import static com.google.common.base.Preconditions.checkArgument;
+import org.apache.drill.exec.physical.EndpointAffinity;
+import org.apache.drill.exec.physical.OperatorCost;
+import org.apache.drill.exec.physical.ReadEntry;
+import org.apache.drill.exec.physical.base.AbstractGroupScan;
+import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.physical.base.Size;
+import org.apache.drill.exec.physical.base.SubScan;
+import org.apache.drill.exec.proto.CoordinationProtos;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName("json-scan")
-public class JSONScanPOP extends AbstractScan<JSONScanPOP.ScanEntry> {
+public class JSONGroupScan extends AbstractGroupScan {
     private static int ESTIMATED_RECORD_SIZE = 1024; // 1kb
 
-    private LinkedList[] mappings;
-
+    private LinkedList<JSONGroupScan.ScanEntry>[] mappings;
+    protected final List<JSONGroupScan.ScanEntry> readEntries;
+    private final OperatorCost cost;
+    private final Size size;
+    
     @JsonCreator
-    public JSONScanPOP(@JsonProperty("entries") List<JSONScanPOP.ScanEntry> readEntries) {
-        super(readEntries);
+    public JSONGroupScan(@JsonProperty("entries") List<JSONGroupScan.ScanEntry> readEntries) {
+        this.readEntries = readEntries;
+        OperatorCost cost = new OperatorCost(0,0,0,0);
+        Size size = new Size(0,0);
+        for(JSONGroupScan.ScanEntry r : readEntries){
+          cost = cost.add(r.getCost());
+          size = size.add(r.getSize());
+        }
+        this.cost = cost;
+        this.size = size;
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public void applyAssignments(List<CoordinationProtos.DrillbitEndpoint> endpoints) {
-        checkArgument(endpoints.size() <= getReadEntries().size());
+        checkArgument(endpoints.size() <= readEntries.size());
 
         mappings = new LinkedList[endpoints.size()];
 
         int i = 0;
-        for (ScanEntry e : this.getReadEntries()) {
+        for (ScanEntry e : readEntries) {
             if (i == endpoints.size()) i = 0;
             LinkedList entries = mappings[i];
             if (entries == null) {
@@ -71,19 +83,23 @@ public class JSONScanPOP extends AbstractScan<JSONScanPOP.ScanEntry> {
 
     @SuppressWarnings("unchecked")
     @Override
-    public Scan<?> getSpecificScan(int minorFragmentId) {
+    public SubScan getSpecificScan(int minorFragmentId) {
         checkArgument(minorFragmentId < mappings.length, "Mappings length [%s] should be longer than minor fragment id [%s] but it isn't.", mappings.length, minorFragmentId);
-        return new JSONScanPOP(mappings[minorFragmentId]);
+        return new JSONSubScan(mappings[minorFragmentId]);
     }
 
     @Override
     public List<EndpointAffinity> getOperatorAffinity() {
         return Collections.emptyList();
     }
+    
+    public List<JSONGroupScan.ScanEntry> getReadEntries() {
+      return readEntries;
+    }
 
     @Override
     public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
-        return new JSONScanPOP(readEntries);
+        return new JSONGroupScan(readEntries);
     }
 
     public static class ScanEntry implements ReadEntry {
@@ -110,5 +126,20 @@ public class JSONScanPOP extends AbstractScan<JSONScanPOP.ScanEntry> {
         public String getUrl() {
             return url;
         }
+    }
+
+    @Override
+    public int getMaxParallelizationWidth() {
+      return readEntries.size();
+    }
+
+    @Override
+    public OperatorCost getCost() {
+      return cost;
+    }
+
+    @Override
+    public Size getSize() {
+      return size;
     }
 }

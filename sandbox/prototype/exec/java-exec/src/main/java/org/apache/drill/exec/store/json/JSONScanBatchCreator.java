@@ -16,28 +16,28 @@
  * limitations under the License.
  ******************************************************************************/
 
-package org.apache.drill.exec.physical.config;
+package org.apache.drill.exec.store.json;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.physical.impl.ScanBatch;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.store.JSONRecordReader;
 import org.apache.drill.exec.store.RecordReader;
 
 import java.util.List;
 
-public class JSONScanBatchCreator implements BatchCreator<JSONScanPOP> {
+public class JSONScanBatchCreator implements BatchCreator<JSONSubScan> {
 
     @Override
-    public RecordBatch getBatch(FragmentContext context, JSONScanPOP config, List<RecordBatch> children) throws ExecutionSetupException {
+    public RecordBatch getBatch(FragmentContext context, JSONSubScan config, List<RecordBatch> children) throws ExecutionSetupException {
         Preconditions.checkArgument(children.isEmpty());
-        List<JSONScanPOP.ScanEntry> entries = config.getReadEntries();
+        List<JSONGroupScan.ScanEntry> entries = config.getReadEntries();
         List<RecordReader> readers = Lists.newArrayList();
-        for (JSONScanPOP.ScanEntry e : entries) {
+        for (JSONGroupScan.ScanEntry e : entries) {
             readers.add(new JSONRecordReader(context, e.getUrl()));
         }
 

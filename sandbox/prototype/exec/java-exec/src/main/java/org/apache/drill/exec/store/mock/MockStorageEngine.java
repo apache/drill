@@ -22,10 +22,9 @@ import java.util.ArrayList;
 
 import org.apache.drill.common.logical.data.Scan;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
-import org.apache.drill.exec.physical.config.MockGroupScanPOP;
-import org.apache.drill.exec.physical.config.MockGroupScanPOP.MockScanEntry;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStorageEngine;
+import org.apache.drill.exec.store.mock.MockGroupScanPOP.MockScanEntry;
 import org.apache.drill.storage.MockStorageEngineConfig;
 
 import com.fasterxml.jackson.core.type.TypeReference;
