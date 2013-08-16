@@ -54,7 +54,7 @@ public class TestFileGenerator {
       this.parquetType = parquetType;
       this.name = name;
       this.bitLength = bitLength;
-      this.numberOfPages = Math.max(1, (int) Math.ceil(recordsPerRowGroup * bitLength / 8.0 / bytesPerPage));
+      this.numberOfPages = Math.max(1, (int) Math.ceil( ((long) recordsPerRowGroup) * bitLength / 8.0 / bytesPerPage));
       this.values = values;
       // generator is designed to use 3 values
       assert values.length == 3;
@@ -91,7 +91,7 @@ public class TestFileGenerator {
     fields.put("bigInt/", new FieldInfo(recordsPerRowGroup, "int64", "bigInt", 64, longVals, TypeProtos.MinorType.BIGINT));
     fields.put("f/", new FieldInfo(recordsPerRowGroup, "float", "f", 32, floatVals, TypeProtos.MinorType.FLOAT4));
     fields.put("d/", new FieldInfo(recordsPerRowGroup, "double", "d", 64, doubleVals, TypeProtos.MinorType.FLOAT8));
-    // fields.put("b/", new FieldInfo("binary", "b", 1, boolVals, TypeProtos.MinorType.BIT));
+    fields.put("b/", new FieldInfo(recordsPerRowGroup, "boolean", "b", 1, boolVals, TypeProtos.MinorType.BIT));
     fields.put("bin/", new FieldInfo(recordsPerRowGroup, "binary", "bin", -1, binVals, TypeProtos.MinorType.VARBINARY));
     fields.put("bin2/", new FieldInfo(recordsPerRowGroup, "binary", "bin2", -1, bin2Vals, TypeProtos.MinorType.VARBINARY));
     return fields;
@@ -129,6 +129,8 @@ public class TestFileGenerator {
     int valsWritten;
     for (int k = 0; k < numberRowGroups; k++) {
       w.startBlock(1);
+      currentBooleanByte = 0;
+      booleanBitCounter.reset();
 
       for (FieldInfo fieldInfo : fields.values()) {
 
@@ -143,7 +145,7 @@ public class TestFileGenerator {
         ColumnDescriptor c1 = schema.getColumnDescription(path1);
 
         w.startColumn(c1, recordsPerRowGroup, codec);
-        int valsPerPage = (int) Math.ceil(recordsPerRowGroup / (float) ((int) fieldInfo.numberOfPages));
+        int valsPerPage = (int) Math.ceil(recordsPerRowGroup / (float) fieldInfo.numberOfPages);
         byte[] bytes;
         // for variable length binary fields
         int bytesNeededToEncodeLength = 4;

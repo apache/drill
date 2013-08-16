@@ -19,7 +19,7 @@
     ],
     storageengine:{
                          "type":"parquet",
-                         "dfsName" : "maprfs:///"
+                         "dfsName" : "file:///"
                    }
   },
   {

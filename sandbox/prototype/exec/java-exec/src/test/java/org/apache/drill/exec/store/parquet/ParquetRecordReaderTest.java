@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.types.TypeProtos;
@@ -46,6 +47,7 @@ import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.store.parquet.TestFileGenerator.FieldInfo;
 import org.apache.drill.exec.vector.BaseDataValueVector;
 import org.apache.drill.exec.vector.ValueVector;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import parquet.bytes.BytesInput;
@@ -57,6 +59,7 @@ import parquet.hadoop.metadata.ParquetMetadata;
 import parquet.schema.MessageType;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import com.google.common.util.concurrent.SettableFuture;
@@ -66,22 +69,37 @@ public class ParquetRecordReaderTest {
 
   private boolean VERBOSE_DEBUG = false;
 
-  
-  public static void main(String[] args) throws Exception{
-    new ParquetRecordReaderTest().testMultipleRowGroupsAndReadsEvent();
-  }
+  static final int numberRowGroups = 20;
+  static final int recordsPerRowGroup = 300000;
+  static final String fileName = "/tmp/parquet_test_file_many_types";
 
- 
-  @Test
-  public void testMultipleRowGroupsAndReadsEvent() throws Exception {
-    String planName = "/parquet_scan_screen.json";
-    String fileName = "/tmp/parquet_test_file_many_types";
-    int numberRowGroups = 20;
-    int recordsPerRowGroup = 300000;
+  @BeforeClass
+  public static void generateFile() throws Exception{
     File f = new File(fileName);
     if(!f.exists()) TestFileGenerator.generateParquetFile(fileName, numberRowGroups, recordsPerRowGroup);
-    testParquetFullEngineLocal(planName, fileName, 2, numberRowGroups, recordsPerRowGroup);
   }
+ 
+  @Test
+  public void testMultipleRowGroupsAndReads() throws Exception {
+    String planName = "/parquet/parquet_scan_screen.json";
+    testParquetFullEngineLocalPath(planName, fileName, 2, numberRowGroups, recordsPerRowGroup);
+  }
+  
+  @Test
+  public void testMultipleRowGroupsAndReads2() throws Exception {
+    String readEntries;
+    readEntries = "";
+    // number of times to read the file
+    int i = 3;
+    for (int j = 0; j < i; j++){
+      readEntries += "{path: \""+fileName+"\"}";
+      if (j < i - 1)
+        readEntries += ",";
+    }
+    String planText = Files.toString(FileUtils.getResourceAsFile("/parquet/parquet_scan_screen_read_entry_replace.json"), Charsets.UTF_8).replaceFirst( "&REPLACED_IN_PARQUET_TEST&", readEntries);
+    testParquetFullEngineLocalText(planText, fileName, i, numberRowGroups, recordsPerRowGroup);
+  }
+
 
   private class ParquetResultListener implements UserResultsListener {
     private SettableFuture<Void> future = SettableFuture.create();
@@ -198,6 +216,8 @@ public class ParquetRecordReaderTest {
   }
 
   
+  
+  
   public void testParquetFullEngineRemote(String plan, String filename, int numberOfTimesRead /* specified in json plan */, int numberOfRowGroups, int recordsPerRowGroup) throws Exception{
     
     DrillConfig config = DrillConfig.create();
@@ -212,8 +232,13 @@ public class ParquetRecordReaderTest {
     
   }
   
-  // specific tests should call this method, but it is not marked as a test itself intentionally
-  public void testParquetFullEngineLocal(String plan, String filename, int numberOfTimesRead /* specified in json plan */, int numberOfRowGroups, int recordsPerRowGroup) throws Exception{
+  
+  public void testParquetFullEngineLocalPath(String planFileName, String filename, int numberOfTimesRead /* specified in json plan */, int numberOfRowGroups, int recordsPerRowGroup) throws Exception{
+    testParquetFullEngineLocalText(Files.toString(FileUtils.getResourceAsFile(planFileName), Charsets.UTF_8), filename, numberOfTimesRead, numberOfRowGroups, recordsPerRowGroup);
+  }
+  
+  //specific tests should call this method, but it is not marked as a test itself intentionally
+  public void testParquetFullEngineLocalText(String planText, String filename, int numberOfTimesRead /* specified in json plan */, int numberOfRowGroups, int recordsPerRowGroup) throws Exception{
     
     RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
@@ -224,8 +249,11 @@ public class ParquetRecordReaderTest {
       client.connect();
       RecordBatchLoader batchLoader = new RecordBatchLoader(client.getAllocator());
       ParquetResultListener resultListener = new ParquetResultListener(recordsPerRowGroup, batchLoader, numberOfRowGroups, numberOfTimesRead);
-      client.runQuery(UserProtos.QueryType.LOGICAL, Files.toString(FileUtils.getResourceAsFile(plan), Charsets.UTF_8), resultListener);
+      Stopwatch watch = new Stopwatch().start();
+      client.runQuery(UserProtos.QueryType.LOGICAL, planText, resultListener);
       resultListener.get();
+      System.out.println(String.format("Took %d ms to run query", watch.elapsed(TimeUnit.MILLISECONDS)));
+
     }
     
   }
@@ -312,7 +340,8 @@ public class ParquetRecordReaderTest {
       assertEquals(footer.getFile().getName(), keyValueMetaData.get(footer.getFile().getName()));
     }
   }
-
+  
+  
   private void validateContains(MessageType schema, PageReadStore pages, String[] path, int values, BytesInput bytes)
       throws IOException {
     PageReader pageReader = pages.getPageReader(schema.getColumnDescription(path));
