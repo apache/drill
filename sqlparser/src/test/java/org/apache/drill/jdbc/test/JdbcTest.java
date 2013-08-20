@@ -399,6 +399,37 @@ public class JdbcTest {
             + "DEPTID=null; LASTNAME=John\n")
         .planContains("'op':'order'");
   }
+
+  @Test
+  public void testLimit() throws Exception {
+    JdbcAssert
+        .withModel(MODEL, "HR")
+        .sql("select LASTNAME from emp limit 2")
+        .planContains("\"op\":\"limit\"")
+        .returns("LASTNAME=Rafferty\n" +
+            "LASTNAME=Jones");
+  }
+
+  @Test
+  public void testOrderByWithOffset() throws Exception {
+    JdbcAssert
+        .withModel(MODEL, "HR")
+        .sql("select LASTNAME from emp order by LASTNAME asc offset 3")
+        .planContains("\"op\":\"limit\"")
+        .returns("LASTNAME=Robinson\n" +
+            "LASTNAME=Smith\n" +
+            "LASTNAME=John");
+  }
+
+  @Test
+  public void testOrderByWithOffsetAndFetch() throws Exception {
+    JdbcAssert
+        .withModel(MODEL, "HR")
+        .sql("select LASTNAME from emp order by LASTNAME asc offset 3 fetch next 2 rows only")
+        .planContains("\"op\":\"limit\"")
+        .returns("LASTNAME=Robinson\n" +
+            "LASTNAME=Smith");
+  }
 }
 
 // End JdbcTest.java

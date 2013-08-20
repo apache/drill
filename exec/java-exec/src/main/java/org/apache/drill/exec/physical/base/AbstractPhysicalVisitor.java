@@ -17,19 +17,7 @@
  */
 package org.apache.drill.exec.physical.base;
 
-import org.apache.drill.exec.physical.config.Filter;
-import org.apache.drill.exec.physical.config.HashPartitionSender;
-import org.apache.drill.exec.physical.config.HashToRandomExchange;
-import org.apache.drill.exec.physical.config.MergeJoinPOP;
-import org.apache.drill.exec.physical.config.Project;
-import org.apache.drill.exec.physical.config.RandomReceiver;
-import org.apache.drill.exec.physical.config.RangeSender;
-import org.apache.drill.exec.physical.config.Screen;
-import org.apache.drill.exec.physical.config.SingleSender;
-import org.apache.drill.exec.physical.config.Sort;
-import org.apache.drill.exec.physical.config.StreamingAggregate;
-import org.apache.drill.exec.physical.config.Union;
-import org.apache.drill.exec.physical.config.UnionExchange;
+import org.apache.drill.exec.physical.config.*;
 
 public abstract class AbstractPhysicalVisitor<T, X, E extends Throwable> implements PhysicalVisitor<T, X, E> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractPhysicalVisitor.class);
@@ -58,7 +46,11 @@ public abstract class AbstractPhysicalVisitor<T, X, E extends Throwable> impleme
   public T visitSort(Sort sort, X value) throws E{
     return visitOp(sort, value);
   }
-  
+
+  @Override
+  public T visitLimit(Limit limit, X value) throws E {
+    return visitOp(limit, value);
+  }
 
   @Override
   public T visitStreamingAggregate(StreamingAggregate agg, X value) throws E {

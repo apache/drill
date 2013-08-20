@@ -48,5 +48,4 @@ public class FullEngineTest {
     // .sql("select cast(_MAP['red'] as bigint) + 1 as red_inc from donuts ")
         .sql("select * from \"department.json\" ").displayResults(50);
   }
-
 }

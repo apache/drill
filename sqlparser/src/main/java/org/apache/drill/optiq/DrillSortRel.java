@@ -30,19 +30,27 @@ import org.eigenbase.relopt.RelTraitSet;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.eigenbase.rex.RexLiteral;
+import org.eigenbase.rex.RexNode;
 
 /**
  * Sort implemented in Drill.
  */
 public class DrillSortRel extends SortRel implements DrillRel {
+
   /** Creates a DrillSortRel. */
   public DrillSortRel(RelOptCluster cluster, RelTraitSet traits, RelNode input, RelCollation collation) {
     super(cluster, traits, input, collation);
   }
 
+  /** Creates a DrillSortRel with offset and fetch. */
+  public DrillSortRel(RelOptCluster cluster, RelTraitSet traits, RelNode input, RelCollation collation, RexNode offset, RexNode fetch) {
+    super(cluster, traits, input, collation, offset, fetch);
+  }
+
   @Override
-  public DrillSortRel copy(RelTraitSet traitSet, RelNode input, RelCollation collation) {
-    return new DrillSortRel(getCluster(), traitSet, input, collation);
+  public DrillSortRel copy(RelTraitSet traitSet, RelNode input, RelCollation collation, RexNode offset, RexNode fetch) {
+    return new DrillSortRel(getCluster(), traitSet, input, collation, offset, fetch);
   }
 
   @Override
@@ -74,6 +82,8 @@ public class DrillSortRel extends SortRel implements DrillRel {
 
     return implementor.add(order);
   }
+
+
 
   private static String toDrill(RelFieldCollation collation) {
     switch (collation.getDirection()) {

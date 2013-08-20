@@ -34,6 +34,11 @@ public class DrillSortRule extends RelOptRule {
   @Override
   public void onMatch(RelOptRuleCall call) {
     final SortRel sort = call.rel(0);
+
+    if(sort.offset != null || sort.fetch != null) {
+      return; //Sort already handled by DrillLimitRule
+    }
+
     final RelNode input = call.rel(1);
     final RelTraitSet traits = sort.getTraitSet().plus(DrillRel.CONVENTION);
     final RelTraitSet inputTraits = input.getTraitSet().plus(DrillRel.CONVENTION);

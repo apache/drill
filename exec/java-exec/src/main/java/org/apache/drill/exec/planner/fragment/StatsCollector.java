@@ -19,6 +19,7 @@ package org.apache.drill.exec.planner.fragment;
 
 import org.apache.drill.exec.physical.base.*;
 import org.apache.drill.exec.physical.base.GroupScan;
+import org.apache.drill.exec.physical.config.Limit;
 import org.apache.drill.exec.planner.AbstractOpWrapperVisitor;
 import org.apache.drill.exec.planner.fragment.Fragment.ExchangeFragmentPair;
 
@@ -89,6 +90,12 @@ public class StatsCollector {
       Stats stats = wrapper.getStats();
       stats.addMaxWidth(store.getMaxWidth());
       return super.visitStore(store, wrapper);
+    }
+
+    @Override
+    public Void visitLimit(Limit limit, Wrapper value) throws RuntimeException {
+      // TODO: Implement this
+      return visitOp(limit, value);
     }
 
     @Override

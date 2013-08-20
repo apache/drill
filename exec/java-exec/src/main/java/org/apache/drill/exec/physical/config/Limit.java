@@ -1,4 +1,4 @@
-/**
+/*******************************************************************************
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -14,26 +14,26 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
-package org.apache.drill.common.logical.data;
+ ******************************************************************************/
+package org.apache.drill.exec.physical.config;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.google.common.collect.Iterators;
-import org.apache.drill.common.logical.data.visitors.LogicalVisitor;
-
-import java.util.Iterator;
+import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.exec.physical.OperatorCost;
+import org.apache.drill.exec.physical.base.AbstractSingle;
+import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.physical.base.PhysicalVisitor;
 
 @JsonTypeName("limit")
-public class Limit extends SingleInputOperator{
-  
+public class Limit extends AbstractSingle {
   private final Integer first;
   private final Integer last;
-  
+
   @JsonCreator
-  public Limit(@JsonProperty("first") Integer first, @JsonProperty("last") Integer last) {
-    super();
+  public Limit(@JsonProperty("child") PhysicalOperator child, @JsonProperty("first") Integer first, @JsonProperty("last") Integer last) {
+    super(child);
     this.first = first;
     this.last = last;
   }
@@ -46,15 +46,18 @@ public class Limit extends SingleInputOperator{
     return last;
   }
 
-    @Override
-    public <T, X, E extends Throwable> T accept(LogicalVisitor<T, X, E> logicalVisitor, X value) throws E {
-        return logicalVisitor.visitLimit(this, value);
-    }
+  @Override
+  protected PhysicalOperator getNewWithChild(PhysicalOperator child) {
+    return new Limit(child, first, last);
+  }
 
-    @Override
-    public Iterator<LogicalOperator> iterator() {
-        return Iterators.singletonIterator(getInput());
-    }
+  @Override
+  public OperatorCost getCost() {
+    return new OperatorCost(0, 0, 0, 0.25f);
+  }
 
-
+  @Override
+  public <T, X, E extends Throwable> T accept(PhysicalVisitor<T, X, E> physicalVisitor, X value) throws E {
+    return physicalVisitor.visitLimit(this, value);
+  }
 }

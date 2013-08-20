@@ -25,8 +25,8 @@ import org.apache.drill.exec.ref.eval.EvaluatorFactory;
 public class LimitROP extends SingleInputROPBase<Limit>{
 
   private LimitIterator iter;
-  private int first;
-  private int last;
+  private Integer first;
+  private Integer last;
 
   public LimitROP(Limit config) {
     super(config);
@@ -62,10 +62,10 @@ public class LimitROP extends SingleInputROPBase<Limit>{
       while(true){
         r = incoming.next();
         currentIndex++;
-        if (currentIndex > first && currentIndex <= last)
+        if (currentIndex > first && (last == null || currentIndex <= last))
             return r;
 
-        if (currentIndex > last)
+        if (last != null && currentIndex > last)
             return NextOutcome.NONE_LEFT;
       }
     }

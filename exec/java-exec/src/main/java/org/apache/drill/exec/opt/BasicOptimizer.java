@@ -32,19 +32,9 @@ import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.logical.StorageEngineConfig;
-import org.apache.drill.common.logical.data.CollapsingAggregate;
-import org.apache.drill.common.logical.data.Filter;
-import org.apache.drill.common.logical.data.Join;
-import org.apache.drill.common.logical.data.JoinCondition;
-import org.apache.drill.common.logical.data.NamedExpression;
-import org.apache.drill.common.logical.data.Order;
+import org.apache.drill.common.logical.data.*;
 import org.apache.drill.common.logical.data.Order.Direction;
 import org.apache.drill.common.logical.data.Order.Ordering;
-import org.apache.drill.common.logical.data.Project;
-import org.apache.drill.common.logical.data.Scan;
-import org.apache.drill.common.logical.data.Segment;
-import org.apache.drill.common.logical.data.SinkOperator;
-import org.apache.drill.common.logical.data.Store;
 import org.apache.drill.common.logical.data.visitors.AbstractLogicalVisitor;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.DataMode;
@@ -57,6 +47,7 @@ import org.apache.drill.exec.physical.config.MergeJoinPOP;
 import org.apache.drill.exec.physical.config.Screen;
 import org.apache.drill.exec.physical.config.SelectionVectorRemover;
 import org.apache.drill.exec.physical.config.Sort;
+import org.apache.drill.exec.physical.config.Limit;
 import org.apache.drill.exec.physical.config.StreamingAggregate;
 import org.apache.drill.exec.store.StorageEngine;
 
@@ -139,7 +130,11 @@ public class BasicOptimizer extends Optimizer{
       return new SelectionVectorRemover(new Sort(input, ods, false));
     }
 
-
+    @Override
+    public PhysicalOperator visitLimit(org.apache.drill.common.logical.data.Limit limit, Object value) throws OptimizerException {
+      PhysicalOperator input = limit.getInput().accept(this, value);
+      return new SelectionVectorRemover(new Limit(input, limit.getFirst(), limit.getLast()));
+    }
 
     @Override
     public PhysicalOperator visitCollapsingAggregate(CollapsingAggregate agg, Object value)
