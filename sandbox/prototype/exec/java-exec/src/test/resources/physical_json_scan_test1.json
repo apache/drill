@@ -10,13 +10,24 @@
         {
             @id:1,
             pop:"json-scan",
-            entries:[
-            	{url: "#{TEST_FILE}"}
-            ]
+            entries: [
+                {
+                    path : "#{TEST_FILE}"
+                }
+            ],
+            storageengine: {
+                "type": "json",
+                "dfsName": "file:///"
+            }
         },
         {
             @id: 2,
             child: 1,
+            pop: "union-exchange"
+        },
+        {
+            @id: 3,
+            child: 2,
             pop: "screen"
         }
     ]

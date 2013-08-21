@@ -18,69 +18,85 @@
 
 package org.apache.drill.exec.store.json;
 
+import com.fasterxml.jackson.annotation.*;
+import com.google.common.collect.Iterators;
+import org.apache.drill.common.logical.StorageEngineConfig;
+import org.apache.drill.exec.exception.SetupException;
+import org.apache.drill.exec.physical.OperatorCost;
+import org.apache.drill.exec.physical.base.*;
+import org.apache.drill.exec.store.StorageEngineRegistry;
+
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.drill.exec.physical.OperatorCost;
-import org.apache.drill.exec.physical.base.AbstractBase;
-import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.physical.base.PhysicalVisitor;
-import org.apache.drill.exec.physical.base.Size;
-import org.apache.drill.exec.physical.base.SubScan;
-
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.google.common.collect.Iterators;
-
 @JsonTypeName("json-sub-scan")
-public class JSONSubScan extends AbstractBase implements SubScan{
+public class JSONSubScan extends AbstractBase implements SubScan {
 
-    protected final List<JSONGroupScan.ScanEntry> readEntries;
-    private final OperatorCost cost;
-    private final Size size;
-    
-    @JsonCreator
-    public JSONSubScan(@JsonProperty("entries") List<JSONGroupScan.ScanEntry> readEntries) {
-        this.readEntries = readEntries;
-        OperatorCost cost = new OperatorCost(0,0,0,0);
-        Size size = new Size(0,0);
-        for(JSONGroupScan.ScanEntry r : readEntries){
-          cost = cost.add(r.getCost());
-          size = size.add(r.getSize());
-        }
-        this.cost = cost;
-        this.size = size;
+  protected final List<JSONGroupScan.ScanEntry> readEntries;
+  private final OperatorCost cost;
+  private final Size size;
+  private final StorageEngineRegistry registry;
+  private final JSONStorageEngineConfig engineConfig;
+  private final JSONStorageEngine storageEngine;
+
+  @JsonCreator
+  public JSONSubScan(@JacksonInject StorageEngineRegistry registry,
+                     @JsonProperty("engineConfig") StorageEngineConfig engineConfig,
+                     @JsonProperty("readEntries") List<JSONGroupScan.ScanEntry> readEntries) throws SetupException {
+    this.readEntries = readEntries;
+    this.registry = registry;
+    this.engineConfig = (JSONStorageEngineConfig) engineConfig;
+    this.storageEngine = (JSONStorageEngine) registry.getEngine(engineConfig);
+    OperatorCost cost = new OperatorCost(0, 0, 0, 0);
+    Size size = new Size(0, 0);
+    for (JSONGroupScan.ScanEntry r : readEntries) {
+      cost = cost.add(r.getCost());
+      size = size.add(r.getSize());
     }
+    this.cost = cost;
+    this.size = size;
+  }
 
-    public List<JSONGroupScan.ScanEntry> getReadEntries() {
-      return readEntries;
+  public List<JSONGroupScan.ScanEntry> getReadEntries() {
+    return readEntries;
+  }
+
+  public StorageEngineConfig getEngineConfig() {
+    return engineConfig;
+  }
+
+  @JsonIgnore
+  public JSONStorageEngine getStorageEngine() {
+    return storageEngine;
+  }
+
+  @Override
+  public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
+    try {
+      return new JSONSubScan(registry, (StorageEngineConfig) engineConfig, readEntries);
+    } catch (SetupException e) {
+      e.printStackTrace();
     }
+    return null;
+  }
 
-    @Override
-    public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
-        return new JSONSubScan(readEntries);
-    }
+  @Override
+  public OperatorCost getCost() {
+    return cost;
+  }
 
-    @Override
-    public OperatorCost getCost() {
-      return cost;
-    }
+  @Override
+  public Size getSize() {
+    return size;
+  }
 
-    @Override
-    public Size getSize() {
-      return size;
-    }
+  @Override
+  public <T, X, E extends Throwable> T accept(PhysicalVisitor<T, X, E> physicalVisitor, X value) throws E {
+    return physicalVisitor.visitSubScan(this, value);
+  }
 
-    @Override
-    public <T, X, E extends Throwable> T accept(PhysicalVisitor<T, X, E> physicalVisitor, X value) throws E {
-      return physicalVisitor.visitSubScan(this, value);
-    }
-
-    @Override
-    public Iterator<PhysicalOperator> iterator() {
-      return Iterators.emptyIterator();
-    }
-
+  @Override
+  public Iterator<PhysicalOperator> iterator() {
+    return Iterators.emptyIterator();
+  }
 }

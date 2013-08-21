@@ -28,6 +28,9 @@ import org.apache.drill.exec.schema.json.jackson.JacksonHelper;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.VectorHolder;
 import org.apache.drill.exec.vector.*;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,9 +47,9 @@ public class JSONRecordReader implements RecordReader {
   private static final int DEFAULT_LENGTH = 256 * 1024; // 256kb
   public static final Charset UTF_8 = Charset.forName("UTF-8");
 
-  private final String inputPath;
-
   private final Map<String, VectorHolder> valueVectorMap;
+  private final FileSystem fileSystem;
+  private final Path hadoopPath;
 
   private JsonParser parser;
   private SchemaIdGenerator generator;
@@ -57,15 +60,16 @@ public class JSONRecordReader implements RecordReader {
   private BufferAllocator allocator;
   private int batchSize;
 
-  public JSONRecordReader(FragmentContext fragmentContext, String inputPath, int batchSize) {
-    this.inputPath = inputPath;
+  public JSONRecordReader(FragmentContext fragmentContext, String inputPath, FileSystem fileSystem, int batchSize) {
+    this.hadoopPath = new Path(inputPath);
+    this.fileSystem = fileSystem;
     this.allocator = fragmentContext.getAllocator();
     this.batchSize = batchSize;
     valueVectorMap = Maps.newHashMap();
   }
 
-  public JSONRecordReader(FragmentContext fragmentContext, String inputPath) {
-    this(fragmentContext, inputPath, DEFAULT_LENGTH);
+  public JSONRecordReader(FragmentContext fragmentContext, String inputPath, FileSystem fileSystem) {
+    this(fragmentContext, inputPath, fileSystem, DEFAULT_LENGTH);
   }
 
   private JsonParser getParser() {
@@ -80,15 +84,8 @@ public class JSONRecordReader implements RecordReader {
     removedFields = Lists.newArrayList();
 
     try {
-      InputSupplier<InputStreamReader> input;
-      if (inputPath.startsWith("resource:")) {
-        input = Resources.newReaderSupplier(Resources.getResource(inputPath.substring(9)), Charsets.UTF_8);
-      } else {
-        input = Files.newReaderSupplier(new File(URI.create(inputPath)), Charsets.UTF_8);
-      }
-
       JsonFactory factory = new JsonFactory();
-      parser = factory.createJsonParser(input.getInput());
+      parser = factory.createJsonParser(fileSystem.open(hadoopPath));
       parser.nextToken(); // Read to the first START_OBJECT token
       generator = new SchemaIdGenerator();
     } catch (IOException e) {
