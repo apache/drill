@@ -1,0 +1,30 @@
+#!/bin/bash
+
+
+if [ -z $JAVA_HOME ]
+then
+  JAVA=`which java`
+else
+  JAVA=$JAVA_HOME/bin/java
+fi
+
+if [ -e $JAVA ]; then
+  echo ""
+else
+  echo "Java not found."
+  exit 1
+fi
+
+$JAVA -version 2>&1 | grep "version" | egrep -e "1.7" > /dev/null
+if [ $? -ne 0 ]; then
+  echo "Java 1.7 is required to run Apache Drill."
+  exit 1
+fi
+
+
+CP=$DRILL_HOME/jars/*:$CP
+CP=$DRILL_HOME/lib/*:$CP
+
+CP=$CP:$DRILL_CONF_DIR
+
+exec $JAVA $DRILL_JAVA_OPTS -cp $CP org.apache.drill.exec.server.Drillbit

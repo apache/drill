@@ -215,6 +215,15 @@
             </lifecycleMappingMetadata>
           </configuration>
         </plugin>
+        <plugin>
+          <artifactId>maven-assembly-plugin</artifactId>
+          <version>2.4</version>
+          <configuration>
+            <descriptors>
+              <descriptor>src/assemble/bin.xml</descriptor>
+            </descriptors>
+          </configuration>
+        </plugin>
       </plugins>
     </pluginManagement>
   </build>
@@ -292,5 +301,6 @@
     <module>exec</module>
     <module>planner</module>
     <module>sqlparser</module>
+    <module>distribution</module>
   </modules>
 </project>

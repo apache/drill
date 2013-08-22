@@ -1,0 +1,8 @@
+Package: drill
+Version: 1.0-SNAPSHOT
+Section: misc
+Priority: optional
+Architecture: all
+Maintainer: name <>
+Description: Apache Drill
+Distribution: development
