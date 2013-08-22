@@ -49,12 +49,7 @@ public abstract class LogicalOperatorBase implements LogicalOperator{
 
   @Override
   public void accept(GraphVisitor<LogicalOperator> visitor) {
-    if(visitor.enter(this)){
-        for(LogicalOperator o : children){
-            o.accept(visitor);
-        }
-    }
-    visitor.leave(this);
+    if(visitor.enter(this)) visitor.leave(this);
   }
 
     @Override
