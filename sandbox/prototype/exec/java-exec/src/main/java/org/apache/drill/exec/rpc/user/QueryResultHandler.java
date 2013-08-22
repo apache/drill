@@ -63,6 +63,9 @@ public class QueryResultHandler {
       l = resultsListener.putIfAbsent(result.getQueryId(), bl);
       // if we had a succesful insert, use that reference.  Otherwise, just throw away the new bufering listener.
       if (l == null) l = bl;
+      if (result.getQueryId().toString().equals("")) {
+        failAll();
+      }
     }
       
     if(failed){
@@ -80,6 +83,13 @@ public class QueryResultHandler {
       resultsListener.remove(result.getQueryId(), l);
     }
 
+
+  }
+
+  private void failAll() {
+    for (UserResultsListener l : resultsListener.values()) {
+      l.submissionFailed(new RpcException("Received result without QueryId"));
+    }
   }
 
   

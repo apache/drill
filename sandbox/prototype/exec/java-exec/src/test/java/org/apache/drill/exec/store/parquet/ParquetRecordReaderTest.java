@@ -103,17 +103,16 @@ public class ParquetRecordReaderTest {
   }
 
   @Test
-  @Ignore
   public void testLocalDistributed() throws Exception {
     String planName = "/parquet/parquet_scan_union_screen_physical.json";
-    testParquetFullEngineLocalTextDistributed(planName, fileName, 1, 20, 300000);
+    testParquetFullEngineLocalTextDistributed(planName, fileName, 1, numberRowGroups, recordsPerRowGroup);
   }
 
   @Test
   @Ignore
   public void testRemoteDistributed() throws Exception {
     String planName = "/parquet/parquet_scan_union_screen_physical.json";
-    testParquetFullEngineRemote(planName, fileName, 1, 10, 30000);
+    testParquetFullEngineRemote(planName, fileName, 1, numberRowGroups, recordsPerRowGroup);
   }
 
 

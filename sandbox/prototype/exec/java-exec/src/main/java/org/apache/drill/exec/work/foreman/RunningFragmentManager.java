@@ -147,7 +147,10 @@ class RunningFragmentManager implements FragmentStatusListener{
     updateStatus(status);
     int remaining = remainingFragmentCount.decrementAndGet();
     if(remaining == 0){
-      QueryResult result = QueryResult.newBuilder().setQueryState(QueryState.COMPLETED).build();
+      QueryResult result = QueryResult.newBuilder() //
+              .setQueryState(QueryState.COMPLETED) //
+              .setQueryId(queryId) //
+              .build();
       foreman.cleanupAndSendResult(result);
     }
   }

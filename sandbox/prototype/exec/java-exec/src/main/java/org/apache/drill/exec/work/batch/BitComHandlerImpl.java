@@ -124,6 +124,15 @@ public class BitComHandlerImpl implements BitComHandler {
       listener.fail(fragment.getHandle(), "Failure while parsing fragment execution plan.", e);
     }catch(ExecutionSetupException e){
       listener.fail(fragment.getHandle(), "Failure while setting up execution plan.", e);
+    } catch (Exception e) {
+      listener.fail(fragment.getHandle(), "Failure due to uncaught exception", e);
+    } catch (OutOfMemoryError t) {
+      if(t.getMessage().startsWith("Direct buffer")){
+        listener.fail(fragment.getHandle(), "Failure due to error", t);  
+      }else{
+        throw t;
+      }
+      
     }
     
   }

@@ -106,6 +106,7 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
         .addError(error) //
         .setIsLastChunk(true) //
         .setQueryState(QueryState.FAILED) //
+        .setQueryId(queryId) //
         .build();
     cleanupAndSendResult(result);
   }

@@ -1,24 +1,25 @@
 package org.apache.drill.exec.ref.rops;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
+import java.util.Collection;
+
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.logical.data.Constant;
 import org.apache.drill.common.util.FileUtils;
-import org.apache.drill.exec.ref.*;
+import org.apache.drill.exec.ref.IteratorRegistry;
+import org.apache.drill.exec.ref.RecordIterator;
+import org.apache.drill.exec.ref.RecordPointer;
+import org.apache.drill.exec.ref.ReferenceInterpreter;
+import org.apache.drill.exec.ref.RunOutcome;
 import org.apache.drill.exec.ref.eval.BasicEvaluatorFactory;
 import org.apache.drill.exec.ref.rse.RSERegistry;
 import org.apache.drill.exec.ref.values.ScalarValues;
+import org.junit.Ignore;
 import org.junit.Test;
 
-
-import java.io.File;
-import java.util.Collection;
-import java.util.Iterator;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Created with IntelliJ IDEA.
@@ -64,9 +65,8 @@ public class ConstantROPTest {
     // not sure if we want to keep this as a test and check the results. Now that the internals of the ConstantROP work
     // it might now be worth running the reference intepreter with every build
     @Test
-    public void testRefInterp(){
-
-        try{
+    @Ignore // this plan needs to be updated.
+    public void testRefInterp() throws Exception{
             DrillConfig config = DrillConfig.create();
             final String jsonFile = "/constant2.json";
             LogicalPlan plan = LogicalPlan.parse(config, FileUtils.getResourceAsString(jsonFile));
@@ -89,8 +89,6 @@ public class ConstantROPTest {
                     outcome.exception.printStackTrace();
                 }
             }
-        } catch (Exception e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        }
+
     }
 }

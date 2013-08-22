@@ -1,6 +1,6 @@
 {
   head:{
-    type:"apache_drill_logical_plan",
+    type:"APACHE_DRILL_LOGICAL",
     version:"1",
     generator:{
       type:"manual",
