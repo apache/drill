@@ -47,7 +47,7 @@ public class Project extends SingleInputOperator {
     }
   }
 
-  @JsonProperty("exprs")
+  @JsonProperty("projections")
   public NamedExpression[] getSelections() {
     return selections;
   }
