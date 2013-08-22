@@ -211,8 +211,8 @@ public class ParquetRecordReader implements RecordReader {
       }
       for (VarLenBinaryReader.VarLengthColumn r : varLengthReader.columns) {
         output.addField(r.valueVecHolder.getValueVector());
-        output.setNewSchema();
       }
+      output.setNewSchema();
     }catch(SchemaChangeException e) {
       throw new ExecutionSetupException("Error setting up output mutator.", e);
     }

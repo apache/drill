@@ -18,14 +18,13 @@
 package org.apache.drill.exec.store.parquet;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 
+import com.google.common.base.Stopwatch;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.exception.SetupException;
 import org.apache.drill.exec.physical.EndpointAffinity;
@@ -59,8 +58,9 @@ import com.google.common.base.Preconditions;
 public class ParquetGroupScan extends AbstractGroupScan {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetGroupScan.class);
 
-  private LinkedList<ParquetRowGroupScan.RowGroupReadEntry>[] mappings;
+  private ArrayListMultimap<Integer, ParquetRowGroupScan.RowGroupReadEntry> mappings;
   private List<RowGroupInfo> rowGroupInfos;
+  private Stopwatch watch = new Stopwatch();
 
   public List<ReadEntryWithPath> getEntries() {
     return entries;
@@ -110,16 +110,14 @@ public class ParquetGroupScan extends AbstractGroupScan {
   }
 
   private void readFooter() throws IOException {
-    long tA = System.nanoTime();
+    watch.reset();
+    watch.start();
     rowGroupInfos = new ArrayList();
     long start = 0, length = 0;
     ColumnChunkMetaData columnChunkMetaData;
     for (ReadEntryWithPath readEntryWithPath : entries){
       Path path = new Path(readEntryWithPath.getPath());
       ParquetMetadata footer = ParquetFileReader.readFooter(this.storageEngine.getHadoopConfig(), path);
-//      FileSystem fs = FileSystem.get(this.storageEngine.getHadoopConfig());
-//      FileStatus status = fs.getFileStatus(path);
-//      ParquetMetadata footer = ParquetFileReader.readFooter(this.storageEngine.getHadoopConfig(), status);
       readEntryWithPath.getPath();
 
       int i = 0;
@@ -138,38 +136,21 @@ public class ParquetGroupScan extends AbstractGroupScan {
         i++;
       }
     }
-    long tB = System.nanoTime();
-    logger.debug("Took {} ms to get row group infos", (float)(tB - tA) / 1E6);
+    watch.stop();
+    logger.debug("Took {} ms to get row group infos", watch.elapsed(TimeUnit.MILLISECONDS));
   }
 
   private void calculateEndpointBytes() {
-    long tA = System.nanoTime();
+    watch.reset();
+    watch.start();
     AffinityCalculator ac = new AffinityCalculator(fileName, fs, availableEndpoints);
     for (RowGroupInfo e : rowGroupInfos) {
       ac.setEndpointBytes(e);
       totalBytes += e.getLength();
     }
-    long tB = System.nanoTime();
-    logger.debug("Took {} ms to calculate EndpointBytes", (float)(tB - tA) / 1E6);
+    watch.stop();
+    logger.debug("Took {} ms to calculate EndpointBytes", watch.elapsed(TimeUnit.MILLISECONDS));
   }
-/*
-  public LinkedList<RowGroupInfo> getRowGroups() {
-    return rowGroups;
-  }
-
-  public void setRowGroups(LinkedList<RowGroupInfo> rowGroups) {
-    this.rowGroups = rowGroups;
-  }
-
-  public static class ParquetFileReadEntry {
-
-    String path;
-
-    public ParquetFileReadEntry(@JsonProperty String path){
-      this.path = path;
-    }
-  }
-  */
 
   @JsonIgnore
   public FileSystem getFileSystem() {
@@ -232,16 +213,22 @@ public class ParquetGroupScan extends AbstractGroupScan {
     }
   }
 
+  /**
+   *Calculates the affinity each endpoint has for this scan, by adding up the affinity each endpoint has for each
+   * rowGroup
+   * @return a list of EndpointAffinity objects
+   */
   @Override
   public List<EndpointAffinity> getOperatorAffinity() {
-    long tA = System.nanoTime();
+    watch.reset();
+    watch.start();
     if (this.endpointAffinities == null) {
       HashMap<DrillbitEndpoint, Float> affinities = new HashMap<>();
       for (RowGroupInfo entry : rowGroupInfos) {
         for (DrillbitEndpoint d : entry.getEndpointBytes().keySet()) {
           long bytes = entry.getEndpointBytes().get(d);
           float affinity = (float)bytes / (float)totalBytes;
-          logger.error("RowGroup: {} Endpoint: {} Bytes: {}", entry.getRowGroupIndex(), d.getAddress(), bytes);
+          logger.debug("RowGroup: {} Endpoint: {} Bytes: {}", entry.getRowGroupIndex(), d.getAddress(), bytes);
           if (affinities.keySet().contains(d)) {
             affinities.put(d, affinities.get(d) + affinity);
           } else {
@@ -256,83 +243,90 @@ public class ParquetGroupScan extends AbstractGroupScan {
       }
       this.endpointAffinities = affinityList;
     }
-    long tB = System.nanoTime();
-    logger.debug("Took {} ms to get operator affinity", (float)(tB - tA) / 1E6);
+    watch.stop();
+    logger.debug("Took {} ms to get operator affinity", watch.elapsed(TimeUnit.MILLISECONDS));
     return this.endpointAffinities;
   }
 
 
+  static final double[] ASSIGNMENT_CUTOFFS = {0.99, 0.50, 0.25, 0.01};
 
-
+  /**
+   *
+   * @param incomingEndpoints
+   */
   @Override
-  public void applyAssignments(List<DrillbitEndpoint> endpoints) {
-    long tA = System.nanoTime();
-    Preconditions.checkArgument(endpoints.size() <= rowGroupInfos.size());
-
-    int i = 0;
-    for (DrillbitEndpoint endpoint : endpoints) {
-      logger.debug("Endpoint index {}, endpoint host: {}", i++, endpoint.getAddress());
+  public void applyAssignments(List<DrillbitEndpoint> incomingEndpoints) {
+    watch.reset();
+    watch.start();
+    Preconditions.checkArgument(incomingEndpoints.size() <= rowGroupInfos.size());
+    mappings = ArrayListMultimap.create();
+    ArrayList rowGroupList = new ArrayList(rowGroupInfos);
+    List<DrillbitEndpoint> endpointLinkedlist = Lists.newLinkedList(incomingEndpoints);
+    for(double cutoff : ASSIGNMENT_CUTOFFS ){
+      scanAndAssign(mappings, endpointLinkedlist, rowGroupList, cutoff, false);
     }
-
-    Collections.sort(rowGroupInfos, new ParquetReadEntryComparator());
-    mappings = new LinkedList[endpoints.size()];
-    LinkedList<RowGroupInfo> unassigned = scanAndAssign(endpoints, rowGroupInfos, 100, true, false);
-    LinkedList<RowGroupInfo> unassigned2 = scanAndAssign(endpoints, unassigned, 50, true, false);
-    LinkedList<RowGroupInfo> unassigned3 = scanAndAssign(endpoints, unassigned2, 25, true, false);
-    LinkedList<RowGroupInfo> unassigned4 = scanAndAssign(endpoints, unassigned3, 0, false, false);
-    LinkedList<RowGroupInfo> unassigned5 = scanAndAssign(endpoints, unassigned4, 0, false, true);
-    assert unassigned5.size() == 0 : String.format("All readEntries should be assigned by now, but some are still unassigned");
-    long tB = System.nanoTime();
-    logger.debug("Took {} ms to apply assignments ", (float)(tB - tA) / 1E6);
+    scanAndAssign(mappings, endpointLinkedlist, rowGroupList, 0.0, true);
+    watch.stop();
+    logger.debug("Took {} ms to apply assignments", watch.elapsed(TimeUnit.MILLISECONDS));
+    Preconditions.checkArgument(rowGroupList.isEmpty(), "All readEntries should be assigned by now, but some are still unassigned");
+    Preconditions.checkArgument(!rowGroupInfos.isEmpty());
   }
 
-  private LinkedList<RowGroupInfo> scanAndAssign (List<DrillbitEndpoint> endpoints, List<RowGroupInfo> rowGroups, int requiredPercentage, boolean mustContain, boolean assignAll) {
-    Collections.sort(rowGroupInfos, new ParquetReadEntryComparator());
-    LinkedList<RowGroupInfo> unassigned = new LinkedList<>();
+  public int fragmentPointer = 0;
 
-    int maxEntries = (int) (rowGroupInfos.size() / endpoints.size() * 1.5);
+  /**
+   *
+   * @param endpointAssignments the mapping between fragment/endpoint and rowGroup
+   * @param endpoints the list of drillbits, ordered by the corresponding fragment
+   * @param rowGroups the list of rowGroups to assign
+   * @param requiredPercentage the percentage of max bytes required to make an assignment
+   * @param assignAll if true, will assign even if no affinity
+   */
+  private void scanAndAssign (Multimap<Integer, ParquetRowGroupScan.RowGroupReadEntry> endpointAssignments, List<DrillbitEndpoint> endpoints, List<RowGroupInfo> rowGroups, double requiredPercentage, boolean assignAll) {
+    Collections.sort(rowGroups, new ParquetReadEntryComparator());
+    final boolean requireAffinity = requiredPercentage > 0;
+    int maxAssignments = (int) (rowGroups.size() / endpoints.size());
 
-    if (maxEntries < 1) maxEntries = 1;
+    if (maxAssignments < 1) maxAssignments = 1;
 
-    int i =0;
-    for(RowGroupInfo e : rowGroups) {
-      boolean assigned = false;
-      for (int j = i; j < i + endpoints.size(); j++) {
-        DrillbitEndpoint currentEndpoint = endpoints.get(j%endpoints.size());
+    for(Iterator<RowGroupInfo> iter = rowGroups.iterator(); iter.hasNext();){
+      RowGroupInfo rowGroupInfo = iter.next();
+      for (int i = 0; i < endpoints.size(); i++) {
+        int minorFragmentId = (fragmentPointer + i) % endpoints.size();
+        DrillbitEndpoint currentEndpoint = endpoints.get(minorFragmentId);
+        Map<DrillbitEndpoint, Long> bytesPerEndpoint = rowGroupInfo.getEndpointBytes();
+        boolean haveAffinity = bytesPerEndpoint.containsKey(currentEndpoint) ;
+
         if (assignAll ||
-                (e.getEndpointBytes().size() > 0 &&
-                (e.getEndpointBytes().containsKey(currentEndpoint) || !mustContain) &&
-                (mappings[j%endpoints.size()] == null || mappings[j%endpoints.size()].size() < maxEntries) &&
-                e.getEndpointBytes().get(currentEndpoint) >= e.getMaxBytes() * requiredPercentage / 100)) {
-          LinkedList<ParquetRowGroupScan.RowGroupReadEntry> entries = mappings[j%endpoints.size()];
-          if(entries == null){
-            entries = new LinkedList<ParquetRowGroupScan.RowGroupReadEntry>();
-            mappings[j%endpoints.size()] = entries;
-          }
-          entries.add(e.getRowGroupReadEntry());
-          logger.debug("Assigned rowGroup ( {} , {} ) to endpoint {}", e.getPath(), e.getStart(), currentEndpoint.getAddress());
-          assigned = true;
+                (!bytesPerEndpoint.isEmpty() &&
+                        (!requireAffinity || haveAffinity) &&
+                        (!endpointAssignments.containsKey(minorFragmentId) || endpointAssignments.get(minorFragmentId).size() < maxAssignments) &&
+                        bytesPerEndpoint.get(currentEndpoint) >= rowGroupInfo.getMaxBytes() * requiredPercentage)) {
+
+          endpointAssignments.put(minorFragmentId, rowGroupInfo.getRowGroupReadEntry());
+          logger.debug("Assigned rowGroup {} to minorFragmentId {} endpoint {}", rowGroupInfo.getRowGroupIndex(), minorFragmentId, endpoints.get(minorFragmentId).getAddress());
+          iter.remove();
+          fragmentPointer = (minorFragmentId + 1) % endpoints.size();
           break;
         }
       }
-      if (!assigned) unassigned.add(e);
-      i++;
+
     }
-    return unassigned;
   }
 
   @Override
   public ParquetRowGroupScan getSpecificScan(int minorFragmentId) {
-    assert minorFragmentId < mappings.length : String.format("Mappings length [%d] should be longer than minor fragment id [%d] but it isn't.", mappings.length, minorFragmentId);
-    for (ParquetRowGroupScan.RowGroupReadEntry rg : mappings[minorFragmentId]) {
+    assert minorFragmentId < mappings.size() : String.format("Mappings length [%d] should be longer than minor fragment id [%d] but it isn't.", mappings.size(), minorFragmentId);
+    for (ParquetRowGroupScan.RowGroupReadEntry rg : mappings.get(minorFragmentId)) {
       logger.debug("minorFragmentId: {} Path: {} RowGroupIndex: {}",minorFragmentId, rg.getPath(),rg.getRowGroupIndex());
     }
+    Preconditions.checkArgument(!mappings.get(minorFragmentId).isEmpty(), String.format("MinorFragmentId %d has no read entries assigned", minorFragmentId));
     try {
-      return new ParquetRowGroupScan(storageEngine, engineConfig, mappings[minorFragmentId]);
+      return new ParquetRowGroupScan(storageEngine, engineConfig, mappings.get(minorFragmentId));
     } catch (SetupException e) {
-      e.printStackTrace(); // TODO - fix this
+      throw new RuntimeException("Error setting up ParquetRowGroupScan", e);
     }
-    return null;
   }
 
   @Override
@@ -342,7 +336,8 @@ public class ParquetGroupScan extends AbstractGroupScan {
 
   @Override
   public OperatorCost getCost() {
-    return new OperatorCost(1,1,1,1);
+    //TODO Figure out how to properly calculate cost
+    return new OperatorCost(1,rowGroupInfos.size(),1,1);
   }
 
   @Override

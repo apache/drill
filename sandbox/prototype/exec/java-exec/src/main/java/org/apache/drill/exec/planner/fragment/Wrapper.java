@@ -151,15 +151,12 @@ public class Wrapper {
       for (int i = start; i < start + width; i++) {
         endpoints.add(all.get(i % div));
       }
-    } else if (values.size() < width) {
-      throw new NotImplementedException(
-          "Haven't implemented a scenario where we have some node affinity but the affinity list is smaller than the expected width.");
     } else {
       // get nodes with highest affinity.
       Collections.sort(values);
       values = Lists.reverse(values);
       for (int i = 0; i < width; i++) {
-        endpoints.add(values.get(i).getEndpoint());
+        endpoints.add(values.get(i%values.size()).getEndpoint());
       }
     }
 

@@ -35,8 +35,8 @@ public class ErrorHelper {
     if(message != null){
       sb.append(message);
     }
-      
-    do{
+
+    while (true) {
       sb.append(" < ");
       sb.append(t.getClass().getSimpleName());
       if(t.getMessage() != null){
@@ -44,7 +44,9 @@ public class ErrorHelper {
         sb.append(t.getMessage());
         sb.append(" ]");
       }
-    }while(t.getCause() != null && t.getCause() != t);
+      if (t.getCause() == null || t.getCause() == t) break;
+      t = t.getCause();
+    }
     
     builder.setMessage(sb.toString());
     

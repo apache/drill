@@ -48,6 +48,7 @@ import org.apache.drill.exec.store.parquet.TestFileGenerator.FieldInfo;
 import org.apache.drill.exec.vector.BaseDataValueVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import parquet.bytes.BytesInput;
@@ -68,6 +69,7 @@ public class ParquetRecordReaderTest {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetRecordReaderTest.class);
 
   private boolean VERBOSE_DEBUG = false;
+  private boolean checkValues = true;
 
   static final int numberRowGroups = 20;
   static final int recordsPerRowGroup = 300000;
@@ -98,6 +100,20 @@ public class ParquetRecordReaderTest {
     }
     String planText = Files.toString(FileUtils.getResourceAsFile("/parquet/parquet_scan_screen_read_entry_replace.json"), Charsets.UTF_8).replaceFirst( "&REPLACED_IN_PARQUET_TEST&", readEntries);
     testParquetFullEngineLocalText(planText, fileName, i, numberRowGroups, recordsPerRowGroup);
+  }
+
+  @Test
+  @Ignore
+  public void testLocalDistributed() throws Exception {
+    String planName = "/parquet/parquet_scan_union_screen_physical.json";
+    testParquetFullEngineLocalTextDistributed(planName, fileName, 1, 20, 300000);
+  }
+
+  @Test
+  @Ignore
+  public void testRemoteDistributed() throws Exception {
+    String planName = "/parquet/parquet_scan_union_screen_physical.json";
+    testParquetFullEngineRemote(planName, fileName, 1, 10, 30000);
   }
 
 
@@ -155,8 +171,12 @@ public class ParquetRecordReaderTest {
           if (VERBOSE_DEBUG){
             System.out.print(vv.getAccessor().getObject(j) + ", " + (j % 25 == 0 ? "\n batch:" + batchCounter + " v:" + j + " - " : ""));
           }
-          assertField(vv, j, (TypeProtos.MinorType) currentField.type,
-              currentField.values[(int) (columnValCounter % 3)], (String) currentField.name + "/");
+          if (checkValues) {
+            try {
+              assertField(vv, j, (TypeProtos.MinorType) currentField.type,
+                currentField.values[(int) (columnValCounter % 3)], (String) currentField.name + "/");
+            } catch (AssertionError e) { submissionFailed(new RpcException(e)); }
+          }
           columnValCounter++;
         }
         if (VERBOSE_DEBUG){
@@ -197,7 +217,9 @@ public class ParquetRecordReaderTest {
       batchCounter++;
       if(result.getHeader().getIsLastChunk()){
         for (String s : valuesChecked.keySet()) {
+          try {
           assertEquals("Record count incorrect for column: " + s, totalRecords, (long) valuesChecked.get(s));
+          } catch (AssertionError e) { submissionFailed(new RpcException(e)); }
         }
         
         assert valuesChecked.keySet().size() > 0;
@@ -222,11 +244,13 @@ public class ParquetRecordReaderTest {
     
     DrillConfig config = DrillConfig.create();
 
+    checkValues = false;
+
     try(DrillClient client = new DrillClient(config);){
       client.connect();
       RecordBatchLoader batchLoader = new RecordBatchLoader(client.getAllocator());
       ParquetResultListener resultListener = new ParquetResultListener(recordsPerRowGroup, batchLoader, numberOfRowGroups, numberOfTimesRead);
-      client.runQuery(UserProtos.QueryType.LOGICAL, Files.toString(FileUtils.getResourceAsFile(plan), Charsets.UTF_8), resultListener);
+      client.runQuery(UserProtos.QueryType.PHYSICAL, Files.toString(FileUtils.getResourceAsFile(plan), Charsets.UTF_8), resultListener);
       resultListener.get();
     }
     
@@ -259,6 +283,28 @@ public class ParquetRecordReaderTest {
   }
 
 
+  //use this method to submit physical plan
+  public void testParquetFullEngineLocalTextDistributed(String planName, String filename, int numberOfTimesRead /* specified in json plan */, int numberOfRowGroups, int recordsPerRowGroup) throws Exception{
+
+    RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
+
+    checkValues = false;
+
+    DrillConfig config = DrillConfig.create();
+
+    try(Drillbit bit1 = new Drillbit(config, serviceSet); DrillClient client = new DrillClient(config, serviceSet.getCoordinator());){
+      bit1.run();
+      client.connect();
+      RecordBatchLoader batchLoader = new RecordBatchLoader(client.getAllocator());
+      ParquetResultListener resultListener = new ParquetResultListener(recordsPerRowGroup, batchLoader, numberOfRowGroups, numberOfTimesRead);
+      Stopwatch watch = new Stopwatch().start();
+      client.runQuery(UserProtos.QueryType.PHYSICAL, Files.toString(FileUtils.getResourceAsFile(planName), Charsets.UTF_8), resultListener);
+      resultListener.get();
+      System.out.println(String.format("Took %d ms to run query", watch.elapsed(TimeUnit.MILLISECONDS)));
+
+    }
+
+  }
 
   public String pad(String value, int length) {
     return pad(value, length, " ");

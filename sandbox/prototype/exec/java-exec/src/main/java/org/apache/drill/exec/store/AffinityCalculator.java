@@ -1,6 +1,7 @@
 package org.apache.drill.exec.store;
 
 
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableRangeMap;
 import com.google.common.collect.Range;
 import org.apache.drill.exec.store.parquet.ParquetGroupScan;
@@ -13,6 +14,7 @@ import org.apache.hadoop.fs.Path;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 public class AffinityCalculator {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AffinityCalculator.class);
@@ -24,6 +26,7 @@ public class AffinityCalculator {
   String fileName;
   Collection<DrillbitEndpoint> endpoints;
   HashMap<String,DrillbitEndpoint> endPointMap;
+  Stopwatch watch = new Stopwatch();
 
   public AffinityCalculator(String fileName, FileSystem fs, Collection<DrillbitEndpoint> endpoints) {
     this.fs = fs;
@@ -33,16 +36,20 @@ public class AffinityCalculator {
     buildEndpointMap();
   }
 
+  /**
+   * Builds a mapping of block locations to file byte range
+   */
   private void buildBlockMap() {
     try {
+      watch.start();
       FileStatus file = fs.getFileStatus(new Path(fileName));
-      long tC = System.nanoTime();
       blocks = fs.getFileBlockLocations(file, 0 , file.getLen());
-      long tD = System.nanoTime();
+      watch.stop();
       logger.debug("Block locations: {}", blocks);
-      logger.debug("Took {} ms to get Block locations", (float)(tD - tC) / 1e6);
+      logger.debug("Took {} ms to get Block locations", watch.elapsed(TimeUnit.MILLISECONDS));
     } catch (IOException ioe) { throw new RuntimeException(ioe); }
-    long tA = System.nanoTime();
+    watch.reset();
+    watch.start();
     ImmutableRangeMap.Builder<Long, BlockLocation> blockMapBuilder = new ImmutableRangeMap.Builder<Long,BlockLocation>();
     for (BlockLocation block : blocks) {
       long start = block.getOffset();
@@ -51,62 +58,72 @@ public class AffinityCalculator {
       blockMapBuilder = blockMapBuilder.put(range, block);
     }
     blockMap = blockMapBuilder.build();
-    long tB = System.nanoTime();
-    logger.debug("Took {} ms to build block map", (float)(tB - tA) / 1e6);
+    watch.stop();
+    logger.debug("Took {} ms to build block map", watch.elapsed(TimeUnit.MILLISECONDS));
   }
   /**
+   * For a given RowGroup, calculate how many bytes are available on each on drillbit endpoint
    *
-   * @param entry
+   * @param rowGroup the RowGroup to calculate endpoint bytes for
    */
-  public void setEndpointBytes(ParquetGroupScan.RowGroupInfo entry) {
-    long tA = System.nanoTime();
+  public void setEndpointBytes(ParquetGroupScan.RowGroupInfo rowGroup) {
+    watch.reset();
+    watch.start();
     HashMap<String,Long> hostMap = new HashMap<>();
-    long start = entry.getStart();
-    long end = start + entry.getLength();
-    Range<Long> entryRange = Range.closedOpen(start, end);
-    ImmutableRangeMap<Long,BlockLocation> subRangeMap = blockMap.subRangeMap(entryRange);
-    for (Map.Entry<Range<Long>,BlockLocation> e : subRangeMap.asMapOfRanges().entrySet()) {
-      String[] hosts = null;
-      Range<Long> blockRange = e.getKey();
+    HashMap<DrillbitEndpoint,Long> endpointByteMap = new HashMap();
+    long start = rowGroup.getStart();
+    long end = start + rowGroup.getLength();
+    Range<Long> rowGroupRange = Range.closedOpen(start, end);
+
+    // Find submap of ranges that intersect with the rowGroup
+    ImmutableRangeMap<Long,BlockLocation> subRangeMap = blockMap.subRangeMap(rowGroupRange);
+
+    // Iterate through each block in this submap and get the host for the block location
+    for (Map.Entry<Range<Long>,BlockLocation> block : subRangeMap.asMapOfRanges().entrySet()) {
+      String[] hosts;
+      Range<Long> blockRange = block.getKey();
       try {
-        hosts = e.getValue().getHosts();
-      } catch (IOException ioe) { /*TODO Handle this exception */}
-      Range<Long> intersection = entryRange.intersection(blockRange);
+        hosts = block.getValue().getHosts();
+      } catch (IOException ioe) {
+        throw new RuntimeException("Failed to get hosts for block location", ioe);
+      }
+      Range<Long> intersection = rowGroupRange.intersection(blockRange);
       long bytes = intersection.upperEndpoint() - intersection.lowerEndpoint();
+
+      // For each host in the current block location, add the intersecting bytes to the corresponding endpoint
       for (String host : hosts) {
-        if (hostMap.containsKey(host)) {
-          hostMap.put(host, hostMap.get(host) + bytes);
+        DrillbitEndpoint endpoint = getDrillBitEndpoint(host);
+        if (endpointByteMap.containsKey(endpoint)) {
+          endpointByteMap.put(endpoint, endpointByteMap.get(endpoint) + bytes);
         } else {
-          hostMap.put(host, bytes);
+          if (endpoint != null ) endpointByteMap.put(endpoint, bytes);
         }
       }
     }
-    HashMap<DrillbitEndpoint,Long> ebs = new HashMap();
-    try {
-      for (Map.Entry<String,Long> hostEntry : hostMap.entrySet()) {
-        String host = hostEntry.getKey();
-        Long bytes = hostEntry.getValue();
-        DrillbitEndpoint d = getDrillBitEndpoint(host);
-        if (d != null ) ebs.put(d, bytes);
-      }
-    } catch (NullPointerException n) {}
-    entry.setEndpointBytes(ebs);
-    long tB = System.nanoTime();
-    logger.debug("Took {} ms to set endpoint bytes", (float)(tB - tA) / 1e6);
+
+    rowGroup.setEndpointBytes(endpointByteMap);
+    rowGroup.setMaxBytes(endpointByteMap.size() > 0 ? Collections.max(endpointByteMap.values()) : 0);
+    logger.debug("Row group ({},{}) max bytes {}", rowGroup.getPath(), rowGroup.getStart(), rowGroup.getMaxBytes());
+    watch.stop();
+    logger.debug("Took {} ms to set endpoint bytes", watch.elapsed(TimeUnit.MILLISECONDS));
   }
 
   private DrillbitEndpoint getDrillBitEndpoint(String hostName) {
     return endPointMap.get(hostName);
   }
 
+  /**
+   * Builds a mapping of drillbit endpoints to hostnames
+   */
   private void buildEndpointMap() {
-    long tA = System.nanoTime();
+    watch.reset();
+    watch.start();
     endPointMap = new HashMap<String, DrillbitEndpoint>();
     for (DrillbitEndpoint d : endpoints) {
       String hostName = d.getAddress();
       endPointMap.put(hostName, d);
     }
-    long tB = System.nanoTime();
-    logger.debug("Took {} ms to build endpoint map", (float)(tB - tA) / 1e6);
+    watch.stop();
+    logger.debug("Took {} ms to build endpoint map", watch.elapsed(TimeUnit.MILLISECONDS));
   }
 }
