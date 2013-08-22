@@ -108,6 +108,7 @@ public class ScreenCreator implements RootCreator<Screen>{
           QueryWritableBatch batch = materializer.convertNext(true);
           connection.sendResult(listener, batch);
         }
+
         return false;
       }
       case OK_NEW_SCHEMA:
