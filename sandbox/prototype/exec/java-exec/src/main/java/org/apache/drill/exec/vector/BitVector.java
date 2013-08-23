@@ -71,6 +71,12 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
   public void copyFrom(int inIndex, int outIndex, BitVector from) {
     this.mutator.set(outIndex, from.accessor.get(inIndex));
   }
+  
+  public boolean copyFromSafe(int inIndex, int outIndex, BitVector from){
+    if(outIndex >= this.getValueCapacity()) return false;
+    copyFrom(inIndex, outIndex, from);
+    return true;
+  }
 
   @Override
   public void load(FieldMetadata metadata, ByteBuf buffer) {

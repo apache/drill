@@ -117,16 +117,22 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     }
   }
   
-  public void copyFrom(int inIndex, int outIndex, ${minor.class}Vector v){
+  public void copyFrom(int fromIndex, int thisIndex, ${minor.class}Vector from){
     <#if (type.width > 8)>
-    data.getBytes(inIndex * ${type.width}, v.data, outIndex * ${type.width}, ${type.width});
+    data.getBytes(fromIndex * ${type.width}, from.data, thisIndex * ${type.width}, ${type.width});
     <#else> <#-- type.width <= 8 -->
-    data.set${(minor.javaType!type.javaType)?cap_first}(outIndex * ${type.width}, 
-        v.data.get${(minor.javaType!type.javaType)?cap_first}(inIndex * ${type.width})
+    data.set${(minor.javaType!type.javaType)?cap_first}(thisIndex * ${type.width}, 
+        from.data.get${(minor.javaType!type.javaType)?cap_first}(fromIndex * ${type.width})
     );
     </#if> <#-- type.width -->
   }
   
+  public boolean copyFromSafe(int fromIndex, int thisIndex, ${minor.class}Vector from){
+    if(thisIndex >= getValueCapacity()) return false;
+    copyFrom(fromIndex, thisIndex, from);
+    return true;
+  }
+
   public final class Accessor extends BaseValueVector.BaseAccessor{
 
     public int getValueCount() {

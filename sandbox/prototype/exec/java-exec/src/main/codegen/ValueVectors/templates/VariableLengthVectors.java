@@ -124,15 +124,33 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     clear();
   }
   
-  public void copyFrom(int inIndex, int outIndex, ${minor.class}Vector v){
-    int start = offsetVector.data.get${(minor.javaType!type.javaType)?cap_first}(inIndex);
-    int end =   offsetVector.data.get${(minor.javaType!type.javaType)?cap_first}(inIndex+1);
+  public void copyFrom(int fromIndex, int thisIndex, ${minor.class}Vector from){
+    int start = from.offsetVector.data.get${(minor.javaType!type.javaType)?cap_first}(fromIndex);
+    int end =   from.offsetVector.data.get${(minor.javaType!type.javaType)?cap_first}(fromIndex+1);
     int len = end - start;
     
-    int outputStart = outIndex == 0 ? 0 : v.offsetVector.data.get${(minor.javaType!type.javaType)?cap_first}(outIndex * ${type.width});
-    data.getBytes(start, v.data, outputStart, len);
-    v.offsetVector.data.set${(minor.javaType!type.javaType)?cap_first}( (outIndex+1) * ${type.width}, len);
+    int outputStart = offsetVector.data.get${(minor.javaType!type.javaType)?cap_first}(thisIndex * ${type.width});
+    from.data.getBytes(start, from.data, outputStart, len);
+    offsetVector.data.set${(minor.javaType!type.javaType)?cap_first}( (thisIndex+1) * ${type.width}, len);
   }
+  
+  public boolean copyFromSafe(int fromIndex, int thisIndex, ${minor.class}Vector from){
+    if(thisIndex >= getValueCapacity()) return false;
+    
+    int start = from.offsetVector.data.get${(minor.javaType!type.javaType)?cap_first}(fromIndex);
+    int end =   from.offsetVector.data.get${(minor.javaType!type.javaType)?cap_first}(fromIndex+1);
+    int len = end - start;
+    
+    int outputStart = offsetVector.data.get${(minor.javaType!type.javaType)?cap_first}(thisIndex * ${type.width});
+    
+    if(data.capacity() < outputStart + len) return false;
+    
+    from.data.getBytes(start, from.data, outputStart, len);
+    offsetVector.data.set${(minor.javaType!type.javaType)?cap_first}( (thisIndex+1) * ${type.width}, len);
+
+    return true;
+  }
+
   
   private class TransferImpl implements TransferPair{
     ${minor.class}Vector to;

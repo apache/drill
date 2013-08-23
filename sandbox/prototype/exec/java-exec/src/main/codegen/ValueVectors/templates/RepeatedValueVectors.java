@@ -98,7 +98,10 @@ import com.google.common.collect.ObjectArrays;
   public void copyFrom(int inIndex, int outIndex, Repeated${minor.class}Vector v){
     throw new UnsupportedOperationException();
   }
-
+  
+  public boolean copyFromSafe(int inIndex, int outIndex, Repeated${minor.class}Vector v){
+    throw new UnsupportedOperationException();
+  }
   
   <#if type.major == "VarLen">
   @Override

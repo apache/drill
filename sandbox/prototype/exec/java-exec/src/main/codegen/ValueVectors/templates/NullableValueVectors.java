@@ -204,10 +204,15 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
   }
 
   
-  public void copyFrom(int inIndex, int outIndex, Nullable${minor.class}Vector v){
-    bits.copyFrom(inIndex, outIndex, v.bits);
-    values.copyFrom(inIndex, outIndex, v.values);
+  public void copyFrom(int fromIndex, int thisIndex, Nullable${minor.class}Vector from){
+    bits.copyFrom(fromIndex, thisIndex, from.bits);
+    values.copyFrom(fromIndex, thisIndex, from.values);
   }
+  
+  public boolean copyFromSafe(int fromIndex, int thisIndex, Nullable${minor.class}Vector from){
+    return bits.copyFromSafe(fromIndex, thisIndex, from.bits) && values.copyFromSafe(fromIndex, thisIndex, from.values);
+  }
+
   
   public final class Accessor implements ValueVector.Accessor{
 
