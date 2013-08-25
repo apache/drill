@@ -1,6 +1,10 @@
 package org.apache.drill.exec.expr;
 
+import static org.apache.drill.exec.compile.sig.GeneratorMapping.GM;
+
 import java.io.IOException;
+import java.util.LinkedList;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.drill.common.expression.LogicalExpression;
@@ -10,7 +14,6 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.compile.TemplateClassDefinition;
 import org.apache.drill.exec.compile.sig.CodeGeneratorArgument;
 import org.apache.drill.exec.compile.sig.CodeGeneratorMethod;
-import org.apache.drill.exec.compile.sig.DefaultGeneratorSignature;
 import org.apache.drill.exec.compile.sig.GeneratorMapping;
 import org.apache.drill.exec.compile.sig.MappingSet;
 import org.apache.drill.exec.compile.sig.SignatureHolder;
@@ -19,6 +22,8 @@ import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.vector.TypeHelper;
 
+import com.beust.jcommander.internal.Lists;
+import com.beust.jcommander.internal.Maps;
 import com.google.common.base.Preconditions;
 import com.sun.codemodel.JBlock;
 import com.sun.codemodel.JClass;
@@ -34,11 +39,16 @@ import com.sun.codemodel.JVar;
 
 public class CodeGenerator<T>{
   
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CodeGenerator.class);
+  public static final GeneratorMapping DEFAULT_SCALAR_MAP = GM("doSetup", "doEval", null, null);
+  public static final GeneratorMapping DEFAULT_CONSTANT_MAP = GM("doSetup", "doSetup", null, null);
+  public static final MappingSet DEFAULT_MAPPING = new MappingSet("inIndex", "outIndex", DEFAULT_SCALAR_MAP, DEFAULT_SCALAR_MAP);
 
+  
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CodeGenerator.class);
+  public static enum BlockType {SETUP, EVAL, RESET, CLEANUP};
+  
   public JDefinedClass clazz;
-  private JBlock[] parentBlocks;
-  private JBlock[] childBlocks;
+  private LinkedList<JBlock>[] blocks;
   private final TemplateClassDefinition<T> definition;
   private JCodeModel model;
   private int index = 0;
@@ -49,12 +59,14 @@ public class CodeGenerator<T>{
   private final SignatureHolder sig;
   private MappingSet mappings;
   private final EvaluationVisitor evaluationVisitor;
+  private final Map<ValueVectorSetup, JVar> vvDeclaration = Maps.newHashMap();
   
   
   public CodeGenerator(TemplateClassDefinition<T> definition, FunctionImplementationRegistry funcRegistry) {
-    this(DefaultGeneratorSignature.DEFAULT_MAPPING, definition, funcRegistry);
+    this(DEFAULT_MAPPING, definition, funcRegistry);
   }
   
+  @SuppressWarnings("unchecked")
   public CodeGenerator(MappingSet mappingSet, TemplateClassDefinition<T> definition, FunctionImplementationRegistry funcRegistry) {
     Preconditions.checkNotNull(definition.getSignature(), "The signature for defintion %s was incorrectly initialized.", definition);
     this.sig = definition.getSignature();
@@ -65,12 +77,10 @@ public class CodeGenerator<T>{
       this.definition = definition;
       this.model = new JCodeModel();
       this.clazz = model._package(packageName)._class(className);
-      clazz._implements(definition.getInternalInterface());
-      parentBlocks = new JBlock[sig.size()];
+      blocks = (LinkedList<JBlock>[]) new LinkedList[sig.size()];
       for(int i =0; i < sig.size(); i++){
-        parentBlocks[i] = new JBlock(false, false);
+        blocks[i] = Lists.newLinkedList();
       }
-      childBlocks = new JBlock[sig.size()];
       this.evaluationVisitor = new EvaluationVisitor(funcRegistry);
       rotateBlock();
     } catch (JClassAlreadyExistsException e) {
@@ -90,26 +100,38 @@ public class CodeGenerator<T>{
     return mappings.getCurrentMapping();
   }
   
-  private JBlock getBlock(String methodName){
-    JBlock blk = this.childBlocks[sig.get(methodName)];
+  public JBlock getBlock(String methodName){
+    JBlock blk = this.blocks[sig.get(methodName)].getLast();
     Preconditions.checkNotNull(blk, "Requested method name of %s was not available for signature %s.",  methodName, this.sig);
     return blk;
   }
   
+  public JBlock getBlock(BlockType type){
+    return getBlock(getCurrentMapping().getMethodName(type)); 
+  }
+  
   public JBlock getSetupBlock(){
-    return getBlock(getCurrentMapping().getSetup());
+    return getBlock(getCurrentMapping().getMethodName(BlockType.SETUP));
   }
   public JBlock getEvalBlock(){
-    return getBlock(getCurrentMapping().getEval());
+    return getBlock(getCurrentMapping().getMethodName(BlockType.EVAL));
   }
-//  public JBlock getResetBlock(){
-//    return getBlock(getCurrentMapping().getReset());
-//  }
-//  public JBlock getCleanupBlock(){
-//    return getBlock(getCurrentMapping().getCleanup());
-//  }
+  public JBlock getResetBlock(){
+    return getBlock(getCurrentMapping().getMethodName(BlockType.RESET));
+  }
+  public JBlock getCleanupBlock(){
+    return getBlock(getCurrentMapping().getMethodName(BlockType.CLEANUP));
+  }
     
   public JVar declareVectorValueSetupAndMember(String batchName, TypedFieldId fieldId){
+    return declareVectorValueSetupAndMember( DirectExpression.direct(batchName), fieldId);
+  }
+
+  public JVar declareVectorValueSetupAndMember(DirectExpression batchName, TypedFieldId fieldId){
+    final ValueVectorSetup setup = new ValueVectorSetup(batchName, fieldId);
+    JVar var = this.vvDeclaration.get(setup);
+    if(var != null) return var;
+    
     Class<?> valueVectorClass = TypeHelper.getValueVectorClass(fieldId.getType().getMinorType(), fieldId.getType().getMode());
     JClass vvClass = model.ref(valueVectorClass);
     JClass retClass = vvClass;
@@ -126,16 +148,18 @@ public class CodeGenerator<T>{
     JVar obj = b.decl( //
         objClass, //
         getNextVar("tmp"), // 
-        JExpr.direct(batchName)
+        batchName
           .invoke("getValueAccessorById") //
           .arg(JExpr.lit(fieldId.getFieldId())) //
           .arg( vvClass.dotclass())
           .invoke(vectorAccess)//
           );
         
-        b._if(obj.eq(JExpr._null()))._then()._throw(JExpr._new(t).arg(JExpr.lit(String.format("Failure while loading vector %s with id: %s.", vv.name(), fieldId.toString()))));
-        //b.assign(vv, JExpr.cast(retClass, ((JExpression) JExpr.cast(wrapperClass, obj) ).invoke(vectorAccess)));
-        b.assign(vv, JExpr.cast(retClass, obj ));
+        
+    b._if(obj.eq(JExpr._null()))._then()._throw(JExpr._new(t).arg(JExpr.lit(String.format("Failure while loading vector %s with id: %s.", vv.name(), fieldId.toString()))));
+    //b.assign(vv, JExpr.cast(retClass, ((JExpression) JExpr.cast(wrapperClass, obj) ).invoke(vectorAccess)));
+    b.assign(vv, JExpr.cast(retClass, obj ));
+    vvDeclaration.put(setup, vv);
         
     return vv;
   }
@@ -145,16 +169,14 @@ public class CodeGenerator<T>{
   }
   
   public HoldingContainer addExpr(LogicalExpression ex, boolean rotate){
-    logger.debug("Adding next write {}", ex);
+//    logger.debug("Adding next write {}", ex);
     if(rotate) rotateBlock();
     return evaluationVisitor.addExpr(ex, this);
   }
   
   public void rotateBlock(){
-    for(int i =0; i < childBlocks.length; i++){
-      this.childBlocks[i] = new JBlock(true, true);
-      
-      this.parentBlocks[i].add(childBlocks[i]);
+    for(LinkedList<JBlock> b : blocks){
+      b.add(new JBlock(true, true));
     }
   }
   
@@ -176,9 +198,12 @@ public class CodeGenerator<T>{
       for(Class<?> c : method.getThrowsIterable()){
         m._throws(model.ref(c));
       }
-
       m._throws(SchemaChangeException.class);
-      m.body().add(this.parentBlocks[i++]);
+      
+      for(JBlock b : blocks[i++]){
+        if(!b.isEmpty()) m.body().add(b);
+      }
+      
     }
     
     SingleClassStringWriter w = new SingleClassStringWriter();
@@ -202,6 +227,7 @@ public class CodeGenerator<T>{
   public JVar declareClassField(String prefix, JType t){
     return clazz.field(JMod.NONE, t, prefix + index++);
   }
+
   
   public HoldingContainer declare(MajorType t){
     return declare(t, true);
@@ -221,6 +247,50 @@ public class CodeGenerator<T>{
     }
     index++;
     return new HoldingContainer(t, var, var.ref("value"), outputSet);
+  }
+  
+  private static class ValueVectorSetup{
+    final DirectExpression batch;
+    final TypedFieldId fieldId;
+    
+    public ValueVectorSetup(DirectExpression batch, TypedFieldId fieldId) {
+      super();
+      this.batch = batch;
+      this.fieldId = fieldId;
+    }
+
+    @Override
+    public int hashCode() {
+      final int prime = 31;
+      int result = 1;
+      result = prime * result + ((batch == null) ? 0 : batch.hashCode());
+      result = prime * result + ((fieldId == null) ? 0 : fieldId.hashCode());
+      return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj)
+        return true;
+      if (obj == null)
+        return false;
+      if (getClass() != obj.getClass())
+        return false;
+      ValueVectorSetup other = (ValueVectorSetup) obj;
+      if (batch == null) {
+        if (other.batch != null)
+          return false;
+      } else if (!batch.equals(other.batch))
+        return false;
+      if (fieldId == null) {
+        if (other.fieldId != null)
+          return false;
+      } else if (!fieldId.equals(other.fieldId))
+        return false;
+      return true;
+    }
+
+    
   }
   
   

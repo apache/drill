@@ -14,7 +14,10 @@ import org.apache.drill.exec.proto.UserBitShared.FieldMetadata;
 import org.apache.drill.exec.record.DeadBuf;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.BaseValueVector;
+import org.apache.drill.exec.vector.BitVector;
+import org.apache.drill.common.expression.FieldReference;
 
+import java.io.ObjectInputStream.GetField;
 import java.util.Arrays;
 import java.util.Random;
 
@@ -91,7 +94,10 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
   }
   
   public TransferPair getTransferPair(){
-    return new TransferImpl();
+    return new TransferImpl(getField());
+  }
+  public TransferPair getTransferPair(FieldReference ref){
+    return new TransferImpl(getField().clone(ref));
   }
   
   public void transferTo(${minor.class}Vector target){
@@ -104,8 +110,8 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
   private class TransferImpl implements TransferPair{
     ${minor.class}Vector to;
     
-    public TransferImpl(){
-      this.to = new ${minor.class}Vector(getField(), allocator);
+    public TransferImpl(MaterializedField field){
+      this.to = new ${minor.class}Vector(field, allocator);
     }
     
     public ${minor.class}Vector getTo(){
@@ -114,6 +120,11 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     
     public void transfer(){
       transferTo(to);
+    }
+    
+    @Override
+    public void copyValue(int fromIndex, int toIndex) {
+      to.copyFrom(fromIndex, toIndex, ${minor.class}Vector.this);
     }
   }
   
@@ -214,6 +225,12 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
      data.setBytes(index * ${type.width}, holder.buffer, holder.start, ${type.width});
    }
    
+   public boolean setSafe(int index, ${minor.class}Holder holder){
+     if(index >= getValueCapacity()) return false;
+     set(index, holder);
+     return true;
+   }
+
    void set(int index, Nullable${minor.class}Holder holder){
      data.setBytes(index * ${type.width}, holder.buffer, holder.start, ${type.width});
    }
@@ -235,6 +252,12 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
      data.set${(minor.javaType!type.javaType)?cap_first}(index * ${type.width}, value);
    }
    
+   public boolean setSafe(int index, <#if (type.width >= 4)>${minor.javaType!type.javaType}<#else>int</#if> value) {
+     if(index >= getValueCapacity()) return false;
+     set(index, value);
+     return true;
+   }
+
    public void set(int index, ${minor.class}Holder holder){
      data.set${(minor.javaType!type.javaType)?cap_first}(index * ${type.width}, holder.value);
    }

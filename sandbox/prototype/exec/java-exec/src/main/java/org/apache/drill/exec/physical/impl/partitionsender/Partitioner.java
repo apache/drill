@@ -31,9 +31,5 @@ public interface Partitioner {
 
   public abstract void partitionBatch(RecordBatch incoming);
 
-  public static TemplateClassDefinition<Partitioner> TEMPLATE_DEFINITION =
-      new TemplateClassDefinition<>(Partitioner.class,
-                                    "org.apache.drill.exec.physical.impl.partitionsender.PartitionerTemplate",
-                                    PartitionerEvaluator.class,
-                                    PartitionerInnerSignature.class);
+  public static TemplateClassDefinition<Partitioner> TEMPLATE_DEFINITION = new TemplateClassDefinition<>(Partitioner.class, PartitionerTemplate.class);
 }

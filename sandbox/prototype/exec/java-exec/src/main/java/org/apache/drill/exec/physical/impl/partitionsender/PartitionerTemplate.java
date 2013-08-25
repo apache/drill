@@ -18,6 +18,8 @@
 
 package org.apache.drill.exec.physical.impl.partitionsender;
 
+import javax.inject.Named;
+
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.RecordBatch;
@@ -51,7 +53,8 @@ public abstract class PartitionerTemplate implements Partitioner {
 
   }
 
-  protected abstract void doSetup(FragmentContext context, RecordBatch incoming, OutgoingRecordBatch[] outgoing) throws SchemaChangeException;
-  protected abstract void doEval(int inIndex, int outIndex);
+  public abstract void doSetup(@Named("context") FragmentContext context, @Named("incoming") RecordBatch incoming, @Named("outgoing") OutgoingRecordBatch[] outgoing) throws SchemaChangeException;
+  public abstract void doEval(@Named("inIndex") int inIndex, @Named("outIndex") int outIndex);
+
 
 }

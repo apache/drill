@@ -1,6 +1,6 @@
 package org.apache.drill.exec.expr.fn.impl;
 
-import org.apache.drill.exec.expr.DrillFunc;
+import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
@@ -16,7 +16,7 @@ public class MathFunctions{
   private MathFunctions(){}
   
   @FunctionTemplate(name = "add", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
-  public static class Add1 implements DrillFunc{
+  public static class Add1 implements DrillSimpleFunc{
     
     @Param IntHolder left;
     @Param IntHolder right;
@@ -31,7 +31,7 @@ public class MathFunctions{
   }
   
   @FunctionTemplate(name = "add", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
-  public static class LongAdd1 implements DrillFunc{
+  public static class LongAdd1 implements DrillSimpleFunc{
     
     @Param BigIntHolder left;
     @Param BigIntHolder right;
@@ -46,7 +46,7 @@ public class MathFunctions{
   }
   
   @FunctionTemplate(name = "negative", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
-  public static class Negative implements DrillFunc{
+  public static class Negative implements DrillSimpleFunc{
     
     @Param BigIntHolder input;
     @Output BigIntHolder out;

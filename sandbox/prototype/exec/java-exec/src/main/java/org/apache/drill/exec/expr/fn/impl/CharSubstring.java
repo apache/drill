@@ -21,7 +21,7 @@ package org.apache.drill.exec.expr.fn.impl;
 import org.apache.drill.common.expression.*;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.exec.expr.DrillFunc;
+import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
@@ -51,7 +51,7 @@ import org.apache.drill.exec.vector.*;
 @FunctionTemplate(name = "charsubstring",
                   scope = FunctionTemplate.FunctionScope.SIMPLE,
                   nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
-public class CharSubstring implements DrillFunc {
+public class CharSubstring implements DrillSimpleFunc {
 
   @Param VarCharHolder string;
   @Param BigIntHolder offset;

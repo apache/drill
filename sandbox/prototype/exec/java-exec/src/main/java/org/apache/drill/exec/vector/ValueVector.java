@@ -21,6 +21,7 @@ import io.netty.buffer.ByteBuf;
 
 import java.io.Closeable;
 
+import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.exec.proto.UserBitShared.FieldMetadata;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
@@ -58,6 +59,9 @@ public interface ValueVector extends Closeable {
    * @return 
    */
   public TransferPair getTransferPair();
+  
+  
+  public TransferPair getTransferPair(FieldReference ref);
 
   /**
    * Given the current buffer allocation, return the maximum number of values that this buffer can contain.

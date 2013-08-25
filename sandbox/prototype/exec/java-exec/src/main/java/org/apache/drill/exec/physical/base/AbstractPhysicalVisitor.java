@@ -46,6 +46,12 @@ public abstract class AbstractPhysicalVisitor<T, X, E extends Throwable> impleme
   public T visitSort(Sort sort, X value) throws E{
     return visitOp(sort, value);
   }
+  
+
+  @Override
+  public T visitStreamingAggregate(StreamingAggregate agg, X value) throws E {
+    return visitOp(agg, value);
+  }
 
   @Override
   public T visitSender(Sender sender, X value) throws E {

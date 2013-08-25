@@ -1,5 +1,3 @@
-import org.apache.drill.exec.vector.ValueVector;
-
 <@pp.dropOutputFile />
 <#list types as type>
 <#list type.minor as minor>
@@ -24,6 +22,8 @@ import org.apache.drill.exec.proto.UserBitShared.FieldMetadata;
 import org.apache.drill.exec.record.DeadBuf;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
+import org.apache.drill.common.expression.FieldReference;
+
 
 import java.util.List;
 
@@ -68,7 +68,10 @@ import com.google.common.collect.ObjectArrays;
   }
   
   public TransferPair getTransferPair(){
-    return new TransferImpl();
+    return new TransferImpl(getField());
+  }
+  public TransferPair getTransferPair(FieldReference ref){
+    return new TransferImpl(getField().clone(ref));
   }
   
   public void transferTo(Repeated${minor.class}Vector target){
@@ -82,8 +85,8 @@ import com.google.common.collect.ObjectArrays;
   private class TransferImpl implements TransferPair{
     Repeated${minor.class}Vector to;
     
-    public TransferImpl(){
-      this.to = new Repeated${minor.class}Vector(getField(), allocator);
+    public TransferImpl(MaterializedField field){
+      this.to = new Repeated${minor.class}Vector(field, allocator);
     }
     
     public Repeated${minor.class}Vector getTo(){
@@ -92,6 +95,11 @@ import com.google.common.collect.ObjectArrays;
     
     public void transfer(){
       transferTo(to);
+    }
+    
+    @Override
+    public void copyValue(int fromIndex, int toIndex) {
+      to.copyFrom(fromIndex, toIndex, Repeated${minor.class}Vector.this);
     }
   }
   

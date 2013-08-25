@@ -9,6 +9,7 @@ import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.exec.compile.sig.MappingSet;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.CodeGenerator;
@@ -32,6 +33,10 @@ import com.sun.codemodel.JExpr;
 public class SortBatch extends AbstractRecordBatch<Sort> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SortBatch.class);
 
+  public static final MappingSet MAIN_MAPPING = new MappingSet( (String) null, null, CodeGenerator.DEFAULT_SCALAR_MAP, CodeGenerator.DEFAULT_SCALAR_MAP);
+  public static final MappingSet LEFT_MAPPING = new MappingSet("leftIndex", null, CodeGenerator.DEFAULT_SCALAR_MAP, CodeGenerator.DEFAULT_SCALAR_MAP);
+  public static final MappingSet RIGHT_MAPPING = new MappingSet("rightIndex", null, CodeGenerator.DEFAULT_SCALAR_MAP, CodeGenerator.DEFAULT_SCALAR_MAP);
+
   private static long MAX_SORT_BYTES = 8l * 1024 * 1024 * 1024;
 
   private final RecordBatch incoming;
@@ -47,7 +52,7 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
 
   @Override
   public int getRecordCount() {
-    return sv4.getLength();
+    return sv4.getCount();
   }
 
   @Override
@@ -127,18 +132,18 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
   
   private Sorter createNewSorter() throws ClassTransformationException, IOException, SchemaChangeException{
     CodeGenerator<Sorter> g = new CodeGenerator<Sorter>(Sorter.TEMPLATE_DEFINITION, context.getFunctionRegistry());
-    g.setMappingSet(SortSignature.MAIN_MAPPING);
+    g.setMappingSet(MAIN_MAPPING);
     
     for(OrderDef od : popConfig.getOrderings()){
       // first, we rewrite the evaluation stack for each side of the comparison.
       ErrorCollector collector = new ErrorCollectorImpl(); 
       final LogicalExpression expr = ExpressionTreeMaterializer.materialize(od.getExpr(), this, collector);
       if(collector.hasErrors()) throw new SchemaChangeException("Failure while materializing expression. " + collector.toErrorString());
-      g.setMappingSet(SortSignature.LEFT_MAPPING);
+      g.setMappingSet(LEFT_MAPPING);
       HoldingContainer left = g.addExpr(expr, false);
-      g.setMappingSet(SortSignature.RIGHT_MAPPING);
+      g.setMappingSet(RIGHT_MAPPING);
       HoldingContainer right = g.addExpr(expr, false);
-      g.setMappingSet(SortSignature.MAIN_MAPPING);
+      g.setMappingSet(MAIN_MAPPING);
       
       // next we wrap the two comparison sides and add the expression block for the comparison.
       FunctionCall f = new FunctionCall(ComparatorFunctions.COMPARE_TO, ImmutableList.of((LogicalExpression) new HoldingContainerExpression(left), new HoldingContainerExpression(right)), ExpressionPosition.UNKNOWN);

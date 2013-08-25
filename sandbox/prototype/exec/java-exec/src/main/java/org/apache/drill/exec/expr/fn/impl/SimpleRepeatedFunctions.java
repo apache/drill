@@ -8,7 +8,7 @@ import org.apache.drill.common.expression.FunctionDefinition;
 import org.apache.drill.common.expression.OutputTypeDeterminer;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.exec.expr.DrillFunc;
+import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
@@ -26,7 +26,7 @@ public class SimpleRepeatedFunctions {
   }
 
   @FunctionTemplate(name = "repeated_count", scope = FunctionTemplate.FunctionScope.SIMPLE)
-  public static class RepeatedLengthBigInt implements DrillFunc {
+  public static class RepeatedLengthBigInt implements DrillSimpleFunc {
 
     @Param
     RepeatedBigIntHolder input;
@@ -42,7 +42,7 @@ public class SimpleRepeatedFunctions {
   }
 
   @FunctionTemplate(name = "repeated_count", scope = FunctionTemplate.FunctionScope.SIMPLE)
-  public static class RepeatedLengthInt implements DrillFunc {
+  public static class RepeatedLengthInt implements DrillSimpleFunc {
 
     @Param RepeatedIntHolder input;
     @Output IntHolder out;
@@ -56,7 +56,7 @@ public class SimpleRepeatedFunctions {
   }
 
   @FunctionTemplate(name = "repeated_contains", scope = FunctionTemplate.FunctionScope.SIMPLE)
-  public static class ContainsBigInt implements DrillFunc {
+  public static class ContainsBigInt implements DrillSimpleFunc {
 
     @Param RepeatedBigIntHolder listToSearch;
     @Param BigIntHolder targetValue;

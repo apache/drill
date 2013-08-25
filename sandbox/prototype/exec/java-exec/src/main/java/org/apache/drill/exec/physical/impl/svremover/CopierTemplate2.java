@@ -1,10 +1,12 @@
 package org.apache.drill.exec.physical.impl.svremover;
 
+import javax.inject.Named;
+
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.physical.impl.svremover.RemovingRecordBatch.VectorAllocator;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
+import org.apache.drill.exec.vector.allocator.VectorAllocator;
 
 public abstract class CopierTemplate2 implements Copier{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CopierTemplate2.class);
@@ -36,8 +38,9 @@ public abstract class CopierTemplate2 implements Copier{
     }
   }
   
-  public abstract void doSetup(FragmentContext context, RecordBatch incoming, RecordBatch outgoing) throws SchemaChangeException;
-  public abstract void doEval(int incoming, int outgoing);
+  public abstract void doSetup(@Named("context") FragmentContext context, @Named("incoming") RecordBatch incoming, @Named("outgoing") RecordBatch outgoing);
+  public abstract void doEval(@Named("inIndex") int inIndex, @Named("outIndex") int outIndex);
+
         
 
 }

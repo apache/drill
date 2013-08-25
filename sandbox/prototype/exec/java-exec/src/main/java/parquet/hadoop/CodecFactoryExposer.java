@@ -17,12 +17,12 @@
  ******************************************************************************/
 package parquet.hadoop;
 
-import com.sun.corba.se.impl.interceptors.CodecFactoryImpl;
+import java.io.IOException;
+
 import org.apache.hadoop.conf.Configuration;
+
 import parquet.bytes.BytesInput;
 import parquet.hadoop.metadata.CompressionCodecName;
-
-import java.io.IOException;
 
 public class CodecFactoryExposer{
 

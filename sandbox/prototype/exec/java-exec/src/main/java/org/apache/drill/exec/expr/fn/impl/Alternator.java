@@ -6,7 +6,7 @@ import org.apache.drill.common.expression.NoArgValidator;
 import org.apache.drill.common.expression.OutputTypeDeterminer;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.exec.expr.DrillFunc;
+import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.Output;
@@ -19,7 +19,7 @@ import org.apache.drill.exec.vector.BigIntHolder;
 public class Alternator {
   
   @FunctionTemplate(name = "alternate", scope = FunctionScope.SIMPLE)
-  public static class Alternate2 implements DrillFunc{
+  public static class Alternate2 implements DrillSimpleFunc{
     @Workspace int val;
     @Output BigIntHolder out;
     
@@ -39,7 +39,7 @@ public class Alternator {
   }
 
   @FunctionTemplate(name = "alternate3", scope = FunctionScope.SIMPLE)
-  public static class Alternate3 implements DrillFunc{
+  public static class Alternate3 implements DrillSimpleFunc{
     @Workspace int val;
     @Output BigIntHolder out;
     

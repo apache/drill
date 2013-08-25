@@ -18,17 +18,20 @@
 
 package org.apache.drill.exec.expr.fn.impl;
 
-import org.apache.drill.common.expression.*;
-import org.apache.drill.exec.expr.DrillFunc;
+import org.apache.drill.common.expression.ArgumentValidators;
+import org.apache.drill.common.expression.CallProvider;
+import org.apache.drill.common.expression.FunctionDefinition;
+import org.apache.drill.common.expression.OutputTypeDeterminer;
+import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.vector.BitHolder;
+import org.apache.drill.exec.vector.NullableFloat8Holder;
 
 @FunctionTemplate(name = "isNull", scope = FunctionTemplate.FunctionScope.SIMPLE)
-public class IsNull implements DrillFunc {
+public class IsNull implements DrillSimpleFunc {
 
   @Param NullableFloat8Holder input;
   @Output BitHolder out;

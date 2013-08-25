@@ -4,7 +4,7 @@ import org.apache.drill.common.expression.ArgumentValidators;
 import org.apache.drill.common.expression.CallProvider;
 import org.apache.drill.common.expression.FunctionDefinition;
 import org.apache.drill.common.expression.OutputTypeDeterminer;
-import org.apache.drill.exec.expr.DrillFunc;
+import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
@@ -21,7 +21,7 @@ public class ComparisonFunctions {
     private ComparisonFunctions() {}
 
     @FunctionTemplate(name = "equal", scope = FunctionTemplate.FunctionScope.SIMPLE)
-    public static class IntEqual implements DrillFunc {
+    public static class IntEqual implements DrillSimpleFunc {
 
         @Param IntHolder left;
         @Param IntHolder right;
@@ -35,7 +35,7 @@ public class ComparisonFunctions {
     }
 
     @FunctionTemplate(name = "equal", scope = FunctionTemplate.FunctionScope.SIMPLE)
-    public static class BigIntEqual implements DrillFunc {
+    public static class BigIntEqual implements DrillSimpleFunc {
 
         @Param BigIntHolder left;
         @Param BigIntHolder right;
@@ -49,7 +49,7 @@ public class ComparisonFunctions {
     }
 
     @FunctionTemplate(name = "equal", scope = FunctionTemplate.FunctionScope.SIMPLE)
-    public static class Float4Equal implements DrillFunc {
+    public static class Float4Equal implements DrillSimpleFunc {
 
         @Param Float4Holder left;
         @Param Float4Holder right;
@@ -63,7 +63,7 @@ public class ComparisonFunctions {
     }
 
     @FunctionTemplate(name = "equal", scope = FunctionTemplate.FunctionScope.SIMPLE)
-    public static class Float8Equal implements DrillFunc {
+    public static class Float8Equal implements DrillSimpleFunc {
 
         @Param Float8Holder left;
         @Param Float8Holder right;
@@ -77,7 +77,7 @@ public class ComparisonFunctions {
     }
 
     @FunctionTemplate(name = "not equal", scope = FunctionTemplate.FunctionScope.SIMPLE)
-    public static class IntNotEqual implements DrillFunc {
+    public static class IntNotEqual implements DrillSimpleFunc {
 
         @Param IntHolder left;
         @Param IntHolder right;
@@ -91,7 +91,7 @@ public class ComparisonFunctions {
     }
 
     @FunctionTemplate(name = "not equal", scope = FunctionTemplate.FunctionScope.SIMPLE)
-    public static class BigIntNotEqual implements DrillFunc {
+    public static class BigIntNotEqual implements DrillSimpleFunc {
 
         @Param BigIntHolder left;
         @Param BigIntHolder right;
@@ -105,7 +105,7 @@ public class ComparisonFunctions {
     }
 
     @FunctionTemplate(name = "not equal", scope = FunctionTemplate.FunctionScope.SIMPLE)
-    public static class Float4NotEqual implements DrillFunc {
+    public static class Float4NotEqual implements DrillSimpleFunc {
 
         @Param Float4Holder left;
         @Param Float4Holder right;
@@ -119,7 +119,7 @@ public class ComparisonFunctions {
     }
 
     @FunctionTemplate(name = "not equal", scope = FunctionTemplate.FunctionScope.SIMPLE)
-    public static class Float8NotEqual implements DrillFunc {
+    public static class Float8NotEqual implements DrillSimpleFunc {
 
         @Param Float8Holder left;
         @Param Float8Holder right;
@@ -133,7 +133,7 @@ public class ComparisonFunctions {
     }
 
     @FunctionTemplate(name = "greater than", scope = FunctionTemplate.FunctionScope.SIMPLE)
-    public static class IntGreaterThan implements DrillFunc {
+    public static class IntGreaterThan implements DrillSimpleFunc {
 
         @Param IntHolder left;
         @Param IntHolder right;
@@ -147,7 +147,7 @@ public class ComparisonFunctions {
     }
 
     @FunctionTemplate(name = "greater than", scope = FunctionTemplate.FunctionScope.SIMPLE)
-    public static class BigIntGreaterThan implements DrillFunc {
+    public static class BigIntGreaterThan implements DrillSimpleFunc {
 
         @Param BigIntHolder left;
         @Param BigIntHolder right;
@@ -161,7 +161,7 @@ public class ComparisonFunctions {
     }
 
     @FunctionTemplate(name = "greater than", scope = FunctionTemplate.FunctionScope.SIMPLE)
-    public static class Float4GreaterThan implements DrillFunc {
+    public static class Float4GreaterThan implements DrillSimpleFunc {
 
         @Param Float4Holder left;
         @Param Float4Holder right;
@@ -175,7 +175,7 @@ public class ComparisonFunctions {
     }
 
     @FunctionTemplate(name = "greater than", scope = FunctionTemplate.FunctionScope.SIMPLE)
-    public static class Float8GreaterThan implements DrillFunc {
+    public static class Float8GreaterThan implements DrillSimpleFunc {
 
         @Param Float8Holder left;
         @Param Float8Holder right;
@@ -189,7 +189,7 @@ public class ComparisonFunctions {
     }
 
     @FunctionTemplate(name = "greater than or equal to", scope = FunctionTemplate.FunctionScope.SIMPLE)
-    public static class IntGreaterThanEqual implements DrillFunc {
+    public static class IntGreaterThanEqual implements DrillSimpleFunc {
 
         @Param IntHolder left;
         @Param IntHolder right;
@@ -203,7 +203,7 @@ public class ComparisonFunctions {
     }
 
     @FunctionTemplate(name = "greater than or equal to", scope = FunctionTemplate.FunctionScope.SIMPLE)
-    public static class BigIntGreaterThanEqual implements DrillFunc {
+    public static class BigIntGreaterThanEqual implements DrillSimpleFunc {
 
         @Param BigIntHolder left;
         @Param BigIntHolder right;
@@ -217,7 +217,7 @@ public class ComparisonFunctions {
     }
 
     @FunctionTemplate(name = "greater than or equal to", scope = FunctionTemplate.FunctionScope.SIMPLE)
-    public static class Float4GreaterThanEqual implements DrillFunc {
+    public static class Float4GreaterThanEqual implements DrillSimpleFunc {
 
         @Param Float4Holder left;
         @Param Float4Holder right;
@@ -231,7 +231,7 @@ public class ComparisonFunctions {
     }
 
     @FunctionTemplate(name = "greater than or equal to", scope = FunctionTemplate.FunctionScope.SIMPLE)
-    public static class Float8GreaterThanEqual implements DrillFunc {
+    public static class Float8GreaterThanEqual implements DrillSimpleFunc {
 
         @Param Float8Holder left;
         @Param Float8Holder right;
@@ -245,7 +245,7 @@ public class ComparisonFunctions {
     }
 
     @FunctionTemplate(name = "less than", scope = FunctionTemplate.FunctionScope.SIMPLE)
-    public static class IntLessThan implements DrillFunc {
+    public static class IntLessThan implements DrillSimpleFunc {
 
         @Param IntHolder left;
         @Param IntHolder right;
@@ -259,7 +259,7 @@ public class ComparisonFunctions {
     }
 
     @FunctionTemplate(name = "less than", scope = FunctionTemplate.FunctionScope.SIMPLE)
-    public static class BigIntLessThan implements DrillFunc {
+    public static class BigIntLessThan implements DrillSimpleFunc {
 
         @Param BigIntHolder left;
         @Param BigIntHolder right;
@@ -273,7 +273,7 @@ public class ComparisonFunctions {
     }
 
     @FunctionTemplate(name = "less than", scope = FunctionTemplate.FunctionScope.SIMPLE)
-    public static class Float4LessThan implements DrillFunc {
+    public static class Float4LessThan implements DrillSimpleFunc {
 
         @Param Float4Holder left;
         @Param Float4Holder right;
@@ -287,7 +287,7 @@ public class ComparisonFunctions {
     }
 
     @FunctionTemplate(name = "less than", scope = FunctionTemplate.FunctionScope.SIMPLE)
-    public static class Float8LessThan implements DrillFunc {
+    public static class Float8LessThan implements DrillSimpleFunc {
 
         @Param Float8Holder left;
         @Param Float8Holder right;
@@ -301,7 +301,7 @@ public class ComparisonFunctions {
     }
 
     @FunctionTemplate(name = "less than or equal to", scope = FunctionTemplate.FunctionScope.SIMPLE)
-    public static class IntLessThanEqual implements DrillFunc {
+    public static class IntLessThanEqual implements DrillSimpleFunc {
 
         @Param IntHolder left;
         @Param IntHolder right;
@@ -315,7 +315,7 @@ public class ComparisonFunctions {
     }
 
     @FunctionTemplate(name = "less than or equal to", scope = FunctionTemplate.FunctionScope.SIMPLE)
-    public static class BigIntLessThanEqual implements DrillFunc {
+    public static class BigIntLessThanEqual implements DrillSimpleFunc {
 
         @Param BigIntHolder left;
         @Param BigIntHolder right;
@@ -329,7 +329,7 @@ public class ComparisonFunctions {
     }
 
     @FunctionTemplate(name = "less than or equal to", scope = FunctionTemplate.FunctionScope.SIMPLE)
-    public static class Float4LessThanEqual implements DrillFunc {
+    public static class Float4LessThanEqual implements DrillSimpleFunc {
 
         @Param Float4Holder left;
         @Param Float4Holder right;
@@ -343,7 +343,7 @@ public class ComparisonFunctions {
     }
 
     @FunctionTemplate(name = "less than or equal to", scope = FunctionTemplate.FunctionScope.SIMPLE)
-    public static class Float8LessThanEqual implements DrillFunc {
+    public static class Float8LessThanEqual implements DrillSimpleFunc {
 
         @Param Float8Holder left;
         @Param Float8Holder right;

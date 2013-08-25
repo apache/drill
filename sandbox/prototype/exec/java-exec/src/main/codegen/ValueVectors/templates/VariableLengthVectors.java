@@ -20,6 +20,8 @@ import org.apache.drill.exec.proto.UserBitShared.FieldMetadata;
 import org.apache.drill.exec.record.DeadBuf;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
+import org.apache.drill.common.expression.FieldReference;
+
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ObjectArrays;
@@ -113,7 +115,10 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
   }
   
   public TransferPair getTransferPair(){
-    return new TransferImpl();
+    return new TransferImpl(getField());
+  }
+  public TransferPair getTransferPair(FieldReference ref){
+    return new TransferImpl(getField().clone(ref));
   }
   
   public void transferTo(${minor.class}Vector target){
@@ -145,7 +150,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     
     if(data.capacity() < outputStart + len) return false;
     
-    from.data.getBytes(start, from.data, outputStart, len);
+    from.data.getBytes(start, data, outputStart, len);
     offsetVector.data.set${(minor.javaType!type.javaType)?cap_first}( (thisIndex+1) * ${type.width}, len);
 
     return true;
@@ -155,8 +160,8 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
   private class TransferImpl implements TransferPair{
     ${minor.class}Vector to;
     
-    public TransferImpl(){
-      this.to = new ${minor.class}Vector(getField(), allocator);
+    public TransferImpl(MaterializedField field){
+      this.to = new ${minor.class}Vector(field, allocator);
     }
     
     public ${minor.class}Vector getTo(){
@@ -165,6 +170,11 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     
     public void transfer(){
       transferTo(to);
+    }
+    
+    @Override
+    public void copyValue(int fromIndex, int toIndex) {
+      to.copyFrom(fromIndex, toIndex, ${minor.class}Vector.this);
     }
   }
   
@@ -246,6 +256,42 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       data.setBytes(currentOffset, bytes);
     }
 
+   
+    public boolean setSafe(int index, Nullable${minor.class}Holder holder){
+      assert holder.isSet == 1;
+      if(index >= getValueCapacity()) return false;
+      
+      int start = holder.start;
+      int end =   holder.end;
+      int len = end - start;
+      
+      int outputStart = offsetVector.data.get${(minor.javaType!type.javaType)?cap_first}(index * ${type.width});
+      
+      if(data.capacity() < outputStart + len) return false;
+      
+      holder.buffer.getBytes(start, data, outputStart, len);
+      offsetVector.data.set${(minor.javaType!type.javaType)?cap_first}( (index+1) * ${type.width}, len);
+
+      return true;
+    }
+    
+    public boolean setSafe(int index, ${minor.class}Holder holder){
+      if(index >= getValueCapacity()) return false;
+      
+      int start = holder.start;
+      int end =   holder.end;
+      int len = end - start;
+      
+      int outputStart = offsetVector.data.get${(minor.javaType!type.javaType)?cap_first}(index * ${type.width});
+      
+      if(data.capacity() < outputStart + len) return false;
+      
+      holder.buffer.getBytes(start, data, outputStart, len);
+      offsetVector.data.set${(minor.javaType!type.javaType)?cap_first}( (index+1) * ${type.width}, len);
+
+      return true;
+    }
+    
     public void set(int index, int start, int length, ByteBuf buffer){
       assert index >= 0;
       int currentOffset = offsetVector.getAccessor().get(index);

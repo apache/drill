@@ -1,5 +1,9 @@
 package org.apache.drill.exec.compile.sig;
 
+import org.apache.drill.exec.expr.CodeGenerator.BlockType;
+
+import com.google.common.base.Preconditions;
+
 public class GeneratorMapping {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(GeneratorMapping.class);
 
@@ -17,24 +21,31 @@ public class GeneratorMapping {
   }
 
   public static GeneratorMapping GM(String setup, String eval, String reset, String cleanup){
+    return create(setup, eval, reset, cleanup);
+  }
+
+  public static GeneratorMapping create(String setup, String eval, String reset, String cleanup){   
     return new GeneratorMapping(setup, eval, reset, cleanup);
   }
-
-  public String getSetup() {
-    return setup;
+  
+  public String getMethodName(BlockType type){
+    switch(type){
+    case CLEANUP:
+      Preconditions.checkNotNull(cleanup, "The current mapping does not have a cleanup method defined.");
+      return cleanup;
+    case EVAL:
+      Preconditions.checkNotNull(eval, "The current mapping does not have an eval method defined.");
+      return eval;
+    case RESET:
+      Preconditions.checkNotNull(reset, "The current mapping does not have a cleanup method defined.");
+      return reset;
+    case SETUP:
+      Preconditions.checkNotNull(setup, "The current mapping does not have a setup method defined.");
+      return setup;
+    default:
+      throw new IllegalStateException();
+    }
   }
-
-  public String getEval() {
-    return eval;
-  }
-
-  public String getReset() {
-    return reset;
-  }
-
-  public String getCleanup() {
-    return cleanup;
-  }
- 
+  
   
 }

@@ -17,48 +17,38 @@
  ******************************************************************************/
 package org.apache.drill.exec.compile;
 
-import org.apache.drill.exec.compile.sig.CodeGeneratorSignature;
-import org.apache.drill.exec.compile.sig.DefaultGeneratorSignature;
 import org.apache.drill.exec.compile.sig.SignatureHolder;
 
 public class TemplateClassDefinition<T>{
   
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TemplateClassDefinition.class);
   
-  private final Class<T> externalInterface;
-  private final String templateClassName;
-  private final Class<?> internalInterface;
+  private final Class<T> iface;
+  private final Class<?> template;
   private final SignatureHolder signature;
   
-  public TemplateClassDefinition(Class<T> externalInterface, String templateClassName, Class<?> internalInterface) {
-    this(externalInterface, templateClassName, internalInterface, DefaultGeneratorSignature.class);
-  }
   
-  public <X extends CodeGeneratorSignature> TemplateClassDefinition(Class<T> externalInterface, String templateClassName, Class<?> internalInterface, Class<X> signature) {
+  public <X extends T> TemplateClassDefinition(Class<T> iface, Class<X> template) {
     super();
-    this.externalInterface = externalInterface;
-    this.templateClassName = templateClassName;
-    this.internalInterface = internalInterface;
+    this.iface = iface;
+    this.template = template;
     SignatureHolder holder = null;
     try{
-      holder = new SignatureHolder(signature);
+      holder = new SignatureHolder(template);
     }catch(Exception ex){
-      logger.error("Failure while trying to build signature holder for signature. {}", signature.getSimpleName(), ex);
+      logger.error("Failure while trying to build signature holder for signature. {}", template.getName(), ex);
     }
     this.signature = holder;
 
   }
 
   public Class<T> getExternalInterface() {
-    return externalInterface;
-  }
-  
-  public Class<?> getInternalInterface() {
-    return internalInterface;
+    return iface;
   }
 
+
   public String getTemplateClassName() {
-    return templateClassName;
+    return template.getName();
   }
 
   public SignatureHolder getSignature(){
@@ -67,9 +57,9 @@ public class TemplateClassDefinition<T>{
 
   @Override
   public String toString() {
-    return "TemplateClassDefinition [externalInterface=" + externalInterface + ", templateClassName="
-        + templateClassName + ", internalInterface=" + internalInterface + ", signature=" + signature + "]";
+    return "TemplateClassDefinition [template=" + template + ", signature=" + signature + "]";
   }
+
   
   
 }

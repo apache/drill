@@ -19,24 +19,32 @@
 package org.apache.drill.exec.physical.impl.partitionsender;
 
 import java.util.Iterator;
-import java.util.List;
 
-import com.beust.jcommander.internal.Lists;
-import com.google.common.base.Preconditions;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.HashPartitionSender;
 import org.apache.drill.exec.proto.ExecProtos;
 import org.apache.drill.exec.proto.GeneralRPCProtos;
-import org.apache.drill.exec.record.*;
+import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.record.FragmentWritableBatch;
+import org.apache.drill.exec.record.RecordBatch;
+import org.apache.drill.exec.record.SchemaBuilder;
+import org.apache.drill.exec.record.TypedFieldId;
+import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.record.VectorWrapper;
+import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.rpc.BaseRpcOutcomeListener;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.bit.BitTunnel;
-import org.apache.drill.exec.vector.*;
+import org.apache.drill.exec.vector.TypeHelper;
+import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.allocator.VectorAllocator;
 import org.apache.drill.exec.work.foreman.ErrorHelper;
+
+import com.google.common.base.Preconditions;
 
 /**
  * OutgoingRecordBatch is a holder of value vectors which are to be sent to another host.  Thus,
@@ -121,9 +129,9 @@ public class OutgoingRecordBatch implements RecordBatch {
     // NOTE: the value vector is directly referenced by generated code; therefore references
     // must remain valid.
     recordCount = 0;
-    for (VectorWrapper v : vectorContainer) {
+    for (VectorWrapper<?> v : vectorContainer) {
       logger.debug("Reallocating vv to capacity " + incoming.getRecordCount() + " after flush.");
-      getAllocator(v.getValueVector(), v.getValueVector()).alloc(incoming.getRecordCount());
+      VectorAllocator.getAllocator(v.getValueVector(), v.getValueVector()).alloc(incoming.getRecordCount());
     }
     if (!ok) { throw new SchemaChangeException("Flush ended NOT OK!"); }
     return true;
@@ -139,14 +147,14 @@ public class OutgoingRecordBatch implements RecordBatch {
     vectorContainer = new VectorContainer();
 
     SchemaBuilder bldr = BatchSchema.newBuilder().setSelectionVectorMode(BatchSchema.SelectionVectorMode.NONE);
-    for (VectorWrapper v : incoming) {
+    for (VectorWrapper<?> v : incoming) {
 
       // add field to the output schema
       bldr.addField(v.getField());
 
       // allocate a new value vector
       ValueVector outgoingVector = TypeHelper.getNewVector(v.getField(), context.getAllocator());
-      getAllocator(v.getValueVector(), outgoingVector).alloc(recordCapacity);
+      VectorAllocator.getAllocator(v.getValueVector(), outgoingVector).alloc(recordCapacity);
       vectorContainer.add(outgoingVector);
       logger.debug("Reallocating to cap " + recordCapacity + " because of newly init'd vector : " + v.getValueVector());
     }
@@ -162,7 +170,7 @@ public class OutgoingRecordBatch implements RecordBatch {
     isLast = false;
     recordCount = 0;
     recordCapacity = 0;
-    for (VectorWrapper v : vectorContainer)
+    for (VectorWrapper<?> v : vectorContainer)
       v.getValueVector().clear();
   }
 
@@ -227,49 +235,6 @@ public class OutgoingRecordBatch implements RecordBatch {
     return WritableBatch.get(this);
   }
 
-  private VectorAllocator getAllocator(ValueVector in, ValueVector outgoing){
-    if(outgoing instanceof FixedWidthVector){
-      return new FixedVectorAllocator((FixedWidthVector) outgoing);
-    }else if(outgoing instanceof VariableWidthVector && in instanceof VariableWidthVector){
-      return new VariableVectorAllocator( (VariableWidthVector) in, (VariableWidthVector) outgoing);
-    }else{
-      throw new UnsupportedOperationException();
-    }
-  }
-
-  private class FixedVectorAllocator implements VectorAllocator{
-    FixedWidthVector out;
-
-    public FixedVectorAllocator(FixedWidthVector out) {
-      super();
-      this.out = out;
-    }
-
-    public void alloc(int recordCount){
-      out.allocateNew(recordCount);
-      out.getMutator().setValueCount(recordCount);
-    }
-  }
-
-  private class VariableVectorAllocator implements VectorAllocator{
-    VariableWidthVector in;
-    VariableWidthVector out;
-
-    public VariableVectorAllocator(VariableWidthVector in, VariableWidthVector out) {
-      super();
-      this.in = in;
-      this.out = out;
-    }
-
-    public void alloc(int recordCount){
-      out.allocateNew(in.getByteCapacity(), recordCount);
-      out.getMutator().setValueCount(recordCount);
-    }
-  }
-
-  public interface VectorAllocator{
-    public void alloc(int recordCount);
-  }  
   
   private StatusHandler statusHandler = new StatusHandler();
   private class StatusHandler extends BaseRpcOutcomeListener<GeneralRPCProtos.Ack> {

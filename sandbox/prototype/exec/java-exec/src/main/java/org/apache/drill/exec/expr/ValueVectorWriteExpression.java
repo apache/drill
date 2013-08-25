@@ -16,16 +16,16 @@ public class ValueVectorWriteExpression implements LogicalExpression {
 
   private final TypedFieldId fieldId;
   private final LogicalExpression child;
-  private final String indexVariableName;
+  private final boolean safe;
   
   public ValueVectorWriteExpression(TypedFieldId fieldId, LogicalExpression child){
-    this(fieldId, child, null);
+    this(fieldId, child, false);
   }
   
-  public ValueVectorWriteExpression(TypedFieldId fieldId, LogicalExpression child, String indexVariableName){
+  public ValueVectorWriteExpression(TypedFieldId fieldId, LogicalExpression child, boolean safe){
     this.fieldId = fieldId;
     this.child = child;
-    this.indexVariableName = indexVariableName;
+    this.safe = safe;
   }
   
   public TypedFieldId getFieldId() {
@@ -35,6 +35,11 @@ public class ValueVectorWriteExpression implements LogicalExpression {
   @Override
   public MajorType getMajorType() {
     return Types.NULL;
+  }
+
+  
+  public boolean isSafe() {
+    return safe;
   }
 
   @Override

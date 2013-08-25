@@ -87,14 +87,15 @@ public class MockRecordReader implements RecordReader {
 
   @Override
   public int next() {
+    if(recordsRead >= this.config.getRecords()) return 0;
     
-    int recordSetSize = Math.min(batchRecordCount, this.config.getRecords()- recordsRead);
-
+    int recordSetSize = Math.min(batchRecordCount, this.config.getRecords() - recordsRead);
+    
     recordsRead += recordSetSize;
     for(ValueVector v : valueVectors){
       AllocationHelper.allocate(v, recordSetSize, 50, 5);
       
-      logger.debug("MockRecordReader:  Generating random data for VV of type " + v.getClass().getName());
+//      logger.debug(String.format("MockRecordReader:  Generating %d records of random data for VV of type %s.", recordSetSize, v.getClass().getName()));
       ValueVector.Mutator m = v.getMutator();
       m.setValueCount(recordSetSize);
       m.generateTestData();

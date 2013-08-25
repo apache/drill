@@ -14,7 +14,7 @@ import com.google.common.collect.Lists;
 /**
  * Holds the data for a particular record batch for later manipulation.
  */
-class RecordBatchData {
+public class RecordBatchData {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RecordBatchData.class);
   
   final List<ValueVector> vectors = Lists.newArrayList();

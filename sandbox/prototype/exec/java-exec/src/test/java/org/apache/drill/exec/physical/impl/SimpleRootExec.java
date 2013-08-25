@@ -4,6 +4,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.ScreenCreator.ScreenRoot;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
@@ -28,6 +29,10 @@ public class SimpleRootExec implements RootExec, Iterable<ValueVector>{
     
   }
 
+  public FragmentContext getContext(){
+    return incoming.getContext();
+  }
+  
   public SelectionVector2 getSelectionVector2(){
     return incoming.getSelectionVector2();
   }

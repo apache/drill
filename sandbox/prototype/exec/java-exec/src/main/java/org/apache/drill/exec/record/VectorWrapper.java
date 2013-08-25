@@ -11,4 +11,5 @@ public interface VectorWrapper<T extends ValueVector> {
   public T[] getValueVectors();
   public boolean isHyper();
   public void release();
+  public VectorWrapper<T> cloneAndTransfer();
 }

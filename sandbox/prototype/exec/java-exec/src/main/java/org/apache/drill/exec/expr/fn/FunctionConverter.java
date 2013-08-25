@@ -15,8 +15,8 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
-import org.apache.drill.exec.expr.fn.FunctionHolder.ValueReference;
-import org.apache.drill.exec.expr.fn.FunctionHolder.WorkspaceReference;
+import org.apache.drill.exec.expr.fn.DrillFuncHolder.ValueReference;
+import org.apache.drill.exec.expr.fn.DrillFuncHolder.WorkspaceReference;
 import org.apache.drill.exec.expr.holders.ValueHolder;
 import org.codehaus.commons.compiler.CompileException;
 import org.codehaus.janino.Java;
@@ -36,7 +36,7 @@ public class FunctionConverter {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FunctionConverter.class);
   
   
-  public <T extends DrillFunc> FunctionHolder getHolder(Class<T> clazz){
+  public <T extends DrillFunc> DrillFuncHolder getHolder(Class<T> clazz){
     FunctionTemplate template = clazz.getAnnotation(FunctionTemplate.class);
     if(template == null){
       return failure("Class does not declare FunctionTemplate annotation.", clazz);
@@ -98,7 +98,7 @@ public class FunctionConverter {
         
       }else{
         // workspace work.
-        logger.debug("Found workspace field {}:{}", field.getType(), field.getName());
+//        logger.debug("Found workspace field {}:{}", field.getType(), field.getName());
         workspaceFields.add(new WorkspaceReference(field.getType(), field.getName()));
       }
       
@@ -122,16 +122,13 @@ public class FunctionConverter {
     // return holder
     ValueReference[] ps = params.toArray(new ValueReference[params.size()]);
     WorkspaceReference[] works = workspaceFields.toArray(new WorkspaceReference[workspaceFields.size()]);
-    if(!methods.containsKey("eval")){
-      return failure("Failure finding eval method for function.", clazz);
-    }
     
     try{
       switch(template.scope()){
       case POINT_AGGREGATE:
         return new DrillAggFuncHolder(template.scope(), template.nulls(), template.isBinaryCommutative(), template.name(), ps, outputField, works, methods, imports);
       case SIMPLE:
-        FunctionHolder fh = new DrillFuncHolder(template.scope(), template.nulls(), template.isBinaryCommutative(), template.name(), ps, outputField, works, methods, imports);
+        DrillFuncHolder fh = new DrillSimpleFuncHolder(template.scope(), template.nulls(), template.isBinaryCommutative(), template.name(), ps, outputField, works, methods, imports);
         return fh;
 
       case HOLISTIC_AGGREGATE:
@@ -174,27 +171,27 @@ public class FunctionConverter {
       return (T) val;
   }
   
-  private static FunctionHolder failure(String message, Throwable t, Class<?> clazz, String fieldName){
+  private static DrillFuncHolder failure(String message, Throwable t, Class<?> clazz, String fieldName){
     logger.warn("Failure loading function class {}, field {}. " + message, clazz.getName(), fieldName, t);
     return null;
   }  
   
-  private FunctionHolder failure(String message, Class<?> clazz, String fieldName){
+  private DrillFuncHolder failure(String message, Class<?> clazz, String fieldName){
     logger.warn("Failure loading function class {}, field {}. " + message, clazz.getName(), fieldName);
     return null;
   }
 
-  private FunctionHolder failure(String message, Class<?> clazz){
+  private DrillFuncHolder failure(String message, Class<?> clazz){
     logger.warn("Failure loading function class {}. " + message, clazz.getName());
     return null;
   }
 
-  private FunctionHolder failure(String message, Throwable t, Class<?> clazz){
+  private DrillFuncHolder failure(String message, Throwable t, Class<?> clazz){
     logger.warn("Failure loading function class {}. " + message, t, clazz.getName());
     return null;
   }
   
-  private FunctionHolder failure(String message, Class<?> clazz, Field field){
+  private DrillFuncHolder failure(String message, Class<?> clazz, Field field){
     return failure(message, clazz, field.getName());
   }
   

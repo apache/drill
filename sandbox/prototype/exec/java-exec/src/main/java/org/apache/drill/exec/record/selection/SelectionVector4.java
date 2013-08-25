@@ -42,7 +42,7 @@ public class SelectionVector4 {
     return recordCount;
   }
   
-  public int getCurrentCount(){
+  public int getCount(){
     return length;
   }
   
@@ -54,15 +54,23 @@ public class SelectionVector4 {
   }
   
   public int get(int index){
-    return vector.getInt(index*4);
+    return vector.getInt( (start+index)*4);
   }
-
-  public int getStart() {
-    return start;
-  }
-
-  public int getLength() {
-    return length;
+  
+  /**
+   * Caution: This method shares the underlying buffer between this vector and the newly created one.
+   * @return Newly created single batch SelectionVector4.
+   * @throws SchemaChangeException 
+   */
+  public SelectionVector4 createNewWrapperCurrent(){
+    try {
+      vector.retain();
+      SelectionVector4 sv4 = new SelectionVector4(vector, length, length);
+      sv4.start = this.start;
+      return sv4;
+    } catch (SchemaChangeException e) {
+      throw new IllegalStateException("This shouldn't happen.");
+    }
   }
   
   public boolean next(){
@@ -71,6 +79,10 @@ public class SelectionVector4 {
     int newEnd = Math.min(start+length, recordCount);
     length = newEnd - start;
     return true;
+  }
+  
+  public void clear(){
+    this.vector.clear();
   }
   
   

@@ -2,12 +2,9 @@ package org.apache.drill.exec.vector;
 
 import io.netty.buffer.ByteBuf;
 
-import java.util.Random;
-
+import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.FieldMetadata;
-import org.apache.drill.exec.record.DeadBuf;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
 
@@ -98,9 +95,13 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
     return new Accessor();
   }
 
-  public TransferPair getTransferPair() {
-    return new TransferImpl();
+  public TransferPair getTransferPair(){
+    return new TransferImpl(getField());
   }
+  public TransferPair getTransferPair(FieldReference ref){
+    return new TransferImpl(getField().clone(ref));
+  }
+
 
   public void transferTo(BitVector target) {
     target.data = data;
@@ -112,8 +113,8 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
   private class TransferImpl implements TransferPair {
     BitVector to;
 
-    public TransferImpl() {
-      this.to = new BitVector(getField(), allocator);
+    public TransferImpl(MaterializedField field) {
+      this.to = new BitVector(field, allocator);
     }
 
     public BitVector getTo() {
@@ -122,6 +123,11 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
 
     public void transfer() {
       transferTo(to);
+    }
+
+    @Override
+    public void copyValue(int fromIndex, int toIndex) {
+      to.copyFrom(fromIndex, toIndex, BitVector.this);
     }
   }
 
@@ -198,6 +204,12 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
 
     final void set(int index, NullableBitHolder holder) {
       set(index, holder.value);
+    }
+    
+    public boolean setSafe(int index, int value) {
+      if(index >= getValueCapacity()) return false;
+      set(index, value);
+      return true;
     }
 
     public final void setValueCount(int valueCount) {

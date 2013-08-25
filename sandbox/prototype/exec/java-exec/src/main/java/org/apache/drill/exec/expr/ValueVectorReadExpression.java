@@ -16,25 +16,12 @@ public class ValueVectorReadExpression implements LogicalExpression{
   private final MajorType type;
   private final TypedFieldId fieldId;
   private final boolean superReader;
-  private final String indexVariableName;
+  
   
   public ValueVectorReadExpression(TypedFieldId tfId){
-    this(tfId, null);
-  }
-  
-  public ValueVectorReadExpression(TypedFieldId tfId, String indexVariableName) {
     this.type = tfId.getType();
     this.fieldId = tfId;
     this.superReader = tfId.isHyperReader();
-    this.indexVariableName = indexVariableName;
-  }
-
-  public boolean isNamed(){
-    return indexVariableName != null;
-  }
-  
-  public String getIndexVariableName(){
-    return indexVariableName;
   }
   
   public TypedFieldId getTypedFieldId(){

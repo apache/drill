@@ -20,6 +20,8 @@ package org.apache.drill.exec.physical.base;
 import org.apache.drill.common.graph.GraphVisitor;
 import org.apache.drill.exec.physical.OperatorCost;
 
+import com.google.common.base.Preconditions;
+
 public abstract class AbstractBase implements PhysicalOperator{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractBase.class);
 
@@ -30,6 +32,7 @@ public abstract class AbstractBase implements PhysicalOperator{
     visitor.enter(this);
     if(this.iterator() == null) throw new IllegalArgumentException("Null iterator for pop." + this);
     for(PhysicalOperator o : this){
+      Preconditions.checkNotNull(o, String.format("Null in iterator for pop %s.", this));
       o.accept(visitor);  
     }
     visitor.leave(this);

@@ -1,11 +1,13 @@
 package org.apache.drill.exec.physical.impl.svremover;
 
+import javax.inject.Named;
+
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.physical.impl.svremover.RemovingRecordBatch.VectorAllocator;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
+import org.apache.drill.exec.vector.allocator.VectorAllocator;
 
 public abstract class CopierTemplate4 implements Copier{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CopierTemplate4.class);
@@ -30,18 +32,18 @@ public abstract class CopierTemplate4 implements Copier{
 
   @Override
   public void copyRecords(){
-    final int recordCount = sv4.getLength();
+    final int recordCount = sv4.getCount();
     allocateVectors(recordCount);
     int outgoingPosition = 0;
-    final int end = sv4.getStart() + sv4.getLength();
-    for(int svIndex = sv4.getStart(); svIndex < end; svIndex++, outgoingPosition++){
+    for(int svIndex = 0; svIndex < sv4.getCount(); svIndex++, outgoingPosition++){
       int deRefIndex = sv4.get(svIndex);
       doEval(deRefIndex, outgoingPosition);
     }
   }
   
-  public abstract void doSetup(FragmentContext context, RecordBatch incoming, RecordBatch outgoing) throws SchemaChangeException;
-  public abstract void doEval(int incoming, int outgoing);
+  public abstract void doSetup(@Named("context") FragmentContext context, @Named("incoming") RecordBatch incoming, @Named("outgoing") RecordBatch outgoing);
+  public abstract void doEval(@Named("inIndex") int inIndex, @Named("outIndex") int outIndex);
+
         
 
 }

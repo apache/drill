@@ -96,9 +96,10 @@ public class ExpressionTreeMaterializer {
 
     @Override
     public LogicalExpression visitSchemaPath(SchemaPath path) {
-      logger.debug("Visiting schema path {}", path);
+//      logger.debug("Visiting schema path {}", path);
       TypedFieldId tfId = batch.getValueVectorId(path);
       if (tfId == null) {
+        logger.warn("Unable to find value vector of path {}, returning null instance.", path);
         return NullExpression.INSTANCE;
       } else {
         return new ValueVectorReadExpression(tfId);

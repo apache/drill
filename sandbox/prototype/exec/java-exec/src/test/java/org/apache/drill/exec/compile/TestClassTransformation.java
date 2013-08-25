@@ -38,10 +38,7 @@ public class TestClassTransformation {
   private void testBasicClassCompilation(boolean useJanino) throws ClassTransformationException{
     final String output = "hello world, the time is now " + System.currentTimeMillis();
 
-    TemplateClassDefinition<ExampleExternalInterface> def = new TemplateClassDefinition<ExampleExternalInterface>(
-        ExampleExternalInterface.class, "org.apache.drill.exec.compile.ExampleTemplate",
-        ExampleInternalInterface.class);
-    
+    TemplateClassDefinition<ExampleExternalInterface> def = new TemplateClassDefinition<ExampleExternalInterface>(ExampleExternalInterface.class, ExampleTemplate.class);
     
     ClassTransformer ct = new ClassTransformer();
     QueryClassLoader loader = new QueryClassLoader(useJanino);

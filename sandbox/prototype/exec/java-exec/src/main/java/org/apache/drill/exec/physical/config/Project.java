@@ -17,7 +17,6 @@
  ******************************************************************************/
 package org.apache.drill.exec.physical.config;
 
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.drill.common.logical.data.NamedExpression;

@@ -1,5 +1,7 @@
 package org.apache.drill.exec.physical.impl.filter;
 
+import javax.inject.Named;
+
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
@@ -78,6 +80,7 @@ public abstract class FilterTemplate implements Filterer{
     outgoingSelectionVector.setRecordCount(svIndex);
   }
   
-  protected abstract void doSetup(FragmentContext context, RecordBatch incoming, RecordBatch outgoing) throws SchemaChangeException;
-  protected abstract boolean doEval(int inIndex, int outIndex);
+  public abstract void doSetup(@Named("context") FragmentContext context, @Named("incoming") RecordBatch incoming, @Named("outgoing") RecordBatch outgoing);
+  public abstract boolean doEval(@Named("inIndex") int inIndex, @Named("outIndex") int outIndex);
+
 }

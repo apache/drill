@@ -1,6 +1,6 @@
 package org.apache.drill.exec.expr.fn.impl;
 
-import org.apache.drill.exec.expr.DrillFunc;
+import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
@@ -15,7 +15,7 @@ public class ComparisonFunctionsNullable {
     private ComparisonFunctionsNullable() {}
 
     @FunctionTemplate(name = "equal", scope = FunctionTemplate.FunctionScope.SIMPLE)
-    public static class NullableIntEqual implements DrillFunc {
+    public static class NullableIntEqual implements DrillSimpleFunc {
 
         @Param NullableIntHolder left;
         @Param NullableIntHolder right;
@@ -33,7 +33,7 @@ public class ComparisonFunctionsNullable {
     }
 
     @FunctionTemplate(name = "equal", scope = FunctionTemplate.FunctionScope.SIMPLE)
-    public static class NullableBigIntEqual implements DrillFunc {
+    public static class NullableBigIntEqual implements DrillSimpleFunc {
 
         @Param NullableBigIntHolder left;
         @Param NullableBigIntHolder right;
@@ -51,7 +51,7 @@ public class ComparisonFunctionsNullable {
     }
 
     @FunctionTemplate(name = "not equal", scope = FunctionTemplate.FunctionScope.SIMPLE)
-    public static class NullableIntNotEqual implements DrillFunc {
+    public static class NullableIntNotEqual implements DrillSimpleFunc {
 
         @Param NullableIntHolder left;
         @Param NullableIntHolder right;
@@ -69,7 +69,7 @@ public class ComparisonFunctionsNullable {
     }
 
     @FunctionTemplate(name = "not equal", scope = FunctionTemplate.FunctionScope.SIMPLE)
-    public static class NullableBigIntNotEqual implements DrillFunc {
+    public static class NullableBigIntNotEqual implements DrillSimpleFunc {
 
         @Param NullableBigIntHolder left;
         @Param NullableBigIntHolder right;
@@ -87,7 +87,7 @@ public class ComparisonFunctionsNullable {
     }
 
     @FunctionTemplate(name = "less than", scope = FunctionTemplate.FunctionScope.SIMPLE)
-    public static class NullableIntLessThan implements DrillFunc {
+    public static class NullableIntLessThan implements DrillSimpleFunc {
 
         @Param NullableIntHolder left;
         @Param NullableIntHolder right;
@@ -105,7 +105,7 @@ public class ComparisonFunctionsNullable {
     }
 
     @FunctionTemplate(name = "less than", scope = FunctionTemplate.FunctionScope.SIMPLE)
-    public static class NullableBigIntLessThan implements DrillFunc {
+    public static class NullableBigIntLessThan implements DrillSimpleFunc {
 
         @Param NullableBigIntHolder left;
         @Param NullableBigIntHolder right;
@@ -123,7 +123,7 @@ public class ComparisonFunctionsNullable {
     }
 
     @FunctionTemplate(name = "less than or equal to", scope = FunctionTemplate.FunctionScope.SIMPLE)
-    public static class NullableIntLessThanEqual implements DrillFunc {
+    public static class NullableIntLessThanEqual implements DrillSimpleFunc {
 
         @Param NullableIntHolder left;
         @Param NullableIntHolder right;
@@ -141,7 +141,7 @@ public class ComparisonFunctionsNullable {
     }
 
     @FunctionTemplate(name = "less than or equal to", scope = FunctionTemplate.FunctionScope.SIMPLE)
-    public static class NullableBigIntLessThanEqual implements DrillFunc {
+    public static class NullableBigIntLessThanEqual implements DrillSimpleFunc {
 
         @Param NullableBigIntHolder left;
         @Param NullableBigIntHolder right;
@@ -159,7 +159,7 @@ public class ComparisonFunctionsNullable {
     }
 
     @FunctionTemplate(name = "greater than", scope = FunctionTemplate.FunctionScope.SIMPLE)
-    public static class NullableIntGreaterThan implements DrillFunc {
+    public static class NullableIntGreaterThan implements DrillSimpleFunc {
 
         @Param NullableIntHolder left;
         @Param NullableIntHolder right;
@@ -177,7 +177,7 @@ public class ComparisonFunctionsNullable {
     }
 
     @FunctionTemplate(name = "greater than", scope = FunctionTemplate.FunctionScope.SIMPLE)
-    public static class NullableBigIntGreaterThan implements DrillFunc {
+    public static class NullableBigIntGreaterThan implements DrillSimpleFunc {
 
         @Param NullableBigIntHolder left;
         @Param NullableBigIntHolder right;
@@ -195,7 +195,7 @@ public class ComparisonFunctionsNullable {
     }
 
     @FunctionTemplate(name = "greater than or equal to", scope = FunctionTemplate.FunctionScope.SIMPLE)
-    public static class NullableIntGreaterThanEqual implements DrillFunc {
+    public static class NullableIntGreaterThanEqual implements DrillSimpleFunc {
 
         @Param NullableIntHolder left;
         @Param NullableIntHolder right;
@@ -213,7 +213,7 @@ public class ComparisonFunctionsNullable {
     }
 
     @FunctionTemplate(name = "greater than or equal to", scope = FunctionTemplate.FunctionScope.SIMPLE)
-    public static class NullableBigIntGreaterThanEqual implements DrillFunc {
+    public static class NullableBigIntGreaterThanEqual implements DrillSimpleFunc {
 
         @Param NullableBigIntHolder left;
         @Param NullableBigIntHolder right;

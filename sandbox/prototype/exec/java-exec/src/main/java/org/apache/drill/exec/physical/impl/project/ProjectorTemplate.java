@@ -2,6 +2,8 @@ package org.apache.drill.exec.physical.impl.project;
 
 import java.util.List;
 
+import javax.inject.Named;
+
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
@@ -71,8 +73,9 @@ public abstract class ProjectorTemplate implements Projector {
     doSetup(context, incoming, outgoing);
   }
 
-  protected abstract void doSetup(FragmentContext context, RecordBatch incoming, RecordBatch outgoing) throws SchemaChangeException;
-  protected abstract void doEval(int inIndex, int outIndex);
+  public abstract void doSetup(@Named("context") FragmentContext context, @Named("incoming") RecordBatch incoming, @Named("outgoing") RecordBatch outgoing);
+  public abstract void doEval(@Named("inIndex") int inIndex, @Named("outIndex") int outIndex);
+
 
   
 

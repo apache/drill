@@ -1,5 +1,3 @@
-import java.lang.UnsupportedOperationException;
-
 <@pp.dropOutputFile />
 <#list types as type>
 <#list type.minor as minor>
@@ -9,6 +7,8 @@ import java.lang.UnsupportedOperationException;
 <@pp.changeOutputFile name="${className}.java" />
 
 package org.apache.drill.exec.vector;
+
+
 
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -29,6 +29,8 @@ import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.BitVector;
 import org.apache.drill.exec.vector.UInt2Vector;
 import org.apache.drill.exec.vector.UInt4Vector;
+import org.apache.drill.common.expression.FieldReference;
+
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.ObjectArrays;
@@ -160,8 +162,12 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
   </#if>
   
   public TransferPair getTransferPair(){
-    return new TransferImpl();
+    return new TransferImpl(getField());
   }
+  public TransferPair getTransferPair(FieldReference ref){
+    return new TransferImpl(getField().clone(ref));
+  }
+
   
   public void transferTo(Nullable${minor.class}Vector target){
     bits.transferTo(target.bits);
@@ -173,8 +179,8 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
   private class TransferImpl implements TransferPair{
     Nullable${minor.class}Vector to;
     
-    public TransferImpl(){
-      this.to = new Nullable${minor.class}Vector(getField(), allocator);
+    public TransferImpl(MaterializedField field){
+      this.to = new Nullable${minor.class}Vector(field, allocator);
     }
     
     public Nullable${minor.class}Vector getTo(){
@@ -183,6 +189,11 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
     
     public void transfer(){
       transferTo(to);
+    }
+    
+    @Override
+    public void copyValue(int fromIndex, int toIndex) {
+      to.copyFrom(fromIndex, toIndex, Nullable${minor.class}Vector.this);
     }
   }
   
@@ -271,8 +282,7 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
       bits.getMutator().set(index, 1);
       values.getMutator().set(index, value);
     }
-
-
+    
     public void setSkipNull(int index, ${minor.class}Holder holder){
       values.getMutator().set(index, holder);
     }
@@ -290,6 +300,19 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
       bits.getMutator().set(index, 1);
       values.getMutator().set(index, holder);
     }
+    
+    public boolean setSafe(int index, <#if type.major == "VarLen">Nullable${minor.class}Holder <#elseif (type.width < 4)>int<#else>${minor.javaType!type.javaType}</#if> value){
+      boolean b1 = bits.getMutator().setSafe(index, 1);
+      boolean b2 = values.getMutator().setSafe(index, value);
+      if(b1 && b2){
+        setCount++;
+        return true;
+      }else{
+        return false;
+      }
+
+    }
+
     
     public void setValueCount(int valueCount) {
       assert valueCount >= 0;

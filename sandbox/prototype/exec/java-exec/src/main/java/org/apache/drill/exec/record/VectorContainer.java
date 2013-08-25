@@ -29,14 +29,33 @@ public class VectorContainer implements Iterable<VectorWrapper<?>> {
       add(vArr);
     }
   }
-  
-  public void addHyperList(List<ValueVector> vectors){
+
+  public void addHyperList(List<ValueVector> vectors) {
     schema = null;
     ValueVector[] vv = new ValueVector[vectors.size()];
-    for(int i =0; i < vv.length; i++){
+    for (int i = 0; i < vv.length; i++) {
       vv[i] = vectors.get(i);
     }
     add(vv);
+  }
+
+  /**
+   * Get a set of transferred clones of this container. Note that this guarantees that the vectors in the cloned
+   * container have the same TypedFieldIds as the existing container, allowing interchangeability in generated code.
+   * 
+   * @param incoming The RecordBatch iterator the contains the batch we should take over. 
+   * @return A cloned vector container.
+   */
+  public static VectorContainer getTransferClone(RecordBatch incoming) {
+    VectorContainer vc = new VectorContainer();
+    for (VectorWrapper<?> w : incoming) {
+      vc.cloneAndTransfer(w);
+    }
+    return vc;
+  }
+
+  private void cloneAndTransfer(VectorWrapper<?> wrapper) {
+    wrappers.add(wrapper.cloneAndTransfer());
   }
 
   public void addCollection(Iterable<ValueVector> vectors) {
@@ -101,11 +120,13 @@ public class VectorContainer implements Iterable<VectorWrapper<?>> {
     return (VectorWrapper<T>) va;
   }
 
-  public BatchSchema getSchema(){
-    Preconditions.checkNotNull(schema, "Schema is currently null.  You must call buildSchema(SelectionVectorMode) before this container can return a schema.");
+  public BatchSchema getSchema() {
+    Preconditions
+        .checkNotNull(schema,
+            "Schema is currently null.  You must call buildSchema(SelectionVectorMode) before this container can return a schema.");
     return schema;
   }
-  
+
   public void buildSchema(SelectionVectorMode mode) {
     SchemaBuilder bldr = BatchSchema.newBuilder().setSelectionVectorMode(mode);
     for (VectorWrapper<?> v : wrappers) {
@@ -121,7 +142,8 @@ public class VectorContainer implements Iterable<VectorWrapper<?>> {
 
   public void clear() {
     // TODO: figure out a better approach for this.
-    // we don't clear schema because we want empty batches to carry previous schema to avoid extra schema update for no data.
+    // we don't clear schema because we want empty batches to carry previous schema to avoid extra schema update for no
+    // data.
     // schema = null;
     for (VectorWrapper<?> w : wrappers) {
       w.release();

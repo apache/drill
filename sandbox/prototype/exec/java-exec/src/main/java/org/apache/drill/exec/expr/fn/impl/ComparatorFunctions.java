@@ -6,7 +6,7 @@ import org.apache.drill.common.expression.FunctionDefinition;
 import org.apache.drill.common.expression.OutputTypeDeterminer;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.exec.expr.DrillFunc;
+import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
@@ -18,7 +18,7 @@ public class ComparatorFunctions {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ComparatorFunctions.class);
   
   @FunctionTemplate(name = "compare_to", scope = FunctionTemplate.FunctionScope.SIMPLE)
-  public static class IntComparator implements DrillFunc {
+  public static class IntComparator implements DrillSimpleFunc {
 
       @Param IntHolder left;
       @Param IntHolder right;
@@ -32,7 +32,7 @@ public class ComparatorFunctions {
   }
   
   @FunctionTemplate(name = "compare_to", scope = FunctionTemplate.FunctionScope.SIMPLE)
-  public static class Long implements DrillFunc {
+  public static class Long implements DrillSimpleFunc {
 
       @Param BigIntHolder left;
       @Param BigIntHolder right;

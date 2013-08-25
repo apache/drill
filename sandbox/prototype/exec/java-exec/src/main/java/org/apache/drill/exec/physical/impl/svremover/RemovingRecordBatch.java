@@ -19,14 +19,14 @@ import org.apache.drill.exec.vector.FixedWidthVector;
 import org.apache.drill.exec.vector.TypeHelper;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VariableWidthVector;
+import org.apache.drill.exec.vector.allocator.FixedVectorAllocator;
+import org.apache.drill.exec.vector.allocator.VariableEstimatedVector;
+import org.apache.drill.exec.vector.allocator.VectorAllocator;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import com.sun.codemodel.JBlock;
-import com.sun.codemodel.JClass;
 import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JExpression;
-import com.sun.codemodel.JType;
 import com.sun.codemodel.JVar;
 
 public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVectorRemover>{
@@ -118,7 +118,7 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
     for(VectorWrapper<?> i : incoming){
       ValueVector v = TypeHelper.getNewVector(i.getField(), context.getAllocator());
       container.add(v);
-      allocators.add(getAllocator(i.getValueVector(), v));
+      allocators.add(VectorAllocator.getAllocator(i.getValueVector(), v));
     }
 
     try {
@@ -203,62 +203,4 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
   }
   
   
-  private VectorAllocator getAllocator(ValueVector in, ValueVector outgoing){
-    if(outgoing instanceof FixedWidthVector){
-      return new FixedVectorAllocator((FixedWidthVector) outgoing);
-    }else if(outgoing instanceof VariableWidthVector && in instanceof VariableWidthVector){
-      return new VariableVectorAllocator( (VariableWidthVector) in, (VariableWidthVector) outgoing);
-    }else{
-      throw new UnsupportedOperationException();
-    }
-  }
-  
-  private class FixedVectorAllocator implements VectorAllocator{
-    FixedWidthVector out;
-    
-    public FixedVectorAllocator(FixedWidthVector out) {
-      super();
-      this.out = out;
-    }
-
-    public void alloc(int recordCount){
-      out.allocateNew(recordCount);
-      out.getMutator().setValueCount(recordCount);
-    }
-  }
-  
-  private class VariableEstimatedVector implements VectorAllocator{
-    VariableWidthVector out;
-    int avgWidth;
-    
-    public VariableEstimatedVector(VariableWidthVector out, int avgWidth) {
-      super();
-      this.out = out;
-      this.avgWidth = avgWidth;
-    }
-    
-    public void alloc(int recordCount){
-      out.allocateNew(avgWidth * recordCount, recordCount);
-      out.getMutator().setValueCount(recordCount);
-    }
-  }
-  private class VariableVectorAllocator implements VectorAllocator{
-    VariableWidthVector in;
-    VariableWidthVector out;
-    
-    public VariableVectorAllocator(VariableWidthVector in, VariableWidthVector out) {
-      super();
-      this.in = in;
-      this.out = out;
-    }
-
-    public void alloc(int recordCount){
-      out.allocateNew(in.getByteCapacity(), recordCount);
-      out.getMutator().setValueCount(recordCount);
-    }
-  }
-  
-  public interface VectorAllocator{
-    public void alloc(int recordCount);
-  }
 }

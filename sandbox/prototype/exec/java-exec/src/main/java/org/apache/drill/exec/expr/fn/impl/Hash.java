@@ -19,7 +19,7 @@
 package org.apache.drill.exec.expr.fn.impl;
 
 import org.apache.drill.common.expression.*;
-import org.apache.drill.exec.expr.DrillFunc;
+import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.Output;
@@ -29,7 +29,7 @@ import org.apache.drill.exec.vector.BigIntHolder;
 import org.apache.drill.exec.vector.IntHolder;
 
 @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
-public class Hash implements DrillFunc {
+public class Hash implements DrillSimpleFunc {
 
   @Param BigIntHolder in;
   @Output IntHolder out;

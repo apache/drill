@@ -28,7 +28,7 @@ public class AggregationFunctions implements CallProvider {
   @Override
   public FunctionDefinition[] getFunctionDefintions() {
     return new FunctionDefinition[] {
-        FunctionDefinition.aggregator("count",  new AnyTypeAllowed(1), new OutputTypeDeterminer.SameAsFirstInput()),
+        FunctionDefinition.aggregator("count",  new AnyTypeAllowed(1), OutputTypeDeterminer.FIXED_BIGINT),
         FunctionDefinition.aggregator("sum",  new AnyTypeAllowed(1), new OutputTypeDeterminer.SameAsFirstInput())
     };
   }

@@ -34,7 +34,9 @@ import org.apache.drill.exec.physical.config.Screen;
 import org.apache.drill.exec.physical.config.SelectionVectorRemover;
 import org.apache.drill.exec.physical.config.SingleSender;
 import org.apache.drill.exec.physical.config.Sort;
-import org.apache.drill.exec.physical.config.*;
+import org.apache.drill.exec.physical.config.StreamingAggregate;
+import org.apache.drill.exec.physical.config.Union;
+import org.apache.drill.exec.physical.impl.aggregate.AggBatchCreator;
 import org.apache.drill.exec.physical.impl.filter.FilterBatchCreator;
 import org.apache.drill.exec.physical.impl.partitionsender.PartitionSenderCreator;
 import org.apache.drill.exec.physical.impl.project.ProjectBatchCreator;
@@ -70,6 +72,7 @@ public class ImplCreator extends AbstractPhysicalVisitor<RecordBatch, FragmentCo
   private UnionBatchCreator unionbc = new UnionBatchCreator();
   private SVRemoverCreator svc = new SVRemoverCreator();
   private SortBatchCreator sbc = new SortBatchCreator();
+  private AggBatchCreator abc = new AggBatchCreator();
   private RootExec root = null;
   
   private ImplCreator(){}
@@ -130,6 +133,13 @@ public class ImplCreator extends AbstractPhysicalVisitor<RecordBatch, FragmentCo
   @Override
   public RecordBatch visitFilter(Filter filter, FragmentContext context) throws ExecutionSetupException {
     return fbc.getBatch(context, filter, getChildren(filter, context));
+  }
+
+  
+  @Override
+  public RecordBatch visitStreamingAggregate(StreamingAggregate config, FragmentContext context)
+      throws ExecutionSetupException {
+    return abc.getBatch(context, config, getChildren(config, context));
   }
 
   @Override

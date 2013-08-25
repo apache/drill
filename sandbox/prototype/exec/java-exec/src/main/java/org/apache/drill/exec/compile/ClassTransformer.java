@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.util.Iterator;
-import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -45,11 +44,11 @@ import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Stopwatch;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Sets;
-import com.google.common.io.Files;
 import com.google.common.io.Resources;
 
 public class ClassTransformer {
@@ -94,7 +93,6 @@ public class ClassTransformer {
     try {
       String classBody = ClassBodyBuilder.newBuilder() //
           .setClassName(materializedClassName) //
-          .setImplementedInterfaces(templateDefinition.getInternalInterface()) //
           .setBody(internalClassBody) //
           .build();
       return getImplementationClass(classLoader, templateDefinition, classBody, materializedClassName);
@@ -112,13 +110,14 @@ public class ClassTransformer {
       String materializedClassName) throws ClassTransformationException {
 
     try {
-      long t0 = System.nanoTime();
+      Stopwatch t1 = new Stopwatch().start();
       final byte[] implementationClass = classLoader.getClassByteCode(materializedClassName, entireClass);
 
       // Get Template Class
       final String templateClassName = templateDefinition.getTemplateClassName().replaceAll("\\.", File.separator);
       final String templateClassPath = File.separator + templateClassName + ".class";
-      long t1 = System.nanoTime();
+      t1.stop();
+      Stopwatch t2 = new Stopwatch().start();
       final byte[] templateClass = getClassByteCodeFromPath(templateClassPath);
 //      int fileNum = new Random().nextInt(100);
       //Files.write(templateClass, new File(String.format("/tmp/%d-template.class", fileNum)));
@@ -130,11 +129,13 @@ public class ClassTransformer {
       String materializedSlashName = materializedClassName.replace('.', '/');
       RemapClasses remapper = new RemapClasses(oldTemplateSlashName, materializedSlashName);
       
+      Stopwatch t3;
       {
         
         ClassNode impl = getClassNodeFromByteCode(implementationClass);
-        long t2 = System.nanoTime();
-        logger.debug("Compile {}, decode template {}", (t1 - t0)/1000/1000, (t2- t1)/1000/1000);
+        t2.stop();
+        t3 = new Stopwatch().start();
+        
         
         ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
 
@@ -150,7 +151,8 @@ public class ClassTransformer {
         // Load the class
         classLoader.injectByteCode(materializedClassName, outputClass);
       }
-
+      t3.stop();
+      Stopwatch t4 = new Stopwatch().start();
       int i = 0;
       for (String s : remapper.getSubclasses()) {
         logger.debug("Setting up sub class {}", s);
@@ -168,14 +170,15 @@ public class ClassTransformer {
 //        Files.write(subcw.toByteArray(), new File(String.format("/tmp/%d-sub-%d.class", fileNum, i)));
         i++;
       }
-
+      t4.stop();
+      logger.debug(String.format("[Compile Time] Janino: %dms, Bytecode load and parse: %dms, Class Merge: %dms, Subclass remap and load: %dms.", t1.elapsed(TimeUnit.MILLISECONDS), t2.elapsed(TimeUnit.MILLISECONDS), t3.elapsed(TimeUnit.MILLISECONDS), t4.elapsed(TimeUnit.MILLISECONDS)));
       Class<?> c = classLoader.findClass(materializedClassName);
       if (templateDefinition.getExternalInterface().isAssignableFrom(c)) {
         return (T) c.newInstance();
       } else {
         throw new ClassTransformationException("The requested class did not implement the expected interface.");
       }
-
+      
     } catch (CompileException | IOException | ClassNotFoundException | InstantiationException | IllegalAccessException e) {
       throw new ClassTransformationException(String.format(
           "Failure generating transformation classes for value: \n %s", entireClass), e);
@@ -213,9 +216,7 @@ public class ClassTransformer {
 
     @Override
     public void visitInnerClass(String name, String outerName, String innerName, int access) {
-      logger.debug(String.format(
-          "[Inner Class] Name: %s, outerName: %s, innerName: %s, templateName: %s, newName: %s.", name, outerName,
-          innerName, templateName, newName));
+//      logger.debug(String.format("[Inner Class] Name: %s, outerName: %s, innerName: %s, templateName: %s, newName: %s.", name, outerName, innerName, templateName, newName));
       if (name.startsWith(templateName)) {
         super.visitInnerClass(name.replace(templateName, newName), newName, innerName, access);
       } else {

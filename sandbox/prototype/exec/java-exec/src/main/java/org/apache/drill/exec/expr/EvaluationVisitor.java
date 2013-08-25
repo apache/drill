@@ -1,5 +1,6 @@
 package org.apache.drill.exec.expr;
 
+import java.util.Collections;
 import java.util.Set;
 
 import org.apache.drill.common.expression.FunctionCall;
@@ -12,13 +13,14 @@ import org.apache.drill.common.expression.ValueExpressions.DoubleExpression;
 import org.apache.drill.common.expression.ValueExpressions.LongExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
-import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.exec.compile.sig.ConstantExpressionIdentifier;
 import org.apache.drill.exec.expr.CodeGenerator.HoldingContainer;
-import org.apache.drill.exec.expr.fn.FunctionHolder;
+import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.physical.impl.filter.ReturnValueExpression;
+import org.apache.drill.exec.record.NullExpression;
 
 import com.sun.codemodel.JBlock;
 import com.sun.codemodel.JConditional;
@@ -37,7 +39,9 @@ public class EvaluationVisitor {
   }
 
   public HoldingContainer addExpr(LogicalExpression e, CodeGenerator<?> generator){
-    return e.accept(new ConstantFilter(ConstantExpressionIdentifier.getConstantExpressionSet(e)), generator);
+//    Set<LogicalExpression> constantBoundaries = ConstantExpressionIdentifier.getConstantExpressionSet(e);
+    Set<LogicalExpression> constantBoundaries = Collections.emptySet();
+    return e.accept(new ConstantFilter(constantBoundaries), generator);
     
   }
 
@@ -46,12 +50,18 @@ public class EvaluationVisitor {
     
     @Override
     public HoldingContainer visitFunctionCall(FunctionCall call, CodeGenerator<?> generator) throws RuntimeException {
+      DrillFuncHolder holder = registry.getFunction(call);
+      JVar[] workspaceVars = holder.renderStart(generator, null);
+
+      
+      if(holder.isNested()) generator.getMappingSet().enterChild();
       HoldingContainer[] args = new HoldingContainer[call.args.size()];
       for (int i = 0; i < call.args.size(); i++) {
         args[i] = call.args.get(i).accept(this, generator);
       }
-      FunctionHolder holder = registry.getFunction(call);
-      return holder.renderFunction(generator, args);
+      holder.renderMiddle(generator, args, workspaceVars);
+      if(holder.isNested()) generator.getMappingSet().exitChild();
+      return holder.renderEnd(generator, args, workspaceVars);
     }
 
     @Override
@@ -104,6 +114,7 @@ public class EvaluationVisitor {
       return output;
     }
 
+    
     @Override
     public HoldingContainer visitSchemaPath(SchemaPath path, CodeGenerator<?> generator) throws RuntimeException {
       throw new UnsupportedOperationException("All schema paths should have been replaced with ValueVectorExpressions.");
@@ -141,6 +152,8 @@ public class EvaluationVisitor {
         return visitReturnValueExpression((ReturnValueExpression) e, generator);
       }else if(e instanceof HoldingContainerExpression){
         return ((HoldingContainerExpression) e).getContainer();
+      }else if(e instanceof NullExpression){
+        return generator.declare(Types.optional(MinorType.INT));
       } else {
         return super.visitUnknown(e, generator);
       }
@@ -148,22 +161,40 @@ public class EvaluationVisitor {
     }
 
     private HoldingContainer visitValueVectorWriteExpression(ValueVectorWriteExpression e, CodeGenerator<?> generator) {
+
       LogicalExpression child = e.getChild();
-      HoldingContainer hc = child.accept(this, generator);
+      HoldingContainer inputContainer = child.accept(this, generator);
       JBlock block = generator.getEvalBlock();
       JExpression outIndex = generator.getMappingSet().getValueWriteIndex();
-      JVar vv = generator.declareVectorValueSetupAndMember("outgoing", e.getFieldId());
-
-      if (hc.isOptional()) {
-        vv.invoke("getMutator").invoke("set").arg(outIndex);
-        JConditional jc = block._if(hc.getIsSet().eq(JExpr.lit(0)).not());
-        block = jc._then();
+      JVar vv = generator.declareVectorValueSetupAndMember(generator.getMappingSet().getOutgoing(), e.getFieldId());
+      String setMethod = e.isSafe() ? "setSafe" : "set";
+      
+      JInvocation setMeth;
+      if (Types.usesHolderForGet(inputContainer.getMajorType())) {
+        setMeth = vv.invoke("getMutator").invoke(setMethod).arg(outIndex).arg(inputContainer.getHolder());
+      }else{
+        setMeth = vv.invoke("getMutator").invoke(setMethod).arg(outIndex).arg(inputContainer.getValue());
       }
-      if (hc.getMinorType() == TypeProtos.MinorType.VARCHAR || hc.getMinorType() == TypeProtos.MinorType.VARBINARY) {
-        block.add(vv.invoke("getMutator").invoke("set").arg(outIndex).arg(hc.getHolder()));
-      } else {
-        block.add(vv.invoke("getMutator").invoke("set").arg(outIndex).arg(hc.getValue()));
+      
+      if(e.isSafe()){
+        HoldingContainer outputContainer = generator.declare(Types.REQUIRED_BIT);
+        block.assign(outputContainer.getValue(), JExpr.lit(1));
+        if(inputContainer.isOptional()){
+//          block._if(vv.invoke("getMutator").invoke(setMethod).arg(outIndex).not())._then().assign(outputContainer.getValue(), JExpr.lit(0));
+          JConditional jc = block._if(inputContainer.getIsSet().eq(JExpr.lit(0)).not());
+          block = jc._then();
+        }
+        block._if(setMeth.not())._then().assign(outputContainer.getValue(), JExpr.lit(0));
+        return outputContainer;
+      }else{
+        if (inputContainer.isOptional()) {
+//          block.add(vv.invoke("getMutator").invoke(setMethod).arg(outIndex));
+          JConditional jc = block._if(inputContainer.getIsSet().eq(JExpr.lit(0)).not());
+          block = jc._then();
+        }
+        block.add(setMeth);
       }
+      
       return null;
     }
 
@@ -171,7 +202,7 @@ public class EvaluationVisitor {
         throws RuntimeException {
       // declare value vector
       
-      JVar vv1 = generator.declareVectorValueSetupAndMember("incoming", e.getFieldId());
+      JVar vv1 = generator.declareVectorValueSetupAndMember(generator.getMappingSet().getIncoming(), e.getFieldId());
       JExpression indexVariable = generator.getMappingSet().getValueReadIndex();
 
       JInvocation getValueAccessor = vv1.invoke("getAccessor").invoke("get");
@@ -306,6 +337,7 @@ public class EvaluationVisitor {
       }
     }
 
+    
     @Override
     public HoldingContainer visitUnknown(LogicalExpression e, CodeGenerator<?> generator) throws RuntimeException {
       if (constantBoundaries.contains(e)) {

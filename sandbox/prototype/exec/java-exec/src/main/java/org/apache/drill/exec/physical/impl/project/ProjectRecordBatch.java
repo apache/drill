@@ -5,12 +5,8 @@ import java.util.List;
 
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
-import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.LogicalExpression;
-import org.apache.drill.common.expression.PathSegment;
-import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.data.NamedExpression;
-import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.CodeGenerator;
@@ -19,14 +15,12 @@ import org.apache.drill.exec.expr.ValueVectorReadExpression;
 import org.apache.drill.exec.expr.ValueVectorWriteExpression;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.Project;
-import org.apache.drill.exec.proto.SchemaDefProtos.FieldDef;
-import org.apache.drill.exec.proto.SchemaDefProtos.NamePart;
-import org.apache.drill.exec.proto.SchemaDefProtos.NamePart.Type;
-import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.AbstractSingleRecordBatch;
+import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TransferPair;
+import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.TypeHelper;
@@ -76,7 +70,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
     for(int i =0; i < exprs.size(); i++){
       final NamedExpression namedExpression = exprs.get(i);
       final LogicalExpression expr = ExpressionTreeMaterializer.materialize(namedExpression.getExpr(), incoming, collector);
-      final MaterializedField outputField = getMaterializedField(namedExpression.getRef(), expr);
+      final MaterializedField outputField = MaterializedField.create(namedExpression.getRef(), expr.getMajorType());
       if(collector.hasErrors()){
         throw new SchemaChangeException(String.format("Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));
       }
@@ -87,7 +81,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
         ValueVector vvIn = incoming.getValueAccessorById(vectorRead.getFieldId().getFieldId(), TypeHelper.getValueVectorClass(vectorRead.getMajorType().getMinorType(), vectorRead.getMajorType().getMode())).getValueVector();
         Preconditions.checkNotNull(incoming);
 
-        TransferPair tp = vvIn.getTransferPair();
+        TransferPair tp = vvIn.getTransferPair(namedExpression.getRef());
         transfers.add(tp);
         container.add(tp.getTo());
         logger.debug("Added transfer.");
@@ -95,7 +89,8 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
         // need to do evaluation.
         ValueVector vector = TypeHelper.getNewVector(outputField, context.getAllocator());
         allocationVectors.add(vector);
-        ValueVectorWriteExpression write = new ValueVectorWriteExpression(container.add(vector), expr);
+        TypedFieldId fid = container.add(vector);
+        ValueVectorWriteExpression write = new ValueVectorWriteExpression(fid, expr);
         cg.addExpr(write);
         logger.debug("Added eval.");
       }
@@ -112,29 +107,5 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
     }
   }
   
-  private MaterializedField getMaterializedField(FieldReference reference, LogicalExpression expr){
-    return new MaterializedField(getFieldDef(reference, expr.getMajorType()));
-  }
-
-  private FieldDef getFieldDef(SchemaPath path, MajorType type){
-    return FieldDef //
-        .newBuilder() //
-        .addAllName(getNameParts(path.getRootSegment())) //
-        .setMajorType(type) //
-        .build();
-  }
-  
-  private List<NamePart> getNameParts(PathSegment seg){
-    List<NamePart> parts = Lists.newArrayList();
-    while(seg != null){
-      if(seg.isArray()){
-        parts.add(NamePart.newBuilder().setType(Type.ARRAY).build());
-      }else{
-        parts.add(NamePart.newBuilder().setType(Type.NAME).setName(seg.getNameSegment().getPath().toString()).build());
-      }
-      seg = seg.getChild();
-    }
-    return parts;
-  }
   
 }

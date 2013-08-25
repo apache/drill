@@ -38,6 +38,14 @@ public class SimpleVectorWrapper<T extends ValueVector> implements VectorWrapper
   }
   
   
+  @SuppressWarnings("unchecked")
+  @Override
+  public VectorWrapper<T> cloneAndTransfer() {
+    TransferPair tp = v.getTransferPair();
+    tp.transfer();
+    return new SimpleVectorWrapper<T>((T) tp.getTo());
+  }
+
   @Override
   public void release() {
     v.clear();

@@ -1,10 +1,13 @@
 package org.apache.drill.exec.compile.sig;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
+import com.beust.jcommander.internal.Lists;
 import com.beust.jcommander.internal.Maps;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterators;
@@ -15,18 +18,31 @@ public class SignatureHolder implements Iterable<CodeGeneratorMethod>{
   private final CodeGeneratorMethod[] methods;
   private final Map<String, Integer> methodMap;
   
-  public <T extends CodeGeneratorSignature> SignatureHolder(Class<T> signature){
+  public SignatureHolder(Class<?> signature){
     Method[] reflectMethods = signature.getDeclaredMethods();
-    methods = new CodeGeneratorMethod[reflectMethods.length];
     Map<String, Integer> newMap = Maps.newHashMap(); 
     
-    for(int i =0; i < methods.length; i++){
-      methods[i] = new CodeGeneratorMethod(reflectMethods[i]);
+    List<CodeGeneratorMethod> methodHolders = Lists.newArrayList();
+    for(Method m : reflectMethods){
+      if( (m.getModifiers() & Modifier.ABSTRACT) == 0) continue;
+      methodHolders.add(new CodeGeneratorMethod(m));
+    }
+    
+    methods = new CodeGeneratorMethod[methodHolders.size()];
+    for(int i =0; i < methodHolders.size(); i++){
+      methods[i] = methodHolders.get(i);
       newMap.put(methods[i].getMethodName(), i);
     }
     
-    methodMap = ImmutableMap.copyOf(newMap);
     
+    methodMap = ImmutableMap.copyOf(newMap);
+
+    
+
+  }
+  
+  public CodeGeneratorMethod get(int i){
+    return methods[i];
   }
 
   @Override
