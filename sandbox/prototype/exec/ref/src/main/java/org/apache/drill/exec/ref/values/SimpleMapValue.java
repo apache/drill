@@ -27,7 +27,6 @@ import java.util.Map.Entry;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.exec.ref.exceptions.RecordException;
 import org.apache.drill.exec.ref.rops.DataWriter;
-import org.apache.tools.ant.types.DataType;
 
 public class SimpleMapValue extends BaseMapValue{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SimpleMapValue.class);

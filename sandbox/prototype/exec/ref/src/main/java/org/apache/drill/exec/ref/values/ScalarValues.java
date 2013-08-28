@@ -29,7 +29,6 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ref.eval.EvaluatorTypes.BasicEvaluator;
 import org.apache.drill.exec.ref.rops.DataWriter;
 import org.apache.hadoop.io.BytesWritable;
-import org.apache.tools.ant.types.DataType;
 
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;

@@ -23,7 +23,6 @@ import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.ref.exceptions.RecordException;
-import org.apache.tools.ant.types.DataType;
 
 public class ValueUtils {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ValueUtils.class);

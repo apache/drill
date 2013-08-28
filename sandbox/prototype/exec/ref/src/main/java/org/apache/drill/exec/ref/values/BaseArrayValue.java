@@ -21,7 +21,6 @@ import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.tools.ant.types.DataType;
 
 
 public abstract class BaseArrayValue extends BaseDataValue implements ContainerValue{
