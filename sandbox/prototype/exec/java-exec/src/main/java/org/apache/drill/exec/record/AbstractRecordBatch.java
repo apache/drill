@@ -65,7 +65,7 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
 
   @Override
   public VectorWrapper<?> getValueAccessorById(int fieldId, Class<?> clazz) {
-    return container.getVectorAccessor(fieldId, clazz);
+    return container.getValueAccessorById(fieldId, clazz);
   }
 
   

@@ -108,7 +108,7 @@ public class VectorContainer implements Iterable<VectorWrapper<?>> {
   }
 
   @SuppressWarnings("unchecked")
-  public <T extends ValueVector> VectorWrapper<T> getVectorAccessor(int fieldId, Class<?> clazz) {
+  public <T extends ValueVector> VectorWrapper<T> getValueAccessorById(int fieldId, Class<?> clazz) {
     VectorWrapper<?> va = wrappers.get(fieldId);
     assert va != null;
     if (va.getVectorClass() != clazz) {

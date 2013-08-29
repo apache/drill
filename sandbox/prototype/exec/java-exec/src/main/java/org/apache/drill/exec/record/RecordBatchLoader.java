@@ -140,7 +140,7 @@ public class RecordBatchLoader implements Iterable<VectorWrapper<?>>{
   }
 
   public VectorWrapper<?> getValueAccessorById(int fieldId, Class<?> clazz){
-    return container.getVectorAccessor(fieldId, clazz);
+    return container.getValueAccessorById(fieldId, clazz);
   }
   
   public WritableBatch getWritableBatch(){

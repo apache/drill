@@ -10,16 +10,24 @@
     {
       @id:1,
       pop:"json-sub-scan",
-      entries:[
-        {url: "#{LEFT_FILE}"}
-      ]
+      readEntries:[
+        {path: "#{LEFT_FILE}"}
+      ],
+      engineConfig:{
+         "type":"json",
+         "dfsName" : "file:///"
+      }      
     },
     {
       @id:2,
       pop:"json-sub-scan",
-      entries:[
-        {url: "#{RIGHT_FILE}"}
-      ]
+      readEntries:[
+        {path: "#{RIGHT_FILE}"}
+      ],
+      engineConfig:{
+         "type":"json",
+         "dfsName" : "file:///"
+      }      
     },
     {
       @id: 3,

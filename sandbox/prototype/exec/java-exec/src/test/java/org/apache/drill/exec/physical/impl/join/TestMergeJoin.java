@@ -112,9 +112,10 @@ public class TestMergeJoin {
     new NonStrictExpectations(){{
       bitContext.getMetrics(); result = new MetricRegistry("test");
       bitContext.getAllocator(); result = BufferAllocator.getAllocator(c);
+      bitContext.getConfig(); result = c;
     }};
 
-    PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(),CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
+    PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(),CoordinationProtos.DrillbitEndpoint.getDefaultInstance(), new StorageEngineRegistry(bitContext));
     PhysicalPlan plan = reader.readPhysicalPlan(
         Files.toString(
             FileUtils.getResourceAsFile("/join/merge_single_batch.json"), Charsets.UTF_8)

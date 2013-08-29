@@ -222,7 +222,7 @@ public class OutgoingRecordBatch implements RecordBatch {
 
   @Override
   public VectorWrapper<?> getValueAccessorById(int fieldId, Class<?> clazz) {
-    return vectorContainer.getVectorAccessor(fieldId, clazz);
+    return vectorContainer.getValueAccessorById(fieldId, clazz);
   }
 
   @Override

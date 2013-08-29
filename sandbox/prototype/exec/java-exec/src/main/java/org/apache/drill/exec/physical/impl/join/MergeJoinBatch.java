@@ -317,7 +317,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
       JVar vvIn = cg.declareVectorValueSetupAndMember("incomingLeft",
                                                       new TypedFieldId(vw.getField().getType(), vectorId));
       JVar vvOut = cg.declareVectorValueSetupAndMember("outgoing",
-                                                       new TypedFieldId(vw.getField().getType(),vectorId, true));
+                                                       new TypedFieldId(vw.getField().getType(),vectorId));
       // todo: check for room in vvOut
       cg.getEvalBlock().add(vvOut.invoke("copyFrom")
                                    .arg(COPY_LEFT_MAPPING.getValueReadIndex())
@@ -336,7 +336,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
       JVar vvIn = cg.declareVectorValueSetupAndMember("incomingRight",
                                                       new TypedFieldId(vw.getField().getType(), vectorId - rightVectorBase));
       JVar vvOut = cg.declareVectorValueSetupAndMember("outgoing",
-                                                       new TypedFieldId(vw.getField().getType(),vectorId, true));
+                                                       new TypedFieldId(vw.getField().getType(),vectorId));
       cg.getEvalBlock().add(vvOut.invoke("copyFrom")
           .arg(COPY_RIGHT_MAPPING.getValueReadIndex())
           .arg(COPY_RIGHT_MAPPING.getValueWriteIndex())
