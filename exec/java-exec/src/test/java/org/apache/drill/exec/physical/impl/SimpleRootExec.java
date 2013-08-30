@@ -28,6 +28,7 @@ import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector2;
+import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.ValueVector;
 
 import com.beust.jcommander.internal.Lists;
@@ -52,6 +53,10 @@ public class SimpleRootExec implements RootExec, Iterable<ValueVector>{
   
   public SelectionVector2 getSelectionVector2(){
     return incoming.getSelectionVector2();
+  }
+
+  public SelectionVector4 getSelectionVector4(){
+    return incoming.getSelectionVector4();
   }
 
   @SuppressWarnings("unchecked")

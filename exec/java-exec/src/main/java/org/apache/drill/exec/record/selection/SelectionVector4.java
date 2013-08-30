@@ -25,7 +25,7 @@ public class SelectionVector4 {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SelectionVector4.class);
 
   private final ByteBuf vector;
-  private final int recordCount;
+  private int recordCount;
   private int start;
   private int length;
   
@@ -44,7 +44,12 @@ public class SelectionVector4 {
   public int getCount(){
     return length;
   }
-  
+
+  public void setCount(int length) {
+    this.length = length;
+    this.recordCount = length;
+  }
+
   public void set(int index, int compound){
     vector.setInt(index*4, compound);
   }
@@ -55,7 +60,7 @@ public class SelectionVector4 {
   public int get(int index){
     return vector.getInt( (start+index)*4);
   }
-  
+
   /**
    * Caution: This method shares the underlying buffer between this vector and the newly created one.
    * @return Newly created single batch SelectionVector4.

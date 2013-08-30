@@ -74,7 +74,35 @@ public class TestSimpleFilter {
     assertTrue(!context.isFailed());
 
   }
-  
+
+  @Test
+  public void testSV4Filter(@Injectable final DrillbitContext bitContext, @Injectable UserClientConnection connection) throws Throwable{
+    new NonStrictExpectations(){{
+      bitContext.getMetrics(); result = new MetricRegistry("test");
+      bitContext.getAllocator(); result = BufferAllocator.getAllocator(c);
+    }};
+
+    PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
+    PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/filter/test_sv4.json"), Charsets.UTF_8));
+    FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
+    FragmentContext context = new FragmentContext(bitContext, FragmentHandle.getDefaultInstance(), connection, null, registry);
+    SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
+    int recordCount = 0;
+    while(exec.next()) {
+      for (int i = 0; i < exec.getSelectionVector4().getCount(); i++) {
+        System.out.println("Got: " + exec.getSelectionVector4().get(i));
+      }
+      recordCount += exec.getSelectionVector4().getCount();
+    }
+    assertEquals(50, recordCount);
+
+    if(context.getFailureCause() != null){
+      throw context.getFailureCause();
+    }
+    assertTrue(!context.isFailed());
+
+  }
+
   @AfterClass
   public static void tearDown() throws Exception{
     // pause to get logger to catch up.
