@@ -2,6 +2,7 @@ package org.apache.drill.exec.store;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
+import com.google.common.base.Stopwatch;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
 import mockit.Injectable;
@@ -36,6 +37,7 @@ import java.nio.charset.Charset;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static junit.framework.Assert.assertNull;
@@ -116,8 +118,10 @@ public class TestParquetPhysicalPlan {
     try(DrillClient client = new DrillClient(config);){
       client.connect();
       ParquetResultsListener listener = new ParquetResultsListener();
+      Stopwatch watch = new Stopwatch();
+      watch.start();
       client.runQuery(UserProtos.QueryType.PHYSICAL, Resources.toString(Resources.getResource(fileName),Charsets.UTF_8), listener);
-      System.out.println(String.format("Got %d total records.", listener.await()));
+      System.out.println(String.format("Got %d total records in %d seconds", listener.await(), watch.elapsed(TimeUnit.SECONDS)));
       client.close();
     }
   }
