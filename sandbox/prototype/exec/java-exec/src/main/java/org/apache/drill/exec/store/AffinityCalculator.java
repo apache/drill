@@ -20,26 +20,25 @@ public class AffinityCalculator {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AffinityCalculator.class);
 
 
-  BlockLocation[] blocks;
-  ImmutableRangeMap<Long,BlockLocation> blockMap;
+  HashMap<String,ImmutableRangeMap<Long,BlockLocation>> blockMapMap = new HashMap<>();
   FileSystem fs;
   String fileName;
   Collection<DrillbitEndpoint> endpoints;
   HashMap<String,DrillbitEndpoint> endPointMap;
-  Stopwatch watch = new Stopwatch();
 
-  public AffinityCalculator(String fileName, FileSystem fs, Collection<DrillbitEndpoint> endpoints) {
+  public AffinityCalculator(FileSystem fs, Collection<DrillbitEndpoint> endpoints) {
     this.fs = fs;
-    this.fileName = fileName;
     this.endpoints = endpoints;
-    buildBlockMap();
     buildEndpointMap();
   }
 
   /**
    * Builds a mapping of block locations to file byte range
    */
-  private void buildBlockMap() {
+  private void buildBlockMap(String fileName) {
+    Stopwatch watch = new Stopwatch();
+    BlockLocation[] blocks;
+    ImmutableRangeMap<Long,BlockLocation> blockMap;
     try {
       watch.start();
       FileStatus file = fs.getFileStatus(new Path(fileName));
@@ -60,6 +59,7 @@ public class AffinityCalculator {
     blockMap = blockMapBuilder.build();
     watch.stop();
     logger.debug("Took {} ms to build block map", watch.elapsed(TimeUnit.MILLISECONDS));
+    blockMapMap.put(fileName, blockMap);
   }
   /**
    * For a given RowGroup, calculate how many bytes are available on each on drillbit endpoint
@@ -67,8 +67,14 @@ public class AffinityCalculator {
    * @param rowGroup the RowGroup to calculate endpoint bytes for
    */
   public void setEndpointBytes(ParquetGroupScan.RowGroupInfo rowGroup) {
-    watch.reset();
+    Stopwatch watch = new Stopwatch();
     watch.start();
+    String fileName = rowGroup.getPath();
+    if (!blockMapMap.containsKey(fileName)) {
+      buildBlockMap(fileName);
+    }
+
+    ImmutableRangeMap<Long,BlockLocation> blockMap = blockMapMap.get(fileName);
     HashMap<String,Long> hostMap = new HashMap<>();
     HashMap<DrillbitEndpoint,Long> endpointByteMap = new HashMap();
     long start = rowGroup.getStart();
@@ -116,7 +122,7 @@ public class AffinityCalculator {
    * Builds a mapping of drillbit endpoints to hostnames
    */
   private void buildEndpointMap() {
-    watch.reset();
+    Stopwatch watch = new Stopwatch();
     watch.start();
     endPointMap = new HashMap<String, DrillbitEndpoint>();
     for (DrillbitEndpoint d : endpoints) {

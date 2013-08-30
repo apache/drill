@@ -46,6 +46,7 @@ import org.apache.drill.exec.store.StorageEngineRegistry;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
+import parquet.hadoop.Footer;
 import parquet.hadoop.ParquetFileReader;
 import parquet.hadoop.metadata.BlockMetaData;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
@@ -87,7 +88,6 @@ public class ParquetGroupScan extends AbstractGroupScan {
   private StorageEngineRegistry engineRegistry;
   private ParquetStorageEngineConfig engineConfig;
   private FileSystem fs;
-  private String fileName;
   private final FieldReference ref;
   private List<EndpointAffinity> endpointAffinities;
 
@@ -106,7 +106,6 @@ public class ParquetGroupScan extends AbstractGroupScan {
     this.entries = entries;
     this.ref = ref;
     readFooter();
-    this.fileName = rowGroupInfos.get(0).getPath();
     calculateEndpointBytes();
   }
 
@@ -118,7 +117,6 @@ public class ParquetGroupScan extends AbstractGroupScan {
     this.entries = entries;
     this.ref = ref;
     readFooter();
-    this.fileName = rowGroupInfos.get(0).getPath();
     calculateEndpointBytes();
   }
 
@@ -130,23 +128,27 @@ public class ParquetGroupScan extends AbstractGroupScan {
     ColumnChunkMetaData columnChunkMetaData;
     for (ReadEntryWithPath readEntryWithPath : entries){
       Path path = new Path(readEntryWithPath.getPath());
-      ParquetMetadata footer = ParquetFileReader.readFooter(this.storageEngine.getHadoopConfig(), path);
+      List<Footer> footers = ParquetFileReader.readFooters(this.storageEngine.getHadoopConfig(), path);
       readEntryWithPath.getPath();
 
-      int i = 0;
-      for (BlockMetaData rowGroup : footer.getBlocks()){
-        // need to grab block information from HDFS
-        columnChunkMetaData = rowGroup.getColumns().iterator().next();
-        start = columnChunkMetaData.getFirstDataPageOffset();
-        // this field is not being populated correctly, but the column chunks know their sizes, just summing them for now
-        //end = start + rowGroup.getTotalByteSize();
-        length = 0;
-        for (ColumnChunkMetaData col : rowGroup.getColumns()){
-          length += col.getTotalSize();
+      for (Footer footer : footers) {
+        int index = 0;
+        ParquetMetadata metadata = footer.getParquetMetadata();
+        for (BlockMetaData rowGroup : metadata.getBlocks()){
+          // need to grab block information from HDFS
+          columnChunkMetaData = rowGroup.getColumns().iterator().next();
+          start = columnChunkMetaData.getFirstDataPageOffset();
+          // this field is not being populated correctly, but the column chunks know their sizes, just summing them for now
+          //end = start + rowGroup.getTotalByteSize();
+          length = 0;
+          for (ColumnChunkMetaData col : rowGroup.getColumns()){
+            length += col.getTotalSize();
+          }
+          String filePath = footer.getFile().toUri().getPath();
+          rowGroupInfos.add(new ParquetGroupScan.RowGroupInfo(filePath, start, length, index));
+          logger.debug("rowGroupInfo path: {} start: {} length {}", filePath, start, length);
+          index++;
         }
-        rowGroupInfos.add(new ParquetGroupScan.RowGroupInfo(readEntryWithPath.getPath(), start, length, i));
-        logger.debug("rowGroupInfo path: {} start: {} length {}", readEntryWithPath.getPath(), start, length);
-        i++;
       }
     }
     watch.stop();
@@ -156,7 +158,7 @@ public class ParquetGroupScan extends AbstractGroupScan {
   private void calculateEndpointBytes() {
     watch.reset();
     watch.start();
-    AffinityCalculator ac = new AffinityCalculator(fileName, fs, availableEndpoints);
+    AffinityCalculator ac = new AffinityCalculator(fs, availableEndpoints);
     for (RowGroupInfo e : rowGroupInfos) {
       ac.setEndpointBytes(e);
       totalBytes += e.getLength();

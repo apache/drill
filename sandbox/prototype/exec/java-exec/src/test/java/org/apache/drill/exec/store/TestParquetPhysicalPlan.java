@@ -44,7 +44,7 @@ public class TestParquetPhysicalPlan {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestParquetPhysicalPlan.class);
 
   //public String fileName = "/physical_test2.json";
-  public String fileName = "parquet_scan_union_screen_physical.json";
+  public String fileName = "parquet/parquet_scan_union_screen_physical.json";
 //  public String fileName = "parquet-sample.json";
 
 
@@ -59,19 +59,28 @@ public class TestParquetPhysicalPlan {
       client.connect();
       List<QueryResultBatch> results = client.runQuery(UserProtos.QueryType.PHYSICAL, Resources.toString(Resources.getResource(fileName),Charsets.UTF_8));
       RecordBatchLoader loader = new RecordBatchLoader(bit1.getContext().getAllocator());
+      int count = 0;
       for (QueryResultBatch b : results) {
         System.out.println(String.format("Got %d results", b.getHeader().getRowCount()));
+        count += b.getHeader().getRowCount();
         loader.load(b.getHeader().getDef(), b.getData());
         for (VectorWrapper vw : loader) {
+//          System.out.println(vw.getValueVector().getField().getName() + vw.getValueVector().getField().getType());
           System.out.println(vw.getValueVector().getField().getName());
           ValueVector vv = vw.getValueVector();
           for (int i = 0; i < vv.getAccessor().getValueCount(); i++) {
             Object o = vv.getAccessor().getObject(i);
-            System.out.println(vv.getAccessor().getObject(i));
+            if (o instanceof byte[]) {
+              System.out.println(new String((byte[]) o));
+            } else {
+              System.out.println(vv.getAccessor().getObject(i));
+            }
+            break;
           }
         }
       }
       client.close();
+      System.out.println(String.format("Got %d total results", count));
     }
   }
 

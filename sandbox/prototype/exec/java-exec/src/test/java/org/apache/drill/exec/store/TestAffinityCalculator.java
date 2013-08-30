@@ -103,7 +103,7 @@ public class TestAffinityCalculator {
     }};
 
 
-    AffinityCalculator ac = new AffinityCalculator(path, fs, endPoints);
+    AffinityCalculator ac = new AffinityCalculator(fs, endPoints);
     for (ParquetGroupScan.RowGroupInfo rowGroup : rowGroups) {
       ac.setEndpointBytes(rowGroup);
     }
@@ -115,7 +115,7 @@ public class TestAffinityCalculator {
 
     buildRowGroups(rowGroups, numberOfBlocks, blockSize, 2);
 
-    ac = new AffinityCalculator(path, fs, endPoints);
+    ac = new AffinityCalculator(fs, endPoints);
     for (ParquetGroupScan.RowGroupInfo rowGroup : rowGroups) {
       ac.setEndpointBytes(rowGroup);
     }
@@ -127,7 +127,7 @@ public class TestAffinityCalculator {
 
     buildRowGroups(rowGroups, numberOfBlocks, blockSize, 6);
 
-    ac = new AffinityCalculator(path, fs, endPoints);
+    ac = new AffinityCalculator(fs, endPoints);
     for (ParquetGroupScan.RowGroupInfo rowGroup : rowGroups) {
       ac.setEndpointBytes(rowGroup);
     }
