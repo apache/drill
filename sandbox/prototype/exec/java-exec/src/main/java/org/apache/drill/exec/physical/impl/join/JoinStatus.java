@@ -112,14 +112,15 @@ public final class JoinStatus {
    * Side effect: advances to next left batch if current left batch size is exceeded.
    */
   public final boolean isLeftPositionAllowed(){
-    if(!isLeftPositionInCurrentBatch()){
+    if (lastLeft == IterOutcome.NONE)
+      return false;
+    if (!isLeftPositionInCurrentBatch()) {
       leftPosition = 0;
       lastLeft = left.next();
       return lastLeft == IterOutcome.OK;
-    }else{
-      lastLeft = IterOutcome.OK;
-      return true;
     }
+    lastLeft = IterOutcome.OK;
+    return true;
   }
 
   /**
@@ -129,16 +130,15 @@ public final class JoinStatus {
   public final boolean isRightPositionAllowed(){
     if (rightSourceMode == RightSourceMode.SV4)
       return svRightPosition < sv4.getCount();
-
-    if(!isRightPositionInCurrentBatch()){
+    if (lastRight == IterOutcome.NONE)
+      return false;
+    if (!isRightPositionInCurrentBatch()) {
       rightPosition = 0;
       lastRight = right.next();
       return lastRight == IterOutcome.OK;
-    }else{
-      lastRight = IterOutcome.OK;
-      return true;
     }
-    
+    lastRight = IterOutcome.OK;
+    return true;
   }
 
   /**

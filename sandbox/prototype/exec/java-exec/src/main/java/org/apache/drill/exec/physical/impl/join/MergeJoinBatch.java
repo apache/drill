@@ -27,6 +27,7 @@ import org.apache.drill.exec.physical.impl.filter.ReturnValueExpression;
 import org.apache.drill.exec.physical.impl.join.JoinWorker.JoinOutcome;
 import org.apache.drill.exec.record.*;
 import org.apache.drill.exec.vector.*;
+import org.apache.drill.exec.vector.allocator.VectorAllocator;
 
 /**
  * A merge join combining to incoming in-order batches.
@@ -107,7 +108,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
     
     // we do this in the here instead of the constructor because don't necessary want to start consuming on construction.
     status.ensureInitial();
-
+    
     // loop so we can start over again if we find a new batch was created.
     while(true){
 
@@ -367,62 +368,18 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
     // add fields from both batches
     for (VectorWrapper<?> w : left) {
       ValueVector outgoingVector = TypeHelper.getNewVector(w.getField(), context.getAllocator());
-      getAllocator(w.getValueVector(), outgoingVector).alloc(left.getRecordCount() * 16);
+      VectorAllocator.getAllocator(outgoingVector, (int) Math.ceil(w.getValueVector().getBufferSize() / left.getRecordCount())).alloc(left.getRecordCount() * 16);
       container.add(outgoingVector);
     }
 
     for (VectorWrapper<?> w : right) {
       ValueVector outgoingVector = TypeHelper.getNewVector(w.getField(), context.getAllocator());
-      getAllocator(w.getValueVector(), outgoingVector).alloc(right.getRecordCount() * 16);
+      VectorAllocator.getAllocator(outgoingVector, (int) Math.ceil(w.getValueVector().getBufferSize() / right.getRecordCount())).alloc(right.getRecordCount() * 16);
       container.add(outgoingVector);
     }
 
     container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
     logger.debug("Built joined schema: {}", container.getSchema());
-  }
-
-  private VectorAllocator getAllocator(ValueVector in, ValueVector outgoing){
-    if(outgoing instanceof FixedWidthVector){
-      return new FixedVectorAllocator((FixedWidthVector) outgoing);
-    }else if(outgoing instanceof VariableWidthVector && in instanceof VariableWidthVector){
-      return new VariableVectorAllocator( (VariableWidthVector) in, (VariableWidthVector) outgoing);
-    }else{
-      throw new UnsupportedOperationException();
-    }
-  }
-
-  private class FixedVectorAllocator implements VectorAllocator{
-    FixedWidthVector out;
-
-    public FixedVectorAllocator(FixedWidthVector out) {
-      super();
-      this.out = out;
-    }
-
-    public void alloc(int recordCount){
-      out.allocateNew(recordCount);
-      out.getMutator().setValueCount(recordCount);
-    }
-  }
-
-  private class VariableVectorAllocator implements VectorAllocator{
-    VariableWidthVector in;
-    VariableWidthVector out;
-
-    public VariableVectorAllocator(VariableWidthVector in, VariableWidthVector out) {
-      super();
-      this.in = in;
-      this.out = out;
-    }
-
-    public void alloc(int recordCount){
-      out.allocateNew(in.getByteCapacity() * 4, recordCount);
-      out.getMutator().setValueCount(recordCount);
-    }
-  }
-
-  public interface VectorAllocator{
-    public void alloc(int recordCount);
   }
 
 }
