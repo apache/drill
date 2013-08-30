@@ -36,6 +36,7 @@ import java.nio.charset.Charset;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static junit.framework.Assert.assertNull;
 import static org.junit.Assert.assertEquals;
@@ -85,6 +86,7 @@ public class TestParquetPhysicalPlan {
   }
 
   private class ParquetResultsListener implements UserResultsListener {
+    AtomicInteger count = new AtomicInteger();
     private CountDownLatch latch = new CountDownLatch(1);
     @Override
     public void submissionFailed(RpcException ex) {
@@ -94,12 +96,16 @@ public class TestParquetPhysicalPlan {
 
     @Override
     public void resultArrived(QueryResultBatch result) {
-      System.out.printf("Result batch arrived. Number of records: %d", result.getHeader().getRowCount());
+      int rows = result.getHeader().getRowCount();
+      System.out.println(String.format("Result batch arrived. Number of records: %d", rows));
+      count.addAndGet(rows);
       if (result.getHeader().getIsLastChunk()) latch.countDown();
+      result.release();
     }
 
-    public void await() throws Exception {
+    public int await() throws Exception {
       latch.await();
+      return count.get();
     }
   }
   @Test
@@ -111,7 +117,7 @@ public class TestParquetPhysicalPlan {
       client.connect();
       ParquetResultsListener listener = new ParquetResultsListener();
       client.runQuery(UserProtos.QueryType.PHYSICAL, Resources.toString(Resources.getResource(fileName),Charsets.UTF_8), listener);
-      listener.await();
+      System.out.println(String.format("Got %d total records.", listener.await()));
       client.close();
     }
   }

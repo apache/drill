@@ -152,6 +152,7 @@ public class Wrapper {
         endpoints.add(all.get(i % div));
       }
     } else {
+      width = Math.min(width, values.size()*5);
       // get nodes with highest affinity.
       Collections.sort(values);
       values = Lists.reverse(values);
