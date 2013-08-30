@@ -38,6 +38,7 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarBinaryHolder;
 import org.apache.drill.exec.vector.VarBinaryVector;
 import org.junit.AfterClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
@@ -45,7 +46,7 @@ import com.google.common.io.Files;
 import com.google.common.io.Resources;
 import com.yammer.metrics.MetricRegistry;
 
-
+@Ignore
 public class TestOptiqPlans {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestOptiqPlans.class);
   DrillConfig c = DrillConfig.create();

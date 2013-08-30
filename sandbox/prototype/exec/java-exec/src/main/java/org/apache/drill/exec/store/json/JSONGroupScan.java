@@ -56,7 +56,7 @@ public class JSONGroupScan extends AbstractGroupScan {
   @JsonCreator
   public JSONGroupScan(@JsonProperty("entries") List<ScanEntry> entries,
                        @JsonProperty("storageengine") JSONStorageEngineConfig storageEngineConfig,
-                       @JacksonInject StorageEngineRegistry engineRegistry, FieldReference ref) throws ExecutionSetupException {
+                       @JacksonInject StorageEngineRegistry engineRegistry, @JsonProperty("ref") FieldReference ref) throws ExecutionSetupException {
     this(entries, (JSONStorageEngine) engineRegistry.getEngine(storageEngineConfig), ref);
   }
 

@@ -476,7 +476,7 @@ public class JSONRecordReader implements RecordReader {
   }
 
   private VectorHolder getOrCreateVectorHolder(Field field) throws SchemaChangeException {
-    String fullFieldName = ref.getPath() + "." + field.getFullFieldName();
+    String fullFieldName = ref != null ? ref.getPath() + "." + field.getFullFieldName() : field.getFullFieldName();
     VectorHolder holder = valueVectorMap.get(fullFieldName);
 
     if (holder == null) {

@@ -23,7 +23,7 @@
   </logger>
 
   <root>
-    <level value="error" />
+    <level value="debug" />
     <appender-ref ref="SOCKET" />
 <!--     <appender-ref ref="STDOUT" /> -->
   </root>

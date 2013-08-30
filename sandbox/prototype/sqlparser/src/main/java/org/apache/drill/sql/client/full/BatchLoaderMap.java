@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.Set;
 
 import jline.internal.Preconditions;
-import net.hydromatic.optiq.DataContext;
 
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.exception.SchemaChangeException;
@@ -15,6 +14,8 @@ import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.user.QueryResultBatch;
+import org.apache.drill.exec.vector.NullableVarBinaryVector;
+import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarBinaryVector;
 import org.apache.drill.exec.vector.VarCharVector;
@@ -41,13 +42,12 @@ public class BatchLoaderMap implements Map<String, Object> {
   private JsonHelper helper;
   private boolean loaded;
 
-  public BatchLoaderMap(List<String> requestedFields, BatchListener listener, DrillClient client, DataContext context) {
+  public BatchLoaderMap(List<String> requestedFields, BatchListener listener, DrillClient client) {
     this.listener = listener;
     this.requestedFields = requestedFields;
     this.objArr = new Object[requestedFields.size()];
     this.loader = new RecordBatchLoader(client.getAllocator());
     this.helper = new JsonHelper(client.getConfig());
-    FileSystemSchema fsSchema = (FileSystemSchema) context;
   }
 
   private void load(QueryResultBatch batch) throws SchemaChangeException {
@@ -113,10 +113,13 @@ public class BatchLoaderMap implements Map<String, Object> {
   }
 
   private Object getObj(ValueVector vv){
-    if(vv instanceof VarBinaryVector || vv instanceof VarCharVector){
-      return new String( (byte[]) vv.getAccessor().getObject(index));
+    Object val = vv.getAccessor().getObject(index);
+    if(val == null){
+      return null;
+    }else if(vv instanceof VarBinaryVector || vv instanceof VarCharVector || vv instanceof NullableVarBinaryVector || vv instanceof NullableVarCharVector){
+      return new String( (byte[]) val );
     }else{
-      return vv.getAccessor().getObject(index);  
+      return val;  
     }
   }
   
@@ -182,6 +185,7 @@ public class BatchLoaderMap implements Map<String, Object> {
     try {
       return new ObjectMapper().writeValueAsString(this);
     } catch (JsonProcessingException e) {
+      logger.error("Exception during query", e);
       throw new RuntimeException(e);
     }
   }

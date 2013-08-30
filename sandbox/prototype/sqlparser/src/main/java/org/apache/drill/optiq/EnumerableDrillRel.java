@@ -52,7 +52,7 @@ import org.slf4j.LoggerFactory;
  * results as an {@link net.hydromatic.linq4j.Enumerable}.
  */
 public class EnumerableDrillRel extends SingleRel implements EnumerableRel {
-  private static final Logger LOG = LoggerFactory.getLogger(EnumerableDrillRel.class);
+  private static final Logger logger = LoggerFactory.getLogger(EnumerableDrillRel.class);
 
   private static final Function1<String, Expression> TO_LITERAL = new Function1<String, Expression>() {
     @Override
@@ -72,6 +72,7 @@ public class EnumerableDrillRel extends SingleRel implements EnumerableRel {
           DataContext.class);
       // EnumerableDrillFullEngine.class.getMethod("of", String.class, List.class, Class.class);
     } catch (NoSuchMethodException e) {
+      logger.error("Exception during query", e);
       throw new RuntimeException(e);
     }
   }
@@ -99,7 +100,7 @@ public class EnumerableDrillRel extends SingleRel implements EnumerableRel {
   }
 
   public Result implement(EnumerableRelImplementor implementor, Prefer pref) {
-    LOG.debug("implementing enumerable");
+    logger.debug("implementing enumerable");
 
     final DrillImplementor drillImplementor = new DrillImplementor();
     DrillRel input = (DrillRel) getChild();

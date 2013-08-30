@@ -27,6 +27,7 @@ public class JsonHelper {
       
       if(o instanceof Integer) map.put(k, (Integer) o);
       else if(o instanceof Long) map.put(k, (Long) o);
+      else if(o instanceof Boolean) map.put(k, (Boolean) o);
       else if(o instanceof String) map.put(k, (String) o);
       else if(o instanceof byte[]) map.put(k, new String((byte[]) o));
       else if(o instanceof Float) map.put(k, (Float) o);

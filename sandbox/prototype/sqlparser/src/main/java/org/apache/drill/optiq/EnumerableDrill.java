@@ -47,6 +47,7 @@ import org.apache.drill.exec.ref.ReferenceInterpreter;
 import org.apache.drill.exec.ref.RunOutcome;
 import org.apache.drill.exec.ref.eval.BasicEvaluatorFactory;
 import org.apache.drill.exec.ref.rse.RSERegistry;
+import org.apache.drill.exec.store.json.JSONRecordReader;
 import org.apache.drill.jdbc.DrillHandler;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -58,6 +59,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  * Runtime helper that executes a Drill query and converts it into an {@link Enumerable}.
  */
 public class EnumerableDrill<E> extends AbstractEnumerable<E> implements Enumerable<E> {
+  
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(EnumerableDrill.class);
+  
   private final LogicalPlan plan;
   final BlockingQueue<Object> queue = new ArrayBlockingQueue<>(100);
   final DrillConfig config;
@@ -103,6 +107,7 @@ public class EnumerableDrill<E> extends AbstractEnumerable<E> implements Enumera
     try {
       i.setup();
     } catch (IOException e) {
+      logger.error("IOException during query", e);
       throw new RuntimeException(e);
     }
     return service.submit(new Callable<Collection<RunOutcome>>() {

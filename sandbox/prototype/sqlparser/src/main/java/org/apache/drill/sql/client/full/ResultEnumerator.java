@@ -13,12 +13,13 @@ import org.apache.drill.exec.rpc.RpcException;
    * Enumerator used for full execution engine.
    */
   class ResultEnumerator implements Enumerator<Object> {
-
+    static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ResultEnumerator.class);
+    
     private final BatchLoaderMap loaderMap;
     private Object current;
     
-    public ResultEnumerator(BatchListener listener, DrillClient client, List<String> fields, DataContext context) {
-      this.loaderMap = new BatchLoaderMap(fields, listener, client, context);
+    public ResultEnumerator(BatchListener listener, DrillClient client, List<String> fields) {
+      this.loaderMap = new BatchLoaderMap(fields, listener, client);
     }
 
     public Object current() {
@@ -30,14 +31,16 @@ import org.apache.drill.exec.rpc.RpcException;
       try {
         boolean succ = loaderMap.next();
         if(succ){
-          current = loaderMap.getCurrentObject();          
+          current = loaderMap.getCurrentObject();         
         }
         return succ;
         
       } catch (InterruptedException e) {
         Thread.interrupted();
+        logger.error("Exception during query", e);
         throw new RuntimeException(e);
       } catch (RpcException | SchemaChangeException e) {
+        logger.error("Exception during query", e);
         throw new RuntimeException(e);
       }
     }

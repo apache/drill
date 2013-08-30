@@ -68,7 +68,6 @@ public class BasicOptimizer extends Optimizer{
     LogicalConverter converter = new LogicalConverter(plan);
     for ( SinkOperator op : roots){
       PhysicalOperator pop  = op.accept(converter, obj);
-      System.out.println(pop);
       physOps.add(pop);
     }
 

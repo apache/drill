@@ -35,6 +35,9 @@ import com.google.common.collect.Sets;
  * Context for converting a tree of {@link DrillRel} nodes into a Drill logical plan.
  */
 public class DrillImplementor {
+  
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillImplementor.class);
+  
   final ObjectMapper mapper = new ObjectMapper();
   {
     mapper.enable(SerializationFeature.INDENT_OUTPUT);
@@ -111,7 +114,7 @@ public class DrillImplementor {
   /** Returns the generated plan. */
   public String getJsonString() {
     String s = rootNode.toString();
-    System.out.println(s);
+    if(logger.isDebugEnabled()) logger.debug("Optiq Generated Logical Plan: {}", s);
     return s;
   }
 

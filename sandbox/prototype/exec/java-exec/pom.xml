@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <project
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
-    xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+  xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <artifactId>exec-parent</artifactId>
@@ -28,6 +28,16 @@
       <version>2.5.6</version>
     </dependency>
     <dependency>
+      <groupId>xerces</groupId>
+      <artifactId>xercesImpl</artifactId>
+      <version>2.9.1</version>
+    </dependency>
+    <dependency>
+      <groupId>xalan</groupId>
+      <artifactId>xalan</artifactId>
+      <version>2.7.1</version>
+    </dependency>
+    <dependency>
       <groupId>com.sun.codemodel</groupId>
       <artifactId>codemodel</artifactId>
       <version>2.6</version>
@@ -41,7 +51,7 @@
       <groupId>net.hydromatic</groupId>
       <artifactId>optiq</artifactId>
       <version>0.4.10</version>
-    </dependency>    
+    </dependency>
     <dependency>
       <groupId>org.freemarker</groupId>
       <artifactId>freemarker</artifactId>
@@ -57,7 +67,7 @@
       <groupId>net.hydromatic</groupId>
       <artifactId>optiq</artifactId>
       <version>0.4.10</version>
-    </dependency>    
+    </dependency>
     <dependency>
       <groupId>com.twitter</groupId>
       <artifactId>parquet-column</artifactId>
@@ -87,7 +97,7 @@
       <groupId>javax.inject</groupId>
       <artifactId>javax.inject</artifactId>
       <version>1</version>
-    </dependency>    
+    </dependency>
     <dependency>
       <groupId>org.apache.drill</groupId>
       <artifactId>common</artifactId>
@@ -261,13 +271,13 @@
                   </fileset>
                 </path>
                 <pathconvert pathsep=" " property="proto.files"
-                             refid="proto.path.files" />
+                  refid="proto.path.files" />
 
                 <exec executable="protoc">
                   <arg value="--java_out=${target.gen.source.path}" />
                   <arg value="--proto_path=${proto.cas.path}" />
                   <arg
-                      value="--proto_path=${project.basedir}/../../common/src/main/protobuf/" />
+                    value="--proto_path=${project.basedir}/../../common/src/main/protobuf/" />
                   <arg line="${proto.files}" />
                 </exec>
               </tasks>
@@ -298,43 +308,43 @@
           </execution>
         </executions>
       </plugin>
-        <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <version>2.1</version>
-                <executions>
-                  <execution>
-                    <phase>package</phase>
-                    <goals>
-                      <goal>shade</goal>
-                    </goals>
-                    <configuration>
-                      <artifactSet>
-                         <includes>
-                            <include>com.google.protobuf:protobuf-java</include>                     
-                         </includes>                 
-                      </artifactSet>
-                      <shadedArtifactAttached>true</shadedArtifactAttached>
-                      <shadedClassifierName>rebuffed</shadedClassifierName>
-                      <filters>
-                        <filter>
-                            <artifact>com.google.protobuf:protobuf-java</artifact>
-                            <excludes>
-                                <exclude>**</exclude>
-                            </excludes>
-                        </filter>
-                    </filters>
-                      <relocations>
-                        <relocation>
-                          <pattern>com.google.protobuf</pattern>
-                          <shadedPattern>250.com.google.protobuf</shadedPattern>
-                        </relocation>
-                      </relocations>
-                    </configuration>
-                  </execution>
-                </executions>
-              </plugin>
-        
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>2.1</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <artifactSet>
+                <includes>
+                  <include>com.google.protobuf:protobuf-java</include>
+                </includes>
+              </artifactSet>
+              <shadedArtifactAttached>true</shadedArtifactAttached>
+              <shadedClassifierName>rebuffed</shadedClassifierName>
+              <filters>
+                <filter>
+                  <artifact>com.google.protobuf:protobuf-java</artifact>
+                  <excludes>
+                    <exclude>**</exclude>
+                  </excludes>
+                </filter>
+              </filters>
+              <relocations>
+                <relocation>
+                  <pattern>com.google.protobuf</pattern>
+                  <shadedPattern>250.com.google.protobuf</shadedPattern>
+                </relocation>
+              </relocations>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
       <!-- <plugin> -->
       <!-- <groupId>com.github.igor-petruk.protobuf</groupId> -->
       <!-- <artifactId>protobuf-maven-plugin</artifactId> -->

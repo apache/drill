@@ -173,7 +173,7 @@ public class DrillOptiq {
 
     @Override
     public StringBuilder visitLiteral(RexLiteral literal) {
-      return buf.append(literal.toString());
+      return buf.append(literal);
     }
   }
 }

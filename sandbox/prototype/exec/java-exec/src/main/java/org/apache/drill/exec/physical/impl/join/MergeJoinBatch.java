@@ -107,7 +107,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
     
     // we do this in the here instead of the constructor because don't necessary want to start consuming on construction.
     status.ensureInitial();
-    
+
     // loop so we can start over again if we find a new batch was created.
     while(true){
 
@@ -148,8 +148,8 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
         kill();
         return IterOutcome.STOP;
       case NO_MORE_DATA:
-        logger.debug("NO MORE DATA; returning {}", (status.getOutPosition() > 0 ? "OK" : "NONE"));
-        return status.getOutPosition() > 0 ? IterOutcome.OK: IterOutcome.NONE;
+        logger.debug("NO MORE DATA; returning {}", (status.getOutPosition() > 0 ? (first ? "OK_NEW_SCHEMA" : "OK") : "NONE"));
+        return status.getOutPosition() > 0 ? (first ? IterOutcome.OK_NEW_SCHEMA : IterOutcome.OK): IterOutcome.NONE;
       case SCHEMA_CHANGED:
         worker = null;
         if(status.getOutPosition() > 0){
@@ -327,8 +327,8 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
                                                       new TypedFieldId(vw.getField().getType(), vectorId));
       JVar vvOut = cg.declareVectorValueSetupAndMember("outgoing",
                                                        new TypedFieldId(vw.getField().getType(),vectorId));
-      // todo: check for room in vvOut
-      cg.getEvalBlock().add(vvOut.invoke("copyFrom")
+      // todo: check result of copyFromSafe and grow allocation
+      cg.getEvalBlock().add(vvOut.invoke("copyFromSafe")
                                    .arg(COPY_LEFT_MAPPING.getValueReadIndex())
                                    .arg(COPY_LEFT_MAPPING.getValueWriteIndex())
                                    .arg(vvIn));
@@ -346,7 +346,8 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
                                                       new TypedFieldId(vw.getField().getType(), vectorId - rightVectorBase));
       JVar vvOut = cg.declareVectorValueSetupAndMember("outgoing",
                                                        new TypedFieldId(vw.getField().getType(),vectorId));
-      cg.getEvalBlock().add(vvOut.invoke("copyFrom")
+      // todo: check result of copyFromSafe and grow allocation
+      cg.getEvalBlock().add(vvOut.invoke("copyFromSafe")
           .arg(COPY_RIGHT_MAPPING.getValueReadIndex())
           .arg(COPY_RIGHT_MAPPING.getValueWriteIndex())
           .arg(vvIn));
@@ -366,13 +367,13 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
     // add fields from both batches
     for (VectorWrapper<?> w : left) {
       ValueVector outgoingVector = TypeHelper.getNewVector(w.getField(), context.getAllocator());
-      getAllocator(w.getValueVector(), outgoingVector).alloc(left.getRecordCount() * 4);
+      getAllocator(w.getValueVector(), outgoingVector).alloc(left.getRecordCount() * 16);
       container.add(outgoingVector);
     }
 
     for (VectorWrapper<?> w : right) {
       ValueVector outgoingVector = TypeHelper.getNewVector(w.getField(), context.getAllocator());
-      getAllocator(w.getValueVector(), outgoingVector).alloc(right.getRecordCount() * 4);
+      getAllocator(w.getValueVector(), outgoingVector).alloc(right.getRecordCount() * 16);
       container.add(outgoingVector);
     }
 
@@ -399,7 +400,6 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
     }
 
     public void alloc(int recordCount){
-      recordCount *=10;
       out.allocateNew(recordCount);
       out.getMutator().setValueCount(recordCount);
     }
@@ -416,8 +416,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
     }
 
     public void alloc(int recordCount){
-      recordCount *= 10;
-      out.allocateNew(in.getByteCapacity()*10, recordCount);
+      out.allocateNew(in.getByteCapacity() * 4, recordCount);
       out.getMutator().setValueCount(recordCount);
     }
   }

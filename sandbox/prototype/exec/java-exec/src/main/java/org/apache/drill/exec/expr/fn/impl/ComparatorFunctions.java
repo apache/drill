@@ -13,6 +13,9 @@ import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.vector.BigIntHolder;
 import org.apache.drill.exec.vector.IntHolder;
+import org.apache.drill.exec.vector.NullableBigIntHolder;
+import org.apache.drill.exec.vector.NullableIntHolder;
+import org.apache.drill.exec.vector.NullableVarCharHolder;
 import org.apache.drill.exec.vector.VarBinaryHolder;
 import org.apache.drill.exec.vector.VarCharHolder;
 
@@ -34,6 +37,58 @@ public class ComparatorFunctions {
   }
   
   @FunctionTemplate(name = "compare_to", scope = FunctionTemplate.FunctionScope.SIMPLE)
+  public static class NullableIntComparator implements DrillSimpleFunc {
+
+      @Param NullableIntHolder left;
+      @Param NullableIntHolder right;
+      @Output IntHolder out;
+
+      public void setup(RecordBatch b) {}
+
+      public void eval() {
+        
+        if(left.isSet == 0){
+          if(right.isSet == 0){
+            out.value = 0; 
+          }else{
+            out.value = -1;
+          }
+        }else if(right.isSet == 0){
+          out.value = 1;
+        }else{
+          out.value = left.value < right.value ? -1 : ((left.value == right.value)? 0 : 1);  
+        }
+        
+      }
+  }
+  
+  @FunctionTemplate(name = "compare_to", scope = FunctionTemplate.FunctionScope.SIMPLE)
+  public static class NullableBigIntComparator implements DrillSimpleFunc {
+
+      @Param NullableBigIntHolder left;
+      @Param NullableBigIntHolder right;
+      @Output IntHolder out;
+
+      public void setup(RecordBatch b) {}
+
+      public void eval() {
+        
+        if(left.isSet == 0){
+          if(right.isSet == 0){
+            out.value = 0; 
+          }else{
+            out.value = -1;
+          }
+        }else if(right.isSet == 0){
+          out.value = 1;
+        }else{
+          out.value = left.value < right.value ? -1 : ((left.value == right.value)? 0 : 1);  
+        }
+        
+      }
+  }
+  
+  @FunctionTemplate(name = "compare_to", scope = FunctionTemplate.FunctionScope.SIMPLE)
   public static class VarBinaryComparator implements DrillSimpleFunc {
 
       @Param VarBinaryHolder left;
@@ -48,7 +103,21 @@ public class ComparatorFunctions {
      
   }
   
-  
+  @FunctionTemplate(name = "compare_to", scope = FunctionTemplate.FunctionScope.SIMPLE)
+  public static class NullableVarCharComparator implements DrillSimpleFunc {
+
+      @Param NullableVarCharHolder left;
+      @Param NullableVarCharHolder right;
+      @Output IntHolder out;
+
+      public void setup(RecordBatch b) {}
+
+      public void eval() {
+        out.value = org.apache.drill.exec.expr.fn.impl.VarHelpers.compare(left, right);
+      }
+     
+  }
+
   
   @FunctionTemplate(name = "compare_to", scope = FunctionTemplate.FunctionScope.SIMPLE)
   public static class VarCharComparator implements DrillSimpleFunc {

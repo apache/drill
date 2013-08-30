@@ -210,10 +210,11 @@ public class EvaluationVisitor {
       JExpression indexVariable = generator.getMappingSet().getValueReadIndex();
 
       JInvocation getValueAccessor = vv1.invoke("getAccessor").invoke("get");
+      JInvocation getValueAccessor2 = vv1.invoke("getAccessor");
       if (e.isSuperReader()) {
 
-        getValueAccessor = ((JExpression) vv1.component(indexVariable.shrz(JExpr.lit(16)))).invoke("getAccessor")
-            .invoke("get");
+        getValueAccessor = ((JExpression) vv1.component(indexVariable.shrz(JExpr.lit(16)))).invoke("getAccessor").invoke("get");
+        getValueAccessor2 = ((JExpression) vv1.component(indexVariable.shrz(JExpr.lit(16)))).invoke("getAccessor");
         indexVariable = indexVariable.band(JExpr.lit((int) Character.MAX_VALUE));
       }
 
@@ -222,7 +223,7 @@ public class EvaluationVisitor {
 
       if (out.isOptional()) {
         JBlock blk = generator.getEvalBlock();
-        blk.assign(out.getIsSet(), vv1.invoke("getAccessor").invoke("isSet").arg(indexVariable));
+        blk.assign(out.getIsSet(), getValueAccessor2.invoke("isSet").arg(indexVariable));
         JConditional jc = blk._if(out.getIsSet().eq(JExpr.lit(1)));
         if (Types.usesHolderForGet(e.getMajorType())) {
           jc._then().add(getValueAccessor.arg(indexVariable).arg(out.getHolder()));
