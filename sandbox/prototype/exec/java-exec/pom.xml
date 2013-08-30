@@ -169,6 +169,11 @@
   <profiles>
     <profile>
       <id>default-hadoop</id>
+      <activation>
+        <property>
+          <name>!alt-hadoop</name>
+        </property>
+      </activation>
       <dependencies>
         <dependency>
           <groupId>org.apache.hadoop</groupId>
