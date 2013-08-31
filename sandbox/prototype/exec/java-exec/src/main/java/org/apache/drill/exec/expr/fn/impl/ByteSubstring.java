@@ -18,16 +18,20 @@
 
 package org.apache.drill.exec.expr.fn.impl;
 
-import org.apache.drill.common.expression.*;
+import org.apache.drill.common.expression.Arg;
+import org.apache.drill.common.expression.BasicArgumentValidator;
+import org.apache.drill.common.expression.CallProvider;
+import org.apache.drill.common.expression.FunctionDefinition;
+import org.apache.drill.common.expression.OutputTypeDeterminer;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
+import org.apache.drill.exec.expr.holders.BigIntHolder;
+import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.vector.*;
 
 // TODO: implement optional length parameter
 

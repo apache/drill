@@ -1,26 +1,14 @@
 <@pp.dropOutputFile />
-<#list types as type>
+<#list vv.types as type>
 <#list type.minor as minor>
 
 <#if type.major == "Fixed">
-<@pp.changeOutputFile name="${minor.class}Vector.java" />
+<@pp.changeOutputFile name="/org/apache/drill/exec/vector/${minor.class}Vector.java" />
+<#include "/@includes/license.ftl" />
+
 package org.apache.drill.exec.vector;
 
-import io.netty.buffer.ByteBuf;
-
-import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.record.TransferPair;
-import org.apache.drill.exec.proto.UserBitShared.FieldMetadata;
-import org.apache.drill.exec.record.DeadBuf;
-import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.vector.BaseValueVector;
-import org.apache.drill.exec.vector.BitVector;
-import org.apache.drill.common.expression.FieldReference;
-
-import java.io.ObjectInputStream.GetField;
-import java.util.Arrays;
-import java.util.Random;
-
+<#include "/@includes/vv_imports.ftl" />
 
 /**
  * ${minor.class} implements a vector of fixed width values.  Elements in the vector are accessed

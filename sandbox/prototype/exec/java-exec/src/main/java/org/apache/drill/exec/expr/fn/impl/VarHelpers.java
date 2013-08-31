@@ -1,9 +1,9 @@
 package org.apache.drill.exec.expr.fn.impl;
 
-import org.apache.drill.exec.vector.NullableVarBinaryHolder;
-import org.apache.drill.exec.vector.NullableVarCharHolder;
-import org.apache.drill.exec.vector.VarBinaryHolder;
-import org.apache.drill.exec.vector.VarCharHolder;
+import org.apache.drill.exec.expr.holders.NullableVarBinaryHolder;
+import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
+import org.apache.drill.exec.expr.holders.VarBinaryHolder;
+import org.apache.drill.exec.expr.holders.VarCharHolder;
 
 public class VarHelpers {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(VarHelpers.class);

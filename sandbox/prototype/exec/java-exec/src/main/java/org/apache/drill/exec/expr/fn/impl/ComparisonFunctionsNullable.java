@@ -4,10 +4,10 @@ import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
+import org.apache.drill.exec.expr.holders.BitHolder;
+import org.apache.drill.exec.expr.holders.NullableBigIntHolder;
+import org.apache.drill.exec.expr.holders.NullableIntHolder;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.vector.NullableBigIntHolder;
-import org.apache.drill.exec.vector.BitHolder;
-import org.apache.drill.exec.vector.NullableIntHolder;
 
 public class ComparisonFunctionsNullable {
     static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ComparisonFunctionsNullable.class);

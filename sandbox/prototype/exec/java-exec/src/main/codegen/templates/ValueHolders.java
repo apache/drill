@@ -1,17 +1,16 @@
 <@pp.dropOutputFile />
-<#list modes as mode>
-<#list types as type>
+<#list vv.modes as mode>
+<#list vv.types as type>
 <#list type.minor as minor>
 
 <#assign className="${mode.prefix}${minor.class}Holder" />
-<@pp.changeOutputFile name="${className}.java" />
-package org.apache.drill.exec.vector;
+<@pp.changeOutputFile name="/org/apache/drill/exec/expr/holders/${className}.java" />
 
-import org.apache.drill.common.types.Types;
-import org.apache.drill.common.types.TypeProtos.MajorType;
-import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.expr.holders.ValueHolder;
-import io.netty.buffer.ByteBuf;
+<#include "/@includes/license.ftl" />
+
+package org.apache.drill.exec.expr.holders;
+
+<#include "/@includes/vv_imports.ftl" />
 
 public final class ${className} implements ValueHolder{
   

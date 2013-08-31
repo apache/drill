@@ -20,7 +20,6 @@ import org.apache.drill.exec.compile.sig.SignatureHolder;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.record.TypedFieldId;
-import org.apache.drill.exec.vector.TypeHelper;
 
 import com.beust.jcommander.internal.Lists;
 import com.beust.jcommander.internal.Maps;

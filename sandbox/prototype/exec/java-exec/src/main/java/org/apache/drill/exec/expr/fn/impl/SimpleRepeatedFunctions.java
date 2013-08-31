@@ -1,7 +1,6 @@
 package org.apache.drill.exec.expr.fn.impl;
 
 import org.apache.drill.common.expression.Arg;
-import org.apache.drill.common.expression.ArgumentValidators;
 import org.apache.drill.common.expression.BasicArgumentValidator;
 import org.apache.drill.common.expression.CallProvider;
 import org.apache.drill.common.expression.FunctionDefinition;
@@ -12,12 +11,12 @@ import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
+import org.apache.drill.exec.expr.holders.BigIntHolder;
+import org.apache.drill.exec.expr.holders.BitHolder;
+import org.apache.drill.exec.expr.holders.IntHolder;
+import org.apache.drill.exec.expr.holders.RepeatedBigIntHolder;
+import org.apache.drill.exec.expr.holders.RepeatedIntHolder;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.vector.BigIntHolder;
-import org.apache.drill.exec.vector.BitHolder;
-import org.apache.drill.exec.vector.IntHolder;
-import org.apache.drill.exec.vector.RepeatedBigIntHolder;
-import org.apache.drill.exec.vector.RepeatedIntHolder;
 
 public class SimpleRepeatedFunctions {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MathFunctions.class);

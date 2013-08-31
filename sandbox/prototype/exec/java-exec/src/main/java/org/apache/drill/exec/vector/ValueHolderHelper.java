@@ -2,6 +2,8 @@ package org.apache.drill.exec.vector;
 
 import io.netty.buffer.UnpooledByteBufAllocator;
 
+import org.apache.drill.exec.expr.holders.VarCharHolder;
+
 import com.google.common.base.Charsets;
 
 

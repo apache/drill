@@ -11,8 +11,8 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Workspace;
+import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.vector.BigIntHolder;
 
 
 

@@ -1,34 +1,13 @@
 <@pp.dropOutputFile />
-<#list types as type>
+<#list vv.types as type>
 <#list type.minor as minor>
-<@pp.changeOutputFile name="Repeated${minor.class}Vector.java" />
+<@pp.changeOutputFile name="/org/apache/drill/exec/vector/Repeated${minor.class}Vector.java" />
+<#include "/@includes/license.ftl" />
+
 package org.apache.drill.exec.vector;
 
-import org.apache.drill.exec.vector.UInt2Vector;
-import org.apache.drill.exec.vector.UInt4Vector;
+<#include "/@includes/vv_imports.ftl" />
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkState;
-import io.netty.buffer.ByteBuf;
-
-import java.io.Closeable;
-import java.util.Random;
-import java.util.Vector;
-
-import org.apache.commons.lang3.ArrayUtils;
-import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.proto.SchemaDefProtos;
-import org.apache.drill.exec.proto.UserBitShared.FieldMetadata;
-import org.apache.drill.exec.record.DeadBuf;
-import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.record.TransferPair;
-import org.apache.drill.common.expression.FieldReference;
-
-
-import java.util.List;
-
-import com.google.common.collect.Lists;
-import com.google.common.collect.ObjectArrays;
 
 @SuppressWarnings("unused")
 /**

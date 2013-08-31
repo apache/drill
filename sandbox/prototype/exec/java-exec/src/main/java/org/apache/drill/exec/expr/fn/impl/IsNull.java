@@ -26,9 +26,9 @@ import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
+import org.apache.drill.exec.expr.holders.BitHolder;
+import org.apache.drill.exec.expr.holders.NullableFloat8Holder;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.vector.BitHolder;
-import org.apache.drill.exec.vector.NullableFloat8Holder;
 
 @FunctionTemplate(name = "isNull", scope = FunctionTemplate.FunctionScope.SIMPLE)
 public class IsNull implements DrillSimpleFunc {

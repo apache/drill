@@ -1,31 +1,15 @@
 <@pp.dropOutputFile />
-<#list types as type>
+<#list vv.types as type>
 <#list type.minor as minor>
 
 <#if type.major == "VarLen">
-<@pp.changeOutputFile name="${minor.class}Vector.java" />
+<@pp.changeOutputFile name="/org/apache/drill/exec/vector/${minor.class}Vector.java" />
+
+<#include "/@includes/license.ftl" />
+
 package org.apache.drill.exec.vector;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkState;
-import io.netty.buffer.ByteBuf;
-
-import java.io.Closeable;
-import java.nio.ByteBuffer;
-import java.util.Random;
-
-import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.proto.SchemaDefProtos;
-import org.apache.drill.exec.proto.UserBitShared.FieldMetadata;
-import org.apache.drill.exec.record.DeadBuf;
-import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.record.TransferPair;
-import org.apache.drill.common.expression.FieldReference;
-
-
-import com.google.common.base.Charsets;
-import com.google.common.collect.ObjectArrays;
-
+<#include "/@includes/vv_imports.ftl" />
 
 /**
  * ${minor.class}Vector implements a vector of variable width values.  Elements in the vector

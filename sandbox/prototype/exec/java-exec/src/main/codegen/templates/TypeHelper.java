@@ -1,30 +1,12 @@
-/*******************************************************************************
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- ******************************************************************************/
-package org.apache.drill.exec.vector;
+<@pp.dropOutputFile />
+<@pp.changeOutputFile name="/org/apache/drill/exec/expr/TypeHelper.java" />
 
-import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.common.types.TypeProtos.DataMode;
-import org.apache.drill.common.types.TypeProtos.MajorType;
-import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.exec.record.MaterializedField;
+<#include "/@includes/license.ftl" />
 
-import com.sun.codemodel.JType;
-import com.sun.codemodel.JCodeModel;
+package org.apache.drill.exec.expr;
+
+<#include "/@includes/vv_imports.ftl" />
+
 
 public class TypeHelper {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TypeHelper.class);
@@ -33,7 +15,7 @@ public class TypeHelper {
 
   public static int getSize(MajorType major) {
     switch (major.getMinorType()) {
-<#list types as type>
+<#list vv.types as type>
   <#list type.minor as minor>
     case ${minor.class?upper_case}:
       return ${type.width}<#if minor.class?substring(0, 3) == "Var" ||
@@ -50,7 +32,7 @@ public class TypeHelper {
 
   public static Class<?> getValueVectorClass(MinorType type, DataMode mode){
     switch (type) {
-<#list types as type>
+<#list vv.types as type>
   <#list type.minor as minor>
       case ${minor.class?upper_case}:
         switch (mode) {
@@ -71,7 +53,7 @@ public class TypeHelper {
 
   public static JType getHolderType(JCodeModel model, MinorType type, DataMode mode){
     switch (type) {
-<#list types as type>
+<#list vv.types as type>
   <#list type.minor as minor>
       case ${minor.class?upper_case}:
         switch (mode) {
@@ -94,7 +76,7 @@ public class TypeHelper {
     MajorType type = field.getType();
 
     switch (type.getMinorType()) {
-<#list types as type>
+<#list vv.  types as type>
   <#list type.minor as minor>
     case ${minor.class?upper_case}:
       switch (type.getMode()) {

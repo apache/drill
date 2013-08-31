@@ -1,39 +1,16 @@
 <@pp.dropOutputFile />
-<#list types as type>
+<#list vv.types as type>
 <#list type.minor as minor>
 
 <#assign className = "Nullable${minor.class}Vector" />
 <#assign valuesName = "${minor.class}Vector" />
-<@pp.changeOutputFile name="${className}.java" />
+<@pp.changeOutputFile name="/org/apache/drill/exec/vector/${className}.java" />
+
+<#include "/@includes/license.ftl" />
 
 package org.apache.drill.exec.vector;
 
-
-
-
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkState;
-import io.netty.buffer.ByteBuf;
-
-import java.io.Closeable;
-import java.util.List;
-
-import org.apache.commons.lang3.ArrayUtils;
-import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.proto.SchemaDefProtos;
-import org.apache.drill.exec.proto.UserBitShared.FieldMetadata;
-import org.apache.drill.exec.record.DeadBuf;
-import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.record.TransferPair;
-import org.apache.drill.exec.vector.BaseValueVector;
-import org.apache.drill.exec.vector.BitVector;
-import org.apache.drill.exec.vector.UInt2Vector;
-import org.apache.drill.exec.vector.UInt4Vector;
-import org.apache.drill.common.expression.FieldReference;
-
-
-import com.google.common.collect.Lists;
-import com.google.common.collect.ObjectArrays;
+<#include "/@includes/vv_imports.ftl" />
 
 /**
  * Nullable${minor.class} implements a vector of values which could be null.  Elements in the vector
