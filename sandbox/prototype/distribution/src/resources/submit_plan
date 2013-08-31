@@ -4,10 +4,10 @@ ARGS=();
 while [ $# -gt 0 ]
 do
   case "$1" in
-  -q) shift;
-      QUERY=$1;;
-  -e) shift;
-      QUERY=$1;;
+  -t) shift;
+      TYPE=$1;;
+  -zk) shift;
+      ZK=$1;;
   -f) shift;
       FILE=$1;;
    *) ARGS+=($1);;
@@ -45,21 +45,11 @@ if [ "$DRILL_LOG_DIR" = "" ]; then
   export DRILL_LOG_DIR=/var/log/drill
 fi
 
-
 CP=$DRILL_HOME/jars/*:$CP
 CP=$DRILL_HOME/lib/*:$CP
-CP=$DRILL_HOME/contrib/*:$CP
 
 CP=$DRILL_CONF_DIR:$CP
 
-DRILL_SHELL_JAVA_OPTS="$DRILL_SHELL_JAVA_OPTS -Dlog.path=$DRILL_LOG_DIR/sqlline.log"
+DRILL_SHELL_JAVA_OPTS="$DRILL_SHELL_JAVA_OPTS -Dlog.path=$DRILL_LOG_DIR/submitter.log"
 
-if [ -n "$QUERY" ]
-then
-  echo $QUERY | exec $JAVA $DRILL_SHELL_JAVA_OPTS $DRILL_JAVA_OPTS -cp $CP sqlline.SqlLine "${ARGS[@]}"
-elif [ -n "$FILE" ]
-then
-  exec $JAVA $DRILL_SHELL_JAVA_OPTS $DRILL_JAVA_OPTS -cp $CP sqlline.SqlLine "${ARGS[@]}" --run=$FILE
-else
-  exec $JAVA $DRILL_SHELL_JAVA_OPTS $DRILL_JAVA_OPTS -cp $CP sqlline.SqlLine "${ARGS[@]}"
-fi
+exec $JAVA $DRILL_SHELL_JAVA_OPTS $DRILL_JAVA_OPTS -cp $CP org.apache.drill.exec.client.QuerySubmitter $FILE $TYPE $ZK

@@ -387,6 +387,14 @@
             <version>1.0.3-mapr-3.0.0</version>
             <exclusions>
               <exclusion>
+                <artifactId>asm</artifactId>
+                <groupId>asm</groupId>
+              </exclusion>
+              <exclusion>
+                <artifactId>central-logging</artifactId>
+                <groupId>com.mapr.util</groupId>
+              </exclusion>
+              <exclusion>
                 <groupId>org.codehaus.jackson</groupId>
                 <artifactId>jackson-core-asl</artifactId>
               </exclusion>

@@ -86,6 +86,7 @@ public class ParquetGroupScan extends AbstractGroupScan {
   private Collection<DrillbitEndpoint> availableEndpoints;
   private ParquetStorageEngine storageEngine;
   private StorageEngineRegistry engineRegistry;
+  @JsonProperty("storageengine")
   private ParquetStorageEngineConfig engineConfig;
   private FileSystem fs;
   private final FieldReference ref;

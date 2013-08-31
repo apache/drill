@@ -58,7 +58,7 @@ public class QuerySubmitter {
     Stopwatch watch = new Stopwatch();
     watch.start();
     client.runQuery(queryType, plan, listener);
-    System.out.println(String.format("Got %d total records in %d seconds", listener.await(), watch.elapsed(TimeUnit.SECONDS)));
+    System.out.println(String.format("Got %d total records in %f seconds", listener.await(), (float)watch.elapsed(TimeUnit.MILLISECONDS) / (float)1000));
     return 0;
   }
 
