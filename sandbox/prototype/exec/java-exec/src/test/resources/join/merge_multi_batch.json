@@ -36,6 +36,7 @@
       left: 1,
       right: 2,
       pop: "merge-join",
+      join-type: "LEFT",
       join-conditions: [ { relationship: "==", left: "a", right: "aa" } ]
     },
     {

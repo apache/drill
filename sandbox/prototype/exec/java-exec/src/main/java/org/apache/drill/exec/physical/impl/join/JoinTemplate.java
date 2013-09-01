@@ -2,8 +2,10 @@ package org.apache.drill.exec.physical.impl.join;
 
 import javax.inject.Named;
 
+import org.apache.drill.common.logical.data.Join;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.physical.config.MergeJoinPOP;
 import org.apache.drill.exec.record.VectorContainer;
 
 /**
@@ -71,10 +73,12 @@ public abstract class JoinTemplate implements JoinWorker {
 
       // validate input iterators (advancing to the next record batch if necessary)
       if (!status.isRightPositionAllowed()) {
-        // we've hit the end of the right record batch; copy any remaining values from the left batch
-        while (status.isLeftPositionAllowed()) {
-          doCopyLeft(status.getLeftPosition(), status.fetchAndIncOutputPos());
-          status.advanceLeft();
+        if (((MergeJoinPOP)status.outputBatch.getPopConfig()).getJoinType() == Join.JoinType.LEFT) {
+          // we've hit the end of the right record batch; copy any remaining values from the left batch
+          while (status.isLeftPositionAllowed()) {
+            doCopyLeft(status.getLeftPosition(), status.fetchAndIncOutputPos());
+            status.advanceLeft();
+          }
         }
         return;
       }
@@ -86,7 +90,8 @@ public abstract class JoinTemplate implements JoinWorker {
 
       case -1:
         // left key < right key
-        doCopyLeft(status.getLeftPosition(), status.fetchAndIncOutputPos());
+        if (((MergeJoinPOP)status.outputBatch.getPopConfig()).getJoinType() == Join.JoinType.LEFT)
+          doCopyLeft(status.getLeftPosition(), status.fetchAndIncOutputPos());
         status.advanceLeft();
         continue;
 

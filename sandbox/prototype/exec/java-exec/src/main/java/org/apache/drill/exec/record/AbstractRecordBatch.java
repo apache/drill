@@ -31,6 +31,10 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
     return context;
   }
 
+  public PhysicalOperator getPopConfig() {
+    return popConfig;
+  }
+
   @Override
   public BatchSchema getSchema() {
     return container.getSchema();
