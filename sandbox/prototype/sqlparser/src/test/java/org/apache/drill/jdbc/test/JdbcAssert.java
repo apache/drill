@@ -47,6 +47,12 @@ public class JdbcAssert {
     return new ModelAndSchema(info);
   }
 
+  public static ModelAndSchema withFull(String schema) {
+    final Properties info = new Properties();
+    info.setProperty("schema", schema);
+    return new ModelAndSchema(info, false);
+  }
+
   
   static String toString(ResultSet resultSet, int expectedRecordCount) throws SQLException {
     StringBuilder buf = new StringBuilder();
@@ -109,11 +115,16 @@ public class JdbcAssert {
     private final ConnectionFactory connectionFactory;
 
     public ModelAndSchema(Properties info) {
+      this(info, true);
+    }
+    
+    public ModelAndSchema(Properties info, final boolean ref) {
       this.info = info;
       this.connectionFactory = new ConnectionFactory() {
         public Connection createConnection() throws Exception {
           Class.forName("org.apache.drill.jdbc.Driver");
-          return DriverManager.getConnection("jdbc:drill:ref=true", ModelAndSchema.this.info);
+          String connect = ref ? "jdbc:drill:ref=true" : "jdbc:drill:";
+          return DriverManager.getConnection(connect, ModelAndSchema.this.info);  
         }
       };
     }

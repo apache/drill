@@ -68,20 +68,6 @@ public class DrillHandler extends HandlerImpl {
         String enginesData = Resources.toString(Resources.getResource("storage-engines.json"), Charsets.UTF_8);
 
         StorageEngines engines = config.getMapper().readValue(enginesData, StorageEngines.class);
-        MutableSchema rootSchema = connection.getRootSchema();
-
-        for (Map.Entry<String, StorageEngineConfig> entry : engines) {
-          SchemaProvider provider = registry.getSchemaProvider(entry.getValue());
-          FileSystemSchema schema = new FileSystemSchema(client, entry.getValue(), provider,
-              rootSchema.getTypeFactory(), rootSchema, entry.getKey(), rootSchema.getExpression(),
-              rootSchema.getQueryProvider());
-          rootSchema.addSchema(entry.getKey(), schema);
-        }
-
-        rootSchema.addSchema(
-            "--FAKE--",
-            new FakeSchema(rootSchema, rootSchema.getQueryProvider(), rootSchema.getTypeFactory(), "fake", rootSchema
-                .getExpression()));
 
         if (zk != null) {
           coordinator = new ZKClusterCoordinator(config, zk);
@@ -100,6 +86,22 @@ public class DrillHandler extends HandlerImpl {
           cl.connect();
           client = cl;
         }
+        
+        MutableSchema rootSchema = connection.getRootSchema();
+
+        for (Map.Entry<String, StorageEngineConfig> entry : engines) {
+          SchemaProvider provider = registry.getSchemaProvider(entry.getValue());
+          FileSystemSchema schema = new FileSystemSchema(client, entry.getValue(), provider,
+              rootSchema.getTypeFactory(), rootSchema, entry.getKey(), rootSchema.getExpression(),
+              rootSchema.getQueryProvider());
+          rootSchema.addSchema(entry.getKey(), schema);
+        }
+
+        rootSchema.addSchema(
+            "--FAKE--",
+            new FakeSchema(rootSchema, rootSchema.getQueryProvider(), rootSchema.getTypeFactory(), "fake", rootSchema
+                .getExpression()));
+        
       } catch (Exception ex) {
         throw new SQLException("Failure trying to connect to Drill.", ex);
       }

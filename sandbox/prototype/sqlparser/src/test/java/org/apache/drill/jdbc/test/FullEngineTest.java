@@ -13,7 +13,7 @@ import org.junit.rules.Timeout;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
-@Ignore
+
 public class FullEngineTest {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FullEngineTest.class);
 
@@ -25,16 +25,18 @@ public class FullEngineTest {
   // Set a timeout unless we're debugging.
   @Rule public TestRule globalTimeout = IS_DEBUG ? new TestName() : new Timeout(10000);
   
-  @BeforeClass
-  public static void setupFixtures() throws IOException {
-    MODEL_FULL_ENGINE = Resources.toString(Resources.getResource("full-model.json"), Charsets.UTF_8);
-  }
+//  @BeforeClass
+//  public static void setupFixtures() throws IOException {
+//    MODEL_FULL_ENGINE = Resources.toString(Resources.getResource("full-model.json"), Charsets.UTF_8);
+//  }
+  
+  
   
   @Test
   public void fullSelectStarEngine() throws Exception {
-    JdbcAssert.withModel(MODEL_FULL_ENGINE, "DONUTS")
+    JdbcAssert.withFull("parquet-local")
     // .sql("select cast(_MAP['red'] as bigint) + 1 as red_inc from donuts ")
-        .sql("select _MAP['d'] as d, _MAP['b'] as b from \"parquet-local\".\"/tmp/parquet_test_file_many_types\" ").displayResults(50);
+        .sql("select _MAP['d'] as d, _MAP['b'] as b from \"/tmp/parquet_test_file_many_types\" ").displayResults(50);
   }
 
 //  @Test

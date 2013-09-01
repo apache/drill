@@ -91,7 +91,7 @@ public class DrillImplementor {
   }
   
   public void registerSource(DrillTable table){
-    if(tables.add(table)){
+    if(!table.isRefEngine() && tables.add(table)){
       sourcesNode.put(table.getStorageEngineName(), mapper.convertValue(table.getStorageEngineConfig(), JsonNode.class));  
     }
   }
