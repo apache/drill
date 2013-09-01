@@ -36,12 +36,10 @@ Case     : 'case';
 When     : 'when';
 
 
-Or       : '||';
-And      : '&&';
-Equals   : '==';
-Equals2   : '=';
-NEquals  : '<>';
-NEquals2 : '!=';
+Or       : '||' | 'or' | 'OR' | 'Or';
+And      : '&&' | 'and' | 'AND' ;
+Equals   : '==' | '=';
+NEquals  : '<>' | '!=';
 GTEquals : '>=';
 LTEquals : '<=';
 Caret      : '^';

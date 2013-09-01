@@ -131,7 +131,7 @@ orExpr returns [LogicalExpression e]
 	    $e = registry.createExpression("||", p, exprs);
 	  }
 	}
-  :  a1=andExpr { exprs.add($a1.e); p = pos( $a1.start );} (Or^ a2=andExpr { exprs.add($a2.e); })*
+  :  a1=andExpr { exprs.add($a1.e); p = pos( $a1.start );} (Or a2=andExpr { exprs.add($a2.e); })*
   ;
 
 andExpr returns [LogicalExpression e]
@@ -146,7 +146,7 @@ andExpr returns [LogicalExpression e]
 	    $e = registry.createExpression("&&", p, exprs);
 	  }
 	}
-  :  e1=equExpr { exprs.add($e1.e); p = pos( $e1.start );  } (And^ e2=equExpr { exprs.add($e2.e);  })*
+  :  e1=equExpr { exprs.add($e1.e); p = pos( $e1.start );  } ( And e2=equExpr { exprs.add($e2.e);  })*
   ;
 
 equExpr returns [LogicalExpression e]
@@ -159,7 +159,7 @@ equExpr returns [LogicalExpression e]
 	  $e = registry.createByOp(exprs, p, cmps);
 	}
   :  r1=relExpr { exprs.add($r1.e); p = pos( $r1.start );
-    } ( cmpr= (Equals2 | Equals | NEquals | NEquals2 ) r2=relExpr {exprs.add($r2.e); cmps.add($cmpr.text); })*
+    } ( cmpr= ( Equals | NEquals ) r2=relExpr {exprs.add($r2.e); cmps.add($cmpr.text); })*
   ;
 
 relExpr returns [LogicalExpression e]
