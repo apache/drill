@@ -1,0 +1,17 @@
+{
+  types: [
+    {from: "Int", to: "BigInt"},
+    {from: "Float4", to: "Float8" }, 
+    {from: "Int", to: "Float4" },
+    {from: "BigInt", to: "Float4" },
+    {from: "Int", to: "Float8" },
+    {from: "BigInt", to: "Float8" },
+    {to: "Int", from: "BigInt", explicit: "int"},
+    {to: "Float4", from: "Float8" , explicit: "float"}, 
+    {to: "Int", from: "Float4" , explicit: "int"},
+    {to: "BigInt", from: "Float4" , explicit: "long"},
+    {to: "Int", from: "Float8" , explicit: "int"},
+    {to: "BigInt", from: "Float8" , explicit: "long"}
+    
+  ]
+} 

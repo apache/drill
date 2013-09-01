@@ -1,0 +1,6 @@
+{
+  types: [
+    {comparables: ["Float4", "Float8", "Int", "BigInt", "NullableFloat4", "NullableFloat8", "NullableInt", "NullableBigInt"], mode: "fixed"}, 
+    {comparables: ["VarChar", "VarBinary", "NullableVarChar", "NullableVarBinary"], mode: "var"} 
+  ]
+} 

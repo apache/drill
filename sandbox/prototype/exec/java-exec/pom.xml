@@ -228,7 +228,7 @@
         <executions>
           <execution>
             <id>copy-resources</id>
-            <phase>validate</phase>
+            <phase>generate-sources</phase>
             <goals>
               <goal>copy-resources</goal>
             </goals>
@@ -237,6 +237,11 @@
               <resources>
                 <resource>
                   <directory>src/main/java</directory>
+                  <filtering>true</filtering>
+                </resource>
+                <resource>
+                  <directory>target/generated-sources</directory>
+<!--                   <include>*/org</include> -->
                   <filtering>true</filtering>
                 </resource>
               </resources>
@@ -301,7 +306,7 @@
         <executions>
           <execution>
             <id>generate-sources</id>
-            <phase>generate-sources</phase>
+            <phase>validate</phase>
             <goals>
               <goal>generate</goal>
             </goals>

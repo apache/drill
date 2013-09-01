@@ -1,5 +1,7 @@
 data: {
-    vv: tdd(../data/ValueVectorTypes.tdd)
+    vv: tdd(../data/ValueVectorTypes.tdd),
+    compare: tdd(../data/CompareTypes.tdd),
+    cast: tdd(../data/Casts.tdd)
 }
 freemarkerLinks: {
     includes: includes/

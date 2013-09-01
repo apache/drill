@@ -17,14 +17,15 @@ import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder.ValueReference;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder.WorkspaceReference;
+import org.apache.drill.exec.expr.fn.impl.GCompareBigIntNullableBigInt;
 import org.apache.drill.exec.expr.holders.ValueHolder;
 import org.codehaus.commons.compiler.CompileException;
-import org.codehaus.janino.Java;
 import org.codehaus.janino.Java.CompilationUnit;
 import org.codehaus.janino.Parser;
 import org.codehaus.janino.Scanner;
 import org.mortbay.util.IO;
 
+import com.beust.jcommander.internal.Maps;
 import com.google.common.collect.Lists;
 import com.google.common.io.InputSupplier;
 import com.google.common.io.Resources;
@@ -35,6 +36,38 @@ import com.google.common.io.Resources;
 public class FunctionConverter {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FunctionConverter.class);
   
+  private Map<String, CompilationUnit> functionUnits = Maps.newHashMap();
+  
+  private CompilationUnit get(Class<?> c) throws IOException{
+    String path = c.getName();
+    path = path.replaceFirst("\\$.*", "");
+    path = path.replace(".", File.separator);
+    path = "/" + path + ".java";
+    CompilationUnit cu = functionUnits.get(path);
+    if(cu != null) return cu;
+
+    URL u = Resources.getResource(c, path);
+    InputSupplier<InputStream> supplier = Resources.newInputStreamSupplier(u);
+    try(InputStream is = supplier.getInput()){
+      if(is == null){
+        throw new IOException(String.format("Failure trying to located source code for Class %s, tried to read on classpath location %s", c.getName(), path));
+      }
+      String body = IO.toString(is);
+      
+      //TODO: Hack to remove annotations so Janino doesn't choke.  Need to reconsider this problem...
+      body = body.replaceAll("@\\w+(?:\\([^\\\\]*?\\))?", "");
+      try{
+        cu = new Parser(new Scanner(null, new StringReader(body))).parseCompilationUnit();
+        functionUnits.put(path, cu);
+        return cu;
+      } catch (CompileException e) {
+        logger.warn("Failure while parsing function class:\n{}", body, e);
+        return null;
+      }
+      
+    }
+    
+  }
   
   public <T extends DrillFunc> DrillFuncHolder getHolder(Class<T> clazz){
     FunctionTemplate template = clazz.getAnnotation(FunctionTemplate.class);
@@ -112,8 +145,9 @@ public class FunctionConverter {
    
     CompilationUnit cu;
     try {
-      cu = getClassBody(clazz);
-    } catch (CompileException | IOException e) {
+      cu = get(clazz);
+      if(cu == null) return null;
+    } catch (IOException e) {
       return failure("Failure while getting class body.", e, clazz);
     }
     
@@ -144,7 +178,7 @@ public class FunctionConverter {
   
   
   
-  private Java.CompilationUnit getClassBody(Class<?> c) throws CompileException, IOException{
+  private String getClassBody(Class<?> c) throws CompileException, IOException{
     String path = c.getName();
     path = path.replaceFirst("\\$.*", "");
     path = path.replace(".", File.separator);
@@ -158,11 +192,13 @@ public class FunctionConverter {
       String body = IO.toString(is);
       
       //TODO: Hack to remove annotations so Janino doesn't choke.  Need to reconsider this problem...
-      body = body.replaceAll("@(?:Output|Param|Workspace|Override|FunctionTemplate\\([^\\\\]*?\\))", "");
-      return new Parser(new Scanner(null, new StringReader(body))).parseCompilationUnit();
+      //return body.replaceAll("@(?:Output|Param|Workspace|Override|SuppressWarnings\\([^\\\\]*?\\)|FunctionTemplate\\([^\\\\]*?\\))", "");
+      return body.replaceAll("@(?:\\([^\\\\]*?\\))?", "");
     }
     
   }
+  
+  
   
   @SuppressWarnings("unchecked")
   private <T> T getStaticFieldValue(String fieldName, Class<?> valueType, Class<T> c) throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException{
@@ -182,12 +218,12 @@ public class FunctionConverter {
   }
 
   private DrillFuncHolder failure(String message, Class<?> clazz){
-    logger.warn("Failure loading function class {}. " + message, clazz.getName());
+    logger.warn("Failure loading function class [{}]. Message: {}", clazz.getName(), message);
     return null;
   }
 
   private DrillFuncHolder failure(String message, Throwable t, Class<?> clazz){
-    logger.warn("Failure loading function class {}. " + message, t, clazz.getName());
+    logger.warn("Failure loading function class [{}]. Message: {}", clazz.getName(), message, t);
     return null;
   }
   
@@ -195,12 +231,6 @@ public class FunctionConverter {
     return failure(message, clazz, field.getName());
   }
   
-  public static void main(String[] args) throws Exception{
-    
-    URL u = Resources.getResource(FunctionConverter.class, "/org/apache/drill/exec/expr/fn/impl/MathFunctions.java");
-    InputStream is = Resources.newInputStreamSupplier(u).getInput();
-    String s = IO.toString(is);
-    System.out.println(s);
-  }
+
   
 }

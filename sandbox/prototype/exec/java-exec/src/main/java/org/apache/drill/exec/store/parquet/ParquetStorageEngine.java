@@ -70,6 +70,8 @@ public class ParquetStorageEngine extends AbstractStorageEngine{
   }
 
   public Configuration getHadoopConfig() {
+    double y = 5;
+    int x = (int) y;
     return schemaProvider.conf;
   }
 
