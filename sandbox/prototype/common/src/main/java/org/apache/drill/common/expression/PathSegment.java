@@ -76,11 +76,11 @@ public abstract class PathSegment{
   
   
   public static class NameSegment extends PathSegment{
-    private final CharSequence path;
+    private final String path;
     
     public NameSegment(CharSequence n, ValueExpressions.CollisionBehavior collision){
       super(collision);
-      this.path = n;
+      this.path = n.toString();
     }
     
     public CharSequence getPath(){

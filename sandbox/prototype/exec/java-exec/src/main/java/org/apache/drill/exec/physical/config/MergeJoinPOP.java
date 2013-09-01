@@ -4,6 +4,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.drill.common.logical.data.Join;
+import org.apache.drill.common.logical.data.Join.JoinType;
 import org.apache.drill.common.logical.data.JoinCondition;
 import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.base.AbstractBase;
@@ -11,6 +12,7 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.Size;
 
+import com.beust.jcommander.internal.Lists;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -80,5 +82,18 @@ public class MergeJoinPOP extends AbstractBase{
 
   public List<JoinCondition> getConditions() {
     return conditions;
+  }
+  
+  public MergeJoinPOP flipIfRight(){
+    if(joinType == JoinType.RIGHT){
+      List<JoinCondition> flippedConditions = Lists.newArrayList(conditions.size());
+      for(JoinCondition c : conditions){
+        flippedConditions.add(c.flip());
+      }
+      return new MergeJoinPOP(right, left, flippedConditions, JoinType.LEFT);
+    }else{
+      return this;
+    }
+
   }
 }

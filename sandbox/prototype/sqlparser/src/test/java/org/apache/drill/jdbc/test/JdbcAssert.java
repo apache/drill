@@ -122,8 +122,14 @@ public class JdbcAssert {
       this.info = info;
       this.connectionFactory = new ConnectionFactory() {
         public Connection createConnection() throws Exception {
-          Class.forName("org.apache.drill.jdbc.Driver");
-          String connect = ref ? "jdbc:drill:ref=true" : "jdbc:drill:";
+          String connect = ref ? "jdbc:drillref:" : "jdbc:drill:";
+          if(ref){
+            Class.forName("org.apache.drill.jdbc.RefDriver");
+          }else{
+            Class.forName("org.apache.drill.jdbc.Driver");  
+          }
+          
+          
           return DriverManager.getConnection(connect, ModelAndSchema.this.info);  
         }
       };

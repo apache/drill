@@ -37,7 +37,7 @@ public class DrillPrepareImpl extends OptiqPrepareImpl {
   @Override
   protected RelOptPlanner createPlanner() {
     final RelOptPlanner planner = super.createPlanner();
-    planner.addRule(EnumerableDrillRule.getInstance(driver.getClient()));
+    planner.addRule(EnumerableDrillRule.getInstance(driver == null ? null : driver.getClient()));
 
     // Enable when https://issues.apache.org/jira/browse/DRILL-57 fixed
     if (false) {

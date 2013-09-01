@@ -29,13 +29,13 @@ import org.apache.drill.optiq.DrillPrepareImpl;
 /**
  * JDBC driver for Apache Drill.
  */
-public class Driver extends UnregisteredDriver {
-  public static final String CONNECT_STRING_PREFIX = "jdbc:drill:";
+public class RefDriver extends UnregisteredDriver {
+  public static final String CONNECT_STRING_PREFIX = "jdbc:drillref:";
 
   private volatile DrillHandler handler;
   
   static {
-    new Driver().register();
+    new RefDriver().register();
   }
 
   protected String getConnectStringPrefix() {
@@ -51,7 +51,7 @@ public class Driver extends UnregisteredDriver {
     return new Function0<OptiqPrepare>() {
       @Override
       public OptiqPrepare apply() {
-        return new DrillPrepareImpl(Driver.this);
+        return new DrillPrepareImpl(null);
       }
     };
   }
@@ -62,7 +62,7 @@ public class Driver extends UnregisteredDriver {
   
   @Override
   protected Handler createHandler() {
-    this.handler = new DrillHandler(false);
+    this.handler = new DrillHandler(true);
     return handler;
   }
   

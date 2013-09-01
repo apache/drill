@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import org.apache.drill.common.logical.data.Scan;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStorageEngine;
+import org.apache.drill.exec.store.ClassPathFileSystem;
 import org.apache.drill.exec.store.SchemaProvider;
 import org.apache.drill.exec.store.json.JSONGroupScan.ScanEntry;
 import org.apache.hadoop.conf.Configuration;
@@ -44,6 +45,7 @@ public class JSONStorageEngine extends AbstractStorageEngine {
     
     try {
       this.conf = new Configuration();
+      this.conf.set("fs.classpath.impl", ClassPathFileSystem.class.getName());
       this.conf.set(HADOOP_DEFAULT_NAME, config.getDfsName());
       this.fileSystem = FileSystem.get(conf);
 

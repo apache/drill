@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.physical.ReadEntryWithPath;
+import org.apache.drill.exec.store.ClassPathFileSystem;
 import org.apache.drill.exec.store.SchemaProvider;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -23,6 +24,7 @@ public class JsonSchemaProvider implements SchemaProvider{
     try {
       this.conf = new Configuration();
       this.conf.set(HADOOP_DEFAULT_NAME, "file:///");
+      this.conf.set("fs.classpath.impl", ClassPathFileSystem.class.getName());
       this.fs = FileSystem.get(conf);
     } catch (IOException ie) {
       throw new RuntimeException("Error setting up filesystem");

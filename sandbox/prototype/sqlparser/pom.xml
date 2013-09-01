@@ -11,20 +11,6 @@
   <artifactId>sqlparser</artifactId>
   <name>sqlparser</name>
 
-  <repositories>
-    <repository>
-      <releases>
-        <enabled>true</enabled>
-        <updatePolicy>always</updatePolicy>
-        <checksumPolicy>warn</checksumPolicy>
-      </releases>
-      <id>conjars</id>
-      <name>Conjars</name>
-      <url>http://conjars.org/repo</url>
-      <layout>default</layout>
-    </repository>
-  </repositories>
-
   <dependencies>
     <dependency>
       <groupId>net.hydromatic</groupId>
@@ -59,7 +45,11 @@
       <version>0.3</version>
       <scope>test</scope>
     </dependency>
-
+    <dependency>
+      <groupId>pentaho</groupId>
+      <artifactId>mondrian-data-foodmart-json</artifactId>
+      <version>0.2</version>
+    </dependency>
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
       <artifactId>ref</artifactId>

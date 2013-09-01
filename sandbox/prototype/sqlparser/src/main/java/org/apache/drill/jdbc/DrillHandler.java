@@ -37,13 +37,18 @@ public class DrillHandler extends HandlerImpl {
   private Drillbit bit;
   private DrillConfig config = DrillConfig.create();
   private SchemaProviderRegistry registry;
+  private final boolean ref;
+  
+  public DrillHandler(boolean ref){
+    this.ref = ref;
+  }
 
   public void onConnectionInit(OptiqConnection connection) throws SQLException {
     super.onConnectionInit(connection);
 
     final Properties p = connection.getProperties();
     
-    if (p.getProperty("ref") != null) {
+    if (ref) {
       final String model = p.getProperty("model");
       if (model != null) {
         if (model != null) {

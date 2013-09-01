@@ -47,5 +47,9 @@ public class JoinCondition {
   public LogicalExpression getRight() {
     return right;
   }
+  
+  public JoinCondition flip(){
+    return new JoinCondition(relationship, right, left);
+  }
 
 }

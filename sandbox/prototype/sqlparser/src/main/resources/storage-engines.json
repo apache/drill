@@ -5,10 +5,20 @@
         "type":"parquet",
         "dfsName" : "file:///"
       },
+    "parquet-cp" :
+      {
+        "type":"parquet",
+        "dfsName" : "classpath:///"
+      },
     "jsonl" :
       {
         "type":"json",
         "dfsName" : "file:///"
+      },
+    "json-cp" :
+      {
+        "type":"json",
+        "dfsName" : "classpath:///"
       },
     "parquet" :
       {

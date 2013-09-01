@@ -19,7 +19,9 @@
 package org.apache.drill.exec.physical.impl.join;
 
 import com.google.common.base.Preconditions;
+
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.logical.data.Join.JoinType;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.MergeJoinPOP;
 import org.apache.drill.exec.physical.impl.BatchCreator;
@@ -33,6 +35,11 @@ public class MergeJoinCreator implements BatchCreator<MergeJoinPOP> {
   @Override
   public RecordBatch getBatch(FragmentContext context, MergeJoinPOP config, List<RecordBatch> children) throws ExecutionSetupException {
     Preconditions.checkArgument(children.size() == 2);
-    return new MergeJoinBatch(config, context, children.get(0), children.get(1));
+    if(config.getJoinType() == JoinType.RIGHT){
+      return new MergeJoinBatch(config.flipIfRight(), context, children.get(1), children.get(0));
+    }else{
+      return new MergeJoinBatch(config, context, children.get(0), children.get(1));  
+    }
+    
   }
 }

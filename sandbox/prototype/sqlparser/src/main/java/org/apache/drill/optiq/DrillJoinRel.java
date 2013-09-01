@@ -47,10 +47,7 @@ public class DrillJoinRel extends JoinRelBase implements DrillRel {
   public DrillJoinRel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, RexNode condition,
       JoinRelType joinType) throws InvalidRelException {
     super(cluster, traits, left, right, condition, joinType, Collections.<String> emptySet());
-    switch (joinType) {
-    case RIGHT:
-      throw new InvalidRelException("DrillJoinRel does not support RIGHT join");
-    }
+
     RexNode remaining = RelOptUtil.splitJoinCondition(left, right, condition, leftKeys, rightKeys);
     if (!remaining.isAlwaysTrue()) {
       throw new InvalidRelException("DrillJoinRel only supports equi-join");
@@ -148,6 +145,8 @@ public class DrillJoinRel extends JoinRelBase implements DrillRel {
     switch (joinType) {
     case LEFT:
       return "left";
+    case RIGHT:
+      return "right";
     case INNER:
       return "inner";
     case FULL:
