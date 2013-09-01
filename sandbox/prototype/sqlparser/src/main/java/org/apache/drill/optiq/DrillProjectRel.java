@@ -74,8 +74,8 @@ public class DrillProjectRel extends ProjectRelBase implements DrillRel {
       transforms.add(objectNode);
       String expr = DrillOptiq.toDrill(getChild(), pair.left);
       objectNode.put("expr", expr);
-//      String ref = "output." + pair.right;
-      String ref = pair.right;
+      String ref = "output." + pair.right;
+//      String ref = pair.right;
       objectNode.put("ref", ref);
     }
     return implementor.add(project);

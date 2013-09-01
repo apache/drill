@@ -13,6 +13,7 @@ import net.hydromatic.optiq.impl.java.JavaTypeFactory;
 import net.hydromatic.optiq.impl.java.MapSchema;
 import net.hydromatic.optiq.jdbc.HandlerImpl;
 import net.hydromatic.optiq.jdbc.OptiqConnection;
+import net.hydromatic.optiq.model.ModelHandler;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.logical.StorageEngineConfig;
@@ -40,58 +41,68 @@ public class DrillHandler extends HandlerImpl {
   public void onConnectionInit(OptiqConnection connection) throws SQLException {
     super.onConnectionInit(connection);
 
-    registry = new SchemaProviderRegistry(config);
     final Properties p = connection.getProperties();
-    Preconditions.checkArgument(bit == null);
-    Preconditions.checkArgument(client == null);
-    Preconditions.checkArgument(coordinator == null);
-    // final String model = p.getProperty("model");
-    // if (model != null) {
-    // if (model != null) {
-    // try {
-    // new ModelHandler(connection, model);
-    // } catch (IOException e) {
-    // throw new SQLException(e);
-    // }
-    // }
-    // }
-
-    final String zk = connection.getProperties().getProperty("zk");
-
-    try {
-      String enginesData = Resources.toString(Resources.getResource("storage-engines.json"), Charsets.UTF_8);
-
-      StorageEngines engines = config.getMapper().readValue(enginesData, StorageEngines.class);
-      MutableSchema rootSchema = connection.getRootSchema();
-
-      for (Map.Entry<String, StorageEngineConfig> entry : engines) {
-        SchemaProvider provider = registry.getSchemaProvider(entry.getValue());
-        FileSystemSchema schema = new FileSystemSchema(client, entry.getValue(), provider, rootSchema.getTypeFactory(),
-            rootSchema, entry.getKey(), rootSchema.getExpression(), rootSchema.getQueryProvider());
-        rootSchema.addSchema(entry.getKey(), schema);
+    
+    if (p.getProperty("ref") != null) {
+      final String model = p.getProperty("model");
+      if (model != null) {
+        if (model != null) {
+          try {
+            new ModelHandler(connection, model);
+          } catch (IOException e) {
+            throw new SQLException(e);
+          }
+        }
       }
-
-      rootSchema.addSchema("--FAKE--", new FakeSchema(rootSchema, rootSchema.getQueryProvider(), rootSchema.getTypeFactory(), "fake", rootSchema.getExpression()));
+    } else {
       
-      if (zk != null) {
-        coordinator = new ZKClusterCoordinator(config, zk);
-        coordinator.start(10000);
-        DrillClient cl = new DrillClient(config, coordinator);
-        cl.connect();
-        client = cl;
-      } else {
+      registry = new SchemaProviderRegistry(config);
+      
+      Preconditions.checkArgument(bit == null);
+      Preconditions.checkArgument(client == null);
+      Preconditions.checkArgument(coordinator == null);
 
-        RemoteServiceSet local = RemoteServiceSet.getLocalServiceSet();
-        this.coordinator = local.getCoordinator();
-        bit = new Drillbit(config, local);
-        bit.run();
-        
-        DrillClient cl = new DrillClient(config, coordinator);
-        cl.connect();
-        client = cl;
+      final String zk = connection.getProperties().getProperty("zk");
+
+      try {
+        String enginesData = Resources.toString(Resources.getResource("storage-engines.json"), Charsets.UTF_8);
+
+        StorageEngines engines = config.getMapper().readValue(enginesData, StorageEngines.class);
+        MutableSchema rootSchema = connection.getRootSchema();
+
+        for (Map.Entry<String, StorageEngineConfig> entry : engines) {
+          SchemaProvider provider = registry.getSchemaProvider(entry.getValue());
+          FileSystemSchema schema = new FileSystemSchema(client, entry.getValue(), provider,
+              rootSchema.getTypeFactory(), rootSchema, entry.getKey(), rootSchema.getExpression(),
+              rootSchema.getQueryProvider());
+          rootSchema.addSchema(entry.getKey(), schema);
+        }
+
+        rootSchema.addSchema(
+            "--FAKE--",
+            new FakeSchema(rootSchema, rootSchema.getQueryProvider(), rootSchema.getTypeFactory(), "fake", rootSchema
+                .getExpression()));
+
+        if (zk != null) {
+          coordinator = new ZKClusterCoordinator(config, zk);
+          coordinator.start(10000);
+          DrillClient cl = new DrillClient(config, coordinator);
+          cl.connect();
+          client = cl;
+        } else {
+
+          RemoteServiceSet local = RemoteServiceSet.getLocalServiceSet();
+          this.coordinator = local.getCoordinator();
+          bit = new Drillbit(config, local);
+          bit.run();
+
+          DrillClient cl = new DrillClient(config, coordinator);
+          cl.connect();
+          client = cl;
+        }
+      } catch (Exception ex) {
+        throw new SQLException("Failure trying to connect to Drill.", ex);
       }
-    } catch (Exception ex) {
-      throw new SQLException("Failure trying to connect to Drill.", ex);
     }
 
     // The "schema" parameter currently gives a name to the schema. In future
@@ -102,23 +113,23 @@ public class DrillHandler extends HandlerImpl {
     }
 
   }
-  
-  public class FakeSchema extends MapSchema{
+
+  public class FakeSchema extends MapSchema {
 
     public FakeSchema(Schema parentSchema, QueryProvider queryProvider, JavaTypeFactory typeFactory, String name,
         Expression expression) {
       super(parentSchema, queryProvider, typeFactory, name, expression);
-      
+
     }
+
     public DrillClient getClient() {
       return client;
     }
   }
-  
+
   public DrillClient getClient() {
     return client;
   }
-
 
   @Override
   public void onConnectionClose(OptiqConnection connection) throws RuntimeException {

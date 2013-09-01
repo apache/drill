@@ -5,7 +5,9 @@ import java.util.List;
 
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
+import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.logical.data.NamedExpression;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.SchemaChangeException;
@@ -57,6 +59,16 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
     }
   }
 
+  /** hack to make ref and full work together... need to figure out if this is still necessary. **/
+  private FieldReference getRef(NamedExpression e){
+    FieldReference ref = e.getRef();
+    PathSegment seg = ref.getRootSegment();
+    if(seg.isNamed() && "output".contentEquals(seg.getNameSegment().getPath())){
+      return new FieldReference(ref.getPath().toString().subSequence(7, ref.getPath().length()), ref.getPosition());
+    }
+    return ref;
+  }
+  
   @Override
   protected void setupNewSchema() throws SchemaChangeException{
     this.allocationVectors = Lists.newArrayList();
@@ -70,7 +82,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
     for(int i =0; i < exprs.size(); i++){
       final NamedExpression namedExpression = exprs.get(i);
       final LogicalExpression expr = ExpressionTreeMaterializer.materialize(namedExpression.getExpr(), incoming, collector);
-      final MaterializedField outputField = MaterializedField.create(namedExpression.getRef(), expr.getMajorType());
+      final MaterializedField outputField = MaterializedField.create(getRef(namedExpression), expr.getMajorType());
       if(collector.hasErrors()){
         throw new SchemaChangeException(String.format("Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));
       }
@@ -81,7 +93,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
         ValueVector vvIn = incoming.getValueAccessorById(vectorRead.getFieldId().getFieldId(), TypeHelper.getValueVectorClass(vectorRead.getMajorType().getMinorType(), vectorRead.getMajorType().getMode())).getValueVector();
         Preconditions.checkNotNull(incoming);
 
-        TransferPair tp = vvIn.getTransferPair(namedExpression.getRef());
+        TransferPair tp = vvIn.getTransferPair(getRef(namedExpression));
         transfers.add(tp);
         container.add(tp.getTo());
         logger.debug("Added transfer.");

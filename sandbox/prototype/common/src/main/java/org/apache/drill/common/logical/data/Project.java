@@ -40,9 +40,9 @@ public class Project extends SingleInputOperator {
     for (int i = 0; i < selections.length; i++) {
       PathSegment segment = selections[i].getRef().getRootSegment();
       CharSequence path = segment.getNameSegment().getPath();
-//      if (!segment.isNamed() || !path.equals("output"))
-//        throw new ExpressionParsingException(String.format(
-//            "Outputs for projections always have to start with named path of output. First segment was named '%s' or was named [%s]", path, segment.isNamed()));
+      if (!segment.isNamed() || !path.equals("output"))
+        throw new ExpressionParsingException(String.format(
+            "Outputs for projections always have to start with named path of output. First segment was named '%s' or was named [%s]", path, segment.isNamed()));
 
     }
   }

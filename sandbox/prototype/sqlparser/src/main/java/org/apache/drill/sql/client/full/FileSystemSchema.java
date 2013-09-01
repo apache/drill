@@ -103,7 +103,7 @@ public class FileSystemSchema implements Schema{
     Object selection = schemaProvider.getSelectionBaseOnName(name);
     if(selection == null) return null;
     
-    DrillTable table = DrillTable.createTable(client, typeFactory, this, name, config, selection);
+    DrillTable table = DrillTable.createTable(client, typeFactory, this, name, null, config, selection);
     info = new TableInfo(name, table);
     TableInfo oldInfo = (TableInfo) tables.putIfAbsent(name, info);
     if(oldInfo != null) return (Table<E>) oldInfo.table;

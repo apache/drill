@@ -113,7 +113,7 @@ public class JdbcAssert {
       this.connectionFactory = new ConnectionFactory() {
         public Connection createConnection() throws Exception {
           Class.forName("org.apache.drill.jdbc.Driver");
-          return DriverManager.getConnection("jdbc:drill:", ModelAndSchema.this.info);
+          return DriverManager.getConnection("jdbc:drill:ref=true", ModelAndSchema.this.info);
         }
       };
     }

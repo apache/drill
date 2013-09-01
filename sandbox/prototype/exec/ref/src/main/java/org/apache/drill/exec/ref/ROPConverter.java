@@ -106,7 +106,7 @@ class ROPConverter {
 
   private ReferenceStorageEngine getEngine(String name){
     StorageEngineConfig config = plan.getStorageEngineConfig(name);
-    if(config == null) throw new SetupException(String.format("Unable to find define logical plan of name [%s].", name));
+    if(config == null) throw new SetupException(String.format("Unable to find define storage engine of name [%s].", name));
     ReferenceStorageEngine engine = engineRegistry.getEngine(config);
     return engine;
   }

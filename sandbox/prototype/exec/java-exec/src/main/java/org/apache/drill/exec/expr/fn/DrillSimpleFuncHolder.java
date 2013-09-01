@@ -1,5 +1,6 @@
 package org.apache.drill.exec.expr.fn;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -99,5 +100,12 @@ class DrillSimpleFuncHolder extends DrillFuncHolder{
     if (sub != topSub) sub.assign(internalOutput.ref("isSet"),JExpr.lit(1));// Assign null if NULL_IF_NULL mode
     return out;
   }
+
+@Override
+public String toString() {
+  final int maxLen = 10;
+  return "DrillSimpleFuncHolder [, functionName=" + functionName + ", nullHandling=" + nullHandling + "parameters="
+      + (parameters != null ? Arrays.asList(parameters).subList(0, Math.min(parameters.length, maxLen)) : null) + "]";
+}
   
 }

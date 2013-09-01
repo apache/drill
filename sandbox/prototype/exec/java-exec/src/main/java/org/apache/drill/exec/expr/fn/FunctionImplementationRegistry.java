@@ -43,8 +43,25 @@ public class FunctionImplementationRegistry {
     for(LogicalExpression e : call.args){
       types.add(e.getMajorType());
     }
-    
-    throw new UnsupportedOperationException(String.format("Unable to find matching function implementation for call %s with args %s", call.getDefinition().getName(), types));
+    StringBuilder sb = new StringBuilder();
+    sb.append("Missing function implementation: ");
+    sb.append("[");
+    sb.append(call.getDefinition().getName());
+    sb.append("(");
+    boolean first = true;
+    for(MajorType mt : types){
+      if(first){
+        first = false;
+      }else{
+        sb.append(", ");
+      }
+      sb.append(mt.getMinorType().name());
+      sb.append("-");
+      sb.append(mt.getMode().name());
+    }
+    sb.append(")");
+    sb.append("]");
+    throw new UnsupportedOperationException(sb.toString());
   }
 
   

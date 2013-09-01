@@ -32,7 +32,7 @@ import com.google.common.base.Function;
 import com.google.common.io.Resources;
 
 /** Unit tests for Drill's JDBC driver. */
-@Ignore
+
 public class JdbcTest {
   private static String MODEL;
   private static String EXPECTED;
@@ -65,7 +65,7 @@ public class JdbcTest {
   @Test
   public void testConnect() throws Exception {
     Class.forName("org.apache.drill.jdbc.Driver");
-    final Connection connection = DriverManager.getConnection("jdbc:drill:schema=DONUTS");
+    final Connection connection = DriverManager.getConnection("jdbc:drill:ref=true&schema=DONUTS");
     connection.close();
   }
 

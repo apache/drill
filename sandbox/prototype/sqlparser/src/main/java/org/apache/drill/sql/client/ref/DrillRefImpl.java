@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionService;
@@ -28,24 +27,23 @@ import org.apache.drill.exec.ref.ReferenceInterpreter;
 import org.apache.drill.exec.ref.RunOutcome;
 import org.apache.drill.exec.ref.eval.BasicEvaluatorFactory;
 import org.apache.drill.exec.ref.rse.RSERegistry;
-import org.apache.drill.jdbc.DrillTable;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Lists;
 
 public class DrillRefImpl<E> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillRefImpl.class);
 
   private static final ObjectMapper mapper = createMapper();
-  
+
   private final String plan;
   final BlockingQueue<Object> queue;
   final DrillConfig config;
   private final List<String> fields;
 
-  
   public DrillRefImpl(String plan, DrillConfig config, List<String> fields, BlockingQueue<Object> queue) {
     super();
     this.plan = plan;
@@ -53,8 +51,7 @@ public class DrillRefImpl<E> {
     this.fields = fields;
     this.queue = queue;
   }
-  
-  
+
   private static ObjectMapper createMapper() {
     return new ObjectMapper();
   }
@@ -67,17 +64,20 @@ public class DrillRefImpl<E> {
     private final String holder;
     private final List<String> fields;
     private Object current;
+    private Future<Collection<RunOutcome>> futureOutcomes;
 
-    public JsonEnumerator(BlockingQueue<Object> queue, List<String> fields) {
+    public JsonEnumerator(Future<Collection<RunOutcome>> futureOutcomes, BlockingQueue<Object> queue,
+        List<String> fields) {
+      this.futureOutcomes = futureOutcomes;
       this.queue = queue;
       this.holder = null;
       this.fields = fields;
     }
 
-    public void close(){
-      
+    public void close() {
+
     }
-    
+
     public Object current() {
       return current;
     }
@@ -87,13 +87,32 @@ public class DrillRefImpl<E> {
         Object o = queue.take();
         if (o instanceof RunOutcome.OutcomeType) {
           switch ((RunOutcome.OutcomeType) o) {
-            case SUCCESS:
-              return false; // end of data
-            case CANCELED:
-              throw new RuntimeException("canceled");
-            case FAILED:
-            default:
-              throw new RuntimeException("failed");
+          case SUCCESS:
+            return false; // end of data
+          case CANCELED:
+            throw new RuntimeException("canceled");
+          case FAILED:
+          default:
+            try {
+              Collection<RunOutcome> outcomes = this.futureOutcomes.get();
+              List<RunOutcome> l = Lists.newArrayList(outcomes);
+              for (int i = 1; i < outcomes.size(); i++) {
+                RunOutcome out = l.get(i);
+                logger.error("Failure while running query", out, out.exception);
+              }
+              if (!outcomes.isEmpty()) {
+                RunOutcome out = outcomes.iterator().next();
+                if (out.exception != null) {
+                  throw new RuntimeException("Query Failed while running.", out.exception);
+                } else {
+                  throw new RuntimeException("Query Failed while running. " + o);
+                }
+              }
+            } catch (Exception e) {
+              throw new RuntimeException("failed", e);
+            }
+            
+            throw new RuntimeException("failed");
           }
         } else {
           Object o1 = parseJson((byte[]) o);
@@ -127,45 +146,38 @@ public class DrillRefImpl<E> {
     }
   }
 
-
   /**
    * Runs the plan as a background task.
    */
-  Future<Collection<RunOutcome>> runRefInterpreterPlan(
-      CompletionService<Collection<RunOutcome>> service) {
+  Future<Collection<RunOutcome>> runRefInterpreterPlan(CompletionService<Collection<RunOutcome>> service) {
     LogicalPlan parsedPlan = LogicalPlan.parse(DrillConfig.create(), plan);
     IteratorRegistry ir = new IteratorRegistry();
     DrillConfig config = DrillConfig.create();
     config.setSinkQueues(0, queue);
-    final ReferenceInterpreter i =
-        new ReferenceInterpreter(parsedPlan, ir, new BasicEvaluatorFactory(ir),
-            new RSERegistry(config));
+    final ReferenceInterpreter i = new ReferenceInterpreter(parsedPlan, ir, new BasicEvaluatorFactory(ir),
+        new RSERegistry(config));
     try {
       i.setup();
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
-    return service.submit(
-        new Callable<Collection<RunOutcome>>() {
-          @Override
-          public Collection<RunOutcome> call() throws Exception {
-            Collection<RunOutcome> outcomes = i.run();
+    return service.submit(new Callable<Collection<RunOutcome>>() {
+      @Override
+      public Collection<RunOutcome> call() throws Exception {
+        Collection<RunOutcome> outcomes = i.run();
 
-            for (RunOutcome outcome : outcomes) {
-              System.out.println("============");
-              System.out.println(outcome);
-              if (outcome.outcome == RunOutcome.OutcomeType.FAILED
-                  && outcome.exception != null) {
-                outcome.exception.printStackTrace();
-              }
-            }
-            return outcomes;
+        for (RunOutcome outcome : outcomes) {
+          System.out.println("============");
+          System.out.println(outcome);
+          if (outcome.outcome == RunOutcome.OutcomeType.FAILED && outcome.exception != null) {
+            outcome.exception.printStackTrace();
           }
-        });
+        }
+        return outcomes;
+      }
+    });
   }
 
-  
-  
   public Enumerator<E> enumerator() {
     // TODO: use a completion service from the container
     final ExecutorCompletionService<Collection<RunOutcome>> service = new ExecutorCompletionService<Collection<RunOutcome>>(
@@ -177,13 +189,13 @@ public class DrillRefImpl<E> {
     // TODO: use the result of task, and check for exceptions
     final Future<Collection<RunOutcome>> task = runRefInterpreterPlan(service);
 
-    return new JsonEnumerator(queue, fields);
+    return new JsonEnumerator(task, queue, fields);
 
   }
-  
+
   /**
-   * Converts a JSON document, represented as an array of bytes, into a Java
-   * object (consisting of Map, List, String, Integer, Double, Boolean).
+   * Converts a JSON document, represented as an array of bytes, into a Java object (consisting of Map, List, String,
+   * Integer, Double, Boolean).
    */
   static Object parseJson(byte[] bytes) {
     try {
@@ -192,33 +204,31 @@ public class DrillRefImpl<E> {
       throw new RuntimeException(e);
     }
   }
-  
-
 
   /**
-   * Converts a JSON node to Java objects ({@link List}, {@link Map},
-   * {@link String}, {@link Integer}, {@link Double}, {@link Boolean}.
+   * Converts a JSON node to Java objects ({@link List}, {@link Map}, {@link String}, {@link Integer}, {@link Double},
+   * {@link Boolean}.
    */
   static Object wrapper(JsonNode node) {
     switch (node.asToken()) {
-      case START_OBJECT:
-        return map((ObjectNode) node);
-      case START_ARRAY:
-        return array((ArrayNode) node);
-      case VALUE_STRING:
-        return node.asText();
-      case VALUE_NUMBER_INT:
-        return node.asInt();
-      case VALUE_NUMBER_FLOAT:
-        return node.asDouble();
-      case VALUE_TRUE:
-        return Boolean.TRUE;
-      case VALUE_FALSE:
-        return Boolean.FALSE;
-      case VALUE_NULL:
-        return null;
-      default:
-        throw new AssertionError("unexpected: " + node + ": " + node.asToken());
+    case START_OBJECT:
+      return map((ObjectNode) node);
+    case START_ARRAY:
+      return array((ArrayNode) node);
+    case VALUE_STRING:
+      return node.asText();
+    case VALUE_NUMBER_INT:
+      return node.asInt();
+    case VALUE_NUMBER_FLOAT:
+      return node.asDouble();
+    case VALUE_TRUE:
+      return Boolean.TRUE;
+    case VALUE_FALSE:
+      return Boolean.FALSE;
+    case VALUE_NULL:
+      return null;
+    default:
+      throw new AssertionError("unexpected: " + node + ": " + node.asToken());
     }
   }
 
@@ -241,5 +251,4 @@ public class DrillRefImpl<E> {
     return Collections.unmodifiableSortedMap(map);
   }
 
-  
 }

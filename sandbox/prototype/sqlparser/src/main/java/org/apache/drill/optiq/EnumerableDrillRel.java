@@ -102,7 +102,7 @@ public class EnumerableDrillRel extends SingleRel implements EnumerableRel {
   public Result implement(EnumerableRelImplementor implementor, Prefer pref) {
     logger.debug("implementing enumerable");
 
-    final DrillImplementor drillImplementor = new DrillImplementor();
+    final DrillImplementor drillImplementor = new DrillImplementor(this.client == null);
     DrillRel input = (DrillRel) getChild();
 
     drillImplementor.go(input);

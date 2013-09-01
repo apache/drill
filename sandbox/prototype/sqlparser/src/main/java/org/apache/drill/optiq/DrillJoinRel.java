@@ -123,8 +123,8 @@ public class DrillJoinRel extends JoinRelBase implements DrillRel {
       final ObjectNode objectNode = implementor.mapper.createObjectNode();
       transforms.add(objectNode);
       objectNode.put("expr", pair.left);
-//      objectNode.put("ref", "output." + pair.right);
-      objectNode.put("ref", pair.right);
+      objectNode.put("ref", "output." + pair.right);
+//      objectNode.put("ref", pair.right);
     }
     return implementor.add(project);
   }

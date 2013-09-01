@@ -17,13 +17,16 @@
  ******************************************************************************/
 package org.apache.drill.optiq;
 
+import java.io.IOException;
 import java.util.Set;
 
 import org.apache.drill.exec.ref.rse.QueueRSE.QueueOutputInfo;
 import org.apache.drill.jdbc.DrillTable;
 import org.eigenbase.rel.RelNode;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -48,8 +51,10 @@ public class DrillImplementor {
   private final ArrayNode operatorsNode;
   private final ObjectNode sourcesNode;
   private Set<DrillTable> tables = Sets.newHashSet();
+  private final boolean isRef;
   
-  public DrillImplementor() {
+  public DrillImplementor(boolean isRef) {
+    this.isRef = isRef;
     final ObjectNode headNode = mapper.createObjectNode();
     rootNode.put("head", headNode);
     headNode.put("type", "APACHE_DRILL_LOGICAL");
@@ -65,17 +70,19 @@ public class DrillImplementor {
     sourcesNode = mapper.createObjectNode();
     rootNode.put("storage", sourcesNode);
 
-    // input file source
-//    {
-//      final ObjectNode sourceNode = mapper.createObjectNode();
-//      sourceNode.put("type", "classpath");
-//      sourcesNode.put("donuts-json", sourceNode);
-//    }
-//    {
-//      final ObjectNode sourceNode = mapper.createObjectNode();
-//      sourceNode.put("type", "queue");
-//      sourcesNode.put("queue", sourceNode);
-//    }
+    if(isRef){
+      {
+        final ObjectNode sourceNode = mapper.createObjectNode();
+        sourceNode.put("type", "classpath");
+        sourcesNode.put("donuts-json", sourceNode);
+      }
+      {
+        final ObjectNode sourceNode = mapper.createObjectNode();
+        sourceNode.put("type", "queue");
+        sourcesNode.put("queue", sourceNode);
+      }
+    }
+
 
     final ArrayNode queryNode = mapper.createArrayNode();
     rootNode.put("query", queryNode);
@@ -114,7 +121,18 @@ public class DrillImplementor {
   /** Returns the generated plan. */
   public String getJsonString() {
     String s = rootNode.toString();
-    if(logger.isDebugEnabled()) logger.debug("Optiq Generated Logical Plan: {}", s);
+    
+    if(logger.isDebugEnabled()){
+      JsonNode node;
+      try {
+        ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
+        node = mapper.readValue(s, JsonNode.class);
+        logger.debug("Optiq Generated Logical Plan: {}", mapper.writeValueAsString(node));
+      } catch (IOException e) {
+        logger.error("Failure while trying to parse logical plan string of {}", s, e);
+      }
+      
+    }
     return s;
   }
 

@@ -44,7 +44,7 @@ public class FieldReference extends SchemaPath {
   }
   
   
-  public FieldReference(String value, ExpressionPosition pos) {
+  public FieldReference(CharSequence value, ExpressionPosition pos) {
     super(value, pos);
   }
 

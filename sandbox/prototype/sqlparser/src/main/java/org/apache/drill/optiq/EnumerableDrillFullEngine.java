@@ -69,13 +69,12 @@ public class EnumerableDrillFullEngine<E> extends AbstractEnumerable<E> implemen
   public static <E> EnumerableDrillFullEngine<E> of(String plan, final List<String> fieldNames, Class<E> clazz,
       DataContext context) {
     DrillConfig config = DrillConfig.create();
-    return new EnumerableDrillFullEngine<>(config, plan, clazz, fieldNames, ((FakeSchema) context.getSubSchema("--FAKE--")).getClient());
+    FakeSchema s = (FakeSchema) context.getSubSchema("--FAKE--");
+    return new EnumerableDrillFullEngine<>(config, plan, clazz, fieldNames, s == null ? null : s.getClient());
   }
 
   @Override
   public Enumerator<E> enumerator() {
-    
-    //DrillTable table = (DrillTable) drillConnectionDataContext.getSubSchema("DONUTS").getTable("DONUTS", Object.class);
     if (client == null) {
       DrillRefImpl<E> impl = new DrillRefImpl<E>(plan, config, fields, queue);
       return impl.enumerator();
