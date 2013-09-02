@@ -25,7 +25,8 @@ public class ParquetSchemaProvider implements SchemaProvider{
     try {
       this.conf = new Configuration();
       this.conf.set("fs.classpath.impl", ClassPathFileSystem.class.getName());
-      this.conf.set(HADOOP_DEFAULT_NAME, "file:///");
+      this.conf.set(HADOOP_DEFAULT_NAME, configuration.getDfsName());
+      logger.debug("{}: {}",HADOOP_DEFAULT_NAME, configuration.getDfsName());
       this.fs = FileSystem.get(conf);
     } catch (IOException ie) {
       throw new RuntimeException("Error setting up filesystem");
