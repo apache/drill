@@ -18,26 +18,20 @@
 package org.apache.drill.exec.store.parquet;
 
 import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
-import com.google.common.base.Stopwatch;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ops.FragmentContext;
+
 import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.physical.impl.ScanBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.store.RecordReader;
-import org.apache.drill.exec.store.mock.MockScanBatchCreator;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-
 import parquet.hadoop.ParquetFileReader;
 import parquet.hadoop.metadata.ParquetMetadata;
 
@@ -46,8 +40,6 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
 
   @Override
   public RecordBatch getBatch(FragmentContext context, ParquetRowGroupScan rowGroupScan, List<RecordBatch> children) throws ExecutionSetupException {
-    Stopwatch watch = new Stopwatch();
-    watch.start();
     Preconditions.checkArgument(children.isEmpty());
     List<RecordReader> readers = Lists.newArrayList();
     for(ParquetRowGroupScan.RowGroupReadEntry e : rowGroupScan.getRowGroupReadEntries()){
@@ -63,15 +55,13 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
             new ParquetRecordReader(
                 context, e.getPath(), e.getRowGroupIndex(), rowGroupScan.getStorageEngine().getFileSystem(),
                 rowGroupScan.getStorageEngine().getCodecFactoryExposer(),
-                ParquetFileReader.readFooter( rowGroupScan.getStorageEngine().getFileSystem().getConf(), new Path(e.getPath())),
-                rowGroupScan.getRef()
+                ParquetFileReader.readFooter( rowGroupScan.getStorageEngine().getFileSystem().getConf(), new Path(e.getPath()))
             )
         );
       } catch (IOException e1) {
         throw new ExecutionSetupException(e1);
       }
     }
-    logger.debug("total time in ScanBatchCreator.getBatch: {} ms", watch.elapsed(TimeUnit.MILLISECONDS));
     return new ScanBatch(context, readers.iterator());
   }
 }

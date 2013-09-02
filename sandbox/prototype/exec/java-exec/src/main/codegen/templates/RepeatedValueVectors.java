@@ -45,6 +45,10 @@ package org.apache.drill.exec.vector;
   public int getBufferSize(){
     return offsets.getBufferSize() + values.getBufferSize();
   }
+
+  public ByteBuf getData(){
+      return values.getData();
+  }
   
   public TransferPair getTransferPair(){
     return new TransferImpl(getField());

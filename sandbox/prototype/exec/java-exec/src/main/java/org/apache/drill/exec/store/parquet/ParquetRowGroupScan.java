@@ -17,56 +17,40 @@
  ******************************************************************************/
 package org.apache.drill.exec.store.parquet;
 
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-
+import com.fasterxml.jackson.annotation.*;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterators;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.logical.StorageEngineConfig;
 import org.apache.drill.exec.exception.SetupException;
 import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.ReadEntryFromHDFS;
-import org.apache.drill.exec.physical.base.AbstractBase;
-import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.physical.base.PhysicalVisitor;
-import org.apache.drill.exec.physical.base.Size;
-import org.apache.drill.exec.physical.base.SubScan;
+import org.apache.drill.exec.physical.base.*;
 import org.apache.drill.exec.store.StorageEngineRegistry;
 
-import com.fasterxml.jackson.annotation.JacksonInject;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterators;
+import java.util.*;
 
 // Class containing information for reading a single parquet row group form HDFS
 @JsonTypeName("parquet-row-group-scan")
 public class ParquetRowGroupScan extends AbstractBase implements SubScan {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetRowGroupScan.class);
 
-  public final StorageEngineConfig engineConfig;
-  private final ParquetStorageEngine parquetStorageEngine;
-  private final List<RowGroupReadEntry> rowGroupReadEntries;
-  private final FieldReference ref;
+  public StorageEngineConfig engineConfig;
+  private ParquetStorageEngine parquetStorageEngine;
+  private List<RowGroupReadEntry> rowGroupReadEntries;
 
   @JsonCreator
   public ParquetRowGroupScan(@JacksonInject StorageEngineRegistry registry, @JsonProperty("engineConfig") StorageEngineConfig engineConfig,
-                             @JsonProperty("rowGroupReadEntries") LinkedList<RowGroupReadEntry> rowGroupReadEntries, @JsonProperty("ref") FieldReference ref) throws ExecutionSetupException {
+                             @JsonProperty("rowGroupReadEntries") LinkedList<RowGroupReadEntry> rowGroupReadEntries) throws ExecutionSetupException {
     parquetStorageEngine = (ParquetStorageEngine) registry.getEngine(engineConfig);
     this.rowGroupReadEntries = rowGroupReadEntries;
-    this.engineConfig = engineConfig;
-    this.ref = ref;
   }
 
   public ParquetRowGroupScan(ParquetStorageEngine engine, ParquetStorageEngineConfig config,
-                              List<RowGroupReadEntry> rowGroupReadEntries, FieldReference ref) {
+                              List<RowGroupReadEntry> rowGroupReadEntries) throws SetupException {
     parquetStorageEngine = engine;
     engineConfig = config;
     this.rowGroupReadEntries = rowGroupReadEntries;
-    this.ref = ref;
   }
 
   public List<RowGroupReadEntry> getRowGroupReadEntries() {
@@ -80,11 +64,6 @@ public class ParquetRowGroupScan extends AbstractBase implements SubScan {
   @Override
   public OperatorCost getCost() {
     return null;
-  }
-
-  
-  public FieldReference getRef() {
-    return ref;
   }
 
   @Override
@@ -110,7 +89,12 @@ public class ParquetRowGroupScan extends AbstractBase implements SubScan {
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
     Preconditions.checkArgument(children.isEmpty());
-    return new ParquetRowGroupScan(parquetStorageEngine, (ParquetStorageEngineConfig) engineConfig, rowGroupReadEntries, ref);
+    try {
+      return new ParquetRowGroupScan(parquetStorageEngine, (ParquetStorageEngineConfig) engineConfig, rowGroupReadEntries);
+    } catch (SetupException e) {
+      // TODO - handle this
+      throw new RuntimeException(e);
+    }
   }
 
   @Override

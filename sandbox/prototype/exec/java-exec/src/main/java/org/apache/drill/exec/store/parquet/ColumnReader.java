@@ -19,7 +19,7 @@ package org.apache.drill.exec.store.parquet;
 
 import io.netty.buffer.ByteBuf;
 import org.apache.drill.exec.store.VectorHolder;
-import org.apache.drill.exec.vector.BaseDataValueVector;
+import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.ValueVector;
 import parquet.column.ColumnDescriptor;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
@@ -61,7 +61,7 @@ public abstract class ColumnReader {
                boolean fixedLength, ValueVector v){
     this.parentReader = parentReader;
     if (allocateSize > 1) valueVecHolder = new VectorHolder(allocateSize, v);
-    else valueVecHolder = new VectorHolder(5000, (BaseDataValueVector) v);
+    else valueVecHolder = new VectorHolder(5000, v);
 
     columnDescriptor = descriptor;
     this.columnChunkMetaData = columnChunkMetaData;
@@ -82,7 +82,7 @@ public abstract class ColumnReader {
     readLength = 0;
     readLengthInBits = 0;
     recordsReadInThisIteration = 0;
-    vectorData = ((BaseDataValueVector) valueVecHolder.getValueVector()).getData();
+    vectorData = ((BaseValueVector)valueVecHolder.getValueVector()).getData();
     do {
       // if no page has been read, or all of the records have been read out of a page, read the next one
       if (pageReadStatus.currentPage == null

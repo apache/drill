@@ -1,0 +1,41 @@
+{
+  head:{
+    type:"APACHE_DRILL_LOGICAL",
+    version:"1",
+    generator:{
+      type:"manual",
+      info:"na"
+    }
+  },
+  storage:{
+    "parquet" :
+      {
+        "type":"parquet",
+        "dfsName" : "file:///"
+      }
+  },
+  query:[
+    {
+      @id:"1",
+      op:"scan",
+      memo:"initial_scan",
+      storageengine:"parquet",
+      selection: [
+        {
+            path: "/tmp/nullable_test.parquet"
+        }
+      ]
+    },
+    {
+      @id:"2",
+      input: 1,
+      op: "store",
+      memo: "output sink",
+      target: {
+        file: "console:///stdout"
+      }
+
+    }
+
+  ]
+}

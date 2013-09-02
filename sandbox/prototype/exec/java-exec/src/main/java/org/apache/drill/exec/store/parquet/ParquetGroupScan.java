@@ -33,6 +33,7 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.logical.StorageEngineConfig;
+import org.apache.drill.exec.exception.SetupException;
 import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.ReadEntryFromHDFS;
@@ -97,7 +98,7 @@ public class ParquetGroupScan extends AbstractGroupScan {
                           @JsonProperty("storageengine") ParquetStorageEngineConfig storageEngineConfig,
                           @JacksonInject StorageEngineRegistry engineRegistry,
                           @JsonProperty("ref") FieldReference ref
-                           )throws IOException, ExecutionSetupException {
+  )throws IOException, ExecutionSetupException {
     engineRegistry.init(DrillConfig.create());
     this.storageEngine = (ParquetStorageEngine) engineRegistry.getEngine(storageEngineConfig);
     this.availableEndpoints = storageEngine.getContext().getBits();
@@ -316,10 +317,10 @@ public class ParquetGroupScan extends AbstractGroupScan {
         boolean haveAffinity = bytesPerEndpoint.containsKey(currentEndpoint) ;
 
         if (assignAll ||
-                (!bytesPerEndpoint.isEmpty() &&
-                        (!requireAffinity || haveAffinity) &&
-                        (!endpointAssignments.containsKey(minorFragmentId) || endpointAssignments.get(minorFragmentId).size() < maxAssignments) &&
-                        bytesPerEndpoint.get(currentEndpoint) >= rowGroupInfo.getMaxBytes() * requiredPercentage)) {
+            (!bytesPerEndpoint.isEmpty() &&
+                (!requireAffinity || haveAffinity) &&
+                (!endpointAssignments.containsKey(minorFragmentId) || endpointAssignments.get(minorFragmentId).size() < maxAssignments) &&
+                bytesPerEndpoint.get(currentEndpoint) >= rowGroupInfo.getMaxBytes() * requiredPercentage)) {
 
           endpointAssignments.put(minorFragmentId, rowGroupInfo.getRowGroupReadEntry());
           logger.debug("Assigned rowGroup {} to minorFragmentId {} endpoint {}", rowGroupInfo.getRowGroupIndex(), minorFragmentId, endpoints.get(minorFragmentId).getAddress());
@@ -339,10 +340,15 @@ public class ParquetGroupScan extends AbstractGroupScan {
       logger.debug("minorFragmentId: {} Path: {} RowGroupIndex: {}",minorFragmentId, rg.getPath(),rg.getRowGroupIndex());
     }
     Preconditions.checkArgument(!mappings.get(minorFragmentId).isEmpty(), String.format("MinorFragmentId %d has no read entries assigned", minorFragmentId));
-    return new ParquetRowGroupScan(storageEngine, engineConfig, mappings.get(minorFragmentId), ref);
+    try {
+      return new ParquetRowGroupScan(storageEngine, engineConfig, mappings.get(minorFragmentId));
+    } catch (SetupException e) {
+      // TODO - not sure if we want to change interface above to throw exception
+      throw new RuntimeException(e);
+    }
   }
 
-  
+
   public FieldReference getRef() {
     return ref;
   }
@@ -368,7 +374,7 @@ public class ParquetGroupScan extends AbstractGroupScan {
   public StorageEngineConfig getStorageEngineConfig(){
     return this.engineConfig;
   }
-  
+
   @Override
   @JsonIgnore
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {

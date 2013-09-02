@@ -1,10 +1,11 @@
 package org.apache.drill.exec.vector;
 
 import org.apache.drill.common.expression.FieldReference;
+import io.netty.buffer.ByteBuf;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.record.MaterializedField;
 
-abstract class BaseValueVector implements ValueVector{
+public abstract class BaseValueVector implements ValueVector{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseValueVector.class);
   
   protected final BufferAllocator allocator;
@@ -29,6 +30,9 @@ abstract class BaseValueVector implements ValueVector{
     return getField().clone(ref);
   }
   
+
+  abstract public ByteBuf getData();
+
   abstract class BaseAccessor implements ValueVector.Accessor{
     public abstract int getValueCount();
     public void reset(){}

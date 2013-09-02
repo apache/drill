@@ -20,8 +20,10 @@ package org.apache.drill.exec.store.parquet;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import parquet.bytes.BytesInput;
+import parquet.column.ValuesType;
 import parquet.column.page.Page;
 import parquet.column.page.PageReader;
+import parquet.column.values.ValuesReader;
 import parquet.format.PageHeader;
 
 import java.io.IOException;
@@ -36,11 +38,8 @@ public final class PageReadStatus {
   // store references to the pages that have been uncompressed, but not copied to ValueVectors yet
   Page currentPage;
   // buffer to store bytes of current page, set to max size of parquet page
-  // TODO: add this back once toByteArray accepts an input.  byte[] pageDataByteArray = new byte[ParquetRecordReader.PARQUET_PAGE_MAX_SIZE];
-  byte[] pageDataByteArray;
-  
-  
-  PageReader pageReader;
+  byte[] pageDataByteArray = new byte[ParquetRecordReader.PARQUET_PAGE_MAX_SIZE];
+
   // read position in the current page, stored in the ByteBuf in ParquetRecordReader called bufferWithAllData
   long readPosInBytes;
   // bit shift needed for the next page if the last one did not line up with a byte boundary
@@ -52,8 +51,8 @@ public final class PageReadStatus {
   int valuesRead;
   int byteLength;
   int rowGroupIndex;
-  // buffer with the compressed data of an entire row group
-  ByteBuf bufferWithAllData;
+  ValuesReader definitionLevels;
+  ValuesReader valueReader;
 
   PageReadStatus(ColumnReader parentStatus, int rowGroupIndex, ByteBuf bufferWithAllData){
     this.parentColumnReader = parentStatus;
@@ -101,20 +100,26 @@ public final class PageReadStatus {
 
     parentColumnReader.readPositionInBuffer += pageHeader.compressed_page_size + length;
     byteLength = pageHeader.uncompressed_page_size;
+
     if (currentPage == null) {
       return false;
     }
 
     // if the buffer holding each page's data is not large enough to hold the current page, re-allocate, with a little extra space
-//    if (pageHeader.getUncompressed_page_size() > pageDataByteArray.length) {
-//      pageDataByteArray = new byte[pageHeader.getUncompressed_page_size() + 100];
-//    }
+    if (pageHeader.getUncompressed_page_size() > pageDataByteArray.length) {
+      pageDataByteArray = new byte[pageHeader.getUncompressed_page_size() + 100];
+    }
     // TODO - would like to get this into the mainline, hopefully before alpha
     pageDataByteArray = currentPage.getBytes().toByteArray();
-    //TODO: Fix once parquet supports buffer work or at least passing in array.
-    //pageDataByteArray = currentPage.getBytes().toByteArray(pageDataByteArray, 0, byteLength);
 
-    readPosInBytes = 0;
+    if (parentColumnReader.columnDescriptor.getMaxDefinitionLevel() != 0){
+      definitionLevels = currentPage.getDlEncoding().getValuesReader(parentColumnReader.columnDescriptor, ValuesType.DEFINITION_LEVEL);
+      valueReader = currentPage.getValueEncoding().getValuesReader(parentColumnReader.columnDescriptor, ValuesType.VALUES);
+      int endOfDefinitionLevels = definitionLevels.initFromPage(currentPage.getValueCount(), pageDataByteArray, 0);
+      valueReader.initFromPage(currentPage.getValueCount(), pageDataByteArray, endOfDefinitionLevels);
+      readPosInBytes = endOfDefinitionLevels;
+    }
+
     valuesRead = 0;
     return true;
   }

@@ -17,17 +17,10 @@
  ******************************************************************************/
 package org.apache.drill.exec.store.parquet;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import io.netty.buffer.ByteBuf;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.ExpressionPosition;
-import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
@@ -36,21 +29,25 @@ import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
+import org.apache.drill.exec.proto.SchemaDefProtos;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-
 import parquet.column.ColumnDescriptor;
 import parquet.hadoop.CodecFactoryExposer;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
 import parquet.hadoop.metadata.ParquetMetadata;
-import parquet.schema.MessageType;
 import parquet.schema.PrimitiveType;
 
-import com.google.common.base.Joiner;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class ParquetRecordReader implements RecordReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetRecordReader.class);
@@ -60,7 +57,7 @@ public class ParquetRecordReader implements RecordReader {
   private static final long DEFAULT_BATCH_LENGTH = 256 * 1024 * NUMBER_OF_VECTORS; // 256kb
   private static final long DEFAULT_BATCH_LENGTH_IN_BITS = DEFAULT_BATCH_LENGTH * 8; // 256kb
 
-  // TODO - should probably find a smarter way to set this, currently 2 megabytes
+  // TODO - should probably find a smarter way to set this, currently 1 megabyte
   private static final int VAR_LEN_FIELD_LENGTH = 1024 * 1024 * 1;
   public static final int PARQUET_PAGE_MAX_SIZE = 1024 * 1024 * 1;
   private static final String SEPERATOR = System.getProperty("file.separator");
@@ -75,7 +72,6 @@ public class ParquetRecordReader implements RecordReader {
   private boolean allFieldsFixedLength;
   private int recordsPerBatch;
   private ByteBuf bufferWithAllData;
-  private final FieldReference ref;
   long totalRecords;
   long rowGroupOffset;
 
@@ -96,19 +92,18 @@ public class ParquetRecordReader implements RecordReader {
 
   public ParquetRecordReader(FragmentContext fragmentContext,
                              String path, int rowGroupIndex, FileSystem fs,
-                             CodecFactoryExposer codecFactoryExposer, ParquetMetadata footer, FieldReference ref) throws ExecutionSetupException {
-    this(fragmentContext, DEFAULT_BATCH_LENGTH_IN_BITS, path, rowGroupIndex, fs, codecFactoryExposer, footer, ref);
+                             CodecFactoryExposer codecFactoryExposer, ParquetMetadata footer) throws ExecutionSetupException {
+    this(fragmentContext, DEFAULT_BATCH_LENGTH_IN_BITS, path, rowGroupIndex, fs, codecFactoryExposer, footer);
   }
 
 
   public ParquetRecordReader(FragmentContext fragmentContext, long batchSize,
                              String path, int rowGroupIndex, FileSystem fs,
-                             CodecFactoryExposer codecFactoryExposer, ParquetMetadata footer, FieldReference ref) throws ExecutionSetupException {
+                             CodecFactoryExposer codecFactoryExposer, ParquetMetadata footer) throws ExecutionSetupException {
     this.allocator = fragmentContext.getAllocator();
 
     hadoopPath = new Path(path);
     fileSystem = fs;
-    this.ref = ref;
     this.codecFactoryExposer = codecFactoryExposer;
     this.rowGroupIndex = rowGroupIndex;
     this.batchSize = batchSize;
@@ -125,7 +120,6 @@ public class ParquetRecordReader implements RecordReader {
     // loop to add up the length of the fixed width columns and build the schema
     for (int i = 0; i < columns.size(); ++i) {
       column = columns.get(i);
-      logger.debug("Found Parquet column {} of type {}", column.getPath(), column.getType());
       // sum the lengths of all of the fixed length fields
       if (column.getType() != PrimitiveType.PrimitiveTypeName.BINARY) {
         // There is not support for the fixed binary type yet in parquet, leaving a task here as a reminder
@@ -148,23 +142,29 @@ public class ParquetRecordReader implements RecordReader {
     }
     try {
       ArrayList<VarLenBinaryReader.VarLengthColumn> varLengthColumns = new ArrayList<>();
+      ArrayList<VarLenBinaryReader.NullableVarLengthColumn> nullableVarLengthColumns = new ArrayList<>();
       // initialize all of the column read status objects
       boolean fieldFixedLength = false;
       MaterializedField field;
       for (int i = 0; i < columns.size(); ++i) {
         column = columns.get(i);
         columnChunkMetaData = footer.getBlocks().get(0).getColumns().get(i);
-        field = MaterializedField.create(toFieldName(column.getPath()),
-            toMajorType(column.getType(), getDataMode(column, footer.getFileMetaData().getSchema())));
+        field = MaterializedField.create(new SchemaPath(toFieldName(column.getPath()), ExpressionPosition.UNKNOWN),
+            toMajorType(column.getType(), getDataMode(column)));
         fieldFixedLength = column.getType() != PrimitiveType.PrimitiveTypeName.BINARY;
         ValueVector v = TypeHelper.getNewVector(field, allocator);
         if (column.getType() != PrimitiveType.PrimitiveTypeName.BINARY) {
-          createFixedColumnReader(fieldFixedLength, field, column, columnChunkMetaData, recordsPerBatch, v);
+          createFixedColumnReader(fieldFixedLength, column, columnChunkMetaData, recordsPerBatch, v);
         } else {
-          varLengthColumns.add(new VarLenBinaryReader.VarLengthColumn(this, -1, column, columnChunkMetaData, false, v));
+          if (column.getMaxDefinitionLevel() == 0){// column is required
+            varLengthColumns.add(new VarLenBinaryReader.VarLengthColumn(this, -1, column, columnChunkMetaData, false, v));
+          }
+          else{
+            nullableVarLengthColumns.add(new VarLenBinaryReader.NullableVarLengthColumn(this, -1, column, columnChunkMetaData, false, v));
+          }
         }
       }
-      varLengthReader = new VarLenBinaryReader(this, varLengthColumns);
+      varLengthReader = new VarLenBinaryReader(this, varLengthColumns, nullableVarLengthColumns);
     } catch (SchemaChangeException e) {
       throw new ExecutionSetupException(e);
     }
@@ -215,6 +215,9 @@ public class ParquetRecordReader implements RecordReader {
       for (VarLenBinaryReader.VarLengthColumn r : varLengthReader.columns) {
         output.addField(r.valueVecHolder.getValueVector());
       }
+      for (VarLenBinaryReader.NullableVarLengthColumn r : varLengthReader.nullableColumns) {
+        output.addField(r.valueVecHolder.getValueVector());
+      }
       output.setNewSchema();
     }catch(SchemaChangeException e) {
       throw new ExecutionSetupException("Error setting up output mutator.", e);
@@ -242,6 +245,9 @@ public class ParquetRecordReader implements RecordReader {
     for (VarLenBinaryReader.VarLengthColumn r : varLengthReader.columns){
       totalByteLength += r.columnChunkMetaData.getTotalSize();
     }
+    for (VarLenBinaryReader.NullableVarLengthColumn r : varLengthReader.nullableColumns){
+      totalByteLength += r.columnChunkMetaData.getTotalSize();
+    }
     int bufferSize = 64*1024;
     long totalBytesWritten = 0;
     int validBytesInCurrentBuffer;
@@ -262,17 +268,22 @@ public class ParquetRecordReader implements RecordReader {
     }
   }
 
-  private SchemaPath toFieldName(String[] paths) {
-    if(this.ref == null){
-      return new SchemaPath(Joiner.on('/').join(paths), ExpressionPosition.UNKNOWN);
-    }else{
-      return ref.getChild(paths);
+  private static String toFieldName(String[] paths) {
+    StringBuilder sb = new StringBuilder();
+    boolean first = true;
+    for(String np : paths){
+      if(first){
+        first = false;
+      }else{
+        sb.append(".");
+      }
+      sb.append(np);
     }
-    
+    return sb.toString();
   }
 
-  private TypeProtos.DataMode getDataMode(ColumnDescriptor column, MessageType schema) {
-    if (schema.getColumnDescription(column.getPath()).getMaxDefinitionLevel() == 0) {
+  private TypeProtos.DataMode getDataMode(ColumnDescriptor column) {
+    if (column.getMaxDefinitionLevel() == 0) {
       return TypeProtos.DataMode.REQUIRED;
     } else {
       return TypeProtos.DataMode.OPTIONAL;
@@ -288,30 +299,46 @@ public class ParquetRecordReader implements RecordReader {
       r.valueVecHolder.reset();
       r.valuesReadInCurrentPass = 0;
     }
+    for (VarLenBinaryReader.NullableVarLengthColumn r : varLengthReader.nullableColumns){
+      r.valueVecHolder.reset();
+      r.valuesReadInCurrentPass = 0;
+    }
   }
 
   /**
    * @param fixedLength
-   * @param field
    * @param descriptor
    * @param columnChunkMetaData
    * @param allocateSize - the size of the vector to create
    * @return
    * @throws SchemaChangeException
    */
-  private boolean createFixedColumnReader(boolean fixedLength, MaterializedField field, ColumnDescriptor descriptor,
+  private boolean createFixedColumnReader(boolean fixedLength, ColumnDescriptor descriptor,
                                           ColumnChunkMetaData columnChunkMetaData, int allocateSize, ValueVector v)
       throws SchemaChangeException {
-    TypeProtos.MajorType type = field.getType();
-    if (columnChunkMetaData.getType() == PrimitiveType.PrimitiveTypeName.BOOLEAN){
-      columnStatuses.add(new BitReader(this, allocateSize, descriptor, columnChunkMetaData,
-          fixedLength, v));
+    // if the column is required
+    if (descriptor.getMaxDefinitionLevel() == 0){
+      if (columnChunkMetaData.getType() == PrimitiveType.PrimitiveTypeName.BOOLEAN){
+        columnStatuses.add(new BitReader(this, allocateSize, descriptor, columnChunkMetaData,
+            fixedLength, v));
+      }
+      else{
+        columnStatuses.add(new FixedByteAlignedReader(this, allocateSize, descriptor, columnChunkMetaData,
+            fixedLength, v));
+      }
+      return true;
     }
-    else{
-      columnStatuses.add(new FixedByteAlignedReader(this, allocateSize, descriptor, columnChunkMetaData,
-          fixedLength, v));
+    else { // if the column is nullable
+      if (columnChunkMetaData.getType() == PrimitiveType.PrimitiveTypeName.BOOLEAN){
+        columnStatuses.add(new NullableBitReader(this, allocateSize, descriptor, columnChunkMetaData,
+            fixedLength, v));
+      }
+      else{
+        columnStatuses.add(new NullableFixedByteAlignedReader(this, allocateSize, descriptor, columnChunkMetaData,
+            fixedLength, v));
+      }
+      return true;
     }
-    return true;
   }
 
  public void readAllFixedFields(long recordsToRead, ColumnReader firstColumnStatus) throws IOException {
@@ -326,12 +353,24 @@ public class ParquetRecordReader implements RecordReader {
     resetBatch();
     long recordsToRead = 0;
     try {
-      ColumnReader firstColumnStatus = columnStatuses.iterator().next();
+      ColumnReader firstColumnStatus;
+      if (columnStatuses.size() > 0){
+        firstColumnStatus = columnStatuses.iterator().next();
+      }
+      else{
+        if (varLengthReader.columns.size() > 0){
+          firstColumnStatus = varLengthReader.columns.iterator().next();
+        }
+        else{
+         firstColumnStatus = varLengthReader.nullableColumns.iterator().next();
+        }
+      }
+
       if (allFieldsFixedLength) {
         recordsToRead = Math.min(recordsPerBatch, firstColumnStatus.columnChunkMetaData.getValueCount() - firstColumnStatus.totalValuesRead);
       } else {
         // arbitrary
-        recordsToRead = 8000;
+        recordsToRead = 4000;
 
         // going to incorporate looking at length of values and copying the data into a single loop, hopefully it won't
         // get too complicated
@@ -343,6 +382,7 @@ public class ParquetRecordReader implements RecordReader {
         // cannot find more information on this right now, will keep looking
       }
 
+      logger.debug("records to read in this pass: {}", recordsToRead);
       if (allFieldsFixedLength) {
         readAllFixedFields(recordsToRead, firstColumnStatus);
       } else { // variable length columns
@@ -363,31 +403,88 @@ public class ParquetRecordReader implements RecordReader {
 
   static TypeProtos.MajorType toMajorType(PrimitiveType.PrimitiveTypeName primitiveTypeName, int length,
                                                TypeProtos.DataMode mode) {
-    switch (primitiveTypeName) {
-      case BINARY:
-        return Types.required(TypeProtos.MinorType.VARBINARY);
-      case INT64:
-        return Types.required(TypeProtos.MinorType.BIGINT);
-      case INT32:
-        return Types.required(TypeProtos.MinorType.INT);
-      case BOOLEAN:
-        return Types.required(TypeProtos.MinorType.BIT);
-      case FLOAT:
-        return Types.required(TypeProtos.MinorType.FLOAT4);
-      case DOUBLE:
-        return Types.required(TypeProtos.MinorType.FLOAT8);
-      // Both of these are not supported by the parquet library yet (7/3/13),
-      // but they are declared here for when they are implemented
-      case INT96:
-        return TypeProtos.MajorType.newBuilder().setMinorType(TypeProtos.MinorType.FIXEDBINARY).setWidth(12)
-            .setMode(mode).build();
-      case FIXED_LEN_BYTE_ARRAY:
-        checkArgument(length > 0, "A length greater than zero must be provided for a FixedBinary type.");
-        return TypeProtos.MajorType.newBuilder().setMinorType(TypeProtos.MinorType.FIXEDBINARY)
-            .setWidth(length).setMode(mode).build();
-      default:
-        throw new UnsupportedOperationException("Type not supported: " + primitiveTypeName);
+    switch (mode) {
+
+      case OPTIONAL:
+        switch (primitiveTypeName) {
+          case BINARY:
+            return Types.optional(TypeProtos.MinorType.VARBINARY);
+          case INT64:
+            return Types.optional(TypeProtos.MinorType.BIGINT);
+          case INT32:
+            return Types.optional(TypeProtos.MinorType.INT);
+          case BOOLEAN:
+            return Types.optional(TypeProtos.MinorType.BIT);
+          case FLOAT:
+            return Types.optional(TypeProtos.MinorType.FLOAT4);
+          case DOUBLE:
+            return Types.optional(TypeProtos.MinorType.FLOAT8);
+          // TODO - Both of these are not supported by the parquet library yet (7/3/13),
+          // but they are declared here for when they are implemented
+          case INT96:
+            return TypeProtos.MajorType.newBuilder().setMinorType(TypeProtos.MinorType.FIXEDBINARY).setWidth(12)
+                .setMode(mode).build();
+          case FIXED_LEN_BYTE_ARRAY:
+            checkArgument(length > 0, "A length greater than zero must be provided for a FixedBinary type.");
+            return TypeProtos.MajorType.newBuilder().setMinorType(TypeProtos.MinorType.FIXEDBINARY)
+                .setWidth(length).setMode(mode).build();
+          default:
+            throw new UnsupportedOperationException("Type not supported: " + primitiveTypeName);
+        }
+      case REQUIRED:
+        switch (primitiveTypeName) {
+          case BINARY:
+            return Types.required(TypeProtos.MinorType.VARBINARY);
+          case INT64:
+            return Types.required(TypeProtos.MinorType.BIGINT);
+          case INT32:
+            return Types.required(TypeProtos.MinorType.INT);
+          case BOOLEAN:
+            return Types.required(TypeProtos.MinorType.BIT);
+          case FLOAT:
+            return Types.required(TypeProtos.MinorType.FLOAT4);
+          case DOUBLE:
+            return Types.required(TypeProtos.MinorType.FLOAT8);
+          // Both of these are not supported by the parquet library yet (7/3/13),
+          // but they are declared here for when they are implemented
+          case INT96:
+            return TypeProtos.MajorType.newBuilder().setMinorType(TypeProtos.MinorType.FIXEDBINARY).setWidth(12)
+                .setMode(mode).build();
+          case FIXED_LEN_BYTE_ARRAY:
+            checkArgument(length > 0, "A length greater than zero must be provided for a FixedBinary type.");
+            return TypeProtos.MajorType.newBuilder().setMinorType(TypeProtos.MinorType.FIXEDBINARY)
+                .setWidth(length).setMode(mode).build();
+          default:
+            throw new UnsupportedOperationException("Type not supported: " + primitiveTypeName);
+        }
+      case REPEATED:
+        switch (primitiveTypeName) {
+          case BINARY:
+            return Types.repeated(TypeProtos.MinorType.VARBINARY);
+          case INT64:
+            return Types.repeated(TypeProtos.MinorType.BIGINT);
+          case INT32:
+            return Types.repeated(TypeProtos.MinorType.INT);
+          case BOOLEAN:
+            return Types.repeated(TypeProtos.MinorType.BIT);
+          case FLOAT:
+            return Types.repeated(TypeProtos.MinorType.FLOAT4);
+          case DOUBLE:
+            return Types.repeated(TypeProtos.MinorType.FLOAT8);
+          // Both of these are not supported by the parquet library yet (7/3/13),
+          // but they are declared here for when they are implemented
+          case INT96:
+            return TypeProtos.MajorType.newBuilder().setMinorType(TypeProtos.MinorType.FIXEDBINARY).setWidth(12)
+                .setMode(mode).build();
+          case FIXED_LEN_BYTE_ARRAY:
+            checkArgument(length > 0, "A length greater than zero must be provided for a FixedBinary type.");
+            return TypeProtos.MajorType.newBuilder().setMinorType(TypeProtos.MinorType.FIXEDBINARY)
+                .setWidth(length).setMode(mode).build();
+          default:
+            throw new UnsupportedOperationException("Type not supported: " + primitiveTypeName);
+        }
     }
+    throw new UnsupportedOperationException("Type not supported: " + primitiveTypeName + " Mode: " + mode);
   }
 
   static String join(String delimiter, String... str) {
@@ -406,7 +503,8 @@ public class ParquetRecordReader implements RecordReader {
   @Override
   public void cleanup() {
     columnStatuses.clear();
-    this.varLengthReader.columns.clear();
     bufferWithAllData.release();
+    varLengthReader.columns.clear();
+    varLengthReader.nullableColumns.clear();
   }
 }
