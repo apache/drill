@@ -43,7 +43,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
   }
   
   public int getValueCapacity(){
-    return offsetVector.getValueCapacity();
+    return offsetVector.getValueCapacity() - 1;
   }
   
   public int getByteCapacity(){
@@ -60,27 +60,26 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
   
   @Override
   public FieldMetadata getMetadata() {
-    int len = (valueCount + 1) * ${type.width} + getVarByteLength();
     return FieldMetadata.newBuilder()
              .setDef(getField().getDef())
              .setValueCount(valueCount)
              .setVarByteLength(getVarByteLength())
-             .setBufferLength(len)
+             .setBufferLength(getBufferSize())
              .build();
   }
 
   public int load(int dataBytes, int valueCount, ByteBuf buf){
     this.valueCount = valueCount;
     int loaded = offsetVector.load(valueCount+1, buf);
-    data = buf.slice(loaded, dataBytes);
+    data = buf.slice(loaded, dataBytes - loaded);
     data.retain();
-    return loaded + dataBytes;
+    return  dataBytes;
   }
   
   @Override
   public void load(FieldMetadata metadata, ByteBuf buffer) {
     assert this.field.getDef().equals(metadata.getDef());
-    int loaded = load(metadata.getVarByteLength(), metadata.getValueCount(), buffer);
+    int loaded = load(metadata.getBufferLength(), metadata.getValueCount(), buffer);
     assert metadata.getBufferLength() == loaded;
   }
   
@@ -168,6 +167,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     data = allocator.buffer(totalBytes);
     data.readerIndex(0);
     offsetVector.allocateNew(valueCount+1);
+    offsetVector.getMutator().set(0,0);
   }
 
   public Accessor getAccessor(){
@@ -307,7 +307,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     @Override
     public void generateTestData(){
       boolean even = true;
-      for(int i =0; i < valueCount; i++, even = !even){
+      for(int i =0; i < getValueCapacity(); i++, even = !even){
         if(even){
           set(i, new String("aaaaa").getBytes(Charsets.UTF_8));
         }else{

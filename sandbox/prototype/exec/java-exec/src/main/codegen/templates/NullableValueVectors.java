@@ -83,6 +83,7 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
     
     // remove bits part of buffer.
     buf = buf.slice(loaded, buf.capacity() - loaded);
+    dataBytes -= loaded;
     loaded += values.load(dataBytes, valueCount, buf);
     return loaded;
   }
@@ -90,7 +91,7 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
   @Override
   public void load(FieldMetadata metadata, ByteBuf buffer) {
     assert this.field.getDef().equals(metadata.getDef());
-    int loaded = load(metadata.getVarByteLength(), metadata.getValueCount(), buffer);
+    int loaded = load(metadata.getBufferLength(), metadata.getValueCount(), buffer);
     assert metadata.getBufferLength() == loaded;
   }
   
