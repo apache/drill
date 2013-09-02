@@ -11,7 +11,7 @@ if [ ! -f .classpath ]; then
 fi
 
 #exec java -Drebel.log=true -javaagent:/src/jrebel/jrebel.jar -Dlogback.configurationFile=/src/drill/sandbox/prototype/sqlparser/src/test/resources/logback.xml -cp ./:"$(cat .classpath)" sqlline.SqlLine "$@"
-exec java -Dlogback.configurationFile=/src/drill/sandbox/prototype/sqlparser/src/test/resources/logback.xml -cp ./:"$(cat .classpath)" sqlline.SqlLine --verbose=true "$@"
+exec java -Xmx2G -Dlogback.configurationFile=./sqlparser/src/test/resources/logback.xml -cp ./:"$(cat .classpath)" sqlline.SqlLine --verbose=true "$@"
 
 
 # End sqlline
