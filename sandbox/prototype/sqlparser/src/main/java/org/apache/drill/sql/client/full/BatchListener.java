@@ -21,6 +21,7 @@ public class BatchListener implements UserResultsListener {
   public void submissionFailed(RpcException ex) {
     this.ex = ex;
     completed = true;
+    System.out.println("Query failed: " + ex);
   }
 
   @Override
@@ -29,6 +30,9 @@ public class BatchListener implements UserResultsListener {
     queue.add(result);
     if(result.getHeader().getIsLastChunk()){
       completed = true;
+    }
+    if (result.getHeader().getErrorCount() > 0) {
+      submissionFailed(new RpcException(String.format("%s", result.getHeader().getErrorList())));
     }
   }
 
