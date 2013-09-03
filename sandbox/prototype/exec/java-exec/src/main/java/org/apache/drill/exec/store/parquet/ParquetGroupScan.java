@@ -112,6 +112,7 @@ public class ParquetGroupScan extends AbstractGroupScan {
   public ParquetGroupScan(ArrayList<ReadEntryWithPath> entries,
                           ParquetStorageEngine storageEngine, FieldReference ref) throws IOException {
     this.storageEngine = storageEngine;
+    this.engineConfig = storageEngine.getEngineConfig();
     this.availableEndpoints = storageEngine.getContext().getBits();
     this.fs = storageEngine.getFileSystem();
     this.entries = entries;

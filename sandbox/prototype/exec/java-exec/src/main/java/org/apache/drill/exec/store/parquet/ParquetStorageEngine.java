@@ -60,12 +60,13 @@ public class ParquetStorageEngine extends AbstractStorageEngine{
   private CodecFactoryExposer codecFactoryExposer;
   final ParquetMetadata footer;
   private final ParquetSchemaProvider schemaProvider;
+  private final ParquetStorageEngineConfig engineConfig;
 
   public ParquetStorageEngine(ParquetStorageEngineConfig configuration, DrillbitContext context){
     this.context = context;
     this.schemaProvider = new ParquetSchemaProvider(configuration, context.getConfig());
     codecFactoryExposer = new CodecFactoryExposer(schemaProvider.conf);
-
+    this.engineConfig = configuration;
     this.footer = null;
   }
 
@@ -77,6 +78,10 @@ public class ParquetStorageEngine extends AbstractStorageEngine{
 
   public FileSystem getFileSystem() {
     return schemaProvider.fs;
+  }
+
+  public ParquetStorageEngineConfig getEngineConfig() {
+    return engineConfig;
   }
 
   public DrillbitContext getContext() {
