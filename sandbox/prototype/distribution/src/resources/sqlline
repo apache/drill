@@ -1,11 +1,30 @@
 #!/bin/bash
 
+ARGS=();
+while [ $# -gt 0 ]
+do
+  case "$1" in
+  -q) shift;
+      QUERY=$1;;
+  -e) shift;
+      QUERY=$1;;
+  -f) shift;
+      FILE=$1;;
+   *) ARGS+=($1);;
+  esac
+  shift
+done
+
+bin=`dirname "${BASH_SOURCE-$0}"`
+bin=`cd "$bin">/dev/null; pwd`
+
+. "$bin"/drill-config.sh
 
 if [ -z $JAVA_HOME ]
 then
   JAVA=`which java`
 else
-  JAVA=$JAVA_HOME/bin/java
+  JAVA=`find $JAVA_HOME -name java`
 fi
 
 if [ -e $JAVA ]; then
@@ -24,7 +43,18 @@ fi
 
 CP=$DRILL_HOME/jars/*:$CP
 CP=$DRILL_HOME/lib/*:$CP
+CP=$DRILL_HOME/contrib/*:$CP
 
-CP=$CP:$DRILL_CONF_DIR
+CP=$DRILL_CONF_DIR:$CP
 
-exec $DRILL_JAVA_OPTS -cp $CP sqlline.SqlLine "$@"
+echo $QUERY
+
+if [ -n "$QUERY" ]
+then
+  echo $QUERY | exec $JAVA $DRILL_SHELL_JAVA_OPTS $DRILL_JAVA_OPTS -cp $CP sqlline.SqlLine "${ARGS[@]}"
+elif [ -n "$FILE" ]
+then
+  exec $JAVA $DRILL_SHELL_JAVA_OPTS $DRILL_JAVA_OPTS -cp $CP sqlline.SqlLine "${ARGS[@]}" --run=$FILE
+else
+  exec $JAVA $DRILL_SHELL_JAVA_OPTS $DRILL_JAVA_OPTS -cp $CP sqlline.SqlLine "${ARGS[@]}"
+fi

@@ -108,6 +108,7 @@ public class DrillHandler extends HandlerImpl {
                 .getExpression()));
         
       } catch (Exception ex) {
+        System.out.println(ex);
         throw new SQLException("Failure trying to connect to Drill.", ex);
       }
     }
