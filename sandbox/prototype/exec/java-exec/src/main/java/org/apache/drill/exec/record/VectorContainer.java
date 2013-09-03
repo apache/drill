@@ -15,20 +15,21 @@ public class VectorContainer implements Iterable<VectorWrapper<?>> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(VectorContainer.class);
 
   private final List<VectorWrapper<?>> wrappers = Lists.newArrayList();
+  private final List<VectorWrapper<?>> oldWrappers = Lists.newArrayList();
   private BatchSchema schema;
 
   public VectorContainer() {
   }
 
-  public VectorContainer(List<ValueVector> vectors, List<ValueVector[]> hyperVectors) {
-    assert !vectors.isEmpty() || !hyperVectors.isEmpty();
-
-    addCollection(vectors);
-
-    for (ValueVector[] vArr : hyperVectors) {
-      add(vArr);
-    }
-  }
+  // public VectorContainer(List<ValueVector> vectors, List<ValueVector[]> hyperVectors) {
+  // assert !vectors.isEmpty() || !hyperVectors.isEmpty();
+  //
+  // addCollection(vectors);
+  //
+  // for (ValueVector[] vArr : hyperVectors) {
+  // add(vArr);
+  // }
+  // }
 
   public void addHyperList(List<ValueVector> vectors) {
     schema = null;
@@ -41,9 +42,12 @@ public class VectorContainer implements Iterable<VectorWrapper<?>> {
 
   /**
    * Get a set of transferred clones of this container. Note that this guarantees that the vectors in the cloned
-   * container have the same TypedFieldIds as the existing container, allowing interchangeability in generated code.
+   * container have the same TypedFieldIds as the existing container, allowing interchangeability in generated code. In
+   * the case of hyper vectors, this container actually doesn't do a full transfer, rather creating a clone vector
+   * wrapper only.
    * 
-   * @param incoming The RecordBatch iterator the contains the batch we should take over. 
+   * @param incoming
+   *          The RecordBatch iterator the contains the batch we should take over.
    * @return A cloned vector container.
    */
   public static VectorContainer getTransferClone(RecordBatch incoming) {

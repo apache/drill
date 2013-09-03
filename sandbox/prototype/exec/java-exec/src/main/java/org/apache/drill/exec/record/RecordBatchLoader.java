@@ -108,6 +108,7 @@ public class RecordBatchLoader implements Iterable<VectorWrapper<?>>{
     }
     b.setSelectionVectorMode(BatchSchema.SelectionVectorMode.NONE);
     this.schema = b.build();
+    newVectors.buildSchema(BatchSchema.SelectionVectorMode.NONE);
     container = newVectors;
     return schemaChanged;
 

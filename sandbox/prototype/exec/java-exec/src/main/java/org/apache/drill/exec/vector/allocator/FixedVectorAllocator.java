@@ -12,7 +12,6 @@ public class FixedVectorAllocator extends VectorAllocator{
 
   public void alloc(int recordCount){
     out.allocateNew(recordCount);
-    out.getMutator().setValueCount(recordCount);
   }
 
   @Override

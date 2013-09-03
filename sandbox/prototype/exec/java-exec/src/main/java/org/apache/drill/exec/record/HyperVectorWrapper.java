@@ -10,11 +10,17 @@ public class HyperVectorWrapper<T extends ValueVector> implements VectorWrapper<
   
   private T[] vectors;
   private MaterializedField f;
-
+  private final boolean releasable;
+  
   public HyperVectorWrapper(MaterializedField f, T[] v){
+    this(f, v, true);
+  }
+  
+  public HyperVectorWrapper(MaterializedField f, T[] v, boolean releasable){
     assert(v.length > 0);
     this.f = f;
     this.vectors = v;
+    this.releasable = releasable;
   }
 
   @SuppressWarnings("unchecked")
@@ -45,6 +51,7 @@ public class HyperVectorWrapper<T extends ValueVector> implements VectorWrapper<
 
   @Override
   public void release() {
+    if(!releasable) return;
     for(T x : vectors){
       x.clear();  
     }
@@ -54,13 +61,14 @@ public class HyperVectorWrapper<T extends ValueVector> implements VectorWrapper<
   @Override
   @SuppressWarnings("unchecked")
   public VectorWrapper<T> cloneAndTransfer() {
-    T[] newVectors = (T[]) Array.newInstance(vectors.getClass().getComponentType(), vectors.length);
-    for(int i =0; i < newVectors.length; i++){
-      TransferPair tp = vectors[i].getTransferPair();
-      tp.transfer();
-      newVectors[i] = (T) tp.getTo();
-    }
-    return new HyperVectorWrapper<T>(f, newVectors);
+    return new HyperVectorWrapper<T>(f, vectors, false);
+//    T[] newVectors = (T[]) Array.newInstance(vectors.getClass().getComponentType(), vectors.length);
+//    for(int i =0; i < newVectors.length; i++){
+//      TransferPair tp = vectors[i].getTransferPair();
+//      tp.transfer();
+//      newVectors[i] = (T) tp.getTo();
+//    }
+//    return new HyperVectorWrapper<T>(f, newVectors);
   }
 
   public static <T extends ValueVector> HyperVectorWrapper<T> create(MaterializedField f, T[] v){

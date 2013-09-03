@@ -157,7 +157,7 @@ public abstract class AggTemplate implements Aggregator {
               return AggOutcome.RETURN_OUTCOME;
               
             case OK_NEW_SCHEMA:
-              if(EXTRA_DEBUG) logger.debug("Received new schema.");
+              if(EXTRA_DEBUG) logger.debug("Received new schema.  Batch has {} records.", incoming.getRecordCount());
               if(addedRecordCount > 0){
                 if( !outputToBatchPrev( previous, previousIndex, outputCount) ) remainderBatch = previous;
                 if(EXTRA_DEBUG) logger.debug("Wrote out end of previous batch, returning.");

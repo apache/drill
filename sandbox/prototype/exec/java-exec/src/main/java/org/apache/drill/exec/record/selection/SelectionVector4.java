@@ -74,10 +74,20 @@ public class SelectionVector4 {
   }
   
   public boolean next(){
-    if(start + length == recordCount) return false;
+//    logger.debug("Next called. Start: {}, Length: {}, recordCount: " + recordCount, start, length);
+    
+    if(start + length >= recordCount){
+      
+      start = recordCount;
+      length = 0;
+//      logger.debug("Setting count to zero.");
+      return false;
+    }
+    
     start = start+length;
     int newEnd = Math.min(start+length, recordCount);
     length = newEnd - start;
+//    logger.debug("New start {}, new length {}", start, length);
     return true;
   }
   

@@ -35,6 +35,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
   }
 
   public int getBufferSize(){
+    if(valueCount == 0) return 0;
     return offsetVector.getBufferSize() + data.writerIndex();
   }
   
@@ -55,6 +56,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
    * @return
    */
   public int getVarByteLength(){
+    if(valueCount == 0) return 0;
     return offsetVector.getAccessor().get(valueCount); 
   }
   
@@ -70,6 +72,10 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
 
   public int load(int dataBytes, int valueCount, ByteBuf buf){
     this.valueCount = valueCount;
+    if(valueCount == 0){
+      allocateNew(0,0);
+      return 0;
+    }
     int loaded = offsetVector.load(valueCount+1, buf);
     data = buf.slice(loaded, dataBytes - loaded);
     data.retain();

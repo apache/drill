@@ -147,13 +147,8 @@ public class BasicOptimizer extends Optimizer{
         orderDefs.add(new OrderDef(Direction.ASC, e));
       }
       Sort sort = new Sort(segment.getInput().accept(this, value), orderDefs, false);
-
-      StreamingAggregate sa;
-      if (keys.size() == 0) {
-        sa = new StreamingAggregate(segment.getInput().accept(this, value), new NamedExpression[0], agg.getAggregations(), 1.0f);
-      } else {
-        sa = new StreamingAggregate(sort, keys.toArray(new NamedExpression[keys.size()]), agg.getAggregations(), 1.0f);
-      }
+      
+      StreamingAggregate sa = new StreamingAggregate(sort, keys.toArray(new NamedExpression[keys.size()]), agg.getAggregations(), 1.0f);
       SelectionVectorRemover svm = new SelectionVectorRemover(sa);
       return svm;
     }

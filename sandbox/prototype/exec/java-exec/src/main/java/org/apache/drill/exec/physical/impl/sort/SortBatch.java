@@ -70,6 +70,15 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
     return sv4;
   }
 
+  
+  
+  @Override
+  protected void cleanup() {
+    super.cleanup();
+    container.clear();
+    sv4.clear();
+  }
+
   @Override
   public IterOutcome next() {
     if(builder != null){

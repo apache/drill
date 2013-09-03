@@ -14,6 +14,5 @@ class VariableVectorAllocator extends VectorAllocator{
 
   public void alloc(int recordCount){
     out.allocateNew(in.getByteCapacity(), recordCount);
-    out.getMutator().setValueCount(recordCount);
   }
 }

@@ -14,6 +14,5 @@ public class VariableEstimatedVector extends VectorAllocator{
   
   public void alloc(int recordCount){
     out.allocateNew(avgWidth * recordCount, recordCount);
-    out.getMutator().setValueCount(recordCount);
   }
 }
