@@ -4,6 +4,7 @@ import com.beust.jcommander.internal.Lists;
 import com.google.common.base.Charsets;
 import com.google.common.base.Stopwatch;
 import com.google.common.io.Resources;
+import org.apache.commons.lang.StringUtils;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.coord.ZKClusterCoordinator;
 import org.apache.drill.exec.exception.SchemaChangeException;
@@ -58,13 +59,15 @@ public class QuerySubmitter {
     Stopwatch watch = new Stopwatch();
     watch.start();
     client.runQuery(queryType, plan, listener);
-    System.out.println(String.format("Got %d total records in %f seconds", listener.await(), (float)watch.elapsed(TimeUnit.MILLISECONDS) / (float)1000));
+    int rows = listener.await();
+    System.out.println(String.format("Got %d record%s in %f seconds", rows, rows > 1 ? "s" : "", (float)watch.elapsed(TimeUnit.MILLISECONDS) / (float)1000));
     return 0;
   }
 
   private class QueryResultsListener implements UserResultsListener {
     AtomicInteger count = new AtomicInteger();
     private CountDownLatch latch = new CountDownLatch(1);
+    RecordBatchLoader loader = new RecordBatchLoader(new BootStrapContext(DrillConfig.create()).getAllocator());
     @Override
     public void submissionFailed(RpcException ex) {
       System.out.println(String.format("Query failed: %s", ex));
@@ -74,37 +77,44 @@ public class QuerySubmitter {
     @Override
     public void resultArrived(QueryResultBatch result) {
       int rows = result.getHeader().getRowCount();
-      RecordBatchLoader loader = new RecordBatchLoader(new BootStrapContext(DrillConfig.create()).getAllocator());
-      try {
-        loader.load(result.getHeader().getDef(), result.getData());
-      } catch (SchemaChangeException e) {
-        submissionFailed(new RpcException(e));
-      }
-      List<String> columns = Lists.newArrayList();
-      for (VectorWrapper vw : loader) {
-        columns.add(vw.getValueVector().getField().getName());
-      }
-      for (int row = 0; row < rows; row++) {
-        if (row%50 == 0) {
-          for (String column : columns) {
-            System.out.printf("| %-15s", column.length() <= 15 ? column : column.substring(0, 14));
+      if (result.getData() != null) {
+        try {
+          loader.load(result.getHeader().getDef(), result.getData());
+        } catch (SchemaChangeException e) {
+          submissionFailed(new RpcException(e));
+        }
+        List<String> columns = Lists.newArrayList();
+        for (VectorWrapper vw : loader) {
+          columns.add(vw.getValueVector().getField().getName());
+        }
+        for (int row = 0; row < rows; row++) {
+          if (row%50 == 0) {
+            System.out.println(StringUtils.repeat("-", columns.size()*17 + 1));
+            for (String column : columns) {
+              System.out.printf("| %-15s", column.length() <= 15 ? column : column.substring(0, 14));
+            }
+            System.out.printf("|\n");
+            System.out.println(StringUtils.repeat("-", columns.size()*17 + 1));
+          }
+          for (VectorWrapper vw : loader) {
+            Object o = vw.getValueVector().getAccessor().getObject(row);
+            if (o instanceof byte[]) {
+              String value = new String((byte[]) o);
+              count.addAndGet(1);
+              System.out.printf("| %-15s",value.length() <= 15 ? value : value.substring(0, 14));
+            } else {
+              String value = o.toString();
+              count.addAndGet(1);
+              System.out.printf("| %-15s",value.length() <= 15 ? value : value.substring(0,14));
+            }
           }
           System.out.printf("|\n");
         }
-        for (VectorWrapper vw : loader) {
-          Object o = vw.getValueVector().getAccessor().getObject(row);
-          if (o instanceof byte[]) {
-            String value = new String((byte[]) o);
-            System.out.printf("| %-15s",value.length() <= 15 ? value : value.substring(0, 14));
-          } else {
-            String value = o.toString();
-            System.out.printf("| %-15s",value.length() <= 15 ? value : value.substring(0,14));
-          }
-        }
-        System.out.printf("|\n");
       }
-      count.addAndGet(rows);
-      if (result.getHeader().getIsLastChunk()) latch.countDown();
+      if (result.getHeader().getIsLastChunk()) {
+//        System.out.println(StringUtils.repeat("-", columns.size()*17 + 1));
+        latch.countDown();
+      }
       result.release();
     }
 

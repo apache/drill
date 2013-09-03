@@ -109,6 +109,7 @@ public class DrillHandler extends HandlerImpl {
         
       } catch (Exception ex) {
         System.out.println(ex);
+        logger.error("Failure while setting up jdbc handler", ex);
         throw new SQLException("Failure trying to connect to Drill.", ex);
       }
     }
