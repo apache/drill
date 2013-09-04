@@ -260,7 +260,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       if(data.capacity() < outputStart + len) return false;
       
       holder.buffer.getBytes(start, data, outputStart, len);
-      offsetVector.data.set${(minor.javaType!type.javaType)?cap_first}( (index+1) * ${type.width}, len);
+      offsetVector.data.set${(minor.javaType!type.javaType)?cap_first}( (index+1) * ${type.width},  outputStart + len);
 
       return true;
     }
@@ -277,7 +277,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       if(data.capacity() < outputStart + len) return false;
       
       holder.buffer.getBytes(start, data, outputStart, len);
-      offsetVector.data.set${(minor.javaType!type.javaType)?cap_first}( (index+1) * ${type.width}, len);
+      offsetVector.data.set${(minor.javaType!type.javaType)?cap_first}( (index+1) * ${type.width},  outputStart + len);
 
       return true;
     }
