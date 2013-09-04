@@ -81,7 +81,11 @@ public class CoordinationQueue {
       connection.releasePermit();
       if(!future.isSuccess()){
         removeFromMap(coordinationId);
-        future.get();
+        if(future.channel().isActive()) {
+           throw new RpcException("Future failed") ;
+        }else{
+          throw  new ChannelClosedException();
+        }
       }
     }
 

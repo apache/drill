@@ -24,6 +24,9 @@ public interface ExecConstants {
   public static final String ZK_TIMEOUT = "drill.exec.zk.timeout";
   public static final String ZK_ROOT = "drill.exec.zk.root";
   public static final String ZK_REFRESH = "drill.exec.zk.refresh";
+  public static final String BIT_RETRY_TIMES = "drill.exec.bit.retry.count";
+  public static final String BIT_RETRY_DELAY = "drill.exec.bit.retry.delay";
+  public static final String BIT_TIMEOUT = "drill.exec.bit.timeout" ;
   public static final String STORAGE_ENGINE_SCAN_PACKAGES = "drill.exec.storage.packages";
   public static final String SERVICE_NAME = "drill.exec.cluster-id";
   public static final String INITIAL_BIT_PORT = "drill.exec.rpc.bit.port";

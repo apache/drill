@@ -83,6 +83,10 @@ public abstract class BasicClient<T extends EnumLite, R extends RemoteConnection
     ;
   }
 
+  public boolean isActive(){
+    return connection.getChannel().isActive() ;
+  }
+
   protected abstract void validateHandshake(HANDSHAKE_RESPONSE validateHandshake) throws RpcException;
   protected abstract void finalizeConnection(HANDSHAKE_RESPONSE handshake, R connection);
   
