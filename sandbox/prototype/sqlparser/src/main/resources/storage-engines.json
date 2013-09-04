@@ -23,7 +23,7 @@
     "parquet" :
       {
         "type":"parquet",
-        "dfsName" : "maprfs://10.10.30.52/"
+        "dfsName" : "file:///"
       }
   }
 }

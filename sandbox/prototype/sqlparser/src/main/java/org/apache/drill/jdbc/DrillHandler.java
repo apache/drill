@@ -31,6 +31,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.io.Resources;
 
 public class DrillHandler extends HandlerImpl {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillHandler.class);
 
   private ClusterCoordinator coordinator;
   private volatile DrillClient client;

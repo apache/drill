@@ -34,9 +34,17 @@
       <excludes>
         <exclude>org.apache.drill</exclude>
         <exclude>org.apache.drill.exec</exclude>
-        <exclude>com.google.protobuf</exclude>
-        <exclude>de.huxhorn.*</exclude>
+        <exclude>com.google.protobuf:protobuf-java:jar:2.5.0</exclude>
       </excludes>
+      <scope>test</scope>
+    </dependencySet>
+    <dependencySet>
+      <outputDirectory>lib</outputDirectory>
+      <unpack>false</unpack>
+      <useProjectArtifact>false</useProjectArtifact>
+      <includes>
+        <include>com.google.protobuf:protobuf-java:jar:2.4.1</include>
+      </includes>
       <scope>test</scope>
     </dependencySet>
   </dependencySets>
