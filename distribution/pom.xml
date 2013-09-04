@@ -17,7 +17,7 @@
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
       <artifactId>java-exec</artifactId>
-      <version>1.0.0-m2-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
@@ -27,17 +27,17 @@
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
       <artifactId>ref</artifactId>
-      <version>1.0.0-m2-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.drill</groupId>
       <artifactId>common</artifactId>
-      <version>1.0.0-m2-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.drill</groupId>
       <artifactId>sqlparser</artifactId>
-      <version>1.0.0-m2-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>com.google.protobuf</groupId>

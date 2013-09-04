@@ -16,7 +16,7 @@
 		<dependency>
 			<groupId>org.apache.drill</groupId>
 			<artifactId>common</artifactId>
-			<version>1.0.0-m2-SNAPSHOT</version>
+			<version>${project.version}</version>
 		</dependency>
 
 		<dependency>
