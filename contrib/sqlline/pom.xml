@@ -4,7 +4,7 @@
   <parent>
     <artifactId>drill-root</artifactId>
     <groupId>org.apache.drill</groupId>
-    <version>1.0.0-m1</version>
+    <version>1.0.0-m2-SNAPSHOT</version>
     <relativePath>../../</relativePath>
   </parent>
   <artifactId>sqlline</artifactId>
@@ -34,8 +34,4 @@
       <version>2.7.1</version>
     </dependency>
   </dependencies>
-
-  <scm>
-    <tag>drill-root-1.0.0-m1</tag>
-  </scm>
 </project>
