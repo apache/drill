@@ -68,6 +68,8 @@ public class QuerySubmitter {
     AtomicInteger count = new AtomicInteger();
     private CountDownLatch latch = new CountDownLatch(1);
     RecordBatchLoader loader = new RecordBatchLoader(new BootStrapContext(DrillConfig.create()).getAllocator());
+    int width;
+
     @Override
     public void submissionFailed(RpcException ex) {
       System.out.println(String.format("Query failed: %s", ex));
@@ -87,14 +89,15 @@ public class QuerySubmitter {
         for (VectorWrapper vw : loader) {
           columns.add(vw.getValueVector().getField().getName());
         }
+        width = columns.size();
         for (int row = 0; row < rows; row++) {
           if (row%50 == 0) {
-            System.out.println(StringUtils.repeat("-", columns.size()*17 + 1));
+            System.out.println(StringUtils.repeat("-", width*17 + 1));
             for (String column : columns) {
-              System.out.printf("| %-15s", column.length() <= 15 ? column : column.substring(0, 14));
+              System.out.printf("| %-15s", width <= 15 ? column : column.substring(0, 14));
             }
             System.out.printf("|\n");
-            System.out.println(StringUtils.repeat("-", columns.size()*17 + 1));
+            System.out.println(StringUtils.repeat("-", width*17 + 1));
           }
           for (VectorWrapper vw : loader) {
             Object o = vw.getValueVector().getAccessor().getObject(row);
@@ -112,7 +115,7 @@ public class QuerySubmitter {
         }
       }
       if (result.getHeader().getIsLastChunk()) {
-//        System.out.println(StringUtils.repeat("-", columns.size()*17 + 1));
+        System.out.println(StringUtils.repeat("-", width*17 + 1));
         latch.countDown();
       }
       result.release();
