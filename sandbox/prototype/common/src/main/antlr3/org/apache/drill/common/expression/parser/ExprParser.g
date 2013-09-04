@@ -187,10 +187,10 @@ mulExpr returns [LogicalExpression e]
 	@after{
 	  $e = registry.createByOp(exprs, p, ops);
 	}
-  :  p1=powExpr  {exprs.add($p1.e); p = pos($p1.start);} (op=(Asterisk|ForwardSlash|Percent) p2=powExpr {exprs.add($p2.e); ops.add($op.text); } )*
+  :  p1=xorExpr  {exprs.add($p1.e); p = pos($p1.start);} (op=(Asterisk|ForwardSlash|Percent) p2=xorExpr {exprs.add($p2.e); ops.add($op.text); } )*
   ;
 
-powExpr returns [LogicalExpression e]
+xorExpr returns [LogicalExpression e]
 	@init{
 	  List<LogicalExpression> exprs = new ArrayList<LogicalExpression>();
 	  List<String> ops = new ArrayList();

@@ -35,10 +35,10 @@ public class MathFunctions implements CallProvider{
         FunctionDefinition.operator("divide", new ArgumentValidators.NumericTypeAllowed(1, Integer.MAX_VALUE, true), new OutputTypeDeterminer.SameAsAnySoft(), "/"),
         FunctionDefinition.operator("multiply", new ArgumentValidators.NumericTypeAllowed(1, Integer.MAX_VALUE, true), new OutputTypeDeterminer.SameAsAnySoft(), "*"),
         FunctionDefinition.operator("modulo", new ArgumentValidators.NumericTypeAllowed(1, Integer.MAX_VALUE, true), new OutputTypeDeterminer.SameAsAnySoft(), "%"),
-        
+        XOR
     };
 
   }
   
-	
+	public static final FunctionDefinition XOR = FunctionDefinition.operator("xor", new ArgumentValidators.NumericTypeAllowed(1, Integer.MAX_VALUE, true), new OutputTypeDeterminer.SameAsAnySoft(), "^");
 }
