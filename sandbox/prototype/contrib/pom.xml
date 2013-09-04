@@ -3,12 +3,13 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <artifactId>prototype-parent</artifactId>
+    <artifactId>drill-root</artifactId>
     <groupId>org.apache.drill</groupId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.0-m1-SNAPSHOT</version>
   </parent>
     <groupId>org.apache.drill.contrib</groupId>
   <artifactId>contrib-parent</artifactId>
+  <name>contrib/Parent Pom</name>
   <packaging>pom</packaging>
 
   <dependencies>
@@ -16,5 +17,6 @@
   </dependencies>
   <modules>
     <module>storage-hbase</module>
+    <module>sqlline</module>
   </modules>
 </project>

@@ -9,7 +9,7 @@
     <version>1.0-SNAPSHOT</version>
   </parent>
   <artifactId>sqlline</artifactId>
-  <name>sqlline</name>
+  <name>contrib/sqlline</name>
 
   <dependencies>
     <dependency>

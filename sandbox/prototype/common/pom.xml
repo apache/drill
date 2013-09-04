@@ -5,14 +5,14 @@
   <modelVersion>4.0.0</modelVersion>
   
   <parent>
-    <artifactId>prototype-parent</artifactId>
+    <artifactId>drill-root</artifactId>
     <groupId>org.apache.drill</groupId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.0-m1-SNAPSHOT</version>
   </parent>
 
   <artifactId>common</artifactId>
   <packaging>jar</packaging>
-  <name>common</name>
+  <name>Common (Logical Plan, Base expressions)</name>
 
   <dependencies>
 

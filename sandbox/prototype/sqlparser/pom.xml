@@ -4,12 +4,12 @@
   xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <artifactId>prototype-parent</artifactId>
+    <artifactId>drill-root</artifactId>
     <groupId>org.apache.drill</groupId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.0-m1-SNAPSHOT</version>
   </parent>
   <artifactId>sqlparser</artifactId>
-  <name>sqlparser</name>
+  <name>SQL Parser</name>
 
   <dependencies>
     <dependency>
@@ -20,7 +20,7 @@
     <dependency>
       <groupId>org.apache.drill</groupId>
       <artifactId>common</artifactId>
-      <version>1.0-SNAPSHOT</version>
+      <version>1.0.0-m1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.apache.drill.exec</groupId>

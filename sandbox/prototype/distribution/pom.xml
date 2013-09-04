@@ -1,47 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <artifactId>prototype-parent</artifactId>
+    <artifactId>drill-root</artifactId>
     <groupId>org.apache.drill</groupId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.0-m1-SNAPSHOT</version>
   </parent>
 
   <groupId>org.apache.drill</groupId>
   <artifactId>distribution</artifactId>
   <packaging>pom</packaging>
-  <name>Packaging</name>
+  <name>Packaging and Distribution Assembly</name>
 
   <dependencies>
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
       <artifactId>java-exec</artifactId>
-      <version>1.0-SNAPSHOT</version>
+      <version>1.0.0-m1-SNAPSHOT</version>
     </dependency>
-      <dependency>
-          <groupId>org.apache.drill.exec</groupId>
-          <artifactId>netty-bufferl</artifactId>
-          <version>4.0.7.Final</version>
-      </dependency>
-      <dependency>
-          <groupId>org.apache.drill.exec</groupId>
-          <artifactId>ref</artifactId>
-          <version>1.0-SNAPSHOT</version>
-      </dependency>
+    <dependency>
+      <groupId>org.apache.drill.exec</groupId>
+      <artifactId>netty-bufferl</artifactId>
+      <version>4.0.7.Final</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.drill.exec</groupId>
+      <artifactId>ref</artifactId>
+      <version>1.0.0-m1-SNAPSHOT</version>
+    </dependency>
     <dependency>
       <groupId>org.apache.drill</groupId>
       <artifactId>common</artifactId>
-      <version>1.0-SNAPSHOT</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.drill</groupId>
-      <artifactId>planner</artifactId>
-      <version>1.0-SNAPSHOT</version>
+      <version>1.0.0-m1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.apache.drill</groupId>
       <artifactId>sqlparser</artifactId>
-      <version>1.0-SNAPSHOT</version>
+      <version>1.0.0-m1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>com.google.protobuf</groupId>
@@ -71,7 +67,7 @@
               <descriptors>
                 <descriptor>src/assemble/bin.xml</descriptor>
               </descriptors>
-              <finalName>drill-1.0</finalName>
+              <finalName>apache-drill-${project.version}</finalName>
             </configuration>
           </execution>
         </executions>
@@ -79,7 +75,10 @@
     </plugins>
   </build>
 
+
+
   <profiles>
+
     <profile>
       <id>rpm</id>
       <build>

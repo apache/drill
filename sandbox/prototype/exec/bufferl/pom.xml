@@ -16,14 +16,14 @@
   <parent>
     <groupId>org.apache.drill.exec</groupId>
     <artifactId>exec-parent</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.0-m1-SNAPSHOT</version>
   </parent>
 
   <groupId>org.apache.drill.exec</groupId>
   <version>4.0.7.Final</version>
   <artifactId>netty-bufferl</artifactId>
 
-  <name>Netty/Drill/Buffer</name>
+  <name>exec/Netty Little Endian Buffers</name>
 
   <dependencies>
     <dependency>

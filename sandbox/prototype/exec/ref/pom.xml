@@ -6,19 +6,19 @@
 	<parent>
 		<artifactId>exec-parent</artifactId>
 		<groupId>org.apache.drill.exec</groupId>
-		<version>1.0-SNAPSHOT</version>
+		<version>1.0.0-m1-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>ref</artifactId>
 
-	<name>Logical Plan Execution Reference Implementation</name>
+	<name>exec/Reference Interpreter</name>
 
 	<dependencies>
 
 		<dependency>
 			<groupId>org.apache.drill</groupId>
 			<artifactId>common</artifactId>
-			<version>1.0-SNAPSHOT</version>
+			<version>1.0.0-m1-SNAPSHOT</version>
 		</dependency>
 
 		<dependency>
@@ -27,11 +27,6 @@
 			<version>0.4.2</version>
 		</dependency>
 
-<!-- 		<dependency> -->
-<!-- 			<groupId>org.apache.hadoop</groupId> -->
-<!-- 			<artifactId>hadoop-examples</artifactId> -->
-<!-- 			<version>1.2.1</version> -->
-<!-- 		</dependency> -->
 	</dependencies>
 
   <profiles>

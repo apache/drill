@@ -6,15 +6,15 @@
   <parent>
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
-    <version>9</version>
+    <version>13</version>
   </parent>
 
   <groupId>org.apache.drill</groupId>
-  <artifactId>prototype-parent</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <artifactId>drill-root</artifactId>
+  <version>1.0.0-m1-SNAPSHOT</version>
   <packaging>pom</packaging>
 
-  <name>prototype-parent</name>
+  <name>Apache Drill Root POM</name>
 
   <properties>
     <target.gen.source.path>${project.basedir}/target/generated-sources</target.gen.source.path>
@@ -23,6 +23,12 @@
     <dep.slf4j.version>1.7.5</dep.slf4j.version>
   </properties>
 
+
+  <scm>
+    <connection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-drill.git</connection>
+    <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-drill.git</developerConnection>
+    <url>https://github.com/apache/incubator-drill</url>
+  </scm>
 
   <repositories>
     <repository>
@@ -37,9 +43,9 @@
       </releases>
       <snapshots>
         <enabled>false</enabled>
-      </snapshots>      
+      </snapshots>
     </repository>
-    
+
     <repository>
       <id>pentaho</id>
       <name>Pentaho</name>
@@ -54,7 +60,7 @@
         <enabled>false</enabled>
       </snapshots>
     </repository>
-    
+
     <repository>
       <id>sonatype-nexus-snapshots</id>
       <url>https://oss.sonatype.org/content/repositories/snapshots</url>
@@ -67,11 +73,32 @@
     </repository>
   </repositories>
 
-
+  <issueManagement>
+    <system>Jira</system>
+    <url>https://issues.apache.org/jira/browse/DRILL</url>
+  </issueManagement>
 
   <build>
 
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <index>true</index>
+            <manifest>
+              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+              <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+            </manifest>
+            <manifestEntries>
+              <Extension-Name>org.apache.drill</Extension-Name>
+              <Built-By>${username}</Built-By>
+              <url>http://lucene.apache.org/mahout</url>
+            </manifestEntries>
+          </archive>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
@@ -83,7 +110,7 @@
             <exclude>**/logback.xml</exclude>
           </excludes>
         </configuration>
-        
+
         <executions>
           <execution>
             <goals>
@@ -92,7 +119,7 @@
           </execution>
         </executions>
       </plugin>
-      
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-resources-plugin</artifactId>
@@ -253,7 +280,7 @@
       <artifactId>guava</artifactId>
       <version>14.0.1</version>
     </dependency>
-    
+
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
@@ -367,15 +394,15 @@
       <dependencyManagement>
         <dependencies>
           <dependency>
-              <groupId>xerces</groupId>
-              <artifactId>xercesImpl</artifactId>
-              <version>2.9.1</version>
+            <groupId>xerces</groupId>
+            <artifactId>xercesImpl</artifactId>
+            <version>2.9.1</version>
           </dependency>
           <dependency>
-              <groupId>xalan</groupId>
-              <artifactId>xalan</artifactId>
-              <version>2.7.1</version>
-          </dependency>        
+            <groupId>xalan</groupId>
+            <artifactId>xalan</artifactId>
+            <version>2.7.1</version>
+          </dependency>
           <dependency>
             <groupId>com.mapr.hadoop</groupId>
             <artifactId>maprfs</artifactId>
@@ -416,7 +443,7 @@
               </exclusion>
               <exclusion>
 
-              <artifactId>jets3t</artifactId>
+                <artifactId>jets3t</artifactId>
                 <groupId>net.java.dev.jets3t</groupId>
               </exclusion>
               <exclusion>
@@ -472,8 +499,12 @@
         <repository>
           <id>mapr-releases</id>
           <url>http://repository.mapr.com/maven/</url>
-          <snapshots><enabled>false</enabled></snapshots>
-          <releases><enabled>true</enabled></releases>
+          <snapshots>
+            <enabled>false</enabled>
+          </snapshots>
+          <releases>
+            <enabled>true</enabled>
+          </releases>
         </repository>
       </repositories>
     </profile>
@@ -548,7 +579,6 @@
     <module>common</module>
     <module>contrib</module>
     <module>exec</module>
-    <module>planner</module>
     <module>sqlparser</module>
     <module>distribution</module>
   </modules>
