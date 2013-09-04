@@ -66,7 +66,26 @@ done
 # Allow alternate drill conf dir location.
 export DRILL_CONF_DIR="${DRILL_CONF_DIR:-/etc/drill/conf}"
 
+if [ ! -d $DRILL_CONF_DIR ]
+then
+  export DRILL_CONF_DIR=$DRILL_HOME/conf
+fi
+
 . "${DRILL_CONF_DIR}/drill-env.sh"
+
+if [ "${HADOOP_HOME}x" != "x" ]
+then
+  HADOOP_CLASSPATH=""
+  for jar in `ls $HADOOP_HOME/lib/*jar`
+  do
+    echo $jar | grep -v -f $DRILL_HOME/bin/hadoop-excludes.txt >/dev/null
+    if [ "$?" -eq "0" ]
+    then
+      HADOOP_CLASSPATH=$jar:$HADOOP_CLASSPATH
+    fi
+  done
+  export HADOOP_CLASSPATH=$HADOOP_HOME/conf:$HADOOP_CLASSPATH
+fi
 
 # Newer versions of glibc use an arena memory allocator that causes virtual
 # memory usage to explode. Tune the variable down to prevent vmem explosion.

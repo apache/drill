@@ -76,6 +76,7 @@ public class ParquetGroupScan extends AbstractGroupScan {
     return entries;
   }
 
+  @JsonProperty("storageengine")
   public ParquetStorageEngineConfig getEngineConfig() {
     return this.engineConfig;
   }
@@ -360,11 +361,6 @@ public class ParquetGroupScan extends AbstractGroupScan {
     return new Size(10,10);
   }
 
-  @JsonProperty("storageengine")
-  public StorageEngineConfig getStorageEngineConfig(){
-    return this.engineConfig;
-  }
-  
   @Override
   @JsonIgnore
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {

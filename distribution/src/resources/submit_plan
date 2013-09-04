@@ -24,7 +24,7 @@ if [ -z $JAVA_HOME ]
 then
   JAVA=`which java`
 else
-  JAVA=`find $JAVA_HOME -name java`
+  JAVA=`find -L $JAVA_HOME -name java | head -n 1`
 fi
 
 if [ -e $JAVA ]; then

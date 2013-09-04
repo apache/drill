@@ -62,6 +62,10 @@
       <outputDirectory>bin</outputDirectory>
     </file>
     <file>
+      <source>src/resources/hadoop-excludes.txt</source>
+      <outputDirectory>bin</outputDirectory>
+    </file>
+    <file>
       <source>src/resources/drillbit.sh</source>
       <outputDirectory>bin</outputDirectory>
     </file>
@@ -87,6 +91,10 @@
     </file>
     <file>
       <source>src/resources/drill-env.sh</source>
+      <outputDirectory>conf</outputDirectory>
+    </file>
+    <file>
+      <source>src/resources/storage-engines.json</source>
       <outputDirectory>conf</outputDirectory>
     </file>
   </files>

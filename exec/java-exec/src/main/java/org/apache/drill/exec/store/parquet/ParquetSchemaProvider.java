@@ -29,7 +29,7 @@ public class ParquetSchemaProvider implements SchemaProvider{
       logger.debug("{}: {}",HADOOP_DEFAULT_NAME, configuration.getDfsName());
       this.fs = FileSystem.get(conf);
     } catch (IOException ie) {
-      throw new RuntimeException("Error setting up filesystem");
+      throw new RuntimeException("Error setting up filesystem", ie);
     }
   }
 
