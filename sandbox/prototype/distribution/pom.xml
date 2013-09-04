@@ -13,6 +13,7 @@
   <packaging>pom</packaging>
   <name>Packaging and Distribution Assembly</name>
 
+  
   <dependencies>
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
@@ -78,7 +79,41 @@
 
 
   <profiles>
-
+    <!-- START SNIPPET: release-profile -->
+    <profile>
+      <id>drill-release</id>
+      <build>
+        <plugins>
+          <!-- We want to deploy the artifact to a staging location for perusal -->
+          <plugin>
+            <inherited>true</inherited>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-deploy-plugin</artifactId>
+            <configuration>
+              <updateReleaseInfo>true</updateReleaseInfo>
+            </configuration>
+          </plugin>
+          <!-- We want to sign the artifact, the POM, and all attached artifacts -->
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <configuration>
+              <passphrase>${gpg.passphrase}</passphrase>
+              <useAgent>${gpg.useagent}</useAgent>
+            </configuration>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <!-- END SNIPPET: release-profile -->
+    
     <profile>
       <id>rpm</id>
       <build>
@@ -107,7 +142,7 @@
                   <directory>/opt/drill/bin</directory>
                   <sources>
                     <source>
-                      <location>target/drill-1.0-bin/drill-1.0/bin</location>
+                      <location>target/drill-${project.version}-bin/drill-${project.version}/bin</location>
                     </source>
                   </sources>
                 </mapping>
@@ -115,7 +150,7 @@
                   <directory>/opt/drill/lib</directory>
                   <sources>
                     <source>
-                      <location>target/drill-1.0-bin/drill-1.0/lib</location>
+                      <location>target/drill-${project.version}-bin/drill-${project.version}/lib</location>
                     </source>
                   </sources>
                 </mapping>
@@ -123,7 +158,7 @@
                   <directory>/opt/drill/jars</directory>
                   <sources>
                     <source>
-                      <location>target/drill-1.0-bin/drill-1.0/jars</location>
+                      <location>target/drill-${project.version}-bin/drill-${project.version}/jars</location>
                     </source>
                   </sources>
                 </mapping>
@@ -131,7 +166,7 @@
                   <directory>/etc/drill/conf</directory>
                   <sources>
                     <source>
-                      <location>target/drill-1.0-bin/drill-1.0/conf</location>
+                      <location>target/drill-${project.version}-bin/drill-${project.version}/conf</location>
                     </source>
                   </sources>
                   <configuration>true</configuration>
@@ -166,10 +201,10 @@
                   <goal>jdeb</goal>
                 </goals>
                 <configuration>
-                  <deb>target/drill-1.0-SNAPSHOT.deb</deb>
+                  <deb>target/drill-${project.version}.deb</deb>
                   <dataSet>
                     <data>
-                      <src>target/drill-1.0-bin/drill-1.0/lib</src>
+                      <src>target/drill-${project.version}-bin/drill-${project.version}/lib</src>
                       <type>directory</type>
                       <mapper>
                         <type>perm</type>
@@ -177,7 +212,7 @@
                       </mapper>
                     </data>
                     <data>
-                      <src>target/drill-1.0-bin/drill-1.0/jars</src>
+                      <src>target/drill-${project.version}-bin/drill-${project.version}/jars</src>
                       <type>directory</type>
                       <mapper>
                         <type>perm</type>
@@ -185,7 +220,7 @@
                       </mapper>
                     </data>
                     <data>
-                      <src>target/drill-1.0-bin/drill-1.0/bin</src>
+                      <src>target/drill-${project.version}-bin/drill-${project.version}/bin</src>
                       <type>directory</type>
                       <mapper>
                         <type>perm</type>
@@ -194,7 +229,7 @@
                       </mapper>
                     </data>
                     <data>
-                      <src>target/drill-1.0-bin/drill-1.0/conf</src>
+                      <src>target/drill-${project.version}-bin/drill-${project.version}/conf</src>
                       <type>directory</type>
                       <mapper>
                         <type>perm</type>

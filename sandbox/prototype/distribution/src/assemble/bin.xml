@@ -50,11 +50,11 @@
   </dependencySets>
   <files>
     <file>
-      <source>../common/target/common-1.0-SNAPSHOT-rebuffed.jar</source>
+      <source>../common/target/common-${project.version}-rebuffed.jar</source>
       <outputDirectory>jars</outputDirectory>
     </file>
     <file>
-      <source>../exec/java-exec/target/java-exec-1.0-SNAPSHOT-rebuffed.jar</source>
+      <source>../exec/java-exec/target/java-exec-${project.version}-rebuffed.jar</source>
       <outputDirectory>jars</outputDirectory>
     </file>
     <file>
