@@ -98,6 +98,11 @@ public class OutgoingRecordBatch implements RecordBatch {
     final ExecProtos.FragmentHandle handle = context.getHandle();
 
     if (recordCount != 0) {
+      
+      for(VectorWrapper<?> w : vectorContainer){
+        w.getValueVector().getMutator().setValueCount(recordCount);
+      }
+      
       FragmentWritableBatch writableBatch = new FragmentWritableBatch(isLast,
                                                                       handle.getQueryId(),
                                                                       handle.getMajorFragmentId(),
@@ -105,6 +110,7 @@ public class OutgoingRecordBatch implements RecordBatch {
                                                                       operator.getOppositeMajorFragmentId(),
                                                                       0,
                                                                       getWritableBatch());
+
       tunnel.sendRecordBatch(statusHandler, context, writableBatch);
     } else {
       logger.debug("Flush requested on an empty outgoing record batch" + (isLast ? " (last batch)" : ""));
