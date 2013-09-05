@@ -6,14 +6,15 @@
     <groupId>org.apache.drill</groupId>
     <version>1.0.0-m2-SNAPSHOT</version>
   </parent>
-    <groupId>org.apache.drill.contrib</groupId>
+
+  <groupId>org.apache.drill.contrib</groupId>
   <artifactId>contrib-parent</artifactId>
   <name>contrib/Parent Pom</name>
   <packaging>pom</packaging>
 
   <dependencies>
-
   </dependencies>
+
   <modules>
     <module>storage-hbase</module>
     <module>sqlline</module>

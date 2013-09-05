@@ -256,9 +256,9 @@ public class ParquetRecordReader implements RecordReader {
     long totalBytesWritten = 0;
     int validBytesInCurrentBuffer;
     byte[] buffer = new byte[bufferSize];
-    try {
+    
+    try (FSDataInputStream inputStream = fileSystem.open(hadoopPath)) {
       bufferWithAllData = allocator.buffer(totalByteLength);
-      FSDataInputStream inputStream = fileSystem.open(hadoopPath);
       inputStream.seek(start);
       while (totalBytesWritten < totalByteLength){
         validBytesInCurrentBuffer = (int) Math.min(bufferSize, totalByteLength - totalBytesWritten);
@@ -266,7 +266,6 @@ public class ParquetRecordReader implements RecordReader {
         bufferWithAllData.writeBytes(buffer, 0 , (int) validBytesInCurrentBuffer);
         totalBytesWritten += validBytesInCurrentBuffer;
       }
-
     } catch (IOException e) {
       throw new ExecutionSetupException("Error opening or reading metatdata for parquet file at location: " + hadoopPath.getName());
     }
