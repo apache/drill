@@ -28,6 +28,10 @@ import com.google.common.io.Files;
 public class FileUtils {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FileUtils.class);
 
+  public static final char separatorChar = '/';
+
+  public static final String separator = "" + separatorChar;
+
   public static File getResourceAsFile(String fileName) throws IOException {
     URL u = FileUtils.class.getResource(fileName);
     if (u == null) throw new FileNotFoundException(String.format("Unable to find file on path %s", fileName));

@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.expr.DrillFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.Output;
@@ -41,7 +42,7 @@ public class FunctionConverter {
   private CompilationUnit get(Class<?> c) throws IOException{
     String path = c.getName();
     path = path.replaceFirst("\\$.*", "");
-    path = path.replace(".", File.separator);
+    path = path.replace(".", FileUtils.separator);
     path = "/" + path + ".java";
     CompilationUnit cu = functionUnits.get(path);
     if(cu != null) return cu;
@@ -181,7 +182,7 @@ public class FunctionConverter {
   private String getClassBody(Class<?> c) throws CompileException, IOException{
     String path = c.getName();
     path = path.replaceFirst("\\$.*", "");
-    path = path.replace(".", File.separator);
+    path = path.replace(".", FileUtils.separator);
     path = "/" + path + ".java";
     URL u = Resources.getResource(c, path);
     InputSupplier<InputStream> supplier = Resources.newInputStreamSupplier(u);
