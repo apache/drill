@@ -27,6 +27,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.codehaus.commons.compiler.CompileException;
 import org.objectweb.asm.ClassReader;
@@ -114,8 +115,8 @@ public class ClassTransformer {
       final byte[] implementationClass = classLoader.getClassByteCode(materializedClassName, entireClass);
 
       // Get Template Class
-      final String templateClassName = templateDefinition.getTemplateClassName().replaceAll("\\.", File.separator);
-      final String templateClassPath = File.separator + templateClassName + ".class";
+      final String templateClassName = templateDefinition.getTemplateClassName().replace('.', FileUtils.separatorChar);
+      final String templateClassPath = FileUtils.separator + templateClassName + ".class";
       t1.stop();
       Stopwatch t2 = new Stopwatch().start();
       final byte[] templateClass = getClassByteCodeFromPath(templateClassPath);
@@ -125,8 +126,8 @@ public class ClassTransformer {
 
       // Setup adapters for merging, remapping class names and class writing. This is done in reverse order of how they
       // will be evaluated.
-      String oldTemplateSlashName = templateDefinition.getTemplateClassName().replace('.', '/');
-      String materializedSlashName = materializedClassName.replace('.', '/');
+      String oldTemplateSlashName = templateDefinition.getTemplateClassName().replace('.', FileUtils.separatorChar);
+      String materializedSlashName = materializedClassName.replace('.', FileUtils.separatorChar);
       RemapClasses remapper = new RemapClasses(oldTemplateSlashName, materializedSlashName);
       
       Stopwatch t3;
@@ -157,7 +158,7 @@ public class ClassTransformer {
       for (String s : remapper.getSubclasses()) {
         logger.debug("Setting up sub class {}", s);
         // for each sub class, remap them into the new class.
-        String subclassPath = File.separator + s + ".class";
+        String subclassPath = FileUtils.separator + s + ".class";
         final byte[] bytecode = getClassByteCodeFromPath(subclassPath);
         RemapClasses localRemapper = new RemapClasses(oldTemplateSlashName, materializedSlashName);
         Preconditions.checkArgument(localRemapper.getSubclasses().isEmpty(), "Class transformations are only supported for classes that have a single level of inner classes.");
@@ -166,7 +167,7 @@ public class ClassTransformer {
         ClassReader reader = new ClassReader(bytecode);
         reader.accept(remap, ClassReader.EXPAND_FRAMES);
         byte[] newByteCode = subcw.toByteArray();
-        classLoader.injectByteCode(s.replace(oldTemplateSlashName, materializedSlashName).replace('/', '.'), newByteCode);
+        classLoader.injectByteCode(s.replace(oldTemplateSlashName, materializedSlashName).replace(FileUtils.separatorChar, '.'), newByteCode);
 //        Files.write(subcw.toByteArray(), new File(String.format("/tmp/%d-sub-%d.class", fileNum, i)));
         i++;
       }
@@ -209,7 +210,7 @@ public class ClassTransformer {
       super(Opcodes.ASM4, cv);
       this.classToMerge = cn;
       this.templateName = templateName;
-      this.newName = newName.replace('.', '/');
+      this.newName = newName.replace('.', FileUtils.separatorChar);
       ;
 
     }
@@ -268,8 +269,8 @@ public class ClassTransformer {
         mn.instructions.resetLabels();
         // mn.accept(new RemappingMethodAdapter(mn.access, mn.desc, mv, new
         // SimpleRemapper("org.apache.drill.exec.compile.ExampleTemplate", "Bunky")));
-        mn.accept(new RemappingMethodAdapter(mn.access, mn.desc, mv, new SimpleRemapper(cname.replace('.', '/'),
-            classToMerge.name.replace('.', '/'))));
+        mn.accept(new RemappingMethodAdapter(mn.access, mn.desc, mv, new SimpleRemapper(cname.replace('.', FileUtils.separatorChar),
+            classToMerge.name.replace('.', FileUtils.separatorChar))));
       }
       super.visitEnd();
     }
