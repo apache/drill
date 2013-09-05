@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <artifactId>drill-root</artifactId>
     <groupId>org.apache.drill</groupId>
-    <version>1.0.0-m2-SNAPSHOT</version>
+    <version>1.0.0-m1-SNAPSHOT</version>
   </parent>
 
   <groupId>org.apache.drill</groupId>
@@ -17,7 +18,7 @@
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
       <artifactId>java-exec</artifactId>
-      <version>1.0.0-m2-SNAPSHOT</version>
+      <version>1.0.0-m1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
@@ -27,17 +28,17 @@
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
       <artifactId>ref</artifactId>
-      <version>1.0.0-m2-SNAPSHOT</version>
+      <version>1.0.0-m1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.apache.drill</groupId>
       <artifactId>common</artifactId>
-      <version>1.0.0-m2-SNAPSHOT</version>
+      <version>1.0.0-m1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.apache.drill</groupId>
       <artifactId>sqlparser</artifactId>
-      <version>1.0.0-m2-SNAPSHOT</version>
+      <version>1.0.0-m1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>com.google.protobuf</groupId>
