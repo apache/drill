@@ -47,7 +47,8 @@ public class ServiceEngine implements Closeable{
   boolean useIP = false;
   
   public ServiceEngine(BitComHandler bitComWorker, UserWorker userWorker, BootStrapContext context){
-    this.userServer = new UserServer(context.getAllocator().getUnderlyingAllocator(), new NioEventLoopGroup(1, new NamedThreadFactory("UserServer-")), userWorker);
+    this.userServer = new UserServer(context.getAllocator().getUnderlyingAllocator(), new NioEventLoopGroup(context.getConfig().getInt(ExecConstants.USER_SERVER_RPC_THREADS),
+            new NamedThreadFactory("UserServer-")), userWorker);
     this.bitCom = new BitComImpl(context, bitComWorker);
     this.config = context.getConfig();
   }

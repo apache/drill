@@ -24,17 +24,23 @@ public interface ExecConstants {
   public static final String ZK_TIMEOUT = "drill.exec.zk.timeout";
   public static final String ZK_ROOT = "drill.exec.zk.root";
   public static final String ZK_REFRESH = "drill.exec.zk.refresh";
-  public static final String BIT_RETRY_TIMES = "drill.exec.bit.retry.count";
-  public static final String BIT_RETRY_DELAY = "drill.exec.bit.retry.delay";
+  public static final String BIT_RETRY_TIMES = "drill.exec.rpc.bit.server.retry.count";
+  public static final String BIT_RETRY_DELAY = "drill.exec.rpc.bit.server.retry.delay";
   public static final String BIT_TIMEOUT = "drill.exec.bit.timeout" ;
   public static final String STORAGE_ENGINE_SCAN_PACKAGES = "drill.exec.storage.packages";
   public static final String SERVICE_NAME = "drill.exec.cluster-id";
-  public static final String INITIAL_BIT_PORT = "drill.exec.rpc.bit.port";
-  public static final String INITIAL_USER_PORT = "drill.exec.rpc.user.port";
+  public static final String INITIAL_BIT_PORT = "drill.exec.rpc.bit.server.port";
+  public static final String INITIAL_USER_PORT = "drill.exec.rpc.user.server.port";
   public static final String METRICS_CONTEXT_NAME = "drill.exec.metrics.context";
   public static final String FUNCTION_PACKAGES = "drill.exec.functions";
   public static final String USE_IP_ADDRESS = "drill.exec.rpc.use.ip";
   public static final String METRICS_JMX_OUTPUT_ENABLED = "drill.exec.metrics.jmx.enabled";
   public static final String METRICS_LOG_OUTPUT_ENABLED = "drill.exec.metrics.log.enabled";
   public static final String METRICS_LOG_OUTPUT_INTERVAL = "drill.exec.metrics.log.interval";
+  public static final String GLOBAL_MAX_WIDTH = "drill.exec.work.global.max.width";
+  public static final String MAX_WIDTH_PER_ENDPOINT = "drill.exec.work.max.width.per.endpoint";
+  public static final String EXECUTOR_THREADS = "drill.exec.work.executor.threads";
+  public static final String CLIENT_RPC_THREADS = "drill.exec.rpc.user.client.threads";
+  public static final String BIT_SERVER_RPC_THREADS = "drill.exec.rpc.bit.server.threads";
+  public static final String USER_SERVER_RPC_THREADS = "drill.exec.rpc.user.server.threads";
 }

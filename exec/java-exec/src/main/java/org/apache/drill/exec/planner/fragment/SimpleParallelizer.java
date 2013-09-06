@@ -60,12 +60,13 @@ public class SimpleParallelizer {
    * @param globalMaxWidth  The maximum level or parallelization any stage of the query can do. Note that while this
    *                        might be the number of active Drillbits, realistically, this could be well beyond that
    *                        number of we want to do things like speed results return.
+   * @param maxWidthPerEndpoint Limits the maximum level of parallelization to this factor time the number of Drillbits
    * @return The list of generated PlanFragment protobuf objects to be assigned out to the individual nodes.
    * @throws ExecutionSetupException
    */
   public QueryWorkUnit getFragments(DrillbitEndpoint foremanNode, QueryId queryId, Collection<DrillbitEndpoint> activeEndpoints, PhysicalPlanReader reader, Fragment rootNode, PlanningSet planningSet,
-                                    int globalMaxWidth) throws ExecutionSetupException {
-    assignEndpoints(activeEndpoints, planningSet, globalMaxWidth);
+                                    int globalMaxWidth, int maxWidthPerEndpoint) throws ExecutionSetupException {
+    assignEndpoints(activeEndpoints, planningSet, globalMaxWidth, maxWidthPerEndpoint);
     return generateWorkUnit(foremanNode, queryId, reader, rootNode, planningSet);
   }
 
@@ -142,7 +143,7 @@ public class SimpleParallelizer {
   }
 
   private void assignEndpoints(Collection<DrillbitEndpoint> allNodes, PlanningSet planningSet,
-                               int globalMaxWidth) throws PhysicalOperatorSetupException {
+                               int globalMaxWidth, int maxWidthPerEndpoint) throws PhysicalOperatorSetupException {
     // First we determine the amount of parallelization for a fragment. This will be between 1 and maxWidth based on
     // cost. (Later could also be based on cluster operation.) then we decide endpoints based on affinity (later this
     // could be based on endpoint load)
@@ -160,6 +161,8 @@ public class SimpleParallelizer {
       if (diskCost < width) {
         width = (int) diskCost;
       }
+
+      width = Math.min(width, maxWidthPerEndpoint*allNodes.size());
 
       if (width < 1) width = 1;
 //      logger.debug("Setting width {} on fragment {}", width, wrapper);
