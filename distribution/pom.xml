@@ -69,6 +69,7 @@
                 <descriptor>src/assemble/bin.xml</descriptor>
               </descriptors>
               <finalName>apache-drill-${project.version}</finalName>
+              <tarLongFileMode>gnu</tarLongFileMode>
             </configuration>
           </execution>
         </executions>
