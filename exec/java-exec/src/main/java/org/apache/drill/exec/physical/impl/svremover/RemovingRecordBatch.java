@@ -196,7 +196,7 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
     if(outgoing instanceof FixedWidthVector){
       return new FixedVectorAllocator((FixedWidthVector) outgoing);
     }else if(outgoing instanceof VariableWidthVector ){
-      return new VariableEstimatedVector( (VariableWidthVector) outgoing, 50);
+      return new VariableEstimatedVector( (VariableWidthVector) outgoing, 250);
     }else{
       throw new UnsupportedOperationException();
     }
