@@ -280,7 +280,7 @@ public class ParquetGroupScan extends AbstractGroupScan {
   }
 
 
-  static final double[] ASSIGNMENT_CUTOFFS = {0.99, 0.50, 0.25, 0.01};
+  static final double[] ASSIGNMENT_CUTOFFS = {0.99, 0.50, 0.25, 0.00};
 
   /**
    *
@@ -317,7 +317,8 @@ public class ParquetGroupScan extends AbstractGroupScan {
    * @param requiredPercentage the percentage of max bytes required to make an assignment
    * @param assignAll if true, will assign even if no affinity
    */
-  private void scanAndAssign (Multimap<Integer, ParquetRowGroupScan.RowGroupReadEntry> endpointAssignments, List<DrillbitEndpoint> endpoints, List<RowGroupInfo> rowGroups, double requiredPercentage, boolean assignAll) {
+  private void scanAndAssign (Multimap<Integer, ParquetRowGroupScan.RowGroupReadEntry> endpointAssignments, List<DrillbitEndpoint> endpoints,
+                              List<RowGroupInfo> rowGroups, double requiredPercentage, boolean assignAll) {
     Collections.sort(rowGroups, new ParquetReadEntryComparator());
     final boolean requireAffinity = requiredPercentage > 0;
     int maxAssignments = (int) (rowGroups.size() / endpoints.size());
@@ -336,7 +337,7 @@ public class ParquetGroupScan extends AbstractGroupScan {
                 (!bytesPerEndpoint.isEmpty() &&
                         (!requireAffinity || haveAffinity) &&
                         (!endpointAssignments.containsKey(minorFragmentId) || endpointAssignments.get(minorFragmentId).size() < maxAssignments) &&
-                        bytesPerEndpoint.get(currentEndpoint) >= rowGroupInfo.getMaxBytes() * requiredPercentage)) {
+                        (!requireAffinity || bytesPerEndpoint.get(currentEndpoint) >= rowGroupInfo.getMaxBytes() * requiredPercentage))) {
 
           endpointAssignments.put(minorFragmentId, rowGroupInfo.getRowGroupReadEntry());
           logger.debug("Assigned rowGroup {} to minorFragmentId {} endpoint {}", rowGroupInfo.getRowGroupIndex(), minorFragmentId, endpoints.get(minorFragmentId).getAddress());
