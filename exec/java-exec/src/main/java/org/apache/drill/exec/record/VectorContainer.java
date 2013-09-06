@@ -93,7 +93,7 @@ public class VectorContainer implements Iterable<VectorWrapper<?>> {
     for (Iterator<VectorWrapper<?>> iter = wrappers.iterator(); iter.hasNext();) {
       VectorWrapper<?> w = iter.next();
       if (!w.isHyper() && v == w.getValueVector()) {
-        w.release();
+        w.clear();
         iter.remove();
         return;
       }
@@ -148,11 +148,15 @@ public class VectorContainer implements Iterable<VectorWrapper<?>> {
   public void clear() {
     // TODO: figure out a better approach for this.
     // we don't clear schema because we want empty batches to carry previous schema to avoid extra schema update for no
-    // data.
+    // data.  
     // schema = null;
-    for (VectorWrapper<?> w : wrappers) {
-      w.release();
-    }
+    zeroVectors();
     wrappers.clear();
+  }
+  
+  public void zeroVectors(){
+    for (VectorWrapper<?> w : wrappers) {
+      w.clear();
+    }
   }
 }

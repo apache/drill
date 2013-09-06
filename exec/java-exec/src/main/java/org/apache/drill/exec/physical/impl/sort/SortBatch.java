@@ -75,7 +75,7 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
   @Override
   protected void cleanup() {
     super.cleanup();
-    container.clear();
+    container.zeroVectors();;
     sv4.clear();
   }
 
@@ -98,7 +98,7 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
           break outer;
         case NOT_YET:
         case STOP:
-          container.clear();
+          container.zeroVectors();
           return upstream;
         case OK_NEW_SCHEMA:
           // only change in the case that the schema truly changes.  Artificial schema changes are ignored.

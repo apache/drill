@@ -10,6 +10,6 @@ public interface VectorWrapper<T extends ValueVector> {
   public T getValueVector();
   public T[] getValueVectors();
   public boolean isHyper();
-  public void release();
+  public void clear();
   public VectorWrapper<T> cloneAndTransfer();
 }

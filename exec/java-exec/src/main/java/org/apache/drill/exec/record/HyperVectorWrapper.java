@@ -50,14 +50,14 @@ public class HyperVectorWrapper<T extends ValueVector> implements VectorWrapper<
   }
 
   @Override
-  public void release() {
+  public void clear() {
     if(!releasable) return;
     for(T x : vectors){
       x.clear();  
     }
     
   }
-  
+
   @Override
   @SuppressWarnings("unchecked")
   public VectorWrapper<T> cloneAndTransfer() {

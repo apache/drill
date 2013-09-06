@@ -29,7 +29,7 @@ public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> exte
     case NONE:
     case NOT_YET:
     case STOP:
-      container.clear();
+      container.zeroVectors();
       return upstream;
     case OK_NEW_SCHEMA:
       try{

@@ -209,7 +209,7 @@ public class ParquetRecordReaderTest {
       }
 
       for(VectorWrapper<?> vw : batchLoader){
-        vw.release();
+        vw.clear();
       }
       result.release();
       

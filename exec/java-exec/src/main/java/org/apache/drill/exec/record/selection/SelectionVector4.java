@@ -92,6 +92,8 @@ public class SelectionVector4 {
   }
   
   public void clear(){
+    start = 0;
+    length = 0;
     this.vector.clear();
   }
   

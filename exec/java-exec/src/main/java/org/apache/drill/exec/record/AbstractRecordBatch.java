@@ -42,7 +42,7 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
 
   @Override
   public void kill() {
-    container.clear();
+    container.zeroVectors();
     killIncoming();
     cleanup();
   }

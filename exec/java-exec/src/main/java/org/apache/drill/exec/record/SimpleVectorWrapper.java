@@ -47,7 +47,7 @@ public class SimpleVectorWrapper<T extends ValueVector> implements VectorWrapper
   }
 
   @Override
-  public void release() {
+  public void clear() {
     v.clear();
   }
 
