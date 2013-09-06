@@ -5,7 +5,7 @@
   <parent>
     <artifactId>contrib-parent</artifactId>
     <groupId>org.apache.drill.contrib</groupId>
-    <version>1.0.0-m1</version>
+    <version>1.0.0-m2-SNAPSHOT</version>
   </parent>
 
   <artifactId>sqlline</artifactId>
