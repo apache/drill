@@ -108,6 +108,7 @@ public class VectorContainer implements Iterable<VectorWrapper<?>> {
       if (va.getField().matches(path))
         return new TypedFieldId(va.getField().getType(), i, va.isHyper());
     }
+    if(path.getRootSegment().isNamed() && path.getRootSegment().getNameSegment().getPath().equals("_MAP") && path.getRootSegment().isLastPath()) throw new UnsupportedOperationException("Drill does not yet support map references.");
     return null;
   }
 
