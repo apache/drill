@@ -120,6 +120,7 @@ public final class PageReadStatus {
       readPosInBytes = endOfDefinitionLevels;
     }
 
+    readPosInBytes = 0;
     valuesRead = 0;
     return true;
   }
