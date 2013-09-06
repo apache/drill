@@ -23,6 +23,7 @@ import com.google.common.base.Stopwatch;
 import com.google.common.io.Resources;
 import org.apache.commons.lang.StringUtils;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.coord.ZKClusterCoordinator;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.proto.UserProtos;
@@ -33,6 +34,8 @@ import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.user.QueryResultBatch;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
 import org.apache.drill.exec.server.BootStrapContext;
+import org.apache.drill.exec.server.Drillbit;
+import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.vector.ValueVector;
 
 import java.io.IOException;
@@ -54,9 +57,17 @@ public class QuerySubmitter {
 
   public int submitQuery(String planLocation, String type, String zkQuorum) throws Exception {
     DrillConfig config = DrillConfig.create();
-    ZKClusterCoordinator clusterCoordinator = new ZKClusterCoordinator(config, zkQuorum);
-    clusterCoordinator.start(10000);
-    DrillClient client = new DrillClient(config, clusterCoordinator);
+    DrillClient client;
+    if (zkQuorum.equals("local")) {
+      RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
+      Drillbit bit = new Drillbit(config, serviceSet);
+      bit.run();
+      client = new DrillClient(config, serviceSet.getCoordinator());
+    } else {
+      ZKClusterCoordinator clusterCoordinator = new ZKClusterCoordinator(config, zkQuorum);
+      clusterCoordinator.start(10000);
+      client = new DrillClient(config, clusterCoordinator);
+    }
     client.connect();
     QueryResultsListener listener = new QueryResultsListener();
     String plan = Charsets.UTF_8.decode(ByteBuffer.wrap(Files.readAllBytes(Paths.get(planLocation)))).toString();
