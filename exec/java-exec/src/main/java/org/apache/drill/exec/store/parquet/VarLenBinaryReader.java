@@ -116,7 +116,6 @@ public class VarLenBinaryReader {
         columnReader.dataTypeLengthInBits = BytesUtils.readIntLittleEndian(bytes,
             (int) columnReader.pageReadStatus.readPosInBytes);
         lengthVarFieldsInCurrentRecord += columnReader.dataTypeLengthInBits;
-
       }
       for (NullableVarLengthColumn columnReader : nullableColumns) {
         if (columnReader.pageReadStatus.currentPage == null
@@ -162,10 +161,6 @@ public class VarLenBinaryReader {
         columnReader.pageReadStatus.valuesRead++;
         columnReader.valuesReadInCurrentPass++;
         currVec.getMutator().setValueCount((int)recordsReadInCurrentPass);
-        // reached the end of a page
-        if ( columnReader.pageReadStatus.valuesRead == columnReader.pageReadStatus.currentPage.getValueCount()) {
-          columnReader.pageReadStatus.next();
-        }
       }
       for (NullableVarLengthColumn columnReader : nullableColumns) {
         bytes = columnReader.pageReadStatus.pageDataByteArray;
