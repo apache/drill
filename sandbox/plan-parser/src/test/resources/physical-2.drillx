@@ -1,7 +1,0 @@
-# sub-tree filtering
-%1 := scan-json "resource:data2.json"
-%2 := explode %1, "x"
-%4 := bind "a", %2
-%5 := > %4, 3
-%6 := filter %5, %2
-%7,%8 := implode %6, %2

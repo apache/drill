@@ -1,3 +1,0 @@
-SELECT x, y, z
-  FROM [bigquery/samples/shakespeare]
-  ORDER BY x, y desc;

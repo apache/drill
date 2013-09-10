@@ -141,6 +141,25 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>com.mycila</groupId>
+        <artifactId>license-maven-plugin</artifactId>
+        <version>2.3</version>
+        <configuration>
+          <header>header</header>
+          <includes>
+            <include>**/*.java</include>
+          </includes>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>compile</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
     <pluginManagement>
 
@@ -166,7 +185,16 @@
             <argLine>-XX:MaxDirectMemorySize=4096M </argLine>
           </configuration>
         </plugin>
-        <!--This plugin's configuration is used to store Eclipse m2e settings 
+        <plugin>
+          <groupId>org.apache.rat</groupId>
+          <artifactId>apache-rat-plugin</artifactId>
+          <version>0.10</version>
+          <configuration>
+            <property>rat.excludeSubprojects</property>
+          </configuration>
+        </plugin>
+
+        <!--This plugin's configuration is used to store Eclipse m2e settings
           only. It has no influence on the Maven build itself. -->
         <plugin>
           <groupId>org.eclipse.m2e</groupId>
@@ -379,6 +407,7 @@
       <id>mapr</id>
       <properties>
         <alt-hadoop>mapr</alt-hadoop>
+        <rat.excludeSubprojects>false</rat.excludeSubprojects>
       </properties>
       <dependencyManagement>
         <dependencies>
