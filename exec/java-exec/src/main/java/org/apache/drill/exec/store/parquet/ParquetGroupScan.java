@@ -29,10 +29,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import com.yammer.metrics.Histogram;
+import com.yammer.metrics.MetricRegistry;
+import com.yammer.metrics.Timer;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.FieldReference;
-import org.apache.drill.common.logical.StorageEngineConfig;
+import org.apache.drill.exec.metrics.DrillMetrics;
 import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.ReadEntryFromHDFS;
@@ -67,6 +70,12 @@ import com.google.common.collect.Multimap;
 @JsonTypeName("parquet-scan")
 public class ParquetGroupScan extends AbstractGroupScan {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetGroupScan.class);
+  static final MetricRegistry metrics = DrillMetrics.getInstance();
+  static final String READ_FOOTER_TIMER = MetricRegistry.name(ParquetGroupScan.class, "readFooter");
+  static final String ENDPOINT_BYTES_TIMER = MetricRegistry.name(ParquetGroupScan.class, "endpointBytes");
+  static final String ASSIGNMENT_TIMER = MetricRegistry.name(ParquetGroupScan.class, "applyAssignments");
+  static final String ASSIGNMENT_AFFINITY_HIST = MetricRegistry.name(ParquetGroupScan.class, "assignmentAffinity");
+  final Histogram assignmentAffinityStats = metrics.histogram(ASSIGNMENT_AFFINITY_HIST);
 
   private ArrayListMultimap<Integer, ParquetRowGroupScan.RowGroupReadEntry> mappings;
   private List<RowGroupInfo> rowGroupInfos;
@@ -122,13 +131,17 @@ public class ParquetGroupScan extends AbstractGroupScan {
   private void readFooter() throws IOException {
     watch.reset();
     watch.start();
+    Timer.Context tContext = metrics.timer(READ_FOOTER_TIMER).time();
     rowGroupInfos = new ArrayList();
     long start = 0, length = 0;
     ColumnChunkMetaData columnChunkMetaData;
     for (ReadEntryWithPath readEntryWithPath : entries){
       Path path = new Path(readEntryWithPath.getPath());
       List<Footer> footers = ParquetFileReader.readFooters(this.storageEngine.getHadoopConfig(), path);
-      readEntryWithPath.getPath();
+      if (footers.size() == 0) {
+        logger.warn("No footers found");
+      }
+//      readEntryWithPath.getPath();
 
       for (Footer footer : footers) {
         int index = 0;
@@ -150,11 +163,14 @@ public class ParquetGroupScan extends AbstractGroupScan {
         }
       }
     }
+    Preconditions.checkState(!rowGroupInfos.isEmpty(), "No row groups found");
+    tContext.stop();
     watch.stop();
     logger.debug("Took {} ms to get row group infos", watch.elapsed(TimeUnit.MILLISECONDS));
   }
 
   private void calculateEndpointBytes() {
+    Timer.Context tContext = metrics.timer(ENDPOINT_BYTES_TIMER).time();
     watch.reset();
     watch.start();
     AffinityCalculator ac = new AffinityCalculator(fs, availableEndpoints);
@@ -163,6 +179,7 @@ public class ParquetGroupScan extends AbstractGroupScan {
       totalBytes += e.getLength();
     }
     watch.stop();
+    tContext.stop();
     logger.debug("Took {} ms to calculate EndpointBytes", watch.elapsed(TimeUnit.MILLISECONDS));
   }
 
@@ -273,7 +290,9 @@ public class ParquetGroupScan extends AbstractGroupScan {
   public void applyAssignments(List<DrillbitEndpoint> incomingEndpoints) {
     watch.reset();
     watch.start();
-    Preconditions.checkArgument(incomingEndpoints.size() <= rowGroupInfos.size());
+    final Timer.Context tcontext = metrics.timer(ASSIGNMENT_TIMER).time();
+    Preconditions.checkArgument(incomingEndpoints.size() <= rowGroupInfos.size(), String.format("Incoming endpoints %d " +
+            "is greater than number of row groups %d", incomingEndpoints.size(), rowGroupInfos.size()));
     mappings = ArrayListMultimap.create();
     ArrayList rowGroupList = new ArrayList(rowGroupInfos);
     List<DrillbitEndpoint> endpointLinkedlist = Lists.newLinkedList(incomingEndpoints);
@@ -281,10 +300,11 @@ public class ParquetGroupScan extends AbstractGroupScan {
       scanAndAssign(mappings, endpointLinkedlist, rowGroupList, cutoff, false);
     }
     scanAndAssign(mappings, endpointLinkedlist, rowGroupList, 0.0, true);
+    tcontext.stop();
     watch.stop();
     logger.debug("Took {} ms to apply assignments", watch.elapsed(TimeUnit.MILLISECONDS));
-    Preconditions.checkArgument(rowGroupList.isEmpty(), "All readEntries should be assigned by now, but some are still unassigned");
-    Preconditions.checkArgument(!rowGroupInfos.isEmpty());
+    Preconditions.checkState(rowGroupList.isEmpty(), "All readEntries should be assigned by now, but some are still unassigned");
+    Preconditions.checkState(!rowGroupInfos.isEmpty());
   }
 
   public int fragmentPointer = 0;
@@ -320,6 +340,7 @@ public class ParquetGroupScan extends AbstractGroupScan {
 
           endpointAssignments.put(minorFragmentId, rowGroupInfo.getRowGroupReadEntry());
           logger.debug("Assigned rowGroup {} to minorFragmentId {} endpoint {}", rowGroupInfo.getRowGroupIndex(), minorFragmentId, endpoints.get(minorFragmentId).getAddress());
+          assignmentAffinityStats.update(bytesPerEndpoint.get(currentEndpoint) / rowGroupInfo.getLength());
           iter.remove();
           fragmentPointer = (minorFragmentId + 1) % endpoints.size();
           break;

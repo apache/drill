@@ -37,8 +37,8 @@
 <!--     <appender-ref ref="STDOUT" /> -->
 	</logger>
   
-  <logger name="io.netty" additivity="false">
-    <level value="info" />
+  <logger name="org.apache.drill" additivity="false">
+    <level value="debug" />
     <appender-ref ref="SOCKET" />
 <!--     <appender-ref ref="STDOUT" /> -->
   </logger>

@@ -21,6 +21,9 @@ package org.apache.drill.exec.store;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableRangeMap;
 import com.google.common.collect.Range;
+import com.yammer.metrics.*;
+import com.yammer.metrics.Timer;
+import org.apache.drill.exec.metrics.DrillMetrics;
 import org.apache.drill.exec.store.parquet.ParquetGroupScan;
 
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
@@ -35,6 +38,8 @@ import java.util.concurrent.TimeUnit;
 
 public class AffinityCalculator {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AffinityCalculator.class);
+  static final MetricRegistry metrics = DrillMetrics.getInstance();
+  static final String BLOCK_MAP_BUILDER_TIMER = MetricRegistry.name(AffinityCalculator.class, "blockMapBuilderTimer");
 
 
   HashMap<String,ImmutableRangeMap<Long,BlockLocation>> blockMapMap = new HashMap<>();
@@ -53,19 +58,13 @@ public class AffinityCalculator {
    * Builds a mapping of block locations to file byte range
    */
   private void buildBlockMap(String fileName) {
-    Stopwatch watch = new Stopwatch();
+    final Timer.Context context = metrics.timer(BLOCK_MAP_BUILDER_TIMER).time();
     BlockLocation[] blocks;
     ImmutableRangeMap<Long,BlockLocation> blockMap;
     try {
-      watch.start();
       FileStatus file = fs.getFileStatus(new Path(fileName));
       blocks = fs.getFileBlockLocations(file, 0 , file.getLen());
-      watch.stop();
-      logger.debug("Block locations: {}", blocks);
-      logger.debug("Took {} ms to get Block locations", watch.elapsed(TimeUnit.MILLISECONDS));
     } catch (IOException ioe) { throw new RuntimeException(ioe); }
-    watch.reset();
-    watch.start();
     ImmutableRangeMap.Builder<Long, BlockLocation> blockMapBuilder = new ImmutableRangeMap.Builder<Long,BlockLocation>();
     for (BlockLocation block : blocks) {
       long start = block.getOffset();
@@ -74,9 +73,8 @@ public class AffinityCalculator {
       blockMapBuilder = blockMapBuilder.put(range, block);
     }
     blockMap = blockMapBuilder.build();
-    watch.stop();
-    logger.debug("Took {} ms to build block map", watch.elapsed(TimeUnit.MILLISECONDS));
     blockMapMap.put(fileName, blockMap);
+    context.stop();
   }
   /**
    * For a given RowGroup, calculate how many bytes are available on each on drillbit endpoint
