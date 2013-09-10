@@ -398,6 +398,33 @@
                 <artifactId>core</artifactId>
                 <groupId>org.eclipse.jdt</groupId>
               </exclusion>
+              <exclusion>
+                <groupId>org.codehaus.jackson</groupId>
+                <artifactId>jackson-core-asl</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.codehaus.jackson</groupId>
+                <artifactId>jackson-mapper-asl</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.codehaus.jackson</groupId>
+                <artifactId>jackson-xc</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.codehaus.jackson</groupId>
+                <artifactId>jackson-jaxrs</artifactId>
+              </exclusion>
+            </exclusions>
+          </dependency>
+          <dependency>
+            <groupId>net.hydromatic</groupId>
+            <artifactId>optiq</artifactId>
+            <version>0.4.10</version>
+            <exclusions>
+              <exclusion>
+                <groupId>org.jgrapht</groupId>
+                <artifactId>jgrapht-jdk1.5</artifactId>
+              </exclusion>
             </exclusions>
           </dependency>
         </dependencies>

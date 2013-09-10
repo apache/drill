@@ -15,7 +15,6 @@
     <dependency>
       <groupId>net.hydromatic</groupId>
       <artifactId>optiq</artifactId>
-      <version>0.4.10</version>
     </dependency>
     <dependency>
       <groupId>org.apache.drill</groupId>
