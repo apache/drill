@@ -22,7 +22,7 @@
     <groupId>org.apache.drill.exec</groupId>
     <version>1.0.0-m2-incubating-SNAPSHOT</version>
   </parent>
-  <artifactId>java-exec</artifactId>
+  <artifactId>drill-java-exec</artifactId>
   <name>exec/Java Execution Engine</name>
 
   <dependencies>
@@ -118,17 +118,17 @@
     </dependency>
     <dependency>
       <groupId>org.apache.drill</groupId>
-      <artifactId>common</artifactId>
+      <artifactId>drill-common</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
-      <version>4.0.8.Final-SNAPSHOT</version>
-      <artifactId>netty-bufferl</artifactId>
+      <version>4.0.7.Final</version>
+      <artifactId>drill-netty-bufferl</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.drill</groupId>
-      <artifactId>common</artifactId>
+      <artifactId>drill-common</artifactId>
       <version>${project.version}</version>
       <classifier>tests</classifier>
       <scope>test</scope>

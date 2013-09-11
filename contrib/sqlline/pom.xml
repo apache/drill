@@ -19,18 +19,18 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <artifactId>contrib-parent</artifactId>
+    <artifactId>drill-contrib-parent</artifactId>
     <groupId>org.apache.drill.contrib</groupId>
     <version>1.0.0-m2-incubating-SNAPSHOT</version>
   </parent>
 
-  <artifactId>sqlline</artifactId>
+  <artifactId>drill-sqlline</artifactId>
   <name>contrib/sqlline</name>
 
   <dependencies>
     <dependency>
       <groupId>org.apache.drill</groupId>
-      <artifactId>sqlparser</artifactId>
+      <artifactId>drill-sqlparser</artifactId>
       <version>${project.version}</version>
     </dependency>
 

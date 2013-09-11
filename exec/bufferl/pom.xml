@@ -19,8 +19,8 @@
   </parent>
 
   <groupId>org.apache.drill.exec</groupId>
-  <version>4.0.8.Final-SNAPSHOT</version>
-  <artifactId>netty-bufferl</artifactId>
+  <version>4.0.7.Final</version>
+  <artifactId>drill-netty-bufferl</artifactId>
 
   <name>exec/Netty Little Endian Buffers</name>
 

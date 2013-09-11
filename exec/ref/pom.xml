@@ -23,7 +23,7 @@
 		<version>1.0.0-m2-incubating-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>ref</artifactId>
+	<artifactId>drill-ref</artifactId>
 
 	<name>exec/Reference Interpreter</name>
 
@@ -31,7 +31,7 @@
 
 		<dependency>
 			<groupId>org.apache.drill</groupId>
-			<artifactId>common</artifactId>
+			<artifactId>drill-common</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 
