@@ -29,6 +29,11 @@
   <name>Common (Logical Plan, Base expressions)</name>
 
   <dependencies>
+    <dependency>
+      <groupId>org.apache.drill</groupId>
+      <artifactId>drill-protocol</artifactId>
+      <version>${project.version}</version>
+    </dependency>
 
     <dependency>
       <groupId>com.google.protobuf</groupId>
@@ -122,20 +127,6 @@
           <execution>
             <goals>
               <goal>antlr</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-
-
-      <plugin>
-        <groupId>com.github.igor-petruk.protobuf</groupId>
-        <artifactId>protobuf-maven-plugin</artifactId>
-        <version>0.6.3</version>
-        <executions>
-          <execution>
-            <goals>
-              <goal>run</goal>
             </goals>
           </execution>
         </executions>
