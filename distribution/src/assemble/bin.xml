@@ -74,6 +74,10 @@
   
   <files>
     <file>
+      <source>../protocol/target/drill-protocol-${project.version}-rebuffed.jar</source>
+      <outputDirectory>jars</outputDirectory>
+    </file>
+    <file>
       <source>../common/target/drill-common-${project.version}-rebuffed.jar</source>
       <outputDirectory>jars</outputDirectory>
     </file>
