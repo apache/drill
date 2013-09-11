@@ -32,28 +32,33 @@
   
   <dependencies>
     <dependency>
-      <groupId>org.apache.drill.exec</groupId>
-      <artifactId>java-exec</artifactId>
+      <groupId>org.apache.drill</groupId>
+      <artifactId>drill-protocol</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
-      <artifactId>netty-bufferl</artifactId>
+      <artifactId>drill-java-exec</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.drill.exec</groupId>
+      <artifactId>drill-netty-bufferl</artifactId>
       <version>4.0.7.Final</version>
     </dependency>
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
-      <artifactId>ref</artifactId>
+      <artifactId>drill-ref</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.drill</groupId>
-      <artifactId>common</artifactId>
+      <artifactId>drill-common</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.drill</groupId>
-      <artifactId>sqlparser</artifactId>
+      <artifactId>drill-sqlparser</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>

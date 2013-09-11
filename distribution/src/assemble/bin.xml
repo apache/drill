@@ -32,9 +32,9 @@
 
       <!-- Now, select which projects to include in this module-set. -->
       <includes>
-        <include>org.apache.drill:sqlparser:jar</include>
-        <include>org.apache.drill.exec:netty-bufferl</include>
-        <include>org.apache.drill.exec:ref</include>
+        <include>org.apache.drill:drill-sqlparser:jar</include>
+        <include>org.apache.drill.exec:drill-netty-bufferl</include>
+        <include>org.apache.drill.exec:drill-ref</include>
       </includes>
       <binaries>
         <outputDirectory>jars</outputDirectory>
@@ -74,11 +74,15 @@
   
   <files>
     <file>
-      <source>../common/target/common-${project.version}-rebuffed.jar</source>
+      <source>../protocol/target/drill-protocol-${project.version}-rebuffed.jar</source>
       <outputDirectory>jars</outputDirectory>
     </file>
     <file>
-      <source>../exec/java-exec/target/java-exec-${project.version}-rebuffed.jar</source>
+      <source>../common/target/drill-common-${project.version}-rebuffed.jar</source>
+      <outputDirectory>jars</outputDirectory>
+    </file>
+    <file>
+      <source>../exec/java-exec/target/drill-java-exec-${project.version}-rebuffed.jar</source>
       <outputDirectory>jars</outputDirectory>
     </file>
     <file>

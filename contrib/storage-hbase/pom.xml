@@ -19,12 +19,12 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <artifactId>contrib-parent</artifactId>
+    <artifactId>drill-contrib-parent</artifactId>
     <groupId>org.apache.drill.contrib</groupId>
     <version>1.0.0-m1-incubating-SNAPSHOT</version>
   </parent>
 
-  <artifactId>storage-hbase</artifactId>
+  <artifactId>drill-storage-hbase</artifactId>
 
   <name>contrib/hbase-storage-engine</name>
 
