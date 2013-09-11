@@ -21,7 +21,7 @@
   <parent>
     <artifactId>drill-root</artifactId>
     <groupId>org.apache.drill</groupId>
-    <version>1.0.0-m1-SNAPSHOT</version>
+    <version>1.0.0-m1-incubating-SNAPSHOT</version>
   </parent>
 
   <groupId>org.apache.drill</groupId>
@@ -71,6 +71,20 @@
 
   <build>
     <plugins>
+      <plugin>
+        <groupId>org.apache.rat</groupId>
+        <artifactId>apache-rat-plugin</artifactId>
+        <inherited>true</inherited>
+        <configuration>
+          <excludes>
+            <exclude>**/conffiles</exclude>
+            <exclude>**/control</exclude>
+            <exclude>**/*.json</exclude>
+            <exclude>**/hadoop-excludes.txt</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
+    
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
         <executions>

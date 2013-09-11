@@ -21,7 +21,7 @@
   <parent>
     <artifactId>contrib-parent</artifactId>
     <groupId>org.apache.drill.contrib</groupId>
-    <version>1.0.0-m1-SNAPSHOT</version>
+    <version>1.0.0-m1-incubating-SNAPSHOT</version>
   </parent>
 
   <artifactId>storage-hbase</artifactId>
