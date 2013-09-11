@@ -20,7 +20,7 @@
   <parent>
     <artifactId>exec-parent</artifactId>
     <groupId>org.apache.drill.exec</groupId>
-    <version>1.0.0-m1-incubating</version>
+    <version>1.0.0-m2-incubating-SNAPSHOT</version>
   </parent>
   <artifactId>java-exec</artifactId>
   <name>exec/Java Execution Engine</name>
@@ -123,7 +123,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
-      <version>4.0.7.Final</version>
+      <version>4.0.8.Final-SNAPSHOT</version>
       <artifactId>netty-bufferl</artifactId>
     </dependency>
     <dependency>

@@ -20,7 +20,7 @@
 	<parent>
 		<artifactId>exec-parent</artifactId>
 		<groupId>org.apache.drill.exec</groupId>
-		<version>1.0.0-m1-incubating</version>
+		<version>1.0.0-m2-incubating-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>ref</artifactId>

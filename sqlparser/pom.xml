@@ -14,7 +14,7 @@
   <parent>
     <artifactId>drill-root</artifactId>
     <groupId>org.apache.drill</groupId>
-    <version>1.0.0-m1-incubating</version>
+    <version>1.0.0-m2-incubating-SNAPSHOT</version>
   </parent>
   <artifactId>sqlparser</artifactId>
   <name>SQL Parser</name>
