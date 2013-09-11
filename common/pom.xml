@@ -26,7 +26,7 @@
     <version>1.0.0-m1-incubating-SNAPSHOT</version>
   </parent>
 
-  <artifactId>common</artifactId>
+  <artifactId>drill-common</artifactId>
   <packaging>jar</packaging>
   <name>Common (Logical Plan, Base expressions)</name>
 
