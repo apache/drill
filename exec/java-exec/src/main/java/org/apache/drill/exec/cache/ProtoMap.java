@@ -44,7 +44,7 @@ public abstract class ProtoMap<K extends MessageLite, V extends MessageLite, HK 
     Preconditions.checkNotNull(key);
     Preconditions.checkNotNull(value);
     HV oldValue = hzMap.put(getNewKey(key), getNewValue(value));
-    return oldValue.get();
+    return oldValue == null ? null : oldValue.get();
   }
   
   public abstract HK getNewKey(K key);
