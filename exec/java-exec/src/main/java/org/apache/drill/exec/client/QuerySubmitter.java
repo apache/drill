@@ -17,6 +17,10 @@
  */
 package org.apache.drill.exec.client;
 
+import com.beust.jcommander.JCommander;
+import com.beust.jcommander.Parameter;
+import com.beust.jcommander.ParameterException;
+import com.beust.jcommander.Parameters;
 import com.beust.jcommander.internal.Lists;
 import com.google.common.base.Charsets;
 import com.google.common.base.Stopwatch;
@@ -52,16 +56,54 @@ public class QuerySubmitter {
 
   public static void main(String args[]) throws Exception {
     QuerySubmitter submitter = new QuerySubmitter();
-    System.exit(submitter.submitQuery(args[0], args[1], args[2]));
+    Options o = new Options();
+    JCommander jc = null;
+    try {
+      jc = new JCommander(o, args);
+      jc.setProgramName("./submit_plan");
+    } catch (ParameterException e) {
+      System.out.println(e.getMessage());
+      String[] valid = {"-f", "file", "-t", "physical"};
+      new JCommander(o, valid).usage();
+      System.exit(-1);
+    }
+    if (o.help) {
+      jc.usage();
+      System.exit(0);
+    }
+    System.exit(submitter.submitQuery(o.location, o.planType, o.zk, o.local, o.bits));
   }
 
-  public int submitQuery(String planLocation, String type, String zkQuorum) throws Exception {
+  static class Options {
+    @Parameter(names = {"-f"}, description = "file containing plan", required=true)
+    public String location = null;
+
+    @Parameter(names = {"-t"}, description = "type of plan, logical/physical", required=true)
+    public String planType;
+
+    @Parameter(names = {"-zk"}, description = "zookeeper connect string.", required=false)
+    public String zk = "localhost:2181";
+
+    @Parameter(names = {"-local"}, description = "run query in local mode", required=false)
+    public boolean local;
+
+    @Parameter(names = "-bits", description = "number of drillbits to run. local mode only", required=false)
+    public int bits = 1;
+
+    @Parameter(names = {"-h", "-help", "--help"}, description = "show usage", help=true)
+    public boolean help = false;
+  }
+
+  public int submitQuery(String planLocation, String type, String zkQuorum, boolean local, int bits) throws Exception {
     DrillConfig config = DrillConfig.create();
     DrillClient client;
-    if (zkQuorum.equals("local")) {
+    if (local) {
       RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
-      Drillbit bit = new Drillbit(config, serviceSet);
-      bit.run();
+      Drillbit[] drillbits = new Drillbit[bits];
+      for (int i = 0; i < bits; i++) {
+        drillbits[i] = new Drillbit(config, serviceSet);
+        drillbits[i].run();
+      }
       client = new DrillClient(config, serviceSet.getCoordinator());
     } else {
       ZKClusterCoordinator clusterCoordinator = new ZKClusterCoordinator(config, zkQuorum);

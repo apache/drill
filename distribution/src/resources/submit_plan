@@ -15,21 +15,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARGS=();
-while [ $# -gt 0 ]
-do
-  case "$1" in
-  -t) shift;
-      TYPE=$1;;
-  -zk) shift;
-      ZK=$1;;
-  -f) shift;
-      FILE=$1;;
-   *) ARGS+=($1);;
-  esac
-  shift
-done
-
 bin=`dirname "${BASH_SOURCE-$0}"`
 bin=`cd "$bin">/dev/null; pwd`
 
@@ -64,7 +49,8 @@ CP=$DRILL_HOME/jars/*:$CP
 CP=$DRILL_HOME/lib/*:$CP
 
 CP=$DRILL_CONF_DIR:$CP
+CP=$HADOOP_CLASSPATH:$CP
 
 DRILL_SHELL_JAVA_OPTS="$DRILL_SHELL_JAVA_OPTS -Dlog.path=$DRILL_LOG_DIR/submitter.log"
 
-exec $JAVA $DRILL_SHELL_JAVA_OPTS $DRILL_JAVA_OPTS -cp $CP org.apache.drill.exec.client.QuerySubmitter $FILE $TYPE $ZK
+exec $JAVA $DRILL_SHELL_JAVA_OPTS $DRILL_JAVA_OPTS -cp $CP org.apache.drill.exec.client.QuerySubmitter $@
