@@ -34,7 +34,7 @@ import org.apache.drill.exec.vector.ValueVector;
 
 import com.google.common.collect.Maps;
 
-public class RecordBatchLoader implements Iterable<VectorWrapper<?>>{
+public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapper<?>>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RecordBatchLoader.class);
 
   private VectorContainer container = new VectorContainer();
@@ -115,14 +115,14 @@ public class RecordBatchLoader implements Iterable<VectorWrapper<?>>{
   }
 
   public TypedFieldId getValueVectorId(SchemaPath path) {
-    return container.getValueVector(path);
+    return container.getValueVectorId(path);
   }
   
   
   
 //  
 //  @SuppressWarnings("unchecked")
-//  public <T extends ValueVector> T getValueVector(int fieldId, Class<?> clazz) {
+//  public <T extends ValueVector> T getValueVectorId(int fieldId, Class<?> clazz) {
 //    ValueVector v = container.get(fieldId);
 //    assert v != null;
 //    if (v.getClass() != clazz){

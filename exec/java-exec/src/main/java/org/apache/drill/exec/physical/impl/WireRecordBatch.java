@@ -33,6 +33,7 @@ import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
+import org.apache.drill.exec.util.BatchPrinter;
 import org.apache.drill.exec.vector.ValueVector;
 
 public class WireRecordBatch implements RecordBatch{
@@ -105,6 +106,7 @@ public class WireRecordBatch implements RecordBatch{
 
       RecordBatchDef rbd = batch.getHeader().getDef();
       boolean schemaChanged = batchLoader.load(rbd, batch.getBody());
+//      System.out.println(rbd.getRecordCount());
       batch.release();
       if(schemaChanged){
         this.schema = batchLoader.getSchema();

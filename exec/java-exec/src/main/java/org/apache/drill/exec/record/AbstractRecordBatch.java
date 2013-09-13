@@ -81,7 +81,7 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
 
   @Override
   public TypedFieldId getValueVectorId(SchemaPath path) {
-    return container.getValueVector(path);
+    return container.getValueVectorId(path);
   }
 
   @Override

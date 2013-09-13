@@ -101,6 +101,11 @@ public abstract class AbstractPhysicalVisitor<T, X, E extends Throwable> impleme
   }
 
   @Override
+  public T visitOrderedPartitionSender(OrderedPartitionSender op, X value) throws E {
+    return visitSender(op, value);
+  }
+
+  @Override
   public T visitRandomReceiver(RandomReceiver op, X value) throws E {
     return visitReceiver(op, value);
   }

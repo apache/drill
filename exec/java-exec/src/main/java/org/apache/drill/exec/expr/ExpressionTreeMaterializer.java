@@ -32,6 +32,7 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TypedFieldId;
 
 import com.google.common.collect.Lists;
+import org.apache.drill.exec.record.VectorAccessible;
 
 public class ExpressionTreeMaterializer {
 
@@ -42,16 +43,16 @@ public class ExpressionTreeMaterializer {
   private ExpressionTreeMaterializer() {
   };
 
-  public static LogicalExpression materialize(LogicalExpression expr, RecordBatch batch, ErrorCollector errorCollector) {
+  public static LogicalExpression materialize(LogicalExpression expr, VectorAccessible batch, ErrorCollector errorCollector) {
     return expr.accept(new MaterializeVisitor(batch, errorCollector), null);
   }
 
   private static class MaterializeVisitor extends SimpleExprVisitor<LogicalExpression> {
     private final ErrorCollector errorCollector;
-    private final RecordBatch batch;
+    private final VectorAccessible batch;
     private ExpressionValidator validator = new ExpressionValidator();
 
-    public MaterializeVisitor(RecordBatch batch, ErrorCollector errorCollector) {
+    public MaterializeVisitor(VectorAccessible batch, ErrorCollector errorCollector) {
       this.batch = batch;
       this.errorCollector = errorCollector;
     }

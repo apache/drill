@@ -15,50 +15,44 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.physical.impl.sort;
+package org.apache.drill.exec.physical.impl.orderedpartitioner;
 
-import javax.inject.Named;
-
-import com.google.common.base.Preconditions;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorContainer;
-import org.apache.drill.exec.record.selection.SelectionVector4;
+import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.hadoop.util.IndexedSortable;
 import org.apache.hadoop.util.QuickSort;
 
-public abstract class SortTemplate implements Sorter, IndexedSortable{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SortTemplate.class);
-  
-  private SelectionVector4 vector4;
-  
-  
-  public void setup(FragmentContext context, SelectionVector4 vector4, VectorContainer hyperBatch) throws SchemaChangeException{
-    // we pass in the local hyperBatch since that is where we'll be reading data.
-    Preconditions.checkArgument(vector4 != null);
-    this.vector4 = vector4;
-    doSetup(context, hyperBatch, null);
+import javax.inject.Named;
+
+public abstract class SampleSortTemplate implements SampleSorter, IndexedSortable{
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SampleSortTemplate.class);
+
+  SelectionVector2 vector2;
+
+  public void setup(FragmentContext context, VectorContainer sampleBatch, SelectionVector2 vector2) throws SchemaChangeException{
+    this.vector2 = vector2;
+    doSetup(context, sampleBatch, null);
   }
   
   @Override
-  public void sort(SelectionVector4 vector4, VectorContainer container){
+  public void sort(SelectionVector2 vector2, VectorContainer container){
     QuickSort qs = new QuickSort();
-    qs.sort(this, 0, vector4.getTotalCount());
+    qs.sort(this, 0, vector2.getCount());
   }
 
   @Override
   public void swap(int sv0, int sv1) {
-    int tmp = vector4.get(sv0);
-    vector4.set(sv0, vector4.get(sv1));
-    vector4.set(sv1, tmp);
+    char tmp = vector2.getIndex(sv0);
+    vector2.setIndex(sv0, vector2.getIndex(sv1));
+    vector2.setIndex(sv1, tmp);
   }
   
   @Override
   public int compare(int leftIndex, int rightIndex) {
-    int sv1 = vector4.get(leftIndex);
-    int sv2 = vector4.get(rightIndex);
-    return doEval(sv1, sv2);
+    return doEval(leftIndex, rightIndex);
   }
 
   public abstract void doSetup(@Named("context") FragmentContext context, @Named("incoming") VectorContainer incoming, @Named("outgoing") RecordBatch outgoing);

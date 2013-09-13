@@ -149,6 +149,7 @@ public class QuerySubmitter {
     @Override
     public void resultArrived(QueryResultBatch result) {
       int rows = result.getHeader().getRowCount();
+      count.addAndGet(rows);
       if (result.getData() != null) {
         try {
           loader.load(result.getHeader().getDef(), result.getData());
@@ -173,11 +174,9 @@ public class QuerySubmitter {
             Object o = vw.getValueVector().getAccessor().getObject(row);
             if (o instanceof byte[]) {
               String value = new String((byte[]) o);
-              count.addAndGet(1);
               System.out.printf("| %-15s",value.length() <= 15 ? value : value.substring(0, 14));
             } else {
               String value = o.toString();
-              count.addAndGet(1);
               System.out.printf("| %-15s",value.length() <= 15 ? value : value.substring(0,14));
             }
           }

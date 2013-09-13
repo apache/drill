@@ -28,12 +28,13 @@ import org.apache.drill.exec.vector.ValueVector;
 import com.beust.jcommander.internal.Lists;
 import com.google.common.base.Preconditions;
 
-public class VectorContainer implements Iterable<VectorWrapper<?>> {
+public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccessible {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(VectorContainer.class);
 
   private final List<VectorWrapper<?>> wrappers = Lists.newArrayList();
   private final List<VectorWrapper<?>> oldWrappers = Lists.newArrayList();
   private BatchSchema schema;
+  private int recordCount = -1;
 
   public VectorContainer() {
   }
@@ -119,7 +120,7 @@ public class VectorContainer implements Iterable<VectorWrapper<?>> {
     throw new IllegalStateException("You attempted to remove a vector that didn't exist.");
   }
 
-  public TypedFieldId getValueVector(SchemaPath path) {
+  public TypedFieldId getValueVectorId(SchemaPath path) {
     for (int i = 0; i < wrappers.size(); i++) {
       VectorWrapper<?> va = wrappers.get(i);
       if (va.getField().matches(path))
@@ -129,8 +130,10 @@ public class VectorContainer implements Iterable<VectorWrapper<?>> {
     return null;
   }
 
+
+  @Override
   @SuppressWarnings("unchecked")
-  public <T extends ValueVector> VectorWrapper<T> getValueAccessorById(int fieldId, Class<?> clazz) {
+  public VectorWrapper<?> getValueAccessorById(int fieldId, Class<?> clazz) {
     VectorWrapper<?> va = wrappers.get(fieldId);
     assert va != null;
     if (va.getVectorClass() != clazz) {
@@ -139,7 +142,7 @@ public class VectorContainer implements Iterable<VectorWrapper<?>> {
           clazz.getCanonicalName(), va.getVectorClass().getCanonicalName()));
       return null;
     }
-    return (VectorWrapper<T>) va;
+    return (VectorWrapper) va;
   }
 
   public BatchSchema getSchema() {
@@ -169,6 +172,16 @@ public class VectorContainer implements Iterable<VectorWrapper<?>> {
     // schema = null;
     zeroVectors();
     wrappers.clear();
+  }
+
+  public void setRecordCount(int recordCount) {
+    this.recordCount = recordCount;
+  }
+
+  @Override
+  public int getRecordCount() {
+    Preconditions.checkState(recordCount != -1, "Record count not set for this vector container");
+    return recordCount;
   }
   
   public void zeroVectors(){

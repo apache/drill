@@ -159,7 +159,7 @@ public class SimpleParallelizer {
       // TODO: right now we'll just assume that each task is cost 1 so we'll set the breadth at the lesser of the number
       // of tasks or the maximum width of the fragment.
       if (diskCost < width) {
-        width = (int) diskCost;
+//        width = (int) diskCost;
       }
 
       width = Math.min(width, maxWidthPerEndpoint*allNodes.size());

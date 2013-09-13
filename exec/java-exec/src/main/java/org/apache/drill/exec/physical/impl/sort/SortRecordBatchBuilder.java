@@ -17,8 +17,10 @@
  */
 package org.apache.drill.exec.physical.impl.sort;
 
+import com.google.common.collect.Lists;
 import io.netty.buffer.ByteBuf;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.exec.exception.SchemaChangeException;
@@ -74,11 +76,13 @@ public class SortRecordBatchBuilder {
     if (batch.getRecordCount() == 0) return true; // skip over empty record batches.
 
     long batchBytes = getSize(batch);
+    if (batchBytes == 0) {return true;}
     if(batchBytes + runningBytes > maxBytes) return false; // enough data memory.
     if(runningBatches+1 > Character.MAX_VALUE) return false; // allowed in batch.
     if(!svAllocator.preAllocate(batch.getRecordCount()*4)) return false;  // sv allocation available.
       
-   
+
+    if (batch.getRecordCount() == 0) return true;
     RecordBatchData bd = new RecordBatchData(batch);
     runningBytes += batchBytes;
     batches.put(batch.getSchema(), bd);
@@ -142,6 +146,19 @@ public class SortRecordBatchBuilder {
 
   public SelectionVector4 getSv4() {
     return sv4;
+  }
+
+  public List<VectorContainer> getContainers() {
+    ArrayList containerList = Lists.newArrayList();
+    int recordCount = 0;
+    for (BatchSchema bs : batches.keySet()) {
+      for (RecordBatchData bd : batches.get(bs)) {
+        VectorContainer c = bd.getContainer();
+        c.setRecordCount(bd.getRecordCount());
+        containerList.add(c);
+      }
+    }
+    return containerList;
   }
   
 }

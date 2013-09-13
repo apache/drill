@@ -204,12 +204,15 @@ public class DrillClient implements Closeable{
         } else {
           fail(ex);
         }
+      } else {
+        fail(ex);
       }
     }
 
     private void fail(Exception ex) {
       logger.debug("Submission failed.", ex);
       future.setException(ex);
+      future.set(results);
     }
 
     @Override

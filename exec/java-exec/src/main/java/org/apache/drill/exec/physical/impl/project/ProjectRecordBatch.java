@@ -96,7 +96,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
     
     final CodeGenerator<Projector> cg = new CodeGenerator<Projector>(Projector.TEMPLATE_DEFINITION, context.getFunctionRegistry());
     
-    for(int i =0; i < exprs.size(); i++){
+    for(int i = 0; i < exprs.size(); i++){
       final NamedExpression namedExpression = exprs.get(i);
       final LogicalExpression expr = ExpressionTreeMaterializer.materialize(namedExpression.getExpr(), incoming, collector);
       final MaterializedField outputField = MaterializedField.create(getRef(namedExpression), expr.getMajorType());

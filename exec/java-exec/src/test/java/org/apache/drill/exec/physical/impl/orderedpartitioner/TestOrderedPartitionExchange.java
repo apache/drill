@@ -1,0 +1,124 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.drill.exec.physical.impl.orderedpartitioner;
+
+import com.beust.jcommander.internal.Lists;
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
+import org.apache.commons.math.stat.descriptive.moment.Mean;
+import org.apache.commons.math.stat.descriptive.moment.StandardDeviation;
+import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.expression.ExpressionPosition;
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.exec.client.DrillClient;
+import org.apache.drill.exec.pop.PopUnitTestBase;
+import org.apache.drill.exec.proto.UserProtos;
+import org.apache.drill.exec.record.RecordBatchLoader;
+import org.apache.drill.exec.rpc.user.QueryResultBatch;
+import org.apache.drill.exec.server.BootStrapContext;
+import org.apache.drill.exec.server.Drillbit;
+import org.apache.drill.exec.server.RemoteServiceSet;
+import org.apache.drill.exec.util.BatchPrinter;
+import org.apache.drill.exec.vector.BigIntVector;
+import org.apache.drill.exec.vector.Float8Vector;
+import org.apache.drill.exec.vector.IntVector;
+import org.junit.Assert;
+import org.junit.Ignore;
+import org.junit.Test;
+
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+
+
+public class TestOrderedPartitionExchange extends PopUnitTestBase {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestOrderedPartitionExchange.class);
+
+  @Test
+  public void twoBitTwoExchangeTwoEntryRun() throws Exception {
+    RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
+
+    try(Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
+        Drillbit bit2 = new Drillbit(CONFIG, serviceSet);
+        DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
+
+      bit1.run();
+      bit2.run();
+      client.connect();
+      List<QueryResultBatch> results = client.runQuery(UserProtos.QueryType.PHYSICAL,
+          Files.toString(FileUtils.getResourceAsFile("/sender/ordered_exchange.json"),
+              Charsets.UTF_8));
+      int count = 0;
+      List<Integer> partitionRecordCounts = Lists.newArrayList();
+      for(QueryResultBatch b : results) {
+        if (b.getData() != null) {
+          int rows = b.getHeader().getRowCount();
+          count += rows;
+          RecordBatchLoader loader = new RecordBatchLoader(new BootStrapContext(DrillConfig.create()).getAllocator());
+          loader.load(b.getHeader().getDef(), b.getData());
+          BigIntVector vv1 = (BigIntVector)loader.getValueAccessorById(loader.getValueVectorId(
+                  new SchemaPath("col1", ExpressionPosition.UNKNOWN)).getFieldId(), BigIntVector.class).getValueVector();
+          Float8Vector vv2 = (Float8Vector)loader.getValueAccessorById(loader.getValueVectorId(
+                  new SchemaPath("col2", ExpressionPosition.UNKNOWN)).getFieldId(), Float8Vector.class).getValueVector();
+          IntVector pVector = (IntVector)loader.getValueAccessorById(loader.getValueVectorId(
+                  new SchemaPath("partition", ExpressionPosition.UNKNOWN)).getFieldId(), IntVector.class).getValueVector();
+          long previous1 = Long.MIN_VALUE;
+          double previous2 = Double.MIN_VALUE;
+          int partPrevious = -1;
+          long current1 = Long.MIN_VALUE;
+          double current2 = Double.MIN_VALUE;
+          int partCurrent = -1;
+          int partitionRecordCount = 0;
+          for (int i = 0; i < rows; i++) {
+            previous1 = current1;
+            previous2 = current2;
+            partPrevious = partCurrent;
+            current1 = vv1.getAccessor().get(i);
+            current2 = vv2.getAccessor().get(i);
+            partCurrent = pVector.getAccessor().get(i);
+            Assert.assertTrue(current1 >= previous1);
+            if (current1 == previous1) {
+              Assert.assertTrue(current2 <= previous2);
+            }
+            if (partCurrent == partPrevious || partPrevious == -1) {
+              partitionRecordCount++;
+            } else {
+              partitionRecordCounts.add(partitionRecordCount);
+              partitionRecordCount = 0;
+            }
+          }
+          partitionRecordCounts.add(partitionRecordCount);
+        }
+      }
+      double[] values = new double[partitionRecordCounts.size()];
+      int i = 0;
+      for (Integer rc : partitionRecordCounts) {
+        values[i++] = rc.doubleValue();
+      }
+      StandardDeviation stdDev = new StandardDeviation();
+      Mean mean = new Mean();
+      double std = stdDev.evaluate(values);
+      double m = mean.evaluate(values);
+      System.out.println("mean: " + m + " std dev: " + std);
+      Assert.assertTrue(std < 0.1 * m);
+      assertEquals(31000, count);
+    }
+  }
+
+}

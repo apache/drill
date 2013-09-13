@@ -31,7 +31,7 @@ import org.apache.drill.exec.vector.ValueVector;
  * A key thing to know is that the Iterator provided by record batch must align with the rank positions of the field ids
  * provided utilizing getValueVectorId();
  */
-public interface RecordBatch extends Iterable<VectorWrapper<?>> {
+public interface RecordBatch extends VectorAccessible, Iterable<VectorWrapper<?>>{
 
   /**
    * Describes the outcome of a RecordBatch being incremented forward.
@@ -92,6 +92,7 @@ public interface RecordBatch extends Iterable<VectorWrapper<?>> {
    *         TypedFieldId
    */
   public abstract TypedFieldId getValueVectorId(SchemaPath path);
+  @Override
   public abstract VectorWrapper<?> getValueAccessorById(int fieldId, Class<?> clazz);
 
   /**

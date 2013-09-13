@@ -32,6 +32,7 @@ import org.apache.drill.exec.physical.config.Union;
 import org.apache.drill.exec.physical.impl.filter.FilterBatchCreator;
 import org.apache.drill.exec.physical.impl.join.MergeJoinCreator;
 import org.apache.drill.exec.physical.impl.limit.LimitBatchCreator;
+import org.apache.drill.exec.physical.impl.orderedpartitioner.OrderedPartitionBatchCreator;
 import org.apache.drill.exec.physical.impl.partitionsender.PartitionSenderCreator;
 import org.apache.drill.exec.physical.impl.project.ProjectBatchCreator;
 import org.apache.drill.exec.physical.impl.sort.SortBatchCreator;
@@ -60,8 +61,10 @@ public class ImplCreator extends AbstractPhysicalVisitor<RecordBatch, FragmentCo
   private ScreenCreator sc = new ScreenCreator();
   private RandomReceiverCreator rrc = new RandomReceiverCreator();
   private PartitionSenderCreator hsc = new PartitionSenderCreator();
+  private OrderedPartitionBatchCreator opc = new OrderedPartitionBatchCreator();
   private SingleSenderCreator ssc = new SingleSenderCreator();
   private ProjectBatchCreator pbc = new ProjectBatchCreator();
+  private OrderedPartitionBatchCreator smplbc = new OrderedPartitionBatchCreator();
   private FilterBatchCreator fbc = new FilterBatchCreator();
   private LimitBatchCreator lbc = new LimitBatchCreator();
   private UnionBatchCreator unionbc = new UnionBatchCreator();
@@ -133,6 +136,15 @@ public class ImplCreator extends AbstractPhysicalVisitor<RecordBatch, FragmentCo
   @Override
   public RecordBatch visitHashPartitionSender(HashPartitionSender op, FragmentContext context) throws ExecutionSetupException {
     root = hsc.getRoot(context, op, getChildren(op, context));
+    return null;
+  }
+
+  @Override
+  public RecordBatch visitOrderedPartitionSender(OrderedPartitionSender op, FragmentContext context) throws ExecutionSetupException {
+    List<RecordBatch> children = Lists.newArrayList();
+    children.add(opc.getBatch(context, op, getChildren(op, context)));
+    HashPartitionSender config = new HashPartitionSender(op.getOppositeMajorFragmentId(), op, op.getRef(),op.getDestinations());
+    root = hsc.getRoot(context, config, children);
     return null;
   }
   

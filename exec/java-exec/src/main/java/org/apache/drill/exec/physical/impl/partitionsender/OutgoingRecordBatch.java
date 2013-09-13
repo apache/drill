@@ -39,6 +39,7 @@ import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.rpc.BaseRpcOutcomeListener;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.bit.BitTunnel;
+import org.apache.drill.exec.util.BatchPrinter;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.allocator.VectorAllocator;
 import org.apache.drill.exec.work.foreman.ErrorHelper;
@@ -103,7 +104,9 @@ public class OutgoingRecordBatch implements RecordBatch {
       for(VectorWrapper<?> w : vectorContainer){
         w.getValueVector().getMutator().setValueCount(recordCount);
       }
-      
+
+//      BatchPrinter.printBatch(vectorContainer);
+
       FragmentWritableBatch writableBatch = new FragmentWritableBatch(isLast,
                                                                       handle.getQueryId(),
                                                                       handle.getMajorFragmentId(),
@@ -222,7 +225,7 @@ public class OutgoingRecordBatch implements RecordBatch {
 
   @Override
   public TypedFieldId getValueVectorId(SchemaPath path) {
-    return vectorContainer.getValueVector(path);
+    return vectorContainer.getValueVectorId(path);
   }
 
   @Override

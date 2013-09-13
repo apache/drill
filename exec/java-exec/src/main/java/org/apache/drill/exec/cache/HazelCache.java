@@ -20,6 +20,8 @@ package org.apache.drill.exec.cache;
 import java.io.IOException;
 import java.util.List;
 
+import com.hazelcast.core.*;
+import com.hazelcast.nio.DataSerializable;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.cache.ProtoBufImpl.HWorkQueueStatus;
@@ -33,12 +35,6 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.hazelcast.config.Config;
-import com.hazelcast.core.Hazelcast;
-import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.IMap;
-import com.hazelcast.core.ITopic;
-import com.hazelcast.core.Message;
-import com.hazelcast.core.MessageListener;
 
 public class HazelCache implements DistributedCache {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HazelCache.class);
@@ -78,7 +74,11 @@ public class HazelCache implements DistributedCache {
       if (instance.getName().equals(this.instanceName))
         return instance;
     }
+    try {
     return Hazelcast.newHazelcastInstance(c);
+    } catch (DuplicateInstanceNameException e) {
+      return getInstanceOrCreateNew(c);
+    }
   }
 
 //  @Override
@@ -108,6 +108,17 @@ public class HazelCache implements DistributedCache {
   }
   
 
+  public <K,V extends DataSerializable> MultiMap<K,V> getMultiMap(String name) {
+    return this.instance.getMultiMap(name);
+  }
+
+  public <K,V extends DataSerializable> IMap<K,V> getMap(String name) {
+    return this.instance.getMap(name);
+  }
+
+  public  AtomicNumber getAtomicNumber(String name) {
+    return this.instance.getAtomicNumber(name);
+  }
   
 
 }

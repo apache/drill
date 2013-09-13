@@ -15,19 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.physical.impl.sort;
+package org.apache.drill.exec.record;
 
-import org.apache.drill.exec.compile.TemplateClassDefinition;
-import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.record.VectorContainer;
-import org.apache.drill.exec.record.selection.SelectionVector4;
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.vector.ValueVector;
 
-public interface Sorter {
-  public void setup(FragmentContext context, SelectionVector4 vector4, VectorContainer hyperBatch) throws SchemaChangeException;
-  public void sort(SelectionVector4 vector4, VectorContainer container);
-  
-  public static TemplateClassDefinition<Sorter> TEMPLATE_DEFINITION = new TemplateClassDefinition<Sorter>(Sorter.class, SortTemplate.class);
-
+/**
+ * Created with IntelliJ IDEA.
+ * User: sphillips
+ * Date: 9/30/13
+ * Time: 1:40 PM
+ * To change this template use File | Settings | File Templates.
+ */
+public interface VectorAccessible extends Iterable<VectorWrapper<?>> {
+  public VectorWrapper<?> getValueAccessorById(int fieldId, Class<?> clazz);
+  public TypedFieldId getValueVectorId(SchemaPath path);
+  public BatchSchema getSchema();
+  public int getRecordCount();
 }

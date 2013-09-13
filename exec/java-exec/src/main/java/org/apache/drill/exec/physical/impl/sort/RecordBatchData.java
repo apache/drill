@@ -22,6 +22,7 @@ import java.util.List;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TransferPair;
+import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.vector.ValueVector;
@@ -37,6 +38,7 @@ public class RecordBatchData {
   final List<ValueVector> vectors = Lists.newArrayList();
   final SelectionVector2 sv2;
   final int recordCount;
+  VectorContainer container;
   
   public RecordBatchData(RecordBatch batch){
     this.sv2 = batch.getSchema().getSelectionVectorMode() == SelectionVectorMode.TWO_BYTE ? batch.getSelectionVector2().clone() : null;
@@ -60,5 +62,19 @@ public class RecordBatchData {
 
   public SelectionVector2 getSv2() {
     return sv2;
+  }
+
+  public VectorContainer getContainer() {
+    if (this.container == null) buildContainer();
+    return this.container;
+  }
+
+  private void buildContainer() {
+    assert container == null;
+    container = new VectorContainer();
+    for (ValueVector vv : vectors) {
+      container.add(vv);
+    }
+    container.buildSchema(sv2 == null ? SelectionVectorMode.NONE : SelectionVectorMode.TWO_BYTE);
   }
 }

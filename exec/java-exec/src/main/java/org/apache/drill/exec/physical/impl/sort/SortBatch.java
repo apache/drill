@@ -18,6 +18,7 @@
 package org.apache.drill.exec.physical.impl.sort;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.drill.common.defs.OrderDef;
 import org.apache.drill.common.expression.ErrorCollector;
@@ -35,11 +36,9 @@ import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.HoldingContainerExpression;
 import org.apache.drill.exec.expr.fn.impl.ComparatorFunctions;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.Sort;
-import org.apache.drill.exec.record.AbstractRecordBatch;
-import org.apache.drill.exec.record.BatchSchema;
-import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.record.WritableBatch;
+import org.apache.drill.exec.record.*;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 
@@ -139,7 +138,7 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
       sv4 = builder.getSv4();
 
       sorter = createNewSorter();
-      sorter.setup(context, this);
+      sorter.setup(context, this.getSelectionVector4(), this.container);
       long t1 = System.nanoTime();
       sorter.sort(sv4, container);
       logger.debug("Sorted {} records in {} micros.", sv4.getTotalCount(), (System.nanoTime() - t1)/1000);
@@ -154,22 +153,29 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
     }
   }
 
+  private Sorter createNewSorter() throws ClassTransformationException, IOException, SchemaChangeException {
+    return createNewSorter(this.context, this.popConfig.getOrderings(), this, MAIN_MAPPING, LEFT_MAPPING, RIGHT_MAPPING);
+  }
+
+  public static Sorter createNewSorter(FragmentContext context, List<OrderDef> orderings, VectorAccessible batch) throws ClassTransformationException, IOException, SchemaChangeException {
+    return createNewSorter(context, orderings, batch, MAIN_MAPPING, LEFT_MAPPING, RIGHT_MAPPING);
+  }
   
-  
-  private Sorter createNewSorter() throws ClassTransformationException, IOException, SchemaChangeException{
+  public static Sorter createNewSorter(FragmentContext context, List<OrderDef> orderings, VectorAccessible batch, MappingSet mainMapping, MappingSet leftMapping, MappingSet rightMapping)
+          throws ClassTransformationException, IOException, SchemaChangeException{
     CodeGenerator<Sorter> g = new CodeGenerator<Sorter>(Sorter.TEMPLATE_DEFINITION, context.getFunctionRegistry());
-    g.setMappingSet(MAIN_MAPPING);
+    g.setMappingSet(mainMapping);
     
-    for(OrderDef od : popConfig.getOrderings()){
+    for(OrderDef od : orderings){
       // first, we rewrite the evaluation stack for each side of the comparison.
       ErrorCollector collector = new ErrorCollectorImpl(); 
-      final LogicalExpression expr = ExpressionTreeMaterializer.materialize(od.getExpr(), this, collector);
+      final LogicalExpression expr = ExpressionTreeMaterializer.materialize(od.getExpr(), batch, collector);
       if(collector.hasErrors()) throw new SchemaChangeException("Failure while materializing expression. " + collector.toErrorString());
-      g.setMappingSet(LEFT_MAPPING);
+      g.setMappingSet(leftMapping);
       HoldingContainer left = g.addExpr(expr, false);
-      g.setMappingSet(RIGHT_MAPPING);
+      g.setMappingSet(rightMapping);
       HoldingContainer right = g.addExpr(expr, false);
-      g.setMappingSet(MAIN_MAPPING);
+      g.setMappingSet(mainMapping);
       
       // next we wrap the two comparison sides and add the expression block for the comparison.
       FunctionCall f = new FunctionCall(ComparatorFunctions.COMPARE_TO, ImmutableList.of((LogicalExpression) new HoldingContainerExpression(left), new HoldingContainerExpression(right)), ExpressionPosition.UNKNOWN);
