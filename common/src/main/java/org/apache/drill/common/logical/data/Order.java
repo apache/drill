@@ -70,7 +70,7 @@ public class Order extends SingleInputOperator {
     public Ordering(@JsonProperty("order") String strOrder, @JsonProperty("expr") LogicalExpression expr, @JsonProperty("nullCollation") String nullCollation) {
       this.expr = expr;
       this.nulls = NullCollation.NULLS_LAST.description.equals(nullCollation) ? NullCollation.NULLS_LAST :  NullCollation.NULLS_FIRST; // default first
-      this.direction = Direction.DESC.description.equals(strOrder) ? Direction.DESC : Direction.ASC; // default asc
+      this.direction = Direction.DESC.description.equalsIgnoreCase(strOrder) ? Direction.DESC : Direction.ASC; // default asc
                                                                                                      
     }
 
@@ -105,7 +105,7 @@ public class Order extends SingleInputOperator {
   }
 
   public static enum Direction {
-    ASC("asc"), DESC("desc");
+    ASC("ASC"), DESC("DESC");
     public final String description;
 
     Direction(String d) {
