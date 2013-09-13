@@ -341,7 +341,11 @@ public class ParquetGroupScan extends AbstractGroupScan {
 
           endpointAssignments.put(minorFragmentId, rowGroupInfo.getRowGroupReadEntry());
           logger.debug("Assigned rowGroup {} to minorFragmentId {} endpoint {}", rowGroupInfo.getRowGroupIndex(), minorFragmentId, endpoints.get(minorFragmentId).getAddress());
-          assignmentAffinityStats.update(bytesPerEndpoint.get(currentEndpoint) / rowGroupInfo.getLength());
+          if (bytesPerEndpoint.get(currentEndpoint) != null) {
+            assignmentAffinityStats.update(bytesPerEndpoint.get(currentEndpoint) / rowGroupInfo.getLength());
+          } else {
+            assignmentAffinityStats.update(0);
+          }
           iter.remove();
           fragmentPointer = (minorFragmentId + 1) % endpoints.size();
           break;
