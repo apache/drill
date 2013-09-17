@@ -184,7 +184,7 @@ class PartitionSenderRootExec implements RootExec {
     // generate evaluate expression to determine the hash
     CodeGenerator.HoldingContainer exprHolder = cg.addExpr(materializedExpr);
     cg.getEvalBlock().decl(JType.parse(cg.getModel(), "int"), "bucket", exprHolder.getValue().mod(JExpr.lit(outgoing.length)));
-
+    cg.getEvalBlock().assign(JExpr.ref("bucket"), cg.getModel().ref(Math.class).staticInvoke("abs").arg(bucket));
     // declare and assign the array of outgoing record batches
     JVar outgoingBatches = cg.clazz.field(JMod.NONE,
         outgoingBatchArrayType,
