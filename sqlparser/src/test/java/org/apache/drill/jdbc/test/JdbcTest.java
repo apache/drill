@@ -21,8 +21,23 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
+import com.beust.jcommander.internal.Lists;
+import com.beust.jcommander.internal.Maps;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
+import org.apache.drill.common.JSONOptions;
+import org.apache.drill.common.PlanProperties;
+import org.apache.drill.common.logical.LogicalPlan;
+import org.apache.drill.common.logical.StorageEngineConfig;
+import org.apache.drill.common.logical.data.*;
 import org.apache.drill.exec.ref.ReferenceInterpreter;
+import org.apache.drill.exec.ref.rse.ClasspathRSE;
+import org.apache.drill.exec.ref.rse.QueueRSE;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -149,16 +164,31 @@ public class JdbcTest {
   /** Checks the logical plan. */
   @Test
   public void testProjectPlan() throws Exception {
-    JdbcAssert
+    LogicalPlan plan = JdbcAssert
         .withModel(MODEL, "DONUTS")
         .sql("select _MAP['ppu'] as ppu from donuts")
-        .planContains(
-            "{'head':{'type':'APACHE_DRILL_LOGICAL','version':'1','generator':{'type':'optiq','info':'na'}},"
-                + "'storage':{'donuts-json':{'type':'classpath'},'queue':{'type':'queue'}},"
-                + "'query':["
-                + "{'op':'scan','memo':'initial_scan','ref':'_MAP','storageengine':'donuts-json','selection':{'path':'/donuts.json','type':'JSON'},'@id':1},"
-                + "{'op':'project','input':1,'projections':[{'expr':'_MAP.ppu','ref':'output.PPU'}],'@id':2},"
-                + "{'op':'store','input':2,'storageengine':'queue','memo':'output sink','target':{'number':0},'@id':3}]}");
+        .logicalPlan();
+
+    PlanProperties planProperties = plan.getProperties();
+    Assert.assertEquals("optiq", planProperties.generator.type);
+    Assert.assertEquals("na", planProperties.generator.info);
+    Assert.assertEquals(1, planProperties.version);
+    Assert.assertEquals(PlanProperties.PlanType.APACHE_DRILL_LOGICAL, planProperties.type);
+    Map<String, StorageEngineConfig> seConfigs = plan.getStorageEngines();
+    StorageEngineConfig config = seConfigs.get("donuts-json");
+    Assert.assertTrue(config != null && config instanceof ClasspathRSE.ClasspathRSEConfig);
+    config = seConfigs.get("queue");
+    Assert.assertTrue(config != null && config instanceof QueueRSE.QueueRSEConfig);
+    Scan scan = findOnlyOperator(plan, Scan.class);
+    Assert.assertEquals("donuts-json", scan.getStorageEngine());
+    Assert.assertEquals("_MAP", scan.getOutputReference().getPath());
+    Project project = findOnlyOperator(plan, Project.class);
+    Assert.assertEquals(1, project.getSelections().length);
+    Assert.assertEquals(Scan.class, project.getInput().getClass());
+    Store store = findOnlyOperator(plan, Store.class);
+    Assert.assertEquals("queue", store.getStorageEngine());
+    Assert.assertEquals("output sink", store.getMemo());
+    Assert.assertEquals(Project.class, store.getInput().getClass());
   }
 
   /**
@@ -174,21 +204,52 @@ public class JdbcTest {
         .returns("NAME=Raised; XX=null\n" + "NAME=Filled; XX=null\n" + "NAME=Apple Fritter; XX=null\n");
   }
 
+  private static <T extends LogicalOperator> Iterable<T> findOperator(LogicalPlan plan, final Class<T> operatorClazz) {
+    return (Iterable<T>) Iterables.filter(plan.getSortedOperators(), new Predicate<LogicalOperator>() {
+      @Override
+      public boolean apply(LogicalOperator input) {
+        return input.getClass().equals(operatorClazz);
+      }
+    });
+  }
+
+  private static <T extends LogicalOperator> T findOnlyOperator(LogicalPlan plan, final Class<T> operatorClazz) {
+    return Iterables.getOnlyElement(findOperator(plan, operatorClazz));
+  }
+
   @Test
   public void testProjectFilterSubqueryPlan() throws Exception {
-    JdbcAssert
+    LogicalPlan plan = JdbcAssert
         .withModel(MODEL, "DONUTS")
         .sql(
             "select d['name'] as name, d['xx'] as xx from (\n" + " select _MAP['donuts'] as d from donuts)\n"
                 + "where cast(d['ppu'] as double) > 0.6")
-        .planContains(
-            "{'head':{'type':'APACHE_DRILL_LOGICAL','version':'1','generator':{'type':'optiq','info':'na'}},'storage':{'donuts-json':{'type':'classpath'},'queue':{'type':'queue'}},"
-                + "'query':["
-                + "{'op':'scan','memo':'initial_scan','ref':'_MAP','storageengine':'donuts-json','selection':{'path':'/donuts.json','type':'JSON'},'@id':1},"
-                + "{'op':'filter','input':1,'expr':'(_MAP.donuts.ppu > 0.6)','@id':2},"
-                + "{'op':'project','input':2,'projections':[{'expr':'_MAP.donuts','ref':'output.D'}],'@id':3},"
-                + "{'op':'project','input':3,'projections':[{'expr':'D.name','ref':'output.NAME'},{'expr':'D.xx','ref':'output.XX'}],'@id':4},"
-                + "{'op':'store','input':4,'storageengine':'queue','memo':'output sink','target':{'number':0},'@id':5}]}");
+        .logicalPlan();
+    PlanProperties planProperties = plan.getProperties();
+    Assert.assertEquals("optiq", planProperties.generator.type);
+    Assert.assertEquals("na", planProperties.generator.info);
+    Assert.assertEquals(1, planProperties.version);
+    Assert.assertEquals(PlanProperties.PlanType.APACHE_DRILL_LOGICAL, planProperties.type);
+    Map<String, StorageEngineConfig> seConfigs = plan.getStorageEngines();
+    StorageEngineConfig config = seConfigs.get("donuts-json");
+    Assert.assertTrue(config != null && config instanceof ClasspathRSE.ClasspathRSEConfig);
+    config = seConfigs.get("queue");
+    Assert.assertTrue(config != null && config instanceof QueueRSE.QueueRSEConfig);
+    Scan scan = findOnlyOperator(plan, Scan.class);
+    Assert.assertEquals("donuts-json", scan.getStorageEngine());
+    Assert.assertEquals("_MAP", scan.getOutputReference().getPath());
+    Filter filter = findOnlyOperator(plan, Filter.class);
+    Assert.assertTrue(filter.getInput() instanceof Scan);
+    Project[] projects = Iterables.toArray(findOperator(plan, Project.class), Project.class);
+    Assert.assertEquals(2, projects.length);
+    Assert.assertEquals(1, projects[0].getSelections().length);
+    Assert.assertEquals(Filter.class, projects[0].getInput().getClass());
+    Assert.assertEquals(2, projects[1].getSelections().length);
+    Assert.assertEquals(Project.class, projects[1].getInput().getClass());
+    Store store = findOnlyOperator(plan, Store.class);
+    Assert.assertEquals("queue", store.getStorageEngine());
+    Assert.assertEquals("output sink", store.getMemo());
+    Assert.assertEquals(Project.class, store.getInput().getClass());
   }
 
   /** Query that projects one field. (Disabled; uses sugared syntax.) */
@@ -221,56 +282,57 @@ public class JdbcTest {
   public void testDistinct() throws Exception {
     JdbcAssert.withModel(MODEL, "HR").sql("select distinct deptId from emp")
         .returnsUnordered("DEPTID=null", "DEPTID=31", "DEPTID=34", "DEPTID=33")
-        .planContains("\"op\":\"collapsingaggregate\"");
+        .planContains(CollapsingAggregate.class);
   }
 
   @Test
   public void testCountNoGroupBy() throws Exception {
     // 5 out of 6 employees have a not-null deptId
     JdbcAssert.withModel(MODEL, "HR").sql("select count(deptId) as cd, count(*) as c from emp").returns("CD=5; C=6\n")
-        .planContains("\"op\":\"collapsingaggregate\"");
+        .planContains(CollapsingAggregate.class);
   }
 
   @Test
   public void testDistinctCountNoGroupBy() throws Exception {
     JdbcAssert.withModel(MODEL, "HR").sql("select count(distinct deptId) as c from emp").returns("C=3\n")
-        .planContains("\"op\":\"collapsingaggregate\"");
+        .planContains(CollapsingAggregate.class);
   }
 
   @Test
   public void testDistinctCountGroupByEmpty() throws Exception {
     JdbcAssert.withModel(MODEL, "HR").sql("select count(distinct deptId) as c from emp group by ()").returns("C=3\n")
-        .planContains("\"op\":\"collapsingaggregate\"");
+        .planContains(CollapsingAggregate.class);
   }
 
   @Test
   public void testCountNull() throws Exception {
     JdbcAssert.withModel(MODEL, "HR").sql("select count(distinct deptId) as c from emp group by ()").returns("C=3\n")
-        .planContains("\"op\":\"collapsingaggregate\"");
+        .planContains(CollapsingAggregate.class);
   }
 
   @Test
   public void testCount() throws Exception {
     JdbcAssert.withModel(MODEL, "HR").sql("select deptId, count(*) as c from emp group by deptId")
         .returnsUnordered("DEPTID=31; C=1", "DEPTID=33; C=2", "DEPTID=34; C=2", "DEPTID=null; C=1")
-        .planContains("\"op\":\"collapsingaggregate\""); // make sure using drill
+        .planContains(CollapsingAggregate.class); // make sure using drill
   }
 
   @Test
   public void testJoin() throws Exception {
-    JdbcAssert
+    Join join = JdbcAssert
         .withModel(MODEL, "HR")
         .sql("select * from emp join dept on emp.deptId = dept.deptId")
         .returnsUnordered("DEPTID=31; LASTNAME=Rafferty; DEPTID0=31; NAME=Sales",
             "DEPTID=33; LASTNAME=Jones; DEPTID0=33; NAME=Engineering",
             "DEPTID=33; LASTNAME=Steinberg; DEPTID0=33; NAME=Engineering",
             "DEPTID=34; LASTNAME=Robinson; DEPTID0=34; NAME=Clerical",
-            "DEPTID=34; LASTNAME=Smith; DEPTID0=34; NAME=Clerical").planContains("'type':'inner'");
+            "DEPTID=34; LASTNAME=Smith; DEPTID0=34; NAME=Clerical").planContains(Join.class);
+    Assert.assertEquals(Join.JoinType.INNER, join.getJointType());
   }
 
   @Test
   public void testLeftJoin() throws Exception {
-    JdbcAssert
+    Join join = JdbcAssert
         .withModel(MODEL, "HR")
         .sql("select * from emp left join dept on emp.deptId = dept.deptId")
         .returnsUnordered("DEPTID=31; LASTNAME=Rafferty; DEPTID0=31; NAME=Sales",
@@ -278,7 +340,8 @@ public class JdbcTest {
             "DEPTID=33; LASTNAME=Steinberg; DEPTID0=33; NAME=Engineering",
             "DEPTID=34; LASTNAME=Robinson; DEPTID0=34; NAME=Clerical",
             "DEPTID=34; LASTNAME=Smith; DEPTID0=34; NAME=Clerical",
-            "DEPTID=null; LASTNAME=John; DEPTID0=null; NAME=null").planContains("'type':'left'");
+            "DEPTID=null; LASTNAME=John; DEPTID0=null; NAME=null").planContains(Join.class);
+    Assert.assertEquals(Join.JoinType.LEFT, join.getJointType());
   }
 
   /**
@@ -286,13 +349,14 @@ public class JdbcTest {
    */
   @Test @Ignore
   public void testRightJoin() throws Exception {
-    JdbcAssert.withModel(MODEL, "HR").sql("select * from emp right join dept on emp.deptId = dept.deptId")
-        .returnsUnordered("xx").planContains("'type':'left'");
+    Join join = JdbcAssert.withModel(MODEL, "HR").sql("select * from emp right join dept on emp.deptId = dept.deptId")
+        .returnsUnordered("xx").planContains(Join.class);
+    Assert.assertEquals(Join.JoinType.LEFT, join.getJointType());
   }
 
   @Test
   public void testFullJoin() throws Exception {
-    JdbcAssert
+    Join join = JdbcAssert
         .withModel(MODEL, "HR")
         .sql("select * from emp full join dept on emp.deptId = dept.deptId")
         .returnsUnordered("DEPTID=31; LASTNAME=Rafferty; DEPTID0=31; NAME=Sales",
@@ -301,7 +365,8 @@ public class JdbcTest {
             "DEPTID=34; LASTNAME=Robinson; DEPTID0=34; NAME=Clerical",
             "DEPTID=34; LASTNAME=Smith; DEPTID0=34; NAME=Clerical",
             "DEPTID=null; LASTNAME=John; DEPTID0=null; NAME=null",
-            "DEPTID=null; LASTNAME=null; DEPTID0=35; NAME=Marketing").planContains("'type':'outer'");
+            "DEPTID=null; LASTNAME=null; DEPTID0=35; NAME=Marketing").planContains(Join.class);
+    Assert.assertEquals(Join.JoinType.OUTER, join.getJointType());
   }
 
   /**
@@ -310,7 +375,7 @@ public class JdbcTest {
    */
   @Test
   public void testJoinOnSubquery() throws Exception {
-    JdbcAssert
+    Join join = JdbcAssert
         .withModel(MODEL, "HR")
         .sql(
             "select * from (\n" + "select deptId, lastname, 'x' as name from emp) as e\n"
@@ -319,7 +384,8 @@ public class JdbcTest {
             "DEPTID=33; LASTNAME=Jones; NAME=x; DEPTID0=33; NAME0=Engineering",
             "DEPTID=33; LASTNAME=Steinberg; NAME=x; DEPTID0=33; NAME0=Engineering",
             "DEPTID=34; LASTNAME=Robinson; NAME=x; DEPTID0=34; NAME0=Clerical",
-            "DEPTID=34; LASTNAME=Smith; NAME=x; DEPTID0=34; NAME0=Clerical").planContains("'type':'inner'");
+            "DEPTID=34; LASTNAME=Smith; NAME=x; DEPTID0=34; NAME0=Clerical").planContains(Join.class);
+    Assert.assertEquals(Join.JoinType.INNER, join.getJointType());
   }
 
   /** Tests that one of the FoodMart tables is present. */
@@ -335,16 +401,18 @@ public class JdbcTest {
 
   @Test
   public void testUnionAll() throws Exception {
-    JdbcAssert.withModel(MODEL, "HR").sql("select deptId from dept\n" + "union all\n" + "select deptId from emp")
+    Union union = JdbcAssert.withModel(MODEL, "HR").sql("select deptId from dept\n" + "union all\n" + "select deptId from emp")
         .returnsUnordered("DEPTID=31", "DEPTID=33", "DEPTID=34", "DEPTID=35", "DEPTID=null")
-        .planContains("'op':'union','distinct':false");
+        .planContains(Union.class);
+    Assert.assertFalse(union.isDistinct());
   }
 
   @Test
   public void testUnion() throws Exception {
-    JdbcAssert.withModel(MODEL, "HR").sql("select deptId from dept\n" + "union\n" + "select deptId from emp")
+    Union union = JdbcAssert.withModel(MODEL, "HR").sql("select deptId from dept\n" + "union\n" + "select deptId from emp")
         .returnsUnordered("DEPTID=31", "DEPTID=33", "DEPTID=34", "DEPTID=35", "DEPTID=null")
-        .planContains("'op':'union','distinct':true");
+        .planContains(Union.class);
+    Assert.assertTrue(union.isDistinct());
   }
 
   @Test
@@ -356,7 +424,7 @@ public class JdbcTest {
         .returns(
             "DEPTID=null; LASTNAME=John\n" + "DEPTID=34; LASTNAME=Robinson\n" + "DEPTID=34; LASTNAME=Smith\n"
                 + "DEPTID=33; LASTNAME=Jones\n" + "DEPTID=33; LASTNAME=Steinberg\n" + "DEPTID=31; LASTNAME=Rafferty\n")
-        .planContains("'op':'order'");
+        .planContains(Order.class);
   }
 
   @Test
@@ -368,7 +436,7 @@ public class JdbcTest {
         .returns(
             "DEPTID=34; LASTNAME=Robinson\n" + "DEPTID=34; LASTNAME=Smith\n" + "DEPTID=33; LASTNAME=Jones\n"
                 + "DEPTID=33; LASTNAME=Steinberg\n" + "DEPTID=31; LASTNAME=Rafferty\n" + "DEPTID=null; LASTNAME=John\n")
-        .planContains("'op':'order'");
+        .planContains(Order.class);
   }
 
   @Test @Ignore
@@ -381,7 +449,7 @@ public class JdbcTest {
         .returns(
             "DEPTID=null; LASTNAME=John\n" + "DEPTID=34; LASTNAME=Robinson\n" + "DEPTID=34; LASTNAME=Smith\n"
                 + "DEPTID=33; LASTNAME=Jones\n" + "DEPTID=33; LASTNAME=Steinberg\n" + "DEPTID=31; LASTNAME=Rafferty\n")
-        .planContains("'op':'order'");
+        .planContains(Order.class);
   }
 
   @Test
@@ -397,7 +465,7 @@ public class JdbcTest {
             + "DEPTID=34; LASTNAME=Robinson\n"
             + "DEPTID=34; LASTNAME=Smith\n"
             + "DEPTID=null; LASTNAME=John\n")
-        .planContains("'op':'order'");
+        .planContains(Order.class);
   }
 
   @Test
@@ -405,9 +473,9 @@ public class JdbcTest {
     JdbcAssert
         .withModel(MODEL, "HR")
         .sql("select LASTNAME from emp limit 2")
-        .planContains("\"op\":\"limit\"")
         .returns("LASTNAME=Rafferty\n" +
-            "LASTNAME=Jones");
+            "LASTNAME=Jones")
+        .planContains(Limit.class);
   }
 
   @Test
@@ -415,10 +483,11 @@ public class JdbcTest {
     JdbcAssert
         .withModel(MODEL, "HR")
         .sql("select LASTNAME from emp order by LASTNAME asc offset 3")
-        .planContains("\"op\":\"limit\"")
         .returns("LASTNAME=Robinson\n" +
             "LASTNAME=Smith\n" +
-            "LASTNAME=John");
+            "LASTNAME=John")
+        .planContains(Limit.class);
+
   }
 
   @Test
@@ -426,9 +495,9 @@ public class JdbcTest {
     JdbcAssert
         .withModel(MODEL, "HR")
         .sql("select LASTNAME from emp order by LASTNAME asc offset 3 fetch next 2 rows only")
-        .planContains("\"op\":\"limit\"")
         .returns("LASTNAME=Robinson\n" +
-            "LASTNAME=Smith");
+            "LASTNAME=Smith")
+        .planContains(Limit.class);
   }
 }
 

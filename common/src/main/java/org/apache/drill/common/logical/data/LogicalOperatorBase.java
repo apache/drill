@@ -48,6 +48,12 @@ public abstract class LogicalOperatorBase implements LogicalOperator{
 	}
 
   @Override
+  public NodeBuilder nodeBuilder() {
+    // FIXME: Implement this on all logical operators
+    throw new UnsupportedOperationException("Not yet implemented.");
+  }
+
+  @Override
   public void accept(GraphVisitor<LogicalOperator> visitor) {
     if(visitor.enter(this)) visitor.leave(this);
   }

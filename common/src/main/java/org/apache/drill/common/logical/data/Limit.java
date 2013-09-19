@@ -20,17 +20,19 @@ package org.apache.drill.common.logical.data;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Iterators;
 import org.apache.drill.common.logical.data.visitors.LogicalVisitor;
 
 import java.util.Iterator;
 
 @JsonTypeName("limit")
-public class Limit extends SingleInputOperator{
-  
+public class Limit extends SingleInputOperator {
+
   private final Integer first;
   private final Integer last;
-  
+
   @JsonCreator
   public Limit(@JsonProperty("first") Integer first, @JsonProperty("last") Integer last) {
     super();
@@ -46,15 +48,31 @@ public class Limit extends SingleInputOperator{
     return last;
   }
 
-    @Override
-    public <T, X, E extends Throwable> T accept(LogicalVisitor<T, X, E> logicalVisitor, X value) throws E {
-        return logicalVisitor.visitLimit(this, value);
-    }
+  @Override
+  public <T, X, E extends Throwable> T accept(LogicalVisitor<T, X, E> logicalVisitor, X value) throws E {
+    return logicalVisitor.visitLimit(this, value);
+  }
+
+  @Override
+  public NodeBuilder nodeBuilder() {
+    return new LimitNodeBuilder();  //To change body of implemented methods use File | Settings | File Templates.
+  }
+
+  @Override
+  public Iterator<LogicalOperator> iterator() {
+    return Iterators.singletonIterator(getInput());
+  }
+
+  public static class LimitNodeBuilder implements NodeBuilder<Limit> {
 
     @Override
-    public Iterator<LogicalOperator> iterator() {
-        return Iterators.singletonIterator(getInput());
+    public ObjectNode convert(ObjectMapper mapper, Limit operator, Integer inputId) {
+      ObjectNode limitNode = mapper.createObjectNode();
+      limitNode.put("op", "limit");
+      limitNode.put("input", inputId);
+      limitNode.put("first", operator.first);
+      limitNode.put("last", operator.last);
+      return limitNode;
     }
-
-
+  }
 }

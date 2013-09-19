@@ -36,7 +36,7 @@ public class DrillSortRule extends RelOptRule {
     final SortRel sort = call.rel(0);
 
     if(sort.offset != null || sort.fetch != null) {
-      return; //Sort already handled by DrillLimitRule
+      return;
     }
 
     final RelNode input = call.rel(1);

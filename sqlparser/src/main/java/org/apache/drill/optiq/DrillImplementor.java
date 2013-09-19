@@ -20,13 +20,12 @@ package org.apache.drill.optiq;
 import java.io.IOException;
 import java.util.Set;
 
+import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.exec.ref.rse.QueueRSE.QueueOutputInfo;
 import org.apache.drill.jdbc.DrillTable;
 import org.eigenbase.rel.RelNode;
 
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -109,6 +108,10 @@ public class DrillImplementor {
     output.number = 0;
     writeOp.put("target", mapper.convertValue(output, JsonNode.class));
     return add(writeOp);
+  }
+
+  public int add(LogicalOperator operator, Integer inputId) {
+    return add(operator.nodeBuilder().convert(mapper, operator, inputId));
   }
 
   public int add(ObjectNode operator) {

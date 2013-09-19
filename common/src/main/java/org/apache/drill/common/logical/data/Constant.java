@@ -28,7 +28,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
 
 @JsonTypeName("constant")
-public class Constant extends SourceOperator{
+public class Constant extends SourceOperator {
 
     private final JSONOptions content;
 

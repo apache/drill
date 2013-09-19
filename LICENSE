@@ -269,7 +269,7 @@ For
   Netty/Common (http://netty.io/netty-common/) io.netty:netty-common:bundle:4.0.7.Final
   Netty/Handler (http://netty.io/netty-handler/) io.netty:netty-handler:bundle:4.0.7.Final
   Netty/Transport (http://netty.io/netty-transport/) io.netty:netty-transport:bundle:4.0.7.Final
-  optiq (http://github.com/julianhyde/optiq) net.hydromatic:optiq:jar:0.4.10
+  optiq (http://github.com/julianhyde/optiq) net.hydromatic:optiq:jar:0.4.11
   Parquet Column (https://github.com/Parquet/parquet-mr) com.twitter:parquet-column:jar:1.0.1
   Parquet Common (https://github.com/Parquet/parquet-mr) com.twitter:parquet-common:jar:1.0.1
   Parquet Encodings (https://github.com/Parquet/parquet-mr) com.twitter:parquet-encoding:jar:1.0.1

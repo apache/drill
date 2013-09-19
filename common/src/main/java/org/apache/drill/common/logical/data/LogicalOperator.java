@@ -21,26 +21,33 @@ import java.util.Collection;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.drill.common.graph.GraphValue;
 import org.apache.drill.common.logical.ValidationError;
 
 import org.apache.drill.common.logical.data.visitors.LogicalVisitor;
 
 @JsonPropertyOrder({"@id", "memo", "input"}) // op will always be first since it is wrapped.
-@JsonIdentityInfo(generator=ObjectIdGenerators.IntSequenceGenerator.class, property="@id")
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property="op")
-public interface LogicalOperator extends GraphValue<LogicalOperator>{
+@JsonIdentityInfo(generator = ObjectIdGenerators.IntSequenceGenerator.class, property = "@id")
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "op")
+public interface LogicalOperator extends GraphValue<LogicalOperator> {
 
-	public void setupAndValidate(List<LogicalOperator> operators, Collection<ValidationError> errors);
+  public void setupAndValidate(List<LogicalOperator> operators, Collection<ValidationError> errors);
 
-    /**
-     * Provides capability to build a set of output based on traversing a query graph tree.
-     *
-     * @param logicalVisitor
-     * @return
-     */
-    public <T, X, E extends Throwable> T accept(LogicalVisitor<T, X, E> logicalVisitor, X value) throws E;
+  /**
+   * Provides capability to build a set of output based on traversing a query graph tree.
+   *
+   * @param logicalVisitor
+   * @return
+   */
+  public <T, X, E extends Throwable> T accept(LogicalVisitor<T, X, E> logicalVisitor, X value) throws E;
 
-    public void registerAsSubscriber(LogicalOperator operator);
+  public void registerAsSubscriber(LogicalOperator operator);
 
+  NodeBuilder nodeBuilder();
+
+  public interface NodeBuilder<T extends LogicalOperator> {
+    ObjectNode convert(ObjectMapper mapper, T operator, Integer inputId);
+  }
 }

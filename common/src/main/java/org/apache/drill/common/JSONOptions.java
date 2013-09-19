@@ -48,7 +48,7 @@ public class JSONOptions {
   private JsonNode root;
   private JsonLocation location;
   
-  private JSONOptions(JsonNode n, JsonLocation location){
+  public JSONOptions(JsonNode n, JsonLocation location){
     this.root = n;
     this.location = location;
   }

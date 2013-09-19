@@ -29,9 +29,18 @@ import java.util.Properties;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
 import net.hydromatic.linq4j.Ord;
 
+import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.logical.LogicalPlan;
+import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.common.util.Hook;
+import org.codehaus.jackson.node.ObjectNode;
 import org.junit.Assert;
 
 import com.google.common.base.Function;
@@ -53,7 +62,7 @@ public class JdbcAssert {
     return new ModelAndSchema(info, false);
   }
 
-  
+
   static String toString(ResultSet resultSet, int expectedRecordCount) throws SQLException {
     StringBuilder buf = new StringBuilder();
     int total = 0, n;
@@ -72,7 +81,7 @@ public class JdbcAssert {
     }
     return buf.toString();
   }
-  
+
   static String toString(ResultSet resultSet) throws SQLException {
     StringBuilder buf = new StringBuilder();
     final List<Ord<String>> columns = columnLabels(resultSet);
@@ -84,7 +93,6 @@ public class JdbcAssert {
     }
     return buf.toString();
   }
-
 
 
   static List<String> toStrings(ResultSet resultSet) throws SQLException {
@@ -117,20 +125,20 @@ public class JdbcAssert {
     public ModelAndSchema(Properties info) {
       this(info, true);
     }
-    
+
     public ModelAndSchema(Properties info, final boolean ref) {
       this.info = info;
       this.connectionFactory = new ConnectionFactory() {
         public Connection createConnection() throws Exception {
           String connect = ref ? "jdbc:drillref:" : "jdbc:drill:";
-          if(ref){
+          if (ref) {
             Class.forName("org.apache.drill.jdbc.RefDriver");
-          }else{
-            Class.forName("org.apache.drill.jdbc.Driver");  
+          } else {
+            Class.forName("org.apache.drill.jdbc.Driver");
           }
-          
-          
-          return DriverManager.getConnection(connect, ModelAndSchema.this.info);  
+
+
+          return DriverManager.getConnection(connect, ModelAndSchema.this.info);
         }
       };
     }
@@ -161,7 +169,9 @@ public class JdbcAssert {
       this.sql = sql;
     }
 
-    /** Checks that the current SQL statement returns the expected result. */
+    /**
+     * Checks that the current SQL statement returns the expected result.
+     */
     public TestDataConnection returns(String expected) throws Exception {
       Connection connection = null;
       Statement statement = null;
@@ -171,7 +181,7 @@ public class JdbcAssert {
         ResultSet resultSet = statement.executeQuery(sql);
         expected = expected.trim();
         String result = JdbcAssert.toString(resultSet).trim();
-        
+
         Assert.assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected), expected.equals(result));
         Assert.assertEquals(expected, result);
         resultSet.close();
@@ -185,7 +195,6 @@ public class JdbcAssert {
         }
       }
     }
-    
 
 
     /**
@@ -211,10 +220,10 @@ public class JdbcAssert {
         }
       }
     }
-    
+
     public TestDataConnection displayResults(int recordCount) throws Exception {
       // record count check is done in toString method
-      
+
       Connection connection = null;
       Statement statement = null;
       try {
@@ -232,7 +241,7 @@ public class JdbcAssert {
           connection.close();
         }
       }
-      
+
     }
 
     private SortedSet<String> unsortedList(List<String> strings) {
@@ -242,11 +251,9 @@ public class JdbcAssert {
       }
       return set;
     }
-    
 
-
-    public TestDataConnection planContains(String expected) {
-      final String[] plan0 = { null };
+    public LogicalPlan logicalPlan() {
+      final String[] plan0 = {null};
       Connection connection = null;
       Statement statement = null;
       final Hook.Closeable x = Hook.LOGICAL_PLAN.add(new Function<String, Void>() {
@@ -260,11 +267,7 @@ public class JdbcAssert {
         statement = connection.prepareStatement(sql);
         statement.close();
         final String plan = plan0[0].trim();
-        // it's easier to write java strings containing single quotes than
-        // double quotes
-        String expected2 = expected.replace("'", "\"").trim();
-        Assert.assertTrue(String.format("Plan of: \n%s \n does not contain expected string of: \n%s",plan, expected2), plan.contains(expected2));
-        return this;
+        return LogicalPlan.parse(DrillConfig.create(), plan);
       } catch (Exception e) {
         throw new RuntimeException(e);
       } finally {
@@ -284,6 +287,15 @@ public class JdbcAssert {
         }
         x.close();
       }
+    }
+
+    public <T extends LogicalOperator> T planContains(final Class<T> operatorClazz) {
+      return (T) Iterables.find(logicalPlan().getSortedOperators(), new Predicate<LogicalOperator>() {
+        @Override
+        public boolean apply(LogicalOperator input) {
+          return input.getClass().equals(operatorClazz);
+        }
+      });
     }
   }
 
