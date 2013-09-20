@@ -64,8 +64,8 @@ class PartitionSenderRootExec implements RootExec {
     this.context = context;
     this.outgoing = new OutgoingRecordBatch[operator.getDestinations().size()];
     int fieldId = 0;
-    for (CoordinationProtos.DrillbitEndpoint endpoint : operator.getDestinations())
-      outgoing[fieldId++] = new OutgoingRecordBatch(operator,
+    for (CoordinationProtos.DrillbitEndpoint endpoint : operator.getDestinations()) {
+      outgoing[fieldId] = new OutgoingRecordBatch(operator,
                                                     context.getCommunicator().getTunnel(endpoint),
                                                     incoming,
                                                     context);
@@ -107,7 +107,12 @@ class PartitionSenderRootExec implements RootExec {
       case OK_NEW_SCHEMA:
         try {
           // send all existing batches
-          flushOutgoingBatches(false, true);
+          if (partitioner != null) {
+            flushOutgoingBatches(false, true);
+          }
+          for (OutgoingRecordBatch b : outgoing) {
+            b.initializeBatch();
+          }
           // update OutgoingRecordBatch's schema and generate partitioning code
           createPartitioner();
         } catch (SchemaChangeException e) {

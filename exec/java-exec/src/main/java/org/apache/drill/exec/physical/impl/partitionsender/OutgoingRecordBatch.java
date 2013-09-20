@@ -63,12 +63,14 @@ public class OutgoingRecordBatch implements RecordBatch {
   private VectorContainer vectorContainer;
   private int recordCount;
   private int recordCapacity;
+  private int oppositeMinorFragmentId;
 
-  public OutgoingRecordBatch(HashPartitionSender operator, BitTunnel tunnel, RecordBatch incoming, FragmentContext context) {
+  public OutgoingRecordBatch(HashPartitionSender operator, BitTunnel tunnel, RecordBatch incoming, FragmentContext context, int oppositeMinorFragmentId) {
     this.incoming = incoming;
     this.context = context;
     this.operator = operator;
     this.tunnel = tunnel;
+    this.oppositeMinorFragmentId = oppositeMinorFragmentId;
     initializeBatch();
   }
 
@@ -107,7 +109,7 @@ public class OutgoingRecordBatch implements RecordBatch {
                                                                       handle.getMajorFragmentId(),
                                                                       handle.getMinorFragmentId(),
                                                                       operator.getOppositeMajorFragmentId(),
-                                                                      0,
+                                                                      oppositeMinorFragmentId,
                                                                       getWritableBatch());
 
       tunnel.sendRecordBatch(statusHandler, context, writableBatch);
@@ -123,7 +125,7 @@ public class OutgoingRecordBatch implements RecordBatch {
                                                                         handle.getMajorFragmentId(),
                                                                         handle.getMinorFragmentId(),
                                                                         operator.getOppositeMajorFragmentId(),
-                                                                        0,
+                                                                        oppositeMinorFragmentId,
                                                                         getWritableBatch());
         tunnel.sendRecordBatch(statusHandler, context, writableBatch);
         return true;
