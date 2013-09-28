@@ -41,19 +41,19 @@ public class DrillLimitRule extends RelOptRule {
     if (sort.offset == null && sort.fetch == null) {
       return;
     }
-    final RelTraitSet traits = sort.getTraitSet().plus(DrillRel.CONVENTION);
+    final RelTraitSet traits = sort.getTraitSet();
     RelNode input = sort.getChild();
     if (!sort.getCollation().getFieldCollations().isEmpty()) {
       input = sort.copy(
-          sort.getTraitSet().replace(RelCollationImpl.EMPTY),
-          input,
-          RelCollationImpl.EMPTY,
+          sort.getTraitSet(),
+          sort,
+          sort.getCollation(),
           null,
           null);
     }
-    RelNode x = convert(
-        input,
-        input.getTraitSet().replace(DrillRel.CONVENTION));
-    call.transformTo(new DrillLimitRel(sort.getCluster(), traits, x, sort.offset, sort.fetch));
+    //RelNode x = convert(
+    //    input,
+    //    input.getTraitSet());
+    call.transformTo(new DrillLimitRel(sort.getCluster(), traits, input, sort.offset, sort.fetch));
   }
 }

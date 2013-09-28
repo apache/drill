@@ -46,7 +46,7 @@ public class DrillLimitRel extends SingleRel implements DrillRel {
   @Override
   public int implement(DrillImplementor implementor) {
     int inputId = implementor.visitChild(this, 0, getChild());
-    final ObjectNode limit = implementor.mapper.createObjectNode();
+
 
     // First offset to include into results (inclusive). Null implies it is starting from offset 0
     int first = offset != null ? Math.max(0, RexLiteral.intValue(offset)) : 0;
