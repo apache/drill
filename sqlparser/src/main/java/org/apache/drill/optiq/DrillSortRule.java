@@ -32,17 +32,20 @@ public class DrillSortRule extends RelOptRule {
   }
 
   @Override
-  public void onMatch(RelOptRuleCall call) {
+  public boolean matches(RelOptRuleCall call) {
     final SortRel sort = call.rel(0);
+    return sort.offset == null && sort.fetch == null;
+  }
 
-    if(sort.offset != null || sort.fetch != null) {
-      return;
-    }
+  @Override
+  public void onMatch(RelOptRuleCall call) {
+
+    final SortRel sort = call.rel(0);
 
     final RelNode input = call.rel(1);
     final RelTraitSet traits = sort.getTraitSet().plus(DrillRel.CONVENTION);
-    final RelTraitSet inputTraits = input.getTraitSet().plus(DrillRel.CONVENTION);
-    final RelNode convertedInput = convert(input, inputTraits);
+
+    final RelNode convertedInput = convert(input, input.getTraitSet().plus(DrillRel.CONVENTION));
     call.transformTo(new DrillSortRel(sort.getCluster(), traits, convertedInput, sort.getCollation()));
   }
 }

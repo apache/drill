@@ -17,7 +17,6 @@
  */
 package org.apache.drill.optiq;
 
-import org.eigenbase.rel.RelCollationImpl;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.SortRel;
 import org.eigenbase.relopt.Convention;
@@ -36,24 +35,25 @@ public class DrillLimitRule extends RelOptRule {
   }
 
   @Override
-  public void onMatch(RelOptRuleCall call) {
+  public boolean matches(RelOptRuleCall call) {
     final SortRel sort = call.rel(0);
-    if (sort.offset == null && sort.fetch == null) {
-      return;
-    }
-    final RelTraitSet traits = sort.getTraitSet();
-    RelNode input = sort.getChild();
-    if (!sort.getCollation().getFieldCollations().isEmpty()) {
-      input = sort.copy(
-          sort.getTraitSet(),
-          sort,
-          sort.getCollation(),
-          null,
-          null);
-    }
-    //RelNode x = convert(
-    //    input,
-    //    input.getTraitSet());
-    call.transformTo(new DrillLimitRel(sort.getCluster(), traits, input, sort.offset, sort.fetch));
+    return sort.offset != null || sort.fetch != null;
   }
+
+  @Override
+  public void onMatch(RelOptRuleCall call) {
+    final SortRel incomingSort = call.rel(0);
+    final RelTraitSet incomingTraits = incomingSort.getTraitSet();
+    RelNode input = incomingSort.getChild();
+
+    // if the Optiq sort rel includes a collation and a limit, we need to create a copy the sort rel that excludes the
+    // limit information.
+    if (!incomingSort.getCollation().getFieldCollations().isEmpty()) {
+      input = incomingSort.copy(incomingTraits, input, incomingSort.getCollation(), null, null);
+    }
+
+    RelNode convertedInput = convert(input, input.getTraitSet().plus(DrillRel.CONVENTION));
+    call.transformTo(new DrillLimitRel(incomingSort.getCluster(), incomingTraits.plus(DrillRel.CONVENTION), convertedInput, incomingSort.offset, incomingSort.fetch));
+  }
+
 }

@@ -20,7 +20,6 @@ package org.apache.drill.optiq;
 import net.hydromatic.optiq.prepare.OptiqPrepareImpl;
 import net.hydromatic.optiq.rules.java.JavaRules;
 
-import org.apache.drill.jdbc.DrillHandler;
 import org.apache.drill.jdbc.Driver;
 import org.eigenbase.relopt.RelOptPlanner;
 
@@ -38,12 +37,20 @@ public class DrillPrepareImpl extends OptiqPrepareImpl {
   protected RelOptPlanner createPlanner() {
     final RelOptPlanner planner = super.createPlanner();
     planner.addRule(EnumerableDrillRule.getInstance(driver == null ? null : driver.getClient()));
+    planner.addRule(DrillValuesRule.INSTANCE);
 
-    // Enable when https://issues.apache.org/jira/browse/DRILL-57 fixed
-    if (false) {
-      planner.addRule(DrillValuesRule.INSTANCE);
-      planner.removeRule(JavaRules.ENUMERABLE_VALUES_RULE);
-    }
+    planner.removeRule(JavaRules.ENUMERABLE_JOIN_RULE);
+    planner.removeRule(JavaRules.ENUMERABLE_CALC_RULE);
+    planner.removeRule(JavaRules.ENUMERABLE_AGGREGATE_RULE);
+    planner.removeRule(JavaRules.ENUMERABLE_SORT_RULE);
+    planner.removeRule(JavaRules.ENUMERABLE_LIMIT_RULE);
+    planner.removeRule(JavaRules.ENUMERABLE_UNION_RULE);
+    planner.removeRule(JavaRules.ENUMERABLE_INTERSECT_RULE);
+    planner.removeRule(JavaRules.ENUMERABLE_MINUS_RULE);
+    planner.removeRule(JavaRules.ENUMERABLE_TABLE_MODIFICATION_RULE);
+    planner.removeRule(JavaRules.ENUMERABLE_VALUES_RULE);
+    planner.removeRule(JavaRules.ENUMERABLE_WINDOW_RULE);
+    planner.removeRule(JavaRules.ENUMERABLE_ONE_ROW_RULE);
     return planner;
   }
 }

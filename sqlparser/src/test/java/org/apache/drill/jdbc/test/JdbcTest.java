@@ -29,6 +29,7 @@ import com.beust.jcommander.internal.Lists;
 import com.beust.jcommander.internal.Maps;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
+
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.PlanProperties;
 import org.apache.drill.common.logical.LogicalPlan;
@@ -37,6 +38,7 @@ import org.apache.drill.common.logical.data.*;
 import org.apache.drill.exec.ref.ReferenceInterpreter;
 import org.apache.drill.exec.ref.rse.ClasspathRSE;
 import org.apache.drill.exec.ref.rse.QueueRSE;
+import org.apache.drill.jdbc.test.JdbcAssert.TestDataConnection;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -270,6 +272,8 @@ public class JdbcTest {
     JdbcAssert.withModel(MODEL, "DONUTS").sql("select * from donuts where 3 < 4").returns(EXPECTED);
   }
 
+  
+  @Ignore
   @Test
   public void testValues() throws Exception {
     JdbcAssert.withModel(MODEL, "DONUTS").sql("values (1)").returns("EXPR$0=1\n");
@@ -478,6 +482,19 @@ public class JdbcTest {
         .planContains(Limit.class);
   }
 
+  
+  @Test
+  public void testLimitOrderBy() throws Exception {
+    TestDataConnection tdc = JdbcAssert
+        .withModel(MODEL, "HR")
+        .sql("select LASTNAME from emp order by LASTNAME limit 2")
+        .returns("LASTNAME=John\n" +
+            "LASTNAME=Jones");
+        tdc.planContains(Limit.class);
+        tdc.planContains(Order.class);
+        
+  }
+  
   @Test
   public void testOrderByWithOffset() throws Exception {
     JdbcAssert
@@ -485,7 +502,7 @@ public class JdbcTest {
         .sql("select LASTNAME from emp order by LASTNAME asc offset 3")
         .returns("LASTNAME=Robinson\n" +
             "LASTNAME=Smith\n" +
-            "LASTNAME=John")
+            "LASTNAME=Steinberg")
         .planContains(Limit.class);
 
   }
