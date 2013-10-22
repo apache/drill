@@ -39,7 +39,6 @@ import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.rpc.BaseRpcOutcomeListener;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.bit.BitTunnel;
-import org.apache.drill.exec.util.BatchPrinter;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.allocator.VectorAllocator;
 import org.apache.drill.exec.work.foreman.ErrorHelper;

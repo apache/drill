@@ -46,12 +46,22 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
-
+/**
+ * Tests the OrderedPartitionExchange Operator
+ */
 public class TestOrderedPartitionExchange extends PopUnitTestBase {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestOrderedPartitionExchange.class);
 
+  /**
+   * Starts two drillbits and runs a physical plan with a Mock scan, project, OrderedParititionExchange, Union Exchange,
+   * and sort. The final sort is done first on the partition column, and verifies that the partitions are correct, in that
+   * all rows in partition 0 should come in the sort order before any row in partition 1, etc. Also verifies that the standard
+   * deviation of the size of the partitions is less than one tenth the mean size of the partitions, because we expect all
+   * the partitions to be roughly equal in size.
+   * @throws Exception
+   */
   @Test
-  public void twoBitTwoExchangeTwoEntryRun() throws Exception {
+  public void twoBitTwoExchangeRun() throws Exception {
     RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
     try(Drillbit bit1 = new Drillbit(CONFIG, serviceSet);

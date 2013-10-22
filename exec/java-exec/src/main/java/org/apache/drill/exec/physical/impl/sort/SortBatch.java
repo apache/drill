@@ -158,7 +158,10 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
   }
 
   public static Sorter createNewSorter(FragmentContext context, List<OrderDef> orderings, VectorAccessible batch) throws ClassTransformationException, IOException, SchemaChangeException {
-    return createNewSorter(context, orderings, batch, MAIN_MAPPING, LEFT_MAPPING, RIGHT_MAPPING);
+    final MappingSet mainMapping = new MappingSet( (String) null, null, CodeGenerator.DEFAULT_SCALAR_MAP, CodeGenerator.DEFAULT_SCALAR_MAP);
+    final MappingSet leftMapping = new MappingSet("leftIndex", null, CodeGenerator.DEFAULT_SCALAR_MAP, CodeGenerator.DEFAULT_SCALAR_MAP);
+    final MappingSet rightMapping = new MappingSet("rightIndex", null, CodeGenerator.DEFAULT_SCALAR_MAP, CodeGenerator.DEFAULT_SCALAR_MAP);
+    return createNewSorter(context, orderings, batch, mainMapping, leftMapping, rightMapping);
   }
   
   public static Sorter createNewSorter(FragmentContext context, List<OrderDef> orderings, VectorAccessible batch, MappingSet mainMapping, MappingSet leftMapping, MappingSet rightMapping)

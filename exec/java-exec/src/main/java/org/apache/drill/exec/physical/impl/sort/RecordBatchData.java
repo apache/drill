@@ -19,11 +19,8 @@ package org.apache.drill.exec.physical.impl.sort;
 
 import java.util.List;
 
+import org.apache.drill.exec.record.*;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
-import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.record.TransferPair;
-import org.apache.drill.exec.record.VectorContainer;
-import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.vector.ValueVector;
 
@@ -35,13 +32,17 @@ import com.google.common.collect.Lists;
 public class RecordBatchData {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RecordBatchData.class);
   
-  final List<ValueVector> vectors = Lists.newArrayList();
   final SelectionVector2 sv2;
   final int recordCount;
-  VectorContainer container;
+  VectorContainer container = new VectorContainer();
   
-  public RecordBatchData(RecordBatch batch){
-    this.sv2 = batch.getSchema().getSelectionVectorMode() == SelectionVectorMode.TWO_BYTE ? batch.getSelectionVector2().clone() : null;
+  public RecordBatchData(VectorAccessible batch){
+    List<ValueVector> vectors = Lists.newArrayList();
+    if (batch instanceof RecordBatch && batch.getSchema().getSelectionVectorMode() == SelectionVectorMode.TWO_BYTE) {
+      this.sv2 = ((RecordBatch)batch).getSelectionVector2().clone();
+    } else {
+      this.sv2 = null;
+    }
     
     for(VectorWrapper<?> v : batch){
       if(v.isHyper()) throw new UnsupportedOperationException("Record batch data can't be created based on a hyper batch.");
@@ -49,14 +50,21 @@ public class RecordBatchData {
       tp.transfer();
       vectors.add(tp.getTo());
     }
-    
+
+    container.addCollection(vectors);
     recordCount = batch.getRecordCount();
+    container.setRecordCount(recordCount);
+    container.buildSchema(batch.getSchema().getSelectionVectorMode());
   }
   
   public int getRecordCount(){
     return recordCount;
   }
   public List<ValueVector> getVectors() {
+    List<ValueVector> vectors = Lists.newArrayList();
+    for (VectorWrapper w : container) {
+      vectors.add(w.getValueVector());
+    }
     return vectors;
   }
 
@@ -65,16 +73,6 @@ public class RecordBatchData {
   }
 
   public VectorContainer getContainer() {
-    if (this.container == null) buildContainer();
-    return this.container;
-  }
-
-  private void buildContainer() {
-    assert container == null;
-    container = new VectorContainer();
-    for (ValueVector vv : vectors) {
-      container.add(vv);
-    }
-    container.buildSchema(sv2 == null ? SelectionVectorMode.NONE : SelectionVectorMode.TWO_BYTE);
+    return container;
   }
 }

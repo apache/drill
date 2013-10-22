@@ -184,7 +184,7 @@ public class DrillTable extends BaseQueryable<Object> implements TranslatableTab
 //        JavaTypeFactory typeFactory,
 //        Schema schema,
 //        String name,
-//        Map<String, Object> operand, 
+//        DistributedMap<String, Object> operand,
 //        RelDataType rowType) {
 //      final ClasspathRSE.ClasspathRSEConfig rseConfig = new ClasspathRSE.ClasspathRSEConfig();
 //      final ClasspathInputConfig inputConfig = new ClasspathInputConfig();

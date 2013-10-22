@@ -189,4 +189,8 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
       w.clear();
     }
   }
+
+  public int getNumberOfColumns() {
+    return this.wrappers.size();
+  }
 }

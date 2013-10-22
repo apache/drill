@@ -18,26 +18,21 @@
 package org.apache.drill.exec.cache;
 
 import com.beust.jcommander.internal.Lists;
-import com.hazelcast.core.MultiMap;
-import com.hazelcast.nio.FastByteArrayInputStream;
-import com.hazelcast.nio.FastByteArrayOutputStream;
-import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.TypeHelper;
-import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.vector.*;
 import org.junit.Test;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataOutput;
 import java.util.List;
 
 public class TestVectorCache {
@@ -69,20 +64,17 @@ public class TestVectorCache {
     intVector.getMutator().setValueCount(4);
     binVector.getMutator().setValueCount(4);
 
-    VectorWrap wrap = new VectorWrap(vectorList);
-    /*
-    FastByteArrayOutputStream out = new FastByteArrayOutputStream();
-    wrap.writeData(out);
-    FastByteArrayInputStream in = new FastByteArrayInputStream(out.getBytes());
-    VectorWrap newWrap = new VectorWrap();
-    newWrap.readData(in);
-    */
-    MultiMap<String, VectorWrap> mmap = cache.getMultiMap("testMap");
-    mmap.put("vectors", wrap);
-    VectorWrap newWrap = mmap.get("vectors").iterator().next();
+    VectorContainer container = new VectorContainer();
+    container.addCollection(vectorList);
+    VectorContainerSerializable wrap = new VectorContainerSerializable(container);
 
-    List<ValueVector> vectors = newWrap.get();
-    for (ValueVector vv : vectors) {
+    DistributedMultiMap<VectorContainerSerializable> mmap = cache.getMultiMap(VectorContainerSerializable.class);
+    mmap.put("vectors", wrap);
+    VectorContainerSerializable newWrap = (VectorContainerSerializable)mmap.get("vectors").iterator().next();
+
+    VectorContainer newContainer = newWrap.get();
+    for (VectorWrapper w : newContainer) {
+      ValueVector vv = w.getValueVector();
       int values = vv.getAccessor().getValueCount();
       for (int i = 0; i < values; i++) {
         Object o = vv.getAccessor().getObject(i);

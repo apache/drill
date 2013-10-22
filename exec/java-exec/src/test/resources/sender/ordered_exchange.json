@@ -43,7 +43,9 @@
               {expr: "col1", order: "ASC"},
               {expr: "col2", order: "DESC"}
             ],
-            ref: "partition"
+            ref: "partition",
+            recordsToSample: 15000,
+            completionFactor: 0.8
         },
         {
             @id: 4,

@@ -27,12 +27,8 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.BufferAllocator.PreAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.record.*;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
-import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.record.VectorContainer;
-import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.ValueVector;
 
@@ -57,7 +53,7 @@ public class SortRecordBatchBuilder {
     this.container = container;
   }
   
-  private long getSize(RecordBatch batch){
+  private long getSize(VectorAccessible batch){
     long bytes = 0;
     for(VectorWrapper<?> v : batch){
       bytes += v.getValueVector().getBufferSize();
@@ -71,12 +67,15 @@ public class SortRecordBatchBuilder {
    * @return True if the requested add completed successfully.  Returns false in the case that this builder is full and cannot receive additional packages. 
    * @throws SchemaChangeException
    */
-  public boolean add(RecordBatch batch){
+  public boolean add(VectorAccessible batch){
     if(batch.getSchema().getSelectionVectorMode() == SelectionVectorMode.FOUR_BYTE) throw new UnsupportedOperationException("A sort cannot currently work against a sv4 batch.");
-    if (batch.getRecordCount() == 0) return true; // skip over empty record batches.
+    if (batch.getRecordCount() == 0)
+      return true; // skip over empty record batches.
 
     long batchBytes = getSize(batch);
-    if (batchBytes == 0) {return true;}
+    if (batchBytes == 0) {
+      return true;
+    }
     if(batchBytes + runningBytes > maxBytes) return false; // enough data memory.
     if(runningBatches+1 > Character.MAX_VALUE) return false; // allowed in batch.
     if(!svAllocator.preAllocate(batch.getRecordCount()*4)) return false;  // sv allocation available.
@@ -94,6 +93,7 @@ public class SortRecordBatchBuilder {
     container.clear();
     if(batches.keySet().size() > 1) throw new SchemaChangeException("Sort currently only supports a single schema.");
     if(batches.size() > Character.MAX_VALUE) throw new SchemaChangeException("Sort cannot work on more than %d batches at a time.", (int) Character.MAX_VALUE);
+    assert batches.keySet().size() > 0;
     sv4 = new SelectionVector4(svAllocator.getAllocation(), recordCount, Character.MAX_VALUE);
     BatchSchema schema = batches.keySet().iterator().next();
     List<RecordBatchData> data = batches.get(schema);
@@ -131,7 +131,7 @@ public class SortRecordBatchBuilder {
     // next, we'll create lists of each of the vector types.
     ArrayListMultimap<MaterializedField, ValueVector> vectors = ArrayListMultimap.create();
     for(RecordBatchData rbd : batches.values()){
-      for(ValueVector v : rbd.vectors){
+      for(ValueVector v : rbd.getVectors()){
         vectors.put(v.getField(), v);
       }
     }
@@ -150,7 +150,6 @@ public class SortRecordBatchBuilder {
 
   public List<VectorContainer> getContainers() {
     ArrayList containerList = Lists.newArrayList();
-    int recordCount = 0;
     for (BatchSchema bs : batches.keySet()) {
       for (RecordBatchData bd : batches.get(bs)) {
         VectorContainer c = bd.getContainer();

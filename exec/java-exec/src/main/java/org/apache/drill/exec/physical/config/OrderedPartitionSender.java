@@ -39,10 +39,15 @@ public class OrderedPartitionSender extends AbstractSender {
   private final List<DrillbitEndpoint> endpoints;
   private final int sendingWidth;
 
+  private int recordsToSample;
+  private int samplingFactor;
+  private float completionFactor;
+
   @JsonCreator
   public OrderedPartitionSender(@JsonProperty("orderings") List<OrderDef> orderings, @JsonProperty("ref") FieldReference ref, @JsonProperty("child") PhysicalOperator child,
                                 @JsonProperty("destinations") List<DrillbitEndpoint> endpoints, @JsonProperty("receiver-major-fragment") int oppositeMajorFragmentId,
-                                @JsonProperty("sending-fragment-width") int sendingWidth) {
+                                @JsonProperty("sending-fragment-width") int sendingWidth, @JsonProperty("recordsToSample") int recordsToSample,
+                                @JsonProperty("samplingFactor") int samplingFactor, @JsonProperty("completionFactor") float completionFactor) {
     super(oppositeMajorFragmentId, child);
     if (orderings == null) {
       this.orderings = Lists.newArrayList();
@@ -52,6 +57,9 @@ public class OrderedPartitionSender extends AbstractSender {
     this.ref = ref;
     this.endpoints = endpoints;
     this.sendingWidth = sendingWidth;
+    this.recordsToSample = recordsToSample;
+    this.samplingFactor = samplingFactor;
+    this.completionFactor = completionFactor;
   }
 
   public int getSendingWidth() {
@@ -88,6 +96,20 @@ public class OrderedPartitionSender extends AbstractSender {
 
   @Override
   protected PhysicalOperator getNewWithChild(PhysicalOperator child) {
-    return new OrderedPartitionSender(orderings, ref, child, endpoints, oppositeMajorFragmentId, sendingWidth);
+    return new OrderedPartitionSender(orderings, ref, child, endpoints, oppositeMajorFragmentId, sendingWidth, recordsToSample, samplingFactor,
+            completionFactor);
   }
+
+  public int getRecordsToSample() {
+    return recordsToSample;
+  }
+
+  public int getSamplingFactor() {
+    return samplingFactor;
+  }
+
+  public float getCompletionFactor() {
+    return completionFactor;
+  }
+
 }

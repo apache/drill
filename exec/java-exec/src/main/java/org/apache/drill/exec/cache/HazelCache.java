@@ -18,22 +18,22 @@
 package org.apache.drill.exec.cache;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
+import com.google.common.collect.Lists;
 import com.hazelcast.core.*;
-import com.hazelcast.nio.DataSerializable;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.cache.ProtoBufImpl.HWorkQueueStatus;
 import org.apache.drill.exec.cache.ProtoBufImpl.HandlePlan;
-import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.ExecProtos.PlanFragment;
 import org.apache.drill.exec.proto.ExecProtos.WorkQueueStatus;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.google.protobuf.InvalidProtocolBufferException;
 import com.hazelcast.config.Config;
 
 public class HazelCache implements DistributedCache {
@@ -108,17 +108,88 @@ public class HazelCache implements DistributedCache {
   }
   
 
-  public <K,V extends DataSerializable> MultiMap<K,V> getMultiMap(String name) {
-    return this.instance.getMultiMap(name);
+  @Override
+  public <V extends DrillSerializable> DistributedMultiMap<V> getMultiMap(Class<V> clazz) {
+    return new HCDistributedMultiMapImpl(this.instance.getMultiMap(clazz.toString()), clazz);
   }
 
-  public <K,V extends DataSerializable> IMap<K,V> getMap(String name) {
-    return this.instance.getMap(name);
+  @Override
+  public <V extends DrillSerializable> DistributedMap<V> getMap(Class<V> clazz) {
+    return new HCDistributedMapImpl(this.instance.getMap(clazz.toString()), clazz);
   }
 
-  public  AtomicNumber getAtomicNumber(String name) {
-    return this.instance.getAtomicNumber(name);
+  @Override
+  public Counter getCounter(String name) {
+    return new HCCounterImpl(this.instance.getAtomicNumber(name));
   }
-  
+
+  public static class HCDistributedMapImpl<V> implements DistributedMap<V> {
+    private IMap<String, HCDrillSerializableWrapper> m;
+    private Class<V> clazz;
+
+    public HCDistributedMapImpl(IMap m, Class<V> clazz) {
+      this.m = m;
+      this.clazz = clazz;
+    }
+
+    public DrillSerializable get(String key) {
+      return m.get(key).get();
+    }
+
+    public void put(String key, DrillSerializable value) {
+      m.put(key, HCDrillSerializableWrapper.getWrapper(value, clazz));
+    }
+
+    public void putIfAbsent(String key, DrillSerializable value) {
+      m.putIfAbsent(key, HCDrillSerializableWrapper.getWrapper(value, clazz));
+    }
+
+    public void putIfAbsent(String key, DrillSerializable value, long ttl, TimeUnit timeunit) {
+      m.putIfAbsent(key, HCDrillSerializableWrapper.getWrapper(value, clazz), ttl, timeunit);
+    }
+  }
+
+  public static class HCDistributedMultiMapImpl<V> implements DistributedMultiMap<V> {
+    private com.hazelcast.core.MultiMap<String, HCDrillSerializableWrapper> mmap;
+    private Class<V> clazz;
+
+    public HCDistributedMultiMapImpl(com.hazelcast.core.MultiMap mmap, Class<V> clazz) {
+      this.mmap = mmap;
+      this.clazz = clazz;
+    }
+
+    public Collection<DrillSerializable> get(String key) {
+      List<DrillSerializable> list = Lists.newArrayList();
+      for (HCDrillSerializableWrapper v : mmap.get(key)) {
+        list.add(v.get());
+      }
+      return list;
+    }
+
+    @Override
+    public void put(String key, DrillSerializable value) {
+      mmap.put(key, HCDrillSerializableWrapper.getWrapper(value, clazz));
+    }
+  }
+
+  public static class HCCounterImpl implements Counter {
+    private AtomicNumber n;
+
+    public HCCounterImpl(AtomicNumber n) {
+      this.n = n;
+    }
+
+    public long get() {
+      return n.get();
+    }
+
+    public long incrementAndGet() {
+      return n.incrementAndGet();
+    }
+
+    public long decrementAndGet() {
+      return n.decrementAndGet();
+    }
+  }
 
 }

@@ -35,7 +35,6 @@ import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorWrapper;
-import org.apache.drill.exec.util.BatchPrinter;
 import org.apache.drill.exec.vector.ValueVector;
 
 import com.sun.codemodel.JArray;

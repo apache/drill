@@ -18,13 +18,10 @@
 package org.apache.drill.exec.cache;
 
 import java.io.Closeable;
-import java.util.List;
 
 import org.apache.drill.exec.exception.DrillbitStartupException;
-import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.ExecProtos.PlanFragment;
-import org.apache.drill.exec.proto.ExecProtos.WorkQueueStatus;
 
 
 public interface DistributedCache extends Closeable{
@@ -37,4 +34,7 @@ public interface DistributedCache extends Closeable{
   
   public PlanFragment getFragment(FragmentHandle handle);
   public void storeFragment(PlanFragment fragment);
+  public <V extends DrillSerializable> DistributedMultiMap<V> getMultiMap(Class<V> clazz);
+  public <V extends DrillSerializable> DistributedMap<V> getMap(Class<V> clazz);
+  public Counter getCounter(String name);
 }

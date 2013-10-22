@@ -211,7 +211,7 @@ public class DrillRefImpl<E> {
   }
 
   /**
-   * Converts a JSON document, represented as an array of bytes, into a Java object (consisting of Map, List, String,
+   * Converts a JSON document, represented as an array of bytes, into a Java object (consisting of DistributedMap, List, String,
    * Integer, Double, Boolean).
    */
   static Object parseJson(byte[] bytes) {

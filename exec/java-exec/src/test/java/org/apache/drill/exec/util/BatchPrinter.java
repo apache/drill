@@ -28,6 +28,9 @@ import org.apache.drill.exec.vector.ValueVector;
 
 import java.util.List;
 
+/**
+ * This is a tool for printing the content of record batches to screen. Used for debugging.
+ */
 public class BatchPrinter {
   public static void printHyperBatch(VectorAccessible batch) {
     List<String> columns = Lists.newArrayList();

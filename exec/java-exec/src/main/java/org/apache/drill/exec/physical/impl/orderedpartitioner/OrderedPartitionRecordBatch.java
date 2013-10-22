@@ -20,20 +20,14 @@ package org.apache.drill.exec.physical.impl.orderedpartitioner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.hazelcast.core.AtomicNumber;
-import com.hazelcast.core.IMap;
-import com.hazelcast.core.MultiMap;
 import com.sun.codemodel.JConditional;
 import com.sun.codemodel.JExpr;
-import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.defs.OrderDef;
 import org.apache.drill.common.expression.*;
-import org.apache.drill.common.logical.data.NamedExpression;
 import org.apache.drill.common.logical.data.Order;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.exec.cache.HazelCache;
-import org.apache.drill.exec.cache.VectorWrap;
+import org.apache.drill.exec.cache.*;
 import org.apache.drill.exec.compile.sig.MappingSet;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.SchemaChangeException;
@@ -46,7 +40,6 @@ import org.apache.drill.exec.physical.impl.sort.SortRecordBatchBuilder;
 import org.apache.drill.exec.physical.impl.sort.Sorter;
 import org.apache.drill.exec.record.*;
 import org.apache.drill.exec.record.selection.SelectionVector4;
-import org.apache.drill.exec.util.BatchPrinter;
 import org.apache.drill.exec.vector.*;
 
 import java.io.IOException;
@@ -56,20 +49,26 @@ import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * The purpose of this operator is to generate an ordered partition, rather than a random hash partition. This could be used
+ * to do a total order sort, for example.
+ * This operator reads in a few incoming record batches, samples these batches, and stores them in the distributed cache. The samples
+ * from all the parallel-running fragments are merged, and a partition-table is built and stored in the distributed cache for use by all
+ * fragments. A new column is added to the outgoing batch, whose value is determined by where each record falls in the partition table.
+ * This column is used by PartitionSenderRootExec to determine which bucket to assign each record to.
+ */
 public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPartitionSender>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OrderedPartitionRecordBatch.class);
 
-  public static final MappingSet MAIN_MAPPING = new MappingSet( (String) null, null, CodeGenerator.DEFAULT_SCALAR_MAP, CodeGenerator.DEFAULT_SCALAR_MAP);
-  public static final MappingSet INCOMING_MAPPING = new MappingSet("inIndex", null, "incoming", null, CodeGenerator.DEFAULT_SCALAR_MAP, CodeGenerator.DEFAULT_SCALAR_MAP);
-  public static final MappingSet PARTITION_MAPPING = new MappingSet("partitionIndex", null, "partitionVectors", null,
+  public final MappingSet mainMapping = new MappingSet( (String) null, null, CodeGenerator.DEFAULT_SCALAR_MAP, CodeGenerator.DEFAULT_SCALAR_MAP);
+  public final MappingSet incomingMapping = new MappingSet("inIndex", null, "incoming", null, CodeGenerator.DEFAULT_SCALAR_MAP, CodeGenerator.DEFAULT_SCALAR_MAP);
+  public final MappingSet partitionMapping = new MappingSet("partitionIndex", null, "partitionVectors", null,
           CodeGenerator.DEFAULT_SCALAR_MAP, CodeGenerator.DEFAULT_SCALAR_MAP);
 
   private static long MAX_SORT_BYTES = 8l * 1024 * 1024 * 1024;
-  private static int RECORDS_TO_SAMPLE = 5000;
-  private static int SAMPLING_FACTOR = 10;
-  private static float COMPLETION_FACTOR = .75f;
-  private static String SAMPLE_MAP_NAME = "sampleMap";
-  private static String TABLE_MAP_NAME = "TableMap";
+  private final int recordsToSample; // How many records must be received before analyzing
+  private final int samplingFactor; // Will collect samplingFactor * number of partitions to send to distributed cache
+  private final float completionFactor; // What fraction of fragments must be completed before attempting to build partition table
   protected final RecordBatch incoming;
   private boolean first = true;
   private OrderedPartitionProjector projector;
@@ -83,23 +82,40 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
   private boolean startedUnsampledBatches = false;
   private boolean upstreamNone = false;
   private int recordCount;
+  private DistributedMap<VectorContainerSerializable> tableMap;
+  private DistributedMultiMap mmap;
+  private String mapKey;
 
   public OrderedPartitionRecordBatch(OrderedPartitionSender pop, RecordBatch incoming, FragmentContext context){
     super(pop, context);
     this.incoming = incoming;
     this.partitions = pop.getDestinations().size();
     this.sendingMajorFragmentWidth = pop.getSendingWidth();
+    this.recordsToSample = pop.getRecordsToSample();
+    this.samplingFactor = pop.getSamplingFactor();
+    this.completionFactor = pop.getCompletionFactor();
   }
 
+  /**
+   * This method is called when the first batch comes in. Incoming batches are collected until a threshold is met. At that point,
+   * the records in the batches are sorted and sampled, and the sampled records are stored in the distributed cache. Once a sufficient
+   * fraction of the fragments have shared their samples, each fragment grabs all the samples, sorts all the records, builds a partition
+   * table, and attempts to push the partition table to the distributed cache. Whichever table gets pushed first becomes the table used by all
+   * fragments for partitioning.
+   * @return
+   */
   private boolean getPartitionVectors() {
     VectorContainer sampleContainer = new VectorContainer();
     recordsSampled = 0;
     IterOutcome upstream;
+
+    // Start collecting batches until recordsToSample records have been collected
+
     builder = new SortRecordBatchBuilder(context.getAllocator(), MAX_SORT_BYTES, sampleContainer);
     builder.add(incoming);
     recordsSampled += incoming.getRecordCount();
     try {
-      outer: while (recordsSampled < RECORDS_TO_SAMPLE) {
+      outer: while (recordsSampled < recordsToSample) {
         upstream = incoming.next();
         switch(upstream) {
           case NONE:
@@ -111,93 +127,72 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
         builder.add(incoming);
         recordsSampled += incoming.getRecordCount();
         if (upstream == IterOutcome.NONE) break;
-        //TODO handle upstream cases
       }
       builder.build(context);
+
+      // Sort the records according the orderings given in the configuration
+
       Sorter sorter = SortBatch.createNewSorter(context, popConfig.getOrderings(), sampleContainer);
       SelectionVector4 sv4 = builder.getSv4();
       sorter.setup(context, sv4, sampleContainer);
       sorter.sort(sv4, sampleContainer);
 
+      // Project every Nth record to a new vector container, where N = recordsSampled/(samplingFactor * partitions). Uses the
+      // the expressions from the OrderDefs to populate each column. There is one column for each OrderDef in popConfig.orderings.
+
       VectorContainer containerToCache = new VectorContainer();
       SampleCopier copier = getCopier(sv4, sampleContainer, containerToCache, popConfig.getOrderings());
-      copier.copyRecords(recordsSampled/(SAMPLING_FACTOR * partitions), 0, SAMPLING_FACTOR * partitions);
+      copier.copyRecords(recordsSampled/(samplingFactor * partitions), 0, samplingFactor * partitions);
 
       for (VectorWrapper vw : containerToCache) {
         vw.getValueVector().getMutator().setValueCount(copier.getOutputRecords());
       }
 
-//      BatchPrinter.printBatch(containerToCache);
+      // Get a distributed multimap handle from the distributed cache, and put the vectors from the new vector container
+      // into a serializable wrapper object, and then add to distributed map
 
-      HazelCache cache = new HazelCache(DrillConfig.create());
-      cache.run();
-      String mapKey = String.format("%s_%d", context.getHandle().getQueryId(), context.getHandle().getMajorFragmentId());
-      MultiMap<String, VectorWrap> mmap = cache.getMultiMap(SAMPLE_MAP_NAME);
-
+      DistributedCache cache = context.getDrillbitContext().getCache();
+      mapKey = String.format("%s_%d", context.getHandle().getQueryId(), context.getHandle().getMajorFragmentId());
+      mmap = cache.getMultiMap(VectorContainerSerializable.class);
       List<ValueVector> vectorList = Lists.newArrayList();
       for (VectorWrapper vw : containerToCache) {
         vectorList.add(vw.getValueVector());
       }
 
-      VectorWrap wrap = new VectorWrap(vectorList);
+      VectorContainerSerializable wrap = new VectorContainerSerializable(containerToCache);
 
       mmap.put(mapKey, wrap);
+      wrap = null;
 
-      AtomicNumber minorFragmentSampleCount = cache.getAtomicNumber(mapKey);
+      Counter minorFragmentSampleCount = cache.getCounter(mapKey);
 
       long val = minorFragmentSampleCount.incrementAndGet();
       logger.debug("Incremented mfsc, got {}", val);
+      tableMap = cache.getMap(VectorContainerSerializable.class);
+      Preconditions.checkNotNull(tableMap);
 
-      for (int i = 0; i < 10 && minorFragmentSampleCount.get() < sendingMajorFragmentWidth * COMPLETION_FACTOR; i++) {
-        Thread.sleep(10);
+      if (val == Math.ceil(sendingMajorFragmentWidth * completionFactor)) {
+        buildTable();
+        wrap = (VectorContainerSerializable)tableMap.get(mapKey + "final");
+      } else if (val < Math.ceil(sendingMajorFragmentWidth * completionFactor)) {
+        // Wait until sufficient number of fragments have submitted samples, or proceed after 100 ms passed
+        for (int i = 0; i < 100 && wrap == null; i++) {
+          Thread.sleep(10);
+          wrap = (VectorContainerSerializable)tableMap.get(mapKey + "final");
+          if (i == 99) {
+            buildTable();
+            wrap = (VectorContainerSerializable)tableMap.get(mapKey + "final");
+          }
+        }
+      } else {
+        wrap = (VectorContainerSerializable)tableMap.get(mapKey + "final");
       }
 
-      Collection<VectorWrap> allSamplesWrap = mmap.get(mapKey);
-      VectorContainer allSamplesContainer = new VectorContainer();
-      int orderSize = popConfig.getOrderings().size();
-      SortContainerBuilder containerBuilder = new SortContainerBuilder(context.getAllocator(), MAX_SORT_BYTES, allSamplesContainer, orderSize);
-      for (VectorWrap w : allSamplesWrap) {
-        containerBuilder.add(w.get());
-      }
-      containerBuilder.build(context);
-
-//      BatchPrinter.printHyperBatch(allSamplesContainer);
-
-      List<OrderDef> orderDefs = Lists.newArrayList();
-      int i = 0;
-      for (OrderDef od : popConfig.getOrderings()) {
-        SchemaPath sp = new SchemaPath("f" + i++, ExpressionPosition.UNKNOWN);
-        orderDefs.add(new OrderDef(od.getDirection(), new FieldReference(sp)));
-      }
-
-      SelectionVector4 newSv4 = containerBuilder.getSv4();
-      Sorter sorter2 = SortBatch.createNewSorter(context, orderDefs, allSamplesContainer);
-      sorter2.setup(context, newSv4, allSamplesContainer);
-      sorter2.sort(newSv4, allSamplesContainer);
-
-      VectorContainer candidatePartitionTable = new VectorContainer();
-      SampleCopier copier2 = getCopier(newSv4, allSamplesContainer, candidatePartitionTable, orderDefs);
-      int skipRecords = containerBuilder.getSv4().getTotalCount() / partitions;
-      copier2.copyRecords(skipRecords, skipRecords, partitions - 1);
-      assert copier2.getOutputRecords() == partitions - 1 : String.format("output records: %d partitions: %d", copier2.getOutputRecords(), partitions);
-      for (VectorWrapper vw : candidatePartitionTable) {
-        vw.getValueVector().getMutator().setValueCount(copier2.getOutputRecords());
-      }
-
-//      BatchPrinter.printBatch(candidatePartitionTable);
-
-      vectorList = Lists.newArrayList();
-      for (VectorWrapper vw: candidatePartitionTable) {
-        vectorList.add(vw.getValueVector());
-      }
-      wrap = new VectorWrap(vectorList);
-
-      IMap<String, VectorWrap> tableMap = cache.getMap(TABLE_MAP_NAME);
-      tableMap.putIfAbsent(mapKey + "final", wrap, 1, TimeUnit.MINUTES);
-      wrap = tableMap.get(mapKey + "final");
       Preconditions.checkState(wrap != null);
-      for (ValueVector vv : wrap.get()) {
-        partitionVectors.add(vv);
+
+      // Extract vectors from the wrapper, and add to partition vectors. These vectors will be used for partitioning in the rest of this operator
+      for (VectorWrapper w : wrap.get()) {
+        partitionVectors.add(w.getValueVector());
       }
     } catch (ClassTransformationException | IOException | SchemaChangeException | InterruptedException ex) {
       kill();
@@ -208,6 +203,56 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
     return true;
   }
 
+  private void buildTable() throws SchemaChangeException, ClassTransformationException, IOException {
+    // Get all samples from distributed map
+    Collection<DrillSerializable> allSamplesWrap = mmap.get(mapKey);
+    VectorContainer allSamplesContainer = new VectorContainer();
+
+    SortRecordBatchBuilder containerBuilder = new SortRecordBatchBuilder(context.getAllocator(), MAX_SORT_BYTES, allSamplesContainer);
+    for (DrillSerializable w : allSamplesWrap) {
+      containerBuilder.add(((VectorContainerSerializable)w).get());
+    }
+    containerBuilder.build(context);
+
+    List<OrderDef> orderDefs = Lists.newArrayList();
+    int i = 0;
+    for (OrderDef od : popConfig.getOrderings()) {
+      SchemaPath sp = new SchemaPath("f" + i++, ExpressionPosition.UNKNOWN);
+      orderDefs.add(new OrderDef(od.getDirection(), new FieldReference(sp)));
+    }
+
+    SelectionVector4 newSv4 = containerBuilder.getSv4();
+    Sorter sorter2 = SortBatch.createNewSorter(context, orderDefs, allSamplesContainer);
+    sorter2.setup(context, newSv4, allSamplesContainer);
+    sorter2.sort(newSv4, allSamplesContainer);
+
+    // Copy every Nth record from the samples into a candidate partition table, where N = totalSampledRecords/partitions
+    // Attempt to push this to the distributed map. Only the first candidate to get pushed will be used.
+    VectorContainer candidatePartitionTable = new VectorContainer();
+    SampleCopier copier2 = getCopier(newSv4, allSamplesContainer, candidatePartitionTable, orderDefs);
+    int skipRecords = containerBuilder.getSv4().getTotalCount() / partitions;
+    copier2.copyRecords(skipRecords, skipRecords, partitions - 1);
+    assert copier2.getOutputRecords() == partitions - 1 : String.format("output records: %d partitions: %d", copier2.getOutputRecords(), partitions);
+    for (VectorWrapper vw : candidatePartitionTable) {
+      vw.getValueVector().getMutator().setValueCount(copier2.getOutputRecords());
+    }
+
+    VectorContainerSerializable wrap = new VectorContainerSerializable(candidatePartitionTable);
+
+    tableMap.putIfAbsent(mapKey + "final", wrap, 1, TimeUnit.MINUTES);
+  }
+
+  /**
+   * Creates a copier that does a project for every Nth record from a VectorContainer incoming into VectorContainer outgoing. Each OrderDef in orderings
+   * generates a column, and evaluation of the expression associated with each OrderDef determines the value of each column. These records will later be
+   * sorted based on the values in each column, in the same order as the orderings.
+   * @param sv4
+   * @param incoming
+   * @param outgoing
+   * @param orderings
+   * @return
+   * @throws SchemaChangeException
+   */
   private SampleCopier getCopier(SelectionVector4 sv4, VectorContainer incoming, VectorContainer outgoing, List<OrderDef> orderings) throws SchemaChangeException{
     List<ValueVector> localAllocationVectors = Lists.newArrayList();
     final ErrorCollector collector = new ErrorCollectorImpl();
@@ -232,9 +277,8 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
       logger.debug("Added eval.");
     }
     for (ValueVector vv : localAllocationVectors) {
-      AllocationHelper.allocate(vv, SAMPLING_FACTOR * partitions, 50);
+      AllocationHelper.allocate(vv, samplingFactor * partitions, 50);
     }
-//    outgoing.addCollection(allocationVectors);
     outgoing.buildSchema(BatchSchema.SelectionVectorMode.NONE);
     try {
       SampleCopier sampleCopier = context.getImplementationClass(cg);
@@ -252,11 +296,17 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
 
   @Override
   public IterOutcome next() {
+
+    //if we got IterOutcome.NONE while getting partition vectors, and there are no batches on the queue, then we are done
     if (upstreamNone && (batchQueue == null || batchQueue.size() == 0)) return IterOutcome.NONE;
+
+    // if there are batches on the queue, process them first, rather than calling incoming.next()
     if (batchQueue != null && batchQueue.size() > 0) {
       VectorContainer vc = batchQueue.poll();
       recordCount = vc.getRecordCount();
       try{
+
+        // Must set up a new schema each time, because ValueVectors are not reused between containers in queue
         setupNewSchema(vc);
       }catch(SchemaChangeException ex){
         kill();
@@ -267,15 +317,22 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
       doWork(vc);
       return IterOutcome.OK_NEW_SCHEMA;
     }
+
+    // Reaching this point, either this is the first iteration, or there are no batches left on the queue and there are more incoming
     IterOutcome upstream = incoming.next();
     recordCount = incoming.getRecordCount();
+
     if(this.first && upstream == IterOutcome.OK) {
-      upstream = IterOutcome.OK_NEW_SCHEMA;
+      throw new RuntimeException("Invalid state: First batch should have OK_NEW_SCHEMA");
     }
+
+    // If this is the first iteration, we need to generate the partition vectors before we can proceed
     if(this.first && upstream == IterOutcome.OK_NEW_SCHEMA) {
       if (!getPartitionVectors()) return IterOutcome.STOP;
       batchQueue = new LinkedBlockingQueue<>(builder.getContainers());
       first = false;
+
+      // Now that we have the partition vectors, we immediately process the first batch on the queue
       VectorContainer vc = batchQueue.poll();
       try{
         setupNewSchema(vc);
@@ -288,6 +345,9 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
       doWork(vc);
       return IterOutcome.OK_NEW_SCHEMA;
     }
+
+    // if this now that all the batches on the queue are processed, we begin processing the incoming batches. For the first one
+    // we need to generate a new schema, even if the outcome is IterOutcome.OK After that we can reuse the schema.
     if (this.startedUnsampledBatches == false) {
       this.startedUnsampledBatches = true;
       if (upstream == IterOutcome.OK) upstream = IterOutcome.OK_NEW_SCHEMA;
@@ -333,16 +393,12 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
     }
   }
 
-  /** hack to make ref and full work together... need to figure out if this is still necessary. **/
-  private FieldReference getRef(NamedExpression e){
-    FieldReference ref = e.getRef();
-    PathSegment seg = ref.getRootSegment();
-    if(seg.isNamed() && "output".contentEquals(seg.getNameSegment().getPath())){
-      return new FieldReference(ref.getPath().toString().subSequence(7, ref.getPath().length()), ref.getPosition());
-    }
-    return ref;
-  }
-  
+  /**
+   * Sets up projection that will transfer all of the columns in batch, and also populate the partition column based on which
+   * partition a record falls into in the partition table
+   * @param batch
+   * @throws SchemaChangeException
+   */
   protected void setupNewSchema(VectorAccessible batch) throws SchemaChangeException{
     this.allocationVectors = Lists.newArrayList();
     container.clear();
@@ -357,20 +413,18 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
       container.add(tp.getTo());
     }
 
-    cg.setMappingSet(MAIN_MAPPING);
+    cg.setMappingSet(mainMapping);
 
     int count = 0;
     for(OrderDef od : popConfig.getOrderings()){
-      // first, we rewrite the evaluation stack for each side of the comparison.
       final LogicalExpression expr = ExpressionTreeMaterializer.materialize(od.getExpr(), batch, collector);
       if(collector.hasErrors()) throw new SchemaChangeException("Failure while materializing expression. " + collector.toErrorString());
-      cg.setMappingSet(INCOMING_MAPPING);
+      cg.setMappingSet(incomingMapping);
       CodeGenerator.HoldingContainer left = cg.addExpr(expr, false);
-      cg.setMappingSet(PARTITION_MAPPING);
+      cg.setMappingSet(partitionMapping);
       CodeGenerator.HoldingContainer right = cg.addExpr(new ValueVectorReadExpression(new TypedFieldId(expr.getMajorType(), count++)), false);
-      cg.setMappingSet(MAIN_MAPPING);
+      cg.setMappingSet(mainMapping);
 
-      // next we wrap the two comparison sides and add the expression block for the comparison.
       FunctionCall f = new FunctionCall(ComparatorFunctions.COMPARE_TO, ImmutableList.of((LogicalExpression) new HoldingContainerExpression(left), new HoldingContainerExpression(right)), ExpressionPosition.UNKNOWN);
       CodeGenerator.HoldingContainer out = cg.addExpr(f, false);
       JConditional jc = cg.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)));

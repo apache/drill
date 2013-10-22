@@ -44,6 +44,7 @@ public abstract class OrderedPartitionProjectorTemplate implements OrderedPartit
   private SelectionVectorMode svMode;
   private RecordBatch outBatch;
   private SchemaPath outputField;
+  private IntVector partitionValues;
 
   public OrderedPartitionProjectorTemplate() throws SchemaChangeException{
   }
@@ -60,7 +61,6 @@ public abstract class OrderedPartitionProjectorTemplate implements OrderedPartit
   @Override
   public final int projectRecords(final int recordCount, int firstOutputIndex) {
     final int countN = recordCount;
-    IntVector partitionValues = (IntVector) outBatch.getValueAccessorById(outBatch.getValueVectorId(outputField).getFieldId(), IntVector.class).getValueVector();
     int counter = 0;
     for (int i = 0; i < countN; i++, firstOutputIndex++) {
       int partition = getPartition(i);
@@ -80,6 +80,7 @@ public abstract class OrderedPartitionProjectorTemplate implements OrderedPartit
     this.svMode = incoming.getSchema().getSelectionVectorMode();
     this.outBatch = outgoing;
     this.outputField = outputField;
+    partitionValues = (IntVector) outBatch.getValueAccessorById(outBatch.getValueVectorId(outputField).getFieldId(), IntVector.class).getValueVector();
     switch(svMode){
     case FOUR_BYTE:
     case TWO_BYTE:
