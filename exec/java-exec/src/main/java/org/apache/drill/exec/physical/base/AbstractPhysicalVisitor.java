@@ -43,6 +43,11 @@ public abstract class AbstractPhysicalVisitor<T, X, E extends Throwable> impleme
   }
 
   @Override
+  public T visitTrace(Trace trace, X value) throws E{
+      return visitOp(trace, value);
+  }
+
+  @Override
   public T visitSort(Sort sort, X value) throws E{
     return visitOp(sort, value);
   }

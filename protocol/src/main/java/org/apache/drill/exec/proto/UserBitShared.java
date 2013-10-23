@@ -2909,6 +2909,16 @@ public final class UserBitShared {
      * <code>optional int32 record_count = 2;</code>
      */
     int getRecordCount();
+
+    // optional bool isSelectionVector2 = 3;
+    /**
+     * <code>optional bool isSelectionVector2 = 3;</code>
+     */
+    boolean hasIsSelectionVector2();
+    /**
+     * <code>optional bool isSelectionVector2 = 3;</code>
+     */
+    boolean getIsSelectionVector2();
   }
   /**
    * Protobuf type {@code exec.shared.RecordBatchDef}
@@ -2972,6 +2982,11 @@ public final class UserBitShared {
             case 16: {
               bitField0_ |= 0x00000001;
               recordCount_ = input.readInt32();
+              break;
+            }
+            case 24: {
+              bitField0_ |= 0x00000002;
+              isSelectionVector2_ = input.readBool();
               break;
             }
           }
@@ -3069,9 +3084,26 @@ public final class UserBitShared {
       return recordCount_;
     }
 
+    // optional bool isSelectionVector2 = 3;
+    public static final int ISSELECTIONVECTOR2_FIELD_NUMBER = 3;
+    private boolean isSelectionVector2_;
+    /**
+     * <code>optional bool isSelectionVector2 = 3;</code>
+     */
+    public boolean hasIsSelectionVector2() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional bool isSelectionVector2 = 3;</code>
+     */
+    public boolean getIsSelectionVector2() {
+      return isSelectionVector2_;
+    }
+
     private void initFields() {
       field_ = java.util.Collections.emptyList();
       recordCount_ = 0;
+      isSelectionVector2_ = false;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -3091,6 +3123,9 @@ public final class UserBitShared {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         output.writeInt32(2, recordCount_);
       }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBool(3, isSelectionVector2_);
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -3107,6 +3142,10 @@ public final class UserBitShared {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(2, recordCount_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBoolSize(3, isSelectionVector2_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -3233,6 +3272,8 @@ public final class UserBitShared {
         }
         recordCount_ = 0;
         bitField0_ = (bitField0_ & ~0x00000002);
+        isSelectionVector2_ = false;
+        bitField0_ = (bitField0_ & ~0x00000004);
         return this;
       }
 
@@ -3274,6 +3315,10 @@ public final class UserBitShared {
           to_bitField0_ |= 0x00000001;
         }
         result.recordCount_ = recordCount_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.isSelectionVector2_ = isSelectionVector2_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -3318,6 +3363,9 @@ public final class UserBitShared {
         }
         if (other.hasRecordCount()) {
           setRecordCount(other.getRecordCount());
+        }
+        if (other.hasIsSelectionVector2()) {
+          setIsSelectionVector2(other.getIsSelectionVector2());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -3615,6 +3663,39 @@ public final class UserBitShared {
       public Builder clearRecordCount() {
         bitField0_ = (bitField0_ & ~0x00000002);
         recordCount_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional bool isSelectionVector2 = 3;
+      private boolean isSelectionVector2_ ;
+      /**
+       * <code>optional bool isSelectionVector2 = 3;</code>
+       */
+      public boolean hasIsSelectionVector2() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional bool isSelectionVector2 = 3;</code>
+       */
+      public boolean getIsSelectionVector2() {
+        return isSelectionVector2_;
+      }
+      /**
+       * <code>optional bool isSelectionVector2 = 3;</code>
+       */
+      public Builder setIsSelectionVector2(boolean value) {
+        bitField0_ |= 0x00000004;
+        isSelectionVector2_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bool isSelectionVector2 = 3;</code>
+       */
+      public Builder clearIsSelectionVector2() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        isSelectionVector2_ = false;
         onChanged();
         return this;
       }
@@ -4903,15 +4984,16 @@ public final class UserBitShared {
       "ror\030\005 \003(\0132\031.exec.shared.ParsingError\"\\\n\014" +
       "ParsingError\022\024\n\014start_column\030\002 \001(\005\022\021\n\tst" +
       "art_row\030\003 \001(\005\022\022\n\nend_column\030\004 \001(\005\022\017\n\007end" +
-      "_row\030\005 \001(\005\"\r\n\013RecordBatch\"Q\n\016RecordBatch",
+      "_row\030\005 \001(\005\"\r\n\013RecordBatch\"m\n\016RecordBatch",
       "Def\022)\n\005field\030\001 \003(\0132\032.exec.shared.FieldMe" +
-      "tadata\022\024\n\014record_count\030\002 \001(\005\"\261\001\n\rFieldMe" +
-      "tadata\022\033\n\003def\030\001 \001(\0132\016.exec.FieldDef\022\023\n\013v" +
-      "alue_count\030\002 \001(\005\022\027\n\017var_byte_length\030\003 \001(" +
-      "\005\022\023\n\013group_count\030\004 \001(\005\022\025\n\rbuffer_length\030" +
-      "\005 \001(\005\022)\n\005child\030\006 \003(\0132\032.exec.shared.Field" +
-      "MetadataB.\n\033org.apache.drill.exec.protoB" +
-      "\rUserBitSharedH\001"
+      "tadata\022\024\n\014record_count\030\002 \001(\005\022\032\n\022isSelect" +
+      "ionVector2\030\003 \001(\010\"\261\001\n\rFieldMetadata\022\033\n\003de" +
+      "f\030\001 \001(\0132\016.exec.FieldDef\022\023\n\013value_count\030\002" +
+      " \001(\005\022\027\n\017var_byte_length\030\003 \001(\005\022\023\n\013group_c" +
+      "ount\030\004 \001(\005\022\025\n\rbuffer_length\030\005 \001(\005\022)\n\005chi" +
+      "ld\030\006 \003(\0132\032.exec.shared.FieldMetadataB.\n\033" +
+      "org.apache.drill.exec.protoB\rUserBitShar" +
+      "edH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -4947,7 +5029,7 @@ public final class UserBitShared {
           internal_static_exec_shared_RecordBatchDef_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_shared_RecordBatchDef_descriptor,
-              new java.lang.String[] { "Field", "RecordCount", });
+              new java.lang.String[] { "Field", "RecordCount", "IsSelectionVector2", });
           internal_static_exec_shared_FieldMetadata_descriptor =
             getDescriptor().getMessageTypes().get(5);
           internal_static_exec_shared_FieldMetadata_fieldAccessorTable = new

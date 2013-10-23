@@ -66,7 +66,7 @@ public class TestLoad {
       v.getMutator().setValueCount(100);
     }
 
-    WritableBatch writableBatch = WritableBatch.getBatchNoSV(100, vectors);
+    WritableBatch writableBatch = WritableBatch.getBatchNoHV(100, vectors, false);
     RecordBatchLoader batchLoader = new RecordBatchLoader(allocator);
     ByteBuf[] byteBufs = writableBatch.getBuffers();
     int bytes = 0;

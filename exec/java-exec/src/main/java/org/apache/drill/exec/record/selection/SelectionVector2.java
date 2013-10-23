@@ -35,6 +35,8 @@ public class SelectionVector2 implements Closeable{
   private int recordCount;
   private ByteBuf buffer = DeadBuf.DEAD_BUFFER;
 
+  public static final int RECORD_SIZE = 2;
+
   public SelectionVector2(BufferAllocator allocator) {
     this.allocator = allocator;
   }
@@ -43,24 +45,54 @@ public class SelectionVector2 implements Closeable{
     return recordCount;
   }
 
+  public ByteBuf getBuffer()
+  {
+      ByteBuf bufferHandle = this.buffer;
+
+      /* Increment the ref count for this buffer */
+      bufferHandle.retain();
+
+      /* We are passing ownership of the buffer to the
+       * caller. clear the buffer from within our selection vector
+       */
+      clear();
+
+      return bufferHandle;
+  }
+
+  public void setBuffer(ByteBuf bufferHandle)
+  {
+      /* clear the existing buffer */
+      clear();
+
+      this.buffer = bufferHandle;
+      buffer.retain();
+  }
+
   public char getIndex(int index){
     
-    return buffer.getChar(index*2);
+    return buffer.getChar(index * RECORD_SIZE);
   }
 
   public void setIndex(int index, char value){
-    buffer.setChar(index*2, value);
+    buffer.setChar(index * RECORD_SIZE, value);
   }
   
   public void allocateNew(int size){
     clear();
-    buffer = allocator.buffer(size * 2);
+    buffer = allocator.buffer(size * RECORD_SIZE);
   }
-  
+
   public SelectionVector2 clone(){
     SelectionVector2 newSV = new SelectionVector2(allocator);
     newSV.recordCount = recordCount;
     newSV.buffer = buffer;
+
+    /* Since buffer and newSV.buffer essentially point to the
+     * same buffer, if we don't do a retain() on the newSV's
+     * buffer, it might get freed.
+     */
+    newSV.buffer.retain();
     clear();
     return newSV;
   }
@@ -82,6 +114,6 @@ public class SelectionVector2 implements Closeable{
   public void close() throws IOException {
     clear();
   }
-  
-  
+
+
 }

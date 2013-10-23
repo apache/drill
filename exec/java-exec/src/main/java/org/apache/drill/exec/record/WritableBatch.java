@@ -58,16 +58,16 @@ public class WritableBatch {
     return buffers;
   }
 
-  public static WritableBatch getBatchNoSVWrap(int recordCount, Iterable<VectorWrapper<?>> vws) {
+  public static WritableBatch getBatchNoHVWrap(int recordCount, Iterable<VectorWrapper<?>> vws, boolean isSV2) {
     List<ValueVector> vectors = Lists.newArrayList();
     for(VectorWrapper<?> vw : vws){
       Preconditions.checkArgument(!vw.isHyper());
       vectors.add(vw.getValueVector());
     }
-    return getBatchNoSV(recordCount, vectors);
+    return getBatchNoHV(recordCount, vectors, isSV2);
   }
   
-  public static WritableBatch getBatchNoSV(int recordCount, Iterable<ValueVector> vectors) {
+  public static WritableBatch getBatchNoHV(int recordCount, Iterable<ValueVector> vectors, boolean isSV2) {
     List<ByteBuf> buffers = Lists.newArrayList();
     List<FieldMetadata> metadata = Lists.newArrayList();
 
@@ -84,14 +84,17 @@ public class WritableBatch {
       vv.clear();
     }
 
-    RecordBatchDef batchDef = RecordBatchDef.newBuilder().addAllField(metadata).setRecordCount(recordCount).build();
+    RecordBatchDef batchDef = RecordBatchDef.newBuilder().addAllField(metadata).setRecordCount(recordCount).setIsSelectionVector2(isSV2).build();
     WritableBatch b = new WritableBatch(batchDef, buffers);
     return b;
   }
   
   public static WritableBatch get(RecordBatch batch) {
-    if(batch.getSchema() != null && batch.getSchema().getSelectionVectorMode() != SelectionVectorMode.NONE) throw new UnsupportedOperationException("Only batches without selections vectors are writable.");
-    return getBatchNoSVWrap(batch.getRecordCount(), batch);
+    if(batch.getSchema() != null && batch.getSchema().getSelectionVectorMode() == SelectionVectorMode.FOUR_BYTE)
+        throw new UnsupportedOperationException("Only batches without hyper selections vectors are writable.");
+
+    boolean sv2 = (batch.getSchema().getSelectionVectorMode() == SelectionVectorMode.TWO_BYTE);
+    return getBatchNoHVWrap(batch.getRecordCount(), batch, sv2);
   }
 
 }

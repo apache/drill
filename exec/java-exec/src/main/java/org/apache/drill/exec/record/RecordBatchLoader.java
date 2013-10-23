@@ -143,7 +143,8 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
   }
   
   public WritableBatch getWritableBatch(){
-    return WritableBatch.getBatchNoSVWrap(valueCount, container);
+    boolean isSV2 = (schema.getSelectionVectorMode() == BatchSchema.SelectionVectorMode.TWO_BYTE);
+    return WritableBatch.getBatchNoHVWrap(valueCount, container, isSV2);
   }
 
   @Override

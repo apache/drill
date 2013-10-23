@@ -19,6 +19,7 @@ package org.apache.drill.exec.ops;
 
 import java.io.IOException;
 
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.compile.ClassTransformer;
 import org.apache.drill.exec.compile.QueryClassLoader;
 import org.apache.drill.exec.exception.ClassTransformationException;
@@ -140,5 +141,9 @@ public class FragmentContext {
   
   public QueryClassLoader getClassLoader(){
     return loader;
+  }
+
+  public DrillConfig getConfig() {
+      return context.getConfig();
   }
 }

@@ -34,7 +34,8 @@ message RecordBatch{
 message RecordBatchDef {
 	repeated FieldMetadata field = 1;
 	optional int32 record_count = 2;
-	
+    optional bool isSelectionVector2 = 3;
+
 }
 
 message FieldMetadata {
