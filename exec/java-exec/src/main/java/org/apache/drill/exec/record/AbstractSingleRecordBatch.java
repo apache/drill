@@ -65,7 +65,7 @@ public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> exte
       throw new UnsupportedOperationException();
     }
   }
-  
+
   protected abstract void setupNewSchema() throws SchemaChangeException;
   protected abstract void doWork();
 }

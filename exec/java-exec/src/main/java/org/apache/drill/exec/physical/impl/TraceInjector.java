@@ -74,7 +74,7 @@ public class TraceInjector extends AbstractPhysicalVisitor<PhysicalOperator, Fra
         /* For every child operator create a trace operator as its parent */
         for (int i = 0; i < newChildren.size(); i++)
         {
-            String traceTag = newChildren.toString() + Integer.toString(traceTagCount++);
+            String traceTag = newChildren.get(i).toString() + Integer.toString(traceTagCount++);
 
             /* Trace operator */
             Trace traceOp = new Trace(newChildren.get(i), traceTag);

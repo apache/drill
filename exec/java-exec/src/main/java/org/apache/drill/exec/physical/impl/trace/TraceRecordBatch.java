@@ -24,7 +24,10 @@ import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.ByteBuffer;
 import java.util.List;
+import java.util.Formatter;
 
+import com.google.common.collect.Iterators;
+import io.netty.buffer.CompositeByteBuf;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
@@ -43,6 +46,19 @@ import org.apache.drill.exec.proto.SchemaDefProtos.FieldDef;
 
 import io.netty.buffer.ByteBuf;
 
+/* TraceRecordBatch contains value vectors which are exactly the same
+ * as the incoming record batch's value vectors. If the incoming
+ * record batch has a selection vector (type 2) then TraceRecordBatch
+ * will also contain a selection vector.
+ *
+ * Purpose of this record batch is to dump the data associated with all
+ * the value vectors and selection vector to disk.
+ *
+ * This record batch does not modify any data or schema, it simply
+ * consumes the incoming record batch's data, dump to disk and pass the
+ * same set of value vectors (and selection vectors) to its parent record
+ * batch
+ */
 public class TraceRecordBatch extends AbstractSingleRecordBatch<Trace>
 {
     static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TraceRecordBatch.class);
@@ -55,11 +71,33 @@ public class TraceRecordBatch extends AbstractSingleRecordBatch<Trace>
     /* Location where the log should be dumped */
     private final String logLocation;
 
+    /* File descriptors needed to be able to dump to log file */
+    private FileOutputStream fos;
+    private FileChannel fc;
+
     public TraceRecordBatch(Trace pop, RecordBatch incoming, FragmentContext context)
     {
         super(pop, context, incoming);
         this.traceTag = pop.traceTag;
         logLocation = context.getConfig().getString(ExecConstants.TRACE_DUMP_DIRECTORY);
+
+        String fileName = getFileName();
+
+        /* Create the log file we will dump to and initialize the file descriptors */
+        try
+        {
+            File file = new File(fileName);
+
+            /* create the file */
+            file.createNewFile();
+
+            fos = new FileOutputStream(file, true);
+            fc  = fos.getChannel();
+
+        } catch (IOException e)
+        {
+            logger.error("Unable to create file: " + fileName);
+        }
     }
 
     @Override
@@ -75,6 +113,13 @@ public class TraceRecordBatch extends AbstractSingleRecordBatch<Trace>
      * Function is invoked for every record batch and it simply
      * dumps the buffers associated with all the value vectors in
      * this record batch to a log file.
+     *
+     * Function is divided into three main parts
+     *   1. Get all the buffers(ByteBuf's) associated with incoming
+     *      record batch's value vectors and selection vector
+     *   2. Dump these buffers to the log file (performed by writeToFile())
+     *   3. Construct the record batch with these buffers to look exactly like
+     *      the incoming record batch (performed by reconstructRecordBatch())
      */
     @Override
     protected void doWork()
@@ -85,122 +130,29 @@ public class TraceRecordBatch extends AbstractSingleRecordBatch<Trace>
         /* Get the array of buffers from the incoming record batch */
         WritableBatch batch = incoming.getWritableBatch();
 
-        BufferAllocator allocator = context.getAllocator();
         ByteBuf[] incomingBuffers = batch.getBuffers();
         RecordBatchDef batchDef = batch.getDef();
 
-        /* Total length of buffers across all value vectors */
-        int totalBufferLength = 0;
+        /* ByteBuf associated with the selection vector */
+        ByteBuf svBuf = null;
 
-        String fileName = getFileName();
+        /* Size of the selection vector */
+        int svCount = 0;
 
-        try
+        if (svMode == SelectionVectorMode.TWO_BYTE)
         {
-            File file = new File(fileName);
-
-            if (!file.exists())
-                file.createNewFile();
-
-            FileOutputStream fos = new FileOutputStream(file, true);
-
-            /* Write the metadata to the file */
-            batchDef.writeDelimitedTo(fos);
-
-            FileChannel fc = fos.getChannel();
-
-            /* If we have a selection vector, dump it to file first */
-            if (svMode == SelectionVectorMode.TWO_BYTE)
-            {
-                SelectionVector2 incomingSV2 = incoming.getSelectionVector2();
-                int recordCount = incomingSV2.getCount();
-                int sv2Size = recordCount * SelectionVector2.RECORD_SIZE;
-
-                ByteBuf buf = incomingSV2.getBuffer();
-
-                /* For writing to the selection vectors we use
-                 * setChar() method which does not modify the
-                 * reader and writer index. To copy the entire buffer
-                 * without having to get each byte individually we need
-                 * to set the writer index
-                 */
-                buf.writerIndex(sv2Size);
-
-                /* dump the selection vector to log */
-                dumpByteBuf(fc, buf);
-
-                if (sv == null)
-                    sv = new SelectionVector2(allocator);
-
-                sv.setRecordCount(recordCount);
-
-                /* create our selection vector from the
-                 * incoming selection vector's buffer
-                 */
-                sv.setBuffer(buf);
-
-                buf.release();
-            }
-
-            /* For each buffer dump it to log and compute total length */
-            for (ByteBuf buf : incomingBuffers)
-            {
-                /* dump the buffer into the file channel */
-                dumpByteBuf(fc, buf);
-
-                /* Reset reader index on the ByteBuf so we can read it again */
-                buf.resetReaderIndex();
-
-                /* compute total length of buffer, will be used when
-                 * we create a compound buffer
-                 */
-                totalBufferLength += buf.readableBytes();
-            }
-
-            fc.close();
-            fos.close();
-
-        } catch (IOException e)
-        {
-            logger.error("Unable to write buffer to file: " + fileName);
+            SelectionVector2 sv2 = incoming.getSelectionVector2();
+            svCount = sv2.getCount();
+            svBuf = sv2.getBuffer();
         }
 
-        /* allocate memory for the compound buffer, compound buffer
-         * will contain the data from all the buffers across all the
-         * value vectors
+        /* Write the ByteBuf for the value vectors and selection vectors to disk
+         * totalBufferLength is the sum of size of all the ByteBuf across all value vectors
          */
-        ByteBuf byteBuf = allocator.buffer(totalBufferLength);
+        int totalBufferLength = writeToFile(batchDef, incomingBuffers, svBuf, svCount);
 
-        /* Copy data from each buffer into the compound buffer */
-        for (int i = 0; i < incomingBuffers.length; i++)
-        {
-            byteBuf.writeBytes(incomingBuffers[i], incomingBuffers[i].readableBytes());
-        }
-
-        List<FieldMetadata> fields = batchDef.getFieldList();
-
-        int bufferOffset = 0;
-
-        /* For each value vector slice up the appropriate size from
-         * the compound buffer and load it into the value vector
-         */
-        int vectorIndex = 0;
-        for(VectorWrapper<?> vv : container)
-        {
-            FieldMetadata fmd = fields.get(vectorIndex);
-            ValueVector v = vv.getValueVector();
-            v.load(fmd, byteBuf.slice(bufferOffset, fmd.getBufferLength()));
-            vectorIndex++;
-            bufferOffset += fmd.getBufferLength();
-        }
-
-        container.buildSchema(svMode);
-
-        /* Set the record count in the value vector */
-        for(VectorWrapper<?> v : container)
-        {
-            ValueVector.Mutator m = v.getValueVector().getMutator();
-            m.setValueCount(incoming.getRecordCount());
-        }
+        /* Reconstruct the record batch from the ByteBuf's */
+        reconstructRecordBatch(batchDef, context, incomingBuffers, totalBufferLength, svBuf, svCount, svMode);
     }
 
     @Override
@@ -241,19 +193,136 @@ public class TraceRecordBatch extends AbstractSingleRecordBatch<Trace>
         int majorFragmentId = handle.getMajorFragmentId();
         int minorFragmentId = handle.getMinorFragmentId();
 
-        return new String(logLocation + "/" + traceTag + "_" + qid + "_" + majorFragmentId + "_" + minorFragmentId);
+        String fileName = String.format("%s//%s_%s_%s_%s", logLocation, qid, majorFragmentId, minorFragmentId, traceTag);
+
+        return fileName;
     }
 
-    private void dumpByteBuf(FileChannel fc, ByteBuf buf) throws IOException
+    private int writeToFile(RecordBatchDef batchDef, ByteBuf[] vvBufs, ByteBuf svBuf, int svCount)
     {
-        int bufferLength = buf.readableBytes();
+        String fileName = getFileName();
+        int totalBufferLength = 0;
 
-        byte[] byteArray = new byte[bufferLength];
+        try
+        {
+            /* Write the metadata to the file */
+            batchDef.writeDelimitedTo(fos);
 
-        /* Transfer bytes to a byte array */
-        buf.readBytes(byteArray);
+            /* If we have a selection vector, dump it to file first */
+            if (svBuf != null)
+            {
 
-        /* Drop the byte array into the file channel */
-        fc.write(ByteBuffer.wrap(byteArray));
+                /* For writing to the selection vectors we use
+                 * setChar() method which does not modify the
+                 * reader and writer index. To copy the entire buffer
+                 * without having to get each byte individually we need
+                 * to set the writer index
+                 */
+                svBuf.writerIndex(svCount * SelectionVector2.RECORD_SIZE);
+
+                fc.write(svBuf.nioBuffers());
+            }
+
+            /* Dump the array of ByteBuf's associated with the value vectors */
+            for (ByteBuf buf : vvBufs)
+            {
+                /* dump the buffer into the file channel */
+                fc.write(buf.nioBuffers());
+
+                /* compute total length of buffer, will be used when
+                 * we create a compound buffer
+                 */
+                totalBufferLength += buf.readableBytes();
+            }
+
+            fc.force(true);
+            fos.flush();
+
+        } catch (IOException e)
+        {
+            logger.error("Unable to write buffer to file: " + fileName);
+        }
+
+        return totalBufferLength;
     }
+
+    private void reconstructRecordBatch(RecordBatchDef batchDef, FragmentContext context,
+                                        ByteBuf[] vvBufs, int totalBufferLength,
+                                        ByteBuf svBuf, int svCount, SelectionVectorMode svMode)
+    {
+        if (vvBufs.length > 0)    /* If we have ByteBuf's associated with value vectors */
+        {
+            CompositeByteBuf cbb = new CompositeByteBuf(vvBufs[0].alloc(), true, vvBufs.length);
+
+            /* Copy data from each buffer into the compound buffer */
+            for (int i = 0; i < vvBufs.length; i++)
+            {
+                cbb.addComponent(vvBufs[i]);
+            }
+
+            List<FieldMetadata> fields = batchDef.getFieldList();
+
+            int bufferOffset = 0;
+
+            /* For each value vector slice up the appropriate size from
+             * the compound buffer and load it into the value vector
+             */
+            int vectorIndex = 0;
+
+            for(VectorWrapper<?> vv : container)
+            {
+                FieldMetadata fmd = fields.get(vectorIndex);
+                ValueVector v = vv.getValueVector();
+                v.load(fmd, cbb.slice(bufferOffset, fmd.getBufferLength()));
+                vectorIndex++;
+                bufferOffset += fmd.getBufferLength();
+            }
+        }
+
+        /* Set the selection vector for the record batch if the
+         * incoming batch had a selection vector
+         */
+        if (svMode == SelectionVectorMode.TWO_BYTE)
+        {
+            if (sv == null)
+                sv = new SelectionVector2(context.getAllocator());
+
+            sv.setRecordCount(svCount);
+
+            /* create our selection vector from the
+             * incoming selection vector's buffer
+             */
+            sv.setBuffer(svBuf);
+
+            svBuf.release();
+        }
+
+        container.buildSchema(svMode);
+
+        /* Set the record count in the value vector */
+        for(VectorWrapper<?> v : container)
+        {
+            ValueVector.Mutator m = v.getValueVector().getMutator();
+            m.setValueCount(incoming.getRecordCount());
+        }
+    }
+
+    @Override
+    protected void cleanup()
+    {
+        /* Release the selection vector */
+        if (sv != null)
+          sv.clear();
+
+        /* Close the file descriptors */
+        try
+        {
+            fos.close();
+            fc.close();
+        } catch (IOException e)
+        {
+            logger.error("Unable to close file descriptors for file: " + getFileName());
+        }
+    }
+
 }
