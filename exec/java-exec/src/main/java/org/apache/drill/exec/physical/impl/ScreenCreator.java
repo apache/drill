@@ -91,23 +91,15 @@ public class ScreenCreator implements RootCreator<Screen>{
           return false;
       }
       case NONE: {
-        if(materializer == null){
-          // receive no results.
-          context.batchesCompleted.inc(1);
-          context.recordsCompleted.inc(incoming.getRecordCount());
-          QueryResult header = QueryResult.newBuilder() //
-              .setQueryId(context.getHandle().getQueryId()) //
-              .setRowCount(0) //
-              .setDef(RecordBatchDef.getDefaultInstance()) //
-              .setIsLastChunk(true) //
-              .build();
-          QueryWritableBatch batch = new QueryWritableBatch(header);
-          connection.sendResult(listener, batch);
-
-        }else{
-          QueryWritableBatch batch = materializer.convertNext(true);
-          connection.sendResult(listener, batch);
-        }
+        context.batchesCompleted.inc(1);
+        QueryResult header = QueryResult.newBuilder() //
+            .setQueryId(context.getHandle().getQueryId()) //
+            .setRowCount(0) //
+            .setDef(RecordBatchDef.getDefaultInstance()) //
+            .setIsLastChunk(true) //
+            .build();
+        QueryWritableBatch batch = new QueryWritableBatch(header);
+        connection.sendResult(listener, batch);
 
         return false;
       }

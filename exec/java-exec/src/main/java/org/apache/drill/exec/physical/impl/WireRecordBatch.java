@@ -97,8 +97,15 @@ public class WireRecordBatch implements RecordBatch{
   @Override
   public IterOutcome next() {
     RawFragmentBatch batch = fragProvider.getNext();
+    
+    // skip over empty batches. we do this since these are basically control messages.
+    while(batch != null && batch.getHeader().getDef().getRecordCount() == 0){
+      batch = fragProvider.getNext();
+    }
+    
     try{
       if (batch == null) return IterOutcome.NONE;
+      
 
       logger.debug("Next received batch {}", batch);
 

@@ -83,7 +83,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
   private boolean upstreamNone = false;
   private int recordCount;
   private DistributedMap<VectorAccessibleSerializable> tableMap;
-  private DistributedMultiMap mmap;
+  private DistributedMultiMap<?> mmap;
   private String mapKey;
 
   public OrderedPartitionRecordBatch(OrderedPartitionSender pop, RecordBatch incoming, FragmentContext context){
@@ -123,6 +123,8 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
           case STOP:
             upstreamNone = true;
             break outer;
+        default:
+          // fall through
         }
         builder.add(incoming);
         recordsSampled += incoming.getRecordCount();
@@ -144,7 +146,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
       SampleCopier copier = getCopier(sv4, sampleContainer, containerToCache, popConfig.getOrderings());
       copier.copyRecords(recordsSampled/(samplingFactor * partitions), 0, samplingFactor * partitions);
 
-      for (VectorWrapper vw : containerToCache) {
+      for (VectorWrapper<?> vw : containerToCache) {
         vw.getValueVector().getMutator().setValueCount(copier.getOutputRecords());
       }
       containerToCache.setRecordCount(copier.getOutputRecords());
@@ -156,7 +158,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
       mapKey = String.format("%s_%d", context.getHandle().getQueryId(), context.getHandle().getMajorFragmentId());
       mmap = cache.getMultiMap(VectorAccessibleSerializable.class);
       List<ValueVector> vectorList = Lists.newArrayList();
-      for (VectorWrapper vw : containerToCache) {
+      for (VectorWrapper<?> vw : containerToCache) {
         vectorList.add(vw.getValueVector());
       }
 
@@ -193,7 +195,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
       Preconditions.checkState(wrap != null);
 
       // Extract vectors from the wrapper, and add to partition vectors. These vectors will be used for partitioning in the rest of this operator
-      for (VectorWrapper w : wrap.get()) {
+      for (VectorWrapper<?> w : wrap.get()) {
         partitionVectors.add(w.getValueVector());
       }
     } catch (ClassTransformationException | IOException | SchemaChangeException | InterruptedException ex) {
@@ -235,7 +237,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
     int skipRecords = containerBuilder.getSv4().getTotalCount() / partitions;
     copier2.copyRecords(skipRecords, skipRecords, partitions - 1);
     assert copier2.getOutputRecords() == partitions - 1 : String.format("output records: %d partitions: %d", copier2.getOutputRecords(), partitions);
-    for (VectorWrapper vw : candidatePartitionTable) {
+    for (VectorWrapper<?> vw : candidatePartitionTable) {
       vw.getValueVector().getMutator().setValueCount(copier2.getOutputRecords());
     }
     candidatePartitionTable.setRecordCount(copier2.getOutputRecords());
@@ -324,7 +326,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
 
     // Reaching this point, either this is the first iteration, or there are no batches left on the queue and there are more incoming
     IterOutcome upstream = incoming.next();
-    recordCount = incoming.getRecordCount();
+    
 
     if(this.first && upstream == IterOutcome.OK) {
       throw new RuntimeException("Invalid state: First batch should have OK_NEW_SCHEMA");
@@ -347,6 +349,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
         return IterOutcome.STOP;
       }
       doWork(vc);
+      recordCount = vc.getRecordCount();
       return IterOutcome.OK_NEW_SCHEMA;
     }
 
@@ -361,6 +364,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
       case NOT_YET:
       case STOP:
         container.zeroVectors();
+        recordCount = 0;
         return upstream;
       case OK_NEW_SCHEMA:
         try{
@@ -374,6 +378,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
         // fall through.
       case OK:
         doWork(incoming);
+        recordCount = incoming.getRecordCount();
         return upstream; // change if upstream changed, otherwise normal.
       default:
         throw new UnsupportedOperationException();

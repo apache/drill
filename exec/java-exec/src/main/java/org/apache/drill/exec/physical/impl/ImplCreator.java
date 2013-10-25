@@ -28,7 +28,6 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.physical.config.*;
 import org.apache.drill.exec.physical.impl.aggregate.AggBatchCreator;
-import org.apache.drill.exec.physical.config.Union;
 import org.apache.drill.exec.physical.impl.filter.FilterBatchCreator;
 import org.apache.drill.exec.physical.impl.join.MergeJoinCreator;
 import org.apache.drill.exec.physical.impl.limit.LimitBatchCreator;
@@ -39,6 +38,8 @@ import org.apache.drill.exec.physical.impl.sort.SortBatchCreator;
 import org.apache.drill.exec.physical.impl.svremover.SVRemoverCreator;
 import org.apache.drill.exec.physical.impl.trace.TraceBatchCreator;
 import org.apache.drill.exec.physical.impl.union.UnionBatchCreator;
+import org.apache.drill.exec.physical.impl.validate.IteratorValidatorCreator;
+import org.apache.drill.exec.physical.impl.validate.IteratorValidatorInjector;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.store.json.JSONScanBatchCreator;
 import org.apache.drill.exec.store.json.JSONSubScan;
@@ -73,6 +74,7 @@ public class ImplCreator extends AbstractPhysicalVisitor<RecordBatch, FragmentCo
   private SortBatchCreator sbc = new SortBatchCreator();
   private AggBatchCreator abc = new AggBatchCreator();
   private MergeJoinCreator mjc = new MergeJoinCreator();
+  private IteratorValidatorCreator ivc = new IteratorValidatorCreator();
   private RootExec root = null;
   private TraceBatchCreator tbc = new TraceBatchCreator();
 
@@ -190,12 +192,24 @@ public class ImplCreator extends AbstractPhysicalVisitor<RecordBatch, FragmentCo
     return children;
   }
 
+  @Override
+  public RecordBatch visitIteratorValidator(IteratorValidator op, FragmentContext context) throws ExecutionSetupException {
+    return ivc.getBatch(context, op, getChildren(op, context));
+  }
+  
   public static RootExec getExec(FragmentContext context, FragmentRoot root) throws ExecutionSetupException {
     ImplCreator i = new ImplCreator();
+    boolean isAssertEnabled = false;
+    assert isAssertEnabled = true;
+    if(isAssertEnabled){
+      root = IteratorValidatorInjector.rewritePlanWithIteratorValidator(context, root);
+    }
     root.accept(i, context);
     if (i.root == null)
       throw new ExecutionSetupException(
           "The provided fragment did not have a root node that correctly created a RootExec value.");
     return i.getRoot();
   }
+
+
 }
