@@ -17,15 +17,15 @@
  */
 package org.apache.drill.exec.cache;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
+import java.io.*;
 
 /**
  * Classes that can be put in the Distributed Cache must implement this interface.
  */
 public interface DrillSerializable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillSerializable.class);
-  public void read(DataInput arg0) throws IOException;
-  public void write (DataOutput arg0) throws IOException;
+  public void read(DataInput input) throws IOException;
+  public void readFromStream(InputStream input) throws IOException;
+  public void write(DataOutput output) throws IOException;
+  public void writeToStream(OutputStream output) throws IOException;
 }

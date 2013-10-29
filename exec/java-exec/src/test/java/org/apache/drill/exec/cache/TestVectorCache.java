@@ -25,6 +25,7 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.server.Drillbit;
@@ -66,13 +67,14 @@ public class TestVectorCache {
 
     VectorContainer container = new VectorContainer();
     container.addCollection(vectorList);
+    container.setRecordCount(4);
     VectorContainerSerializable wrap = new VectorContainerSerializable(container);
 
     DistributedMultiMap<VectorContainerSerializable> mmap = cache.getMultiMap(VectorContainerSerializable.class);
     mmap.put("vectors", wrap);
     VectorContainerSerializable newWrap = (VectorContainerSerializable)mmap.get("vectors").iterator().next();
 
-    VectorContainer newContainer = newWrap.get();
+    VectorAccessible newContainer = newWrap.get();
     for (VectorWrapper w : newContainer) {
       ValueVector vv = w.getValueVector();
       int values = vv.getAccessor().getValueCount();

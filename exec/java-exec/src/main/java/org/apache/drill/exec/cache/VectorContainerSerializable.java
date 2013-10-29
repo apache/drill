@@ -18,15 +18,18 @@
 package org.apache.drill.exec.cache;
 
 import com.google.common.collect.Lists;
+import com.yammer.metrics.MetricRegistry;
+import com.yammer.metrics.Timer;
 import io.netty.buffer.ByteBuf;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.DataInputInputStream;
 import org.apache.drill.common.util.DataOutputOutputStream;
 import org.apache.drill.exec.expr.TypeHelper;
-import org.apache.drill.exec.record.BatchSchema;
-import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.record.VectorContainer;
-import org.apache.drill.exec.record.VectorWrapper;
+import org.apache.drill.exec.metrics.DrillMetrics;
+import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.proto.UserBitShared;
+import org.apache.drill.exec.record.*;
+import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.vector.BaseDataValueVector;
 import org.apache.drill.exec.vector.ValueVector;
@@ -37,72 +40,147 @@ import java.util.List;
 
 public class VectorContainerSerializable implements DrillSerializable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(VectorContainerSerializable.class);
+  static final MetricRegistry metrics = DrillMetrics.getInstance();
+  static final String WRITER_TIMER = MetricRegistry.name(VectorContainerSerializable.class, "writerTime");
 
-//  List<ValueVector> vectorList;
-  private VectorContainer container;
+  private VectorAccessible va;
   private BootStrapContext context;
-  private int listSize = 0;
   private int recordCount = -1;
+  private BatchSchema.SelectionVectorMode svMode = BatchSchema.SelectionVectorMode.NONE;
+  private SelectionVector2 sv2;
 
   /**
    *
-   * @param container
+   * @param va
    */
-  public VectorContainerSerializable(VectorContainer container){
-    this.container = container;
-    container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
-    this.context = new BootStrapContext(DrillConfig.create());
-    this.listSize = container.getNumberOfColumns();
+  public VectorContainerSerializable(VectorAccessible va){
+    this.va = va;
+    this.context = new BootStrapContext(DrillConfig.getDefaultInstance());
+  }
+
+  public VectorContainerSerializable(VectorAccessible va, SelectionVector2 sv2, FragmentContext context) {
+    this.va = va;
+    this.context = new BootStrapContext(DrillConfig.getDefaultInstance());
+    this.sv2 = sv2;
+    if (sv2 != null) this.svMode = BatchSchema.SelectionVectorMode.TWO_BYTE;
   }
 
   public VectorContainerSerializable() {
-    this.container = new VectorContainer();
-    this.context = new BootStrapContext(DrillConfig.create());
+    this.va = new VectorContainer();
+    this.context = new BootStrapContext(DrillConfig.getDefaultInstance());
+  }
+
+  @Override
+  public void read(DataInput input) throws IOException {
+    readFromStream(DataInputInputStream.constructInputStream(input));
   }
   
   @Override
-  public void read(DataInput input) throws IOException {
+  public void readFromStream(InputStream input) throws IOException {
+    VectorContainer container = new VectorContainer();
+    UserBitShared.RecordBatchDef batchDef = UserBitShared.RecordBatchDef.parseDelimitedFrom(input);
+    recordCount = batchDef.getRecordCount();
+    if (batchDef.hasIsSelectionVector2() && batchDef.getIsSelectionVector2()) {
+      sv2.allocateNew(recordCount * 2);
+      sv2.getBuffer().setBytes(0, input, recordCount * 2);
+      svMode = BatchSchema.SelectionVectorMode.TWO_BYTE;
+    }
     List<ValueVector> vectorList = Lists.newArrayList();
-    int size = input.readInt();
-    InputStream stream = DataInputInputStream.constructInputStream(input);
-    for (int i = 0; i < size; i++) {
-      FieldMetadata metaData = FieldMetadata.parseDelimitedFrom(stream);
-      if (recordCount == -1) recordCount = metaData.getValueCount();
+    List<FieldMetadata> fieldList = batchDef.getFieldList();
+    for (FieldMetadata metaData : fieldList) {
       int dataLength = metaData.getBufferLength();
       byte[] bytes = new byte[dataLength];
-      input.readFully(bytes);
+      input.read(bytes);
       MaterializedField field = MaterializedField.create(metaData.getDef());
       ByteBuf buf = context.getAllocator().buffer(dataLength);
       buf.setBytes(0, bytes);
       ValueVector vector = TypeHelper.getNewVector(field, context.getAllocator());
       vector.load(metaData, buf);
-      vectorList.add((BaseDataValueVector) vector);
+      vectorList.add(vector);
     }
     container.addCollection(vectorList);
-    container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
+    container.buildSchema(svMode);
     container.setRecordCount(recordCount);
-    this.listSize = vectorList.size();
+    va = container;
   }
 
   @Override
   public void write(DataOutput output) throws IOException {
-//    int size = vectorList.size();
-    output.writeInt(listSize);
-    for (VectorWrapper w : container) {
-      OutputStream stream = DataOutputOutputStream.constructOutputStream(output);
-      ValueVector vector = w.getValueVector();
-      if (recordCount == -1) container.setRecordCount(vector.getMetadata().getValueCount());
-      vector.getMetadata().writeDelimitedTo(stream);
-      ByteBuf[] data = vector.getBuffers();
-      for (ByteBuf bb : data) {
-        byte[] bytes = new byte[bb.readableBytes()];
-        bb.getBytes(0, bytes);
-        stream.write(bytes);
+    writeToStream(DataOutputOutputStream.constructOutputStream(output));
+  }
+
+  @Override
+  public void writeToStream(OutputStream output) throws IOException {
+    final Timer.Context context = metrics.timer(WRITER_TIMER).time();
+    WritableBatch batch = WritableBatch.getBatchNoHVWrap(va.getRecordCount(),va,false);
+
+    ByteBuf[] incomingBuffers = batch.getBuffers();
+    UserBitShared.RecordBatchDef batchDef = batch.getDef();
+
+        /* ByteBuf associated with the selection vector */
+    ByteBuf svBuf = null;
+
+        /* Size of the selection vector */
+    int svCount = 0;
+
+    if (svMode == BatchSchema.SelectionVectorMode.TWO_BYTE)
+    {
+      svCount = sv2.getCount();
+      svBuf = sv2.getBuffer();
+    }
+
+    int totalBufferLength = 0;
+
+    try
+    {
+            /* Write the metadata to the file */
+      batchDef.writeDelimitedTo(output);
+
+            /* If we have a selection vector, dump it to file first */
+      if (svBuf != null)
+      {
+
+                /* For writing to the selection vectors we use
+                 * setChar() method which does not modify the
+                 * reader and writer index. To copy the entire buffer
+                 * without having to get each byte individually we need
+                 * to set the writer index
+                 */
+        svBuf.writerIndex(svCount * SelectionVector2.RECORD_SIZE);
+
+//        fc.write(svBuf.nioBuffers());
+        svBuf.getBytes(0, output, svBuf.readableBytes());
+        svBuf.release();
       }
+
+            /* Dump the array of ByteBuf's associated with the value vectors */
+      for (ByteBuf buf : incomingBuffers)
+      {
+                /* dump the buffer into the file channel */
+        int bufLength = buf.readableBytes();
+        buf.getBytes(0, output, bufLength);
+
+                /* compute total length of buffer, will be used when
+                 * we create a compound buffer
+                 */
+        totalBufferLength += buf.readableBytes();
+        buf.release();
+      }
+
+      output.flush();
+      context.stop();
+    } catch (IOException e)
+    {
+      throw new RuntimeException(e);
+    } finally {
+      clear();
     }
   }
 
-  public VectorContainer get() {
-    return container;
+  private void clear() {
+  }
+
+  public VectorAccessible get() {
+    return va;
   }
 }

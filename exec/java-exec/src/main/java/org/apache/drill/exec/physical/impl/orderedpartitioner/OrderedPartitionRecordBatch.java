@@ -147,6 +147,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
       for (VectorWrapper vw : containerToCache) {
         vw.getValueVector().getMutator().setValueCount(copier.getOutputRecords());
       }
+      containerToCache.setRecordCount(copier.getOutputRecords());
 
       // Get a distributed multimap handle from the distributed cache, and put the vectors from the new vector container
       // into a serializable wrapper object, and then add to distributed map
@@ -236,6 +237,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
     for (VectorWrapper vw : candidatePartitionTable) {
       vw.getValueVector().getMutator().setValueCount(copier2.getOutputRecords());
     }
+    candidatePartitionTable.setRecordCount(copier2.getOutputRecords());
 
     VectorContainerSerializable wrap = new VectorContainerSerializable(candidatePartitionTable);
 
