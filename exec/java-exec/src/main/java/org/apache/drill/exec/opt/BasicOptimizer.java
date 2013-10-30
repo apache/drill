@@ -23,7 +23,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import org.apache.drill.common.PlanProperties;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.defs.OrderDef;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -31,6 +30,7 @@ import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.LogicalPlan;
+import org.apache.drill.common.logical.PlanProperties;
 import org.apache.drill.common.logical.StorageEngineConfig;
 import org.apache.drill.common.logical.data.*;
 import org.apache.drill.common.logical.data.Order.Direction;
@@ -79,10 +79,10 @@ public class BasicOptimizer extends Optimizer{
       physOps.add(pop);
     }
 
-    PlanProperties props = new PlanProperties();
-    props.type = PlanProperties.PlanType.APACHE_DRILL_PHYSICAL;
-    props.version = plan.getProperties().version;
-    props.generator = plan.getProperties().generator;
+    PlanProperties props = PlanProperties.builder()
+        .type(PlanProperties.PlanType.APACHE_DRILL_PHYSICAL)
+        .version(plan.getProperties().version)
+        .generator(plan.getProperties().generator).build();
     PhysicalPlan p = new PhysicalPlan(props, physOps);
     return p;
     //return new PhysicalPlan(props, physOps);

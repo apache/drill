@@ -31,7 +31,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 
 import org.apache.drill.common.JSONOptions;
-import org.apache.drill.common.PlanProperties;
+import org.apache.drill.common.logical.PlanProperties;
 import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.logical.StorageEngineConfig;
 import org.apache.drill.common.logical.data.*;

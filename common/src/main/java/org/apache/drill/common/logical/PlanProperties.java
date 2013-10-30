@@ -74,6 +74,11 @@ public class PlanProperties {
       return this;
     }
 
+    public PlanPropertiesBuilder generator(Generator generator) {
+      this.generator = generator;
+      return this;
+    }
+
     public PlanProperties build() {
       return new PlanProperties(version, generator, type);
     }
