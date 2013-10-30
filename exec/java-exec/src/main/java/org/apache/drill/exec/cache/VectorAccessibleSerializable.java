@@ -87,13 +87,12 @@ public class VectorAccessibleSerializable implements DrillSerializable {
     List<FieldMetadata> fieldList = batchDef.getFieldList();
     for (FieldMetadata metaData : fieldList) {
       int dataLength = metaData.getBufferLength();
-      byte[] bytes = new byte[dataLength];
-      input.read(bytes);
       MaterializedField field = MaterializedField.create(metaData.getDef());
       ByteBuf buf = allocator.buffer(dataLength);
-      buf.setBytes(0, bytes);
+      buf.writeBytes(input, dataLength);
       ValueVector vector = TypeHelper.getNewVector(field, allocator);
       vector.load(metaData, buf);
+      buf.release();
       vectorList.add(vector);
     }
     container.addCollection(vectorList);
