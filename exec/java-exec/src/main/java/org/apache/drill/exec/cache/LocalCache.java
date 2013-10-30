@@ -19,6 +19,7 @@ package org.apache.drill.exec.cache;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -31,11 +32,15 @@ import com.google.common.collect.Lists;
 import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.exception.DrillbitStartupException;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.ExecProtos.PlanFragment;
 
 import com.google.common.collect.Maps;
+import org.apache.drill.exec.server.BootStrapContext;
+import org.apache.drill.exec.server.DrillbitContext;
 
 public class LocalCache implements DistributedCache {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LocalCache.class);
@@ -44,7 +49,8 @@ public class LocalCache implements DistributedCache {
   private volatile ConcurrentMap<Class, DistributedMap> maps;
   private volatile ConcurrentMap<Class, DistributedMultiMap> multiMaps;
   private volatile ConcurrentMap<String, Counter> counters;
-  
+  private static final BufferAllocator allocator = BufferAllocator.getAllocator(DrillConfig.create());
+
   @Override
   public void close() throws IOException {
     handles = null;
@@ -116,10 +122,10 @@ public class LocalCache implements DistributedCache {
   public static DrillSerializable deserialize(byte[] bytes, Class clazz) {
     ByteArrayDataInput in = ByteStreams.newDataInput(bytes);
     try {
-      DrillSerializable obj = (DrillSerializable)clazz.newInstance();
+      DrillSerializable obj = (DrillSerializable)clazz.getConstructor(BufferAllocator.class).newInstance(allocator);
       obj.read(in);
       return obj;
-    } catch (InstantiationException | IllegalAccessException | IOException e) {
+    } catch (InstantiationException | IllegalAccessException | IOException | NoSuchMethodException | InvocationTargetException e) {
       throw new RuntimeException(e);
     }
   }

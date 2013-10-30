@@ -31,23 +31,29 @@ import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.RemoteServiceSet;
-import org.apache.drill.exec.vector.*;
+import org.apache.drill.exec.vector.AllocationHelper;
+import org.apache.drill.exec.vector.IntVector;
+import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.VarBinaryVector;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.junit.Test;
 
 import java.util.List;
 
-public class TestVectorCache {
+public class TestWriteToDisk {
 
   @Test
-  public void testVectorCache() throws Exception {
+  public void test() throws Exception {
     List<ValueVector> vectorList = Lists.newArrayList();
     RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
     DrillConfig config = DrillConfig.create();
     Drillbit bit = new Drillbit(config, serviceSet);
     bit.run();
     DrillbitContext context = bit.getContext();
-    HazelCache cache = new HazelCache(config, context.getAllocator());
-    cache.run();
 
     MaterializedField intField = MaterializedField.create(new SchemaPath("int", ExpressionPosition.UNKNOWN), Types.required(TypeProtos.MinorType.INT));
     IntVector intVector = (IntVector)TypeHelper.getNewVector(intField, context.getAllocator());
@@ -70,9 +76,20 @@ public class TestVectorCache {
     container.setRecordCount(4);
     VectorAccessibleSerializable wrap = new VectorAccessibleSerializable(container, context.getAllocator());
 
-    DistributedMultiMap<VectorAccessibleSerializable> mmap = cache.getMultiMap(VectorAccessibleSerializable.class);
-    mmap.put("vectors", wrap);
-    VectorAccessibleSerializable newWrap = (VectorAccessibleSerializable)mmap.get("vectors").iterator().next();
+    Configuration conf = new Configuration();
+    conf.set("fs.name.default", "file:///");
+    FileSystem fs = FileSystem.get(conf);
+    Path path = new Path("/tmp/drillSerializable");
+    if (fs.exists(path)) fs.delete(path, false);
+    FSDataOutputStream out = fs.create(path);
+
+    wrap.writeToStream(out);
+    out.close();
+
+    FSDataInputStream in = fs.open(path);
+    VectorAccessibleSerializable newWrap = new VectorAccessibleSerializable(context.getAllocator());
+    newWrap.readFromStream(in);
+    fs.close();
 
     VectorAccessible newContainer = newWrap.get();
     for (VectorWrapper w : newContainer) {

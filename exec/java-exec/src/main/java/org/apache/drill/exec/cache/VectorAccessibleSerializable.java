@@ -21,30 +21,28 @@ import com.google.common.collect.Lists;
 import com.yammer.metrics.MetricRegistry;
 import com.yammer.metrics.Timer;
 import io.netty.buffer.ByteBuf;
-import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.DataInputInputStream;
 import org.apache.drill.common.util.DataOutputOutputStream;
 import org.apache.drill.exec.expr.TypeHelper;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.metrics.DrillMetrics;
-import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.record.*;
 import org.apache.drill.exec.record.selection.SelectionVector2;
-import org.apache.drill.exec.server.BootStrapContext;
-import org.apache.drill.exec.vector.BaseDataValueVector;
+import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.proto.UserBitShared.FieldMetadata;
 
 import java.io.*;
 import java.util.List;
 
-public class VectorContainerSerializable implements DrillSerializable {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(VectorContainerSerializable.class);
+public class VectorAccessibleSerializable implements DrillSerializable {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(VectorAccessibleSerializable.class);
   static final MetricRegistry metrics = DrillMetrics.getInstance();
-  static final String WRITER_TIMER = MetricRegistry.name(VectorContainerSerializable.class, "writerTime");
+  static final String WRITER_TIMER = MetricRegistry.name(VectorAccessibleSerializable.class, "writerTime");
 
   private VectorAccessible va;
-  private BootStrapContext context;
+  private BufferAllocator allocator;
   private int recordCount = -1;
   private BatchSchema.SelectionVectorMode svMode = BatchSchema.SelectionVectorMode.NONE;
   private SelectionVector2 sv2;
@@ -53,21 +51,21 @@ public class VectorContainerSerializable implements DrillSerializable {
    *
    * @param va
    */
-  public VectorContainerSerializable(VectorAccessible va){
+  public VectorAccessibleSerializable(VectorAccessible va, BufferAllocator allocator){
     this.va = va;
-    this.context = new BootStrapContext(DrillConfig.getDefaultInstance());
+    this.allocator = allocator;
   }
 
-  public VectorContainerSerializable(VectorAccessible va, SelectionVector2 sv2, FragmentContext context) {
+  public VectorAccessibleSerializable(VectorAccessible va, SelectionVector2 sv2, BufferAllocator allocator) {
     this.va = va;
-    this.context = new BootStrapContext(DrillConfig.getDefaultInstance());
+    this.allocator = allocator;
     this.sv2 = sv2;
     if (sv2 != null) this.svMode = BatchSchema.SelectionVectorMode.TWO_BYTE;
   }
 
-  public VectorContainerSerializable() {
+  public VectorAccessibleSerializable(BufferAllocator allocator) {
     this.va = new VectorContainer();
-    this.context = new BootStrapContext(DrillConfig.getDefaultInstance());
+    this.allocator = allocator;
   }
 
   @Override
@@ -92,9 +90,9 @@ public class VectorContainerSerializable implements DrillSerializable {
       byte[] bytes = new byte[dataLength];
       input.read(bytes);
       MaterializedField field = MaterializedField.create(metaData.getDef());
-      ByteBuf buf = context.getAllocator().buffer(dataLength);
+      ByteBuf buf = allocator.buffer(dataLength);
       buf.setBytes(0, bytes);
-      ValueVector vector = TypeHelper.getNewVector(field, context.getAllocator());
+      ValueVector vector = TypeHelper.getNewVector(field, allocator);
       vector.load(metaData, buf);
       vectorList.add(vector);
     }

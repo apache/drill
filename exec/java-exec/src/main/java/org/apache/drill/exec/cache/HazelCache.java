@@ -22,12 +22,15 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.hazelcast.config.SerializerConfig;
 import com.hazelcast.core.*;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.cache.ProtoBufImpl.HWorkQueueStatus;
 import org.apache.drill.exec.cache.ProtoBufImpl.HandlePlan;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.ExecProtos.PlanFragment;
 import org.apache.drill.exec.proto.ExecProtos.WorkQueueStatus;
@@ -35,6 +38,7 @@ import org.apache.drill.exec.proto.ExecProtos.WorkQueueStatus;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.hazelcast.config.Config;
+import org.apache.drill.exec.server.DrillbitContext;
 
 public class HazelCache implements DistributedCache {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HazelCache.class);
@@ -44,9 +48,11 @@ public class HazelCache implements DistributedCache {
   private ITopic<HWorkQueueStatus> workQueueLengths;
   private HandlePlan fragments;
   private Cache<WorkQueueStatus, Integer>  endpoints;
-  
-  public HazelCache(DrillConfig config) {
+  private BufferAllocator allocator;
+
+  public HazelCache(DrillConfig config, BufferAllocator allocator) {
     this.instanceName = config.getString(ExecConstants.SERVICE_NAME);
+    this.allocator = allocator;
   }
 
   private class Listener implements MessageListener<HWorkQueueStatus>{
@@ -61,7 +67,10 @@ public class HazelCache implements DistributedCache {
   
   public void run() {
     Config c = new Config();
+    SerializerConfig sc = new SerializerConfig().setImplementation(new HCVectorAccessibleSerializer(allocator))
+            .setTypeClass(VectorAccessibleSerializable.class);
     c.setInstanceName(instanceName);
+    c.getSerializationConfig().addSerializerConfig(sc);
     instance = getInstanceOrCreateNew(c);
     workQueueLengths = instance.getTopic("queue-length");
     fragments = new HandlePlan(instance);
@@ -120,11 +129,11 @@ public class HazelCache implements DistributedCache {
 
   @Override
   public Counter getCounter(String name) {
-    return new HCCounterImpl(this.instance.getAtomicNumber(name));
+    return new HCCounterImpl(this.instance.getAtomicLong(name));
   }
 
   public static class HCDistributedMapImpl<V> implements DistributedMap<V> {
-    private IMap<String, HCDrillSerializableWrapper> m;
+    private IMap<String, DrillSerializable> m;
     private Class<V> clazz;
 
     public HCDistributedMapImpl(IMap m, Class<V> clazz) {
@@ -133,24 +142,24 @@ public class HazelCache implements DistributedCache {
     }
 
     public DrillSerializable get(String key) {
-      return m.get(key).get();
+      return m.get(key);
     }
 
     public void put(String key, DrillSerializable value) {
-      m.put(key, HCDrillSerializableWrapper.getWrapper(value, clazz));
+      m.put(key, value);
     }
 
     public void putIfAbsent(String key, DrillSerializable value) {
-      m.putIfAbsent(key, HCDrillSerializableWrapper.getWrapper(value, clazz));
+      m.putIfAbsent(key, value);
     }
 
     public void putIfAbsent(String key, DrillSerializable value, long ttl, TimeUnit timeunit) {
-      m.putIfAbsent(key, HCDrillSerializableWrapper.getWrapper(value, clazz), ttl, timeunit);
+      m.putIfAbsent(key, value, ttl, timeunit);
     }
   }
 
   public static class HCDistributedMultiMapImpl<V> implements DistributedMultiMap<V> {
-    private com.hazelcast.core.MultiMap<String, HCDrillSerializableWrapper> mmap;
+    private com.hazelcast.core.MultiMap<String, DrillSerializable> mmap;
     private Class<V> clazz;
 
     public HCDistributedMultiMapImpl(com.hazelcast.core.MultiMap mmap, Class<V> clazz) {
@@ -160,22 +169,22 @@ public class HazelCache implements DistributedCache {
 
     public Collection<DrillSerializable> get(String key) {
       List<DrillSerializable> list = Lists.newArrayList();
-      for (HCDrillSerializableWrapper v : mmap.get(key)) {
-        list.add(v.get());
+      for (DrillSerializable v : mmap.get(key)) {
+        list.add(v);
       }
       return list;
     }
 
     @Override
     public void put(String key, DrillSerializable value) {
-      mmap.put(key, HCDrillSerializableWrapper.getWrapper(value, clazz));
+      mmap.put(key, value);
     }
   }
 
   public static class HCCounterImpl implements Counter {
-    private AtomicNumber n;
+    private IAtomicLong n;
 
-    public HCCounterImpl(AtomicNumber n) {
+    public HCCounterImpl(IAtomicLong n) {
       this.n = n;
     }
 

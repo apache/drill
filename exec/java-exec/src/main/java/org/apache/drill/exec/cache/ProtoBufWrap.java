@@ -21,11 +21,13 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import com.hazelcast.nio.ObjectDataInput;
+import com.hazelcast.nio.ObjectDataOutput;
 import org.apache.drill.exec.proto.ExecProtos.WorkQueueStatus;
 
 import com.google.protobuf.MessageLite;
 import com.google.protobuf.Parser;
-import com.hazelcast.nio.DataSerializable;
+import com.hazelcast.nio.serialization.DataSerializable;
 
 public abstract class ProtoBufWrap<T extends MessageLite> implements DataSerializable{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProtoBufWrap.class);
@@ -43,7 +45,7 @@ public abstract class ProtoBufWrap<T extends MessageLite> implements DataSeriali
   }
   
   @Override
-  public void readData(DataInput arg0) throws IOException {
+  public void readData(ObjectDataInput arg0) throws IOException {
     int len = arg0.readShort();
     byte[] b = new byte[len];
     arg0.readFully(b);
@@ -51,7 +53,7 @@ public abstract class ProtoBufWrap<T extends MessageLite> implements DataSeriali
   }
 
   @Override
-  public void writeData(DataOutput arg0) throws IOException {
+  public void writeData(ObjectDataOutput arg0) throws IOException {
     byte[] b = value.toByteArray();
     if (b.length > Short.MAX_VALUE) throw new IOException("Unexpectedly long value.");
     arg0.writeShort(b.length);

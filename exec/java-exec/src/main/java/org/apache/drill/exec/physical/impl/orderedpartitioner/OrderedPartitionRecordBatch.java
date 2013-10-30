@@ -82,7 +82,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
   private boolean startedUnsampledBatches = false;
   private boolean upstreamNone = false;
   private int recordCount;
-  private DistributedMap<VectorContainerSerializable> tableMap;
+  private DistributedMap<VectorAccessibleSerializable> tableMap;
   private DistributedMultiMap mmap;
   private String mapKey;
 
@@ -154,13 +154,13 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
 
       DistributedCache cache = context.getDrillbitContext().getCache();
       mapKey = String.format("%s_%d", context.getHandle().getQueryId(), context.getHandle().getMajorFragmentId());
-      mmap = cache.getMultiMap(VectorContainerSerializable.class);
+      mmap = cache.getMultiMap(VectorAccessibleSerializable.class);
       List<ValueVector> vectorList = Lists.newArrayList();
       for (VectorWrapper vw : containerToCache) {
         vectorList.add(vw.getValueVector());
       }
 
-      VectorContainerSerializable wrap = new VectorContainerSerializable(containerToCache);
+      VectorAccessibleSerializable wrap = new VectorAccessibleSerializable(containerToCache, context.getDrillbitContext().getAllocator());
 
       mmap.put(mapKey, wrap);
       wrap = null;
@@ -169,24 +169,24 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
 
       long val = minorFragmentSampleCount.incrementAndGet();
       logger.debug("Incremented mfsc, got {}", val);
-      tableMap = cache.getMap(VectorContainerSerializable.class);
+      tableMap = cache.getMap(VectorAccessibleSerializable.class);
       Preconditions.checkNotNull(tableMap);
 
       if (val == Math.ceil(sendingMajorFragmentWidth * completionFactor)) {
         buildTable();
-        wrap = (VectorContainerSerializable)tableMap.get(mapKey + "final");
+        wrap = (VectorAccessibleSerializable)tableMap.get(mapKey + "final");
       } else if (val < Math.ceil(sendingMajorFragmentWidth * completionFactor)) {
         // Wait until sufficient number of fragments have submitted samples, or proceed after 100 ms passed
         for (int i = 0; i < 100 && wrap == null; i++) {
           Thread.sleep(10);
-          wrap = (VectorContainerSerializable)tableMap.get(mapKey + "final");
+          wrap = (VectorAccessibleSerializable)tableMap.get(mapKey + "final");
           if (i == 99) {
             buildTable();
-            wrap = (VectorContainerSerializable)tableMap.get(mapKey + "final");
+            wrap = (VectorAccessibleSerializable)tableMap.get(mapKey + "final");
           }
         }
       } else {
-        wrap = (VectorContainerSerializable)tableMap.get(mapKey + "final");
+        wrap = (VectorAccessibleSerializable)tableMap.get(mapKey + "final");
       }
 
       Preconditions.checkState(wrap != null);
@@ -211,7 +211,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
 
     SortRecordBatchBuilder containerBuilder = new SortRecordBatchBuilder(context.getAllocator(), MAX_SORT_BYTES, allSamplesContainer);
     for (DrillSerializable w : allSamplesWrap) {
-      containerBuilder.add(((VectorContainerSerializable)w).get());
+      containerBuilder.add(((VectorAccessibleSerializable)w).get());
     }
     containerBuilder.build(context);
 
@@ -239,7 +239,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
     }
     candidatePartitionTable.setRecordCount(copier2.getOutputRecords());
 
-    VectorContainerSerializable wrap = new VectorContainerSerializable(candidatePartitionTable);
+    VectorAccessibleSerializable wrap = new VectorAccessibleSerializable(candidatePartitionTable, context.getDrillbitContext().getAllocator());
 
     tableMap.putIfAbsent(mapKey + "final", wrap, 1, TimeUnit.MINUTES);
   }
