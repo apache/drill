@@ -19,13 +19,13 @@ package org.apache.drill.exec.physical.impl.trace;
 
 import static org.junit.Assert.*;
 
-import io.netty.buffer.ByteBufInputStream;
 import mockit.Injectable;
 import mockit.NonStrictExpectations;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.cache.VectorAccessibleSerializable;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -37,25 +37,20 @@ import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
+import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.proto.UserBitShared.RecordBatchDef;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.junit.AfterClass;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.yammer.metrics.MetricRegistry;
-
-import java.nio.channels.FileChannel;
-import java.nio.ByteBuffer;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.FileInputStream;
-
-import io.netty.buffer.ByteBuf;
 
 /*
  * This test uses a simple physical plan with a mock-scan that
@@ -112,44 +107,30 @@ public class TestTraceOutputDump {
 
         System.out.println("Found log location: " + logLocation);
 
-        String filename = new String(logLocation + "/" + "mock-scan" + "_" + qid + "_" + majorFragmentId + "_" + minorFragmentId);
+      String filename = String.format("%s//%s_%d_%d_mock-scan", logLocation, qid, majorFragmentId, minorFragmentId);
 
-        System.out.println("File Name: " + filename);
+      System.out.println("File Name: " + filename);
 
-        File file = new File(filename);
+        Configuration conf = new Configuration();
+      conf.set("fs.name.default", c.getString(ExecConstants.TRACE_DUMP_FILESYSTEM));
 
-        if (!file.exists())
-            throw new IOException("Trace file not created");
+        FileSystem fs = FileSystem.get(conf);
+      Path path = new Path(filename);
+      assertTrue("Trace file does not exist", fs.exists(path));
+      FSDataInputStream in = fs.open(path);
 
-        FileInputStream input = new FileInputStream(file.getAbsoluteFile());
-        FileChannel fc = input.getChannel();
-        int size = (int) fc.size();
-        BufferAllocator allocator = context.getAllocator();
-        ByteBuffer buffer = ByteBuffer.allocate((int) fc.size());
-        ByteBuf buf = allocator.buffer(size);
-
-        int readSize;
-
-        /* Read the file into a ByteBuffer and transfer it into our ByteBuf */
-        while ((readSize = (fc.read(buffer))) > 0)
-        {
-            buffer.position(0).limit(readSize);
-            buf.writeBytes(buffer);
-            buffer.clear();
-        }
-
-        final ByteBufInputStream is = new ByteBufInputStream(buf, buf.readableBytes());
-
-        RecordBatchDef batchDef = RecordBatchDef.parseDelimitedFrom(is);
+      VectorAccessibleSerializable wrap = new VectorAccessibleSerializable(context.getAllocator());
+      wrap.readFromStream(in);
+      VectorAccessible container = wrap.get();
 
         /* Assert there are no selection vectors */
-        assertTrue(!batchDef.getIsSelectionVector2());
+      assertTrue(wrap.getSv2() == null);
 
         /* Assert there is only one record */
-        assertTrue(batchDef.getRecordCount() == 1);
+        assertTrue(container.getRecordCount() == 1);
 
         /* Read the Integer value and ASSERT its Integer.MIN_VALUE */
-        int value = buf.getInt(buf.readerIndex());
+        int value = (int) container.iterator().next().getValueVector().getAccessor().getObject(0);
         assertTrue(value == Integer.MIN_VALUE);
     }
 

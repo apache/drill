@@ -47,6 +47,7 @@ public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> exte
     case NOT_YET:
     case STOP:
       container.zeroVectors();
+      cleanup();
       return upstream;
     case OK_NEW_SCHEMA:
       try{

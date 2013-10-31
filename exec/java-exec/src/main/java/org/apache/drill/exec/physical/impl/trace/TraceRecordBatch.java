@@ -21,6 +21,7 @@ package org.apache.drill.exec.physical.impl.trace;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.channels.FileChannel;
 import java.nio.ByteBuffer;
 import java.util.List;
@@ -29,6 +30,7 @@ import java.util.Formatter;
 import com.google.common.collect.Iterators;
 import io.netty.buffer.CompositeByteBuf;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.cache.VectorAccessibleSerializable;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -45,6 +47,10 @@ import org.apache.drill.exec.proto.UserBitShared.FieldMetadata;
 import org.apache.drill.exec.proto.SchemaDefProtos.FieldDef;
 
 import io.netty.buffer.ByteBuf;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 
 /* TraceRecordBatch contains value vectors which are exactly the same
  * as the incoming record batch's value vectors. If the incoming
@@ -72,8 +78,7 @@ public class TraceRecordBatch extends AbstractSingleRecordBatch<Trace>
     private final String logLocation;
 
     /* File descriptors needed to be able to dump to log file */
-    private FileOutputStream fos;
-    private FileChannel fc;
+    private OutputStream fos;
 
     public TraceRecordBatch(Trace pop, RecordBatch incoming, FragmentContext context)
     {
@@ -86,14 +91,12 @@ public class TraceRecordBatch extends AbstractSingleRecordBatch<Trace>
         /* Create the log file we will dump to and initialize the file descriptors */
         try
         {
-            File file = new File(fileName);
+          Configuration conf = new Configuration();
+          conf.set("fs.name.default", ExecConstants.TRACE_DUMP_FILESYSTEM);
+          FileSystem fs = FileSystem.get(conf);
 
             /* create the file */
-            file.createNewFile();
-
-            fos = new FileOutputStream(file, true);
-            fc  = fos.getChannel();
-
+          fos = fs.create(new Path(fileName));
         } catch (IOException e)
         {
             logger.error("Unable to create file: " + fileName);
@@ -124,35 +127,17 @@ public class TraceRecordBatch extends AbstractSingleRecordBatch<Trace>
     @Override
     protected void doWork()
     {
-        /* get the selection vector mode */
-        SelectionVectorMode svMode = incoming.getSchema().getSelectionVectorMode();
+      VectorAccessibleSerializable wrap = new VectorAccessibleSerializable(incoming,
+            incoming.getSchema().getSelectionVectorMode() == SelectionVectorMode.TWO_BYTE ? incoming.getSelectionVector2() : null,
+            context.getAllocator());
+      wrap.retain(container);
 
-        /* Get the array of buffers from the incoming record batch */
-        WritableBatch batch = incoming.getWritableBatch();
-
-        ByteBuf[] incomingBuffers = batch.getBuffers();
-        RecordBatchDef batchDef = batch.getDef();
-
-        /* ByteBuf associated with the selection vector */
-        ByteBuf svBuf = null;
-
-        /* Size of the selection vector */
-        int svCount = 0;
-
-        if (svMode == SelectionVectorMode.TWO_BYTE)
-        {
-            SelectionVector2 sv2 = incoming.getSelectionVector2();
-            svCount = sv2.getCount();
-            svBuf = sv2.getBuffer();
-        }
-
-        /* Write the ByteBuf for the value vectors and selection vectors to disk
-         * totalBufferLength is the sum of size of all the ByteBuf across all value vectors
-         */
-        int totalBufferLength = writeToFile(batchDef, incomingBuffers, svBuf, svCount);
-
-        /* Reconstruct the record batch from the ByteBuf's */
-        reconstructRecordBatch(batchDef, context, incomingBuffers, totalBufferLength, svBuf, svCount, svMode);
+      try {
+        wrap.writeToStream(fos);
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+      sv = wrap.getSv2();
     }
 
     @Override
@@ -198,114 +183,6 @@ public class TraceRecordBatch extends AbstractSingleRecordBatch<Trace>
         return fileName;
     }
 
-    private int writeToFile(RecordBatchDef batchDef, ByteBuf[] vvBufs, ByteBuf svBuf, int svCount)
-    {
-        String fileName = getFileName();
-        int totalBufferLength = 0;
-
-        try
-        {
-            /* Write the metadata to the file */
-            batchDef.writeDelimitedTo(fos);
-
-            /* If we have a selection vector, dump it to file first */
-            if (svBuf != null)
-            {
-
-                /* For writing to the selection vectors we use
-                 * setChar() method which does not modify the
-                 * reader and writer index. To copy the entire buffer
-                 * without having to get each byte individually we need
-                 * to set the writer index
-                 */
-                svBuf.writerIndex(svCount * SelectionVector2.RECORD_SIZE);
-
-                fc.write(svBuf.nioBuffers());
-            }
-
-            /* Dump the array of ByteBuf's associated with the value vectors */
-            for (ByteBuf buf : vvBufs)
-            {
-                /* dump the buffer into the file channel */
-                fc.write(buf.nioBuffers());
-
-                /* compute total length of buffer, will be used when
-                 * we create a compound buffer
-                 */
-                totalBufferLength += buf.readableBytes();
-            }
-
-            fc.force(true);
-            fos.flush();
-
-        } catch (IOException e)
-        {
-            logger.error("Unable to write buffer to file: " + fileName);
-        }
-
-        return totalBufferLength;
-    }
-
-    private void reconstructRecordBatch(RecordBatchDef batchDef, FragmentContext context,
-                                        ByteBuf[] vvBufs, int totalBufferLength,
-                                        ByteBuf svBuf, int svCount, SelectionVectorMode svMode)
-    {
-        if (vvBufs.length > 0)    /* If we have ByteBuf's associated with value vectors */
-        {
-            CompositeByteBuf cbb = new CompositeByteBuf(vvBufs[0].alloc(), true, vvBufs.length);
-
-            /* Copy data from each buffer into the compound buffer */
-            for (int i = 0; i < vvBufs.length; i++)
-            {
-                cbb.addComponent(vvBufs[i]);
-            }
-
-            List<FieldMetadata> fields = batchDef.getFieldList();
-
-            int bufferOffset = 0;
-
-            /* For each value vector slice up the appropriate size from
-             * the compound buffer and load it into the value vector
-             */
-            int vectorIndex = 0;
-
-            for(VectorWrapper<?> vv : container)
-            {
-                FieldMetadata fmd = fields.get(vectorIndex);
-                ValueVector v = vv.getValueVector();
-                v.load(fmd, cbb.slice(bufferOffset, fmd.getBufferLength()));
-                vectorIndex++;
-                bufferOffset += fmd.getBufferLength();
-            }
-        }
-
-        /* Set the selection vector for the record batch if the
-         * incoming batch had a selection vector
-         */
-        if (svMode == SelectionVectorMode.TWO_BYTE)
-        {
-            if (sv == null)
-                sv = new SelectionVector2(context.getAllocator());
-
-            sv.setRecordCount(svCount);
-
-            /* create our selection vector from the
-             * incoming selection vector's buffer
-             */
-            sv.setBuffer(svBuf);
-
-            svBuf.release();
-        }
-
-        container.buildSchema(svMode);
-
-        /* Set the record count in the value vector */
-        for(VectorWrapper<?> v : container)
-        {
-            ValueVector.Mutator m = v.getValueVector().getMutator();
-            m.setValueCount(incoming.getRecordCount());
-        }
-    }
 
     @Override
     protected void cleanup()
@@ -318,7 +195,6 @@ public class TraceRecordBatch extends AbstractSingleRecordBatch<Trace>
         try
         {
             fos.close();
-            fc.close();
         } catch (IOException e)
         {
             logger.error("Unable to close file descriptors for file: " + getFileName());
