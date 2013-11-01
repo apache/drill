@@ -160,7 +160,8 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
         vectorList.add(vw.getValueVector());
       }
 
-      VectorAccessibleSerializable wrap = new VectorAccessibleSerializable(containerToCache, context.getDrillbitContext().getAllocator());
+      WritableBatch batch = WritableBatch.getBatchNoHVWrap(containerToCache.getRecordCount(), containerToCache, false);
+      VectorAccessibleSerializable wrap = new VectorAccessibleSerializable(batch, context.getDrillbitContext().getAllocator());
 
       mmap.put(mapKey, wrap);
       wrap = null;
@@ -238,8 +239,9 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
       vw.getValueVector().getMutator().setValueCount(copier2.getOutputRecords());
     }
     candidatePartitionTable.setRecordCount(copier2.getOutputRecords());
+    WritableBatch batch = WritableBatch.getBatchNoHVWrap(candidatePartitionTable.getRecordCount(), candidatePartitionTable, false);
 
-    VectorAccessibleSerializable wrap = new VectorAccessibleSerializable(candidatePartitionTable, context.getDrillbitContext().getAllocator());
+    VectorAccessibleSerializable wrap = new VectorAccessibleSerializable(batch, context.getDrillbitContext().getAllocator());
 
     tableMap.putIfAbsent(mapKey + "final", wrap, 1, TimeUnit.MINUTES);
   }

@@ -116,28 +116,27 @@ public class TraceRecordBatch extends AbstractSingleRecordBatch<Trace>
      * Function is invoked for every record batch and it simply
      * dumps the buffers associated with all the value vectors in
      * this record batch to a log file.
-     *
-     * Function is divided into three main parts
-     *   1. Get all the buffers(ByteBuf's) associated with incoming
-     *      record batch's value vectors and selection vector
-     *   2. Dump these buffers to the log file (performed by writeToFile())
-     *   3. Construct the record batch with these buffers to look exactly like
-     *      the incoming record batch (performed by reconstructRecordBatch())
      */
     @Override
     protected void doWork()
     {
-      VectorAccessibleSerializable wrap = new VectorAccessibleSerializable(incoming,
-            incoming.getSchema().getSelectionVectorMode() == SelectionVectorMode.TWO_BYTE ? incoming.getSelectionVector2() : null,
-            context.getAllocator());
-      wrap.retain(container);
+
+      boolean incomingHasSv2 = incoming.getSchema().getSelectionVectorMode() == SelectionVectorMode.TWO_BYTE;
+      if (incomingHasSv2) {
+        sv = incoming.getSelectionVector2();
+      } else {
+        sv = null;
+      }
+      WritableBatch batch = WritableBatch.getBatchNoHVWrap(incoming.getRecordCount(),
+              incoming, incomingHasSv2 ? true : false);
+      VectorAccessibleSerializable wrap = new VectorAccessibleSerializable(batch, sv, context.getAllocator());
 
       try {
-        wrap.writeToStream(fos);
+        wrap.writeToStreamAndRetain(fos);
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
-      sv = wrap.getSv2();
+      batch.reconstructContainer(container);
     }
 
     @Override
