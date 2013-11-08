@@ -340,13 +340,8 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
     }
 
     // check value equality
-    cg.getEvalBlock()._if(compareThisLeftExprHolder.getValue().eq(compareNextLeftExprHolder.getValue()))
-                     ._then()
-                       ._return(JExpr.lit(0));
-
-    // no match if reached
-    cg.getEvalBlock()._return(JExpr.lit(1));
-
+    FunctionCall g = new FunctionCall(ComparatorFunctions.COMPARE_TO, ImmutableList.of((LogicalExpression) new HoldingContainerExpression(compareThisLeftExprHolder), (LogicalExpression)  new HoldingContainerExpression(compareNextLeftExprHolder)), ExpressionPosition.UNKNOWN);
+    cg.addExpr(new ReturnValueExpression(g, false), false);
 
     // generate copyLeft()
     //////////////////////
