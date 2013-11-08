@@ -29,13 +29,13 @@ import com.google.common.base.Preconditions;
 import java.util.List;
 
 public class TraceBatchCreator implements BatchCreator<Trace> {
-    static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TraceBatchCreator.class);
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TraceBatchCreator.class);
 
-    @Override
-    public RecordBatch getBatch(FragmentContext context, Trace config, List<RecordBatch> children) throws ExecutionSetupException {
-        //Preconditions.checkArgument(children.size() == 1);
-        return new TraceRecordBatch(config, children.iterator().next(), context);
-    }
-
+  @Override
+  public RecordBatch getBatch(FragmentContext context, Trace config, List<RecordBatch> children)
+      throws ExecutionSetupException {
+    // Preconditions.checkArgument(children.size() == 1);
+    return new TraceRecordBatch(config, children.iterator().next(), context);
+  }
 
 }

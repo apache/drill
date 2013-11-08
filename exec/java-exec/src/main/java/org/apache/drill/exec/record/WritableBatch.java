@@ -60,17 +60,15 @@ public class WritableBatch {
     return buffers;
   }
 
-  public void reconstructContainer(VectorContainer container)
-  {
-    Preconditions.checkState(!cleared, "Attempted to reconstruct a container from a WritableBatch after it had been cleared");
-    if (buffers.length > 0)    /* If we have ByteBuf's associated with value vectors */
-    {
-
+  public void reconstructContainer(VectorContainer container) {
+    Preconditions.checkState(!cleared,
+        "Attempted to reconstruct a container from a WritableBatch after it had been cleared");
+    if (buffers.length > 0) { /* If we have ByteBuf's associated with value vectors */
+      
       CompositeByteBuf cbb = new CompositeByteBuf(buffers[0].alloc(), true, buffers.length);
 
-            /* Copy data from each buffer into the compound buffer */
-      for (ByteBuf buf : buffers)
-      {
+      /* Copy data from each buffer into the compound buffer */
+      for (ByteBuf buf : buffers) {
         cbb.addComponent(buf);
       }
 
@@ -78,13 +76,12 @@ public class WritableBatch {
 
       int bufferOffset = 0;
 
-            /* For each value vector slice up the appropriate size from
-             * the compound buffer and load it into the value vector
-             */
+      /*
+       * For each value vector slice up the appropriate size from the compound buffer and load it into the value vector
+       */
       int vectorIndex = 0;
 
-      for(VectorWrapper<?> vv : container)
-      {
+      for (VectorWrapper<?> vv : container) {
         FieldMetadata fmd = fields.get(vectorIndex);
         ValueVector v = vv.getValueVector();
         v.load(fmd, cbb.slice(bufferOffset, fmd.getBufferLength()));
@@ -101,9 +98,8 @@ public class WritableBatch {
     }
     container.buildSchema(svMode);
 
-        /* Set the record count in the value vector */
-    for(VectorWrapper<?> v : container)
-    {
+    /* Set the record count in the value vector */
+    for (VectorWrapper<?> v : container) {
       ValueVector.Mutator m = v.getValueVector().getMutator();
       m.setValueCount(def.getRecordCount());
     }
@@ -118,23 +114,24 @@ public class WritableBatch {
 
   public static WritableBatch getBatchNoHVWrap(int recordCount, Iterable<VectorWrapper<?>> vws, boolean isSV2) {
     List<ValueVector> vectors = Lists.newArrayList();
-    for(VectorWrapper<?> vw : vws){
+    for (VectorWrapper<?> vw : vws) {
       Preconditions.checkArgument(!vw.isHyper());
       vectors.add(vw.getValueVector());
     }
     return getBatchNoHV(recordCount, vectors, isSV2);
   }
-  
+
   public static WritableBatch getBatchNoHV(int recordCount, Iterable<ValueVector> vectors, boolean isSV2) {
     List<ByteBuf> buffers = Lists.newArrayList();
     List<FieldMetadata> metadata = Lists.newArrayList();
 
     for (ValueVector vv : vectors) {
       metadata.add(vv.getMetadata());
-      
-      // don't try to get the buffers if we don't have any records.  It is possible the buffers are dead buffers.
-      if(recordCount == 0) continue;
-      
+
+      // don't try to get the buffers if we don't have any records. It is possible the buffers are dead buffers.
+      if (recordCount == 0)
+        continue;
+
       for (ByteBuf b : vv.getBuffers()) {
         buffers.add(b);
       }
@@ -142,14 +139,15 @@ public class WritableBatch {
       vv.clear();
     }
 
-    RecordBatchDef batchDef = RecordBatchDef.newBuilder().addAllField(metadata).setRecordCount(recordCount).setIsSelectionVector2(isSV2).build();
+    RecordBatchDef batchDef = RecordBatchDef.newBuilder().addAllField(metadata).setRecordCount(recordCount)
+        .setIsSelectionVector2(isSV2).build();
     WritableBatch b = new WritableBatch(batchDef, buffers);
     return b;
   }
-  
+
   public static WritableBatch get(RecordBatch batch) {
-    if(batch.getSchema() != null && batch.getSchema().getSelectionVectorMode() == SelectionVectorMode.FOUR_BYTE)
-        throw new UnsupportedOperationException("Only batches without hyper selections vectors are writable.");
+    if (batch.getSchema() != null && batch.getSchema().getSelectionVectorMode() == SelectionVectorMode.FOUR_BYTE)
+      throw new UnsupportedOperationException("Only batches without hyper selections vectors are writable.");
 
     boolean sv2 = (batch.getSchema().getSelectionVectorMode() == SelectionVectorMode.TWO_BYTE);
     return getBatchNoHVWrap(batch.getRecordCount(), batch, sv2);

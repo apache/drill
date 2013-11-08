@@ -65,139 +65,125 @@ import org.apache.hadoop.fs.Path;
  * same set of value vectors (and selection vectors) to its parent record
  * batch
  */
-public class TraceRecordBatch extends AbstractSingleRecordBatch<Trace>
-{
-    static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TraceRecordBatch.class);
+public class TraceRecordBatch extends AbstractSingleRecordBatch<Trace> {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TraceRecordBatch.class);
 
-    private SelectionVector2 sv = null;
+  private SelectionVector2 sv = null;
 
-    /* Tag associated with each trace operator */
-    final String traceTag;
+  /* Tag associated with each trace operator */
+  final String traceTag;
 
-    /* Location where the log should be dumped */
-    private final String logLocation;
+  /* Location where the log should be dumped */
+  private final String logLocation;
 
-    /* File descriptors needed to be able to dump to log file */
-    private OutputStream fos;
+  /* File descriptors needed to be able to dump to log file */
+  private OutputStream fos;
 
-    public TraceRecordBatch(Trace pop, RecordBatch incoming, FragmentContext context)
-    {
-        super(pop, context, incoming);
-        this.traceTag = pop.traceTag;
-        logLocation = context.getConfig().getString(ExecConstants.TRACE_DUMP_DIRECTORY);
+  public TraceRecordBatch(Trace pop, RecordBatch incoming, FragmentContext context) {
+    super(pop, context, incoming);
+    this.traceTag = pop.traceTag;
+    logLocation = context.getConfig().getString(ExecConstants.TRACE_DUMP_DIRECTORY);
 
-        String fileName = getFileName();
+    String fileName = getFileName();
 
-        /* Create the log file we will dump to and initialize the file descriptors */
-        try
-        {
-          Configuration conf = new Configuration();
-          conf.set("fs.name.default", ExecConstants.TRACE_DUMP_FILESYSTEM);
-          FileSystem fs = FileSystem.get(conf);
+    /* Create the log file we will dump to and initialize the file descriptors */
+    try {
+      Configuration conf = new Configuration();
+      conf.set("fs.name.default", ExecConstants.TRACE_DUMP_FILESYSTEM);
+      FileSystem fs = FileSystem.get(conf);
 
-            /* create the file */
-          fos = fs.create(new Path(fileName));
-        } catch (IOException e)
-        {
-            logger.error("Unable to create file: " + fileName);
-        }
+      /* create the file */
+      fos = fs.create(new Path(fileName));
+    } catch (IOException e) {
+      logger.error("Unable to create file: " + fileName);
     }
+  }
 
-    @Override
-    public int getRecordCount()
-    {
-        if (sv == null)
-            return incoming.getRecordCount();
-        else
-           return sv.getCount();
+  @Override
+  public int getRecordCount() {
+    if (sv == null)
+      return incoming.getRecordCount();
+    else
+      return sv.getCount();
+  }
+
+  /**
+   * Function is invoked for every record batch and it simply dumps the buffers associated with all the value vectors in
+   * this record batch to a log file.
+   */
+  @Override
+  protected void doWork() {
+
+    boolean incomingHasSv2 = incoming.getSchema().getSelectionVectorMode() == SelectionVectorMode.TWO_BYTE;
+    if (incomingHasSv2) {
+      sv = incoming.getSelectionVector2();
+    } else {
+      sv = null;
     }
+    WritableBatch batch = WritableBatch.getBatchNoHVWrap(incoming.getRecordCount(), incoming, incomingHasSv2 ? true
+        : false);
+    VectorAccessibleSerializable wrap = new VectorAccessibleSerializable(batch, sv, context.getAllocator());
 
-    /**
-     * Function is invoked for every record batch and it simply
-     * dumps the buffers associated with all the value vectors in
-     * this record batch to a log file.
+    try {
+      wrap.writeToStreamAndRetain(fos);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+    batch.reconstructContainer(container);
+  }
+
+  @Override
+  protected void setupNewSchema() throws SchemaChangeException {
+    /* Trace operator does not deal with hyper vectors yet */
+    if (incoming.getSchema().getSelectionVectorMode() == SelectionVectorMode.FOUR_BYTE)
+      throw new SchemaChangeException("Trace operator does not work with hyper vectors");
+
+    /*
+     * we have a new schema, clear our existing container to load the new value vectors
      */
-    @Override
-    protected void doWork()
-    {
+    container.clear();
 
-      boolean incomingHasSv2 = incoming.getSchema().getSelectionVectorMode() == SelectionVectorMode.TWO_BYTE;
-      if (incomingHasSv2) {
-        sv = incoming.getSelectionVector2();
-      } else {
-        sv = null;
-      }
-      WritableBatch batch = WritableBatch.getBatchNoHVWrap(incoming.getRecordCount(),
-              incoming, incomingHasSv2 ? true : false);
-      VectorAccessibleSerializable wrap = new VectorAccessibleSerializable(batch, sv, context.getAllocator());
-
-      try {
-        wrap.writeToStreamAndRetain(fos);
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      }
-      batch.reconstructContainer(container);
+    /* Add all the value vectors in the container */
+    for (VectorWrapper<?> vv : incoming) {
+      TransferPair tp = vv.getValueVector().getTransferPair();
+      container.add(tp.getTo());
     }
+  }
 
-    @Override
-    protected void setupNewSchema() throws SchemaChangeException
-    {
-        /* Trace operator does not deal with hyper vectors yet */
-        if (incoming.getSchema().getSelectionVectorMode() == SelectionVectorMode.FOUR_BYTE)
-            throw new SchemaChangeException("Trace operator does not work with hyper vectors");
+  @Override
+  public SelectionVector2 getSelectionVector2() {
+    return sv;
+  }
 
-        /* we have a new schema, clear our existing container to
-         * load the new value vectors
-         */
-        container.clear();
+  private String getFileName() {
+    /*
+     * From the context, get the query id, major fragment id, minor fragment id. This will be used as the file name to
+     * which we will dump the incoming buffer data
+     */
+    FragmentHandle handle = incoming.getContext().getHandle();
 
-        /* Add all the value vectors in the container */
-        for(VectorWrapper<?> vv : incoming)
-        {
-            TransferPair tp = vv.getValueVector().getTransferPair();
-            container.add(tp.getTo());
-        }
+    String qid = QueryIdHelper.getQueryId(handle.getQueryId());
+
+    int majorFragmentId = handle.getMajorFragmentId();
+    int minorFragmentId = handle.getMinorFragmentId();
+
+    String fileName = String.format("%s//%s_%s_%s_%s", logLocation, qid, majorFragmentId, minorFragmentId, traceTag);
+
+    return fileName;
+  }
+
+  @Override
+  protected void cleanup() {
+    /* Release the selection vector */
+    if (sv != null)
+      sv.clear();
+
+    /* Close the file descriptors */
+    try {
+      fos.close();
+    } catch (IOException e) {
+      logger.error("Unable to close file descriptors for file: " + getFileName());
     }
-
-    @Override
-    public SelectionVector2 getSelectionVector2() {
-        return sv;
-    }
-
-    private String getFileName()
-    {
-        /* From the context, get the query id, major fragment id,
-         * minor fragment id. This will be used as the file name
-         * to which we will dump the incoming buffer data
-         */
-        FragmentHandle handle = incoming.getContext().getHandle();
-
-        String qid = QueryIdHelper.getQueryId(handle.getQueryId());
-
-        int majorFragmentId = handle.getMajorFragmentId();
-        int minorFragmentId = handle.getMinorFragmentId();
-
-        String fileName = String.format("%s//%s_%s_%s_%s", logLocation, qid, majorFragmentId, minorFragmentId, traceTag);
-
-        return fileName;
-    }
-
-
-    @Override
-    protected void cleanup()
-    {
-        /* Release the selection vector */
-        if (sv != null)
-          sv.clear();
-
-        /* Close the file descriptors */
-        try
-        {
-            fos.close();
-        } catch (IOException e)
-        {
-            logger.error("Unable to close file descriptors for file: " + getFileName());
-        }
-    }
+  }
 
 }
