@@ -110,6 +110,10 @@
       <outputDirectory>bin</outputDirectory>
     </file>
     <file>
+      <source>src/resources/drill_dumpcat</source>
+      <outputDirectory>bin</outputDirectory>
+    </file>
+    <file>
       <source>src/resources/drill-override.conf</source>
       <outputDirectory>conf</outputDirectory>
     </file>

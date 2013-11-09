@@ -25,6 +25,7 @@ import com.beust.jcommander.internal.Lists;
 import com.google.common.base.Charsets;
 import com.google.common.base.Stopwatch;
 import com.google.common.io.Resources;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.coord.ClusterCoordinator;
@@ -40,6 +41,7 @@ import org.apache.drill.exec.rpc.user.UserResultsListener;
 import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
+import org.apache.drill.exec.util.VectorUtil;
 import org.apache.drill.exec.vector.ValueVector;
 
 import java.io.IOException;
@@ -156,35 +158,12 @@ public class QuerySubmitter {
         } catch (SchemaChangeException e) {
           submissionFailed(new RpcException(e));
         }
-        List<String> columns = Lists.newArrayList();
-        for (VectorWrapper vw : loader) {
-          columns.add(vw.getValueVector().getField().getName());
-        }
-        width = columns.size();
-        for (int row = 0; row < rows; row++) {
-          if (row%50 == 0) {
-            System.out.println(StringUtils.repeat("-", width*17 + 1));
-            for (String column : columns) {
-              System.out.printf("| %-15s", width <= 15 ? column : column.substring(0, 14));
-            }
-            System.out.printf("|\n");
-            System.out.println(StringUtils.repeat("-", width*17 + 1));
-          }
-          for (VectorWrapper vw : loader) {
-            Object o = vw.getValueVector().getAccessor().getObject(row);
-            if (o instanceof byte[]) {
-              String value = new String((byte[]) o);
-              System.out.printf("| %-15s",value.length() <= 15 ? value : value.substring(0, 14));
-            } else {
-              String value = o.toString();
-              System.out.printf("| %-15s",value.length() <= 15 ? value : value.substring(0,14));
-            }
-          }
-          System.out.printf("|\n");
-        }
+        
+        VectorUtil.showVectorAccessibleContent(loader);
       }
+      
       if (result.getHeader().getIsLastChunk()) {
-        System.out.println(StringUtils.repeat("-", width*17 + 1));
+        //System.out.println(StringUtils.repeat("-", width*17 + 1));
         latch.countDown();
       }
       result.release();
