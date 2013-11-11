@@ -147,6 +147,11 @@ public class QueryResultHandler {
       return finished;
     }
 
+
+    @Override
+    public void queryIdArrived(QueryId queryId) {
+    }
+
   }
 
   private class SubmissionListener extends BaseRpcOutcomeListener<QueryId> {
@@ -164,6 +169,7 @@ public class QueryResultHandler {
 
     @Override
     public void success(QueryId queryId, ByteBuf buf) {
+      listener.queryIdArrived(queryId);
       logger.debug("Received QueryId {} succesfully.  Adding listener {}", queryId, listener);
       UserResultsListener oldListener = resultsListener.putIfAbsent(queryId, listener);
 

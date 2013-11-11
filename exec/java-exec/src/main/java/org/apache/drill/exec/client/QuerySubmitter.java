@@ -31,6 +31,7 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.coord.ZKClusterCoordinator;
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserProtos;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
@@ -172,6 +173,10 @@ public class QuerySubmitter {
     public int await() throws Exception {
       latch.await();
       return count.get();
+    }
+
+    @Override
+    public void queryIdArrived(QueryId queryId) {
     }
   }
 }

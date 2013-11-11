@@ -21,6 +21,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.user.QueryResultBatch;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
@@ -68,6 +69,10 @@ public class BatchListener implements UserResultsListener {
       }
       
     }
+  }
+
+  @Override
+  public void queryIdArrived(QueryId queryId) {
   }
 
   

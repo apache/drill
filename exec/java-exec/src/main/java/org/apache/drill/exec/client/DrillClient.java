@@ -37,6 +37,7 @@ import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.coord.ZKClusterCoordinator;
 import org.apache.drill.exec.memory.DirectBufferAllocator;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserProtos;
 import org.apache.drill.exec.proto.UserProtos.QueryType;
 import org.apache.drill.exec.rpc.*;
@@ -230,6 +231,10 @@ public class DrillClient implements Closeable{
       }catch(Throwable t){
         throw RpcException.mapException(t);
       }
+    }
+
+    @Override
+    public void queryIdArrived(QueryId queryId) {
     }
   }
   

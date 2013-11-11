@@ -20,8 +20,10 @@ package org.apache.drill.exec.store;
 import com.google.common.base.Charsets;
 import com.google.common.base.Stopwatch;
 import com.google.common.io.Resources;
+
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.client.DrillClient;
+import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserProtos;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
@@ -102,6 +104,10 @@ public class TestParquetPhysicalPlan {
     public int await() throws Exception {
       latch.await();
       return count.get();
+    }
+
+    @Override
+    public void queryIdArrived(QueryId queryId) {
     }
   }
   @Test

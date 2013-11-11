@@ -35,6 +35,7 @@ import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.physical.impl.OutputMutator;
+import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserProtos;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatchLoader;
@@ -233,6 +234,10 @@ public class ParquetRecordReaderTest {
       }catch(Throwable t){
         throw RpcException.mapException(t);
       }
+    }
+
+    @Override
+    public void queryIdArrived(QueryId queryId) {
     }
   }
 

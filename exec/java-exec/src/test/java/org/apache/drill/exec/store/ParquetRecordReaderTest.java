@@ -20,15 +20,15 @@ package org.apache.drill.exec.store;
 import com.beust.jcommander.internal.Lists;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-
 import com.google.common.util.concurrent.SettableFuture;
+
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.physical.impl.OutputMutator;
-
+import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserProtos;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatchLoader;
@@ -38,7 +38,6 @@ import org.apache.drill.exec.rpc.user.QueryResultBatch;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
-
 import org.apache.drill.exec.store.json.JsonSchemaProvider;
 import org.apache.drill.exec.vector.BaseDataValueVector;
 import org.apache.drill.exec.vector.ValueVector;
@@ -47,9 +46,9 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.junit.Ignore;
 import org.junit.Test;
+
 import parquet.bytes.BytesInput;
 import parquet.column.ColumnDescriptor;
-
 import parquet.hadoop.ParquetFileWriter;
 import parquet.hadoop.metadata.CompressionCodecName;
 import parquet.schema.MessageType;
@@ -58,7 +57,6 @@ import parquet.schema.MessageTypeParser;
 import java.util.*;
 
 import static org.junit.Assert.*;
-import static org.junit.Assert.assertEquals;
 import static parquet.column.Encoding.PLAIN;
 
 public class ParquetRecordReaderTest {
@@ -453,6 +451,10 @@ public class ParquetRecordReaderTest {
       }catch(Throwable t){
         throw RpcException.mapException(t);
       }
+    }
+
+    @Override
+    public void queryIdArrived(QueryId queryId) {
     }
   }
 

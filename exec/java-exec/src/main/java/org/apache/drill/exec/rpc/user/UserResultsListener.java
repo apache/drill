@@ -17,15 +17,12 @@
  */
 package org.apache.drill.exec.rpc.user;
 
-import java.util.concurrent.Future;
-
-import org.apache.drill.exec.proto.UserProtos.QueryResult;
+import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.rpc.RpcException;
-
-import com.google.common.util.concurrent.SettableFuture;
 
 public interface UserResultsListener {
   
+  public abstract void queryIdArrived(QueryId queryId);
   public abstract void submissionFailed(RpcException ex); 
   public abstract void resultArrived(QueryResultBatch result);
 
