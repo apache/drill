@@ -50,4 +50,6 @@ public interface ExecConstants {
   public static final String SPOOLING_BUFFER_IMPL = "drill.exec.spooling.impl";
   public static final String SPOOLING_BUFFER_DELETE = "drill.exec.spooling.delete";
   public static final String SPOOLING_BUFFER_MEMORY = "drill.exec.spooling.size";
+  public static final String NULL_EXPRESSION = "NULLEXPRESSION";
+  
 }

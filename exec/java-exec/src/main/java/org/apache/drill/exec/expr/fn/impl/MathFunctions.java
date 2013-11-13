@@ -24,6 +24,8 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
+import org.apache.drill.exec.expr.holders.Float4Holder;
+import org.apache.drill.exec.expr.holders.Float8Holder;
 import org.apache.drill.exec.expr.holders.IntHolder;
 import org.apache.drill.exec.record.RecordBatch;
 
@@ -60,6 +62,35 @@ public class MathFunctions{
       out.value = left.value + right.value;
     }
 
+  }
+  
+  @FunctionTemplate(name = "add", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  public static class Float4Add implements DrillSimpleFunc{
+    
+	@Param Float4Holder left;
+	@Param Float4Holder right;
+	@Output Float4Holder out;
+
+	public void setup(RecordBatch b){}
+    
+	public void eval(){
+  	out.value = left.value + right.value;
+	}
+  }
+ 
+ 
+  @FunctionTemplate(name = "add", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  public static class Float8Add implements DrillSimpleFunc{
+    
+	@Param Float8Holder left;
+	@Param Float8Holder right;
+	@Output Float8Holder out;
+
+	public void setup(RecordBatch b){}
+    
+	public void eval(){
+  	out.value = left.value + right.value;
+	}
   }
   
   @FunctionTemplate(name = "negative", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)

@@ -24,12 +24,16 @@ import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.CodeGenerator.BlockType;
 import org.apache.drill.exec.expr.CodeGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
+import org.apache.drill.exec.record.NullExpression;
+import org.apache.drill.exec.resolver.ResolverTypePrecedence;
+import org.apache.drill.exec.resolver.TypeCastRules;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -148,6 +152,51 @@ public abstract class DrillFuncHolder {
     
     return true;
   }
+  
+  
+  public int getCost(FunctionCall call){
+	  	int cost = 0;	  
+	    
+	    if(call.args.size() != parameters.length){
+	    	return -1;
+	    }
+	    for(int i =0; i < parameters.length; i++){
+	    	ValueReference param = parameters[i];
+	    	LogicalExpression callarg = call.args.get(i);	    	
+	    	
+	    	Integer paramval = ResolverTypePrecedence.precedenceMap.get(param.type.getMinorType().name());
+	    	Integer callval = null;
+	    	
+	    	if(!TypeCastRules.isCastable(param.type.getMinorType(), callarg.getMajorType().getMinorType())){
+	    		return -1;
+	    	}
+	    	
+	    	/** Allow NULL Expression/Arguments in casting **/
+	    	if(callarg == null || callarg instanceof NullExpression)
+	    	{
+	    		callval = ResolverTypePrecedence.precedenceMap.get(ExecConstants.NULL_EXPRESSION);
+	    	}
+	    	else
+	    	{
+	    		callval = ResolverTypePrecedence.precedenceMap.get(callarg.getMajorType().getMinorType().name());
+	    	}
+	    	
+	    	if(paramval==null || callval==null){
+	    		// TODO: Throw exception, Compatibility precedence not defined
+	    		return -1;
+	    	}
+	    	
+	    	if(paramval - callval<0){
+	    		return -1;
+	    	}	    	
+	    	
+			cost += paramval - callval;
+			    
+	    }	    
+	    return cost;
+	  }
+	  
+  
   
   private boolean softCompare(MajorType a, MajorType b){
     return Types.softEquals(a, b, nullHandling == NullHandling.NULL_IF_NULL);
