@@ -61,6 +61,7 @@ public class ImplCreator extends AbstractPhysicalVisitor<RecordBatch, FragmentCo
   private MockScanBatchCreator msc = new MockScanBatchCreator();
   private ParquetScanBatchCreator parquetScan = new ParquetScanBatchCreator();
   private ScreenCreator sc = new ScreenCreator();
+  private MergingReceiverCreator mrc = new MergingReceiverCreator();
   private RandomReceiverCreator rrc = new RandomReceiverCreator();
   private PartitionSenderCreator hsc = new PartitionSenderCreator();
   private OrderedPartitionBatchCreator opc = new OrderedPartitionBatchCreator();
@@ -182,6 +183,11 @@ public class ImplCreator extends AbstractPhysicalVisitor<RecordBatch, FragmentCo
   @Override
   public RecordBatch visitRandomReceiver(RandomReceiver op, FragmentContext context) throws ExecutionSetupException {
     return rrc.getBatch(context, op, null);
+  }
+
+  @Override
+  public RecordBatch visitMergingReceiver(MergingReceiverPOP op, FragmentContext context) throws ExecutionSetupException {
+    return mrc.getBatch(context, op, null);
   }
 
   private List<RecordBatch> getChildren(PhysicalOperator op, FragmentContext context) throws ExecutionSetupException {

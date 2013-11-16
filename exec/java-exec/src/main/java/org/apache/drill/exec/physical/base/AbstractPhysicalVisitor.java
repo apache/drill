@@ -116,6 +116,11 @@ public abstract class AbstractPhysicalVisitor<T, X, E extends Throwable> impleme
   }
 
   @Override
+  public T visitMergingReceiver(MergingReceiverPOP op, X value) throws E {
+    return visitReceiver(op, value);
+  }
+
+  @Override
   public T visitHashPartitionSender(HashToRandomExchange op, X value) throws E {
     return visitExchange(op, value);
   }
