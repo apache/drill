@@ -75,15 +75,16 @@ public class ParquetRecordReader implements RecordReader {
   private int recordsPerBatch;
   private ByteBuf bufferWithAllData;
   private final FieldReference ref;
-  long totalRecords;
-  long rowGroupOffset;
+  private long totalRecords;
+  private long rowGroupOffset;
 
   private List<ColumnReader> columnStatuses;
-  FileSystem fileSystem;
+  private FileSystem fileSystem;
   private BufferAllocator allocator;
   private long batchSize;
-  Path hadoopPath;
-  private final VarLenBinaryReader varLengthReader;
+  private Path hadoopPath;
+  private VarLenBinaryReader varLengthReader;
+  private ParquetMetadata footer;
 
   public CodecFactoryExposer getCodecFactoryExposer() {
     return codecFactoryExposer;
@@ -111,6 +112,46 @@ public class ParquetRecordReader implements RecordReader {
     this.codecFactoryExposer = codecFactoryExposer;
     this.rowGroupIndex = rowGroupIndex;
     this.batchSize = batchSize;
+    this.footer = footer;
+  }
+
+  public ByteBuf getBufferWithAllData() {
+    return bufferWithAllData;
+  }
+
+  public int getRowGroupIndex() {
+    return rowGroupIndex;
+  }
+
+  public int getBitWidthAllFixedFields() {
+    return bitWidthAllFixedFields;
+  }
+
+  public long getBatchSize() {
+    return batchSize;
+  }
+
+  /**
+   * @param type a fixed length type from the parquet library enum
+   * @return the length in pageDataByteArray of the type
+   */
+  public static int getTypeLengthInBits(PrimitiveType.PrimitiveTypeName type) {
+    switch (type) {
+      case INT64:   return 64;
+      case INT32:   return 32;
+      case BOOLEAN: return 1;
+      case FLOAT:   return 32;
+      case DOUBLE:  return 64;
+      case INT96:   return 96;
+      // binary and fixed length byte array
+      default:
+        throw new IllegalStateException("Length cannot be determined for type " + type);
+    }
+  }
+
+  @Override
+  public void setup(OutputMutator output) throws ExecutionSetupException {
+    
 
     columnStatuses = new ArrayList<>();
 
@@ -172,44 +213,8 @@ public class ParquetRecordReader implements RecordReader {
     } catch (SchemaChangeException e) {
       throw new ExecutionSetupException(e);
     }
-  }
-
-  public ByteBuf getBufferWithAllData() {
-    return bufferWithAllData;
-  }
-
-  public int getRowGroupIndex() {
-    return rowGroupIndex;
-  }
-
-  public int getBitWidthAllFixedFields() {
-    return bitWidthAllFixedFields;
-  }
-
-  public long getBatchSize() {
-    return batchSize;
-  }
-
-  /**
-   * @param type a fixed length type from the parquet library enum
-   * @return the length in pageDataByteArray of the type
-   */
-  public static int getTypeLengthInBits(PrimitiveType.PrimitiveTypeName type) {
-    switch (type) {
-      case INT64:   return 64;
-      case INT32:   return 32;
-      case BOOLEAN: return 1;
-      case FLOAT:   return 32;
-      case DOUBLE:  return 64;
-      case INT96:   return 96;
-      // binary and fixed length byte array
-      default:
-        throw new IllegalStateException("Length cannot be determined for type " + type);
-    }
-  }
-
-  @Override
-  public void setup(OutputMutator output) throws ExecutionSetupException {
+    
+    
     output.removeAllFields();
 
     try {
