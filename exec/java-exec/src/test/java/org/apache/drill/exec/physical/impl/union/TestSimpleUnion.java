@@ -19,7 +19,7 @@ package org.apache.drill.exec.physical.impl.union;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-import com.yammer.metrics.MetricRegistry;
+import com.codahale.metrics.MetricRegistry;
 import mockit.Injectable;
 import mockit.NonStrictExpectations;
 import org.apache.drill.common.config.DrillConfig;
@@ -52,7 +52,7 @@ public class TestSimpleUnion {
 
     
     new NonStrictExpectations(){{
-      bitContext.getMetrics(); result = new MetricRegistry("test");
+      bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = BufferAllocator.getAllocator(c);
     }};
     

@@ -61,7 +61,7 @@ import org.junit.Test;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
-import com.yammer.metrics.MetricRegistry;
+import com.codahale.metrics.MetricRegistry;
 
 @Ignore
 public class TestOptiqPlans {
@@ -85,7 +85,7 @@ public class TestOptiqPlans {
   
   private SimpleRootExec doLogicalTest(final BootStrapContext context, UserClientConnection connection, String file, ClusterCoordinator coord, BitCom com, DistributedCache cache) throws Exception{
     new NonStrictExpectations(){{
-      context.getMetrics(); result = new MetricRegistry("test");
+      context.getMetrics(); result = new MetricRegistry();
       context.getAllocator(); result = BufferAllocator.getAllocator(c);
       context.getConfig(); result = c;
     }};
@@ -268,7 +268,7 @@ public class TestOptiqPlans {
   
   private SimpleRootExec doPhysicalTest(final DrillbitContext bitContext, UserClientConnection connection, String file) throws Exception{
     new NonStrictExpectations(){{
-      bitContext.getMetrics(); result = new MetricRegistry("test");
+      bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = BufferAllocator.getAllocator(c);
       bitContext.getConfig(); result = c;
     }};

@@ -17,9 +17,9 @@
  */
 package org.apache.drill.exec.metrics;
 
-import com.yammer.metrics.JmxReporter;
-import com.yammer.metrics.MetricRegistry;
-import com.yammer.metrics.Slf4jReporter;
+import com.codahale.metrics.JmxReporter;
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Slf4jReporter;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.client.DrillClient;
@@ -33,7 +33,7 @@ public class DrillMetrics {
   private DrillMetrics() {}
 
   private static class RegistryHolder {
-    public static final MetricRegistry REGISTRY = new MetricRegistry("Drill Metrics");
+    public static final MetricRegistry REGISTRY = new MetricRegistry();
     private static JmxReporter jmxReporter = getJmxReporter();
     private static Slf4jReporter logReporter = getLogReporter();
 

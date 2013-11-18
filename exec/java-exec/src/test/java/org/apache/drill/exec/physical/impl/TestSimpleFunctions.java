@@ -45,7 +45,7 @@ import org.junit.Test;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-import com.yammer.metrics.MetricRegistry;
+import com.codahale.metrics.MetricRegistry;
 
 public class TestSimpleFunctions {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestSimpleFunctions.class);
@@ -57,7 +57,7 @@ public class TestSimpleFunctions {
                          @Injectable UserServer.UserClientConnection connection) throws Throwable {
 
     new NonStrictExpectations(){{
-      bitContext.getMetrics(); result = new MetricRegistry("test");
+      bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = BufferAllocator.getAllocator(c);
     }};
 
@@ -84,7 +84,7 @@ public class TestSimpleFunctions {
                             @Injectable UserServer.UserClientConnection connection) throws Throwable{
 
     new NonStrictExpectations(){{
-      bitContext.getMetrics(); result = new MetricRegistry("test");
+      bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = BufferAllocator.getAllocator(c);
     }};
 
@@ -111,7 +111,7 @@ public class TestSimpleFunctions {
                             @Injectable UserServer.UserClientConnection connection) throws Throwable{
 
     new NonStrictExpectations(){{
-      bitContext.getMetrics(); result = new MetricRegistry("test");
+      bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = BufferAllocator.getAllocator(c);
     }};
 
@@ -150,7 +150,7 @@ public class TestSimpleFunctions {
                                     @Injectable UserServer.UserClientConnection connection) throws Throwable{
 
     new NonStrictExpectations(){{
-      bitContext.getMetrics(); result = new MetricRegistry("test");
+      bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = BufferAllocator.getAllocator(c);
     }};
 
@@ -189,7 +189,7 @@ public class TestSimpleFunctions {
                                   @Injectable UserServer.UserClientConnection connection) throws Throwable{
 
     new NonStrictExpectations(){{
-      bitContext.getMetrics(); result = new MetricRegistry("test");
+      bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = BufferAllocator.getAllocator(c);
     }};
 

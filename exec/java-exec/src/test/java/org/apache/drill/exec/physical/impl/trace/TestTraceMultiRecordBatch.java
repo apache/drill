@@ -42,7 +42,7 @@ import org.junit.Test;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-import com.yammer.metrics.MetricRegistry;
+import com.codahale.metrics.MetricRegistry;
 
 /*
  * This test uses a physical plan with the mock scan that generates 100k records.
@@ -62,7 +62,7 @@ public class TestTraceMultiRecordBatch {
     {
 
         new NonStrictExpectations(){{
-            bitContext.getMetrics(); result = new MetricRegistry("test");
+            bitContext.getMetrics(); result = new MetricRegistry();
             bitContext.getAllocator(); result = BufferAllocator.getAllocator(c);
             bitContext.getConfig(); result = c;
         }};

@@ -21,8 +21,8 @@ package org.apache.drill.exec.store;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableRangeMap;
 import com.google.common.collect.Range;
-import com.yammer.metrics.*;
-import com.yammer.metrics.Timer;
+import com.codahale.metrics.*;
+import com.codahale.metrics.Timer;
 import org.apache.drill.exec.metrics.DrillMetrics;
 import org.apache.drill.exec.store.parquet.ParquetGroupScan;
 

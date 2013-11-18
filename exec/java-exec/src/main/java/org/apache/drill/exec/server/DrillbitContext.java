@@ -36,7 +36,7 @@ import org.apache.drill.exec.rpc.bit.BitCom;
 import org.apache.drill.exec.store.StorageEngine;
 
 import com.google.common.base.Preconditions;
-import com.yammer.metrics.MetricRegistry;
+import com.codahale.metrics.MetricRegistry;
 
 import org.apache.drill.exec.store.StorageEngineRegistry;
 

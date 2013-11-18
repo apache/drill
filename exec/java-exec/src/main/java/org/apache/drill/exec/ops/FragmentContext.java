@@ -36,8 +36,8 @@ import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.work.FragmentRunner;
 import org.apache.drill.exec.work.batch.IncomingBuffers;
 
-import com.yammer.metrics.MetricRegistry;
-import com.yammer.metrics.Timer;
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Timer;
 
 /**
  * Contextual objects required for execution of a particular fragment.  

@@ -50,7 +50,7 @@ import org.junit.Test;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-import com.yammer.metrics.MetricRegistry;
+import com.codahale.metrics.MetricRegistry;
 
 /*
  * This test uses a simple physical plan with a mock-scan that
@@ -76,7 +76,7 @@ public class TestTraceOutputDump {
     {
 
         new NonStrictExpectations(){{
-            bitContext.getMetrics(); result = new MetricRegistry("test");
+            bitContext.getMetrics(); result = new MetricRegistry();
             bitContext.getAllocator(); result = BufferAllocator.getAllocator(c);
             bitContext.getConfig(); result = c;
         }};

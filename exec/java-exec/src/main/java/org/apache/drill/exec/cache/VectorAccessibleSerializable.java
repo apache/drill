@@ -19,8 +19,8 @@ package org.apache.drill.exec.cache;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import com.yammer.metrics.MetricRegistry;
-import com.yammer.metrics.Timer;
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Timer;
 import io.netty.buffer.ByteBuf;
 import org.apache.drill.common.util.DataInputInputStream;
 import org.apache.drill.common.util.DataOutputOutputStream;

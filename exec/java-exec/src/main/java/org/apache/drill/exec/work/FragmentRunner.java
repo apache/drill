@@ -25,7 +25,7 @@ import org.apache.drill.exec.proto.ExecProtos.FragmentStatus;
 import org.apache.drill.exec.proto.ExecProtos.FragmentStatus.FragmentState;
 import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
 
-import com.yammer.metrics.Timer;
+import com.codahale.metrics.Timer;
 
 /**
  * Responsible for running a single fragment on a single Drillbit. Listens/responds to status request and cancellation

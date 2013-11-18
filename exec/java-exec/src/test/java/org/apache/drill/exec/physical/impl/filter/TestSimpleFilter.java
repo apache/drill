@@ -41,7 +41,7 @@ import org.junit.Test;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-import com.yammer.metrics.MetricRegistry;
+import com.codahale.metrics.MetricRegistry;
 
 public class TestSimpleFilter {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestSimpleFilter.class);
@@ -54,7 +54,7 @@ public class TestSimpleFilter {
 
     
     new NonStrictExpectations(){{
-      bitContext.getMetrics(); result = new MetricRegistry("test");
+      bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = BufferAllocator.getAllocator(c);
     }};
     
@@ -78,7 +78,7 @@ public class TestSimpleFilter {
   @Test
   public void testSV4Filter(@Injectable final DrillbitContext bitContext, @Injectable UserClientConnection connection) throws Throwable{
     new NonStrictExpectations(){{
-      bitContext.getMetrics(); result = new MetricRegistry("test");
+      bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = BufferAllocator.getAllocator(c);
     }};
 

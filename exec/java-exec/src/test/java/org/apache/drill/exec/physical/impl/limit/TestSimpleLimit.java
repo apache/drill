@@ -19,7 +19,7 @@ package org.apache.drill.exec.physical.impl.limit;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-import com.yammer.metrics.MetricRegistry;
+import com.codahale.metrics.MetricRegistry;
 import junit.framework.Assert;
 import mockit.Injectable;
 import mockit.NonStrictExpectations;
@@ -48,7 +48,7 @@ public class TestSimpleLimit {
   @Test
   public void testLimit(@Injectable final DrillbitContext bitContext, @Injectable UserServer.UserClientConnection connection) throws Throwable{
     new NonStrictExpectations(){{
-      bitContext.getMetrics(); result = new MetricRegistry("test");
+      bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = BufferAllocator.getAllocator(c);
     }};
 
@@ -58,7 +58,7 @@ public class TestSimpleLimit {
   @Test
   public void testLimitNoEnd(@Injectable final DrillbitContext bitContext, @Injectable UserServer.UserClientConnection connection) throws Throwable{
     new NonStrictExpectations(){{
-      bitContext.getMetrics(); result = new MetricRegistry("test");
+      bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = BufferAllocator.getAllocator(c);
     }};
 
@@ -68,7 +68,7 @@ public class TestSimpleLimit {
   @Test
   public void testLimitAcrossBatches(@Injectable final DrillbitContext bitContext, @Injectable UserServer.UserClientConnection connection) throws Throwable{
     new NonStrictExpectations(){{
-      bitContext.getMetrics(); result = new MetricRegistry("test");
+      bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = BufferAllocator.getAllocator(c);
     }};
 

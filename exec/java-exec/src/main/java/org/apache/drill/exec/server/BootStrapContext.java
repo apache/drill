@@ -26,7 +26,7 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.rpc.NamedThreadFactory;
 
-import com.yammer.metrics.MetricRegistry;
+import com.codahale.metrics.MetricRegistry;
 
 public class BootStrapContext implements Closeable{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BootStrapContext.class);
@@ -40,7 +40,7 @@ public class BootStrapContext implements Closeable{
     super();
     this.config = config;
     this.loop = new NioEventLoopGroup(config.getInt(ExecConstants.BIT_SERVER_RPC_THREADS), new NamedThreadFactory("BitServer-"));
-    this.metrics = new MetricRegistry(config.getString(ExecConstants.METRICS_CONTEXT_NAME));
+    this.metrics = new MetricRegistry();
     this.allocator = BufferAllocator.getAllocator(config);
   }
 

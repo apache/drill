@@ -48,7 +48,7 @@ import org.junit.Test;
 import com.beust.jcommander.internal.Lists;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-import com.yammer.metrics.MetricRegistry;
+import com.codahale.metrics.MetricRegistry;
 
 
 public class TestMergeJoin {
@@ -61,7 +61,7 @@ public class TestMergeJoin {
                                  @Injectable UserServer.UserClientConnection connection) throws Throwable {
 
     new NonStrictExpectations(){{
-      bitContext.getMetrics(); result = new MetricRegistry("test");
+      bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = BufferAllocator.getAllocator(c);
     }};
 
@@ -109,7 +109,7 @@ public class TestMergeJoin {
                                       @Injectable UserServer.UserClientConnection connection) throws Throwable {
 
     new NonStrictExpectations(){{
-      bitContext.getMetrics(); result = new MetricRegistry("test");
+      bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = BufferAllocator.getAllocator(c);
       bitContext.getConfig(); result = c;
     }};
@@ -161,7 +161,7 @@ public class TestMergeJoin {
                                        @Injectable UserServer.UserClientConnection connection) throws Throwable {
 
     new NonStrictExpectations(){{
-      bitContext.getMetrics(); result = new MetricRegistry("test");
+      bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = BufferAllocator.getAllocator(c);
       bitContext.getConfig(); result = c;
     }};
@@ -213,7 +213,7 @@ public class TestMergeJoin {
                                             @Injectable UserServer.UserClientConnection connection) throws Throwable {
 
     new NonStrictExpectations(){{
-      bitContext.getMetrics(); result = new MetricRegistry("test");
+      bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = BufferAllocator.getAllocator(c);
       bitContext.getConfig(); result = c;
     }};

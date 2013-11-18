@@ -19,7 +19,7 @@ package org.apache.drill.exec.metrics;
 
 import org.apache.drill.exec.server.DrillbitContext;
 
-import com.yammer.metrics.Counter;
+import com.codahale.metrics.Counter;
 
 /**
  * Wraps a parent counter so that local in-thread metrics can be collected while collecting for a global counter. Note
