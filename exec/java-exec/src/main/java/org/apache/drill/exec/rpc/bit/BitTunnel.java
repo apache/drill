@@ -23,6 +23,7 @@ import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.ExecProtos.FragmentStatus;
 import org.apache.drill.exec.proto.ExecProtos.PlanFragment;
 import org.apache.drill.exec.proto.ExecProtos.RpcType;
+import org.apache.drill.exec.proto.GeneralRPCProtos;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.record.FragmentWritableBatch;
 import org.apache.drill.exec.rpc.DrillRpcFuture;
@@ -49,6 +50,12 @@ public class BitTunnel {
     manager.runCommand(b);
   }
 
+  public DrillRpcFuture<Ack> sendRecordBatch(FragmentContext context, FragmentWritableBatch batch) {
+    SendBatchAsync b = new SendBatchAsync(batch, context);
+    manager.runCommand(b);
+    return b.getFuture();
+  }
+
   public void sendFragment(RpcOutcomeListener<Ack> outcomeListener, PlanFragment fragment){
     SendFragment b = new SendFragment(outcomeListener, fragment);
     manager.runCommand(b);
@@ -64,6 +71,27 @@ public class BitTunnel {
     SendFragmentStatus b = new SendFragmentStatus(status);
     manager.runCommand(b);
     return b.getFuture();
+  }
+
+  public static class SendBatchAsync extends FutureBitCommand<Ack> {
+    final FragmentWritableBatch batch;
+    final FragmentContext context;
+
+    public SendBatchAsync(FragmentWritableBatch batch, FragmentContext context) {
+      super();
+      this.batch = batch;
+      this.context = context;
+    }
+
+    @Override
+    public void doRpcCall(RpcOutcomeListener<Ack> outcomeListener, BitConnection connection) {
+      connection.send(outcomeListener, RpcType.REQ_RECORD_BATCH, batch.getHeader(), Ack.class, batch.getBuffers());
+    }
+
+    @Override
+    public String toString() {
+      return "SendBatch [batch.header=" + batch.getHeader() + "]";
+    }
   }
 
   public static class SendBatch extends ListeningBitCommand<Ack> {

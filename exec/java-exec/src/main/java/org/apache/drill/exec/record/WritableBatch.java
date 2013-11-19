@@ -153,4 +153,9 @@ public class WritableBatch {
     return getBatchNoHVWrap(batch.getRecordCount(), batch, sv2);
   }
 
+  public void retainBuffers() {
+    for (ByteBuf buf : buffers) {
+      buf.retain();
+    }
+  }
 }

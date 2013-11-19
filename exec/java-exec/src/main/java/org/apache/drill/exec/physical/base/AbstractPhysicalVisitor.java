@@ -131,6 +131,11 @@ public abstract class AbstractPhysicalVisitor<T, X, E extends Throwable> impleme
   }
 
   @Override
+  public T visitBroadcastSender(BroadcastSender op, X value) throws E {
+    return visitSender(op, value);
+  }
+
+  @Override
   public T visitScreen(Screen op, X value) throws E {
     return visitStore(op, value);
   }

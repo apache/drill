@@ -53,6 +53,7 @@ public interface PhysicalVisitor<RETURN, EXTRA, EXCEP extends Throwable> {
   public RETURN visitMergingReceiver(MergingReceiverPOP op, EXTRA value) throws EXCEP;
   public RETURN visitHashPartitionSender(HashToRandomExchange op, EXTRA value) throws EXCEP;
   public RETURN visitRangeSender(RangeSender op, EXTRA value) throws EXCEP;
+  public RETURN visitBroadcastSender(BroadcastSender op, EXTRA value) throws EXCEP;
   public RETURN visitScreen(Screen op, EXTRA value) throws EXCEP;
   public RETURN visitSingleSender(SingleSender op, EXTRA value) throws EXCEP;
   public RETURN visitUnionExchange(UnionExchange op, EXTRA value) throws EXCEP;

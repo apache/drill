@@ -17,10 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl;
 
-import io.netty.buffer.ByteBuf;
-
-import java.util.List;
-
+import com.google.common.base.Preconditions;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.Screen;
 import org.apache.drill.exec.physical.impl.materialize.QueryWritableBatch;
@@ -36,7 +33,7 @@ import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
 import org.apache.drill.exec.work.foreman.ErrorHelper;
 
-import com.google.common.base.Preconditions;
+import java.util.List;
 
 public class ScreenCreator implements RootCreator<Screen>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScreenCreator.class);
