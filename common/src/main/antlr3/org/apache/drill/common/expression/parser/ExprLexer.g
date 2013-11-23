@@ -35,6 +35,17 @@ In       : 'in';
 Case     : 'case';
 When     : 'when';
 
+Cast: 'cast';
+Nullable: 'nullable';
+Repeat: 'repeat';
+As: 'as';
+
+INT		 : 'int';
+BIGINT	 : 'bigint';
+FLOAT4   : 'float4';
+FLOAT8   : 'float8';
+VARCHAR  : 'varchar';
+VARBINARY: 'varbinary';
 
 Or       : '||' | 'or' | 'OR' | 'Or';
 And      : '&&' | 'and' | 'AND' ;

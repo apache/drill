@@ -33,7 +33,7 @@ public class ValueHolderHelper {
     byte[] b = s.getBytes(Charsets.UTF_8);
     vch.start = 0;
     vch.end = b.length;
-    vch.buffer = UnpooledByteBufAllocator.DEFAULT.buffer();
+    vch.buffer = UnpooledByteBufAllocator.DEFAULT.buffer(s.length()); // use the length of input string to allocate buffer. 
     vch.buffer.setBytes(0, b);
     return vch;
   }

@@ -29,8 +29,12 @@ public interface OutputTypeDeterminer {
   public static OutputTypeDeterminer FIXED_BIT = new FixedType(Types.required(MinorType.BIT));
   public static OutputTypeDeterminer FIXED_INT = new FixedType(Types.required(MinorType.INT));
   public static OutputTypeDeterminer FIXED_BIGINT = new FixedType(Types.required(MinorType.BIGINT));
-  public static OutputTypeDeterminer FIXED_FLOAT8 = new FixedType(Types.required(MinorType.FLOAT8));
-
+  public static OutputTypeDeterminer FIXED_FLOAT4 = new FixedType(Types.required(MinorType.FLOAT4));
+  public static OutputTypeDeterminer FIXED_FLOAT8 = new FixedType(Types.required(MinorType.FLOAT8)); 
+  public static OutputTypeDeterminer FIXED_VARCHAR = new FixedType(Types.required(MinorType.VARCHAR));
+  public static OutputTypeDeterminer FIXED_VARBINARY = new FixedType(Types.required(MinorType.VARBINARY));
+  public static OutputTypeDeterminer FIXED_VAR16CHAR = new FixedType(Types.required(MinorType.VAR16CHAR));
+  
   public MajorType getOutputType(List<LogicalExpression> expressions);
   
   

@@ -20,7 +20,7 @@
 
 
 <#list cast.types as type>
-<#if type.major == "Fixed">
+<#if type.major == "SrcVarlenTargetVarlen">
 
 <@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/gcast/Cast${type.from}${type.to}.java" />
 
@@ -28,11 +28,14 @@
 
 package org.apache.drill.exec.expr.fn.impl.gcast;
 
+import io.netty.buffer.ByteBuf;
+
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
+import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
 
@@ -41,17 +44,24 @@ import org.apache.drill.exec.record.RecordBatch;
 public class Cast${type.from}${type.to} implements DrillSimpleFunc{
 
   @Param ${type.from}Holder in;
+  @Param BigIntHolder length;
+  @Workspace ByteBuf buffer;     
   @Output ${type.to}Holder out;
 
-  public void setup(RecordBatch incoming) {}
+  public void setup(RecordBatch incoming) {
+  }
 
   public void eval() {
-    <#if type.explicit??>
-    out.value = (${type.explicit}) in.value;
-    <#else>
-    out.value = in.value;
-    </#if>
-  }
+    //if input length <= target_type length, do nothing
+    //else truncate based on target_type length.     
+    out.buffer = in.buffer;
+    out.start =  in.start;
+    if (in.end - in.start <= length.value) {
+      out.end = in.end;
+    } else {
+      out.end = out.start + (int) length.value;
+    }
+  }      
 }
 
 </#if> <#-- type.major -->

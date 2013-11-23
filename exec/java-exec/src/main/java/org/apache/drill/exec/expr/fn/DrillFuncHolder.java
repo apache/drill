@@ -127,10 +127,12 @@ public abstract class DrillFuncHolder {
   
   
   public boolean matches(FunctionCall call){
+    
     if(!softCompare(call.getMajorType(), returnValue.type)){
 //      logger.debug(String.format("Call [%s] didn't match as return type [%s] was different than expected [%s]. ", call.getDefinition().getName(), returnValue.type, call.getMajorType()));
       return false;
     }
+    
     if(call.args.size() != parameters.length){
 //      logger.debug(String.format("Call [%s] didn't match as the number of arguments provided [%d] were different than expected [%d]. ", call.getDefinition().getName(), parameters.length, call.args.size()));
       return false;

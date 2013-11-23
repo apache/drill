@@ -27,7 +27,9 @@ import org.apache.drill.common.config.CommonConstants;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExpressionParsingException;
+import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.util.PathScanner;
+import org.apache.drill.common.types.Types;
 
 import com.google.common.collect.Lists;
 
@@ -35,7 +37,7 @@ public class FunctionRegistry {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FunctionRegistry.class);
   
   private final Map<String, FunctionDefinition> funcMap;
-
+ 
   public FunctionRegistry(DrillConfig config){
     try{
       Set<Class<? extends CallProvider>> providerClasses = PathScanner.scanForImplementations(CallProvider.class, config.getStringList(CommonConstants.LOGICAL_FUNCTION_SCAN_PACKAGES));
@@ -60,6 +62,31 @@ public class FunctionRegistry {
     }
   }
   
+  /*
+   * create a cast function.
+   * arguments : type -- targetType
+   *             ep   -- input expression position
+   *             expr -- input expression  
+   */
+  public LogicalExpression createCast(MajorType type, ExpressionPosition ep, LogicalExpression expr){    
+    String castFuncWithType = "cast" + type.getMinorType().name();
+    
+    FunctionDefinition d = funcMap.get(castFuncWithType);
+    if(d == null) throw new ExpressionParsingException(String.format("Unable to find function definition for function named '%s'", castFuncWithType));
+    
+    List<LogicalExpression> newArgs = Lists.newArrayList();
+    newArgs.add(expr);  //input_expr
+
+    //VarLen type
+    if (!Types.isFixedWidthType(type)) {
+      newArgs.add(new ValueExpressions.LongExpression(type.getWidth(), null));
+    }
+    
+    FunctionDefinition castFuncDef = FunctionDefinition.simple(castFuncWithType, d.getArgumentValidator(), d.getOutputTypeDeterminer()) ;   
+    
+    return new FunctionCall(castFuncDef, newArgs, ep);
+  }
+
   
   public LogicalExpression createExpression(String functionName, ExpressionPosition ep, List<LogicalExpression> args){
     FunctionDefinition d = funcMap.get(functionName);

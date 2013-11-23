@@ -35,6 +35,8 @@ package org.apache.drill.common.expression.parser;
 import org.antlr.runtime.BitSet;
 import java.util.*;
 import org.apache.drill.common.expression.*;
+import org.apache.drill.common.types.*;
+import org.apache.drill.common.types.TypeProtos.*;
 
 }
 
@@ -66,7 +68,44 @@ parse returns [LogicalExpression e]
 functionCall returns [LogicalExpression e]
   :  Identifier OParen exprList? CParen {$e = registry.createExpression($Identifier.text, pos($Identifier), $exprList.listE);  }
   ;
+  
+castCall returns [LogicalExpression e]
+	@init{
+  	  List<LogicalExpression> exprs = new ArrayList<LogicalExpression>();
+	  ExpressionPosition p = null;
+	}  
+  :  Cast OParen expression As dataType repeat? CParen 
+      {  if ($repeat.isRep!=null && $repeat.isRep.compareTo(Boolean.TRUE)==0)
+      	 	$e = registry.createCast(TypeProtos.MajorType.newBuilder().mergeFrom($dataType.type).setMode(DataMode.REPEATED).build(), pos($Cast), $expression.e);
+      	 else 
+         	$e = registry.createCast($dataType.type, pos($Cast), $expression.e);}
+  ;
 
+repeat returns [Boolean isRep]
+  : Repeat { $isRep = Boolean.TRUE;}
+  ;
+
+dataType returns [MajorType type]
+	: numType  {$type =$numType.type;}
+	| charType {$type =$charType.type;}
+	; 
+  
+numType returns [MajorType type]
+	: INT    { $type = Types.required(TypeProtos.MinorType.INT); }
+	| BIGINT { $type = Types.required(TypeProtos.MinorType.BIGINT); }
+	| FLOAT4 { $type = Types.required(TypeProtos.MinorType.FLOAT4); }
+	| FLOAT8 { $type = Types.required(TypeProtos.MinorType.FLOAT8); }
+	; 
+
+charType returns [MajorType type]
+	:  VARCHAR typeLen {$type = TypeProtos.MajorType.newBuilder().setMinorType(TypeProtos.MinorType.VARCHAR).setMode(DataMode.REQUIRED).setWidth($typeLen.length.intValue()).build(); }
+	|  VARBINARY typeLen {$type = TypeProtos.MajorType.newBuilder().setMinorType(TypeProtos.MinorType.VARBINARY).setMode(DataMode.REQUIRED).setWidth($typeLen.length.intValue()).build();}	
+	; 
+
+typeLen returns [Integer length]
+    : OParen Number CParen {$length = Integer.parseInt($Number.text);}
+    ;
+     	
 ifStatement returns [LogicalExpression e]
 	@init {
 	  IfExpression.Builder s = IfExpression.newBuilder();
@@ -217,6 +256,7 @@ atom returns [LogicalExpression e]
 
 lookup returns [LogicalExpression e]
   :  functionCall {$e = $functionCall.e ;}
+  | castCall {$e = $castCall.e; }
   | Identifier {$e = new SchemaPath($Identifier.text, pos($Identifier) ); }
   | String {$e = new ValueExpressions.QuotedString($String.text, pos($String) ); }
   | OParen expression CParen  {$e = $expression.e; }

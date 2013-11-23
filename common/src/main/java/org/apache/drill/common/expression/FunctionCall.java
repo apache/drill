@@ -17,9 +17,11 @@
  */
 package org.apache.drill.common.expression;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 
@@ -73,8 +75,5 @@ public class FunctionCall extends LogicalExpressionBase implements Iterable<Logi
     final int maxLen = 10;
     return "FunctionCall [func=" + func + ", args="
         + (args != null ? args.subList(0, Math.min(args.size(), maxLen)) : null) + ", pos=" + pos + "]";
-  }
-
-  
-  
+  }  
 }

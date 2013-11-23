@@ -16,18 +16,38 @@
 
 {
   types: [
-    {from: "Int", to: "BigInt"},
-    {from: "Float4", to: "Float8" }, 
-    {from: "Int", to: "Float4" },
-    {from: "BigInt", to: "Float4" },
-    {from: "Int", to: "Float8" },
-    {from: "BigInt", to: "Float8" },
-    {to: "Int", from: "BigInt", explicit: "int"},
-    {to: "Float4", from: "Float8" , explicit: "float"}, 
-    {to: "Int", from: "Float4" , explicit: "int"},
-    {to: "BigInt", from: "Float4" , explicit: "long"},
-    {to: "Int", from: "Float8" , explicit: "int"},
-    {to: "BigInt", from: "Float8" , explicit: "long"}
+    {from: "Int", to: "BigInt", major: "Fixed"},
+    {from: "Float4", to: "Float8", major: "Fixed" }, 
+    {from: "Int", to: "Float4", major: "Fixed" },
+    {from: "BigInt", to: "Float4", major: "Fixed" },
+    {from: "Int", to: "Float8", major: "Fixed" },
+    {from: "BigInt", to: "Float8", major: "Fixed" },
+    {to: "Int", from: "BigInt", explicit: "int", major: "Fixed"},
+    {to: "Float4", from: "Float8" , explicit: "float", major: "Fixed"}, 
+    {to: "Int", from: "Float4" , explicit: "int", major: "Fixed"},
+    {to: "BigInt", from: "Float4" , explicit: "long", major: "Fixed"},
+    {to: "Int", from: "Float8" , explicit: "int", major: "Fixed"},
+    {to: "BigInt", from: "Float8" , explicit: "long", major: "Fixed"},
     
+    {from: "VarChar", to: "BigInt", major: "SrcVarlen", javaType: "Long", primeType: "long"},
+    {from: "VarChar", to: "Int", major: "SrcVarlen", javaType:"Integer", primeType:"int"},
+    {from: "VarBinary", to: "BigInt", major: "SrcVarlen", javaType: "Long", primeType : "long"},
+    {from: "VarBinary", to: "Int", major: "SrcVarlen", javaType:"Integer", primeType : "int"},   
+    {from: "VarChar", to: "Float4", major: "SrcVarlen", javaType:"Float", parse:"Float"},
+    {from: "VarChar", to: "Float8", major: "SrcVarlen", javaType:"Double", parse:"Double"},
+    {from: "VarBinary", to: "Float4", major: "SrcVarlen", javaType:"Float", parse:"Float"},
+    {from: "VarBinary", to: "Float8", major: "SrcVarlen", javaType:"Double", parse:"Double"}, 
+
+    {from: "BigInt", to: "VarChar", major: "TargetVarlen", javaType: "Long", bufferLength:"20"},
+    {from: "Int", to: "VarChar", major: "TargetVarlen", javaType: "Integer", bufferLength:"10"},
+    {from: "Float4", to: "VarChar", major: "TargetVarlen", javaType: "Float", bufferLength:"100"},
+    {from: "Float8", to: "VarChar", major: "TargetVarlen", javaType: "Double", bufferLength:"100"},
+    {from: "BigInt", to: "VarBinary", major: "TargetVarlen", javaType: "Long", bufferLength:"20"},
+    {from: "Int", to: "VarBinary", major: "TargetVarlen", javaType: "Integer", bufferLength:"10"},
+    {from: "Float4", to: "VarBinary", major: "TargetVarlen", javaType: "Float", bufferLength:"100"},
+    {from: "Float8", to: "VarBinary", major: "TargetVarlen", javaType: "Double", bufferLength:"100"},     
+    
+    {from: "VarBinary", to: "VarChar", major: "SrcVarlenTargetVarlen"},
+    {from: "VarChar", to: "VarBinary", major: "SrcVarlenTargetVarlen"}     
   ]
 } 
