@@ -134,10 +134,11 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
         }
       }
       
-      if (builder == null)
+      if (builder == null){
         // builder may be null at this point if the first incoming batch is empty
         return IterOutcome.NONE;
-
+      }
+        
       builder.build(context);
       sv4 = builder.getSv4();
 
