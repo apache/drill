@@ -17,11 +17,13 @@
  */
 package org.apache.drill.exec.work.batch;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.drill.exec.exception.FragmentSetupException;
+import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.AbstractPhysicalVisitor;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.Receiver;
@@ -41,12 +43,14 @@ public class IncomingBuffers {
   private final AtomicInteger streamsRemaining = new AtomicInteger(0);
   private final AtomicInteger remainingRequired = new AtomicInteger(0);
   private final Map<Integer, BatchCollector> fragCounts;
+  private final FragmentContext context;
 
-  public IncomingBuffers(PhysicalOperator root) {
+  public IncomingBuffers(PhysicalOperator root, FragmentContext context) {
+    this.context = context;
     Map<Integer, BatchCollector> counts = Maps.newHashMap();
     CountRequiredFragments reqFrags = new CountRequiredFragments();
     root.accept(reqFrags, counts);
-    
+
     logger.debug("Came up with a list of {} required fragments.  Fragments {}", remainingRequired.get(), counts);
     fragCounts = ImmutableMap.copyOf(counts);
 
@@ -68,10 +72,14 @@ public class IncomingBuffers {
     int sendMajorFragmentId = batch.getHeader().getSendingMajorFragmentId();
     BatchCollector fSet = fragCounts.get(sendMajorFragmentId);
     if (fSet == null) throw new FragmentSetupException(String.format("We received a major fragment id that we were not expecting.  The id was %d.", sendMajorFragmentId));
-    boolean decremented = fSet.batchArrived(throttle, batch.getHeader().getSendingMinorFragmentId(), batch);
-    
-    // we should only return true if remaining required has been decremented and is currently equal to zero.
-    return decremented && remainingRequired.get() == 0;
+    try {
+      boolean decremented = fSet.batchArrived(throttle, batch.getHeader().getSendingMinorFragmentId(), batch);
+
+      // we should only return true if remaining required has been decremented and is currently equal to zero.
+      return decremented && remainingRequired.get() == 0;
+    } catch (IOException e) {
+      throw new FragmentSetupException(e);
+    }
   }
 
   public int getRemainingRequired() {
@@ -94,9 +102,9 @@ public class IncomingBuffers {
     public Void visitReceiver(Receiver receiver, Map<Integer, BatchCollector> counts) throws RuntimeException {
       BatchCollector set;
       if (receiver.supportsOutOfOrderExchange()) {
-        set = new MergingCollector(remainingRequired, receiver);
+        set = new MergingCollector(remainingRequired, receiver, context);
       } else {
-        set = new PartitionedCollector(remainingRequired, receiver);
+        set = new PartitionedCollector(remainingRequired, receiver, context);
       }
       
       counts.put(set.getOppositeMajorFragmentId(), set);

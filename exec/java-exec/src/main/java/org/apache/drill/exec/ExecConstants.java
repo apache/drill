@@ -45,4 +45,9 @@ public interface ExecConstants {
   public static final String USER_SERVER_RPC_THREADS = "drill.exec.rpc.user.server.threads";
   public static final String TRACE_DUMP_DIRECTORY = "drill.exec.trace.directory";
   public static final String TRACE_DUMP_FILESYSTEM = "drill.exec.trace.filesystem";
+  public static final String TEMP_DIRECTORIES = "drill.exec.tmp.directories";
+  public static final String TEMP_FILESYSTEM = "drill.exec.tmp.filesystem";
+  public static final String SPOOLING_BUFFER_IMPL = "drill.exec.spooling.impl";
+  public static final String SPOOLING_BUFFER_DELETE = "drill.exec.spooling.delete";
+  public static final String SPOOLING_BUFFER_MEMORY = "drill.exec.spooling.size";
 }

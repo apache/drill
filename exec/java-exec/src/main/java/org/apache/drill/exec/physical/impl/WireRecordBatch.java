@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl;
 
+import java.io.IOException;
 import java.util.Iterator;
 
 import org.apache.drill.common.expression.SchemaPath;
@@ -96,14 +97,14 @@ public class WireRecordBatch implements RecordBatch{
 
   @Override
   public IterOutcome next() {
-    RawFragmentBatch batch = fragProvider.getNext();
-    
-    // skip over empty batches. we do this since these are basically control messages.
-    while(batch != null && batch.getHeader().getDef().getRecordCount() == 0){
-      batch = fragProvider.getNext();
-    }
-    
     try{
+      RawFragmentBatch batch = fragProvider.getNext();
+    
+      // skip over empty batches. we do this since these are basically control messages.
+      while(batch != null && batch.getHeader().getDef().getRecordCount() == 0){
+        batch = fragProvider.getNext();
+      }
+    
       if (batch == null) return IterOutcome.NONE;
       
 
@@ -119,7 +120,7 @@ public class WireRecordBatch implements RecordBatch{
       }else{
         return IterOutcome.OK;
       }
-    }catch(SchemaChangeException ex){
+    }catch(SchemaChangeException | IOException ex){
       context.fail(ex);
       return IterOutcome.STOP;
     }

@@ -31,6 +31,10 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
 
   private final LinkedBlockingDeque<RawFragmentBatch> buffer = Queues.newLinkedBlockingDeque();
   private volatile boolean finished = false;
+
+  public UnlimitedRawBatchBuffer(FragmentContext context) {
+
+  }
   
   @Override
   public void enqueue(ConnectionThrottle throttle, RawFragmentBatch batch) {

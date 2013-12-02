@@ -56,8 +56,9 @@ public class RemoteFragmentHandler implements IncomingFragmentHandler {
     try{
       this.fragment = fragment;
       this.root = context.getPlanReader().readFragmentOperator(fragment.getFragmentJson());
-      this.buffers = new IncomingBuffers(root);
-      this.context = new FragmentContext(context, fragment.getHandle(), null, buffers, new FunctionImplementationRegistry(context.getConfig()));
+      this.context = new FragmentContext(context, fragment.getHandle(), null, new FunctionImplementationRegistry(context.getConfig()));
+      this.buffers = new IncomingBuffers(root, this.context);
+      this.context.setBuffers(buffers);
       this.runnerListener = new RemoteFragmentRunnerListener(this.context, foremanTunnel);
       this.reader = context.getPlanReader();
       

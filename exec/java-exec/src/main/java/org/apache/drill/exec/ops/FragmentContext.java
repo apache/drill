@@ -27,6 +27,7 @@ import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.metrics.SingleThreadNestedCounter;
+import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.ExecProtos.FragmentStatus;
@@ -57,14 +58,14 @@ public class FragmentContext {
   public final Timer fragmentTime;
   private final FragmentHandle handle;
   private final UserClientConnection connection;
-  private final IncomingBuffers buffers;
+  private IncomingBuffers buffers;
   private volatile Throwable failureCause;
   private volatile boolean failed = false;
   private final FunctionImplementationRegistry funcRegistry;
   private final QueryClassLoader loader;
   private final ClassTransformer transformer;
   
-  public FragmentContext(DrillbitContext dbContext, FragmentHandle handle, UserClientConnection connection, IncomingBuffers buffers, FunctionImplementationRegistry funcRegistry) {
+  public FragmentContext(DrillbitContext dbContext, FragmentHandle handle, UserClientConnection connection, FunctionImplementationRegistry funcRegistry) {
     this.loader = new QueryClassLoader(true);
     this.transformer = new ClassTransformer();
     this.fragmentTime = dbContext.getMetrics().timer(METRIC_TIMER_FRAGMENT_TIME);
@@ -74,8 +75,11 @@ public class FragmentContext {
     this.context = dbContext;
     this.connection = connection;
     this.handle = handle;
-    this.buffers = buffers;
     this.funcRegistry = funcRegistry;
+  }
+
+  public void setBuffers(IncomingBuffers buffers) {
+    this.buffers = buffers;
   }
 
   public void fail(Throwable cause) {

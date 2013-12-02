@@ -111,7 +111,7 @@ public class BitComHandlerImpl implements BitComHandler {
   @Override
   public void startNewRemoteFragment(PlanFragment fragment){
     logger.debug("Received remote fragment start instruction", fragment);
-    FragmentContext context = new FragmentContext(bee.getContext(), fragment.getHandle(), null, null,new FunctionImplementationRegistry(bee.getContext().getConfig()));
+    FragmentContext context = new FragmentContext(bee.getContext(), fragment.getHandle(), null, new FunctionImplementationRegistry(bee.getContext().getConfig()));
     BitTunnel tunnel = bee.getContext().getBitCom().getTunnel(fragment.getForeman());
     RemoteFragmentRunnerListener listener = new RemoteFragmentRunnerListener(context, tunnel);
     try{

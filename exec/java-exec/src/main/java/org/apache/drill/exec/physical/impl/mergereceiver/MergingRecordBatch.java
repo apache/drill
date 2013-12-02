@@ -132,7 +132,13 @@ public class MergingRecordBatch implements RecordBatch {
       // set up each (non-empty) incoming record batch
       List<RawFragmentBatch> rawBatches = Lists.newArrayList();
       for (RawFragmentBatchProvider provider : fragProviders) {
-        RawFragmentBatch rawBatch = provider.getNext();
+        RawFragmentBatch rawBatch = null;
+        try {
+          rawBatch = provider.getNext();
+        } catch (IOException e) {
+          context.fail(e);
+          return IterOutcome.STOP;
+        }
         if (rawBatch.getHeader().getDef().getRecordCount() != 0)
           rawBatches.add(rawBatch);
       }
@@ -226,7 +232,12 @@ public class MergingRecordBatch implements RecordBatch {
 
       if (node.valueIndex == batchLoaders[node.batchId].getRecordCount() - 1) {
         // reached the end of an incoming record batch
-        incomingBatches[node.batchId] = fragProviders[node.batchId].getNext();
+        try {
+          incomingBatches[node.batchId] = fragProviders[node.batchId].getNext();
+        } catch (IOException e) {
+          context.fail(e);
+          return IterOutcome.STOP;
+        }
 
         if (incomingBatches[node.batchId].getHeader().getIsLastBatch() ||
             incomingBatches[node.batchId].getHeader().getDef().getRecordCount() == 0) {
