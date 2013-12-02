@@ -26,12 +26,27 @@ import org.apache.drill.exec.physical.base.AbstractPhysicalVisitor;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.SubScan;
-import org.apache.drill.exec.physical.config.*;
+import org.apache.drill.exec.physical.config.Filter;
+import org.apache.drill.exec.physical.config.HashPartitionSender;
+import org.apache.drill.exec.physical.config.IteratorValidator;
+import org.apache.drill.exec.physical.config.Limit;
+import org.apache.drill.exec.physical.config.MergeJoinPOP;
+import org.apache.drill.exec.physical.config.MergingReceiverPOP;
+import org.apache.drill.exec.physical.config.OrderedPartitionSender;
+import org.apache.drill.exec.physical.config.Project;
+import org.apache.drill.exec.physical.config.RandomReceiver;
+import org.apache.drill.exec.physical.config.Screen;
+import org.apache.drill.exec.physical.config.SelectionVectorRemover;
+import org.apache.drill.exec.physical.config.SingleSender;
+import org.apache.drill.exec.physical.config.Sort;
+import org.apache.drill.exec.physical.config.StreamingAggregate;
+import org.apache.drill.exec.physical.config.Trace;
+import org.apache.drill.exec.physical.config.Union;
 import org.apache.drill.exec.physical.impl.aggregate.AggBatchCreator;
 import org.apache.drill.exec.physical.impl.filter.FilterBatchCreator;
 import org.apache.drill.exec.physical.impl.join.MergeJoinCreator;
 import org.apache.drill.exec.physical.impl.limit.LimitBatchCreator;
-import org.apache.drill.exec.physical.impl.orderedpartitioner.OrderedPartitionBatchCreator;
+import org.apache.drill.exec.physical.impl.orderedpartitioner.OrderedPartitionSenderCreator;
 import org.apache.drill.exec.physical.impl.partitionsender.PartitionSenderCreator;
 import org.apache.drill.exec.physical.impl.project.ProjectBatchCreator;
 import org.apache.drill.exec.physical.impl.sort.SortBatchCreator;
@@ -64,10 +79,9 @@ public class ImplCreator extends AbstractPhysicalVisitor<RecordBatch, FragmentCo
   private MergingReceiverCreator mrc = new MergingReceiverCreator();
   private RandomReceiverCreator rrc = new RandomReceiverCreator();
   private PartitionSenderCreator hsc = new PartitionSenderCreator();
-  private OrderedPartitionBatchCreator opc = new OrderedPartitionBatchCreator();
+  private OrderedPartitionSenderCreator opsc = new OrderedPartitionSenderCreator();
   private SingleSenderCreator ssc = new SingleSenderCreator();
   private ProjectBatchCreator pbc = new ProjectBatchCreator();
-  private OrderedPartitionBatchCreator smplbc = new OrderedPartitionBatchCreator();
   private FilterBatchCreator fbc = new FilterBatchCreator();
   private LimitBatchCreator lbc = new LimitBatchCreator();
   private UnionBatchCreator unionbc = new UnionBatchCreator();
@@ -150,10 +164,7 @@ public class ImplCreator extends AbstractPhysicalVisitor<RecordBatch, FragmentCo
 
   @Override
   public RecordBatch visitOrderedPartitionSender(OrderedPartitionSender op, FragmentContext context) throws ExecutionSetupException {
-    List<RecordBatch> children = Lists.newArrayList();
-    children.add(opc.getBatch(context, op, getChildren(op, context)));
-    HashPartitionSender config = new HashPartitionSender(op.getOppositeMajorFragmentId(), op, op.getRef(),op.getDestinations());
-    root = hsc.getRoot(context, config, children);
+    root = opsc.getRoot(context, op, getChildren(op, context));
     return null;
   }
   

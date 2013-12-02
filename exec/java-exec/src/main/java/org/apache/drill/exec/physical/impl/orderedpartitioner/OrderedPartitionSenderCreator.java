@@ -17,23 +17,31 @@
  */
 package org.apache.drill.exec.physical.impl.orderedpartitioner;
 
-import com.google.common.base.Preconditions;
-import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.physical.config.OrderedPartitionSender;
-import org.apache.drill.exec.physical.impl.BatchCreator;
-import org.apache.drill.exec.record.RecordBatch;
-
 import java.util.List;
 
-public class OrderedPartitionBatchCreator implements BatchCreator<OrderedPartitionSender>{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OrderedPartitionBatchCreator.class);
+import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.physical.config.HashPartitionSender;
+import org.apache.drill.exec.physical.config.OrderedPartitionSender;
+import org.apache.drill.exec.physical.impl.RootCreator;
+import org.apache.drill.exec.physical.impl.RootExec;
+import org.apache.drill.exec.physical.impl.partitionsender.PartitionSenderRootExec;
+import org.apache.drill.exec.record.RecordBatch;
+
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+
+public class OrderedPartitionSenderCreator implements RootCreator<OrderedPartitionSender> {
 
   @Override
-  public RecordBatch getBatch(FragmentContext context, OrderedPartitionSender config, List<RecordBatch> children) throws ExecutionSetupException {
+  public RootExec getRoot(FragmentContext context, OrderedPartitionSender config,
+      List<RecordBatch> children) throws ExecutionSetupException {
     Preconditions.checkArgument(children.size() == 1);
-    return new OrderedPartitionRecordBatch(config, children.iterator().next(), context);
+
+    List<RecordBatch> ordered_children = Lists.newArrayList();
+    ordered_children.add(new OrderedPartitionRecordBatch(config, children.iterator().next(), context));
+    HashPartitionSender hpc = new HashPartitionSender(config.getOppositeMajorFragmentId(), config, config.getRef(), config.getDestinations());
+    return new PartitionSenderRootExec(context, ordered_children.iterator().next(), hpc);
   }
-  
-  
+
 }
