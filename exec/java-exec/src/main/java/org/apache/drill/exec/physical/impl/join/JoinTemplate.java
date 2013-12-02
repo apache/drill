@@ -83,8 +83,9 @@ public abstract class JoinTemplate implements JoinWorker {
   /**
    * Copy rows from the input record batches until the output record batch is full
    * @param status  State of the join operation (persists across multiple record batches/schema changes)
+   * @return  true of join succeeded; false if the worker needs to be regenerated
    */
-  public final void doJoin(final JoinStatus status) {
+  public final boolean doJoin(final JoinStatus status) {
     while (true) {
       // for each record
 
@@ -93,14 +94,15 @@ public abstract class JoinTemplate implements JoinWorker {
         if (((MergeJoinPOP)status.outputBatch.getPopConfig()).getJoinType() == Join.JoinType.LEFT) {
           // we've hit the end of the right record batch; copy any remaining values from the left batch
           while (status.isLeftPositionAllowed()) {
-            doCopyLeft(status.getLeftPosition(), status.fetchAndIncOutputPos());
+            if (!doCopyLeft(status.getLeftPosition(), status.fetchAndIncOutputPos()))
+              return false;
             status.advanceLeft();
           }
         }
-        return;
+        return true;
       }
       if (!status.isLeftPositionAllowed())
-        return;
+        return true;
 
       int comparison = doCompare(status.getLeftPosition(), status.getRightPosition());
       switch (comparison) {
@@ -108,7 +110,9 @@ public abstract class JoinTemplate implements JoinWorker {
       case -1:
         // left key < right key
         if (((MergeJoinPOP)status.outputBatch.getPopConfig()).getJoinType() == Join.JoinType.LEFT)
-          doCopyLeft(status.getLeftPosition(), status.fetchAndIncOutputPos());
+          if (!doCopyLeft(status.getLeftPosition(), status.fetchAndIncOutputPos())) {
+            return false;
+          }
         status.advanceLeft();
         continue;
 
@@ -133,10 +137,10 @@ public abstract class JoinTemplate implements JoinWorker {
         do {
           // copy all equal right keys to the output record batch
           if (!doCopyLeft(status.getLeftPosition(), status.getOutPosition()))
-            return;
+            return false;
 
           if (!doCopyRight(status.getRightPosition(), status.fetchAndIncOutputPos()))
-            return;
+            return false;
           
           // If the left key has duplicates and we're about to cross a boundary in the right batch, add the
           // right table's record batch to the sv4 builder before calling next.  These records will need to be
@@ -167,7 +171,7 @@ public abstract class JoinTemplate implements JoinWorker {
             status.ok = false;
           }
           // return to indicate recompile in right-sv4 mode
-          return;
+          return true;
         }
 
         continue;
@@ -193,8 +197,8 @@ public abstract class JoinTemplate implements JoinWorker {
   /**
    * Copy the data to the new record batch (if it fits).
    *
-   * @param leftPosition  position of batch (lower 16 bits) and record (upper 16 bits) in left SV4
-   * @param outputPosition position of the output record batch
+   * @param leftIndex  position of batch (lower 16 bits) and record (upper 16 bits) in left SV4
+   * @param outIndex position of the output record batch
    * @return Whether or not the data was copied.
    */
   public abstract boolean doCopyLeft(@Named("leftIndex") int leftIndex, @Named("outIndex") int outIndex);
@@ -205,8 +209,8 @@ public abstract class JoinTemplate implements JoinWorker {
    * Compare the values of the left and right join key to determine whether the left is less than, greater than
    * or equal to the right.
    *
-   * @param leftPosition
-   * @param rightPosition
+   * @param leftIndex
+   * @param rightIndex
    * @return  0 if both keys are equal
    *         -1 if left is < right
    *          1 if left is > right

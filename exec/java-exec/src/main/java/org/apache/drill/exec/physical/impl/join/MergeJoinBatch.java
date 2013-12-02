@@ -166,7 +166,8 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
       }
 
       // join until we have a complete outgoing batch
-      worker.doJoin(status);
+      if (!worker.doJoin(status))
+        worker = null;
 
       // get the outcome of the join.
       switch(status.getOutcome()){
@@ -353,10 +354,12 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
       JVar vvOut = cg.declareVectorValueSetupAndMember("outgoing",
                                                        new TypedFieldId(vw.getField().getType(),vectorId));
       // todo: check result of copyFromSafe and grow allocation
-      cg.getEvalBlock().add(vvOut.invoke("copyFromSafe")
+      cg.getEvalBlock()._if(vvOut.invoke("copyFromSafe")
                                    .arg(COPY_LEFT_MAPPING.getValueReadIndex())
                                    .arg(COPY_LEFT_MAPPING.getValueWriteIndex())
-                                   .arg(vvIn));
+                                   .arg(vvIn).eq(JExpr.FALSE))
+          ._then()
+          ._return(JExpr.FALSE);
       ++vectorId;
     }
     cg.getEvalBlock()._return(JExpr.lit(true));
@@ -372,10 +375,12 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
       JVar vvOut = cg.declareVectorValueSetupAndMember("outgoing",
                                                        new TypedFieldId(vw.getField().getType(),vectorId));
       // todo: check result of copyFromSafe and grow allocation
-      cg.getEvalBlock().add(vvOut.invoke("copyFromSafe")
-          .arg(COPY_RIGHT_MAPPING.getValueReadIndex())
-          .arg(COPY_RIGHT_MAPPING.getValueWriteIndex())
-          .arg(vvIn));
+      cg.getEvalBlock()._if(vvOut.invoke("copyFromSafe")
+                                 .arg(COPY_RIGHT_MAPPING.getValueReadIndex())
+                                 .arg(COPY_RIGHT_MAPPING.getValueWriteIndex())
+                                 .arg(vvIn).eq(JExpr.FALSE))
+          ._then()
+          ._return(JExpr.FALSE);
       ++vectorId;
     }
     cg.getEvalBlock()._return(JExpr.lit(true));
@@ -388,7 +393,6 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
   private void allocateBatch() {
     // allocate new batch space.
     container.clear();
-
     // add fields from both batches
     for (VectorWrapper<?> w : left) {
       ValueVector outgoingVector = TypeHelper.getNewVector(w.getField(), context.getAllocator());
