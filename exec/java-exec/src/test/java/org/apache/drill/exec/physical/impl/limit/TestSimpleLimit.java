@@ -38,8 +38,11 @@ import org.apache.drill.exec.physical.impl.SimpleRootExec;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.proto.ExecProtos;
+import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.rpc.user.UserServer;
 import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.exec.vector.BigIntVector;
+import org.apache.drill.exec.vector.ValueVector;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -79,6 +82,13 @@ public class TestSimpleLimit {
     }};
 
     verifyLimitCount(bitContext, connection, "test2.json", 69999);
+    long start = 30000;
+    long end = 100000;
+    long expectedSum = (end - start) * (end + start - 1) / 2; //Formula for sum of series
+   
+    verifySum(bitContext, connection, "test4.json", 70000, expectedSum);
+    
+
   }
 
   private void verifyLimitCount(DrillbitContext bitContext, UserServer.UserClientConnection connection, String testPlan, int expectedCount) throws Throwable {
@@ -93,6 +103,31 @@ public class TestSimpleLimit {
     }
 
     assertEquals(expectedCount, recordCount);
+
+    if(context.getFailureCause() != null){
+      throw context.getFailureCause();
+    }
+    assertTrue(!context.isFailed());
+  }
+
+  private void verifySum(DrillbitContext bitContext, UserServer.UserClientConnection connection, String testPlan, int expectedCount, long expectedSum) throws Throwable {
+    PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
+    PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/limit/" + testPlan), Charsets.UTF_8));
+    FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
+    FragmentContext context = new FragmentContext(bitContext, ExecProtos.FragmentHandle.getDefaultInstance(), connection, null, registry);
+    SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
+    int recordCount = 0;
+    long sum = 0;
+    while(exec.next()){
+      recordCount += exec.getRecordCount();
+      BigIntVector v = (BigIntVector) exec.iterator().next();
+      for (int i = 0; i < v.getAccessor().getValueCount(); i++) {
+        sum += v.getAccessor().get(i);
+      }
+    }
+
+    assertEquals(expectedCount, recordCount);
+    assertEquals(expectedSum, sum);
 
     if(context.getFailureCause() != null){
       throw context.getFailureCause();

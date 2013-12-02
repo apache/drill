@@ -36,6 +36,7 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
   private int recordsLeft;
   private boolean noEndLimit;
   private boolean skipBatch;
+  List<TransferPair> transfers = Lists.newArrayList();
 
   public LimitRecordBatch(Limit popConfig, FragmentContext context, RecordBatch incoming) {
     super(popConfig, context, incoming);
@@ -52,7 +53,6 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
   protected void setupNewSchema() throws SchemaChangeException {
     container.clear();
 
-    List<TransferPair> transfers = Lists.newArrayList();
 
     for(VectorWrapper<?> v : incoming){
       TransferPair pair = v.getValueVector().getTransferPair();
@@ -74,9 +74,6 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
 
     container.buildSchema(BatchSchema.SelectionVectorMode.TWO_BYTE);
 
-    for(TransferPair tp : transfers) {
-      tp.transfer();
-    }
   }
 
   @Override
@@ -96,6 +93,9 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
 
   @Override
   protected void doWork() {
+    for(TransferPair tp : transfers) {
+      tp.transfer();
+    }
     skipBatch = false;
     int recordCount = incoming.getRecordCount();
     if(recordCount <= recordsToSkip) {
