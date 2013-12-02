@@ -17,9 +17,19 @@
  */
 package org.apache.drill.common.exceptions;
 
+import java.lang.reflect.InvocationTargetException;
+
 
 public class ExecutionSetupException extends DrillException{
+  private static final long serialVersionUID = -6943409010231014085L;
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExecutionSetupException.class);
+
+  public static ExecutionSetupException fromThrowable(String message, Throwable cause) {
+    Throwable t = cause instanceof InvocationTargetException 
+        ? ((InvocationTargetException)cause).getTargetException() : cause;
+    if(t instanceof ExecutionSetupException) return ((ExecutionSetupException) t);
+    return new ExecutionSetupException(message, t);
+  }
   
   public ExecutionSetupException() {
     super();

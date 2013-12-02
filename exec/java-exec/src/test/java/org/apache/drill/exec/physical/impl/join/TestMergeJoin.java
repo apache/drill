@@ -33,6 +33,7 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.FragmentRoot;
+import org.apache.drill.exec.physical.impl.OperatorCreatorRegistry;
 import org.apache.drill.exec.physical.impl.ImplCreator;
 import org.apache.drill.exec.physical.impl.SimpleRootExec;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
@@ -63,6 +64,7 @@ public class TestMergeJoin {
     new NonStrictExpectations(){{
       bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = BufferAllocator.getAllocator(c);
+      bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
     }};
 
     PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
@@ -112,6 +114,7 @@ public class TestMergeJoin {
       bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = BufferAllocator.getAllocator(c);
       bitContext.getConfig(); result = c;
+      bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
     }};
 
     PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(),CoordinationProtos.DrillbitEndpoint.getDefaultInstance(), new StorageEngineRegistry(bitContext));
@@ -164,6 +167,7 @@ public class TestMergeJoin {
       bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = BufferAllocator.getAllocator(c);
       bitContext.getConfig(); result = c;
+      bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
     }};
 
     PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(),CoordinationProtos.DrillbitEndpoint.getDefaultInstance(), new StorageEngineRegistry(bitContext));
@@ -216,6 +220,7 @@ public class TestMergeJoin {
       bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = BufferAllocator.getAllocator(c);
       bitContext.getConfig(); result = c;
+      bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
     }};
 
     PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(),CoordinationProtos.DrillbitEndpoint.getDefaultInstance(), new StorageEngineRegistry(bitContext));

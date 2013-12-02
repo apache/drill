@@ -18,7 +18,6 @@
 package org.apache.drill.exec.physical.impl.trace;
 
 import static org.junit.Assert.*;
-
 import mockit.Injectable;
 import mockit.NonStrictExpectations;
 
@@ -31,6 +30,7 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.FragmentRoot;
+import org.apache.drill.exec.physical.impl.OperatorCreatorRegistry;
 import org.apache.drill.exec.physical.impl.ImplCreator;
 import org.apache.drill.exec.physical.impl.SimpleRootExec;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
@@ -40,7 +40,6 @@ import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
 import org.apache.drill.exec.server.DrillbitContext;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -79,6 +78,7 @@ public class TestTraceOutputDump {
             bitContext.getMetrics(); result = new MetricRegistry();
             bitContext.getAllocator(); result = BufferAllocator.getAllocator(c);
             bitContext.getConfig(); result = c;
+            bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
         }};
 
         PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());

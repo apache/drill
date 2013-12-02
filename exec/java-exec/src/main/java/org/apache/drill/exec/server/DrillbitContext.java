@@ -24,21 +24,18 @@ import java.util.Collection;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.StorageEngineConfig;
-import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.cache.DistributedCache;
 import org.apache.drill.exec.coord.ClusterCoordinator;
-import org.apache.drill.exec.exception.SetupException;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.physical.impl.OperatorCreatorRegistry;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
-import org.apache.drill.exec.rpc.NamedThreadFactory;
 import org.apache.drill.exec.rpc.bit.BitCom;
 import org.apache.drill.exec.store.StorageEngine;
-
-import com.google.common.base.Preconditions;
-import com.codahale.metrics.MetricRegistry;
-
 import org.apache.drill.exec.store.StorageEngineRegistry;
+
+import com.codahale.metrics.MetricRegistry;
+import com.google.common.base.Preconditions;
 
 public class DrillbitContext {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillbitContext.class);
@@ -51,6 +48,7 @@ public class DrillbitContext {
   private final DistributedCache cache;
   private final DrillbitEndpoint endpoint;
   private final StorageEngineRegistry storageEngineRegistry;
+  private final OperatorCreatorRegistry operatorCreatorRegistry;
   
   public DrillbitContext(DrillbitEndpoint endpoint, BootStrapContext context, ClusterCoordinator coord, BitCom com, DistributedCache cache) {
     super();
@@ -65,6 +63,7 @@ public class DrillbitContext {
     this.endpoint = endpoint;
     this.storageEngineRegistry = new StorageEngineRegistry(this);
     this.reader = new PhysicalPlanReader(context.getConfig(), context.getConfig().getMapper(), endpoint, storageEngineRegistry);
+    this.operatorCreatorRegistry = new OperatorCreatorRegistry(context.getConfig());
   }
   
   public DrillbitEndpoint getEndpoint(){
@@ -82,7 +81,11 @@ public class DrillbitContext {
   public BufferAllocator getAllocator(){
     return context.getAllocator();
   }
-  
+
+  public OperatorCreatorRegistry getOperatorCreatorRegistry() {
+    return operatorCreatorRegistry;
+  }
+
   public StorageEngine getStorageEngine(StorageEngineConfig config) throws ExecutionSetupException {
     return storageEngineRegistry.getEngine(config);
   }
