@@ -28,12 +28,11 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.StorageEngineConfig;
 import org.apache.drill.common.util.PathScanner;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.exception.SetupException;
 import org.apache.drill.exec.server.DrillbitContext;
 
 public class StorageEngineRegistry {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StorageEngineRegistry.class);
-  
+
   private Map<Object, Constructor<? extends StorageEngine>> availableEngines = new HashMap<Object, Constructor<? extends StorageEngine>>();
   private Map<StorageEngineConfig, StorageEngine> activeEngines = new HashMap<StorageEngineConfig, StorageEngine>();
 
@@ -42,7 +41,7 @@ public class StorageEngineRegistry {
     init(context.getConfig());
     this.context = context;
   }
-  
+
   @SuppressWarnings("unchecked")
   public void init(DrillConfig config){
     Collection<Class<? extends StorageEngine>> engines = PathScanner.scanForImplementations(StorageEngine.class, config.getStringList(ExecConstants.STORAGE_ENGINE_SCAN_PACKAGES));
@@ -63,21 +62,23 @@ public class StorageEngineRegistry {
       }
     }
   }
-  
-  public StorageEngine getEngine(StorageEngineConfig engineConfig) throws ExecutionSetupException{
+
+  public synchronized StorageEngine getEngine(StorageEngineConfig engineConfig) throws ExecutionSetupException{
     StorageEngine engine = activeEngines.get(engineConfig);
     if(engine != null) return engine;
     Constructor<? extends StorageEngine> c = availableEngines.get(engineConfig.getClass());
     if(c == null) throw new ExecutionSetupException(String.format("Failure finding StorageEngine constructor for config %s", engineConfig));
     try {
-      return c.newInstance(engineConfig, context);
+      engine = c.newInstance(engineConfig, context);
+      activeEngines.put(engineConfig, engine);
+      return engine;
     } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
       Throwable t = e instanceof InvocationTargetException ? ((InvocationTargetException)e).getTargetException() : e;
       if(t instanceof ExecutionSetupException) throw ((ExecutionSetupException) t);
       throw new ExecutionSetupException(String.format("Failure setting up new storage engine configuration for config %s", engineConfig), t);
     }
   }
-  
 
-  
+
+
 }
