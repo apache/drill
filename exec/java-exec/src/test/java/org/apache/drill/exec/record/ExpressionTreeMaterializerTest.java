@@ -26,6 +26,7 @@ import java.util.List;
 import mockit.Injectable;
 import mockit.NonStrictExpectations;
 
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.ArgumentValidator;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
@@ -43,6 +44,7 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
+import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.proto.SchemaDefProtos.FieldDef;
 import org.apache.drill.exec.proto.SchemaDefProtos.NamePart;
 import org.junit.Test;
@@ -58,6 +60,9 @@ public class ExpressionTreeMaterializerTest {
   final MajorType bigIntType = MajorType.newBuilder().setMode(DataMode.REQUIRED).setMinorType(MinorType.BIGINT).build();
   final MajorType intType = MajorType.newBuilder().setMode(DataMode.REQUIRED).setMinorType(MinorType.INT).build();
 
+  DrillConfig c = DrillConfig.create();
+  FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
+      
   private MaterializedField getField(int fieldId, String name, MajorType type) {
     return new MaterializedField(FieldDef.newBuilder().setMajorType(type).addName(NamePart.newBuilder().setName(name))
         .build());
@@ -68,7 +73,7 @@ public class ExpressionTreeMaterializerTest {
 
     ErrorCollector ec = new ErrorCollectorImpl();
     LogicalExpression expr = ExpressionTreeMaterializer.materialize(new ValueExpressions.LongExpression(1L,
-        ExpressionPosition.UNKNOWN), batch, ec);
+        ExpressionPosition.UNKNOWN), batch, ec, registry);
     assertTrue(expr instanceof ValueExpressions.LongExpression);
     assertEquals(1L, ValueExpressions.LongExpression.class.cast(expr).getLong());
     assertFalse(ec.hasErrors());
@@ -89,7 +94,7 @@ public class ExpressionTreeMaterializerTest {
 
     ErrorCollector ec = new ErrorCollectorImpl();
     LogicalExpression expr = ExpressionTreeMaterializer.materialize(new FieldReference("test",
-        ExpressionPosition.UNKNOWN), batch, ec);
+        ExpressionPosition.UNKNOWN), batch, ec, registry);
     assertEquals(bigIntType, expr.getMajorType());
     assertFalse(ec.hasErrors());
   }
@@ -121,7 +126,7 @@ public class ExpressionTreeMaterializerTest {
                     .setElse(new ValueExpressions.LongExpression(1L, ExpressionPosition.UNKNOWN)).build()) //
         ) //
         .setElse(new ValueExpressions.LongExpression(1L, ExpressionPosition.UNKNOWN)).build();
-    LogicalExpression newExpr = ExpressionTreeMaterializer.materialize(expr, batch, ec);
+    LogicalExpression newExpr = ExpressionTreeMaterializer.materialize(expr, batch, ec, registry);
     assertTrue(newExpr instanceof IfExpression);
     IfExpression newIfExpr = (IfExpression) newExpr;
     assertEquals(1, newIfExpr.conditions.size());
@@ -216,7 +221,7 @@ public class ExpressionTreeMaterializerTest {
           }
         }, OutputTypeDeterminer.FIXED_BIT), ImmutableList.of((LogicalExpression) // 
             new FieldReference("test", ExpressionPosition.UNKNOWN) ), ExpressionPosition.UNKNOWN);
-    LogicalExpression newExpr = ExpressionTreeMaterializer.materialize(functionCallExpr, batch, ec);
+    LogicalExpression newExpr = ExpressionTreeMaterializer.materialize(functionCallExpr, batch, ec, registry);
     assertTrue(newExpr instanceof FunctionCall);
     FunctionCall funcExpr = (FunctionCall) newExpr;
     assertEquals(1, funcExpr.args.size());

@@ -444,7 +444,8 @@ public class MergingRecordBatch implements RecordBatch {
         cg.getSetupBlock().assign(incomingVar, JExpr.direct("incomingBatches[" + batchIdx + "]"));
         LogicalExpression exprForCurrentBatch = ExpressionTreeMaterializer.materialize(orderings.get(i).getExpr(),
                                                                                        batch,
-                                                                                       collector);
+                                                                                       collector,
+                                                                                       context.getFunctionRegistry());
         if (collector.hasErrors()) {
           throw new SchemaChangeException(
               String.format("Failure while trying to materialize incoming schema.  Errors:\n %s.",

@@ -76,7 +76,6 @@ public abstract class DrillFuncHolder {
     return imports;
   }
 
-  
   public JVar[] renderStart(CodeGenerator<?> g, HoldingContainer[] inputVariables){
     return declareWorkspaceVariables(g);
   };
@@ -152,51 +151,18 @@ public abstract class DrillFuncHolder {
     
     return true;
   }
+  	    
+  public MajorType getParmMajorType(int i) {
+    return this.parameters[i].type;
+  }
   
+  public int getParmSize(){
+    return this.parameters.length;
+  }
   
-  public int getCost(FunctionCall call){
-	  	int cost = 0;	  
-	    
-	    if(call.args.size() != parameters.length){
-	    	return -1;
-	    }
-	    for(int i =0; i < parameters.length; i++){
-	    	ValueReference param = parameters[i];
-	    	LogicalExpression callarg = call.args.get(i);	    	
-	    	
-	    	Integer paramval = ResolverTypePrecedence.precedenceMap.get(param.type.getMinorType().name());
-	    	Integer callval = null;
-	    	
-	    	if(!TypeCastRules.isCastable(param.type.getMinorType(), callarg.getMajorType().getMinorType())){
-	    		return -1;
-	    	}
-	    	
-	    	/** Allow NULL Expression/Arguments in casting **/
-	    	if(callarg == null || callarg instanceof NullExpression)
-	    	{
-	    		callval = ResolverTypePrecedence.precedenceMap.get(ExecConstants.NULL_EXPRESSION);
-	    	}
-	    	else
-	    	{
-	    		callval = ResolverTypePrecedence.precedenceMap.get(callarg.getMajorType().getMinorType().name());
-	    	}
-	    	
-	    	if(paramval==null || callval==null){
-	    		// TODO: Throw exception, Compatibility precedence not defined
-	    		return -1;
-	    	}
-	    	
-	    	if(paramval - callval<0){
-	    		return -1;
-	    	}	    	
-	    	
-			cost += paramval - callval;
-			    
-	    }	    
-	    return cost;
-	  }
-	  
-  
+  public NullHandling getNullHandling() {
+    return this.nullHandling ;
+  }
   
   private boolean softCompare(MajorType a, MajorType b){
     return Types.softEquals(a, b, nullHandling == NullHandling.NULL_IF_NULL);
@@ -220,6 +186,7 @@ public abstract class DrillFuncHolder {
     public String toString() {
       return "ValueReference [type=" + type + ", name=" + name + "]";
     }
+    
   }
 
   

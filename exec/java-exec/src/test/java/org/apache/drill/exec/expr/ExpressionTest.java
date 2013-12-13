@@ -50,6 +50,9 @@ import org.junit.Test;
 
 public class ExpressionTest {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExpressionTest.class);
+  
+  DrillConfig c = DrillConfig.create();
+  FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
 
   @Test
   public void testBasicExpression(@Injectable RecordBatch batch) throws Exception {
@@ -105,7 +108,7 @@ public class ExpressionTest {
   private String getExpressionCode(String expression, RecordBatch batch) throws Exception {
     LogicalExpression expr = parseExpr(expression);
     ErrorCollector error = new ErrorCollectorImpl();
-    LogicalExpression materializedExpr = ExpressionTreeMaterializer.materialize(expr, batch, error);
+    LogicalExpression materializedExpr = ExpressionTreeMaterializer.materialize(expr, batch, error, registry);
     if (error.getErrorCount() != 0) {
       logger.error("Failure while materializing expression [{}].  Errors: {}", expression, error);
       assertEquals(0, error.getErrorCount());

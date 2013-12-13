@@ -52,19 +52,16 @@ public class FunctionImplementationRegistry {
     }
   }
   
+  public ArrayListMultimap<String, DrillFuncHolder> getMethods() {
+    return this.methods;
+  }
   
-  public DrillFuncHolder getFunction(FunctionCall call){
-	  
-	  
-	FunctionResolver resolver = FunctionResolverFactory.getResolver(call);	  
-	DrillFuncHolder matchedFuncHolder = resolver.getBestMatch(methods.get(call.getDefinition().getName()), call); 
-	
-	
-	if(null != matchedFuncHolder){
-	   return matchedFuncHolder;
-	} 
-    
-    
+  public DrillFuncHolder getFunction(FunctionCall call){	  
+    for(DrillFuncHolder h : methods.get(call.getDefinition().getName())){
+      if(h.matches(call)){
+        return h;
+      }
+    }
     
     List<MajorType> types = Lists.newArrayList();
     for(LogicalExpression e : call.args){

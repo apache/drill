@@ -25,6 +25,7 @@ import org.apache.drill.common.expression.IfExpression;
 import org.apache.drill.common.expression.IfExpression.IfCondition;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.expression.TypedNullConstant;
 import org.apache.drill.common.expression.ValueExpressions.BooleanExpression;
 import org.apache.drill.common.expression.ValueExpressions.DoubleExpression;
 import org.apache.drill.common.expression.ValueExpressions.LongExpression;
@@ -175,7 +176,9 @@ public class EvaluationVisitor {
         return ((HoldingContainerExpression) e).getContainer();
       }else if(e instanceof NullExpression){
         return generator.declare(Types.optional(MinorType.INT));
-      } else {
+      } else if (e instanceof TypedNullConstant) {
+        return generator.declare(e.getMajorType());
+      }    else {
         return super.visitUnknown(e, generator);
       }
 

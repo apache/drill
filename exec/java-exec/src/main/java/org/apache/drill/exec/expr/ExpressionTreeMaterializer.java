@@ -20,18 +20,18 @@ package org.apache.drill.exec.expr;
 import java.util.List;
 
 import org.apache.drill.common.expression.ErrorCollector;
-import org.apache.drill.common.expression.ExpressionValidator;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.IfExpression;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.expression.visitors.SimpleExprVisitor;
+import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.record.NullExpression;
-import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TypedFieldId;
 
 import com.google.common.collect.Lists;
+
 import org.apache.drill.exec.record.VectorAccessible;
 
 public class ExpressionTreeMaterializer {
@@ -43,23 +43,16 @@ public class ExpressionTreeMaterializer {
   private ExpressionTreeMaterializer() {
   };
 
-  public static LogicalExpression materialize(LogicalExpression expr, VectorAccessible batch, ErrorCollector errorCollector) {
-    return expr.accept(new MaterializeVisitor(batch, errorCollector), null);
+  public static LogicalExpression materialize(LogicalExpression expr, VectorAccessible batch, ErrorCollector errorCollector, FunctionImplementationRegistry registry) {
+    LogicalExpression materializedExpr = expr.accept(new MaterializeVisitor(batch, errorCollector), null);
+    return ImplicitCastBuilder.injectImplicitCast(materializedExpr, errorCollector, registry);
   }
 
   private static class MaterializeVisitor extends SimpleExprVisitor<LogicalExpression> {
-    private final ErrorCollector errorCollector;
     private final VectorAccessible batch;
-    private ExpressionValidator validator = new ExpressionValidator();
 
     public MaterializeVisitor(VectorAccessible batch, ErrorCollector errorCollector) {
       this.batch = batch;
-      this.errorCollector = errorCollector;
-    }
-
-    private LogicalExpression validateNewExpr(LogicalExpression newExpr) {
-      newExpr.accept(validator, errorCollector);
-      return newExpr;
     }
 
     @Override
@@ -75,7 +68,7 @@ public class ExpressionTreeMaterializer {
         args.add(newExpr);
       }
 
-      return validateNewExpr(new FunctionCall(call.getDefinition(), args, call.getPosition()));
+      return new FunctionCall(call.getDefinition(), args, call.getPosition());
     }
 
     @Override
@@ -91,7 +84,7 @@ public class ExpressionTreeMaterializer {
         conditions.set(i, new IfExpression.IfCondition(newCondition, newExpr));
       }
 
-      return validateNewExpr(IfExpression.newBuilder().setElse(newElseExpr).addConditions(conditions).build());
+      return IfExpression.newBuilder().setElse(newElseExpr).addConditions(conditions).build();
     }
 
     @Override

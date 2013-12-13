@@ -90,7 +90,6 @@
   <build>
 
     <plugins>
-      <!--
       <plugin>
         <groupId>org.apache.rat</groupId>
         <artifactId>apache-rat-plugin</artifactId>
@@ -119,8 +118,7 @@
           </excludes>
         </configuration>
       </plugin>
-      -->
-      
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
@@ -187,13 +185,11 @@
     <pluginManagement>
 
       <plugins>
-	<!--
         <plugin>
           <groupId>org.apache.rat</groupId>
           <artifactId>apache-rat-plugin</artifactId>
           <version>0.10</version>
         </plugin>
-	-->
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-resources-plugin</artifactId>
@@ -304,7 +300,6 @@
                     <ignore />
                   </action>
                 </pluginExecution>
-		<!--
                 <pluginExecution>
                   <pluginExecutionFilter>
                     <groupId>org.apache.rat</groupId>
@@ -318,7 +313,6 @@
                     <ignore/>
                   </action>
                 </pluginExecution>
-		-->
               </pluginExecutions>
             </lifecycleMappingMetadata>
           </configuration>
@@ -576,9 +570,7 @@
       <id>mapr</id>
       <properties>
         <alt-hadoop>mapr</alt-hadoop>
-	<!--
         <rat.excludeSubprojects>false</rat.excludeSubprojects>
-	-->
       </properties>
       <dependencyManagement>
         <dependencies>

@@ -110,11 +110,11 @@ public class ArgumentValidators {
   public static class ComparableArguments extends PredicateValidator {
 
     public ComparableArguments(int argCount, MajorType... allowedTypes) {
-      super(argCount, new ComparableChecker(), true);
+      super(argCount, new ComparableChecker(), false);
     }
 
     public ComparableArguments(int minArguments, int maxArguments, MajorType... allowedTypes) {
-      super(minArguments, maxArguments, new ComparableChecker(), true);
+      super(minArguments, maxArguments, new ComparableChecker(), false);
     }
 
     public static class ComparableChecker implements Predicate<MajorType> {

@@ -247,12 +247,12 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
     JVar incomingRecordBatch = cg.clazz.field(JMod.NONE, recordBatchClass, "incoming");
 
     // materialize value vector readers from join expression
-    final LogicalExpression materializedLeftExpr = ExpressionTreeMaterializer.materialize(leftFieldExpr, left, collector);
+    final LogicalExpression materializedLeftExpr = ExpressionTreeMaterializer.materialize(leftFieldExpr, left, collector, context.getFunctionRegistry());
     if (collector.hasErrors())
       throw new ClassTransformationException(String.format(
           "Failure while trying to materialize incoming left field.  Errors:\n %s.", collector.toErrorString()));
 
-    final LogicalExpression materializedRightExpr = ExpressionTreeMaterializer.materialize(rightFieldExpr, right, collector);
+    final LogicalExpression materializedRightExpr = ExpressionTreeMaterializer.materialize(rightFieldExpr, right, collector, context.getFunctionRegistry());
     if (collector.hasErrors())
       throw new ClassTransformationException(String.format(
           "Failure while trying to materialize incoming right field.  Errors:\n %s.", collector.toErrorString()));

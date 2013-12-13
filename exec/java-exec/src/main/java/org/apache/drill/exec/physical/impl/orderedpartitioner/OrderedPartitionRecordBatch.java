@@ -266,7 +266,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
 
     int i = 0;
     for(OrderDef od : orderings) {
-      final LogicalExpression expr = ExpressionTreeMaterializer.materialize(od.getExpr(), incoming, collector);
+      final LogicalExpression expr = ExpressionTreeMaterializer.materialize(od.getExpr(), incoming, collector, context.getFunctionRegistry());
       SchemaPath schemaPath = new SchemaPath("f" + i++, ExpressionPosition.UNKNOWN);
       TypeProtos.MajorType.Builder builder = TypeProtos.MajorType.newBuilder().mergeFrom(expr.getMajorType()).clearMode().setMode(TypeProtos.DataMode.REQUIRED);
       TypeProtos.MajorType newType = builder.build();
@@ -426,7 +426,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
 
     int count = 0;
     for(OrderDef od : popConfig.getOrderings()){
-      final LogicalExpression expr = ExpressionTreeMaterializer.materialize(od.getExpr(), batch, collector);
+      final LogicalExpression expr = ExpressionTreeMaterializer.materialize(od.getExpr(), batch, collector, context.getFunctionRegistry());
       if(collector.hasErrors()) throw new SchemaChangeException("Failure while materializing expression. " + collector.toErrorString());
       cg.setMappingSet(incomingMapping);
       CodeGenerator.HoldingContainer left = cg.addExpr(expr, false);

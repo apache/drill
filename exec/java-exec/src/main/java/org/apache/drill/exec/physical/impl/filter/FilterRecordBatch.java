@@ -116,7 +116,7 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
     final List<VectorAllocator> allocators = Lists.newArrayList();
     final CodeGenerator<Filterer> cg = new CodeGenerator<Filterer>(Filterer.TEMPLATE_DEFINITION4, context.getFunctionRegistry());
 
-    final LogicalExpression expr = ExpressionTreeMaterializer.materialize(popConfig.getExpr(), incoming, collector);
+    final LogicalExpression expr = ExpressionTreeMaterializer.materialize(popConfig.getExpr(), incoming, collector, context.getFunctionRegistry());
     if(collector.hasErrors()){
       throw new SchemaChangeException(String.format("Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));
     }
@@ -156,7 +156,7 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
     final List<TransferPair> transfers = Lists.newArrayList();
     final CodeGenerator<Filterer> cg = new CodeGenerator<Filterer>(Filterer.TEMPLATE_DEFINITION2, context.getFunctionRegistry());
 
-    final LogicalExpression expr = ExpressionTreeMaterializer.materialize(popConfig.getExpr(), incoming, collector);
+    final LogicalExpression expr = ExpressionTreeMaterializer.materialize(popConfig.getExpr(), incoming, collector, context.getFunctionRegistry());
     if(collector.hasErrors()){
       throw new SchemaChangeException(String.format("Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));
     }

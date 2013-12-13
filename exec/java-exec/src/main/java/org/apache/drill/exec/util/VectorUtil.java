@@ -49,7 +49,11 @@ public class VectorUtil {
       }
       for (VectorWrapper vw : va) {
         Object o = vw.getValueVector().getAccessor().getObject(row);
-        if (o instanceof byte[]) {
+        if (o == null) {
+          //null value
+          System.out.printf("| %-15s", "");
+        }
+        else if (o instanceof byte[]) {
           String value = new String((byte[]) o);
           System.out.printf("| %-15s",value.length() <= 15 ? value : value.substring(0, 14));
         } else {
