@@ -19,18 +19,21 @@ package org.apache.drill.exec.record;
 
 import io.netty.buffer.ByteBuf;
 
-import org.apache.drill.exec.proto.ExecProtos.FragmentRecordBatch;
+import org.apache.drill.exec.proto.BitData.FragmentRecordBatch;
+import org.apache.drill.exec.rpc.RemoteConnection;
 
 public class RawFragmentBatch {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RawFragmentBatch.class);
 
+  final RemoteConnection connection;
   final FragmentRecordBatch header;
   final ByteBuf body;
 
-  public RawFragmentBatch(FragmentRecordBatch header, ByteBuf body) {
+  public RawFragmentBatch(RemoteConnection connection, FragmentRecordBatch header, ByteBuf body) {
     super();
     this.header = header;
     this.body = body;
+    this.connection = connection;
     if(body != null) body.retain();
   }
 
@@ -51,4 +54,9 @@ public class RawFragmentBatch {
     if(body != null) body.release();
   }
 
+  public RemoteConnection getConnection() {
+    return connection;
+  }
+
+  
 }

@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.rpc;
 
-import org.apache.drill.exec.proto.ExecProtos.RpcType;
-
 import io.netty.buffer.ByteBuf;
 
 import com.google.protobuf.Internal.EnumLite;

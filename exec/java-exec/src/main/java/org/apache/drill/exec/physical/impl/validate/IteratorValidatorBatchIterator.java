@@ -113,4 +113,9 @@ public class IteratorValidatorBatchIterator implements RecordBatch{
     validateReadState();
     return incoming.getWritableBatch();
   }
+
+  @Override
+  public void cleanup() {
+    incoming.cleanup();
+  }
 }

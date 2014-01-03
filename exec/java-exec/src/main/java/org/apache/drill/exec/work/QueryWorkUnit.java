@@ -20,8 +20,7 @@ package org.apache.drill.exec.work;
 import java.util.List;
 
 import org.apache.drill.exec.physical.base.FragmentRoot;
-import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.proto.ExecProtos.PlanFragment;
+import org.apache.drill.exec.proto.BitControl.PlanFragment;
 
 import com.google.common.base.Preconditions;
 

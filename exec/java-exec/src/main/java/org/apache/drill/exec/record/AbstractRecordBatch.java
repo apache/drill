@@ -59,16 +59,16 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
 
   @Override
   public void kill() {
-    container.zeroVectors();
     killIncoming();
     cleanup();
   }
   
   protected abstract void killIncoming();
   
-  protected void cleanup(){
+  public void cleanup(){
+    container.clear();
   }
-  
+ 
   @Override
   public SelectionVector2 getSelectionVector2() {
     throw new UnsupportedOperationException();
@@ -92,7 +92,10 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
   
   @Override
   public WritableBatch getWritableBatch() {
-    return WritableBatch.get(this);
+//    logger.debug("Getting writable batch.");
+    WritableBatch batch = WritableBatch.get(this);
+    return batch;
+    
   }
   
   

@@ -32,7 +32,6 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(VectorContainer.class);
 
   private final List<VectorWrapper<?>> wrappers = Lists.newArrayList();
-  private final List<VectorWrapper<?>> oldWrappers = Lists.newArrayList();
   private BatchSchema schema;
   private int recordCount = -1;
 
@@ -50,12 +49,16 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
   // }
 
   public void addHyperList(List<ValueVector> vectors) {
+    addHyperList(vectors, true);
+  }
+  
+  public void addHyperList(List<ValueVector> vectors, boolean releasable) {
     schema = null;
     ValueVector[] vv = new ValueVector[vectors.size()];
     for (int i = 0; i < vv.length; i++) {
       vv[i] = vectors.get(i);
     }
-    add(vv);
+    add(vv, releasable);
   }
 
   /**
@@ -95,6 +98,9 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
   }
 
   public void add(ValueVector[] hyperVector) {
+    
+  }
+  public void add(ValueVector[] hyperVector, boolean releasable) {
     assert hyperVector.length != 0;
     schema = null;
     Class<?> clazz = hyperVector[0].getClass();
@@ -103,7 +109,7 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
       c[i] = hyperVector[i];
     }
     // todo: work with a merged schema.
-    wrappers.add(HyperVectorWrapper.create(hyperVector[0].getField(), c));
+    wrappers.add(HyperVectorWrapper.create(hyperVector[0].getField(), c, releasable));
   }
 
   public void remove(ValueVector v) {
@@ -166,10 +172,7 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
   }
 
   public void clear() {
-    // TODO: figure out a better approach for this.
-    // we don't clear schema because we want empty batches to carry previous schema to avoid extra schema update for no
-    // data.  
-    // schema = null;
+    schema = null;
     zeroVectors();
     wrappers.clear();
   }

@@ -17,7 +17,10 @@
  */
 package org.apache.drill.exec.ops;
 
+import java.io.Closeable;
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.compile.ClassTransformer;
@@ -26,56 +29,57 @@ import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.metrics.SingleThreadNestedCounter;
-import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.proto.BitControl.FragmentStatus;
+import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
-import org.apache.drill.exec.proto.ExecProtos.FragmentStatus;
-import org.apache.drill.exec.rpc.bit.BitCom;
+import org.apache.drill.exec.rpc.control.ControlTunnel;
+import org.apache.drill.exec.rpc.data.DataTunnel;
 import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.work.FragmentRunner;
 import org.apache.drill.exec.work.batch.IncomingBuffers;
+import org.apache.drill.exec.work.fragment.FragmentExecutor;
 
+import com.beust.jcommander.internal.Lists;
+import com.beust.jcommander.internal.Maps;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 
 /**
- * Contextual objects required for execution of a particular fragment.  
+ * Contextual objects required for execution of a particular fragment.
  */
-public class FragmentContext {
+public class FragmentContext implements Closeable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FragmentContext.class);
 
-  private final static String METRIC_TIMER_FRAGMENT_TIME = MetricRegistry.name(FragmentRunner.class, "completionTimes");
-  private final static String METRIC_BATCHES_COMPLETED = MetricRegistry.name(FragmentRunner.class, "batchesCompleted");
-  private final static String METRIC_RECORDS_COMPLETED = MetricRegistry.name(FragmentRunner.class, "recordsCompleted");
-  private final static String METRIC_DATA_PROCESSED = MetricRegistry.name(FragmentRunner.class, "dataProcessed");
+
+  private Map<DrillbitEndpoint, DataTunnel> tunnels = Maps.newHashMap();
 
   private final DrillbitContext context;
-  public final SingleThreadNestedCounter batchesCompleted;
-  public final SingleThreadNestedCounter recordsCompleted;
-  public final SingleThreadNestedCounter dataProcessed;
-  public final Timer fragmentTime;
-  private final FragmentHandle handle;
   private final UserClientConnection connection;
-  private IncomingBuffers buffers;
-  private volatile Throwable failureCause;
-  private volatile boolean failed = false;
+  private final FragmentStats stats;
   private final FunctionImplementationRegistry funcRegistry;
   private final QueryClassLoader loader;
   private final ClassTransformer transformer;
-  
-  public FragmentContext(DrillbitContext dbContext, FragmentHandle handle, UserClientConnection connection, FunctionImplementationRegistry funcRegistry) {
+  private final BufferAllocator allocator;
+  private final PlanFragment fragment;
+  private List<Thread> daemonThreads = Lists.newLinkedList();
+  private IncomingBuffers buffers;
+
+  private volatile Throwable failureCause;
+  private volatile boolean failed = false;
+
+  public FragmentContext(DrillbitContext dbContext, PlanFragment fragment, UserClientConnection connection,
+      FunctionImplementationRegistry funcRegistry) throws OutOfMemoryException {
     this.loader = new QueryClassLoader(true);
     this.transformer = new ClassTransformer();
-    this.fragmentTime = dbContext.getMetrics().timer(METRIC_TIMER_FRAGMENT_TIME);
-    this.batchesCompleted = new SingleThreadNestedCounter(dbContext, METRIC_BATCHES_COMPLETED);
-    this.recordsCompleted = new SingleThreadNestedCounter(dbContext, METRIC_RECORDS_COMPLETED);
-    this.dataProcessed = new SingleThreadNestedCounter(dbContext, METRIC_DATA_PROCESSED);
+    this.stats = new FragmentStats(dbContext.getMetrics());
     this.context = dbContext;
     this.connection = connection;
-    this.handle = handle;
+    this.fragment = fragment;
     this.funcRegistry = funcRegistry;
+    this.allocator = context.getAllocator().getChildAllocator(fragment.getHandle(), fragment.getMemInitial(), fragment.getMemMax());
   }
 
   public void setBuffers(IncomingBuffers buffers) {
@@ -87,67 +91,110 @@ public class FragmentContext {
     failed = true;
     failureCause = cause;
   }
-  
-  public DrillbitContext getDrillbitContext(){
+
+  public DrillbitContext getDrillbitContext() {
     return context;
   }
 
-  public DrillbitEndpoint getIdentity(){
+  /**
+   * Get this node's identity.
+   * @return A DrillbitEndpoint object.
+   */
+  public DrillbitEndpoint getIdentity() {
     return context.getEndpoint();
   }
+
+  public FragmentStats getStats(){
+    return this.stats;
+  }
   
+  /**
+   * The FragmentHandle for this Fragment
+   * @return FragmentHandle
+   */
   public FragmentHandle getHandle() {
-    return handle;
+    return fragment.getHandle();
   }
 
-  public BufferAllocator getAllocator(){
-    // TODO: A local query allocator to ensure memory limits and accurately gauge memory usage.
-    return context.getAllocator();
+  /**
+   * Get this fragment's allocator.
+   * @return
+   */
+  public BufferAllocator getAllocator() {
+    return allocator;
   }
 
-  public <T> T getImplementationClass(CodeGenerator<T> cg) throws ClassTransformationException, IOException{
+  public <T> T getImplementationClass(CodeGenerator<T> cg) throws ClassTransformationException, IOException {
     long t1 = System.nanoTime();
-    T t= transformer.getImplementationClass(this.loader, cg.getDefinition(), cg.generate(), cg.getMaterializedClassName());
-    logger.debug("Compile time: {} millis.", (System.nanoTime() - t1)/1000/1000 );
+    T t = transformer.getImplementationClass(this.loader, cg.getDefinition(), cg.generate(),
+        cg.getMaterializedClassName());
+    logger.debug("Compile time: {} millis.", (System.nanoTime() - t1) / 1000 / 1000);
     return t;
-    
+
   }
-  
-  public void addMetricsToStatus(FragmentStatus.Builder stats){
-    stats.setBatchesCompleted(batchesCompleted.get());
-    stats.setDataProcessed(dataProcessed.get());
-    stats.setRecordsCompleted(recordsCompleted.get());
-  }
-  
+
+  /**
+   * Get the user connection associated with this fragment.  This return null unless this is a root fragment.
+   * @return The RPC connection to the query submitter.
+   */
   public UserClientConnection getConnection() {
     return connection;
   }
 
-  public BitCom getCommunicator(){
-    return context.getBitCom();
+  public ControlTunnel getControlTunnel(DrillbitEndpoint endpoint) {
+    return context.getController().getTunnel(endpoint);
   }
-  
-  public IncomingBuffers getBuffers(){
+
+  public DataTunnel getDataTunnel(DrillbitEndpoint endpoint, FragmentHandle remoteHandle) {
+    DataTunnel tunnel = tunnels.get(endpoint);
+    if (tunnel == null) {
+      tunnel = context.getDataConnectionsPool().getTunnel(endpoint, remoteHandle);
+      tunnels.put(endpoint, tunnel);
+    }
+    return tunnel;
+  }
+
+  /**
+   * Add a new thread to this fragment's context. This thread will likely run for the life of the fragment but should be
+   * terminated when the fragment completes. When the fragment completes, the threads will be interrupted.
+   * 
+   * @param runnable
+   */
+  public void addDaemonThread(Thread thread) {
+    daemonThreads.add(thread);
+    thread.start();
+    
+  }
+
+  public IncomingBuffers getBuffers() {
     return buffers;
   }
 
   public Throwable getFailureCause() {
     return failureCause;
   }
-  
-  public boolean isFailed(){
+
+  public boolean isFailed() {
     return failed;
   }
-  
-  public FunctionImplementationRegistry getFunctionRegistry(){
+
+  public FunctionImplementationRegistry getFunctionRegistry() {
     return funcRegistry;
   }
-  
-  public QueryClassLoader getClassLoader(){
+
+  public QueryClassLoader getClassLoader() {
     return loader;
   }
 
   public DrillConfig getConfig() {
-      return context.getConfig();
+    return context.getConfig();
+  }
+
+  @Override
+  public void close() {
+    for(Thread thread: daemonThreads){
+     thread.interrupt();
+    }
+    allocator.close();
   }
 }

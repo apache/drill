@@ -53,27 +53,37 @@ public final class CoordinationProtos {
      */
     int getUserPort();
 
-    // optional int32 bit_port = 3;
+    // optional int32 control_port = 3;
     /**
-     * <code>optional int32 bit_port = 3;</code>
+     * <code>optional int32 control_port = 3;</code>
      */
-    boolean hasBitPort();
+    boolean hasControlPort();
     /**
-     * <code>optional int32 bit_port = 3;</code>
+     * <code>optional int32 control_port = 3;</code>
      */
-    int getBitPort();
+    int getControlPort();
 
-    // optional .exec.Roles roles = 4;
+    // optional int32 data_port = 4;
     /**
-     * <code>optional .exec.Roles roles = 4;</code>
+     * <code>optional int32 data_port = 4;</code>
+     */
+    boolean hasDataPort();
+    /**
+     * <code>optional int32 data_port = 4;</code>
+     */
+    int getDataPort();
+
+    // optional .exec.Roles roles = 5;
+    /**
+     * <code>optional .exec.Roles roles = 5;</code>
      */
     boolean hasRoles();
     /**
-     * <code>optional .exec.Roles roles = 4;</code>
+     * <code>optional .exec.Roles roles = 5;</code>
      */
     org.apache.drill.exec.proto.CoordinationProtos.Roles getRoles();
     /**
-     * <code>optional .exec.Roles roles = 4;</code>
+     * <code>optional .exec.Roles roles = 5;</code>
      */
     org.apache.drill.exec.proto.CoordinationProtos.RolesOrBuilder getRolesOrBuilder();
   }
@@ -140,12 +150,17 @@ public final class CoordinationProtos {
             }
             case 24: {
               bitField0_ |= 0x00000004;
-              bitPort_ = input.readInt32();
+              controlPort_ = input.readInt32();
               break;
             }
-            case 34: {
+            case 32: {
+              bitField0_ |= 0x00000008;
+              dataPort_ = input.readInt32();
+              break;
+            }
+            case 42: {
               org.apache.drill.exec.proto.CoordinationProtos.Roles.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000008) == 0x00000008)) {
+              if (((bitField0_ & 0x00000010) == 0x00000010)) {
                 subBuilder = roles_.toBuilder();
               }
               roles_ = input.readMessage(org.apache.drill.exec.proto.CoordinationProtos.Roles.PARSER, extensionRegistry);
@@ -153,7 +168,7 @@ public final class CoordinationProtos {
                 subBuilder.mergeFrom(roles_);
                 roles_ = subBuilder.buildPartial();
               }
-              bitField0_ |= 0x00000008;
+              bitField0_ |= 0x00000010;
               break;
             }
           }
@@ -255,39 +270,55 @@ public final class CoordinationProtos {
       return userPort_;
     }
 
-    // optional int32 bit_port = 3;
-    public static final int BIT_PORT_FIELD_NUMBER = 3;
-    private int bitPort_;
+    // optional int32 control_port = 3;
+    public static final int CONTROL_PORT_FIELD_NUMBER = 3;
+    private int controlPort_;
     /**
-     * <code>optional int32 bit_port = 3;</code>
+     * <code>optional int32 control_port = 3;</code>
      */
-    public boolean hasBitPort() {
+    public boolean hasControlPort() {
       return ((bitField0_ & 0x00000004) == 0x00000004);
     }
     /**
-     * <code>optional int32 bit_port = 3;</code>
+     * <code>optional int32 control_port = 3;</code>
      */
-    public int getBitPort() {
-      return bitPort_;
+    public int getControlPort() {
+      return controlPort_;
     }
 
-    // optional .exec.Roles roles = 4;
-    public static final int ROLES_FIELD_NUMBER = 4;
-    private org.apache.drill.exec.proto.CoordinationProtos.Roles roles_;
+    // optional int32 data_port = 4;
+    public static final int DATA_PORT_FIELD_NUMBER = 4;
+    private int dataPort_;
     /**
-     * <code>optional .exec.Roles roles = 4;</code>
+     * <code>optional int32 data_port = 4;</code>
      */
-    public boolean hasRoles() {
+    public boolean hasDataPort() {
       return ((bitField0_ & 0x00000008) == 0x00000008);
     }
     /**
-     * <code>optional .exec.Roles roles = 4;</code>
+     * <code>optional int32 data_port = 4;</code>
+     */
+    public int getDataPort() {
+      return dataPort_;
+    }
+
+    // optional .exec.Roles roles = 5;
+    public static final int ROLES_FIELD_NUMBER = 5;
+    private org.apache.drill.exec.proto.CoordinationProtos.Roles roles_;
+    /**
+     * <code>optional .exec.Roles roles = 5;</code>
+     */
+    public boolean hasRoles() {
+      return ((bitField0_ & 0x00000010) == 0x00000010);
+    }
+    /**
+     * <code>optional .exec.Roles roles = 5;</code>
      */
     public org.apache.drill.exec.proto.CoordinationProtos.Roles getRoles() {
       return roles_;
     }
     /**
-     * <code>optional .exec.Roles roles = 4;</code>
+     * <code>optional .exec.Roles roles = 5;</code>
      */
     public org.apache.drill.exec.proto.CoordinationProtos.RolesOrBuilder getRolesOrBuilder() {
       return roles_;
@@ -296,7 +327,8 @@ public final class CoordinationProtos {
     private void initFields() {
       address_ = "";
       userPort_ = 0;
-      bitPort_ = 0;
+      controlPort_ = 0;
+      dataPort_ = 0;
       roles_ = org.apache.drill.exec.proto.CoordinationProtos.Roles.getDefaultInstance();
     }
     private byte memoizedIsInitialized = -1;
@@ -318,10 +350,13 @@ public final class CoordinationProtos {
         output.writeInt32(2, userPort_);
       }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
-        output.writeInt32(3, bitPort_);
+        output.writeInt32(3, controlPort_);
       }
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
-        output.writeMessage(4, roles_);
+        output.writeInt32(4, dataPort_);
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        output.writeMessage(5, roles_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -342,11 +377,15 @@ public final class CoordinationProtos {
       }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(3, bitPort_);
+          .computeInt32Size(3, controlPort_);
       }
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(4, roles_);
+          .computeInt32Size(4, dataPort_);
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(5, roles_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -469,14 +508,16 @@ public final class CoordinationProtos {
         bitField0_ = (bitField0_ & ~0x00000001);
         userPort_ = 0;
         bitField0_ = (bitField0_ & ~0x00000002);
-        bitPort_ = 0;
+        controlPort_ = 0;
         bitField0_ = (bitField0_ & ~0x00000004);
+        dataPort_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000008);
         if (rolesBuilder_ == null) {
           roles_ = org.apache.drill.exec.proto.CoordinationProtos.Roles.getDefaultInstance();
         } else {
           rolesBuilder_.clear();
         }
-        bitField0_ = (bitField0_ & ~0x00000008);
+        bitField0_ = (bitField0_ & ~0x00000010);
         return this;
       }
 
@@ -516,9 +557,13 @@ public final class CoordinationProtos {
         if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
           to_bitField0_ |= 0x00000004;
         }
-        result.bitPort_ = bitPort_;
+        result.controlPort_ = controlPort_;
         if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
           to_bitField0_ |= 0x00000008;
+        }
+        result.dataPort_ = dataPort_;
+        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+          to_bitField0_ |= 0x00000010;
         }
         if (rolesBuilder_ == null) {
           result.roles_ = roles_;
@@ -549,8 +594,11 @@ public final class CoordinationProtos {
         if (other.hasUserPort()) {
           setUserPort(other.getUserPort());
         }
-        if (other.hasBitPort()) {
-          setBitPort(other.getBitPort());
+        if (other.hasControlPort()) {
+          setControlPort(other.getControlPort());
+        }
+        if (other.hasDataPort()) {
+          setDataPort(other.getDataPort());
         }
         if (other.hasRoles()) {
           mergeRoles(other.getRoles());
@@ -689,51 +737,84 @@ public final class CoordinationProtos {
         return this;
       }
 
-      // optional int32 bit_port = 3;
-      private int bitPort_ ;
+      // optional int32 control_port = 3;
+      private int controlPort_ ;
       /**
-       * <code>optional int32 bit_port = 3;</code>
+       * <code>optional int32 control_port = 3;</code>
        */
-      public boolean hasBitPort() {
+      public boolean hasControlPort() {
         return ((bitField0_ & 0x00000004) == 0x00000004);
       }
       /**
-       * <code>optional int32 bit_port = 3;</code>
+       * <code>optional int32 control_port = 3;</code>
        */
-      public int getBitPort() {
-        return bitPort_;
+      public int getControlPort() {
+        return controlPort_;
       }
       /**
-       * <code>optional int32 bit_port = 3;</code>
+       * <code>optional int32 control_port = 3;</code>
        */
-      public Builder setBitPort(int value) {
+      public Builder setControlPort(int value) {
         bitField0_ |= 0x00000004;
-        bitPort_ = value;
+        controlPort_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>optional int32 bit_port = 3;</code>
+       * <code>optional int32 control_port = 3;</code>
        */
-      public Builder clearBitPort() {
+      public Builder clearControlPort() {
         bitField0_ = (bitField0_ & ~0x00000004);
-        bitPort_ = 0;
+        controlPort_ = 0;
         onChanged();
         return this;
       }
 
-      // optional .exec.Roles roles = 4;
+      // optional int32 data_port = 4;
+      private int dataPort_ ;
+      /**
+       * <code>optional int32 data_port = 4;</code>
+       */
+      public boolean hasDataPort() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>optional int32 data_port = 4;</code>
+       */
+      public int getDataPort() {
+        return dataPort_;
+      }
+      /**
+       * <code>optional int32 data_port = 4;</code>
+       */
+      public Builder setDataPort(int value) {
+        bitField0_ |= 0x00000008;
+        dataPort_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 data_port = 4;</code>
+       */
+      public Builder clearDataPort() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        dataPort_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional .exec.Roles roles = 5;
       private org.apache.drill.exec.proto.CoordinationProtos.Roles roles_ = org.apache.drill.exec.proto.CoordinationProtos.Roles.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
           org.apache.drill.exec.proto.CoordinationProtos.Roles, org.apache.drill.exec.proto.CoordinationProtos.Roles.Builder, org.apache.drill.exec.proto.CoordinationProtos.RolesOrBuilder> rolesBuilder_;
       /**
-       * <code>optional .exec.Roles roles = 4;</code>
+       * <code>optional .exec.Roles roles = 5;</code>
        */
       public boolean hasRoles() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000010) == 0x00000010);
       }
       /**
-       * <code>optional .exec.Roles roles = 4;</code>
+       * <code>optional .exec.Roles roles = 5;</code>
        */
       public org.apache.drill.exec.proto.CoordinationProtos.Roles getRoles() {
         if (rolesBuilder_ == null) {
@@ -743,7 +824,7 @@ public final class CoordinationProtos {
         }
       }
       /**
-       * <code>optional .exec.Roles roles = 4;</code>
+       * <code>optional .exec.Roles roles = 5;</code>
        */
       public Builder setRoles(org.apache.drill.exec.proto.CoordinationProtos.Roles value) {
         if (rolesBuilder_ == null) {
@@ -755,11 +836,11 @@ public final class CoordinationProtos {
         } else {
           rolesBuilder_.setMessage(value);
         }
-        bitField0_ |= 0x00000008;
+        bitField0_ |= 0x00000010;
         return this;
       }
       /**
-       * <code>optional .exec.Roles roles = 4;</code>
+       * <code>optional .exec.Roles roles = 5;</code>
        */
       public Builder setRoles(
           org.apache.drill.exec.proto.CoordinationProtos.Roles.Builder builderForValue) {
@@ -769,15 +850,15 @@ public final class CoordinationProtos {
         } else {
           rolesBuilder_.setMessage(builderForValue.build());
         }
-        bitField0_ |= 0x00000008;
+        bitField0_ |= 0x00000010;
         return this;
       }
       /**
-       * <code>optional .exec.Roles roles = 4;</code>
+       * <code>optional .exec.Roles roles = 5;</code>
        */
       public Builder mergeRoles(org.apache.drill.exec.proto.CoordinationProtos.Roles value) {
         if (rolesBuilder_ == null) {
-          if (((bitField0_ & 0x00000008) == 0x00000008) &&
+          if (((bitField0_ & 0x00000010) == 0x00000010) &&
               roles_ != org.apache.drill.exec.proto.CoordinationProtos.Roles.getDefaultInstance()) {
             roles_ =
               org.apache.drill.exec.proto.CoordinationProtos.Roles.newBuilder(roles_).mergeFrom(value).buildPartial();
@@ -788,11 +869,11 @@ public final class CoordinationProtos {
         } else {
           rolesBuilder_.mergeFrom(value);
         }
-        bitField0_ |= 0x00000008;
+        bitField0_ |= 0x00000010;
         return this;
       }
       /**
-       * <code>optional .exec.Roles roles = 4;</code>
+       * <code>optional .exec.Roles roles = 5;</code>
        */
       public Builder clearRoles() {
         if (rolesBuilder_ == null) {
@@ -801,19 +882,19 @@ public final class CoordinationProtos {
         } else {
           rolesBuilder_.clear();
         }
-        bitField0_ = (bitField0_ & ~0x00000008);
+        bitField0_ = (bitField0_ & ~0x00000010);
         return this;
       }
       /**
-       * <code>optional .exec.Roles roles = 4;</code>
+       * <code>optional .exec.Roles roles = 5;</code>
        */
       public org.apache.drill.exec.proto.CoordinationProtos.Roles.Builder getRolesBuilder() {
-        bitField0_ |= 0x00000008;
+        bitField0_ |= 0x00000010;
         onChanged();
         return getRolesFieldBuilder().getBuilder();
       }
       /**
-       * <code>optional .exec.Roles roles = 4;</code>
+       * <code>optional .exec.Roles roles = 5;</code>
        */
       public org.apache.drill.exec.proto.CoordinationProtos.RolesOrBuilder getRolesOrBuilder() {
         if (rolesBuilder_ != null) {
@@ -823,7 +904,7 @@ public final class CoordinationProtos {
         }
       }
       /**
-       * <code>optional .exec.Roles roles = 4;</code>
+       * <code>optional .exec.Roles roles = 5;</code>
        */
       private com.google.protobuf.SingleFieldBuilder<
           org.apache.drill.exec.proto.CoordinationProtos.Roles, org.apache.drill.exec.proto.CoordinationProtos.Roles.Builder, org.apache.drill.exec.proto.CoordinationProtos.RolesOrBuilder> 
@@ -2338,18 +2419,18 @@ public final class CoordinationProtos {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\022Coordination.proto\022\004exec\"d\n\020DrillbitEn" +
+      "\n\022Coordination.proto\022\004exec\"{\n\020DrillbitEn" +
       "dpoint\022\017\n\007address\030\001 \001(\t\022\021\n\tuser_port\030\002 \001" +
-      "(\005\022\020\n\010bit_port\030\003 \001(\005\022\032\n\005roles\030\004 \001(\0132\013.ex" +
-      "ec.Roles\"i\n\024DrillServiceInstance\022\n\n\002id\030\001" +
-      " \001(\t\022\033\n\023registrationTimeUTC\030\002 \001(\003\022(\n\010end" +
-      "point\030\003 \001(\0132\026.exec.DrillbitEndpoint\"\227\001\n\005" +
-      "Roles\022\027\n\tsql_query\030\001 \001(\010:\004true\022\032\n\014logica" +
-      "l_plan\030\002 \001(\010:\004true\022\033\n\rphysical_plan\030\003 \001(" +
-      "\010:\004true\022\033\n\rjava_executor\030\004 \001(\010:\004true\022\037\n\021" +
-      "distributed_cache\030\005 \001(\010:\004trueB3\n\033org.apa",
-      "che.drill.exec.protoB\022CoordinationProtos" +
-      "H\001"
+      "(\005\022\024\n\014control_port\030\003 \001(\005\022\021\n\tdata_port\030\004 " +
+      "\001(\005\022\032\n\005roles\030\005 \001(\0132\013.exec.Roles\"i\n\024Drill" +
+      "ServiceInstance\022\n\n\002id\030\001 \001(\t\022\033\n\023registrat" +
+      "ionTimeUTC\030\002 \001(\003\022(\n\010endpoint\030\003 \001(\0132\026.exe" +
+      "c.DrillbitEndpoint\"\227\001\n\005Roles\022\027\n\tsql_quer" +
+      "y\030\001 \001(\010:\004true\022\032\n\014logical_plan\030\002 \001(\010:\004tru" +
+      "e\022\033\n\rphysical_plan\030\003 \001(\010:\004true\022\033\n\rjava_e" +
+      "xecutor\030\004 \001(\010:\004true\022\037\n\021distributed_cache",
+      "\030\005 \001(\010:\004trueB3\n\033org.apache.drill.exec.pr" +
+      "otoB\022CoordinationProtosH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -2361,7 +2442,7 @@ public final class CoordinationProtos {
           internal_static_exec_DrillbitEndpoint_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_DrillbitEndpoint_descriptor,
-              new java.lang.String[] { "Address", "UserPort", "BitPort", "Roles", });
+              new java.lang.String[] { "Address", "UserPort", "ControlPort", "DataPort", "Roles", });
           internal_static_exec_DrillServiceInstance_descriptor =
             getDescriptor().getMessageTypes().get(1);
           internal_static_exec_DrillServiceInstance_fieldAccessorTable = new

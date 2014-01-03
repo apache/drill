@@ -18,7 +18,7 @@
 package org.apache.drill.exec.work.batch;
 
 import java.io.IOException;
-import java.util.List;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -28,10 +28,8 @@ import org.apache.drill.exec.physical.base.AbstractPhysicalVisitor;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.Receiver;
 import org.apache.drill.exec.record.RawFragmentBatch;
-import org.apache.drill.exec.rpc.RemoteConnection.ConnectionThrottle;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 /**
@@ -42,12 +40,12 @@ public class IncomingBuffers {
 
   private final AtomicInteger streamsRemaining = new AtomicInteger(0);
   private final AtomicInteger remainingRequired = new AtomicInteger(0);
-  private final Map<Integer, BatchCollector> fragCounts;
+  private final Map<Integer, DataCollector> fragCounts;
   private final FragmentContext context;
 
   public IncomingBuffers(PhysicalOperator root, FragmentContext context) {
     this.context = context;
-    Map<Integer, BatchCollector> counts = Maps.newHashMap();
+    Map<Integer, DataCollector> counts = Maps.newHashMap();
     CountRequiredFragments reqFrags = new CountRequiredFragments();
     root.accept(reqFrags, counts);
 
@@ -56,24 +54,24 @@ public class IncomingBuffers {
 
     // Determine the total number of incoming streams that will need to be completed before we are finished.
     int totalStreams = 0;
-    for(BatchCollector bc : fragCounts.values()){
+    for(DataCollector bc : fragCounts.values()){
       totalStreams += bc.getTotalIncomingFragments();
     }
     assert totalStreams >= remainingRequired.get() : String.format("Total Streams %d should be more than the minimum number of streams to commence (%d).  It isn't.", totalStreams, remainingRequired.get());
     streamsRemaining.set(totalStreams);
   }
 
-  public boolean batchArrived(ConnectionThrottle throttle, RawFragmentBatch batch) throws FragmentSetupException {
+  public boolean batchArrived(RawFragmentBatch batch) throws FragmentSetupException {
     // no need to do anything if we've already enabled running.
-    logger.debug("New Batch Arrived {}", batch);
+//    logger.debug("New Batch Arrived {}", batch);
     if(batch.getHeader().getIsLastBatch()){
       streamsRemaining.decrementAndGet();
     }
     int sendMajorFragmentId = batch.getHeader().getSendingMajorFragmentId();
-    BatchCollector fSet = fragCounts.get(sendMajorFragmentId);
-    if (fSet == null) throw new FragmentSetupException(String.format("We received a major fragment id that we were not expecting.  The id was %d.", sendMajorFragmentId));
+    DataCollector fSet = fragCounts.get(sendMajorFragmentId);
+    if (fSet == null) throw new FragmentSetupException(String.format("We received a major fragment id that we were not expecting.  The id was %d. %s", sendMajorFragmentId, Arrays.toString(fragCounts.values().toArray())));
     try {
-      boolean decremented = fSet.batchArrived(throttle, batch.getHeader().getSendingMinorFragmentId(), batch);
+      boolean decremented = fSet.batchArrived(batch.getHeader().getSendingMinorFragmentId(), batch);
 
       // we should only return true if remaining required has been decremented and is currently equal to zero.
       return decremented && remainingRequired.get() == 0;
@@ -96,11 +94,11 @@ public class IncomingBuffers {
   /**
    * Designed to setup initial values for arriving fragment accounting.
    */
-  public class CountRequiredFragments extends AbstractPhysicalVisitor<Void, Map<Integer, BatchCollector>, RuntimeException> {
+  public class CountRequiredFragments extends AbstractPhysicalVisitor<Void, Map<Integer, DataCollector>, RuntimeException> {
     
     @Override
-    public Void visitReceiver(Receiver receiver, Map<Integer, BatchCollector> counts) throws RuntimeException {
-      BatchCollector set;
+    public Void visitReceiver(Receiver receiver, Map<Integer, DataCollector> counts) throws RuntimeException {
+      DataCollector set;
       if (receiver.supportsOutOfOrderExchange()) {
         set = new MergingCollector(remainingRequired, receiver, context);
       } else {
@@ -114,7 +112,7 @@ public class IncomingBuffers {
 
     
     @Override
-    public Void visitOp(PhysicalOperator op, Map<Integer, BatchCollector> value) throws RuntimeException {
+    public Void visitOp(PhysicalOperator op, Map<Integer, DataCollector> value) throws RuntimeException {
       for(PhysicalOperator o : op){
         o.accept(this, value);
       }

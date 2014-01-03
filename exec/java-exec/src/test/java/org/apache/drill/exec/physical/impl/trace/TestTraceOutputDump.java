@@ -27,6 +27,7 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.cache.VectorAccessibleSerializable;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.FragmentRoot;
@@ -35,6 +36,7 @@ import org.apache.drill.exec.physical.impl.ImplCreator;
 import org.apache.drill.exec.physical.impl.SimpleRootExec;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.proto.CoordinationProtos;
+import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.record.VectorAccessible;
@@ -76,7 +78,7 @@ public class TestTraceOutputDump {
 
         new NonStrictExpectations(){{
             bitContext.getMetrics(); result = new MetricRegistry();
-            bitContext.getAllocator(); result = BufferAllocator.getAllocator(c);
+            bitContext.getAllocator(); result = new TopLevelAllocator();
             bitContext.getConfig(); result = c;
             bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
         }};
@@ -84,7 +86,7 @@ public class TestTraceOutputDump {
         PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
         PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/trace/simple_trace.json"), Charsets.UTF_8));
         FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
-        FragmentContext context = new FragmentContext(bitContext, FragmentHandle.getDefaultInstance(), connection, registry);
+        FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
         SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
 
         while(exec.next()){

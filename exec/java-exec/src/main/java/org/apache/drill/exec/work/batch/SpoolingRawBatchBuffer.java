@@ -17,18 +17,24 @@
  */
 package org.apache.drill.exec.work.batch;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Queues;
 import io.netty.buffer.ByteBuf;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Random;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.proto.BitData;
 import org.apache.drill.exec.proto.ExecProtos;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.record.RawFragmentBatch;
-import org.apache.drill.exec.rpc.RemoteConnection.ConnectionThrottle;
+import org.apache.drill.exec.rpc.RemoteConnection;
 import org.apache.drill.exec.store.LocalSyncableFileSystem;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -36,14 +42,9 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
-import java.io.IOException;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Random;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Stopwatch;
+import com.google.common.collect.Queues;
 
 /**
  * This implementation of RawBatchBuffer starts writing incoming batches to disk once the buffer size reaches a threshold.
@@ -85,7 +86,7 @@ public class SpoolingRawBatchBuffer implements RawBatchBuffer {
   }
 
   @Override
-  public synchronized void enqueue(ConnectionThrottle throttle, RawFragmentBatch batch) throws IOException {
+  public synchronized void enqueue(RawFragmentBatch batch) throws IOException {
     RawFragmentBatchWrapper wrapper;
     boolean spool = spooling.get();
     wrapper = new RawFragmentBatchWrapper(batch, !spool);
@@ -224,10 +225,10 @@ public class SpoolingRawBatchBuffer implements RawBatchBuffer {
     public void readFromStream(FSDataInputStream stream) throws IOException {
       Stopwatch watch = new Stopwatch();
       watch.start();
-      ExecProtos.FragmentRecordBatch header = ExecProtos.FragmentRecordBatch.parseDelimitedFrom(stream);
+      BitData.FragmentRecordBatch header = BitData.FragmentRecordBatch.parseDelimitedFrom(stream);
       ByteBuf buf = context.getAllocator().buffer(bodyLength);
       buf.writeBytes(stream, bodyLength);
-      batch = new RawFragmentBatch(header, buf);
+      batch = new RawFragmentBatch(null, header, buf);
       available = true;
       latch.countDown();
       long t = watch.elapsed(TimeUnit.MICROSECONDS);

@@ -31,7 +31,7 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 import org.apache.drill.exec.rpc.BaseRpcOutcomeListener;
 import org.apache.drill.exec.rpc.RpcException;
-import org.apache.drill.exec.rpc.bit.BitTunnel;
+import org.apache.drill.exec.rpc.data.DataTunnel;
 
 public class SingleSenderCreator implements RootCreator<SingleSender>{
 
@@ -43,21 +43,24 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
   }
   
   
+  
   private static class SingleSenderRootExec implements RootExec{
     static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SingleSenderRootExec.class);
     private RecordBatch incoming;
-    private BitTunnel tunnel;
+    private DataTunnel tunnel;
     private FragmentHandle handle;
     private int recMajor;
     private FragmentContext context;
     private volatile boolean ok = true;
+    private final SendingAccountor sendCount = new SendingAccountor();
     
     public SingleSenderRootExec(FragmentContext context, RecordBatch batch, SingleSender config){
       this.incoming = batch;
       assert(incoming != null);
       this.handle = context.getHandle();
       this.recMajor = config.getOppositeMajorFragmentId();
-      this.tunnel = context.getCommunicator().getTunnel(config.getDestination());
+      FragmentHandle opposite = handle.toBuilder().setMajorFragmentId(config.getOppositeMajorFragmentId()).setMinorFragmentId(0).build();
+      this.tunnel = context.getDataTunnel(config.getDestination(), opposite);
       this.context = context;
     }
     
@@ -69,18 +72,20 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
         return false;
       }
       IterOutcome out = incoming.next();
-      logger.debug("Outcome of sender next {}", out);
+//      logger.debug("Outcome of sender next {}", out);
       switch(out){
       case STOP:
       case NONE:
         FragmentWritableBatch b2 = FragmentWritableBatch.getEmptyLast(handle.getQueryId(), handle.getMajorFragmentId(), handle.getMinorFragmentId(), recMajor, 0);
-        tunnel.sendRecordBatch(new RecordSendFailure(), context, b2);
+        sendCount.increment();
+        tunnel.sendRecordBatch(new RecordSendFailure(), b2);
         return false;
 
       case OK_NEW_SCHEMA:
       case OK:
         FragmentWritableBatch batch = new FragmentWritableBatch(false, handle.getQueryId(), handle.getMajorFragmentId(), handle.getMinorFragmentId(), recMajor, 0, incoming.getWritableBatch());
-        tunnel.sendRecordBatch(new RecordSendFailure(), context, batch);
+        sendCount.increment();
+        tunnel.sendRecordBatch(new RecordSendFailure(), batch);
         return true;
 
       case NOT_YET:
@@ -92,6 +97,8 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
     @Override
     public void stop() {
       ok = false;
+      incoming.cleanup();
+      sendCount.waitForSendComplete();
     }
     
     
@@ -99,12 +106,14 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
 
       @Override
       public void failed(RpcException ex) {
+        sendCount.decrement();
         context.fail(ex);
         stop();
       }
 
       @Override
       public void success(Ack value, ByteBuf buf) {
+        sendCount.decrement();
         if(value.getOk()) return;
 
         logger.error("Downstream fragment was not accepted.  Stopping future sends.");

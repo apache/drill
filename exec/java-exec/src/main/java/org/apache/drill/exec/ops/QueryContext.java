@@ -26,7 +26,8 @@ import org.apache.drill.exec.cache.DistributedCache;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
-import org.apache.drill.exec.rpc.bit.BitCom;
+import org.apache.drill.exec.rpc.control.WorkEventBus;
+import org.apache.drill.exec.rpc.data.DataConnectionCreator;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.StorageEngine;
 
@@ -35,11 +36,13 @@ public class QueryContext {
   
   private QueryId queryId;
   private DrillbitContext drillbitContext;
+  private WorkEventBus workBus;
   
   public QueryContext(QueryId queryId, DrillbitContext drllbitContext) {
     super();
     this.queryId = queryId;
     this.drillbitContext = drllbitContext;
+    this.workBus = drllbitContext.getWorkBus();
   }
   
   public DrillbitEndpoint getCurrentEndpoint(){
@@ -66,12 +69,16 @@ public class QueryContext {
     return drillbitContext.getPlanReader();
   }
   
-  public BitCom getBitCom(){
-    return drillbitContext.getBitCom();
+  public DataConnectionCreator getDataConnectionsPool(){
+    return drillbitContext.getDataConnectionsPool();
   }
   
   public DrillConfig getConfig(){
     return drillbitContext.getConfig();
+  }
+  
+  public WorkEventBus getWorkBus(){
+    return workBus;
   }
   
 }

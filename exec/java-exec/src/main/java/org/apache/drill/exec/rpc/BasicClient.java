@@ -30,6 +30,7 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.concurrent.GenericFutureListener;
 
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.rpc.RpcConnectionHandler.FailureType;
 
 import com.google.protobuf.Internal.EnumLite;
@@ -60,16 +61,17 @@ public abstract class BasicClient<T extends EnumLite, R extends RemoteConnection
         .option(ChannelOption.ALLOCATOR, alloc) //
         .option(ChannelOption.SO_RCVBUF, 1 << 17) //
         .option(ChannelOption.SO_SNDBUF, 1 << 17) //
+        .option(ChannelOption.TCP_NODELAY, true)
         .handler(new ChannelInitializer<SocketChannel>() {
 
           @Override
           protected void initChannel(SocketChannel ch) throws Exception {
-            logger.debug("initializing client connection.");
+//            logger.debug("initializing client connection.");
             connection = initRemoteConnection(ch);
             ch.closeFuture().addListener(getCloseHandler(connection));
             
             ch.pipeline().addLast( //
-                new ZeroCopyProtobufLengthDecoder(), //
+                getDecoder(connection.getAllocator()), //
                 new RpcDecoder("c-" + rpcConfig.getName()), //
                 new RpcEncoder("c-" + rpcConfig.getName()), //
                 new ClientHandshakeHandler(), //
@@ -82,6 +84,8 @@ public abstract class BasicClient<T extends EnumLite, R extends RemoteConnection
 
     ;
   }
+  
+  public abstract ProtobufLengthDecoder getDecoder(BufferAllocator allocator);
 
   public boolean isActive(){
     return connection.getChannel().isActive() ;
@@ -94,18 +98,12 @@ public abstract class BasicClient<T extends EnumLite, R extends RemoteConnection
     return new ChannelClosedHandler();
   }
 
-  protected final <SEND extends MessageLite, RECEIVE extends MessageLite> DrillRpcFutureImpl<RECEIVE> send(
-      T connection, T rpcType, SEND protobufBody, Class<RECEIVE> clazz, ByteBuf... dataBodies) throws RpcException {
-    throw new UnsupportedOperationException(
-        "This shouldn't be used in client mode as a client only has a single connection.");
-  }
-
-  protected <SEND extends MessageLite, RECEIVE extends MessageLite> void send(RpcOutcomeListener<RECEIVE> listener,
-      T rpcType, SEND protobufBody, Class<RECEIVE> clazz, ByteBuf... dataBodies) throws RpcException {
+  public <SEND extends MessageLite, RECEIVE extends MessageLite> void send(RpcOutcomeListener<RECEIVE> listener,
+      T rpcType, SEND protobufBody, Class<RECEIVE> clazz, ByteBuf... dataBodies) {
     super.send(listener, connection, rpcType, protobufBody, clazz, dataBodies);
   }
 
-  protected <SEND extends MessageLite, RECEIVE extends MessageLite> DrillRpcFuture<RECEIVE> send(T rpcType,
+  public <SEND extends MessageLite, RECEIVE extends MessageLite> DrillRpcFuture<RECEIVE> send(T rpcType,
       SEND protobufBody, Class<RECEIVE> clazz, ByteBuf... dataBodies) throws RpcException {
     return super.send(connection, rpcType, protobufBody, clazz, dataBodies);
   }
@@ -146,7 +144,8 @@ public abstract class BasicClient<T extends EnumLite, R extends RemoteConnection
         try {
           future.get();
           if (future.isSuccess()) {
-            send(handshakeSendHandler, handshakeType, handshakeValue, responseClass);
+            // send a handshake on the current thread.  This is the only time we will send from within the event thread.  We can do this because the connection will not be backed up.
+            send(handshakeSendHandler, connection, handshakeType, handshakeValue, responseClass, true);
           } else {
             l.connectionFailed(FailureType.CONNECTION, new RpcException("General connection failure."));
           }

@@ -18,24 +18,27 @@
 package org.apache.drill.exec.rpc;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.EventLoopGroup;
 import io.netty.util.concurrent.GenericFutureListener;
 
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.rpc.BasicClientWithConnection.ServerConnection;
 
+import com.google.protobuf.Internal.EnumLite;
 import com.google.protobuf.MessageLite;
 import com.google.protobuf.Parser;
-import com.google.protobuf.Internal.EnumLite;
 
 public abstract class BasicClientWithConnection<T extends EnumLite, HANDSHAKE_SEND extends MessageLite, HANDSHAKE_RESPONSE extends MessageLite> extends BasicClient<T, ServerConnection, HANDSHAKE_SEND, HANDSHAKE_RESPONSE>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BasicClientWithConnection.class);
 
-  public BasicClientWithConnection(RpcConfig rpcMapping, ByteBufAllocator alloc, EventLoopGroup eventLoopGroup, T handshakeType,
+  private BufferAllocator alloc;
+  
+  public BasicClientWithConnection(RpcConfig rpcMapping, BufferAllocator alloc, EventLoopGroup eventLoopGroup, T handshakeType,
       Class<HANDSHAKE_RESPONSE> responseClass, Parser<HANDSHAKE_RESPONSE> handshakeParser) {
-    super(rpcMapping, alloc, eventLoopGroup, handshakeType, responseClass, handshakeParser);
+    super(rpcMapping, alloc.getUnderlyingAllocator(), eventLoopGroup, handshakeType, responseClass, handshakeParser);
+    this.alloc = alloc;
   }
   
   @Override
@@ -52,14 +55,24 @@ public abstract class BasicClientWithConnection<T extends EnumLite, HANDSHAKE_SE
     
   @Override
   public ServerConnection initRemoteConnection(Channel channel) {
-    return new ServerConnection(channel);
+    return new ServerConnection(channel, alloc);
   }
 
   public static class ServerConnection extends RemoteConnection{
 
-    public ServerConnection(Channel channel) {
+    private final BufferAllocator alloc;
+    
+    public ServerConnection(Channel channel, BufferAllocator alloc) {
       super(channel);
+      this.alloc = alloc;
     }
+
+    @Override
+    public BufferAllocator getAllocator() {
+      return alloc;
+    }
+    
+    
 
   }
 

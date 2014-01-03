@@ -27,9 +27,9 @@ import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.planner.fragment.Materializer.IndexedFragmentNode;
+import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
-import org.apache.drill.exec.proto.ExecProtos.PlanFragment;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.work.QueryWorkUnit;
 
@@ -128,11 +128,11 @@ public class SimpleParallelizer {
             .build();
 
         if (isRootNode) {
-          logger.debug("Root fragment {}", fragment);
+          logger.debug("Root fragment:\n {}", fragment);
           rootFragment = fragment;
           rootOperator = root;
         } else {
-          logger.debug("Remote fragment {}", fragment);
+          logger.debug("Remote fragment:\n {}", fragment);
           fragments.add(fragment);
         }
       }

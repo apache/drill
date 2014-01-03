@@ -7,35 +7,36 @@ option optimize_for = SPEED;
 import "Coordination.proto";
 import "SchemaDef.proto";
 
+enum RpcChannel {
+  BIT_CONTROL = 0;
+  BIT_DATA = 1;
+  USER = 2;
+}
+
 message QueryId {
-  	optional sfixed64 part1 = 1;
-  	optional sfixed64 part2 = 2;
+  optional sfixed64 part1 = 1;
+  optional sfixed64 part2 = 2;
 }
 
 message DrillPBError{
-    optional string error_id = 1; // for debug tracing purposes
-    optional DrillbitEndpoint endpoint = 2;
-    optional int32 error_type = 3; 
-    optional string message = 4;
-    repeated ParsingError parsing_error = 5; //optional, used when providing location of error within a piece of text.
+  optional string error_id = 1; // for debug tracing purposes
+  optional DrillbitEndpoint endpoint = 2;
+  optional int32 error_type = 3; 
+  optional string message = 4;
+  repeated ParsingError parsing_error = 5; //optional, used when providing location of error within a piece of text.
 }
 
 message ParsingError{
-    optional int32 start_column = 2;
-    optional int32 start_row = 3;
-    optional int32 end_column = 4;
-    optional int32 end_row = 5;
-}
-
-message RecordBatch{
-    
+  optional int32 start_column = 2;
+  optional int32 start_row = 3;
+  optional int32 end_column = 4;
+  optional int32 end_row = 5;
 }
 
 message RecordBatchDef {
 	repeated FieldMetadata field = 1;
 	optional int32 record_count = 2;
-    optional bool is_selection_vector_2 = 3;
-
+  optional bool is_selection_vector_2 = 3;
 }
 
 message FieldMetadata {

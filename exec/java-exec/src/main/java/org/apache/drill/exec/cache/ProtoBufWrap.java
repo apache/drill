@@ -17,16 +17,12 @@
  */
 package org.apache.drill.exec.cache;
 
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
-
-import com.hazelcast.nio.ObjectDataInput;
-import com.hazelcast.nio.ObjectDataOutput;
-import org.apache.drill.exec.proto.ExecProtos.WorkQueueStatus;
 
 import com.google.protobuf.MessageLite;
 import com.google.protobuf.Parser;
+import com.hazelcast.nio.ObjectDataInput;
+import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.DataSerializable;
 
 public abstract class ProtoBufWrap<T extends MessageLite> implements DataSerializable{

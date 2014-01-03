@@ -26,6 +26,7 @@ import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.impl.validate.IteratorValidatorInjector;
 import org.apache.drill.exec.record.RecordBatch;
+import org.apache.drill.exec.util.AssertionUtil;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -75,11 +76,10 @@ public class ImplCreator extends AbstractPhysicalVisitor<RecordBatch, FragmentCo
 
   public static RootExec getExec(FragmentContext context, FragmentRoot root) throws ExecutionSetupException {
     ImplCreator i = new ImplCreator();
-    boolean isAssertEnabled = false;
-    assert isAssertEnabled = true;
-    if(isAssertEnabled){
-      root = IteratorValidatorInjector.rewritePlanWithIteratorValidator(context, root);
+    if(AssertionUtil.isAssertionsEnabled()){
+      root = IteratorValidatorInjector.rewritePlanWithIteratorValidator(context, root); 
     }
+
     root.accept(i, context);
     if (i.root == null)
       throw new ExecutionSetupException(

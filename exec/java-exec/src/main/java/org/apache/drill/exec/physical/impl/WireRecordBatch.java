@@ -105,10 +105,13 @@ public class WireRecordBatch implements RecordBatch{
         batch = fragProvider.getNext();
       }
     
-      if (batch == null) return IterOutcome.NONE;
+      if (batch == null){
+        batchLoader.clear();
+        return IterOutcome.NONE;
+      }
       
 
-      logger.debug("Next received batch {}", batch);
+//      logger.debug("Next received batch {}", batch);
 
       RecordBatchDef rbd = batch.getHeader().getDef();
       boolean schemaChanged = batchLoader.load(rbd, batch.getBody());
@@ -129,6 +132,10 @@ public class WireRecordBatch implements RecordBatch{
   @Override
   public WritableBatch getWritableBatch() {
     return batchLoader.getWritableBatch();
+  }
+
+  @Override
+  public void cleanup() {
   }
   
   

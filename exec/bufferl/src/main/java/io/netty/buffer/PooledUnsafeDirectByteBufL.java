@@ -30,7 +30,7 @@ import java.nio.channels.ClosedChannelException;
 import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
 
-final class PooledUnsafeDirectByteBufL extends PooledByteBufL<ByteBuffer> {
+public final class PooledUnsafeDirectByteBufL extends PooledByteBufL<ByteBuffer> {
   
     private static final boolean NATIVE_ORDER = ByteOrder.nativeOrder() == ByteOrder.LITTLE_ENDIAN;
 

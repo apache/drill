@@ -153,6 +153,8 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
     return schema;
   }
 
-
+  public void clear(){
+    container.clear();
+  }
 
 }

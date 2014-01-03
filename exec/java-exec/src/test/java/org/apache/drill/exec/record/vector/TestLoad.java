@@ -18,13 +18,17 @@
 package org.apache.drill.exec.record.vector;
 
 import com.google.common.collect.Lists;
+
 import io.netty.buffer.ByteBuf;
+
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.*;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
@@ -36,17 +40,11 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
-/**
- * Created with IntelliJ IDEA.
- * User: witwolf
- * Date: 8/30/13
- * Time: 5:00 PM
- */
 
 public class TestLoad {
   @Test
   public void testLoadValueVector() {
-    BufferAllocator allocator = BufferAllocator.getAllocator(null);
+    BufferAllocator allocator = new TopLevelAllocator();
     ValueVector fixedV = new IntVector(
       MaterializedField.create(new SchemaPath("ints", ExpressionPosition.UNKNOWN), Types.required(MinorType.INT)),
       allocator);

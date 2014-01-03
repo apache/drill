@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.work;
 
-import org.apache.drill.exec.proto.ExecProtos.FragmentStatus;
+import org.apache.drill.exec.proto.BitControl.FragmentStatus;
 
 public interface StatusProvider {
   public FragmentStatus getStatus();

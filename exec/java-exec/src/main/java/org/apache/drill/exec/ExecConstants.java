@@ -47,8 +47,9 @@ public interface ExecConstants {
   public static final String TRACE_DUMP_FILESYSTEM = "drill.exec.trace.filesystem";
   public static final String TEMP_DIRECTORIES = "drill.exec.tmp.directories";
   public static final String TEMP_FILESYSTEM = "drill.exec.tmp.filesystem";
-  public static final String SPOOLING_BUFFER_IMPL = "drill.exec.spooling.impl";
-  public static final String SPOOLING_BUFFER_DELETE = "drill.exec.spooling.delete";
-  public static final String SPOOLING_BUFFER_MEMORY = "drill.exec.spooling.size";
+  public static final String INCOMING_BUFFER_IMPL = "drill.exec.buffer.impl";
+  public static final String INCOMING_BUFFER_SIZE = "drill.exec.buffer.size"; // incoming buffer size (number of batches)
+  public static final String SPOOLING_BUFFER_DELETE = "drill.exec.buffer.spooling.delete";
+  public static final String SPOOLING_BUFFER_MEMORY = "drill.exec.buffer.spooling.size";
   
 }

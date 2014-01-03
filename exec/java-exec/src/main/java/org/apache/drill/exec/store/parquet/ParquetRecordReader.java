@@ -384,7 +384,7 @@ public class ParquetRecordReader implements RecordReader {
         // cannot find more information on this right now, will keep looking
       }
 
-      logger.debug("records to read in this pass: {}", recordsToRead);
+//      logger.debug("records to read in this pass: {}", recordsToRead);
       if (allFieldsFixedLength) {
         readAllFixedFields(recordsToRead, firstColumnStatus);
       } else { // variable length columns

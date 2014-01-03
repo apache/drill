@@ -78,14 +78,14 @@ public class Drillbit implements Closeable{
       this.context = new BootStrapContext(config);
       this.manager = new WorkManager(context);
       this.coord = serviceSet.getCoordinator();
-      this.engine = new ServiceEngine(manager.getBitComWorker(), manager.getUserWorker(), context);
+      this.engine = new ServiceEngine(manager.getControlMessageHandler(), manager.getUserWorker(), context, manager.getWorkBus(), manager.getDataHandler());
       this.cache = serviceSet.getCache();
     }else{
       Runtime.getRuntime().addShutdownHook(new ShutdownThread(config));
       this.context = new BootStrapContext(config);
       this.manager = new WorkManager(context);
       this.coord = new ZKClusterCoordinator(config);
-      this.engine = new ServiceEngine(manager.getBitComWorker(), manager.getUserWorker(), context);
+      this.engine = new ServiceEngine(manager.getControlMessageHandler(), manager.getUserWorker(), context, manager.getWorkBus(), manager.getDataHandler());
       this.cache = new HazelCache(config, context.getAllocator());
     }
   }
@@ -93,7 +93,7 @@ public class Drillbit implements Closeable{
   public void run() throws Exception {
     coord.start(10000);
     DrillbitEndpoint md = engine.start();
-    manager.start(md, cache, engine.getBitCom(), coord);
+    manager.start(md, cache, engine.getController(), engine.getDataConnectionCreator(), coord);
     cache.run();
     handle = coord.register(md);
   }

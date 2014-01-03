@@ -82,6 +82,13 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
     }
   }
   
+  
+  @Override
+  public void cleanup() {
+    super.cleanup();
+    if(sv2 != null) sv2.clear();
+  }
+
   @Override
   protected void setupNewSchema() throws SchemaChangeException {
     container.clear();
@@ -97,7 +104,7 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
         break;
       case FOUR_BYTE:
         // set up the multi-batch selection vector
-        this.svAllocator = context.getAllocator().getPreAllocator();
+        this.svAllocator = context.getAllocator().getNewPreAllocator();
         if (!svAllocator.preAllocate(incoming.getRecordCount()*4))
           throw new SchemaChangeException("Attempted to filter an SV4 which exceeds allowed memory (" +
                                           incoming.getRecordCount() * 4 + " bytes)");

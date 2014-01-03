@@ -41,7 +41,7 @@ public class MergeJoinBatchBuilder {
   public MergeJoinBatchBuilder(FragmentContext context, JoinStatus status) {
     this.container = new VectorContainer();
     this.status = status;
-    this.svAllocator = context.getAllocator().getPreAllocator();
+    this.svAllocator = context.getAllocator().getNewPreAllocator();
   }
 
   public boolean add(RecordBatch batch) {

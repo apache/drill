@@ -17,13 +17,12 @@
  */
 package org.apache.drill.exec.metrics;
 
-import org.apache.drill.exec.server.DrillbitContext;
-
 import com.codahale.metrics.Counter;
+import com.codahale.metrics.MetricRegistry;
 
 /**
  * Wraps a parent counter so that local in-thread metrics can be collected while collecting for a global counter. Note
- * that this one writer, many reader safe.
+ * that this is one writer, many reader safe.
  */
 public class SingleThreadNestedCounter {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SingleThreadNestedCounter.class);
@@ -31,9 +30,9 @@ public class SingleThreadNestedCounter {
   private volatile long count;
   private final Counter counter;
 
-  public SingleThreadNestedCounter(DrillbitContext context, String name) {
+  public SingleThreadNestedCounter(MetricRegistry registry, String name) {
     super();
-    this.counter = context.getMetrics().counter(name);
+    this.counter = registry.counter(name);
   }
 
   public long inc(long n) {

@@ -133,6 +133,7 @@ public class VectorAccessibleSerializable implements DrillSerializable {
     retain = true;
     writeToStream(output);
   }
+  
 
   /**
    * Serializes the VectorAccessible va and writes it to an output stream
@@ -189,9 +190,10 @@ public class VectorAccessibleSerializable implements DrillSerializable {
     }
   }
 
-  private void clear() {
+  public void clear() {
     if (!retain) {
       batch.clear();
+      if(sv2 != null) sv2.clear();
     }
   }
 

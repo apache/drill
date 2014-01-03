@@ -17,6 +17,8 @@
  */
 package org.apache.drill.common.config;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
 import java.net.URL;
 import java.util.Collection;
 import java.util.List;
@@ -35,6 +37,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
@@ -42,13 +45,18 @@ public final class DrillConfig extends NestedConfig{
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillConfig.class);
   private final ObjectMapper mapper;
+  private final ImmutableList<String> startupArguments;
+  @SuppressWarnings("restriction")  private static final long MAX_DIRECT_MEMORY = sun.misc.VM.maxDirectMemory();
   
   @SuppressWarnings("unchecked")
   private volatile List<Queue<Object>> sinkQueues = new CopyOnWriteArrayList<Queue<Object>>(new Queue[1]);
 
+  
+  @SuppressWarnings("restriction")
   @VisibleForTesting
   public DrillConfig(Config config) {
     super(config);
+
     mapper = new ObjectMapper();
     SimpleModule deserModule = new SimpleModule("LogicalExpressionDeserializationModule")
       .addDeserializer(LogicalExpression.class, new LogicalExpression.De(this));
@@ -61,8 +69,16 @@ public final class DrillConfig extends NestedConfig{
     mapper.registerSubtypes(LogicalOperatorBase.getSubTypes(this));
     mapper.registerSubtypes(StorageEngineConfigBase.getSubTypes(this));
     
+    RuntimeMXBean bean = ManagementFactory.getRuntimeMXBean();
+    this.startupArguments = ImmutableList.copyOf(bean.getInputArguments());
     
   };
+
+
+
+  public List<String> getStartupArguments(){
+    return startupArguments;
+  }
   
   /**
    * Create a DrillConfig object using the default config file name 
@@ -154,5 +170,15 @@ public final class DrillConfig extends NestedConfig{
   @Override
   public String toString(){
     return this.root().render();
+  }
+  
+  public static void main(String[] args)  throws Exception{
+    //"-XX:MaxDirectMemorySize"
+    DrillConfig config = DrillConfig.create();
+    
+  }
+  
+  public static long getMaxDirectMemory(){
+    return MAX_DIRECT_MEMORY;
   }
 }

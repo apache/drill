@@ -25,7 +25,7 @@ import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.expr.TypeHelper;
-import org.apache.drill.exec.memory.DirectBufferAllocator;
+import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.proto.SchemaDefProtos.FieldDef;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.BitVector;
@@ -37,7 +37,7 @@ import org.junit.Test;
 
 public class TestValueVector {
 
-  DirectBufferAllocator allocator = new DirectBufferAllocator();
+  TopLevelAllocator allocator = new TopLevelAllocator();
 
   @Test
   public void testFixedType() {

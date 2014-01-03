@@ -1,5 +1,5 @@
 /**
- * Licensed to the Apache Software Foundation (ASF) under one
+ * Licensed to th7e Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
  * regarding copyright ownership.  The ASF licenses this file
@@ -18,38 +18,25 @@
 
 package org.apache.drill.exec.physical.impl.trace;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.channels.FileChannel;
-import java.nio.ByteBuffer;
-import java.util.List;
-import java.util.Formatter;
 
-import com.google.common.collect.Iterators;
-import io.netty.buffer.CompositeByteBuf;
+import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.cache.VectorAccessibleSerializable;
 import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.expr.TypeHelper;
-import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.Trace;
-import org.apache.drill.exec.record.*;
-import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
-import org.apache.drill.exec.record.selection.SelectionVector2;
-import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
-import org.apache.drill.exec.proto.UserBitShared.RecordBatchDef;
-import org.apache.drill.exec.proto.UserBitShared.FieldMetadata;
-import org.apache.drill.exec.proto.SchemaDefProtos.FieldDef;
-
-import io.netty.buffer.ByteBuf;
+import org.apache.drill.exec.record.AbstractSingleRecordBatch;
+import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
+import org.apache.drill.exec.record.RecordBatch;
+import org.apache.drill.exec.record.TransferPair;
+import org.apache.drill.exec.record.VectorWrapper;
+import org.apache.drill.exec.record.WritableBatch;
+import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
@@ -174,7 +161,7 @@ public class TraceRecordBatch extends AbstractSingleRecordBatch<Trace> {
   }
 
   @Override
-  protected void cleanup() {
+  public void cleanup() {
     /* Release the selection vector */
     if (sv != null)
       sv.clear();
@@ -185,6 +172,7 @@ public class TraceRecordBatch extends AbstractSingleRecordBatch<Trace> {
     } catch (IOException e) {
       logger.error("Unable to close file descriptors for file: " + getFileName());
     }
+    super.cleanup();
   }
 
 }

@@ -36,7 +36,7 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.memory.DirectBufferAllocator;
+import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.proto.SchemaDefProtos;
@@ -131,7 +131,7 @@ public class JSONRecordReaderTest {
     new Expectations() {
       {
         context.getAllocator();
-        returns(new DirectBufferAllocator());
+        returns(new TopLevelAllocator());
       }
     };
     JSONRecordReader jr = new JSONRecordReader(context,
@@ -160,7 +160,7 @@ public class JSONRecordReaderTest {
     new Expectations() {
       {
         context.getAllocator();
-        returns(new DirectBufferAllocator());
+        returns(new TopLevelAllocator());
       }
     };
 
@@ -201,7 +201,7 @@ public class JSONRecordReaderTest {
     new Expectations() {
       {
         context.getAllocator();
-        returns(new DirectBufferAllocator());
+        returns(new TopLevelAllocator());
       }
     };
 
@@ -260,7 +260,7 @@ public class JSONRecordReaderTest {
     new Expectations() {
       {
         context.getAllocator();
-        returns(new DirectBufferAllocator());
+        returns(new TopLevelAllocator());
       }
     };
 
@@ -289,7 +289,7 @@ public class JSONRecordReaderTest {
     new Expectations() {
       {
         context.getAllocator();
-        returns(new DirectBufferAllocator());
+        returns(new TopLevelAllocator());
       }
     };
 
@@ -322,7 +322,7 @@ public class JSONRecordReaderTest {
     new Expectations() {
       {
         context.getAllocator();
-        returns(new DirectBufferAllocator());
+        returns(new TopLevelAllocator());
       }
     };
 

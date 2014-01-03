@@ -7,8 +7,9 @@ option optimize_for = SPEED;
 message DrillbitEndpoint{
   optional string address = 1;
   optional int32 user_port = 2;
-  optional int32 bit_port = 3;
-  optional Roles roles = 4;
+  optional int32 control_port = 3;
+  optional int32 data_port = 4;
+  optional Roles roles = 5;
 }
 
 message DrillServiceInstance{

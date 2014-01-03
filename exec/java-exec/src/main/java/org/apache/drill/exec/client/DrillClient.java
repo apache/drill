@@ -35,7 +35,7 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.coord.ZKClusterCoordinator;
-import org.apache.drill.exec.memory.DirectBufferAllocator;
+import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserProtos;
@@ -59,7 +59,7 @@ public class DrillClient implements Closeable{
   private UserClient client;
   private volatile ClusterCoordinator clusterCoordinator;
   private volatile boolean connected = false;
-  private final DirectBufferAllocator allocator = new DirectBufferAllocator();
+  private final TopLevelAllocator allocator = new TopLevelAllocator(Long.MAX_VALUE);
   private int reconnectTimes;
   private int reconnectDelay;
   
@@ -107,7 +107,7 @@ public class DrillClient implements Closeable{
     checkState(!endpoints.isEmpty(), "No DrillbitEndpoint can be found");
     // just use the first endpoint for now
     DrillbitEndpoint endpoint = endpoints.iterator().next();
-    this.client = new UserClient(allocator.getUnderlyingAllocator(), new NioEventLoopGroup(config.getInt(ExecConstants.CLIENT_RPC_THREADS), new NamedThreadFactory("Client-")));
+    this.client = new UserClient(allocator, new NioEventLoopGroup(config.getInt(ExecConstants.CLIENT_RPC_THREADS), new NamedThreadFactory("Client-")));
     logger.debug("Connecting to server {}:{}", endpoint.getAddress(), endpoint.getUserPort());
     connect(endpoint);
     connected = true;
@@ -146,7 +146,7 @@ public class DrillClient implements Closeable{
     }
   }
 
-  public DirectBufferAllocator getAllocator() {
+  public TopLevelAllocator getAllocator() {
     return allocator;
   }
 
@@ -218,7 +218,7 @@ public class DrillClient implements Closeable{
 
     @Override
     public void resultArrived(QueryResultBatch result) {
-      logger.debug("Result arrived.  Is Last Chunk: {}.  Full Result: {}", result.getHeader().getIsLastChunk(), result);
+//      logger.debug("Result arrived.  Is Last Chunk: {}.  Full Result: {}", result.getHeader().getIsLastChunk(), result);
       results.add(result);
       if(result.getHeader().getIsLastChunk()){
         future.set(results);

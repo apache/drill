@@ -28,9 +28,9 @@ import org.apache.drill.exec.proto.UserProtos.RequestResults;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
 import org.apache.drill.exec.rpc.Acks;
 import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
-import org.apache.drill.exec.work.FragmentRunner;
 import org.apache.drill.exec.work.WorkManager.WorkerBee;
 import org.apache.drill.exec.work.foreman.Foreman;
+import org.apache.drill.exec.work.fragment.FragmentExecutor;
 
 public class UserWorker{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserWorker.class);
@@ -65,7 +65,7 @@ public class UserWorker{
   }
   
   public Ack cancelFragment(FragmentHandle handle){
-    FragmentRunner runner = bee.getFragmentRunner(handle);
+    FragmentExecutor runner = bee.getFragmentRunner(handle);
     if(runner != null) runner.cancel();
     return Acks.OK;
   }

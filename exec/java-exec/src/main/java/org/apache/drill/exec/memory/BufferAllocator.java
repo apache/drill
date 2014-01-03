@@ -17,17 +17,16 @@
  */
 package org.apache.drill.exec.memory;
 
-import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 
 import java.io.Closeable;
 
-import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 
 /**
  * Wrapper class to deal with byte buffer allocation. Ensures users only use designated methods.  Also allows inser 
  */
-public abstract class BufferAllocator implements Closeable{
+public interface BufferAllocator extends Closeable{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BufferAllocator.class);
   
   /**
@@ -35,31 +34,23 @@ public abstract class BufferAllocator implements Closeable{
    * @param size The size in bytes.
    * @return A new ByteBuf.
    */
-  public abstract ByteBuf buffer(int size);
+  public abstract AccountingByteBuf buffer(int size);
+  
+  
+  public abstract AccountingByteBuf buffer(int size, String desc);
   
   public abstract ByteBufAllocator getUnderlyingAllocator();
   
-  public abstract BufferAllocator getChildAllocator(long initialReservation, long maximumReservation);
+  public abstract BufferAllocator getChildAllocator(FragmentHandle handle, long initialReservation, long maximumReservation) throws OutOfMemoryException;
   
-  protected abstract boolean pre(int bytes);
+  public PreAllocator getNewPreAllocator();
   
-  public PreAllocator getPreAllocator(){
-    return new PreAllocator(); 
-  }
-  
-  public class PreAllocator{
-    int bytes = 0;
-    public boolean preAllocate(int bytes){
-      if(!pre(bytes)) return false;
-      
-      this.bytes += bytes;
-      return true;
-   
-    }
-    
-    public ByteBuf getAllocation(){
-      return buffer(bytes);
-    }
+  /**
+   * Not thread safe.
+   */
+  public interface PreAllocator{
+    public boolean preAllocate(int bytes);
+    public AccountingByteBuf getAllocation();
   }
   
   
@@ -78,11 +69,6 @@ public abstract class BufferAllocator implements Closeable{
    */
   @Override
   public abstract void close(); 
-  
-  public static BufferAllocator getAllocator(DrillConfig config){
-    // TODO: support alternative allocators (including a debugging allocator that records all allocation locations for each buffer).
-    return new DirectBufferAllocator();
-  }
   
   public abstract long getAllocatedMemory();
   

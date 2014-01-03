@@ -17,19 +17,30 @@
  */
 package org.apache.drill.exec.work.batch;
 
-import org.apache.drill.exec.record.RawFragmentBatch;
-import org.apache.drill.exec.record.RawFragmentBatchProvider;
-import org.apache.drill.exec.rpc.RemoteConnection.ConnectionThrottle;
-
 import java.io.IOException;
 
-public interface RawBatchBuffer extends RawFragmentBatchProvider{
+import org.apache.drill.exec.record.RawFragmentBatch;
+import org.apache.drill.exec.record.RawFragmentBatchProvider;
+import org.apache.drill.exec.rpc.RemoteConnection;
+
+/**
+ * A batch buffer is responsible for queuing incoming batches until a consumer is ready to receive them. It will also
+ * inform upstream if the batch cannot be accepted.
+ */
+public interface RawBatchBuffer extends RawFragmentBatchProvider {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RawBatchBuffer.class);
-  
-  public void enqueue(ConnectionThrottle throttle, RawFragmentBatch batch) throws IOException;
-  
+
   /**
-   * Inform the buffer that no more records are expected.
+   * Add the next new raw fragment batch to the buffer.
+   * 
+   * @param batch
+   *          Batch to enqueue
+   * @throws IOException
+   */
+  public void enqueue(RawFragmentBatch batch) throws IOException;
+
+  /**
+   * Inform the buffer that no more batches are expected.
    */
   public void finished();
 }

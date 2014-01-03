@@ -23,6 +23,7 @@ import io.netty.buffer.ByteBufInputStream;
 import io.netty.channel.Channel;
 import io.netty.channel.EventLoopGroup;
 
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.physical.impl.materialize.QueryWritableBatch;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserProtos.BitToUserHandshake;
@@ -31,10 +32,12 @@ import org.apache.drill.exec.proto.UserProtos.RpcType;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
 import org.apache.drill.exec.proto.UserProtos.UserToBitHandshake;
 import org.apache.drill.exec.rpc.BasicServer;
+import org.apache.drill.exec.rpc.ProtobufLengthDecoder;
 import org.apache.drill.exec.rpc.RemoteConnection;
 import org.apache.drill.exec.rpc.Response;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
+import org.apache.drill.exec.rpc.data.DataProtobufLengthDecoder;
 import org.apache.drill.exec.work.user.UserWorker;
 
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -44,10 +47,12 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserServer.class);
 
   final UserWorker worker;
+  final BufferAllocator alloc;
 
-  public UserServer(ByteBufAllocator alloc, EventLoopGroup eventLoopGroup, UserWorker worker) {
-    super(UserRpcConfig.MAPPING, alloc, eventLoopGroup);
+  public UserServer(BufferAllocator alloc, EventLoopGroup eventLoopGroup, UserWorker worker) {
+    super(UserRpcConfig.MAPPING, alloc.getUnderlyingAllocator(), eventLoopGroup);
     this.worker = worker;
+    this.alloc = alloc;
   }
 
   @Override
@@ -94,14 +99,21 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
 
   }
 
+  
   public class UserClientConnection extends RemoteConnection {
     public UserClientConnection(Channel channel) {
       super(channel);
     }
 
     public void sendResult(RpcOutcomeListener<Ack> listener, QueryWritableBatch result){
-      logger.debug("Sending result to client with {}", result);
+//      logger.debug("Sending result to client with {}", result);
+      
       send(listener, this, RpcType.QUERY_RESULT, result.getHeader(), Ack.class, result.getBuffers());
+    }
+
+    @Override
+    public BufferAllocator getAllocator() {
+      return alloc;
     }
 
   }
@@ -117,7 +129,7 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
 
       @Override
       public MessageLite getHandshakeResponse(UserToBitHandshake inbound) throws Exception {
-        logger.debug("Handling handshake from user to bit. {}", inbound);
+//        logger.debug("Handling handshake from user to bit. {}", inbound);
         if(inbound.getRpcVersion() != UserRpcConfig.RPC_VERSION) throw new RpcException(String.format("Invalid rpc version.  Expected %d, actual %d.", inbound.getRpcVersion(), UserRpcConfig.RPC_VERSION));
         return BitToUserHandshake.newBuilder().setRpcVersion(UserRpcConfig.RPC_VERSION).build();
       }
@@ -125,5 +137,8 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
     };
   }
 
-  
+  @Override
+  public ProtobufLengthDecoder getDecoder(BufferAllocator allocator) {
+    return new UserProtobufLengthDecoder(allocator);
+  }
 }

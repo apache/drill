@@ -17,21 +17,22 @@
  ******************************************************************************/
 package org.apache.drill.exec.physical.impl.broadcastsender;
 
+import java.util.List;
+
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.BroadcastSender;
 import org.apache.drill.exec.physical.impl.RootExec;
+import org.apache.drill.exec.physical.impl.SendingAccountor;
+import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos;
+import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.GeneralRPCProtos;
 import org.apache.drill.exec.record.FragmentWritableBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.rpc.DrillRpcFuture;
 import org.apache.drill.exec.rpc.RpcException;
-import org.apache.drill.exec.rpc.bit.BitTunnel;
-
-import java.util.List;
-
-import static org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.rpc.data.DataTunnel;
 
 /**
  * Broadcast Sender broadcasts incoming batches to all receivers (one or more).
@@ -42,7 +43,7 @@ public class BroadcastSenderRootExec implements RootExec {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BroadcastSenderRootExec.class);
   private final FragmentContext context;
   private final BroadcastSender config;
-  private final BitTunnel[] tunnels;
+  private final DataTunnel[] tunnels;
   private final ExecProtos.FragmentHandle handle;
   private volatile boolean ok;
   private final RecordBatch incoming;
@@ -57,9 +58,10 @@ public class BroadcastSenderRootExec implements RootExec {
     this.config = config;
     this.handle = context.getHandle();
     List<DrillbitEndpoint> destinations = config.getDestinations();
-    this.tunnels = new BitTunnel[destinations.size()];
+    this.tunnels = new DataTunnel[destinations.size()];
     for(int i = 0; i < destinations.size(); ++i) {
-      tunnels[i] = context.getCommunicator().getTunnel(destinations.get(i));
+      FragmentHandle opp = handle.toBuilder().setMajorFragmentId(config.getOppositeMajorFragmentId()).setMinorFragmentId(i).build();
+      tunnels[i] = context.getDataTunnel(destinations.get(i), opp);
     }
     responseFutures = new DrillRpcFuture[destinations.size()];
   }

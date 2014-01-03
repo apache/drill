@@ -26,8 +26,9 @@ enum RpcType {
 }
 
 message UserToBitHandshake {
-    optional bool support_listening = 2;
-    optional int32 rpc_version = 3;
+  optional exec.shared.RpcChannel channel = 1 [default = USER];
+  optional bool support_listening = 2;
+  optional int32 rpc_version = 3;
 }
 
 message RequestResults {

@@ -17,11 +17,10 @@
  */
 package org.apache.drill.exec.cache;
 
+import org.apache.drill.exec.proto.BitControl.PlanFragment;
+import org.apache.drill.exec.proto.BitControl.WorkQueueStatus;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
-import org.apache.drill.exec.proto.ExecProtos.PlanFragment;
-import org.apache.drill.exec.proto.ExecProtos.WorkQueueStatus;
 
-import com.google.protobuf.Parser;
 import com.hazelcast.core.HazelcastInstance;
 
 public class ProtoBufImpl {

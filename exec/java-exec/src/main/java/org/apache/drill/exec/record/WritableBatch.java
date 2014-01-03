@@ -41,7 +41,6 @@ public class WritableBatch {
   private boolean cleared = false;
 
   private WritableBatch(RecordBatchDef def, List<ByteBuf> buffers) {
-    logger.debug("Created new writable batch with def {} and buffers {}", def, buffers);
     this.def = def;
     this.buffers = buffers.toArray(new ByteBuf[buffers.size()]);
   }
@@ -106,6 +105,7 @@ public class WritableBatch {
   }
 
   public void clear() {
+    if(cleared) return;
     for (ByteBuf buf : buffers) {
       buf.release();
     }

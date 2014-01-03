@@ -35,13 +35,18 @@ import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.rpc.NamedThreadFactory;
-import org.apache.drill.exec.rpc.bit.BitCom;
+import org.apache.drill.exec.rpc.control.Controller;
+import org.apache.drill.exec.rpc.control.WorkEventBus;
+import org.apache.drill.exec.rpc.data.DataConnectionCreator;
+import org.apache.drill.exec.rpc.data.DataResponseHandler;
+import org.apache.drill.exec.rpc.data.DataResponseHandlerImpl;
 import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.work.batch.BitComHandler;
-import org.apache.drill.exec.work.batch.BitComHandlerImpl;
+import org.apache.drill.exec.work.batch.ControlHandlerImpl;
+import org.apache.drill.exec.work.batch.ControlMessageHandler;
 import org.apache.drill.exec.work.foreman.Foreman;
-import org.apache.drill.exec.work.fragment.IncomingFragmentHandler;
+import org.apache.drill.exec.work.fragment.FragmentExecutor;
+import org.apache.drill.exec.work.fragment.FragmentManager;
 import org.apache.drill.exec.work.user.UserWorker;
 
 import com.google.common.collect.Maps;
@@ -50,39 +55,51 @@ import com.google.common.collect.Queues;
 public class WorkManager implements Closeable{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WorkManager.class);
   
-  private Set<IncomingFragmentHandler> incomingFragments = Collections.newSetFromMap(Maps.<IncomingFragmentHandler, Boolean> newConcurrentMap());
+  private Set<FragmentManager> incomingFragments = Collections.newSetFromMap(Maps.<FragmentManager, Boolean> newConcurrentMap());
 
   private PriorityBlockingQueue<Runnable> pendingTasks = Queues.newPriorityBlockingQueue();
   
-  private Map<FragmentHandle, FragmentRunner> runningFragments = Maps.newConcurrentMap();
+  private Map<FragmentHandle, FragmentExecutor> runningFragments = Maps.newConcurrentMap();
   
   private ConcurrentMap<QueryId, Foreman> queries = Maps.newConcurrentMap();
 
   private BootStrapContext bContext;
   private DrillbitContext dContext;
 
-  private final BitComHandler bitComWorker;
+  private final ControlMessageHandler controlMessageWorker;
+  private final DataResponseHandler dataHandler;
   private final UserWorker userWorker;
   private final WorkerBee bee;
+  private final WorkEventBus workBus;
   private Executor executor;
   private final EventThread eventThread;
   
   public WorkManager(BootStrapContext context){
     this.bee = new WorkerBee();
+    this.workBus = new WorkEventBus(bee);
     this.bContext = context;
-    this.bitComWorker = new BitComHandlerImpl(bee);
+    this.controlMessageWorker = new ControlHandlerImpl(bee);
     this.userWorker = new UserWorker(bee);
     this.eventThread = new EventThread();
+    this.dataHandler = new DataResponseHandlerImpl(bee);
   }
   
-  public void start(DrillbitEndpoint endpoint, DistributedCache cache, BitCom com, ClusterCoordinator coord){
-    this.dContext = new DrillbitContext(endpoint, bContext, coord, com, cache);
+  public void start(DrillbitEndpoint endpoint, DistributedCache cache, Controller controller, DataConnectionCreator data, ClusterCoordinator coord){
+    this.dContext = new DrillbitContext(endpoint, bContext, coord, controller, data, cache, workBus);
     executor = Executors.newFixedThreadPool(dContext.getConfig().getInt(ExecConstants.EXECUTOR_THREADS), new NamedThreadFactory("WorkManager-"));
     eventThread.start();
   }
   
-  public BitComHandler getBitComWorker(){
-    return bitComWorker;
+  public WorkEventBus getWorkBus(){
+    return workBus;
+  }
+  
+  public DataResponseHandler getDataHandler() {
+    return dataHandler;
+  }
+  
+  public ControlMessageHandler getControlMessageHandler(){
+    return controlMessageWorker;
   }
 
   public UserWorker getUserWorker(){
@@ -101,7 +118,7 @@ public class WorkManager implements Closeable{
   // create this so items can see the data here whether or not they are in this package.
   public class WorkerBee{
 
-    public void addFragmentRunner(FragmentRunner runner){
+    public void addFragmentRunner(FragmentExecutor runner){
       pendingTasks.add(runner);
     }
     
@@ -110,16 +127,16 @@ public class WorkManager implements Closeable{
     }
 
 
-    public void addFragmentPendingRemote(IncomingFragmentHandler handler){
+    public void addFragmentPendingRemote(FragmentManager handler){
       incomingFragments.add(handler);
     }
     
-    public void startFragmentPendingRemote(IncomingFragmentHandler handler){
+    public void startFragmentPendingRemote(FragmentManager handler){
       incomingFragments.remove(handler);
       pendingTasks.add(handler.getRunnable());
     }
     
-    public FragmentRunner getFragmentRunner(FragmentHandle handle){
+    public FragmentExecutor getFragmentRunner(FragmentHandle handle){
       return runningFragments.get(handle);
     }
     

@@ -78,7 +78,7 @@ public class CoordinationQueue {
 
     @Override
     public void operationComplete(ChannelFuture future) throws Exception {
-      connection.releasePermit();
+
       if(!future.isSuccess()){
         removeFromMap(coordinationId);
         if(future.channel().isActive()) {

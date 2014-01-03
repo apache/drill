@@ -20,7 +20,7 @@ package org.apache.drill.optiq;
 import net.hydromatic.linq4j.Ord;
 
 import org.apache.drill.exec.client.DrillClient;
-import org.apache.drill.exec.work.FragmentRunnerListener;
+import org.apache.drill.exec.work.fragment.StatusReporter;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.reltype.RelDataTypeField;

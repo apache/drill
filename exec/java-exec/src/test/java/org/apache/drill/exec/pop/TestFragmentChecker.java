@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.pop;
 
-import static org.junit.Assert.assertEquals;
-
 import java.util.List;
 
 import org.apache.drill.exec.planner.PhysicalPlanReader;
@@ -26,8 +24,8 @@ import org.apache.drill.exec.planner.fragment.Fragment;
 import org.apache.drill.exec.planner.fragment.PlanningSet;
 import org.apache.drill.exec.planner.fragment.SimpleParallelizer;
 import org.apache.drill.exec.planner.fragment.StatsCollector;
+import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
-import org.apache.drill.exec.proto.ExecProtos.PlanFragment;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.work.QueryWorkUnit;
 import org.junit.Test;
@@ -55,7 +53,7 @@ public class TestFragmentChecker extends PopUnitTestBase{
     List<DrillbitEndpoint> endpoints = Lists.newArrayList();
     DrillbitEndpoint localBit = null;
     for(int i =0; i < bitCount; i++){
-      DrillbitEndpoint b1 = DrillbitEndpoint.newBuilder().setAddress("localhost").setBitPort(1234+i).build();
+      DrillbitEndpoint b1 = DrillbitEndpoint.newBuilder().setAddress("localhost").setControlPort(1234+i).build();
       if(i ==0) localBit = b1; 
       endpoints.add(b1);
     }

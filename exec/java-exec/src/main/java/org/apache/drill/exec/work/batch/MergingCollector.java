@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.Receiver;
 
-public class MergingCollector extends AbstractFragmentCollector{
+public class MergingCollector extends AbstractDataCollector{
 
   private AtomicInteger streamsRunning;
   

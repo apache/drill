@@ -314,6 +314,7 @@ public class MergingRecordBatch implements RecordBatch {
     for (RawFragmentBatchProvider provider : fragProviders) {
       provider.kill(context);
     }
+    
   }
 
   @Override
@@ -628,6 +629,14 @@ public class MergingRecordBatch implements RecordBatch {
     Node(int batchId, int valueIndex) {
       this.batchId = batchId;
       this.valueIndex = valueIndex;
+    }
+  }
+
+  @Override
+  public void cleanup() {
+    outgoingContainer.clear();
+    for(RecordBatchLoader rbl : batchLoaders){
+      rbl.clear();
     }
   }
 

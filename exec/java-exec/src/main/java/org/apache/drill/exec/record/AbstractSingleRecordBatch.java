@@ -22,7 +22,7 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 
 public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> extends AbstractRecordBatch<T> {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractSingleRecordBatch.class);
+  final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(this.getClass());
   
   protected final RecordBatch incoming;
   private boolean first = true;
@@ -46,7 +46,6 @@ public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> exte
     case NONE:
     case NOT_YET:
     case STOP:
-      container.zeroVectors();
       cleanup();
       return upstream;
     case OK_NEW_SCHEMA:
@@ -65,6 +64,13 @@ public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> exte
     default:
       throw new UnsupportedOperationException();
     }
+  }
+
+  @Override
+  public void cleanup() {
+//    logger.debug("Cleaning up.");
+    incoming.cleanup();
+    super.cleanup();
   }
 
   protected abstract void setupNewSchema() throws SchemaChangeException;

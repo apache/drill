@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.Receiver;
 
-public class PartitionedCollector extends AbstractFragmentCollector{
+public class PartitionedCollector extends AbstractDataCollector{
 
   public PartitionedCollector(AtomicInteger parentAccounter, Receiver receiver, FragmentContext context) {
     super(parentAccounter, receiver, receiver.getProvidingEndpoints().size(), context);

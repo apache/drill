@@ -54,6 +54,7 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
   
   public RemovingRecordBatch(SelectionVectorRemover popConfig, FragmentContext context, RecordBatch incoming) {
     super(popConfig, context, incoming);
+    logger.debug("Created.");
   }
 
   @Override
@@ -64,7 +65,7 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
   @Override
   protected void setupNewSchema() throws SchemaChangeException {
     container.clear();
-    
+
     switch(incoming.getSchema().getSelectionVectorMode()){
     case NONE:
       this.copier = getStraightCopier();
@@ -93,6 +94,9 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
     }
   }
 
+  public void cleanup(){
+    super.cleanup();
+  }
   
   private class StraightCopier implements Copier{
 

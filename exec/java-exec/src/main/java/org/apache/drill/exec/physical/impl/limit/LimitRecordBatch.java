@@ -158,7 +158,7 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
   }
 
   @Override
-  protected void cleanup(){
+  public void cleanup(){
     super.cleanup();
     outgoingSv.clear();
   }

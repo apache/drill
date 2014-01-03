@@ -25,6 +25,97 @@ public final class UserBitShared {
   public static void registerAllExtensions(
       com.google.protobuf.ExtensionRegistry registry) {
   }
+  /**
+   * Protobuf enum {@code exec.shared.RpcChannel}
+   */
+  public enum RpcChannel
+      implements com.google.protobuf.ProtocolMessageEnum {
+    /**
+     * <code>BIT_CONTROL = 0;</code>
+     */
+    BIT_CONTROL(0, 0),
+    /**
+     * <code>BIT_DATA = 1;</code>
+     */
+    BIT_DATA(1, 1),
+    /**
+     * <code>USER = 2;</code>
+     */
+    USER(2, 2),
+    ;
+
+    /**
+     * <code>BIT_CONTROL = 0;</code>
+     */
+    public static final int BIT_CONTROL_VALUE = 0;
+    /**
+     * <code>BIT_DATA = 1;</code>
+     */
+    public static final int BIT_DATA_VALUE = 1;
+    /**
+     * <code>USER = 2;</code>
+     */
+    public static final int USER_VALUE = 2;
+
+
+    public final int getNumber() { return value; }
+
+    public static RpcChannel valueOf(int value) {
+      switch (value) {
+        case 0: return BIT_CONTROL;
+        case 1: return BIT_DATA;
+        case 2: return USER;
+        default: return null;
+      }
+    }
+
+    public static com.google.protobuf.Internal.EnumLiteMap<RpcChannel>
+        internalGetValueMap() {
+      return internalValueMap;
+    }
+    private static com.google.protobuf.Internal.EnumLiteMap<RpcChannel>
+        internalValueMap =
+          new com.google.protobuf.Internal.EnumLiteMap<RpcChannel>() {
+            public RpcChannel findValueByNumber(int number) {
+              return RpcChannel.valueOf(number);
+            }
+          };
+
+    public final com.google.protobuf.Descriptors.EnumValueDescriptor
+        getValueDescriptor() {
+      return getDescriptor().getValues().get(index);
+    }
+    public final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptorForType() {
+      return getDescriptor();
+    }
+    public static final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptor() {
+      return org.apache.drill.exec.proto.UserBitShared.getDescriptor().getEnumTypes().get(0);
+    }
+
+    private static final RpcChannel[] VALUES = values();
+
+    public static RpcChannel valueOf(
+        com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+      if (desc.getType() != getDescriptor()) {
+        throw new java.lang.IllegalArgumentException(
+          "EnumValueDescriptor is not for this type.");
+      }
+      return VALUES[desc.getIndex()];
+    }
+
+    private final int index;
+    private final int value;
+
+    private RpcChannel(int index, int value) {
+      this.index = index;
+      this.value = value;
+    }
+
+    // @@protoc_insertion_point(enum_scope:exec.shared.RpcChannel)
+  }
+
   public interface QueryIdOrBuilder
       extends com.google.protobuf.MessageOrBuilder {
 
@@ -2563,315 +2654,6 @@ public final class UserBitShared {
     // @@protoc_insertion_point(class_scope:exec.shared.ParsingError)
   }
 
-  public interface RecordBatchOrBuilder
-      extends com.google.protobuf.MessageOrBuilder {
-  }
-  /**
-   * Protobuf type {@code exec.shared.RecordBatch}
-   */
-  public static final class RecordBatch extends
-      com.google.protobuf.GeneratedMessage
-      implements RecordBatchOrBuilder {
-    // Use RecordBatch.newBuilder() to construct.
-    private RecordBatch(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
-      super(builder);
-      this.unknownFields = builder.getUnknownFields();
-    }
-    private RecordBatch(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
-
-    private static final RecordBatch defaultInstance;
-    public static RecordBatch getDefaultInstance() {
-      return defaultInstance;
-    }
-
-    public RecordBatch getDefaultInstanceForType() {
-      return defaultInstance;
-    }
-
-    private final com.google.protobuf.UnknownFieldSet unknownFields;
-    @java.lang.Override
-    public final com.google.protobuf.UnknownFieldSet
-        getUnknownFields() {
-      return this.unknownFields;
-    }
-    private RecordBatch(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      initFields();
-      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-          com.google.protobuf.UnknownFieldSet.newBuilder();
-      try {
-        boolean done = false;
-        while (!done) {
-          int tag = input.readTag();
-          switch (tag) {
-            case 0:
-              done = true;
-              break;
-            default: {
-              if (!parseUnknownField(input, unknownFields,
-                                     extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
-          }
-        }
-      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        throw e.setUnfinishedMessage(this);
-      } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e.getMessage()).setUnfinishedMessage(this);
-      } finally {
-        this.unknownFields = unknownFields.build();
-        makeExtensionsImmutable();
-      }
-    }
-    public static final com.google.protobuf.Descriptors.Descriptor
-        getDescriptor() {
-      return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_RecordBatch_descriptor;
-    }
-
-    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
-        internalGetFieldAccessorTable() {
-      return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_RecordBatch_fieldAccessorTable
-          .ensureFieldAccessorsInitialized(
-              org.apache.drill.exec.proto.UserBitShared.RecordBatch.class, org.apache.drill.exec.proto.UserBitShared.RecordBatch.Builder.class);
-    }
-
-    public static com.google.protobuf.Parser<RecordBatch> PARSER =
-        new com.google.protobuf.AbstractParser<RecordBatch>() {
-      public RecordBatch parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new RecordBatch(input, extensionRegistry);
-      }
-    };
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<RecordBatch> getParserForType() {
-      return PARSER;
-    }
-
-    private void initFields() {
-    }
-    private byte memoizedIsInitialized = -1;
-    public final boolean isInitialized() {
-      byte isInitialized = memoizedIsInitialized;
-      if (isInitialized != -1) return isInitialized == 1;
-
-      memoizedIsInitialized = 1;
-      return true;
-    }
-
-    public void writeTo(com.google.protobuf.CodedOutputStream output)
-                        throws java.io.IOException {
-      getSerializedSize();
-      getUnknownFields().writeTo(output);
-    }
-
-    private int memoizedSerializedSize = -1;
-    public int getSerializedSize() {
-      int size = memoizedSerializedSize;
-      if (size != -1) return size;
-
-      size = 0;
-      size += getUnknownFields().getSerializedSize();
-      memoizedSerializedSize = size;
-      return size;
-    }
-
-    private static final long serialVersionUID = 0L;
-    @java.lang.Override
-    protected java.lang.Object writeReplace()
-        throws java.io.ObjectStreamException {
-      return super.writeReplace();
-    }
-
-    public static org.apache.drill.exec.proto.UserBitShared.RecordBatch parseFrom(
-        com.google.protobuf.ByteString data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static org.apache.drill.exec.proto.UserBitShared.RecordBatch parseFrom(
-        com.google.protobuf.ByteString data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static org.apache.drill.exec.proto.UserBitShared.RecordBatch parseFrom(byte[] data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static org.apache.drill.exec.proto.UserBitShared.RecordBatch parseFrom(
-        byte[] data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static org.apache.drill.exec.proto.UserBitShared.RecordBatch parseFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return PARSER.parseFrom(input);
-    }
-    public static org.apache.drill.exec.proto.UserBitShared.RecordBatch parseFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return PARSER.parseFrom(input, extensionRegistry);
-    }
-    public static org.apache.drill.exec.proto.UserBitShared.RecordBatch parseDelimitedFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return PARSER.parseDelimitedFrom(input);
-    }
-    public static org.apache.drill.exec.proto.UserBitShared.RecordBatch parseDelimitedFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return PARSER.parseDelimitedFrom(input, extensionRegistry);
-    }
-    public static org.apache.drill.exec.proto.UserBitShared.RecordBatch parseFrom(
-        com.google.protobuf.CodedInputStream input)
-        throws java.io.IOException {
-      return PARSER.parseFrom(input);
-    }
-    public static org.apache.drill.exec.proto.UserBitShared.RecordBatch parseFrom(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return PARSER.parseFrom(input, extensionRegistry);
-    }
-
-    public static Builder newBuilder() { return Builder.create(); }
-    public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder(org.apache.drill.exec.proto.UserBitShared.RecordBatch prototype) {
-      return newBuilder().mergeFrom(prototype);
-    }
-    public Builder toBuilder() { return newBuilder(this); }
-
-    @java.lang.Override
-    protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
-      Builder builder = new Builder(parent);
-      return builder;
-    }
-    /**
-     * Protobuf type {@code exec.shared.RecordBatch}
-     */
-    public static final class Builder extends
-        com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements org.apache.drill.exec.proto.UserBitShared.RecordBatchOrBuilder {
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_RecordBatch_descriptor;
-      }
-
-      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
-          internalGetFieldAccessorTable() {
-        return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_RecordBatch_fieldAccessorTable
-            .ensureFieldAccessorsInitialized(
-                org.apache.drill.exec.proto.UserBitShared.RecordBatch.class, org.apache.drill.exec.proto.UserBitShared.RecordBatch.Builder.class);
-      }
-
-      // Construct using org.apache.drill.exec.proto.UserBitShared.RecordBatch.newBuilder()
-      private Builder() {
-        maybeForceBuilderInitialization();
-      }
-
-      private Builder(
-          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
-        super(parent);
-        maybeForceBuilderInitialization();
-      }
-      private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
-        }
-      }
-      private static Builder create() {
-        return new Builder();
-      }
-
-      public Builder clear() {
-        super.clear();
-        return this;
-      }
-
-      public Builder clone() {
-        return create().mergeFrom(buildPartial());
-      }
-
-      public com.google.protobuf.Descriptors.Descriptor
-          getDescriptorForType() {
-        return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_RecordBatch_descriptor;
-      }
-
-      public org.apache.drill.exec.proto.UserBitShared.RecordBatch getDefaultInstanceForType() {
-        return org.apache.drill.exec.proto.UserBitShared.RecordBatch.getDefaultInstance();
-      }
-
-      public org.apache.drill.exec.proto.UserBitShared.RecordBatch build() {
-        org.apache.drill.exec.proto.UserBitShared.RecordBatch result = buildPartial();
-        if (!result.isInitialized()) {
-          throw newUninitializedMessageException(result);
-        }
-        return result;
-      }
-
-      public org.apache.drill.exec.proto.UserBitShared.RecordBatch buildPartial() {
-        org.apache.drill.exec.proto.UserBitShared.RecordBatch result = new org.apache.drill.exec.proto.UserBitShared.RecordBatch(this);
-        onBuilt();
-        return result;
-      }
-
-      public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof org.apache.drill.exec.proto.UserBitShared.RecordBatch) {
-          return mergeFrom((org.apache.drill.exec.proto.UserBitShared.RecordBatch)other);
-        } else {
-          super.mergeFrom(other);
-          return this;
-        }
-      }
-
-      public Builder mergeFrom(org.apache.drill.exec.proto.UserBitShared.RecordBatch other) {
-        if (other == org.apache.drill.exec.proto.UserBitShared.RecordBatch.getDefaultInstance()) return this;
-        this.mergeUnknownFields(other.getUnknownFields());
-        return this;
-      }
-
-      public final boolean isInitialized() {
-        return true;
-      }
-
-      public Builder mergeFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        org.apache.drill.exec.proto.UserBitShared.RecordBatch parsedMessage = null;
-        try {
-          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
-        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (org.apache.drill.exec.proto.UserBitShared.RecordBatch) e.getUnfinishedMessage();
-          throw e;
-        } finally {
-          if (parsedMessage != null) {
-            mergeFrom(parsedMessage);
-          }
-        }
-        return this;
-      }
-
-      // @@protoc_insertion_point(builder_scope:exec.shared.RecordBatch)
-    }
-
-    static {
-      defaultInstance = new RecordBatch(true);
-      defaultInstance.initFields();
-    }
-
-    // @@protoc_insertion_point(class_scope:exec.shared.RecordBatch)
-  }
-
   public interface RecordBatchDefOrBuilder
       extends com.google.protobuf.MessageOrBuilder {
 
@@ -4952,11 +4734,6 @@ public final class UserBitShared {
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_exec_shared_ParsingError_fieldAccessorTable;
   private static com.google.protobuf.Descriptors.Descriptor
-    internal_static_exec_shared_RecordBatch_descriptor;
-  private static
-    com.google.protobuf.GeneratedMessage.FieldAccessorTable
-      internal_static_exec_shared_RecordBatch_fieldAccessorTable;
-  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_shared_RecordBatchDef_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
@@ -4984,14 +4761,15 @@ public final class UserBitShared {
       "ror\030\005 \003(\0132\031.exec.shared.ParsingError\"\\\n\014" +
       "ParsingError\022\024\n\014start_column\030\002 \001(\005\022\021\n\tst" +
       "art_row\030\003 \001(\005\022\022\n\nend_column\030\004 \001(\005\022\017\n\007end" +
-      "_row\030\005 \001(\005\"\r\n\013RecordBatch\"p\n\016RecordBatch",
-      "Def\022)\n\005field\030\001 \003(\0132\032.exec.shared.FieldMe" +
-      "tadata\022\024\n\014record_count\030\002 \001(\005\022\035\n\025is_selec" +
-      "tion_vector_2\030\003 \001(\010\"\261\001\n\rFieldMetadata\022\033\n" +
-      "\003def\030\001 \001(\0132\016.exec.FieldDef\022\023\n\013value_coun" +
-      "t\030\002 \001(\005\022\027\n\017var_byte_length\030\003 \001(\005\022\023\n\013grou" +
-      "p_count\030\004 \001(\005\022\025\n\rbuffer_length\030\005 \001(\005\022)\n\005" +
-      "child\030\006 \003(\0132\032.exec.shared.FieldMetadataB" +
+      "_row\030\005 \001(\005\"p\n\016RecordBatchDef\022)\n\005field\030\001 ",
+      "\003(\0132\032.exec.shared.FieldMetadata\022\024\n\014recor" +
+      "d_count\030\002 \001(\005\022\035\n\025is_selection_vector_2\030\003" +
+      " \001(\010\"\261\001\n\rFieldMetadata\022\033\n\003def\030\001 \001(\0132\016.ex" +
+      "ec.FieldDef\022\023\n\013value_count\030\002 \001(\005\022\027\n\017var_" +
+      "byte_length\030\003 \001(\005\022\023\n\013group_count\030\004 \001(\005\022\025" +
+      "\n\rbuffer_length\030\005 \001(\005\022)\n\005child\030\006 \003(\0132\032.e" +
+      "xec.shared.FieldMetadata*5\n\nRpcChannel\022\017" +
+      "\n\013BIT_CONTROL\020\000\022\014\n\010BIT_DATA\020\001\022\010\n\004USER\020\002B" +
       ".\n\033org.apache.drill.exec.protoB\rUserBitS" +
       "haredH\001"
     };
@@ -5018,20 +4796,14 @@ public final class UserBitShared {
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_shared_ParsingError_descriptor,
               new java.lang.String[] { "StartColumn", "StartRow", "EndColumn", "EndRow", });
-          internal_static_exec_shared_RecordBatch_descriptor =
-            getDescriptor().getMessageTypes().get(3);
-          internal_static_exec_shared_RecordBatch_fieldAccessorTable = new
-            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_exec_shared_RecordBatch_descriptor,
-              new java.lang.String[] { });
           internal_static_exec_shared_RecordBatchDef_descriptor =
-            getDescriptor().getMessageTypes().get(4);
+            getDescriptor().getMessageTypes().get(3);
           internal_static_exec_shared_RecordBatchDef_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_shared_RecordBatchDef_descriptor,
               new java.lang.String[] { "Field", "RecordCount", "IsSelectionVector2", });
           internal_static_exec_shared_FieldMetadata_descriptor =
-            getDescriptor().getMessageTypes().get(5);
+            getDescriptor().getMessageTypes().get(4);
           internal_static_exec_shared_FieldMetadata_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_shared_FieldMetadata_descriptor,

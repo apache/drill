@@ -67,7 +67,14 @@ public class SimpleRootExec implements RootExec, Iterable<ValueVector>{
   
   @Override
   public boolean next() {
-    return incoming.next() != IterOutcome.NONE;
+    switch(incoming.next()){
+    case NONE:
+    case STOP:
+      incoming.cleanup();
+      return false;
+    default:
+      return true;
+    }
   }
 
   @Override

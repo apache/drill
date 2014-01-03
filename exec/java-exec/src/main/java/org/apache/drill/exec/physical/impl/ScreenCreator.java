@@ -17,7 +17,10 @@
  */
 package org.apache.drill.exec.physical.impl;
 
-import com.google.common.base.Preconditions;
+import io.netty.buffer.ByteBuf;
+
+import java.util.List;
+
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.Screen;
 import org.apache.drill.exec.physical.impl.materialize.QueryWritableBatch;
@@ -31,12 +34,13 @@ import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 import org.apache.drill.exec.rpc.BaseRpcOutcomeListener;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
-import org.apache.drill.exec.work.foreman.ErrorHelper;
+import org.apache.drill.exec.work.ErrorHelper;
 
-import java.util.List;
+import com.google.common.base.Preconditions;
 
 public class ScreenCreator implements RootCreator<Screen>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScreenCreator.class);
+  
   
   
   @Override
@@ -50,6 +54,8 @@ public class ScreenCreator implements RootCreator<Screen>{
   static class ScreenRoot implements RootExec{
     static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScreenRoot.class);
     volatile boolean ok = true;
+    
+    private final SendingAccountor sendCount = new SendingAccountor();
     
     final RecordBatch incoming;
     final FragmentContext context;
@@ -72,7 +78,7 @@ public class ScreenCreator implements RootCreator<Screen>{
       }
 
       IterOutcome outcome = incoming.next();
-      logger.debug("Screen Outcome {}", outcome);
+//      logger.debug("Screen Outcome {}", outcome);
       switch(outcome){
       case STOP: {
           QueryResult header = QueryResult.newBuilder() //
@@ -84,11 +90,12 @@ public class ScreenCreator implements RootCreator<Screen>{
               .build();
           QueryWritableBatch batch = new QueryWritableBatch(header);
           connection.sendResult(listener, batch);
+          sendCount.increment();
 
           return false;
       }
       case NONE: {
-        context.batchesCompleted.inc(1);
+        context.getStats().batchesCompleted.inc(1);
         QueryResult header = QueryResult.newBuilder() //
             .setQueryId(context.getHandle().getQueryId()) //
             .setRowCount(0) //
@@ -97,17 +104,20 @@ public class ScreenCreator implements RootCreator<Screen>{
             .build();
         QueryWritableBatch batch = new QueryWritableBatch(header);
         connection.sendResult(listener, batch);
-
+        sendCount.increment();
+        
         return false;
       }
       case OK_NEW_SCHEMA:
         materializer = new VectorRecordMaterializer(context, incoming);
         // fall through.
       case OK:
-        context.batchesCompleted.inc(1);
-        context.recordsCompleted.inc(incoming.getRecordCount());
+        context.getStats().batchesCompleted.inc(1);
+        context.getStats().recordsCompleted.inc(incoming.getRecordCount());
         QueryWritableBatch batch = materializer.convertNext(false);
         connection.sendResult(listener, batch);
+        sendCount.increment();
+        
         return true;
       default:
         throw new UnsupportedOperationException();
@@ -116,7 +126,8 @@ public class ScreenCreator implements RootCreator<Screen>{
 
     @Override
     public void stop() {
-      incoming.kill();
+      incoming.cleanup();
+      sendCount.waitForSendComplete();
     }
 
     private SendListener listener = new SendListener();
@@ -126,7 +137,14 @@ public class ScreenCreator implements RootCreator<Screen>{
 
 
       @Override
+      public void success(Ack value, ByteBuf buffer) {
+        super.success(value, buffer);
+        sendCount.decrement();
+      }
+
+      @Override
       public void failed(RpcException ex) {
+        sendCount.decrement();
         logger.error("Failure while sending data to user.", ex);
         ErrorHelper.logAndConvertError(context.getIdentity(), "Failure while sending fragment to client.", ex, logger);
         ok = false;

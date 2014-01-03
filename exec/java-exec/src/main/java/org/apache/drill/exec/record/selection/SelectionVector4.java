@@ -20,11 +20,12 @@ package org.apache.drill.exec.record.selection;
 import io.netty.buffer.ByteBuf;
 
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.record.DeadBuf;
 
 public class SelectionVector4 {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SelectionVector4.class);
 
-  private final ByteBuf vector;
+  private ByteBuf data;
   private int recordCount;
   private int start;
   private int length;
@@ -34,7 +35,7 @@ public class SelectionVector4 {
     this.recordCount = recordCount;
     this.start = 0;
     this.length = Math.min(batchRecordCount, recordCount);
-    this.vector = vector;
+    this.data = vector;
   }
   
   public int getTotalCount(){
@@ -51,14 +52,14 @@ public class SelectionVector4 {
   }
 
   public void set(int index, int compound){
-    vector.setInt(index*4, compound);
+    data.setInt(index*4, compound);
   }
   public void set(int index, int recordBatch, int recordIndex){
-    vector.setInt(index*4, (recordBatch << 16) | (recordIndex & 65535));
+    data.setInt(index*4, (recordBatch << 16) | (recordIndex & 65535));
   }
   
   public int get(int index){
-    return vector.getInt( (start+index)*4);
+    return data.getInt( (start+index)*4);
   }
 
   /**
@@ -68,8 +69,8 @@ public class SelectionVector4 {
    */
   public SelectionVector4 createNewWrapperCurrent(){
     try {
-      vector.retain();
-      SelectionVector4 sv4 = new SelectionVector4(vector, length, length);
+      data.retain();
+      SelectionVector4 sv4 = new SelectionVector4(data, length, length);
       sv4.start = this.start;
       return sv4;
     } catch (SchemaChangeException e) {
@@ -98,7 +99,10 @@ public class SelectionVector4 {
   public void clear(){
     start = 0;
     length = 0;
-    this.vector.clear();
+    if (data != DeadBuf.DEAD_BUFFER) {
+      data.release();
+      data = DeadBuf.DEAD_BUFFER;
+    }
   }
   
   

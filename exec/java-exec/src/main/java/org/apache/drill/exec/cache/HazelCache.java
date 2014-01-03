@@ -22,23 +22,28 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.hazelcast.config.SerializerConfig;
-import com.hazelcast.core.*;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.cache.ProtoBufImpl.HWorkQueueStatus;
 import org.apache.drill.exec.cache.ProtoBufImpl.HandlePlan;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.proto.BitControl.PlanFragment;
+import org.apache.drill.exec.proto.BitControl.WorkQueueStatus;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
-import org.apache.drill.exec.proto.ExecProtos.PlanFragment;
-import org.apache.drill.exec.proto.ExecProtos.WorkQueueStatus;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.collect.Lists;
 import com.hazelcast.config.Config;
-import org.apache.drill.exec.server.DrillbitContext;
+import com.hazelcast.config.SerializerConfig;
+import com.hazelcast.core.DuplicateInstanceNameException;
+import com.hazelcast.core.Hazelcast;
+import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.core.IAtomicLong;
+import com.hazelcast.core.IMap;
+import com.hazelcast.core.ITopic;
+import com.hazelcast.core.Message;
+import com.hazelcast.core.MessageListener;
 
 public class HazelCache implements DistributedCache {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HazelCache.class);
@@ -67,8 +72,9 @@ public class HazelCache implements DistributedCache {
   
   public void run() {
     Config c = new Config();
-    SerializerConfig sc = new SerializerConfig().setImplementation(new HCVectorAccessibleSerializer(allocator))
-            .setTypeClass(VectorAccessibleSerializable.class);
+    SerializerConfig sc = new SerializerConfig() // 
+      .setImplementation(new HCVectorAccessibleSerializer(allocator)) //
+      .setTypeClass(VectorAccessibleSerializable.class);
     c.setInstanceName(instanceName);
     c.getSerializationConfig().addSerializerConfig(sc);
     instance = getInstanceOrCreateNew(c);
@@ -119,12 +125,14 @@ public class HazelCache implements DistributedCache {
 
   @Override
   public <V extends DrillSerializable> DistributedMultiMap<V> getMultiMap(Class<V> clazz) {
-    return new HCDistributedMultiMapImpl(this.instance.getMultiMap(clazz.toString()), clazz);
+    com.hazelcast.core.MultiMap<String, V> mmap = this.instance.getMultiMap(clazz.toString());
+    return new HCDistributedMultiMapImpl<V>(mmap, clazz);
   }
 
   @Override
   public <V extends DrillSerializable> DistributedMap<V> getMap(Class<V> clazz) {
-    return new HCDistributedMapImpl(this.instance.getMap(clazz.toString()), clazz);
+    IMap<String, V> imap = this.instance.getMap(clazz.toString());
+    return new HCDistributedMapImpl<V>(imap, clazz);
   }
 
   @Override
@@ -132,51 +140,47 @@ public class HazelCache implements DistributedCache {
     return new HCCounterImpl(this.instance.getAtomicLong(name));
   }
 
-  public static class HCDistributedMapImpl<V> implements DistributedMap<V> {
-    private IMap<String, DrillSerializable> m;
-    private Class<V> clazz;
+  public static class HCDistributedMapImpl<V extends DrillSerializable> implements DistributedMap<V> {
+    private IMap<String, V> m;
 
-    public HCDistributedMapImpl(IMap m, Class<V> clazz) {
+    public HCDistributedMapImpl(IMap<String, V> m, Class<V> clazz) {
       this.m = m;
-      this.clazz = clazz;
     }
 
-    public DrillSerializable get(String key) {
+    public V get(String key) {
       return m.get(key);
     }
 
-    public void put(String key, DrillSerializable value) {
+    public void put(String key, V value) {
       m.put(key, value);
     }
 
-    public void putIfAbsent(String key, DrillSerializable value) {
+    public void putIfAbsent(String key, V value) {
       m.putIfAbsent(key, value);
     }
 
-    public void putIfAbsent(String key, DrillSerializable value, long ttl, TimeUnit timeunit) {
+    public void putIfAbsent(String key, V value, long ttl, TimeUnit timeunit) {
       m.putIfAbsent(key, value, ttl, timeunit);
     }
   }
 
-  public static class HCDistributedMultiMapImpl<V> implements DistributedMultiMap<V> {
-    private com.hazelcast.core.MultiMap<String, DrillSerializable> mmap;
-    private Class<V> clazz;
+  public static class HCDistributedMultiMapImpl<V extends DrillSerializable> implements DistributedMultiMap<V> {
+    private com.hazelcast.core.MultiMap<String, V> mmap;
 
-    public HCDistributedMultiMapImpl(com.hazelcast.core.MultiMap mmap, Class<V> clazz) {
+    public HCDistributedMultiMapImpl(com.hazelcast.core.MultiMap<String, V> mmap, Class<V> clazz) {
       this.mmap = mmap;
-      this.clazz = clazz;
     }
 
-    public Collection<DrillSerializable> get(String key) {
-      List<DrillSerializable> list = Lists.newArrayList();
-      for (DrillSerializable v : mmap.get(key)) {
+    public Collection<V> get(String key) {
+      List<V> list = Lists.newArrayList();
+      for (V v : mmap.get(key)) {
         list.add(v);
       }
       return list;
     }
 
     @Override
-    public void put(String key, DrillSerializable value) {
+    public void put(String key, V value) {
       mmap.put(key, value);
     }
   }

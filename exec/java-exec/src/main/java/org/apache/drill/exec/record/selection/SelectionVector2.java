@@ -106,7 +106,7 @@ public class SelectionVector2 implements Closeable{
   }
   
   public void setRecordCount(int recordCount){
-    logger.debug("Seting record count to {}", recordCount);
+//    logger.debug("Seting record count to {}", recordCount);
     this.recordCount = recordCount;
   }
 

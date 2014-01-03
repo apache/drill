@@ -1,0 +1,83 @@
+package exec.bit.control;
+
+option java_package = "org.apache.drill.exec.proto";
+option java_outer_classname = "BitControl";
+option optimize_for = SPEED;
+
+import "ExecutionProtos.proto";
+import "Coordination.proto";
+import "UserBitShared.proto";
+
+
+////// BitControl RPC ///////
+enum RpcType {
+  HANDSHAKE = 0;
+  ACK = 1;
+  GOODBYE = 2;
+    
+  // bit requests
+  REQ_INIATILIZE_FRAGMENT = 3; // Returns Handle
+    
+  REQ_CANCEL_FRAGMENT = 6; // send a cancellation message for a fragment, returns Ack
+  REQ_FRAGMENT_STATUS = 7; // get a fragment status, returns FragmentStatus
+  REQ_BIT_STATUS = 8; // get bit status.
+      
+    // bit responses
+  RESP_FRAGMENT_HANDLE = 9;
+  RESP_FRAGMENT_STATUS = 10;
+  RESP_BIT_STATUS = 11;
+}
+
+
+message BitControlHandshake{
+  optional int32 rpc_version = 1;
+  optional exec.shared.RpcChannel channel = 2 [default = BIT_CONTROL];
+  optional DrillbitEndpoint endpoint = 3;
+}
+
+message BitStatus {
+  repeated FragmentStatus fragment_status = 1;
+}
+
+message FragmentStatus {
+  
+  enum FragmentState {
+    SENDING = 0;
+    AWAITING_ALLOCATION = 1;
+    RUNNING = 2;
+    FINISHED = 3;
+    CANCELLED = 4;
+    FAILED = 5;
+  }
+  
+  optional int64 memory_use = 1;
+  optional int64 batches_completed = 2;
+  optional int64 records_completed = 3;
+  optional int32 estimated_completion_percentage = 4;
+  optional FragmentState state = 5;
+  optional int64 data_processed = 6;
+  
+  optional FragmentHandle handle = 7;
+  optional exec.shared.DrillPBError error = 8;
+  optional int64 running_time = 9;
+}
+
+message PlanFragment {
+  optional FragmentHandle handle = 1;
+  optional float network_cost = 4;
+  optional float cpu_cost = 5;
+  optional float disk_cost = 6;
+  optional float memory_cost = 7;
+  optional string fragment_json = 8;
+  optional DrillbitEndpoint assignment = 10;
+  optional bool leaf_fragment = 9;
+  optional DrillbitEndpoint foreman = 11;
+  optional int64 mem_initial = 12 [default = 20000000]; // 20 megs
+  optional int64 mem_max = 13 [default = 20000000000]; // 20 gigs
+}
+
+message WorkQueueStatus{
+  optional DrillbitEndpoint endpoint = 1;
+  optional int32 queue_length = 2;
+  optional int64 report_time = 3;
+}

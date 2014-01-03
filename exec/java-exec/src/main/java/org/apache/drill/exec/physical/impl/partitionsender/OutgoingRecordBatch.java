@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.physical.impl.partitionsender;
 
+import io.netty.buffer.ByteBuf;
+
 import java.util.Iterator;
 
 import org.apache.drill.common.expression.SchemaPath;
@@ -24,8 +26,10 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.HashPartitionSender;
+import org.apache.drill.exec.physical.impl.SendingAccountor;
 import org.apache.drill.exec.proto.ExecProtos;
 import org.apache.drill.exec.proto.GeneralRPCProtos;
+import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.FragmentWritableBatch;
 import org.apache.drill.exec.record.RecordBatch;
@@ -35,14 +39,12 @@ import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.WritableBatch;
-import org.apache.drill.exec.record.selection.SelectionVector2;
-import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.rpc.BaseRpcOutcomeListener;
 import org.apache.drill.exec.rpc.RpcException;
-import org.apache.drill.exec.rpc.bit.BitTunnel;
+import org.apache.drill.exec.rpc.data.DataTunnel;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.allocator.VectorAllocator;
-import org.apache.drill.exec.work.foreman.ErrorHelper;
+import org.apache.drill.exec.work.ErrorHelper;
 
 import com.google.common.base.Preconditions;
 
@@ -54,25 +56,28 @@ import com.google.common.base.Preconditions;
 public class OutgoingRecordBatch implements VectorAccessible {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OutgoingRecordBatch.class);
 
-  private BitTunnel tunnel;
-  private HashPartitionSender operator;
-  private volatile boolean ok = true;
+  private final DataTunnel tunnel;
+  private final HashPartitionSender operator;
+  private final RecordBatch incoming;
+  private final FragmentContext context;
+  private final VectorContainer vectorContainer = new VectorContainer();
+  private final SendingAccountor sendCount;
+  private final int oppositeMinorFragmentId;
+
   private boolean isLast = false;
-  private RecordBatch incoming;
-  private FragmentContext context;
+  private volatile boolean ok = true;
   private BatchSchema outSchema;
-  private VectorContainer vectorContainer;
   private int recordCount;
   private int recordCapacity;
-  private int oppositeMinorFragmentId;
   private static int DEFAULT_ALLOC_SIZE = 20000;
   private static int DEFAULT_VARIABLE_WIDTH_SIZE = 2048;
 
-  public OutgoingRecordBatch(HashPartitionSender operator, BitTunnel tunnel, RecordBatch incoming, FragmentContext context, int oppositeMinorFragmentId) {
+  public OutgoingRecordBatch(SendingAccountor sendCount, HashPartitionSender operator, DataTunnel tunnel, RecordBatch incoming, FragmentContext context, int oppositeMinorFragmentId) {
     this.incoming = incoming;
     this.context = context;
     this.operator = operator;
     this.tunnel = tunnel;
+    this.sendCount = sendCount;
     this.oppositeMinorFragmentId = oppositeMinorFragmentId;
   }
 
@@ -116,7 +121,8 @@ public class OutgoingRecordBatch implements VectorAccessible {
                                                                       oppositeMinorFragmentId,
                                                                       getWritableBatch());
 
-      tunnel.sendRecordBatch(statusHandler, context, writableBatch);
+      tunnel.sendRecordBatch(statusHandler, writableBatch);
+      this.sendCount.increment();
     } else {
       logger.debug("Flush requested on an empty outgoing record batch" + (isLast ? " (last batch)" : ""));
       if (isLast) {
@@ -128,7 +134,8 @@ public class OutgoingRecordBatch implements VectorAccessible {
                                                                         operator.getOppositeMajorFragmentId(),
                                                                         oppositeMinorFragmentId,
                                                                         getWritableBatch());
-        tunnel.sendRecordBatch(statusHandler, context, writableBatch);
+        tunnel.sendRecordBatch(statusHandler, writableBatch);
+        this.sendCount.increment();
         vectorContainer.clear();
         return true;
       }
@@ -138,6 +145,7 @@ public class OutgoingRecordBatch implements VectorAccessible {
     // NOTE: the value vector is directly referenced by generated code; therefore references
     // must remain valid.
     recordCount = 0;
+    vectorContainer.zeroVectors();
     for (VectorWrapper<?> v : vectorContainer) {
       logger.debug("Reallocating vv to capacity " + DEFAULT_ALLOC_SIZE + " after flush.");
       VectorAllocator.getAllocator(v.getValueVector(), DEFAULT_VARIABLE_WIDTH_SIZE).alloc(DEFAULT_ALLOC_SIZE);
@@ -152,8 +160,8 @@ public class OutgoingRecordBatch implements VectorAccessible {
    */
   public void initializeBatch() {
     isLast = false;
+    vectorContainer.clear();
     recordCapacity = DEFAULT_ALLOC_SIZE;
-    vectorContainer = new VectorContainer();
 
     SchemaBuilder bldr = BatchSchema.newBuilder().setSelectionVectorMode(BatchSchema.SelectionVectorMode.NONE);
     for (VectorWrapper<?> v : incoming) {
@@ -179,8 +187,9 @@ public class OutgoingRecordBatch implements VectorAccessible {
     isLast = false;
     recordCount = 0;
     recordCapacity = 0;
-    for (VectorWrapper<?> v : vectorContainer)
+    for (VectorWrapper<?> v : vectorContainer){
       v.getValueVector().clear();
+    }
   }
 
   public void setIsLast() {
@@ -221,9 +230,16 @@ public class OutgoingRecordBatch implements VectorAccessible {
   private StatusHandler statusHandler = new StatusHandler();
   private class StatusHandler extends BaseRpcOutcomeListener<GeneralRPCProtos.Ack> {
     RpcException ex;
+    
+    @Override
+    public void success(Ack value, ByteBuf buffer) {
+      sendCount.decrement();
+      super.success(value, buffer);
+    }
 
     @Override
     public void failed(RpcException ex) {
+      sendCount.decrement();
       logger.error("Failure while sending data to user.", ex);
       ErrorHelper.logAndConvertError(context.getIdentity(), "Failure while sending fragment to client.", ex, logger);
       ok = false;
@@ -232,4 +248,7 @@ public class OutgoingRecordBatch implements VectorAccessible {
 
   }
 
+  public void clear(){
+    vectorContainer.clear();
+  }
 }

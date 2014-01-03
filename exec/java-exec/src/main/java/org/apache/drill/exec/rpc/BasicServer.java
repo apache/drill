@@ -18,7 +18,9 @@
 package org.apache.drill.exec.rpc;
 
 import io.netty.bootstrap.ServerBootstrap;
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
@@ -32,6 +34,7 @@ import java.io.IOException;
 import java.net.BindException;
 
 import org.apache.drill.exec.exception.DrillbitStartupException;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode;
 
 import com.google.protobuf.Internal.EnumLite;
@@ -42,7 +45,7 @@ import com.google.protobuf.Parser;
  * A server is bound to a port and is responsible for responding to various type of requests. In some cases, the inbound
  * requests will generate more than one outbound request.
  */
-public abstract class BasicServer<T extends EnumLite, C extends RemoteConnection> extends RpcBus<T, C>{
+public abstract class BasicServer<T extends EnumLite, C extends RemoteConnection> extends RpcBus<T, C> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BasicServer.class);
 
   private ServerBootstrap b;
@@ -52,10 +55,11 @@ public abstract class BasicServer<T extends EnumLite, C extends RemoteConnection
   public BasicServer(RpcConfig rpcMapping, ByteBufAllocator alloc, EventLoopGroup eventLoopGroup) {
     super(rpcMapping);
     this.eventLoopGroup = eventLoopGroup;
-    
+
     b = new ServerBootstrap() //
         .channel(NioServerSocketChannel.class) //
         .option(ChannelOption.SO_BACKLOG, 100) //
+        .option(ChannelOption.TCP_NODELAY, true)
         .option(ChannelOption.SO_RCVBUF, 1 << 17) //
         .option(ChannelOption.SO_SNDBUF, 1 << 17) //
         .group(eventLoopGroup) //
@@ -64,30 +68,30 @@ public abstract class BasicServer<T extends EnumLite, C extends RemoteConnection
         .childHandler(new ChannelInitializer<SocketChannel>() {
           @Override
           protected void initChannel(SocketChannel ch) throws Exception {
-            
+//            logger.debug("Starting initialization of server connection.");
             C connection = initRemoteConnection(ch);
             ch.closeFuture().addListener(getCloseHandler(connection));
-            
+
             ch.pipeline().addLast( //
-                new ZeroCopyProtobufLengthDecoder(), //
+                getDecoder(connection.getAllocator()), //
                 new RpcDecoder("s-" + rpcConfig.getName()), //
                 new RpcEncoder("s-" + rpcConfig.getName()), //
-                getHandshakeHandler(connection),
-                new InboundHandler(connection), //
+                getHandshakeHandler(connection), new InboundHandler(connection), //
                 new RpcExceptionHandler() //
-                );            
+                );
             connect = true;
-            
+//            logger.debug("Server connection initialization completed.");
           }
         });
   }
- 
+
+  public abstract ProtobufLengthDecoder getDecoder(BufferAllocator allocator);
+  
   @Override
   public boolean isClient() {
     return false;
   }
 
-  
   protected abstract ServerHandshakeHandler<?> getHandshakeHandler(C connection);
 
   protected static abstract class ServerHandshakeHandler<T extends MessageLite> extends AbstractHandshakeHandler<T> {
@@ -98,17 +102,44 @@ public abstract class BasicServer<T extends EnumLite, C extends RemoteConnection
 
     @Override
     protected final void consumeHandshake(ChannelHandlerContext ctx, T inbound) throws Exception {
-      OutboundRpcMessage msg = new OutboundRpcMessage(RpcMode.RESPONSE, this.handshakeType, coordinationId, getHandshakeResponse(inbound));
+      OutboundRpcMessage msg = new OutboundRpcMessage(RpcMode.RESPONSE, this.handshakeType, coordinationId,
+          getHandshakeResponse(inbound));
       ctx.writeAndFlush(msg);
     }
-    
+
     public abstract MessageLite getHandshakeResponse(T inbound) throws Exception;
-    
+
   }
-  
-  
-  public int bind(final int initialPort) throws InterruptedException, DrillbitStartupException{
-    int port = initialPort-1;
+
+  @Override
+  protected MessageLite getResponseDefaultInstance(int rpcType) throws RpcException {
+    return null;
+  }
+
+  @Override
+  protected Response handle(C connection, int rpcType, ByteBuf pBody, ByteBuf dBody) throws RpcException {
+    return null;
+  }
+
+  @Override
+  public <SEND extends MessageLite, RECEIVE extends MessageLite> DrillRpcFuture<RECEIVE> send(C connection, T rpcType,
+      SEND protobufBody, Class<RECEIVE> clazz, ByteBuf... dataBodies) {
+    return super.send(connection, rpcType, protobufBody, clazz, dataBodies);
+  }
+
+  @Override
+  public <SEND extends MessageLite, RECEIVE extends MessageLite> void send(RpcOutcomeListener<RECEIVE> listener,
+      C connection, T rpcType, SEND protobufBody, Class<RECEIVE> clazz, ByteBuf... dataBodies) {
+    super.send(listener, connection, rpcType, protobufBody, clazz, dataBodies);
+  }
+
+  @Override
+  public C initRemoteConnection(Channel channel) {
+    return null;
+  }
+
+  public int bind(final int initialPort) throws InterruptedException, DrillbitStartupException {
+    int port = initialPort - 1;
     while (true) {
       try {
         b.bind(++port).sync();
@@ -119,17 +150,15 @@ public abstract class BasicServer<T extends EnumLite, C extends RemoteConnection
         throw new DrillbitStartupException("Could not bind Drillbit", e);
       }
     }
-    
+
     connect = !connect;
     logger.debug("Server started on port {} of type {} ", port, this.getClass().getSimpleName());
-    return port;    
+    return port;
   }
 
   @Override
   public void close() throws IOException {
     eventLoopGroup.shutdownGracefully();
   }
-  
-  
 
 }

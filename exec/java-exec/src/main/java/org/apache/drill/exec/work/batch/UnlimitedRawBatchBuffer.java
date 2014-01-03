@@ -17,38 +17,46 @@
  */
 package org.apache.drill.exec.work.batch;
 
-import java.util.Iterator;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.RawFragmentBatch;
-import org.apache.drill.exec.rpc.RemoteConnection.ConnectionThrottle;
+import org.apache.drill.exec.rpc.RemoteConnection;
 
 import com.google.common.collect.Queues;
 
 public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UnlimitedRawBatchBuffer.class);
 
-  private final LinkedBlockingDeque<RawFragmentBatch> buffer = Queues.newLinkedBlockingDeque();
+  private final LinkedBlockingDeque<RawFragmentBatch> buffer;
   private volatile boolean finished = false;
+  private int softlimit;
+  private int startlimit;
+  private AtomicBoolean overlimit;
 
   public UnlimitedRawBatchBuffer(FragmentContext context) {
-
+    softlimit = context.getConfig().getInt(ExecConstants.INCOMING_BUFFER_SIZE);
+    startlimit = softlimit/2;
+    buffer = Queues.newLinkedBlockingDeque();
   }
   
   @Override
-  public void enqueue(ConnectionThrottle throttle, RawFragmentBatch batch) {
+  public void enqueue(RawFragmentBatch batch) {
     buffer.add(batch);
+    if(buffer.size() == softlimit){
+      overlimit.set(true);
+      batch.getConnection().setAutoRead(false);
+    }
   }
-
-//  @Override
-//  public RawFragmentBatch dequeue() {
-//    return buffer.poll();
-//  }
 
   @Override
   public void kill(FragmentContext context) {
-    // TODO: Pass back or kill handler?
+    while(!buffer.isEmpty()){
+      RawFragmentBatch batch = buffer.poll();
+      batch.getBody().release();
+    }
   }
 
   
@@ -60,12 +68,24 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
   @Override
   public RawFragmentBatch getNext(){
     
-    RawFragmentBatch b = buffer.poll();
+    RawFragmentBatch b = null;
+    
+    b = buffer.poll();
+    
+    // if we didn't get a buffer, block on waiting for buffer.
     if(b == null && !finished){
       try {
-        return buffer.take();
+        b = buffer.take();
       } catch (InterruptedException e) {
         return null;
+      }
+    }
+    
+    // if we are in the overlimit condition and aren't finished, check if we've passed the start limit.  If so, turn off the overlimit condition and set auto read to true (start reading from socket again).
+    if(!finished && overlimit.get()){
+      if(buffer.size() == startlimit){
+        overlimit.set(false);
+        b.getConnection().setAutoRead(true);
       }
     }
     

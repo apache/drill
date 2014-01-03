@@ -179,5 +179,9 @@ public class ScanBatch implements RecordBatch {
   public WritableBatch getWritableBatch() {
     return WritableBatch.get(this);
   }
+  
+  public void cleanup(){
+    container.clear();
+  }
 
 }

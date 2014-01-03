@@ -88,7 +88,7 @@ public class HyperVectorWrapper<T extends ValueVector> implements VectorWrapper<
 //    return new HyperVectorWrapper<T>(f, newVectors);
   }
 
-  public static <T extends ValueVector> HyperVectorWrapper<T> create(MaterializedField f, T[] v){
-    return new HyperVectorWrapper<T>(f, v);
+  public static <T extends ValueVector> HyperVectorWrapper<T> create(MaterializedField f, T[] v, boolean releasable){
+    return new HyperVectorWrapper<T>(f, v, releasable);
   }
 }

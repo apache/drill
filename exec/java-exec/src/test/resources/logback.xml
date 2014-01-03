@@ -31,10 +31,15 @@
 		</encoder>
 	</appender>
 
-	<logger name="org.apache.drill" additivity="false">
-		<level value="debug" />
-		<appender-ref ref="SOCKET" />
-	</logger>
+  <logger name="org.apache.drill" additivity="false">
+    <level value="debug" />
+    <appender-ref ref="SOCKET" />
+  </logger>
+  
+<!--   <logger name="io.netty" additivity="false"> -->
+<!--     <level value="debug" /> -->
+<!--     <appender-ref ref="SOCKET" /> -->
+<!--   </logger> -->
 
 	<root>
 		<level value="error" />

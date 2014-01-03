@@ -37,7 +37,7 @@ import org.apache.drill.exec.planner.fragment.MakeFragmentsVisitor;
 import org.apache.drill.exec.planner.fragment.PlanningSet;
 import org.apache.drill.exec.planner.fragment.SimpleParallelizer;
 import org.apache.drill.exec.planner.fragment.StatsCollector;
-import org.apache.drill.exec.proto.ExecProtos.PlanFragment;
+import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
@@ -50,10 +50,10 @@ import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.util.AtomicState;
+import org.apache.drill.exec.work.ErrorHelper;
 import org.apache.drill.exec.work.QueryWorkUnit;
 import org.apache.drill.exec.work.WorkManager.WorkerBee;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 
 /**
@@ -65,11 +65,10 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
   private QueryId queryId;
   private RunQuery queryRequest;
   private QueryContext context;
-  private RunningFragmentManager fragmentManager;
+  private QueryManager fragmentManager;
   private WorkerBee bee;
   private UserClientConnection initiatingClient;
   private final AtomicState<QueryState> state;
-  
   
   public Foreman(WorkerBee bee, DrillbitContext dContext, UserClientConnection connection, QueryId queryId,
       RunQuery queryRequest) {
@@ -77,7 +76,7 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
     this.queryRequest = queryRequest;
     this.context = new QueryContext(queryId, dContext);
     this.initiatingClient = connection;
-    this.fragmentManager = new RunningFragmentManager(new ForemanManagerListener(), new TunnelManager(dContext.getBitCom()));
+    this.fragmentManager = new QueryManager(new ForemanManagerListener(), dContext.getController());
     this.bee = bee;
     
     this.state = new AtomicState<QueryState>(QueryState.PENDING) {
@@ -214,17 +213,19 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
               context.getPlanReader(), rootFragment, planningSet, context.getConfig().getInt(ExecConstants.GLOBAL_MAX_WIDTH),
               context.getConfig().getInt(ExecConstants.MAX_WIDTH_PER_ENDPOINT));
 
-      this.context.getBitCom().getListeners().addFragmentStatusListener(work.getRootFragment().getHandle(), fragmentManager);
+      this.context.getWorkBus().setFragmentStatusListener(work.getRootFragment().getHandle().getQueryId(), fragmentManager);
       List<PlanFragment> leafFragments = Lists.newArrayList();
       List<PlanFragment> intermediateFragments = Lists.newArrayList();
 
       // store fragments in distributed grid.
       for (PlanFragment f : work.getFragments()) {
+        
+        // store all fragments in grid since they are part of handshake.
+        context.getCache().storeFragment(f);
         if (f.getLeafFragment()) {
           leafFragments.add(f);
         } else {
           intermediateFragments.add(f);
-          context.getCache().storeFragment(f);
         }
       }
 

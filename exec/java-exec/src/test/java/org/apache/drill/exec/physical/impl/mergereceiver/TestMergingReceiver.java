@@ -65,7 +65,7 @@ public class TestMergingReceiver extends PopUnitTestBase {
         for (int valueIdx = 0; valueIdx < b.getHeader().getRowCount(); valueIdx++) {
           List<Object> row = Lists.newArrayList();
           batchLoader.load(b.getHeader().getDef(), b.getData());
-          for (VectorWrapper vw : batchLoader)
+          for (VectorWrapper<?> vw : batchLoader)
             row.add(vw.getValueVector().getField().getName() + ":" + vw.getValueVector().getAccessor().getObject(valueIdx));
           for (Object cell : row) {
             if (cell == null) {

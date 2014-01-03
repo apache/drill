@@ -18,9 +18,9 @@
 package org.apache.drill.exec.rpc.user;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.EventLoopGroup;
 
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
@@ -30,6 +30,7 @@ import org.apache.drill.exec.proto.UserProtos.RpcType;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
 import org.apache.drill.exec.proto.UserProtos.UserToBitHandshake;
 import org.apache.drill.exec.rpc.BasicClientWithConnection;
+import org.apache.drill.exec.rpc.ProtobufLengthDecoder;
 import org.apache.drill.exec.rpc.Response;
 import org.apache.drill.exec.rpc.RpcConnectionHandler;
 import org.apache.drill.exec.rpc.RpcException;
@@ -41,16 +42,12 @@ public class UserClient extends BasicClientWithConnection<RpcType, UserToBitHand
 
   private final QueryResultHandler queryResultHandler = new QueryResultHandler();
 
-  public UserClient(ByteBufAllocator alloc, EventLoopGroup eventLoopGroup) {
+  public UserClient(BufferAllocator alloc, EventLoopGroup eventLoopGroup) {
     super(UserRpcConfig.MAPPING, alloc, eventLoopGroup, RpcType.HANDSHAKE, BitToUserHandshake.class, BitToUserHandshake.PARSER);
   }
 
   public void submitQuery(UserResultsListener resultsListener, RunQuery query) {
-    try{
-      send(queryResultHandler.getWrappedListener(resultsListener), RpcType.RUN_QUERY, query, QueryId.class);  
-    }catch(RpcException ex){
-      resultsListener.submissionFailed(ex);
-    }
+    send(queryResultHandler.getWrappedListener(resultsListener), RpcType.RUN_QUERY, query, QueryId.class);
   }
 
   public void connect(RpcConnectionHandler<ServerConnection> handler, DrillbitEndpoint endpoint) throws RpcException, InterruptedException {
@@ -86,7 +83,7 @@ public class UserClient extends BasicClientWithConnection<RpcType, UserToBitHand
 
   @Override
   protected void validateHandshake(BitToUserHandshake inbound) throws RpcException {
-    logger.debug("Handling handshake from bit to user. {}", inbound);
+//    logger.debug("Handling handshake from bit to user. {}", inbound);
     if (inbound.getRpcVersion() != UserRpcConfig.RPC_VERSION)
       throw new RpcException(String.format("Invalid rpc version.  Expected %d, actual %d.", inbound.getRpcVersion(),
           UserRpcConfig.RPC_VERSION));
@@ -95,6 +92,11 @@ public class UserClient extends BasicClientWithConnection<RpcType, UserToBitHand
 
   @Override
   protected void finalizeConnection(BitToUserHandshake handshake, BasicClientWithConnection.ServerConnection connection) {
+  }
+  
+  @Override
+  public ProtobufLengthDecoder getDecoder(BufferAllocator allocator) {
+    return new UserProtobufLengthDecoder(allocator);
   }
 
 }

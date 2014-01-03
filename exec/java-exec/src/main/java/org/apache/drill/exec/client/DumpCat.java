@@ -19,19 +19,17 @@ package org.apache.drill.exec.client;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.cache.VectorAccessibleSerializable;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
-import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.util.VectorUtil;
 
 import com.beust.jcommander.IParameterValidator;
@@ -42,7 +40,7 @@ import com.beust.jcommander.internal.Lists;
 
 public class DumpCat {
 
-  private final static BufferAllocator allocator = BufferAllocator.getAllocator(DrillConfig.create());
+  private final static BufferAllocator allocator = new TopLevelAllocator();
 
   public static void main(String args[]) throws Exception {
     DumpCat dumpCat = new DumpCat();

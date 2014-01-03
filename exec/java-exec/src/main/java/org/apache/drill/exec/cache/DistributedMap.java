@@ -19,10 +19,10 @@ package org.apache.drill.exec.cache;
 
 import java.util.concurrent.TimeUnit;
 
-public interface DistributedMap<V> {
+public interface DistributedMap<V extends DrillSerializable> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DistributedMap.class);
-  public DrillSerializable get(String key);
-  public void put(String key, DrillSerializable value);
-  public void putIfAbsent(String key, DrillSerializable value);
-  public void putIfAbsent(String key, DrillSerializable value, long ttl, TimeUnit timeUnit);
+  public V get(String key);
+  public void put(String key, V value);
+  public void putIfAbsent(String key, V value);
+  public void putIfAbsent(String key, V value, long ttl, TimeUnit timeUnit);
 }

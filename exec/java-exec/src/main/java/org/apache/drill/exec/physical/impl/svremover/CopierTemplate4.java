@@ -22,6 +22,7 @@ import javax.inject.Named;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.RecordBatch;
+import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.allocator.VectorAllocator;
@@ -31,7 +32,7 @@ public abstract class CopierTemplate4 implements Copier{
   
   private SelectionVector4 sv4;
   private VectorAllocator[] allocators;
-
+  private RecordBatch incoming;
   
   private void allocateVectors(int recordCount){
     for(VectorAllocator a : allocators){
@@ -42,6 +43,7 @@ public abstract class CopierTemplate4 implements Copier{
   @Override
   public void setupRemover(FragmentContext context, RecordBatch incoming, RecordBatch outgoing, VectorAllocator[] allocators) throws SchemaChangeException{
     this.allocators = allocators;
+    this.incoming = incoming;
     this.sv4 = incoming.getSelectionVector4();
     doSetup(context, incoming, outgoing);
   }
@@ -49,6 +51,7 @@ public abstract class CopierTemplate4 implements Copier{
 
   @Override
   public void copyRecords(){
+//    logger.debug("Copying records.");
     final int recordCount = sv4.getCount();
     allocateVectors(recordCount);
     int outgoingPosition = 0;
@@ -56,6 +59,11 @@ public abstract class CopierTemplate4 implements Copier{
       int deRefIndex = sv4.get(svIndex);
       doEval(deRefIndex, outgoingPosition);
     }
+    
+    for(VectorWrapper<?> v : incoming){
+      v.clear();
+    }
+
   }
   
   public abstract void doSetup(@Named("context") FragmentContext context, @Named("incoming") RecordBatch incoming, @Named("outgoing") RecordBatch outgoing);

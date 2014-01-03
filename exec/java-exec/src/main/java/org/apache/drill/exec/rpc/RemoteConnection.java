@@ -18,48 +18,88 @@
 package org.apache.drill.exec.rpc;
 
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
 
-import java.util.concurrent.Semaphore;
+import org.apache.drill.exec.memory.BufferAllocator;
 
-public class RemoteConnection{
+public abstract class RemoteConnection{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RemoteConnection.class);
   private final Channel channel;
+  private final WriteManager writeManager;
   
-  final Semaphore throttle;
-  
-  public void acquirePermit() throws InterruptedException{
-    if(RpcConstants.EXTRA_DEBUGGING) logger.debug("Acquiring send permit.");
-    this.throttle.acquire();
-    if(RpcConstants.EXTRA_DEBUGGING) logger.debug("Send permit acquired.");
-  }
-  
-  public void releasePermit() {
-    throttle.release();
-  }
-  
-  public RemoteConnection(Channel channel, int maxOutstanding) {
-    super();
-    this.channel = channel;
-    this.throttle  = new Semaphore(maxOutstanding);
+  public boolean inEventLoop(){
+    return channel.eventLoop().inEventLoop();
   }
   
   public RemoteConnection(Channel channel) {
-    this(channel, 100);
+    super();
+    this.channel = channel;
+    this.writeManager = new WriteManager();
+    channel.pipeline().addLast(new BackPressureHandler());
   }
-
+  
+  public abstract BufferAllocator getAllocator();
 
   public final Channel getChannel() {
     return channel;
   }
 
+  public boolean blockOnNotWritable(RpcOutcomeListener<?> listener){
+    try{
+      writeManager.waitForWritable();
+      return true;
+    }catch(InterruptedException e){
+      listener.failed(new RpcException(e));
+      return false;
+    }
+  }
 
-  public ConnectionThrottle getConnectionThrottle(){
-    // can't be implemented until we switch to per query sockets.
-    return null;
+  public void setAutoRead(boolean enableAutoRead){
+    channel.config().setAutoRead(enableAutoRead); 
   }
   
-  public interface ConnectionThrottle{
-    public void disableReceiving();
-    public void enableReceiving();
+  public boolean isActive(){
+    return channel.isActive();
+  }
+  
+  /**
+   * The write manager is responsible for controlling whether or not a write can be sent.  It controls whether or not to block a sender if we have tcp backpressure on the receive side.
+   */
+  private static class WriteManager{
+    private final ResettableBarrier barrier = new ResettableBarrier();
+    
+    public WriteManager(){
+      barrier.openBarrier();
+    }
+    
+    public void waitForWritable() throws InterruptedException{
+      barrier.await();
+    }
+    
+    public void setWritable(boolean isWritable){
+//      logger.debug("Set writable: {}", isWritable);
+      if(isWritable){
+        barrier.openBarrier();  
+      }else{
+        barrier.closeBarrier();
+      }
+      
+    }
+    
+  }
+
+  
+  
+  private class BackPressureHandler extends ChannelInboundHandlerAdapter{
+
+    @Override
+    public void channelWritabilityChanged(ChannelHandlerContext ctx) throws Exception {
+//      logger.debug("Channel writability changed.", ctx.channel().isWritable());
+      writeManager.setWritable(ctx.channel().isWritable());
+      ctx.fireChannelWritabilityChanged();
+    }
+    
+    
   }
 }

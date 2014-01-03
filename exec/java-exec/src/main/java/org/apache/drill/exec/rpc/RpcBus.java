@@ -21,6 +21,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageDecoder;
 import io.netty.util.concurrent.GenericFutureListener;
@@ -61,7 +62,7 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
     this.rpcConfig = rpcConfig;
   }
 
-  public <SEND extends MessageLite, RECEIVE extends MessageLite> DrillRpcFuture<RECEIVE> send(C connection, T rpcType,
+  <SEND extends MessageLite, RECEIVE extends MessageLite> DrillRpcFuture<RECEIVE> send(C connection, T rpcType,
       SEND protobufBody, Class<RECEIVE> clazz, ByteBuf... dataBodies) {
     DrillRpcFutureImpl<RECEIVE> rpcFuture = new DrillRpcFutureImpl<RECEIVE>();
     this.send(rpcFuture, connection, rpcType, protobufBody, clazz, dataBodies);
@@ -70,27 +71,35 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
   
   public <SEND extends MessageLite, RECEIVE extends MessageLite> void send(RpcOutcomeListener<RECEIVE> listener, C connection, T rpcType,
       SEND protobufBody, Class<RECEIVE> clazz, ByteBuf... dataBodies) {
+    send(listener, connection, rpcType, protobufBody, clazz, false, dataBodies);
+  }
   
-    
-
-
-    assert !Arrays.asList(dataBodies).contains(null);
-    assert rpcConfig.checkSend(rpcType, protobufBody.getClass(), clazz);
+  public <SEND extends MessageLite, RECEIVE extends MessageLite> void send(RpcOutcomeListener<RECEIVE> listener, C connection, T rpcType,
+      SEND protobufBody, Class<RECEIVE> clazz, boolean allowInEventLoop, ByteBuf... dataBodies) {
+  
+    if(!allowInEventLoop){
+      if(connection.inEventLoop()) throw new IllegalStateException("You attempted to send while inside the rpc event thread.  This isn't allowed because sending will block if the channel is backed up.");
+      
+      if(!connection.blockOnNotWritable(listener)) return;
+    }
 
     ByteBuf pBuffer = null;
     boolean completed = false;
 
     try {
+
+      assert !Arrays.asList(dataBodies).contains(null);
+      assert rpcConfig.checkSend(rpcType, protobufBody.getClass(), clazz);
+
       Preconditions.checkNotNull(protobufBody);
       ChannelListenerWithCoordinationId futureListener = queue.get(listener, clazz, connection);
       OutboundRpcMessage m = new OutboundRpcMessage(RpcMode.REQUEST, rpcType, futureListener.getCoordinationId(), protobufBody, dataBodies);
-      connection.acquirePermit();
       ChannelFuture channelFuture = connection.getChannel().writeAndFlush(m);
       channelFuture.addListener(futureListener);
+      channelFuture.addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
       completed = true;
-    } catch (InterruptedException e) {
-      completed = true;
-      listener.failed(new RpcException("Interrupted while attempting to acquire outbound queue.", e));
+    } catch(Exception | AssertionError e){
+      listener.failed(new RpcException("Failure sending message.", e));
     } finally {
       if (!completed) {
         if (pBuffer != null) pBuffer.release();
@@ -167,6 +176,7 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
       case RESPONSE_FAILURE:
         RpcFailure failure = RpcFailure.parseFrom(new ByteBufInputStream(msg.pBody, msg.pBody.readableBytes()));
         queue.updateFailedFuture(msg.coordinationId, failure);
+        msg.release();
         if (RpcConstants.EXTRA_DEBUGGING)
           logger.debug("Updated rpc future with coordinationId {} with failure ", msg.coordinationId, failure);
         break;

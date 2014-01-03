@@ -17,9 +17,6 @@
  */
 package org.apache.drill.exec.physical.impl.sort;
 
-import com.google.common.collect.Lists;
-import io.netty.buffer.ByteBuf;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,18 +24,22 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.BufferAllocator.PreAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.record.*;
+import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
+import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.VectorAccessible;
+import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.ValueVector;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Lists;
 
 public class SortRecordBatchBuilder {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SortRecordBatchBuilder.class);
   
   private final ArrayListMultimap<BatchSchema, RecordBatchData> batches = ArrayListMultimap.create();
-  private final VectorContainer container;
 
   private int recordCount;
   private long runningBytes;
@@ -47,10 +48,9 @@ public class SortRecordBatchBuilder {
   private SelectionVector4 sv4;
   final PreAllocator svAllocator;
   
-  public SortRecordBatchBuilder(BufferAllocator a, long maxBytes, VectorContainer container){
+  public SortRecordBatchBuilder(BufferAllocator a, long maxBytes){
     this.maxBytes = maxBytes;
-    this.svAllocator = a.getPreAllocator();
-    this.container = container;
+    this.svAllocator = a.getNewPreAllocator();
   }
   
   private long getSize(VectorAccessible batch){
@@ -89,8 +89,8 @@ public class SortRecordBatchBuilder {
     return true;
   }
 
-  public void build(FragmentContext context) throws SchemaChangeException{
-    container.clear();
+  public void build(FragmentContext context, VectorContainer outputContainer) throws SchemaChangeException{
+    outputContainer.clear();
     if(batches.keySet().size() > 1) throw new SchemaChangeException("Sort currently only supports a single schema.");
     if(batches.size() > Character.MAX_VALUE) throw new SchemaChangeException("Sort cannot work on more than %d batches at a time.", (int) Character.MAX_VALUE);
     assert batches.keySet().size() > 0;
@@ -138,18 +138,25 @@ public class SortRecordBatchBuilder {
     
     for(MaterializedField f : vectors.keySet()){
       List<ValueVector> v = vectors.get(f);
-      container.addHyperList(v);
+      outputContainer.addHyperList(v, false);
     }
     
-    container.buildSchema(SelectionVectorMode.FOUR_BYTE);
+    outputContainer.buildSchema(SelectionVectorMode.FOUR_BYTE);
   }
 
   public SelectionVector4 getSv4() {
     return sv4;
   }
 
-  public List<VectorContainer> getContainers() {
-    ArrayList containerList = Lists.newArrayList();
+  public void clear(){
+    for(RecordBatchData d : batches.values()){
+      d.container.clear();
+    }
+    if(sv4 != null) sv4.clear();
+  }
+  
+  public List<VectorContainer> getHeldRecordBatches() {
+    ArrayList<VectorContainer> containerList = Lists.newArrayList();
     for (BatchSchema bs : batches.keySet()) {
       for (RecordBatchData bd : batches.get(bs)) {
         VectorContainer c = bd.getContainer();
@@ -157,6 +164,7 @@ public class SortRecordBatchBuilder {
         containerList.add(c);
       }
     }
+    batches.clear();
     return containerList;
   }
   

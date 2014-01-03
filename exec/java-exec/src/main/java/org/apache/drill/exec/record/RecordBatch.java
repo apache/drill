@@ -110,5 +110,7 @@ public interface RecordBatch extends VectorAccessible {
    * @return
    */
   public WritableBatch getWritableBatch();
+  
+  public void cleanup();
 
 }

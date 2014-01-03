@@ -68,7 +68,6 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
     valueCapacity = valueCount;
     int valueSize = getSizeFromCount(valueCount);
     data = allocator.buffer(valueSize);
-    this.data.retain();
     for (int i = 0; i < valueSize; i++) {
       data.setByte(i, 0);
     }

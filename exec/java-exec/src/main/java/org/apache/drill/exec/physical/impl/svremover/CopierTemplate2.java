@@ -22,6 +22,7 @@ import javax.inject.Named;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.RecordBatch;
+import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.vector.allocator.VectorAllocator;
 
@@ -30,11 +31,13 @@ public abstract class CopierTemplate2 implements Copier{
   
   private SelectionVector2 sv2;
   private VectorAllocator[] allocators;
+  private RecordBatch incoming;
   
   @Override
   public void setupRemover(FragmentContext context, RecordBatch incoming, RecordBatch outgoing, VectorAllocator[] allocators) throws SchemaChangeException{
     this.allocators = allocators;
     this.sv2 = incoming.getSelectionVector2();
+    this.incoming = incoming;
     doSetup(context, incoming, outgoing);
   }
   
@@ -52,6 +55,10 @@ public abstract class CopierTemplate2 implements Copier{
     
     for(int svIndex = 0; svIndex < recordCount; svIndex++, outgoingPosition++){
       doEval(sv2.getIndex(svIndex), outgoingPosition);
+    }
+//    logger.debug("This: {}, Incoming: {}", System.identityHashCode(this), incoming);
+    for(VectorWrapper<?> v : incoming){
+      v.clear();
     }
   }
   

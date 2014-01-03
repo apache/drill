@@ -38,7 +38,7 @@ public class OrderedPartitionSender extends AbstractSender {
   private final FieldReference ref;
   private final List<DrillbitEndpoint> endpoints;
   private final int sendingWidth;
-
+  
   private int recordsToSample;
   private int samplingFactor;
   private float completionFactor;

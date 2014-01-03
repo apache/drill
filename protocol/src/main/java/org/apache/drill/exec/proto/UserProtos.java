@@ -356,6 +356,16 @@ public final class UserProtos {
   public interface UserToBitHandshakeOrBuilder
       extends com.google.protobuf.MessageOrBuilder {
 
+    // optional .exec.shared.RpcChannel channel = 1 [default = USER];
+    /**
+     * <code>optional .exec.shared.RpcChannel channel = 1 [default = USER];</code>
+     */
+    boolean hasChannel();
+    /**
+     * <code>optional .exec.shared.RpcChannel channel = 1 [default = USER];</code>
+     */
+    org.apache.drill.exec.proto.UserBitShared.RpcChannel getChannel();
+
     // optional bool support_listening = 2;
     /**
      * <code>optional bool support_listening = 2;</code>
@@ -427,13 +437,24 @@ public final class UserProtos {
               }
               break;
             }
+            case 8: {
+              int rawValue = input.readEnum();
+              org.apache.drill.exec.proto.UserBitShared.RpcChannel value = org.apache.drill.exec.proto.UserBitShared.RpcChannel.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(1, rawValue);
+              } else {
+                bitField0_ |= 0x00000001;
+                channel_ = value;
+              }
+              break;
+            }
             case 16: {
-              bitField0_ |= 0x00000001;
+              bitField0_ |= 0x00000002;
               supportListening_ = input.readBool();
               break;
             }
             case 24: {
-              bitField0_ |= 0x00000002;
+              bitField0_ |= 0x00000004;
               rpcVersion_ = input.readInt32();
               break;
             }
@@ -477,6 +498,22 @@ public final class UserProtos {
     }
 
     private int bitField0_;
+    // optional .exec.shared.RpcChannel channel = 1 [default = USER];
+    public static final int CHANNEL_FIELD_NUMBER = 1;
+    private org.apache.drill.exec.proto.UserBitShared.RpcChannel channel_;
+    /**
+     * <code>optional .exec.shared.RpcChannel channel = 1 [default = USER];</code>
+     */
+    public boolean hasChannel() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional .exec.shared.RpcChannel channel = 1 [default = USER];</code>
+     */
+    public org.apache.drill.exec.proto.UserBitShared.RpcChannel getChannel() {
+      return channel_;
+    }
+
     // optional bool support_listening = 2;
     public static final int SUPPORT_LISTENING_FIELD_NUMBER = 2;
     private boolean supportListening_;
@@ -484,7 +521,7 @@ public final class UserProtos {
      * <code>optional bool support_listening = 2;</code>
      */
     public boolean hasSupportListening() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
+      return ((bitField0_ & 0x00000002) == 0x00000002);
     }
     /**
      * <code>optional bool support_listening = 2;</code>
@@ -500,7 +537,7 @@ public final class UserProtos {
      * <code>optional int32 rpc_version = 3;</code>
      */
     public boolean hasRpcVersion() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000004) == 0x00000004);
     }
     /**
      * <code>optional int32 rpc_version = 3;</code>
@@ -510,6 +547,7 @@ public final class UserProtos {
     }
 
     private void initFields() {
+      channel_ = org.apache.drill.exec.proto.UserBitShared.RpcChannel.USER;
       supportListening_ = false;
       rpcVersion_ = 0;
     }
@@ -526,9 +564,12 @@ public final class UserProtos {
                         throws java.io.IOException {
       getSerializedSize();
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeBool(2, supportListening_);
+        output.writeEnum(1, channel_.getNumber());
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBool(2, supportListening_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
         output.writeInt32(3, rpcVersion_);
       }
       getUnknownFields().writeTo(output);
@@ -542,9 +583,13 @@ public final class UserProtos {
       size = 0;
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBoolSize(2, supportListening_);
+          .computeEnumSize(1, channel_.getNumber());
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBoolSize(2, supportListening_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(3, rpcVersion_);
       }
@@ -664,10 +709,12 @@ public final class UserProtos {
 
       public Builder clear() {
         super.clear();
-        supportListening_ = false;
+        channel_ = org.apache.drill.exec.proto.UserBitShared.RpcChannel.USER;
         bitField0_ = (bitField0_ & ~0x00000001);
-        rpcVersion_ = 0;
+        supportListening_ = false;
         bitField0_ = (bitField0_ & ~0x00000002);
+        rpcVersion_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000004);
         return this;
       }
 
@@ -699,9 +746,13 @@ public final class UserProtos {
         if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
           to_bitField0_ |= 0x00000001;
         }
-        result.supportListening_ = supportListening_;
+        result.channel_ = channel_;
         if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
           to_bitField0_ |= 0x00000002;
+        }
+        result.supportListening_ = supportListening_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
         }
         result.rpcVersion_ = rpcVersion_;
         result.bitField0_ = to_bitField0_;
@@ -720,6 +771,9 @@ public final class UserProtos {
 
       public Builder mergeFrom(org.apache.drill.exec.proto.UserProtos.UserToBitHandshake other) {
         if (other == org.apache.drill.exec.proto.UserProtos.UserToBitHandshake.getDefaultInstance()) return this;
+        if (other.hasChannel()) {
+          setChannel(other.getChannel());
+        }
         if (other.hasSupportListening()) {
           setSupportListening(other.getSupportListening());
         }
@@ -753,13 +807,49 @@ public final class UserProtos {
       }
       private int bitField0_;
 
+      // optional .exec.shared.RpcChannel channel = 1 [default = USER];
+      private org.apache.drill.exec.proto.UserBitShared.RpcChannel channel_ = org.apache.drill.exec.proto.UserBitShared.RpcChannel.USER;
+      /**
+       * <code>optional .exec.shared.RpcChannel channel = 1 [default = USER];</code>
+       */
+      public boolean hasChannel() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional .exec.shared.RpcChannel channel = 1 [default = USER];</code>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.RpcChannel getChannel() {
+        return channel_;
+      }
+      /**
+       * <code>optional .exec.shared.RpcChannel channel = 1 [default = USER];</code>
+       */
+      public Builder setChannel(org.apache.drill.exec.proto.UserBitShared.RpcChannel value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000001;
+        channel_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.RpcChannel channel = 1 [default = USER];</code>
+       */
+      public Builder clearChannel() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        channel_ = org.apache.drill.exec.proto.UserBitShared.RpcChannel.USER;
+        onChanged();
+        return this;
+      }
+
       // optional bool support_listening = 2;
       private boolean supportListening_ ;
       /**
        * <code>optional bool support_listening = 2;</code>
        */
       public boolean hasSupportListening() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
+        return ((bitField0_ & 0x00000002) == 0x00000002);
       }
       /**
        * <code>optional bool support_listening = 2;</code>
@@ -771,7 +861,7 @@ public final class UserProtos {
        * <code>optional bool support_listening = 2;</code>
        */
       public Builder setSupportListening(boolean value) {
-        bitField0_ |= 0x00000001;
+        bitField0_ |= 0x00000002;
         supportListening_ = value;
         onChanged();
         return this;
@@ -780,7 +870,7 @@ public final class UserProtos {
        * <code>optional bool support_listening = 2;</code>
        */
       public Builder clearSupportListening() {
-        bitField0_ = (bitField0_ & ~0x00000001);
+        bitField0_ = (bitField0_ & ~0x00000002);
         supportListening_ = false;
         onChanged();
         return this;
@@ -792,7 +882,7 @@ public final class UserProtos {
        * <code>optional int32 rpc_version = 3;</code>
        */
       public boolean hasRpcVersion() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000004) == 0x00000004);
       }
       /**
        * <code>optional int32 rpc_version = 3;</code>
@@ -804,7 +894,7 @@ public final class UserProtos {
        * <code>optional int32 rpc_version = 3;</code>
        */
       public Builder setRpcVersion(int value) {
-        bitField0_ |= 0x00000002;
+        bitField0_ |= 0x00000004;
         rpcVersion_ = value;
         onChanged();
         return this;
@@ -813,7 +903,7 @@ public final class UserProtos {
        * <code>optional int32 rpc_version = 3;</code>
        */
       public Builder clearRpcVersion() {
-        bitField0_ = (bitField0_ & ~0x00000002);
+        bitField0_ = (bitField0_ & ~0x00000004);
         rpcVersion_ = 0;
         onChanged();
         return this;
@@ -5099,35 +5189,36 @@ public final class UserProtos {
   static {
     java.lang.String[] descriptorData = {
       "\n\nUser.proto\022\texec.user\032\017SchemaDef.proto" +
-      "\032\023UserBitShared.proto\"D\n\022UserToBitHandsh" +
-      "ake\022\031\n\021support_listening\030\002 \001(\010\022\023\n\013rpc_ve" +
-      "rsion\030\003 \001(\005\"S\n\016RequestResults\022&\n\010query_i" +
-      "d\030\001 \001(\0132\024.exec.shared.QueryId\022\031\n\021maximum" +
-      "_responses\030\002 \001(\005\"o\n\010RunQuery\0221\n\014results_" +
-      "mode\030\001 \001(\0162\033.exec.user.QueryResultsMode\022" +
-      "\"\n\004type\030\002 \001(\0162\024.exec.user.QueryType\022\014\n\004p" +
-      "lan\030\003 \001(\t\")\n\022BitToUserHandshake\022\023\n\013rpc_v" +
-      "ersion\030\002 \001(\005\"7\n\nNodeStatus\022\017\n\007node_id\030\001 ",
-      "\001(\005\022\030\n\020memory_footprint\030\002 \001(\003\"\331\003\n\013QueryR" +
-      "esult\0226\n\013query_state\030\001 \001(\0162!.exec.user.Q" +
-      "ueryResult.QueryState\022&\n\010query_id\030\002 \001(\0132" +
-      "\024.exec.shared.QueryId\022\025\n\ris_last_chunk\030\003" +
-      " \001(\010\022\021\n\trow_count\030\004 \001(\005\022\024\n\014records_scan\030" +
-      "\005 \001(\003\022\025\n\rrecords_error\030\006 \001(\003\022\027\n\017submissi" +
-      "on_time\030\007 \001(\003\022*\n\013node_status\030\010 \003(\0132\025.exe" +
-      "c.user.NodeStatus\022(\n\005error\030\t \003(\0132\031.exec." +
-      "shared.DrillPBError\022(\n\003def\030\n \001(\0132\033.exec." +
-      "shared.RecordBatchDef\022\026\n\016schema_changed\030",
-      "\013 \001(\010\"b\n\nQueryState\022\013\n\007PENDING\020\000\022\013\n\007RUNN" +
-      "ING\020\001\022\r\n\tCOMPLETED\020\002\022\014\n\010CANCELED\020\003\022\n\n\006FA" +
-      "ILED\020\004\022\021\n\rUNKNOWN_QUERY\020\005*\210\001\n\007RpcType\022\r\n" +
-      "\tHANDSHAKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\r\n\tRU" +
-      "N_QUERY\020\003\022\020\n\014CANCEL_QUERY\020\004\022\023\n\017REQUEST_R" +
-      "ESULTS\020\005\022\020\n\014QUERY_RESULT\020\006\022\020\n\014QUERY_HAND" +
-      "LE\020\007*/\n\tQueryType\022\007\n\003SQL\020\001\022\013\n\007LOGICAL\020\002\022" +
-      "\014\n\010PHYSICAL\020\003*#\n\020QueryResultsMode\022\017\n\013STR" +
-      "EAM_FULL\020\001B+\n\033org.apache.drill.exec.prot" +
-      "oB\nUserProtosH\001"
+      "\032\023UserBitShared.proto\"t\n\022UserToBitHandsh" +
+      "ake\022.\n\007channel\030\001 \001(\0162\027.exec.shared.RpcCh" +
+      "annel:\004USER\022\031\n\021support_listening\030\002 \001(\010\022\023" +
+      "\n\013rpc_version\030\003 \001(\005\"S\n\016RequestResults\022&\n" +
+      "\010query_id\030\001 \001(\0132\024.exec.shared.QueryId\022\031\n" +
+      "\021maximum_responses\030\002 \001(\005\"o\n\010RunQuery\0221\n\014" +
+      "results_mode\030\001 \001(\0162\033.exec.user.QueryResu" +
+      "ltsMode\022\"\n\004type\030\002 \001(\0162\024.exec.user.QueryT" +
+      "ype\022\014\n\004plan\030\003 \001(\t\")\n\022BitToUserHandshake\022",
+      "\023\n\013rpc_version\030\002 \001(\005\"7\n\nNodeStatus\022\017\n\007no" +
+      "de_id\030\001 \001(\005\022\030\n\020memory_footprint\030\002 \001(\003\"\331\003" +
+      "\n\013QueryResult\0226\n\013query_state\030\001 \001(\0162!.exe" +
+      "c.user.QueryResult.QueryState\022&\n\010query_i" +
+      "d\030\002 \001(\0132\024.exec.shared.QueryId\022\025\n\ris_last" +
+      "_chunk\030\003 \001(\010\022\021\n\trow_count\030\004 \001(\005\022\024\n\014recor" +
+      "ds_scan\030\005 \001(\003\022\025\n\rrecords_error\030\006 \001(\003\022\027\n\017" +
+      "submission_time\030\007 \001(\003\022*\n\013node_status\030\010 \003" +
+      "(\0132\025.exec.user.NodeStatus\022(\n\005error\030\t \003(\013" +
+      "2\031.exec.shared.DrillPBError\022(\n\003def\030\n \001(\013",
+      "2\033.exec.shared.RecordBatchDef\022\026\n\016schema_" +
+      "changed\030\013 \001(\010\"b\n\nQueryState\022\013\n\007PENDING\020\000" +
+      "\022\013\n\007RUNNING\020\001\022\r\n\tCOMPLETED\020\002\022\014\n\010CANCELED" +
+      "\020\003\022\n\n\006FAILED\020\004\022\021\n\rUNKNOWN_QUERY\020\005*\210\001\n\007Rp" +
+      "cType\022\r\n\tHANDSHAKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE" +
+      "\020\002\022\r\n\tRUN_QUERY\020\003\022\020\n\014CANCEL_QUERY\020\004\022\023\n\017R" +
+      "EQUEST_RESULTS\020\005\022\020\n\014QUERY_RESULT\020\006\022\020\n\014QU" +
+      "ERY_HANDLE\020\007*/\n\tQueryType\022\007\n\003SQL\020\001\022\013\n\007LO" +
+      "GICAL\020\002\022\014\n\010PHYSICAL\020\003*#\n\020QueryResultsMod" +
+      "e\022\017\n\013STREAM_FULL\020\001B+\n\033org.apache.drill.e",
+      "xec.protoB\nUserProtosH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -5139,7 +5230,7 @@ public final class UserProtos {
           internal_static_exec_user_UserToBitHandshake_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_user_UserToBitHandshake_descriptor,
-              new java.lang.String[] { "SupportListening", "RpcVersion", });
+              new java.lang.String[] { "Channel", "SupportListening", "RpcVersion", });
           internal_static_exec_user_RequestResults_descriptor =
             getDescriptor().getMessageTypes().get(1);
           internal_static_exec_user_RequestResults_fieldAccessorTable = new

@@ -19,8 +19,6 @@ package org.apache.drill.exec.util;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.drill.exec.proto.ExecProtos.FragmentStatus.FragmentState;
-
 import com.google.protobuf.Internal.EnumLite;
 
 /**
