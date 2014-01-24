@@ -41,7 +41,7 @@ import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.store.SchemaProvider;
 import org.apache.drill.exec.store.SchemaProviderRegistry;
-import org.apache.drill.exec.store.hive.HiveSchemaProvider;
+import org.apache.drill.exec.store.hive.HiveStorageEngine.HiveSchemaProvider;
 import org.apache.drill.exec.store.json.JsonSchemaProvider;
 import org.apache.drill.exec.store.parquet.ParquetSchemaProvider;
 import org.apache.drill.sql.client.full.FileSystemSchema;

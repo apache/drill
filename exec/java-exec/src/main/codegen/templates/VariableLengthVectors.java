@@ -260,7 +260,43 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       assert index >= 0;
       int currentOffset = offsetVector.getAccessor().get(index);
       offsetVector.getMutator().set(index + 1, currentOffset + bytes.length);
-      data.setBytes(currentOffset, bytes);
+      data.setBytes(currentOffset, bytes, 0, bytes.length);
+    }
+
+    public boolean setSafe(int index, byte[] bytes) {
+      assert index >= 0;
+      int currentOffset = offsetVector.getAccessor().get(index);
+      if (data.capacity() < currentOffset + bytes.length) return false;
+      offsetVector.getMutator().set(index + 1, currentOffset + bytes.length);
+      data.setBytes(currentOffset, bytes, 0, bytes.length);
+      return true;
+    }
+
+    /**
+     * Set the variable length element at the specified index to the supplied byte array.
+     *
+     * @param index   position of the bit to set
+     * @param bytes   array of bytes to write
+     * @param start   start index of bytes to write
+     * @param length  length of bytes to write
+     */
+    public void set(int index, byte[] bytes, int start, int length) {
+      assert index >= 0;
+      int currentOffset = offsetVector.getAccessor().get(index);
+      offsetVector.getMutator().set(index + 1, currentOffset + length);
+      data.setBytes(currentOffset, bytes, start, length);
+    }
+
+    public boolean setSafe(int index, byte[] bytes, int start, int length) {
+      assert index >= 0;
+
+      int currentOffset = offsetVector.getAccessor().get(index);
+
+      if (data.capacity() < currentOffset + length) return false;
+
+      offsetVector.getMutator().set(index + 1, currentOffset + length);
+      data.setBytes(currentOffset, bytes, start, length);
+      return true;
     }
 
    

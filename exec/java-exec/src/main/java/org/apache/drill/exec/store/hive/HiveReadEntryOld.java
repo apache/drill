@@ -17,47 +17,19 @@
  */
 package org.apache.drill.exec.store.hive;
 
-import com.beust.jcommander.internal.Lists;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.ReadEntry;
 import org.apache.drill.exec.physical.base.Size;
-import org.apache.hadoop.hive.metastore.api.Partition;
-import org.apache.hadoop.hive.metastore.api.Table;
+import org.apache.hadoop.hive.conf.HiveConf;
 
-import java.util.List;
+public class HiveReadEntryOld implements ReadEntry {
+  private final HiveConf conf;
+  private final String table;
+  private Size size;
 
-public class HiveReadEntry implements ReadEntry {
-
-  @JsonProperty("table")
-  public HiveTable table;
-  @JsonProperty("partitions")
-  public List<HiveTable.HivePartition> partitions;
-
-  @JsonIgnore
-  private List<Partition> partitionsUnwrapped = Lists.newArrayList();
-
-  @JsonCreator
-  public HiveReadEntry(@JsonProperty("table") HiveTable table, @JsonProperty("partitions") List<HiveTable.HivePartition> partitions) {
+  public HiveReadEntryOld(HiveConf conf, String table) {
+    this.conf = conf;
     this.table = table;
-    this.partitions = partitions;
-    if (partitions != null) {
-      for(HiveTable.HivePartition part : partitions) {
-        partitionsUnwrapped.add(part.getPartition());
-      }
-    }
-  }
-
-  @JsonIgnore
-  public Table getTable() {
-    return table.getTable();
-  }
-
-  @JsonIgnore
-  public List<Partition> getPartitions() {
-    return partitionsUnwrapped;
   }
 
   @Override
@@ -68,10 +40,11 @@ public class HiveReadEntry implements ReadEntry {
 
   @Override
   public Size getSize() {
-    // TODO: contact the metastore and find the size of the data in table
-    Size size = new Size(1, 1);
+    if (size != null) {
+      // TODO: contact the metastore and find the size of the data in table
+      size = new Size(1, 1);
+    }
 
     return size;
   }
 }
-

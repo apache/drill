@@ -25,7 +25,6 @@ import org.apache.drill.exec.store.ClassPathFileSystem;
 import org.apache.drill.exec.store.SchemaProvider;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 
 import com.beust.jcommander.internal.Lists;
 

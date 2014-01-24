@@ -54,6 +54,7 @@ public class FullEngineTest {
    * @throws Exception
    */
   @Test(timeout=100000) // derby initialization is slow
+  @Ignore
   public void listHiveTables() throws Exception {
     JdbcAssert.withFull("hive-derby")
       .sql("select * from \"metadata\".\"TABLES\"")

@@ -15,25 +15,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.hive;
+package org.apache.drill.exec;
 
-import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.exec.store.SchemaProvider;
+import org.apache.drill.exec.client.QuerySubmitter;
+import org.junit.Ignore;
+import org.junit.Test;
 
-import com.beust.jcommander.internal.Lists;
+import java.io.IOException;
 
-public class HiveSchemaProvider implements SchemaProvider{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveSchemaProvider.class);
+/**
+ * Created with IntelliJ IDEA.
+ * User: sphillips
+ * Date: 1/24/14
+ * Time: 3:46 PM
+ * To change this template use File | Settings | File Templates.
+ */
+public class TestPlan {
 
-  final HiveStorageEngineConfig configuration;
+  String location = "/Users/sphillips/hive-lineitem-orderkey";
+  String type = "physical";
+  String zkQuorum = null;
+  boolean local = true;
+  int bits = 1;
 
-  public HiveSchemaProvider(HiveStorageEngineConfig configuration, DrillConfig config){
-    this.configuration = configuration;
-  }
 
-  @Override
-  public Object getSelectionBaseOnName(String tableName) {
-    HiveReadEntry re = new HiveReadEntry(configuration.getHiveConf(), tableName);
-    return Lists.newArrayList(re);
+  @Test
+  @Ignore
+  public void testSubmitPlan() throws Exception {
+    QuerySubmitter submitter = new QuerySubmitter();
+    submitter.submitQuery(location, type, zkQuorum, local, bits);
   }
 }

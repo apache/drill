@@ -31,12 +31,15 @@ import net.hydromatic.optiq.impl.java.JavaTypeFactory;
 
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.store.SchemaProvider;
+import org.apache.drill.exec.store.hive.HiveReadEntry;
+import org.apache.drill.exec.store.hive.HiveStorageEngine;
 import org.apache.drill.exec.store.hive.HiveStorageEngineConfig;
 import org.apache.drill.jdbc.DrillTable;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
+import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.PrimitiveObjectInspector;
@@ -53,11 +56,11 @@ public class HiveDatabaseSchema implements Schema{
   private final String name;
   private final Expression expression;
   private final QueryProvider queryProvider;
-  private final SchemaProvider schemaProvider;
+  private final HiveStorageEngine.HiveSchemaProvider schemaProvider;
   private final DrillClient client;
   private final HiveStorageEngineConfig config;
 
-  public HiveDatabaseSchema(DrillClient client, HiveStorageEngineConfig config, SchemaProvider schemaProvider,
+  public HiveDatabaseSchema(DrillClient client, HiveStorageEngineConfig config, HiveStorageEngine.HiveSchemaProvider schemaProvider,
                     JavaTypeFactory typeFactory, HiveSchema parentSchema, String name,
                     Expression expression, QueryProvider queryProvider) {
     super();
@@ -121,7 +124,54 @@ public class HiveDatabaseSchema implements Schema{
     return Collections.EMPTY_LIST;
   }
 
-  static Map<PrimitiveObjectInspector.PrimitiveCategory, SqlTypeName> mapPrimHive2Sql = new HashMap<>();
+  private RelDataType getRelDataTypeFromHiveTypeString(String type) {
+    switch(type) {
+      case "boolean":
+        return typeFactory.createSqlType(SqlTypeName.BOOLEAN);
+
+      case "tinyint":
+        return typeFactory.createSqlType(SqlTypeName.TINYINT);
+
+      case "smallint":
+        return typeFactory.createSqlType(SqlTypeName.SMALLINT);
+
+      case "int":
+        return typeFactory.createSqlType(SqlTypeName.INTEGER);
+
+      case "bigint":
+        return typeFactory.createSqlType(SqlTypeName.BIGINT);
+
+      case "float":
+        return typeFactory.createSqlType(SqlTypeName.FLOAT);
+
+      case "double":
+        return typeFactory.createSqlType(SqlTypeName.DOUBLE);
+
+      case "date":
+        return typeFactory.createSqlType(SqlTypeName.DATE);
+
+      case "timestamp":
+        return typeFactory.createSqlType(SqlTypeName.TIMESTAMP);
+
+      case "binary":
+        return typeFactory.createSqlType(SqlTypeName.BINARY);
+
+      case "decimal":
+        return typeFactory.createSqlType(SqlTypeName.DECIMAL);
+
+      case "string":
+      case "varchar": {
+        return typeFactory.createTypeWithCharsetAndCollation(
+                typeFactory.createSqlType(SqlTypeName.VARCHAR), /*input type*/
+                Charset.forName("ISO-8859-1"), /*unicode char set*/
+                SqlCollation.IMPLICIT /* TODO: need to decide if implicit is the correct one */
+        );
+      }
+
+      default:
+        throw new RuntimeException("Unknown or unsupported hive type: " + type);
+    }
+  }
 
   private RelDataType getRelDataTypeFromHivePrimitiveType(PrimitiveObjectInspector poi) {
     switch(poi.getPrimitiveCategory()) {
@@ -161,7 +211,7 @@ public class HiveDatabaseSchema implements Schema{
       case VARCHAR: {
         return typeFactory.createTypeWithCharsetAndCollation(
           typeFactory.createSqlType(SqlTypeName.VARCHAR), /*input type*/
-          Charset.forName("UTF-16"), /*unicode char set*/
+          Charset.forName("ISO-8859-1"), /*unicode char set*/
           SqlCollation.IMPLICIT /* TODO: need to decide if implicit is the correct one */
         );
       }
@@ -189,22 +239,20 @@ public class HiveDatabaseSchema implements Schema{
   @SuppressWarnings("unchecked")
   @Override
   public <E> Table<E> getTable(String name, Class<E> elementType) {
-    try {
-      org.apache.hadoop.hive.ql.metadata.Table hiveTable =
-        parentSchema.getHiveDb().getTable(getName(), name, false /*throwException*/);
+    Object selection = schemaProvider.getSelectionBaseOnName(String.format("%s.%s",this.name, name));
+    if(selection == null) return null;
+    org.apache.hadoop.hive.metastore.api.Table t = ((HiveReadEntry) selection).getTable();
+    if (t == null) {
+      logger.debug("Table name {} is invalid", name);
+      return null;
+    }
+    org.apache.hadoop.hive.ql.metadata.Table hiveTable = new org.apache.hadoop.hive.ql.metadata.Table(t);
 
-      if (hiveTable == null) {
-        logger.debug("Table name {} is invalid", name);
-        return null;
-      }
 
-      Object selection = schemaProvider.getSelectionBaseOnName(name);
-      if(selection == null) return null;
-
-      final MethodCallExpression call = Expressions.call(getExpression(), //
-        BuiltinMethod.DATA_CONTEXT_GET_TABLE.method, //
-        Expressions.constant(name), //
-        Expressions.constant(Object.class));
+    final MethodCallExpression call = Expressions.call(getExpression(), //
+      BuiltinMethod.DATA_CONTEXT_GET_TABLE.method, //
+      Expressions.constant(name), //
+      Expressions.constant(Object.class));
 
       ArrayList<RelDataType> typeList = new ArrayList<>();
       ArrayList<String> fieldNameList = new ArrayList<>();
@@ -215,21 +263,22 @@ public class HiveDatabaseSchema implements Schema{
         typeList.add(getRelDataTypeFromHiveType(hiveField.getFieldObjectInspector()));
       }
 
-      final RelDataType rowType = typeFactory.createStructType(typeList, fieldNameList);
-      return (Table<E>) new DrillTable(
-        client,
-        this,
-        Object.class,
-        call,
-        rowType,
-        name,
-        null /*storageEngineName*/,
-        selection,
-        config /*storageEngineConfig*/);
-    } catch (HiveException ex) {
-      logger.error("getTable failed", ex);
-      return null;
-    }
+      for (FieldSchema field : hiveTable.getPartitionKeys()) {
+        fieldNameList.add(field.getName());
+        typeList.add(getRelDataTypeFromHiveTypeString(field.getType()));
+      }
+
+    final RelDataType rowType = typeFactory.createStructType(typeList, fieldNameList);
+    return (Table<E>) new DrillTable(
+      client,
+      this,
+      Object.class,
+      call,
+      rowType,
+      name,
+      null /*storageEngineName*/,
+      selection,
+      config /*storageEngineConfig*/);
   }
 
   @Override

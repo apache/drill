@@ -28,7 +28,7 @@ public class TemplateClassDefinition<T>{
   private final Class<T> iface;
   private final Class<?> template;
   private final SignatureHolder signature;
-  private final AtomicLong classNumber = new AtomicLong(0);
+  private static final AtomicLong classNumber = new AtomicLong(0);
   
   public <X extends T> TemplateClassDefinition(Class<T> iface, Class<X> template) {
     super();

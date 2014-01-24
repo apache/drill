@@ -72,6 +72,7 @@ public class Wrapper {
   
   public void addEndpointAffinity(DrillbitEndpoint endpoint, float affinity) {
     Preconditions.checkState(!endpointsAssigned);
+    Preconditions.checkNotNull(endpoint);
     EndpointAffinity ea = endpointAffinity.get(endpoint);
     if (ea == null) {
       ea = new EndpointAffinity(endpoint);
@@ -149,6 +150,7 @@ public class Wrapper {
       int start = ThreadLocalRandom.current().nextInt(div);
       // round robin with random start.
       for (int i = start; i < start + width; i++) {
+        Preconditions.checkNotNull(all.get(i % div));
         endpoints.add(all.get(i % div));
       }
     } else {
@@ -156,6 +158,7 @@ public class Wrapper {
       Collections.sort(values);
       values = Lists.reverse(values);
       for (int i = 0; i < width; i++) {
+        Preconditions.checkNotNull(values.get(i%values.size()).getEndpoint());
         endpoints.add(values.get(i%values.size()).getEndpoint());
       }
     }

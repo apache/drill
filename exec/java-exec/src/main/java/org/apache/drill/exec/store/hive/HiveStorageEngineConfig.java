@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.hive;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.common.logical.StorageEngineConfigBase;
@@ -27,9 +28,12 @@ import java.util.Map;
 
 @JsonTypeName("hive")
 public class HiveStorageEngineConfig extends StorageEngineConfigBase {
-  private Map<String, String> configProps;
+  @JsonProperty
+  public Map<String, String> configProps;
+  @JsonIgnore
   private HiveConf hiveConf;
 
+  @JsonIgnore
   public HiveConf getHiveConf() {
     if (hiveConf == null) {
       hiveConf = new HiveConf();

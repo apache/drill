@@ -30,6 +30,7 @@ import org.apache.drill.common.logical.StorageEngineConfig;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.store.SchemaProvider;
 import org.apache.drill.exec.store.hive.HiveStorageEngineConfig;
+import org.apache.drill.exec.store.hive.HiveStorageEngine.HiveSchemaProvider;
 
 import org.apache.drill.jdbc.DrillTable;
 import org.apache.hadoop.hive.ql.metadata.Hive;
@@ -47,7 +48,7 @@ public class HiveSchema implements Schema{
   private final String name;
   private final Expression expression;
   private final QueryProvider queryProvider;
-  private final SchemaProvider schemaProvider;
+  private final HiveSchemaProvider schemaProvider;
   private final DrillClient client;
   private final HiveStorageEngineConfig config;
   private Hive hiveDb;
@@ -62,7 +63,7 @@ public class HiveSchema implements Schema{
     this.name = name;
     this.expression = expression;
     this.queryProvider = queryProvider;
-    this.schemaProvider = schemaProvider;
+    this.schemaProvider = (HiveSchemaProvider) schemaProvider;
     this.config = (HiveStorageEngineConfig) config;
   }
 
