@@ -23,7 +23,7 @@
 package org.apache.drill.exec.expr;
 
 <#include "/@includes/vv_imports.ftl" />
-
+import org.apache.drill.exec.vector.accessor.*;
 
 public class TypeHelper {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TypeHelper.class);
@@ -47,6 +47,25 @@ public class TypeHelper {
     throw new UnsupportedOperationException();
   }
 
+  public static SqlAccessor getSqlAccessor(ValueVector vector){
+    switch(vector.getField().getType().getMinorType()){
+    <#list vv.types as type>
+    <#list type.minor as minor>
+    case ${minor.class?upper_case}:
+      switch (vector.getField().getType().getMode()) {
+        case REQUIRED:
+          return new ${minor.class}Accessor((${minor.class}Vector) vector);
+        case OPTIONAL:
+          return new Nullable${minor.class}Accessor((Nullable${minor.class}Vector) vector);
+        case REPEATED:
+          throw new UnsupportedOperationException();
+      }
+    </#list>
+    </#list>
+    }
+    throw new UnsupportedOperationException();
+  }
+  
   public static Class<?> getValueVectorClass(MinorType type, DataMode mode){
     switch (type) {
 <#list vv.types as type>

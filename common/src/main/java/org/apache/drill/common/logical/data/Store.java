@@ -17,16 +17,15 @@
  */
 package org.apache.drill.common.logical.data;
 
-import com.google.common.collect.Iterators;
+import java.util.Iterator;
+
 import org.apache.drill.common.JSONOptions;
-import org.apache.drill.common.defs.PartitionDef;
+import org.apache.drill.common.logical.data.visitors.LogicalVisitor;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import org.apache.drill.common.logical.data.visitors.LogicalVisitor;
-
-import java.util.Iterator;
+import com.google.common.collect.Iterators;
 
 @JsonTypeName("store")
 public class Store extends SinkOperator{
@@ -34,14 +33,12 @@ public class Store extends SinkOperator{
   
   private final String storageEngine;
   private final JSONOptions target;
-  private final PartitionDef partition;
 
   @JsonCreator
-  public Store(@JsonProperty("storageengine") String storageEngine, @JsonProperty("target") JSONOptions target, @JsonProperty("partition") PartitionDef partition) {
+  public Store(@JsonProperty("storageengine") String storageEngine, @JsonProperty("target") JSONOptions target) {
     super();
     this.storageEngine = storageEngine;
     this.target = target;
-    this.partition = partition;
   }
 
   public String getStorageEngine() {
@@ -50,10 +47,6 @@ public class Store extends SinkOperator{
 
   public JSONOptions getTarget() {
     return target;
-  }
-
-  public PartitionDef getPartition() {
-    return partition;
   }
 
   @Override
@@ -66,8 +59,26 @@ public class Store extends SinkOperator{
       return Iterators.singletonIterator(getInput());
   }
 
-  public static StoreBuilder builder() {
-    return new StoreBuilder();
+  public static Builder builder() {
+    return new Builder();
   }
   
+  public static class Builder extends AbstractSingleBuilder<Store, Builder>{
+    private String storageEngine;
+    private JSONOptions target;
+
+    public Builder storageEngine(String storageEngine) {
+      this.storageEngine = storageEngine;
+      return this;
+    }
+
+    public Builder target(JSONOptions target) {
+      this.target = target;
+      return this;
+    }
+
+    public Store internalBuild() {
+      return new Store(storageEngine, target);
+    }    
+  }
 }

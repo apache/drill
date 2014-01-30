@@ -33,6 +33,5 @@
   <modules>
     <module>bufferl</module>
     <module>java-exec</module>
-    <module>ref</module>
   </modules>
 </project>

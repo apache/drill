@@ -24,6 +24,6 @@ public interface UserResultsListener {
   
   public abstract void queryIdArrived(QueryId queryId);
   public abstract void submissionFailed(RpcException ex); 
-  public abstract void resultArrived(QueryResultBatch result);
+  public abstract void resultArrived(QueryResultBatch result, ConnectionThrottle throttle);
 
 }

@@ -20,9 +20,15 @@ enum RpcType {
     CANCEL_QUERY = 4;
     REQUEST_RESULTS = 5;
     
+    
     // bit to user
 	QUERY_RESULT = 6;
 	QUERY_HANDLE = 7;
+	
+	REQ_META_FUNCTIONS = 8;
+	RESP_FUNCTION_LIST = 9;
+	
+	
 }
 
 message UserToBitHandshake {
@@ -41,6 +47,8 @@ message RunQuery {
   optional QueryType type = 2;
   optional string plan = 3;
 }
+
+message 
 
 enum QueryType {
   SQL = 1;

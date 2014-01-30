@@ -112,10 +112,7 @@ class MergeAdapter extends ClassVisitor {
       return null;
     }
     if(arg3 != null){
-      System.out.println("a: " + arg3);
       arg3 = arg3.replace(set.precompiled.slash, set.generated.slash);
-      System.out.println("b: " + arg3);
-      
     }
     // if( (access & Modifier.PUBLIC) == 0){
     // access = access ^ Modifier.PUBLIC ^ Modifier.PROTECTED | Modifier.PRIVATE;

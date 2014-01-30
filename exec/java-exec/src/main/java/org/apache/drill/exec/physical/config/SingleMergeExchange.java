@@ -18,25 +18,25 @@
 
 package org.apache.drill.exec.physical.config;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import org.apache.drill.common.defs.OrderDef;
+import java.util.List;
+
 import org.apache.drill.common.exceptions.PhysicalOperatorSetupException;
-import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.logical.data.Order.Ordering;
 import org.apache.drill.exec.physical.base.AbstractExchange;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.Receiver;
 import org.apache.drill.exec.physical.base.Sender;
 import org.apache.drill.exec.proto.CoordinationProtos;
 
-import java.util.List;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName("single-merge-exchange")
 public class SingleMergeExchange extends AbstractExchange {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SingleMergeExchange.class);
 
-  private final List<OrderDef> orderExpr;
+  private final List<Ordering> orderExpr;
 
   // ephemeral for setup tasks
   private List<CoordinationProtos.DrillbitEndpoint> senderLocations;
@@ -44,7 +44,7 @@ public class SingleMergeExchange extends AbstractExchange {
 
   @JsonCreator
   public SingleMergeExchange(@JsonProperty("child") PhysicalOperator child,
-                             @JsonProperty("orderings") List<OrderDef> orderExpr) {
+                             @JsonProperty("orderings") List<Ordering> orderExpr) {
     super(child);
     this.orderExpr = orderExpr;
   }

@@ -17,6 +17,8 @@
  ******************************************************************************/
 package org.apache.drill.common.logical;
 
+import org.apache.drill.common.logical.PlanProperties.Generator.ResultMode;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -30,11 +32,16 @@ public class PlanProperties {
   public PlanType type;
   public int version;
 	public Generator generator;
+	public ResultMode resultMode;
 
-	@JsonInclude(Include.NON_NULL)
+//	@JsonInclude(Include.NON_NULL)
 	public static class Generator{
 		public String type;
 		public String info;
+	  
+		public static enum ResultMode{
+	    EXEC, LOGICAL, PHYSICAL;
+	  }
 
     private Generator(@JsonProperty("type") String type, @JsonProperty("info") String info) {
       this.type = type;
@@ -44,10 +51,13 @@ public class PlanProperties {
 
   private PlanProperties(@JsonProperty("version") int version,
                          @JsonProperty("generator") Generator generator,
-                         @JsonProperty("type") PlanType type) {
+                         @JsonProperty("type") PlanType type,
+                         @JsonProperty("mode") ResultMode resultMode
+                         ) {
     this.version = version;
     this.generator = generator;
     this.type = type;
+    this.resultMode = resultMode == null ? ResultMode.EXEC : resultMode;
   }
 
   public static PlanPropertiesBuilder builder() {
@@ -58,6 +68,7 @@ public class PlanProperties {
     private int version;
     private Generator generator;
     private PlanType type;
+    private ResultMode mode = ResultMode.EXEC;
 
     public PlanPropertiesBuilder type(PlanType type) {
       this.type = type;
@@ -73,6 +84,11 @@ public class PlanProperties {
       this.generator = new Generator(type, info);
       return this;
     }
+    
+    public PlanPropertiesBuilder resultMode(ResultMode mode){
+      this.mode = mode;
+      return this;
+    }
 
     public PlanPropertiesBuilder generator(Generator generator) {
       this.generator = generator;
@@ -80,7 +96,7 @@ public class PlanProperties {
     }
 
     public PlanProperties build() {
-      return new PlanProperties(version, generator, type);
+      return new PlanProperties(version, generator, type, mode);
     }
   }
 }

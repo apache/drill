@@ -17,17 +17,22 @@
  */
 package org.apache.drill.common.logical.data;
 
-import com.google.common.collect.Iterators;
+import java.util.Iterator;
+import java.util.List;
+
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.logical.data.visitors.LogicalVisitor;
+import org.eigenbase.rel.RelFieldCollation;
+import org.eigenbase.rel.RelFieldCollation.Direction;
+import org.eigenbase.rel.RelFieldCollation.NullDirection;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import org.apache.drill.common.logical.data.visitors.LogicalVisitor;
-
-import java.util.Iterator;
+import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
 
 @JsonTypeName("order")
 public class Order extends SingleInputOperator {
@@ -62,16 +67,25 @@ public class Order extends SingleInputOperator {
 
     public static class Ordering {
 
-    private final Direction direction;
+    private final RelFieldCollation.Direction direction;
     private final LogicalExpression expr;
-    private final NullCollation nulls;
+    private final RelFieldCollation.NullDirection nulls;
     
     @JsonCreator
-    public Ordering(@JsonProperty("order") String strOrder, @JsonProperty("expr") LogicalExpression expr, @JsonProperty("nullCollation") String nullCollation) {
+    public Ordering(@JsonProperty("order") String strOrder, @JsonProperty("expr") LogicalExpression expr, @JsonProperty("nullDirection") String nullCollation) {
       this.expr = expr;
-      this.nulls = NullCollation.NULLS_LAST.description.equals(nullCollation) ? NullCollation.NULLS_LAST :  NullCollation.NULLS_FIRST; // default first
-      this.direction = Direction.DESC.description.equalsIgnoreCase(strOrder) ? Direction.DESC : Direction.ASC; // default asc
-                                                                                                     
+      this.nulls = NullDirection.LAST.name().equalsIgnoreCase(nullCollation) ? NullDirection.LAST :  NullDirection.FIRST; // default first
+      this.direction = Order.getDirectionFromString(strOrder);
+    }
+
+    public Ordering(Direction direction, LogicalExpression e, NullDirection nullCollation) {
+      this.expr = e;
+      this.nulls = nullCollation;
+      this.direction = direction;
+    }
+    
+    public Ordering(Direction direction, LogicalExpression e) {
+      this(direction, e, NullDirection.FIRST);
     }
 
     @JsonIgnore
@@ -84,34 +98,52 @@ public class Order extends SingleInputOperator {
     }
 
     public String getOrder() {
-      return direction.description;
+      
+      switch(direction){
+      case Descending: return "DESC";
+      default: return "ASC";
+      }
     }
 
-    public NullCollation getNullCollation() {
+    public NullDirection getNullDirection() {
       return nulls;
     }
     
     
 
   }
-  public static enum NullCollation {
-    NULLS_FIRST("first"), NULLS_LAST("last");
+  
+  public static Builder builder(){
+    return new Builder();
+  }
+  
+  public static class Builder extends AbstractSingleBuilder<Order, Builder>{
+    private List<Ordering> orderings = Lists.newArrayList();
+    private FieldReference within;
     
-    public final String description;
-
-    NullCollation(String d) {
-      description = d;
+    public Builder setWithin(FieldReference within){
+      this.within = within;
+      return this;
     }
-  }
-
-  public static enum Direction {
-    ASC("ASC"), DESC("DESC");
-    public final String description;
-
-    Direction(String d) {
-      description = d;
+    
+    public Builder addOrdering(Direction direction, LogicalExpression e, NullDirection collation){
+      orderings.add(new Ordering(direction, e, collation));
+      return this;
     }
+
+    @Override
+    public Order internalBuild() {
+      return new Order(within, orderings.toArray(new Ordering[orderings.size()]));
+    }
+    
+    
   }
   
+  public static Direction getDirectionFromString(String direction){
+    return "DESC".equalsIgnoreCase(direction) ? Direction.Descending : Direction.Ascending;
+  }
   
+  public static String getStringFromDirection(Direction direction){
+    return direction == Direction.Descending ? "DESC" : "ASC";
+  }
 }

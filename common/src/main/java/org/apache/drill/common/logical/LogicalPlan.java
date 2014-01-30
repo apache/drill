@@ -46,7 +46,8 @@ public class LogicalPlan {
   private final PlanProperties properties;
   private final Map<String, StorageEngineConfig> storageEngineMap;
   private final Graph<LogicalOperator, SinkOperator, SourceOperator> graph;
-
+  
+  
   @JsonCreator
   public LogicalPlan(@JsonProperty("head") PlanProperties head,
       @JsonProperty("storage") Map<String, StorageEngineConfig> storageEngineMap,
@@ -82,6 +83,15 @@ public class LogicalPlan {
 
   public String toJsonString(DrillConfig config) throws JsonProcessingException {
     return config.getMapper().writeValueAsString(this);
+  }
+
+  public String toJsonStringSafe(DrillConfig config){
+    try{
+      return toJsonString(config);
+    }catch(JsonProcessingException e){
+      logger.error("Failure while trying to get JSON representation of plan.", e);
+      return "Unable to generate plan.";
+    }
   }
 
   /** Parses a logical plan. */

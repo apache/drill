@@ -94,7 +94,7 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
       }
 
     default:
-      throw new UnsupportedOperationException();
+      throw new UnsupportedOperationException(String.format("UserServer received rpc of unknown type.  Type was %d.", rpcType));
     }
 
   }

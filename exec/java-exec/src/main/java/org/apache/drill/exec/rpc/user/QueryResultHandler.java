@@ -51,7 +51,7 @@ public class QueryResultHandler {
     return new SubmissionListener(listener);
   }
   
-  public void batchArrived(ByteBuf pBody, ByteBuf dBody) throws RpcException {
+  public void batchArrived(ConnectionThrottle throttle, ByteBuf pBody, ByteBuf dBody) throws RpcException {
     final QueryResult result = RpcBus.get(pBody, QueryResult.PARSER);
     final QueryResultBatch batch = new QueryResultBatch(result, dBody);
     UserResultsListener l = resultsListener.get(result.getQueryId());
@@ -72,7 +72,7 @@ public class QueryResultHandler {
       l.submissionFailed(new RpcException("Remote failure while running query." + batch.getHeader().getErrorList()));
       resultsListener.remove(result.getQueryId(), l);
     }else{
-      l.resultArrived(batch);
+      l.resultArrived(batch, throttle);
     }
     
     if (
@@ -100,13 +100,13 @@ public class QueryResultHandler {
     private volatile boolean finished = false;
     private volatile RpcException ex;
     private volatile UserResultsListener output;
-
+    private volatile ConnectionThrottle throttle;
     public boolean transferTo(UserResultsListener l) {
       synchronized (this) {
         output = l;
         boolean last = false;
         for (QueryResultBatch r : results) {
-          l.resultArrived(r);
+          l.resultArrived(r, throttle);
           last = r.getHeader().getIsLastChunk();
         }
         if(ex != null){
@@ -119,14 +119,15 @@ public class QueryResultHandler {
 
     
     @Override
-    public void resultArrived(QueryResultBatch result) {
+    public void resultArrived(QueryResultBatch result, ConnectionThrottle throttle) {
+      this.throttle = throttle;
       if(result.getHeader().getIsLastChunk()) finished = true;
       
       synchronized (this) {
         if (output == null) {
           this.results.add(result);
         } else {
-          output.resultArrived(result);
+          output.resultArrived(result, throttle);
         }
       }
     }

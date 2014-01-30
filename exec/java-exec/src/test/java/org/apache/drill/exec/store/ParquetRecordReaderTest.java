@@ -17,10 +17,13 @@
  */
 package org.apache.drill.exec.store;
 
-import com.beust.jcommander.internal.Lists;
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
-import com.google.common.util.concurrent.SettableFuture;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static parquet.column.Encoding.PLAIN;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.types.TypeProtos;
@@ -34,6 +37,7 @@ import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.rpc.RpcException;
+import org.apache.drill.exec.rpc.user.ConnectionThrottle;
 import org.apache.drill.exec.rpc.user.QueryResultBatch;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
 import org.apache.drill.exec.server.Drillbit;
@@ -54,10 +58,10 @@ import parquet.hadoop.metadata.CompressionCodecName;
 import parquet.schema.MessageType;
 import parquet.schema.MessageTypeParser;
 
-import java.util.*;
-
-import static org.junit.Assert.*;
-import static parquet.column.Encoding.PLAIN;
+import com.beust.jcommander.internal.Lists;
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
+import com.google.common.util.concurrent.SettableFuture;
 
 public class ParquetRecordReaderTest {
   org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetRecordReaderTest.class);
@@ -368,7 +372,7 @@ public class ParquetRecordReaderTest {
     }
 
     @Override
-    public void resultArrived(QueryResultBatch result) {
+    public void resultArrived(QueryResultBatch result, ConnectionThrottle throttle) {
       logger.debug("result arrived in test batch listener.");
       if(result.getHeader().getIsLastChunk()){
         future.set(null);

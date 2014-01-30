@@ -17,16 +17,20 @@
  */
 package org.apache.drill.common.logical.data;
 
-import com.google.common.collect.Iterators;
+import java.util.Iterator;
+import java.util.List;
+
 import org.apache.drill.common.exceptions.ExpressionParsingException;
+import org.apache.drill.common.expression.FieldReference;
+import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.PathSegment;
+import org.apache.drill.common.logical.data.visitors.LogicalVisitor;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import org.apache.drill.common.logical.data.visitors.LogicalVisitor;
-
-import java.util.Iterator;
+import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
 
 @JsonTypeName("project")
 public class Project extends SingleInputOperator {
@@ -36,13 +40,18 @@ public class Project extends SingleInputOperator {
   @JsonCreator
   public Project(@JsonProperty("projections") NamedExpression[] selections) {
     this.selections = selections;
-    if(selections == null || selections.length == 0) throw new ExpressionParsingException("Project did not provide any projection selections.  At least one projection must be provided.");
+    if (selections == null || selections.length == 0)
+      throw new ExpressionParsingException(
+          "Project did not provide any projection selections.  At least one projection must be provided.");
     for (int i = 0; i < selections.length; i++) {
       PathSegment segment = selections[i].getRef().getRootSegment();
       CharSequence path = segment.getNameSegment().getPath();
       if (!segment.isNamed() || !path.equals("output"))
-        throw new ExpressionParsingException(String.format(
-            "Outputs for projections always have to start with named path of output. First segment was named '%s' or was named [%s]", path, segment.isNamed()));
+        throw new ExpressionParsingException(
+            String
+                .format(
+                    "Outputs for projections always have to start with named path of output. First segment was named '%s' or was named [%s]",
+                    path, segment.isNamed()));
 
     }
   }
@@ -52,15 +61,33 @@ public class Project extends SingleInputOperator {
     return selections;
   }
 
-    @Override
-    public <T, X, E extends Throwable> T accept(LogicalVisitor<T, X, E> logicalVisitor, X value) throws E {
-        return logicalVisitor.visitProject(this, value);
+  @Override
+  public <T, X, E extends Throwable> T accept(LogicalVisitor<T, X, E> logicalVisitor, X value) throws E {
+    return logicalVisitor.visitProject(this, value);
+  }
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static class Builder extends AbstractSingleBuilder<Project, Builder> {
+
+    private List<NamedExpression> exprs = Lists.newArrayList();
+
+    public Builder addExpr(NamedExpression expr) {
+      exprs.add(expr);
+      return this;
+    }
+
+    public Builder addExpr(FieldReference ref, LogicalExpression expr) {
+      exprs.add(new NamedExpression(expr, ref));
+      return this;
     }
 
     @Override
-    public Iterator<LogicalOperator> iterator() {
-        return Iterators.singletonIterator(getInput());
+    public Project internalBuild() {
+      return new Project(aN(exprs));
     }
 
-
+  }
 }

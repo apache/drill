@@ -119,6 +119,7 @@ public class WorkManager implements Closeable{
   public class WorkerBee{
 
     public void addFragmentRunner(FragmentExecutor runner){
+      logger.debug("Adding pending task {}", runner);
       pendingTasks.add(runner);
     }
     
@@ -167,7 +168,7 @@ public class WorkManager implements Closeable{
     try {
     while(true){
 //      logger.debug("Polling for pending work tasks.");
-      Runnable r = pendingTasks.poll(10, TimeUnit.SECONDS);
+      Runnable r = pendingTasks.take();
       if(r != null){
         logger.debug("Starting pending task {}", r);
         executor.execute(r);  

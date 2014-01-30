@@ -20,13 +20,11 @@ package org.apache.drill.exec.physical.impl.sort;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.drill.common.defs.OrderDef;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
-import org.apache.drill.common.logical.data.Order.Direction;
 import org.apache.drill.common.logical.data.Order.Ordering;
 import org.apache.drill.exec.compile.sig.MappingSet;
 import org.apache.drill.exec.exception.ClassTransformationException;
@@ -46,6 +44,7 @@ import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
+import org.eigenbase.rel.RelFieldCollation.Direction;
 
 import com.google.common.collect.ImmutableList;
 import com.sun.codemodel.JConditional;
@@ -165,20 +164,20 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
     return createNewSorter(this.context, this.popConfig.getOrderings(), this, MAIN_MAPPING, LEFT_MAPPING, RIGHT_MAPPING);
   }
 
-  public static Sorter createNewSorter(FragmentContext context, List<OrderDef> orderings, VectorAccessible batch) throws ClassTransformationException, IOException, SchemaChangeException {
+  public static Sorter createNewSorter(FragmentContext context, List<Ordering> orderings, VectorAccessible batch) throws ClassTransformationException, IOException, SchemaChangeException {
     final MappingSet mainMapping = new MappingSet( (String) null, null, ClassGenerator.DEFAULT_SCALAR_MAP, ClassGenerator.DEFAULT_SCALAR_MAP);
     final MappingSet leftMapping = new MappingSet("leftIndex", null, ClassGenerator.DEFAULT_SCALAR_MAP, ClassGenerator.DEFAULT_SCALAR_MAP);
     final MappingSet rightMapping = new MappingSet("rightIndex", null, ClassGenerator.DEFAULT_SCALAR_MAP, ClassGenerator.DEFAULT_SCALAR_MAP);
     return createNewSorter(context, orderings, batch, mainMapping, leftMapping, rightMapping);
   }
   
-  public static Sorter createNewSorter(FragmentContext context, List<OrderDef> orderings, VectorAccessible batch, MappingSet mainMapping, MappingSet leftMapping, MappingSet rightMapping)
+  public static Sorter createNewSorter(FragmentContext context, List<Ordering> orderings, VectorAccessible batch, MappingSet mainMapping, MappingSet leftMapping, MappingSet rightMapping)
           throws ClassTransformationException, IOException, SchemaChangeException{
     CodeGenerator<Sorter> cg = CodeGenerator.get(Sorter.TEMPLATE_DEFINITION, context.getFunctionRegistry());
     ClassGenerator<Sorter> g = cg.getRoot();
     g.setMappingSet(mainMapping);
     
-    for(OrderDef od : orderings){
+    for(Ordering od : orderings){
       // first, we rewrite the evaluation stack for each side of the comparison.
       ErrorCollector collector = new ErrorCollectorImpl(); 
       final LogicalExpression expr = ExpressionTreeMaterializer.materialize(od.getExpr(), batch, collector,context.getFunctionRegistry());
@@ -194,7 +193,7 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
       HoldingContainer out = g.addExpr(f, false);
       JConditional jc = g.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)));
       
-      if(od.getDirection() == Direction.ASC){
+      if(od.getDirection() == Direction.Ascending){
         jc._then()._return(out.getValue());
       }else{
         jc._then()._return(out.getValue().minus());

@@ -167,6 +167,10 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
       return ((data.getByte((int) Math.floor(index / 8)) & (int) Math.pow(2, (index % 8))) == 0) ? 0 : 1;
     }
 
+    public boolean isNull(int index){
+      return false;
+    }
+    
     @Override
     public final Object getObject(int index) {
       return new Boolean(get(index) != 0);

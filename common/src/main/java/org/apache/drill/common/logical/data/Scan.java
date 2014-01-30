@@ -19,11 +19,11 @@ package org.apache.drill.common.logical.data;
 
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.expression.FieldReference;
+import org.apache.drill.common.logical.data.visitors.LogicalVisitor;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import org.apache.drill.common.logical.data.visitors.LogicalVisitor;
 
 
 @JsonTypeName("scan")
@@ -59,8 +59,34 @@ public class Scan extends SourceOperator{
       return logicalVisitor.visitScan(this, value);
   }
 
-  public static ScanBuilder builder() {
-    return new ScanBuilder();
+  public static Builder builder() {
+    return new Builder();
+  }
+  
+  
+  public static class Builder extends AbstractBuilder<Scan>{
+    private String storageEngine;
+    private JSONOptions selection;
+    private FieldReference outputReference;
+
+    public Builder storageEngine(String storageEngine) {
+      this.storageEngine = storageEngine;
+      return this;
+    }
+
+    public Builder selection(JSONOptions selection) {
+      this.selection = selection;
+      return this;
+    }
+
+    public Builder outputReference(FieldReference outputReference) {
+      this.outputReference = outputReference;
+      return this;
+    }
+
+    public Scan build() {
+      return new Scan(storageEngine, selection, outputReference);
+    }
   }
 
 }

@@ -17,55 +17,71 @@
  */
 package org.apache.drill.jdbc;
 
-import net.hydromatic.linq4j.function.Function0;
-import net.hydromatic.optiq.jdbc.DriverVersion;
-import net.hydromatic.optiq.jdbc.Handler;
-import net.hydromatic.optiq.jdbc.OptiqPrepare;
-import net.hydromatic.optiq.jdbc.UnregisteredDriver;
+import org.apache.drill.common.config.DrillConfig;
 
-import org.apache.drill.exec.client.DrillClient;
-import org.apache.drill.optiq.DrillPrepareImpl;
+import net.hydromatic.avatica.DriverVersion;
+import net.hydromatic.avatica.Handler;
+import net.hydromatic.avatica.HandlerImpl;
+import net.hydromatic.avatica.UnregisteredDriver;
 
 /**
- * JDBC driver for Apache Drill.
+ * Optiq JDBC driver.
  */
 public class Driver extends UnregisteredDriver {
   public static final String CONNECT_STRING_PREFIX = "jdbc:drill:";
 
-  private volatile DrillHandler handler;
+
+
+  final DrillConfig config;
   
-  static {
-    new Driver().register();
+  public Driver() {
+    super();
+    config = DrillConfig.create();
   }
 
+
+  public static boolean load(){
+    return true;
+  }
+  
+  @Override
   protected String getConnectStringPrefix() {
     return CONNECT_STRING_PREFIX;
   }
 
-  protected DriverVersion createDriverVersion() {
-    return new DrillDriverVersion();
-  }
-
   @Override
-  protected Function0<OptiqPrepare> createPrepareFactory() {
-    return new Function0<OptiqPrepare>() {
-      @Override
-      public OptiqPrepare apply() {
-        return new DrillPrepareImpl(Driver.this);
-      }
-    };
+  protected String getFactoryClassName(JdbcVersion jdbcVersion) {
+    switch (jdbcVersion) {
+    case JDBC_30:
+      return "org.apache.drill.jdbc.DrillJdbc3Factory";
+    case JDBC_40:
+      return "org.apache.drill.jdbc.DrillJdbc40Factory";
+    case JDBC_41:
+    default:
+      return "org.apache.drill.jdbc.DrillJdbc41Factory";
+    }
   }
 
-  public DrillClient getClient(){
-    return handler.getClient();
+  protected DriverVersion createDriverVersion() {
+    return DriverVersion.load(
+        Driver.class,
+        "apache-drill-jdbc.properties",
+        "Drill JDBC Driver",
+        "unknown version",
+        "Optiq",
+        "unknown version");
+  }
+
+  DrillConfig getConfig(){
+    return config;
   }
   
   @Override
   protected Handler createHandler() {
-    this.handler = new DrillHandler(false);
-    return handler;
+    return new HandlerImpl();
   }
-  
-}
 
-// End Driver.java
+  static {
+    new Driver().register();
+  }
+}

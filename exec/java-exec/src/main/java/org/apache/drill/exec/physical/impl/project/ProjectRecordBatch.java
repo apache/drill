@@ -88,6 +88,18 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
     }
     return ref;
   }
+  private boolean isWildcard(NamedExpression ex){
+    LogicalExpression expr = ex.getExpr();
+    LogicalExpression ref = ex.getRef();
+    if(expr instanceof SchemaPath && ref instanceof SchemaPath){
+      PathSegment e = ((SchemaPath) expr).getRootSegment();
+      PathSegment n = ((SchemaPath) ref).getRootSegment();
+      if(e.isNamed() && e.getNameSegment().getPath().equals("*") && n.isNamed() && n.getChild() != null && n.getChild().isNamed() && n.getChild().getNameSegment().getPath().equals("*")){
+        return true;
+      }
+    }
+    return false;
+  }
   
   @Override
   protected void setupNewSchema() throws SchemaChangeException{
@@ -99,33 +111,43 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
     
     final ClassGenerator<Projector> cg = CodeGenerator.getRoot(Projector.TEMPLATE_DEFINITION, context.getFunctionRegistry());
     
-    for(int i = 0; i < exprs.size(); i++){
-      final NamedExpression namedExpression = exprs.get(i);
-      final LogicalExpression expr = ExpressionTreeMaterializer.materialize(namedExpression.getExpr(), incoming, collector, context.getFunctionRegistry());
-      final MaterializedField outputField = MaterializedField.create(getRef(namedExpression), expr.getMajorType());
-      if(collector.hasErrors()){
-        throw new SchemaChangeException(String.format("Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));
-      }
-      
-      // add value vector to transfer if direct reference and this is allowed, otherwise, add to evaluation stack.
-      if(expr instanceof ValueVectorReadExpression && incoming.getSchema().getSelectionVectorMode() == SelectionVectorMode.NONE){
-        ValueVectorReadExpression vectorRead = (ValueVectorReadExpression) expr;
-        ValueVector vvIn = incoming.getValueAccessorById(vectorRead.getFieldId().getFieldId(), TypeHelper.getValueVectorClass(vectorRead.getMajorType().getMinorType(), vectorRead.getMajorType().getMode())).getValueVector();
-        Preconditions.checkNotNull(incoming);
-
-        TransferPair tp = vvIn.getTransferPair(getRef(namedExpression));
+    if(exprs.size() == 1 && isWildcard(exprs.get(0))){
+      for(VectorWrapper<?> wrapper : incoming){
+        ValueVector vvIn = wrapper.getValueVector();
+        TransferPair tp = wrapper.getValueVector().getTransferPair(new FieldReference(vvIn.getField().getName()));
         transfers.add(tp);
         container.add(tp.getTo());
-        logger.debug("Added transfer.");
-      }else{
-        // need to do evaluation.
-        ValueVector vector = TypeHelper.getNewVector(outputField, context.getAllocator());
-        allocationVectors.add(vector);
-        TypedFieldId fid = container.add(vector);
-        ValueVectorWriteExpression write = new ValueVectorWriteExpression(fid, expr);
-        cg.addExpr(write);
-        logger.debug("Added eval.");
       }
+    }else{
+      for(int i = 0; i < exprs.size(); i++){
+        final NamedExpression namedExpression = exprs.get(i);
+        final LogicalExpression expr = ExpressionTreeMaterializer.materialize(namedExpression.getExpr(), incoming, collector, context.getFunctionRegistry());
+        final MaterializedField outputField = MaterializedField.create(getRef(namedExpression), expr.getMajorType());
+        if(collector.hasErrors()){
+          throw new SchemaChangeException(String.format("Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));
+        }
+        
+        // add value vector to transfer if direct reference and this is allowed, otherwise, add to evaluation stack.
+        if(expr instanceof ValueVectorReadExpression && incoming.getSchema().getSelectionVectorMode() == SelectionVectorMode.NONE){
+          ValueVectorReadExpression vectorRead = (ValueVectorReadExpression) expr;
+          ValueVector vvIn = incoming.getValueAccessorById(vectorRead.getFieldId().getFieldId(), TypeHelper.getValueVectorClass(vectorRead.getMajorType().getMinorType(), vectorRead.getMajorType().getMode())).getValueVector();
+          Preconditions.checkNotNull(incoming);
+
+          TransferPair tp = vvIn.getTransferPair(getRef(namedExpression));
+          transfers.add(tp);
+          container.add(tp.getTo());
+          logger.debug("Added transfer.");
+        }else{
+          // need to do evaluation.
+          ValueVector vector = TypeHelper.getNewVector(outputField, context.getAllocator());
+          allocationVectors.add(vector);
+          TypedFieldId fid = container.add(vector);
+          ValueVectorWriteExpression write = new ValueVectorWriteExpression(fid, expr);
+          cg.addExpr(write);
+          logger.debug("Added eval.");
+        }
+    }
+
       
     }
     

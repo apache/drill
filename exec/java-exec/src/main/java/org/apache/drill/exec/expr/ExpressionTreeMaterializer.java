@@ -24,15 +24,17 @@ import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.IfExpression;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.expression.TypedNullConstant;
 import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.expression.visitors.SimpleExprVisitor;
+import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.record.NullExpression;
 import org.apache.drill.exec.record.TypedFieldId;
+import org.apache.drill.exec.record.VectorAccessible;
 
 import com.google.common.collect.Lists;
-
-import org.apache.drill.exec.record.VectorAccessible;
 
 public class ExpressionTreeMaterializer {
 
@@ -45,7 +47,12 @@ public class ExpressionTreeMaterializer {
 
   public static LogicalExpression materialize(LogicalExpression expr, VectorAccessible batch, ErrorCollector errorCollector, FunctionImplementationRegistry registry) {
     LogicalExpression materializedExpr = expr.accept(new MaterializeVisitor(batch, errorCollector), null);
-    return ImplicitCastBuilder.injectImplicitCast(materializedExpr, errorCollector, registry);
+    LogicalExpression out = ImplicitCastBuilder.injectImplicitCast(materializedExpr, errorCollector, registry);
+    if(out instanceof NullExpression){
+      return new TypedNullConstant(Types.optional(MinorType.INT));
+    }else{
+      return out;
+    }
   }
 
   private static class MaterializeVisitor extends SimpleExprVisitor<LogicalExpression> {

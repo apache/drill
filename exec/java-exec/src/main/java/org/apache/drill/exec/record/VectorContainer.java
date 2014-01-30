@@ -138,17 +138,18 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
 
 
   @Override
-  @SuppressWarnings("unchecked")
   public VectorWrapper<?> getValueAccessorById(int fieldId, Class<?> clazz) {
     VectorWrapper<?> va = wrappers.get(fieldId);
-    assert va != null;
-    if (va.getVectorClass() != clazz) {
+    if(va!= null && clazz == null){
+      return (VectorWrapper<?>) va;
+    }
+    if (va != null && va.getVectorClass() != clazz) {
       logger.warn(String.format(
           "Failure while reading vector.  Expected vector class of %s but was holding vector class %s.",
           clazz.getCanonicalName(), va.getVectorClass().getCanonicalName()));
       return null;
     }
-    return (VectorWrapper) va;
+    return (VectorWrapper<?>) va;
   }
 
   public BatchSchema getSchema() {

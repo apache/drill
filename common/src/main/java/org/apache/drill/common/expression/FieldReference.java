@@ -43,6 +43,9 @@ public class FieldReference extends SchemaPath {
     super(sp);
   }
   
+  public FieldReference(CharSequence value){
+    super(value, ExpressionPosition.UNKNOWN);
+  }
   
   public FieldReference(CharSequence value, ExpressionPosition pos) {
     super(value, pos);

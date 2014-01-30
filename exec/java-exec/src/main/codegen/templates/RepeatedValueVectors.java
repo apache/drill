@@ -243,7 +243,12 @@ package org.apache.drill.exec.vector;
            </#if> get(int index, int positionIndex) {
       return values.getAccessor().get(offsets.getAccessor().get(index) + positionIndex);
     }
+        
            
+    public boolean isNull(int index){
+      return false;
+    }
+    
     public void get(int index, Repeated${minor.class}Holder holder){
       holder.start = offsets.getAccessor().get(index);
       holder.end =  offsets.getAccessor().get(index+1);

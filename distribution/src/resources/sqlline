@@ -72,7 +72,7 @@ DRILL_SHELL_JAVA_OPTS="$DRILL_SHELL_JAVA_OPTS -Dlog.path=$DRILL_LOG_DIR/sqlline.
 
 if [ -n "$QUERY" ]
 then
-  echo $QUERY | exec $JAVA $DRILL_SHELL_JAVA_OPTS $DRILL_JAVA_OPTS -cp $CP sqlline.SqlLine "${ARGS[@]}"
+  echo $QUERY | exec $JAVA $DRILL_SHELL_JAVA_OPTS $DRILL_JAVA_OPTS -cp $CP sqlline.SqlLine -d org.apache.drill.jdbc.Driver "${ARGS[@]}"
 elif [ -n "$FILE" ]
 then
   exec $JAVA $DRILL_SHELL_JAVA_OPTS $DRILL_JAVA_OPTS -cp $CP sqlline.SqlLine "${ARGS[@]}" --run=$FILE

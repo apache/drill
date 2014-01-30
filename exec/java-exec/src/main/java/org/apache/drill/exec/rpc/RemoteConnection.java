@@ -22,8 +22,9 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.rpc.user.ConnectionThrottle;
 
-public abstract class RemoteConnection{
+public abstract class RemoteConnection implements ConnectionThrottle{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RemoteConnection.class);
   private final Channel channel;
   private final WriteManager writeManager;

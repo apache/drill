@@ -17,43 +17,33 @@
  */
 package org.apache.drill.exec.client;
 
-import com.beust.jcommander.JCommander;
-import com.beust.jcommander.Parameter;
-import com.beust.jcommander.ParameterException;
-import com.beust.jcommander.Parameters;
-import com.beust.jcommander.internal.Lists;
-import com.google.common.base.Charsets;
-import com.google.common.base.Stopwatch;
-import com.google.common.io.Resources;
+import java.nio.ByteBuffer;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.coord.ZKClusterCoordinator;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserProtos;
 import org.apache.drill.exec.record.RecordBatchLoader;
-import org.apache.drill.exec.record.VectorWrapper;
-import org.apache.drill.exec.rpc.RemoteRpcException;
 import org.apache.drill.exec.rpc.RpcException;
+import org.apache.drill.exec.rpc.user.ConnectionThrottle;
 import org.apache.drill.exec.rpc.user.QueryResultBatch;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
 import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.util.VectorUtil;
-import org.apache.drill.exec.vector.ValueVector;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.charset.CharsetDecoder;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
+import com.beust.jcommander.JCommander;
+import com.beust.jcommander.Parameter;
+import com.beust.jcommander.ParameterException;
+import com.google.common.base.Charsets;
+import com.google.common.base.Stopwatch;
 
 public class QuerySubmitter {
 
@@ -99,42 +89,50 @@ public class QuerySubmitter {
 
   public int submitQuery(String planLocation, String type, String zkQuorum, boolean local, int bits) throws Exception {
     DrillConfig config = DrillConfig.create();
-    DrillClient client;
-    if (local) {
-      RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
-      Drillbit[] drillbits = new Drillbit[bits];
-      for (int i = 0; i < bits; i++) {
-        drillbits[i] = new Drillbit(config, serviceSet);
-        drillbits[i].run();
+    DrillClient client = null;
+    
+    try{
+      if (local) {
+        RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
+        Drillbit[] drillbits = new Drillbit[bits];
+        for (int i = 0; i < bits; i++) {
+          drillbits[i] = new Drillbit(config, serviceSet);
+          drillbits[i].run();
+        }
+        client = new DrillClient(config, serviceSet.getCoordinator());
+      } else {
+        ZKClusterCoordinator clusterCoordinator = new ZKClusterCoordinator(config, zkQuorum);
+        clusterCoordinator.start(10000);
+        client = new DrillClient(config, clusterCoordinator);
       }
-      client = new DrillClient(config, serviceSet.getCoordinator());
-    } else {
-      ZKClusterCoordinator clusterCoordinator = new ZKClusterCoordinator(config, zkQuorum);
-      clusterCoordinator.start(10000);
-      client = new DrillClient(config, clusterCoordinator);
+      client.connect();
+      QueryResultsListener listener = new QueryResultsListener();
+      String plan = Charsets.UTF_8.decode(ByteBuffer.wrap(Files.readAllBytes(Paths.get(planLocation)))).toString();
+      UserProtos.QueryType queryType;
+      type = type.toLowerCase();
+      switch(type) {
+        case "sql":
+          queryType = UserProtos.QueryType.SQL;
+          break;
+        case "logical":
+          queryType = UserProtos.QueryType.LOGICAL;
+          break;
+        case "physical":
+          queryType = UserProtos.QueryType.PHYSICAL;
+          break;
+        default:
+          System.out.println("Invalid query type: " + type);
+          return -1;
+      }
+      Stopwatch watch = new Stopwatch();
+      watch.start();
+      client.runQuery(queryType, plan, listener);
+      int rows = listener.await();
+      System.out.println(String.format("Got %d record%s in %f seconds", rows, rows > 1 ? "s" : "", (float)watch.elapsed(TimeUnit.MILLISECONDS) / (float)1000));
+      return 0;
+    }finally{
+      if(client != null) client.close();
     }
-    client.connect();
-    QueryResultsListener listener = new QueryResultsListener();
-    String plan = Charsets.UTF_8.decode(ByteBuffer.wrap(Files.readAllBytes(Paths.get(planLocation)))).toString();
-    UserProtos.QueryType queryType;
-    type = type.toLowerCase();
-    switch(type) {
-      case "logical":
-        queryType = UserProtos.QueryType.LOGICAL;
-        break;
-      case "physical":
-        queryType = UserProtos.QueryType.PHYSICAL;
-        break;
-      default:
-        System.out.println("Invalid query type: " + type);
-        return -1;
-    }
-    Stopwatch watch = new Stopwatch();
-    watch.start();
-    client.runQuery(queryType, plan, listener);
-    int rows = listener.await();
-    System.out.println(String.format("Got %d record%s in %f seconds", rows, rows > 1 ? "s" : "", (float)watch.elapsed(TimeUnit.MILLISECONDS) / (float)1000));
-    return 0;
   }
 
   private class QueryResultsListener implements UserResultsListener {
@@ -150,7 +148,7 @@ public class QuerySubmitter {
     }
 
     @Override
-    public void resultArrived(QueryResultBatch result) {
+    public void resultArrived(QueryResultBatch result, ConnectionThrottle throttle) {
       int rows = result.getHeader().getRowCount();
       if (result.getData() != null) {
         count.addAndGet(rows);

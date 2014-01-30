@@ -36,6 +36,19 @@
     </dependency>
 
     <dependency>
+      <!-- add as provided scope so that we can compile TestTools.  Should only be ever used in a test scenario where someone else is bringing JUnit in. -->
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>${dep.junit.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>net.hydromatic</groupId>
+      <artifactId>optiq-core</artifactId>
+    </dependency>
+
+
+    <dependency>
       <groupId>com.google.protobuf</groupId>
       <artifactId>protobuf-java</artifactId>
       <version>2.5.0</version>
@@ -68,7 +81,7 @@
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-annotations</artifactId>
-      <version>2.1.1</version>
+      <version>2.2.0</version>
     </dependency>
     <dependency>
       <groupId>org.hibernate</groupId>
@@ -84,7 +97,7 @@
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
-      <version>2.1.1</version>
+      <version>2.2.0</version>
     </dependency>
     <dependency>
       <groupId>org.antlr</groupId>
@@ -99,12 +112,12 @@
   <build>
     <plugins>
       <plugin>
-          <artifactId>maven-surefire-plugin</artifactId>
-          <version>2.15</version>
-          <configuration>
-            <useSystemClassLoader>false</useSystemClassLoader>
-          </configuration>
-      </plugin>    
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.15</version>
+        <configuration>
+          <useSystemClassLoader>false</useSystemClassLoader>
+        </configuration>
+      </plugin>
       <plugin>
         <artifactId>maven-jar-plugin</artifactId>
         <executions>
@@ -131,7 +144,7 @@
           </execution>
         </executions>
       </plugin>
-	 
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
@@ -144,13 +157,13 @@
             </goals>
             <configuration>
               <artifactSet>
-                 <includes>
-                    <include>com.google.protobuf:protobuf-java</include>                     
-                 </includes>                 
+                <includes>
+                  <include>com.google.protobuf:protobuf-java</include>
+                </includes>
               </artifactSet>
               <shadedArtifactAttached>true</shadedArtifactAttached>
               <shadedClassifierName>rebuffed</shadedClassifierName>
-             
+
               <relocations>
                 <relocation>
                   <pattern>com.google.protobuf</pattern>

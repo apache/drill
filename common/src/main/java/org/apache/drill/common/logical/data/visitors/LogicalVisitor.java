@@ -18,8 +18,23 @@
 package org.apache.drill.common.logical.data.visitors;
 
 
-import org.apache.drill.common.graph.GraphVisitor;
-import org.apache.drill.common.logical.data.*;
+import org.apache.drill.common.logical.data.CollapsingAggregate;
+import org.apache.drill.common.logical.data.Constant;
+import org.apache.drill.common.logical.data.Filter;
+import org.apache.drill.common.logical.data.Flatten;
+import org.apache.drill.common.logical.data.GroupingAggregate;
+import org.apache.drill.common.logical.data.Join;
+import org.apache.drill.common.logical.data.Limit;
+import org.apache.drill.common.logical.data.Order;
+import org.apache.drill.common.logical.data.Project;
+import org.apache.drill.common.logical.data.RunningAggregate;
+import org.apache.drill.common.logical.data.Scan;
+import org.apache.drill.common.logical.data.Segment;
+import org.apache.drill.common.logical.data.Sequence;
+import org.apache.drill.common.logical.data.Store;
+import org.apache.drill.common.logical.data.Transform;
+import org.apache.drill.common.logical.data.Union;
+import org.apache.drill.common.logical.data.WindowFrame;
 
 /**
  * Visitor class designed to traversal of a operator tree.  Basis for a number of operator manipulations including fragmentation and materialization.
@@ -31,11 +46,10 @@ public interface LogicalVisitor<RETURN, EXTRA, EXCEP extends Throwable> {
     static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LogicalVisitor.class);
 
 
-    //public RETURN visitExchange(Exchange exchange, EXTRA value) throws EXCEP;
     public RETURN visitScan(Scan scan, EXTRA value) throws EXCEP;
     public RETURN visitStore(Store store, EXTRA value) throws EXCEP;
     public RETURN visitCollapsingAggregate(CollapsingAggregate collapsingAggregate, EXTRA value) throws EXCEP;
-
+    public RETURN visitGroupingAggregate(GroupingAggregate groupBy, EXTRA value) throws EXCEP;
     public RETURN visitFilter(Filter filter, EXTRA value) throws EXCEP;
     public RETURN visitFlatten(Flatten flatten, EXTRA value) throws EXCEP;
 

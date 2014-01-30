@@ -225,14 +225,35 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       holder.buffer = data;
     }
     
+
+    <#switch minor.class>
+    <#case "VarChar">
+    public Object getObject(int index) {
+      return new String(get(index), Charsets.UTF_8);
+    }
+    <#break>
+    <#case "Var16Char">
+    public Object getObject(int index) {
+      return new String(get(index), Charsets.UTF_16);
+    }
+    <#break>
+    <#default>
     public Object getObject(int index) {
       return get(index);
     }
+
+    </#switch>
+    
+    
     
     public int getValueCount() {
       return valueCount;
     }
 
+    public boolean isNull(int index){
+      return false;
+    }
+    
     public UInt${type.width}Vector getOffsetVector(){
       return offsetVector;
     }

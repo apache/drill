@@ -25,14 +25,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.PriorityQueue;
 
-import org.apache.drill.common.defs.OrderDef;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.logical.data.Order.Direction;
+import org.apache.drill.common.logical.data.Order.Ordering;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.SchemaChangeException;
@@ -60,6 +59,7 @@ import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.allocator.VectorAllocator;
+import org.eigenbase.rel.RelFieldCollation.Direction;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -367,7 +367,7 @@ public class MergingRecordBatch implements RecordBatch {
   private MergingReceiverGeneratorBase createMerger() throws SchemaChangeException {
 
     // set up the expression evaluator and code generation
-    final List<OrderDef> orderings = config.getOrderings();
+    final List<Ordering> orderings = config.getOrderings();
     final ErrorCollector collector = new ErrorCollectorImpl();
     final ClassGenerator<MergingReceiverGeneratorBase> cg =
         CodeGenerator.getRoot(MergingReceiverGeneratorBase.TEMPLATE_DEFINITION, context.getFunctionRegistry());
@@ -550,11 +550,11 @@ public class MergingRecordBatch implements RecordBatch {
       // generate less than/greater than checks (fixing results for ASCending vs. DESCending)
       cg.getEvalBlock()._if(out.getValue().eq(JExpr.lit(1)))
                        ._then()
-                       ._return(JExpr.lit(config.getOrderings().get(comparisonVectorIndex).getDirection() == Direction.ASC ? 1 : -1));
+                       ._return(JExpr.lit(config.getOrderings().get(comparisonVectorIndex).getDirection() == Direction.Ascending ? 1 : -1));
 
       cg.getEvalBlock()._if(out.getValue().eq(JExpr.lit(-1)))
                        ._then()
-                       ._return(JExpr.lit(config.getOrderings().get(comparisonVectorIndex).getDirection() == Direction.ASC ? -1 : 1));
+                       ._return(JExpr.lit(config.getOrderings().get(comparisonVectorIndex).getDirection() == Direction.Ascending ? -1 : 1));
 
       ++comparisonVectorIndex;
     }

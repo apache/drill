@@ -25,6 +25,7 @@ import io.netty.util.concurrent.GenericFutureListener;
 
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.rpc.BasicClientWithConnection.ServerConnection;
+import org.apache.drill.exec.rpc.user.ConnectionThrottle;
 
 import com.google.protobuf.Internal.EnumLite;
 import com.google.protobuf.MessageLite;
@@ -48,10 +49,10 @@ public abstract class BasicClientWithConnection<T extends EnumLite, HANDSHAKE_SE
   
   @Override
   protected Response handle(ServerConnection connection, int rpcType, ByteBuf pBody, ByteBuf dBody) throws RpcException {
-    return handle(rpcType, pBody, dBody);
+    return handleReponse( (ConnectionThrottle) connection, rpcType, pBody, dBody);
   }
   
-  protected abstract Response handle(int rpcType, ByteBuf pBody, ByteBuf dBody) throws RpcException ;
+  protected abstract Response handleReponse(ConnectionThrottle throttle, int rpcType, ByteBuf pBody, ByteBuf dBody) throws RpcException ;
     
   @Override
   public ServerConnection initRemoteConnection(Channel channel) {

@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import net.hydromatic.optiq.SchemaPlus;
+
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.compile.ClassTransformer;
 import org.apache.drill.exec.compile.QueryClassLoader;
@@ -75,6 +77,7 @@ public class FragmentContext implements Closeable {
     this.connection = connection;
     this.fragment = fragment;
     this.funcRegistry = funcRegistry;
+    logger.debug("Getting initial memory allocation of {}", fragment.getMemInitial());
     this.allocator = context.getAllocator().getChildAllocator(fragment.getHandle(), fragment.getMemInitial(), fragment.getMemMax());
   }
 
@@ -90,6 +93,10 @@ public class FragmentContext implements Closeable {
 
   public DrillbitContext getDrillbitContext() {
     return context;
+  }
+  
+  public SchemaPlus getRootSchema(){
+    return null;
   }
 
   /**

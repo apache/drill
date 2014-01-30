@@ -23,12 +23,16 @@ import java.util.Collection;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.expression.FunctionRegistry;
 import org.apache.drill.common.logical.StorageEngineConfig;
 import org.apache.drill.exec.cache.DistributedCache;
 import org.apache.drill.exec.coord.ClusterCoordinator;
+import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.physical.impl.OperatorCreatorRegistry;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
+import org.apache.drill.exec.planner.logical.StorageEngines;
+import org.apache.drill.exec.planner.sql.DrillSchemaFactory;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.rpc.control.Controller;
 import org.apache.drill.exec.rpc.control.WorkEventBus;
@@ -37,7 +41,9 @@ import org.apache.drill.exec.store.StorageEngine;
 import org.apache.drill.exec.store.StorageEngineRegistry;
 
 import com.codahale.metrics.MetricRegistry;
+import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
+import com.google.common.io.Resources;
 
 public class DrillbitContext {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillbitContext.class);
@@ -53,6 +59,9 @@ public class DrillbitContext {
   private final OperatorCreatorRegistry operatorCreatorRegistry;
   private final Controller controller;
   private final WorkEventBus workBus;
+  private final FunctionImplementationRegistry functionRegistry;
+  private final FunctionRegistry functionRegistryX;
+  private final DrillSchemaFactory factory;
   
   public DrillbitContext(DrillbitEndpoint endpoint, BootStrapContext context, ClusterCoordinator coord, Controller controller, DataConnectionCreator connectionsPool, DistributedCache cache, WorkEventBus workBus) {
     super();
@@ -70,8 +79,34 @@ public class DrillbitContext {
     this.storageEngineRegistry = new StorageEngineRegistry(this);
     this.reader = new PhysicalPlanReader(context.getConfig(), context.getConfig().getMapper(), endpoint, storageEngineRegistry);
     this.operatorCreatorRegistry = new OperatorCreatorRegistry(context.getConfig());
+    this.functionRegistry = new FunctionImplementationRegistry(context.getConfig());
+    
+    DrillSchemaFactory factory = null;
+    try{
+      String enginesData = Resources.toString(Resources.getResource("storage-engines.json"), Charsets.UTF_8);
+      StorageEngines engines = context.getConfig().getMapper().readValue(enginesData, StorageEngines.class);
+      factory = new DrillSchemaFactory(engines, context.getConfig());
+    }catch(Exception e){
+      logger.error("Failure reading storage engines data. Creating empty list of schemas.", e);
+      factory = DrillSchemaFactory.createEmpty();
+    }
+    this.factory = factory;
+    this.functionRegistryX = new FunctionRegistry(context.getConfig());
+
   }
   
+  public DrillSchemaFactory getSchemaFactory(){
+    return factory;
+  }
+
+  public FunctionRegistry getFunctionRegistry(){
+    return functionRegistryX;
+  }
+  
+  public FunctionImplementationRegistry getFunctionImplementationRegistry() {
+    return functionRegistry;
+  }
+
   public WorkEventBus getWorkBus(){
     return workBus;
   }

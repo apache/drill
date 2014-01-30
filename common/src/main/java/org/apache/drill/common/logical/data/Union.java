@@ -17,13 +17,16 @@
  */
 package org.apache.drill.common.logical.data;
 
+import java.util.Iterator;
+import java.util.List;
+
+import org.apache.drill.common.logical.data.visitors.LogicalVisitor;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.collect.Iterators;
-import org.apache.drill.common.logical.data.visitors.LogicalVisitor;
-
-import java.util.Iterator;
+import com.google.common.collect.Lists;
 
 @JsonTypeName("union")
 public class Union extends LogicalOperatorBase {
@@ -63,6 +66,29 @@ public class Union extends LogicalOperatorBase {
     }
 
 
-
+    public static Builder builder(){
+      return new Builder();
+    }
+    
+    public static class Builder extends AbstractBuilder<Union>{
+      private List<LogicalOperator> inputs = Lists.newArrayList();
+      private boolean distinct;
+      
+      public Builder addInput(LogicalOperator o){
+        inputs.add(o);
+        return this;
+      }
+      
+      public Builder setDistinct(boolean distinct){
+        this.distinct = distinct;
+        return this;
+      }
+      
+      @Override
+      public Union build() {
+        return new Union(inputs.toArray(new LogicalOperator[inputs.size()]), distinct);
+      }
+      
+    }
 
 }

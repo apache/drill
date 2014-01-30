@@ -58,6 +58,85 @@ public class Types {
     }
   }
   
+  public static int getSqlType(MajorType type){
+    if(type.getMode() == DataMode.REPEATED) return java.sql.Types.ARRAY;
+    
+    switch(type.getMinorType()){
+    case BIGINT:
+      return java.sql.Types.BIGINT;
+    case BIT:
+      return java.sql.Types.BOOLEAN;
+    case DATE:
+      return java.sql.Types.DATE;
+    case DATETIME:
+      return java.sql.Types.DATE;
+    case DECIMAL12:
+    case DECIMAL16:
+    case DECIMAL4:
+    case DECIMAL8:
+      return java.sql.Types.DECIMAL;
+    case FIXED16CHAR:
+      return java.sql.Types.NCHAR;
+    case FIXEDBINARY:
+      return java.sql.Types.BINARY;
+    case FIXEDCHAR:
+      return java.sql.Types.NCHAR;
+    case FLOAT4:
+      return java.sql.Types.FLOAT;
+    case FLOAT8:
+      return java.sql.Types.DOUBLE;
+    case INT:
+      return java.sql.Types.INTEGER;
+    case MAP:
+      return java.sql.Types.STRUCT;
+    case MONEY:
+      return java.sql.Types.DECIMAL;
+    case NULL:
+    case INTERVAL:
+    case LATE:
+    case REPEATMAP:
+      return java.sql.Types.OTHER;
+    case SMALLINT:
+      return java.sql.Types.SMALLINT;
+    case TIME:
+      return java.sql.Types.TIME;
+    case TIMESTAMP:
+      return java.sql.Types.TIMESTAMP;
+    case TIMETZ:
+      return java.sql.Types.DATE;
+    case TINYINT:
+      return java.sql.Types.TINYINT;
+    case UINT1:
+      return java.sql.Types.TINYINT;
+    case UINT2:
+      return java.sql.Types.SMALLINT;
+    case UINT4:
+      return java.sql.Types.INTEGER;
+    case UINT8:
+      return java.sql.Types.BIGINT;
+    case VAR16CHAR:
+      return java.sql.Types.NVARCHAR;
+    case VARBINARY:
+      return java.sql.Types.VARBINARY;
+    case VARCHAR:
+      return java.sql.Types.NVARCHAR;
+    default:
+      throw new UnsupportedOperationException();
+    }
+  }
+  
+  public static boolean isUnSigned(MajorType type){
+    switch(type.getMinorType()){
+    case UINT1:
+    case UINT2:
+    case UINT4:
+    case UINT8:
+      return true;
+    default:
+      return false;
+    }
+    
+  }
   public static boolean usesHolderForGet(MajorType type){
     if(type.getMode() == REPEATED) return true;
     switch(type.getMinorType()){

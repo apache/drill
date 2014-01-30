@@ -18,9 +18,7 @@
     <version>1.0.0-m2-incubating-SNAPSHOT</version>
   </parent>
 
-  <groupId>org.apache.drill.exec</groupId>
-  <version>4.0.7.Final</version>
-  <artifactId>drill-netty-bufferl</artifactId>
+  <artifactId>drill-buffers</artifactId>
 
   <name>exec/Netty Little Endian Buffers</name>
 

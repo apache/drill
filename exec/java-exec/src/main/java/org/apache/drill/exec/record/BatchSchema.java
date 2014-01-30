@@ -36,6 +36,15 @@ public class BatchSchema implements Iterable<MaterializedField> {
     return new SchemaBuilder();
   }
 
+  public int getFieldCount(){
+    return fields.size();
+  }
+  
+  public MaterializedField getColumn(int index){
+    if(index < 0 || index >= fields.size()) return null;
+    return fields.get(index);
+  }
+  
   @Override
   public Iterator<MaterializedField> iterator() {
     return fields.iterator();

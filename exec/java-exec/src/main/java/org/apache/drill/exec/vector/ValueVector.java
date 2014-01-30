@@ -125,6 +125,8 @@ public interface ValueVector extends Closeable {
     public abstract Object getObject(int index);
 
     public int getValueCount();
+    
+    public boolean isNull(int index);
 
     public void reset();
   }

@@ -18,6 +18,7 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ObjectArrays;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufInputStream;
 
 import org.apache.commons.lang3.ArrayUtils;
 
@@ -39,6 +40,8 @@ import java.util.Random;
 import java.util.List;
 
 import java.io.Closeable;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 
 
 

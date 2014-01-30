@@ -112,7 +112,7 @@ public class SchemaPath extends LogicalExpressionBase {
     return visitor.visitSchemaPath(this, value);
   }
 
-  public SchemaPath getChild(String[] childPaths){
+  public SchemaPath getChild(String... childPaths){
     return new SchemaPath(this, childPaths);
   }
   

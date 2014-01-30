@@ -17,27 +17,27 @@
  */
 package org.apache.drill.exec.physical.config;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.google.common.base.Preconditions;
-import org.apache.drill.common.defs.OrderDef;
+import java.util.List;
+
 import org.apache.drill.common.expression.FieldReference;
-import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.logical.data.Order.Ordering;
 import org.apache.drill.exec.physical.base.AbstractExchange;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.Receiver;
 import org.apache.drill.exec.physical.base.Sender;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
-import java.util.List;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.google.common.base.Preconditions;
 
 @JsonTypeName("ordered-partition-exchange")
 public class OrderedPartitionExchange extends AbstractExchange {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OrderedPartitionExchange.class);
 
 
-  private final List<OrderDef> orderings;
+  private final List<Ordering> orderings;
   private final FieldReference ref;
   private int recordsToSample = 10000; // How many records must be received before analyzing
   private int samplingFactor = 10; // Will collect SAMPLING_FACTOR * number of partitions to send to distributed cache
@@ -48,7 +48,7 @@ public class OrderedPartitionExchange extends AbstractExchange {
   private List<DrillbitEndpoint> receiverLocations;
 
   @JsonCreator
-  public OrderedPartitionExchange(@JsonProperty("orderings") List<OrderDef> orderings, @JsonProperty("ref") FieldReference ref,
+  public OrderedPartitionExchange(@JsonProperty("orderings") List<Ordering> orderings, @JsonProperty("ref") FieldReference ref,
                                   @JsonProperty("child") PhysicalOperator child, @JsonProperty("recordsToSample") Integer recordsToSample,
                                   @JsonProperty("samplingFactor") Integer samplingFactor, @JsonProperty("completionFactor") Float completionFactor) {
     super(child);

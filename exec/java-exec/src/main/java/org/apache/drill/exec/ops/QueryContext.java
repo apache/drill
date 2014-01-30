@@ -21,9 +21,11 @@ import java.util.Collection;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.expression.FunctionRegistry;
 import org.apache.drill.common.logical.StorageEngineConfig;
 import org.apache.drill.exec.cache.DistributedCache;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
+import org.apache.drill.exec.planner.sql.DrillSchemaFactory;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.rpc.control.WorkEventBus;
@@ -79,6 +81,15 @@ public class QueryContext {
   
   public WorkEventBus getWorkBus(){
     return workBus;
+  }
+  
+  public DrillSchemaFactory getSchemaFactory(){
+    return drillbitContext.getSchemaFactory();
+  }
+
+  public FunctionRegistry getFunctionRegistry(){
+    return drillbitContext.getFunctionRegistry();
+    
   }
   
 }

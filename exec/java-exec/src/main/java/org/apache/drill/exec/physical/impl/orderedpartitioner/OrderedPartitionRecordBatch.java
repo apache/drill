@@ -23,7 +23,6 @@ import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.drill.common.defs.OrderDef;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.ExpressionPosition;
@@ -32,6 +31,7 @@ import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.data.Order;
+import org.apache.drill.common.logical.data.Order.Ordering;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.cache.Counter;
@@ -69,6 +69,7 @@ import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.IntVector;
 import org.apache.drill.exec.vector.ValueVector;
+import org.eigenbase.rel.RelFieldCollation.Direction;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -189,7 +190,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
 
     // Project every Nth record to a new vector container, where N = recordsSampled/(samplingFactor * partitions).
     // Uses the
-    // the expressions from the OrderDefs to populate each column. There is one column for each OrderDef in
+    // the expressions from the Orderings to populate each column. There is one column for each Ordering in
     // popConfig.orderings.
 
     VectorContainer containerToCache = new VectorContainer();
@@ -293,11 +294,11 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
     VectorContainer allSamplesContainer = new VectorContainer();
     containerBuilder.build(context, allSamplesContainer);
 
-    List<OrderDef> orderDefs = Lists.newArrayList();
+    List<Ordering> orderDefs = Lists.newArrayList();
     int i = 0;
-    for (OrderDef od : popConfig.getOrderings()) {
+    for (Ordering od : popConfig.getOrderings()) {
       SchemaPath sp = new SchemaPath("f" + i++, ExpressionPosition.UNKNOWN);
-      orderDefs.add(new OrderDef(od.getDirection(), new FieldReference(sp)));
+      orderDefs.add(new Ordering(od.getDirection(), new FieldReference(sp)));
     }
 
     // sort the data incoming samples.
@@ -330,8 +331,8 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
 
   /**
    * Creates a copier that does a project for every Nth record from a VectorContainer incoming into VectorContainer
-   * outgoing. Each OrderDef in orderings generates a column, and evaluation of the expression associated with each
-   * OrderDef determines the value of each column. These records will later be sorted based on the values in each
+   * outgoing. Each Ordering in orderings generates a column, and evaluation of the expression associated with each
+   * Ordering determines the value of each column. These records will later be sorted based on the values in each
    * column, in the same order as the orderings.
    * 
    * @param sv4
@@ -342,14 +343,14 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
    * @throws SchemaChangeException
    */
   private SampleCopier getCopier(SelectionVector4 sv4, VectorContainer incoming, VectorContainer outgoing,
-      List<OrderDef> orderings) throws SchemaChangeException {
+      List<Ordering> orderings) throws SchemaChangeException {
     List<ValueVector> localAllocationVectors = Lists.newArrayList();
     final ErrorCollector collector = new ErrorCollectorImpl();
     final ClassGenerator<SampleCopier> cg = CodeGenerator.getRoot(SampleCopier.TEMPLATE_DEFINITION,
         context.getFunctionRegistry());
 
     int i = 0;
-    for (OrderDef od : orderings) {
+    for (Ordering od : orderings) {
       final LogicalExpression expr = ExpressionTreeMaterializer.materialize(od.getExpr(), incoming, collector, context.getFunctionRegistry());
       SchemaPath schemaPath = new SchemaPath("f" + i++, ExpressionPosition.UNKNOWN);
       TypeProtos.MajorType.Builder builder = TypeProtos.MajorType.newBuilder().mergeFrom(expr.getMajorType())
@@ -521,7 +522,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
     cg.setMappingSet(mainMapping);
 
     int count = 0;
-    for (OrderDef od : popConfig.getOrderings()) {
+    for (Ordering od : popConfig.getOrderings()) {
       final LogicalExpression expr = ExpressionTreeMaterializer.materialize(od.getExpr(), batch, collector, context.getFunctionRegistry());
       if (collector.hasErrors())
         throw new SchemaChangeException("Failure while materializing expression. " + collector.toErrorString());
@@ -538,7 +539,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
       ClassGenerator.HoldingContainer out = cg.addExpr(f, false);
       JConditional jc = cg.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)));
 
-      if (od.getDirection() == Order.Direction.ASC) {
+      if (od.getDirection() == Direction.Ascending) {
         jc._then()._return(out.getValue());
       } else {
         jc._then()._return(out.getValue().minus());

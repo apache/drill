@@ -87,6 +87,9 @@ public class FunctionRegistry {
     return new FunctionCall(castFuncDef, newArgs, ep);
   }
 
+  public LogicalExpression createExpression(String functionName, List<LogicalExpression> args){
+    return createExpression(functionName, ExpressionPosition.UNKNOWN, args);
+  }
   
   public LogicalExpression createExpression(String functionName, ExpressionPosition ep, List<LogicalExpression> args){
     FunctionDefinition d = funcMap.get(functionName);

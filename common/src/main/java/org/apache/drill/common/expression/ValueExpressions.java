@@ -29,6 +29,30 @@ import com.google.common.collect.Iterators;
 
 public class ValueExpressions {
 
+  public static LogicalExpression getBigInt(long l){
+    return new LongExpression(l);
+  }
+  
+  public static LogicalExpression getInt(int i){
+    return new LongExpression(i);
+  }
+  
+  public static LogicalExpression getFloat8(double d){
+    return new DoubleExpression(d, ExpressionPosition.UNKNOWN);
+  }
+  public static LogicalExpression getFloat4(float f){
+    return new DoubleExpression(f, ExpressionPosition.UNKNOWN);
+  }
+  
+  public static LogicalExpression getBit(boolean b){
+    return new BooleanExpression(Boolean.toString(b), ExpressionPosition.UNKNOWN);
+  }
+  
+  public static LogicalExpression getChar(String s){
+    return new QuotedString(s, ExpressionPosition.UNKNOWN);
+  }
+  
+
   public static LogicalExpression getNumericExpression(String s, ExpressionPosition ep) {
     try {
       long l = Long.parseLong(s);
@@ -74,6 +98,7 @@ public class ValueExpressions {
       super(value, pos);
     }
 
+    
     @Override
     protected Boolean parseValue(String s) {
       return Boolean.parseBoolean(s);
@@ -132,7 +157,11 @@ public class ValueExpressions {
 
     private long l;
 
-    public LongExpression(long l, ExpressionPosition pos) {
+    public LongExpression(long l) {
+      this(l, ExpressionPosition.UNKNOWN);
+    }
+    
+      public LongExpression(long l, ExpressionPosition pos) {
       super(pos);
       this.l = l;
     }

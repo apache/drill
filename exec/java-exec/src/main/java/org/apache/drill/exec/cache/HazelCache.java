@@ -35,6 +35,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.Lists;
 import com.hazelcast.config.Config;
+import com.hazelcast.config.MapConfig;
 import com.hazelcast.config.SerializerConfig;
 import com.hazelcast.core.DuplicateInstanceNameException;
 import com.hazelcast.core.Hazelcast;
@@ -132,6 +133,10 @@ public class HazelCache implements DistributedCache {
   @Override
   public <V extends DrillSerializable> DistributedMap<V> getMap(Class<V> clazz) {
     IMap<String, V> imap = this.instance.getMap(clazz.toString());
+    MapConfig myMapConfig = new MapConfig();
+    myMapConfig.setBackupCount(0);
+    myMapConfig.setReadBackupData(true);
+    instance.getConfig().getMapConfigs().put(clazz.toString(), myMapConfig);
     return new HCDistributedMapImpl<V>(imap, clazz);
   }
 

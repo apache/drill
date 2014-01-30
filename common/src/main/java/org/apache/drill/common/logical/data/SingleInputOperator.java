@@ -17,9 +17,12 @@
  */
 package org.apache.drill.common.logical.data;
 
+import java.util.Iterator;
+
 import org.apache.drill.common.logical.UnexpectedOperatorType;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.Iterators;
 
 /**
  * SimpleOperator is an operator that has one inputs at most.
@@ -41,6 +44,9 @@ public abstract class SingleInputOperator extends LogicalOperatorBase {
   }
 
   
-  
+  @Override
+  public Iterator<LogicalOperator> iterator() {
+    return Iterators.singletonIterator(input);
+  }
   
 }

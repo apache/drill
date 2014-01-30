@@ -171,12 +171,7 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
             }
 
             ValueVector.Accessor accessor = v.getValueVector().getAccessor();
-
-            if (v.getField().getType().getMinorType() == TypeProtos.MinorType.VARCHAR) {
-              System.out.println(new String((byte[]) accessor.getObject(r), UTF_8));
-            } else {
-              System.out.print(accessor.getObject(r));
-            }
+            System.out.print(accessor.getObject(r));
           }
           if (!first) System.out.println();
         }

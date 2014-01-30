@@ -21,13 +21,14 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.drill.common.logical.data.Join;
-import org.apache.drill.common.logical.data.Join.JoinType;
 import org.apache.drill.common.logical.data.JoinCondition;
 import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.base.AbstractBase;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.Size;
+import org.eigenbase.rel.JoinRelType;
+import org.eigenbase.sql.SqlJoinOperator.JoinType;
 
 import com.beust.jcommander.internal.Lists;
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -44,7 +45,7 @@ public class MergeJoinPOP extends AbstractBase{
   private final PhysicalOperator left;
   private final PhysicalOperator right;
   private final List<JoinCondition> conditions;
-  private final Join.JoinType joinType;
+  private final JoinRelType joinType;
 
   @Override
   public OperatorCost getCost() {
@@ -56,7 +57,7 @@ public class MergeJoinPOP extends AbstractBase{
       @JsonProperty("left") PhysicalOperator left, 
       @JsonProperty("right") PhysicalOperator right,
       @JsonProperty("join-conditions") List<JoinCondition> conditions,
-      @JsonProperty("join-type") Join.JoinType joinType
+      @JsonProperty("join-type") JoinRelType joinType
   ) {
     this.left = left;
     this.right = right;
@@ -93,7 +94,7 @@ public class MergeJoinPOP extends AbstractBase{
     return right;
   }
 
-  public Join.JoinType getJoinType() {
+  public JoinRelType getJoinType() {
     return joinType;
   }
 
@@ -102,12 +103,12 @@ public class MergeJoinPOP extends AbstractBase{
   }
   
   public MergeJoinPOP flipIfRight(){
-    if(joinType == JoinType.RIGHT){
+    if(joinType == JoinRelType.RIGHT){
       List<JoinCondition> flippedConditions = Lists.newArrayList(conditions.size());
       for(JoinCondition c : conditions){
         flippedConditions.add(c.flip());
       }
-      return new MergeJoinPOP(right, left, flippedConditions, JoinType.LEFT);
+      return new MergeJoinPOP(right, left, flippedConditions, JoinRelType.LEFT);
     }else{
       return this;
     }

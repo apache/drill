@@ -22,28 +22,28 @@
   <id>binary-release</id>
   <formats>
     <format>tar.gz</format>
-    <format>dir</format>
   </formats>
   <includeBaseDirectory>true</includeBaseDirectory>
   <moduleSets>
-    <moduleSet>
 
-      <!-- Enable access to all projects in the current multimodule build! -->
-      <useAllReactorProjects>true</useAllReactorProjects>
-
-      <!-- Now, select which projects to include in this module-set. -->
-      <includes>
-        <include>org.apache.drill:drill-sqlparser:jar</include>
-        <include>org.apache.drill.exec:drill-netty-bufferl</include>
-        <include>org.apache.drill.exec:drill-ref</include>
-      </includes>
-      <binaries>
-        <outputDirectory>jars</outputDirectory>
-        <unpack>false</unpack>
-      </binaries>
-    </moduleSet>
   </moduleSets>
   <dependencySets>
+    <dependencySet>
+
+<!--       Now, select which projects to include in this module-set. -->
+      <includes>
+        <include>org.apache.drill:drill-sqlparser:jar</include>
+        <include>org.apache.drill.exec:drill-buffers</include>
+        <include>org.apache.drill:drill-protocol:jar:rebuffed</include>
+        <include>org.apache.drill:drill-common:jar:rebuffed</include>
+        <include>org.apache.drill.exec:drill-java-exec:jar:rebuffed</include>
+      </includes>
+      
+      
+      
+      <outputDirectory>jars</outputDirectory>
+      <useProjectArtifact>false</useProjectArtifact>
+    </dependencySet>  
     <dependencySet>
       <outputDirectory>lib</outputDirectory>
       <unpack>false</unpack>
@@ -51,7 +51,8 @@
       <excludes>
         <exclude>org.apache.drill</exclude>
         <exclude>org.apache.drill.exec</exclude>
-        <exclude>com.google.protobuf:protobuf-java:jar:2.5.0</exclude>
+        <exclude>org.hsqldb:hsqldb</exclude> <!-- exclude or sqlline has problems -->
+        <exclude>hsqldb:hsqldb</exclude> <!-- exclude or sqlline has problems -->
       </excludes>
       <scope>test</scope>
     </dependencySet>
@@ -74,22 +75,6 @@
   </fileSets>
   
   <files>
-    <file>
-      <source>../protocol/target/drill-protocol-${project.version}-rebuffed.jar</source>
-      <outputDirectory>jars</outputDirectory>
-    </file>
-    <file>
-      <source>../common/target/drill-common-${project.version}-rebuffed.jar</source>
-      <outputDirectory>jars</outputDirectory>
-    </file>
-    <file>
-      <source>../exec/java-exec/target/drill-java-exec-${project.version}-rebuffed.jar</source>
-      <outputDirectory>jars</outputDirectory>
-    </file>
-    <file>
-      <source>../contrib/storage-hive/target/storage-hive-${project.version}.jar</source>
-      <outputDirectory>jars</outputDirectory>
-    </file>
     <file>
       <source>src/resources/runbit</source>
       <outputDirectory>bin</outputDirectory>

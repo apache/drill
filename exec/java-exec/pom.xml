@@ -44,12 +44,10 @@
     <dependency>
       <groupId>xerces</groupId>
       <artifactId>xercesImpl</artifactId>
-      <version>2.9.1</version>
     </dependency>
     <dependency>
       <groupId>xalan</groupId>
       <artifactId>xalan</artifactId>
-      <version>2.7.1</version>
     </dependency>
     <dependency>
       <groupId>com.sun.codemodel</groupId>
@@ -58,12 +56,12 @@
     </dependency>
     <dependency>
       <groupId>org.codehaus.janino</groupId>
-      <artifactId>commons-compiler-jdk</artifactId>
-      <version>2.6.1</version>
+      <artifactId>janino</artifactId>
+      <version>2.7.3</version>
     </dependency>
     <dependency>
       <groupId>net.hydromatic</groupId>
-      <artifactId>optiq</artifactId>
+      <artifactId>optiq-core</artifactId>
     </dependency>
     <dependency>
       <groupId>org.freemarker</groupId>
@@ -139,8 +137,8 @@
     </dependency>
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
-      <version>4.0.7.Final</version>
-      <artifactId>drill-netty-bufferl</artifactId>
+      <version>${project.version}</version>
+      <artifactId>drill-buffers</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.drill</groupId>
@@ -196,7 +194,7 @@
     <dependency>
       <groupId>com.hazelcast</groupId>
       <artifactId>hazelcast</artifactId>
-      <version>3.1</version>
+      <version>3.1.4</version>
     </dependency>
     <dependency>
       <groupId>org.codehaus.janino</groupId>

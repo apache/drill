@@ -155,6 +155,10 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
       return valueCount;
     }
     
+    public boolean isNull(int index){
+      return false;
+    }
+    
     <#if (type.width > 8)>
 
     public ${minor.javaType!type.javaType} get(int index) {

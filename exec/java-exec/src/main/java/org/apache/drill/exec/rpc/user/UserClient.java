@@ -70,10 +70,10 @@ public class UserClient extends BasicClientWithConnection<RpcType, UserToBitHand
     throw new RpcException(String.format("Unable to deal with RpcType of %d", rpcType));
   }
 
-  protected Response handle(int rpcType, ByteBuf pBody, ByteBuf dBody) throws RpcException {
+  protected Response handleReponse(ConnectionThrottle throttle, int rpcType, ByteBuf pBody, ByteBuf dBody) throws RpcException {
     switch (rpcType) {
     case RpcType.QUERY_RESULT_VALUE:
-      queryResultHandler.batchArrived(pBody, dBody);
+      queryResultHandler.batchArrived(throttle, pBody, dBody);
       return new Response(RpcType.ACK, Ack.getDefaultInstance());
     default:
       throw new RpcException(String.format("Unknown Rpc Type %d. ", rpcType));

@@ -52,7 +52,7 @@ public class ParquetSchemaProvider implements SchemaProvider{
   @Override
   public Object getSelectionBaseOnName(String tableName) {
     try{
-//      if(!fs.exists(new Path(tableName))) return null;
+      if(!fs.exists(new Path(tableName))) return null;
       ReadEntryWithPath re = new ReadEntryWithPath(tableName);
       return Lists.newArrayList(re);
     }catch(Exception e){

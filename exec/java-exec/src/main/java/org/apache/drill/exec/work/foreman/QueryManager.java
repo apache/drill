@@ -76,18 +76,25 @@ class QueryManager implements FragmentStatusListener{
   }
 
   public void runFragments(WorkerBee bee, PlanFragment rootFragment, FragmentRoot rootOperator, UserClientConnection rootClient, List<PlanFragment> leafFragments, List<PlanFragment> intermediateFragments) throws ExecutionSetupException{
+    logger.debug("Setting up fragment runs.");
     remainingFragmentCount.set(leafFragments.size()+1);
     queryId = rootFragment.getHandle().getQueryId();
     workBus = bee.getContext().getWorkBus();
 
     // set up the root fragment first so we'll have incoming buffers available.
     {
-      FragmentContext rootContext = new FragmentContext(bee.getContext(), rootFragment, rootClient, new FunctionImplementationRegistry(bee.getContext().getConfig()));
+      logger.debug("Setting up root context.");
+      FragmentContext rootContext = new FragmentContext(bee.getContext(), rootFragment, rootClient, bee.getContext().getFunctionImplementationRegistry());
+      logger.debug("Setting up incoming buffers");
       IncomingBuffers buffers = new IncomingBuffers(rootOperator, rootContext);
+      logger.debug("Setting buffers on root context.");
       rootContext.setBuffers(buffers);
+      logger.debug("Generating Exec tree");
       RootExec rootExec = ImplCreator.getExec(rootContext, rootOperator);
+      logger.debug("Exec tree generated.");
       // add fragment to local node.
       map.put(rootFragment.getHandle(), new FragmentData(rootFragment.getHandle(), null, true));
+      logger.debug("Fragment added to local node.");
       rootRunner = new FragmentExecutor(rootContext, rootExec, new RootStatusHandler(rootContext, rootFragment));
       RootFragmentManager fragmentManager = new RootFragmentManager(rootFragment.getHandle(), buffers, rootRunner);
       
@@ -98,6 +105,7 @@ class QueryManager implements FragmentStatusListener{
         // if we do, record the fragment manager in the workBus.
         workBus.setRootFragmentManager(fragmentManager);  
       }
+      
       
     }
 
@@ -112,6 +120,7 @@ class QueryManager implements FragmentStatusListener{
       sendRemoteFragment(f);
     }
     
+    logger.debug("Fragment runs setup is complete.");
   }
     
   private void sendRemoteFragment(PlanFragment fragment){

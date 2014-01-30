@@ -49,6 +49,7 @@ import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.allocator.VectorAllocator;
+import org.eigenbase.rel.JoinRelType;
 
 import com.google.common.collect.ImmutableList;
 import com.sun.codemodel.JClass;
@@ -112,7 +113,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
   private final RecordBatch right;
   private final JoinStatus status;
   private final JoinCondition condition;
-  private final Join.JoinType joinType;
+  private final JoinRelType joinType;
   private JoinWorker worker;
   public MergeJoinBatchBuilder batchBuilder;
   
