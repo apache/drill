@@ -20,9 +20,9 @@ package org.apache.drill.exec.expr.fn;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.drill.exec.expr.CodeGenerator;
-import org.apache.drill.exec.expr.CodeGenerator.BlockType;
-import org.apache.drill.exec.expr.CodeGenerator.HoldingContainer;
+import org.apache.drill.exec.expr.ClassGenerator;
+import org.apache.drill.exec.expr.ClassGenerator.BlockType;
+import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 
@@ -61,7 +61,7 @@ class DrillAggFuncHolder extends DrillFuncHolder{
   }
   
   @Override
-  public JVar[] renderStart(CodeGenerator<?> g, HoldingContainer[] inputVariables) {
+  public JVar[] renderStart(ClassGenerator<?> g, HoldingContainer[] inputVariables) {
     JVar[] workspaceJVars = declareWorkspaceVariables(g);
     generateBody(g, BlockType.SETUP, setup, workspaceJVars);
     return workspaceJVars;
@@ -69,13 +69,13 @@ class DrillAggFuncHolder extends DrillFuncHolder{
 
 
   @Override
-  public void renderMiddle(CodeGenerator<?> g, HoldingContainer[] inputVariables, JVar[]  workspaceJVars) {
+  public void renderMiddle(ClassGenerator<?> g, HoldingContainer[] inputVariables, JVar[]  workspaceJVars) {
     addProtectedBlock(g, g.getBlock(BlockType.EVAL), add, inputVariables, workspaceJVars);
   }
 
 
   @Override
-  public HoldingContainer renderEnd(CodeGenerator<?> g, HoldingContainer[] inputVariables, JVar[]  workspaceJVars) {
+  public HoldingContainer renderEnd(ClassGenerator<?> g, HoldingContainer[] inputVariables, JVar[]  workspaceJVars) {
     HoldingContainer out = g.declare(returnValue.type, false);
     JBlock sub = new JBlock();
     g.getEvalBlock().add(sub);

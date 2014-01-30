@@ -27,11 +27,13 @@ import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.logical.data.Order.Direction;
+import org.apache.drill.common.logical.data.Order.Ordering;
 import org.apache.drill.exec.compile.sig.MappingSet;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.expr.ClassGenerator;
+import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.CodeGenerator;
-import org.apache.drill.exec.expr.CodeGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.HoldingContainerExpression;
 import org.apache.drill.exec.expr.fn.impl.ComparatorFunctions;
@@ -52,9 +54,9 @@ import com.sun.codemodel.JExpr;
 public class SortBatch extends AbstractRecordBatch<Sort> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SortBatch.class);
 
-  public final MappingSet MAIN_MAPPING = new MappingSet( (String) null, null, CodeGenerator.DEFAULT_SCALAR_MAP, CodeGenerator.DEFAULT_SCALAR_MAP);
-  public final MappingSet LEFT_MAPPING = new MappingSet("leftIndex", null, CodeGenerator.DEFAULT_SCALAR_MAP, CodeGenerator.DEFAULT_SCALAR_MAP);
-  public final MappingSet RIGHT_MAPPING = new MappingSet("rightIndex", null, CodeGenerator.DEFAULT_SCALAR_MAP, CodeGenerator.DEFAULT_SCALAR_MAP);
+  public final MappingSet MAIN_MAPPING = new MappingSet( (String) null, null, ClassGenerator.DEFAULT_SCALAR_MAP, ClassGenerator.DEFAULT_SCALAR_MAP);
+  public final MappingSet LEFT_MAPPING = new MappingSet("leftIndex", null, ClassGenerator.DEFAULT_SCALAR_MAP, ClassGenerator.DEFAULT_SCALAR_MAP);
+  public final MappingSet RIGHT_MAPPING = new MappingSet("rightIndex", null, ClassGenerator.DEFAULT_SCALAR_MAP, ClassGenerator.DEFAULT_SCALAR_MAP);
 
   private static long MAX_SORT_BYTES = 8l * 1024 * 1024 * 1024;
 
@@ -164,15 +166,16 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
   }
 
   public static Sorter createNewSorter(FragmentContext context, List<OrderDef> orderings, VectorAccessible batch) throws ClassTransformationException, IOException, SchemaChangeException {
-    final MappingSet mainMapping = new MappingSet( (String) null, null, CodeGenerator.DEFAULT_SCALAR_MAP, CodeGenerator.DEFAULT_SCALAR_MAP);
-    final MappingSet leftMapping = new MappingSet("leftIndex", null, CodeGenerator.DEFAULT_SCALAR_MAP, CodeGenerator.DEFAULT_SCALAR_MAP);
-    final MappingSet rightMapping = new MappingSet("rightIndex", null, CodeGenerator.DEFAULT_SCALAR_MAP, CodeGenerator.DEFAULT_SCALAR_MAP);
+    final MappingSet mainMapping = new MappingSet( (String) null, null, ClassGenerator.DEFAULT_SCALAR_MAP, ClassGenerator.DEFAULT_SCALAR_MAP);
+    final MappingSet leftMapping = new MappingSet("leftIndex", null, ClassGenerator.DEFAULT_SCALAR_MAP, ClassGenerator.DEFAULT_SCALAR_MAP);
+    final MappingSet rightMapping = new MappingSet("rightIndex", null, ClassGenerator.DEFAULT_SCALAR_MAP, ClassGenerator.DEFAULT_SCALAR_MAP);
     return createNewSorter(context, orderings, batch, mainMapping, leftMapping, rightMapping);
   }
   
   public static Sorter createNewSorter(FragmentContext context, List<OrderDef> orderings, VectorAccessible batch, MappingSet mainMapping, MappingSet leftMapping, MappingSet rightMapping)
           throws ClassTransformationException, IOException, SchemaChangeException{
-    CodeGenerator<Sorter> g = new CodeGenerator<Sorter>(Sorter.TEMPLATE_DEFINITION, context.getFunctionRegistry());
+    CodeGenerator<Sorter> cg = CodeGenerator.get(Sorter.TEMPLATE_DEFINITION, context.getFunctionRegistry());
+    ClassGenerator<Sorter> g = cg.getRoot();
     g.setMappingSet(mainMapping);
     
     for(OrderDef od : orderings){
@@ -191,7 +194,6 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
       HoldingContainer out = g.addExpr(f, false);
       JConditional jc = g.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)));
       
-      //TODO: is this the right order...
       if(od.getDirection() == Direction.ASC){
         jc._then()._return(out.getValue());
       }else{
@@ -201,7 +203,7 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
     
     g.getEvalBlock()._return(JExpr.lit(0));
     
-    return context.getImplementationClass(g);
+    return context.getImplementationClass(cg);
 
 
   }

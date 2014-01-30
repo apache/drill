@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -143,8 +144,8 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
     }
 
     try {
-      final CodeGenerator<Copier> cg = new CodeGenerator<Copier>(Copier.TEMPLATE_DEFINITION2, context.getFunctionRegistry());
-      generateCopies(cg, false);
+      final CodeGenerator<Copier> cg = CodeGenerator.get(Copier.TEMPLATE_DEFINITION2, context.getFunctionRegistry());
+      generateCopies(cg.getRoot(), false);
       Copier copier = context.getImplementationClass(cg);
       copier.setupRemover(context, incoming, this, allocators.toArray(new VectorAllocator[allocators.size()]));
       return copier;
@@ -165,8 +166,8 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
     }
 
     try {
-      final CodeGenerator<Copier> cg = new CodeGenerator<Copier>(Copier.TEMPLATE_DEFINITION4, context.getFunctionRegistry());
-      generateCopies(cg, true);
+      final CodeGenerator<Copier> cg = CodeGenerator.get(Copier.TEMPLATE_DEFINITION4, context.getFunctionRegistry());
+      generateCopies(cg.getRoot(), true);
       Copier copier = context.getImplementationClass(cg);
       copier.setupRemover(context, incoming, this, allocators.toArray(new VectorAllocator[allocators.size()]));
       return copier;
@@ -175,7 +176,7 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
     }
   }
   
-  private void generateCopies(CodeGenerator<Copier> g, boolean hyper){
+  private void generateCopies(ClassGenerator<Copier> g, boolean hyper){
     // we have parallel ids for each value vector so we don't actually have to deal with managing the ids at all.
     int fieldId = 0;
     

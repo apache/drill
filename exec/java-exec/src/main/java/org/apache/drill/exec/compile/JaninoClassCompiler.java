@@ -43,7 +43,7 @@ public class JaninoClassCompiler implements ClassCompiler{
     this.compilationClassLoader = new ClassLoaderIClassLoader(parentClassLoader);
   }
 
-  public byte[] getClassByteCode(final String className, final String code) throws CompileException, IOException, ClassNotFoundException, ClassTransformationException {
+  public byte[][] getClassByteCode(final String className, final String code) throws CompileException, IOException, ClassNotFoundException, ClassTransformationException {
     if(logger.isDebugEnabled()){
       logger.debug("Compiling:\n {}", prefixLineNumbers(code));
     }
@@ -52,9 +52,12 @@ public class JaninoClassCompiler implements ClassCompiler{
     Java.CompilationUnit compilationUnit = new Parser(scanner).parseCompilationUnit();
     ClassFile[] classFiles = new UnitCompiler(compilationUnit, compilationClassLoader).compileUnit(this.debugSource,
         this.debugLines, this.debugVars);
-    if (classFiles.length != 1)
-      throw new ClassTransformationException("Only one class file should have been generated from source code.");
-    return classFiles[0].toByteArray();
+    
+    byte[][] byteCodes = new byte[classFiles.length][];
+    for(int i =0; i < classFiles.length; i++){
+      byteCodes[i] = classFiles[i].toByteArray();
+    }
+    return byteCodes;
   }
 
 

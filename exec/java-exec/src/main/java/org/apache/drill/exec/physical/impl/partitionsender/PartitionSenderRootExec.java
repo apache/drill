@@ -25,6 +25,7 @@ import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.TypeHelper;
@@ -142,7 +143,7 @@ public class PartitionSenderRootExec implements RootExec {
 
     LogicalExpression filterExpression = operator.getExpr();
     final ErrorCollector collector = new ErrorCollectorImpl();
-    final CodeGenerator<Partitioner> cg = new CodeGenerator<Partitioner>(Partitioner.TEMPLATE_DEFINITION, context.getFunctionRegistry());
+    final ClassGenerator<Partitioner> cg = CodeGenerator.get(Partitioner.TEMPLATE_DEFINITION, context.getFunctionRegistry()).getRoot();
 
     final LogicalExpression expr = ExpressionTreeMaterializer.materialize(filterExpression, incoming, collector,context.getFunctionRegistry());
     if(collector.hasErrors()){
@@ -166,7 +167,7 @@ public class PartitionSenderRootExec implements RootExec {
     // set up partitioning function
     final LogicalExpression expr = operator.getExpr();
     final ErrorCollector collector = new ErrorCollectorImpl();
-    final CodeGenerator<Partitioner> cg = new CodeGenerator<Partitioner>(Partitioner.TEMPLATE_DEFINITION,
+    final ClassGenerator<Partitioner> cg = CodeGenerator.getRoot(Partitioner.TEMPLATE_DEFINITION,
                                                                          context.getFunctionRegistry());
 
     final LogicalExpression materializedExpr = ExpressionTreeMaterializer.materialize(expr, incoming, collector, context.getFunctionRegistry());
@@ -183,7 +184,7 @@ public class PartitionSenderRootExec implements RootExec {
     JType outgoingBatchArrayType = cg.getModel().ref(OutgoingRecordBatch.class).array();
 
     // generate evaluate expression to determine the hash
-    CodeGenerator.HoldingContainer exprHolder = cg.addExpr(materializedExpr);
+    ClassGenerator.HoldingContainer exprHolder = cg.addExpr(materializedExpr);
     cg.getEvalBlock().decl(JType.parse(cg.getModel(), "int"), "bucket", exprHolder.getValue().mod(JExpr.lit(outgoing.length)));
     cg.getEvalBlock().assign(JExpr.ref("bucket"), cg.getModel().ref(Math.class).staticInvoke("abs").arg(bucket));
     // declare and assign the array of outgoing record batches

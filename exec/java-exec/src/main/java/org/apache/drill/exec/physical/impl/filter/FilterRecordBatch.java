@@ -26,6 +26,7 @@ import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -38,6 +39,7 @@ import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.ValueVector;
 
 import com.google.common.collect.Lists;
+
 import org.apache.drill.exec.vector.allocator.VectorAllocator;
 
 public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
@@ -121,7 +123,7 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
     final ErrorCollector collector = new ErrorCollectorImpl();
     final List<TransferPair> transfers = Lists.newArrayList();
     final List<VectorAllocator> allocators = Lists.newArrayList();
-    final CodeGenerator<Filterer> cg = new CodeGenerator<Filterer>(Filterer.TEMPLATE_DEFINITION4, context.getFunctionRegistry());
+    final ClassGenerator<Filterer> cg = CodeGenerator.getRoot(Filterer.TEMPLATE_DEFINITION4, context.getFunctionRegistry());
 
     final LogicalExpression expr = ExpressionTreeMaterializer.materialize(popConfig.getExpr(), incoming, collector, context.getFunctionRegistry());
     if(collector.hasErrors()){
@@ -161,7 +163,7 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
   protected Filterer generateSV2Filterer() throws SchemaChangeException {
     final ErrorCollector collector = new ErrorCollectorImpl();
     final List<TransferPair> transfers = Lists.newArrayList();
-    final CodeGenerator<Filterer> cg = new CodeGenerator<Filterer>(Filterer.TEMPLATE_DEFINITION2, context.getFunctionRegistry());
+    final ClassGenerator<Filterer> cg = CodeGenerator.getRoot(Filterer.TEMPLATE_DEFINITION2, context.getFunctionRegistry());
 
     final LogicalExpression expr = ExpressionTreeMaterializer.materialize(popConfig.getExpr(), incoming, collector, context.getFunctionRegistry());
     if(collector.hasErrors()){

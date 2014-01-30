@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.compile;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 import org.apache.drill.exec.compile.sig.SignatureHolder;
 
 public class TemplateClassDefinition<T>{
@@ -26,7 +28,7 @@ public class TemplateClassDefinition<T>{
   private final Class<T> iface;
   private final Class<?> template;
   private final SignatureHolder signature;
-  
+  private final AtomicLong classNumber = new AtomicLong(0);
   
   public <X extends T> TemplateClassDefinition(Class<T> iface, Class<X> template) {
     super();
@@ -34,7 +36,7 @@ public class TemplateClassDefinition<T>{
     this.template = template;
     SignatureHolder holder = null;
     try{
-      holder = new SignatureHolder(template);
+      holder = SignatureHolder.getHolder(template);
     }catch(Exception ex){
       logger.error("Failure while trying to build signature holder for signature. {}", template.getName(), ex);
     }
@@ -42,6 +44,10 @@ public class TemplateClassDefinition<T>{
 
   }
 
+  public long getNextClassNumber(){
+    return classNumber.getAndIncrement();
+  }
+  
   public Class<T> getExternalInterface() {
     return iface;
   }

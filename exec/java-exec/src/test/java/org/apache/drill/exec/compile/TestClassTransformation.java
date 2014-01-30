@@ -17,35 +17,48 @@
  */
 package org.apache.drill.exec.compile;
 
-import static org.junit.Assert.*;
-
-import org.apache.drill.exec.exception.ClassTransformationException;
+import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.exec.compile.sig.GeneratorMapping;
+import org.apache.drill.exec.compile.sig.MappingSet;
+import org.apache.drill.exec.expr.CodeGenerator;
+import org.apache.drill.exec.expr.ClassGenerator;
+import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.junit.Test;
 
 public class TestClassTransformation {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestClassTransformation.class);
 
-  @Test
-  public void testJaninoCompilation() throws ClassTransformationException {
-    testBasicClassCompilation(true);
-  }
-  
-  @Test 
-  public void testJDKCompilation() throws ClassTransformationException{
-    testBasicClassCompilation(false);
-  }
-  
-  private void testBasicClassCompilation(boolean useJanino) throws ClassTransformationException{
-    final String output = "hello world, the time is now " + System.currentTimeMillis();
 
-    TemplateClassDefinition<ExampleExternalInterface> def = new TemplateClassDefinition<ExampleExternalInterface>(ExampleExternalInterface.class, ExampleTemplate.class);
+  
+  
+  /**
+   * Do a test of a three level class to ensure that nested code generators works correctly.
+   * @throws Exception
+   */
+  @Test
+  public void testInnerClassCompilation() throws Exception{
+    final TemplateClassDefinition<ExampleInner> template = new TemplateClassDefinition<>(ExampleInner.class, ExampleTemplateWithInner.class);
     
     ClassTransformer ct = new ClassTransformer();
-    QueryClassLoader loader = new QueryClassLoader(useJanino);
-    ExampleExternalInterface instance = ct.getImplementationClassByBody(loader, def,
-        "public String getInternalData(){return \"" + output + "\";}");
-    System.out.println(String.format("Generated a new class %s that provides the following getData response '%s'.",
-        instance.getClass().getCanonicalName(), instance.getData()));
-    assertEquals(instance.getData(), output);
+    QueryClassLoader loader = new QueryClassLoader(true);
+    CodeGenerator<ExampleInner> cg = CodeGenerator.get(template, new FunctionImplementationRegistry(DrillConfig.create()));
+    
+    ClassGenerator<ExampleInner> root = cg.getRoot();
+    root.setMappingSet(new MappingSet(new GeneratorMapping("doOutside", null, null, null)));
+    root.getSetupBlock().directStatement("System.out.println(\"outside\");");
+    
+    
+    ClassGenerator<ExampleInner> inner = root.getInnerGenerator("TheInnerClass");
+    inner.setMappingSet(new MappingSet(new GeneratorMapping("doInside", null, null, null)));
+    inner.getSetupBlock().directStatement("System.out.println(\"inside\");");
+
+    ClassGenerator<ExampleInner> doubleInner = inner.getInnerGenerator("DoubleInner");
+    doubleInner.setMappingSet(new MappingSet(new GeneratorMapping("doDouble", null, null, null)));
+    doubleInner.getSetupBlock().directStatement("System.out.println(\"double\");");
+
+    ExampleInner t = ct.getImplementationClass(loader, cg.getDefinition(), cg.generate(), cg.getMaterializedClassName());
+    t.doOutside();
+    t.doInsideOutside();
+    
   }
 }

@@ -17,13 +17,34 @@
  */
 package org.apache.drill.exec.compile;
 
-import java.io.IOException;
+import org.apache.drill.exec.compile.sig.RuntimeOverridden;
 
-import org.apache.drill.exec.exception.ClassTransformationException;
-import org.codehaus.commons.compiler.CompileException;
-
-interface ClassCompiler {
-
-  public abstract byte[][] getClassByteCode(String className, String sourcecode) throws CompileException, IOException, ClassNotFoundException, ClassTransformationException ;
-
+public abstract class ExampleTemplateWithInner implements ExampleInner{
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExampleTemplateWithInner.class);
+  
+  public abstract void doOutside();
+  public class TheInnerClass{
+    
+    @RuntimeOverridden
+    public void doInside(){};
+    
+    
+    public void doDouble(){
+      DoubleInner di = new DoubleInner();
+      di.doDouble();
+    }
+    
+    public class DoubleInner{
+      @RuntimeOverridden
+      public void doDouble(){};
+    }
+    
+  }
+  
+  public void doInsideOutside(){
+    TheInnerClass inner = new TheInnerClass();
+    inner.doInside();
+    inner.doDouble();
+  }
+  
 }

@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.compile;
 
-import org.codehaus.commons.compiler.jdk.ExpressionEvaluator;
+import org.codehaus.janino.ExpressionEvaluator;
 import org.junit.Ignore;
 import org.junit.Test;
 

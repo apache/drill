@@ -17,92 +17,230 @@
  */
 package org.apache.drill.exec.compile;
 
-import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Modifier;
-import java.net.URL;
-import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.exec.compile.MergeAdapter.MergedClassResult;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.codehaus.commons.compiler.CompileException;
 import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.FieldVisitor;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.commons.Remapper;
-import org.objectweb.asm.commons.RemappingClassAdapter;
-import org.objectweb.asm.commons.RemappingMethodAdapter;
-import org.objectweb.asm.commons.SimpleRemapper;
 import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.FieldNode;
-import org.objectweb.asm.tree.MethodNode;
 
+import com.beust.jcommander.internal.Lists;
+import com.beust.jcommander.internal.Maps;
+import com.beust.jcommander.internal.Sets;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Stopwatch;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.collect.Sets;
-import com.google.common.io.Resources;
 
 public class ClassTransformer {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ClassTransformer.class);
 
+  private ByteCodeLoader byteCodeLoader = new ByteCodeLoader();
   private AtomicLong index = new AtomicLong(0);
-  private AtomicLong interfaceIndex = new AtomicLong(0);
-  private LoadingCache<String, byte[]> byteCode = CacheBuilder.newBuilder().maximumSize(10000)
-      .expireAfterWrite(10, TimeUnit.MINUTES).build(new ClassBytesCacheLoader());
 
-  private class ClassBytesCacheLoader extends CacheLoader<String, byte[]> {
-    public byte[] load(String path) throws ClassTransformationException, IOException {
-      URL u = this.getClass().getResource(path);
-      if (u == null)
-        throw new ClassTransformationException(String.format("Unable to find TemplateClass at path %s", path));
-      return Resources.toByteArray(u);
-    }
-  };
 
-  private byte[] getClassByteCodeFromPath(String path) throws ClassTransformationException, IOException {
-    try {
-      return byteCode.get(path);
-    } catch (ExecutionException e) {
-      Throwable c = e.getCause();
-      if (c instanceof ClassTransformationException)
-        throw (ClassTransformationException) c;
-      if (c instanceof IOException)
-        throw (IOException) c;
-      throw new ClassTransformationException(c);
+//  public <T, I> T getImplementationClassByBody( QueryClassLoader classLoader, TemplateClassDefinition<T> templateDefinition, //
+//      String internalClassBody //
+//  ) throws ClassTransformationException {
+//    final String materializedClassName = "org.apache.drill.generated."
+//        + "Gen" + templateDefinition.getExternalInterface().getSimpleName() //
+//        + index.getAndIncrement();
+//    // Get Implementation Class
+//    try {
+//      String classBody = ClassBodyBuilder.newBuilder() //
+//          .setClassName(materializedClassName) //
+//          .setBody(internalClassBody) //
+//          .build();
+//      return getImplementationClass(classLoader, templateDefinition, classBody, materializedClassName);
+//    } catch (IOException | CompileException e) {
+//      throw new ClassTransformationException("Failure generating class body for runtime generated class.", e);
+//    }
+//
+//  }
+
+  
+  
+  public static class ClassSet{
+    public final ClassSet parent;
+    public final ClassNames precompiled;
+    public final ClassNames generated;
+    
+    public ClassSet(ClassSet parent, String precompiled, String generated) {
+      super();
+      this.parent = parent;
+      
+      this.precompiled = new ClassNames(precompiled);
+      this.generated = new ClassNames(generated);
+      Preconditions.checkArgument(!generated.startsWith(precompiled), 
+          String.format("The new name of a class cannot start with the old name of a class, otherwise class renaming will cause problems.  Precompiled class name %s.  Generated class name %s", precompiled, generated));
     }
+    
+    public ClassSet getChild(String precompiled, String generated){
+      return new ClassSet(this, precompiled, generated);
+    }
+    
+    public ClassSet getChild(String precompiled){
+      return new ClassSet(this, precompiled, precompiled.replace(this.precompiled.dot, this.generated.dot));
+    }
+
+    @Override
+    public int hashCode() {
+      final int prime = 31;
+      int result = 1;
+      result = prime * result + ((generated == null) ? 0 : generated.hashCode());
+      result = prime * result + ((parent == null) ? 0 : parent.hashCode());
+      result = prime * result + ((precompiled == null) ? 0 : precompiled.hashCode());
+      return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj)
+        return true;
+      if (obj == null)
+        return false;
+      if (getClass() != obj.getClass())
+        return false;
+      ClassSet other = (ClassSet) obj;
+      if (generated == null) {
+        if (other.generated != null)
+          return false;
+      } else if (!generated.equals(other.generated))
+        return false;
+      if (parent == null) {
+        if (other.parent != null)
+          return false;
+      } else if (!parent.equals(other.parent))
+        return false;
+      if (precompiled == null) {
+        if (other.precompiled != null)
+          return false;
+      } else if (!precompiled.equals(other.precompiled))
+        return false;
+      return true;
+    }
+    
+    
+  }
+  
+  public static class ClassNames{
+    
+    public final String dot;
+    public final String slash;
+    public final String clazz;
+    
+    public ClassNames(String className){
+      dot = className;
+      slash = className.replace('.', FileUtils.separatorChar);
+      clazz = FileUtils.separatorChar + slash + ".class";
+    }
+
+    @Override
+    public int hashCode() {
+      final int prime = 31;
+      int result = 1;
+      result = prime * result + ((clazz == null) ? 0 : clazz.hashCode());
+      result = prime * result + ((dot == null) ? 0 : dot.hashCode());
+      result = prime * result + ((slash == null) ? 0 : slash.hashCode());
+      return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj)
+        return true;
+      if (obj == null)
+        return false;
+      if (getClass() != obj.getClass())
+        return false;
+      ClassNames other = (ClassNames) obj;
+      if (clazz == null) {
+        if (other.clazz != null)
+          return false;
+      } else if (!clazz.equals(other.clazz))
+        return false;
+      if (dot == null) {
+        if (other.dot != null)
+          return false;
+      } else if (!dot.equals(other.dot))
+        return false;
+      if (slash == null) {
+        if (other.slash != null)
+          return false;
+      } else if (!slash.equals(other.slash))
+        return false;
+      return true;
+    }
+    
+    
+//    
+//    public ClassNames getFixed(ClassNames precompiled, ClassNames generated){
+//      if(!dot.startsWith(precompiled.dot)) throw new IllegalStateException(String.format("Expected a class that starts with %s.  However the class %s does not start with this string.", precompiled.dot, dot));
+//      return new ClassNames(dot.replace(precompiled.dot, generated.dot));
+//    }
+  }
+  
+//  
+//  private void mergeAndInjectClass(QueryClassLoader classLoader, byte[] implementationClass, ClassNames precompiled, ClassNames generated){
+//    // Get Template Class
+//    final byte[] templateClass = byteCodeLoader.getClassByteCodeFromPath(precompiled.clazz);
+//
+//    // get the runtime generated class's ClassNode from bytecode.
+//    ClassNode impl = getClassNodeFromByteCode(implementationClass);
+//
+//    // Setup adapters for merging, remapping class names and class writing. This is done in reverse order of how they
+//    // will be evaluated.
+//    
+//    Stopwatch t3;
+//    {
+//
+//      // 
+//      ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
+//
+//      ClassVisitor remappingAdapter = new RemappingClassAdapter(cw, remapper);
+//      MergeAdapter mergingAdapter = new MergeAdapter(oldTemplateSlashName, materializedSlashName, remappingAdapter,
+//          impl);
+//      ClassReader tReader = new ClassReader(templateClass);
+//      tReader.accept(mergingAdapter, ClassReader.EXPAND_FRAMES);
+//      byte[] outputClass = cw.toByteArray();
+////      Files.write(outputClass, new File(String.format("/tmp/%d-output.class", fileNum)));
+//      outputClass = cw.toByteArray();
+//
+//      // Load the class
+//      classLoader.injectByteCode(materializedClassName, outputClass);
+//    }
+//    t3.stop();
+//    Stopwatch t4 = new Stopwatch().start();
+//    int i = 0;
+//    for (String s : remapper.getInnerClasses()) {
+//      logger.debug("Setting up sub class {}", s);
+//      // for each sub class, remap them into the new class.
+//      String subclassPath = FileUtils.separator + s + ".class";
+//      final byte[] bytecode = getClassByteCodeFromPath(subclassPath);
+//      RemapClasses localRemapper = new RemapClasses(oldTemplateSlashName, materializedSlashName);
+//      Preconditions.checkArgument(localRemapper.getInnerClasses().isEmpty(), "Class transformations are only supported for classes that have a single level of inner classes.");
+//      ClassWriter subcw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
+//      ClassVisitor remap = new RemappingClassAdapter(subcw, localRemapper);
+//      ClassReader reader = new ClassReader(bytecode);
+//      reader.accept(remap, ClassReader.EXPAND_FRAMES);
+//      byte[] newByteCode = subcw.toByteArray();
+//      classLoader.injectByteCode(s.replace(oldTemplateSlashName, materializedSlashName).replace(FileUtils.separatorChar, '.'), newByteCode);
+////      Files.write(subcw.toByteArray(), new File(String.format("/tmp/%d-sub-%d.class", fileNum, i)));
+//      i++;
+//    }
+//  }
+//  
+  private static ClassNode getClassNodeFromByteCode(byte[] bytes) {
+    ClassReader iReader = new ClassReader(bytes);
+    ClassNode impl = new ClassNode();
+    iReader.accept(impl, 0);
+    return impl;
   }
 
-  public <T, I> T getImplementationClassByBody( //
-      QueryClassLoader classLoader, //
-      TemplateClassDefinition<T> templateDefinition, //
-      String internalClassBody //
-  ) throws ClassTransformationException {
-    final String materializedClassName = "org.apache.drill.generated."
-        + "Gen" + templateDefinition.getExternalInterface().getSimpleName() //
-        + index.getAndIncrement();
-    // Get Implementation Class
-    try {
-      String classBody = ClassBodyBuilder.newBuilder() //
-          .setClassName(materializedClassName) //
-          .setBody(internalClassBody) //
-          .build();
-      return getImplementationClass(classLoader, templateDefinition, classBody, materializedClassName);
-    } catch (IOException | CompileException e) {
-      throw new ClassTransformationException("Failure generating class body for runtime generated class.", e);
-    }
-
-  }
-
+  
   @SuppressWarnings("unchecked")
   public <T, I> T getImplementationClass( //
       QueryClassLoader classLoader, //
@@ -110,70 +248,50 @@ public class ClassTransformer {
       String entireClass, //
       String materializedClassName) throws ClassTransformationException {
 
-    try {
-      Stopwatch t1 = new Stopwatch().start();
-      final byte[] implementationClass = classLoader.getClassByteCode(materializedClassName, entireClass);
+    final ClassSet set = new ClassSet(null, templateDefinition.getTemplateClassName(), materializedClassName);
 
-      // Get Template Class
-      final String templateClassName = templateDefinition.getTemplateClassName().replace('.', FileUtils.separatorChar);
-      final String templateClassPath = FileUtils.separator + templateClassName + ".class";
-      t1.stop();
-      Stopwatch t2 = new Stopwatch().start();
-      final byte[] templateClass = getClassByteCodeFromPath(templateClassPath);
-//      int fileNum = new Random().nextInt(100);
-      //Files.write(templateClass, new File(String.format("/tmp/%d-template.class", fileNum)));
-      // Generate Merge Class
-
-      // Setup adapters for merging, remapping class names and class writing. This is done in reverse order of how they
-      // will be evaluated.
-      String oldTemplateSlashName = templateDefinition.getTemplateClassName().replace('.', FileUtils.separatorChar);
-      String materializedSlashName = materializedClassName.replace('.', FileUtils.separatorChar);
-      RemapClasses remapper = new RemapClasses(oldTemplateSlashName, materializedSlashName);
       
-      Stopwatch t3;
-      {
-        
-        ClassNode impl = getClassNodeFromByteCode(implementationClass);
-        t2.stop();
-        t3 = new Stopwatch().start();
-        
-        
-        ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
 
-        ClassVisitor remappingAdapter = new RemappingClassAdapter(cw, remapper);
-        MergeAdapter mergingAdapter = new MergeAdapter(oldTemplateSlashName, materializedSlashName, remappingAdapter,
-            impl);
-        ClassReader tReader = new ClassReader(templateClass);
-        tReader.accept(mergingAdapter, ClassReader.EXPAND_FRAMES);
-        byte[] outputClass = cw.toByteArray();
-//        Files.write(outputClass, new File(String.format("/tmp/%d-output.class", fileNum)));
-        outputClass = cw.toByteArray();
+    try {
+      final byte[][] implementationClasses = classLoader.getClassByteCode(set.generated.clazz, entireClass);
+      
+      
+      Map<String, ClassNode> classesToMerge = Maps.newHashMap();
+      for(byte[] clazz : implementationClasses){
+        ClassNode node = getClassNodeFromByteCode(clazz);
+        classesToMerge.put(node.name, node);
+      }
+      
+      LinkedList<ClassSet> names = Lists.newLinkedList();
+      Set<ClassSet> namesCompleted = Sets.newHashSet();
+      names.add(set);
+      
+      while( !names.isEmpty() ){
+        final ClassSet nextSet = names.removeFirst();
+        if(namesCompleted.contains(nextSet)) continue;
+        final ClassNames nextPrecompiled = nextSet.precompiled;
+        final byte[] precompiledBytes = byteCodeLoader.getClassByteCodeFromPath(nextPrecompiled.clazz);
+        ClassNames nextGenerated = nextSet.generated;
+        ClassNode generatedNode = classesToMerge.get(nextGenerated.slash);
+        MergedClassResult result = MergeAdapter.getMergedClass(nextSet, precompiledBytes, generatedNode);
+        
+        for(String s : result.innerClasses){
+          s = s.replace(FileUtils.separatorChar, '.');
+          names.add(nextSet.getChild(s));
+        }
+        classLoader.injectByteCode(nextGenerated.dot, result.bytes);
+        namesCompleted.add(nextSet);
+        
+      }
+      
 
-        // Load the class
-        classLoader.injectByteCode(materializedClassName, outputClass);
-      }
-      t3.stop();
-      Stopwatch t4 = new Stopwatch().start();
-      int i = 0;
-      for (String s : remapper.getSubclasses()) {
-        logger.debug("Setting up sub class {}", s);
-        // for each sub class, remap them into the new class.
-        String subclassPath = FileUtils.separator + s + ".class";
-        final byte[] bytecode = getClassByteCodeFromPath(subclassPath);
-        RemapClasses localRemapper = new RemapClasses(oldTemplateSlashName, materializedSlashName);
-        Preconditions.checkArgument(localRemapper.getSubclasses().isEmpty(), "Class transformations are only supported for classes that have a single level of inner classes.");
-        ClassWriter subcw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
-        ClassVisitor remap = new RemappingClassAdapter(subcw, localRemapper);
-        ClassReader reader = new ClassReader(bytecode);
-        reader.accept(remap, ClassReader.EXPAND_FRAMES);
-        byte[] newByteCode = subcw.toByteArray();
-        classLoader.injectByteCode(s.replace(oldTemplateSlashName, materializedSlashName).replace(FileUtils.separatorChar, '.'), newByteCode);
-//        Files.write(subcw.toByteArray(), new File(String.format("/tmp/%d-sub-%d.class", fileNum, i)));
-        i++;
-      }
-      t4.stop();
-      logger.debug(String.format("[Compile Time] Janino: %dms, Bytecode load and parse: %dms, Class Merge: %dms, Subclass remap and load: %dms.", t1.elapsed(TimeUnit.MILLISECONDS), t2.elapsed(TimeUnit.MILLISECONDS), t3.elapsed(TimeUnit.MILLISECONDS), t4.elapsed(TimeUnit.MILLISECONDS)));
-      Class<?> c = classLoader.findClass(materializedClassName);
+      
+      
+//      logger.debug(String.format("[Compile Time] Janino: %dms, Bytecode load and parse: %dms, Class Merge: %dms, Subclass remap and load: %dms.", t1.elapsed(TimeUnit.MILLISECONDS), t2.elapsed(TimeUnit.MILLISECONDS), t3.elapsed(TimeUnit.MILLISECONDS), t4.elapsed(TimeUnit.MILLISECONDS)));
+      
+      
+      
+      Class<?> c = classLoader.findClass(set.generated.dot);
       if (templateDefinition.getExternalInterface().isAssignableFrom(c)) {
         return (T) c.newInstance();
       } else {
@@ -187,12 +305,7 @@ public class ClassTransformer {
 
   }
 
-  private ClassNode getClassNodeFromByteCode(byte[] bytes) {
-    ClassReader iReader = new ClassReader(bytes);
-    ClassNode impl = new ClassNode();
-    iReader.accept(impl, 0);
-    return impl;
-  }
+
 
   // private void traceClassToSystemOut(byte[] bytecode) {
   // TraceClassVisitor tcv = new TraceClassVisitor(new EmptyVisitor(), new PrintWriter(System.out));
@@ -200,121 +313,6 @@ public class ClassTransformer {
   // cr.accept(tcv, 0);
   // }
 
-  public class MergeAdapter extends ClassVisitor {
-    private ClassNode classToMerge;
-    private String cname;
-    private String templateName;
-    private String newName;
 
-    public MergeAdapter(String templateName, String newName, ClassVisitor cv, ClassNode cn) {
-      super(Opcodes.ASM4, cv);
-      this.classToMerge = cn;
-      this.templateName = templateName;
-      this.newName = newName.replace('.', FileUtils.separatorChar);
-      ;
-
-    }
-
-    @Override
-    public void visitInnerClass(String name, String outerName, String innerName, int access) {
-//      logger.debug(String.format("[Inner Class] Name: %s, outerName: %s, innerName: %s, templateName: %s, newName: %s.", name, outerName, innerName, templateName, newName));
-      if (name.startsWith(templateName)) {
-        super.visitInnerClass(name.replace(templateName, newName), newName, innerName, access);
-      } else {
-        super.visitInnerClass(name, outerName, innerName, access);
-      }
-    }
-
-    // visit the class
-    public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
-      // use the access and names of the impl class.
-      super.visit(version, access ^ Modifier.ABSTRACT | Modifier.FINAL, name, signature, superName, interfaces);
-      this.cname = name;
-    }
-
-    @Override
-    public MethodVisitor visitMethod(int access, String arg1, String arg2, String arg3, String[] arg4) {
-      // finalize all methods.
-
-      // skip all abstract methods as they should have implementations.
-      if ((access & Modifier.ABSTRACT) != 0) {
-        // logger.debug("Skipping copy of '{}()' since it is abstract.", arg1);
-        return null;
-      }
-
-      // if( (access & Modifier.PUBLIC) == 0){
-      // access = access ^ Modifier.PUBLIC ^ Modifier.PROTECTED | Modifier.PRIVATE;
-      // }
-      if (!arg1.equals("<init>")) {
-        access = access | Modifier.FINAL;
-      }
-      return super.visitMethod(access, arg1, arg2, arg3, arg4);
-    }
-
-    @SuppressWarnings("unchecked")
-    public void visitEnd() {
-      for (Iterator<?> it = classToMerge.fields.iterator(); it.hasNext();) {
-        ((FieldNode) it.next()).accept(this);
-      }
-      for (Iterator<?> it = classToMerge.methods.iterator(); it.hasNext();) {
-        MethodNode mn = (MethodNode) it.next();
-
-        // skip the init.
-        if (mn.name.equals("<init>"))
-          continue;
-
-        String[] exceptions = new String[mn.exceptions.size()];
-        mn.exceptions.toArray(exceptions);
-        MethodVisitor mv = cv.visitMethod(mn.access | Modifier.FINAL, mn.name, mn.desc, mn.signature, exceptions);
-        mn.instructions.resetLabels();
-        // mn.accept(new RemappingMethodAdapter(mn.access, mn.desc, mv, new
-        // SimpleRemapper("org.apache.drill.exec.compile.ExampleTemplate", "Bunky")));
-        mn.accept(new RemappingMethodAdapter(mn.access, mn.desc, mv, new SimpleRemapper(cname.replace('.', FileUtils.separatorChar),
-            classToMerge.name.replace('.', FileUtils.separatorChar))));
-      }
-      super.visitEnd();
-    }
-
-    @Override
-    public FieldVisitor visitField(int access, String name, String desc, String signature, Object value) {
-      return super.visitField(access, name, desc, signature, value);
-    }
-
-  }
-
-  static class RemapClasses extends Remapper {
-
-    final Set<String> subclasses = Sets.newHashSet();
-
-    String oldName;
-    String newName;
-
-    public RemapClasses(String oldName, String newName) {
-      super();
-      Preconditions.checkArgument(!newName.startsWith(oldName), "The new name of a class cannot start with the old name of a class, otherwise class renaming will cause problems.");
-      this.oldName = oldName;
-      this.newName = newName;
-    }
-
-    @Override
-    public String map(String typeName) {
-      // remap the names of all classes that start with the old class name.
-      if (typeName.startsWith(oldName)) {
-        
-        // write down all the sub classes.
-        if (typeName.startsWith(oldName + "$")){
-          subclasses.add(typeName);
-        }
-          
-        return typeName.replace(oldName, newName);
-      }
-      return typeName;
-    }
-
-    public Set<String> getSubclasses() {
-      return subclasses;
-    }
-
-  }
 
 }

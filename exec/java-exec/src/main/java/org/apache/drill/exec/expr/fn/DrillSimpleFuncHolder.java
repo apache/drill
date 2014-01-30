@@ -23,9 +23,9 @@ import java.util.Map;
 
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
-import org.apache.drill.exec.expr.CodeGenerator;
-import org.apache.drill.exec.expr.CodeGenerator.BlockType;
-import org.apache.drill.exec.expr.CodeGenerator.HoldingContainer;
+import org.apache.drill.exec.expr.ClassGenerator;
+import org.apache.drill.exec.expr.ClassGenerator.BlockType;
+import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 
@@ -63,7 +63,7 @@ class DrillSimpleFuncHolder extends DrillFuncHolder{
     return false;
   }
   
-  public HoldingContainer renderEnd(CodeGenerator<?> g, HoldingContainer[] inputVariables, JVar[]  workspaceJVars){
+  public HoldingContainer renderEnd(ClassGenerator<?> g, HoldingContainer[] inputVariables, JVar[]  workspaceJVars){
     generateBody(g, BlockType.SETUP, setupBody, workspaceJVars);
     HoldingContainer c = generateEvalBody(g, inputVariables, evalBody, workspaceJVars);
     generateBody(g, BlockType.RESET, resetBody, workspaceJVars);
@@ -71,7 +71,7 @@ class DrillSimpleFuncHolder extends DrillFuncHolder{
     return c;
   }
   
- protected HoldingContainer generateEvalBody(CodeGenerator<?> g, HoldingContainer[] inputVariables, String body, JVar[] workspaceJVars){
+ protected HoldingContainer generateEvalBody(ClassGenerator<?> g, HoldingContainer[] inputVariables, String body, JVar[] workspaceJVars){
     
     //g.getBlock().directStatement(String.format("//---- start of eval portion of %s function. ----//", functionName));
     

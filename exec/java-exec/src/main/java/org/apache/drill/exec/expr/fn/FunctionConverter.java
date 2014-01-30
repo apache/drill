@@ -169,13 +169,15 @@ public class FunctionConverter {
       return failure("Failure while getting class body.", e, clazz);
     }
     
-    Map<String, String> methods = MethodGrabbingVisitor.getMethods(cu, clazz);
-    List<String> imports = ImportGrabber.getMethods(cu);
-    // return holder
-    ValueReference[] ps = params.toArray(new ValueReference[params.size()]);
-    WorkspaceReference[] works = workspaceFields.toArray(new WorkspaceReference[workspaceFields.size()]);
     
     try{
+      Map<String, String> methods = MethodGrabbingVisitor.getMethods(cu, clazz);
+      List<String> imports = ImportGrabber.getMethods(cu);
+      // return holder
+      ValueReference[] ps = params.toArray(new ValueReference[params.size()]);
+      WorkspaceReference[] works = workspaceFields.toArray(new WorkspaceReference[workspaceFields.size()]);
+
+      
       switch(template.scope()){
       case POINT_AGGREGATE:
         return new DrillAggFuncHolder(template.scope(), template.nulls(), template.isBinaryCommutative(), template.name(), ps, outputField, works, methods, imports);
@@ -188,7 +190,7 @@ public class FunctionConverter {
       default:
         return failure("Unsupported Function Type.", clazz);
       }
-    }catch(Exception ex){
+    }catch(Exception | NoSuchFieldError | AbstractMethodError ex){
       return failure("Failure while creating function holder.", ex, clazz);
     }
     

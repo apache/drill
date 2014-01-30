@@ -17,13 +17,7 @@
  */
 package org.apache.drill.exec.compile;
 
-import java.io.IOException;
-
-import org.apache.drill.exec.exception.ClassTransformationException;
-import org.codehaus.commons.compiler.CompileException;
-
-interface ClassCompiler {
-
-  public abstract byte[][] getClassByteCode(String className, String sourcecode) throws CompileException, IOException, ClassNotFoundException, ClassTransformationException ;
-
+public interface ExampleInner {
+  public abstract void doOutside();
+  public abstract void doInsideOutside();
 }

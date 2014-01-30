@@ -31,6 +31,7 @@ import org.apache.drill.common.logical.data.JoinCondition;
 import org.apache.drill.exec.compile.sig.MappingSet;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.HoldingContainerExpression;
@@ -215,7 +216,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
 
   private JoinWorker generateNewWorker() throws ClassTransformationException, IOException, SchemaChangeException{
 
-    final CodeGenerator<JoinWorker> cg = new CodeGenerator<>(JoinWorker.TEMPLATE_DEFINITION, context.getFunctionRegistry());
+    final ClassGenerator<JoinWorker> cg = CodeGenerator.getRoot(JoinWorker.TEMPLATE_DEFINITION, context.getFunctionRegistry());
     final ErrorCollector collector = new ErrorCollectorImpl();
     final LogicalExpression leftFieldExpr = condition.getLeft();
     final LogicalExpression rightFieldExpr = condition.getRight();
@@ -262,10 +263,10 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
     ////////////////////////
     cg.setMappingSet(COMPARE_MAPPING);
     cg.getSetupBlock().assign(JExpr._this().ref(incomingRecordBatch), JExpr._this().ref(incomingLeftRecordBatch));
-    CodeGenerator.HoldingContainer compareLeftExprHolder = cg.addExpr(materializedLeftExpr, false);
+    ClassGenerator.HoldingContainer compareLeftExprHolder = cg.addExpr(materializedLeftExpr, false);
     cg.setMappingSet(COMPARE_RIGHT_MAPPING);
     cg.getSetupBlock().assign(JExpr._this().ref(incomingRecordBatch), JExpr._this().ref(incomingRightRecordBatch));
-    CodeGenerator.HoldingContainer compareRightExprHolder = cg.addExpr(materializedRightExpr, false);
+    ClassGenerator.HoldingContainer compareRightExprHolder = cg.addExpr(materializedRightExpr, false);
 
     if (compareLeftExprHolder.isOptional() && compareRightExprHolder.isOptional()) {
       // handle null == null
@@ -322,9 +323,9 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
                        ._return(JExpr.lit(-1));
 
     // generate VV read expressions
-    CodeGenerator.HoldingContainer compareThisLeftExprHolder = cg.addExpr(materializedLeftExpr, false);
+    ClassGenerator.HoldingContainer compareThisLeftExprHolder = cg.addExpr(materializedLeftExpr, false);
     cg.setMappingSet(COMPARE_NEXT_LEFT_MAPPING); // change mapping from 'leftIndex' to 'nextLeftIndex'
-    CodeGenerator.HoldingContainer compareNextLeftExprHolder = cg.addExpr(materializedLeftExpr, false);
+    ClassGenerator.HoldingContainer compareNextLeftExprHolder = cg.addExpr(materializedLeftExpr, false);
 
     if (compareThisLeftExprHolder.isOptional()) {
       // handle null == null

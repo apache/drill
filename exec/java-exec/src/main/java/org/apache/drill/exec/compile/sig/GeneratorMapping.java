@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.compile.sig;
 
-import org.apache.drill.exec.expr.CodeGenerator.BlockType;
+import org.apache.drill.exec.expr.ClassGenerator.BlockType;
 
 import com.google.common.base.Preconditions;
 

@@ -25,9 +25,9 @@ import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.expr.CodeGenerator;
-import org.apache.drill.exec.expr.CodeGenerator.BlockType;
-import org.apache.drill.exec.expr.CodeGenerator.HoldingContainer;
+import org.apache.drill.exec.expr.ClassGenerator;
+import org.apache.drill.exec.expr.ClassGenerator.BlockType;
+import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
@@ -76,15 +76,15 @@ public abstract class DrillFuncHolder {
     return imports;
   }
 
-  public JVar[] renderStart(CodeGenerator<?> g, HoldingContainer[] inputVariables){
+  public JVar[] renderStart(ClassGenerator<?> g, HoldingContainer[] inputVariables){
     return declareWorkspaceVariables(g);
   };
   
-  public void renderMiddle(CodeGenerator<?> g, HoldingContainer[] inputVariables, JVar[]  workspaceJVars){};  
-  public abstract HoldingContainer renderEnd(CodeGenerator<?> g, HoldingContainer[] inputVariables, JVar[]  workspaceJVars);
+  public void renderMiddle(ClassGenerator<?> g, HoldingContainer[] inputVariables, JVar[]  workspaceJVars){};  
+  public abstract HoldingContainer renderEnd(ClassGenerator<?> g, HoldingContainer[] inputVariables, JVar[]  workspaceJVars);
   public abstract boolean isNested();
   
-  protected JVar[] declareWorkspaceVariables(CodeGenerator<?> g){
+  protected JVar[] declareWorkspaceVariables(ClassGenerator<?> g){
     JVar[] workspaceJVars = new JVar[workspaceVars.length];
     for(int i =0 ; i < workspaceVars.length; i++){
       workspaceJVars[i] = g.declareClassField("work", g.getModel()._ref(workspaceVars[i].type));
@@ -92,7 +92,7 @@ public abstract class DrillFuncHolder {
     return workspaceJVars;
   }
 
-  protected void generateBody(CodeGenerator<?> g, BlockType bt, String body, JVar[] workspaceJVars){
+  protected void generateBody(ClassGenerator<?> g, BlockType bt, String body, JVar[] workspaceJVars){
     if(!Strings.isNullOrEmpty(body) && !body.trim().isEmpty()){
       JBlock sub = new JBlock(true, true);
       addProtectedBlock(g, sub, body, null, workspaceJVars);
@@ -102,7 +102,7 @@ public abstract class DrillFuncHolder {
     }
   }
 
-  protected void addProtectedBlock(CodeGenerator<?> g, JBlock sub, String body, HoldingContainer[] inputVariables, JVar[] workspaceJVars){
+  protected void addProtectedBlock(ClassGenerator<?> g, JBlock sub, String body, HoldingContainer[] inputVariables, JVar[] workspaceJVars){
 
     if(inputVariables != null){
       for(int i =0; i < inputVariables.length; i++){

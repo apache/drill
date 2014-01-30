@@ -15,15 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.compile;
+package org.apache.drill.exec.compile.sig;
 
-import java.io.IOException;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-import org.apache.drill.exec.exception.ClassTransformationException;
-import org.codehaus.commons.compiler.CompileException;
-
-interface ClassCompiler {
-
-  public abstract byte[][] getClassByteCode(String className, String sourcecode) throws CompileException, IOException, ClassNotFoundException, ClassTransformationException ;
-
+/**
+ * Describes the field will provide output from the given function.
+ */
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.METHOD})
+public @interface RuntimeOverridden {
 }

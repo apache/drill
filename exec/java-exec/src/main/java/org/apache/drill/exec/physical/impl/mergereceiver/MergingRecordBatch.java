@@ -18,15 +18,13 @@ package org.apache.drill.exec.physical.impl.mergereceiver;
  * limitations under the License.
  */
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.sun.codemodel.JArray;
-import com.sun.codemodel.JClass;
-import com.sun.codemodel.JExpr;
-import com.sun.codemodel.JExpression;
-import com.sun.codemodel.JMod;
-import com.sun.codemodel.JType;
-import com.sun.codemodel.JVar;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
+import java.util.PriorityQueue;
+
 import org.apache.drill.common.defs.OrderDef;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
@@ -34,10 +32,11 @@ import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.logical.data.Order;
+import org.apache.drill.common.logical.data.Order.Direction;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.HoldingContainerExpression;
@@ -62,13 +61,15 @@ import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.allocator.VectorAllocator;
 
-import java.io.IOException;
-import java.lang.Class;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.List;
-import java.util.PriorityQueue;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import com.sun.codemodel.JArray;
+import com.sun.codemodel.JClass;
+import com.sun.codemodel.JExpr;
+import com.sun.codemodel.JExpression;
+import com.sun.codemodel.JMod;
+import com.sun.codemodel.JType;
+import com.sun.codemodel.JVar;
 
 
 /**
@@ -368,8 +369,8 @@ public class MergingRecordBatch implements RecordBatch {
     // set up the expression evaluator and code generation
     final List<OrderDef> orderings = config.getOrderings();
     final ErrorCollector collector = new ErrorCollectorImpl();
-    final CodeGenerator<MergingReceiverGeneratorBase> cg =
-        new CodeGenerator<>(MergingReceiverGeneratorBase.TEMPLATE_DEFINITION, context.getFunctionRegistry());
+    final ClassGenerator<MergingReceiverGeneratorBase> cg =
+        CodeGenerator.getRoot(MergingReceiverGeneratorBase.TEMPLATE_DEFINITION, context.getFunctionRegistry());
     JExpression inIndex = JExpr.direct("inIndex");
 
     JType valueVector2DArray = cg.getModel().ref(ValueVector.class).array().array();
@@ -518,7 +519,7 @@ public class MergingRecordBatch implements RecordBatch {
         .arg(JExpr.direct("leftNode.valueIndex"))
         .arg(leftVar));
 
-      CodeGenerator.HoldingContainer left = new CodeGenerator.HoldingContainer(vvRead.getMajorType(),
+      ClassGenerator.HoldingContainer left = new ClassGenerator.HoldingContainer(vvRead.getMajorType(),
                                                                                leftVar,
                                                                                leftVar.ref("value"),
                                                                                leftVar.ref("isSet"));
@@ -534,7 +535,7 @@ public class MergingRecordBatch implements RecordBatch {
         .arg(JExpr.direct("rightNode.valueIndex"))
         .arg(rightVar));
 
-      CodeGenerator.HoldingContainer right = new CodeGenerator.HoldingContainer(vvRead.getMajorType(),
+      ClassGenerator.HoldingContainer right = new ClassGenerator.HoldingContainer(vvRead.getMajorType(),
                                                                                 rightVar,
                                                                                 rightVar.ref("value"),
                                                                                 rightVar.ref("isSet"));
@@ -544,16 +545,16 @@ public class MergingRecordBatch implements RecordBatch {
                                         ImmutableList.of((LogicalExpression) new HoldingContainerExpression(left),
                                                                              new HoldingContainerExpression(right)),
                                         ExpressionPosition.UNKNOWN);
-      CodeGenerator.HoldingContainer out = cg.addExpr(f, false);
+      ClassGenerator.HoldingContainer out = cg.addExpr(f, false);
 
       // generate less than/greater than checks (fixing results for ASCending vs. DESCending)
       cg.getEvalBlock()._if(out.getValue().eq(JExpr.lit(1)))
                        ._then()
-                       ._return(JExpr.lit(config.getOrderings().get(comparisonVectorIndex).getDirection() == Order.Direction.ASC ? 1 : -1));
+                       ._return(JExpr.lit(config.getOrderings().get(comparisonVectorIndex).getDirection() == Direction.ASC ? 1 : -1));
 
       cg.getEvalBlock()._if(out.getValue().eq(JExpr.lit(-1)))
                        ._then()
-                       ._return(JExpr.lit(config.getOrderings().get(comparisonVectorIndex).getDirection() == Order.Direction.ASC ? -1 : 1));
+                       ._return(JExpr.lit(config.getOrderings().get(comparisonVectorIndex).getDirection() == Direction.ASC ? -1 : 1));
 
       ++comparisonVectorIndex;
     }

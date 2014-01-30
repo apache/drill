@@ -42,21 +42,12 @@ package org.apache.drill.exec.compile;
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.Reader;
-import java.io.StringReader;
 import java.io.StringWriter;
-import java.nio.CharBuffer;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.codehaus.commons.compiler.CompileException;
 import org.codehaus.commons.compiler.IClassBodyEvaluator;
-import org.codehaus.commons.io.MultiReader;
 
 public class ClassBodyBuilder {
 
