@@ -304,7 +304,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
     case TWO_BYTE: {
       JVar var = g.declareClassField("sv2_", g.getModel()._ref(SelectionVector2.class));
       g.getBlock("setupInterior").assign(var, JExpr.direct("incoming").invoke("getSelectionVector2"));
-      g.getBlock("getVectorIndex")._return(var.invoke("get").arg(JExpr.direct("recordIndex")));;
+      g.getBlock("getVectorIndex")._return(var.invoke("getIndex").arg(JExpr.direct("recordIndex")));;
       return;
     }
      
