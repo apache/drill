@@ -33,6 +33,7 @@
 
   <modules>
     <module>storage-hbase</module>
+    <module>storage-hive</module>
     <module>sqlline</module>
   </modules>
 </project>

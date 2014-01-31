@@ -41,11 +41,15 @@ import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.store.SchemaProvider;
 import org.apache.drill.exec.store.SchemaProviderRegistry;
+import org.apache.drill.exec.store.hive.HiveSchemaProvider;
+import org.apache.drill.exec.store.json.JsonSchemaProvider;
+import org.apache.drill.exec.store.parquet.ParquetSchemaProvider;
 import org.apache.drill.sql.client.full.FileSystemSchema;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.io.Resources;
+import org.apache.drill.sql.client.full.HiveSchema;
 
 public class DrillHandler extends HandlerImpl {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillHandler.class);
@@ -114,9 +118,7 @@ public class DrillHandler extends HandlerImpl {
 
         for (Map.Entry<String, StorageEngineConfig> entry : engines) {
           SchemaProvider provider = registry.getSchemaProvider(entry.getValue());
-          FileSystemSchema schema = new FileSystemSchema(client, entry.getValue(), provider,
-              rootSchema.getTypeFactory(), rootSchema, entry.getKey(), rootSchema.getExpression(),
-              rootSchema.getQueryProvider());
+          Schema schema = getSchema(provider, client, entry.getKey(), entry.getValue(), rootSchema);
           rootSchema.addSchema(entry.getKey(), schema);
         }
 
@@ -139,6 +141,25 @@ public class DrillHandler extends HandlerImpl {
       connection.setSchema(schemaName);
     }
 
+    final String catalogName = connection.getProperties().getProperty("catalog");
+    if (catalogName != null) {
+      connection.setCatalog(catalogName);
+    }
+  }
+
+  private Schema getSchema(SchemaProvider provider, DrillClient client, String name, StorageEngineConfig config, Schema rootSchema)
+    throws SQLException {
+    if (provider instanceof ParquetSchemaProvider || provider instanceof JsonSchemaProvider) {
+      return new FileSystemSchema(client, config, provider,
+        rootSchema.getTypeFactory(), rootSchema, name, rootSchema.getExpression(),
+        rootSchema.getQueryProvider());
+    } else if (provider instanceof HiveSchemaProvider) {
+      return new HiveSchema(client, config, provider,
+        rootSchema.getTypeFactory(), rootSchema, name, rootSchema.getExpression(),
+        rootSchema.getQueryProvider());
+    }
+
+    throw new SQLException("Unknown schema provider");
   }
 
   public class FakeSchema extends MapSchema {
@@ -171,6 +192,9 @@ public class DrillHandler extends HandlerImpl {
       } catch (IOException e) {
         throw new RuntimeException("Failure closing coordinator.", e);
       }
+    bit = null;
+    client = null;
+    coordinator = null;
   }
 
 }

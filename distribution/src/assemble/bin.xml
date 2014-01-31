@@ -86,6 +86,10 @@
       <outputDirectory>jars</outputDirectory>
     </file>
     <file>
+      <source>../contrib/storage-hive/target/storage-hive-${project.version}.jar</source>
+      <outputDirectory>jars</outputDirectory>
+    </file>
+    <file>
       <source>src/resources/runbit</source>
       <outputDirectory>bin</outputDirectory>
     </file>

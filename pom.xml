@@ -114,7 +114,8 @@
             <exclude>**/*.proto</exclude>
             <exclude>**/*.fmpp</exclude>
             <exclude>**/*.tdd</exclude>
-            
+            <exclude>**/drill_hive_db/**</exclude>
+            <exclude>**/drill_hive_wh/**</exclude>
           </excludes>
         </configuration>
       </plugin>
@@ -209,6 +210,9 @@
           <version>2.15</version>
           <configuration>
             <argLine>-XX:MaxDirectMemorySize=4096M </argLine>
+            <additionalClasspathElements>
+              <additionalClasspathElement>./sqlparser/src/test/resources/storage-engines.json</additionalClasspathElement>
+            </additionalClasspathElements>
           </configuration>
         </plugin>
         <plugin>

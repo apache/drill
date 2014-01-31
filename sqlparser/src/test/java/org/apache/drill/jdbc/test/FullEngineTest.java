@@ -17,12 +17,12 @@
  */
 package org.apache.drill.jdbc.test;
 
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TestName;
+import org.junit.*;
+                                                                                                                                import org.junit.rules.TestName;
 import org.junit.rules.TestRule;
 import org.junit.rules.Timeout;
+
+import java.io.File;
 
 
 public class FullEngineTest {
@@ -32,8 +32,8 @@ public class FullEngineTest {
   static final boolean IS_DEBUG = java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments().toString().indexOf("-agentlib:jdwp") > 0;
 
   // Set a timeout unless we're debugging.
-  @Rule public TestRule globalTimeout = IS_DEBUG ? new TestName() : new Timeout(10000);
-  
+  @Rule public TestRule globalTimeout = IS_DEBUG ? new TestName() : new Timeout(100000);
+
   @Test
   @Ignore // since this is a specifically located file.
   public void fullSelectStarEngine() throws Exception {
@@ -47,5 +47,40 @@ public class FullEngineTest {
     JdbcAssert.withFull("json-cp")
     // .sql("select cast(_MAP['red'] as bigint) + 1 as red_inc from donuts ")
         .sql("select * from \"department.json\" ").displayResults(50);
+  }
+
+  /**
+   * List tables using the system table (metadata.TABLES) which is same as "!tables" from SQLLine
+   * @throws Exception
+   */
+  @Test(timeout=100000) // derby initialization is slow
+  public void listHiveTables() throws Exception {
+    JdbcAssert.withFull("hive-derby")
+      .sql("select * from \"metadata\".\"TABLES\"")
+      .returns(
+        "tableCat=null; tableSchem=hive-derby; tableName=testdb1.kv_seq; tableType=TABLE; remarks=null; typeCat=null; typeSchem=null; typeName=null; selfReferencingColName=null; refGeneration=null\n" +
+        "tableCat=null; tableSchem=hive-derby; tableName=default.all_types; tableType=TABLE; remarks=null; typeCat=null; typeSchem=null; typeName=null; selfReferencingColName=null; refGeneration=null\n" +
+        "tableCat=null; tableSchem=hive-derby; tableName=default.kv_text; tableType=TABLE; remarks=null; typeCat=null; typeSchem=null; typeName=null; selfReferencingColName=null; refGeneration=null\n" +
+        "tableCat=null; tableSchem=metadata; tableName=COLUMNS; tableType=SYSTEM_TABLE; remarks=null; typeCat=null; typeSchem=null; typeName=null; selfReferencingColName=null; refGeneration=null\n" +
+        "tableCat=null; tableSchem=metadata; tableName=TABLES; tableType=SYSTEM_TABLE; remarks=null; typeCat=null; typeSchem=null; typeName=null; selfReferencingColName=null; refGeneration=null\n"
+      );
+  }
+
+  @Test(timeout=1000000) // derby initialization is slow
+  @Ignore // ignore this until Hive SerDe/InputFormat work is intergrated
+  public void selectFromHiveTable() throws Exception {
+    JdbcAssert.withFull("hive-derby")
+      .sql("select * from \"testdb1\".\"kv\"").displayResults(10);
+  }
+
+  @AfterClass
+  public static void cleanup() {
+    // derby creates a derby.log in cwd. Currently there seems to be no way to pass the config
+    // property from hive component to derby to disable or write logging in a different location
+    // need to delete this file for RAT pass
+    File derbyLog = new File("./derby.log");
+    if (derbyLog.exists()) {
+      derbyLog.delete();
+    }
   }
 }
