@@ -69,20 +69,32 @@ public class Accountor {
     remainder.forceGet(size);
   }
 
-  public void reserved(long expected, AccountingByteBuf buf, String desc){
+  public void reserved(long expected, AccountingByteBuf buf){
     // make sure to take away the additional memory that happened due to rounding.
 
     long additional = buf.capacity() - expected;
     remainder.forceGet(additional);
 
     if (ENABLE_ACCOUNTING) {
-      buffers.put(buf, new DebugStackTrace(desc, buf.capacity(), Thread.currentThread().getStackTrace()));
+      buffers.put(buf, new DebugStackTrace(buf.capacity(), Thread.currentThread().getStackTrace()));
     }
   }
-  public void reserved(long expected, AccountingByteBuf buf) {
-    reserved(expected, buf, null);
-  }
 
+
+  public void releasePartial(AccountingByteBuf buf, long size){
+    remainder.returnAllocation(size);
+    if (ENABLE_ACCOUNTING) {
+      if(buf != null){
+        DebugStackTrace dst = buffers.get(buf);
+        if(dst == null) throw new IllegalStateException("Partially releasing a buffer that has already been released. Buffer: " + buf);
+        dst.size =- size;
+        if(dst.size < 0){
+          throw new IllegalStateException("Partially releasing a buffer that has already been released. Buffer: " + buf);
+        }
+      }
+    }
+  }
+  
   public void release(AccountingByteBuf buf, long size) {
     remainder.returnAllocation(size);
     if (ENABLE_ACCOUNTING) {
@@ -120,11 +132,6 @@ public class Accountor {
         sb.append(" allocation(s) of byte size(s): ");
         for(DebugStackTrace alloc : allocs){
           sb.append(alloc.size);
-          if(alloc.desc != null){
-            sb.append(" (");
-            sb.append(alloc.desc);
-            sb.append(")");
-          }
           sb.append(", ");
         }
 
@@ -144,13 +151,11 @@ public class Accountor {
 
     private StackTraceElement[] elements;
     private long size;
-    private String desc;
 
-    public DebugStackTrace(String desc, long size, StackTraceElement[] elements) {
+    public DebugStackTrace(long size, StackTraceElement[] elements) {
       super();
       this.elements = elements;
       this.size = size;
-      this.desc = desc;
     }
 
     public void addToString(StringBuffer sb) {

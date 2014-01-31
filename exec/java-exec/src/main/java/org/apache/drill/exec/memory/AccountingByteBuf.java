@@ -40,13 +40,13 @@ public class AccountingByteBuf extends ByteBuf{
   
   private final PooledUnsafeDirectByteBufL b;
   private final Accountor acct;
-  private int size;
+  private volatile int size;
   
   public AccountingByteBuf(Accountor a, PooledUnsafeDirectByteBufL b) {
     super();
     this.b = b;
     this.acct = a;
-    this.size = b.capacity();
+    this.size = b.maxCapacity();
   }
 
   @Override
@@ -55,7 +55,7 @@ public class AccountingByteBuf extends ByteBuf{
   }
 
   @Override
-  public boolean release() {
+  public synchronized boolean release() {
     if(b.release()){
       acct.release(this, size);
       return true;
@@ -64,7 +64,7 @@ public class AccountingByteBuf extends ByteBuf{
   }
 
   @Override
-  public boolean release(int decrement) {
+  public synchronized boolean release(int decrement) {
     if(b.release(decrement)){
       acct.release(this, size);
       return true;
@@ -78,11 +78,19 @@ public class AccountingByteBuf extends ByteBuf{
   }
 
   @Override
-  public ByteBuf capacity(int newCapacity) {
-    if(newCapacity < size){
-      // TODO: once DRILL-336 is merged: do trim, update size and return
+  public synchronized ByteBuf capacity(int newCapacity) {
+    if(newCapacity == size){
+      return this;
+    }else if(newCapacity < size){
+      b.capacity(newCapacity);
+      int diff = size - b.maxCapacity();
+      acct.releasePartial(this, diff);
+      this.size = size - diff;
+      return this;
+    }else{
+      throw new UnsupportedOperationException("Accounting byte buf doesn't support increasing allocations.");  
     }
-    throw new UnsupportedOperationException();
+    
   }
 
   @Override

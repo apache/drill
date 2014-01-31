@@ -39,17 +39,18 @@ public class TopLevelAllocator implements BufferAllocator {
     this.acct = new Accountor(null, null, maximumAllocation, 0);
   }
 
+  public AccountingByteBuf buffer(int min, int max) {
+    if(!acct.reserve(min)) return null;
+    ByteBuf buffer = innerAllocator.directBuffer(min, max);
+    if(buffer.maxCapacity() > max) buffer.capacity(max);
+    AccountingByteBuf wrapped = new AccountingByteBuf(acct, (PooledUnsafeDirectByteBufL) buffer);
+    acct.reserved(buffer.maxCapacity(), wrapped);
+    return wrapped;
+  }
+  
   @Override
   public AccountingByteBuf buffer(int size) {
-    return buffer(size, null);
-  }
-
-  public AccountingByteBuf buffer(int size, String desc){
-    if(!acct.reserve(size)) return null;
-    ByteBuf buffer = innerAllocator.directBuffer(size);
-    AccountingByteBuf wrapped = new AccountingByteBuf(acct, (PooledUnsafeDirectByteBufL) buffer);
-    acct.reserved(size, wrapped, desc);
-    return wrapped;
+    return buffer(size, size);
   }
 
   @Override
@@ -86,19 +87,20 @@ public class TopLevelAllocator implements BufferAllocator {
     
     
     @Override
-    public AccountingByteBuf buffer(int size, String desc) {
+    public AccountingByteBuf buffer(int size, int max) {
       if(!innerAcct.reserve(size)){
         return null;
       };
       
-      ByteBuf buffer = innerAllocator.directBuffer(size);
+      ByteBuf buffer = innerAllocator.directBuffer(size, max);
+      if(buffer.maxCapacity() > max) buffer.capacity(max);
       AccountingByteBuf wrapped = new AccountingByteBuf(innerAcct, (PooledUnsafeDirectByteBufL) buffer);
-      innerAcct.reserved(size, wrapped);
+      innerAcct.reserved(buffer.maxCapacity(), wrapped);
       return wrapped;
     }
     
     public AccountingByteBuf buffer(int size) {
-      return buffer(size, null);
+      return buffer(size, size);
     }
 
     @Override

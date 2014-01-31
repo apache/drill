@@ -24,52 +24,62 @@ import java.io.Closeable;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 
 /**
- * Wrapper class to deal with byte buffer allocation. Ensures users only use designated methods.  Also allows inser 
+ * Wrapper class to deal with byte buffer allocation. Ensures users only use designated methods. Also allows inser
  */
-public interface BufferAllocator extends Closeable{
+public interface BufferAllocator extends Closeable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BufferAllocator.class);
-  
+
   /**
-   * Allocate a new or reused buffer of the provided size.  Note that the buffer may technically be larger than the requested size for rounding purposes.  However, the buffers capacity will be set to the configured size.
-   * @param size The size in bytes.
+   * Allocate a new or reused buffer of the provided size. Note that the buffer may technically be larger than the
+   * requested size for rounding purposes. However, the buffers capacity will be set to the configured size.
+   * 
+   * @param size
+   *          The size in bytes.
    * @return A new ByteBuf.
    */
   public abstract AccountingByteBuf buffer(int size);
-  
-  
-  public abstract AccountingByteBuf buffer(int size, String desc);
-  
+
+  /**
+   * Allocate a new or reused buffer within provided range. Note that the buffer may technically be larger than the
+   * requested size for rounding purposes. However, the buffers capacity will be set to the configured size.
+   * 
+   * @param minSize The minimum size in bytes.
+   * @param maxSize The maximum size in bytes.
+   * @return A new ByteBuf.
+   */
+  public abstract AccountingByteBuf buffer(int minSize, int maxSize);
+
   public abstract ByteBufAllocator getUnderlyingAllocator();
-  
-  public abstract BufferAllocator getChildAllocator(FragmentHandle handle, long initialReservation, long maximumReservation) throws OutOfMemoryException;
-  
+
+  public abstract BufferAllocator getChildAllocator(FragmentHandle handle, long initialReservation,
+      long maximumReservation) throws OutOfMemoryException;
+
   public PreAllocator getNewPreAllocator();
-  
+
   /**
    * Not thread safe.
    */
-  public interface PreAllocator{
+  public interface PreAllocator {
     public boolean preAllocate(int bytes);
+
     public AccountingByteBuf getAllocation();
   }
-  
-  
+
   /**
    * @param bytes
    * @return
    */
-  
+
   /**
    * 
    */
-  
-  
+
   /**
    * Close and release all buffers generated from this buffer pool.
    */
   @Override
-  public abstract void close(); 
-  
+  public abstract void close();
+
   public abstract long getAllocatedMemory();
-  
+
 }

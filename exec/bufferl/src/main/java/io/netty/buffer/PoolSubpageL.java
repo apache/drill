@@ -77,7 +77,8 @@ final class PoolSubpageL<T> {
     }
 
     /**
-     * Returns the bitmap index of the subpage allocation.
+     * Allocates a subpage element from a page.
+     * @return the bitmap index of the subpage allocation.
      */
     long allocate() {
         if (elemSize == 0) {
@@ -105,6 +106,7 @@ final class PoolSubpageL<T> {
     }
 
     /**
+     * Frees an element and returns it to the page it came from.
      * @return {@code true} if this subpage is in use.
      *         {@code false} if this subpage is not used by its chunk and thus it's OK to be released.
      */
@@ -114,23 +116,27 @@ final class PoolSubpageL<T> {
             return true;
         }
 
+        // mark the corresponding bit as "free"
         int q = bitmapIdx >>> 6;
         int r = bitmapIdx & 63;
         assert (bitmap[q] >>> r & 1) != 0;
         bitmap[q] ^= 1L << r;
 
+        // If we were full, add our page to the pool of subpages
         if (numAvail ++ == 0) {
             nextAvail = bitmapIdx;
             addToPool();
             return true;
         }
 
+        // If we are not empty, then keep us among the pool of subpages
         if (numAvail != maxNumElems) {
             return true;
+            
+        // if our page is now empty (numAvail == maxNumElems), ...
         } else {
-            // Subpage not in use (numAvail == maxNumElems)
+            // Do not remove if this page is the only one left in the pool.
             if (prev == next) {
-                // Do not remove if this subpage is the only one left in the pool.
                 return true;
             }
 
@@ -158,6 +164,11 @@ final class PoolSubpageL<T> {
         prev = null;
     }
 
+    
+    /**
+     * Search a bitmap to find the next available bit.
+     * @return index to a free bit
+     */
     private int findNextAvailable() {
         int newNextAvail = -1;
         loop:

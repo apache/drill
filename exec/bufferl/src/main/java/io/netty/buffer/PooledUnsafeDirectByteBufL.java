@@ -30,6 +30,10 @@ import java.nio.channels.ClosedChannelException;
 import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
 
+/**
+* A buffer allocated from the netty pool allocator, optimized for little endian access.
+*
+*/
 public final class PooledUnsafeDirectByteBufL extends PooledByteBufL<ByteBuffer> {
   
     private static final boolean NATIVE_ORDER = ByteOrder.nativeOrder() == ByteOrder.LITTLE_ENDIAN;
