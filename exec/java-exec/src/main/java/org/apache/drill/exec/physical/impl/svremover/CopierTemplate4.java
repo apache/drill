@@ -60,9 +60,9 @@ public abstract class CopierTemplate4 implements Copier{
       doEval(deRefIndex, outgoingPosition);
     }
     
-    for(VectorWrapper<?> v : incoming){
-      v.clear();
-    }
+//    for(VectorWrapper<?> v : incoming){
+//      v.clear();
+//    }
 
   }
   

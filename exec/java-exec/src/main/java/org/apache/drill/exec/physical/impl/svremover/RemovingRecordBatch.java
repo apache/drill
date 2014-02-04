@@ -27,13 +27,9 @@ import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.SelectionVectorRemover;
-import org.apache.drill.exec.record.AbstractSingleRecordBatch;
+import org.apache.drill.exec.record.*;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
-import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.record.TransferPair;
-import org.apache.drill.exec.record.TypedFieldId;
-import org.apache.drill.exec.record.VectorWrapper;
-import org.apache.drill.exec.record.WritableBatch;
+import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.FixedWidthVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VariableWidthVector;
@@ -145,7 +141,7 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
 
     try {
       final CodeGenerator<Copier> cg = CodeGenerator.get(Copier.TEMPLATE_DEFINITION2, context.getFunctionRegistry());
-      generateCopies(cg.getRoot(), false);
+      generateCopies(cg.getRoot(), incoming, false);
       Copier copier = context.getImplementationClass(cg);
       copier.setupRemover(context, incoming, this, allocators.toArray(new VectorAllocator[allocators.size()]));
       return copier;
@@ -153,12 +149,16 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
       throw new SchemaChangeException("Failure while attempting to load generated class", e);
     }
   }
-  
-  private Copier getGenerated4Copier() throws SchemaChangeException{
+
+  private Copier getGenerated4Copier() throws SchemaChangeException {
     Preconditions.checkArgument(incoming.getSchema().getSelectionVectorMode() == SelectionVectorMode.FOUR_BYTE);
-    
+    return getGenerated4Copier(incoming, context, container, this);
+  }
+  
+  public static Copier getGenerated4Copier(RecordBatch batch, FragmentContext context, VectorContainer container, RecordBatch outgoing) throws SchemaChangeException{
+
     List<VectorAllocator> allocators = Lists.newArrayList();
-    for(VectorWrapper<?> i : incoming){
+    for(VectorWrapper<?> i : batch){
       
       ValueVector v = TypeHelper.getNewVector(i.getField(), context.getAllocator());
       container.add(v);
@@ -167,23 +167,23 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
 
     try {
       final CodeGenerator<Copier> cg = CodeGenerator.get(Copier.TEMPLATE_DEFINITION4, context.getFunctionRegistry());
-      generateCopies(cg.getRoot(), true);
+      generateCopies(cg.getRoot(), batch, true);
       Copier copier = context.getImplementationClass(cg);
-      copier.setupRemover(context, incoming, this, allocators.toArray(new VectorAllocator[allocators.size()]));
+      copier.setupRemover(context, batch, outgoing, allocators.toArray(new VectorAllocator[allocators.size()]));
       return copier;
     } catch (ClassTransformationException | IOException e) {
       throw new SchemaChangeException("Failure while attempting to load generated class", e);
     }
   }
   
-  private void generateCopies(ClassGenerator<Copier> g, boolean hyper){
+  private static void generateCopies(ClassGenerator<Copier> g, RecordBatch batch, boolean hyper){
     // we have parallel ids for each value vector so we don't actually have to deal with managing the ids at all.
     int fieldId = 0;
     
     JExpression inIndex = JExpr.direct("inIndex");
     JExpression outIndex = JExpr.direct("outIndex");
     g.rotateBlock();
-    for(VectorWrapper<?> vv : incoming){
+    for(VectorWrapper<?> vv : batch){
       JVar inVV = g.declareVectorValueSetupAndMember("incoming", new TypedFieldId(vv.getField().getType(), fieldId, vv.isHyper()));
       JVar outVV = g.declareVectorValueSetupAndMember("outgoing", new TypedFieldId(vv.getField().getType(), fieldId, false));
 
@@ -214,7 +214,7 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
     return WritableBatch.get(this);
   }
   
-  private VectorAllocator getAllocator4(ValueVector outgoing){
+  public static VectorAllocator getAllocator4(ValueVector outgoing){
     if(outgoing instanceof FixedWidthVector){
       return new FixedVectorAllocator((FixedWidthVector) outgoing);
     }else if(outgoing instanceof VariableWidthVector ){

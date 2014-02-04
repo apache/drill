@@ -31,7 +31,7 @@ import com.google.common.collect.Sets;
  * builder will always check that this schema is a equal or more materialized version of the current schema.
  */
 public class SchemaBuilder {
-  private LinkedHashSet<MaterializedField> fields = Sets.newLinkedHashSet();
+  private List<MaterializedField> fields = Lists.newArrayList();
 
   private BatchSchema.SelectionVectorMode selectionVectorMode = SelectionVectorMode.NONE;
 

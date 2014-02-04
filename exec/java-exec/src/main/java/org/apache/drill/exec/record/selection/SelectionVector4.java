@@ -70,7 +70,7 @@ public class SelectionVector4 {
   public SelectionVector4 createNewWrapperCurrent(){
     try {
       data.retain();
-      SelectionVector4 sv4 = new SelectionVector4(data, length, length);
+      SelectionVector4 sv4 = new SelectionVector4(data, recordCount, length);
       sv4.start = this.start;
       return sv4;
     } catch (SchemaChangeException e) {

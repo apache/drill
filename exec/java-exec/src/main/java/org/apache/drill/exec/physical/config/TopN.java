@@ -17,8 +17,9 @@
  */
 package org.apache.drill.exec.physical.config;
 
-import java.util.List;
-
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.drill.common.logical.data.Order.Ordering;
 import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.base.AbstractSingle;
@@ -26,22 +27,18 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.Size;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeName;
+import java.util.List;
 
-@JsonTypeName("sort")
-public class Sort extends AbstractSingle{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Sort.class);
-  
-  protected final List<Ordering> orderings;
-  protected boolean reverse = false;
-  
+@JsonTypeName("top-n")
+public class TopN extends Sort {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TopN.class);
+
+  private final int limit;
+
   @JsonCreator
-  public Sort(@JsonProperty("child") PhysicalOperator child, @JsonProperty("orderings") List<Ordering> orderings, @JsonProperty("reverse") boolean reverse) {
-    super(child);
-    this.orderings = orderings;
-    this.reverse = reverse;
+  public TopN(@JsonProperty("child") PhysicalOperator child, @JsonProperty("orderings") List<Ordering> orderings, @JsonProperty("reverse") boolean reverse, @JsonProperty("limit") int limit) {
+    super(child, orderings, reverse);
+    this.limit = limit;
   }
 
   public List<Ordering> getOrderings() {
@@ -50,6 +47,10 @@ public class Sort extends AbstractSingle{
 
   public boolean getReverse() {
     return reverse;
+  }
+
+  public int getLimit() {
+    return limit;
   }
 
   @Override
@@ -76,7 +77,7 @@ public class Sort extends AbstractSingle{
 
   @Override
   protected PhysicalOperator getNewWithChild(PhysicalOperator child) {
-    return new Sort(child, orderings, reverse);
+    return new TopN(child, orderings, reverse, limit);
   }
 
     

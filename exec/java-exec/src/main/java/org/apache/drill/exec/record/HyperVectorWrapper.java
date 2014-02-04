@@ -19,6 +19,8 @@ package org.apache.drill.exec.record;
 
 import java.lang.reflect.Array;
 
+import com.google.common.base.Preconditions;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.drill.exec.vector.ValueVector;
 
 
@@ -90,5 +92,14 @@ public class HyperVectorWrapper<T extends ValueVector> implements VectorWrapper<
 
   public static <T extends ValueVector> HyperVectorWrapper<T> create(MaterializedField f, T[] v, boolean releasable){
     return new HyperVectorWrapper<T>(f, v, releasable);
+  }
+
+  public void addVector(ValueVector v) {
+    Preconditions.checkArgument(v.getClass() == this.getVectorClass(), String.format("Cannot add vector type %s to hypervector type %s", v.getClass(), this.getVectorClass()));
+    vectors = (T[]) ArrayUtils.add(vectors, v);// TODO optimize this so not copying every time
+  }
+
+  public void addVectors(ValueVector[] vv) {
+    vectors = (T[]) ArrayUtils.add(vectors, vv);
   }
 }

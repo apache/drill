@@ -32,6 +32,7 @@ public abstract class SortTemplate implements Sorter, IndexedSortable{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SortTemplate.class);
   
   private SelectionVector4 vector4;
+  private long compares;
   
   
   public void setup(FragmentContext context, SelectionVector4 vector4, VectorContainer hyperBatch) throws SchemaChangeException{
@@ -45,6 +46,7 @@ public abstract class SortTemplate implements Sorter, IndexedSortable{
   public void sort(SelectionVector4 vector4, VectorContainer container){
     QuickSort qs = new QuickSort();
     qs.sort(this, 0, vector4.getTotalCount());
+    logger.debug("Did {} comparisons", compares);
   }
 
   @Override
@@ -58,6 +60,7 @@ public abstract class SortTemplate implements Sorter, IndexedSortable{
   public int compare(int leftIndex, int rightIndex) {
     int sv1 = vector4.get(leftIndex);
     int sv2 = vector4.get(rightIndex);
+    compares++;
     return doEval(sv1, sv2);
   }
 

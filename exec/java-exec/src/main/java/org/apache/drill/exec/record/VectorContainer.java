@@ -31,7 +31,7 @@ import com.google.common.base.Preconditions;
 public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccessible {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(VectorContainer.class);
 
-  private final List<VectorWrapper<?>> wrappers = Lists.newArrayList();
+  protected final List<VectorWrapper<?>> wrappers = Lists.newArrayList();
   private BatchSchema schema;
   private int recordCount = -1;
 
@@ -98,7 +98,7 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
   }
 
   public void add(ValueVector[] hyperVector) {
-    
+    add(hyperVector, true);
   }
   public void add(ValueVector[] hyperVector, boolean releasable) {
     assert hyperVector.length != 0;
