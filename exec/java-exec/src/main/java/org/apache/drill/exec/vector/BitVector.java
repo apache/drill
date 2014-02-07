@@ -120,6 +120,10 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
     return new TransferImpl(getField().clone(ref));
   }
 
+  public TransferPair makeTransferPair(ValueVector to) {
+    return new TransferImpl((BitVector) to);
+  }
+
 
   public void transferTo(BitVector target) {
     target.data = data;
@@ -133,6 +137,10 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
 
     public TransferImpl(MaterializedField field) {
       this.to = new BitVector(field, allocator);
+    }
+
+    public TransferImpl(BitVector to) {
+      this.to = to;
     }
 
     public BitVector getTo() {

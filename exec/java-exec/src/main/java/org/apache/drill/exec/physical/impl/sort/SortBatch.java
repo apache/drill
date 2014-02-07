@@ -141,11 +141,10 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
       }
         
       builder.build(context, container);
-
       sorter = createNewSorter();
       sorter.setup(context, getSelectionVector4(), this.container);
       sorter.sort(getSelectionVector4(), this.container);
-      
+
       return IterOutcome.OK_NEW_SCHEMA;
       
     }catch(SchemaChangeException | ClassTransformationException | IOException ex){

@@ -71,7 +71,7 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
    *          The RecordBatch iterator the contains the batch we should take over.
    * @return A cloned vector container.
    */
-  public static VectorContainer getTransferClone(RecordBatch incoming) {
+  public static VectorContainer getTransferClone(VectorAccessible incoming) {
     VectorContainer vc = new VectorContainer();
     for (VectorWrapper<?> w : incoming) {
       vc.cloneAndTransfer(w);
@@ -184,6 +184,9 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
 
   @Override
   public int getRecordCount() {
+    if (recordCount < 0) {
+      System.out.println();
+    }
     Preconditions.checkState(recordCount != -1, "Record count not set for this vector container");
     return recordCount;
   }

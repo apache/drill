@@ -73,6 +73,10 @@ package org.apache.drill.exec.vector;
   public TransferPair getTransferPair(FieldReference ref){
     return new TransferImpl(getField().clone(ref));
   }
+
+  public TransferPair makeTransferPair(ValueVector to) {
+    return new TransferImpl((Repeated${minor.class}Vector) to);
+  }
   
   public void transferTo(Repeated${minor.class}Vector target){
     offsets.transferTo(target.offsets);
@@ -88,7 +92,11 @@ package org.apache.drill.exec.vector;
     public TransferImpl(MaterializedField field){
       this.to = new Repeated${minor.class}Vector(field, allocator);
     }
-    
+
+    public TransferImpl(Repeated${minor.class}Vector to){
+      this.to = to;
+    }
+
     public Repeated${minor.class}Vector getTo(){
       return to;
     }

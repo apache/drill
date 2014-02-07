@@ -28,9 +28,13 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.compile.sig.MappingSet;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.expr.*;
+import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
-import org.apache.drill.exec.expr.fn.impl.ComparatorFunctions;
+import org.apache.drill.exec.expr.CodeGenerator;
+import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
+import org.apache.drill.exec.expr.HoldingContainerExpression;
+import org.apache.drill.exec.expr.TypeHelper;
+import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.TopN;
 import org.apache.drill.exec.physical.impl.sort.RecordBatchData;
@@ -233,7 +237,7 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
     for(Ordering od : orderings){
       // first, we rewrite the evaluation stack for each side of the comparison.
       ErrorCollector collector = new ErrorCollectorImpl(); 
-      final LogicalExpression expr = ExpressionTreeMaterializer.materialize(od.getExpr(), batch, collector,context.getFunctionRegistry());
+      final LogicalExpression expr = ExpressionTreeMaterializer.materialize(od.getExpr(), batch, collector, context.getFunctionRegistry());
       if(collector.hasErrors()) throw new SchemaChangeException("Failure while materializing expression. " + collector.toErrorString());
       g.setMappingSet(leftMapping);
       HoldingContainer left = g.addExpr(expr, false);
@@ -242,8 +246,8 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
       g.setMappingSet(mainMapping);
       
       // next we wrap the two comparison sides and add the expression block for the comparison.
-      FunctionCall f = new FunctionCall(ComparatorFunctions.COMPARE_TO, ImmutableList.of((LogicalExpression) new HoldingContainerExpression(left), new HoldingContainerExpression(right)), ExpressionPosition.UNKNOWN);
-      HoldingContainer out = g.addExpr(f, false);
+      LogicalExpression fh = FunctionGenerationHelper.getComparator(left, right, context.getFunctionRegistry());
+      HoldingContainer out = g.addExpr(fh, false);
       JConditional jc = g.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)));
       
       if(od.getDirection() == Direction.Ascending){

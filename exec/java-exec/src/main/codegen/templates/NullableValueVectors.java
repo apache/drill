@@ -171,6 +171,10 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
     return new TransferImpl(getField().clone(ref));
   }
 
+  public TransferPair makeTransferPair(ValueVector to) {
+    return new TransferImpl((Nullable${minor.class}Vector) to);
+  }
+
   
   public void transferTo(Nullable${minor.class}Vector target){
     bits.transferTo(target.bits);
@@ -188,7 +192,11 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
     public TransferImpl(MaterializedField field){
       this.to = new Nullable${minor.class}Vector(field, allocator);
     }
-    
+
+    public TransferImpl(Nullable${minor.class}Vector to){
+      this.to = to;
+    }
+
     public Nullable${minor.class}Vector getTo(){
       return to;
     }

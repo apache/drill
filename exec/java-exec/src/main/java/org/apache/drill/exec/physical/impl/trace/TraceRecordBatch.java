@@ -36,6 +36,7 @@ import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
+import org.apache.drill.exec.util.Utilities;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -144,20 +145,7 @@ public class TraceRecordBatch extends AbstractSingleRecordBatch<Trace> {
   }
 
   private String getFileName() {
-    /*
-     * From the context, get the query id, major fragment id, minor fragment id. This will be used as the file name to
-     * which we will dump the incoming buffer data
-     */
-    FragmentHandle handle = incoming.getContext().getHandle();
-
-    String qid = QueryIdHelper.getQueryId(handle.getQueryId());
-
-    int majorFragmentId = handle.getMajorFragmentId();
-    int minorFragmentId = handle.getMinorFragmentId();
-
-    String fileName = String.format("%s//%s_%s_%s_%s", logLocation, qid, majorFragmentId, minorFragmentId, traceTag);
-
-    return fileName;
+    return Utilities.getFileNameForQueryFragment(incoming.getContext(), logLocation, traceTag);
   }
 
   @Override

@@ -32,7 +32,7 @@ import java.util.List;
  * This is a tool for printing the content of record batches to screen. Used for debugging.
  */
 public class BatchPrinter {
-  public static void printHyperBatch(VectorAccessible batch) {
+  public static void printHyperBatch(VectorAccessible batch, SelectionVector4 sv4) {
     List<String> columns = Lists.newArrayList();
     List<ValueVector> vectors = Lists.newArrayList();
     int numBatches = 0;
@@ -41,11 +41,9 @@ public class BatchPrinter {
       numBatches = vw.getValueVectors().length;
     }
     int width = columns.size();
-      for (int i = 0; i < numBatches; i++) {
-        int rows = batch.iterator().next().getValueVectors()[i].getMetadata().getValueCount();
-        for (int j = 0; j < rows; j++) {
+        for (int j = 0; j < sv4.getCount(); j++) {
           for (VectorWrapper vw : batch) {
-            Object o = vw.getValueVectors()[i].getAccessor().getObject(j);
+            Object o = vw.getValueVectors()[sv4.get(j) >>> 16].getAccessor().getObject(j & 65535);
             if (o instanceof byte[]) {
               String value = new String((byte[]) o);
               System.out.printf("| %-15s",value.length() <= 15 ? value : value.substring(0, 14));
@@ -56,7 +54,6 @@ public class BatchPrinter {
           }
           System.out.printf("|\n");
         }
-      }
       System.out.printf("|\n");
   }
   public static void printBatch(VectorAccessible batch) {

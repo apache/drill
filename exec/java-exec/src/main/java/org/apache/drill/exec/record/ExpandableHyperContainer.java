@@ -25,6 +25,10 @@ import java.util.Iterator;
 
 public class ExpandableHyperContainer extends VectorContainer {
 
+  public ExpandableHyperContainer() {
+    super();
+  }
+
   public ExpandableHyperContainer(VectorAccessible batch) {
     super();
     if (batch.getSchema().getSelectionVectorMode() == BatchSchema.SelectionVectorMode.FOUR_BYTE) {

@@ -176,7 +176,7 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
     }
   }
   
-  private static void generateCopies(ClassGenerator<Copier> g, RecordBatch batch, boolean hyper){
+  public static void generateCopies(ClassGenerator g, VectorAccessible batch, boolean hyper){
     // we have parallel ids for each value vector so we don't actually have to deal with managing the ids at all.
     int fieldId = 0;
     

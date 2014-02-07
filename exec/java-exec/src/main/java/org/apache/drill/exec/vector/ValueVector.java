@@ -59,6 +59,8 @@ public interface ValueVector extends Closeable {
    * @return 
    */
   public TransferPair getTransferPair();
+
+  public TransferPair makeTransferPair(ValueVector to);
   
   
   public TransferPair getTransferPair(FieldReference ref);

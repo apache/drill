@@ -126,6 +126,10 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
   public TransferPair getTransferPair(FieldReference ref){
     return new TransferImpl(getField().clone(ref));
   }
+
+  public TransferPair makeTransferPair(ValueVector to) {
+    return new TransferImpl((${minor.class}Vector) to);
+  }
   
   public void transferTo(${minor.class}Vector target){
     this.offsetVector.transferTo(target.offsetVector);
@@ -169,7 +173,11 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     public TransferImpl(MaterializedField field){
       this.to = new ${minor.class}Vector(field, allocator);
     }
-    
+
+    public TransferImpl(${minor.class}Vector to){
+      this.to = to;
+    }
+
     public ${minor.class}Vector getTo(){
       return to;
     }

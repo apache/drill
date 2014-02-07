@@ -32,8 +32,8 @@ import com.google.common.collect.Lists;
 public class RecordBatchData {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RecordBatchData.class);
   
-  final SelectionVector2 sv2;
-  final int recordCount;
+  private SelectionVector2 sv2;
+  private int recordCount;
   VectorContainer container = new VectorContainer();
   
   public RecordBatchData(VectorAccessible batch){
@@ -66,6 +66,12 @@ public class RecordBatchData {
       vectors.add(w.getValueVector());
     }
     return vectors;
+  }
+
+  public void setSv2(SelectionVector2 sv2) {
+    this.sv2 = sv2;
+    this.recordCount = sv2.getCount();
+    this.container.buildSchema(SelectionVectorMode.TWO_BYTE);
   }
 
   public SelectionVector2 getSv2() {

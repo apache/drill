@@ -89,6 +89,29 @@ public class SortRecordBatchBuilder {
     return true;
   }
 
+  public boolean add(RecordBatchData rbd) {
+    long batchBytes = getSize(rbd.getContainer());
+    if (batchBytes == 0) {
+      return true;
+    }
+    if(batchBytes + runningBytes > maxBytes) {
+      return false; // enough data memory.
+    }
+    if(runningBatches+1 > Character.MAX_VALUE) {
+      return false; // allowed in batch.
+    }
+    if(!svAllocator.preAllocate(rbd.getRecordCount()*4)) {
+      return false;  // sv allocation available.
+    }
+
+
+    if (rbd.getRecordCount() == 0) return true;
+    runningBytes += batchBytes;
+    batches.put(rbd.getContainer().getSchema(), rbd);
+    recordCount += rbd.getRecordCount();
+    return true;
+  }
+
   public void build(FragmentContext context, VectorContainer outputContainer) throws SchemaChangeException{
     outputContainer.clear();
     if(batches.keySet().size() > 1) throw new SchemaChangeException("Sort currently only supports a single schema.");

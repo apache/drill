@@ -26,6 +26,7 @@ import org.junit.rules.TestRule;
 public class TestExampleQueries extends BaseTestQuery{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestExampleQueries.class);
   
+  @Rule public TestRule TIMEOUT = TestTools.getTimeoutRule(20000);
   
   @Test
   public void testSelectWithLimit() throws Exception{

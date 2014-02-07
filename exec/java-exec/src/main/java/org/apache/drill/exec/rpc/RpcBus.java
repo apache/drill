@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.rpc;
 
+import com.google.common.base.Stopwatch;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.channel.Channel;
@@ -29,7 +30,9 @@ import io.netty.util.concurrent.GenericFutureListener;
 import java.io.Closeable;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
+import org.apache.drill.exec.proto.BitControl;
 import org.apache.drill.exec.proto.GeneralRPCProtos.RpcFailure;
 import org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode;
 

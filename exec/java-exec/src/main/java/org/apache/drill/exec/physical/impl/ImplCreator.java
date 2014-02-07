@@ -18,7 +18,9 @@
 package org.apache.drill.exec.physical.impl;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
+import com.google.common.base.Stopwatch;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.AbstractPhysicalVisitor;
@@ -80,7 +82,10 @@ public class ImplCreator extends AbstractPhysicalVisitor<RecordBatch, FragmentCo
       root = IteratorValidatorInjector.rewritePlanWithIteratorValidator(context, root); 
     }
 
+    Stopwatch watch = new Stopwatch();
+    watch.start();
     root.accept(i, context);
+    logger.debug("Took {} ms to accept", watch.elapsed(TimeUnit.MILLISECONDS));
     if (i.root == null)
       throw new ExecutionSetupException(
           "The provided fragment did not have a root node that correctly created a RootExec value.");
