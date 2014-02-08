@@ -17,7 +17,8 @@
 data: {
     vv: tdd(../data/ValueVectorTypes.tdd),
     compare: tdd(../data/CompareTypes.tdd),
-    cast: tdd(../data/Casts.tdd)
+    cast: tdd(../data/Casts.tdd),
+    MathFunctionTypes: tdd(../data/MathFunctionTypes.tdd)
 }
 freemarkerLinks: {
     includes: includes/

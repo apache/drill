@@ -34,65 +34,6 @@ public class MathFunctions{
   
   private MathFunctions(){}
   
-  @FunctionTemplate(name = "add", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
-  public static class Add1 implements DrillSimpleFunc{
-    
-    @Param IntHolder left;
-    @Param IntHolder right;
-    @Output IntHolder out;
-
-    public void setup(RecordBatch b){}
-    
-    public void eval(){
-      out.value = left.value + right.value;
-    }
-
-  }
-  
-  @FunctionTemplate(name = "add", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
-  public static class LongAdd1 implements DrillSimpleFunc{
-    
-    @Param BigIntHolder left;
-    @Param BigIntHolder right;
-    @Output BigIntHolder out;
-
-    public void setup(RecordBatch b){}
-    
-    public void eval(){
-      out.value = left.value + right.value;
-    }
-
-  }
-  
-  @FunctionTemplate(name = "add", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
-  public static class Float4Add implements DrillSimpleFunc{
-    
-	@Param Float4Holder left;
-	@Param Float4Holder right;
-	@Output Float4Holder out;
-
-	public void setup(RecordBatch b){}
-    
-	public void eval(){
-  	out.value = left.value + right.value;
-	}
-  }
- 
- 
-  @FunctionTemplate(name = "add", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
-  public static class Float8Add implements DrillSimpleFunc{
-    
-	@Param Float8Holder left;
-	@Param Float8Holder right;
-	@Output Float8Holder out;
-
-	public void setup(RecordBatch b){}
-    
-	public void eval(){
-  	out.value = left.value + right.value;
-	}
-  }
-  
   @FunctionTemplate(name = "negative", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
   public static class Negative implements DrillSimpleFunc{
     
