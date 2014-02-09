@@ -534,14 +534,28 @@ public class TypeCastRules {
       // Check null vs non-null, using same logic as that in Types.softEqual()
       // Only when the function uses NULL_IF_NULL, nullable and non-nullable are inter-changable.
       // Otherwise, the function implementation is not a match. 
-      if (argType.getMode() != parmType.getMode())
-        if (!((holder.getNullHandling() == NullHandling.NULL_IF_NULL) &&
-            (argType.getMode() == DataMode.OPTIONAL ||
-             argType.getMode() == DataMode.REQUIRED ||
-             parmType.getMode() == DataMode.OPTIONAL ||
-             parmType.getMode() == DataMode.REQUIRED )))
-          return -1;
-     
+      if (argType.getMode() != parmType.getMode()) {
+        // TODO - this does not seem to do what it is intended to
+//        if (!((holder.getNullHandling() == NullHandling.NULL_IF_NULL) &&
+//            (argType.getMode() == DataMode.OPTIONAL ||
+//             argType.getMode() == DataMode.REQUIRED ||
+//             parmType.getMode() == DataMode.OPTIONAL ||
+//             parmType.getMode() == DataMode.REQUIRED )))
+//          return -1;
+        // if the function is designed to take optional with custom null handling, and a required
+        // is being passed, increase the cost to account for a null check
+        // this allows for a non-nullable implementation to be preferred
+        if (holder.getNullHandling() == NullHandling.INTERNAL) {
+          // a function that expects required output, but nullable was provided
+          if (parmType.getMode() == DataMode.REQUIRED && argType.getMode() == DataMode.OPTIONAL) {
+            return -1;
+          }
+          else if (parmType.getMode() == DataMode.OPTIONAL && argType.getMode() == DataMode.REQUIRED) {
+            cost++;
+          }
+        }
+      }
+
       cost += (parmVal - argVal); 
     }
 

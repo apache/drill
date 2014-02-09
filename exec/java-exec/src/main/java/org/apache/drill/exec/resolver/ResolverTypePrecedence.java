@@ -41,34 +41,34 @@ public static final Map<MinorType, Integer> precedenceMap;
      */
     int i = 0;
     precedenceMap = new HashMap<MinorType, Integer>();
-   	precedenceMap.put(MinorType.NULL, i++);       // NULL is legal to implicitly be promoted to any other type	 
-  	precedenceMap.put(MinorType.FIXEDBINARY, i++); // Fixed-length is promoted to var length
-  	precedenceMap.put(MinorType.VARBINARY, i++);
-    precedenceMap.put(MinorType.FIXEDCHAR, i++);
-   	precedenceMap.put(MinorType.VARCHAR, i++);
-    precedenceMap.put(MinorType.FIXED16CHAR, i++);
-   	precedenceMap.put(MinorType.VAR16CHAR, i++);
-   	precedenceMap.put(MinorType.BIT, i++);
-   	precedenceMap.put(MinorType.TINYINT, i++);   //type with few bytes is promoted to type with more bytes ==> no data loss. 
-   	precedenceMap.put(MinorType.UINT1, i++);     //signed is legal to implicitly be promoted to unsigned.   
-   	precedenceMap.put(MinorType.SMALLINT, i++);
-   	precedenceMap.put(MinorType.UINT2, i++); 
-  	precedenceMap.put(MinorType.INT, i++);
-  	precedenceMap.put(MinorType.UINT4, i++); 
-  	precedenceMap.put(MinorType.BIGINT, i++);
-  	precedenceMap.put(MinorType.UINT8, i++);
-  	precedenceMap.put(MinorType.MONEY, i++);
-  	precedenceMap.put(MinorType.DECIMAL4, i++);
-  	precedenceMap.put(MinorType.DECIMAL8, i++);
-  	precedenceMap.put(MinorType.DECIMAL12, i++);
-  	precedenceMap.put(MinorType.DECIMAL16, i++);
-  	precedenceMap.put(MinorType.FLOAT4, i++);
-  	precedenceMap.put(MinorType.FLOAT8, i++);
-  	precedenceMap.put(MinorType.TIME, i++);
-  	precedenceMap.put(MinorType.DATE, i++);
-  	precedenceMap.put(MinorType.DATETIME, i++);
-    precedenceMap.put(MinorType.TIMETZ, i++);
-    precedenceMap.put(MinorType.TIMESTAMP, i++);  	
+   	precedenceMap.put(MinorType.NULL, i += 2);       // NULL is legal to implicitly be promoted to any other type
+  	precedenceMap.put(MinorType.FIXEDBINARY, i += 2); // Fixed-length is promoted to var length
+  	precedenceMap.put(MinorType.VARBINARY, i += 2);
+    precedenceMap.put(MinorType.FIXEDCHAR, i += 2);
+   	precedenceMap.put(MinorType.VARCHAR, i += 2);
+    precedenceMap.put(MinorType.FIXED16CHAR, i += 2);
+   	precedenceMap.put(MinorType.VAR16CHAR, i += 2);
+   	precedenceMap.put(MinorType.BIT, i += 2);
+   	precedenceMap.put(MinorType.TINYINT, i += 2);   //type with few bytes is promoted to type with more bytes ==> no data loss.
+   	precedenceMap.put(MinorType.UINT1, i += 2);     //signed is legal to implicitly be promoted to unsigned.
+   	precedenceMap.put(MinorType.SMALLINT, i += 2);
+   	precedenceMap.put(MinorType.UINT2, i += 2);
+  	precedenceMap.put(MinorType.INT, i += 2);
+  	precedenceMap.put(MinorType.UINT4, i += 2);
+  	precedenceMap.put(MinorType.BIGINT, i += 2);
+  	precedenceMap.put(MinorType.UINT8, i += 2);
+  	precedenceMap.put(MinorType.MONEY, i += 2);
+  	precedenceMap.put(MinorType.DECIMAL4, i += 2);
+  	precedenceMap.put(MinorType.DECIMAL8, i += 2);
+  	precedenceMap.put(MinorType.DECIMAL12, i += 2);
+  	precedenceMap.put(MinorType.DECIMAL16, i += 2);
+  	precedenceMap.put(MinorType.FLOAT4, i += 2);
+  	precedenceMap.put(MinorType.FLOAT8, i += 2);
+  	precedenceMap.put(MinorType.TIME, i += 2);
+  	precedenceMap.put(MinorType.DATE, i += 2);
+  	precedenceMap.put(MinorType.DATETIME, i += 2);
+    precedenceMap.put(MinorType.TIMETZ, i += 2);
+    precedenceMap.put(MinorType.TIMESTAMP, i += 2);
     
   }
 

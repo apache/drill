@@ -75,6 +75,16 @@ public class ExpressionValidator implements ExprVisitor<Void, ErrorCollector, Ru
   }
 
   @Override
+  public Void visitIntConstant(ValueExpressions.IntExpression intExpr, ErrorCollector value) throws RuntimeException {
+    return null;
+  }
+
+  @Override
+  public Void visitFloatConstant(ValueExpressions.FloatExpression fExpr, ErrorCollector value) throws RuntimeException {
+    return null;
+  }
+
+  @Override
   public Void visitLongConstant(LongExpression intExpr, ErrorCollector errors) throws RuntimeException {
     return null;
   }

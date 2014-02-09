@@ -107,6 +107,16 @@ public class ExpressionTreeMaterializer {
     }
 
     @Override
+    public LogicalExpression visitIntConstant(ValueExpressions.IntExpression intExpr) {
+      return intExpr;
+    }
+
+    @Override
+    public LogicalExpression visitFloatConstant(ValueExpressions.FloatExpression fExpr) {
+      return fExpr;
+    }
+
+    @Override
     public LogicalExpression visitLongConstant(ValueExpressions.LongExpression intExpr) {
       return intExpr;
     }

@@ -98,7 +98,19 @@ public class ConstantExpressionIdentifier implements ExprVisitor<Boolean, Identi
   public Boolean visitSchemaPath(SchemaPath path, IdentityHashMap<LogicalExpression, Object> value){
     return false;
   }
-  
+
+  @Override
+  public Boolean visitIntConstant(ValueExpressions.IntExpression intExpr, IdentityHashMap<LogicalExpression, Object> value) throws RuntimeException {
+    value.put(intExpr, true);
+    return true;
+  }
+
+  @Override
+  public Boolean visitFloatConstant(ValueExpressions.FloatExpression fExpr, IdentityHashMap<LogicalExpression, Object> value) throws RuntimeException {
+    value.put(fExpr, true);
+    return true;
+  }
+
   @Override
   public Boolean visitLongConstant(LongExpression intExpr, IdentityHashMap<LogicalExpression, Object> value){
     value.put(intExpr, true);

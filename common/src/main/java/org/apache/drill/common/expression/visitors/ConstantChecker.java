@@ -25,6 +25,8 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.ValueExpressions.BooleanExpression;
 import org.apache.drill.common.expression.ValueExpressions.DoubleExpression;
 import org.apache.drill.common.expression.ValueExpressions.LongExpression;
+import org.apache.drill.common.expression.ValueExpressions.IntExpression;
+import org.apache.drill.common.expression.ValueExpressions.FloatExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 
 public final class ConstantChecker extends SimpleExprVisitor<Boolean>{
@@ -57,6 +59,16 @@ public final class ConstantChecker extends SimpleExprVisitor<Boolean>{
   @Override
   public Boolean visitSchemaPath(SchemaPath path) {
     return false;
+  }
+
+  @Override
+  public Boolean visitIntConstant(IntExpression intExpr) {
+    return true;
+  }
+
+  @Override
+  public Boolean visitFloatConstant(FloatExpression fExpr) {
+    return true;
   }
 
   @Override

@@ -120,6 +120,69 @@ public class ValueExpressions {
 
   }
 
+  public static class FloatExpression extends LogicalExpressionBase {
+    private float f;
+
+    private static final MajorType FLOAT_CONSTANT = Types.required(MinorType.FLOAT4);
+
+    public FloatExpression(float f, ExpressionPosition pos) {
+      super(pos);
+      this.f = f;
+    }
+
+    public float getFloat() {
+      return f;
+    }
+
+    @Override
+    public MajorType getMajorType() {
+      return FLOAT_CONSTANT;
+    }
+
+    @Override
+    public <T, V, E extends Exception> T accept(ExprVisitor<T, V, E> visitor, V value) throws E {
+      return visitor.visitFloatConstant(this, value);
+    }
+
+    @Override
+    public Iterator<LogicalExpression> iterator() {
+      return Iterators.emptyIterator();
+    }
+
+  }
+
+  public static class IntExpression extends LogicalExpressionBase {
+
+    private static final MajorType INT_CONSTANT = Types.required(MinorType.INT);
+
+    private int i;
+
+    public IntExpression(int i, ExpressionPosition pos) {
+      super(pos);
+      this.i = i;
+    }
+
+    public int getInt() {
+      return i;
+    }
+
+    @Override
+    public MajorType getMajorType() {
+      return INT_CONSTANT;
+    }
+
+    @Override
+    public <T, V, E extends Exception> T accept(ExprVisitor<T, V, E> visitor, V value) throws E {
+      return visitor.visitIntConstant(this, value);
+    }
+
+    @Override
+    public Iterator<LogicalExpression> iterator() {
+      return Iterators.emptyIterator();
+    }
+
+  }
+
   public static class DoubleExpression extends LogicalExpressionBase {
     private double d;
 

@@ -29,7 +29,7 @@ import org.apache.drill.exec.expr.holders.BitHolder;
 import org.apache.drill.exec.expr.holders.NullableFloat8Holder;
 import org.apache.drill.exec.record.RecordBatch;
 
-@FunctionTemplate(name = "isNull", scope = FunctionTemplate.FunctionScope.SIMPLE)
+@FunctionTemplate(name = "isNull", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
 public class IsNull implements DrillSimpleFunc {
 
   @Param NullableFloat8Holder input;

@@ -19,13 +19,23 @@ package org.apache.drill.exec.physical.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+
+import com.google.common.collect.Lists;
+import com.sun.codemodel.JClassAlreadyExistsException;
+import com.sun.codemodel.JVar;
 import mockit.Injectable;
 import mockit.NonStrictExpectations;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.expression.ExpressionPosition;
-import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.expression.*;
+import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.exec.compile.sig.GeneratorMapping;
+import org.apache.drill.exec.compile.sig.MappingSet;
+import org.apache.drill.exec.expr.ClassGenerator;
+import org.apache.drill.exec.expr.CodeGenerator;
+import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.expr.holders.NullableVarBinaryHolder;
 import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
@@ -34,10 +44,14 @@ import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.FragmentRoot;
+import org.apache.drill.exec.physical.impl.aggregate.Aggregator;
+import org.apache.drill.exec.physical.impl.project.Projector;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.proto.ExecProtos;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
+import org.apache.drill.exec.resolver.FunctionResolver;
+import org.apache.drill.exec.resolver.FunctionResolverFactory;
 import org.apache.drill.exec.rpc.user.UserServer;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.vector.NullableVarBinaryVector;
@@ -49,10 +63,97 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.codahale.metrics.MetricRegistry;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 public class TestSimpleFunctions {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestSimpleFunctions.class);
 
   DrillConfig c = DrillConfig.create();
+
+  @Test
+  public void testHashFunctionResolution(@Injectable DrillConfig config) throws JClassAlreadyExistsException, IOException {
+    FunctionImplementationRegistry registry = new FunctionImplementationRegistry(config);
+    // test required vs nullable Int input
+    resolveHash(config,
+        new TypedNullConstant(Types.optional(TypeProtos.MinorType.INT)),
+        Types.optional(TypeProtos.MinorType.INT),
+        Types.required(TypeProtos.MinorType.INT),
+        TypeProtos.DataMode.OPTIONAL,
+        registry);
+
+    resolveHash(config,
+        new ValueExpressions.IntExpression(1, ExpressionPosition.UNKNOWN),
+        Types.required(TypeProtos.MinorType.INT),
+        Types.required(TypeProtos.MinorType.INT),
+        TypeProtos.DataMode.REQUIRED,
+        registry);
+
+    // test required vs nullable float input
+    resolveHash(config,
+        new TypedNullConstant(Types.optional(TypeProtos.MinorType.FLOAT4)),
+        Types.optional(TypeProtos.MinorType.FLOAT4),
+        Types.required(TypeProtos.MinorType.FLOAT4),
+        TypeProtos.DataMode.OPTIONAL,
+        registry);
+
+    resolveHash(config,
+        new ValueExpressions.FloatExpression(5.0f, ExpressionPosition.UNKNOWN),
+        Types.required(TypeProtos.MinorType.FLOAT4),
+        Types.required(TypeProtos.MinorType.FLOAT4),
+        TypeProtos.DataMode.REQUIRED,
+        registry);
+
+    // test required vs nullable long input
+    resolveHash(config,
+        new TypedNullConstant(Types.optional(TypeProtos.MinorType.BIGINT)),
+        Types.optional(TypeProtos.MinorType.BIGINT),
+        Types.required(TypeProtos.MinorType.BIGINT),
+        TypeProtos.DataMode.OPTIONAL,
+        registry);
+
+    resolveHash(config,
+        new ValueExpressions.LongExpression(100L, ExpressionPosition.UNKNOWN),
+        Types.required(TypeProtos.MinorType.BIGINT),
+        Types.required(TypeProtos.MinorType.BIGINT),
+        TypeProtos.DataMode.REQUIRED,
+        registry);
+
+    // test required vs nullable double input
+    resolveHash(config,
+        new TypedNullConstant(Types.optional(TypeProtos.MinorType.FLOAT8)),
+        Types.optional(TypeProtos.MinorType.FLOAT8),
+        Types.required(TypeProtos.MinorType.FLOAT8),
+        TypeProtos.DataMode.OPTIONAL,
+        registry);
+
+    resolveHash(config,
+        new ValueExpressions.DoubleExpression(100.0, ExpressionPosition.UNKNOWN),
+        Types.required(TypeProtos.MinorType.FLOAT8),
+        Types.required(TypeProtos.MinorType.FLOAT8),
+        TypeProtos.DataMode.REQUIRED,
+        registry);
+  }
+
+  public void resolveHash(DrillConfig config, LogicalExpression arg, TypeProtos.MajorType expectedArg,
+                                    TypeProtos.MajorType expectedOut, TypeProtos.DataMode expectedBestInputMode,
+                                    FunctionImplementationRegistry registry) throws JClassAlreadyExistsException, IOException {
+    List<LogicalExpression> args = new ArrayList<>();
+    args.add(arg);
+    String[] registeredNames = { "hash" };
+    FunctionCall call = new FunctionCall(
+        FunctionDefinition.simple("hash",
+          new BasicArgumentValidator(new Arg[]{ new Arg(expectedArg)}),
+          new OutputTypeDeterminer.FixedType(expectedOut),
+          registeredNames),
+        args,
+        ExpressionPosition.UNKNOWN
+    );
+    FunctionResolver resolver = FunctionResolverFactory.getResolver(call);
+    DrillFuncHolder matchedFuncHolder = resolver.getBestMatch(registry.getMethods().get(call.getDefinition().getName()), call);
+    assertEquals( expectedBestInputMode, matchedFuncHolder.getParmMajorType(0).getMode());
+  }
 
   @Test
   public void testIsNull(@Injectable final DrillbitContext bitContext,

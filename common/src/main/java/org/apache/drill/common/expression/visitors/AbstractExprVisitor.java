@@ -22,6 +22,8 @@ import org.apache.drill.common.expression.IfExpression;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.ValueExpressions.BooleanExpression;
+import org.apache.drill.common.expression.ValueExpressions.FloatExpression;
+import org.apache.drill.common.expression.ValueExpressions.IntExpression;
 import org.apache.drill.common.expression.ValueExpressions.DoubleExpression;
 import org.apache.drill.common.expression.ValueExpressions.LongExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
@@ -42,6 +44,16 @@ public abstract class AbstractExprVisitor<T, VAL, EXCEP extends Exception> imple
   @Override
   public T visitSchemaPath(SchemaPath path, VAL value) throws EXCEP {
     return visitUnknown(path, value);
+  }
+
+  @Override
+  public T visitFloatConstant(FloatExpression fExpr, VAL value) throws EXCEP {
+    return visitUnknown(fExpr, value);
+  }
+
+  @Override
+  public T visitIntConstant(IntExpression intExpr, VAL value) throws EXCEP {
+    return visitUnknown(intExpr, value);
   }
 
   @Override

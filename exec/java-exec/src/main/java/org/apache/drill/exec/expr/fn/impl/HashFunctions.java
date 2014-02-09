@@ -26,9 +26,7 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.holders.BigIntHolder;
-import org.apache.drill.exec.expr.holders.IntHolder;
-import org.apache.drill.exec.expr.holders.VarBinaryHolder;
+import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
 
 public class HashFunctions {
@@ -44,8 +42,122 @@ public class HashFunctions {
     }
 
   }
-  
-  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+
+  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL )
+  public static class NullableFloatHash implements DrillSimpleFunc {
+
+    @Param NullableFloat4Holder in;
+    @Output IntHolder out;
+
+    public void setup(RecordBatch incoming) {
+    }
+
+    public void eval() {
+      if (in.isSet == 0)
+        out.value = 0;
+      else
+        out.value = com.google.common.hash.Hashing.murmur3_128().hashInt(Float.floatToIntBits(in.value)).asInt();
+    }
+  }
+
+  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL )
+  public static class FloatHash implements DrillSimpleFunc {
+
+    @Param Float4Holder in;
+    @Output IntHolder out;
+
+    public void setup(RecordBatch incoming) {
+    }
+
+    public void eval() {
+      out.value = com.google.common.hash.Hashing.murmur3_128().hashInt(Float.floatToIntBits(in.value)).asInt();
+    }
+  }
+
+  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL )
+  public static class NullableDoubleHash implements DrillSimpleFunc {
+
+    @Param NullableFloat8Holder in;
+    @Output IntHolder out;
+
+    public void setup(RecordBatch incoming) {
+    }
+
+    public void eval() {
+      if (in.isSet == 0)
+        out.value = 0;
+      else
+        out.value = com.google.common.hash.Hashing.murmur3_128().hashLong(Double.doubleToLongBits(in.value)).asInt();
+    }
+  }
+
+  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL )
+  public static class DoubleHash implements DrillSimpleFunc {
+
+    @Param Float8Holder in;
+    @Output IntHolder out;
+
+    public void setup(RecordBatch incoming) {
+    }
+
+    public void eval() {
+      out.value = com.google.common.hash.Hashing.murmur3_128().hashLong(Double.doubleToLongBits(in.value)).asInt();
+    }
+  }
+
+  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL )
+  public static class NullableVarBinaryHash implements DrillSimpleFunc {
+
+    @Param NullableVarBinaryHolder in;
+    @Output IntHolder out;
+
+    public void setup(RecordBatch incoming) {
+    }
+
+    public void eval() {
+      if (in.isSet == 0)
+        out.value = 0;
+      else
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash(in.buffer.nioBuffer(), 0);
+    }
+  }
+
+  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  public static class NullableBigIntHash implements DrillSimpleFunc {
+
+    @Param NullableBigIntHolder in;
+    @Output IntHolder out;
+
+    public void setup(RecordBatch incoming) {
+    }
+
+    public void eval() {
+      // TODO: implement hash function for other types
+      if (in.isSet == 0)
+        out.value = 0;
+      else
+        out.value = com.google.common.hash.Hashing.murmur3_128().hashLong(in.value).asInt();
+    }
+  }
+
+  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  public static class NullableIntHash implements DrillSimpleFunc {
+    @Param NullableIntHolder in;
+    @Output IntHolder out;
+
+    public void setup(RecordBatch incoming) {
+    }
+
+    public void eval() {
+      // TODO: implement hash function for other types
+      if (in.isSet == 0)
+        out.value = 0;
+      else
+        out.value = com.google.common.hash.Hashing.murmur3_128().hashInt(in.value).asInt();
+    }
+  }
+
+  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
   public static class VarBinaryHash implements DrillSimpleFunc {
 
     @Param VarBinaryHolder in;
@@ -59,7 +171,7 @@ public class HashFunctions {
     }
   }
   
-  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
   public static class HashBigInt implements DrillSimpleFunc {
 
     @Param BigIntHolder in;
@@ -74,7 +186,7 @@ public class HashFunctions {
     }
   }
 
-  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
   public static class IntHash implements DrillSimpleFunc {
     @Param IntHolder in;
     @Output IntHolder out;
@@ -87,5 +199,5 @@ public class HashFunctions {
       out.value = com.google.common.hash.Hashing.murmur3_128().hashInt(in.value).asInt();
     }
   }
-  
+
 }

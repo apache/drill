@@ -25,11 +25,16 @@ import org.apache.drill.common.expression.ValueExpressions.BooleanExpression;
 import org.apache.drill.common.expression.ValueExpressions.DoubleExpression;
 import org.apache.drill.common.expression.ValueExpressions.LongExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
+import org.apache.drill.common.expression.ValueExpressions.FloatExpression;
+import org.apache.drill.common.expression.ValueExpressions.IntExpression;
+
 
 public interface ExprVisitor<T, VAL, EXCEP extends Exception> {
 	public T visitFunctionCall(FunctionCall call, VAL value) throws EXCEP;
 	public T visitIfExpression(IfExpression ifExpr, VAL value) throws EXCEP;
-	public T visitSchemaPath(SchemaPath path, VAL value) throws EXCEP;	
+	public T visitSchemaPath(SchemaPath path, VAL value) throws EXCEP;
+  public T visitIntConstant(IntExpression intExpr, VAL value) throws EXCEP;
+  public T visitFloatConstant(FloatExpression fExpr, VAL value) throws EXCEP;
 	public T visitLongConstant(LongExpression intExpr, VAL value) throws EXCEP;
 	public T visitDoubleConstant(DoubleExpression dExpr, VAL value) throws EXCEP;
 	public T visitBooleanConstant(BooleanExpression e, VAL value) throws EXCEP;
