@@ -167,7 +167,7 @@ public class HashFunctions {
     }
 
     public void eval() {
-      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash(in.buffer.nioBuffer(), 0);
+      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash(in.buffer.nioBuffer(in.start, in.end - in.start), 0);
     }
   }
   
