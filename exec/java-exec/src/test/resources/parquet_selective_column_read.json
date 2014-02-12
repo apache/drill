@@ -1,0 +1,28 @@
+{
+  head : {
+    version : 1,
+    generator : {
+      type : "manual",
+      info : "na"
+    },
+    type : "APACHE_DRILL_PHYSICAL"
+  },
+  graph : [ {
+    pop : "parquet-scan",
+    @id : 1,
+    entries : [ {
+      path : "/tmp/test.parquet"
+    } ],
+    storageengine : {
+      type : "parquet",
+      dfsName : "file:///"
+    },
+    columns: [ "integer", "bigInt", "bin", "bin2"],
+    fragmentPointer : 0
+  }, {
+    pop : "screen",
+    @id : 2,
+    child : 1
+  } ]
+}
+

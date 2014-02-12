@@ -90,18 +90,22 @@ public class JSONRecordReader implements RecordReader {
   private BufferAllocator allocator;
   private int batchSize;
   private final FieldReference ref;
+  private final List<SchemaPath> columns;
 
-  public JSONRecordReader(FragmentContext fragmentContext, String inputPath, FileSystem fileSystem, int batchSize, FieldReference ref) {
+  public JSONRecordReader(FragmentContext fragmentContext, String inputPath, FileSystem fileSystem, int batchSize,
+                          FieldReference ref, List<SchemaPath> columns) {
     this.hadoopPath = new Path(inputPath);
     this.fileSystem = fileSystem;
     this.allocator = fragmentContext.getAllocator();
     this.batchSize = batchSize;
     valueVectorMap = Maps.newHashMap();
     this.ref = ref;
+    this.columns = columns;
   }
 
-  public JSONRecordReader(FragmentContext fragmentContext, String inputPath, FileSystem fileSystem, FieldReference ref) {
-    this(fragmentContext, inputPath, fileSystem, DEFAULT_LENGTH, ref);
+  public JSONRecordReader(FragmentContext fragmentContext, String inputPath, FileSystem fileSystem, FieldReference ref,
+                          List<SchemaPath> columns) {
+    this(fragmentContext, inputPath, fileSystem, DEFAULT_LENGTH, ref, columns);
   }
 
   private JsonParser getParser() {
@@ -209,6 +213,19 @@ public class JSONRecordReader implements RecordReader {
     return allocator;
   }
 
+  private boolean fieldSelected(String field){
+    SchemaPath sp = new SchemaPath(field, ExpressionPosition.UNKNOWN);
+    if (this.columns != null && this.columns.size() > 1){
+      for (SchemaPath expr : this.columns){
+        if ( sp.equals(expr)){
+          return true;
+        }
+      }
+      return false;
+    }
+    return true;
+  }
+
   public static enum ReadType {
     ARRAY(END_ARRAY) {
       @Override
@@ -264,6 +281,12 @@ public class JSONRecordReader implements RecordReader {
         }
 
         String fieldName = parser.getCurrentName();
+        if ( fieldName != null && ! reader.fieldSelected(fieldName)){
+          // this field was not requested in the query
+          token = parser.nextToken();
+          colIndex += 1;
+          continue;
+        }
         MajorType fieldType = JacksonHelper.getFieldType(token, this == ReadType.ARRAY);
         ReadType readType = null;
         switch (token) {

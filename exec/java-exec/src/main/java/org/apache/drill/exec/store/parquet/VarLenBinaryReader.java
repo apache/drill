@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.parquet;
 
+import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.vector.NullableVarBinaryVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarBinaryVector;
@@ -43,7 +44,7 @@ public class VarLenBinaryReader {
 
   public static class VarLengthColumn extends ColumnReader {
 
-    VarLengthColumn(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, ValueVector v) {
+    VarLengthColumn(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, ValueVector v) throws ExecutionSetupException {
       super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v);
     }
 
@@ -58,7 +59,7 @@ public class VarLenBinaryReader {
     int nullsRead;
     boolean currentValNull = false;
 
-    NullableVarLengthColumn(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, ValueVector v) {
+    NullableVarLengthColumn(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, ValueVector v) throws ExecutionSetupException {
       super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v);
     }
 
@@ -118,6 +119,12 @@ public class VarLenBinaryReader {
         lengthVarFieldsInCurrentRecord += columnReader.dataTypeLengthInBits;
       }
       for (NullableVarLengthColumn columnReader : nullableColumns) {
+        // check to make sure there is capacity for the next value (for nullables this is a check to see if there is
+        // still space in the nullability recording vector)
+        if (recordsReadInCurrentPass == columnReader.valueVecHolder.getValueVector().getValueCapacity()){
+          rowGroupFinished = true;
+          break;
+        }
         if (columnReader.pageReadStatus.currentPage == null
             || columnReader.pageReadStatus.valuesRead == columnReader.pageReadStatus.currentPage.getValueCount()) {
           columnReader.totalValuesRead += columnReader.pageReadStatus.valuesRead;

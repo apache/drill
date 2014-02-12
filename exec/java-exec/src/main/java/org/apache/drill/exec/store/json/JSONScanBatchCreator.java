@@ -37,7 +37,8 @@ public class JSONScanBatchCreator implements BatchCreator<JSONSubScan> {
         List<JSONGroupScan.ScanEntry> entries = config.getReadEntries();
         List<RecordReader> readers = Lists.newArrayList();
         for (JSONGroupScan.ScanEntry e : entries) {
-            readers.add(new JSONRecordReader(context, e.getPath(), config.getStorageEngine().getFileSystem(), config.getRef()));
+            readers.add(new JSONRecordReader(context, e.getPath(), config.getStorageEngine().getFileSystem(), config.getRef(),
+                config.getColumns()));
         }
 
         return new ScanBatch(context, readers.iterator());

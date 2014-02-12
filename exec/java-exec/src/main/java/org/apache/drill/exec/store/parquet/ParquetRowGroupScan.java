@@ -23,8 +23,9 @@ import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.FieldReference;
+import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StorageEngineConfig;
-import org.apache.drill.exec.exception.SetupException;
 import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.ReadEntryFromHDFS;
 import org.apache.drill.exec.physical.base.AbstractBase;
@@ -51,22 +52,31 @@ public class ParquetRowGroupScan extends AbstractBase implements SubScan {
   private final ParquetStorageEngine parquetStorageEngine;
   private final List<RowGroupReadEntry> rowGroupReadEntries;
   private final FieldReference ref;
+  private final List<SchemaPath> columns;
 
   @JsonCreator
-  public ParquetRowGroupScan(@JacksonInject StorageEngineRegistry registry, @JsonProperty("engineConfig") StorageEngineConfig engineConfig,
-                             @JsonProperty("rowGroupReadEntries") LinkedList<RowGroupReadEntry> rowGroupReadEntries, @JsonProperty("ref") FieldReference ref) throws ExecutionSetupException {
+  public ParquetRowGroupScan(@JacksonInject StorageEngineRegistry registry,
+                             @JsonProperty("engineConfig") StorageEngineConfig engineConfig,
+                             @JsonProperty("rowGroupReadEntries") LinkedList<RowGroupReadEntry> rowGroupReadEntries,
+                             @JsonProperty("ref") FieldReference ref,
+                             @JsonProperty("columns") List<SchemaPath> columns
+                             ) throws ExecutionSetupException {
     parquetStorageEngine = (ParquetStorageEngine) registry.getEngine(engineConfig);
     this.rowGroupReadEntries = rowGroupReadEntries;
     this.engineConfig = engineConfig;
     this.ref = ref;
+    this.columns = columns;
   }
 
   public ParquetRowGroupScan(ParquetStorageEngine engine, ParquetStorageEngineConfig config,
-                              List<RowGroupReadEntry> rowGroupReadEntries, FieldReference ref) {
+                              List<RowGroupReadEntry> rowGroupReadEntries, FieldReference ref,
+                              List<SchemaPath> columns
+                              ) {
     parquetStorageEngine = engine;
     engineConfig = config;
     this.rowGroupReadEntries = rowGroupReadEntries;
     this.ref = ref;
+    this.columns = columns;
   }
 
   public List<RowGroupReadEntry> getRowGroupReadEntries() {
@@ -108,14 +118,19 @@ public class ParquetRowGroupScan extends AbstractBase implements SubScan {
   }
 
   @Override
-  public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
+  public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException {
     Preconditions.checkArgument(children.isEmpty());
-    return new ParquetRowGroupScan(parquetStorageEngine, (ParquetStorageEngineConfig) engineConfig, rowGroupReadEntries, ref);
+    return new ParquetRowGroupScan(parquetStorageEngine, (ParquetStorageEngineConfig) engineConfig, rowGroupReadEntries,
+            ref, columns);
   }
 
   @Override
   public Iterator<PhysicalOperator> iterator() {
     return Iterators.emptyIterator();
+  }
+
+  public List<SchemaPath> getColumns() {
+    return columns;
   }
 
   public static class RowGroupReadEntry extends ReadEntryFromHDFS {

@@ -17,16 +17,18 @@
  */
 package org.apache.drill.exec.store.parquet;
 
-import org.apache.drill.exec.vector.BaseDataValueVector;
-import org.apache.drill.exec.vector.NullableVectorDefinitionSetter;
+import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.vector.ValueVector;
+
 import parquet.column.ColumnDescriptor;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
 
 public class NullableFixedByteAlignedReader extends NullableColumnReader {
 
-  NullableFixedByteAlignedReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
-                         boolean fixedLength, ValueVector v) {
+  private byte[] bytes;
+
+  NullableFixedByteAlignedReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
+      ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, ValueVector v) throws ExecutionSetupException {
     super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v);
   }
 
@@ -34,15 +36,15 @@ public class NullableFixedByteAlignedReader extends NullableColumnReader {
   @Override
   protected void readField(long recordsToReadInThisPass, ColumnReader firstColumnStatus) {
 
-    recordsReadInThisIteration = recordsToReadInThisPass;
+    this.recordsReadInThisIteration = recordsToReadInThisPass;
 
-    readStartInBytes = pageReadStatus.readPosInBytes;
-    readLengthInBits = recordsReadInThisIteration * dataTypeLengthInBits;
-    readLength = (int) Math.ceil(readLengthInBits / 8.0);
-
-    bytes = pageReadStatus.pageDataByteArray;
-    // vectorData is assigned by the superclass read loop method
-    vectorData.writeBytes(bytes,
-        (int) readStartInBytes, (int) readLength);
+    // set up metadata
+    this.readStartInBytes = pageReadStatus.readPosInBytes;
+    this.readLengthInBits = recordsReadInThisIteration * dataTypeLengthInBits;
+    this.readLength = (int) Math.ceil(readLengthInBits / 8.0);
+    this.bytes = pageReadStatus.pageDataByteArray;
+    
+    // fill in data.
+    vectorData.writeBytes(bytes, (int) readStartInBytes, (int) readLength);
   }
 }

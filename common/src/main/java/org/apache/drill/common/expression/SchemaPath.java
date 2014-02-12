@@ -63,6 +63,10 @@ public class SchemaPath extends LogicalExpressionBase {
     this.originalPath = path.originalPath;
     this.rootSegment = path.rootSegment;
   }
+
+  public SchemaPath(String str){
+    this(str, ExpressionPosition.UNKNOWN);
+  }
   
   public SchemaPath(CharSequence str, ExpressionPosition pos) {
     super(pos);

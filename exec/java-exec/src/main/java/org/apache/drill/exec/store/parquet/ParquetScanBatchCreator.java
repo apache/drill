@@ -20,7 +20,9 @@ package org.apache.drill.exec.store.parquet;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.base.Stopwatch;
@@ -48,6 +50,8 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
   public RecordBatch getBatch(FragmentContext context, ParquetRowGroupScan rowGroupScan, List<RecordBatch> children) throws ExecutionSetupException {
     Preconditions.checkArgument(children.isEmpty());
     List<RecordReader> readers = Lists.newArrayList();
+    // keep footers in a map to avoid re-reading them
+    Map<String, ParquetMetadata> footers = new HashMap<String, ParquetMetadata>();
     for(ParquetRowGroupScan.RowGroupReadEntry e : rowGroupScan.getRowGroupReadEntries()){
       /*
       Here we could store a map from file names to footers, to prevent re-reading the footer for each row group in a file
@@ -57,12 +61,17 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
       These fields will be added to the constructor below
       */
       try {
+        if ( ! footers.containsKey(e.getPath())){
+          footers.put(e.getPath(),
+              ParquetFileReader.readFooter( rowGroupScan.getStorageEngine().getFileSystem().getConf(), new Path(e.getPath())));
+        }
         readers.add(
             new ParquetRecordReader(
                 context, e.getPath(), e.getRowGroupIndex(), rowGroupScan.getStorageEngine().getFileSystem(),
                 rowGroupScan.getStorageEngine().getCodecFactoryExposer(),
-                ParquetFileReader.readFooter( rowGroupScan.getStorageEngine().getFileSystem().getConf(), new Path(e.getPath())),
-                rowGroupScan.getRef()
+                footers.get(e.getPath()),
+                rowGroupScan.getRef(),
+                rowGroupScan.getColumns()
             )
         );
       } catch (IOException e1) {

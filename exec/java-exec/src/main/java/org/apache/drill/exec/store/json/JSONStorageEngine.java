@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.json;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.data.Scan;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStorageEngine;
@@ -65,7 +66,7 @@ public class JSONStorageEngine extends AbstractStorageEngine {
   @Override
   public JSONGroupScan getPhysicalScan(Scan scan) throws IOException {
     ArrayList<ScanEntry> readEntries = scan.getSelection().getListWith(new ObjectMapper(), new TypeReference<ArrayList<ScanEntry>>() {});
-    return new JSONGroupScan(readEntries, this, scan.getOutputReference());
+    return new JSONGroupScan(readEntries, this, scan.getOutputReference(), null);
   }
 
   @Override
