@@ -61,19 +61,19 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
       out.value = ${type.javaType}.parse${type.parse}(new String(buf));
       
     <#elseif type.to=="Int" || type.to == "BigInt">
-      int i = 0;
-      int length = in.end - in.start;    
-      
-      if (length==0) {
+
+      if ((in.end - in.start) ==0) {
         //empty, not a valid number
         byte[] buf = new byte[in.end - in.start];
         in.buffer.getBytes(in.start, buf, 0, in.end - in.start);  
         throw new NumberFormatException(new String(buf));  
       }
+
+      int readIndex = in.start;
+
+      boolean negative = in.buffer.getByte(readIndex) == '-';
       
-      boolean negative = in.buffer.getByte(0)=='-';
-      
-      if (negative && ++i == length ) {
+      if (negative && ++readIndex == in.end) {
         //only one single '-'
         byte[] buf = new byte[in.end - in.start];
         in.buffer.getBytes(in.start, buf, 0, in.end - in.start);  
@@ -85,8 +85,8 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
       ${type.primeType} result = 0;
       int digit;
       
-      while (i < length) {
-        digit = Character.digit(in.buffer.getByte(i++),radix);
+      while (readIndex < in.end) {
+        digit = Character.digit(in.buffer.getByte(readIndex++),radix);
         //not valid digit.
         if (digit == -1) {
           byte[] buf = new byte[in.end - in.start];
