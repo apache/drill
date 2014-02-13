@@ -34,7 +34,7 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
   private volatile boolean finished = false;
   private int softlimit;
   private int startlimit;
-  private AtomicBoolean overlimit;
+  private AtomicBoolean overlimit = new AtomicBoolean(false);
 
   public UnlimitedRawBatchBuffer(FragmentContext context) {
     softlimit = context.getConfig().getInt(ExecConstants.INCOMING_BUFFER_SIZE);
