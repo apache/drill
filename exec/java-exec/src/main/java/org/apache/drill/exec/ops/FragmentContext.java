@@ -52,7 +52,7 @@ public class FragmentContext implements Closeable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FragmentContext.class);
 
 
-  private Map<DrillbitEndpoint, DataTunnel> tunnels = Maps.newHashMap();
+  private Map<FragmentHandle, DataTunnel> tunnels = Maps.newHashMap();
 
   private final DrillbitContext context;
   private final UserClientConnection connection;
@@ -154,10 +154,10 @@ public class FragmentContext implements Closeable {
   }
 
   public DataTunnel getDataTunnel(DrillbitEndpoint endpoint, FragmentHandle remoteHandle) {
-    DataTunnel tunnel = tunnels.get(endpoint);
+    DataTunnel tunnel = tunnels.get(remoteHandle);
     if (tunnel == null) {
       tunnel = context.getDataConnectionsPool().getTunnel(endpoint, remoteHandle);
-      tunnels.put(endpoint, tunnel);
+      tunnels.put(remoteHandle, tunnel);
     }
     return tunnel;
   }
@@ -165,8 +165,8 @@ public class FragmentContext implements Closeable {
   /**
    * Add a new thread to this fragment's context. This thread will likely run for the life of the fragment but should be
    * terminated when the fragment completes. When the fragment completes, the threads will be interrupted.
-   * 
-   * @param runnable
+   *
+   * @param thread
    */
   public void addDaemonThread(Thread thread) {
     daemonThreads.add(thread);
