@@ -136,10 +136,10 @@ public class LocalSyncableFileSystem extends FileSystem {
 
   public class LocalInputStream extends InputStream implements Seekable, PositionedReadable {
 
-    private FileInputStream input;
+    private BufferedInputStream input;
 
     public LocalInputStream(Path path)  throws IOException {
-      input = new FileInputStream(path.toString());
+      input = new BufferedInputStream(new FileInputStream(path.toString()), 1024*1024);
     }
 
     @Override
