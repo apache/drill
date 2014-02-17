@@ -27,7 +27,6 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.physical.OperatorCost;
-import org.apache.drill.exec.physical.ReadEntry;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.Size;
@@ -75,7 +74,7 @@ public class MockGroupScanPOP extends AbstractGroupScan {
     return readEntries;
   }
   
-  public static class MockScanEntry implements ReadEntry {
+  public static class MockScanEntry{
 
     private final int records;
     private final MockColumn[] types;
@@ -93,7 +92,7 @@ public class MockGroupScanPOP extends AbstractGroupScan {
       this.recordSize = size;
     }
 
-    @Override
+    @JsonIgnore
     public OperatorCost getCost() {
       return new OperatorCost(1, 2, 1, 1);
     }
@@ -106,7 +105,7 @@ public class MockGroupScanPOP extends AbstractGroupScan {
       return types;
     }
 
-    @Override
+    @JsonIgnore
     public Size getSize() {
       return new Size(records, recordSize);
     }

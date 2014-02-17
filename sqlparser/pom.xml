@@ -31,30 +31,10 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.drill</groupId>
-      <artifactId>storage-hive</artifactId>
-      <version>${project.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.apache.hive</groupId>
-          <artifactId>hive-exec</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
       <groupId>org.apache.drill.exec</groupId>
       <artifactId>drill-java-exec</artifactId>
       <version>${project.version}</version>
     </dependency>
-    <dependency>
-      <groupId>xerces</groupId>
-      <artifactId>xercesImpl</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>xalan</groupId>
-      <artifactId>xalan</artifactId>
-    </dependency>
-
 
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
@@ -72,7 +52,7 @@
     <dependency>
       <groupId>pentaho</groupId>
       <artifactId>mondrian-data-foodmart-json</artifactId>
-      <version>0.2</version>
+      <version>0.3.2</version>
     </dependency>
 
     <dependency>
@@ -89,12 +69,10 @@
     <dependency>
       <groupId>xerces</groupId>
       <artifactId>xercesImpl</artifactId>
-      <version>2.9.1</version>
     </dependency>
     <dependency>
       <groupId>xalan</groupId>
       <artifactId>xalan</artifactId>
-      <version>2.7.1</version>
     </dependency>
   </dependencies>
 
@@ -109,6 +87,7 @@
             <exclude>**/.buildpath</exclude>
             <exclude>**/*.json</exclude>
             <exclude>**/donuts-output-data.txt</exclude>
+            <exclude>**/derby.log</exclude>
           </excludes>
         </configuration>
       </plugin>

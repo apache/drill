@@ -18,37 +18,35 @@
 package org.apache.drill.exec.store.parquet;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import com.codahale.metrics.Histogram;
-import com.codahale.metrics.MetricRegistry;
-import com.codahale.metrics.Timer;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.exceptions.PhysicalOperatorSetupException;
 import org.apache.drill.common.expression.FieldReference;
-import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.logical.data.NamedExpression;
+import org.apache.drill.common.logical.FormatPluginConfig;
+import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.metrics.DrillMetrics;
 import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.physical.OperatorCost;
-import org.apache.drill.exec.physical.ReadEntryFromHDFS;
-import org.apache.drill.exec.physical.ReadEntryWithPath;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.Size;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
-import org.apache.drill.exec.store.AffinityCalculator;
-import org.apache.drill.exec.store.StorageEngineRegistry;
+import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.exec.store.dfs.FileSystemPlugin;
+import org.apache.drill.exec.store.dfs.ReadEntryFromHDFS;
+import org.apache.drill.exec.store.dfs.ReadEntryWithPath;
+import org.apache.drill.exec.store.dfs.easy.FileWork;
+import org.apache.drill.exec.store.schedule.AffinityCreator;
+import org.apache.drill.exec.store.schedule.AssignmentCreator;
+import org.apache.drill.exec.store.schedule.BlockMapBuilder;
+import org.apache.drill.exec.store.schedule.CompleteWork;
+import org.apache.drill.exec.store.schedule.EndpointByteMap;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
@@ -59,16 +57,17 @@ import parquet.hadoop.metadata.ColumnChunkMetaData;
 import parquet.hadoop.metadata.ParquetMetadata;
 import parquet.org.codehaus.jackson.annotate.JsonCreator;
 
+import com.codahale.metrics.Histogram;
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Timer;
 import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
-import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
-
 
 @JsonTypeName("parquet-scan")
 public class ParquetGroupScan extends AbstractGroupScan {
@@ -78,11 +77,18 @@ public class ParquetGroupScan extends AbstractGroupScan {
   static final String ENDPOINT_BYTES_TIMER = MetricRegistry.name(ParquetGroupScan.class, "endpointBytes");
   static final String ASSIGNMENT_TIMER = MetricRegistry.name(ParquetGroupScan.class, "applyAssignments");
   static final String ASSIGNMENT_AFFINITY_HIST = MetricRegistry.name(ParquetGroupScan.class, "assignmentAffinity");
+  
   final Histogram assignmentAffinityStats = metrics.histogram(ASSIGNMENT_AFFINITY_HIST);
 
-  private ArrayListMultimap<Integer, ParquetRowGroupScan.RowGroupReadEntry> mappings;
+  private ListMultimap<Integer, RowGroupInfo> mappings;
   private List<RowGroupInfo> rowGroupInfos;
-  private Stopwatch watch = new Stopwatch();
+  private final List<ReadEntryWithPath> entries;
+  private final Stopwatch watch = new Stopwatch();
+  private final ParquetFormatPlugin formatPlugin;
+  private final ParquetFormatConfig formatConfig;
+  private final FileSystem fs;
+  private final FieldReference ref;
+  private List<EndpointAffinity> endpointAffinities;
 
   private List<SchemaPath> columns;
 
@@ -91,79 +97,87 @@ public class ParquetGroupScan extends AbstractGroupScan {
   }
 
   @JsonProperty("storageengine")
-  public ParquetStorageEngineConfig getEngineConfig() {
-    return this.engineConfig;
+  public ParquetFormatConfig getEngineConfig() {
+    return this.formatConfig;
   }
-
-  private List<ReadEntryWithPath> entries;
-  private long totalBytes;
-  private Collection<DrillbitEndpoint> availableEndpoints;
-  private ParquetStorageEngine storageEngine;
-  private ParquetStorageEngineConfig engineConfig;
-  private FileSystem fs;
-  private final FieldReference ref;
-  private List<EndpointAffinity> endpointAffinities;
 
   @JsonCreator
-  public ParquetGroupScan(@JsonProperty("entries") List<ReadEntryWithPath> entries,
-                          @JsonProperty("storageengine") ParquetStorageEngineConfig storageEngineConfig,
-                          @JacksonInject StorageEngineRegistry engineRegistry,
-                          @JsonProperty("ref") FieldReference ref,
-                          @JsonProperty("columns") List<SchemaPath> columns
-                           )throws IOException, ExecutionSetupException {
+  public ParquetGroupScan( //
+      @JsonProperty("entries") List<ReadEntryWithPath> entries, //
+      @JsonProperty("storage") StoragePluginConfig storageConfig, //
+      @JsonProperty("format") FormatPluginConfig formatConfig, //
+      @JacksonInject StoragePluginRegistry engineRegistry, // 
+      @JsonProperty("ref") FieldReference ref, //
+      @JsonProperty("columns") List<SchemaPath> columns //
+      ) throws IOException, ExecutionSetupException {
     engineRegistry.init(DrillConfig.create());
     this.columns = columns;
-    this.storageEngine = (ParquetStorageEngine) engineRegistry.getEngine(storageEngineConfig);
-    this.availableEndpoints = storageEngine.getContext().getBits();
-    this.fs = storageEngine.getFileSystem();
-    this.engineConfig = storageEngineConfig;
+    if(formatConfig == null) formatConfig = new ParquetFormatConfig();
+    Preconditions.checkNotNull(storageConfig);
+    Preconditions.checkNotNull(formatConfig);
+    this.formatPlugin = (ParquetFormatPlugin) engineRegistry.getFormatPlugin(storageConfig, formatConfig);
+    Preconditions.checkNotNull(formatPlugin);
+    this.fs = formatPlugin.getFileSystem().getUnderlying();
+    this.formatConfig = formatPlugin.getConfig();
     this.entries = entries;
     this.ref = ref;
-    readFooter();
-    calculateEndpointBytes();
+    this.readFooterFromEntries();
+
   }
 
-  public ParquetGroupScan(List<ReadEntryWithPath> entries, //
-                          ParquetStorageEngine storageEngine, // 
-                          FieldReference ref, //
-                          List<SchemaPath> columns) throws IOException {
-    this.storageEngine = storageEngine;
-    this.columns = columns;
-    this.engineConfig = storageEngine.getEngineConfig();
-    this.availableEndpoints = storageEngine.getContext().getBits();
-    this.fs = storageEngine.getFileSystem();
-    this.entries = entries;
+  public ParquetGroupScan(List<FileStatus> files, //
+      ParquetFormatPlugin formatPlugin, //
+      FieldReference ref) //
+      throws IOException {
+    this.formatPlugin = formatPlugin;
+    this.columns = null;
+    this.formatConfig = formatPlugin.getConfig();
+    this.fs = formatPlugin.getFileSystem().getUnderlying();
+    
+    this.entries = Lists.newArrayList();
+    for(FileStatus file : files){
+      entries.add(new ReadEntryWithPath(file.getPath().toString()));
+    }
+    
     this.ref = ref;
-    readFooter();
-    calculateEndpointBytes();
+    readFooter(files);
   }
 
-  private void readFooter() throws IOException {
+  private void readFooterFromEntries()  throws IOException {
+    List<FileStatus> files = Lists.newArrayList();
+    for(ReadEntryWithPath e : entries){
+      files.add(fs.getFileStatus(new Path(e.getPath())));
+    }
+    readFooter(files);
+  }
+  
+  private void readFooter(List<FileStatus> statuses) throws IOException {
     watch.reset();
     watch.start();
     Timer.Context tContext = metrics.timer(READ_FOOTER_TIMER).time();
-    rowGroupInfos = new ArrayList();
+    
+    
+    rowGroupInfos = Lists.newArrayList();
     long start = 0, length = 0;
     ColumnChunkMetaData columnChunkMetaData;
-    for (ReadEntryWithPath readEntryWithPath : entries){
-      Path path = new Path(readEntryWithPath.getPath());
-      List<Footer> footers = ParquetFileReader.readFooters(this.storageEngine.getHadoopConfig(), path);
+    for (FileStatus status : statuses) {
+      List<Footer> footers = ParquetFileReader.readFooters(formatPlugin.getHadoopConfig(), status);
       if (footers.size() == 0) {
-        logger.warn("No footers found");
+        throw new IOException(String.format("Unable to find footer for file %s", status.getPath().getName()));
       }
-//      readEntryWithPath.getPath();
 
       for (Footer footer : footers) {
         int index = 0;
         ParquetMetadata metadata = footer.getParquetMetadata();
-        for (BlockMetaData rowGroup : metadata.getBlocks()){
+        for (BlockMetaData rowGroup : metadata.getBlocks()) {
           // need to grab block information from HDFS
           columnChunkMetaData = rowGroup.getColumns().iterator().next();
           start = columnChunkMetaData.getFirstDataPageOffset();
-          // this field is not being populated correctly, but the column chunks know their sizes, just summing them for now
-          //end = start + rowGroup.getTotalByteSize();
+          // this field is not being populated correctly, but the column chunks know their sizes, just summing them for
+          // now
+          // end = start + rowGroup.getTotalByteSize();
           length = 0;
-          for (ColumnChunkMetaData col : rowGroup.getColumns()){
+          for (ColumnChunkMetaData col : rowGroup.getColumns()) {
             length += col.getTotalSize();
           }
           String filePath = footer.getFile().toUri().getPath();
@@ -179,203 +193,109 @@ public class ParquetGroupScan extends AbstractGroupScan {
     logger.debug("Took {} ms to get row group infos", watch.elapsed(TimeUnit.MILLISECONDS));
   }
 
-  private void calculateEndpointBytes() {
-    Timer.Context tContext = metrics.timer(ENDPOINT_BYTES_TIMER).time();
-    watch.reset();
-    watch.start();
-    AffinityCalculator ac = new AffinityCalculator(fs, availableEndpoints);
-    for (RowGroupInfo e : rowGroupInfos) {
-      ac.setEndpointBytes(e);
-      totalBytes += e.getLength();
-    }
-    watch.stop();
-    tContext.stop();
-    logger.debug("Took {} ms to calculate EndpointBytes", watch.elapsed(TimeUnit.MILLISECONDS));
-  }
-
   @JsonIgnore
   public FileSystem getFileSystem() {
     return this.fs;
   }
 
-  public static class RowGroupInfo extends ReadEntryFromHDFS {
+  public static class RowGroupInfo extends ReadEntryFromHDFS implements CompleteWork, FileWork {
 
-    private HashMap<DrillbitEndpoint,Long> endpointBytes;
-    private long maxBytes;
+    private EndpointByteMap byteMap;
     private int rowGroupIndex;
 
     @JsonCreator
     public RowGroupInfo(@JsonProperty("path") String path, @JsonProperty("start") long start,
-                        @JsonProperty("length") long length, @JsonProperty("rowGroupIndex") int rowGroupIndex) {
+        @JsonProperty("length") long length, @JsonProperty("rowGroupIndex") int rowGroupIndex) {
       super(path, start, length);
       this.rowGroupIndex = rowGroupIndex;
     }
 
-    @Override
-    public OperatorCost getCost() {
-      return new OperatorCost(1, 2, 1, 1);
-    }
-
-    @Override
-    public Size getSize() {
-      // TODO - these values are wrong, I cannot know these until after I read a file
-      return new Size(10, 10);
-    }
-
-    public HashMap<DrillbitEndpoint,Long> getEndpointBytes() {
-      return endpointBytes;
-    }
-
-    public void setEndpointBytes(HashMap<DrillbitEndpoint,Long> endpointBytes) {
-      this.endpointBytes = endpointBytes;
-    }
-
-    public void setMaxBytes(long bytes) {
-      this.maxBytes = bytes;
-    }
-
-    public long getMaxBytes() {
-      return maxBytes;
-    }
-
-    public ParquetRowGroupScan.RowGroupReadEntry getRowGroupReadEntry() {
-      return new ParquetRowGroupScan.RowGroupReadEntry(this.getPath(), this.getStart(), this.getLength(), this.rowGroupIndex);
+    public RowGroupReadEntry getRowGroupReadEntry() {
+      return new RowGroupReadEntry(this.getPath(), this.getStart(), this.getLength(), this.rowGroupIndex);
     }
 
     public int getRowGroupIndex() {
       return this.rowGroupIndex;
     }
-  }
 
-  private class ParquetReadEntryComparator implements Comparator<RowGroupInfo> {
-    public int compare(RowGroupInfo e1, RowGroupInfo e2) {
-      if (e1.getMaxBytes() == e2.getMaxBytes()) return 0;
-      return (e1.getMaxBytes() > e2.getMaxBytes()) ? 1 : -1;
+    @Override
+    public int compareTo(CompleteWork o) {
+      return Long.compare(getTotalBytes(), o.getTotalBytes());
+    }
+
+    @Override
+    public long getTotalBytes() {
+      return this.getLength();
+    }
+
+    @Override
+    public EndpointByteMap getByteMap() {
+      return byteMap;
+    }
+
+    public void setEndpointByteMap(EndpointByteMap byteMap) {
+      this.byteMap = byteMap;
     }
   }
 
   /**
-   *Calculates the affinity each endpoint has for this scan, by adding up the affinity each endpoint has for each
+   * Calculates the affinity each endpoint has for this scan, by adding up the affinity each endpoint has for each
    * rowGroup
+   * 
    * @return a list of EndpointAffinity objects
    */
   @Override
   public List<EndpointAffinity> getOperatorAffinity() {
-    watch.reset();
-    watch.start();
+    
     if (this.endpointAffinities == null) {
-      HashMap<DrillbitEndpoint, Float> affinities = new HashMap<>();
-      for (RowGroupInfo entry : rowGroupInfos) {
-        for (DrillbitEndpoint d : entry.getEndpointBytes().keySet()) {
-          long bytes = entry.getEndpointBytes().get(d);
-          float affinity = (float)bytes / (float)totalBytes;
-          logger.debug("RowGroup: {} Endpoint: {} Bytes: {}", entry.getRowGroupIndex(), d.getAddress(), bytes);
-          if (affinities.keySet().contains(d)) {
-            affinities.put(d, affinities.get(d) + affinity);
-          } else {
-            affinities.put(d, affinity);
-          }
+      BlockMapBuilder bmb = new BlockMapBuilder(fs, formatPlugin.getContext().getBits());
+      try{
+        for (RowGroupInfo rgi : rowGroupInfos) {
+          EndpointByteMap ebm = bmb.getEndpointByteMap(rgi);
+          rgi.setEndpointByteMap(ebm);
         }
+      } catch (IOException e) {
+        logger.warn("Failure while determining operator affinity.", e);
+        return Collections.emptyList();
       }
-      List<EndpointAffinity> affinityList = new LinkedList<>();
-      for (DrillbitEndpoint d : affinities.keySet()) {
-        logger.debug("Endpoint {} has affinity {}", d.getAddress(), affinities.get(d).floatValue());
-        affinityList.add(new EndpointAffinity(d,affinities.get(d).floatValue()));
-      }
-      this.endpointAffinities = affinityList;
+
+      this.endpointAffinities = AffinityCreator.getAffinityMap(rowGroupInfos);
     }
-    watch.stop();
-    logger.debug("Took {} ms to get operator affinity", watch.elapsed(TimeUnit.MILLISECONDS));
     return this.endpointAffinities;
   }
 
-
-  static final double[] ASSIGNMENT_CUTOFFS = {0.99, 0.50, 0.25, 0.00};
-
-  /**
-   *
-   * @param incomingEndpoints
-   */
   @Override
-  public void applyAssignments(List<DrillbitEndpoint> incomingEndpoints) {
-    watch.reset();
-    watch.start();
-    final Timer.Context tcontext = metrics.timer(ASSIGNMENT_TIMER).time();
-    Preconditions.checkArgument(incomingEndpoints.size() <= rowGroupInfos.size(), String.format("Incoming endpoints %d " +
-            "is greater than number of row groups %d", incomingEndpoints.size(), rowGroupInfos.size()));
-    mappings = ArrayListMultimap.create();
-    ArrayList rowGroupList = new ArrayList(rowGroupInfos);
-    List<DrillbitEndpoint> endpointLinkedlist = Lists.newLinkedList(incomingEndpoints);
-    for(double cutoff : ASSIGNMENT_CUTOFFS ){
-      scanAndAssign(mappings, endpointLinkedlist, rowGroupList, cutoff, false);
-    }
-    scanAndAssign(mappings, endpointLinkedlist, rowGroupList, 0.0, true);
-    tcontext.stop();
-    watch.stop();
-    logger.debug("Took {} ms to apply assignments", watch.elapsed(TimeUnit.MILLISECONDS));
-    Preconditions.checkState(rowGroupList.isEmpty(), "All readEntries should be assigned by now, but some are still unassigned");
-    Preconditions.checkState(!rowGroupInfos.isEmpty());
-  }
+  public void applyAssignments(List<DrillbitEndpoint> incomingEndpoints) throws PhysicalOperatorSetupException {
 
-  public int fragmentPointer = 0;
+    this.mappings = AssignmentCreator.getMappings(incomingEndpoints, rowGroupInfos);
 
-  /**
-   *
-   * @param endpointAssignments the mapping between fragment/endpoint and rowGroup
-   * @param endpoints the list of drillbits, ordered by the corresponding fragment
-   * @param rowGroups the list of rowGroups to assign
-   * @param requiredPercentage the percentage of max bytes required to make an assignment
-   * @param assignAll if true, will assign even if no affinity
-   */
-  private void scanAndAssign (Multimap<Integer, ParquetRowGroupScan.RowGroupReadEntry> endpointAssignments, List<DrillbitEndpoint> endpoints,
-                              List<RowGroupInfo> rowGroups, double requiredPercentage, boolean assignAll) {
-    Collections.sort(rowGroups, new ParquetReadEntryComparator());
-    final boolean requireAffinity = requiredPercentage > 0;
-    int maxAssignments = (int) (rowGroups.size() / endpoints.size());
-
-    if (maxAssignments < 1) maxAssignments = 1;
-
-    for(Iterator<RowGroupInfo> iter = rowGroups.iterator(); iter.hasNext();){
-      RowGroupInfo rowGroupInfo = iter.next();
-      for (int i = 0; i < endpoints.size(); i++) {
-        int minorFragmentId = (fragmentPointer + i) % endpoints.size();
-        DrillbitEndpoint currentEndpoint = endpoints.get(minorFragmentId);
-        Map<DrillbitEndpoint, Long> bytesPerEndpoint = rowGroupInfo.getEndpointBytes();
-        boolean haveAffinity = bytesPerEndpoint.containsKey(currentEndpoint) ;
-
-        if (assignAll ||
-                (!bytesPerEndpoint.isEmpty() &&
-                        (!requireAffinity || haveAffinity) &&
-                        (!endpointAssignments.containsKey(minorFragmentId) || endpointAssignments.get(minorFragmentId).size() < maxAssignments) &&
-                        (!requireAffinity || bytesPerEndpoint.get(currentEndpoint) >= rowGroupInfo.getMaxBytes() * requiredPercentage))) {
-
-          endpointAssignments.put(minorFragmentId, rowGroupInfo.getRowGroupReadEntry());
-          logger.debug("Assigned rowGroup {} to minorFragmentId {} endpoint {}", rowGroupInfo.getRowGroupIndex(), minorFragmentId, endpoints.get(minorFragmentId).getAddress());
-          if (bytesPerEndpoint.get(currentEndpoint) != null) {
-            assignmentAffinityStats.update(bytesPerEndpoint.get(currentEndpoint) / rowGroupInfo.getLength());
-          } else {
-            assignmentAffinityStats.update(0);
-          }
-          iter.remove();
-          fragmentPointer = (minorFragmentId + 1) % endpoints.size();
-          break;
-        }
-      }
-
-    }
   }
 
   @Override
   public ParquetRowGroupScan getSpecificScan(int minorFragmentId) {
-    assert minorFragmentId < mappings.size() : String.format("Mappings length [%d] should be longer than minor fragment id [%d] but it isn't.", mappings.size(), minorFragmentId);
-    for (ParquetRowGroupScan.RowGroupReadEntry rg : mappings.get(minorFragmentId)) {
-      logger.debug("minorFragmentId: {} Path: {} RowGroupIndex: {}",minorFragmentId, rg.getPath(),rg.getRowGroupIndex());
-    }
-    Preconditions.checkArgument(!mappings.get(minorFragmentId).isEmpty(), String.format("MinorFragmentId %d has no read entries assigned", minorFragmentId));
-    return new ParquetRowGroupScan(storageEngine, engineConfig, mappings.get(minorFragmentId), ref,
-            columns);
+    assert minorFragmentId < mappings.size() : String.format(
+        "Mappings length [%d] should be longer than minor fragment id [%d] but it isn't.", mappings.size(),
+        minorFragmentId);
+
+    List<RowGroupInfo> rowGroupsForMinor = mappings.get(minorFragmentId);
+
+    Preconditions.checkArgument(!rowGroupsForMinor.isEmpty(),
+        String.format("MinorFragmentId %d has no read entries assigned", minorFragmentId));
+
+    return new ParquetRowGroupScan(formatPlugin, convertToReadEntries(rowGroupsForMinor), ref, columns);
   }
 
+  
+  
+  private List<RowGroupReadEntry> convertToReadEntries(List<RowGroupInfo> rowGroups){
+    List<RowGroupReadEntry> entries = Lists.newArrayList();
+    for (RowGroupInfo rgi : rowGroups) {
+      RowGroupReadEntry rgre = new RowGroupReadEntry(rgi.getPath(), rgi.getStart(), rgi.getLength(),
+          rgi.getRowGroupIndex());
+      entries.add(rgre);
+    }
+    return entries;
+  }
   
   public FieldReference getRef() {
     return ref;
@@ -392,21 +312,21 @@ public class ParquetGroupScan extends AbstractGroupScan {
 
   @Override
   public OperatorCost getCost() {
-    //TODO Figure out how to properly calculate cost
-    return new OperatorCost(1,rowGroupInfos.size(),1,1);
+    // TODO Figure out how to properly calculate cost
+    return new OperatorCost(1, rowGroupInfos.size(), 1, 1);
   }
 
   @Override
   public Size getSize() {
     // TODO - this is wrong, need to populate correctly
-    return new Size(10,10);
+    return new Size(10, 10);
   }
 
   @Override
   @JsonIgnore
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
     Preconditions.checkArgument(children.isEmpty());
-    //TODO return copy of self
+    // TODO return copy of self
     return this;
   }
 

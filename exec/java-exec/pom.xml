@@ -272,7 +272,6 @@
     <plugins>
       <plugin>
         <artifactId>maven-resources-plugin</artifactId>
-        <version>2.6</version>
         <executions>
           <execution>
             <id>copy-resources</id>
@@ -369,18 +368,6 @@
         </executions>
       </plugin>
 
-      <!-- <plugin> -->
-      <!-- <groupId>com.github.igor-petruk.protobuf</groupId> -->
-      <!-- <artifactId>protobuf-maven-plugin</artifactId> -->
-      <!-- <version>0.6.2</version> -->
-      <!-- <executions> -->
-      <!-- <execution> -->
-      <!-- <goals> -->
-      <!-- <goal>run</goal> -->
-      <!-- </goals> -->
-      <!-- </execution> -->
-      <!-- </executions> -->
-      <!-- </plugin> -->
     </plugins>
   </build>
 

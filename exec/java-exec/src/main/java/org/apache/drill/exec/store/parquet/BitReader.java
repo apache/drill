@@ -23,7 +23,7 @@ import org.apache.drill.exec.vector.ValueVector;
 import parquet.column.ColumnDescriptor;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
 
-public final class BitReader extends ColumnReader {
+final class BitReader extends ColumnReader {
 
   private byte currentByte;
   private byte nextByte;

@@ -24,7 +24,6 @@ import net.hydromatic.optiq.tools.RelConversionException;
 import net.hydromatic.optiq.tools.RuleSet;
 import net.hydromatic.optiq.tools.ValidationException;
 
-import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.FunctionRegistry;
 import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.logical.PlanProperties.Generator.ResultMode;
@@ -34,7 +33,7 @@ import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillRuleSets;
 import org.apache.drill.exec.planner.logical.DrillScreenRel;
 import org.apache.drill.exec.planner.logical.DrillStoreRel;
-import org.apache.drill.exec.planner.logical.StorageEngines;
+import org.apache.drill.exec.store.StoragePluginRegistry.DrillSchemaFactory;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.sql.SqlExplain;
 import org.eigenbase.sql.SqlKind;
@@ -42,9 +41,6 @@ import org.eigenbase.sql.SqlLiteral;
 import org.eigenbase.sql.SqlNode;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.parser.SqlParseException;
-
-import com.google.common.base.Charsets;
-import com.google.common.io.Resources;
 
 public class DrillSqlWorker {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillSqlWorker.class);
@@ -55,9 +51,7 @@ public class DrillSqlWorker {
   public DrillSqlWorker(DrillSchemaFactory schemaFactory, FunctionRegistry functionRegistry) throws Exception {
     this.registry = functionRegistry;
     this.planner = Frameworks.getPlanner(ConnectionConfig.Lex.MYSQL, schemaFactory, SqlStdOperatorTable.instance(), new RuleSet[]{DrillRuleSets.DRILL_BASIC_RULES});
-    
   }
-
   
   public LogicalPlan getPlan(String sql) throws SqlParseException, ValidationException, RelConversionException{
     SqlNode sqlNode = planner.parse(sql);
@@ -77,8 +71,6 @@ public class DrillSqlWorker {
         break;
       default:
       }
-
-      
     }
     
     SqlNode validatedNode = planner.validate(sqlNode);
@@ -95,28 +87,6 @@ public class DrillSqlWorker {
     planner.reset();
     return implementor.getPlan();
     
-  }
-  private void x() throws Exception {
-    String sqlAgg = "select a, count(1) from parquet.`/Users/jnadeau/region.parquet` group by a";
-    String sql = "select * from parquet.`/Users/jnadeau/region.parquet`";
-
-    
-    System.out.println(sql);
-    System.out.println(getPlan(sql).toJsonString(DrillConfig.create()));
-    System.out.println("///////////");
-    System.out.println(sqlAgg);
-    System.out.println(getPlan(sqlAgg).toJsonString(DrillConfig.create()));
-  }
-
-  public static void main(String[] args) throws Exception {
-    DrillConfig config = DrillConfig.create();
-    
-    String enginesData = Resources.toString(Resources.getResource("storage-engines.json"), Charsets.UTF_8);
-    StorageEngines engines = config.getMapper().readValue(enginesData, StorageEngines.class);
-    FunctionRegistry fr = new FunctionRegistry(config);
-    DrillSchemaFactory schemaFactory = new DrillSchemaFactory(engines, config);
-    DrillSqlWorker worker = new DrillSqlWorker(schemaFactory, fr);
-    worker.x();
   }
 
   

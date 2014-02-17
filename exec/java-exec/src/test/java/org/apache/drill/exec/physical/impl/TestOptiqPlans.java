@@ -55,7 +55,7 @@ import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.RemoteServiceSet;
-import org.apache.drill.exec.store.StorageEngineRegistry;
+import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarBinaryVector;
 import org.junit.AfterClass;
@@ -304,7 +304,7 @@ public class TestOptiqPlans {
       }
     };
 
-    StorageEngineRegistry reg = new StorageEngineRegistry(bitContext);
+    StoragePluginRegistry reg = new StoragePluginRegistry(bitContext);
 
     PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(),
         CoordinationProtos.DrillbitEndpoint.getDefaultInstance(), reg);

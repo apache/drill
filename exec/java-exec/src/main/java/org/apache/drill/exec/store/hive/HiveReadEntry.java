@@ -17,19 +17,19 @@
  */
 package org.apache.drill.exec.store.hive;
 
-import com.beust.jcommander.internal.Lists;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.List;
+
 import org.apache.drill.exec.physical.OperatorCost;
-import org.apache.drill.exec.physical.ReadEntry;
 import org.apache.drill.exec.physical.base.Size;
 import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.Table;
 
-import java.util.List;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.Lists;
 
-public class HiveReadEntry implements ReadEntry {
+public class HiveReadEntry {
 
   @JsonProperty("table")
   public HiveTable table;
@@ -60,18 +60,5 @@ public class HiveReadEntry implements ReadEntry {
     return partitionsUnwrapped;
   }
 
-  @Override
-  public OperatorCost getCost() {
-    // TODO: need to come up with way to calculate the cost for Hive tables
-    return new OperatorCost(1, 1, 2, 2);
-  }
-
-  @Override
-  public Size getSize() {
-    // TODO: contact the metastore and find the size of the data in table
-    Size size = new Size(1, 1);
-
-    return size;
-  }
 }
 

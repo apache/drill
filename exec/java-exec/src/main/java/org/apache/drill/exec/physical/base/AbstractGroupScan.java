@@ -19,8 +19,6 @@ package org.apache.drill.exec.physical.base;
 
 import java.util.Iterator;
 
-import org.apache.drill.exec.physical.ReadEntry;
-
 import com.google.common.collect.Iterators;
 
 public abstract class AbstractGroupScan extends AbstractBase implements GroupScan {

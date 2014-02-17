@@ -9,16 +9,10 @@
 	graph:[
         {
             @id:1,
-            pop:"json-scan",
-            entries: [
-                {
-                    path : "#{TEST_FILE}"
-                }
-            ],
-            storageengine: {
-                "type": "json",
-                "dfsName": "file:///"
-            }
+            pop:"fs-scan",
+            format: {type: "json"},
+            storage:{type: "file", connection: "file:///"},   
+            files: [ "#{TEST_FILE}" ]
         },
         {
             @id: 2,

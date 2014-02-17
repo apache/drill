@@ -29,7 +29,7 @@ import com.google.common.collect.ImmutableMap;
  */
 public class LogicalPlanBuilder {
   private PlanProperties planProperties;
-  private ImmutableMap.Builder<String, StorageEngineConfig> storageEngines = ImmutableMap.builder();
+  private ImmutableMap.Builder<String, StoragePluginConfig> storageEngines = ImmutableMap.builder();
   private ImmutableList.Builder<LogicalOperator> operators = ImmutableList.builder();
 
   public LogicalPlanBuilder planProperties(PlanProperties planProperties) {
@@ -42,7 +42,7 @@ public class LogicalPlanBuilder {
     return this;
   }
   
-  public LogicalPlanBuilder addStorageEngine(String name, StorageEngineConfig config) {
+  public LogicalPlanBuilder addStorageEngine(String name, StoragePluginConfig config) {
     this.storageEngines.put(name, config);
     return this;
   }

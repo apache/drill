@@ -27,7 +27,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.drill.common.exceptions.DrillConfigurationException;
 import org.apache.drill.common.expression.LogicalExpression;
-import org.apache.drill.common.logical.StorageEngineConfigBase;
+import org.apache.drill.common.logical.FormatPluginConfigBase;
+import org.apache.drill.common.logical.StoragePluginConfigBase;
 import org.apache.drill.common.logical.data.LogicalOperatorBase;
 import org.apache.drill.common.util.PathScanner;
 
@@ -61,13 +62,15 @@ public final class DrillConfig extends NestedConfig{
     SimpleModule deserModule = new SimpleModule("LogicalExpressionDeserializationModule")
       .addDeserializer(LogicalExpression.class, new LogicalExpression.De(this));
     
+    
     mapper.registerModule(deserModule);
     mapper.enable(SerializationFeature.INDENT_OUTPUT);
     mapper.configure(Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
     mapper.configure(JsonGenerator.Feature.QUOTE_FIELD_NAMES, true);
     mapper.configure(Feature.ALLOW_COMMENTS, true);
     mapper.registerSubtypes(LogicalOperatorBase.getSubTypes(this));
-    mapper.registerSubtypes(StorageEngineConfigBase.getSubTypes(this));
+    mapper.registerSubtypes(StoragePluginConfigBase.getSubTypes(this));
+    mapper.registerSubtypes(FormatPluginConfigBase.getSubTypes(this));
     
     RuntimeMXBean bean = ManagementFactory.getRuntimeMXBean();
     this.startupArguments = ImmutableList.copyOf(bean.getInputArguments());

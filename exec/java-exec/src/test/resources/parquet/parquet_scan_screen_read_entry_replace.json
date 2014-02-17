@@ -8,10 +8,10 @@
     }
   },
   storage:{
-    "parquet" :
+    "fs" :
       {
-        "type":"parquet",
-        "dfsName" : "file:///"
+        "type":"file",
+        "connection" : "file:///"
       }
   },
   query:[
@@ -19,10 +19,11 @@
       @id:"1",
       op:"scan",
       memo:"initial_scan",
-      storageengine:"parquet",
-      selection: [
-        &REPLACED_IN_PARQUET_TEST&
-      ]
+      storageengine:"fs",
+      selection: {
+        format: {type: "parquet"},
+        files: [&REPLACED_IN_PARQUET_TEST&]
+      }
     },
     {
       @id:"2",

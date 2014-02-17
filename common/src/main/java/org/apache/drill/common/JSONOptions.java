@@ -19,6 +19,7 @@ package org.apache.drill.common;
 
 import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 
 import org.apache.drill.common.JSONOptions.De;
 import org.apache.drill.common.JSONOptions.Se;
@@ -87,8 +88,9 @@ public class JSONOptions {
   @SuppressWarnings("unchecked")
   public <T> T getListWith(ObjectMapper mapper, TypeReference<T> t) throws IOException {
     if(opaque != null){
-      ParameterizedType pt = (ParameterizedType) t.getType();
-      if ( pt.getRawType().equals(opaque.getClass())){
+      Type c = t.getType();
+      if(c instanceof ParameterizedType) c = ((ParameterizedType)c).getRawType();
+      if ( c.equals(opaque.getClass())){
         return (T) opaque;
       }else{
         throw new IOException(String.format("Attmpted to retrieve a list with type of %s.  However, the JSON options carried an opaque value of type %s.", t.getType(), opaque.getClass().getName()));

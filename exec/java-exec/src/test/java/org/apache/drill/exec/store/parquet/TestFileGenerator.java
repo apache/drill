@@ -20,7 +20,6 @@ package org.apache.drill.exec.store.parquet;
 import static parquet.column.Encoding.PLAIN;
 
 import java.util.HashMap;
-import java.util.Map;
 
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.store.ByteArrayUtil;
@@ -58,84 +57,60 @@ public class TestFileGenerator {
   static final Object[] binVals = { varLen1, varLen2, varLen3 };
   static final Object[] bin2Vals = { varLen3, varLen2, varLen1 };
 
-  static class FieldInfo {
-
-    String parquetType;
-    String name;
-    int bitLength;
-    int numberOfPages;
-    Object[] values;
-    TypeProtos.MinorType type;
-
-    FieldInfo(int recordsPerRowGroup, String parquetType, String name, int bitLength, Object[] values, TypeProtos.MinorType type) {
-      this.parquetType = parquetType;
-      this.name = name;
-      this.bitLength = bitLength;
-      this.numberOfPages = Math.max(1, (int) Math.ceil( ((long) recordsPerRowGroup) * bitLength / 8.0 / bytesPerPage));
-      this.values = values;
-      // generator is designed to use 3 values
-      assert values.length == 3;
-      this.type = type;
-    }
+  static void populateFieldInfoMap(ParquetTestProperties props){
+    props.fields.put("integer", new FieldInfo("int32", "integer", 32, intVals, TypeProtos.MinorType.INT, props));
+    props.fields.put("bigInt", new FieldInfo("int64", "bigInt", 64, longVals, TypeProtos.MinorType.BIGINT, props));
+    props.fields.put("f", new FieldInfo("float", "f", 32, floatVals, TypeProtos.MinorType.FLOAT4, props));
+    props.fields.put("d", new FieldInfo("double", "d", 64, doubleVals, TypeProtos.MinorType.FLOAT8, props));
+    props.fields.put("b", new FieldInfo("boolean", "b", 1, boolVals, TypeProtos.MinorType.BIT, props));
+    props.fields.put("bin", new FieldInfo("binary", "bin", -1, binVals, TypeProtos.MinorType.VARBINARY, props));
+    props.fields.put("bin2", new FieldInfo("binary", "bin2", -1, bin2Vals, TypeProtos.MinorType.VARBINARY, props));
   }
 
-  private static class WrapAroundCounter {
-
-    int maxVal;
-    int val;
-
-    public WrapAroundCounter(int maxVal) {
-      this.maxVal = maxVal;
-    }
-
-    public int increment() {
-      val++;
-      if (val > maxVal) {
-        val = 0;
-      }
-      return val;
-    }
-
-    public void reset() {
-      val = 0;
-    }
-
+  static void populatePigTPCHCustomerFields(ParquetTestProperties props){
+    // all of the data in the fieldInfo constructors doesn't matter because the file is generated outside the test
+    props.fields.put("C_CUSTKEY", new FieldInfo("int32", "integer", 32, intVals, TypeProtos.MinorType.INT, props));
+    props.fields.put("C_NATIONKEY", new FieldInfo("int64", "bigInt", 64, longVals, TypeProtos.MinorType.BIGINT, props));
+    props.fields.put("C_ACCTBAL", new FieldInfo("float", "f", 32, floatVals, TypeProtos.MinorType.FLOAT4, props));
+    props.fields.put("C_NAME", new FieldInfo("double", "d", 64, doubleVals, TypeProtos.MinorType.FLOAT8, props));
+    props.fields.put("C_ADDRESS", new FieldInfo("boolean", "b", 1, boolVals, TypeProtos.MinorType.BIT, props));
+    props.fields.put("C_PHONE", new FieldInfo("binary", "bin", -1, binVals, TypeProtos.MinorType.VARBINARY, props));
+    props.fields.put("C_MKTSEGMENT", new FieldInfo("binary", "bin2", -1, bin2Vals, TypeProtos.MinorType.VARBINARY, props));
+    props.fields.put("C_COMMENT", new FieldInfo("binary", "bin2", -1, bin2Vals, TypeProtos.MinorType.VARBINARY, props));
   }
 
-  public static HashMap<String, FieldInfo> getFieldMap(int recordsPerRowGroup) {
-    HashMap<String, FieldInfo> fields = new HashMap<>();
-    fields.put("integer", new FieldInfo(recordsPerRowGroup, "int32", "integer", 32, intVals, TypeProtos.MinorType.INT));
-    fields.put("bigInt", new FieldInfo(recordsPerRowGroup, "int64", "bigInt", 64, longVals, TypeProtos.MinorType.BIGINT));
-    fields.put("f", new FieldInfo(recordsPerRowGroup, "float", "f", 32, floatVals, TypeProtos.MinorType.FLOAT4));
-    fields.put("d", new FieldInfo(recordsPerRowGroup, "double", "d", 64, doubleVals, TypeProtos.MinorType.FLOAT8));
-    fields.put("b", new FieldInfo(recordsPerRowGroup, "boolean", "b", 1, boolVals, TypeProtos.MinorType.BIT));
-    fields.put("bin", new FieldInfo(recordsPerRowGroup, "binary", "bin", -1, binVals, TypeProtos.MinorType.VARBINARY));
-    fields.put("bin2", new FieldInfo(recordsPerRowGroup, "binary", "bin2", -1, bin2Vals, TypeProtos.MinorType.VARBINARY));
-    return fields;
+  static void populatePigTPCHSupplierFields(ParquetTestProperties props){
+    // all of the data in the fieldInfo constructors doesn't matter because the file is generated outside the test
+    props.fields.put("S_SUPPKEY", new FieldInfo("int32", "integer", 32, intVals, TypeProtos.MinorType.INT, props));
+    props.fields.put("S_NATIONKEY", new FieldInfo("int64", "bigInt", 64, longVals, TypeProtos.MinorType.BIGINT, props));
+    props.fields.put("S_ACCTBAL", new FieldInfo("float", "f", 32, floatVals, TypeProtos.MinorType.FLOAT4, props));
+    props.fields.put("S_NAME", new FieldInfo("double", "d", 64, doubleVals, TypeProtos.MinorType.FLOAT8, props));
+    props.fields.put("S_ADDRESS", new FieldInfo("boolean", "b", 1, boolVals, TypeProtos.MinorType.BIT, props));
+    props.fields.put("S_PHONE", new FieldInfo("binary", "bin", -1, binVals, TypeProtos.MinorType.VARBINARY, props));
+    props.fields.put("S_COMMENT", new FieldInfo("binary", "bin2", -1, bin2Vals, TypeProtos.MinorType.VARBINARY, props));
   }
 
-  public static void generateParquetFile(String filename, int numberRowGroups, int recordsPerRowGroup) throws Exception {
-    final Map<String, FieldInfo> fields = getFieldMap(recordsPerRowGroup);
+  public static void generateParquetFile(String filename, ParquetTestProperties props) throws Exception {
 
     int currentBooleanByte = 0;
     WrapAroundCounter booleanBitCounter = new WrapAroundCounter(7);
-    
+
     Configuration configuration = new Configuration();
-    configuration.set(ParquetSchemaProvider.HADOOP_DEFAULT_NAME, "file:///");
-    // "message m { required int32 integer; required int64 integer64; required boolean b; required float f; required double d;}"
+    configuration.set("fs.default.name", "file:///");
+    //"message m { required int32 integer; required int64 integer64; required boolean b; required float f; required double d;}"
 
     FileSystem fs = FileSystem.get(configuration);
     Path path = new Path(filename);
-    if (fs.exists(path))
-      fs.delete(path, false);
+    if (fs.exists(path)) fs.delete(path, false);
+
 
     String messageSchema = "message m {";
-    for (FieldInfo fieldInfo : fields.values()) {
+    for (FieldInfo fieldInfo : props.fields.values()) {
       messageSchema += " required " + fieldInfo.parquetType + " " + fieldInfo.name + ";";
     }
     // remove the last semicolon, java really needs a join method for strings...
     // TODO - nvm apparently it requires a semicolon after every field decl, might want to file a bug
-    // messageSchema = messageSchema.substring(schemaType, messageSchema.length() - 1);
+    //messageSchema = messageSchema.substring(schemaType, messageSchema.length() - 1);
     messageSchema += "}";
 
     MessageType schema = MessageTypeParser.parseMessageType(messageSchema);
@@ -145,25 +120,25 @@ public class TestFileGenerator {
     w.start();
     HashMap<String, Integer> columnValuesWritten = new HashMap();
     int valsWritten;
-    for (int k = 0; k < numberRowGroups; k++) {
+    for (int k = 0; k < props.numberRowGroups; k++){
       w.startBlock(1);
       currentBooleanByte = 0;
       booleanBitCounter.reset();
 
-      for (FieldInfo fieldInfo : fields.values()) {
+      for (FieldInfo fieldInfo : props.fields.values()) {
 
-        if (!columnValuesWritten.containsKey(fieldInfo.name)) {
+        if ( ! columnValuesWritten.containsKey(fieldInfo.name)){
           columnValuesWritten.put((String) fieldInfo.name, 0);
           valsWritten = 0;
         } else {
           valsWritten = columnValuesWritten.get(fieldInfo.name);
         }
 
-        String[] path1 = { (String) fieldInfo.name };
+        String[] path1 = {(String) fieldInfo.name};
         ColumnDescriptor c1 = schema.getColumnDescription(path1);
 
-        w.startColumn(c1, recordsPerRowGroup, codec);
-        int valsPerPage = (int) Math.ceil(recordsPerRowGroup / (float) fieldInfo.numberOfPages);
+        w.startColumn(c1, props.recordsPerRowGroup, codec);
+        int valsPerPage = (int) Math.ceil(props.recordsPerRowGroup / (float) fieldInfo.numberOfPages);
         byte[] bytes;
         // for variable length binary fields
         int bytesNeededToEncodeLength = 4;
@@ -171,21 +146,18 @@ public class TestFileGenerator {
           bytes = new byte[(int) Math.ceil(valsPerPage * (int) fieldInfo.bitLength / 8.0)];
         } else {
           // the twelve at the end is to account for storing a 4 byte length with each value
-          int totalValLength = ((byte[]) fieldInfo.values[0]).length + ((byte[]) fieldInfo.values[1]).length
-              + ((byte[]) fieldInfo.values[2]).length + 3 * bytesNeededToEncodeLength;
+          int totalValLength = ((byte[]) fieldInfo.values[0]).length + ((byte[]) fieldInfo.values[1]).length + ((byte[]) fieldInfo.values[2]).length + 3 * bytesNeededToEncodeLength;
           // used for the case where there is a number of values in this row group that is not divisible by 3
           int leftOverBytes = 0;
-          if (valsPerPage % 3 > 0)
-            leftOverBytes += ((byte[]) fieldInfo.values[1]).length + 4;
-          if (valsPerPage % 3 > 1)
-            leftOverBytes += ((byte[]) fieldInfo.values[2]).length + 4;
+          if ( valsPerPage % 3 > 0 ) leftOverBytes += ((byte[])fieldInfo.values[1]).length + bytesNeededToEncodeLength;
+          if ( valsPerPage % 3 > 1 ) leftOverBytes += ((byte[])fieldInfo.values[2]).length + bytesNeededToEncodeLength;
           bytes = new byte[valsPerPage / 3 * totalValLength + leftOverBytes];
         }
         int bytesPerPage = (int) (valsPerPage * ((int) fieldInfo.bitLength / 8.0));
         int bytesWritten = 0;
         for (int z = 0; z < (int) fieldInfo.numberOfPages; z++, bytesWritten = 0) {
           for (int i = 0; i < valsPerPage; i++) {
-            // System.out.print(i + ", " + (i % 25 == 0 ? "\n gen " + fieldInfo.name + ": " : ""));
+            //System.out.print(i + ", " + (i % 25 == 0 ? "\n gen " + fieldInfo.name + ": " : ""));
             if (fieldInfo.values[0] instanceof Boolean) {
 
               bytes[currentBooleanByte] |= bitFields[booleanBitCounter.val]
@@ -195,25 +167,23 @@ public class TestFileGenerator {
                 currentBooleanByte++;
               }
               valsWritten++;
-              if (currentBooleanByte > bytesPerPage)
-                break;
+              if (currentBooleanByte > bytesPerPage) break;
             } else {
-              if (fieldInfo.values[valsWritten % 3] instanceof byte[]) {
-                System.arraycopy(ByteArrayUtil.toByta(((byte[]) fieldInfo.values[valsWritten % 3]).length), 0, bytes,
-                    bytesWritten, bytesNeededToEncodeLength);
-                System.arraycopy(fieldInfo.values[valsWritten % 3], 0, bytes, bytesWritten + bytesNeededToEncodeLength,
-                    ((byte[]) fieldInfo.values[valsWritten % 3]).length);
-                bytesWritten += ((byte[]) fieldInfo.values[valsWritten % 3]).length + bytesNeededToEncodeLength;
-              } else {
-                System.arraycopy(ByteArrayUtil.toByta(fieldInfo.values[valsWritten % 3]), 0, bytes, i
-                    * ((int) fieldInfo.bitLength / 8), (int) fieldInfo.bitLength / 8);
+              if (fieldInfo.values[valsWritten % 3] instanceof byte[]){
+                System.arraycopy(ByteArrayUtil.toByta(((byte[])fieldInfo.values[valsWritten % 3]).length),
+                    0, bytes, bytesWritten, bytesNeededToEncodeLength);
+                System.arraycopy(fieldInfo.values[valsWritten % 3],
+                    0, bytes, bytesWritten + bytesNeededToEncodeLength, ((byte[])fieldInfo.values[valsWritten % 3]).length);
+                bytesWritten += ((byte[])fieldInfo.values[valsWritten % 3]).length + bytesNeededToEncodeLength;
+              } else{
+                System.arraycopy( ByteArrayUtil.toByta(fieldInfo.values[valsWritten % 3]),
+                    0, bytes, i * ((int) fieldInfo.bitLength / 8), (int) fieldInfo.bitLength / 8);
               }
               valsWritten++;
             }
 
           }
-          w.writeDataPage((int) (recordsPerRowGroup / (int) fieldInfo.numberOfPages), bytes.length,
-              BytesInput.from(bytes), PLAIN, PLAIN, PLAIN);
+          w.writeDataPage((int) (props.recordsPerRowGroup / (int) fieldInfo.numberOfPages), bytes.length, BytesInput.from(bytes), PLAIN, PLAIN, PLAIN);
           currentBooleanByte = 0;
         }
         w.endColumn();

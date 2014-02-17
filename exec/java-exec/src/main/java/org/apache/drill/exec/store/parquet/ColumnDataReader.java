@@ -28,7 +28,7 @@ import parquet.bytes.BytesInput;
 import parquet.format.PageHeader;
 import parquet.format.Util;
 
-public class ColumnDataReader {
+class ColumnDataReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ColumnDataReader.class);
   
   private final long endPosition;

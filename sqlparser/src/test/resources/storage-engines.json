@@ -1,34 +1,20 @@
 {
   "storage":{
-    "parquet-local" :
-      {
-        "type":"parquet",
-        "dfsName" : "file:///"
-      },
-    "parquet-cp" :
-      {
-        "type":"parquet",
-        "dfsName" : "classpath:///"
-      },
-    "jsonl" :
-      {
-        "type":"json",
-        "dfsName" : "file:///"
-      },
-    "json-cp" :
-      {
-        "type":"json",
-        "dfsName" : "classpath:///"
-      },
-    "parquet" :
-      {
-        "type":"parquet",
-        "dfsName" : "file:///"
-      },
-    "hive-derby" :
-      {
-        "type":"hive",
-        "config" :
+    dfs: {
+      type: "file",
+      connection: "file:///",
+      workspaces: {
+        default: "/",
+        home: "/"
+      }
+    },
+    cp: {
+      type: "file",
+      connection: "classpath:///"
+    },
+    hive : {
+        type:"hive",
+        config :
           {
             "hive.metastore.uris" : "",
             "javax.jdo.option.ConnectionURL" : "jdbc:derby:;databaseName=../sample-data/drill_hive_db;create=true",
@@ -39,4 +25,3 @@
       }
   }
 }
-

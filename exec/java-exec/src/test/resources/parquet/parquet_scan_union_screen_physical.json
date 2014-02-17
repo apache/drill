@@ -14,9 +14,9 @@
         path : "/tmp/parquet_test_file_many_types"
     }
     ],
-    storageengine:{
-                         "type":"parquet",
-                         "dfsName" : "file:///"
+    storage:{
+                         "type":"file",
+                         "connection" : "file:///"
                    }
   },
   {

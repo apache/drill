@@ -20,20 +20,22 @@ package org.apache.drill.exec.store.mock;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import net.hydromatic.optiq.Schema;
+import net.hydromatic.optiq.SchemaPlus;
+
 import org.apache.drill.common.logical.data.Scan;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.store.AbstractStorageEngine;
-import org.apache.drill.exec.store.SchemaProvider;
+import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.mock.MockGroupScanPOP.MockScanEntry;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class MockStorageEngine extends AbstractStorageEngine {
+public class MockStorageEngine extends AbstractStoragePlugin {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MockStorageEngine.class);
 
-  public MockStorageEngine(MockStorageEngineConfig configuration, DrillbitContext context) {
+  public MockStorageEngine(MockStorageEngineConfig configuration, DrillbitContext context, String name) {
 
   }
 
@@ -48,8 +50,9 @@ public class MockStorageEngine extends AbstractStorageEngine {
   }
 
   @Override
-  public SchemaProvider getSchemaProvider() {
-    throw new UnsupportedOperationException();
+  public Schema createAndAddSchema(SchemaPlus parent) {
+    return null;
   }
+
 
 }

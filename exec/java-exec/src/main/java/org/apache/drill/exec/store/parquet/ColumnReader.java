@@ -29,7 +29,7 @@ import parquet.schema.PrimitiveType;
 
 import java.io.IOException;
 
-public abstract class ColumnReader {
+abstract class ColumnReader {
   
   final ParquetRecordReader parentReader;
   

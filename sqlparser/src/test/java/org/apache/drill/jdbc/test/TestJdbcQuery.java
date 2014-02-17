@@ -17,6 +17,7 @@
  */
 package org.apache.drill.jdbc.test;
 
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -26,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.jdbc.Driver;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
@@ -38,34 +40,59 @@ public class TestJdbcQuery {
   static final boolean IS_DEBUG = java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments().toString().indexOf("-agentlib:jdwp") > 0;
 
   // Set a timeout unless we're debugging.
-  @Rule public TestRule TIMEOUT = TestTools.getTimeoutRule();
+  @Rule public TestRule TIMEOUT = TestTools.getTimeoutRule(20000);
 
+  private static final String WORKING_PATH;
   static{
     Driver.load();
+    WORKING_PATH = Paths.get("").toAbsolutePath().toString();
   }
+  
+  @Test
+  public void testHiveRead() throws Exception{
+    testQuery("select * from hive.kv_text");
+  }
+
+  @Test
+  @Ignore // something not working here.
+  public void testHiveReadWithDb() throws Exception{
+    testQuery("select * from hive.`default`.kv_text");
+  }
+
+  @Test
+  public void testJsonQuery() throws Exception{
+    testQuery("select * from cp.`employee.json`");
+  }
+
   
   @Test 
   public void testCast() throws Exception{
-    testQuery("select R_REGIONKEY, cast(R_NAME as varchar(15)) as region, cast(R_COMMENT as varchar(255)) as comment from parquet.`/Users/jnadeau/region.parquet`");    
+    testQuery(String.format("select R_REGIONKEY, cast(R_NAME as varchar(15)) as region, cast(R_COMMENT as varchar(255)) as comment from dfs.`%s/../sample-data/region.parquet`", WORKING_PATH));    
   }
+
+  @Test 
+  public void testWorkspace() throws Exception{
+    testQuery(String.format("select * from dfs.home.`%s/../sample-data/region.parquet`", WORKING_PATH));
+  }
+
   @Test 
   public void testWildcard() throws Exception{
-    testQuery("select * from parquet.`/Users/jnadeau/region.parquet`");
+    testQuery(String.format("select * from dfs.`%s/../sample-data/region.parquet`", WORKING_PATH));
   }
   
   @Test 
   public void testLogicalExplain() throws Exception{
-    testQuery("EXPLAIN PLAN WITHOUT IMPLEMENTATION FOR select * from parquet.`/Users/jnadeau/region.parquet`");
+    testQuery(String.format("EXPLAIN PLAN WITHOUT IMPLEMENTATION FOR select * from dfs.`%s/../sample-data/region.parquet`", WORKING_PATH));
   }
 
   @Test 
   public void testPhysicalExplain() throws Exception{
-    testQuery("EXPLAIN PLAN FOR select * from parquet.`/Users/jnadeau/region.parquet`");
+    testQuery(String.format("EXPLAIN PLAN FOR select * from dfs.`%s/../sample-data/region.parquet`", WORKING_PATH));
   }
   
   @Test 
   public void checkUnknownColumn() throws Exception{
-    testQuery("select unknownColumn from parquet.`/Users/jnadeau/region.parquet`");
+    testQuery(String.format("SELECT unknownColumn FROM dfs.`%s/../sample-data/region.parquet`", WORKING_PATH));
   }
 
   

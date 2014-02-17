@@ -23,7 +23,7 @@ import org.apache.drill.exec.vector.ValueVector;
 import parquet.column.ColumnDescriptor;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
 
-public class NullableFixedByteAlignedReader extends NullableColumnReader {
+class NullableFixedByteAlignedReader extends NullableColumnReader {
 
   private byte[] bytes;
 

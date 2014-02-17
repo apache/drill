@@ -25,7 +25,7 @@ import java.util.Map;
 
 import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.logical.PlanProperties;
-import org.apache.drill.common.logical.StorageEngineConfig;
+import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.logical.data.CollapsingAggregate;
 import org.apache.drill.common.logical.data.Filter;
 import org.apache.drill.common.logical.data.Join;
@@ -178,8 +178,8 @@ public class JdbcTest {
     Assert.assertEquals("na", planProperties.generator.info);
     Assert.assertEquals(1, planProperties.version);
     Assert.assertEquals(PlanProperties.PlanType.APACHE_DRILL_LOGICAL, planProperties.type);
-    Map<String, StorageEngineConfig> seConfigs = plan.getStorageEngines();
-    StorageEngineConfig config = seConfigs.get("donuts-json");
+    Map<String, StoragePluginConfig> seConfigs = plan.getStorageEngines();
+    StoragePluginConfig config = seConfigs.get("donuts-json");
 //    Assert.assertTrue(config != null && config instanceof ClasspathRSE.ClasspathRSEConfig);
     config = seConfigs.get("queue");
 //    Assert.assertTrue(config != null && config instanceof QueueRSE.QueueRSEConfig);
@@ -234,8 +234,8 @@ public class JdbcTest {
     Assert.assertEquals("na", planProperties.generator.info);
     Assert.assertEquals(1, planProperties.version);
     Assert.assertEquals(PlanProperties.PlanType.APACHE_DRILL_LOGICAL, planProperties.type);
-    Map<String, StorageEngineConfig> seConfigs = plan.getStorageEngines();
-    StorageEngineConfig config = seConfigs.get("donuts-json");
+    Map<String, StoragePluginConfig> seConfigs = plan.getStorageEngines();
+    StoragePluginConfig config = seConfigs.get("donuts-json");
 //    Assert.assertTrue(config != null && config instanceof ClasspathRSE.ClasspathRSEConfig);
     config = seConfigs.get("queue");
 //    Assert.assertTrue(config != null && config instanceof QueueRSE.QueueRSEConfig);

@@ -35,7 +35,7 @@ import java.io.IOException;
  * because page/batch boundaries that do not land on byte boundaries require shifting of all of the values
  * in the next batch.
  */
-public final class NullableBitReader extends ColumnReader {
+final class NullableBitReader extends ColumnReader {
 
   NullableBitReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
                     boolean fixedLength, ValueVector v) throws ExecutionSetupException {

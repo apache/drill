@@ -13,12 +13,11 @@
     entries : [ {
       path : "/tmp/test.parquet"
     } ],
-    storageengine : {
-      type : "parquet",
-      dfsName : "file:///"
+    storage : {
+      type : "file",
+      connection : "file:///"
     },
-    columns: [ "integer", "bigInt", "bin", "bin2"],
-    fragmentPointer : 0
+    columns: [ "integer", "bigInt", "bin", "bin2"]
   }, {
     pop : "screen",
     @id : 2,

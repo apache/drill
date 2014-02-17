@@ -31,7 +31,7 @@ import parquet.format.PageHeader;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
 
 // class to keep track of the read position of variable length columns
-public final class PageReadStatus {
+final class PageReadStatus {
 
   private final ColumnReader parentColumnReader;
   private final ColumnDataReader dataReader;
@@ -90,9 +90,9 @@ public final class PageReadStatus {
         bytesIn,
         pageHeader.data_page_header.num_values,
         pageHeader.uncompressed_page_size,
-        ParquetStorageEngine.parquetMetadataConverter.getEncoding(pageHeader.data_page_header.repetition_level_encoding),
-        ParquetStorageEngine.parquetMetadataConverter.getEncoding(pageHeader.data_page_header.definition_level_encoding),
-        ParquetStorageEngine.parquetMetadataConverter.getEncoding(pageHeader.data_page_header.encoding)
+        ParquetFormatPlugin.parquetMetadataConverter.getEncoding(pageHeader.data_page_header.repetition_level_encoding),
+        ParquetFormatPlugin.parquetMetadataConverter.getEncoding(pageHeader.data_page_header.definition_level_encoding),
+        ParquetFormatPlugin.parquetMetadataConverter.getEncoding(pageHeader.data_page_header.encoding)
     );
 
     byteLength = pageHeader.uncompressed_page_size;

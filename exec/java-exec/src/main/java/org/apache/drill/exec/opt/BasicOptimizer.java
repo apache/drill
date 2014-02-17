@@ -30,9 +30,19 @@ import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.logical.PlanProperties;
-import org.apache.drill.common.logical.StorageEngineConfig;
-import org.apache.drill.common.logical.data.*;
+import org.apache.drill.common.logical.StoragePluginConfig;
+import org.apache.drill.common.logical.data.CollapsingAggregate;
+import org.apache.drill.common.logical.data.Filter;
+import org.apache.drill.common.logical.data.Join;
+import org.apache.drill.common.logical.data.JoinCondition;
+import org.apache.drill.common.logical.data.NamedExpression;
+import org.apache.drill.common.logical.data.Order;
 import org.apache.drill.common.logical.data.Order.Ordering;
+import org.apache.drill.common.logical.data.Project;
+import org.apache.drill.common.logical.data.Scan;
+import org.apache.drill.common.logical.data.Segment;
+import org.apache.drill.common.logical.data.SinkOperator;
+import org.apache.drill.common.logical.data.Store;
 import org.apache.drill.common.logical.data.visitors.AbstractLogicalVisitor;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.DataMode;
@@ -41,13 +51,13 @@ import org.apache.drill.exec.exception.OptimizerException;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.physical.config.Limit;
 import org.apache.drill.exec.physical.config.MergeJoinPOP;
 import org.apache.drill.exec.physical.config.Screen;
 import org.apache.drill.exec.physical.config.SelectionVectorRemover;
 import org.apache.drill.exec.physical.config.Sort;
-import org.apache.drill.exec.physical.config.Limit;
 import org.apache.drill.exec.physical.config.StreamingAggregate;
-import org.apache.drill.exec.store.StorageEngine;
+import org.apache.drill.exec.store.StoragePlugin;
 import org.eigenbase.rel.RelFieldCollation.Direction;
 import org.eigenbase.rel.RelFieldCollation.NullDirection;
 
@@ -192,11 +202,11 @@ public class BasicOptimizer extends Optimizer{
 
     @Override
     public PhysicalOperator visitScan(Scan scan, Object obj) throws OptimizerException {
-      StorageEngineConfig config = logicalPlan.getStorageEngineConfig(scan.getStorageEngine());
+      StoragePluginConfig config = logicalPlan.getStorageEngineConfig(scan.getStorageEngine());
       if(config == null) throw new OptimizerException(String.format("Logical plan referenced the storage engine config %s but the logical plan didn't have that available as a config.", scan.getStorageEngine()));
-      StorageEngine engine;
+      StoragePlugin engine;
       try {
-        engine = context.getStorageEngine(config);
+        engine = context.getStorage().getEngine(config);
         return engine.getPhysicalScan(scan);
       } catch (IOException | ExecutionSetupException e) {
         throw new OptimizerException("Failure while attempting to retrieve storage engine.", e);

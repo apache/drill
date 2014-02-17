@@ -61,13 +61,27 @@ public class ClassPathFileSystem extends FileSystem{
     throw new IOException(ERROR_MSG);
   }
 
+  private String getFileName(Path path){
+    String file = path.toString();
+    if(file.charAt(0) == '/'){
+      file = file.substring(1);
+    }
+    return file;
+  }
+  
   @Override
   public FileStatus getFileStatus(Path arg0) throws IOException {
-    URL url = Resources.getResource(arg0.toString());
+    String file = getFileName(arg0);
+
+    try{      
+    URL url = Resources.getResource(file);
     if(url == null){
       throw new IOException(String.format("Unable to find path %s.", arg0.toString()));
     }
-    return new FileStatus(-1, false, 1, 8096, System.currentTimeMillis(), arg0);
+    return new FileStatus(1, false, 1, 8096, System.currentTimeMillis(), arg0);
+    }catch(RuntimeException e){
+      throw new IOException(String.format("Failure trying to load file %s", arg0), e);
+    }
   }
 
   @Override
@@ -96,7 +110,8 @@ public class ClassPathFileSystem extends FileSystem{
 
   @Override
   public FSDataInputStream open(Path arg0, int arg1) throws IOException {
-    URL url = Resources.getResource(arg0.toString());
+    String file = getFileName(arg0);
+    URL url = Resources.getResource(file);
     if(url == null){
       throw new IOException(String.format("Unable to find path %s.", arg0.getName()));
     }

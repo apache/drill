@@ -9,8 +9,8 @@
   },
   storage : {
     jsonl : {
-      type : "json",
-      dfsName : "file:///"
+      type : "file",
+      connection : "file:///"
     }
   },
   query : [ {
@@ -18,9 +18,7 @@
     @id : 1,
     memo : "initial_scan",
     storageengine : "jsonl",
-    selection : [ {
-      path : "/src/drill/sandbox/prototype/exec/ref/src/test/resources/employees.json"
-    } ],
+    files : [ path : "/src/drill/sandbox/prototype/exec/ref/src/test/resources/employees.json" ],
     ref : "_MAP"
   }, {
     op : "store",

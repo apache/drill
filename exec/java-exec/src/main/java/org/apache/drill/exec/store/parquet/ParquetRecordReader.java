@@ -49,7 +49,7 @@ import parquet.schema.PrimitiveType;
 
 import com.google.common.base.Joiner;
 
-public class ParquetRecordReader implements RecordReader {
+class ParquetRecordReader implements RecordReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetRecordReader.class);
 
   // this value has been inflated to read in multiple value vectors at once, and then break them up into smaller vectors

@@ -103,6 +103,10 @@ public class VarLenBinaryReader {
     do {
       lengthVarFieldsInCurrentRecord = 0;
       for (ColumnReader columnReader : columns) {
+        if (recordsReadInCurrentPass == columnReader.valueVecHolder.getValueVector().getValueCapacity()){
+          rowGroupFinished = true;
+          break;
+        }
         if (columnReader.pageReadStatus.currentPage == null
             || columnReader.pageReadStatus.valuesRead == columnReader.pageReadStatus.currentPage.getValueCount()) {
           columnReader.totalValuesRead += columnReader.pageReadStatus.valuesRead;

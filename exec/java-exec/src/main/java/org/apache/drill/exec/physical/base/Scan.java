@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.physical.base;
 
-import org.apache.drill.exec.physical.ReadEntry;
 
 public interface Scan extends Leaf {
 }

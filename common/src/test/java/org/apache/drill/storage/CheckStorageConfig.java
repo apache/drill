@@ -23,7 +23,7 @@ import java.util.Collection;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.logical.LogicalPlan;
-import org.apache.drill.common.logical.StorageEngineConfig;
+import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.common.util.PathScanner;
 import org.junit.Test;
@@ -37,7 +37,7 @@ public class CheckStorageConfig {
 
   @Test
   public void ensureStorageEnginePickup() {
-    Collection<?> engines = PathScanner.scanForImplementations(StorageEngineConfig.class, Lists.newArrayList("org"));
+    Collection<?> engines = PathScanner.scanForImplementations(StoragePluginConfig.class, Lists.newArrayList("org"));
     assertEquals(engines.size(), 1);
   }
   

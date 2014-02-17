@@ -23,7 +23,7 @@ public interface CommonConstants {
   
   public static final String LOGICAL_OPERATOR_SCAN_PACKAGES = "drill.logical.operator.packages";
   public static final String PHYSICAL_OPERATOR_SCAN_PACKAGES = "drill.physical.operator.packages";
-  public static final String STORAGE_ENGINE_CONFIG_SCAN_PACKAGES = "drill.logical.storage.packages";
+  public static final String STORAGE_PLUGIN_CONFIG_SCAN_PACKAGES = "drill.logical.storage.packages";
   public static final String DRILL_JAR_MARKER_FILE = "drill-module.conf";
   public static final String LOGICAL_FUNCTION_SCAN_PACKAGES = "drill.logical.function.packages";
 }

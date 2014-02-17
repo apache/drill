@@ -26,7 +26,10 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.base.Stopwatch;
+
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.expression.FieldReference;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.physical.impl.ScanBatch;
@@ -38,8 +41,10 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
+import parquet.hadoop.CodecFactoryExposer;
 import parquet.hadoop.ParquetFileReader;
 import parquet.hadoop.metadata.ParquetMetadata;
 
@@ -50,9 +55,12 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
   public RecordBatch getBatch(FragmentContext context, ParquetRowGroupScan rowGroupScan, List<RecordBatch> children) throws ExecutionSetupException {
     Preconditions.checkArgument(children.isEmpty());
     List<RecordReader> readers = Lists.newArrayList();
+    
+    FileSystem fs = rowGroupScan.getStorageEngine().getFileSystem().getUnderlying();
+    
     // keep footers in a map to avoid re-reading them
     Map<String, ParquetMetadata> footers = new HashMap<String, ParquetMetadata>();
-    for(ParquetRowGroupScan.RowGroupReadEntry e : rowGroupScan.getRowGroupReadEntries()){
+    for(RowGroupReadEntry e : rowGroupScan.getRowGroupReadEntries()){
       /*
       Here we could store a map from file names to footers, to prevent re-reading the footer for each row group in a file
       TODO - to prevent reading the footer again in the parquet record reader (it is read earlier in the ParquetStorageEngine)
@@ -63,11 +71,11 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
       try {
         if ( ! footers.containsKey(e.getPath())){
           footers.put(e.getPath(),
-              ParquetFileReader.readFooter( rowGroupScan.getStorageEngine().getFileSystem().getConf(), new Path(e.getPath())));
+              ParquetFileReader.readFooter( fs.getConf(), new Path(e.getPath())));
         }
         readers.add(
             new ParquetRecordReader(
-                context, e.getPath(), e.getRowGroupIndex(), rowGroupScan.getStorageEngine().getFileSystem(),
+                context, e.getPath(), e.getRowGroupIndex(), fs,
                 rowGroupScan.getStorageEngine().getCodecFactoryExposer(),
                 footers.get(e.getPath()),
                 rowGroupScan.getRef(),

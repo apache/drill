@@ -9,25 +9,21 @@
   graph:[
     {
       @id:1,
-      pop:"json-sub-scan",
-      readEntries:[
-        {path: "#{LEFT_FILE}"}
-      ],
-      engineConfig:{
-         "type":"json",
-         "dfsName" : "file:///"
-      }      
+      pop:"fs-sub-scan",
+      format: {type: "json"},
+      storage:{type: "file", connection: "file:///"},   
+      files:[
+        { path: "#{LEFT_FILE}" }
+      ]
     },
     {
       @id:2,
-      pop:"json-sub-scan",
-      readEntries:[
-        {path: "#{RIGHT_FILE}"}
-      ],
-      engineConfig:{
-         "type":"json",
-         "dfsName" : "file:///"
-      }      
+      pop:"fs-sub-scan",
+      format: {type: "json"},
+      storage:{type: "file", connection: "file:///"},   
+      files:[
+        { path: "#{RIGHT_FILE}" }
+      ]
     },
     {
       @id: 3,

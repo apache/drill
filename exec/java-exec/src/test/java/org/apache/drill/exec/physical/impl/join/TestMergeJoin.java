@@ -43,7 +43,7 @@ import org.apache.drill.exec.proto.ExecProtos;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.rpc.user.UserServer;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.store.StorageEngineRegistry;
+import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.vector.ValueVector;
 import org.junit.AfterClass;
 import org.junit.Test;
@@ -119,7 +119,7 @@ public class TestMergeJoin {
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
     }};
 
-    PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(),CoordinationProtos.DrillbitEndpoint.getDefaultInstance(), new StorageEngineRegistry(bitContext));
+    PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(),CoordinationProtos.DrillbitEndpoint.getDefaultInstance(), new StoragePluginRegistry(bitContext));
     PhysicalPlan plan = reader.readPhysicalPlan(
         Files.toString(
             FileUtils.getResourceAsFile("/join/merge_single_batch.json"), Charsets.UTF_8)
@@ -172,7 +172,7 @@ public class TestMergeJoin {
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
     }};
 
-    PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(),CoordinationProtos.DrillbitEndpoint.getDefaultInstance(), new StorageEngineRegistry(bitContext));
+    PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(),CoordinationProtos.DrillbitEndpoint.getDefaultInstance(), new StoragePluginRegistry(bitContext));
     PhysicalPlan plan = reader.readPhysicalPlan(
         Files.toString(
             FileUtils.getResourceAsFile("/join/merge_inner_single_batch.json"), Charsets.UTF_8)
@@ -225,7 +225,7 @@ public class TestMergeJoin {
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
     }};
 
-    PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(),CoordinationProtos.DrillbitEndpoint.getDefaultInstance(), new StorageEngineRegistry(bitContext));
+    PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(),CoordinationProtos.DrillbitEndpoint.getDefaultInstance(), new StoragePluginRegistry(bitContext));
     PhysicalPlan plan = reader.readPhysicalPlan(
         Files.toString(
             FileUtils.getResourceAsFile("/join/merge_multi_batch.json"), Charsets.UTF_8)

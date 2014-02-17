@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.physical.base;
 
-import org.apache.drill.exec.physical.ReadEntry;
 
 /**
  * A SubScan operator represents the data scanned by a particular major/minor fragment.  This is in contrast to

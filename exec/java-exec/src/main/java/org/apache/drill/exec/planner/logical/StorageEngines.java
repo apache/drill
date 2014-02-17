@@ -23,19 +23,19 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.logical.StorageEngineConfig;
+import org.apache.drill.common.logical.StoragePluginConfig;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
-public class StorageEngines implements Iterable<Map.Entry<String, StorageEngineConfig>>{
+public class StorageEngines implements Iterable<Map.Entry<String, StoragePluginConfig>>{
   
-  private Map<String, StorageEngineConfig> storage;
+  private Map<String, StoragePluginConfig> storage;
   
   @JsonCreator
-  public StorageEngines(@JsonProperty("storage") Map<String, StorageEngineConfig> storage){
+  public StorageEngines(@JsonProperty("storage") Map<String, StoragePluginConfig> storage){
     this.storage = storage;
   }
   
@@ -53,7 +53,7 @@ public class StorageEngines implements Iterable<Map.Entry<String, StorageEngineC
   }
 
   @Override
-  public Iterator<Entry<String, StorageEngineConfig>> iterator() {
+  public Iterator<Entry<String, StoragePluginConfig>> iterator() {
     return storage.entrySet().iterator();
   }
 

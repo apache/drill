@@ -82,6 +82,7 @@
             <exclude>**/control</exclude>
             <exclude>**/*.json</exclude>
             <exclude>**/hadoop-excludes.txt</exclude>
+            <exclude>**/drill_hive_db/*</exclude>
           </excludes>
         </configuration>
       </plugin>

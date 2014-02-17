@@ -47,13 +47,6 @@
       <artifactId>optiq-core</artifactId>
     </dependency>
 
-
-    <dependency>
-      <groupId>com.google.protobuf</groupId>
-      <artifactId>protobuf-java</artifactId>
-      <version>2.5.0</version>
-    </dependency>
-
     <dependency>
       <groupId>com.typesafe</groupId>
       <artifactId>config</artifactId>

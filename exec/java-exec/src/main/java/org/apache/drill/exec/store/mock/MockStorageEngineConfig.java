@@ -17,14 +17,14 @@
  */
 package org.apache.drill.exec.store.mock;
 
-import org.apache.drill.common.logical.StorageEngineConfigBase;
+import org.apache.drill.common.logical.StoragePluginConfigBase;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName("mock")
-public class MockStorageEngineConfig extends StorageEngineConfigBase{
+public class MockStorageEngineConfig extends StoragePluginConfigBase{
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MockStorageEngineConfig.class);
 

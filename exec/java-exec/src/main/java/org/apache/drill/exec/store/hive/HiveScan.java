@@ -34,7 +34,7 @@ import org.apache.drill.exec.physical.base.Size;
 import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
-import org.apache.drill.exec.store.StorageEngineRegistry;
+import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.api.Partition;
@@ -58,9 +58,9 @@ public class HiveScan extends AbstractGroupScan {
   @JsonIgnore
   private List<InputSplit> inputSplits = Lists.newArrayList();
   @JsonIgnore
-  public HiveStorageEngine storageEngine;
-  @JsonProperty("storageengine")
-  public HiveStorageEngineConfig engineConfig;
+  public HiveStoragePlugin storagePlugin;
+  @JsonProperty("storage-plugin")
+  public String storagePluginName;
 
   @JsonIgnore
   public List<Partition> partitions;
@@ -77,27 +77,27 @@ public class HiveScan extends AbstractGroupScan {
   Map<InputSplit, Partition> partitionMap = new HashMap();
 
   @JsonCreator
-  public HiveScan(@JsonProperty("hive-table") HiveReadEntry hiveReadEntry, @JsonProperty("storageengine") HiveStorageEngineConfig config,
+  public HiveScan(@JsonProperty("hive-table") HiveReadEntry hiveReadEntry, @JsonProperty("storage-plugin") String storagePluginName,
                   @JsonProperty("columns") List<FieldReference> columns,
-                  @JacksonInject StorageEngineRegistry engineRegistry) throws ExecutionSetupException {
+                  @JacksonInject StoragePluginRegistry engineRegistry) throws ExecutionSetupException {
     this.hiveReadEntry = hiveReadEntry;
     this.table = hiveReadEntry.getTable();
-    this.engineConfig = config;
-    this.storageEngine = (HiveStorageEngine) engineRegistry.getEngine(config);
+    this.storagePluginName = storagePluginName;
+    this.storagePlugin = (HiveStoragePlugin) engineRegistry.getEngine(storagePluginName);
     this.columns = columns;
     this.partitions = hiveReadEntry.getPartitions();
     getSplits();
-    endpoints = storageEngine.getContext().getBits();
+    endpoints = storagePlugin.getContext().getBits();
   }
 
-  public HiveScan(HiveReadEntry hiveReadEntry, HiveStorageEngine storageEngine, List<FieldReference> columns) throws ExecutionSetupException {
+  public HiveScan(HiveReadEntry hiveReadEntry, HiveStoragePlugin storageEngine, List<FieldReference> columns) throws ExecutionSetupException {
     this.table = hiveReadEntry.getTable();
     this.hiveReadEntry = hiveReadEntry;
     this.columns = columns;
     this.partitions = hiveReadEntry.getPartitions();
     getSplits();
     endpoints = storageEngine.getContext().getBits();
-    this.engineConfig = storageEngine.getConfig();
+    this.storagePluginName = storageEngine.getName();
   }
 
   public List<FieldReference> getColumns() {
@@ -112,7 +112,7 @@ public class HiveScan extends AbstractGroupScan {
         for (Object obj : properties.keySet()) {
           job.set((String) obj, (String) properties.get(obj));
         }
-        InputFormat format = (InputFormat) Class.forName(table.getSd().getInputFormat()).getConstructor().newInstance();
+        InputFormat<?, ?> format = (InputFormat<?, ?>) Class.forName(table.getSd().getInputFormat()).getConstructor().newInstance();
         job.setInputFormat(format.getClass());
         Path path = new Path(table.getSd().getLocation());
         FileInputFormat.addInputPath(job, path);
@@ -130,7 +130,7 @@ public class HiveScan extends AbstractGroupScan {
           for (Object obj : properties.keySet()) {
             job.set((String) obj, (String) properties.get(obj));
           }
-          InputFormat format = (InputFormat) Class.forName(partition.getSd().getInputFormat()).getConstructor().newInstance();
+          InputFormat<?, ?> format = (InputFormat<?, ?>) Class.forName(partition.getSd().getInputFormat()).getConstructor().newInstance();
           job.setInputFormat(format.getClass());
           FileInputFormat.addInputPath(job, new Path(partition.getSd().getLocation()));
           format = job.getInputFormat();
@@ -192,12 +192,12 @@ public class HiveScan extends AbstractGroupScan {
 
   @Override
   public List<EndpointAffinity> getOperatorAffinity() {
-    Map<String, DrillbitEndpoint> endpointMap = new HashMap();
+    Map<String, DrillbitEndpoint> endpointMap = new HashMap<>();
     for (DrillbitEndpoint endpoint : endpoints) {
       endpointMap.put(endpoint.getAddress(), endpoint);
       logger.debug("endpoing address: {}", endpoint.getAddress());
     }
-    Map<DrillbitEndpoint, EndpointAffinity> affinityMap = new HashMap();
+    Map<DrillbitEndpoint, EndpointAffinity> affinityMap = new HashMap<>();
     try {
       long totalSize = 0;
       for (InputSplit split : inputSplits) {
@@ -242,6 +242,6 @@ public class HiveScan extends AbstractGroupScan {
 
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException {
-    return new HiveScan(hiveReadEntry, storageEngine, columns);
+    return new HiveScan(hiveReadEntry, storagePlugin, columns);
   }
 }

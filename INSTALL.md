@@ -4,13 +4,9 @@
 
 Currently, the Apache Drill build process is known to work on Linux, Windows and OSX.  To build, you need to have the following software installed on your system to successfully complete a build. 
   * Java 7+
-  * protoc 2.5.x compiler
   * Maven 3.0+
 
 ## Confirm settings
-    # protoc --version
-    libprotoc 2.5.0
-    
     # java -version
     java version "1.7.0_09"
     Java(TM) SE Runtime Environment (build 1.7.0_09-b05)
@@ -30,13 +26,13 @@ Currently, the Apache Drill build process is known to work on Linux, Windows and
     
 ## Start SQLLine
 
-    ./sqlline -u jdbc:drill:schema=parquet-local -n admin -p admin
+    ./sqlline -u jdbc:drill:zk=local -n admin -p admin
 
 ## Run a query
 
     SELECT 
-      _MAP['R_REGIONKEY'] AS region_key, 
-      _MAP['R_NAME'] AS name, _MAP['R_COMMENT'] AS comment
+      region_key, 
+      r_comment
     FROM "sample-data/region.parquet";
     
 ## More information 

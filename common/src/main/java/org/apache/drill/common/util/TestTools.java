@@ -28,7 +28,11 @@ public class TestTools {
 
   
   public static TestRule getTimeoutRule(){
-    return IS_DEBUG ? new TestName() : new Timeout(10000);
+    return getTimeoutRule(10000);
+  }
+
+  public static TestRule getTimeoutRule(int timeout){
+    return IS_DEBUG ? new TestName() : new Timeout(timeout);
   }
 
 }

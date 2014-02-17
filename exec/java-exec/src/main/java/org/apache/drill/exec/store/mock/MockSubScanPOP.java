@@ -41,21 +41,21 @@ public class MockSubScanPOP extends AbstractBase implements SubScan {
 
   private final String url;
   protected final List<MockGroupScanPOP.MockScanEntry> readEntries;
-  private final OperatorCost cost;
-  private final Size size;
+//  private final OperatorCost cost;
+//  private final Size size;
   private  LinkedList<MockGroupScanPOP.MockScanEntry>[] mappings;
 
   @JsonCreator
   public MockSubScanPOP(@JsonProperty("url") String url, @JsonProperty("entries") List<MockGroupScanPOP.MockScanEntry> readEntries) {
     this.readEntries = readEntries;
-    OperatorCost cost = new OperatorCost(0,0,0,0);
-    Size size = new Size(0,0);
-    for(MockGroupScanPOP.MockScanEntry r : readEntries){
-      cost = cost.add(r.getCost());
-      size = size.add(r.getSize());
-    }
-    this.cost = cost;
-    this.size = size;
+//    OperatorCost cost = new OperatorCost(0,0,0,0);
+//    Size size = new Size(0,0);
+//    for(MockGroupScanPOP.MockScanEntry r : readEntries){
+//      cost = cost.add(r.getCost());
+//      size = size.add(r.getSize());
+//    }
+//    this.cost = cost;
+//    this.size = size;
     this.url = url;
   }
 
@@ -73,12 +73,12 @@ public class MockSubScanPOP extends AbstractBase implements SubScan {
     return Iterators.emptyIterator();
   }
 
-  @Override
+  @Override @JsonIgnore
   public OperatorCost getCost() {
     throw new UnsupportedOperationException();
   }
 
-  @Override
+  @Override @JsonIgnore
   public Size getSize() {
     throw new UnsupportedOperationException();
   }
@@ -86,7 +86,7 @@ public class MockSubScanPOP extends AbstractBase implements SubScan {
   // will want to replace these two methods with an interface above for AbstractSubScan
   @Override
   public boolean isExecutable() {
-    return true;  //To change body of implemented methods use File | Settings | File Templates.
+    return true;  
   }
 
   @Override
