@@ -25,7 +25,9 @@ import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.IfExpression;
 import org.apache.drill.common.expression.IfExpression.IfCondition;
 import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.expression.NullExpression;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.expression.TypedNullConstant;
 import org.apache.drill.common.expression.ValueExpressions.BooleanExpression;
 import org.apache.drill.common.expression.ValueExpressions.DoubleExpression;
 import org.apache.drill.common.expression.ValueExpressions.FloatExpression;
@@ -179,5 +181,15 @@ final class ConstantChecker implements ExprVisitor<Boolean, ErrorCollector, Runt
   @Override
   public Boolean visitConvertExpression(ConvertExpression e, ErrorCollector value) throws RuntimeException {
     return e.getInput().accept(this, value);
+  }
+
+  @Override
+  public Boolean visitNullConstant(TypedNullConstant e, ErrorCollector value) throws RuntimeException {
+    return true;
+  }
+
+  @Override
+  public Boolean visitNullExpression(NullExpression e, ErrorCollector value) throws RuntimeException {
+    return true;
   }
 }

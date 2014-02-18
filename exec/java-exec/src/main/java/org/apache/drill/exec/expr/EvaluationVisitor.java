@@ -29,6 +29,7 @@ import org.apache.drill.common.expression.IfExpression.IfCondition;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.expression.NullExpression;
 import org.apache.drill.common.expression.TypedNullConstant;
 import org.apache.drill.common.expression.ValueExpressions.BooleanExpression;
 import org.apache.drill.common.expression.ValueExpressions.DateExpression;
@@ -55,7 +56,6 @@ import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.expr.fn.HiveFuncHolder;
 import org.apache.drill.exec.physical.impl.filter.ReturnValueExpression;
-import org.apache.drill.exec.record.NullExpression;
 import org.apache.drill.exec.vector.ValueHolderHelper;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.apache.drill.exec.vector.complex.writer.FieldWriter;
@@ -160,7 +160,7 @@ public class EvaluationVisitor {
 
         HoldingContainer thenExpr = c.expression.accept(this, generator);
         if (thenExpr.isOptional()) {
-          JConditional newCond = jc._then()._if(thenExpr.getIsSet());
+          JConditional newCond = jc._then()._if(thenExpr.getIsSet().ne(JExpr.lit(0)));
           JBlock b = newCond._then();
           b.assign(output.getHolder(), thenExpr.getHolder());
           b.assign(output.getIsSet(), thenExpr.getIsSet());
@@ -172,7 +172,7 @@ public class EvaluationVisitor {
 
       HoldingContainer elseExpr = ifExpr.elseExpression.accept(this, generator);
       if (elseExpr.isOptional()) {
-        JConditional newCond = jc._else()._if(elseExpr.getIsSet());
+        JConditional newCond = jc._else()._if(elseExpr.getIsSet().ne(JExpr.lit(0)));
         JBlock b = newCond._then();
         b.assign(output.getHolder(), elseExpr.getHolder());
         b.assign(output.getIsSet(), elseExpr.getIsSet());

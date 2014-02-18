@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.record;
+package org.apache.drill.common.expression;
 
 import java.util.Iterator;
 
@@ -32,9 +32,9 @@ public class NullExpression implements LogicalExpression{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NullExpression.class);
 
   public static final NullExpression INSTANCE = new NullExpression();
-  
+
   final MajorType t = Types.optional(MinorType.NULL);
-  
+
   @Override
   public MajorType getMajorType() {
     return t;
@@ -42,7 +42,7 @@ public class NullExpression implements LogicalExpression{
 
   @Override
   public <T, V, E extends Exception> T accept(ExprVisitor<T, V, E> visitor, V value) throws E {
-    return visitor.visitUnknown(this, value);
+    return visitor.visitNullExpression(this, value);
   }
 
   @Override
@@ -54,6 +54,4 @@ public class NullExpression implements LogicalExpression{
   public Iterator<LogicalExpression> iterator() {
     return Iterators.emptyIterator();
   }
-  
-  
 }

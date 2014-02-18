@@ -23,7 +23,9 @@ import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.IfExpression;
 import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.expression.NullExpression;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.expression.TypedNullConstant;
 import org.apache.drill.common.expression.ValueExpressions.BooleanExpression;
 import org.apache.drill.common.expression.ValueExpressions.DoubleExpression;
 import org.apache.drill.common.expression.ValueExpressions.FloatExpression;
@@ -39,7 +41,6 @@ import org.apache.drill.common.expression.ValueExpressions.Decimal18Expression;
 import org.apache.drill.common.expression.ValueExpressions.Decimal28Expression;
 import org.apache.drill.common.expression.ValueExpressions.Decimal38Expression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
-
 
 public interface ExprVisitor<T, VAL, EXCEP extends Exception> {
   public T visitFunctionCall(FunctionCall call, VAL value) throws EXCEP;
@@ -61,6 +62,8 @@ public interface ExprVisitor<T, VAL, EXCEP extends Exception> {
   public T visitDoubleConstant(DoubleExpression dExpr, VAL value) throws EXCEP;
   public T visitBooleanConstant(BooleanExpression e, VAL value) throws EXCEP;
   public T visitQuotedStringConstant(QuotedString e, VAL value) throws EXCEP;
+  public T visitNullConstant(TypedNullConstant e, VAL value) throws EXCEP;
+  public T visitNullExpression(NullExpression e, VAL value) throws EXCEP;
   public T visitUnknown(LogicalExpression e, VAL value) throws EXCEP;
   public T visitCastExpression(CastExpression e, VAL value) throws EXCEP;
   public T visitConvertExpression(ConvertExpression e, VAL value) throws EXCEP;

@@ -27,15 +27,15 @@ import org.apache.drill.common.expression.FunctionCallFactory;
 import org.apache.drill.common.expression.IfExpression;
 import org.apache.drill.common.expression.IfExpression.IfCondition;
 import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.expression.NullExpression;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.expression.TypedNullConstant;
 import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.exec.expr.EvaluationVisitor;
-import org.apache.drill.exec.record.NullExpression;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.rex.RexCall;
@@ -339,20 +339,20 @@ public class DrillOptiq {
       switch(literal.getType().getSqlTypeName()){
       case BIGINT:
         long l = ((BigDecimal) literal.getValue()).longValue();
-        return ValueExpressions.getBigInt(l);
+        return checkNullLiteral(literal, MinorType.BIGINT, ValueExpressions.getBigInt(l));
       case BOOLEAN:
-        return ValueExpressions.getBit(((Boolean) literal.getValue()));
+        return checkNullLiteral(literal, MinorType.BIT, ValueExpressions.getBit(((Boolean) literal.getValue())));
       case CHAR:
-        return ValueExpressions.getChar(((NlsString)literal.getValue()).getValue());
+        return checkNullLiteral(literal, MinorType.VARCHAR, ValueExpressions.getChar(((NlsString) literal.getValue()).getValue()));
       case DOUBLE:
         double d = ((BigDecimal) literal.getValue()).doubleValue();
-        return ValueExpressions.getFloat8(d);
+        return checkNullLiteral(literal, MinorType.FLOAT8, ValueExpressions.getFloat8(d));
       case FLOAT:
         float f = ((BigDecimal) literal.getValue()).floatValue();
-        return ValueExpressions.getFloat4(f);
+        return checkNullLiteral(literal, MinorType.FLOAT4, ValueExpressions.getFloat4(f));
       case INTEGER:
         int a = ((BigDecimal) literal.getValue()).intValue();
-        return ValueExpressions.getInt(a);
+        return checkNullLiteral(literal, MinorType.INT, ValueExpressions.getInt(a));
       case DECIMAL:
         /* TODO: Enable using Decimal literals once we have more functions implemented for Decimal
          * For now continue using Double instead of decimals
@@ -370,26 +370,40 @@ public class DrillOptiq {
 
         double dbl = ((BigDecimal) literal.getValue()).doubleValue();
         logger.warn("Converting exact decimal into approximate decimal.  Should be fixed once decimal is implemented.");
-        return ValueExpressions.getFloat8(dbl);
+        return checkNullLiteral(literal, MinorType.FLOAT8, ValueExpressions.getFloat8(dbl));
       case VARCHAR:
-        return ValueExpressions.getChar(((NlsString)literal.getValue()).getValue());
+        return checkNullLiteral(literal, MinorType.VARCHAR, ValueExpressions.getChar(((NlsString) literal.getValue()).getValue()));
       case SYMBOL:
-        return ValueExpressions.getChar(literal.getValue().toString());
+        return checkNullLiteral(literal, MinorType.VARCHAR, ValueExpressions.getChar(literal.getValue().toString()));
       case DATE:
-        return (ValueExpressions.getDate((GregorianCalendar)literal.getValue()));
+        return checkNullLiteral(literal, MinorType.DATE, ValueExpressions.getDate((GregorianCalendar) literal.getValue()));
       case TIME:
-        return (ValueExpressions.getTime((GregorianCalendar)literal.getValue()));
+        return checkNullLiteral(literal, MinorType.TIME, ValueExpressions.getTime((GregorianCalendar) literal.getValue()));
       case TIMESTAMP:
-        return (ValueExpressions.getTimeStamp((GregorianCalendar) literal.getValue()));
+        return checkNullLiteral(literal, MinorType.TIMESTAMP, ValueExpressions.getTimeStamp((GregorianCalendar) literal.getValue()));
       case INTERVAL_YEAR_MONTH:
-        return (ValueExpressions.getIntervalYear(((BigDecimal) (literal.getValue())).intValue()));
+        return checkNullLiteral(literal, MinorType.INTERVALYEAR, ValueExpressions.getIntervalYear(((BigDecimal) (literal.getValue())).intValue()));
       case INTERVAL_DAY_TIME:
-        return (ValueExpressions.getIntervalDay(((BigDecimal) (literal.getValue())).longValue()));
-      case NULL:
-        return NullExpression.INSTANCE;
+        return checkNullLiteral(literal, MinorType.INTERVALDAY, ValueExpressions.getIntervalDay(((BigDecimal) (literal.getValue())).longValue()));
+      case ANY:
+        if (isLiteralNull(literal)) {
+          return NullExpression.INSTANCE;
+        }
       default:
-        throw new UnsupportedOperationException(String.format("Unable to convert the value of %s and type %s to a Drill constant expression.", literal, literal.getTypeName()));
+        throw new UnsupportedOperationException(String.format("Unable to convert the value of %s and type %s to a Drill constant expression.", literal, literal.getType().getSqlTypeName()));
       }
     }
+  }
+
+  private static LogicalExpression checkNullLiteral(RexLiteral literal, MinorType type, LogicalExpression orExpr) {
+    if(isLiteralNull(literal)) {
+      return new TypedNullConstant(Types.optional(type));
+    } else {
+      return orExpr;
+    }
+  }
+
+  private static boolean isLiteralNull(RexLiteral literal) {
+    return literal.getTypeName().getName().equals("NULL");
   }
 }

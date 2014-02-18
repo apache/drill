@@ -303,4 +303,15 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
     return null;
   }
 
+  @Override
+  public Void visitNullConstant(TypedNullConstant e, StringBuilder sb) throws RuntimeException {
+    sb.append("NULL");
+    return null;
+  }
+
+  @Override
+  public Void visitNullExpression(NullExpression e, StringBuilder sb) throws RuntimeException {
+    sb.append("NULL");
+    return null;
+  }
 }

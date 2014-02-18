@@ -23,7 +23,9 @@ import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.IfExpression;
 import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.expression.NullExpression;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.expression.TypedNullConstant;
 import org.apache.drill.common.expression.ValueExpressions.BooleanExpression;
 import org.apache.drill.common.expression.ValueExpressions.FloatExpression;
 import org.apache.drill.common.expression.ValueExpressions.IntExpression;
@@ -146,6 +148,16 @@ public abstract class AbstractExprVisitor<T, VAL, EXCEP extends Exception> imple
 
   @Override
   public T visitConvertExpression(ConvertExpression e, VAL value) throws EXCEP {
+    return visitUnknown(e, value);
+  }
+
+  @Override
+  public T visitNullConstant(TypedNullConstant e, VAL value) throws EXCEP {
+    return visitUnknown(e, value);
+  }
+
+  @Override
+  public T visitNullExpression(NullExpression e, VAL value) throws EXCEP {
     return visitUnknown(e, value);
   }
 

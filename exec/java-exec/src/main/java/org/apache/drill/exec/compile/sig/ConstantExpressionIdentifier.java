@@ -28,7 +28,9 @@ import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.IfExpression;
 import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.expression.NullExpression;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.expression.TypedNullConstant;
 import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.expression.ValueExpressions.BooleanExpression;
 import org.apache.drill.common.expression.ValueExpressions.DoubleExpression;
@@ -201,6 +203,16 @@ public class ConstantExpressionIdentifier implements ExprVisitor<Boolean, Identi
   @Override
   public Boolean visitUnknown(LogicalExpression e, IdentityHashMap<LogicalExpression, Object> value){
     return checkChildren(e, value, false);
+  }
+
+  @Override
+  public Boolean visitNullConstant(TypedNullConstant e, IdentityHashMap<LogicalExpression, Object> value) throws RuntimeException {
+    return true;
+  }
+
+  @Override
+  public Boolean visitNullExpression(NullExpression e, IdentityHashMap<LogicalExpression, Object> value) throws RuntimeException {
+    return true;
   }
 
   @Override

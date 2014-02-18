@@ -44,7 +44,7 @@ public class TypedNullConstant extends LogicalExpressionBase {
 
     @Override
     public <T, V, E extends Exception> T accept(ExprVisitor<T, V, E> visitor, V value) throws E {
-      return visitor.visitUnknown(this, value);
+      return visitor.visitNullConstant(this, value);
     }
     
     @Override

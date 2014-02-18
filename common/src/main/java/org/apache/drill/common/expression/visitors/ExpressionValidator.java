@@ -24,7 +24,9 @@ import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.IfExpression;
 import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.expression.NullExpression;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.expression.TypedNullConstant;
 import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.expression.IfExpression.IfCondition;
 import org.apache.drill.common.expression.ValueExpressions.BooleanExpression;
@@ -94,13 +96,15 @@ public class ExpressionValidator implements ExprVisitor<Void, ErrorCollector, Ru
     for (IfCondition c : ifExpr.conditions) {
       MajorType innerT = c.expression.getMajorType();
       if ((innerT.getMode() == DataMode.REPEATED && mt.getMode() != DataMode.REPEATED) || //
-          (innerT.getMinorType() != mt.getMinorType())) {
+          ((innerT.getMinorType() != mt.getMinorType()) &&
+          (innerT.getMode() != DataMode.OPTIONAL && mt.getMode() != DataMode.OPTIONAL &&
+          (innerT.getMinorType() != MinorType.NULL && mt.getMinorType() != MinorType.NULL)))) {
         errors
             .addGeneralError(
                 c.condition.getPosition(),
                 String
                     .format(
-                        "Failure composing If Expression.  All expressions must return the same MajorType as the else expression.  The %d if condition returned type type %s but the else expression was of type %s",
+                        "Failure composing If Expression.  All expressions must return the same MinorType as the else expression.  The %d if condition returned type type %s but the else expression was of type %s",
                         i, innerT, mt));
       }
       i++;
@@ -196,6 +200,16 @@ public class ExpressionValidator implements ExprVisitor<Void, ErrorCollector, Ru
   @Override
   public Void visitCastExpression(CastExpression e, ErrorCollector value) throws RuntimeException {
     return e.getInput().accept(this, value);
+  }
+
+  @Override
+  public Void visitNullConstant(TypedNullConstant e, ErrorCollector value) throws RuntimeException {
+    return null;
+  }
+
+  @Override
+  public Void visitNullExpression(NullExpression e, ErrorCollector value) throws RuntimeException {
+    return null;
   }
 
   @Override

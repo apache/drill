@@ -19,7 +19,12 @@ package org.apache.drill.exec.expr;
 
 import java.util.List;
 
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.ConvertExpression;
 import org.apache.drill.common.expression.ErrorCollector;
@@ -27,7 +32,9 @@ import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.IfExpression;
+import org.apache.drill.common.expression.IfExpression.IfCondition;
 import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.expression.NullExpression;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.TypedNullConstant;
@@ -51,6 +58,7 @@ import org.apache.drill.common.expression.fn.CastFunctions;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 import org.apache.drill.common.expression.visitors.ExpressionValidator;
 import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
@@ -58,7 +66,6 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.expr.fn.HiveFuncHolder;
-import org.apache.drill.exec.record.NullExpression;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.resolver.FunctionResolver;
@@ -233,7 +240,59 @@ public class ExpressionTreeMaterializer {
         conditions.set(i, new IfExpression.IfCondition(newCondition, newExpr));
       }
 
+      // Resolve NullExpression into TypedNullConstant by visiting all conditions
+      // We need to do this because we want to give the correct MajorType to the Null constant
+      Iterable<LogicalExpression> logicalExprs = Iterables.transform(conditions,
+        new Function<IfCondition, LogicalExpression>() {
+          @Override
+          public LogicalExpression apply(IfExpression.IfCondition input) {
+            return input.expression;
+          }
+        }
+      );
+
+      List<LogicalExpression> allExpressions = Lists.newArrayList(logicalExprs);
+      allExpressions.add(newElseExpr);
+
+      boolean containsNullExpr = Iterables.any(allExpressions, new Predicate<LogicalExpression>() {
+        @Override
+        public boolean apply(LogicalExpression input) {
+          return input instanceof NullExpression;
+        }
+      });
+
+      if (containsNullExpr) {
+        Optional<LogicalExpression> nonNullExpr = Iterables.tryFind(allExpressions,
+          new Predicate<LogicalExpression>() {
+            @Override
+            public boolean apply(LogicalExpression input) {
+              return !input.getMajorType().getMinorType().equals(TypeProtos.MinorType.NULL);
+            }
+          }
+        );
+
+        if(nonNullExpr.isPresent()) {
+          MajorType type = nonNullExpr.get().getMajorType();
+          for (int i = 0; i < conditions.size(); ++i) {
+            IfExpression.IfCondition condition = conditions.get(i);
+            conditions.set(i,
+                new IfExpression.IfCondition(condition.condition, rewriteNullExpression(condition.expression, type))
+            );
+          }
+
+          newElseExpr = rewriteNullExpression(newElseExpr, type);
+        }
+      }
+
       return validateNewExpr(IfExpression.newBuilder().setElse(newElseExpr).addConditions(conditions).build());
+    }
+
+    private LogicalExpression rewriteNullExpression(LogicalExpression expr, MajorType type) {
+      if(expr instanceof NullExpression) {
+        return new TypedNullConstant(type);
+      } else {
+        return expr;
+      }
     }
 
     @Override
@@ -277,6 +336,11 @@ public class ExpressionTreeMaterializer {
     @Override
     public LogicalExpression visitTimeStampConstant(TimeStampExpression intExpr, FunctionImplementationRegistry registry) {
       return intExpr;
+    }
+
+    @Override
+    public LogicalExpression visitNullConstant(TypedNullConstant nullConstant, FunctionImplementationRegistry value) throws RuntimeException {
+      return nullConstant;
     }
 
     @Override
