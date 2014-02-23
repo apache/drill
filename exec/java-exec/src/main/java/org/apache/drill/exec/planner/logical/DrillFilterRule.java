@@ -19,7 +19,10 @@ package org.apache.drill.exec.planner.logical;
 
 import org.eigenbase.rel.FilterRel;
 import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.*;
+import org.eigenbase.relopt.Convention;
+import org.eigenbase.relopt.RelOptRule;
+import org.eigenbase.relopt.RelOptRuleCall;
+import org.eigenbase.relopt.RelTraitSet;
 
 /**
  * Rule that converts a {@link org.eigenbase.rel.FilterRel} to a Drill "filter" operation.
@@ -35,7 +38,7 @@ public class DrillFilterRule extends RelOptRule {
   public void onMatch(RelOptRuleCall call) {
     final FilterRel filter = (FilterRel) call.rel(0);
     final RelNode input = call.rel(1);
-    final RelTraitSet traits = filter.getTraitSet().plus(DrillRel.CONVENTION);
+    final RelTraitSet traits = filter.getTraitSet().plus(DrillRel.DRILL_LOGICAL);
     final RelNode convertedInput = convert(input, traits);
     call.transformTo(new DrillFilterRel(filter.getCluster(), traits, convertedInput, filter.getCondition()));
   }

@@ -43,9 +43,9 @@ public class DrillSortRule extends RelOptRule {
     final SortRel sort = call.rel(0);
 
     final RelNode input = call.rel(1);
-    final RelTraitSet traits = sort.getTraitSet().plus(DrillRel.CONVENTION);
+    final RelTraitSet traits = sort.getTraitSet().plus(DrillRel.DRILL_LOGICAL);
 
-    final RelNode convertedInput = convert(input, input.getTraitSet().plus(DrillRel.CONVENTION));
+    final RelNode convertedInput = convert(input, input.getTraitSet().plus(DrillRel.DRILL_LOGICAL));
     call.transformTo(new DrillSortRel(sort.getCluster(), traits, convertedInput, sort.getCollation()));
   }
 }

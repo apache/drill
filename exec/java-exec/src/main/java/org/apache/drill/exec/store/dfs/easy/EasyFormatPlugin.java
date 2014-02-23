@@ -92,21 +92,21 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
     return blockSplittable;
   };
 
-  public abstract RecordReader getRecordReader(FragmentContext context, FileWork fileWork, FieldReference ref, List<SchemaPath> columns) throws ExecutionSetupException;
+  public abstract RecordReader getRecordReader(FragmentContext context, FileWork fileWork, List<SchemaPath> columns) throws ExecutionSetupException;
 
   
   RecordBatch getBatch(FragmentContext context, EasySubScan scan) throws ExecutionSetupException {
     List<RecordReader> readers = Lists.newArrayList();
     for(FileWork work : scan.getWorkUnits()){
-      readers.add(getRecordReader(context, work, scan.getRef(), scan.getColumns())); 
+      readers.add(getRecordReader(context, work, scan.getColumns())); 
     }
     
     return new ScanBatch(context, readers.iterator());
   }
   
   @Override
-  public AbstractGroupScan getGroupScan(FieldReference outputRef, FileSelection selection) throws IOException {
-    return new EasyGroupScan(selection, this, outputRef, null);
+  public AbstractGroupScan getGroupScan(FileSelection selection) throws IOException {
+    return new EasyGroupScan(selection, this, null);
   }
 
   @Override

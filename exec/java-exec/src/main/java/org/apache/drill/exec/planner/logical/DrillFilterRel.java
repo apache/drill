@@ -21,23 +21,18 @@ import java.util.List;
 
 import org.apache.drill.common.logical.data.Filter;
 import org.apache.drill.common.logical.data.LogicalOperator;
+import org.apache.drill.exec.planner.common.BaseFilterRel;
 import org.apache.drill.exec.planner.torel.ConversionContext;
-import org.eigenbase.rel.FilterRelBase;
 import org.eigenbase.rel.InvalidRelException;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelOptCost;
-import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.rex.RexNode;
 
-/**
- * Filter implemented in Drill.
- */
-public class DrillFilterRel extends FilterRelBase implements DrillRel {
+
+public class DrillFilterRel extends BaseFilterRel implements DrillRel {
   protected DrillFilterRel(RelOptCluster cluster, RelTraitSet traits, RelNode child, RexNode condition) {
-    super(cluster, traits, child, condition);
-    assert getConvention() == CONVENTION;
+    super(DRILL_LOGICAL, cluster, traits, child, condition);
   }
 
   @Override
@@ -46,14 +41,9 @@ public class DrillFilterRel extends FilterRelBase implements DrillRel {
   }
 
   @Override
-  public RelOptCost computeSelfCost(RelOptPlanner planner) {
-    return super.computeSelfCost(planner).multiplyBy(0.1);
-  }
-
-  @Override
   public LogicalOperator implement(DrillImplementor implementor) {
     final LogicalOperator input = implementor.visitChild(this, 0, getChild());
-    Filter f = new Filter(DrillOptiq.toDrill(implementor.getContext(), getChild(), getCondition()));
+    Filter f = new Filter(getFilterExpression(implementor.getContext()));
     f.setInput(input);
     return f;
   }

@@ -42,7 +42,6 @@ public class EasySubScan extends AbstractSubScan{
 
   private final List<FileWorkImpl> files;
   private final EasyFormatPlugin<?> formatPlugin;
-  private final FieldReference ref;
   private final List<SchemaPath> columns;
   
   @JsonCreator
@@ -51,21 +50,18 @@ public class EasySubScan extends AbstractSubScan{
       @JsonProperty("storage") StoragePluginConfig storageConfig, //
       @JsonProperty("format") FormatPluginConfig formatConfig, //
       @JacksonInject StoragePluginRegistry engineRegistry, // 
-      @JsonProperty("ref") FieldReference ref, //
       @JsonProperty("columns") List<SchemaPath> columns //
       ) throws IOException, ExecutionSetupException {
     
     this.formatPlugin = (EasyFormatPlugin<?>) engineRegistry.getFormatPlugin(storageConfig, formatConfig);
     Preconditions.checkNotNull(this.formatPlugin);
     this.files = files;
-    this.ref = ref;
     this.columns = columns;
   }
   
-  public EasySubScan(List<FileWorkImpl> files, EasyFormatPlugin<?> plugin, FieldReference ref, List<SchemaPath> columns){
+  public EasySubScan(List<FileWorkImpl> files, EasyFormatPlugin<?> plugin, List<SchemaPath> columns){
     this.formatPlugin = plugin;
     this.files = files;
-    this.ref = ref;
     this.columns = columns;
   }
   
@@ -87,11 +83,6 @@ public class EasySubScan extends AbstractSubScan{
   @JsonProperty("format")
   public FormatPluginConfig getFormatConfig(){
     return formatPlugin.getConfig();
-  }
-  
-  @JsonProperty("ref")
-  public FieldReference getRef() {
-    return ref;
   }
   
   @JsonProperty("columns")

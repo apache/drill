@@ -23,7 +23,8 @@ import java.util.List;
 import net.hydromatic.optiq.Schema;
 import net.hydromatic.optiq.SchemaPlus;
 
-import org.apache.drill.common.logical.data.Scan;
+import org.apache.drill.common.JSONOptions;
+import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 
 public interface StoragePlugin {
@@ -41,8 +42,9 @@ public interface StoragePlugin {
    * @return
    * @throws IOException
    */
-  public AbstractGroupScan getPhysicalScan(Scan scan) throws IOException;
+  public AbstractGroupScan getPhysicalScan(JSONOptions selection) throws IOException;
   
   public Schema createAndAddSchema(SchemaPlus parent);
+  public StoragePluginConfig getConfig();
 
 }

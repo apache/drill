@@ -22,8 +22,8 @@ import java.io.IOException;
 import net.hydromatic.optiq.Schema;
 import net.hydromatic.optiq.SchemaPlus;
 
+import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.common.logical.data.Scan;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.hive.schema.HiveSchemaFactory;
@@ -37,7 +37,6 @@ public class HiveStoragePlugin extends AbstractStoragePlugin {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveStoragePlugin.class);
   
   private final HiveStoragePluginConfig config;
-  private final HiveConf hiveConf;
   private final HiveSchemaFactory schemaFactory;
   private final DrillbitContext context;
   private final String name;
@@ -45,8 +44,7 @@ public class HiveStoragePlugin extends AbstractStoragePlugin {
   public HiveStoragePlugin(HiveStoragePluginConfig config, DrillbitContext context, String name) throws ExecutionSetupException {
     this.config = config;
     this.context = context;
-    this.schemaFactory = new HiveSchemaFactory(config, name, config.getHiveConf());
-    this.hiveConf = config.getHiveConf();
+    this.schemaFactory = new HiveSchemaFactory(this, name, config.getHiveConf());
     this.name = name;
   }
 
@@ -63,8 +61,8 @@ public class HiveStoragePlugin extends AbstractStoragePlugin {
   }
 
   @Override
-  public HiveScan getPhysicalScan(Scan scan) throws IOException {
-    HiveReadEntry hiveReadEntry = scan.getSelection().getListWith(new ObjectMapper(), new TypeReference<HiveReadEntry>(){});
+  public HiveScan getPhysicalScan(JSONOptions selection) throws IOException {
+    HiveReadEntry hiveReadEntry = selection.getListWith(new ObjectMapper(), new TypeReference<HiveReadEntry>(){});
     try {
       return new HiveScan(hiveReadEntry, this, null);
     } catch (ExecutionSetupException e) {

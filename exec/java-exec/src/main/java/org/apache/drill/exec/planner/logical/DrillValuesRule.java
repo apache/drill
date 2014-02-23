@@ -33,7 +33,7 @@ public class DrillValuesRule extends RelOptRule {
   @Override
   public void onMatch(RelOptRuleCall call) {
     final ValuesRel values = (ValuesRel) call.rel(0);
-    final RelTraitSet traits = values.getTraitSet().plus(DrillRel.CONVENTION);
+    final RelTraitSet traits = values.getTraitSet().plus(DrillRel.DRILL_LOGICAL);
     call.transformTo(new DrillValuesRel(values.getCluster(), values.getRowType(), values.getTuples(), traits));
   }
 }

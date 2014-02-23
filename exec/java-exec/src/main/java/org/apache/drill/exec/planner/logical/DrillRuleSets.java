@@ -21,6 +21,8 @@ import java.util.Iterator;
 
 import net.hydromatic.optiq.tools.RuleSet;
 
+import org.apache.drill.exec.planner.physical.ProjectPrule;
+import org.apache.drill.exec.planner.physical.ScanPrule;
 import org.eigenbase.rel.rules.MergeProjectRule;
 import org.eigenbase.rel.rules.PushFilterPastJoinRule;
 import org.eigenbase.rel.rules.PushFilterPastProjectRule;
@@ -44,25 +46,6 @@ public class DrillRuleSets {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillRuleSets.class);
 
   public static final RuleSet DRILL_BASIC_RULES = new DrillRuleSet(ImmutableSet.of( //
-
-//      ExpandConversionRule.instance,
-//      SwapJoinRule.instance,
-//      RemoveDistinctRule.instance,
-//      UnionToDistinctRule.instance,
-//      RemoveTrivialProjectRule.instance,
-//      RemoveTrivialCalcRule.instance,
-//      RemoveSortRule.INSTANCE,
-//
-//      TableAccessRule.instance, //
-//      MergeProjectRule.instance, //
-//      PushFilterPastProjectRule.instance, //
-        PushFilterPastJoinRule.FILTER_ON_JOIN, //
-//      RemoveDistinctAggregateRule.instance, //
-//      ReduceAggregatesRule.instance, //
-//      SwapJoinRule.instance, //
-//      PushJoinThroughJoinRule.RIGHT, //
-//      PushJoinThroughJoinRule.LEFT, //
-//      PushSortPastProjectRule.INSTANCE, //
       
       DrillScanRule.INSTANCE,
       DrillFilterRule.INSTANCE,
@@ -75,6 +58,43 @@ public class DrillRuleSets {
       DrillUnionRule.INSTANCE
       ));
   
+  public static final RuleSet DRILL_PHYSICAL_MEM = new DrillRuleSet(ImmutableSet.of( //
+      DrillScanRule.INSTANCE,
+      DrillFilterRule.INSTANCE,
+      DrillProjectRule.INSTANCE,
+      DrillAggregateRule.INSTANCE,
+
+      DrillLimitRule.INSTANCE,
+      DrillSortRule.INSTANCE,
+      DrillJoinRule.INSTANCE,
+      DrillUnionRule.INSTANCE,
+      ProjectPrule.INSTANCE,
+      ScanPrule.INSTANCE
+
+//    ExpandConversionRule.instance,
+//    SwapJoinRule.instance,
+//    RemoveDistinctRule.instance,
+//    UnionToDistinctRule.instance,
+//    RemoveTrivialProjectRule.instance,
+//    RemoveTrivialCalcRule.instance,
+//    RemoveSortRule.INSTANCE,
+//
+//    TableAccessRule.instance, //
+//    MergeProjectRule.instance, //
+//    PushFilterPastProjectRule.instance, //
+//    PushFilterPastJoinRule.FILTER_ON_JOIN, //
+//    RemoveDistinctAggregateRule.instance, //
+//    ReduceAggregatesRule.instance, //
+//    SwapJoinRule.instance, //
+//    PushJoinThroughJoinRule.RIGHT, //
+//    PushJoinThroughJoinRule.LEFT, //
+//    PushSortPastProjectRule.INSTANCE, //      
+    ));
+  
+  public static final RuleSet DRILL_PHYSICAL_DISK = new DrillRuleSet(ImmutableSet.of( //
+      ProjectPrule.INSTANCE
+  
+    ));
   
   private static class DrillRuleSet implements RuleSet{
     final ImmutableSet<RelOptRule> rules;

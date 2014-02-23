@@ -187,7 +187,7 @@ public class BasicOptimizer extends Optimizer{
       StoragePlugin engine;
       try {
         engine = context.getStorage().getEngine(config);
-        return engine.getPhysicalScan(scan);
+        return engine.getPhysicalScan(scan.getSelection());
       } catch (IOException | ExecutionSetupException e) {
         throw new OptimizerException("Failure while attempting to retrieve storage engine.", e);
       }

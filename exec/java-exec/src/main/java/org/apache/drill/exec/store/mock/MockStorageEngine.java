@@ -23,7 +23,8 @@ import java.util.ArrayList;
 import net.hydromatic.optiq.Schema;
 import net.hydromatic.optiq.SchemaPlus;
 
-import org.apache.drill.common.logical.data.Scan;
+import org.apache.drill.common.JSONOptions;
+import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
@@ -35,14 +36,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class MockStorageEngine extends AbstractStoragePlugin {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MockStorageEngine.class);
 
+  private final MockStorageEngineConfig configuration;
+  
   public MockStorageEngine(MockStorageEngineConfig configuration, DrillbitContext context, String name) {
-
+    this.configuration = configuration;
   }
 
   @Override
-  public AbstractGroupScan getPhysicalScan(Scan scan) throws IOException {
+  public AbstractGroupScan getPhysicalScan(JSONOptions selection) throws IOException {
 
-    ArrayList<MockScanEntry> readEntries = scan.getSelection().getListWith(new ObjectMapper(),
+    ArrayList<MockScanEntry> readEntries = selection.getListWith(new ObjectMapper(),
         new TypeReference<ArrayList<MockScanEntry>>() {
         });
     
@@ -52,6 +55,11 @@ public class MockStorageEngine extends AbstractStoragePlugin {
   @Override
   public Schema createAndAddSchema(SchemaPlus parent) {
     return null;
+  }
+
+  @Override
+  public StoragePluginConfig getConfig() {
+    return configuration;
   }
 
 

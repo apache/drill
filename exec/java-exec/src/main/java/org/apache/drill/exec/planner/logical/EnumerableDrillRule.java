@@ -19,19 +19,20 @@ package org.apache.drill.exec.planner.logical;
 
 import net.hydromatic.optiq.rules.java.EnumerableConvention;
 
+import org.apache.drill.exec.planner.common.BaseScreenRel;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.convert.ConverterRule;
 
 /**
- * Rule that converts any Drill relational expression to enumerable format by adding a {@link DrillScreenRel}.
+ * Rule that converts any Drill relational expression to enumerable format by adding a {@link BaseScreenRel}.
  */
 public class EnumerableDrillRule extends ConverterRule {
 
-  public static EnumerableDrillRule INSTANCE = new EnumerableDrillRule(EnumerableConvention.INSTANCE);
+  public static EnumerableDrillRule INSTANCE = new EnumerableDrillRule();
   
   
-  private EnumerableDrillRule(EnumerableConvention outConvention) {
-    super(RelNode.class, DrillRel.CONVENTION, outConvention, "EnumerableDrillRule." + outConvention);
+  private EnumerableDrillRule() {
+    super(RelNode.class, DrillRel.DRILL_LOGICAL, EnumerableConvention.INSTANCE, "EnumerableDrillRule.");
   }
 
   @Override
@@ -41,7 +42,7 @@ public class EnumerableDrillRule extends ConverterRule {
 
   @Override
   public RelNode convert(RelNode rel) {
-    assert rel.getTraitSet().contains(DrillRel.CONVENTION);
+    assert rel.getTraitSet().contains(DrillRel.DRILL_LOGICAL);
     return new DrillScreenRel(rel.getCluster(), rel.getTraitSet().replace(getOutConvention()), rel);
   }
 }

@@ -19,6 +19,7 @@ package org.apache.drill.exec.planner.logical;
 
 import net.hydromatic.optiq.rules.java.JavaRules.EnumerableTableAccessRel;
 
+import org.apache.drill.exec.planner.common.BaseScanRel;
 import org.eigenbase.relopt.Convention;
 import org.eigenbase.relopt.RelOptRule;
 import org.eigenbase.relopt.RelOptRuleCall;
@@ -31,13 +32,10 @@ public class DrillScanRule  extends RelOptRule {
     super(RelOptHelper.any(EnumerableTableAccessRel.class), "DrillTableRule");
   }
 
-
-
-
   @Override
   public void onMatch(RelOptRuleCall call) {
     final EnumerableTableAccessRel access = (EnumerableTableAccessRel) call.rel(0);
-    final RelTraitSet traits = access.getTraitSet().plus(DrillRel.CONVENTION);
+    final RelTraitSet traits = access.getTraitSet().plus(DrillRel.DRILL_LOGICAL);
     call.transformTo(new DrillScanRel(access.getCluster(), traits, access.getTable()));
   }
 }

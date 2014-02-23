@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.logical;
 
+import org.apache.drill.exec.planner.common.DrillUnionRel;
 import org.eigenbase.rel.UnionRel;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.*;
@@ -37,7 +38,7 @@ public class DrillUnionRule extends RelOptRule {
   @Override
   public void onMatch(RelOptRuleCall call) {
     final UnionRel union = (UnionRel) call.rel(0);
-    final RelTraitSet traits = union.getTraitSet().plus(DrillRel.CONVENTION);
+    final RelTraitSet traits = union.getTraitSet().plus(DrillRel.DRILL_LOGICAL);
     final List<RelNode> convertedInputs = new ArrayList<>();
     for (RelNode input : union.getInputs()) {
       final RelNode convertedInput = convert(input, traits);

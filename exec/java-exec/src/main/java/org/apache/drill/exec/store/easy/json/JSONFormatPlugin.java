@@ -45,9 +45,9 @@ public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
   }
   
   @Override
-  public RecordReader getRecordReader(FragmentContext context, FileWork fileWork, FieldReference ref,
+  public RecordReader getRecordReader(FragmentContext context, FileWork fileWork, 
       List<SchemaPath> columns) throws ExecutionSetupException {
-    return new JSONRecordReader(context, fileWork.getPath(), this.getFileSystem().getUnderlying(), ref, columns);
+    return new JSONRecordReader(context, fileWork.getPath(), this.getFileSystem().getUnderlying(), columns);
   }
 
   @JsonTypeName("json")

@@ -59,7 +59,7 @@ public class DrillOptiq {
   /**
    * Converts a tree of {@link RexNode} operators into a scalar expression in Drill syntax.
    */
-  static LogicalExpression toDrill(DrillParseContext context, RelNode input, RexNode expr) {
+  public static LogicalExpression toDrill(DrillParseContext context, RelNode input, RexNode expr) {
     final RexToDrill visitor = new RexToDrill(context, input);
     return expr.accept(visitor);
   }

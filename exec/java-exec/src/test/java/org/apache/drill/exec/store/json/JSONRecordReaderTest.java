@@ -139,7 +139,7 @@ public class JSONRecordReaderTest {
     };
     JSONRecordReader jr = new JSONRecordReader(context,
         FileUtils.getResourceAsFile("/scan_json_test_1.json").toURI().toString(),
-        FileSystem.getLocal(new Configuration()), null, null);
+        FileSystem.getLocal(new Configuration()), null);
 
     MockOutputMutator mutator = new MockOutputMutator();
     List<ValueVector> addFields = mutator.getAddFields();
@@ -169,7 +169,7 @@ public class JSONRecordReaderTest {
 
     JSONRecordReader jr = new JSONRecordReader(context,
         FileUtils.getResourceAsFile("/scan_json_test_2.json").toURI().toString(),
-        FileSystem.getLocal(new Configuration()), null, null);
+        FileSystem.getLocal(new Configuration()), null);
 
     MockOutputMutator mutator = new MockOutputMutator();
     List<ValueVector> addFields = mutator.getAddFields();
@@ -211,7 +211,7 @@ public class JSONRecordReaderTest {
     JSONRecordReader jr = new JSONRecordReader(context,
         FileUtils.getResourceAsFile("/scan_json_test_2.json").toURI().toString(),
         FileSystem.getLocal(new Configuration()),
-        64, null, Arrays.asList(new SchemaPath("test", ExpressionPosition.UNKNOWN))); // batch only fits 1 int
+        64, Arrays.asList(new SchemaPath("test", ExpressionPosition.UNKNOWN))); // batch only fits 1 int
     MockOutputMutator mutator = new MockOutputMutator();
     List<ValueVector> addFields = mutator.getAddFields();
     List<MaterializedField> removedFields = mutator.getRemovedFields();
@@ -246,7 +246,7 @@ public class JSONRecordReaderTest {
     JSONRecordReader jr = new JSONRecordReader(context,
         FileUtils.getResourceAsFile("/scan_json_test_2.json").toURI().toString(),
         FileSystem.getLocal(new Configuration()),
-        64, null, null); // batch only fits 1 int
+        64, null); // batch only fits 1 int
     MockOutputMutator mutator = new MockOutputMutator();
     List<ValueVector> addFields = mutator.getAddFields();
     List<MaterializedField> removedFields = mutator.getRemovedFields();
@@ -304,7 +304,7 @@ public class JSONRecordReaderTest {
 
     JSONRecordReader jr = new JSONRecordReader(context,
         FileUtils.getResourceAsFile("/scan_json_test_3.json").toURI().toString(),
-        FileSystem.getLocal(new Configuration()), null, null);
+        FileSystem.getLocal(new Configuration()), null);
 
     MockOutputMutator mutator = new MockOutputMutator();
     List<ValueVector> addFields = mutator.getAddFields();
@@ -333,7 +333,7 @@ public class JSONRecordReaderTest {
 
     JSONRecordReader jr = new JSONRecordReader(context,
         FileUtils.getResourceAsFile("/scan_json_test_4.json").toURI().toString(),
-        FileSystem.getLocal(new Configuration()), null, null);
+        FileSystem.getLocal(new Configuration()), null);
 
     MockOutputMutator mutator = new MockOutputMutator();
     List<ValueVector> addFields = mutator.getAddFields();
@@ -366,7 +366,7 @@ public class JSONRecordReaderTest {
 
     JSONRecordReader jr = new JSONRecordReader(context,
         FileUtils.getResourceAsFile("/scan_json_test_5.json").toURI().toString(),
-        FileSystem.getLocal(new Configuration()), null, null);
+        FileSystem.getLocal(new Configuration()), null);
 
     MockOutputMutator mutator = new MockOutputMutator();
     List<ValueVector> addFields = mutator.getAddFields();

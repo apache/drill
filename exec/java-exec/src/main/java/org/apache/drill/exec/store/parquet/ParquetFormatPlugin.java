@@ -100,8 +100,8 @@ public class ParquetFormatPlugin implements FormatPlugin{
   }
 
   @Override
-  public ParquetGroupScan getGroupScan(FieldReference outputRef, FileSelection selection) throws IOException {
-    return new ParquetGroupScan( selection.getFileStatusList(fs), this, outputRef);
+  public ParquetGroupScan getGroupScan(FileSelection selection) throws IOException {
+    return new ParquetGroupScan( selection.getFileStatusList(fs), this);
   }
 
   @Override

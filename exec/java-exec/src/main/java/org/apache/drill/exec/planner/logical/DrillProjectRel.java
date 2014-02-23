@@ -18,22 +18,16 @@
 package org.apache.drill.exec.planner.logical;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
-import org.apache.drill.common.expression.FieldReference;
-import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.common.logical.data.NamedExpression;
 import org.apache.drill.common.logical.data.Project;
+import org.apache.drill.exec.planner.common.BaseProjectRel;
 import org.apache.drill.exec.planner.torel.ConversionContext;
 import org.eigenbase.rel.InvalidRelException;
-import org.eigenbase.rel.ProjectRelBase;
-import org.eigenbase.rel.RelCollation;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelOptCost;
-import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeField;
@@ -41,45 +35,31 @@ import org.eigenbase.reltype.RelDataTypeFieldImpl;
 import org.eigenbase.reltype.RelRecordType;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.util.Pair;
 
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 
 /**
  * Project implemented in Drill.
  */
-public class DrillProjectRel extends ProjectRelBase implements DrillRel {
+public class DrillProjectRel extends BaseProjectRel implements DrillRel {
   protected DrillProjectRel(RelOptCluster cluster, RelTraitSet traits, RelNode child, List<RexNode> exps,
       RelDataType rowType) {
-    super(cluster, traits, child, exps, rowType, Flags.BOXED);
-    assert getConvention() == CONVENTION;
+    super(DRILL_LOGICAL, cluster, traits, child, exps, rowType);
   }
-
 
   @Override
   public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
     return new DrillProjectRel(getCluster(), traitSet, sole(inputs), new ArrayList<RexNode>(exps), rowType);
   }
 
-  @Override
-  public RelOptCost computeSelfCost(RelOptPlanner planner) {
-    return super.computeSelfCost(planner).multiplyBy(0.1);
-  }
-
-  private List<Pair<RexNode, String>> projects() {
-    return Pair.zip(exps, getRowType().getFieldNames());
-  }
 
   @Override
   public LogicalOperator implement(DrillImplementor implementor) {
     LogicalOperator inputOp = implementor.visitChild(this, 0, getChild());
     Project.Builder builder = Project.builder();
     builder.setInput(inputOp);
-    for (Pair<RexNode, String> pair : projects()) {
-      LogicalExpression expr = DrillOptiq.toDrill(implementor.getContext(), getChild(), pair.left);
-      builder.addExpr(new FieldReference("output." + pair.right), expr);
+    for (NamedExpression e: this.getProjectExpressions(implementor.getContext())) {
+      builder.addExpr(e);
     }
     return builder.build();
   }

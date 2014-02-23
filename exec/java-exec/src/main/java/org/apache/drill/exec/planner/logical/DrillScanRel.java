@@ -18,11 +18,10 @@
 package org.apache.drill.exec.planner.logical;
 
 import org.apache.drill.common.JSONOptions;
-import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.common.logical.data.Scan;
+import org.apache.drill.exec.planner.common.BaseScanRel;
 import org.apache.drill.exec.planner.torel.ConversionContext;
-import org.eigenbase.rel.TableAccessRelBase;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptTable;
 import org.eigenbase.relopt.RelTraitSet;
@@ -30,28 +29,20 @@ import org.eigenbase.relopt.RelTraitSet;
 /**
  * GroupScan of a Drill table.
  */
-public class DrillScanRel extends TableAccessRelBase implements DrillRel {
+public class DrillScanRel extends BaseScanRel implements DrillRel {
   private final DrillTable drillTable;
 
   /** Creates a DrillScan. */
   public DrillScanRel(RelOptCluster cluster, RelTraitSet traits, RelOptTable table) {
-    super(cluster, traits, table);
-    assert getConvention() == CONVENTION;
+    super(DRILL_LOGICAL, cluster, traits, table);
     this.drillTable = table.unwrap(DrillTable.class);
     assert drillTable != null;
   }
-
-//  @Override
-//  public void register(RelOptPlanner planner) {
-//    super.register(planner);
-//    DrillOptiq.registerStandardPlannerRules(planner);
-//  }
 
   public LogicalOperator implement(DrillImplementor implementor) {
     Scan.Builder builder = Scan.builder();
     builder.storageEngine(drillTable.getStorageEngineName());
     builder.selection(new JSONOptions(drillTable.getSelection()));
-    //builder.outputReference(new FieldReference("_MAP"));
     implementor.registerSource(drillTable);
     return builder.build();
   }

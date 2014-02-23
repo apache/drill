@@ -80,23 +80,21 @@ public class JSONRecordReader implements RecordReader {
   private OutputMutator outputMutator;
   private BufferAllocator allocator;
   private int batchSize;
-  private final FieldReference ref;
   private final List<SchemaPath> columns;
 
   public JSONRecordReader(FragmentContext fragmentContext, String inputPath, FileSystem fileSystem, int batchSize,
-                          FieldReference ref, List<SchemaPath> columns) {
+                          List<SchemaPath> columns) {
     this.hadoopPath = new Path(inputPath);
     this.fileSystem = fileSystem;
     this.allocator = fragmentContext.getAllocator();
     this.batchSize = batchSize;
     valueVectorMap = Maps.newHashMap();
-    this.ref = ref;
     this.columns = columns;
   }
 
-  public JSONRecordReader(FragmentContext fragmentContext, String inputPath, FileSystem fileSystem, FieldReference ref,
+  public JSONRecordReader(FragmentContext fragmentContext, String inputPath, FileSystem fileSystem, 
                           List<SchemaPath> columns) {
-    this(fragmentContext, inputPath, fileSystem, DEFAULT_LENGTH, ref, columns);
+    this(fragmentContext, inputPath, fileSystem, DEFAULT_LENGTH, columns);
   }
 
   private JsonParser getParser() {
@@ -149,7 +147,6 @@ public class JSONRecordReader implements RecordReader {
       // Garbage collect fields never referenced in this batch
       for (Field field : Iterables.concat(currentSchema.removeUnreadFields(), removedFields)) {
         diffSchema.addRemovedField(field);
-        outputMutator.removeField(field.getAsMaterializedField(ref));
       }
 
       if (diffSchema.isChanged()) {
@@ -510,7 +507,7 @@ public class JSONRecordReader implements RecordReader {
   }
 
   private VectorHolder getOrCreateVectorHolder(Field field) throws SchemaChangeException {
-    String fullFieldName = ref != null ? ref.getPath() + "." + field.getFullFieldName() : field.getFullFieldName();
+    String fullFieldName = field.getFullFieldName();
     VectorHolder holder = valueVectorMap.get(fullFieldName);
 
     if (holder == null) {

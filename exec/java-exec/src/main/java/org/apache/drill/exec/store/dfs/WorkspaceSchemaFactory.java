@@ -43,10 +43,12 @@ public class WorkspaceSchemaFactory implements ExpandingConcurrentMap.MapValueFa
   private final DrillFileSystem fs;
   private final String storageEngineName;
   private final String schemaName;
+  private final FileSystemPlugin plugin;
 
-  public WorkspaceSchemaFactory(String schemaName, String storageEngineName, DrillFileSystem fileSystem, String path,
+  public WorkspaceSchemaFactory(FileSystemPlugin plugin, String schemaName, String storageEngineName, DrillFileSystem fileSystem, String path,
       List<FormatMatcher> formatMatchers) throws ExecutionSetupException {
     this.fs = fileSystem;
+    this.plugin = plugin;
     this.root = new Path(path);
     this.fileMatchers = Lists.newArrayList();
     this.dirMatchers = Lists.newArrayList();
@@ -76,7 +78,7 @@ public class WorkspaceSchemaFactory implements ExpandingConcurrentMap.MapValueFa
           try {
             Object selection = m.isReadable(fileSelection);
             if (selection != null)
-              return new DynamicDrillTable(storageEngineName, selection, m.getFormatPlugin().getStorageConfig());
+              return new DynamicDrillTable(plugin, storageEngineName, selection, m.getFormatPlugin().getStorageConfig());
           } catch (IOException e) {
             logger.debug("File read failed.", e);
           }
@@ -87,7 +89,7 @@ public class WorkspaceSchemaFactory implements ExpandingConcurrentMap.MapValueFa
       for (FormatMatcher m : fileMatchers) {
         Object selection = m.isReadable(fileSelection);
         if (selection != null)
-          return new DynamicDrillTable(storageEngineName, selection, m.getFormatPlugin().getStorageConfig());
+          return new DynamicDrillTable(plugin, storageEngineName, selection, m.getFormatPlugin().getStorageConfig());
       }
       return null;
 

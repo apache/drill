@@ -21,7 +21,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.drill.common.logical.data.Scan;
+import org.apache.drill.common.JSONOptions;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 
 public abstract class AbstractStoragePlugin implements StoragePlugin{
@@ -46,9 +46,10 @@ public abstract class AbstractStoragePlugin implements StoragePlugin{
   }
 
   @Override
-  public AbstractGroupScan getPhysicalScan(Scan scan) throws IOException {
+  public AbstractGroupScan getPhysicalScan(JSONOptions selection) throws IOException {
     throw new UnsupportedOperationException();
   }
-
+  
+  
   
 }

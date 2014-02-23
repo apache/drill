@@ -18,6 +18,7 @@
 package org.apache.drill.exec.planner.logical;
 
 import org.apache.drill.common.logical.StoragePluginConfig;
+import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 
@@ -26,8 +27,8 @@ public class DynamicDrillTable extends DrillTable{
 
   private RelDataTypeHolder holder = new RelDataTypeHolder();
   
-  public DynamicDrillTable(String storageEngineName, Object selection, StoragePluginConfig storageEngineConfig) {
-    super(storageEngineName, selection, storageEngineConfig);
+  public DynamicDrillTable(FileSystemPlugin plugin, String storageEngineName, Object selection, StoragePluginConfig storageEngineConfig) {
+    super(storageEngineName, plugin, selection);
   }
 
   @Override

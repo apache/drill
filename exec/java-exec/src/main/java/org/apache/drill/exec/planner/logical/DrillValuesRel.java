@@ -35,7 +35,7 @@ import org.eigenbase.rex.RexLiteral;
 public class DrillValuesRel extends ValuesRelBase implements DrillRel {
   protected DrillValuesRel(RelOptCluster cluster, RelDataType rowType, List<List<RexLiteral>> tuples, RelTraitSet traits) {
     super(cluster, rowType, tuples, traits);
-    assert getConvention() == CONVENTION;
+    assert getConvention() == DRILL_LOGICAL;
   }
 
   @Override

@@ -25,9 +25,10 @@ import java.util.Map;
 import net.hydromatic.optiq.Schema;
 import net.hydromatic.optiq.SchemaPlus;
 
+import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.FormatPluginConfig;
-import org.apache.drill.common.logical.data.Scan;
+import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
@@ -75,11 +76,11 @@ public class FileSystemPlugin extends AbstractStoragePlugin{
       
       List<WorkspaceSchemaFactory> factories = null;
       if(config.workspaces == null || config.workspaces.isEmpty()){
-        factories = Collections.singletonList(new WorkspaceSchemaFactory("default", name, fs, "/", matchers));
+        factories = Collections.singletonList(new WorkspaceSchemaFactory(this, "default", name, fs, "/", matchers));
       }else{
         factories = Lists.newArrayList();
         for(Map.Entry<String, String> space : config.workspaces.entrySet()){
-          factories.add(new WorkspaceSchemaFactory(space.getKey(), name, fs, space.getValue(), matchers));
+          factories.add(new WorkspaceSchemaFactory(this, space.getKey(), name, fs, space.getValue(), matchers));
         }
       }
       this.schemaFactory = new FileSystemSchemaFactory(name, factories);
@@ -94,8 +95,13 @@ public class FileSystemPlugin extends AbstractStoragePlugin{
   }
   
   @Override
-  public AbstractGroupScan getPhysicalScan(Scan scan) throws IOException {
-    FormatSelection formatSelection = scan.getSelection().getWith(context.getConfig(), FormatSelection.class);
+  public StoragePluginConfig getConfig() {
+    return config;
+  }
+
+  @Override
+  public AbstractGroupScan getPhysicalScan(JSONOptions selection) throws IOException {
+    FormatSelection formatSelection = selection.getWith(context.getConfig(), FormatSelection.class);
     FormatPlugin plugin;
     if(formatSelection.getFormat() instanceof NamedFormatPluginConfig){
       plugin = formatsByName.get( ((NamedFormatPluginConfig) formatSelection.getFormat()).name);
@@ -103,7 +109,7 @@ public class FileSystemPlugin extends AbstractStoragePlugin{
       plugin = formatPluginsByConfig.get(formatSelection.getFormat());
     }
     if(plugin == null) throw new IOException(String.format("Failure getting requested format plugin named '%s'.  It was not one of the format plugins registered.", formatSelection.getFormat()));
-    return plugin.getGroupScan(scan.getOutputReference(), formatSelection.getSelection());
+    return plugin.getGroupScan(formatSelection.getSelection());
   }
   
   @Override

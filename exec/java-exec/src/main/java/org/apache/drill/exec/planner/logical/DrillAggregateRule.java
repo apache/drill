@@ -41,7 +41,7 @@ public class DrillAggregateRule extends RelOptRule {
   public void onMatch(RelOptRuleCall call) {
     final AggregateRel aggregate = (AggregateRel) call.rel(0);
     final RelNode input = call.rel(1);
-    final RelTraitSet traits = aggregate.getTraitSet().plus(DrillRel.CONVENTION);
+    final RelTraitSet traits = aggregate.getTraitSet().plus(DrillRel.DRILL_LOGICAL);
     final RelNode convertedInput = convert(input, traits);
     try {
       call.transformTo(new DrillAggregateRel(aggregate.getCluster(), traits, convertedInput, aggregate.getGroupSet(),

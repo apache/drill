@@ -17,12 +17,18 @@
  */
 package org.apache.drill.exec.planner.logical;
 
+import java.io.IOException;
+
 import net.hydromatic.optiq.Schema.TableType;
 import net.hydromatic.optiq.Statistic;
 import net.hydromatic.optiq.Statistics;
 import net.hydromatic.optiq.Table;
 
+import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.logical.StoragePluginConfig;
+import org.apache.drill.exec.physical.base.GroupScan;
+import org.apache.drill.exec.planner.common.BaseScanRel;
+import org.apache.drill.exec.store.StoragePlugin;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptTable;
 
@@ -32,12 +38,13 @@ public abstract class DrillTable implements Table{
   private final String storageEngineName;  
   public final StoragePluginConfig storageEngineConfig;
   private Object selection;
-  
+  private StoragePlugin plugin;
   
   /** Creates a DrillTable. */
-  public DrillTable(String storageEngineName, Object selection, StoragePluginConfig storageEngineConfig) {
+  public DrillTable(String storageEngineName, StoragePlugin plugin, Object selection) {
     this.selection = selection;
-    this.storageEngineConfig = storageEngineConfig;
+    
+    this.storageEngineConfig = plugin.getConfig();
     this.storageEngineName = storageEngineName;
   }
 
@@ -45,6 +52,10 @@ public abstract class DrillTable implements Table{
     return storageEngineConfig;
   }
   
+  public StoragePlugin getPlugin(){
+    return plugin;
+  }
+    
   public Object getSelection() {
     return selection;
   }
@@ -60,7 +71,7 @@ public abstract class DrillTable implements Table{
 
   public RelNode toRel(RelOptTable.ToRelContext context, RelOptTable table) {
     return new DrillScanRel(context.getCluster(),
-        context.getCluster().traitSetOf(DrillRel.CONVENTION),
+        context.getCluster().traitSetOf(DrillRel.DRILL_LOGICAL),
         table);
   }
 

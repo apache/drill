@@ -52,7 +52,6 @@ public class ParquetRowGroupScan extends AbstractBase implements SubScan {
   public final ParquetFormatConfig formatConfig;
   private final ParquetFormatPlugin formatPlugin;
   private final List<RowGroupReadEntry> rowGroupReadEntries;
-  private final FieldReference ref;
   private final List<SchemaPath> columns;
 
   @JsonCreator
@@ -61,7 +60,6 @@ public class ParquetRowGroupScan extends AbstractBase implements SubScan {
       @JsonProperty("storage") StoragePluginConfig storageConfig, //
       @JsonProperty("format") FormatPluginConfig formatConfig, //
       @JsonProperty("entries") LinkedList<RowGroupReadEntry> rowGroupReadEntries, //
-      @JsonProperty("ref") FieldReference ref, //
       @JsonProperty("columns") List<SchemaPath> columns //
   ) throws ExecutionSetupException {
 
@@ -72,19 +70,16 @@ public class ParquetRowGroupScan extends AbstractBase implements SubScan {
     Preconditions.checkNotNull(formatPlugin);
     this.rowGroupReadEntries = rowGroupReadEntries;
     this.formatConfig = formatPlugin.getConfig();
-    this.ref = ref;
     this.columns = columns;
   }
 
   public ParquetRowGroupScan( //
       ParquetFormatPlugin formatPlugin, //
       List<RowGroupReadEntry> rowGroupReadEntries, //
-      FieldReference ref, //
       List<SchemaPath> columns) {
     this.formatPlugin = formatPlugin;
     this.formatConfig = formatPlugin.getConfig();
     this.rowGroupReadEntries = rowGroupReadEntries;
-    this.ref = ref;
     this.columns = columns;
   }
 
@@ -101,10 +96,6 @@ public class ParquetRowGroupScan extends AbstractBase implements SubScan {
   @Override
   public OperatorCost getCost() {
     return null;
-  }
-
-  public FieldReference getRef() {
-    return ref;
   }
 
   @Override
@@ -130,7 +121,7 @@ public class ParquetRowGroupScan extends AbstractBase implements SubScan {
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException {
     Preconditions.checkArgument(children.isEmpty());
-    return new ParquetRowGroupScan(formatPlugin, rowGroupReadEntries, ref, columns);
+    return new ParquetRowGroupScan(formatPlugin, rowGroupReadEntries, columns);
   }
 
   @Override

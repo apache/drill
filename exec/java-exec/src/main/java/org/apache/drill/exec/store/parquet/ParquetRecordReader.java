@@ -72,7 +72,6 @@ class ParquetRecordReader implements RecordReader {
   private int bitWidthAllFixedFields;
   private boolean allFieldsFixedLength;
   private int recordsPerBatch;
-  private final FieldReference ref;
   private long totalRecords;
   private long rowGroupOffset;
 
@@ -93,22 +92,24 @@ class ParquetRecordReader implements RecordReader {
 
   int rowGroupIndex;
 
-  public ParquetRecordReader(FragmentContext fragmentContext,
-                             String path, int rowGroupIndex, FileSystem fs,
-                             CodecFactoryExposer codecFactoryExposer, ParquetMetadata footer, FieldReference ref,
+  public ParquetRecordReader(FragmentContext fragmentContext, //
+                             String path, //
+                             int rowGroupIndex, //
+                             FileSystem fs, //
+                             CodecFactoryExposer codecFactoryExposer, //
+                             ParquetMetadata footer, //
                              List<SchemaPath> columns) throws ExecutionSetupException {
-    this(fragmentContext, DEFAULT_BATCH_LENGTH_IN_BITS, path, rowGroupIndex, fs, codecFactoryExposer, footer, ref,
+    this(fragmentContext, DEFAULT_BATCH_LENGTH_IN_BITS, path, rowGroupIndex, fs, codecFactoryExposer, footer,
         columns);
   }
 
   public ParquetRecordReader(FragmentContext fragmentContext, long batchSize,
                              String path, int rowGroupIndex, FileSystem fs,
-                             CodecFactoryExposer codecFactoryExposer, ParquetMetadata footer, FieldReference ref,
+                             CodecFactoryExposer codecFactoryExposer, ParquetMetadata footer,
                              List<SchemaPath> columns) throws ExecutionSetupException {
     this.allocator = fragmentContext.getAllocator();
     hadoopPath = new Path(path);
     fileSystem = fs;
-    this.ref = ref;
     this.codecFactoryExposer = codecFactoryExposer;
     this.rowGroupIndex = rowGroupIndex;
     this.batchSize = batchSize;
@@ -255,11 +256,7 @@ class ParquetRecordReader implements RecordReader {
   }
 
   private SchemaPath toFieldName(String[] paths) {
-    if(this.ref == null){
-      return new SchemaPath(Joiner.on('/').join(paths), ExpressionPosition.UNKNOWN);
-    }else{
-      return ref.getChild(paths);
-    }
+    return new SchemaPath(Joiner.on('/').join(paths), ExpressionPosition.UNKNOWN);
   }
 
   private TypeProtos.DataMode getDataMode(ColumnDescriptor column) {

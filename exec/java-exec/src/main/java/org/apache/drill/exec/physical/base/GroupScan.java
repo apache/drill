@@ -21,6 +21,7 @@ import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.PhysicalOperatorSetupException;
+import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -29,7 +30,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
  * A GroupScan operator represents all data which will be scanned by a given physical
  * plan.  It is the superset of all SubScans for the plan.
  */
-public interface GroupScan extends Scan, HasAffinity{
+public interface GroupScan extends Scan, HasAffinity, Prel{
 
   public abstract void applyAssignments(List<DrillbitEndpoint> endpoints) throws PhysicalOperatorSetupException;
 

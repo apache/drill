@@ -33,6 +33,7 @@ import org.apache.drill.exec.store.SchemaFactory;
 import org.apache.drill.exec.store.SchemaHolder;
 import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory.WorkspaceSchema;
 import org.apache.drill.exec.store.hive.HiveReadEntry;
+import org.apache.drill.exec.store.hive.HiveStoragePlugin;
 import org.apache.drill.exec.store.hive.HiveStoragePluginConfig;
 import org.apache.drill.exec.store.hive.HiveTable;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -58,12 +59,12 @@ public class HiveSchemaFactory implements SchemaFactory {
   private LoadingCache<String, List<String>> databases;
   private LoadingCache<String, List<String>> tableNameLoader;
   private LoadingCache<String, LoadingCache<String, HiveReadEntry>> tableLoaders;
-  private HiveStoragePluginConfig pluginConfig;
+  private HiveStoragePlugin plugin;
   private final String schemaName;
 
-  public HiveSchemaFactory(HiveStoragePluginConfig pluginConfig, String name, HiveConf hiveConf) throws ExecutionSetupException {
+  public HiveSchemaFactory(HiveStoragePlugin plugin, String name, HiveConf hiveConf) throws ExecutionSetupException {
     this.schemaName = name;
-    this.pluginConfig = pluginConfig;
+    this.plugin = plugin;
     
     try {
       this.mClient = new HiveMetaStoreClient(hiveConf);
@@ -255,7 +256,7 @@ public class HiveSchemaFactory implements SchemaFactory {
     DrillTable getDrillTable(String dbName, String t){
       HiveReadEntry entry = getSelectionBaseOnName(dbName, t);
       if(entry == null) return null;
-      return new DrillHiveTable(schemaName, entry, pluginConfig);
+      return new DrillHiveTable(schemaName, plugin, entry);
     }
     
     HiveReadEntry getSelectionBaseOnName(String dbName, String t) {

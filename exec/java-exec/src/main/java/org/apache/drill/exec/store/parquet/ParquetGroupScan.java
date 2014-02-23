@@ -87,7 +87,6 @@ public class ParquetGroupScan extends AbstractGroupScan {
   private final ParquetFormatPlugin formatPlugin;
   private final ParquetFormatConfig formatConfig;
   private final FileSystem fs;
-  private final FieldReference ref;
   private List<EndpointAffinity> endpointAffinities;
 
   private List<SchemaPath> columns;
@@ -107,7 +106,6 @@ public class ParquetGroupScan extends AbstractGroupScan {
       @JsonProperty("storage") StoragePluginConfig storageConfig, //
       @JsonProperty("format") FormatPluginConfig formatConfig, //
       @JacksonInject StoragePluginRegistry engineRegistry, // 
-      @JsonProperty("ref") FieldReference ref, //
       @JsonProperty("columns") List<SchemaPath> columns //
       ) throws IOException, ExecutionSetupException {
     engineRegistry.init(DrillConfig.create());
@@ -120,14 +118,12 @@ public class ParquetGroupScan extends AbstractGroupScan {
     this.fs = formatPlugin.getFileSystem().getUnderlying();
     this.formatConfig = formatPlugin.getConfig();
     this.entries = entries;
-    this.ref = ref;
     this.readFooterFromEntries();
 
   }
 
   public ParquetGroupScan(List<FileStatus> files, //
-      ParquetFormatPlugin formatPlugin, //
-      FieldReference ref) //
+      ParquetFormatPlugin formatPlugin) //
       throws IOException {
     this.formatPlugin = formatPlugin;
     this.columns = null;
@@ -139,7 +135,6 @@ public class ParquetGroupScan extends AbstractGroupScan {
       entries.add(new ReadEntryWithPath(file.getPath().toString()));
     }
     
-    this.ref = ref;
     readFooter(files);
   }
 
@@ -282,7 +277,7 @@ public class ParquetGroupScan extends AbstractGroupScan {
     Preconditions.checkArgument(!rowGroupsForMinor.isEmpty(),
         String.format("MinorFragmentId %d has no read entries assigned", minorFragmentId));
 
-    return new ParquetRowGroupScan(formatPlugin, convertToReadEntries(rowGroupsForMinor), ref, columns);
+    return new ParquetRowGroupScan(formatPlugin, convertToReadEntries(rowGroupsForMinor), columns);
   }
 
   
@@ -296,10 +291,7 @@ public class ParquetGroupScan extends AbstractGroupScan {
     }
     return entries;
   }
-  
-  public FieldReference getRef() {
-    return ref;
-  }
+
 
   @Override
   public int getMaxParallelizationWidth() {

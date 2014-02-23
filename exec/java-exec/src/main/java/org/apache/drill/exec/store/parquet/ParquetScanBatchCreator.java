@@ -78,7 +78,6 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
                 context, e.getPath(), e.getRowGroupIndex(), fs,
                 rowGroupScan.getStorageEngine().getCodecFactoryExposer(),
                 footers.get(e.getPath()),
-                rowGroupScan.getRef(),
                 rowGroupScan.getColumns()
             )
         );

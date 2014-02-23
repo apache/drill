@@ -39,7 +39,7 @@ public interface FormatPlugin {
   
   public FormatMatcher getMatcher();
   
-  public AbstractGroupScan getGroupScan(FieldReference outputRef, FileSelection selection) throws IOException;
+  public AbstractGroupScan getGroupScan(FileSelection selection) throws IOException;
 
   public List<QueryOptimizerRule> getOptimizerRules();
   

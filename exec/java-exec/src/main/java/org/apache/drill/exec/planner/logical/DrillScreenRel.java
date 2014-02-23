@@ -19,47 +19,20 @@ package org.apache.drill.exec.planner.logical;
 
 import java.util.List;
 
-import net.hydromatic.optiq.impl.java.JavaTypeFactory;
-import net.hydromatic.optiq.rules.java.EnumerableConvention;
-import net.hydromatic.optiq.rules.java.EnumerableRel;
-import net.hydromatic.optiq.rules.java.EnumerableRelImplementor;
-import net.hydromatic.optiq.rules.java.JavaRowFormat;
-import net.hydromatic.optiq.rules.java.PhysType;
-import net.hydromatic.optiq.rules.java.PhysTypeImpl;
-
 import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.common.logical.data.Store;
+import org.apache.drill.exec.planner.common.BaseScreenRel;
 import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.SingleRel;
 import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelOptCost;
-import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.RelTraitSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Relational expression that converts from Drill to Enumerable. At runtime it executes a Drill query and returns the
- * results as an {@link net.hydromatic.linq4j.Enumerable}.
- */
-public class DrillScreenRel extends SingleRel implements DrillRel {
+public class DrillScreenRel extends BaseScreenRel implements DrillRel {
   private static final Logger logger = LoggerFactory.getLogger(DrillScreenRel.class);
 
-  private PhysType physType;
-
   public DrillScreenRel(RelOptCluster cluster, RelTraitSet traitSet, RelNode input) {
-    super(cluster, traitSet, input);
-    assert input.getConvention() == DrillRel.CONVENTION;
-    physType = PhysTypeImpl.of((JavaTypeFactory) cluster.getTypeFactory(), input.getRowType(), JavaRowFormat.ARRAY);
-  }
-
-  public PhysType getPhysType() {
-    return physType;
-  }
-
-  @Override
-  public RelOptCost computeSelfCost(RelOptPlanner planner) {
-    return super.computeSelfCost(planner).multiplyBy(.1);
+    super(DRILL_LOGICAL, cluster, traitSet, input);
   }
 
   @Override

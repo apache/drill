@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.store.hive.HiveReadEntry;
+import org.apache.drill.exec.store.hive.HiveStoragePlugin;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
@@ -38,8 +39,8 @@ public class DrillHiveTable extends DrillTable{
   
   private final Table hiveTable;
   
-  public DrillHiveTable(String storageEngineName, HiveReadEntry readEntry, StoragePluginConfig storageEngineConfig) {
-    super(storageEngineName, readEntry, storageEngineConfig);
+  public DrillHiveTable(String storageEngineName, HiveStoragePlugin plugin, HiveReadEntry readEntry) {
+    super(storageEngineName, plugin, readEntry);
     this.hiveTable = new org.apache.hadoop.hive.ql.metadata.Table(readEntry.getTable());
   }
 

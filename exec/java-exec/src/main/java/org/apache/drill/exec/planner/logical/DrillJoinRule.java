@@ -43,7 +43,7 @@ public class DrillJoinRule extends RelOptRule {
     final JoinRel join = (JoinRel) call.rel(0);
     final RelNode left = call.rel(1);
     final RelNode right = call.rel(2);
-    final RelTraitSet traits = join.getTraitSet().plus(DrillRel.CONVENTION);
+    final RelTraitSet traits = join.getTraitSet().plus(DrillRel.DRILL_LOGICAL);
 
     final RelNode convertedLeft = convert(left, traits);
     final RelNode convertedRight = convert(right, traits);

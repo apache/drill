@@ -30,14 +30,12 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 public class Scan extends SourceOperator{
 	private final String storageEngine;
 	private final JSONOptions selection;
-	private final FieldReference outputReference;
 	
 	@JsonCreator
-  public Scan(@JsonProperty("storageengine") String storageEngine, @JsonProperty("selection") JSONOptions selection, @JsonProperty("ref") FieldReference outputReference) {
+  public Scan(@JsonProperty("storageengine") String storageEngine, @JsonProperty("selection") JSONOptions selection) {
     super();
     this.storageEngine = storageEngine;
     this.selection = selection;
-    this.outputReference = outputReference;
   }
 
   @JsonProperty("storageengine")
@@ -47,11 +45,6 @@ public class Scan extends SourceOperator{
 
   public JSONOptions getSelection() {
     return selection;
-  }
-
-  @JsonProperty("ref")
-  public FieldReference getOutputReference() {
-    return outputReference;
   }
 
   @Override
@@ -67,7 +60,6 @@ public class Scan extends SourceOperator{
   public static class Builder extends AbstractBuilder<Scan>{
     private String storageEngine;
     private JSONOptions selection;
-    private FieldReference outputReference;
 
     public Builder storageEngine(String storageEngine) {
       this.storageEngine = storageEngine;
@@ -79,13 +71,8 @@ public class Scan extends SourceOperator{
       return this;
     }
 
-    public Builder outputReference(FieldReference outputReference) {
-      this.outputReference = outputReference;
-      return this;
-    }
-
     public Scan build() {
-      return new Scan(storageEngine, selection, outputReference);
+      return new Scan(storageEngine, selection);
     }
   }
 
