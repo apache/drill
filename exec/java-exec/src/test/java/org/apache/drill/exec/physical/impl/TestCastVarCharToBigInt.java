@@ -78,7 +78,7 @@ public class TestCastVarCharToBigInt extends PopUnitTestBase {
             client.connect();
             List<QueryResultBatch> results = client.runQuery(UserProtos.QueryType.PHYSICAL,
                     Files.toString(FileUtils.getResourceAsFile("/functions/cast/test_cast_varchar_to_bigint.json"), Charsets.UTF_8)
-                            .replace("#{TEST_FILE}", FileUtils.getResourceAsFile("/scan_json_test_cast.json").toURI().toString())
+                            .replace("#{TEST_FILE}", "/scan_json_test_cast.json")
             );
 
             RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());

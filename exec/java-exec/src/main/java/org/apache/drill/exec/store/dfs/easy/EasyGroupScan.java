@@ -74,6 +74,7 @@ public class EasyGroupScan extends AbstractGroupScan{
       ) throws IOException, ExecutionSetupException {
     
     this.formatPlugin = (EasyFormatPlugin<?>) engineRegistry.getFormatPlugin(storageConfig, formatConfig);
+    Preconditions.checkNotNull(formatPlugin, "Unable to load format plugin for provided format config.");
     this.selection = new FileSelection(files, true);
     this.maxWidth = selection.getFileStatusList(formatPlugin.getFileSystem()).size();
     this.ref = ref;

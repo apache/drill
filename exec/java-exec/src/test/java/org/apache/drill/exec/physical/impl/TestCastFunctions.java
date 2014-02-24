@@ -393,7 +393,7 @@ public class TestCastFunctions extends PopUnitTestBase{
       
       client.connect();
       List<QueryResultBatch> results = client.runQuery(UserProtos.QueryType.PHYSICAL,
-          Files.toString(FileUtils.getResourceAsFile("/functions/cast/testCastVarCharNull.json"), Charsets.UTF_8).replace("#{TEST_FILE}", FileUtils.getResourceAsFile("/jsoninput/input1.json").toURI().toString()));      
+          Files.toString(FileUtils.getResourceAsFile("/functions/cast/testCastVarCharNull.json"), Charsets.UTF_8).replace("#{TEST_FILE}", "/jsoninput/input1.json"));      
     
       QueryResultBatch batch = results.get(0);
 
