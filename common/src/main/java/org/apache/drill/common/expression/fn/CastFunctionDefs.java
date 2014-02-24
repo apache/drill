@@ -25,13 +25,13 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 
 public class CastFunctionDefs implements CallProvider{
   
-  private static final FunctionDefinition CAST_BIG_INT = FunctionDefinition.simple("castBIGINT", new ArgumentValidators.AnyTypeAllowed(1,3), OutputTypeDeterminer.FIXED_BIGINT);
-  private static final FunctionDefinition CAST_INT = FunctionDefinition.simple("castINT", new ArgumentValidators.AnyTypeAllowed(1,3), OutputTypeDeterminer.FIXED_INT);
-  private static final FunctionDefinition CAST_FLOAT4 = FunctionDefinition.simple("castFLOAT4", new ArgumentValidators.AnyTypeAllowed(1,3), OutputTypeDeterminer.FIXED_FLOAT4); 
-  private static final FunctionDefinition CAST_FLOAT8 = FunctionDefinition.simple("castFLOAT8", new ArgumentValidators.AnyTypeAllowed(1,3), OutputTypeDeterminer.FIXED_FLOAT8);
-  private static final FunctionDefinition CAST_VARCHAR = FunctionDefinition.simple("castVARCHAR", new ArgumentValidators.AnyTypeAllowed(1,4), OutputTypeDeterminer.FIXED_VARCHAR);
-  private static final FunctionDefinition CAST_VARBINARY = FunctionDefinition.simple("castVARBINARY", new ArgumentValidators.AnyTypeAllowed(1,4), OutputTypeDeterminer.FIXED_VARBINARY);
-  private static final FunctionDefinition CAST_VAR16CHAR = FunctionDefinition.simple("castVAR16CHAR", new ArgumentValidators.AnyTypeAllowed(1,4), OutputTypeDeterminer.FIXED_VAR16CHAR);
+  private static final FunctionDefinition CAST_BIG_INT = FunctionDefinition.simple("castBIGINT", new ArgumentValidators.AnyTypeAllowed(1,3), new OutputTypeDeterminer.NullIfNullType(MinorType.BIGINT));
+  private static final FunctionDefinition CAST_INT = FunctionDefinition.simple("castINT", new ArgumentValidators.AnyTypeAllowed(1,3), new OutputTypeDeterminer.NullIfNullType(MinorType.INT));
+  private static final FunctionDefinition CAST_FLOAT4 = FunctionDefinition.simple("castFLOAT4", new ArgumentValidators.AnyTypeAllowed(1,3), new OutputTypeDeterminer.NullIfNullType(MinorType.FLOAT4)); 
+  private static final FunctionDefinition CAST_FLOAT8 = FunctionDefinition.simple("castFLOAT8", new ArgumentValidators.AnyTypeAllowed(1,3), new OutputTypeDeterminer.NullIfNullType(MinorType.FLOAT8));
+  private static final FunctionDefinition CAST_VARCHAR = FunctionDefinition.simple("castVARCHAR", new ArgumentValidators.AnyTypeAllowed(1,4), new OutputTypeDeterminer.NullIfNullType(MinorType.VARCHAR));
+  private static final FunctionDefinition CAST_VARBINARY = FunctionDefinition.simple("castVARBINARY", new ArgumentValidators.AnyTypeAllowed(1,4), new OutputTypeDeterminer.NullIfNullType(MinorType.VARBINARY));
+  private static final FunctionDefinition CAST_VAR16CHAR = FunctionDefinition.simple("castVAR16CHAR", new ArgumentValidators.AnyTypeAllowed(1,4), new OutputTypeDeterminer.NullIfNullType(MinorType.VAR16CHAR));
 
   
   @Override

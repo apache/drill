@@ -19,6 +19,9 @@ package org.apache.drill.exec.physical.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+
+import java.util.List;
+
 import mockit.Injectable;
 import mockit.NonStrictExpectations;
 
@@ -26,6 +29,7 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.Float4Holder;
@@ -38,34 +42,44 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
+import org.apache.drill.exec.pop.PopUnitTestBase;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.CoordinationProtos;
-import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
+import org.apache.drill.exec.proto.UserProtos;
+import org.apache.drill.exec.record.RecordBatchLoader;
+import org.apache.drill.exec.record.VectorAccessible;
+import org.apache.drill.exec.record.VectorWrapper;
+import org.apache.drill.exec.rpc.user.QueryResultBatch;
 import org.apache.drill.exec.rpc.user.UserServer;
+import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.vector.BigIntVector;
 import org.apache.drill.exec.vector.Float4Vector;
 import org.apache.drill.exec.vector.Float8Vector;
 import org.apache.drill.exec.vector.IntVector;
+import org.apache.drill.exec.vector.NullableVarCharVector;
+import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarBinaryVector;
 import org.apache.drill.exec.vector.VarCharVector;
 import org.junit.After;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
-public class TestCastFunctions {
+public class TestCastFunctions extends PopUnitTestBase{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestSimpleFunctions.class);
 
   DrillConfig c = DrillConfig.create();
+
 
   @Test
   // cast to bigint.
   public void testCastBigInt(@Injectable final DrillbitContext bitContext,
                             @Injectable UserServer.UserClientConnection connection) throws Throwable{
-
     new NonStrictExpectations(){{
       bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = new TopLevelAllocator();
@@ -342,7 +356,6 @@ public class TestCastFunctions {
   }
 
   @Test(expected = NumberFormatException.class)
-  //nested: cast is nested in another cast, or another function.
   public void testCastNumException(@Injectable final DrillbitContext bitContext,
                             @Injectable UserServer.UserClientConnection connection) throws Throwable{
 
@@ -370,6 +383,65 @@ public class TestCastFunctions {
 
   }
   
+  @Test
+  public void testCastFromNullablCol() throws Throwable {
+    RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
+
+    try(Drillbit bit = new Drillbit(CONFIG, serviceSet);
+        DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
+      bit.run();
+      
+      client.connect();
+      List<QueryResultBatch> results = client.runQuery(UserProtos.QueryType.PHYSICAL,
+          Files.toString(FileUtils.getResourceAsFile("/functions/cast/testCastVarCharNull.json"), Charsets.UTF_8).replace("#{TEST_FILE}", FileUtils.getResourceAsFile("/jsoninput/input1.json").toURI().toString()));      
+    
+      QueryResultBatch batch = results.get(0);
+
+      RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
+      batchLoader.load(batch.getHeader().getDef(), batch.getData());
+     
+      Object [][] result = getRunResult(batchLoader);
+      
+      Object [][] expected = new Object[2][2];
+      
+      expected[0][0] = new String("2001");
+      expected[0][1] = new String("1.2");
+      
+      expected[1][0] = new String("-2002");
+      expected[1][1] = new String("-1.2");
+ 
+      assertEquals(result.length, expected.length);
+      assertEquals(result[0].length, expected[0].length);
+      
+      for (int i = 0; i<result.length; i++ ) {
+        for (int j = 0; j<result[0].length; j++) {
+          assertEquals(String.format("Column %s at row %s have wrong result",  j, i), result[i][j], expected[i][j]);
+        }
+      }     
+    }  
+  }
+
+  private Object[][] getRunResult(VectorAccessible va) {
+    int size = 0;
+    for (VectorWrapper v : va) {
+      size++;     
+    }   
+  
+    Object[][] res = new Object [va.getRecordCount()][size];
+    for (int j = 0; j < va.getRecordCount(); j++) {
+      int i = 0;
+      for (VectorWrapper v : va) {
+        Object o =  v.getValueVector().getAccessor().getObject(j);
+        if (o instanceof byte[]) {
+          res[j][i++] =  new String((byte[]) o);
+        } else { 
+          res[j][i++] = o;
+        }
+      }
+    }
+    return res;
+ }  
+
   @After
   public void tearDown() throws Exception{
     // pause to get logger to catch up.

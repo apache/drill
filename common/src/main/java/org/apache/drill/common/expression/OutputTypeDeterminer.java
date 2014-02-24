@@ -74,4 +74,24 @@ public interface OutputTypeDeterminer {
     }
   }
   
+  public static class NullIfNullType implements OutputTypeDeterminer{
+    public MinorType outputMinorType;
+    
+    
+    public NullIfNullType(MinorType outputType) {
+      super();
+      this.outputMinorType = outputType;
+    }
+
+    @Override
+    public MajorType getOutputType(List<LogicalExpression> expressions) {
+      for(LogicalExpression e : expressions){
+        if(e.getMajorType().getMode() == DataMode.OPTIONAL){
+          return Types.optional(outputMinorType);
+        }
+      }
+      return Types.required(outputMinorType);
+    }
+  }
+
 }

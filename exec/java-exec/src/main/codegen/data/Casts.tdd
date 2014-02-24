@@ -39,11 +39,11 @@
     {from: "VarBinary", to: "Float8", major: "SrcVarlen", javaType:"Double", parse:"Double"}, 
 
     {from: "BigInt", to: "VarChar", major: "TargetVarlen", javaType: "Long", bufferLength:"20"},
-    {from: "Int", to: "VarChar", major: "TargetVarlen", javaType: "Integer", bufferLength:"10"},
+    {from: "Int", to: "VarChar", major: "TargetVarlen", javaType: "Integer", bufferLength:"11"},
     {from: "Float4", to: "VarChar", major: "TargetVarlen", javaType: "Float", bufferLength:"100"},
     {from: "Float8", to: "VarChar", major: "TargetVarlen", javaType: "Double", bufferLength:"100"},
     {from: "BigInt", to: "VarBinary", major: "TargetVarlen", javaType: "Long", bufferLength:"20"},
-    {from: "Int", to: "VarBinary", major: "TargetVarlen", javaType: "Integer", bufferLength:"10"},
+    {from: "Int", to: "VarBinary", major: "TargetVarlen", javaType: "Integer", bufferLength:"11"},
     {from: "Float4", to: "VarBinary", major: "TargetVarlen", javaType: "Float", bufferLength:"100"},
     {from: "Float8", to: "VarBinary", major: "TargetVarlen", javaType: "Double", bufferLength:"100"},     
     
