@@ -64,6 +64,14 @@ public class TestJdbcQuery {
     testQuery("select * from cp.`employee.json`");
   }
 
+  @Test
+  public void testInfoSchema() throws Exception{
+    testQuery("select * from INFORMATION_SCHEMA.SCHEMATA");
+    testQuery("select * from INFORMATION_SCHEMA.CATALOGS");
+    testQuery("select * from INFORMATION_SCHEMA.VIEWS");
+    testQuery("select * from INFORMATION_SCHEMA.TABLES");
+    testQuery("select * from INFORMATION_SCHEMA.COLUMNS");
+  }
   
   @Test 
   public void testCast() throws Exception{
@@ -125,6 +133,7 @@ public class TestJdbcQuery {
         System.out.println(String.format("Query completed in %d millis.", watch.elapsed(TimeUnit.MILLISECONDS)));
       }
 
+      System.out.println("\n\n\n");
       success = true;
     }finally{
       if(!success) Thread.sleep(2000);

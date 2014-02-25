@@ -17,8 +17,8 @@
  */
 package org.apache.drill.exec.record;
 
+import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
@@ -31,7 +31,7 @@ import com.google.common.collect.Sets;
  * builder will always check that this schema is a equal or more materialized version of the current schema.
  */
 public class SchemaBuilder {
-  private Set<MaterializedField> fields = Sets.newHashSet();
+  private LinkedHashSet<MaterializedField> fields = Sets.newLinkedHashSet();
 
   private BatchSchema.SelectionVectorMode selectionVectorMode = SelectionVectorMode.NONE;
 

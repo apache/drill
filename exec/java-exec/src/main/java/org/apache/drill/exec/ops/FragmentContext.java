@@ -96,7 +96,7 @@ public class FragmentContext implements Closeable {
   }
   
   public SchemaPlus getRootSchema(){
-    return null;
+    return context.getStorage().getSchemaFactory().getOrphanedRootSchema();
   }
 
   /**
