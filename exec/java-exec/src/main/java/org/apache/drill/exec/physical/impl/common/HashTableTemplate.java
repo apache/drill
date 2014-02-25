@@ -371,11 +371,13 @@ public abstract class HashTableTemplate implements HashTable {
   }
 
   public void clear() {
-    for (BatchHolder bh : batchHolders) {
-      bh.clear();
+    if (batchHolders != null) {
+      for (BatchHolder bh : batchHolders) {
+        bh.clear();
+      }
+      batchHolders.clear();
+      batchHolders = null;
     }
-    batchHolders.clear();
-    batchHolders = null;
     startIndices.clear();
     currentIdxHolder = null;
     numEntries = 0;
@@ -486,6 +488,7 @@ public abstract class HashTableTemplate implements HashTable {
   }
 
   // Return -1 if key is not found in the hash table. Otherwise, return the global index of the key
+  @Override
   public int containsKey(int incomingRowIdx, boolean isProbe) {
     int hash = isProbe ? getHashProbe(incomingRowIdx) : getHashBuild(incomingRowIdx);
     int i = getBucketIndex(hash, numBuckets());

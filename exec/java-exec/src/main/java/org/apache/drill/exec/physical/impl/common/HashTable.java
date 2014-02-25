@@ -49,7 +49,7 @@ public interface HashTable {
 
   public PutStatus put(int incomingRowIdx, IntHolder htIdxHolder);
   
-  public int containsKey(int incomingRowIdx);
+  public int containsKey(int incomingRowIdx, boolean isProbe);
 
   public int size();
 
