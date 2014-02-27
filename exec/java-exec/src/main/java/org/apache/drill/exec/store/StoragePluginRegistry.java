@@ -21,14 +21,20 @@ import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
+import net.hydromatic.linq4j.expressions.DefaultExpression;
+import net.hydromatic.linq4j.expressions.Expression;
 import net.hydromatic.linq4j.function.Function1;
 import net.hydromatic.optiq.Schema;
 import net.hydromatic.optiq.SchemaPlus;
+import net.hydromatic.optiq.Table;
+import net.hydromatic.optiq.TableFunction;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -44,6 +50,7 @@ import org.apache.drill.exec.store.dfs.FormatPlugin;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
+import com.google.hive12.common.collect.Maps;
 
 public class StoragePluginRegistry implements Iterable<Map.Entry<String, StoragePlugin>>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StoragePluginRegistry.class);
@@ -167,9 +174,157 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
       return defaultSchema;
     }
     
+    /**
+     * Used in situations where we want to get a schema without having to use in the context of an Optiq planner. 
+     * @return Root schema of the storage engine hiearchy.
+     */
+    public SchemaPlus getOrphanedRootSchema(){
+      SchemaPlus p = new OrphanPlus();
+      apply(p);
+      return p;
+    }
+    
   }
   
 
+  private class OrphanPlusWrap extends OrphanPlus{
+    private Schema inner;
 
+    public OrphanPlusWrap(Schema inner) {
+      super();
+      this.inner = inner;
+    }
+
+    @Override
+    public SchemaPlus getParentSchema() {
+      return inner.getParentSchema();
+    }
+
+    @Override
+    public String getName() {
+      return inner.getName();
+    }
+
+    @Override
+    public Table getTable(String name) {
+      return inner.getTable(name);
+    }
+
+    @Override
+    public Set<String> getTableNames() {
+      return inner.getTableNames();
+    }
+
+    @Override
+    public Collection<TableFunction> getTableFunctions(String name) {
+      return inner.getTableFunctions(name);
+    }
+
+    @Override
+    public Set<String> getTableFunctionNames() {
+      return inner.getTableFunctionNames();
+    }
+
+    @Override
+    public Set<String> getSubSchemaNames() {
+      return inner.getSubSchemaNames();
+    }
+
+    @Override
+    public Expression getExpression() {
+      return inner.getExpression();
+    }
+
+    @Override
+    public SchemaPlus addRecursive(Schema schema) {
+      return schema.getParentSchema().add(schema);
+    }
+    
+    
+    
+  }
+
+  private class OrphanPlus implements SchemaPlus{
+
+    private HashMap<String, SchemaPlus> schemas = Maps.newHashMap();
+    
+    @Override
+    public SchemaPlus getParentSchema() {
+      return null;
+    }
+
+    @Override
+    public String getName() {
+      return "";
+    }
+
+    @Override
+    public Table getTable(String name) {
+      return null;
+    }
+
+    @Override
+    public Set<String> getTableNames() {
+      return Collections.emptySet();
+    }
+
+    @Override
+    public Collection<TableFunction> getTableFunctions(String name) {
+      return Collections.emptyList();
+    }
+
+    @Override
+    public Set<String> getTableFunctionNames() {
+      return Collections.emptySet();
+    }
+
+    @Override
+    public Set<String> getSubSchemaNames() {
+      return schemas.keySet();
+    }
+
+    @Override
+    public Expression getExpression() {
+      return new DefaultExpression(Object.class);
+    }
+
+    @Override
+    public SchemaPlus getSubSchema(String name) {
+      return schemas.get(name);
+    }
+
+    @Override
+    public SchemaPlus add(Schema schema) {
+      OrphanPlusWrap plus = new OrphanPlusWrap(schema);
+      schemas.put(schema.getName(), plus);
+      return plus;
+    }
+
+    @Override
+    public void add(String name, Table table) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void add(String name, TableFunction table) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean isMutable() {
+      return false;
+    }
+
+    @Override
+    public <T> T unwrap(Class<T> clazz) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public SchemaPlus addRecursive(Schema schema) {
+      return schema.getParentSchema().add(schema);
+    }
+    
+  }
   
 }
