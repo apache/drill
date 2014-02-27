@@ -80,6 +80,7 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
   public IterOutcome next() {
     if(!noEndLimit && recordsLeft <= 0) {
       killIncoming();
+      cleanup();
       return IterOutcome.NONE;
     }
 

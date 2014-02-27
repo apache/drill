@@ -399,7 +399,7 @@ public class JSONRecordReaderTest {
 
     JSONRecordReader jr = new JSONRecordReader(context,
         FileUtils.getResourceAsFile("/scan_json_test_7.json").toURI().toString(),
-        FileSystem.getLocal(new Configuration()), null, null);
+        FileSystem.getLocal(new Configuration()), null);
 
     MockOutputMutator mutator = new MockOutputMutator();
     List<ValueVector> addFields = mutator.getAddFields();

@@ -100,7 +100,7 @@ public class Order extends SingleInputOperator {
     public String getOrder() {
       
       switch(direction){
-      case Descending: return "DESC";
+      case DESCENDING: return "DESC";
       default: return "ASC";
       }
     }
@@ -140,10 +140,10 @@ public class Order extends SingleInputOperator {
   }
   
   public static Direction getDirectionFromString(String direction){
-    return "DESC".equalsIgnoreCase(direction) ? Direction.Descending : Direction.Ascending;
+    return "DESC".equalsIgnoreCase(direction) ? Direction.DESCENDING : Direction.ASCENDING;
   }
   
   public static String getStringFromDirection(Direction direction){
-    return direction == Direction.Descending ? "DESC" : "ASC";
+    return direction == Direction.DESCENDING ? "DESC" : "ASC";
   }
 }

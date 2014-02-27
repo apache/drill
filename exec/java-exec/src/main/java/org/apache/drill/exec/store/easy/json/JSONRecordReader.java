@@ -147,6 +147,7 @@ public class JSONRecordReader implements RecordReader {
       // Garbage collect fields never referenced in this batch
       for (Field field : Iterables.concat(currentSchema.removeUnreadFields(), removedFields)) {
         diffSchema.addRemovedField(field);
+        outputMutator.removeField(field.getAsMaterializedField());
       }
 
       if (diffSchema.isChanged()) {

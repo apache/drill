@@ -206,12 +206,12 @@ public final class JoinStatus {
       return JoinOutcome.FAILURE;
     if (lastLeft == IterOutcome.OK && lastRight == IterOutcome.OK)
       return JoinOutcome.BATCH_RETURNED;
+    if (eitherMatches(IterOutcome.NONE))
+      return JoinOutcome.NO_MORE_DATA;    
     if (eitherMatches(IterOutcome.OK_NEW_SCHEMA))
       return JoinOutcome.SCHEMA_CHANGED;
     if (eitherMatches(IterOutcome.NOT_YET))
       return JoinOutcome.WAITING;
-    if (eitherMatches(IterOutcome.NONE))
-      return JoinOutcome.NO_MORE_DATA;
     return JoinOutcome.FAILURE;
   }
   

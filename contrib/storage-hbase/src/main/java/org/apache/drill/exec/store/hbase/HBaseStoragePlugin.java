@@ -18,18 +18,17 @@
 package org.apache.drill.exec.store.hbase;
 
 import java.io.IOException;
-import java.util.ArrayList;
-
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import net.hydromatic.optiq.Schema;
 import net.hydromatic.optiq.SchemaPlus;
-import org.apache.drill.common.logical.data.Scan;
+
+import org.apache.drill.common.JSONOptions;
+import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 
-import com.google.common.base.Preconditions;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class HBaseStoragePlugin extends AbstractStoragePlugin {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBaseStoragePlugin.class);
@@ -42,13 +41,9 @@ public class HBaseStoragePlugin extends AbstractStoragePlugin {
   public HBaseStoragePlugin(HBaseStoragePluginConfig configuration, DrillbitContext context, String name)
       throws IOException {
     this.context = context;
-    this.schemaFactory = new HBaseSchemaFactory(configuration, name);
+    this.schemaFactory = new HBaseSchemaFactory(this, name);
     this.engineConfig = configuration;
     this.name = name;
-  }
-
-  public HBaseStoragePluginConfig getEngineConfig() {
-    return engineConfig;
   }
 
   public DrillbitContext getContext() {
@@ -61,16 +56,20 @@ public class HBaseStoragePlugin extends AbstractStoragePlugin {
   }
 
   @Override
-  public HBaseGroupScan getPhysicalScan(Scan scan) throws IOException {
-    HTableReadEntry readEntry = scan.getSelection().getListWith(new ObjectMapper(),
+  public HBaseGroupScan getPhysicalScan(JSONOptions selection) throws IOException {
+    HTableReadEntry readEntry = selection.getListWith(new ObjectMapper(),
         new TypeReference<HTableReadEntry>() {});
-
-    return new HBaseGroupScan(readEntry.getTableName(), this, scan.getOutputReference(), null);
+    return new HBaseGroupScan(readEntry.getTableName(), this, null);
   }
 
   @Override
   public Schema createAndAddSchema(SchemaPlus parent) {
     return schemaFactory.add(parent);
+  }
+
+  @Override
+  public HBaseStoragePluginConfig getConfig() {
+    return engineConfig;
   }
 
 }

@@ -27,9 +27,9 @@ import org.apache.drill.common.logical.data.Join;
 import org.apache.drill.common.logical.data.JoinCondition;
 import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.common.logical.data.Project;
+import org.apache.drill.exec.planner.common.DrillJoinRelBase;
 import org.apache.drill.exec.planner.torel.ConversionContext;
 import org.eigenbase.rel.InvalidRelException;
-import org.eigenbase.rel.JoinRelBase;
 import org.eigenbase.rel.JoinRelType;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptCluster;
@@ -45,14 +45,11 @@ import org.eigenbase.util.Pair;
 /**
  * Join implemented in Drill.
  */
-public class DrillJoinRel extends JoinRelBase implements DrillRel {
-  private final List<Integer> leftKeys = new ArrayList<>();
-  private final List<Integer> rightKeys = new ArrayList<>();
-
+public class DrillJoinRel extends DrillJoinRelBase implements DrillRel {
   /** Creates a DrillJoinRel. */
   public DrillJoinRel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, RexNode condition,
       JoinRelType joinType) throws InvalidRelException {
-    super(cluster, traits, left, right, condition, joinType, Collections.<String> emptySet());
+    super(cluster, traits, left, right, condition, joinType);
 
     RexNode remaining = RelOptUtil.splitJoinCondition(left, right, condition, leftKeys, rightKeys);
     if (!remaining.isAlwaysTrue()) {
@@ -88,7 +85,8 @@ public class DrillJoinRel extends JoinRelBase implements DrillRel {
     for (Pair<Integer, Integer> pair : Pair.zip(leftKeys, rightKeys)) {
       builder.addCondition("==", new FieldReference(leftFields.get(pair.left)), new FieldReference(rightFields.get(pair.right)));
     }
-    return builder.build();
+    
+    return builder.build();  
   }
 
   /**
@@ -146,20 +144,4 @@ public class DrillJoinRel extends JoinRelBase implements DrillRel {
     return new DrillJoinRel(context.getCluster(), context.getLogicalTraits(), left, right, rexCondition, join.getJoinType());
   }
   
-  
-  /**
-   * Returns whether there are any elements in common between left and right.
-   */
-  private static <T> boolean intersects(List<T> left, List<T> right) {
-    return new HashSet<>(left).removeAll(right);
-  }
-
-  private boolean uniqueFieldNames(RelDataType rowType) {
-    return isUnique(rowType.getFieldNames());
-  }
-
-  private static <T> boolean isUnique(List<T> list) {
-    return new HashSet<>(list).size() == list.size();
-  }
-
 }

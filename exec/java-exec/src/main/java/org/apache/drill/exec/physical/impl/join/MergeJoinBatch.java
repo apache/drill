@@ -128,17 +128,25 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
     // loop so we can start over again if we find a new batch was created.
     while(true){
 
+      JoinOutcome outcome = status.getOutcome();
       // if the previous outcome was a change in schema or we sent a batch, we have to set up a new batch.
-      if (status.getOutcome() == JoinOutcome.BATCH_RETURNED ||
-          status.getOutcome() == JoinOutcome.SCHEMA_CHANGED)
+      if (outcome == JoinOutcome.BATCH_RETURNED ||
+          outcome == JoinOutcome.SCHEMA_CHANGED)
         allocateBatch();
 
       // reset the output position to zero after our parent iterates this RecordBatch
-      if (status.getOutcome() == JoinOutcome.BATCH_RETURNED ||
-          status.getOutcome() == JoinOutcome.SCHEMA_CHANGED ||
-          status.getOutcome() == JoinOutcome.NO_MORE_DATA)
+      if (outcome == JoinOutcome.BATCH_RETURNED ||
+          outcome == JoinOutcome.SCHEMA_CHANGED ||
+          outcome == JoinOutcome.NO_MORE_DATA)
         status.resetOutputPos();
 
+      if (outcome == JoinOutcome.NO_MORE_DATA) {
+        left.cleanup();
+        right.cleanup();
+        logger.debug("NO MORE DATA; returning {}  NONE");
+        return IterOutcome.NONE;
+      }
+      
       boolean first = false;
       if(worker == null){
         try {

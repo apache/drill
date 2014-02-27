@@ -34,15 +34,12 @@ import org.apache.drill.common.logical.data.Project;
 import org.apache.drill.common.logical.data.Scan;
 import org.apache.drill.common.logical.data.Union;
 import org.apache.drill.common.logical.data.visitors.AbstractLogicalVisitor;
-import org.apache.drill.exec.planner.common.BaseFilterRel;
-import org.apache.drill.exec.planner.common.DrillLimitRel;
-import org.apache.drill.exec.planner.common.BaseProjectRel;
-import org.apache.drill.exec.planner.common.BaseScanRel;
-import org.apache.drill.exec.planner.common.DrillUnionRel;
 import org.apache.drill.exec.planner.logical.DrillAggregateRel;
 import org.apache.drill.exec.planner.logical.DrillJoinRel;
+import org.apache.drill.exec.planner.logical.DrillLimitRel;
 import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillSortRel;
+import org.apache.drill.exec.planner.logical.DrillUnionRel;
 import org.apache.drill.exec.planner.logical.ScanFieldDeterminer;
 import org.apache.drill.exec.planner.logical.ScanFieldDeterminer.FieldList;
 import org.eigenbase.rel.InvalidRelException;
@@ -121,17 +118,20 @@ public class ConversionContext implements ToRelContext {
 
     @Override
     public RelNode visitScan(Scan scan, ConversionContext context){
-      return BaseScanRel.convert(scan, context);
+      //return BaseScanRel.convert(scan, context);
+      return null;
     }
 
     @Override
     public RelNode visitFilter(Filter filter, ConversionContext context) throws InvalidRelException{
-      return BaseFilterRel.convert(filter, context);
+      //return BaseFilterRel.convert(filter, context);
+      return null;
     }
 
     @Override
     public RelNode visitProject(Project project, ConversionContext context) throws InvalidRelException{
-      return BaseProjectRel.convert(project, context);
+      //return BaseProjectRel.convert(project, context);
+      return null;
     }
 
     @Override

@@ -129,7 +129,7 @@ public class BasicOptimizer extends Optimizer{
 
       if(groupBy.getKeys().length > 0){
         for(NamedExpression e : groupBy.getKeys()){
-          orderDefs.add(new Ordering(Direction.Ascending, e.getExpr(), NullDirection.FIRST));
+          orderDefs.add(new Ordering(Direction.ASCENDING, e.getExpr(), NullDirection.FIRST));
         }
         input = new Sort(input, orderDefs, false);
       }
@@ -161,7 +161,7 @@ public class BasicOptimizer extends Optimizer{
       PhysicalOperator leftOp = join.getLeft().accept(this, value);
       List<Ordering> leftOrderDefs = Lists.newArrayList();
       for(JoinCondition jc : join.getConditions()){
-        leftOrderDefs.add(new Ordering(Direction.Ascending, jc.getLeft()));
+        leftOrderDefs.add(new Ordering(Direction.ASCENDING, jc.getLeft()));
       }
       leftOp = new Sort(leftOp, leftOrderDefs, false);
       leftOp = new SelectionVectorRemover(leftOp);
@@ -169,7 +169,7 @@ public class BasicOptimizer extends Optimizer{
       PhysicalOperator rightOp = join.getRight().accept(this, value);
       List<Ordering> rightOrderDefs = Lists.newArrayList();
       for(JoinCondition jc : join.getConditions()){
-        rightOrderDefs.add(new Ordering(Direction.Ascending, jc.getRight()));
+        rightOrderDefs.add(new Ordering(Direction.ASCENDING, jc.getRight()));
       }
       rightOp = new Sort(rightOp, rightOrderDefs, false);
       rightOp = new SelectionVectorRemover(rightOp);

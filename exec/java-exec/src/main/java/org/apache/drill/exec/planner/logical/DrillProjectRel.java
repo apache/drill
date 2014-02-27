@@ -23,9 +23,10 @@ import java.util.List;
 import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.common.logical.data.NamedExpression;
 import org.apache.drill.common.logical.data.Project;
-import org.apache.drill.exec.planner.common.BaseProjectRel;
+import org.apache.drill.exec.planner.common.DrillProjectRelBase;
 import org.apache.drill.exec.planner.torel.ConversionContext;
 import org.eigenbase.rel.InvalidRelException;
+import org.eigenbase.rel.ProjectRelBase;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelTraitSet;
@@ -41,15 +42,15 @@ import com.google.common.collect.Lists;
 /**
  * Project implemented in Drill.
  */
-public class DrillProjectRel extends BaseProjectRel implements DrillRel {
+public class DrillProjectRel extends DrillProjectRelBase implements DrillRel {
   protected DrillProjectRel(RelOptCluster cluster, RelTraitSet traits, RelNode child, List<RexNode> exps,
       RelDataType rowType) {
     super(DRILL_LOGICAL, cluster, traits, child, exps, rowType);
   }
 
-  @Override
-  public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
-    return new DrillProjectRel(getCluster(), traitSet, sole(inputs), new ArrayList<RexNode>(exps), rowType);
+
+  public ProjectRelBase copy(RelTraitSet traitSet, RelNode input, List<RexNode> exps, RelDataType rowType) {
+    return new DrillProjectRel(getCluster(), traitSet, input, exps, rowType);
   }
 
 

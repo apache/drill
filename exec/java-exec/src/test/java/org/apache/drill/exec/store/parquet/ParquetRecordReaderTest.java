@@ -429,8 +429,7 @@ public class ParquetRecordReaderTest {
     FileSystem fs = new CachedSingleFileSystem(fileName);
     for(int i = 0; i < 25; i++){
       ParquetRecordReader rr = new ParquetRecordReader(context, 256000, fileName, 0, fs,
-          new CodecFactoryExposer(dfsConfig), f.getParquetMetadata(), new FieldReference("_MAP",
-          ExpressionPosition.UNKNOWN), columns);
+          new CodecFactoryExposer(dfsConfig), f.getParquetMetadata(), columns);
       TestOutputMutator mutator = new TestOutputMutator();
       rr.setup(mutator);
       Stopwatch watch = new Stopwatch();

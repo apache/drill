@@ -546,11 +546,11 @@ public class MergingRecordBatch implements RecordBatch {
       // generate less than/greater than checks (fixing results for ASCending vs. DESCending)
       cg.getEvalBlock()._if(out.getValue().eq(JExpr.lit(1)))
                        ._then()
-                       ._return(JExpr.lit(config.getOrderings().get(comparisonVectorIndex).getDirection() == Direction.Ascending ? 1 : -1));
+                       ._return(JExpr.lit(config.getOrderings().get(comparisonVectorIndex).getDirection() == Direction.ASCENDING ? 1 : -1));
 
       cg.getEvalBlock()._if(out.getValue().eq(JExpr.lit(-1)))
                        ._then()
-                       ._return(JExpr.lit(config.getOrderings().get(comparisonVectorIndex).getDirection() == Direction.Ascending ? -1 : 1));
+                       ._return(JExpr.lit(config.getOrderings().get(comparisonVectorIndex).getDirection() == Direction.ASCENDING ? -1 : 1));
 
       ++comparisonVectorIndex;
     }

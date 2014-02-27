@@ -27,7 +27,6 @@ import net.hydromatic.optiq.Table;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.base.GroupScan;
-import org.apache.drill.exec.planner.common.BaseScanRel;
 import org.apache.drill.exec.store.StoragePlugin;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptTable;
@@ -39,15 +38,24 @@ public abstract class DrillTable implements Table{
   public final StoragePluginConfig storageEngineConfig;
   private Object selection;
   private StoragePlugin plugin;
+  private GroupScan scan; 
   
   /** Creates a DrillTable. */
   public DrillTable(String storageEngineName, StoragePlugin plugin, Object selection) {
     this.selection = selection;
+    this.plugin = plugin;
     
     this.storageEngineConfig = plugin.getConfig();
     this.storageEngineName = storageEngineName;
   }
 
+  public GroupScan getGroupScan() throws IOException{
+    if(scan == null){
+      this.scan = plugin.getPhysicalScan(new JSONOptions(selection));
+    }
+    return scan;
+  }
+  
   public StoragePluginConfig getStorageEngineConfig(){
     return storageEngineConfig;
   }

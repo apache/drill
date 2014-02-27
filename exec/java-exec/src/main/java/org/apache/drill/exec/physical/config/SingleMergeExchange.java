@@ -89,4 +89,9 @@ public class SingleMergeExchange extends AbstractExchange {
     return true;
   }
 
+  @JsonProperty("orderings")
+  public List<Ordering> getOrderings() {
+    return this.orderExpr;
+  }
+
 }

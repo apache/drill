@@ -25,7 +25,6 @@ import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.physical.OperatorCost;
@@ -70,7 +69,6 @@ public class HBaseGroupScan extends AbstractGroupScan {
   private String tableName;
   private HBaseStoragePlugin storagePlugin;
   private HBaseStoragePluginConfig storagePluginConfig;
-  private final FieldReference ref;
   private List<EndpointAffinity> endpointAffinities;
   private List<SchemaPath> columns;
 
@@ -80,24 +78,21 @@ public class HBaseGroupScan extends AbstractGroupScan {
   public HBaseGroupScan(@JsonProperty("entries") List<HTableReadEntry> entries,
                           @JsonProperty("storage") HBaseStoragePluginConfig storageEngineConfig,
                           @JsonProperty("columns") List<SchemaPath> columns,
-                          @JacksonInject StoragePluginRegistry engineRegistry,
-                          @JsonProperty("ref") FieldReference ref
+                          @JacksonInject StoragePluginRegistry engineRegistry
                            )throws IOException, ExecutionSetupException {
     Preconditions.checkArgument(entries.size() == 1);
     engineRegistry.init(DrillConfig.create());
     this.storagePlugin = (HBaseStoragePlugin) engineRegistry.getEngine(storageEngineConfig);
     this.storagePluginConfig = storageEngineConfig;
     this.tableName = entries.get(0).getTableName();
-    this.ref = ref;
     this.columns = columns;
     getRegionInfos();
   }
 
-  public HBaseGroupScan(String tableName, HBaseStoragePlugin storageEngine, FieldReference ref, List<SchemaPath> columns) throws IOException {
+  public HBaseGroupScan(String tableName, HBaseStoragePlugin storageEngine, List<SchemaPath> columns) throws IOException {
     this.storagePlugin = storageEngine;
-    this.storagePluginConfig = storageEngine.getEngineConfig();
+    this.storagePluginConfig = storageEngine.getConfig();
     this.tableName = tableName;
-    this.ref = ref;
     this.columns = columns;
     getRegionInfos();
   }
@@ -167,12 +162,9 @@ public class HBaseGroupScan extends AbstractGroupScan {
 
   @Override
   public HBaseSubScan getSpecificScan(int minorFragmentId) {
-    return new HBaseSubScan(storagePlugin, storagePluginConfig, mappings.get(minorFragmentId), ref, columns);
+    return new HBaseSubScan(storagePlugin, storagePluginConfig, mappings.get(minorFragmentId), columns);
   }
 
-  public FieldReference getRef() {
-    return ref;
-  }
 
   @Override
   public int getMaxParallelizationWidth() {

@@ -30,6 +30,7 @@ import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.logical.data.GroupingAggregate;
 import org.apache.drill.common.logical.data.LogicalOperator;
+import org.apache.drill.exec.planner.common.DrillAggregateRelBase;
 import org.apache.drill.exec.planner.torel.ConversionContext;
 import org.eigenbase.rel.AggregateCall;
 import org.eigenbase.rel.AggregateRelBase;
@@ -43,7 +44,7 @@ import com.google.common.collect.Lists;
 /**
  * Aggregation implemented in Drill.
  */
-public class DrillAggregateRel extends AggregateRelBase implements DrillRel {
+public class DrillAggregateRel extends DrillAggregateRelBase implements DrillRel {
   /** Creates a DrillAggregateRel. */
   public DrillAggregateRel(RelOptCluster cluster, RelTraitSet traits, RelNode child, BitSet groupSet,
       List<AggregateCall> aggCalls) throws InvalidRelException {
@@ -55,10 +56,9 @@ public class DrillAggregateRel extends AggregateRelBase implements DrillRel {
     }
   }
 
-  @Override
-  public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
+  public AggregateRelBase copy(RelTraitSet traitSet, RelNode input, BitSet groupSet, List<AggregateCall> aggCalls) {
     try {
-      return new DrillAggregateRel(getCluster(), traitSet, sole(inputs), getGroupSet(), aggCalls);
+      return new DrillAggregateRel(getCluster(), traitSet, input, getGroupSet(), aggCalls);
     } catch (InvalidRelException e) {
       throw new AssertionError(e);
     }

@@ -22,26 +22,22 @@ import java.util.List;
 
 import org.apache.drill.common.logical.data.Limit;
 import org.apache.drill.common.logical.data.LogicalOperator;
+import org.apache.drill.exec.planner.common.DrillLimitRelBase;
 import org.apache.drill.exec.planner.logical.DrillImplementor;
 import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.torel.ConversionContext;
 import org.eigenbase.rel.InvalidRelException;
 import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.SingleRel;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.rex.RexLiteral;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.sql.type.SqlTypeName;
 
-public class DrillLimitRel extends SingleRel implements DrillRel {
-  private RexNode offset;
-  private RexNode fetch;
+public class DrillLimitRel extends DrillLimitRelBase implements DrillRel {
 
   public DrillLimitRel(RelOptCluster cluster, RelTraitSet traitSet, RelNode child, RexNode offset, RexNode fetch) {
-    super(cluster, traitSet, child);
-    this.offset = offset;
-    this.fetch = fetch;
+    super(cluster, traitSet, child, offset, fetch);
   }
 
   @Override

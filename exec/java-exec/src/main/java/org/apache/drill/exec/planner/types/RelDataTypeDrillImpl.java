@@ -15,13 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.planner.logical;
+package org.apache.drill.exec.planner.types;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.reltype.RelDataTypeImpl;
+import org.eigenbase.reltype.RelDataTypePrecedenceList;
+import org.eigenbase.sql.type.SqlTypeExplicitPrecedenceList;
 import org.eigenbase.sql.type.SqlTypeName;
 
 /* We use an instance of this class as the row type for
@@ -63,7 +66,12 @@ public class RelDataTypeDrillImpl extends RelDataTypeImpl {
 
     @Override
     public SqlTypeName getSqlTypeName() {
-        return null;
+        return SqlTypeName.ANY;
+    }
+
+    @Override
+    public RelDataTypePrecedenceList getPrecedenceList() {
+      return new SqlTypeExplicitPrecedenceList((List<SqlTypeName>) (List) Collections.emptyList());
     }
 
     @Override

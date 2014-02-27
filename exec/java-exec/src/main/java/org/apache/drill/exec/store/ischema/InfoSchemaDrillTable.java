@@ -27,8 +27,8 @@ public class InfoSchemaDrillTable extends DrillTable{
 
   private final SelectedTable table;
   
-  public InfoSchemaDrillTable(String storageEngineName, SelectedTable selection, StoragePluginConfig storageEngineConfig) {
-    super(storageEngineName, selection, storageEngineConfig);
+  public InfoSchemaDrillTable(InfoSchemaStoragePlugin plugin, String storageEngineName, SelectedTable selection, StoragePluginConfig storageEngineConfig) {
+    super(storageEngineName, plugin, selection);
     this.table = selection;
   }
 

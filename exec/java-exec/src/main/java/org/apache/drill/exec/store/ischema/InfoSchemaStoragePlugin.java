@@ -24,6 +24,8 @@ import java.util.Set;
 import net.hydromatic.optiq.Schema;
 import net.hydromatic.optiq.SchemaPlus;
 
+import org.apache.drill.common.JSONOptions;
+import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.logical.data.Scan;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.server.DrillbitContext;
@@ -53,25 +55,30 @@ public class InfoSchemaStoragePlugin extends AbstractStoragePlugin{
   }
 
   @Override
-  public InfoSchemaGroupScan getPhysicalScan(Scan scan) throws IOException {
-    SelectedTable table = scan.getSelection().getWith(context.getConfig(),  SelectedTable.class);
+  public InfoSchemaGroupScan getPhysicalScan(JSONOptions selection) throws IOException {
+    SelectedTable table = selection.getWith(context.getConfig(),  SelectedTable.class);
     return new InfoSchemaGroupScan(table);
   }
 
   @Override
+  public StoragePluginConfig getConfig() {
+    return this.config;
+  }
+  
+  @Override
   public Schema createAndAddSchema(SchemaPlus parent) {
-    Schema s = new ISchema(parent);
+    Schema s = new ISchema(parent, this);
     parent.add(s);
     return s;
   }
   
   private class ISchema extends AbstractSchema{
     private Map<String, InfoSchemaDrillTable> tables;
-    public ISchema(SchemaPlus parent){
+    public ISchema(SchemaPlus parent, InfoSchemaStoragePlugin plugin){
       super(new SchemaHolder(parent), "INFORMATION_SCHEMA");
       Map<String, InfoSchemaDrillTable> tbls = Maps.newHashMap();
       for(SelectedTable tbl : SelectedTable.values()){
-        tbls.put(tbl.name(), new InfoSchemaDrillTable("INFORMATION_SCHEMA", tbl, config));  
+        tbls.put(tbl.name(), new InfoSchemaDrillTable(plugin, "INFORMATION_SCHEMA", tbl, config));  
       }
       this.tables = ImmutableMap.copyOf(tbls);
     }

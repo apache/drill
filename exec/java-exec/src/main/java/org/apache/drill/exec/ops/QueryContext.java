@@ -21,6 +21,7 @@ import java.util.Collection;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.cache.DistributedCache;
+import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
@@ -85,4 +86,7 @@ public class QueryContext {
     return drillbitContext.getSchemaFactory();
   }
   
+  public FunctionImplementationRegistry getFunctionRegistry(){
+    return drillbitContext.getFunctionImplementationRegistry();
+  }
 }

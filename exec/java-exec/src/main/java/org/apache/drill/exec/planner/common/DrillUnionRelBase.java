@@ -17,20 +17,21 @@
  */
 package org.apache.drill.exec.planner.common;
 
-import org.apache.drill.exec.planner.logical.DrillTable;
-import org.eigenbase.rel.TableAccessRelBase;
-import org.eigenbase.relopt.Convention;
+import java.util.List;
+
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.UnionRelBase;
 import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelOptTable;
+
 import org.eigenbase.relopt.RelTraitSet;
 
-public abstract class BaseScanRel extends TableAccessRelBase{
-  protected final DrillTable drillTable;
-
-  public BaseScanRel(Convention convention, RelOptCluster cluster, RelTraitSet traits, RelOptTable table) {
-    super(cluster, traits, table);
-    this.drillTable = table.unwrap(DrillTable.class);
-    assert drillTable != null;
+/**
+ * Base class for logical and physical Union implemented in Drill
+ */
+public abstract class DrillUnionRelBase extends UnionRelBase implements DrillRelNode {
+ 
+  public DrillUnionRelBase(RelOptCluster cluster, RelTraitSet traits,
+      List<RelNode> inputs, boolean all) {
+    super(cluster, traits, inputs, all);
   }
-
 }

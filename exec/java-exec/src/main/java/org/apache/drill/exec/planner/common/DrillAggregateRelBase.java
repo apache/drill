@@ -15,27 +15,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.jdbc;
+package org.apache.drill.exec.planner.common;
 
-import java.util.Properties;
-import java.util.TimeZone;
+import java.util.BitSet;
+import java.util.List;
 
-public class ConnectionConfig {
-  private final Properties props;
-  
-  public ConnectionConfig(Properties p){
-    this.props = p;
+
+import org.eigenbase.rel.AggregateCall;
+import org.eigenbase.rel.AggregateRelBase;
+import org.eigenbase.rel.InvalidRelException;
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.relopt.RelOptCluster;
+import org.eigenbase.relopt.RelTraitSet;
+
+
+/**
+ * Base class for logical and physical Aggregations implemented in Drill
+ */
+public abstract class DrillAggregateRelBase extends AggregateRelBase implements DrillRelNode {
+
+  public DrillAggregateRelBase(RelOptCluster cluster, RelTraitSet traits, RelNode child, BitSet groupSet,
+      List<AggregateCall> aggCalls) throws InvalidRelException {
+    super(cluster, traits, child, groupSet, aggCalls);
   }
-  
-  public boolean isLocal(){
-    return "local".equals(props.getProperty("zk"));
-  }
-  public String getZookeeperConnectionString(){
-    return props.getProperty("zk");
-  }
-  
-  public TimeZone getTimeZone(){
-    return TimeZone.getDefault(); 
-  }
-  
+
 }

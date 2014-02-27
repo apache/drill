@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.planner.logical;
 
-import org.apache.drill.exec.planner.common.DrillUnionRel;
+import org.apache.drill.exec.planner.common.DrillUnionRelBase;
 import org.eigenbase.rel.UnionRel;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.*;
@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Rule that converts a {@link UnionRel} to a {@link DrillUnionRel}, implemented by a "union" operation.
+ * Rule that converts a {@link UnionRel} to a {@link DrillUnionRelBase}, implemented by a "union" operation.
  */
 public class DrillUnionRule extends RelOptRule {
   public static final RelOptRule INSTANCE = new DrillUnionRule();

@@ -17,37 +17,27 @@
  */
 package org.apache.drill.exec.planner.common;
 
-import org.apache.drill.common.expression.LogicalExpression;
-import org.apache.drill.common.logical.data.Filter;
-import org.apache.drill.common.logical.data.LogicalOperator;
-import org.apache.drill.exec.planner.logical.DrillImplementor;
-import org.apache.drill.exec.planner.logical.DrillOptiq;
-import org.apache.drill.exec.planner.logical.DrillParseContext;
-import org.apache.drill.exec.planner.logical.DrillRel;
-import org.apache.drill.exec.planner.torel.ConversionContext;
-import org.eigenbase.rel.FilterRelBase;
-import org.eigenbase.rel.InvalidRelException;
 import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.SingleRel;
 import org.eigenbase.relopt.Convention;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.rex.RexNode;
 
+/**
+ * Base class for logical and physical Screen implemented in Drill
+ */
+public abstract class DrillScreenRelBase extends SingleRel implements DrillRelNode {
 
-public abstract class BaseFilterRel extends FilterRelBase{
-  protected BaseFilterRel(Convention convention, RelOptCluster cluster, RelTraitSet traits, RelNode child, RexNode condition) {
-    super(cluster, traits, child, condition);
-    assert getConvention() == convention;
+  public DrillScreenRelBase(Convention convention, RelOptCluster cluster, RelTraitSet traitSet, RelNode input) {
+    super(cluster, traitSet, input);
+    assert input.getConvention() == convention;
   }
-  
+
   @Override
   public RelOptCost computeSelfCost(RelOptPlanner planner) {
-    return super.computeSelfCost(planner).multiplyBy(0.1);
+    return super.computeSelfCost(planner).multiplyBy(.1);
   }
 
-  protected LogicalExpression getFilterExpression(DrillParseContext context){
-    return DrillOptiq.toDrill(context, getChild(), getCondition());
-  }
 }

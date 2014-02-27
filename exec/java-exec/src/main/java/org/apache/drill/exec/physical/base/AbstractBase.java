@@ -19,6 +19,7 @@ package org.apache.drill.exec.physical.base;
 
 import org.apache.drill.common.graph.GraphVisitor;
 import org.apache.drill.exec.physical.OperatorCost;
+import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 
 import com.google.common.base.Preconditions;
 
@@ -41,6 +42,11 @@ public abstract class AbstractBase implements PhysicalOperator{
   @Override
   public boolean isExecutable() {
     return true;
+  }
+  
+  @Override
+  public SelectionVectorMode getSVMode() {
+    return SelectionVectorMode.NONE;
   }
   
 }

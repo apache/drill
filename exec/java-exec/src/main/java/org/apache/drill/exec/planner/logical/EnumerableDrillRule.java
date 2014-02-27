@@ -19,12 +19,12 @@ package org.apache.drill.exec.planner.logical;
 
 import net.hydromatic.optiq.rules.java.EnumerableConvention;
 
-import org.apache.drill.exec.planner.common.BaseScreenRel;
+import org.apache.drill.exec.planner.common.DrillScreenRelBase;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.convert.ConverterRule;
 
 /**
- * Rule that converts any Drill relational expression to enumerable format by adding a {@link BaseScreenRel}.
+ * Rule that converts any Drill relational expression to enumerable format by adding a {@link DrillScreenRelBase}.
  */
 public class EnumerableDrillRule extends ConverterRule {
 

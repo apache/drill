@@ -17,31 +17,23 @@
  */
 package org.apache.drill.exec.planner.common;
 
-import java.util.List;
-
-import net.hydromatic.optiq.prepare.Prepare.CatalogReader;
-
-import org.apache.drill.common.logical.data.LogicalOperator;
-import org.apache.drill.exec.planner.logical.DrillImplementor;
-import org.apache.drill.exec.planner.logical.DrillRel;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.TableModificationRelBase;
+import org.apache.drill.exec.planner.logical.DrillTable;
+import org.eigenbase.rel.TableAccessRelBase;
+import org.eigenbase.relopt.Convention;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptTable;
 import org.eigenbase.relopt.RelTraitSet;
 
-public class DrillStoreRel extends TableModificationRelBase implements DrillRel{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillStoreRel.class);
+/**
+ * Base class for logical and physical Scans implemented in Drill
+ */
+public abstract class DrillScanRelBase extends TableAccessRelBase implements DrillRelNode {
+  protected final DrillTable drillTable;
 
-  protected DrillStoreRel(RelOptCluster cluster, RelTraitSet traits, RelOptTable table, CatalogReader catalogReader,
-      RelNode child, Operation operation, List<String> updateColumnList, boolean flattened) {
-    super(cluster, traits, table, catalogReader, child, operation, updateColumnList, flattened);
-    
-  }
-
-  @Override
-  public LogicalOperator implement(DrillImplementor implementor) {
-    return null;
+  public DrillScanRelBase(Convention convention, RelOptCluster cluster, RelTraitSet traits, RelOptTable table) {
+    super(cluster, traits, table);
+    this.drillTable = table.unwrap(DrillTable.class);
+    assert drillTable != null;
   }
 
 }

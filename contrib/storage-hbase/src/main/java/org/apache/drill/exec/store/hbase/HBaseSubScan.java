@@ -51,28 +51,24 @@ public class HBaseSubScan extends AbstractBase implements SubScan {
   @JsonIgnore
   private final HBaseStoragePlugin hbaseStoragePlugin;
   private final List<HBaseSubScanReadEntry> rowGroupReadEntries;
-  private final FieldReference ref;
   private final List<SchemaPath> columns;
 
   @JsonCreator
   public HBaseSubScan(@JacksonInject StoragePluginRegistry registry, @JsonProperty("storage") StoragePluginConfig storage,
                       @JsonProperty("rowGroupReadEntries") LinkedList<HBaseSubScanReadEntry> rowGroupReadEntries,
-                      @JsonProperty("columns") List<SchemaPath> columns,
-                      @JsonProperty("ref") FieldReference ref) throws ExecutionSetupException {
+                      @JsonProperty("columns") List<SchemaPath> columns) throws ExecutionSetupException {
     hbaseStoragePlugin = (HBaseStoragePlugin) registry.getEngine(storage);
     this.rowGroupReadEntries = rowGroupReadEntries;
     this.storage = storage;
-    this.ref = ref;
     this.columns = columns;
   }
 
   public HBaseSubScan(HBaseStoragePlugin plugin, HBaseStoragePluginConfig config,
-                      List<HBaseSubScanReadEntry> regionInfoList, FieldReference ref,
+                      List<HBaseSubScanReadEntry> regionInfoList,
                       List<SchemaPath> columns) {
     hbaseStoragePlugin = plugin;
     storage = config;
     this.rowGroupReadEntries = regionInfoList;
-    this.ref = ref;
     this.columns = columns;
   }
 
@@ -92,11 +88,6 @@ public class HBaseSubScan extends AbstractBase implements SubScan {
   @Override
   public OperatorCost getCost() {
     return null;
-  }
-
-  
-  public FieldReference getRef() {
-    return ref;
   }
 
   @Override
@@ -122,7 +113,7 @@ public class HBaseSubScan extends AbstractBase implements SubScan {
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
     Preconditions.checkArgument(children.isEmpty());
-    return new HBaseSubScan(hbaseStoragePlugin, (HBaseStoragePluginConfig) storage, rowGroupReadEntries, ref, columns);
+    return new HBaseSubScan(hbaseStoragePlugin, (HBaseStoragePluginConfig) storage, rowGroupReadEntries, columns);
   }
 
   @Override

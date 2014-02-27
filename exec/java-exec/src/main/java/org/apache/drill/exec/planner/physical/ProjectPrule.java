@@ -17,7 +17,8 @@
  */
 package org.apache.drill.exec.planner.physical;
 
-import org.apache.drill.exec.planner.common.BaseProjectRel;
+import org.apache.drill.exec.planner.common.DrillProjectRelBase;
+import org.apache.drill.exec.planner.logical.DrillProjectRel;
 import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.eigenbase.rel.ProjectRel;
@@ -26,20 +27,33 @@ import org.eigenbase.relopt.Convention;
 import org.eigenbase.relopt.RelOptRule;
 import org.eigenbase.relopt.RelOptRuleCall;
 import org.eigenbase.relopt.RelTraitSet;
+import org.eigenbase.relopt.volcano.RelSubset;
 
 public class ProjectPrule extends RelOptRule {
   public static final RelOptRule INSTANCE = new ProjectPrule();
 
   private ProjectPrule() {
-    super(RelOptHelper.some(BaseProjectRel.class, DrillRel.DRILL_LOGICAL, RelOptHelper.any(RelNode.class)), "ProjectPrule");
+    super(RelOptHelper.some(DrillProjectRel.class, RelOptHelper.any(RelNode.class)), "ProjectPrule");
   }
 
   @Override
   public void onMatch(RelOptRuleCall call) {
-    final BaseProjectRel project = (BaseProjectRel) call.rel(0);
+    final DrillProjectRel project = (DrillProjectRel) call.rel(0);
     final RelNode input = call.rel(1);
-    final RelTraitSet traits = project.getTraitSet().replace(Prel.DRILL_PHYSICAL);
-    final RelNode convertedInput = convert(input, traits);
-    call.transformTo(new ProjectPrel(project.getCluster(), traits, convertedInput, project.getProjects(), project.getRowType()));
+
+    RelTraitSet traits = input.getTraitSet().plus(Prel.DRILL_PHYSICAL);
+    RelNode convertedInput = convert(input, traits);
+    
+    if (convertedInput instanceof RelSubset) {
+      RelSubset subset = (RelSubset) convertedInput;
+      for (RelNode rel : subset.getRelList()) {
+        if (!rel.getTraitSet().getTrait(DrillDistributionTraitDef.INSTANCE).equals(DrillDistributionTrait.DEFAULT)) {
+          call.transformTo(new ProjectPrel(project.getCluster(), rel.getTraitSet(), rel, project.getProjects(), project.getRowType()));
+        }
+      }
+      
+    } else{
+      call.transformTo(new ProjectPrel(project.getCluster(), convertedInput.getTraitSet(), convertedInput, project.getProjects(), project.getRowType()));        
+    }
   }
 }

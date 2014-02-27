@@ -106,6 +106,23 @@ public class HashFunctions {
     }
   }
 
+  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL )
+  public static class NullableVarCharHash implements DrillSimpleFunc {
+
+    @Param NullableVarCharHolder in;
+    @Output IntHolder out;
+
+    public void setup(RecordBatch incoming) {
+    }
+
+    public void eval() {
+      if (in.isSet == 0)
+        out.value = 0;
+      else
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash(in.buffer.nioBuffer(), 0);
+    }
+  }
+
   @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
   public static class NullableBigIntHash implements DrillSimpleFunc {
 
@@ -145,6 +162,20 @@ public class HashFunctions {
   public static class VarBinaryHash implements DrillSimpleFunc {
 
     @Param VarBinaryHolder in;
+    @Output IntHolder out;
+
+    public void setup(RecordBatch incoming) {
+    }
+
+    public void eval() {
+      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash(in.buffer.nioBuffer(in.start, in.end - in.start), 0);
+    }
+  }
+
+  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  public static class VarCharHash implements DrillSimpleFunc {
+
+    @Param VarCharHolder in;
     @Output IntHolder out;
 
     public void setup(RecordBatch incoming) {

@@ -40,12 +40,12 @@ public abstract class Field {
   }
 
   public MaterializedField getAsMaterializedField(FieldReference ref) {
-    if(ref != null){
-      return MaterializedField.create(new SchemaPath(ref.getPath() + "." + getFieldName(), ExpressionPosition.UNKNOWN), fieldType);  
-    }else{
-      return MaterializedField.create(new SchemaPath(getFieldName(), ExpressionPosition.UNKNOWN), fieldType);
-    }
-    
+    assert (ref!=null);
+    return MaterializedField.create(new SchemaPath(ref.getPath() + "." + getFieldName(), ExpressionPosition.UNKNOWN), fieldType);  
+  }
+
+  public MaterializedField getAsMaterializedField() {
+      return MaterializedField.create(new SchemaPath(getFieldName(), ExpressionPosition.UNKNOWN), fieldType);    
   }
 
   public abstract String getFieldName();

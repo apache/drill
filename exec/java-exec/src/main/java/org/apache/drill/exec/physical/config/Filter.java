@@ -23,6 +23,7 @@ import org.apache.drill.exec.physical.base.AbstractSingle;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.Size;
+import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -66,10 +67,14 @@ public class Filter extends AbstractSingle {
   public Size getSize() {
     return new Size( (long) (child.getSize().getRecordCount()*selectivity), child.getSize().getRecordSize());
   }
-  
-  
-
-  
-  
+   
+  @Override
+  public SelectionVectorMode getSVMode() {
+    if (child.getSVMode().equals(SelectionVectorMode.FOUR_BYTE)) {
+      return SelectionVectorMode.FOUR_BYTE;
+    } else {
+      return SelectionVectorMode.TWO_BYTE;
+    }
+  }
   
 }

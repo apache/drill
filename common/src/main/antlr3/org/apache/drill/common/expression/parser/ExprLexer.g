@@ -40,19 +40,20 @@ Nullable: 'nullable';
 Repeat: 'repeat';
 As: 'as';
 
-INT		 : 'int';
-BIGINT	 : 'bigint';
-FLOAT4   : 'float4';
-FLOAT8   : 'float8';
-VARCHAR  : 'varchar';
-VARBINARY: 'varbinary';
-DATE     : 'date';
-TIMESTAMP: 'timestamp';
-TIME     : 'time';
-TIMESTAMPTZ: 'timestamptz';
-INTERVAL : 'interval';
-INTERVALYEAR : 'intervalyear';
-INTERVALDAY : 'intervalday';
+INT    : 'int' | 'INT';
+BIGINT   : 'bigint' | 'BIGINT';
+FLOAT4   : 'float4' | 'FLOAT4';
+FLOAT8   : 'float8' | 'FLOAT8';
+VARCHAR  : 'varchar' | 'VARCHAR';
+VARBINARY: 'varbinary' | 'VARBINARY';
+DATE     : 'date' | 'DATE';
+TIMESTAMP: 'timestamp' | 'TIMESTAMP';
+TIME     : 'time' | 'TIME';
+TIMESTAMPTZ: 'timestamptz' | 'TIMESTAMPTZ';
+INTERVAL : 'interval' | 'INTERVAL';
+INTERVALYEAR : 'intervalyear' | 'INTERVALYEAR';
+INTERVALDAY : 'intervalday' | 'INTERVALDAY';
+
 
 Or       : '||' | 'or' | 'OR' | 'Or';
 And      : '&&' | 'and' | 'AND' ;

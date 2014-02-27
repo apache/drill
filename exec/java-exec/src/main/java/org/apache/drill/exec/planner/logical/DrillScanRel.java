@@ -20,7 +20,7 @@ package org.apache.drill.exec.planner.logical;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.common.logical.data.Scan;
-import org.apache.drill.exec.planner.common.BaseScanRel;
+import org.apache.drill.exec.planner.common.DrillScanRelBase;
 import org.apache.drill.exec.planner.torel.ConversionContext;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptTable;
@@ -29,14 +29,14 @@ import org.eigenbase.relopt.RelTraitSet;
 /**
  * GroupScan of a Drill table.
  */
-public class DrillScanRel extends BaseScanRel implements DrillRel {
-  private final DrillTable drillTable;
+public class DrillScanRel extends DrillScanRelBase implements DrillRel {
+  //private final DrillTable drillTable;
 
   /** Creates a DrillScan. */
   public DrillScanRel(RelOptCluster cluster, RelTraitSet traits, RelOptTable table) {
     super(DRILL_LOGICAL, cluster, traits, table);
-    this.drillTable = table.unwrap(DrillTable.class);
-    assert drillTable != null;
+    //this.drillTable = table.unwrap(DrillTable.class);
+    //assert drillTable != null;
   }
 
   public LogicalOperator implement(DrillImplementor implementor) {

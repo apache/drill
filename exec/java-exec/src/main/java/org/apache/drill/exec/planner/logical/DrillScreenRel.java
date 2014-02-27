@@ -21,14 +21,14 @@ import java.util.List;
 
 import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.common.logical.data.Store;
-import org.apache.drill.exec.planner.common.BaseScreenRel;
+import org.apache.drill.exec.planner.common.DrillScreenRelBase;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelTraitSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DrillScreenRel extends BaseScreenRel implements DrillRel {
+public class DrillScreenRel extends DrillScreenRelBase implements DrillRel {
   private static final Logger logger = LoggerFactory.getLogger(DrillScreenRel.class);
 
   public DrillScreenRel(RelOptCluster cluster, RelTraitSet traitSet, RelNode input) {

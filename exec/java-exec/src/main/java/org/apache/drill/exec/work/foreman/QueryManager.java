@@ -56,7 +56,7 @@ import com.google.common.collect.Maps;
 /**
  * Each Foreman holds its own fragment manager.  This manages the events associated with execution of a particular query across all fragments.  
  */
-class QueryManager implements FragmentStatusListener{
+public class QueryManager implements FragmentStatusListener{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryManager.class);
   
   public Map<FragmentHandle, FragmentData> map = Maps.newHashMap(); // doesn't need to be thread safe as map is generated in a single thread and then accessed by multiple threads for reads only.

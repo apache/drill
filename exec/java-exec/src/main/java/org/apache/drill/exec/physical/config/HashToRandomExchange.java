@@ -84,7 +84,10 @@ public class HashToRandomExchange extends AbstractExchange{
     return true;
   }
 
-  
+  @JsonProperty("expr")
+  public LogicalExpression getExpression(){
+    return expr;
+  }
 
   
   

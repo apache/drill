@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.planner.logical;
+package org.apache.drill.exec.planner.types;
 
 import java.util.List;
 
@@ -40,6 +40,7 @@ public class RelDataTypeHolder {
     int i = 0;
     for (String fieldName : fieldNames) {
 
+//      RelDataTypeField field = new RelDataTypeFieldImpl(fieldName, i, new RelDataTypeDrillImpl(new RelDataTypeHolder(), typeFactory));
       RelDataTypeField field = new RelDataTypeFieldImpl(fieldName, i, typeFactory.createSqlType(SqlTypeName.ANY));
       fields.add(field);
       i++;
@@ -54,7 +55,7 @@ public class RelDataTypeHolder {
   }
 
   private void addStarIfEmpty(){
-    if (fieldNames.isEmpty()) fieldNames.add("*");
+    //if (fieldNames.isEmpty()) fieldNames.add("*");
   }
   
   public RelDataTypeField getField(RelDataTypeFactory typeFactory, String fieldName) {

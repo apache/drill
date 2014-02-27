@@ -21,7 +21,7 @@ import java.util.List;
 
 import org.apache.drill.common.logical.data.Filter;
 import org.apache.drill.common.logical.data.LogicalOperator;
-import org.apache.drill.exec.planner.common.BaseFilterRel;
+import org.apache.drill.exec.planner.common.DrillFilterRelBase;
 import org.apache.drill.exec.planner.torel.ConversionContext;
 import org.eigenbase.rel.InvalidRelException;
 import org.eigenbase.rel.RelNode;
@@ -30,7 +30,7 @@ import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.rex.RexNode;
 
 
-public class DrillFilterRel extends BaseFilterRel implements DrillRel {
+public class DrillFilterRel extends DrillFilterRelBase implements DrillRel {
   protected DrillFilterRel(RelOptCluster cluster, RelTraitSet traits, RelNode child, RexNode condition) {
     super(DRILL_LOGICAL, cluster, traits, child, condition);
   }

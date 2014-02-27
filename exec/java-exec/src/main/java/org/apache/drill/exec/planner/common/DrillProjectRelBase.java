@@ -38,10 +38,11 @@ import org.eigenbase.util.Pair;
 import com.google.common.collect.Lists;
 
 /**
- * Project implemented in Drill.
- */
-public class BaseProjectRel extends ProjectRelBase{
-  protected BaseProjectRel(Convention convention, RelOptCluster cluster, RelTraitSet traits, RelNode child, List<RexNode> exps,
+ *
+ * Base class for logical and physical Project implemented in Drill
+ */ 
+public abstract class DrillProjectRelBase extends ProjectRelBase implements DrillRelNode {
+  protected DrillProjectRelBase(Convention convention, RelOptCluster cluster, RelTraitSet traits, RelNode child, List<RexNode> exps,
       RelDataType rowType) {
     super(cluster, traits, child, exps, rowType, Flags.BOXED);
     assert getConvention() == convention;
@@ -56,7 +57,7 @@ public class BaseProjectRel extends ProjectRelBase{
     return Pair.zip(exps, getRowType().getFieldNames());
   }
 
-  protected List<NamedExpression> getProjectExpressions(DrillParseContext context){
+  protected List<NamedExpression> getProjectExpressions(DrillParseContext context) {
     List<NamedExpression> expressions = Lists.newArrayList();
     for (Pair<RexNode, String> pair : projects()) {
       LogicalExpression expr = DrillOptiq.toDrill(context, getChild(), pair.left);

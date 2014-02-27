@@ -15,27 +15,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.planner.common;
+package org.apache.drill.jdbc;
 
-import org.apache.drill.exec.planner.logical.DrillRel;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.SingleRel;
-import org.eigenbase.relopt.Convention;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelOptCost;
-import org.eigenbase.relopt.RelOptPlanner;
-import org.eigenbase.relopt.RelTraitSet;
+import java.util.Properties;
+import java.util.TimeZone;
 
-public abstract class BaseScreenRel extends SingleRel {
+import net.hydromatic.avatica.ConnectionConfig;
+import net.hydromatic.avatica.ConnectionConfigImpl;
 
-  public BaseScreenRel(Convention convention, RelOptCluster cluster, RelTraitSet traitSet, RelNode input) {
-    super(cluster, traitSet, input);
-    assert input.getConvention() == convention;
+public class DrillConnectionConfig extends ConnectionConfigImpl {
+  private final Properties props;
+  
+  public DrillConnectionConfig(Properties p){
+    super(p);
+    this.props = p;
   }
-
-  @Override
-  public RelOptCost computeSelfCost(RelOptPlanner planner) {
-    return super.computeSelfCost(planner).multiplyBy(.1);
+  
+  public boolean isLocal(){
+    return "local".equals(props.getProperty("zk"));
   }
-
+  public String getZookeeperConnectionString(){
+    return props.getProperty("zk");
+  }
+  
+  public TimeZone getTimeZone(){
+    return TimeZone.getDefault(); 
+  }
+  
 }

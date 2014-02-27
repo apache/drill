@@ -23,6 +23,7 @@ import java.util.List;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.graph.GraphVisitor;
 import org.apache.drill.exec.physical.OperatorCost;
+import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 
 import com.google.common.collect.Iterators;
 
@@ -65,6 +66,11 @@ public abstract class AbstractSubScan implements SubScan{
   @Override
   public Iterator<PhysicalOperator> iterator() {
     return Iterators.emptyIterator();
+  }
+  
+  @Override
+  public SelectionVectorMode getSVMode() {
+    return SelectionVectorMode.NONE;
   }
   
 }

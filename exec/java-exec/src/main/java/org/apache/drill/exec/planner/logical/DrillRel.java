@@ -18,16 +18,16 @@
 package org.apache.drill.exec.planner.logical;
 
 import org.apache.drill.common.logical.data.LogicalOperator;
-import org.eigenbase.rel.RelNode;
+import org.apache.drill.exec.planner.common.DrillRelNode;
 import org.eigenbase.relopt.Convention;
 
 /**
  * Relational expression that is implemented in Drill.
  */
-public interface DrillRel extends RelNode {
+public interface DrillRel extends DrillRelNode {
   /** Calling convention for relational expressions that are "implemented" by
    * generating Drill logical plans. */
-  Convention DRILL_LOGICAL = new Convention.Impl("DRILL", DrillRel.class);
+  Convention DRILL_LOGICAL = new Convention.Impl("LOGICAL", DrillRel.class);
 
   LogicalOperator implement(DrillImplementor implementor);
 }

@@ -28,7 +28,6 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.Size;
 import org.eigenbase.rel.JoinRelType;
-import org.eigenbase.sql.SqlJoinOperator.JoinType;
 
 import com.beust.jcommander.internal.Lists;
 import com.fasterxml.jackson.annotation.JsonCreator;

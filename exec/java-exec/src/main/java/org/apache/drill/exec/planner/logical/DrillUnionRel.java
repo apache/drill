@@ -21,15 +21,13 @@ import java.util.List;
 
 import net.hydromatic.linq4j.Ord;
 
-import org.apache.drill.common.logical.data.Limit;
 import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.common.logical.data.Union;
+import org.apache.drill.exec.planner.common.DrillUnionRelBase;
 import org.apache.drill.exec.planner.logical.DrillImplementor;
-import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.torel.ConversionContext;
 import org.eigenbase.rel.InvalidRelException;
 import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.UnionRelBase;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanner;
@@ -38,7 +36,7 @@ import org.eigenbase.relopt.RelTraitSet;
 /**
  * Union implemented in Drill.
  */
-public class DrillUnionRel extends UnionRelBase implements DrillRel {
+public class DrillUnionRel extends DrillUnionRelBase implements DrillRel {
   /** Creates a DrillUnionRel. */
   public DrillUnionRel(RelOptCluster cluster, RelTraitSet traits,
       List<RelNode> inputs, boolean all) {

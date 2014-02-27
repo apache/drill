@@ -45,7 +45,7 @@ import org.apache.drill.exec.server.RemoteServiceSet;
  */
 abstract class DrillConnectionImpl extends AvaticaConnection implements org.apache.drill.jdbc.DrillConnection {
   public final DrillStatementRegistry registry = new DrillStatementRegistry();
-  final ConnectionConfig config;
+  final DrillConnectionConfig config;
   
   
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillConnection.class);
@@ -57,7 +57,7 @@ abstract class DrillConnectionImpl extends AvaticaConnection implements org.apac
   
   protected DrillConnectionImpl(Driver driver, AvaticaFactory factory, String url, Properties info)  throws SQLException{
     super(driver, factory, url, info);
-    this.config = new ConnectionConfig(info);
+    this.config = new DrillConnectionConfig(info);
   
   this.allocator = new TopLevelAllocator();
     
@@ -90,7 +90,7 @@ abstract class DrillConnectionImpl extends AvaticaConnection implements org.apac
   }
   
   
-  public ConnectionConfig config(){
+  public DrillConnectionConfig config(){
     return config;
   }
 

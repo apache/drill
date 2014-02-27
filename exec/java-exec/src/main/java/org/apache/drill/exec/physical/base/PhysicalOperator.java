@@ -22,6 +22,7 @@ import java.util.List;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.graph.GraphValue;
 import org.apache.drill.exec.physical.OperatorCost;
+import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -62,6 +63,14 @@ public interface  PhysicalOperator extends GraphValue<PhysicalOperator> {
   @JsonIgnore
   public boolean isExecutable();
 
+  /**
+   * Describes the SelectionVector Mode for the output steam from this physical op.
+   * This property is used during physical plan creating using {@link PhysicalPlanCreator}.
+   * @return
+   */
+  @JsonIgnore
+  public SelectionVectorMode getSVMode();
+  
   /**
    * Provides capability to build a set of output based on traversing a query graph tree.
    * 

@@ -24,6 +24,7 @@ public class TestTpchQueries extends BaseTestQuery{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestTpchQueries.class);
   
   @Test
+  @Ignore
   public void tpch01() throws Exception{
     testSqlFromFile("queries/tpch/01.sql");
   }
@@ -53,6 +54,7 @@ public class TestTpchQueries extends BaseTestQuery{
   }
   
   @Test  // DRILL-356
+  @Ignore
   public void tpch06() throws Exception{
     testSqlFromFile("queries/tpch/06.sql");
   }

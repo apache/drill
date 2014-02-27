@@ -25,6 +25,7 @@ import org.apache.drill.exec.physical.base.AbstractSingle;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.Size;
+import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -79,7 +80,10 @@ public class Sort extends AbstractSingle{
     return new Sort(child, orderings, reverse);
   }
 
-    
+  @Override
+  public SelectionVectorMode getSVMode() {
+    return SelectionVectorMode.FOUR_BYTE;
+  }
   
   
 }

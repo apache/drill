@@ -35,11 +35,11 @@ import org.apache.hadoop.hbase.client.HBaseAdmin;
 public class HBaseSchemaFactory implements SchemaFactory {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBaseSchemaFactory.class);
 
-  final HBaseStoragePluginConfig configuration;
   final String schemaName;
-
-  public HBaseSchemaFactory(HBaseStoragePluginConfig configuration, String name) throws IOException {
-    this.configuration = configuration;
+  final HBaseStoragePlugin plugin;
+  
+  public HBaseSchemaFactory(HBaseStoragePlugin plugin, String name) throws IOException {
+    this.plugin = plugin;
     this.schemaName = name;
   }
 
@@ -65,7 +65,7 @@ public class HBaseSchemaFactory implements SchemaFactory {
 
     @Override
     public Schema getSubSchema(String name) {
-      throw new UnsupportedOperationException();
+      return null;
     }
 
     @Override
@@ -76,13 +76,12 @@ public class HBaseSchemaFactory implements SchemaFactory {
     @Override
     public DrillTable getTable(String name) {
       Object selection = new HTableReadEntry(name);
-      return new DynamicDrillTable(schemaName, selection, configuration);
+      return new DynamicDrillTable(plugin, schemaName, selection, plugin.getConfig());
     }
 
     @Override
     public Set<String> getTableNames() {
-      try {
-        HBaseAdmin admin = new HBaseAdmin(configuration.conf);
+      try(HBaseAdmin admin = new HBaseAdmin(plugin.getConfig().conf)) {
         HTableDescriptor[] tables = admin.listTables();
         Set<String> tableNames = Sets.newHashSet();
         for (HTableDescriptor table : tables) {

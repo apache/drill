@@ -45,6 +45,7 @@ public class Screen extends AbstractStore {
 
   public Screen(@JsonProperty("child") PhysicalOperator child, @JacksonInject DrillbitEndpoint endpoint) {
     super(child);
+    assert (endpoint!=null);
     this.endpoint = endpoint;
   }
 

@@ -17,57 +17,39 @@
  */
 package org.apache.drill.exec.planner.common;
 
-import java.util.List;
-
-import net.hydromatic.linq4j.Ord;
-
-import org.apache.drill.common.logical.data.Limit;
+import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.logical.data.Filter;
 import org.apache.drill.common.logical.data.LogicalOperator;
-import org.apache.drill.common.logical.data.Union;
 import org.apache.drill.exec.planner.logical.DrillImplementor;
+import org.apache.drill.exec.planner.logical.DrillOptiq;
+import org.apache.drill.exec.planner.logical.DrillParseContext;
 import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.torel.ConversionContext;
+import org.eigenbase.rel.FilterRelBase;
 import org.eigenbase.rel.InvalidRelException;
 import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.UnionRelBase;
+import org.eigenbase.relopt.Convention;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.RelTraitSet;
+import org.eigenbase.rex.RexNode;
 
 /**
- * Union implemented in Drill.
+ * Base class for logical and physical Filters implemented in Drill
  */
-public class DrillUnionRel extends UnionRelBase implements DrillRel {
-  /** Creates a DrillUnionRel. */
-  public DrillUnionRel(RelOptCluster cluster, RelTraitSet traits,
-      List<RelNode> inputs, boolean all) {
-    super(cluster, traits, inputs, all);
-  }
-
-  @Override
-  public DrillUnionRel copy(RelTraitSet traitSet, List<RelNode> inputs,
-      boolean all) {
-    return new DrillUnionRel(getCluster(), traitSet, inputs, all);
-  }
-
-  @Override
-  public RelOptCost computeSelfCost(RelOptPlanner planner) {
-    // divide cost by two to ensure cheaper than EnumerableDrillRel
-    return super.computeSelfCost(planner).multiplyBy(.5);
-  }
-
-  @Override
-  public LogicalOperator implement(DrillImplementor implementor) {
-    Union.Builder builder = Union.builder();
-    for (Ord<RelNode> input : Ord.zip(inputs)) {
-      builder.addInput(implementor.visitChild(this, input.i, input.e));
-    }
-    builder.setDistinct(!all);
-    return builder.build();
+public abstract class DrillFilterRelBase extends FilterRelBase implements DrillRelNode {
+  protected DrillFilterRelBase(Convention convention, RelOptCluster cluster, RelTraitSet traits, RelNode child, RexNode condition) {
+    super(cluster, traits, child, condition);
+    assert getConvention() == convention;
   }
   
-  public static DrillUnionRel convert(Union union, ConversionContext context) throws InvalidRelException{
-    throw new UnsupportedOperationException();
+  @Override
+  public RelOptCost computeSelfCost(RelOptPlanner planner) {
+    return super.computeSelfCost(planner).multiplyBy(0.1);
+  }
+
+  protected LogicalExpression getFilterExpression(DrillParseContext context){
+    return DrillOptiq.toDrill(context, getChild(), getCondition());
   }
 }

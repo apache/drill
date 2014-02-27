@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.planner.logical;
 
-import org.apache.drill.exec.planner.common.DrillLimitRel;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.SortRel;
 import org.eigenbase.relopt.Convention;
