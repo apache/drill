@@ -106,11 +106,11 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
   }
 
   public Mutator getMutator() {
-    return new Mutator();
+    return mutator;
   }
 
   public Accessor getAccessor() {
-    return new Accessor();
+    return accessor;
   }
 
   public TransferPair getTransferPair(){

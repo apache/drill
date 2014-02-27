@@ -197,6 +197,33 @@
       <artifactId>jetty-util</artifactId>
       <version>6.1.26</version>
     </dependency>
+    <dependency>
+      <groupId>org.apache.hive</groupId>
+      <artifactId>hive-exec</artifactId>
+      <version>0.13.0-SNAPSHOT</version>
+      <exclusions>
+        <exclusion>
+          <artifactId>slf4j-log4j12</artifactId>
+          <groupId>org.slf4j</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>log4j</artifactId>
+          <groupId>log4j</groupId>
+        </exclusion>
+        <exclusion>
+	  <artifactId>commons-logging</artifactId>
+	  <groupId>commons-logging</groupId>
+	</exclusion>
+	<exclusion>
+	  <artifactId>commons-logging-api</artifactId>
+	  <groupId>commons-logging</groupId>
+	</exclusion>
+	<exclusion>
+          <artifactId>com.google.protobuf</artifactId>
+	  <groupId>protobuf-java</groupId>
+	</exclusion>
+      </exclusions>
+    </dependency>  
   </dependencies>
 
   <profiles>

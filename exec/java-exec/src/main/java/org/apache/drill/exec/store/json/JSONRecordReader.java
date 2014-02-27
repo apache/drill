@@ -432,6 +432,11 @@ public class JSONRecordReader implements RecordReader {
         }
         case VARCHAR: {
           if (val == null) {
+            if(groupCount == 0) {
+              NullableVarCharVector varLen4 = (NullableVarCharVector) holder.getValueVector();
+              NullableVarCharVector.Mutator m = varLen4.getMutator();
+              m.markNull(index);
+            }
             return (index + 1) * 4 <= holder.getLength();
           } else {
             byte[] bytes = ((String) val).getBytes(UTF_8);

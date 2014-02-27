@@ -65,8 +65,8 @@ public class JSONGroupScan extends AbstractGroupScan {
     OperatorCost cost = new OperatorCost(0, 0, 0, 0);
     Size size = new Size(0, 0);
     for (JSONGroupScan.ScanEntry r : readEntries) {
-    cost = cost.add(r.getCost());
-    size = size.add(r.getSize());
+      cost = cost.add(r.getCost());
+      size = size.add(r.getSize());
     }
     this.cost = cost;
     this.size = size;
