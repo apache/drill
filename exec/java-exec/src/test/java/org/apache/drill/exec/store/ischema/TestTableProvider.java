@@ -31,11 +31,9 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.store.RecordReader;
-import org.apache.drill.exec.store.ischema.FixedTable;
-import org.apache.drill.exec.store.ischema.PipeProvider;
-import org.apache.drill.exec.store.ischema.RowRecordReader;
 import org.apache.drill.exec.vector.ValueVector;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -59,6 +57,7 @@ public class TestTableProvider {
   }
   
   @Test
+  @Ignore // due to out of heap space
   public void largeRead() {
     readTestTable(1024*1024);
   }

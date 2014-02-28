@@ -54,7 +54,8 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
   private final FormatPluginConfig formatConfig;
   private final String name;
   
-  protected EasyFormatPlugin(String name, DrillbitContext context, DrillFileSystem fs, StoragePluginConfig storageConfig, T formatConfig, boolean readable, boolean writable, boolean blockSplittable, String extension, String defaultName){
+  protected EasyFormatPlugin(String name, DrillbitContext context, DrillFileSystem fs, StoragePluginConfig storageConfig,
+                             T formatConfig, boolean readable, boolean writable, boolean blockSplittable, String extension, String defaultName){
     this.matcher = new BasicFormatMatcher(this, fs, extension);
     this.readable = readable;
     this.writable = writable;

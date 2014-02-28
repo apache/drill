@@ -38,6 +38,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 
+import org.apache.hadoop.fs.PathFilter;
+import org.apache.hadoop.mapred.Utils;
 import parquet.format.converter.ParquetMetadataConverter;
 import parquet.hadoop.CodecFactoryExposer;
 import parquet.hadoop.ParquetFileWriter;
@@ -151,20 +153,39 @@ public class ParquetFormatPlugin implements FormatPlugin{
     }
 
     @Override
-    public FormatSelection isReadable(FileSelection file) throws IOException {
+    public FormatSelection isReadable(FileSelection selection) throws IOException {
       // TODO: we only check the first file for directory reading.  This is because 
-      if(file.containsDirectories(fs)){
-        if(isDirReadable(file.getFirstPath(fs))){
-          return new FormatSelection(plugin.getConfig(), file);
+      if(selection.containsDirectories(fs)){
+        if(isDirReadable(selection.getFirstPath(fs))){
+          return new FormatSelection(plugin.getConfig(), selection);
         }
       }
-      return super.isReadable(file);
+      return super.isReadable(selection);
     }
     
     boolean isDirReadable(FileStatus dir) {
-      Path p = new Path(dir.getPath(), "/" + ParquetFileWriter.PARQUET_METADATA_FILE);
+      Path p = new Path(dir.getPath(), ParquetFileWriter.PARQUET_METADATA_FILE);
       try {
-        return fs.getUnderlying().exists(p);
+        if (fs.getUnderlying().exists(p)) {
+          return true;
+        } else {
+
+          PathFilter filter = new Utils.OutputFileUtils.OutputFilesFilter() {
+            @Override
+            public boolean accept(Path path) {
+              if (path.toString().contains("_metadata")) {
+                return false;
+              }
+              return super.accept(path);
+            }
+          };
+
+          FileStatus[] files = fs.getUnderlying().listStatus(dir.getPath(), filter);
+          if (files.length == 0) {
+            return false;
+          }
+          return super.isReadable(files[0]);
+        }
       } catch (IOException e) {
         logger.info("Failure while attempting to check for Parquet metadata file.", e);
         return false;

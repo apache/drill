@@ -60,9 +60,9 @@ public class BasicFormatMatcher extends FormatMatcher{
   }
 
   @Override
-  public FormatSelection isReadable(FileSelection file) throws IOException {
-    if(isReadable(file.getFirstPath(fs))){
-      return new FormatSelection(plugin.getConfig(), file);
+  public FormatSelection isReadable(FileSelection selection) throws IOException {
+    if(isReadable(selection.getFirstPath(fs))){
+      return new FormatSelection(plugin.getConfig(), selection);
     }
     return null;
   }
