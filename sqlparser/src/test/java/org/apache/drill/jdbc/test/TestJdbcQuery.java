@@ -26,7 +26,9 @@ import java.sql.Statement;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.util.TestTools;
+import org.apache.drill.exec.store.hive.HiveTestDataGenerator;
 import org.apache.drill.jdbc.Driver;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -37,8 +39,7 @@ import com.google.common.base.Stopwatch;
 public class TestJdbcQuery {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestJdbcQuery.class);
 
-  static final boolean IS_DEBUG = java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments().toString().indexOf("-agentlib:jdwp") > 0;
-
+  
   // Set a timeout unless we're debugging.
   @Rule public TestRule TIMEOUT = TestTools.getTimeoutRule(20000);
 
@@ -46,17 +47,23 @@ public class TestJdbcQuery {
   static{
     Driver.load();
     WORKING_PATH = Paths.get("").toAbsolutePath().toString();
+    
+  }
+  
+  @BeforeClass
+  public static void generateHive() throws Exception{
+    new HiveTestDataGenerator().generateTestData();
   }
   
   @Test
   public void testHiveRead() throws Exception{
-    testQuery("select * from hive.kv_text");
+    testQuery("select * from hive.kv");
   }
 
   @Test
   @Ignore // something not working here.
   public void testHiveReadWithDb() throws Exception{
-    testQuery("select * from hive.`default`.kv_text");
+    testQuery("select * from hive.`default`.kv");
   }
 
   @Test
