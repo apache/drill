@@ -23,17 +23,23 @@ Currently, the Apache Drill build process is known to work on Linux, Windows and
 
     cd incubator-drill
     mvn clean install
-    
-## Start SQLLine
 
-    ./sqlline -u jdbc:drill:zk=local -n admin -p admin
+## Explode tarball in installation directory
+   
+    mkdir /opt/drill
+    tar xvzf distribution/target/*.tar.gz --strip=1 -C /opt/drill 
+
+## Start SQLLine (which starts Drill in embedded mode)
+    
+    cd /opt/drill
+    bin/sqlline -u jdbc:drill:zk=local -n admin -p admin
 
 ## Run a query
 
     SELECT 
-      region_key, 
-      r_comment
-    FROM "sample-data/region.parquet";
+      employee_id, 
+      first_name
+    FROM cp.`employee.json`; 
     
 ## More information 
 

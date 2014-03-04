@@ -24,7 +24,6 @@ import java.util.Set;
 import net.hydromatic.optiq.Schema;
 import net.hydromatic.optiq.SchemaPlus;
 
-import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.data.Scan;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.server.DrillbitContext;
@@ -32,8 +31,8 @@ import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.SchemaHolder;
 
-import com.google.hive12.common.collect.ImmutableMap;
-import com.google.hive12.common.collect.Maps;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 
 public class InfoSchemaStoragePlugin extends AbstractStoragePlugin{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(InfoSchemaStoragePlugin.class);

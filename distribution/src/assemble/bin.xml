@@ -37,6 +37,7 @@
         <include>org.apache.drill:drill-protocol:jar:rebuffed</include>
         <include>org.apache.drill:drill-common:jar:rebuffed</include>
         <include>org.apache.drill.exec:drill-java-exec:jar:rebuffed</include>
+        <include>org.apache.drill:storage-hive:jar</include>
       </includes>
       
       
@@ -75,6 +76,18 @@
   </fileSets>
   
   <files>
+    <file>
+      <source>../KEYS</source>
+      <outputDirectory></outputDirectory>
+    </file>
+    <file>
+      <source>../LICENSE</source>
+      <outputDirectory></outputDirectory>
+    </file>
+    <file>
+      <source>../NOTICE</source>
+      <outputDirectory></outputDirectory>
+    </file>
     <file>
       <source>src/resources/runbit</source>
       <outputDirectory>bin</outputDirectory>

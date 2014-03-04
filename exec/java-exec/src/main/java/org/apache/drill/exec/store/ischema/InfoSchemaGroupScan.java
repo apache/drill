@@ -33,7 +33,7 @@ import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.google.hive12.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 
 @JsonTypeName("info-schema")
 public class InfoSchemaGroupScan extends AbstractGroupScan{
