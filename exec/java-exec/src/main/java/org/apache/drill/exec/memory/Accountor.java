@@ -62,18 +62,20 @@ public class Accountor {
   }
 
   public boolean reserve(long size) {
-    return remainder.get(size);
+    //TODO: for now, we won't stop reservation.
+    remainder.get(size);
+    return true;
   }
 
   public void forceAdditionalReservation(long size) {
-    remainder.forceGet(size);
+    if(size > 0) remainder.forceGet(size);
   }
 
   public void reserved(long expected, AccountingByteBuf buf){
     // make sure to take away the additional memory that happened due to rounding.
 
     long additional = buf.capacity() - expected;
-    remainder.forceGet(additional);
+    if(additional > 0) remainder.forceGet(additional);
 
     if (ENABLE_ACCOUNTING) {
       buffers.put(buf, new DebugStackTrace(buf.capacity(), Thread.currentThread().getStackTrace()));
@@ -103,6 +105,7 @@ public class Accountor {
   }
 
   public void close() {
+     
     if (ENABLE_ACCOUNTING && !buffers.isEmpty()) {
       StringBuffer sb = new StringBuffer();
       sb.append("Attempted to close accountor with ");
@@ -144,7 +147,7 @@ public class Accountor {
     }
 
     remainder.close();
-
+    
   }
 
   private class DebugStackTrace {

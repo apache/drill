@@ -228,6 +228,13 @@ public class PooledByteBufAllocatorL extends AbstractByteBufAllocator {
         }
     }
 
+    @Override
+    public ByteBuf directBuffer(int initialCapacity, int maxCapacity) {
+        if (initialCapacity == 0 && maxCapacity == 0) {
+            return newDirectBuffer(0,0);
+        }
+        return super.directBuffer(initialCapacity, maxCapacity);
+    }
     
     /**
      * Override the abstract allocator. Normally, the abstract allocator

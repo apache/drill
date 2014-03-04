@@ -81,7 +81,7 @@ public class ControlHandlerImpl implements ControlMessageHandler {
         return DataRpcConfig.OK;
 
       } catch (OutOfMemoryException e) {
-        logger.error("Failure while attempting to start remote fragment.", fragment);
+        logger.error("Failure while attempting to start remote fragment.", fragment, e);
         return new Response(RpcType.ACK, Acks.FAIL);
       }
       

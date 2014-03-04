@@ -46,7 +46,7 @@ public class AccountingByteBuf extends ByteBuf{
     super();
     this.b = b;
     this.acct = a;
-    this.size = b.maxCapacity();
+    this.size = b.capacity();
   }
 
   @Override
@@ -83,7 +83,7 @@ public class AccountingByteBuf extends ByteBuf{
       return this;
     }else if(newCapacity < size){
       b.capacity(newCapacity);
-      int diff = size - b.maxCapacity();
+      int diff = size - b.capacity();
       acct.releasePartial(this, diff);
       this.size = size - diff;
       return this;

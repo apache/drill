@@ -22,12 +22,18 @@ import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.PooledByteBufAllocatorL;
 import io.netty.buffer.PooledUnsafeDirectByteBufL;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
+import org.apache.drill.exec.util.AssertionUtil;
 
 public class TopLevelAllocator implements BufferAllocator {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TopLevelAllocator.class);
 
+  private static final boolean ENABLE_ACCOUNTING = AssertionUtil.isAssertionsEnabled();
+  private final Set<ChildAllocator> children;
   private final PooledByteBufAllocatorL innerAllocator = new PooledByteBufAllocatorL(true);
   private final Accountor acct;
 
@@ -37,14 +43,14 @@ public class TopLevelAllocator implements BufferAllocator {
   
   public TopLevelAllocator(long maximumAllocation) {
     this.acct = new Accountor(null, null, maximumAllocation, 0);
+    this.children = ENABLE_ACCOUNTING ? new HashSet<ChildAllocator>() : null; 
   }
 
   public AccountingByteBuf buffer(int min, int max) {
     if(!acct.reserve(min)) return null;
     ByteBuf buffer = innerAllocator.directBuffer(min, max);
-    if(buffer.maxCapacity() > max) buffer.capacity(max);
     AccountingByteBuf wrapped = new AccountingByteBuf(acct, (PooledUnsafeDirectByteBufL) buffer);
-    acct.reserved(buffer.maxCapacity(), wrapped);
+    acct.reserved(buffer.capacity() - min, wrapped);
     return wrapped;
   }
   
@@ -68,34 +74,37 @@ public class TopLevelAllocator implements BufferAllocator {
     if(!acct.reserve(initialReservation)){
       throw new OutOfMemoryException(String.format("You attempted to create a new child allocator with initial reservation %d but only %d bytes of memory were available.", initialReservation, acct.getCapacity() - acct.getAllocation()));
     };
-    return new ChildAllocator(handle, acct, initialReservation, maximumReservation);
+    ChildAllocator allocator = new ChildAllocator(handle, acct, initialReservation, maximumReservation);
+    if(ENABLE_ACCOUNTING) children.add(allocator);
+    return allocator;
   }
 
   @Override
   public void close() {
+    if(ENABLE_ACCOUNTING && !children.isEmpty()){
+      throw new IllegalStateException("Failure while trying to close allocator: Child level allocators not closed.");
+    }
     acct.close();
   }
 
   
   private class ChildAllocator implements BufferAllocator{
 
-    private Accountor innerAcct;
+    private Accountor childAcct;
     
     public ChildAllocator(FragmentHandle handle, Accountor parentAccountor, long max, long pre) throws OutOfMemoryException{
-      innerAcct = new Accountor(handle, parentAccountor, max, pre);
+      childAcct = new Accountor(handle, parentAccountor, max, pre);
     }
-    
     
     @Override
     public AccountingByteBuf buffer(int size, int max) {
-      if(!innerAcct.reserve(size)){
+      if(!childAcct.reserve(size)){
         return null;
       };
       
       ByteBuf buffer = innerAllocator.directBuffer(size, max);
-      if(buffer.maxCapacity() > max) buffer.capacity(max);
-      AccountingByteBuf wrapped = new AccountingByteBuf(innerAcct, (PooledUnsafeDirectByteBufL) buffer);
-      innerAcct.reserved(buffer.maxCapacity(), wrapped);
+      AccountingByteBuf wrapped = new AccountingByteBuf(childAcct, (PooledUnsafeDirectByteBufL) buffer);
+      childAcct.reserved(buffer.capacity(), wrapped);
       return wrapped;
     }
     
@@ -111,21 +120,24 @@ public class TopLevelAllocator implements BufferAllocator {
     @Override
     public BufferAllocator getChildAllocator(FragmentHandle handle, long initialReservation, long maximumReservation)
         throws OutOfMemoryException {
-      return new ChildAllocator(handle, innerAcct, maximumReservation, initialReservation);
+      if(!childAcct.reserve(initialReservation)){
+        throw new OutOfMemoryException(String.format("You attempted to create a new child allocator with initial reservation %d but only %d bytes of memory were available.", initialReservation, childAcct.getCapacity() - childAcct.getAllocation()));
+      };
+      return new ChildAllocator(handle, childAcct, maximumReservation, initialReservation);
     }
 
     public PreAllocator getNewPreAllocator(){
-      return new PreAlloc(this.innerAcct); 
+      return new PreAlloc(this.childAcct); 
     }
 
     @Override
     public void close() {
-      innerAcct.close();
+      childAcct.close();
     }
 
     @Override
     public long getAllocatedMemory() {
-      return innerAcct.getAllocation();
+      return childAcct.getAllocation();
     }
     
   }

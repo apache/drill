@@ -80,7 +80,7 @@ public class ProtobufLengthDecoder extends ByteToMessageDecoder {
           // TODO: Can we avoid this copy?
           ByteBuf outBuf = allocator.buffer(length);
           if(outBuf == null){
-            logger.debug("Failure allocating buffer on incoming stream due to memory limits.");
+            logger.warn("Failure allocating buffer on incoming stream due to memory limits.  Current Allocation: {}.", allocator.getAllocatedMemory());
             in.resetReaderIndex();
             return;
           }

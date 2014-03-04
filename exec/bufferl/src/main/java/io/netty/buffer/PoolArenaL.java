@@ -125,13 +125,10 @@ abstract class PoolArenaL<T> {
     
     /**
      * Allocate a buffer from the current arena.
-     * Unlike netty.io buffers, this buffer can grow without bounds,
-     * but it will throw an exception if growth involves copying a page 
-     * or more of data. Instead of being an upper bounds sanity check,
+     * Instead of being an upper bounds sanity check,
      * the "max" capacity is used to opportunistically allocate extra memory.
      * Later, the capacity can be reduced very efficiently.
-     * To avoid excessive copying, a buffer cannot grow if it must copy
-     * more than a single page of data.
+     * 
      * @param cache   TODO: not sure
      * @param minRequested  The smallest capacity buffer we want
      * @param maxRequested  If convenient, allocate up to this capacity
