@@ -120,7 +120,7 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.drill</groupId>
+      <groupId>org.apache.drill.contrib</groupId>
       <artifactId>storage-hive</artifactId>
       <version>${project.version}</version>
       <exclusions>
