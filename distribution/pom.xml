@@ -32,6 +32,12 @@
       <groupId>org.apache.drill.contrib</groupId>
       <artifactId>storage-hive</artifactId>
       <version>${project.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.hive</groupId>
+          <artifactId>hive-exec</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.drill</groupId>
@@ -86,7 +92,6 @@
             <exclude>**/control</exclude>
             <exclude>**/*.json</exclude>
             <exclude>**/hadoop-excludes.txt</exclude>
-            <exclude>**/drill_hive_db/*</exclude>
           </excludes>
         </configuration>
       </plugin>

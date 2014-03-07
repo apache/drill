@@ -118,8 +118,6 @@
             <exclude>**/*.tdd</exclude>
             <exclude>**/*.iml</exclude>
             <exclude>**/target/**</exclude>
-            <exclude>**/drill_hive_db/**</exclude>
-            <exclude>**/drill_hive_wh/**</exclude>
           </excludes>
         </configuration>
       </plugin>
@@ -360,52 +358,6 @@
       <version>${dep.slf4j.version}</version>
     </dependency>
 
-    <dependency>
-      <groupId>org.apache.hive</groupId>
-      <artifactId>hive-exec</artifactId>
-      <version>0.12.0</version>
-      <exclusions>
-        <exclusion>
-          <groupId>commons-logging</groupId>
-          <artifactId>commons-logging</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>commons-logging</groupId>
-          <artifactId>commons-logging-api</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>jline</groupId>
-          <artifactId>jline</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-log4j12</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>log4j</groupId>
-          <artifactId>log4j</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>com.google.guava</groupId>
-          <artifactId>guava</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hive</groupId>
-      <artifactId>hive-hbase-handler</artifactId>
-      <version>0.12.0</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-log4j12</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.hbase</groupId>
-          <artifactId>hbase</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
     <!-- Test Dependencies -->
     <dependency>
       <groupId>com.googlecode.jmockit</groupId>
