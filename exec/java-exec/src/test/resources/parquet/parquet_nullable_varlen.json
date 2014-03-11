@@ -8,10 +8,10 @@
     }
   },
   storage:{
-    "parquet" :
+    "dfs" :
       {
-        "type":"parquet",
-        "dfsName" : "file:///"
+        "type":"named",
+        "name":"dfs"
       }
   },
   query:[
@@ -19,12 +19,13 @@
       @id:"1",
       op:"scan",
       memo:"initial_scan",
-      storageengine:"parquet",
-      selection: [
-        {
-            path: "/tmp/nullable_test.parquet"
-        }
-      ]
+      storageengine:"dfs",
+      selection: {
+          format: {type: "parquet"},
+          files: [
+            "/tmp/nullable_varlen.parquet"
+          ]
+       }
     },
     {
       @id:"2",

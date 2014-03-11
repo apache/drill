@@ -10,8 +10,8 @@
   storage:{
     "dfs" :
       {
-        "type":"file",
-        "connection" : "file:///"
+        "type":"named",
+        "name":"dfs"
       }
   },
   query:[
@@ -21,9 +21,11 @@
       memo:"initial_scan",
       storageengine:"dfs",
       selection: {
-        format: {type: "parquet"},
-        files: ["/tmp/test.parquet"]
-      }
+          format: {type: "parquet"},
+          files: [
+            "/tmp/nullable_test.parquet"
+          ]
+       }
     },
     {
       @id:"2",

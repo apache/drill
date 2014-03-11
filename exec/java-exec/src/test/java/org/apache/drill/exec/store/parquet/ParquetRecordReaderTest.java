@@ -30,7 +30,6 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import mockit.Injectable;
-
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FieldReference;
@@ -42,7 +41,7 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
-import org.apache.drill.exec.proto.BitControl.PlanFragment;
+import org.apache.drill.exec.proto.BitControl;
 import org.apache.drill.exec.proto.UserProtos;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatchLoader;
@@ -282,7 +281,7 @@ public class ParquetRecordReaderTest {
     HashMap<String, FieldInfo> fields = new HashMap<>();
     ParquetTestProperties props = new ParquetTestProperties(3, 3000, DEFAULT_BYTES_PER_PAGE, fields);
     populateFieldInfoMap(props);
-    testParquetFullEngineEventBased(true, "/parquet_scan_screen.json", "/tmp/test.parquet", 1, props);
+    testParquetFullEngineEventBased(true, "/parquet/parquet_scan_screen.json", "/tmp/test.parquet", 1, props);
   }
 
   // TODO - Test currently marked ignore to prevent breaking of the build process, requires a binary file that was
@@ -295,7 +294,7 @@ public class ParquetRecordReaderTest {
     ParquetTestProperties props = new ParquetTestProperties(1, 3000000, DEFAULT_BYTES_PER_PAGE, fields);
     Object[] boolVals = {true, null, null};
     props.fields.put("a", new FieldInfo("boolean", "a", 1, boolVals, TypeProtos.MinorType.BIT, props));
-    testParquetFullEngineEventBased(false, "/parquet_nullable.json", "/tmp/nullable_test.parquet", 1, props);
+    testParquetFullEngineEventBased(false, "/parquet/parquet_nullable.json", "/tmp/nullable_test.parquet", 1, props);
   }
 
   @Ignore
@@ -308,7 +307,7 @@ public class ParquetRecordReaderTest {
     byte[] val3 = { 'l','o','n','g','e','r',' ','s','t','r','i','n','g'};
     Object[] boolVals = { val, val2, val3};
     props.fields.put("a", new FieldInfo("boolean", "a", 1, boolVals, TypeProtos.MinorType.BIT, props));
-    testParquetFullEngineEventBased(false, "/parquet_nullable_varlen.json", "/tmp/nullable_varlen.parquet", 1, props);
+    testParquetFullEngineEventBased(false, "/parquet/parquet_nullable_varlen.json", "/tmp/nullable_varlen.parquet", 1, props);
   }
 
   @Test
@@ -335,15 +334,15 @@ public class ParquetRecordReaderTest {
     HashMap<String, FieldInfo> fields = new HashMap<>();
     ParquetTestProperties props = new ParquetTestProperties(5, 300000, DEFAULT_BYTES_PER_PAGE, fields);
     TestFileGenerator.populatePigTPCHCustomerFields(props);
-    String readEntries = "{path: \"/tmp/tpc-h/customer\"}";
-    testParquetFullEngineEventBased(false, false, "/parquet_scan_screen_read_entry_replace.json", readEntries,
+    String readEntries = "\"/tmp/tpc-h/customer\"";
+    testParquetFullEngineEventBased(false, false, "/parquet/parquet_scan_screen_read_entry_replace.json", readEntries,
         "unused, no file is generated", 1, props, true);
 
     fields = new HashMap();
     props = new ParquetTestProperties(5, 300000, DEFAULT_BYTES_PER_PAGE, fields);
     TestFileGenerator.populatePigTPCHSupplierFields(props);
-    readEntries = "{path: \"/tmp/tpc-h/supplier\"}";
-    testParquetFullEngineEventBased(false, false, "/parquet_scan_screen_read_entry_replace.json", readEntries,
+    readEntries = "\"/tmp/tpc-h/supplier\"";
+    testParquetFullEngineEventBased(false, false, "/parquet/parquet_scan_screen_read_entry_replace.json", readEntries,
         "unused, no file is generated", 1, props, true);
   }
 
@@ -352,7 +351,7 @@ public class ParquetRecordReaderTest {
     HashMap<String, FieldInfo> fields = new HashMap<>();
     ParquetTestProperties props = new ParquetTestProperties(4, 3000, DEFAULT_BYTES_PER_PAGE, fields);
     populateFieldInfoMap(props);
-    testParquetFullEngineEventBased(true, "/parquet_scan_screen.json", "/tmp/test.parquet", 1, props);
+    testParquetFullEngineEventBased(true, "/parquet/parquet_scan_screen.json", "/tmp/test.parquet", 1, props);
   }
 
 
@@ -378,7 +377,7 @@ public class ParquetRecordReaderTest {
     props.fields.put("bigInt", new FieldInfo("int64", "bigInt", 64, TestFileGenerator.longVals, TypeProtos.MinorType.BIGINT, props));
     props.fields.put("bin", new FieldInfo("binary", "bin", -1, TestFileGenerator.binVals, TypeProtos.MinorType.VARBINARY, props));
     props.fields.put("bin2", new FieldInfo("binary", "bin2", -1, TestFileGenerator.bin2Vals, TypeProtos.MinorType.VARBINARY, props));
-    testParquetFullEngineEventBased(true, false, "/parquet_selective_column_read.json", null, "/tmp/test.parquet", 1, props, false);
+    testParquetFullEngineEventBased(true, false, "/parquet/parquet_selective_column_read.json", null, "/tmp/test.parquet", 1, props, false);
   }
 
   public static void main(String[] args) throws Exception{
@@ -392,7 +391,7 @@ public class ParquetRecordReaderTest {
                               @Injectable UserServer.UserClientConnection connection) throws Exception {
     DrillConfig c = DrillConfig.create();
     FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
-    FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
+    FragmentContext context = new FragmentContext(bitContext, BitControl.PlanFragment.getDefaultInstance(), connection, registry);
 
 //    new NonStrictExpectations() {
 //      {
