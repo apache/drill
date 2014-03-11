@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.CommandNeedRetryException;
 import org.apache.hadoop.hive.ql.Driver;
@@ -33,18 +34,33 @@ public class HiveTestDataGenerator {
 
   static int RETRIES = 5;
   private Driver hiveDriver = null;
-
+  private static final String DB_DIR = "/tmp/drill_hive_db";
+  private static final String WH_DIR = "/tmp/drill_hive_wh";
+  
   public static void main(String[] args) throws Exception {
     HiveTestDataGenerator htd = new HiveTestDataGenerator();
     htd.generateTestData();
   }
 
+  private void cleanDir(String dir) throws IOException{
+    File f = new File(dir);
+    if(f.exists()){
+      FileUtils.cleanDirectory(f);
+      FileUtils.forceDelete(f);
+    }
+  }
+  
   public void generateTestData() throws Exception {
+    
+    // remove data from previous runs.
+    cleanDir(DB_DIR);
+    cleanDir(WH_DIR);
+    
     HiveConf conf = new HiveConf();
 
-    conf.set("javax.jdo.option.ConnectionURL", "jdbc:derby:;databaseName=/tmp/drill_hive_db;create=true");
+    conf.set("javax.jdo.option.ConnectionURL", String.format("jdbc:derby:;databaseName=%s;create=true", DB_DIR));
     conf.set("fs.default.name", "file:///");
-    conf.set("hive.metastore.warehouse.dir", "/tmp/drill_hive_wh");
+    conf.set("hive.metastore.warehouse.dir", WH_DIR);
 
     String tableName = "kv";
 
