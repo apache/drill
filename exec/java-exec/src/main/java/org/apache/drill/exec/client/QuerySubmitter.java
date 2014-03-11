@@ -190,6 +190,7 @@ public class QuerySubmitter {
     private CountDownLatch latch = new CountDownLatch(1);
     RecordBatchLoader loader = new RecordBatchLoader(new BootStrapContext(DrillConfig.create()).getAllocator());
     Format format;
+    volatile Exception exception;
 
     public QueryResultsListener(Format format) {
       this.format = format;
@@ -197,7 +198,7 @@ public class QuerySubmitter {
 
     @Override
     public void submissionFailed(RpcException ex) {
-      System.out.println(String.format("Query failed: %s", ex));
+      exception = ex;
       latch.countDown();
     }
 
@@ -233,6 +234,7 @@ public class QuerySubmitter {
 
     public int await() throws Exception {
       latch.await();
+      if(exception != null) throw exception;
       return count.get();
     }
 

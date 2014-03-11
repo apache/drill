@@ -74,11 +74,6 @@ public abstract class AbstractLogicalVisitor<T, X, E extends Throwable> implemen
     }
 
     @Override
-    public T visitSegment(Segment segment, X value) throws E {
-        return visitOp(segment, value);
-    }
-
-    @Override
     public T visitGroupingAggregate(GroupingAggregate groupBy, X value) throws E {
       return visitOp(groupBy, value);
     }
@@ -96,11 +91,6 @@ public abstract class AbstractLogicalVisitor<T, X, E extends Throwable> implemen
     @Override
     public T visitUnion(Union union, X value) throws E {
         return visitOp(union, value);
-    }
-
-    @Override
-    public T visitCollapsingAggregate(CollapsingAggregate collapsingAggregate, X value) throws E {
-        return visitOp(collapsingAggregate, value);
     }
 
     @Override

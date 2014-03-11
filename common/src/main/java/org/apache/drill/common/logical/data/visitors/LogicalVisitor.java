@@ -18,7 +18,6 @@
 package org.apache.drill.common.logical.data.visitors;
 
 
-import org.apache.drill.common.logical.data.CollapsingAggregate;
 import org.apache.drill.common.logical.data.Constant;
 import org.apache.drill.common.logical.data.Filter;
 import org.apache.drill.common.logical.data.Flatten;
@@ -29,7 +28,6 @@ import org.apache.drill.common.logical.data.Order;
 import org.apache.drill.common.logical.data.Project;
 import org.apache.drill.common.logical.data.RunningAggregate;
 import org.apache.drill.common.logical.data.Scan;
-import org.apache.drill.common.logical.data.Segment;
 import org.apache.drill.common.logical.data.Sequence;
 import org.apache.drill.common.logical.data.Store;
 import org.apache.drill.common.logical.data.Transform;
@@ -48,7 +46,6 @@ public interface LogicalVisitor<RETURN, EXTRA, EXCEP extends Throwable> {
 
     public RETURN visitScan(Scan scan, EXTRA value) throws EXCEP;
     public RETURN visitStore(Store store, EXTRA value) throws EXCEP;
-    public RETURN visitCollapsingAggregate(CollapsingAggregate collapsingAggregate, EXTRA value) throws EXCEP;
     public RETURN visitGroupingAggregate(GroupingAggregate groupBy, EXTRA value) throws EXCEP;
     public RETURN visitFilter(Filter filter, EXTRA value) throws EXCEP;
     public RETURN visitFlatten(Flatten flatten, EXTRA value) throws EXCEP;
@@ -59,7 +56,6 @@ public interface LogicalVisitor<RETURN, EXTRA, EXCEP extends Throwable> {
     public RETURN visitJoin(Join join, EXTRA value) throws EXCEP;
     public RETURN visitLimit(Limit limit, EXTRA value) throws EXCEP;
     public RETURN visitRunningAggregate(RunningAggregate runningAggregate, EXTRA value) throws EXCEP;
-    public RETURN visitSegment(Segment segment, EXTRA value) throws EXCEP;
     public RETURN visitSequence(Sequence sequence, EXTRA value) throws EXCEP;
     public RETURN visitTransform(Transform transform, EXTRA value) throws EXCEP;
     public RETURN visitUnion(Union union, EXTRA value) throws EXCEP;

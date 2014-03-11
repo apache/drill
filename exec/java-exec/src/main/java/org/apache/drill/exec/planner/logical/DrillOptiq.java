@@ -84,9 +84,18 @@ public class DrillOptiq {
       switch (syntax) {
       case BINARY:
         logger.debug("Binary");
-        LogicalExpression op1 = call.getOperands().get(0).accept(this);
-        LogicalExpression op2 = call.getOperands().get(1).accept(this);
-        return context.getRegistry().createExpression(call.getOperator().getName(), Lists.newArrayList(op1, op2));
+        final String funcName = call.getOperator().getName().toLowerCase();
+        List<LogicalExpression> args = Lists.newArrayList();
+        for(RexNode r : call.getOperands()){
+          args.add(r.accept(this));
+        }
+        args = Lists.reverse(args);
+        LogicalExpression lastArg = args.get(0);
+        for(int i = 1; i < args.size(); i++){
+          lastArg = context.getRegistry().createExpression(funcName, Lists.newArrayList(args.get(i), lastArg));
+        }
+
+        return lastArg;
       case FUNCTION:
         logger.debug("Function");
         List<LogicalExpression> exprs = Lists.newArrayList();

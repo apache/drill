@@ -3,6 +3,10 @@
     dfs: {
       type: "file",
       connection: "file:///"
+    },
+    cp: {
+      type: "file",
+      connection: "classpath:///"
     }
   }  
 }

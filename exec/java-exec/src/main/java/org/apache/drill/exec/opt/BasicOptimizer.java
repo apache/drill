@@ -25,14 +25,11 @@ import java.util.List;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.common.expression.FieldReference;
-import org.apache.drill.common.expression.LogicalExpression;
-import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.logical.PlanProperties;
 import org.apache.drill.common.logical.StoragePluginConfig;
-import org.apache.drill.common.logical.data.CollapsingAggregate;
 import org.apache.drill.common.logical.data.Filter;
+import org.apache.drill.common.logical.data.GroupingAggregate;
 import org.apache.drill.common.logical.data.Join;
 import org.apache.drill.common.logical.data.JoinCondition;
 import org.apache.drill.common.logical.data.NamedExpression;
@@ -40,7 +37,6 @@ import org.apache.drill.common.logical.data.Order;
 import org.apache.drill.common.logical.data.Order.Ordering;
 import org.apache.drill.common.logical.data.Project;
 import org.apache.drill.common.logical.data.Scan;
-import org.apache.drill.common.logical.data.Segment;
 import org.apache.drill.common.logical.data.SinkOperator;
 import org.apache.drill.common.logical.data.Store;
 import org.apache.drill.common.logical.data.visitors.AbstractLogicalVisitor;
@@ -121,11 +117,23 @@ public class BasicOptimizer extends Optimizer{
       this.logicalPlan = logicalPlan;
     }
 
-    
-
     @Override
-    public PhysicalOperator visitSegment(Segment segment, Object value) throws OptimizerException {
-      throw new OptimizerException("Segment operators aren't currently supported besides next to a collapsing aggregate operator.");
+    public PhysicalOperator visitGroupingAggregate(GroupingAggregate groupBy, Object value) throws OptimizerException {
+      
+      List<Ordering> orderDefs = Lists.newArrayList();
+
+      
+      PhysicalOperator input = groupBy.getInput().accept(this, value);
+
+      if(groupBy.getKeys().length > 0){
+        for(NamedExpression e : groupBy.getKeys()){
+          orderDefs.add(new Ordering(Direction.Ascending, e.getExpr(), NullDirection.FIRST));
+        }
+        input = new Sort(input, orderDefs, false);
+      }
+      
+      StreamingAggregate sa = new StreamingAggregate(input, groupBy.getKeys(), groupBy.getExprs(), 1.0f);
+      return sa;
     }
 
 
@@ -144,34 +152,6 @@ public class BasicOptimizer extends Optimizer{
     public PhysicalOperator visitLimit(org.apache.drill.common.logical.data.Limit limit, Object value) throws OptimizerException {
       PhysicalOperator input = limit.getInput().accept(this, value);
       return new SelectionVectorRemover(new Limit(input, limit.getFirst(), limit.getLast()));
-    }
-
-    @Override
-    public PhysicalOperator visitCollapsingAggregate(CollapsingAggregate agg, Object value)
-        throws OptimizerException {
-
-      if( !(agg.getInput() instanceof Segment) ){
-        throw new OptimizerException(String.format("Currently, Drill only supports CollapsingAggregate immediately preceded by a Segment.  The input of this operator is %s.", agg.getInput()));
-      }
-      Segment segment = (Segment) agg.getInput();
-
-      if(!agg.getWithin().equals(segment.getName())){
-        throw new OptimizerException(String.format("Currently, Drill only supports CollapsingAggregate immediately preceded by a Segment where the CollapsingAggregate works on the defined segments.  In this case, the segment has been defined based on the name %s but the collapsing aggregate is working within the field %s.", segment.getName(), agg.getWithin()));
-      }
-      
-      // a collapsing aggregate is a currently implemented as a sort followed by a streaming aggregate.
-      List<Ordering> orderDefs = Lists.newArrayList();
-      
-      List<NamedExpression> keys = Lists.newArrayList();
-      for(LogicalExpression e : segment.getExprs()){
-        if( !(e instanceof SchemaPath)) throw new OptimizerException("The basic optimizer doesn't currently support collapsing aggregate where the segment value is something other than a SchemaPath.");
-        keys.add(new NamedExpression(e, new FieldReference((SchemaPath) e)));
-        orderDefs.add(new Ordering(Direction.Ascending, e, NullDirection.FIRST));
-      }
-      Sort sort = new Sort(segment.getInput().accept(this, value), orderDefs, false);
-      
-      StreamingAggregate sa = new StreamingAggregate(sort, keys.toArray(new NamedExpression[keys.size()]), agg.getAggregations(), 1.0f);
-      return sa;
     }
 
 
