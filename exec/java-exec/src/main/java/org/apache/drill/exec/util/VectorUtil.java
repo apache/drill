@@ -29,6 +29,40 @@ import com.beust.jcommander.internal.Lists;
 
 public class VectorUtil {
 
+  public static void showVectorAccessibleContent(VectorAccessible va, final String delimiter) {
+
+    int rows = va.getRecordCount();
+    List<String> columns = Lists.newArrayList();
+    for (VectorWrapper vw : va) {
+      columns.add(vw.getValueVector().getField().getName());
+    }
+
+    int width = columns.size();
+    for (String column : columns) {
+      System.out.printf("%s%s",column, column == columns.get(width - 1) ? "\n" : delimiter);
+    }
+    for (int row = 0; row < rows; row++) {
+      int columnCounter = 0;
+      for (VectorWrapper vw : va) {
+        boolean lastColumn = columnCounter == width - 1;
+        Object o = vw.getValueVector().getAccessor().getObject(row);
+        if (o == null) {
+          //null value
+          String value = "null";
+          System.out.printf("%s%s", value, lastColumn ? "\n" : delimiter);
+        }
+        else if (o instanceof byte[]) {
+          String value = new String((byte[]) o);
+          System.out.printf("%s%s", value, lastColumn ? "\n" : delimiter);
+        } else {
+          String value = o.toString();
+          System.out.printf("%s%s", value, lastColumn ? "\n" : delimiter);
+        }
+        columnCounter++;
+      }
+    }
+  }
+
   public static void showVectorAccessibleContent(VectorAccessible va) {
 
     int rows = va.getRecordCount();

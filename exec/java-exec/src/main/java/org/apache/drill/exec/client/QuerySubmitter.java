@@ -20,10 +20,13 @@ package org.apache.drill.exec.client;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Sets;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.coord.ZKClusterCoordinator;
 import org.apache.drill.exec.exception.SchemaChangeException;
@@ -64,33 +67,47 @@ public class QuerySubmitter {
       jc.usage();
       System.exit(0);
     }
-    System.exit(submitter.submitQuery(o.location, o.planType, o.zk, o.local, o.bits));
+
+    System.exit(submitter.submitQuery(o.location, o.queryString, o.planType, o.zk, o.local, o.bits, o.format));
   }
 
   static class Options {
-    @Parameter(names = {"-f"}, description = "file containing plan", required=true)
+    @Parameter(names = {"-f, --file"}, description = "file containing plan", required=false)
     public String location = null;
 
-    @Parameter(names = {"-t"}, description = "type of plan, logical/physical", required=true)
+    @Parameter(names = {"-q", "-e", "--query"}, description = "query string", required = false)
+    public String queryString = null;
+
+    @Parameter(names = {"-t", "--type"}, description = "type of query, sql/logical/physical", required=true)
     public String planType;
 
-    @Parameter(names = {"-zk"}, description = "zookeeper connect string.", required=false)
+    @Parameter(names = {"-z", "--zookeeper"}, description = "zookeeper connect string.", required=false)
     public String zk = "localhost:2181";
 
-    @Parameter(names = {"-local"}, description = "run query in local mode", required=false)
+    @Parameter(names = {"-l", "--local"}, description = "run query in local mode", required=false)
     public boolean local;
 
-    @Parameter(names = "-bits", description = "number of drillbits to run. local mode only", required=false)
+    @Parameter(names = {"-b", "--bits"}, description = "number of drillbits to run. local mode only", required=false)
     public int bits = 1;
 
-    @Parameter(names = {"-h", "-help", "--help"}, description = "show usage", help=true)
+    @Parameter(names = {"-h", "--help"}, description = "show usage", help=true)
     public boolean help = false;
+
+    @Parameter(names = {"--format"}, description = "output format, csv,tsv,table", required = false)
+    public String format = "table";
   }
 
-  public int submitQuery(String planLocation, String type, String zkQuorum, boolean local, int bits) throws Exception {
+  public enum Format {
+    TSV, CSV, TABLE
+  }
+
+  public int submitQuery(String planLocation, String queryString, String type, String zkQuorum, boolean local, int bits, String format) throws Exception {
     DrillConfig config = DrillConfig.create();
     DrillClient client = null;
-    
+
+    Preconditions.checkArgument(!(planLocation == null && queryString == null), "Must provide either query file or query string");
+    Preconditions.checkArgument(!(planLocation != null && queryString != null), "Must provide either query file or query string, not both");
+
     try{
       if (local) {
         RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
@@ -106,29 +123,62 @@ public class QuerySubmitter {
         client = new DrillClient(config, clusterCoordinator);
       }
       client.connect();
-      QueryResultsListener listener = new QueryResultsListener();
-      String plan = Charsets.UTF_8.decode(ByteBuffer.wrap(Files.readAllBytes(Paths.get(planLocation)))).toString();
+      QueryResultsListener listener;
+      String plan;
+      if (queryString == null) {
+        plan = Charsets.UTF_8.decode(ByteBuffer.wrap(Files.readAllBytes(Paths.get(planLocation)))).toString();
+      } else {
+        plan = queryString;
+      }
+      String[] queries;
       UserProtos.QueryType queryType;
       type = type.toLowerCase();
       switch(type) {
         case "sql":
           queryType = UserProtos.QueryType.SQL;
+          queries = plan.split(";");
           break;
         case "logical":
           queryType = UserProtos.QueryType.LOGICAL;
+          queries = new String[]{ plan };
           break;
         case "physical":
           queryType = UserProtos.QueryType.PHYSICAL;
+          queries = new String[]{ plan };
           break;
         default:
           System.out.println("Invalid query type: " + type);
           return -1;
       }
+      Format outputFormat;
+      format = format.toLowerCase();
+      switch(format) {
+        case "csv":
+          outputFormat = Format.CSV;
+          break;
+        case "tsv":
+          outputFormat = Format.TSV;
+          break;
+        case "table":
+          outputFormat = Format.TABLE;
+          break;
+        default:
+          System.out.println("Invalid format type: " + format);
+          return -1;
+      }
       Stopwatch watch = new Stopwatch();
-      watch.start();
-      client.runQuery(queryType, plan, listener);
-      int rows = listener.await();
-      System.out.println(String.format("Got %d record%s in %f seconds", rows, rows > 1 ? "s" : "", (float)watch.elapsed(TimeUnit.MILLISECONDS) / (float)1000));
+      for (String query : queries) {
+        listener = new QueryResultsListener(outputFormat);
+        watch.start();
+        client.runQuery(queryType, query, listener);
+        int rows = listener.await();
+        System.out.println(String.format("%d record%s selected (%f seconds)", rows, rows > 1 ? "s" : "", (float) watch.elapsed(TimeUnit.MILLISECONDS) / (float) 1000));
+        if (query != queries[queries.length - 1]) {
+          System.out.println();
+        }
+        watch.stop();
+        watch.reset();
+      }
       return 0;
     }finally{
       if(client != null) client.close();
@@ -139,7 +189,11 @@ public class QuerySubmitter {
     AtomicInteger count = new AtomicInteger();
     private CountDownLatch latch = new CountDownLatch(1);
     RecordBatchLoader loader = new RecordBatchLoader(new BootStrapContext(DrillConfig.create()).getAllocator());
-    int width;
+    Format format;
+
+    public QueryResultsListener(Format format) {
+      this.format = format;
+    }
 
     @Override
     public void submissionFailed(RpcException ex) {
@@ -157,12 +211,21 @@ public class QuerySubmitter {
         } catch (SchemaChangeException e) {
           submissionFailed(new RpcException(e));
         }
-        
-        VectorUtil.showVectorAccessibleContent(loader);
+
+        switch(format) {
+          case TABLE:
+            VectorUtil.showVectorAccessibleContent(loader);
+            break;
+          case TSV:
+            VectorUtil.showVectorAccessibleContent(loader, "\t");
+            break;
+          case CSV:
+            VectorUtil.showVectorAccessibleContent(loader, ",");
+            break;
+        }
       }
       
       if (result.getHeader().getIsLastChunk()) {
-        //System.out.println(StringUtils.repeat("-", width*17 + 1));
         latch.countDown();
       }
       result.release();
