@@ -48,7 +48,7 @@ public class PhysicalPlanReader {
   private final ObjectReader logicalPlanReader;
 
   public PhysicalPlanReader(DrillConfig config, ObjectMapper mapper, final DrillbitEndpoint endpoint,
-                            final StoragePluginRegistry engineRegistry) {
+                            final StoragePluginRegistry pluginRegistry) {
 
     // Endpoint serializer/deserializer.
     SimpleModule deserModule = new SimpleModule("PhysicalOperatorModule") //
@@ -61,7 +61,7 @@ public class PhysicalPlanReader {
     mapper.registerModule(deserModule);
     mapper.registerSubtypes(PhysicalOperatorUtil.getSubTypes(config));
     InjectableValues injectables = new InjectableValues.Std() //
-            .addValue(StoragePluginRegistry.class, engineRegistry) //
+            .addValue(StoragePluginRegistry.class, pluginRegistry) //
         .addValue(DrillbitEndpoint.class, endpoint); //
 
     this.mapper = mapper;

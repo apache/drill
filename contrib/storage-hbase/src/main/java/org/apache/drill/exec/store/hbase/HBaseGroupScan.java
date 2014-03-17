@@ -76,14 +76,13 @@ public class HBaseGroupScan extends AbstractGroupScan {
 
   @JsonCreator
   public HBaseGroupScan(@JsonProperty("entries") List<HTableReadEntry> entries,
-                          @JsonProperty("storage") HBaseStoragePluginConfig storageEngineConfig,
+                          @JsonProperty("storage") HBaseStoragePluginConfig storagePluginConfig,
                           @JsonProperty("columns") List<SchemaPath> columns,
-                          @JacksonInject StoragePluginRegistry engineRegistry
+                          @JacksonInject StoragePluginRegistry pluginRegistry
                            )throws IOException, ExecutionSetupException {
     Preconditions.checkArgument(entries.size() == 1);
-    engineRegistry.init(DrillConfig.create());
-    this.storagePlugin = (HBaseStoragePlugin) engineRegistry.getEngine(storageEngineConfig);
-    this.storagePluginConfig = storageEngineConfig;
+    this.storagePlugin = (HBaseStoragePlugin) pluginRegistry.getPlugin(storagePluginConfig);
+    this.storagePluginConfig = storagePluginConfig;
     this.tableName = entries.get(0).getTableName();
     this.columns = columns;
     getRegionInfos();

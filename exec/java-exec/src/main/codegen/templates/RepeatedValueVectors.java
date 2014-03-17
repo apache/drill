@@ -108,15 +108,37 @@ package org.apache.drill.exec.vector;
       to.copyFrom(fromIndex, toIndex, Repeated${minor.class}Vector.this);
     }
   }
-  
-  public void copyFrom(int inIndex, int outIndex, Repeated${minor.class}Vector v){
-    throw new UnsupportedOperationException();
-  }
-  
-  public boolean copyFromSafe(int inIndex, int outIndex, Repeated${minor.class}Vector v){
-    throw new UnsupportedOperationException();
-  }
-  
+
+<#if type.major == "VarLen">
+    public void copyFrom(int inIndex, int outIndex, Repeated${minor.class}Vector v){
+      int count = v.getAccessor().getCount(inIndex);
+      getMutator().startNewGroup(outIndex);
+      for (int i = 0; i < count; i++) {
+        getMutator().add(outIndex, v.getAccessor().get(inIndex, i));
+      }
+    }
+
+    public boolean copyFromSafe(int inIndex, int outIndex, Repeated${minor.class}Vector v){
+      int count = v.getAccessor().getCount(inIndex);
+      getMutator().startNewGroup(outIndex);
+      for (int i = 0; i < count; i++) {
+        if (!getMutator().addSafe(outIndex, v.getAccessor().get(inIndex, i))) {
+          return false;
+        }
+      }
+      return true;
+    }
+<#else>
+
+    public void copyFrom(int inIndex, int outIndex, Repeated${minor.class}Vector v){
+        throw new UnsupportedOperationException();
+    }
+
+    public boolean copyFromSafe(int inIndex, int outIndex, Repeated${minor.class}Vector v){
+        throw new UnsupportedOperationException();
+    }
+</#if>
+
   <#if type.major == "VarLen">
   @Override
   public FieldMetadata getMetadata() {
@@ -131,6 +153,7 @@ package org.apache.drill.exec.vector;
   
   public void allocateNew(int totalBytes, int parentValueCount, int childValueCount) {
     offsets.allocateNew(parentValueCount+1);
+    offsets.getMutator().set(0,0);
     values.allocateNew(totalBytes, childValueCount);
     mutator.reset();
     accessor.reset();
@@ -261,6 +284,12 @@ package org.apache.drill.exec.vector;
       holder.vector = values;
     }
 
+    public void get(int index, int positionIndex, ${minor.class}Holder holder) {
+      int offset = offsets.getAccessor().get(index);
+      assert offset >= 0;
+      values.getAccessor().get(offset + positionIndex, holder);
+    }
+
     public MaterializedField getField() {
       return field;
     }
@@ -300,6 +329,19 @@ package org.apache.drill.exec.vector;
       values.getMutator().set(nextOffset, value);
       offsets.getMutator().set(index+1, nextOffset+1);
     }
+
+    <#if type.major == "VarLen">
+    public boolean addSafe(int index, byte[] bytes) {
+      return addSafe(index, bytes, 0, bytes.length);
+    }
+
+    public boolean addSafe(int index, byte[] bytes, int start, int length) {
+      int nextOffset = offsets.getAccessor().get(index+1);
+      boolean b1 = values.getMutator().setSafe(nextOffset, bytes, start, length);
+      boolean b2 = offsets.getMutator().setSafe(index+1, nextOffset+1);
+      return (b1 && b2);
+    }
+    </#if>
 
     public void add(int index, ${minor.class}Holder holder){
       int nextOffset = offsets.getAccessor().get(index+1);

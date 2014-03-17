@@ -157,7 +157,7 @@ public class DrillOptiq {
         if (call.getOperator() == SqlStdOperatorTable.ITEM) {
           SchemaPath left = (SchemaPath) call.getOperands().get(0).accept(this);
           final RexLiteral literal = (RexLiteral) call.getOperands().get(1);
-          return left.getChild((String) literal.getValue2());
+          return left.getChild(literal.getValue2().toString());
         }
         
         // fall through

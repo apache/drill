@@ -22,23 +22,43 @@ import java.util.Iterator;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.record.TypedFieldId;
 
 import com.google.common.collect.Iterators;
 
+import javax.sound.sampled.FloatControl;
+
 public class ValueVectorReadExpression implements LogicalExpression{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ValueVectorReadExpression.class);
 
-  private final MajorType type;
+  private MajorType type;
   private final TypedFieldId fieldId;
   private final boolean superReader;
+  private final int index;
+  private final boolean isArrayElement;
   
   
-  public ValueVectorReadExpression(TypedFieldId tfId){
+  public ValueVectorReadExpression(TypedFieldId tfId, int index, boolean isArrayElement){
     this.type = tfId.getType();
     this.fieldId = tfId;
     this.superReader = tfId.isHyperReader();
+    this.index = index;
+    this.isArrayElement = isArrayElement;
+  }
+
+  public void required() {
+    type = Types.required(type.getMinorType());
+  }
+
+  public boolean isArrayElement() {
+    return isArrayElement;
+  }
+
+  public ValueVectorReadExpression(TypedFieldId tfId) {
+    this(tfId, -1, false);
   }
   
   public TypedFieldId getTypedFieldId(){
@@ -60,6 +80,10 @@ public class ValueVectorReadExpression implements LogicalExpression{
 
   public TypedFieldId getFieldId() {
     return fieldId;
+  }
+
+  public int getIndex() {
+    return index;
   }
 
   @Override

@@ -32,8 +32,11 @@ import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.Size;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.dfs.FileSelection;
+import org.apache.drill.exec.store.dfs.shim.DrillFileSystem;
+import org.apache.drill.exec.store.easy.text.TextFormatPlugin;
 import org.apache.drill.exec.store.schedule.AffinityCreator;
 import org.apache.drill.exec.store.schedule.AssignmentCreator;
 import org.apache.drill.exec.store.schedule.BlockMapBuilder;
@@ -70,11 +73,19 @@ public class EasyGroupScan extends AbstractGroupScan{
       @JacksonInject StoragePluginRegistry engineRegistry, // 
       @JsonProperty("columns") List<SchemaPath> columns
       ) throws IOException, ExecutionSetupException {
-    
+
     this.formatPlugin = (EasyFormatPlugin<?>) engineRegistry.getFormatPlugin(storageConfig, formatConfig);
     Preconditions.checkNotNull(formatPlugin, "Unable to load format plugin for provided format config.");
     this.selection = new FileSelection(files, true);
-    this.maxWidth = selection.getFileStatusList(formatPlugin.getFileSystem()).size();
+    try{
+      BlockMapBuilder b = new BlockMapBuilder(formatPlugin.getFileSystem().getUnderlying(), formatPlugin.getContext().getBits());
+      this.chunks = b.generateFileWork(selection.getFileStatusList(formatPlugin.getFileSystem()), formatPlugin.isBlockSplittable());
+      this.endpointAffinities = AffinityCreator.getAffinityMap(chunks);
+    }catch(IOException e){
+      logger.warn("Failure determining endpoint affinity.", e);
+      this.endpointAffinities = Collections.emptyList();
+    }
+    maxWidth = chunks.size();
     this.columns = columns;
   }
   
@@ -84,9 +95,17 @@ public class EasyGroupScan extends AbstractGroupScan{
       List<SchemaPath> columns
       ) throws IOException{
     this.selection = selection;
-    this.maxWidth = selection.getFileStatusList(formatPlugin.getFileSystem()).size();
     this.formatPlugin = formatPlugin;
     this.columns = columns;
+    try{
+      BlockMapBuilder b = new BlockMapBuilder(formatPlugin.getFileSystem().getUnderlying(), formatPlugin.getContext().getBits());
+      this.chunks = b.generateFileWork(selection.getFileStatusList(formatPlugin.getFileSystem()), formatPlugin.isBlockSplittable());
+      this.endpointAffinities = AffinityCreator.getAffinityMap(chunks);
+    }catch(IOException e){
+      logger.warn("Failure determining endpoint affinity.", e);
+      this.endpointAffinities = Collections.emptyList();
+    }
+    maxWidth = chunks.size();
   }
 
   @Override
@@ -127,15 +146,10 @@ public class EasyGroupScan extends AbstractGroupScan{
   
   @Override
   public List<EndpointAffinity> getOperatorAffinity() {
+    assert chunks != null && chunks.size() > 0;
     if (this.endpointAffinities == null) {
-      try{
-      BlockMapBuilder b = new BlockMapBuilder(formatPlugin.getFileSystem().getUnderlying(), formatPlugin.getContext().getBits());
-      this.chunks = b.generateFileWork(selection.getFileStatusList(formatPlugin.getFileSystem()), formatPlugin.isBlockSplittable());
-      this.endpointAffinities = AffinityCreator.getAffinityMap(chunks);
-      }catch(IOException e){
-        logger.warn("Failure determining endpoint affinity.", e);
-        this.endpointAffinities = Collections.emptyList();
-      }
+        logger.debug("chunks: {}", chunks.size());
+        this.endpointAffinities = AffinityCreator.getAffinityMap(chunks);
     }
     return this.endpointAffinities;
   }

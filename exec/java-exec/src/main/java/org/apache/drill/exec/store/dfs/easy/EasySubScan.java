@@ -25,8 +25,10 @@ import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
+import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.physical.base.AbstractSubScan;
 import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.exec.store.dfs.NamedFormatPluginConfig;
 import org.apache.drill.exec.store.schedule.CompleteFileWork.FileWorkImpl;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
@@ -52,7 +54,7 @@ public class EasySubScan extends AbstractSubScan{
       @JacksonInject StoragePluginRegistry engineRegistry, // 
       @JsonProperty("columns") List<SchemaPath> columns //
       ) throws IOException, ExecutionSetupException {
-    
+
     this.formatPlugin = (EasyFormatPlugin<?>) engineRegistry.getFormatPlugin(storageConfig, formatConfig);
     Preconditions.checkNotNull(this.formatPlugin);
     this.files = files;
@@ -82,7 +84,13 @@ public class EasySubScan extends AbstractSubScan{
 
   @JsonProperty("format")
   public FormatPluginConfig getFormatConfig(){
-    return formatPlugin.getConfig();
+    if (formatPlugin.getName() != null) {
+      NamedFormatPluginConfig namedConfig = new NamedFormatPluginConfig();
+      namedConfig.name = formatPlugin.getName();
+      return namedConfig;
+    } else {
+      return formatPlugin.getConfig();
+    }
   }
   
   @JsonProperty("columns")

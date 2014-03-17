@@ -30,6 +30,7 @@ import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.PathSegment.NameSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.data.NamedExpression;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ClassGenerator;
@@ -140,9 +141,10 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
 
 
         // add value vector to transfer if direct reference and this is allowed, otherwise, add to evaluation stack.
-        if(expr instanceof ValueVectorReadExpression && incoming.getSchema().getSelectionVectorMode() == SelectionVectorMode.NONE &&
-                !isAnyWildcard &&
-                !transferFieldIds.contains(((ValueVectorReadExpression) expr).getFieldId().getFieldId())) {
+        if(expr instanceof ValueVectorReadExpression && incoming.getSchema().getSelectionVectorMode() == SelectionVectorMode.NONE
+                && !isAnyWildcard
+                &&!transferFieldIds.contains(((ValueVectorReadExpression) expr).getFieldId().getFieldId())
+                && !((ValueVectorReadExpression) expr).isArrayElement()) {
           ValueVectorReadExpression vectorRead = (ValueVectorReadExpression) expr;
           ValueVector vvIn = incoming.getValueAccessorById(vectorRead.getFieldId().getFieldId(), TypeHelper.getValueVectorClass(vectorRead.getMajorType().getMinorType(), vectorRead.getMajorType().getMode())).getValueVector();
           Preconditions.checkNotNull(incoming);

@@ -79,25 +79,25 @@ public class HiveScan extends AbstractGroupScan {
   @JsonCreator
   public HiveScan(@JsonProperty("hive-table") HiveReadEntry hiveReadEntry, @JsonProperty("storage-plugin") String storagePluginName,
                   @JsonProperty("columns") List<FieldReference> columns,
-                  @JacksonInject StoragePluginRegistry engineRegistry) throws ExecutionSetupException {
+                  @JacksonInject StoragePluginRegistry pluginRegistry) throws ExecutionSetupException {
     this.hiveReadEntry = hiveReadEntry;
     this.table = hiveReadEntry.getTable();
     this.storagePluginName = storagePluginName;
-    this.storagePlugin = (HiveStoragePlugin) engineRegistry.getEngine(storagePluginName);
+    this.storagePlugin = (HiveStoragePlugin) pluginRegistry.getPlugin(storagePluginName);
     this.columns = columns;
     this.partitions = hiveReadEntry.getPartitions();
     getSplits();
     endpoints = storagePlugin.getContext().getBits();
   }
 
-  public HiveScan(HiveReadEntry hiveReadEntry, HiveStoragePlugin storageEngine, List<FieldReference> columns) throws ExecutionSetupException {
+  public HiveScan(HiveReadEntry hiveReadEntry, HiveStoragePlugin storagePlugin, List<FieldReference> columns) throws ExecutionSetupException {
     this.table = hiveReadEntry.getTable();
     this.hiveReadEntry = hiveReadEntry;
     this.columns = columns;
     this.partitions = hiveReadEntry.getPartitions();
     getSplits();
-    endpoints = storageEngine.getContext().getBits();
-    this.storagePluginName = storageEngine.getName();
+    endpoints = storagePlugin.getContext().getBits();
+    this.storagePluginName = storagePlugin.getName();
   }
 
   public List<FieldReference> getColumns() {

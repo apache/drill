@@ -95,6 +95,7 @@ public class Drillbit implements Closeable{
     DrillbitEndpoint md = engine.start();
     manager.start(md, cache, engine.getController(), engine.getDataConnectionCreator(), coord);
     cache.run();
+    manager.getContext().getStorage().init();
     handle = coord.register(md);
   }
 

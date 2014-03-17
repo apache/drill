@@ -31,5 +31,16 @@ public class FileSystemConfig implements StoragePluginConfig{
   public String connection;
   public Map<String, String> workspaces;
   public Map<String, FormatPluginConfig> formats;
-  
+
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof FileSystemConfig)) {
+      return false;
+    }
+    FileSystemConfig that = (FileSystemConfig) obj;
+    boolean same = ((this.connection == null && that.connection == null) || this.connection.equals(that.connection)) &&
+            ((this.workspaces == null && that.workspaces == null) || this.workspaces.equals(that.workspaces)) &&
+            ((this.formats== null && that.formats == null) || this.formats.equals(that.formats));
+    return same;
+  }
 }

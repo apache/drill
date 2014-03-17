@@ -18,6 +18,7 @@
 package org.apache.drill.exec.vector.allocator;
 
 import org.apache.drill.exec.vector.FixedWidthVector;
+import org.apache.drill.exec.vector.RepeatedVariableWidthVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VariableWidthVector;
 
@@ -29,6 +30,8 @@ public abstract class VectorAllocator{
       return new FixedVectorAllocator((FixedWidthVector) outgoing);
     }else if(outgoing instanceof VariableWidthVector && in instanceof VariableWidthVector){
       return new VariableVectorAllocator( (VariableWidthVector) in, (VariableWidthVector) outgoing);
+    } else if (outgoing instanceof RepeatedVariableWidthVector && in instanceof RepeatedVariableWidthVector) {
+      return new RepeatedVectorAllocator((RepeatedVariableWidthVector) in, (RepeatedVariableWidthVector) outgoing);
     }else{
       throw new UnsupportedOperationException();
     }
@@ -40,7 +43,9 @@ public abstract class VectorAllocator{
       return new FixedVectorAllocator((FixedWidthVector) outgoing);
     }else if(outgoing instanceof VariableWidthVector){
       return new VariableEstimatedVector( (VariableWidthVector) outgoing, averageBytesPerVariable);
-    }else{
+    }else if (outgoing instanceof RepeatedVariableWidthVector) {
+      return new RepeatedVariableEstimatedAllocator((RepeatedVariableWidthVector) outgoing, averageBytesPerVariable);
+    } else {
       throw new UnsupportedOperationException();
     }
   }

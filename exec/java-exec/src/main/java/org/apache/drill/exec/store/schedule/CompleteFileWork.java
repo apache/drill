@@ -102,4 +102,9 @@ public class CompleteFileWork implements FileWork, CompleteWork{
     }
     
   }
+
+  @Override
+  public String toString() {
+    return String.format("File: %s start: %d length: %d", path, start, length);
+  }
 }

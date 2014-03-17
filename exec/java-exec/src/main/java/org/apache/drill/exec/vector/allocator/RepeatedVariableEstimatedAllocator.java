@@ -15,15 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.dfs;
+package org.apache.drill.exec.vector.allocator;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.apache.drill.common.logical.FormatPluginConfig;
+import org.apache.drill.exec.vector.RepeatedVariableWidthVector;
+import org.apache.drill.exec.vector.VariableWidthVector;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
+public class RepeatedVariableEstimatedAllocator extends VectorAllocator{
+  RepeatedVariableWidthVector out;
+  int avgWidth;
 
-
-@JsonTypeName("named")
-public class NamedFormatPluginConfig implements FormatPluginConfig {
-  public String name;
+  public RepeatedVariableEstimatedAllocator(RepeatedVariableWidthVector out, int avgWidth) {
+    super();
+    this.out = out;
+    this.avgWidth = avgWidth;
+  }
+  
+  public void alloc(int recordCount){
+    out.allocateNew(avgWidth * recordCount, recordCount, recordCount);
+  }
 }

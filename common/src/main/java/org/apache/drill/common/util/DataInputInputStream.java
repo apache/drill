@@ -17,6 +17,9 @@
  */
 package org.apache.drill.common.util;
 
+
+import org.apache.commons.lang3.exception.ExceptionUtils;
+
 import java.io.*;
 
 
@@ -62,7 +65,17 @@ public class DataInputInputStream extends InputStream {
 
   @Override
   public int read(byte[] b, int off, int len) throws IOException {
-    in.readFully(b, off, len);
+    for (int i = off; i < off + len; i++) {
+      try {
+        b[i] = in.readByte();
+      } catch(Exception e) {
+        if (ExceptionUtils.getRootCause(e) instanceof EOFException) {
+          return i - off;
+        } else {
+          throw e;
+        }
+      }
+    }
     return len;
   }
 

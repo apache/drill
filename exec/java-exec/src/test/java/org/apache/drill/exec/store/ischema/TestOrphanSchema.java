@@ -39,6 +39,7 @@ import org.apache.drill.exec.store.ischema.RowProvider;
 import org.apache.drill.exec.store.ischema.RowRecordReader;
 import org.apache.drill.exec.vector.ValueVector;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
@@ -46,7 +47,12 @@ import org.junit.Test;
  * An "orphan schema" is a stand alone schema which is not (yet?) connected to Optiq.
  */
 public class TestOrphanSchema {
-  SchemaPlus root = OrphanSchema.create();
+  static SchemaPlus root;
+
+  @BeforeClass
+  public static void init() throws Exception {
+    root = OrphanSchema.create();
+  }
 
   @Test
   public void testTables() {

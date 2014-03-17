@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.planner.logical;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
@@ -30,26 +32,35 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
-public class StorageEngines implements Iterable<Map.Entry<String, StoragePluginConfig>>{
+public class StoragePlugins implements Iterable<Map.Entry<String, StoragePluginConfig>>{
   
   private Map<String, StoragePluginConfig> storage;
   
   @JsonCreator
-  public StorageEngines(@JsonProperty("storage") Map<String, StoragePluginConfig> storage){
+  public StoragePlugins(@JsonProperty("storage") Map<String, StoragePluginConfig> storage){
     this.storage = storage;
   }
   
   public static void main(String[] args) throws Exception{
     DrillConfig config = DrillConfig.create();
     String data = Resources.toString(Resources.getResource("storage-engines.json"), Charsets.UTF_8);
-    StorageEngines se = config.getMapper().readValue(data,  StorageEngines.class);
+    StoragePlugins se = config.getMapper().readValue(data,  StoragePlugins.class);
+    ByteArrayOutputStream os = new ByteArrayOutputStream();
+    config.getMapper().writeValue(System.out, se);
+    config.getMapper().writeValue(os, se);
+    se = config.getMapper().readValue(new ByteArrayInputStream(os.toByteArray()), StoragePlugins.class);
     System.out.println(se);
+  }
+
+  @JsonProperty("storage")
+  public Map<String, StoragePluginConfig> getStorage() {
+    return storage;
   }
 
   @Override
   public String toString() {
     final int maxLen = 10;
-    return "StorageEngines [storage=" + (storage != null ? toString(storage.entrySet(), maxLen) : null) + "]";
+    return "StoragePlugins [storage=" + (storage != null ? toString(storage.entrySet(), maxLen) : null) + "]";
   }
 
   @Override
@@ -68,6 +79,14 @@ public class StorageEngines implements Iterable<Map.Entry<String, StoragePluginC
     }
     builder.append("]");
     return builder.toString();
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof StoragePlugins)) {
+      return false;
+    }
+    return storage.equals(((StoragePlugins) obj).getStorage());
   }
   
   

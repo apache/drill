@@ -61,6 +61,7 @@ public class AssignmentCreator<T extends CompleteWork> {
   }
 
   private AssignmentCreator(List<DrillbitEndpoint> incomingEndpoints, List<T> units) {
+    logger.debug("Assigning {} units to {} endpoints", units.size(), incomingEndpoints.size());
     Stopwatch watch = new Stopwatch();
     
     Preconditions.checkArgument(incomingEndpoints.size() <= units.size(), String.format("Incoming endpoints %d "
@@ -116,6 +117,7 @@ public class AssignmentCreator<T extends CompleteWork> {
                 .get(currentEndpoint) >= endpointByteMap.getMaxBytes() * requiredPercentage))) {
 
           mappings.put(minorFragmentId, unit);
+          logger.debug("Assigned unit: {} to minorFragmentId: {}", unit, minorFragmentId);
           // logger.debug("Assigned rowGroup {} to minorFragmentId {} endpoint {}", rowGroupInfo.getRowGroupIndex(),
           // minorFragmentId, endpoints.get(minorFragmentId).getAddress());
           // if (bytesPerEndpoint.get(currentEndpoint) != null) {

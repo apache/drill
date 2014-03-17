@@ -19,6 +19,7 @@ package org.apache.drill.exec.expr;
 
 import java.util.List;
 
+import com.google.common.base.Joiner;
 import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ExpressionPosition;
@@ -26,6 +27,7 @@ import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.IfExpression;
 import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.TypedNullConstant;
 import org.apache.drill.common.expression.ValueExpressions;
@@ -228,12 +230,37 @@ public class ExpressionTreeMaterializer {
     @Override
     public LogicalExpression visitSchemaPath(SchemaPath path, FunctionImplementationRegistry value) {
 //      logger.debug("Visiting schema path {}", path);
-      TypedFieldId tfId = batch.getValueVectorId(path);
+      PathSegment seg = path.getRootSegment();
+      List<String> segments = Lists.newArrayList();
+      segments.add(seg.getNameSegment().getPath().toString());
+      boolean isArrayElement = false;
+      int index = -1;
+      while((seg = seg.getChild()) != null) {
+        if (seg.isNamed()) {
+          segments.add(seg.getNameSegment().getPath().toString());
+          if (seg.isLastPath()) {
+            break;
+          }
+        } else {
+          if (!seg.isLastPath()) {
+            throw new UnsupportedOperationException("Repeated map type not supported");
+          }
+          index = seg.getArraySegment().getIndex();
+          isArrayElement = true;
+          break;
+        }
+      }
+      SchemaPath newPath = SchemaPath.getCompoundPath((String[]) segments.toArray(new String[0]));
+      TypedFieldId tfId = batch.getValueVectorId(newPath);
       if (tfId == null) {
         logger.warn("Unable to find value vector of path {}, returning null instance.", path);
         return NullExpression.INSTANCE;
       } else {
-        return new ValueVectorReadExpression(tfId);
+        ValueVectorReadExpression e = new ValueVectorReadExpression(tfId, index, isArrayElement);
+        if (isArrayElement) {
+          e.required();
+        }
+        return e;
       }
     }
 

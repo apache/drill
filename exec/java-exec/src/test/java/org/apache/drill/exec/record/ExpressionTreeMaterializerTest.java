@@ -32,6 +32,7 @@ import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.IfExpression;
 import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
@@ -82,7 +83,7 @@ public class ExpressionTreeMaterializerTest {
 
     new NonStrictExpectations() {
       {
-        batch.getValueVectorId(new FieldReference("test", ExpressionPosition.UNKNOWN));
+        batch.getValueVectorId(new SchemaPath("test", ExpressionPosition.UNKNOWN));
         result = new TypedFieldId(Types.required(MinorType.BIGINT), -5);
       }
     };
@@ -98,9 +99,9 @@ public class ExpressionTreeMaterializerTest {
   public void testMaterializingLateboundTree(final @Injectable RecordBatch batch) throws SchemaChangeException {
     new NonStrictExpectations() {
       {
-        batch.getValueVectorId(new FieldReference("test", ExpressionPosition.UNKNOWN));
+        batch.getValueVectorId(SchemaPath.getSimplePath("test"));
         result = new TypedFieldId(Types.required(MinorType.BIT), -4);
-        batch.getValueVectorId(new FieldReference("test1", ExpressionPosition.UNKNOWN));
+        batch.getValueVectorId(SchemaPath.getSimplePath("test1"));
         result = new TypedFieldId(Types.required(MinorType.BIGINT), -5);
       }
     };
@@ -196,7 +197,7 @@ public class ExpressionTreeMaterializerTest {
 
     new NonStrictExpectations() {
       {
-        batch.getValueVectorId(new FieldReference("test", ExpressionPosition.UNKNOWN));
+        batch.getValueVectorId(new SchemaPath("test", ExpressionPosition.UNKNOWN));
         result = new TypedFieldId(Types.required(MinorType.BIGINT), -5);
       }
     };

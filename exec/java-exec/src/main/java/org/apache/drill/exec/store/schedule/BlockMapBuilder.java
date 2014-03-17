@@ -40,6 +40,7 @@ import com.codahale.metrics.Timer;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableRangeMap;
 import com.google.common.collect.Range;
+import org.apache.hadoop.io.compress.CompressionCodecFactory;
 
 public class BlockMapBuilder {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BlockMapBuilder.class);
@@ -50,19 +51,24 @@ public class BlockMapBuilder {
   private Collection<DrillbitEndpoint> endpoints;
   private FileSystem fs;
   private HashMap<String,DrillbitEndpoint> endPointMap;
+  private CompressionCodecFactory codecFactory;
 
   public BlockMapBuilder(FileSystem fs, Collection<DrillbitEndpoint> endpoints) {
     this.fs = fs;
     this.endpoints = endpoints;
+    codecFactory = new CompressionCodecFactory(fs.getConf());
     buildEndpointMap();
   }
 
-  
+  private boolean compressed(FileStatus fileStatus) {
+    return codecFactory.getCodec(fileStatus.getPath()) != null;
+  }
+
   public List<CompleteFileWork> generateFileWork(List<FileStatus> files, boolean blockify) throws IOException{
     List<CompleteFileWork> work = Lists.newArrayList();
     for(FileStatus f : files){
       ImmutableRangeMap<Long,BlockLocation> rangeMap = getBlockMap(f);
-      if(!blockify){
+      if(!blockify || compressed(f)){
         work.add(new CompleteFileWork(this.getEndpointByteMap(new FileStatusWork(f)), 0, f.getLen(), f.getPath().toString()));
         continue;
       }

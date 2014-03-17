@@ -23,6 +23,7 @@ import net.hydromatic.optiq.SchemaPlus;
 import net.hydromatic.optiq.tools.Frameworks;
 
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.exec.cache.LocalCache;
 import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.StoragePluginRegistry;
@@ -37,8 +38,8 @@ public class OrphanSchema {
    * Create an orphan schema to be used for testing.
    * @return root node of the created schema.
    */
-  public static SchemaPlus create(){
-
+  public static SchemaPlus create() throws Exception {
+    
     final DrillConfig c = DrillConfig.create();
 
     // Mock up a context which will allow us to create a schema.
@@ -46,9 +47,13 @@ public class OrphanSchema {
     when(bitContext.getMetrics()).thenReturn(new MetricRegistry());
     when(bitContext.getAllocator()).thenReturn(new TopLevelAllocator());
     when(bitContext.getConfig()).thenReturn(c);
+    when(bitContext.getCache()).thenReturn(new LocalCache());
 
+    bitContext.getCache().run();
+    
     // Using the mock context, get the orphan schema.
     StoragePluginRegistry r = new StoragePluginRegistry(bitContext);
+    r.init();
     SchemaPlus plus = Frameworks.createRootSchema();
     r.getSchemaFactory().registerSchemas(null, plus);
     return plus;
@@ -61,7 +66,7 @@ public class OrphanSchema {
    */
 
   @Test
-  public void test() {
+  public void test() throws Exception {
     printSchema(create(), 0);
   }
 

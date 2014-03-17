@@ -28,7 +28,13 @@ public interface RepeatedVariableWidthVector extends ValueVector{
    * @param childValueCount   Number of supported values in the vector.
    */
   public void allocateNew(int totalBytes, int parentValueCount, int childValueCount);
-  
+
+  /**
+   * Provide the maximum amount of variable width bytes that can be stored int his vector.
+   * @return
+   */
+  public int getByteCapacity();
+
   /**
    * Load the records in the provided buffer based on the given number of values.
    * @param dataBytes   The number of bytes associated with the data array.

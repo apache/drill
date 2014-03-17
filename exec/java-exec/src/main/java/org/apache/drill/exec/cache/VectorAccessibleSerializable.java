@@ -21,6 +21,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
+import com.hazelcast.nio.ObjectDataInput;
+import com.hazelcast.nio.ObjectDataOutput;
 import io.netty.buffer.ByteBuf;
 import org.apache.drill.common.util.DataInputInputStream;
 import org.apache.drill.common.util.DataOutputOutputStream;
@@ -82,7 +84,7 @@ public class VectorAccessibleSerializable implements DrillSerializable {
   }
 
   @Override
-  public void read(DataInput input) throws IOException {
+  public void readData(ObjectDataInput input) throws IOException {
     readFromStream(DataInputInputStream.constructInputStream(input));
   }
 
@@ -125,7 +127,7 @@ public class VectorAccessibleSerializable implements DrillSerializable {
   }
 
   @Override
-  public void write(DataOutput output) throws IOException {
+  public void writeData(ObjectDataOutput output) throws IOException {
     writeToStream(DataOutputOutputStream.constructOutputStream(output));
   }
 

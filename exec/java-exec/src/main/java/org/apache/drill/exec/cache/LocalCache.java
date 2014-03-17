@@ -17,7 +17,10 @@
  */
 package org.apache.drill.exec.cache;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.List;
@@ -27,6 +30,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.util.DataInputInputStream;
+import org.apache.drill.common.util.DataOutputOutputStream;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.TopLevelAllocator;
@@ -109,8 +114,14 @@ public class LocalCache implements DistributedCache {
 
   public static ByteArrayDataOutput serialize(DrillSerializable obj) {
     ByteArrayDataOutput out = ByteStreams.newDataOutput();
+    OutputStream outputStream = DataOutputOutputStream.constructOutputStream(out);
     try {
-      obj.write(out);
+      obj.writeToStream(outputStream);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+    try {
+      outputStream.flush();
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -119,9 +130,10 @@ public class LocalCache implements DistributedCache {
 
   public static <V extends DrillSerializable> V deserialize(byte[] bytes, Class<V> clazz) {
     ByteArrayDataInput in = ByteStreams.newDataInput(bytes);
+    InputStream inputStream = DataInputInputStream.constructInputStream(in);
     try {
       V obj = clazz.getConstructor(BufferAllocator.class).newInstance(allocator);
-      obj.read(in);
+      obj.readFromStream(inputStream);
       return obj;
     } catch (InstantiationException | IllegalAccessException | IOException | NoSuchMethodException | InvocationTargetException e) {
       throw new RuntimeException(e);
@@ -164,6 +176,8 @@ public class LocalCache implements DistributedCache {
     @Override
     public V get(String key) {
       if (m.get(key) == null) return null;
+      ByteArrayDataOutput b = m.get(key);
+      byte[] bytes = b.toByteArray();
       return (V) deserialize(m.get(key).toByteArray(), this.clazz);
     }
 

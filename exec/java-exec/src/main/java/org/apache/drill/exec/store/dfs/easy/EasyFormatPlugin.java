@@ -40,6 +40,10 @@ import org.apache.drill.exec.store.dfs.FormatPlugin;
 import org.apache.drill.exec.store.dfs.shim.DrillFileSystem;
 
 import com.beust.jcommander.internal.Lists;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.compress.CompressionCodec;
+import org.apache.hadoop.io.compress.CompressionCodecFactory;
 
 public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements FormatPlugin {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(EasyFormatPlugin.class);
@@ -51,20 +55,24 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
   private final boolean blockSplittable;
   private final DrillFileSystem fs;
   private final StoragePluginConfig storageConfig;
-  private final FormatPluginConfig formatConfig;
+  protected final FormatPluginConfig formatConfig;
   private final String name;
+  protected final CompressionCodecFactory codecFactory;
+  private final boolean compressible;
   
   protected EasyFormatPlugin(String name, DrillbitContext context, DrillFileSystem fs, StoragePluginConfig storageConfig,
-                             T formatConfig, boolean readable, boolean writable, boolean blockSplittable, String extension, String defaultName){
-    this.matcher = new BasicFormatMatcher(this, fs, extension);
+                             T formatConfig, boolean readable, boolean writable, boolean blockSplittable, boolean compressible, List<String> extensions, String defaultName){
+    this.matcher = new BasicFormatMatcher(this, fs, extensions, compressible);
     this.readable = readable;
     this.writable = writable;
     this.context = context;
     this.blockSplittable = blockSplittable;
+    this.compressible = compressible;
     this.fs = fs;
     this.storageConfig = storageConfig;
     this.formatConfig = formatConfig;
-    this.name = name == null ? defaultName : name; 
+    this.name = name == null ? defaultName : name;
+    this.codecFactory = new CompressionCodecFactory(new Configuration(fs.getUnderlying().getConf()));
   }
   
   @Override
@@ -88,9 +96,13 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
    * 
    * @return True if splittable.
    */
-  public boolean isBlockSplittable(){
+  public boolean isBlockSplittable() {
     return blockSplittable;
-  };
+  }
+
+  public boolean isCompressible() {
+    return compressible;
+  }
 
   public abstract RecordReader getRecordReader(FragmentContext context, FileWork fileWork, List<SchemaPath> columns) throws ExecutionSetupException;
 

@@ -27,6 +27,8 @@ import net.hydromatic.optiq.tools.Frameworks;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.TestTools;
+import org.apache.drill.exec.cache.DistributedCache;
+import org.apache.drill.exec.cache.LocalCache;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.ops.QueryContext;
@@ -63,6 +65,9 @@ public class PlanningBase {
   protected void testSqlPlan(String sqlCommands) throws Exception{
     String[] sqlStrings = sqlCommands.split(";");
 
+    final DistributedCache cache = new LocalCache();
+    cache.run();
+
     new NonStrictExpectations() {
       {
         dbContext.getMetrics();
@@ -71,10 +76,13 @@ public class PlanningBase {
         result = new TopLevelAllocator();
         dbContext.getConfig();
         result = config;
+        dbContext.getCache();
+        result = cache;
       }
     };
 
     StoragePluginRegistry registry = new StoragePluginRegistry(dbContext);
+    registry.init();
     final FunctionImplementationRegistry functionRegistry = new FunctionImplementationRegistry(config);
     final SchemaPlus root = Frameworks.createRootSchema();
     registry.getSchemaFactory().registerSchemas(null, root);
@@ -96,6 +104,8 @@ public class PlanningBase {
         result = new PlannerSettings();
         context.getConfig();
         result = config;
+        context.getCache();
+        result = cache;
       }
     };
 

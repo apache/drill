@@ -22,6 +22,8 @@ import net.hydromatic.optiq.SchemaPlus;
 import net.hydromatic.optiq.tools.Frameworks;
 
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.exec.cache.HazelCache;
+import org.apache.drill.exec.cache.LocalCache;
 import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.junit.Test;
@@ -33,7 +35,7 @@ public class TestOrphanSchema {
 
 
   @Test
-  public void test(final DrillbitContext bitContext){
+  public void test(final DrillbitContext bitContext) throws Exception {
     final DrillConfig c = DrillConfig.create();
 
     new NonStrictExpectations() {
@@ -44,11 +46,16 @@ public class TestOrphanSchema {
         result = new TopLevelAllocator();
         bitContext.getConfig();
         result = c;
+        bitContext.getCache();
+        result = new LocalCache();
       }
     };
 
+    bitContext.getCache().run();
+    
     StoragePluginRegistry r = new StoragePluginRegistry(bitContext);
     SchemaPlus plus = Frameworks.createRootSchema();
+    r.init();
     r.getSchemaFactory().registerSchemas(null, plus);
 
     printSchema(plus, 0);

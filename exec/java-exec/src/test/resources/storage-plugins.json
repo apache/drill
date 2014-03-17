@@ -1,0 +1,40 @@
+{
+  "storage":{
+    dfs: {
+      type: "file",
+      connection: "file:///",
+    formats: {
+            "psv" : {
+              type: "text",
+              extensions: [ "tbl" ],
+              delimiter: "|"
+            },
+            "csv" : {
+              type: "text",
+              extensions: [ "csv", "bcp" ],
+              delimiter: ","
+            },
+            "tsv" : {
+              type: "text",
+              extensions: [ "tsv" ],
+              delimiter: "\t"
+            },
+            "parquet" : {
+              type: "parquet"
+            }
+          }
+    },
+    cp: {
+      type: "file",
+      connection: "classpath:///",
+      formats: {
+        "json" : {
+          type: "json"
+        },
+        "parquet" : {
+          type: "parquet"
+        }
+      }
+    }
+  }
+}

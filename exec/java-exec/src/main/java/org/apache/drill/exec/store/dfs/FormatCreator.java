@@ -37,7 +37,7 @@ public class FormatCreator {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FormatCreator.class);
   
   
-  static final ConstructorChecker FORMAT_BASED = new ConstructorChecker(String.class, DrillbitContext.class, DrillFileSystem.class, StoragePluginConfig.class, FormatPlugin.class);
+  static final ConstructorChecker FORMAT_BASED = new ConstructorChecker(String.class, DrillbitContext.class, DrillFileSystem.class, StoragePluginConfig.class, FormatPluginConfig.class);
   static final ConstructorChecker DEFAULT_BASED = new ConstructorChecker(String.class, DrillbitContext.class, DrillFileSystem.class, StoragePluginConfig.class);
   
   static Map<String, FormatPlugin> getFormatPlugins(DrillbitContext context, DrillFileSystem fileSystem, FileSystemConfig storageConfig){
@@ -69,7 +69,8 @@ public class FormatCreator {
         for(Constructor<?> c : pluginClass.getConstructors()){
           try{
             if(!FORMAT_BASED.check(c)) continue;
-            constructors.put(pluginClass, c);
+            Class<? extends FormatPluginConfig> configClass = (Class<? extends FormatPluginConfig>) c.getParameterTypes()[4];
+            constructors.put(configClass, c);
           }catch(Exception e){
             logger.warn(String.format("Failure while trying instantiate FormatPlugin %s.", pluginClass.getName()), e);
           }

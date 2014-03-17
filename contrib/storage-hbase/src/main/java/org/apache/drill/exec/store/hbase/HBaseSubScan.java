@@ -57,7 +57,7 @@ public class HBaseSubScan extends AbstractBase implements SubScan {
   public HBaseSubScan(@JacksonInject StoragePluginRegistry registry, @JsonProperty("storage") StoragePluginConfig storage,
                       @JsonProperty("rowGroupReadEntries") LinkedList<HBaseSubScanReadEntry> rowGroupReadEntries,
                       @JsonProperty("columns") List<SchemaPath> columns) throws ExecutionSetupException {
-    hbaseStoragePlugin = (HBaseStoragePlugin) registry.getEngine(storage);
+    hbaseStoragePlugin = (HBaseStoragePlugin) registry.getPlugin(storage);
     this.rowGroupReadEntries = rowGroupReadEntries;
     this.storage = storage;
     this.columns = columns;

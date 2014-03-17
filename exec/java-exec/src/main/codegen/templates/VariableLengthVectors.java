@@ -323,7 +323,9 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
 
       if (data.capacity() < currentOffset + length) return false;
 
-      offsetVector.getMutator().set(index + 1, currentOffset + length);
+      if (!offsetVector.getMutator().setSafe(index + 1, currentOffset + length)) {
+        return false;
+      }
       data.setBytes(currentOffset, bytes, start, length);
       return true;
     }

@@ -29,6 +29,7 @@ import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
+import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.metrics.DrillMetrics;
 import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.physical.OperatorCost;
@@ -113,7 +114,6 @@ public class ParquetGroupScan extends AbstractGroupScan {
       @JacksonInject StoragePluginRegistry engineRegistry, // 
       @JsonProperty("columns") List<SchemaPath> columns //
       ) throws IOException, ExecutionSetupException {
-    engineRegistry.init(DrillConfig.create());
     this.columns = columns;
     if(formatConfig == null) formatConfig = new ParquetFormatConfig();
     Preconditions.checkNotNull(storageConfig);

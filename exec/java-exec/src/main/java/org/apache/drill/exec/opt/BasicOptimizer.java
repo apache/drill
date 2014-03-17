@@ -184,10 +184,10 @@ public class BasicOptimizer extends Optimizer{
     public PhysicalOperator visitScan(Scan scan, Object obj) throws OptimizerException {
       StoragePluginConfig config = logicalPlan.getStorageEngineConfig(scan.getStorageEngine());
       if(config == null) throw new OptimizerException(String.format("Logical plan referenced the storage engine config %s but the logical plan didn't have that available as a config.", scan.getStorageEngine()));
-      StoragePlugin engine;
+      StoragePlugin storagePlugin;
       try {
-        engine = context.getStorage().getEngine(config);
-        return engine.getPhysicalScan(scan.getSelection());
+        storagePlugin = context.getStorage().getPlugin(config);
+        return storagePlugin.getPhysicalScan(scan.getSelection());
       } catch (IOException | ExecutionSetupException e) {
         throw new OptimizerException("Failure while attempting to retrieve storage engine.", e);
       }

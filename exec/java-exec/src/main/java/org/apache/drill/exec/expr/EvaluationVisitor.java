@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Set;
 
 import io.netty.buffer.ByteBuf;
+import com.google.common.collect.Lists;
 import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.FunctionHolderExpression;
@@ -45,6 +46,7 @@ import org.apache.drill.common.expression.ValueExpressions.Decimal28Expression;
 import org.apache.drill.common.expression.ValueExpressions.Decimal38Expression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
@@ -332,7 +334,11 @@ public class EvaluationVisitor {
         }
       } else {
         if (Types.usesHolderForGet(e.getMajorType())) {
-          generator.getEvalBlock().add(getValueAccessor.arg(indexVariable).arg(out.getHolder()));
+          if (e.isArrayElement()) {
+            generator.getEvalBlock().add(getValueAccessor.arg(indexVariable).arg(JExpr.lit(e.getIndex())).arg(out.getHolder()));
+          } else {
+            generator.getEvalBlock().add(getValueAccessor.arg(indexVariable).arg(out.getHolder()));
+          }
         } else {
           generator.getEvalBlock().assign(out.getValue(), getValueAccessor.arg(indexVariable));
         }

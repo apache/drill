@@ -117,6 +117,7 @@ public class TestMergeJoin extends PopUnitTestBase {
   }
 
   @Test
+  @Ignore
   public void orderedEqualityLeftJoin(@Injectable final DrillbitContext bitContext,
                                       @Injectable UserServer.UserClientConnection connection) throws Throwable {
 
@@ -170,6 +171,7 @@ public class TestMergeJoin extends PopUnitTestBase {
   }
 
   @Test
+  @Ignore
   public void orderedEqualityInnerJoin(@Injectable final DrillbitContext bitContext,
                                        @Injectable UserServer.UserClientConnection connection) throws Throwable {
 
@@ -223,6 +225,7 @@ public class TestMergeJoin extends PopUnitTestBase {
   }
 
   @Test
+  @Ignore
   public void orderedEqualityMultiBatchJoin(@Injectable final DrillbitContext bitContext,
                                             @Injectable UserServer.UserClientConnection connection) throws Throwable {
 
