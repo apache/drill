@@ -99,7 +99,7 @@ public class JSONRecordReaderTest {
     SchemaDefProtos.FieldDef def = metadata.getDef();
     assertEquals(expectedMinorType, def.getMajorType().getMinorType());
     String[] parts = name.split("\\.");
-    int expected = parts.length;
+    long expected = parts.length;
     assertEquals(expected, def.getNameList().size());
     for(int i = 0; i < parts.length; ++i) {
       assertEquals(parts[i], def.getName(i).getName());
@@ -146,10 +146,10 @@ public class JSONRecordReaderTest {
     jr.setup(mutator);
     assertEquals(2, jr.next());
     assertEquals(3, addFields.size());
-    assertField(addFields.get(0), 0, MinorType.INT, 123, "test");
+    assertField(addFields.get(0), 0, MinorType.BIGINT, 123L, "test");
     assertField(addFields.get(1), 0, MinorType.BIT, true, "b");
     assertField(addFields.get(2), 0, MinorType.VARCHAR, "hi!", "c");
-    assertField(addFields.get(0), 1, MinorType.INT, 1234, "test");
+    assertField(addFields.get(0), 1, MinorType.BIGINT, 1234L, "test");
     assertField(addFields.get(1), 1, MinorType.BIT, false, "b");
     assertField(addFields.get(2), 1, MinorType.VARCHAR, "drill!", "c");
 
@@ -177,22 +177,22 @@ public class JSONRecordReaderTest {
     jr.setup(mutator);
     assertEquals(3, jr.next());
     assertEquals(7, addFields.size());
-    assertField(addFields.get(0), 0, MinorType.INT, 123, "test");
-    assertField(addFields.get(1), 0, MinorType.INT, 1, "b");
+    assertField(addFields.get(0), 0, MinorType.BIGINT, 123L, "test");
+    assertField(addFields.get(1), 0, MinorType.BIGINT, 1L, "b");
     assertField(addFields.get(2), 0, MinorType.FLOAT4, (float) 2.15, "c");
     assertField(addFields.get(3), 0, MinorType.BIT, true, "bool");
     assertField(addFields.get(4), 0, MinorType.VARCHAR, "test1", "str1");
 
-    assertField(addFields.get(0), 1, MinorType.INT, 1234, "test");
-    assertField(addFields.get(1), 1, MinorType.INT, 3, "b");
+    assertField(addFields.get(0), 1, MinorType.BIGINT, 1234L, "test");
+    assertField(addFields.get(1), 1, MinorType.BIGINT, 3L, "b");
     assertField(addFields.get(3), 1, MinorType.BIT, false, "bool");
     assertField(addFields.get(4), 1, MinorType.VARCHAR, "test2", "str1");
-    assertField(addFields.get(5), 1, MinorType.INT, 4, "d");
+    assertField(addFields.get(5), 1, MinorType.BIGINT, 4L, "d");
 
-    assertField(addFields.get(0), 2, MinorType.INT, 12345, "test");
+    assertField(addFields.get(0), 2, MinorType.BIGINT, 12345L, "test");
     assertField(addFields.get(2), 2, MinorType.FLOAT4, (float) 5.16, "c");
     assertField(addFields.get(3), 2, MinorType.BIT, true, "bool");
-    assertField(addFields.get(5), 2, MinorType.INT, 6, "d");
+    assertField(addFields.get(5), 2, MinorType.BIGINT, 6L, "d");
     assertField(addFields.get(6), 2, MinorType.VARCHAR, "test3", "str2");
     assertTrue(mutator.getRemovedFields().isEmpty());
     assertEquals(0, jr.next());
@@ -218,16 +218,16 @@ public class JSONRecordReaderTest {
 
     jr.setup(mutator);
     assertEquals(1, jr.next());
-    assertField(addFields.get(0), 0, MinorType.INT, 123, "test");
+    assertField(addFields.get(0), 0, MinorType.BIGINT, 123L, "test");
     assertTrue(removedFields.isEmpty());
     assertEquals(addFields.size(), 1);
     assertEquals(1, jr.next());
-    assertField(addFields.get(0), 0, MinorType.INT, 1234, "test");
+    assertField(addFields.get(0), 0, MinorType.BIGINT, 1234L, "test");
     assertEquals(addFields.size(), 1);
     assertTrue(removedFields.isEmpty());
     removedFields.clear();
     assertEquals(1, jr.next());
-    assertField(addFields.get(0), 0, MinorType.INT, 12345, "test");
+    assertField(addFields.get(0), 0, MinorType.BIGINT, 12345L, "test");
     assertEquals(addFields.size(), 1);
     assertTrue(removedFields.isEmpty());
     assertEquals(0, jr.next());
@@ -254,27 +254,27 @@ public class JSONRecordReaderTest {
     jr.setup(mutator);
     assertEquals(1, jr.next());
     assertEquals(5, addFields.size());
-    assertField(addFields.get(0), 0, MinorType.INT, 123, "test");
-    assertField(addFields.get(1), 0, MinorType.INT, 1, "b");
+    assertField(addFields.get(0), 0, MinorType.BIGINT, 123L, "test");
+    assertField(addFields.get(1), 0, MinorType.BIGINT, 1L, "b");
     assertField(addFields.get(2), 0, MinorType.FLOAT4, (float) 2.15, "c");
     assertField(addFields.get(3), 0, MinorType.BIT, true, "bool");
     assertField(addFields.get(4), 0, MinorType.VARCHAR, "test1", "str1");
     assertTrue(removedFields.isEmpty());
     assertEquals(1, jr.next());
     assertEquals(6, addFields.size());
-    assertField(addFields.get(0), 0, MinorType.INT, 1234, "test");
-    assertField(addFields.get(1), 0, MinorType.INT, 3, "b");
+    assertField(addFields.get(0), 0, MinorType.BIGINT, 1234L, "test");
+    assertField(addFields.get(1), 0, MinorType.BIGINT, 3L, "b");
     assertField(addFields.get(3), 0, MinorType.BIT, false, "bool");
     assertField(addFields.get(4), 0, MinorType.VARCHAR, "test2", "str1");
-    assertField(addFields.get(5), 0, MinorType.INT, 4, "d");
+    assertField(addFields.get(5), 0, MinorType.BIGINT, 4L, "d");
     assertEquals(1, removedFields.size());
     assertEquals("c", removedFields.get(0).getName());
     removedFields.clear();
     assertEquals(1, jr.next());
     assertEquals(7, addFields.size()); // The reappearing of field 'c' is also included
-    assertField(addFields.get(0), 0, MinorType.INT, 12345, "test");
+    assertField(addFields.get(0), 0, MinorType.BIGINT, 12345L, "test");
     assertField(addFields.get(3), 0, MinorType.BIT, true, "bool");
-    assertField(addFields.get(5), 0, MinorType.INT, 6, "d");
+    assertField(addFields.get(5), 0, MinorType.BIGINT, 6L, "d");
     assertField(addFields.get(2), 0, MinorType.FLOAT4, (float) 5.16, "c");
     assertField(addFields.get(6), 0, MinorType.VARCHAR, "test3", "str2");
     assertEquals(2, removedFields.size());
@@ -311,10 +311,10 @@ public class JSONRecordReaderTest {
     jr.setup(mutator);
     assertEquals(2, jr.next());
     assertEquals(3, addFields.size());
-    assertField(addFields.get(0), 0, MinorType.INT, 123, "test");
+    assertField(addFields.get(0), 0, MinorType.BIGINT, 123L, "test");
     assertField(addFields.get(1), 0, MinorType.VARCHAR, "test", "a.b");
     assertField(addFields.get(2), 0, MinorType.BIT, true, "a.a.d");
-    assertField(addFields.get(0), 1, MinorType.INT, 1234, "test");
+    assertField(addFields.get(0), 1, MinorType.BIGINT, 1234L, "test");
     assertField(addFields.get(1), 1, MinorType.VARCHAR, "test2", "a.b");
     assertField(addFields.get(2), 1, MinorType.BIT, false, "a.a.d");
 
@@ -340,15 +340,15 @@ public class JSONRecordReaderTest {
     jr.setup(mutator);
     assertEquals(2, jr.next());
     assertEquals(7, addFields.size());
-    assertField(addFields.get(0), 0, MinorType.INT, 123, "test");
-    assertField(addFields.get(1), 0, MinorType.INT, Arrays.asList(1, 2, 3), "test2");
-    assertField(addFields.get(2), 0, MinorType.INT, Arrays.asList(4, 5, 6), "test3.a");
-    assertField(addFields.get(3), 0, MinorType.INT, Arrays.asList(7, 8, 9), "test3.b");
-    assertField(addFields.get(4), 0, MinorType.INT, Arrays.asList(10, 11, 12), "test3.c.d");
+    assertField(addFields.get(0), 0, MinorType.BIGINT, 123L, "test");
+    assertField(addFields.get(1), 0, MinorType.BIGINT, Arrays.asList(1L, 2L, 3L), "test2");
+    assertField(addFields.get(2), 0, MinorType.BIGINT, Arrays.asList(4L, 5L, 6L), "test3.a");
+    assertField(addFields.get(3), 0, MinorType.BIGINT, Arrays.asList(7L, 8L, 9L), "test3.b");
+    assertField(addFields.get(4), 0, MinorType.BIGINT, Arrays.asList(10L, 11L, 12L), "test3.c.d");
     assertField(addFields.get(5), 0, MinorType.FLOAT4, Arrays.<Float>asList((float) 1.1, (float) 1.2, (float) 1.3), "testFloat");
     assertField(addFields.get(6), 0, MinorType.VARCHAR, Arrays.asList("hello", "drill"), "testStr");
-    assertField(addFields.get(1), 1, MinorType.INT, Arrays.asList(1, 2), "test2");
-    assertField(addFields.get(2), 1, MinorType.INT, Arrays.asList(7, 7, 7, 8), "test3.a");
+    assertField(addFields.get(1), 1, MinorType.BIGINT, Arrays.asList(1L, 2L), "test2");
+    assertField(addFields.get(2), 1, MinorType.BIGINT, Arrays.asList(7L, 7L, 7L, 8L), "test3.a");
     assertField(addFields.get(5), 1, MinorType.FLOAT4, Arrays.<Float>asList((float) 2.2, (float) 2.3,(float) 2.4), "testFloat");
 
     assertEquals(0, jr.next());
@@ -373,15 +373,15 @@ public class JSONRecordReaderTest {
     jr.setup(mutator);
     assertEquals(9, jr.next());
     assertEquals(1, addFields.size());
-    assertField(addFields.get(0), 0, MinorType.INT, Arrays.<Integer>asList(), "test");
-    assertField(addFields.get(0), 1, MinorType.INT, Arrays.asList(1, 2, 3), "test");
-    assertField(addFields.get(0), 2, MinorType.INT, Arrays.<Integer>asList(), "test");
-    assertField(addFields.get(0), 3, MinorType.INT, Arrays.<Integer>asList(), "test");
-    assertField(addFields.get(0), 4, MinorType.INT, Arrays.asList(4, 5, 6), "test");
-    assertField(addFields.get(0), 5, MinorType.INT, Arrays.<Integer>asList(), "test");
-    assertField(addFields.get(0), 6, MinorType.INT, Arrays.<Integer>asList(), "test");
-    assertField(addFields.get(0), 7, MinorType.INT, Arrays.asList(7, 8, 9), "test");
-    assertField(addFields.get(0), 8, MinorType.INT, Arrays.<Integer>asList(), "test");
+    assertField(addFields.get(0), 0, MinorType.BIGINT, Arrays.<Long>asList(), "test");
+    assertField(addFields.get(0), 1, MinorType.BIGINT, Arrays.asList(1L, 2L, 3L), "test");
+    assertField(addFields.get(0), 2, MinorType.BIGINT, Arrays.<Long>asList(), "test");
+    assertField(addFields.get(0), 3, MinorType.BIGINT, Arrays.<Long>asList(), "test");
+    assertField(addFields.get(0), 4, MinorType.BIGINT, Arrays.asList(4L, 5L, 6L), "test");
+    assertField(addFields.get(0), 5, MinorType.BIGINT, Arrays.<Long>asList(), "test");
+    assertField(addFields.get(0), 6, MinorType.BIGINT, Arrays.<Long>asList(), "test");
+    assertField(addFields.get(0), 7, MinorType.BIGINT, Arrays.asList(7L, 8L, 9L), "test");
+    assertField(addFields.get(0), 8, MinorType.BIGINT, Arrays.<Long>asList(), "test");
 
 
     assertEquals(0, jr.next());

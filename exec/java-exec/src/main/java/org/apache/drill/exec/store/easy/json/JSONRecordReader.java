@@ -52,16 +52,7 @@ import org.apache.drill.exec.schema.SchemaIdGenerator;
 import org.apache.drill.exec.schema.json.jackson.JacksonHelper;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.VectorHolder;
-import org.apache.drill.exec.vector.AllocationHelper;
-import org.apache.drill.exec.vector.NullableBitVector;
-import org.apache.drill.exec.vector.NullableFloat4Vector;
-import org.apache.drill.exec.vector.NullableIntVector;
-import org.apache.drill.exec.vector.NullableVarCharVector;
-import org.apache.drill.exec.vector.RepeatedBitVector;
-import org.apache.drill.exec.vector.RepeatedFloat4Vector;
-import org.apache.drill.exec.vector.RepeatedIntVector;
-import org.apache.drill.exec.vector.RepeatedVarCharVector;
-import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.*;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
@@ -412,23 +403,23 @@ public class JSONRecordReader implements RecordReader {
 
     private static <T> boolean addValueToVector(int index, VectorHolder holder, T val, MinorType minorType, int groupCount) {
       switch (minorType) {
-        case INT: {
+        case BIGINT: {
           holder.incAndCheckLength(NullableIntHolder.WIDTH * 8 + 1);
           if (groupCount == 0) {
             if (val != null) {
-              NullableIntVector int4 = (NullableIntVector) holder.getValueVector();
-              NullableIntVector.Mutator m = int4.getMutator();
-              m.set(index, (Integer) val);
+              NullableBigIntVector int4 = (NullableBigIntVector) holder.getValueVector();
+              NullableBigIntVector.Mutator m = int4.getMutator();
+              m.set(index, (Long) val);
             }
           } else {
             if (val == null) {
               throw new UnsupportedOperationException("Nullable repeated int is not supported.");
             }
 
-            RepeatedIntVector repeatedInt4 = (RepeatedIntVector) holder.getValueVector();
-            RepeatedIntVector.Mutator m = repeatedInt4.getMutator();
+            RepeatedBigIntVector repeatedInt4 = (RepeatedBigIntVector) holder.getValueVector();
+            RepeatedBigIntVector.Mutator m = repeatedInt4.getMutator();
             holder.setGroupCount(index);
-            m.add(index, (Integer) val);
+            m.add(index, (Long) val);
           }
 
           return holder.hasEnoughSpace(NullableIntHolder.WIDTH * 8 + 1);
