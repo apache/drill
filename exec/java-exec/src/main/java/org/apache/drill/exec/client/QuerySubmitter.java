@@ -72,7 +72,7 @@ public class QuerySubmitter {
   }
 
   static class Options {
-    @Parameter(names = {"-f, --file"}, description = "file containing plan", required=false)
+    @Parameter(names = {"-f", "--file"}, description = "file containing plan", required=false)
     public String location = null;
 
     @Parameter(names = {"-q", "-e", "--query"}, description = "query string", required = false)
@@ -136,7 +136,7 @@ public class QuerySubmitter {
       switch(type) {
         case "sql":
           queryType = UserProtos.QueryType.SQL;
-          queries = plan.split(";");
+          queries = plan.trim().split(";");
           break;
         case "logical":
           queryType = UserProtos.QueryType.LOGICAL;
