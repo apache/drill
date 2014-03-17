@@ -35,11 +35,11 @@ import java.util.Random;
 public class GeneratorFunctions {
 
   public static final Random random = new Random(1234L);
-  public static final FunctionDefinition RANDOM_BIG_INT = FunctionDefinition.simple("randomBigInt", new ArgumentValidators.NumericTypeAllowed(1,2, true),
+  public static final FunctionDefinition RANDOM_BIG_INT = FunctionDefinition.simpleRandom("randomBigInt", new ArgumentValidators.NumericTypeAllowed(1,2, true),
           OutputTypeDeterminer.FIXED_BIGINT, "randomBigInt");
-  public static final FunctionDefinition RANDOM_FLOAT8 = FunctionDefinition.simple("randomFloat8", new ArgumentValidators.NumericTypeAllowed(1,2, true),
+  public static final FunctionDefinition RANDOM_FLOAT8 = FunctionDefinition.simpleRandom("randomFloat8", new ArgumentValidators.NumericTypeAllowed(1,2, true),
           OutputTypeDeterminer.FIXED_FLOAT8, "randomFloat8");
-  public static final FunctionDefinition INCREASING_BIGINT = FunctionDefinition.simple("increasingBigInt", new ArgumentValidators.NumericTypeAllowed(1, true),
+  public static final FunctionDefinition INCREASING_BIGINT = FunctionDefinition.simpleRandom("increasingBigInt", new ArgumentValidators.NumericTypeAllowed(1, true),
           OutputTypeDeterminer.FIXED_BIGINT, "increasingBigInt");
 
   public static class Provider implements CallProvider {

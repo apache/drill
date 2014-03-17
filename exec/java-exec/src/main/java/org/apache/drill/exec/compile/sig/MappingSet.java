@@ -58,20 +58,32 @@ public class MappingSet {
     this.outgoing = DirectExpression.direct(outgoing);
     Preconditions.checkArgument(mappings.length >= 2);
     this.constant = mappings[0];
+    
+    //Make sure the constant GM is different from other GM. If it is identical, clone another copy.
+    for (int i = 1; i< mappings.length; i++) {
+      if (mappings[0] == mappings[i]) {
+        this.constant = new GeneratorMapping(mappings[0]);
+        break;
+      }
+    }
+    
     this.mappings = Arrays.copyOfRange(mappings, 1, mappings.length);
     this.current = this.mappings[0];
   }
 
   public void enterConstant(){
-//    assert constant != current;
-//    current = constant;
+    assert constant != current;
+    current = constant;
   }
   
   public void exitConstant(){
-//    assert constant == current;
-//    current = mappings[mappingIndex];
+    assert constant == current;
+    current = mappings[mappingIndex];
   }
   
+  public boolean isWithinConstant() {
+    return constant == current;
+  }
   
   public void enterChild(){
     assert current == mappings[mappingIndex];

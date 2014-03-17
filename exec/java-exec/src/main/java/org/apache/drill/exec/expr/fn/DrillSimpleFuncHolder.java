@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.expr.ClassGenerator;
@@ -28,6 +29,7 @@ import org.apache.drill.exec.expr.ClassGenerator.BlockType;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
+import org.apache.drill.exec.expr.fn.DrillFuncHolder.ValueReference;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -64,13 +66,20 @@ class DrillSimpleFuncHolder extends DrillFuncHolder{
   }
   
   public HoldingContainer renderEnd(ClassGenerator<?> g, HoldingContainer[] inputVariables, JVar[]  workspaceJVars){
-    generateBody(g, BlockType.SETUP, setupBody, workspaceJVars);
+    //If the function's annotation specifies a parameter has to be constant expression, but the HoldingContainer 
+    //for the argument is not, then raise exception.    
+    for(int i =0; i < inputVariables.length; i++){
+      if (parameters[i].isConstant && !inputVariables[i].isConstant()) {
+        throw new DrillRuntimeException(String.format("The argument '%s' of Function '%s' has to be constant!", parameters[i].name, this.getFunctionName()));
+      }
+    }
+    generateBody(g, BlockType.SETUP, setupBody, inputVariables, workspaceJVars, true);
     HoldingContainer c = generateEvalBody(g, inputVariables, evalBody, workspaceJVars);
-    generateBody(g, BlockType.RESET, resetBody, workspaceJVars);
-    generateBody(g, BlockType.CLEANUP, cleanupBody, workspaceJVars);
+    generateBody(g, BlockType.RESET, resetBody, null, workspaceJVars, false);
+    generateBody(g, BlockType.CLEANUP, cleanupBody, null, workspaceJVars, false);
     return c;
   }
-  
+ 
  protected HoldingContainer generateEvalBody(ClassGenerator<?> g, HoldingContainer[] inputVariables, String body, JVar[] workspaceJVars){
     
     //g.getBlock().directStatement(String.format("//---- start of eval portion of %s function. ----//", functionName));
@@ -111,7 +120,7 @@ class DrillSimpleFuncHolder extends DrillFuncHolder{
     
     
     JVar internalOutput = sub.decl(JMod.FINAL, g.getHolderType(returnValueType), returnValue.name, JExpr._new(g.getHolderType(returnValueType)));
-    addProtectedBlock(g, sub, body, inputVariables, workspaceJVars);
+    addProtectedBlock(g, sub, body, inputVariables, workspaceJVars, false);
     if (sub != topSub) sub.assign(internalOutput.ref("isSet"),JExpr.lit(1));// Assign null if NULL_IF_NULL mode
     sub.assign(out.getHolder(), internalOutput);
     if (sub != topSub) sub.assign(internalOutput.ref("isSet"),JExpr.lit(1));// Assign null if NULL_IF_NULL mode

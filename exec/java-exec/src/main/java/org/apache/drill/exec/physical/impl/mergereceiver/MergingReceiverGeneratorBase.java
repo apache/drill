@@ -40,12 +40,12 @@ public interface MergingReceiverGeneratorBase {
   public static TemplateClassDefinition<MergingReceiverGeneratorBase> TEMPLATE_DEFINITION =
       new TemplateClassDefinition<>(MergingReceiverGeneratorBase.class, MergingReceiverTemplate.class);
 
-  public final MappingSet COMPARE_MAPPING =
+  public final MappingSet compareMapping =
     new MappingSet("left.valueIndex", "right.valueIndex",
       GM("doSetup", "doCompare", null, null),
       GM("doSetup", "doCompare", null, null));
 
-  public final MappingSet COPY_MAPPING =
+  public final MappingSet copyMapping =
     new MappingSet("inIndex", "outIndex",
       GM("doSetup", "doCopy", null, null),
       GM("doSetup", "doCopy", null, null));

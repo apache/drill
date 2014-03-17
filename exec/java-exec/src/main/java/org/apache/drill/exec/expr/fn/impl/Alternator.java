@@ -82,8 +82,8 @@ public class Alternator {
     @Override
     public FunctionDefinition[] getFunctionDefintions() {
       return new FunctionDefinition[]{
-          FunctionDefinition.simple("alternate", NoArgValidator.VALIDATOR, new OutputTypeDeterminer.FixedType(Types.required(MinorType.BIGINT)), "alternate"),
-          FunctionDefinition.simple("alternate3", NoArgValidator.VALIDATOR, new OutputTypeDeterminer.FixedType(Types.required(MinorType.BIGINT)), "alternate3")
+          FunctionDefinition.simpleRandom("alternate", NoArgValidator.VALIDATOR, new OutputTypeDeterminer.FixedType(Types.required(MinorType.BIGINT)), "alternate"),
+          FunctionDefinition.simpleRandom("alternate3", NoArgValidator.VALIDATOR, new OutputTypeDeterminer.FixedType(Types.required(MinorType.BIGINT)), "alternate3")
       };
     }
     

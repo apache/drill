@@ -34,8 +34,10 @@ import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
+
 import org.apache.drill.exec.expr.ClassGenerator.BlockType;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
+import org.apache.drill.exec.compile.sig.ConstantExpressionIdentifier;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.physical.impl.filter.ReturnValueExpression;
@@ -61,8 +63,8 @@ public class EvaluationVisitor {
   }
 
   public HoldingContainer addExpr(LogicalExpression e, ClassGenerator<?> generator){
-//    Set<LogicalExpression> constantBoundaries = ConstantExpressionIdentifier.getConstantExpressionSet(e);
-    Set<LogicalExpression> constantBoundaries = Collections.emptySet();
+    Set<LogicalExpression> constantBoundaries = ConstantExpressionIdentifier.getConstantExpressionSet(e);
+    //Set<LogicalExpression> constantBoundaries = Collections.emptySet();
     return e.accept(new ConstantFilter(constantBoundaries), generator);
     
   }
@@ -143,7 +145,7 @@ public class EvaluationVisitor {
     }
 
     @Override
-    public HoldingContainer visitLongConstant(LongExpression e, ClassGenerator<?> generator) throws RuntimeException {
+    public HoldingContainer visitLongConstant(LongExpression e, ClassGenerator<?> generator) throws RuntimeException {     
       HoldingContainer out = generator.declare(e.getMajorType());
       generator.getEvalBlock().assign(out.getValue(), JExpr.lit(e.getLong()));
       return out;
@@ -283,7 +285,6 @@ public class EvaluationVisitor {
       JExpression stringLiteral = JExpr.lit(e.value);
       setup.assign(var, ((JClass)generator.getModel().ref(ValueHolderHelper.class)).staticInvoke("getVarCharHolder").arg(stringLiteral));
       return new HoldingContainer(majorType, var, null, null);
-      
     }
   }
 
@@ -296,14 +297,17 @@ public class EvaluationVisitor {
       super();
       this.constantBoundaries = constantBoundaries;
     }
-
+    
     @Override
     public HoldingContainer visitFunctionCall(FunctionCall e, ClassGenerator<?> generator) throws RuntimeException {
       if (constantBoundaries.contains(e)) {
         generator.getMappingSet().enterConstant();
         HoldingContainer c = super.visitFunctionCall(e, generator);
-        generator.getMappingSet().exitConstant();
-        return c;
+        //generator.getMappingSet().exitConstant();
+        //return c;
+        return renderConstantExpression(generator, c);
+      } else if (generator.getMappingSet().isWithinConstant()) {
+        return super.visitFunctionCall(e, generator).setConstant(true);
       } else {
         return super.visitFunctionCall(e, generator);
       }
@@ -314,8 +318,11 @@ public class EvaluationVisitor {
       if (constantBoundaries.contains(e)) {
         generator.getMappingSet().enterConstant();
         HoldingContainer c = super.visitIfExpression(e, generator);
-        generator.getMappingSet().exitConstant();
-        return c;
+        // generator.getMappingSet().exitConstant();
+        // return c;
+        return renderConstantExpression(generator, c); 
+      } else if (generator.getMappingSet().isWithinConstant()) {
+        return super.visitIfExpression(e, generator).setConstant(true);
       } else {
         return super.visitIfExpression(e, generator);
       }
@@ -326,8 +333,11 @@ public class EvaluationVisitor {
       if (constantBoundaries.contains(e)) {
         generator.getMappingSet().enterConstant();
         HoldingContainer c = super.visitSchemaPath(e, generator);
-        generator.getMappingSet().exitConstant();
-        return c;
+        //generator.getMappingSet().exitConstant();
+        //return c;
+        return renderConstantExpression(generator, c);
+      } else if (generator.getMappingSet().isWithinConstant()) {
+        return super.visitSchemaPath(e, generator).setConstant(true);
       } else {
         return super.visitSchemaPath(e, generator);
       }
@@ -338,8 +348,11 @@ public class EvaluationVisitor {
       if (constantBoundaries.contains(e)) {
         generator.getMappingSet().enterConstant();
         HoldingContainer c = super.visitLongConstant(e, generator);
-        generator.getMappingSet().exitConstant();
-        return c;
+        //generator.getMappingSet().exitConstant();
+        //return c;
+        return renderConstantExpression(generator, c);
+      } else if (generator.getMappingSet().isWithinConstant()) {
+        return super.visitLongConstant(e, generator).setConstant(true);
       } else {
         return super.visitLongConstant(e, generator);
       }
@@ -350,8 +363,11 @@ public class EvaluationVisitor {
       if (constantBoundaries.contains(e)) {
         generator.getMappingSet().enterConstant();
         HoldingContainer c = super.visitDoubleConstant(e, generator);
-        generator.getMappingSet().exitConstant();
-        return c;
+        //generator.getMappingSet().exitConstant();
+        //return c;
+        return renderConstantExpression(generator, c);
+      } else if (generator.getMappingSet().isWithinConstant()) {
+        return super.visitDoubleConstant(e, generator).setConstant(true);
       } else {
         return super.visitDoubleConstant(e, generator);
       }
@@ -363,8 +379,11 @@ public class EvaluationVisitor {
       if (constantBoundaries.contains(e)) {
         generator.getMappingSet().enterConstant();
         HoldingContainer c = super.visitBooleanConstant(e, generator);
-        generator.getMappingSet().exitConstant();
-        return c;
+        //generator.getMappingSet().exitConstant();
+        //return c;
+        return renderConstantExpression(generator, c);
+      } else if (generator.getMappingSet().isWithinConstant()) {
+        return super.visitBooleanConstant(e, generator).setConstant(true);
       } else {
         return super.visitBooleanConstant(e, generator);
       }
@@ -376,10 +395,13 @@ public class EvaluationVisitor {
       if (constantBoundaries.contains(e)) {
         generator.getMappingSet().enterConstant();
         HoldingContainer c = super.visitUnknown(e, generator);
-        generator.getMappingSet().exitConstant();
-        return c;
+        //generator.getMappingSet().exitConstant();
+        //return c;
+        return renderConstantExpression(generator, c);
+      } else if (generator.getMappingSet().isWithinConstant()) {
+        return super.visitUnknown(e, generator).setConstant(true);
       } else {
-        return super.visitUnknown(e, generator);
+        return super.visitUnknown(e, generator); 
       }
     }
 
@@ -389,11 +411,24 @@ public class EvaluationVisitor {
       if (constantBoundaries.contains(e)) {
         generator.getMappingSet().enterConstant();
         HoldingContainer c = super.visitQuotedStringConstant(e, generator);
-        generator.getMappingSet().exitConstant();
-        return c;
+        //generator.getMappingSet().exitConstant();
+        //return c;
+        return renderConstantExpression(generator, c);
+      } else if (generator.getMappingSet().isWithinConstant()) {
+        return super.visitQuotedStringConstant(e, generator).setConstant(true);
       } else {
-        return super.visitQuotedStringConstant(e, generator);
+        return super.visitQuotedStringConstant(e, generator);          
       }
+    }
+
+    /* Get a HoldingContainer for a constant expression. The returned HoldingContainder will indicate it's for
+     * a constant expression. 
+     * */    
+    private HoldingContainer renderConstantExpression(ClassGenerator<?> generator, HoldingContainer input){
+      JVar fieldValue = generator.declareClassField("constant", generator.getHolderType(input.getMajorType()));
+      generator.getEvalBlock().assign(fieldValue, input.getHolder());
+      generator.getMappingSet().exitConstant();
+      return new HoldingContainer(input.getMajorType(), fieldValue, fieldValue.ref("value"), fieldValue.ref("isSet")).setConstant(true);                        
     }
 
   }

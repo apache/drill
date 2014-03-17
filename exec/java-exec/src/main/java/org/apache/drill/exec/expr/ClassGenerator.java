@@ -73,7 +73,7 @@ public class ClassGenerator<T>{
   private MappingSet mappings;
 
   public static MappingSet getDefaultMapping(){
-    return new MappingSet("inIndex", "outIndex", DEFAULT_SCALAR_MAP, DEFAULT_SCALAR_MAP);
+    return new MappingSet("inIndex", "outIndex", DEFAULT_CONSTANT_MAP, DEFAULT_SCALAR_MAP);
   }
 
   
@@ -313,6 +313,7 @@ public class ClassGenerator<T>{
     private final JFieldRef value;
     private final JFieldRef isSet;
     private final MajorType type;
+    private boolean isConstant;
     
     public HoldingContainer(MajorType t, JVar holder, JFieldRef value, JFieldRef isSet) {
       super();
@@ -320,8 +321,18 @@ public class ClassGenerator<T>{
       this.value = value;
       this.isSet = isSet;
       this.type = t;
+      this.isConstant = false;
     }
-
+    
+    public HoldingContainer setConstant(boolean isConstant) {
+      this.isConstant = isConstant;
+      return this;
+    }
+    
+    public boolean isConstant() {
+      return this.isConstant;
+    }
+    
     public JVar getHolder() {
       return holder;
     }

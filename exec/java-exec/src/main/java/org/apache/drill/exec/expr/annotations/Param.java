@@ -31,4 +31,5 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD})
 public @interface Param {
+  boolean constant() default false;
 }

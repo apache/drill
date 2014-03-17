@@ -136,6 +136,9 @@ public class FunctionConverter {
         
         ValueReference p = new ValueReference(type, field.getName());
         if(param != null){
+          if (param.constant()) {
+            p.setConstant(true);
+          }
           params.add(p);
         }else{ 
           if(outputField != null){

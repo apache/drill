@@ -86,7 +86,7 @@ public class ConstantExpressionIdentifier implements ExprVisitor<Boolean, Identi
   
   @Override
   public Boolean visitFunctionCall(FunctionCall call, IdentityHashMap<LogicalExpression, Object> value){
-    return checkChildren(call, value, !call.getDefinition().isAggregating());
+    return checkChildren(call, value, !call.getDefinition().isAggregating() && !call.getDefinition().isRandom());
   }
 
   
@@ -114,25 +114,21 @@ public class ConstantExpressionIdentifier implements ExprVisitor<Boolean, Identi
 
   @Override
   public Boolean visitLongConstant(LongExpression intExpr, IdentityHashMap<LogicalExpression, Object> value){
-    value.put(intExpr, true);
     return true;
   }
 
   @Override
   public Boolean visitDoubleConstant(DoubleExpression dExpr, IdentityHashMap<LogicalExpression, Object> value){
-    value.put(dExpr, true);
     return true;
   }
 
   @Override
   public Boolean visitBooleanConstant(BooleanExpression e, IdentityHashMap<LogicalExpression, Object> value){
-    value.put(e, true);
     return true;
   }
 
   @Override
   public Boolean visitQuotedStringConstant(QuotedString e, IdentityHashMap<LogicalExpression, Object> value){
-    value.put(e, true);
     return true;
   }
 

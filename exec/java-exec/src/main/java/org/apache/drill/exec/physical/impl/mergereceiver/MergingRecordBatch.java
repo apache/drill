@@ -411,7 +411,7 @@ public class MergingRecordBatch implements RecordBatch {
     cg.getSetupBlock().assign(incomingBatchesVar, JExpr.direct("incomingBatchLoaders"));
     cg.getSetupBlock().assign(outgoingBatch, JExpr.direct("outgoing"));
 
-    cg.setMappingSet(MergingReceiverGeneratorBase.COMPARE_MAPPING);
+    cg.setMappingSet(MergingReceiverGeneratorBase.compareMapping);
 
     // evaluate expression on each incoming batch and create/initialize 2d array of incoming vectors.  For example:
     //     incomingVectors = new ValueVector[][] {
@@ -566,7 +566,7 @@ public class MergingRecordBatch implements RecordBatch {
     cg.getSetupBlock().assign(outgoingVectors, JExpr.newArray(cg.getModel().ref(ValueVector.class), fieldsPerBatch));
 
     // generate copy function and setup outgoing batches
-    cg.setMappingSet(MergingReceiverGeneratorBase.COPY_MAPPING);
+    cg.setMappingSet(MergingReceiverGeneratorBase.copyMapping);
     int fieldIdx = 0;
     for (VectorWrapper<?> vvOut : outgoingContainer) {
       // declare outgoing value vectors

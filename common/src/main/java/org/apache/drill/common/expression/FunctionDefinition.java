@@ -31,17 +31,24 @@ public class FunctionDefinition {
   private final OutputTypeDeterminer outputType;
   private final boolean aggregating;
   private final boolean isOperator;
+  private final boolean isRandom;
   
   private FunctionDefinition(String name, ArgumentValidator argumentValidator, OutputTypeDeterminer outputType,
       boolean aggregating, boolean isOperator, String[] registeredNames) {
+    this(name, argumentValidator, outputType, aggregating, isOperator, registeredNames, false);
+  }
+
+  private FunctionDefinition(String name, ArgumentValidator argumentValidator, OutputTypeDeterminer outputType,
+      boolean aggregating, boolean isOperator, String[] registeredNames, boolean isRandom) {
     this.name = name;
     this.argumentValidator = argumentValidator;
     this.outputType = outputType;
     this.aggregating = aggregating;
     this.registeredNames = ArrayUtils.isEmpty(registeredNames) ? new String[]{name} : registeredNames;
     this.isOperator = isOperator;
+    this.isRandom = isRandom;
   }
-
+  
   public MajorType getDataType(List<LogicalExpression> args){
     return outputType.getOutputType(args);
   }
@@ -60,6 +67,10 @@ public class FunctionDefinition {
   
   public static FunctionDefinition simple(String name, ArgumentValidator argumentValidator, OutputTypeDeterminer outputType, String... registeredNames){
     return new FunctionDefinition(name, argumentValidator, outputType, false,  false, registeredNames);
+  }
+
+  public static FunctionDefinition simpleRandom(String name, ArgumentValidator argumentValidator, OutputTypeDeterminer outputType, String... registeredNames){
+    return new FunctionDefinition(name, argumentValidator, outputType, false,  false, registeredNames, true);
   }
 
   public static FunctionDefinition aggregator(String name, ArgumentValidator argumentValidator, OutputTypeDeterminer outputType, String... registeredNames){
@@ -84,6 +95,10 @@ public class FunctionDefinition {
   
   public String getName(){
     return this.name;
+  }
+  
+  public boolean isRandom() {
+    return this.isRandom;
   }
   
   public FunctionCall newCall(List<LogicalExpression> args, ExpressionPosition pos){

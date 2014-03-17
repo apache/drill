@@ -38,6 +38,14 @@ public class GeneratorMapping {
     this.cleanup = cleanup;
   }
 
+  public GeneratorMapping(GeneratorMapping gm) {
+    super();
+    this.setup = gm.setup;
+    this.eval = gm.eval;
+    this.reset = gm.reset;
+    this.cleanup = gm.cleanup;
+  }
+
   public static GeneratorMapping GM(String setup, String eval){
     return create(setup, eval, null, null);
   }

@@ -203,17 +203,17 @@ public class AggBatch extends AbstractRecordBatch<StreamingAggregate> {
   
   
   
-  private final GeneratorMapping IS_SAME = GeneratorMapping.create("setupInterior", "isSame", null, null);
-  private final MappingSet IS_SAME_I1 = new MappingSet("index1", null, IS_SAME, IS_SAME);
-  private final MappingSet IS_SAME_I2 = new MappingSet("index2", null, IS_SAME, IS_SAME);
+  private static final GeneratorMapping IS_SAME = GeneratorMapping.create("setupInterior", "isSame", null, null);
+  private final MappingSet isSameI1Mapping = new MappingSet("index1", null, IS_SAME, IS_SAME);
+  private final MappingSet isSameI2Mapping = new MappingSet("index2", null, IS_SAME, IS_SAME);
 
   private void setupIsSame(ClassGenerator<Aggregator> cg, LogicalExpression[] keyExprs){
-    cg.setMappingSet(IS_SAME_I1);
+    cg.setMappingSet(isSameI1Mapping);
     for(LogicalExpression expr : keyExprs){
       // first, we rewrite the evaluation stack for each side of the comparison.
-      cg.setMappingSet(IS_SAME_I1);
+      cg.setMappingSet(isSameI1Mapping);
       HoldingContainer first = cg.addExpr(expr, false);
-      cg.setMappingSet(IS_SAME_I2);
+      cg.setMappingSet(isSameI2Mapping);
       HoldingContainer second = cg.addExpr(expr, false);
       
       FunctionCall f = new FunctionCall(ComparatorFunctions.COMPARE_TO, ImmutableList.of((LogicalExpression) new HoldingContainerExpression(first), new HoldingContainerExpression(second)), ExpressionPosition.UNKNOWN);
@@ -223,18 +223,18 @@ public class AggBatch extends AbstractRecordBatch<StreamingAggregate> {
     cg.getEvalBlock()._return(JExpr.TRUE);
   }
   
-  private final GeneratorMapping IS_SAME_PREV_INTERNAL_BATCH_READ = GeneratorMapping.create("isSamePrev", "isSamePrev", null, null); // the internal batch changes each time so we need to redo setup.
-  private final GeneratorMapping IS_SAME_PREV = GeneratorMapping.create("setupInterior", "isSamePrev", null, null);
-  private final MappingSet ISA_B1 = new MappingSet("b1Index", null, "b1", null, IS_SAME_PREV_INTERNAL_BATCH_READ, IS_SAME_PREV_INTERNAL_BATCH_READ);
-  private final MappingSet ISA_B2 = new MappingSet("b2Index", null, "incoming", null, IS_SAME_PREV, IS_SAME_PREV);
+  private static final GeneratorMapping IS_SAME_PREV_INTERNAL_BATCH_READ = GeneratorMapping.create("isSamePrev", "isSamePrev", null, null); // the internal batch changes each time so we need to redo setup.
+  private static final GeneratorMapping IS_SAME_PREV = GeneratorMapping.create("setupInterior", "isSamePrev", null, null);
+  private final MappingSet isaB1Mapping = new MappingSet("b1Index", null, "b1", null, IS_SAME_PREV_INTERNAL_BATCH_READ, IS_SAME_PREV_INTERNAL_BATCH_READ);
+  private final MappingSet isaB2Mapping = new MappingSet("b2Index", null, "incoming", null, IS_SAME_PREV, IS_SAME_PREV);
   
   private void setupIsSameApart(ClassGenerator<Aggregator> cg, LogicalExpression[] keyExprs){
-    cg.setMappingSet(ISA_B1);
+    cg.setMappingSet(isaB1Mapping);
     for(LogicalExpression expr : keyExprs){
       // first, we rewrite the evaluation stack for each side of the comparison.
-      cg.setMappingSet(ISA_B1);
+      cg.setMappingSet(isaB1Mapping);
       HoldingContainer first = cg.addExpr(expr, false);
-      cg.setMappingSet(ISA_B2);
+      cg.setMappingSet(isaB2Mapping);
       HoldingContainer second = cg.addExpr(expr, false);
 
       FunctionCall f = new FunctionCall(ComparatorFunctions.COMPARE_TO, ImmutableList.of((LogicalExpression) new HoldingContainerExpression(first), new HoldingContainerExpression(second)), ExpressionPosition.UNKNOWN);
@@ -244,12 +244,12 @@ public class AggBatch extends AbstractRecordBatch<StreamingAggregate> {
     cg.getEvalBlock()._return(JExpr.TRUE);
   }
   
-  private final GeneratorMapping EVAL_INSIDE = GeneratorMapping.create("setupInterior", "addRecord", null, null);
-  private final GeneratorMapping EVAL_OUTSIDE = GeneratorMapping.create("setupInterior", "outputRecordValues", "resetValues", "cleanup");
-  private final MappingSet EVAL = new MappingSet("index", "outIndex", EVAL_INSIDE, EVAL_OUTSIDE, EVAL_INSIDE);
+  private static final GeneratorMapping EVAL_INSIDE = GeneratorMapping.create("setupInterior", "addRecord", null, null);
+  private static final GeneratorMapping EVAL_OUTSIDE = GeneratorMapping.create("setupInterior", "outputRecordValues", "resetValues", "cleanup");
+  private final MappingSet evalMapping = new MappingSet("index", "outIndex", EVAL_INSIDE, EVAL_OUTSIDE, EVAL_INSIDE);
   
   private void addRecordValues(ClassGenerator<Aggregator> cg, LogicalExpression[] valueExprs){
-    cg.setMappingSet(EVAL);
+    cg.setMappingSet(evalMapping);
     for(LogicalExpression ex : valueExprs){
       HoldingContainer hc = cg.addExpr(ex);
       cg.getBlock(BlockType.EVAL)._if(hc.getValue().eq(JExpr.lit(0)))._then()._return(JExpr.FALSE);
@@ -257,10 +257,10 @@ public class AggBatch extends AbstractRecordBatch<StreamingAggregate> {
     cg.getBlock(BlockType.EVAL)._return(JExpr.TRUE);
   }
   
-  private final MappingSet RECORD_KEYS = new MappingSet(GeneratorMapping.create("setupInterior", "outputRecordKeys", null, null));
+  private final MappingSet recordKeysMapping = new MappingSet(GeneratorMapping.create("setupInterior", "outputRecordKeys", null, null));
   
   private void outputRecordKeys(ClassGenerator<Aggregator> cg, TypedFieldId[] keyOutputIds, LogicalExpression[] keyExprs){
-    cg.setMappingSet(RECORD_KEYS);
+    cg.setMappingSet(recordKeysMapping);
     for(int i =0; i < keyExprs.length; i++){
       HoldingContainer hc = cg.addExpr(new ValueVectorWriteExpression(keyOutputIds[i], keyExprs[i], true));
       cg.getBlock(BlockType.EVAL)._if(hc.getValue().eq(JExpr.lit(0)))._then()._return(JExpr.FALSE);
@@ -268,22 +268,22 @@ public class AggBatch extends AbstractRecordBatch<StreamingAggregate> {
     cg.getBlock(BlockType.EVAL)._return(JExpr.TRUE);
   }
   
-  private final GeneratorMapping PREVIOUS_KEYS_OUT = GeneratorMapping.create("setupInterior", "outputRecordKeysPrev", null, null);
-  private final MappingSet RECORD_KEYS_PREV_OUT = new MappingSet("previousIndex", "outIndex", "previous", "outgoing", PREVIOUS_KEYS_OUT, PREVIOUS_KEYS_OUT);
+  private static final GeneratorMapping PREVIOUS_KEYS_OUT = GeneratorMapping.create("setupInterior", "outputRecordKeysPrev", null, null);
+  private final MappingSet recordKeysPrevOutMapping = new MappingSet("previousIndex", "outIndex", "previous", "outgoing", PREVIOUS_KEYS_OUT, PREVIOUS_KEYS_OUT);
 
-  private final GeneratorMapping PREVIOUS_KEYS = GeneratorMapping.create("outputRecordKeysPrev", "outputRecordKeysPrev", null, null);
-  private final MappingSet RECORD_KEYS_PREV = new MappingSet("previousIndex", "outIndex", "previous", null, PREVIOUS_KEYS, PREVIOUS_KEYS);
+  private static final GeneratorMapping PREVIOUS_KEYS = GeneratorMapping.create("outputRecordKeysPrev", "outputRecordKeysPrev", null, null);
+  private final MappingSet recordKeysPrevMapping = new MappingSet("previousIndex", "outIndex", "previous", null, PREVIOUS_KEYS, PREVIOUS_KEYS);
   
   private void outputRecordKeysPrev(ClassGenerator<Aggregator> cg, TypedFieldId[] keyOutputIds, LogicalExpression[] keyExprs){
-    cg.setMappingSet(RECORD_KEYS_PREV);
+    cg.setMappingSet(recordKeysPrevMapping);
 
     for(int i =0; i < keyExprs.length; i++){
       // IMPORTANT: there is an implicit assertion here that the TypedFieldIds for the previous batch and the current batch are the same.  This is possible because InternalBatch guarantees this.
       logger.debug("Writing out expr {}", keyExprs[i]);
       cg.rotateBlock();
-      cg.setMappingSet(RECORD_KEYS_PREV);
+      cg.setMappingSet(recordKeysPrevMapping);
       HoldingContainer innerExpression = cg.addExpr(keyExprs[i], false);
-      cg.setMappingSet(RECORD_KEYS_PREV_OUT);
+      cg.setMappingSet(recordKeysPrevOutMapping);
       HoldingContainer outerExpression = cg.addExpr(new ValueVectorWriteExpression(keyOutputIds[i], new HoldingContainerExpression(innerExpression), true), false);
       cg.getBlock(BlockType.EVAL)._if(outerExpression.getValue().eq(JExpr.lit(0)))._then()._return(JExpr.FALSE);
       

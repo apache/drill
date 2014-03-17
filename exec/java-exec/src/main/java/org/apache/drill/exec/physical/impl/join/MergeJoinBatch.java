@@ -79,31 +79,31 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
 //  private static final MappingSet COMPARE_LEFT_MAPPING = new MappingSet("leftIndex", "null", compareLeft, compareLeft);
 //  private static final MappingSet COMPARE_NEXT_LEFT_MAPPING = new MappingSet("nextLeftIndex", "null", compareLeft, compareLeft);
 //  
-  public static final MappingSet SETUP_MAPPING =
+  public final MappingSet setupMapping =
       new MappingSet("null", "null", 
                      GM("doSetup", "doSetup", null, null),
                      GM("doSetup", "doSetup", null, null));
-  public static final MappingSet COPY_LEFT_MAPPING =
+  public final MappingSet copyLeftMapping =
       new MappingSet("leftIndex", "outIndex",
                      GM("doSetup", "doCopyLeft", null, null),
                      GM("doSetup", "doCopyLeft", null, null));
-  public static final MappingSet COPY_RIGHT_MAPPING =
+  public final MappingSet copyRightMappping =
       new MappingSet("rightIndex", "outIndex",
                      GM("doSetup", "doCopyRight", null, null),
                      GM("doSetup", "doCopyRight", null, null));
-  public static final MappingSet COMPARE_MAPPING =
+  public final MappingSet compareMapping =
       new MappingSet("leftIndex", "rightIndex",
                      GM("doSetup", "doCompare", null, null),
                      GM("doSetup", "doCompare", null, null));
-  public static final MappingSet COMPARE_RIGHT_MAPPING =
+  public final MappingSet compareRightMapping =
       new MappingSet("rightIndex", "null",
                      GM("doSetup", "doCompare", null, null),
                      GM("doSetup", "doCompare", null, null));
-  public static final MappingSet COMPARE_LEFT_MAPPING =
+  public final MappingSet compareLeftMapping =
       new MappingSet("leftIndex", "null",
                      GM("doSetup", "doCompareNextLeftKey", null, null),
                      GM("doSetup", "doCompareNextLeftKey", null, null));
-  public static final MappingSet COMPARE_NEXT_LEFT_MAPPING =
+  public final MappingSet compareNextLeftMapping =
       new MappingSet("nextLeftIndex", "null",
                      GM("doSetup", "doCompareNextLeftKey", null, null),
                      GM("doSetup", "doCompareNextLeftKey", null, null));
@@ -226,7 +226,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
     /////////////////////////////////////////
 
     // declare and assign JoinStatus member
-    cg.setMappingSet(SETUP_MAPPING);
+    cg.setMappingSet(setupMapping);
     JClass joinStatusClass = cg.getModel().ref(JoinStatus.class);
     JVar joinStatus = cg.clazz.field(JMod.NONE, joinStatusClass, "status");
     cg.getSetupBlock().assign(JExpr._this().ref(joinStatus), JExpr.direct("status"));
@@ -262,10 +262,11 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
 
     // generate compare()
     ////////////////////////
-    cg.setMappingSet(COMPARE_MAPPING);
+    cg.setMappingSet(compareMapping);
     cg.getSetupBlock().assign(JExpr._this().ref(incomingRecordBatch), JExpr._this().ref(incomingLeftRecordBatch));
     ClassGenerator.HoldingContainer compareLeftExprHolder = cg.addExpr(materializedLeftExpr, false);
-    cg.setMappingSet(COMPARE_RIGHT_MAPPING);
+
+    cg.setMappingSet(compareRightMapping);
     cg.getSetupBlock().assign(JExpr._this().ref(incomingRecordBatch), JExpr._this().ref(incomingRightRecordBatch));
     ClassGenerator.HoldingContainer compareRightExprHolder = cg.addExpr(materializedRightExpr, false);
 
@@ -312,7 +313,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
 
     // generate compareNextLeftKey()
     ////////////////////////////////
-    cg.setMappingSet(COMPARE_LEFT_MAPPING);
+    cg.setMappingSet(compareLeftMapping);
     cg.getSetupBlock().assign(JExpr._this().ref(incomingRecordBatch), JExpr._this().ref(incomingLeftRecordBatch));
 
     // int nextLeftIndex = leftIndex + 1;
@@ -325,7 +326,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
 
     // generate VV read expressions
     ClassGenerator.HoldingContainer compareThisLeftExprHolder = cg.addExpr(materializedLeftExpr, false);
-    cg.setMappingSet(COMPARE_NEXT_LEFT_MAPPING); // change mapping from 'leftIndex' to 'nextLeftIndex'
+    cg.setMappingSet(compareNextLeftMapping); // change mapping from 'leftIndex' to 'nextLeftIndex'
     ClassGenerator.HoldingContainer compareNextLeftExprHolder = cg.addExpr(materializedLeftExpr, false);
 
     if (compareThisLeftExprHolder.isOptional()) {
@@ -348,7 +349,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
 
     // generate copyLeft()
     //////////////////////
-    cg.setMappingSet(COPY_LEFT_MAPPING);
+    cg.setMappingSet(copyLeftMapping);
     int vectorId = 0;
     for (VectorWrapper<?> vw : left) {
       JVar vvIn = cg.declareVectorValueSetupAndMember("incomingLeft",
@@ -357,8 +358,8 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
                                                        new TypedFieldId(vw.getField().getType(),vectorId));
       // todo: check result of copyFromSafe and grow allocation
       cg.getEvalBlock()._if(vvOut.invoke("copyFromSafe")
-                                   .arg(COPY_LEFT_MAPPING.getValueReadIndex())
-                                   .arg(COPY_LEFT_MAPPING.getValueWriteIndex())
+                                   .arg(copyLeftMapping.getValueReadIndex())
+                                   .arg(copyLeftMapping.getValueWriteIndex())
                                    .arg(vvIn).eq(JExpr.FALSE))
           ._then()
           ._return(JExpr.FALSE);
@@ -368,7 +369,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
 
     // generate copyRight()
     ///////////////////////
-    cg.setMappingSet(COPY_RIGHT_MAPPING);
+    cg.setMappingSet(copyRightMappping);
 
     int rightVectorBase = vectorId;
     for (VectorWrapper<?> vw : right) {
@@ -378,8 +379,8 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
                                                        new TypedFieldId(vw.getField().getType(),vectorId));
       // todo: check result of copyFromSafe and grow allocation
       cg.getEvalBlock()._if(vvOut.invoke("copyFromSafe")
-                                 .arg(COPY_RIGHT_MAPPING.getValueReadIndex())
-                                 .arg(COPY_RIGHT_MAPPING.getValueWriteIndex())
+                                 .arg(copyRightMappping.getValueReadIndex())
+                                 .arg(copyRightMappping.getValueWriteIndex())
                                  .arg(vvIn).eq(JExpr.FALSE))
           ._then()
           ._return(JExpr.FALSE);
