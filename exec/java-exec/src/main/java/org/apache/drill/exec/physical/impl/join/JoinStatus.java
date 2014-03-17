@@ -101,6 +101,10 @@ public final class JoinStatus {
     outputPosition = 0;
   }
 
+  public final void incOutputPos() {
+    outputPosition++;
+  }
+
   public final void notifyLeftRepeating() {
     leftRepeating = true;
     outputBatch.resetBatchBuilder();

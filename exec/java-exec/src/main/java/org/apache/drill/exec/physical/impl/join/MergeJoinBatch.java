@@ -395,16 +395,20 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
   private void allocateBatch() {
     // allocate new batch space.
     container.clear();
-    // add fields from both batches
+    
+    //estimation of joinBatchSize : max of left/right size, expanded by a factor of 16, which is then bounded by MAX_BATCH_SIZE.
+    int joinBatchSize = Math.min(Math.max(left.getRecordCount() , right.getRecordCount() ) * 16, MAX_BATCH_SIZE);
+    
+    // add fields from both batches    
     for (VectorWrapper<?> w : left) {
       ValueVector outgoingVector = TypeHelper.getNewVector(w.getField(), context.getAllocator());
-      VectorAllocator.getAllocator(outgoingVector, (int) Math.ceil(w.getValueVector().getBufferSize() / left.getRecordCount())).alloc(left.getRecordCount() * 16);
+      VectorAllocator.getAllocator(outgoingVector, (int) Math.ceil(w.getValueVector().getBufferSize() / left.getRecordCount())).alloc(joinBatchSize);
       container.add(outgoingVector);
     }
 
     for (VectorWrapper<?> w : right) {
       ValueVector outgoingVector = TypeHelper.getNewVector(w.getField(), context.getAllocator());
-      VectorAllocator.getAllocator(outgoingVector, (int) Math.ceil(w.getValueVector().getBufferSize() / right.getRecordCount())).alloc(right.getRecordCount() * 16);
+      VectorAllocator.getAllocator(outgoingVector, (int) Math.ceil(w.getValueVector().getBufferSize() / right.getRecordCount())).alloc(joinBatchSize);
       container.add(outgoingVector);
     }
 

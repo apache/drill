@@ -95,8 +95,10 @@ public abstract class JoinTemplate implements JoinWorker {
         if (((MergeJoinPOP)status.outputBatch.getPopConfig()).getJoinType() == JoinRelType.LEFT) {
           // we've hit the end of the right record batch; copy any remaining values from the left batch
           while (status.isLeftPositionAllowed()) {
-            if (!doCopyLeft(status.getLeftPosition(), status.fetchAndIncOutputPos()))
+            if (!doCopyLeft(status.getLeftPosition(), status.getOutPosition()))
               return false;
+            
+            status.incOutputPos();  
             status.advanceLeft();
           }
         }
@@ -110,10 +112,11 @@ public abstract class JoinTemplate implements JoinWorker {
 
       case -1:
         // left key < right key
-        if (((MergeJoinPOP)status.outputBatch.getPopConfig()).getJoinType() == JoinRelType.LEFT)
-          if (!doCopyLeft(status.getLeftPosition(), status.fetchAndIncOutputPos())) {
+        if (((MergeJoinPOP)status.outputBatch.getPopConfig()).getJoinType() == JoinRelType.LEFT) {
+          if (!doCopyLeft(status.getLeftPosition(), status.getOutPosition())) 
             return false;
-          }
+          status.incOutputPos();
+        }
         status.advanceLeft();
         continue;
 
@@ -140,8 +143,10 @@ public abstract class JoinTemplate implements JoinWorker {
           if (!doCopyLeft(status.getLeftPosition(), status.getOutPosition()))
             return false;
 
-          if (!doCopyRight(status.getRightPosition(), status.fetchAndIncOutputPos()))
+          if (!doCopyRight(status.getRightPosition(), status.getOutPosition())) 
             return false;
+          
+          status.incOutputPos();
           
           // If the left key has duplicates and we're about to cross a boundary in the right batch, add the
           // right table's record batch to the sv4 builder before calling next.  These records will need to be
