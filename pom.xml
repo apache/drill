@@ -115,9 +115,9 @@
             <exclude>**/.buildpath</exclude>
             <exclude>**/*.proto</exclude>
             <exclude>**/*.fmpp</exclude>
-            <exclude>**/*.tdd</exclude>
-            <exclude>**/*.iml</exclude>
             <exclude>**/target/**</exclude>
+            <exclude>**/*.iml</exclude>
+            <exclude>**/*.tdd</exclude>
           </excludes>
         </configuration>
       </plugin>

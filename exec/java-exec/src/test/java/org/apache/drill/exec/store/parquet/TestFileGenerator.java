@@ -57,6 +57,18 @@ public class TestFileGenerator {
   static final Object[] binVals = { varLen1, varLen2, varLen3 };
   static final Object[] bin2Vals = { varLen3, varLen2, varLen1 };
 
+  static void populateDrill_418_fields(ParquetTestProperties props){
+
+    props.fields.put("cust_key", new FieldInfo("int32", "integer", 32, intVals, TypeProtos.MinorType.INT, props));
+    props.fields.put("nation_key", new FieldInfo("int32", "integer", 32, intVals, TypeProtos.MinorType.INT, props));
+    props.fields.put("acctbal", new FieldInfo("int32", "integer", 32, intVals, TypeProtos.MinorType.INT, props));
+    props.fields.put("name", new FieldInfo("int32", "integer", 32, intVals, TypeProtos.MinorType.INT, props));
+    props.fields.put("address", new FieldInfo("int32", "integer", 32, intVals, TypeProtos.MinorType.INT, props));
+    props.fields.put("phone", new FieldInfo("int32", "integer", 32, intVals, TypeProtos.MinorType.INT, props));
+    props.fields.put("mktsegment", new FieldInfo("int32", "integer", 32, intVals, TypeProtos.MinorType.INT, props));
+    props.fields.put("comment_col", new FieldInfo("int32", "integer", 32, intVals, TypeProtos.MinorType.INT, props));
+  }
+
   static void populateFieldInfoMap(ParquetTestProperties props){
     props.fields.put("integer", new FieldInfo("int32", "integer", 32, intVals, TypeProtos.MinorType.INT, props));
     props.fields.put("bigInt", new FieldInfo("int64", "bigInt", 64, longVals, TypeProtos.MinorType.BIGINT, props));

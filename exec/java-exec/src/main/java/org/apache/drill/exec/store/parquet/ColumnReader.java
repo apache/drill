@@ -46,7 +46,7 @@ abstract class ColumnReader {
   final boolean isFixedLength;
 
   // counter for the total number of values read from one or more pages
-  // when a batch is filled all of these values should be the same for each column
+  // when a batch is filled all of these values should be the same for all of the columns
   int totalValuesRead;
   
   // counter for the values that have been read in this pass (a single call to the next() method)
