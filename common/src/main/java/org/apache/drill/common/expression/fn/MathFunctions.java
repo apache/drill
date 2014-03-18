@@ -35,7 +35,9 @@ public class MathFunctions implements CallProvider{
         FunctionDefinition.operator("divide", new ArgumentValidators.NumericTypeAllowed(1, Integer.MAX_VALUE, true), new OutputTypeDeterminer.SameAsAnySoft(), "/"),
         FunctionDefinition.operator("multiply", new ArgumentValidators.NumericTypeAllowed(1, Integer.MAX_VALUE, true), new OutputTypeDeterminer.SameAsAnySoft(), "*"),
         FunctionDefinition.operator("modulo", new ArgumentValidators.NumericTypeAllowed(1, Integer.MAX_VALUE, true), new OutputTypeDeterminer.SameAsAnySoft(), "%"),
-        XOR
+        XOR,
+        FunctionDefinition.simple("power", new ArgumentValidators.NumericTypeAllowed(1, 3, true), new OutputTypeDeterminer.SameAsAnySoft()),     
+        FunctionDefinition.simpleRandom("random", new ArgumentValidators.NumericTypeAllowed(1, 1, true), new OutputTypeDeterminer.SameAsAnySoft())
     };
 
   }

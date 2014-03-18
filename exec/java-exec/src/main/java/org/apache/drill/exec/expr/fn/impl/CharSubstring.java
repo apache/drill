@@ -153,8 +153,8 @@ public class CharSubstring implements DrillSimpleFunc {
                                                                new Arg(false, false, "offset", TypeProtos.MinorType.BIGINT),
                                                                new Arg(false, false, "length", TypeProtos.MinorType.BIGINT)),
                                     new OutputTypeDeterminer.SameAsFirstInput(),
-                                    "substring",
-                                    "substr")
+                                    "substring2",
+                                    "substr2")
       };
     }
   }

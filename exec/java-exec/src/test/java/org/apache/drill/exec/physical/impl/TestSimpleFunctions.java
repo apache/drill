@@ -277,7 +277,8 @@ public class TestSimpleFunctions {
         if (!a1.isNull(i)) {
           NullableVarCharHolder holder = new NullableVarCharHolder();
           a1.get(i, holder);
-          assertEquals("aa", holder.toString());
+          //when offset is negative, substring return empty string.
+          assertEquals("", holder.toString());
           ++count;
         }
       }

@@ -46,6 +46,33 @@ public class MathFunctions{
       out.value = -input.value;
     }
 
-  }
+  }  
+
+  @FunctionTemplate(name = "power", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  public static class Power implements DrillSimpleFunc{
+    
+    @Param Float8Holder a;
+    @Param Float8Holder b;
+    @Output  Float8Holder out;
+
+    public void setup(RecordBatch b){}
+    
+    public void eval(){
+      out.value = java.lang.Math.pow(a.value, b.value);
+    }
+
+  }  
+
+  @FunctionTemplate(name = "random", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  public static class Random implements DrillSimpleFunc{
+    @Output  Float8Holder out;
+
+    public void setup(RecordBatch b){}
+    
+    public void eval(){
+      out.value = java.lang.Math.random();
+    }
+
+  }  
   
 }

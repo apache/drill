@@ -19,6 +19,7 @@ data: {
     compare: tdd(../data/CompareTypes.tdd),
     cast: tdd(../data/Casts.tdd),
     MathFunctionTypes: tdd(../data/MathFunctionTypes.tdd)
+    mathFunc:tdd(../data/MathFunc.tdd)
 }
 freemarkerLinks: {
     includes: includes/
