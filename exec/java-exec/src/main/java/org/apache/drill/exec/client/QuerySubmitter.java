@@ -224,6 +224,7 @@ public class QuerySubmitter {
             VectorUtil.showVectorAccessibleContent(loader, ",");
             break;
         }
+        
       }
       
       if (result.getHeader().getIsLastChunk()) {

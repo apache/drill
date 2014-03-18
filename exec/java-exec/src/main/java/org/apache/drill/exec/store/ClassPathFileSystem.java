@@ -72,13 +72,15 @@ public class ClassPathFileSystem extends FileSystem{
   @Override
   public FileStatus getFileStatus(Path arg0) throws IOException {
     String file = getFileName(arg0);
-
+    
     try{      
     URL url = Resources.getResource(file);
     if(url == null){
       throw new IOException(String.format("Unable to find path %s.", arg0.toString()));
     }
-    return new FileStatus(1, false, 1, 8096, System.currentTimeMillis(), arg0);
+    
+    
+    return new FileStatus(Resources.asByteSource(url).size(), false, 1, 8096, System.currentTimeMillis(), arg0);
     }catch(RuntimeException e){
       throw new IOException(String.format("Failure trying to load file %s", arg0), e);
     }

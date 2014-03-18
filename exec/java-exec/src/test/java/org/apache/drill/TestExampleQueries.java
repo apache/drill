@@ -23,16 +23,18 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
 
-public class TestExampleQueries {
+public class TestExampleQueries extends BaseTestQuery{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestExampleQueries.class);
   
-  @Rule public TestRule TIMEOUT = TestTools.getTimeoutRule(10000);
   
   @Test
   public void testSelectWithLimit() throws Exception{
     test("select * from cp.`employee.json` limit 5");
   }
   
+
+
+        
   @Test
   public void testJoin() throws Exception{
     test("SELECT\n" + 
@@ -54,19 +56,6 @@ public class TestExampleQueries {
   @Test
   public void testGroupBy() throws Exception{
     test("select marital_status, COUNT(1) as cnt from cp.`employee.json` group by marital_status");
-  }
-  
-  private void test(String sql) throws Exception{
-    boolean good = false;
-    sql = sql.replace("[WORKING_PATH]", TestTools.getWorkingPath());
-    
-    try{
-      QuerySubmitter s = new QuerySubmitter();
-      s.submitQuery(null, sql, "sql", null, true, 1, "tsv");
-      good = true;
-    }finally{
-      if(!good) Thread.sleep(2000);
-    }
   }
   
 }

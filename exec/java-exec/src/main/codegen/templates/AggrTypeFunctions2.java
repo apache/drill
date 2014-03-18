@@ -88,7 +88,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 
   @Override
   public void output() {
-    out.value = sum.value/count.value;
+    out.value = sum.value / ((double) count.value);
   }
 
   @Override

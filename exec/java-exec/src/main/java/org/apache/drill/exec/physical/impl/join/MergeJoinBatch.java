@@ -119,14 +119,15 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
   
   protected MergeJoinBatch(MergeJoinPOP popConfig, FragmentContext context, RecordBatch left, RecordBatch right) {
     super(popConfig, context);
+    // currently only one join condition is supported
+    assert popConfig.getConditions().size() == 1 : String.format("Merge Join currently only supports joins with a single condition.  This join operator was configured with %d condition(s).", popConfig.getConditions().size());
     this.left = left;
     this.right = right;
     this.status = new JoinStatus(left, right, this);
     this.batchBuilder = new MergeJoinBatchBuilder(context, status);
     this.joinType = popConfig.getJoinType();
     this.condition = popConfig.getConditions().get(0);
-    // currently only one join condition is supported
-    assert popConfig.getConditions().size() == 1;
+    
   }
 
   @Override

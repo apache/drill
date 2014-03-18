@@ -18,44 +18,37 @@
 
 package org.apache.drill.exec.physical.impl.agg;
 
-import static org.junit.Assert.*;
-
-import org.apache.drill.exec.client.QuerySubmitter;
-import org.junit.AfterClass;
+import org.apache.drill.BaseTestQuery;
 import org.junit.Test;
 
  
-public class TestHashAggr {
+public class TestHashAggr extends BaseTestQuery{
 
-	/*
-	@Test
-	public void test1() throws Exception {
-		String[] strArr = {"-f",
-				          //  "/Users/asinha/queries/hashaggr/q8.json",
-				         // "/Users/asinha/queries/hashaggr/q8_1.json",
-				// "/Users/asinha/queries/hashaggr/q8_2.json",
-				// "/Users/asinha/queries/hashaggr/q8_3.json",
-				//"/Users/asinha/queries/streamaggr/q8_2.json",
-				// "/Users/asinha/queries/hashaggr/q5.json",
-				//"/Users/asinha/queries/hashaggr/q5_1.json",
-				// "/Users/asinha/queries/hashaggr/q5_2.json",
-				// "/Users/asinha/queries/streamaggr/q4_1.json",
-				// "/Users/asinha/queries/streamaggr/q4_3.json",
-				// "/Users/asinha/queries/hashaggr/q6.json",
-				// "/Users/asinha/queries/hashaggr/q9.json",
-				// "/Users/asinha/queries/hashaggr/q9_1.json",
-				"/Users/asinha/queries/hashaggr/q7_2.json",
-				           "-t",
-				            "physical",
-				           "-local" };
-	    QuerySubmitter.main(strArr);
-
-	}
-	
-	@AfterClass
-	public static void tearDown() throws Exception{
-	  // pause to get logger to catch up.
-	  Thread.sleep(1000);
-	}
-	*/	
+  
+  @Test
+  public void testQ6() throws Exception{
+    testPhysicalFromFile("agg/hashagg/q6.json");
+  }
+  
+  @Test
+  public void testQ7_1() throws Exception{
+    testPhysicalFromFile("agg/hashagg/q7_1.json");
+  }
+  
+  @Test
+  public void testQ7_2() throws Exception{
+    testPhysicalFromFile("agg/hashagg/q7_2.json");
+  }
+  
+  
+  @Test
+  public void testQ8_1() throws Exception{
+    testPhysicalFromFile("agg/hashagg/q8_1.json");
+  }
+  
+  @Test
+  public void test8() throws Exception{
+    testPhysicalFromFile("agg/hashagg/q8.json");
+  }
+  
 }

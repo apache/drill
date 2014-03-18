@@ -18,23 +18,20 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <artifactId>drill-root</artifactId>
-    <groupId>org.apache.drill</groupId>
+    <artifactId>drill-contrib-parent</artifactId>
+    <groupId>org.apache.drill.contrib</groupId>
     <version>1.0.0-m2-incubating-SNAPSHOT</version>
   </parent>
 
-  <groupId>org.apache.drill.contrib</groupId>
-  <artifactId>drill-contrib-parent</artifactId>
-  <name>contrib/Parent Pom</name>
+  <groupId>org.apache.drill.contrib.data</groupId>
+  <artifactId>drill-contrib-data-parent</artifactId>
+  <name>contrib/data/Parent Pom</name>
   <packaging>pom</packaging>
 
   <dependencies>
   </dependencies>
 
   <modules>
-    <module>storage-hbase</module>
-    <module>storage-hive</module>
-    <module>sqlline</module>
-    <module>data</module>
+    <module>tpch-sample-data</module>
   </modules>
 </project>

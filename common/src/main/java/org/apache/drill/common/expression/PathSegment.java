@@ -83,7 +83,7 @@ public abstract class PathSegment{
       this.path = n.toString();
     }
     
-    public CharSequence getPath(){
+    public String getPath(){
       return path;        
     }
     
@@ -126,7 +126,7 @@ public abstract class PathSegment{
       if (path == null) {
         if (other.path != null)
           return false;
-      } else if (!path.equals(other.path))
+      } else if (!path.equalsIgnoreCase(other.path))
         return false;
       return true;
     }

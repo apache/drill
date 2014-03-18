@@ -168,6 +168,7 @@ public class DrillOptiq {
       
       switch(call.getType().getSqlTypeName().getName()){
       case "VARCHAR": 
+      case "CHAR":
         castType = Types.required(MinorType.VARCHAR).toBuilder().setWidth(call.getType().getPrecision()).build();
         break;
       
@@ -175,6 +176,7 @@ public class DrillOptiq {
       case "FLOAT": Types.required(MinorType.FLOAT4); break;
       case "DOUBLE": Types.required(MinorType.FLOAT8); break;
       case "DECIMAL": throw new UnsupportedOperationException("Need to add decimal.");
+      
       default: castType = Types.required(MinorType.valueOf(call.getType().getSqlTypeName().getName()));
       }
       
@@ -202,8 +204,9 @@ public class DrillOptiq {
         return ValueExpressions.getFloat4(f);
       case INTEGER:
       case DECIMAL:
-        int i = ((BigDecimal) literal.getValue()).intValue();
-        return ValueExpressions.getInt(i);
+        double dbl = ((BigDecimal) literal.getValue()).doubleValue();
+        logger.warn("Converting exact decimal into approximate decimal.  Should be fixed once decimal is implemented.");
+        return ValueExpressions.getFloat8(dbl);
       case VARCHAR:
         return ValueExpressions.getChar(((NlsString)literal.getValue()).getValue());
       default:

@@ -33,7 +33,7 @@ public class VectorUtil {
 
     int rows = va.getRecordCount();
     List<String> columns = Lists.newArrayList();
-    for (VectorWrapper vw : va) {
+    for (VectorWrapper<?> vw : va) {
       columns.add(vw.getValueVector().getField().getName());
     }
 
@@ -43,7 +43,7 @@ public class VectorUtil {
     }
     for (int row = 0; row < rows; row++) {
       int columnCounter = 0;
-      for (VectorWrapper vw : va) {
+      for (VectorWrapper<?> vw : va) {
         boolean lastColumn = columnCounter == width - 1;
         Object o = vw.getValueVector().getAccessor().getObject(row);
         if (o == null) {
@@ -61,13 +61,17 @@ public class VectorUtil {
         columnCounter++;
       }
     }
+    
+    for (VectorWrapper<?> vw : va) {
+      vw.clear();
+    }
   }
 
   public static void showVectorAccessibleContent(VectorAccessible va) {
 
     int rows = va.getRecordCount();
     List<String> columns = Lists.newArrayList();
-    for (VectorWrapper vw : va) {
+    for (VectorWrapper<?> vw : va) {
       columns.add(vw.getValueVector().getField().getName());
     }
 
@@ -81,7 +85,7 @@ public class VectorUtil {
         System.out.printf("|\n");
         System.out.println(StringUtils.repeat("-", width*17 + 1));
       }
-      for (VectorWrapper vw : va) {
+      for (VectorWrapper<?> vw : va) {
         Object o = vw.getValueVector().getAccessor().getObject(row);
         if (o == null) {
           //null value
@@ -98,6 +102,10 @@ public class VectorUtil {
       System.out.printf("|\n");
     }
 
+    for (VectorWrapper<?> vw : va) {
+      vw.clear();
+    }
+    
     if (rows > 0 )
       System.out.println(StringUtils.repeat("-", width*17 + 1));
   }

@@ -136,7 +136,7 @@ public class MaterializedField{
         if (n.getType() == Type.ARRAY) continue;
         return false;
       } else {
-        if (p.getNameSegment().getPath().equals(n.getName())) continue;
+        if (p.getNameSegment().getPath().equalsIgnoreCase(n.getName())) continue;
         return false;
       }
       
