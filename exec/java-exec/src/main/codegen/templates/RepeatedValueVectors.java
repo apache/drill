@@ -38,8 +38,6 @@ package org.apache.drill.exec.vector;
 
  public final class Repeated${minor.class}Vector extends BaseValueVector implements Repeated<#if type.major == "VarLen">VariableWidth<#else>FixedWidth</#if>Vector {
 
-  private MaterializedField field;
-  
   private int parentValueCount;
   private int childValueCount;
   
@@ -145,7 +143,7 @@ package org.apache.drill.exec.vector;
     this.childValueCount = childValueCount;
     int loaded = 0;
     loaded += offsets.load(parentValueCount+1, buf.slice(loaded, buf.capacity() - loaded));
-    loaded += values.load(dataBytes, childValueCount, buf.slice(loaded, buf.capacity() - loaded));
+    loaded += values.load(dataBytes + 4*(childValueCount + 1), childValueCount, buf.slice(loaded, buf.capacity() - loaded));
     return loaded;
   }
   
