@@ -38,7 +38,7 @@ import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.HoldingContainerExpression;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.ValueVectorWriteExpression;
-import org.apache.drill.exec.expr.fn.impl.ComparatorFunctions;
+import org.apache.drill.exec.expr.fn.ComparatorFunctionHelper;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.StreamingAggregate;
 import org.apache.drill.exec.record.AbstractRecordBatch;
@@ -215,9 +215,9 @@ public class AggBatch extends AbstractRecordBatch<StreamingAggregate> {
       HoldingContainer first = cg.addExpr(expr, false);
       cg.setMappingSet(isSameI2Mapping);
       HoldingContainer second = cg.addExpr(expr, false);
-      
-      FunctionCall f = new FunctionCall(ComparatorFunctions.COMPARE_TO, ImmutableList.of((LogicalExpression) new HoldingContainerExpression(first), new HoldingContainerExpression(second)), ExpressionPosition.UNKNOWN);
-      HoldingContainer out = cg.addExpr(f, false);
+
+      LogicalExpression fh = ComparatorFunctionHelper.get(first, second, context.getFunctionRegistry());
+      HoldingContainer out = cg.addExpr(fh, false);
       cg.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)))._then()._return(JExpr.FALSE);
     }
     cg.getEvalBlock()._return(JExpr.TRUE);
@@ -237,8 +237,8 @@ public class AggBatch extends AbstractRecordBatch<StreamingAggregate> {
       cg.setMappingSet(isaB2Mapping);
       HoldingContainer second = cg.addExpr(expr, false);
 
-      FunctionCall f = new FunctionCall(ComparatorFunctions.COMPARE_TO, ImmutableList.of((LogicalExpression) new HoldingContainerExpression(first), new HoldingContainerExpression(second)), ExpressionPosition.UNKNOWN);
-      HoldingContainer out = cg.addExpr(f, false);
+      LogicalExpression fh = ComparatorFunctionHelper.get(first, second, context.getFunctionRegistry());
+      HoldingContainer out = cg.addExpr(fh, false);
       cg.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)))._then()._return(JExpr.FALSE);
     }
     cg.getEvalBlock()._return(JExpr.TRUE);

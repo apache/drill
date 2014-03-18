@@ -18,6 +18,7 @@
 package org.apache.drill.common.expression.visitors;
 
 import org.apache.drill.common.expression.FunctionCall;
+import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.IfExpression;
 import org.apache.drill.common.expression.IfExpression.IfCondition;
 import org.apache.drill.common.expression.LogicalExpression;
@@ -41,8 +42,19 @@ public final class ConstantChecker extends SimpleExprVisitor<Boolean>{
 
   @Override
   public Boolean visitFunctionCall(FunctionCall call) {
-    for(LogicalExpression e : call){
-      if(!e.accept(this, null)) return false;
+    throw new UnsupportedOperationException("FunctionCall is not expected here. "+
+      "It should have been converted to FunctionHolderExpression in materialization");
+  }
+
+  @Override
+  public Boolean visitFunctionHolderExpression(FunctionHolderExpression holder) {
+    for(int i=0; i<holder.args.size(); i++) {
+      if (holder.argConstantOnly(i) && !holder.args.get(i).accept(this, null)) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Function '").append(holder.getName())
+          .append("' expects constant input for argument number ").append(i);
+        throw new UnsupportedOperationException(sb.toString());
+      }
     }
     return true;
   }

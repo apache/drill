@@ -18,6 +18,7 @@
 package org.apache.drill.common.expression.visitors;
 
 import org.apache.drill.common.expression.FunctionCall;
+import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.IfExpression;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
@@ -33,7 +34,12 @@ public abstract class AbstractExprVisitor<T, VAL, EXCEP extends Exception> imple
 
   @Override
   public T visitFunctionCall(FunctionCall call, VAL value) throws EXCEP {
-    return null;
+    return visitUnknown(call, value);
+  }
+
+  @Override
+  public T visitFunctionHolderExpression(FunctionHolderExpression holder, VAL value) throws EXCEP {
+    return visitUnknown(holder, value);
   }
 
   @Override

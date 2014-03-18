@@ -17,13 +17,6 @@
  */
 package org.apache.drill.exec.expr.fn.impl;
 
-import org.apache.drill.common.expression.Arg;
-import org.apache.drill.common.expression.BasicArgumentValidator;
-import org.apache.drill.common.expression.CallProvider;
-import org.apache.drill.common.expression.FunctionDefinition;
-import org.apache.drill.common.expression.OutputTypeDeterminer;
-import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.Output;
@@ -48,7 +41,7 @@ import org.apache.drill.exec.record.RecordBatch;
  *
  *  - If the substring is invalid, return an empty string.
  */
-@FunctionTemplate(name = "bytesubstring",
+@FunctionTemplate(names = {"bytesubstring", "byte_substr"},
                   scope = FunctionTemplate.FunctionScope.SIMPLE,
                   nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
 public class ByteSubstring implements DrillSimpleFunc {
@@ -85,22 +78,6 @@ public class ByteSubstring implements DrillSimpleFunc {
       else
         out.end = out.start + (int)length.value;
 
-    }
-  }
-
-  public static class Provider implements CallProvider {
-
-    @Override
-    public FunctionDefinition[] getFunctionDefintions() {
-      return new FunctionDefinition[] {
-          FunctionDefinition.simple("bytesubstring",
-                                    new BasicArgumentValidator(new Arg(Types.required(TypeProtos.MinorType.VARBINARY),
-                                                                       Types.optional(TypeProtos.MinorType.VARBINARY)),
-                                                               new Arg(false, false, "offset", TypeProtos.MinorType.BIGINT),
-                                                               new Arg(false, false, "length", TypeProtos.MinorType.BIGINT)),
-                                    new OutputTypeDeterminer.SameAsFirstInput(),
-                                    "byte_substr")
-      };
     }
   }
 }

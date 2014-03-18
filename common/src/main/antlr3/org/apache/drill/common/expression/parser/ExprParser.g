@@ -41,12 +41,8 @@ import org.apache.drill.common.types.TypeProtos.*;
 }
 
 @members{
-  private FunctionRegistry registry;
   private String fullExpression;
   private int tokenPos;
-  public void setRegistry(FunctionRegistry registry){
-    this.registry = registry;
-  }
 
   public static void p(String s){
     System.out.println(s);
@@ -66,7 +62,7 @@ parse returns [LogicalExpression e]
   ;
  
 functionCall returns [LogicalExpression e]
-  :  Identifier OParen exprList? CParen {$e = registry.createExpression($Identifier.text, pos($Identifier), $exprList.listE);  }
+  :  Identifier OParen exprList? CParen {$e = FunctionCallFactory.createExpression($Identifier.text, pos($Identifier), $exprList.listE);  }
   ;
   
 castCall returns [LogicalExpression e]
@@ -76,9 +72,9 @@ castCall returns [LogicalExpression e]
 	}  
   :  Cast OParen expression As dataType repeat? CParen 
       {  if ($repeat.isRep!=null && $repeat.isRep.compareTo(Boolean.TRUE)==0)
-      	 	$e = registry.createCast(TypeProtos.MajorType.newBuilder().mergeFrom($dataType.type).setMode(DataMode.REPEATED).build(), pos($Cast), $expression.e);
-      	 else 
-         	$e = registry.createCast($dataType.type, pos($Cast), $expression.e);}
+           $e = FunctionCallFactory.createCast(TypeProtos.MajorType.newBuilder().mergeFrom($dataType.type).setMode(DataMode.REPEATED).build(), pos($Cast), $expression.e);
+         else
+           $e = FunctionCallFactory.createCast($dataType.type, pos($Cast), $expression.e);}
   ;
 
 repeat returns [Boolean isRep]
@@ -167,7 +163,7 @@ orExpr returns [LogicalExpression e]
 	  if(exprs.size() == 1){
 	    $e = exprs.get(0);
 	  }else{
-	    $e = registry.createExpression("||", p, exprs);
+	    $e = FunctionCallFactory.createExpression("||", p, exprs);
 	  }
 	}
   :  a1=andExpr { exprs.add($a1.e); p = pos( $a1.start );} (Or a2=andExpr { exprs.add($a2.e); })*
@@ -182,7 +178,7 @@ andExpr returns [LogicalExpression e]
 	  if(exprs.size() == 1){
 	    $e = exprs.get(0);
 	  }else{
-	    $e = registry.createExpression("&&", p, exprs);
+	    $e = FunctionCallFactory.createExpression("&&", p, exprs);
 	  }
 	}
   :  e1=equExpr { exprs.add($e1.e); p = pos( $e1.start );  } ( And e2=equExpr { exprs.add($e2.e);  })*
@@ -195,14 +191,14 @@ equExpr returns [LogicalExpression e]
 	  ExpressionPosition p = null;
 	}
 	@after{
-	  $e = registry.createByOp(exprs, p, cmps);
+	  $e = FunctionCallFactory.createByOp(exprs, p, cmps);
 	}
   :  r1=relExpr { exprs.add($r1.e); p = pos( $r1.start );
     } ( cmpr= ( Equals | NEquals ) r2=relExpr {exprs.add($r2.e); cmps.add($cmpr.text); })*
   ;
 
 relExpr returns [LogicalExpression e]
-  :  left=addExpr {$e = $left.e; } (cmpr = (GTEquals | LTEquals | GT | LT) right=addExpr {$e = registry.createExpression($cmpr.text, pos($left.start), $left.e, $right.e); } )? 
+  :  left=addExpr {$e = $left.e; } (cmpr = (GTEquals | LTEquals | GT | LT) right=addExpr {$e = FunctionCallFactory.createExpression($cmpr.text, pos($left.start), $left.e, $right.e); } )?
   ;
 
 addExpr returns [LogicalExpression e]
@@ -212,7 +208,7 @@ addExpr returns [LogicalExpression e]
 	  ExpressionPosition p = null;
 	}
 	@after{
-	  $e = registry.createByOp(exprs, p, ops);
+	  $e = FunctionCallFactory.createByOp(exprs, p, ops);
 	}
   :  m1=mulExpr  {exprs.add($m1.e); p = pos($m1.start); } ( op=(Plus|Minus) m2=mulExpr {exprs.add($m2.e); ops.add($op.text); })* 
   ;
@@ -224,7 +220,7 @@ mulExpr returns [LogicalExpression e]
 	  ExpressionPosition p = null;
 	}
 	@after{
-	  $e = registry.createByOp(exprs, p, ops);
+	  $e = FunctionCallFactory.createByOp(exprs, p, ops);
 	}
   :  p1=xorExpr  {exprs.add($p1.e); p = pos($p1.start);} (op=(Asterisk|ForwardSlash|Percent) p2=xorExpr {exprs.add($p2.e); ops.add($op.text); } )*
   ;
@@ -236,14 +232,14 @@ xorExpr returns [LogicalExpression e]
 	  ExpressionPosition p = null;
 	}
 	@after{
-	  $e = registry.createByOp(exprs, p, ops);
+	  $e = FunctionCallFactory.createByOp(exprs, p, ops);
 	}
   :  u1=unaryExpr {exprs.add($u1.e); p = pos($u1.start);} (Caret u2=unaryExpr {exprs.add($u2.e); ops.add($Caret.text);} )*
   ;
   
 unaryExpr returns [LogicalExpression e]
-  :  Minus atom {$e = registry.createExpression("u-", pos($atom.start), $atom.e); }
-  |  Excl atom {$e= registry.createExpression("!", pos($atom.start), $atom.e); }
+  :  Minus atom {$e = FunctionCallFactory.createExpression("u-", pos($atom.start), $atom.e); }
+  |  Excl atom {$e= FunctionCallFactory.createExpression("!", pos($atom.start), $atom.e); }
   |  atom {$e = $atom.e; }
   ;
 

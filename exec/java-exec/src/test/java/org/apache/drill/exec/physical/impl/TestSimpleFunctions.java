@@ -143,15 +143,12 @@ public class TestSimpleFunctions {
     args.add(arg);
     String[] registeredNames = { "hash" };
     FunctionCall call = new FunctionCall(
-        FunctionDefinition.simple("hash",
-          new BasicArgumentValidator(new Arg[]{ new Arg(expectedArg)}),
-          new OutputTypeDeterminer.FixedType(expectedOut),
-          registeredNames),
+        "hash",
         args,
         ExpressionPosition.UNKNOWN
     );
     FunctionResolver resolver = FunctionResolverFactory.getResolver(call);
-    DrillFuncHolder matchedFuncHolder = resolver.getBestMatch(registry.getMethods().get(call.getDefinition().getName()), call);
+    DrillFuncHolder matchedFuncHolder = resolver.getBestMatch(registry.getDrillRegistry().getMethods().get(call.getName()), call);
     assertEquals( expectedBestInputMode, matchedFuncHolder.getParmMajorType(0).getMode());
   }
 

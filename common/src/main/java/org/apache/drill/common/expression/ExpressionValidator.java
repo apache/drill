@@ -22,6 +22,8 @@ import org.apache.drill.common.expression.ValueExpressions.BooleanExpression;
 import org.apache.drill.common.expression.ValueExpressions.DoubleExpression;
 import org.apache.drill.common.expression.ValueExpressions.LongExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
+import org.apache.drill.common.expression.visitors.AggregateChecker;
+import org.apache.drill.common.expression.visitors.ConstantChecker;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
@@ -32,8 +34,18 @@ public class ExpressionValidator implements ExprVisitor<Void, ErrorCollector, Ru
 
   @Override
   public Void visitFunctionCall(FunctionCall call, ErrorCollector errors) throws RuntimeException {
-    call.getDefinition().getArgumentValidator()
-        .validateArguments(call.getPosition(), call.args, errors);
+    throw new UnsupportedOperationException("FunctionCall is not expected here. "+
+      "It should have been converted to FunctionHolderExpression in materialization");
+  }
+
+  @Override
+  public Void visitFunctionHolderExpression(FunctionHolderExpression holder, ErrorCollector errors) throws RuntimeException {
+    // make sure aggregate functions are not nested inside aggregate functions
+    AggregateChecker.isAggregating(holder);
+
+    // make sure arguments are constant if the function implementation expects constants for any arguments
+    ConstantChecker.onlyIncludesConstants(holder);
+
     return null;
   }
 

@@ -17,13 +17,6 @@
  */
 package org.apache.drill.exec.expr.fn.impl;
 
-import org.apache.drill.common.expression.Arg;
-import org.apache.drill.common.expression.BasicArgumentValidator;
-import org.apache.drill.common.expression.CallProvider;
-import org.apache.drill.common.expression.FunctionDefinition;
-import org.apache.drill.common.expression.OutputTypeDeterminer;
-import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.Output;
@@ -36,7 +29,6 @@ import org.apache.drill.exec.expr.holders.RepeatedIntHolder;
 import org.apache.drill.exec.record.RecordBatch;
 
 public class SimpleRepeatedFunctions {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MathFunctions.class);
 
   private SimpleRepeatedFunctions() {
   }
@@ -88,28 +80,6 @@ public class SimpleRepeatedFunctions {
           break;
         }
       }
-    }
-
-  }
-
-  public static class Provider implements CallProvider {
-
-    @Override
-    public FunctionDefinition[] getFunctionDefintions() {
-      return new FunctionDefinition[] {
-          FunctionDefinition.simple("repeated_contains", new BasicArgumentValidator( //
-              new Arg("repeatedToSearch", //
-                  Types.repeated(MinorType.BIGINT), //
-                  Types.repeated(MinorType.INT)), //
-              new Arg("targetValue", Types.required(MinorType.BIGINT))), //
-              OutputTypeDeterminer.FixedType.FIXED_BIT),
-
-          FunctionDefinition.simple(
-              "repeated_count",
-              new BasicArgumentValidator(new Arg("repeatedToSearch", Types.repeated(MinorType.BIGINT), Types
-                  .repeated(MinorType.INT))), new OutputTypeDeterminer.FixedType(Types.required(MinorType.INT)))
-
-      };
     }
 
   }

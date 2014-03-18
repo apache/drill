@@ -41,10 +41,11 @@ class DrillAggFuncHolder extends DrillFuncHolder{
   private final String output;
   private final String cleanup;
   
-  public DrillAggFuncHolder(FunctionScope scope, NullHandling nullHandling, boolean isBinaryCommutative,
-      String functionName, ValueReference[] parameters, ValueReference returnValue, WorkspaceReference[] workspaceVars,
+  public DrillAggFuncHolder(FunctionScope scope, NullHandling nullHandling, boolean isBinaryCommutative, boolean isRandom,
+      String[] registeredNames, ValueReference[] parameters, ValueReference returnValue, WorkspaceReference[] workspaceVars,
       Map<String, String> methods, List<String> imports) {
-    super(scope, nullHandling, isBinaryCommutative, functionName, parameters, returnValue, workspaceVars, methods, imports);
+    super(scope, nullHandling, isBinaryCommutative, isRandom,
+      registeredNames, parameters, returnValue, workspaceVars, methods, imports);
     Preconditions.checkArgument(nullHandling == NullHandling.INTERNAL, "An aggregation function is required to do its own null handling.");
     setup = methods.get("setup");
     reset = methods.get("reset");
@@ -59,7 +60,11 @@ class DrillAggFuncHolder extends DrillFuncHolder{
   public boolean isNested(){
     return true;
   }
-  
+
+  public boolean isAggregating() {
+    return true;
+  }
+
   @Override
   public JVar[] renderStart(ClassGenerator<?> g, HoldingContainer[] inputVariables) {
     JVar[] workspaceJVars = declareWorkspaceVariables(g);

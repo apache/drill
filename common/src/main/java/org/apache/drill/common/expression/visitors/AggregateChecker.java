@@ -18,6 +18,7 @@
 package org.apache.drill.common.expression.visitors;
 
 import org.apache.drill.common.expression.FunctionCall;
+import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.IfExpression;
 import org.apache.drill.common.expression.IfExpression.IfCondition;
 import org.apache.drill.common.expression.LogicalExpression;
@@ -41,13 +42,22 @@ public final class AggregateChecker extends SimpleExprVisitor<Boolean>{
 
   @Override
   public Boolean visitFunctionCall(FunctionCall call) {
-    if(call.getDefinition().isAggregating()){
-      for(LogicalExpression e : call){
-        if(e.accept(this, null)) throw new IllegalArgumentException(String.format("Your aggregating function call %s also includes arguments that contain aggregations.  This isn't allowed.", call.getDefinition().toString()));
+    throw new UnsupportedOperationException("FunctionCall is not expected here. "+
+      "It should have been converted to FunctionHolderExpression in materialization");
+  }
+
+  @Override
+  public Boolean visitFunctionHolderExpression(FunctionHolderExpression holder) throws RuntimeException {
+    if(holder.isAggregating()){
+      for(LogicalExpression e : holder.args){
+        if(e.accept(this, null))
+          throw new IllegalArgumentException(String.format(
+            "Your aggregating function call %s also includes arguments that contain aggregations."+
+            " This isn't allowed.", holder.getName()));
       }
       return true;
     }else{
-      for(LogicalExpression e : call){
+      for(LogicalExpression e : holder.args){
         if(e.accept(this, null)) return true;
       }
       return false;

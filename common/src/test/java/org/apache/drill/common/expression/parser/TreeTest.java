@@ -24,8 +24,6 @@ import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.tree.CommonTree;
 import org.antlr.runtime.tree.DOTTreeGenerator;
 import org.antlr.stringtemplate.StringTemplate;
-import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.expression.FunctionRegistry;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.parser.ExprParser.parse_return;
 
@@ -47,7 +45,6 @@ public class TreeTest {
     CommonTokenStream tokens = new CommonTokenStream(lexer);
 
     ExprParser parser = new ExprParser(tokens);
-    parser.setRegistry(new FunctionRegistry(DrillConfig.create()));
     parse_return ret = parser.parse();
     LogicalExpression e = ret.e;
     ObjectMapper mapper = new ObjectMapper();

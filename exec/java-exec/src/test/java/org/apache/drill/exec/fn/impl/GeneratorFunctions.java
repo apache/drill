@@ -17,10 +17,6 @@
  */
 package org.apache.drill.exec.fn.impl;
 
-import org.apache.drill.common.expression.ArgumentValidators;
-import org.apache.drill.common.expression.CallProvider;
-import org.apache.drill.common.expression.FunctionDefinition;
-import org.apache.drill.common.expression.OutputTypeDeterminer;
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
@@ -35,25 +31,9 @@ import java.util.Random;
 public class GeneratorFunctions {
 
   public static final Random random = new Random(1234L);
-  public static final FunctionDefinition RANDOM_BIG_INT = FunctionDefinition.simpleRandom("randomBigInt", new ArgumentValidators.NumericTypeAllowed(1,2, true),
-          OutputTypeDeterminer.FIXED_BIGINT, "randomBigInt");
-  public static final FunctionDefinition RANDOM_FLOAT8 = FunctionDefinition.simpleRandom("randomFloat8", new ArgumentValidators.NumericTypeAllowed(1,2, true),
-          OutputTypeDeterminer.FIXED_FLOAT8, "randomFloat8");
-  public static final FunctionDefinition INCREASING_BIGINT = FunctionDefinition.simpleRandom("increasingBigInt", new ArgumentValidators.NumericTypeAllowed(1, true),
-          OutputTypeDeterminer.FIXED_BIGINT, "increasingBigInt");
 
-  public static class Provider implements CallProvider {
-
-    @Override
-    public FunctionDefinition[] getFunctionDefintions() {
-      return new FunctionDefinition[] { RANDOM_BIG_INT,
-                                        RANDOM_FLOAT8,
-                                        INCREASING_BIGINT };
-    }
-
-  }
-
-  @FunctionTemplate(name = "increasingBigInt", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "increasingBigInt", isRandom = true,
+    scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
   public static class IncreasingBigInt implements DrillSimpleFunc {
 
     @Param BigIntHolder start;
@@ -69,7 +49,8 @@ public class GeneratorFunctions {
     }
   }
 
-  @FunctionTemplate(name = "randomBigInt", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "randomBigInt", isRandom = true,
+    scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
   public static class RandomBigIntGauss implements DrillSimpleFunc {
 
     @Param BigIntHolder range;
@@ -83,7 +64,8 @@ public class GeneratorFunctions {
     }
   }
 
-  @FunctionTemplate(name = "randomBigInt", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "randomBigInt", isRandom = true,
+    scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
   public static class RandomBigInt implements DrillSimpleFunc {
 
     @Param BigIntHolder min;
@@ -98,7 +80,8 @@ public class GeneratorFunctions {
     }
   }
 
-  @FunctionTemplate(name = "randomFloat8", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "randomFloat8", isRandom = true,
+    scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
   public static class RandomFloat8Gauss implements DrillSimpleFunc {
 
     @Param BigIntHolder range;
@@ -113,7 +96,8 @@ public class GeneratorFunctions {
     }
   }
 
-  @FunctionTemplate(name = "randomFloat8", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "randomFloat8", isRandom = true,
+    scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
   public static class RandomFloat8 implements DrillSimpleFunc {
 
     @Param BigIntHolder min;

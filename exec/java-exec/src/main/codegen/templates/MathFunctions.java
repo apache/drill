@@ -29,13 +29,6 @@
 
 package org.apache.drill.exec.expr.fn.impl;
 
-import org.apache.drill.common.expression.Arg;
-import org.apache.drill.common.expression.ArgumentValidators;
-import org.apache.drill.common.expression.BasicArgumentValidator;
-import org.apache.drill.common.expression.CallProvider;
-import org.apache.drill.common.expression.FunctionDefinition;
-import org.apache.drill.common.expression.OutputTypeDeterminer;
-import org.apache.drill.common.expression.ArgumentValidators.AllowedTypeList;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -79,21 +72,6 @@ public class GMathFunctions{
   </#list>
   </#list>
 
-  
-  /*
-   * Function Definitions
-   */
-  public static class UnaryMathFuncProvider implements CallProvider {
-
-    @Override
-    public FunctionDefinition[] getFunctionDefintions() {
-      return new FunctionDefinition[] {
-          <#list mathFunc.unaryMathFunctions as func>
-          FunctionDefinition.simple("${func.funcName}", new ArgumentValidators.NumericTypeAllowed(1, 2, false), new OutputTypeDeterminer.SameAsAnySoft()),          
-          </#list>
-      };
-    }
-  }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   //Math functions which take two arguments (of same type). 
@@ -118,21 +96,4 @@ public class GMathFunctions{
   }
   </#list>
   </#list>
-
-  /*
-   * Function Definitions
-   */
-  public static class BinaryMathFuncProvider implements CallProvider {
-
-    @Override
-    public FunctionDefinition[] getFunctionDefintions() {
-      return new FunctionDefinition[] {
-          <#list mathFunc.binaryMathFunctions as func>
-          FunctionDefinition.simple("${func.funcName}", new ArgumentValidators.NumericTypeAllowed(1, 3, false), new OutputTypeDeterminer.SameAsAnySoft()),          
-          </#list>
-      };
-    }
-  }
-
- 
 }

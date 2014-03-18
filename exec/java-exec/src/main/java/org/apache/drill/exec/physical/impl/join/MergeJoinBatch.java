@@ -36,7 +36,7 @@ import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.HoldingContainerExpression;
 import org.apache.drill.exec.expr.TypeHelper;
-import org.apache.drill.exec.expr.fn.impl.ComparatorFunctions;
+import org.apache.drill.exec.expr.fn.ComparatorFunctionHelper;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.MergeJoinPOP;
 import org.apache.drill.exec.physical.impl.filter.ReturnValueExpression;
@@ -296,8 +296,10 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
           ._return(JExpr.lit(1));
     }
 
-    FunctionCall f = new FunctionCall(ComparatorFunctions.COMPARE_TO, ImmutableList.of((LogicalExpression) new HoldingContainerExpression(compareLeftExprHolder), (LogicalExpression)  new HoldingContainerExpression(compareRightExprHolder)), ExpressionPosition.UNKNOWN);
-    cg.addExpr(new ReturnValueExpression(f, false), false);
+    LogicalExpression fh = ComparatorFunctionHelper.get(compareLeftExprHolder,
+      compareRightExprHolder,
+      context.getFunctionRegistry());
+    cg.addExpr(new ReturnValueExpression(fh, false), false);
 //    
 //    // equality
 //    cg.getEvalBlock()._if(compareLeftExprHolder.getValue().eq(compareRightExprHolder.getValue()))
@@ -344,8 +346,11 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
     }
 
     // check value equality
-    FunctionCall g = new FunctionCall(ComparatorFunctions.COMPARE_TO, ImmutableList.of((LogicalExpression) new HoldingContainerExpression(compareThisLeftExprHolder), (LogicalExpression)  new HoldingContainerExpression(compareNextLeftExprHolder)), ExpressionPosition.UNKNOWN);
-    cg.addExpr(new ReturnValueExpression(g, false), false);
+
+    LogicalExpression gh = ComparatorFunctionHelper.get(compareThisLeftExprHolder,
+      compareNextLeftExprHolder,
+      context.getFunctionRegistry());
+    cg.addExpr(new ReturnValueExpression(gh, false), false);
 
     // generate copyLeft()
     //////////////////////

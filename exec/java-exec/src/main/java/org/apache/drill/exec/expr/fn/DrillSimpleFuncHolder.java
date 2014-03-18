@@ -49,10 +49,10 @@ class DrillSimpleFuncHolder extends DrillFuncHolder{
   private final String cleanupBody;
   
   
-  public DrillSimpleFuncHolder(FunctionScope scope, NullHandling nullHandling, boolean isBinaryCommutative,
-      String functionName, ValueReference[] parameters, ValueReference returnValue, WorkspaceReference[] workspaceVars,
+  public DrillSimpleFuncHolder(FunctionScope scope, NullHandling nullHandling, boolean isBinaryCommutative, boolean isRandom,
+      String[] registeredNames, ValueReference[] parameters, ValueReference returnValue, WorkspaceReference[] workspaceVars,
       Map<String, String> methods, List<String> imports) {
-    super(scope, nullHandling, isBinaryCommutative, functionName, parameters, returnValue, workspaceVars, methods, imports);
+    super(scope, nullHandling, isBinaryCommutative, isRandom, registeredNames, parameters, returnValue, workspaceVars, methods, imports);
     setupBody = methods.get("setup");
     evalBody = methods.get("eval");
     resetBody = methods.get("reset");
@@ -70,7 +70,7 @@ class DrillSimpleFuncHolder extends DrillFuncHolder{
     //for the argument is not, then raise exception.    
     for(int i =0; i < inputVariables.length; i++){
       if (parameters[i].isConstant && !inputVariables[i].isConstant()) {
-        throw new DrillRuntimeException(String.format("The argument '%s' of Function '%s' has to be constant!", parameters[i].name, this.getFunctionName()));
+        throw new DrillRuntimeException(String.format("The argument '%s' of Function '%s' has to be constant!", parameters[i].name, this.getRegisteredNames()[0]));
       }
     }
     generateBody(g, BlockType.SETUP, setupBody, inputVariables, workspaceJVars, true);
@@ -130,7 +130,7 @@ class DrillSimpleFuncHolder extends DrillFuncHolder{
 @Override
 public String toString() {
   final int maxLen = 10;
-  return "DrillSimpleFuncHolder [, functionName=" + functionName + ", nullHandling=" + nullHandling + "parameters="
+  return "DrillSimpleFuncHolder [, functionName=" + Arrays.toString(registeredNames) + ", nullHandling=" + nullHandling + "parameters="
       + (parameters != null ? Arrays.asList(parameters).subList(0, Math.min(parameters.length, maxLen)) : null) + "]";
 }
   

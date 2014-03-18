@@ -20,6 +20,7 @@ data: {
     cast: tdd(../data/Casts.tdd),
     MathFunctionTypes: tdd(../data/MathFunctionTypes.tdd)
     mathFunc:tdd(../data/MathFunc.tdd)
+    drillOI:tdd(../data/HiveTypes.tdd)
 }
 freemarkerLinks: {
     includes: includes/

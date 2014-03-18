@@ -22,8 +22,6 @@ import java.util.List;
 
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
-import org.apache.drill.common.expression.ExpressionPosition;
-import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.logical.data.Order.Ordering;
 import org.apache.drill.exec.compile.sig.MappingSet;
@@ -33,8 +31,7 @@ import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
-import org.apache.drill.exec.expr.HoldingContainerExpression;
-import org.apache.drill.exec.expr.fn.impl.ComparatorFunctions;
+import org.apache.drill.exec.expr.fn.ComparatorFunctionHelper;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.Sort;
 import org.apache.drill.exec.record.AbstractRecordBatch;
@@ -46,7 +43,6 @@ import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.eigenbase.rel.RelFieldCollation.Direction;
 
-import com.google.common.collect.ImmutableList;
 import com.sun.codemodel.JConditional;
 import com.sun.codemodel.JExpr;
 
@@ -190,8 +186,8 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
       g.setMappingSet(mainMapping);
       
       // next we wrap the two comparison sides and add the expression block for the comparison.
-      FunctionCall f = new FunctionCall(ComparatorFunctions.COMPARE_TO, ImmutableList.of((LogicalExpression) new HoldingContainerExpression(left), new HoldingContainerExpression(right)), ExpressionPosition.UNKNOWN);
-      HoldingContainer out = g.addExpr(f, false);
+      LogicalExpression fh = ComparatorFunctionHelper.get(left, right, context.getFunctionRegistry());
+      HoldingContainer out = g.addExpr(fh, false);
       JConditional jc = g.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)));
       
       if(od.getDirection() == Direction.Ascending){

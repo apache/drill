@@ -17,13 +17,6 @@
  */
 package org.apache.drill.exec.expr.fn.impl;
 
-import org.apache.drill.common.expression.Arg;
-import org.apache.drill.common.expression.BasicArgumentValidator;
-import org.apache.drill.common.expression.CallProvider;
-import org.apache.drill.common.expression.FunctionDefinition;
-import org.apache.drill.common.expression.OutputTypeDeterminer;
-import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.Output;
@@ -52,7 +45,7 @@ import org.apache.drill.exec.record.RecordBatch;
  *  
  *  - TODO: implement optional length parameter
  */
-@FunctionTemplate(name = "charsubstring",
+@FunctionTemplate(names = {"charsubstring", "substring2", "substr2"},
                   scope = FunctionTemplate.FunctionScope.SIMPLE,
                   nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
 public class CharSubstring implements DrillSimpleFunc {
@@ -139,23 +132,6 @@ public class CharSubstring implements DrillSimpleFunc {
       if (out.end == 0) {
         out.end = string.end;
       }
-    }
-  }
-
-  public static class Provider implements CallProvider {
-
-    @Override
-    public FunctionDefinition[] getFunctionDefintions() {
-      return new FunctionDefinition[] {
-          FunctionDefinition.simple("charsubstring",
-                                    new BasicArgumentValidator(new Arg(Types.required(TypeProtos.MinorType.VARCHAR),
-                                                                       Types.optional(TypeProtos.MinorType.VARCHAR)),
-                                                               new Arg(false, false, "offset", TypeProtos.MinorType.BIGINT),
-                                                               new Arg(false, false, "length", TypeProtos.MinorType.BIGINT)),
-                                    new OutputTypeDeterminer.SameAsFirstInput(),
-                                    "substring2",
-                                    "substr2")
-      };
     }
   }
 }

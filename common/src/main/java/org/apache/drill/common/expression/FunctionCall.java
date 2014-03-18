@@ -29,13 +29,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 public class FunctionCall extends LogicalExpressionBase implements Iterable<LogicalExpression> {
-  private final FunctionDefinition func;
+  private final String name;
   public final ImmutableList<LogicalExpression> args;
   private final ExpressionPosition pos;
 
-  public FunctionCall(FunctionDefinition func, List<LogicalExpression> args, ExpressionPosition pos) {
+  public FunctionCall(String name, List<LogicalExpression> args, ExpressionPosition pos) {
     super(pos);
-    this.func = func;
+    this.name = name;
     
     if(args == null) args = Lists.newArrayList();
     
@@ -44,6 +44,10 @@ public class FunctionCall extends LogicalExpressionBase implements Iterable<Logi
     }
     this.args = (ImmutableList<LogicalExpression>) args;
     this.pos = pos;
+  }
+
+  public String getName() {
+    return name;
   }
 
   @Override
@@ -61,19 +65,16 @@ public class FunctionCall extends LogicalExpressionBase implements Iterable<Logi
     return args.iterator();
   }
 
-  public FunctionDefinition getDefinition(){
-    return func;
-  }
-  
   @Override
   public MajorType getMajorType() {
-    return func.getDataType(this.args);
+    throw new UnsupportedOperationException(
+      "No return type as FunctionCall is not a materialized expression");
   }
 
   @Override
   public String toString() {
     final int maxLen = 10;
-    return "FunctionCall [func=" + func + ", args="
+    return "FunctionCall [func=" + name + ", args="
         + (args != null ? args.subList(0, Math.min(args.size(), maxLen)) : null) + ", pos=" + pos + "]";
   }  
 }

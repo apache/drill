@@ -15,14 +15,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.common.expression;
+package org.apache.drill.exec.expr.fn.impl.hive;
 
-import java.util.List;
+import org.apache.drill.exec.expr.holders.ValueHolder;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
+import org.apache.hadoop.hive.ql.udf.generic.GenericUDF;
 
-/** 
- * Validates whether the set of arguments are acceptable
- */
-public interface ArgumentValidator {
-  public void validateArguments(ExpressionPosition expr, List<LogicalExpression> expressions, ErrorCollector errors);
-  public String[] getArgumentNamesByPosition();
+public class DrillDeferredObject implements GenericUDF.DeferredObject {
+  public ValueHolder valueHolder;
+
+  @Override
+  public void prepare(int version) throws HiveException {}
+
+  @Override
+  public Object get() throws HiveException {
+    return valueHolder;
+  }
 }

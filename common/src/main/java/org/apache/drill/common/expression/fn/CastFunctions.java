@@ -17,24 +17,32 @@
  */
 package org.apache.drill.common.expression.fn;
 
-import org.apache.drill.common.expression.Arg;
-import org.apache.drill.common.expression.BasicArgumentValidator;
-import org.apache.drill.common.expression.CallProvider;
-import org.apache.drill.common.expression.FunctionDefinition;
-import org.apache.drill.common.expression.OutputTypeDeterminer.FixedType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 
-public class StringFunctions implements CallProvider{
+import java.util.HashMap;
+import java.util.Map;
 
-  
-  @Override
-  public FunctionDefinition[] getFunctionDefintions() {
-    return new FunctionDefinition[]{
-        FunctionDefinition.simple("regex_like", new BasicArgumentValidator( //
-            new Arg(true, false, "pattern", MinorType.VARCHAR, MinorType.VARCHAR), //
-            new Arg(false, true, "value", MinorType.FIXEDCHAR, MinorType.VARCHAR, MinorType.VARCHAR) ), FixedType.FIXED_BIT),
-    };
+public class CastFunctions {
 
+  private static Map<MinorType, String> TYPE2FUNC = new HashMap<>();
+
+  static {
+    TYPE2FUNC.put(MinorType.BIGINT, "castBIGINT");
+    TYPE2FUNC.put(MinorType.INT, "castINT");
+    TYPE2FUNC.put(MinorType.FLOAT4, "castFLOAT4");
+    TYPE2FUNC.put(MinorType.FLOAT8, "castFLOAT8");
+    TYPE2FUNC.put(MinorType.VARCHAR, "castVARCHAR");
+    TYPE2FUNC.put(MinorType.VAR16CHAR, "castVAR16CHAR");
+    TYPE2FUNC.put(MinorType.VARBINARY, "castVARBINARY");
   }
-	
+
+  public static String getCastFunc(MinorType targetMinorType) {
+    String func = TYPE2FUNC.get(targetMinorType);
+    if (func != null)
+      return func;
+
+    throw new RuntimeException(
+      String.format("cast function for type %s is not defined", targetMinorType.name()));
+  }
 }
+

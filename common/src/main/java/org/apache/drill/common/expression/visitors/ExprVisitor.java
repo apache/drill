@@ -18,6 +18,7 @@
 package org.apache.drill.common.expression.visitors;
 
 import org.apache.drill.common.expression.FunctionCall;
+import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.IfExpression;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
@@ -30,14 +31,15 @@ import org.apache.drill.common.expression.ValueExpressions.IntExpression;
 
 
 public interface ExprVisitor<T, VAL, EXCEP extends Exception> {
-	public T visitFunctionCall(FunctionCall call, VAL value) throws EXCEP;
-	public T visitIfExpression(IfExpression ifExpr, VAL value) throws EXCEP;
-	public T visitSchemaPath(SchemaPath path, VAL value) throws EXCEP;
+  public T visitFunctionCall(FunctionCall call, VAL value) throws EXCEP;
+  public T visitFunctionHolderExpression(FunctionHolderExpression holder, VAL value) throws EXCEP;
+  public T visitIfExpression(IfExpression ifExpr, VAL value) throws EXCEP;
+  public T visitSchemaPath(SchemaPath path, VAL value) throws EXCEP;
   public T visitIntConstant(IntExpression intExpr, VAL value) throws EXCEP;
   public T visitFloatConstant(FloatExpression fExpr, VAL value) throws EXCEP;
-	public T visitLongConstant(LongExpression intExpr, VAL value) throws EXCEP;
-	public T visitDoubleConstant(DoubleExpression dExpr, VAL value) throws EXCEP;
-	public T visitBooleanConstant(BooleanExpression e, VAL value) throws EXCEP;
-	public T visitQuotedStringConstant(QuotedString e, VAL value) throws EXCEP;	
-	public T visitUnknown(LogicalExpression e, VAL value) throws EXCEP;
+  public T visitLongConstant(LongExpression intExpr, VAL value) throws EXCEP;
+  public T visitDoubleConstant(DoubleExpression dExpr, VAL value) throws EXCEP;
+  public T visitBooleanConstant(BooleanExpression e, VAL value) throws EXCEP;
+  public T visitQuotedStringConstant(QuotedString e, VAL value) throws EXCEP;
+  public T visitUnknown(LogicalExpression e, VAL value) throws EXCEP;
 }

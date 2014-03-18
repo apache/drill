@@ -18,6 +18,7 @@
 package org.apache.drill.common.expression.visitors;
 
 import org.apache.drill.common.expression.FunctionCall;
+import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.IfExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.ValueExpressions.BooleanExpression;
@@ -32,6 +33,11 @@ public abstract class SimpleExprVisitor<T> implements ExprVisitor<T, Void, Runti
   @Override
   public T visitFunctionCall(FunctionCall call, Void value) throws RuntimeException {
     return visitFunctionCall(call);
+  }
+
+  @Override
+  public T visitFunctionHolderExpression(FunctionHolderExpression holder, Void value) throws RuntimeException {
+    return visitFunctionHolderExpression(holder);
   }
 
   @Override
@@ -76,6 +82,7 @@ public abstract class SimpleExprVisitor<T> implements ExprVisitor<T, Void, Runti
 
   
   public abstract T visitFunctionCall(FunctionCall call);
+  public abstract T visitFunctionHolderExpression(FunctionHolderExpression call);
   public abstract T visitIfExpression(IfExpression ifExpr);
   public abstract T visitSchemaPath(SchemaPath path);
   public abstract T visitIntConstant(IntExpression intExpr);

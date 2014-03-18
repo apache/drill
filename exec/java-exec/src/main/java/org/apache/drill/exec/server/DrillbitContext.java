@@ -23,7 +23,6 @@ import java.util.Collection;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.common.expression.FunctionRegistry;
 import org.apache.drill.exec.cache.DistributedCache;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
@@ -56,7 +55,6 @@ public class DrillbitContext {
   private final Controller controller;
   private final WorkEventBus workBus;
   private final FunctionImplementationRegistry functionRegistry;
-  private final FunctionRegistry functionRegistryX;
   
   public DrillbitContext(DrillbitEndpoint endpoint, BootStrapContext context, ClusterCoordinator coord, Controller controller, DataConnectionCreator connectionsPool, DistributedCache cache, WorkEventBus workBus) {
     super();
@@ -75,11 +73,6 @@ public class DrillbitContext {
     this.reader = new PhysicalPlanReader(context.getConfig(), context.getConfig().getMapper(), endpoint, storagePlugins);
     this.operatorCreatorRegistry = new OperatorCreatorRegistry(context.getConfig());
     this.functionRegistry = new FunctionImplementationRegistry(context.getConfig());
-    this.functionRegistryX = new FunctionRegistry(context.getConfig());
-  }
-
-  public FunctionRegistry getFunctionRegistry(){
-    return functionRegistryX;
   }
   
   public FunctionImplementationRegistry getFunctionImplementationRegistry() {

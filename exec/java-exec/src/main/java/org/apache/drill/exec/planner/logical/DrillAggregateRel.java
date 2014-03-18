@@ -25,6 +25,7 @@ import net.hydromatic.optiq.util.BitSets;
 
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FieldReference;
+import org.apache.drill.common.expression.FunctionCallFactory;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.logical.data.GroupingAggregate;
@@ -96,7 +97,7 @@ public class DrillAggregateRel extends AggregateRelBase implements DrillRel {
     
     // for count(1).
     if(args.isEmpty()) args.add(new ValueExpressions.LongExpression(1l));
-    LogicalExpression expr = implementor.getContext().getRegistry().createExpression(call.getAggregation().getName().toLowerCase(), ExpressionPosition.UNKNOWN, args);
+    LogicalExpression expr = FunctionCallFactory.createExpression(call.getAggregation().getName().toLowerCase(), ExpressionPosition.UNKNOWN, args);
     return expr;
   }
   

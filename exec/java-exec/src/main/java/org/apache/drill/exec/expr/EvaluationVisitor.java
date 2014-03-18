@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.Set;
 
 import org.apache.drill.common.expression.FunctionCall;
+import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.IfExpression;
 import org.apache.drill.common.expression.IfExpression.IfCondition;
 import org.apache.drill.common.expression.LogicalExpression;
@@ -40,6 +41,7 @@ import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.compile.sig.ConstantExpressionIdentifier;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
+import org.apache.drill.exec.expr.fn.HiveFuncHolder;
 import org.apache.drill.exec.physical.impl.filter.ReturnValueExpression;
 import org.apache.drill.exec.record.NullExpression;
 import org.apache.drill.exec.vector.ValueHolderHelper;
@@ -56,7 +58,7 @@ import com.sun.codemodel.JVar;
 public class EvaluationVisitor {
 
   private final FunctionImplementationRegistry registry;
-  
+
   public EvaluationVisitor(FunctionImplementationRegistry registry) {
     super();
     this.registry = registry;
@@ -74,18 +76,47 @@ public class EvaluationVisitor {
     
     @Override
     public HoldingContainer visitFunctionCall(FunctionCall call, ClassGenerator<?> generator) throws RuntimeException {
-      DrillFuncHolder holder = registry.getFunction(call);
-      JVar[] workspaceVars = holder.renderStart(generator, null);
+      throw new UnsupportedOperationException("FunctionCall is not expected here. "+
+        "It should have been converted to FunctionHolderExpression in materialization");
+    }
 
-      
-      if(holder.isNested()) generator.getMappingSet().enterChild();
-      HoldingContainer[] args = new HoldingContainer[call.args.size()];
-      for (int i = 0; i < call.args.size(); i++) {
-        args[i] = call.args.get(i).accept(this, generator);
+    @Override
+    public HoldingContainer visitFunctionHolderExpression(
+      FunctionHolderExpression holderExpr, ClassGenerator<?> generator) throws RuntimeException {
+      // TODO: hack: (Drill/Hive)FuncHolderExpr reference classes in exec so
+      // code generate methods can't be superclass FunctionHolderExpression
+      // which is defined in common
+
+      if (holderExpr instanceof DrillFuncHolderExpr) {
+        DrillFuncHolder holder = ((DrillFuncHolderExpr)holderExpr).getHolder();
+        JVar[] workspaceVars = holder.renderStart(generator, null);
+
+        if(holder.isNested()) generator.getMappingSet().enterChild();
+
+        HoldingContainer[] args = new HoldingContainer[holderExpr.args.size()];
+        for (int i = 0; i < holderExpr.args.size(); i++) {
+          args[i] = holderExpr.args.get(i).accept(this, generator);
+        }
+
+        holder.renderMiddle(generator, args, workspaceVars);
+
+        if(holder.isNested()) generator.getMappingSet().exitChild();
+
+        return holder.renderEnd(generator, args, workspaceVars);
+
+      } else if (holderExpr instanceof HiveFuncHolderExpr) {
+
+        HiveFuncHolder holder = ((HiveFuncHolderExpr)holderExpr).getHolder();
+
+        HoldingContainer[] args = new HoldingContainer[holderExpr.args.size()];
+        for (int i = 0; i < holderExpr.args.size(); i++) {
+          args[i] = holderExpr.args.get(i).accept(this, generator);
+        }
+
+        return holder.renderEnd(generator, args, holder.renderStart(generator, null));
       }
-      holder.renderMiddle(generator, args, workspaceVars);
-      if(holder.isNested()) generator.getMappingSet().exitChild();
-      return holder.renderEnd(generator, args, workspaceVars);
+
+      throw new UnsupportedOperationException(String.format("Unknown expression '%s'", holderExpr.getClass().getCanonicalName()));
     }
 
     @Override
@@ -297,19 +328,25 @@ public class EvaluationVisitor {
       super();
       this.constantBoundaries = constantBoundaries;
     }
-    
+
     @Override
     public HoldingContainer visitFunctionCall(FunctionCall e, ClassGenerator<?> generator) throws RuntimeException {
+      throw new UnsupportedOperationException("FunctionCall is not expected here. "+
+        "It should have been converted to FunctionHolderExpression in materialization");
+    }
+
+    @Override
+    public HoldingContainer visitFunctionHolderExpression(FunctionHolderExpression e, ClassGenerator<?> generator) throws RuntimeException {
       if (constantBoundaries.contains(e)) {
         generator.getMappingSet().enterConstant();
-        HoldingContainer c = super.visitFunctionCall(e, generator);
+        HoldingContainer c = super.visitFunctionHolderExpression(e, generator);
         //generator.getMappingSet().exitConstant();
         //return c;
         return renderConstantExpression(generator, c);
       } else if (generator.getMappingSet().isWithinConstant()) {
-        return super.visitFunctionCall(e, generator).setConstant(true);
+        return super.visitFunctionHolderExpression(e, generator).setConstant(true);
       } else {
-        return super.visitFunctionCall(e, generator);
+        return super.visitFunctionHolderExpression(e, generator);
       }
     }
 

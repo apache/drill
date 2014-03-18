@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.drill.common.expression.FunctionCall;
+import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.IfExpression;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
@@ -86,9 +87,14 @@ public class ConstantExpressionIdentifier implements ExprVisitor<Boolean, Identi
   
   @Override
   public Boolean visitFunctionCall(FunctionCall call, IdentityHashMap<LogicalExpression, Object> value){
-    return checkChildren(call, value, !call.getDefinition().isAggregating() && !call.getDefinition().isRandom());
+    throw new UnsupportedOperationException("FunctionCall is not expected here. "+
+      "It should have been converted to FunctionHolderExpression in materialization");
   }
 
+  @Override
+  public Boolean visitFunctionHolderExpression(FunctionHolderExpression holder, IdentityHashMap<LogicalExpression, Object> value) throws RuntimeException {
+    return checkChildren(holder, value, !holder.isAggregating() && !holder.isRandom());
+   }
   
   @Override
   public Boolean visitIfExpression(IfExpression ifExpr, IdentityHashMap<LogicalExpression, Object> value){

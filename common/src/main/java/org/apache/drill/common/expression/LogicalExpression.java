@@ -75,8 +75,6 @@ public interface LogicalExpression extends Iterable<LogicalExpression>{
 
         //TODO: move functionregistry and error collector to injectables.
         //ctxt.findInjectableValue(valueId, forProperty, beanInstance)
-
-        parser.setRegistry(new FunctionRegistry(config));
         parse_return ret = parser.parse();
 
         // ret.e.resolveAndValidate(expr, errorCollector);

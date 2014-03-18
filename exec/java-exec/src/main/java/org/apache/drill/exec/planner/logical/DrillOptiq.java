@@ -22,6 +22,8 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.drill.common.expression.FieldReference;
+import org.apache.drill.common.expression.FunctionCall;
+import org.apache.drill.common.expression.FunctionCallFactory;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.ValueExpressions;
@@ -92,7 +94,7 @@ public class DrillOptiq {
         args = Lists.reverse(args);
         LogicalExpression lastArg = args.get(0);
         for(int i = 1; i < args.size(); i++){
-          lastArg = context.getRegistry().createExpression(funcName, Lists.newArrayList(args.get(i), lastArg));
+          lastArg = FunctionCallFactory.createExpression(funcName, Lists.newArrayList(args.get(i), lastArg));
         }
 
         return lastArg;
@@ -102,7 +104,7 @@ public class DrillOptiq {
         for(RexNode n : call.getOperands()){
           exprs.add(n.accept(this));
         }
-        return context.getRegistry().createExpression(call.getOperator().getName().toLowerCase(), Lists.newArrayList(exprs));
+        return FunctionCallFactory.createExpression(call.getOperator().getName().toLowerCase(), Lists.newArrayList(exprs));
       case SPECIAL:
         logger.debug("Special");
         switch(call.getKind()){
@@ -165,7 +167,7 @@ public class DrillOptiq {
       switch(call.getType().getSqlTypeName().getName()){
       case "VARCHAR": {
         args = Lists.newArrayList(arg, new LongExpression(call.getType().getPrecision()));
-        return context.getRegistry().createExpression("castVARCHAR", args);
+        return FunctionCallFactory.createExpression("castVARCHAR", args);
       }
       case "INTEGER": fname = "castINT"; break;
       case "FLOAT": fname = "castFLOAT4"; break;
@@ -173,7 +175,7 @@ public class DrillOptiq {
       case "DECIMAL": throw new UnsupportedOperationException("Need to add decimal.");
       default: fname = "cast" + call.getType().getSqlTypeName().getName();
       }
-      return context.getRegistry().createExpression(fname, args);
+      return FunctionCallFactory.createExpression(fname, args);
 
     }
     

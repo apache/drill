@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.expr.fn;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
@@ -35,7 +34,6 @@ import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder.ValueReference;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder.WorkspaceReference;
-import org.apache.drill.exec.expr.fn.impl.GCompareBigIntNullableBigInt;
 import org.apache.drill.exec.expr.holders.ValueHolder;
 import org.codehaus.commons.compiler.CompileException;
 import org.codehaus.janino.Java.CompilationUnit;
@@ -92,7 +90,12 @@ public class FunctionConverter {
     if(template == null){
       return failure("Class does not declare FunctionTemplate annotation.", clazz);
     }
-    
+
+    if ((template.name().isEmpty() && template.names().length == 0) || // none set
+        (!template.name().isEmpty() && template.names().length != 0)) { // both are set
+      return failure("Must use only one annotations 'name' or 'names', not both", clazz);
+    }
+
     // start by getting field information.
     List<ValueReference> params = Lists.newArrayList();
     List<WorkspaceReference> workspaceFields = Lists.newArrayList();
@@ -116,8 +119,6 @@ public class FunctionConverter {
         return failure("The field must be only one of @Param, @Output or @Workspace.  It currently has more than one of these annotations.", clazz, field);
       }
 
-      
-      
       if(param != null || output != null){
         
         // check that param and output are value holders.
@@ -180,13 +181,15 @@ public class FunctionConverter {
       ValueReference[] ps = params.toArray(new ValueReference[params.size()]);
       WorkspaceReference[] works = workspaceFields.toArray(new WorkspaceReference[workspaceFields.size()]);
 
-      
+
+      String[] registeredNames = ((template.name().isEmpty()) ? template.names() : new String[] {template.name()} );
       switch(template.scope()){
       case POINT_AGGREGATE:
-        return new DrillAggFuncHolder(template.scope(), template.nulls(), template.isBinaryCommutative(), template.name(), ps, outputField, works, methods, imports);
+        return new DrillAggFuncHolder(template.scope(), template.nulls(), template.isBinaryCommutative(),
+          template.isRandom(), registeredNames, ps, outputField, works, methods, imports);
       case SIMPLE:
-        DrillFuncHolder fh = new DrillSimpleFuncHolder(template.scope(), template.nulls(), template.isBinaryCommutative(), template.name(), ps, outputField, works, methods, imports);
-        return fh;
+        return new DrillSimpleFuncHolder(template.scope(), template.nulls(), template.isBinaryCommutative(),
+          template.isRandom(), registeredNames, ps, outputField, works, methods, imports);
 
       case HOLISTIC_AGGREGATE:
       case RANGE_AGGREGATE:

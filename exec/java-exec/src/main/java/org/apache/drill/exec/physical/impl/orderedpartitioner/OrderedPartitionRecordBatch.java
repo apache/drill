@@ -27,10 +27,8 @@ import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FieldReference;
-import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.logical.data.Order;
 import org.apache.drill.common.logical.data.Order.Ordering;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
@@ -45,11 +43,10 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
-import org.apache.drill.exec.expr.HoldingContainerExpression;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.ValueVectorReadExpression;
 import org.apache.drill.exec.expr.ValueVectorWriteExpression;
-import org.apache.drill.exec.expr.fn.impl.ComparatorFunctions;
+import org.apache.drill.exec.expr.fn.ComparatorFunctionHelper;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.OrderedPartitionSender;
 import org.apache.drill.exec.physical.impl.sort.SortBatch;
@@ -72,7 +69,6 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.eigenbase.rel.RelFieldCollation.Direction;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.sun.codemodel.JConditional;
 import com.sun.codemodel.JExpr;
@@ -533,10 +529,8 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
           new ValueVectorReadExpression(new TypedFieldId(expr.getMajorType(), count++)), false);
       cg.setMappingSet(mainMapping);
 
-      FunctionCall f = new FunctionCall(ComparatorFunctions.COMPARE_TO, ImmutableList.of(
-          (LogicalExpression) new HoldingContainerExpression(left), new HoldingContainerExpression(right)),
-          ExpressionPosition.UNKNOWN);
-      ClassGenerator.HoldingContainer out = cg.addExpr(f, false);
+      LogicalExpression fh = ComparatorFunctionHelper.get(left, right, context.getFunctionRegistry());
+      ClassGenerator.HoldingContainer out = cg.addExpr(fh, false);
       JConditional jc = cg.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)));
 
       if (od.getDirection() == Direction.Ascending) {

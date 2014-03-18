@@ -34,7 +34,7 @@ public class MathFunctions{
   
   private MathFunctions(){}
   
-  @FunctionTemplate(name = "negative", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(names = {"negative", "u-", "-"}, scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
   public static class Negative implements DrillSimpleFunc{
     
     @Param BigIntHolder input;
@@ -63,7 +63,8 @@ public class MathFunctions{
 
   }  
 
-  @FunctionTemplate(name = "random", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "random", isRandom = true,
+    scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
   public static class Random implements DrillSimpleFunc{
     @Output  Float8Holder out;
 

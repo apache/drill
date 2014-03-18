@@ -1,0 +1,92 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+# http:# www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+{
+  map: [
+    {
+      hiveType: "BOOLEAN",
+      hiveOI: "BooleanObjectInspector",
+      serdeConstant: "BOOLEAN_TYPE_NAME",
+      javaType: "boolean",
+      minorType: "BIT",
+      holder: "Bit"
+    },
+    {
+      hiveType: "BYTE",
+      hiveOI: "ByteObjectInspector",
+      serdeConstant: "TINYINT_TYPE_NAME",
+      javaType: "byte",
+      minorType: "TINYINT",
+      holder: "TinyInt"
+    },
+    {
+      hiveType: "SHORT",
+      hiveOI: "ShortObjectInspector",
+      serdeConstant: "SMALLINT_TYPE_NAME",
+      javaType: "short",
+      minorType: "SMALLINT",
+      holder: "SmallInt"
+    },
+    {
+      hiveType: "INT",
+      hiveOI: "IntObjectInspector",
+      serdeConstant: "INT_TYPE_NAME",
+      javaType: "int",
+      minorType: "INT",
+      holder: "Int"
+    },
+    {
+      hiveType: "LONG",
+      hiveOI: "LongObjectInspector",
+      serdeConstant: "BIGINT_TYPE_NAME",
+      javaType: "long",
+      minorType: "BIGINT",
+      holder: "BigInt"
+    },
+    {
+      hiveType: "FLOAT",
+      hiveOI: "FloatObjectInspector",
+      serdeConstant: "FLOAT_TYPE_NAME",
+      javaType: "float",
+      minorType: "FLOAT4",
+      holder: "Float4"
+    },
+    {
+      hiveType: "DOUBLE",
+      hiveOI: "DoubleObjectInspector",
+      serdeConstant: "DOUBLE_TYPE_NAME",
+      javaType: "double",
+      minorType: "FLOAT8",
+      holder: "Float8"
+    },
+    {
+      hiveType: "VARCHAR",
+      hiveOI: "HiveVarcharObjectInspector",
+      serdeConstant: "VARCHAR_TYPE_NAME",
+      javaType: "",
+      minorType: "VARCHAR",
+      holder: "VarChar"
+    },
+    {
+      hiveType: "STRING",
+      hiveOI: "StringObjectInspector",
+      serdeConstant: "STRING_TYPE_NAME",
+      javaType: "",
+      minorType: "VAR16CHAR",
+      holder: "Var16Char"
+    }
+  ]
+}

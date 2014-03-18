@@ -38,10 +38,9 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
-import org.apache.drill.exec.expr.HoldingContainerExpression;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.ValueVectorReadExpression;
-import org.apache.drill.exec.expr.fn.impl.ComparatorFunctions;
+import org.apache.drill.exec.expr.fn.ComparatorFunctionHelper;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.MergingReceiverPOP;
 import org.apache.drill.exec.proto.UserBitShared;
@@ -541,11 +540,8 @@ public class MergingRecordBatch implements RecordBatch {
                                                                                 rightVar.ref("isSet"));
 
       // generate the comparison function
-      FunctionCall f = new FunctionCall(ComparatorFunctions.COMPARE_TO,
-                                        ImmutableList.of((LogicalExpression) new HoldingContainerExpression(left),
-                                                                             new HoldingContainerExpression(right)),
-                                        ExpressionPosition.UNKNOWN);
-      ClassGenerator.HoldingContainer out = cg.addExpr(f, false);
+      LogicalExpression fh = ComparatorFunctionHelper.get(left, right, context.getFunctionRegistry());
+      ClassGenerator.HoldingContainer out = cg.addExpr(fh, false);
 
       // generate less than/greater than checks (fixing results for ASCending vs. DESCending)
       cg.getEvalBlock()._if(out.getValue().eq(JExpr.lit(1)))

@@ -17,12 +17,6 @@
  */
 package org.apache.drill.exec.expr.fn.impl;
 
-import org.apache.drill.common.expression.CallProvider;
-import org.apache.drill.common.expression.FunctionDefinition;
-import org.apache.drill.common.expression.NoArgValidator;
-import org.apache.drill.common.expression.OutputTypeDeterminer;
-import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
@@ -31,11 +25,9 @@ import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.record.RecordBatch;
 
-
-
 public class Alternator {
   
-  @FunctionTemplate(name = "alternate", scope = FunctionScope.SIMPLE)
+  @FunctionTemplate(name = "alternate", isRandom = true, scope = FunctionScope.SIMPLE)
   public static class Alternate2 implements DrillSimpleFunc{
     @Workspace int val;
     @Output BigIntHolder out;
@@ -55,7 +47,7 @@ public class Alternator {
     }
   }
 
-  @FunctionTemplate(name = "alternate3", scope = FunctionScope.SIMPLE)
+  @FunctionTemplate(name = "alternate3", isRandom = true, scope = FunctionScope.SIMPLE)
   public static class Alternate3 implements DrillSimpleFunc{
     @Workspace int val;
     @Output BigIntHolder out;
@@ -75,17 +67,5 @@ public class Alternator {
         val = 0;
       }
     }
-  }
-  
-  public static class Provider implements CallProvider{
-
-    @Override
-    public FunctionDefinition[] getFunctionDefintions() {
-      return new FunctionDefinition[]{
-          FunctionDefinition.simpleRandom("alternate", NoArgValidator.VALIDATOR, new OutputTypeDeterminer.FixedType(Types.required(MinorType.BIGINT)), "alternate"),
-          FunctionDefinition.simpleRandom("alternate3", NoArgValidator.VALIDATOR, new OutputTypeDeterminer.FixedType(Types.required(MinorType.BIGINT)), "alternate3")
-      };
-    }
-    
   }
 }

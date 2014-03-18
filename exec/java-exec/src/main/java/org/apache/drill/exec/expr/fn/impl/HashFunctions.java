@@ -17,10 +17,6 @@
  */
 package org.apache.drill.exec.expr.fn.impl;
 
-import org.apache.drill.common.expression.ArgumentValidators;
-import org.apache.drill.common.expression.CallProvider;
-import org.apache.drill.common.expression.FunctionDefinition;
-import org.apache.drill.common.expression.OutputTypeDeterminer;
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
@@ -30,18 +26,6 @@ import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
 
 public class HashFunctions {
-
-  public static final FunctionDefinition HASH = FunctionDefinition.simple("hash", new ArgumentValidators.AnyTypeAllowed(1),
-      OutputTypeDeterminer.FIXED_INT, "hash");
-  
-  public static class Provider implements CallProvider {
-
-    @Override
-    public FunctionDefinition[] getFunctionDefintions() {
-      return new FunctionDefinition[] { HASH };
-    }
-
-  }
 
   @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL )
   public static class NullableFloatHash implements DrillSimpleFunc {

@@ -17,20 +17,12 @@
  */
 package org.apache.drill.exec.planner.logical;
 
-import org.apache.drill.common.expression.FunctionRegistry;
-
+// TODO: Can we remove this completely? Or is there any plan to add any props in future for parsing?
 public class DrillParseContext {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillParseContext.class);
-  
-  private final FunctionRegistry registry;
-  
-  public DrillParseContext(FunctionRegistry registry) {
+
+  public DrillParseContext() {
     super();
-    this.registry = registry;
   }
 
-  public FunctionRegistry getRegistry(){
-    return registry;
-  }
-  
 }

@@ -31,36 +31,20 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
 
   @Override
   public Void visitFunctionCall(FunctionCall call, StringBuilder sb) throws RuntimeException {
-    FunctionDefinition func = call.getDefinition();
     ImmutableList<LogicalExpression> args = call.args;
-    if (func.isOperator()) {
-      if (args.size() == 1) { // unary
-        func.addRegisteredName(sb);
-        sb.append("(");
-        args.get(0).accept(this, sb);
-        sb.append(")");
-      } else {
-        for (int i = 0; i < args.size(); i++) {
-          if (i != 0) {
-            sb.append(" ");
-            func.addRegisteredName(sb);
-          }
-          sb.append(" (");
-          args.get(i).accept(this, sb);
-          sb.append(") ");
-        }
-      }
-    } else { // normal function
-
-      func.addRegisteredName(sb);
-      sb.append("(");
-      for (int i = 0; i < args.size(); i++) {
-        if (i != 0) sb.append(", ");
-        args.get(i).accept(this, sb);
-      }
-      sb.append(") ");
+    sb.append(call.getName());
+    sb.append("(");
+    for (int i = 0; i < args.size(); i++) {
+      if (i != 0) sb.append(", ");
+      args.get(i).accept(this, sb);
     }
+    sb.append(") ");
     return null;
+  }
+
+  @Override
+  public Void visitFunctionHolderExpression(FunctionHolderExpression holder, StringBuilder sb) throws RuntimeException {
+    throw new UnsupportedOperationException();
   }
 
   @Override

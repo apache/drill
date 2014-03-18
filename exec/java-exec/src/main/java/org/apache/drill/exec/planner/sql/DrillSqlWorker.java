@@ -24,7 +24,6 @@ import net.hydromatic.optiq.tools.RelConversionException;
 import net.hydromatic.optiq.tools.RuleSet;
 import net.hydromatic.optiq.tools.ValidationException;
 
-import org.apache.drill.common.expression.FunctionRegistry;
 import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.logical.PlanProperties.Generator.ResultMode;
 import org.apache.drill.exec.planner.logical.DrillImplementor;
@@ -45,11 +44,9 @@ import org.eigenbase.sql.parser.SqlParseException;
 public class DrillSqlWorker {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillSqlWorker.class);
 
-  private final FunctionRegistry registry;
   private final Planner planner;
   
-  public DrillSqlWorker(DrillSchemaFactory schemaFactory, FunctionRegistry functionRegistry) throws Exception {
-    this.registry = functionRegistry;
+  public DrillSqlWorker(DrillSchemaFactory schemaFactory) throws Exception {
     this.planner = Frameworks.getPlanner(ConnectionConfig.Lex.MYSQL, schemaFactory, SqlStdOperatorTable.instance(), new RuleSet[]{DrillRuleSets.DRILL_BASIC_RULES});
   }
   
@@ -81,7 +78,7 @@ public class DrillSqlWorker {
     }else{
       convertedRelNode = new DrillScreenRel(convertedRelNode.getCluster(), convertedRelNode.getTraitSet(), convertedRelNode);
     }
-    DrillImplementor implementor = new DrillImplementor(new DrillParseContext(registry), resultMode);
+    DrillImplementor implementor = new DrillImplementor(new DrillParseContext(), resultMode);
     implementor.go( (DrillRel) convertedRelNode);
     planner.close();
     planner.reset();

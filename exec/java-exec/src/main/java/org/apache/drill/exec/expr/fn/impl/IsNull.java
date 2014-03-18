@@ -17,10 +17,6 @@
  */
 package org.apache.drill.exec.expr.fn.impl;
 
-import org.apache.drill.common.expression.ArgumentValidators;
-import org.apache.drill.common.expression.CallProvider;
-import org.apache.drill.common.expression.FunctionDefinition;
-import org.apache.drill.common.expression.OutputTypeDeterminer;
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.Output;
@@ -29,7 +25,7 @@ import org.apache.drill.exec.expr.holders.BitHolder;
 import org.apache.drill.exec.expr.holders.NullableFloat8Holder;
 import org.apache.drill.exec.record.RecordBatch;
 
-@FunctionTemplate(name = "isNull", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+@FunctionTemplate(names = {"isNull", "isnull"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
 public class IsNull implements DrillSimpleFunc {
 
   @Param NullableFloat8Holder input;
@@ -40,20 +36,5 @@ public class IsNull implements DrillSimpleFunc {
   public void eval() {
     out.value = (input.isSet == 0 ? 1 : 0);
   }
-
-  public static class Provider implements CallProvider {
-
-    @Override
-    public FunctionDefinition[] getFunctionDefintions() {
-      return new FunctionDefinition[] {
-          FunctionDefinition.simple("isNull",
-                                    new ArgumentValidators.AnyTypeAllowed(1),
-                                    OutputTypeDeterminer.FIXED_BIT,
-                                    "isnull")
-      };
-    }
-
-  }
-
 }
 

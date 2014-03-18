@@ -20,11 +20,6 @@ package org.apache.drill.exec.expr.fn.impl;
 
 import io.netty.buffer.ByteBuf;
 
-import org.apache.drill.common.expression.Arg;
-import org.apache.drill.common.expression.ArgumentValidators.*;
-import org.apache.drill.common.expression.BasicArgumentValidator;
-import org.apache.drill.common.expression.CallProvider;
-import org.apache.drill.common.expression.FunctionDefinition;
 import org.apache.drill.common.expression.OutputTypeDeterminer;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -115,7 +110,7 @@ public class StringFunctions{
   }
   
 
-  @FunctionTemplate(name = "char_length", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(names = {"char_length", "character_length", "length"}, scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
   public static class CharLength implements DrillSimpleFunc{
     
     @Param  VarCharHolder input;
@@ -279,7 +274,7 @@ public class StringFunctions{
   // Follow Postgre.  
   //  -- Valid "offset": [1, string_length], 
   //  -- Valid "length": [1, up to string_length - offset + 1], if length > string_length - offset +1, get the substr up to the string_lengt.   
-  @FunctionTemplate(name = "substring", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(names = {"substring", "substr"}, scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
   public static class Substring implements DrillSimpleFunc{
 
     @Param VarCharHolder string;
@@ -790,76 +785,5 @@ public class StringFunctions{
         out.buffer.setByte(out.end++, right.buffer.getByte(id));
     } 
     
-  }
-
-  
-  /*
-   * Function Definitions
-   */
-  
-  public static class Provider implements CallProvider {
-
-    @Override
-    public FunctionDefinition[] getFunctionDefintions() {
-      return new FunctionDefinition[] {
-          FunctionDefinition.simple("like", new AllowedTypeList(2, Types.required(MinorType.VARCHAR), Types.optional(MinorType.VARCHAR)), new OutputTypeDeterminer.NullIfNullType(MinorType.BIT), "like"),   
-          FunctionDefinition.simple("similar", new AllowedTypeList(2, Types.required(MinorType.VARCHAR), Types.optional(MinorType.VARCHAR)), new OutputTypeDeterminer.NullIfNullType(MinorType.BIT), "similar"),
-          FunctionDefinition.simple("regexp_replace", new AllowedTypeList(3, Types.required(MinorType.VARCHAR), Types.optional(MinorType.VARCHAR)), new OutputTypeDeterminer.NullIfNullType(MinorType.VARCHAR), "regexp_replace"),
-          FunctionDefinition.simple("char_length", new AllowedTypeList(1, Types.required(MinorType.VARCHAR), Types.optional(MinorType.VARCHAR)), new OutputTypeDeterminer.NullIfNullType(MinorType.BIGINT), "char_length","character_length","length"),
-          FunctionDefinition.simple("octet_length", new AllowedTypeList(1, Types.required(MinorType.VARCHAR), Types.optional(MinorType.VARCHAR)), new OutputTypeDeterminer.NullIfNullType(MinorType.BIGINT), "octet_length"),
-          FunctionDefinition.simple("bit_length", new AllowedTypeList(1, Types.required(MinorType.VARCHAR), Types.optional(MinorType.VARCHAR)), new OutputTypeDeterminer.NullIfNullType(MinorType.BIGINT), "bit_length"),     
-          FunctionDefinition.simple("position", new AllowedTypeList(2, Types.required(MinorType.VARCHAR), Types.optional(MinorType.VARCHAR)), new OutputTypeDeterminer.NullIfNullType(MinorType.BIGINT), "position"), 
-          FunctionDefinition.simple("strpos", new AllowedTypeList(2, Types.required(MinorType.VARCHAR), Types.optional(MinorType.VARCHAR)), new OutputTypeDeterminer.NullIfNullType(MinorType.BIGINT), "strpos"),           
-          FunctionDefinition.simple("lower", new AllowedTypeList(1, Types.required(MinorType.VARCHAR), Types.optional(MinorType.VARCHAR)), new OutputTypeDeterminer.NullIfNullType(MinorType.VARCHAR), "lower"),
-          FunctionDefinition.simple("upper", new AllowedTypeList(1, Types.required(MinorType.VARCHAR), Types.optional(MinorType.VARCHAR)), new OutputTypeDeterminer.NullIfNullType(MinorType.VARCHAR), "upper"),   
-          FunctionDefinition.simple("initcap", new AllowedTypeList(1, Types.required(MinorType.VARCHAR), Types.optional(MinorType.VARCHAR)), new OutputTypeDeterminer.NullIfNullType(MinorType.VARCHAR), "initcap"),   
-          FunctionDefinition.simple("substring", new BasicArgumentValidator(new Arg(Types.required(TypeProtos.MinorType.VARCHAR), Types.optional(TypeProtos.MinorType.VARCHAR)),
-                                                                            new Arg(Types.required(TypeProtos.MinorType.BIGINT),  Types.optional(TypeProtos.MinorType.BIGINT)),
-                                                                            new Arg(Types.required(TypeProtos.MinorType.BIGINT),  Types.optional(TypeProtos.MinorType.BIGINT))                                                
-                                                                           ),
-                                   new OutputTypeDeterminer.NullIfNullType(MinorType.VARCHAR),
-                                   "substring",
-                                   "substr"),
-          FunctionDefinition.simple("left", new BasicArgumentValidator(new Arg(Types.required(TypeProtos.MinorType.VARCHAR), Types.optional(TypeProtos.MinorType.VARCHAR)),                                            
-                                                                       new Arg(Types.required(TypeProtos.MinorType.BIGINT),  Types.optional(TypeProtos.MinorType.BIGINT))                                                
-                                                                      ),
-                                   new OutputTypeDeterminer.NullIfNullType(MinorType.VARCHAR),
-                                   "left"),
-          FunctionDefinition.simple("right",new BasicArgumentValidator(new Arg(Types.required(TypeProtos.MinorType.VARCHAR), Types.optional(TypeProtos.MinorType.VARCHAR)),                                            
-                                                                       new Arg(Types.required(TypeProtos.MinorType.BIGINT),  Types.optional(TypeProtos.MinorType.BIGINT))                                                
-                                                                      ),
-                                   new OutputTypeDeterminer.NullIfNullType(MinorType.VARCHAR),
-                                   "right"),
-          FunctionDefinition.simple("replace",new BasicArgumentValidator(new Arg(Types.required(TypeProtos.MinorType.VARCHAR), Types.optional(TypeProtos.MinorType.VARCHAR)),
-                                                                         new Arg(Types.required(TypeProtos.MinorType.VARCHAR), Types.optional(TypeProtos.MinorType.VARCHAR)),
-                                                                         new Arg(Types.required(TypeProtos.MinorType.VARCHAR), Types.optional(TypeProtos.MinorType.VARCHAR))
-                                                                        ),                                                 
-                                   new OutputTypeDeterminer.NullIfNullType(MinorType.VARCHAR),
-                                   "replace"),
-          FunctionDefinition.simple("lpad",new BasicArgumentValidator(new Arg(Types.required(TypeProtos.MinorType.VARCHAR), Types.optional(TypeProtos.MinorType.VARCHAR)),
-                                                                      new Arg(Types.required(TypeProtos.MinorType.BIGINT), Types.optional(TypeProtos.MinorType.BIGINT)),
-                                                                      new Arg(Types.required(TypeProtos.MinorType.VARCHAR), Types.optional(TypeProtos.MinorType.VARCHAR))
-                                                                     ),                                                 
-                                   new OutputTypeDeterminer.NullIfNullType(MinorType.VARCHAR),
-                                   "lpad") ,
-          FunctionDefinition.simple("rpad",new BasicArgumentValidator(new Arg(Types.required(TypeProtos.MinorType.VARCHAR), Types.optional(TypeProtos.MinorType.VARCHAR)),
-                                                                      new Arg(Types.required(TypeProtos.MinorType.BIGINT), Types.optional(TypeProtos.MinorType.BIGINT)),
-                                                                      new Arg(Types.required(TypeProtos.MinorType.VARCHAR), Types.optional(TypeProtos.MinorType.VARCHAR))
-                                                                      ),                                                 
-                                   new OutputTypeDeterminer.NullIfNullType(MinorType.VARCHAR),
-                                   "rpad"),
-          FunctionDefinition.simple("ltrim",new BasicArgumentValidator(new Arg(Types.required(TypeProtos.MinorType.VARCHAR), Types.optional(TypeProtos.MinorType.VARCHAR)),
-                                                                       new Arg(Types.required(TypeProtos.MinorType.VARCHAR), Types.optional(TypeProtos.MinorType.VARCHAR))
-                                                                      ),                                                 
-                                   new OutputTypeDeterminer.NullIfNullType(MinorType.VARCHAR),
-                                    "ltrim"),
-          FunctionDefinition.simple("rtrim",new BasicArgumentValidator(new Arg(Types.required(TypeProtos.MinorType.VARCHAR), Types.optional(TypeProtos.MinorType.VARCHAR)),
-                                                                       new Arg(Types.required(TypeProtos.MinorType.VARCHAR), Types.optional(TypeProtos.MinorType.VARCHAR))
-                                                                      ),                                                 
-                                   new OutputTypeDeterminer.NullIfNullType(MinorType.VARCHAR), "rtrim")  ,
-         FunctionDefinition.simple("concat", new AllowedTypeList(2, Types.required(MinorType.VARCHAR), Types.optional(MinorType.VARCHAR)), new OutputTypeDeterminer.NullIfNullType(MinorType.VARCHAR), "concat"),
-                                   
-      };
-    }
   }
 }

@@ -26,11 +26,25 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})
 public @interface FunctionTemplate {
-  
-  String name();
+
+  /**
+   * Use this annotation if there is only one name for function
+   * Note: If you use this annotation don't use {@link #names()}
+   * @return
+   */
+  String name() default "";
+
+  /**
+   * Use this annotation if there are multiple names for function
+   * Note: If you use this annotation don't use {@link #name()}
+   * @return
+   */
+  String[] names() default {};
+
   FunctionScope scope();
   NullHandling nulls() default NullHandling.INTERNAL;
   boolean isBinaryCommutative() default false;
+  boolean isRandom()  default false;
   
   public static enum NullHandling {
     INTERNAL, NULL_IF_NULL;

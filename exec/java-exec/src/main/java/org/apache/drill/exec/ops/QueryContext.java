@@ -20,7 +20,6 @@ package org.apache.drill.exec.ops;
 import java.util.Collection;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.expression.FunctionRegistry;
 import org.apache.drill.exec.cache.DistributedCache;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
@@ -82,10 +81,6 @@ public class QueryContext {
     return workBus;
   }
 
-  public FunctionRegistry getFunctionRegistry(){
-    return drillbitContext.getFunctionRegistry();
-  }
-  
   public DrillSchemaFactory getFactory(){
     return drillbitContext.getSchemaFactory();
   }

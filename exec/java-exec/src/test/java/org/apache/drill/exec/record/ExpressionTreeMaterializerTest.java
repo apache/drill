@@ -21,22 +21,17 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.util.List;
-
 import mockit.Injectable;
 import mockit.NonStrictExpectations;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.expression.ArgumentValidator;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.FunctionCall;
-import org.apache.drill.common.expression.FunctionDefinition;
 import org.apache.drill.common.expression.IfExpression;
 import org.apache.drill.common.expression.LogicalExpression;
-import org.apache.drill.common.expression.OutputTypeDeterminer;
 import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
@@ -207,25 +202,11 @@ public class ExpressionTreeMaterializerTest {
     };
 
     
-    LogicalExpression functionCallExpr = new FunctionCall(FunctionDefinition.simple("testFunc",
-        new ArgumentValidator() {
-          @Override
-          public void validateArguments(ExpressionPosition expr, List<LogicalExpression> expressions,
-              ErrorCollector errors) {
-            errors.addGeneralError(expr, "Error!");
-          }
-
-          @Override
-          public String[] getArgumentNamesByPosition() {
-            return new String[0];
-          }
-        }, OutputTypeDeterminer.FIXED_BIT), ImmutableList.of((LogicalExpression) // 
-            new FieldReference("test", ExpressionPosition.UNKNOWN) ), ExpressionPosition.UNKNOWN);
+    LogicalExpression functionCallExpr = new FunctionCall("testFunc",
+      ImmutableList.of((LogicalExpression) new FieldReference("test", ExpressionPosition.UNKNOWN) ),
+      ExpressionPosition.UNKNOWN);
     LogicalExpression newExpr = ExpressionTreeMaterializer.materialize(functionCallExpr, batch, ec, registry);
-    assertTrue(newExpr instanceof FunctionCall);
-    FunctionCall funcExpr = (FunctionCall) newExpr;
-    assertEquals(1, funcExpr.args.size());
-    assertEquals(bigIntType, funcExpr.args.get(0).getMajorType());
+    assertEquals(newExpr, null);
     assertEquals(1, ec.getErrorCount());
     System.out.println(ec.toErrorString());
   }
