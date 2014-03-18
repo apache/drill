@@ -39,9 +39,9 @@ public class TestExampleQueries {
         "  nations.N_NAME,\n" + 
         "  regions.R_NAME\n" + 
         "FROM\n" + 
-        "  dfs.`/opt/drill/sample-data/nation.parquet` nations\n" + 
+        "  dfs.`[WORKING_PATH]/../../sample-data/nation.parquet` nations\n" + 
         "JOIN\n" + 
-        "  dfs.`/opt/drill/sample-data/region.parquet` regions\n" + 
+        "  dfs.`[WORKING_PATH]/../../sample-data/region.parquet` regions\n" + 
         "  on nations.N_REGIONKEY = regions.R_REGIONKEY");
   }
   
@@ -58,7 +58,8 @@ public class TestExampleQueries {
   
   private void test(String sql) throws Exception{
     boolean good = false;
-  
+    sql = sql.replace("[WORKING_PATH]", TestTools.getWorkingPath());
+    
     try{
       QuerySubmitter s = new QuerySubmitter();
       s.submitQuery(null, sql, "sql", null, true, 1, "tsv");
