@@ -119,7 +119,7 @@ public class DrillJoinRel extends JoinRelBase implements DrillRel {
     Project.Builder builder = Project.builder();
     builder.setInput(inputOp);
     for (Pair<String, String> pair : Pair.zip(inputFields, outputFields)) {
-      builder.addExpr(new FieldReference(pair.right), new FieldReference(pair.left));
+      builder.addExpr(new FieldReference("output." + pair.right), new FieldReference(pair.left));
     }
     return builder.build();
   }

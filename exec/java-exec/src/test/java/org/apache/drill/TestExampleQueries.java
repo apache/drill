@@ -34,6 +34,19 @@ public class TestExampleQueries {
   }
   
   @Test
+  public void testJoin() throws Exception{
+    test("SELECT\n" + 
+        "  nations.N_NAME,\n" + 
+        "  regions.R_NAME\n" + 
+        "FROM\n" + 
+        "  dfs.`/opt/drill/sample-data/nation.parquet` nations\n" + 
+        "JOIN\n" + 
+        "  dfs.`/opt/drill/sample-data/region.parquet` regions\n" + 
+        "  on nations.N_REGIONKEY = regions.R_REGIONKEY");
+  }
+  
+  
+  @Test
   public void testWhere() throws Exception{
     test("select * from cp.`employee.json` where employee_id > 10 and employee_id < 20");
   }
@@ -44,8 +57,15 @@ public class TestExampleQueries {
   }
   
   private void test(String sql) throws Exception{
-    QuerySubmitter s = new QuerySubmitter();
-    s.submitQuery(null, sql, "sql", null, true, 1, "tsv");
+    boolean good = false;
+  
+    try{
+      QuerySubmitter s = new QuerySubmitter();
+      s.submitQuery(null, sql, "sql", null, true, 1, "tsv");
+      good = true;
+    }finally{
+      if(!good) Thread.sleep(2000);
+    }
   }
   
 }

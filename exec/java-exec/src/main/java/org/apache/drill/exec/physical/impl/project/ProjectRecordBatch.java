@@ -88,6 +88,14 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
     }
     return ref;
   }
+  
+  private boolean isAnyWildcard(List<NamedExpression> exprs){
+    for(NamedExpression e : exprs){
+      if(isWildcard(e)) return true;
+    }
+    return false;
+  }
+  
   private boolean isWildcard(NamedExpression ex){
     LogicalExpression expr = ex.getExpr();
     LogicalExpression ref = ex.getRef();
@@ -111,7 +119,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
     
     final ClassGenerator<Projector> cg = CodeGenerator.getRoot(Projector.TEMPLATE_DEFINITION, context.getFunctionRegistry());
     
-    if(exprs.size() == 1 && isWildcard(exprs.get(0))){
+    if(isAnyWildcard(exprs)){
       for(VectorWrapper<?> wrapper : incoming){
         ValueVector vvIn = wrapper.getValueVector();
         TransferPair tp = wrapper.getValueVector().getTransferPair(new FieldReference(vvIn.getField().getName()));

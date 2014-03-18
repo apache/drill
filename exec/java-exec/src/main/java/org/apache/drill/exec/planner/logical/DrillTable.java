@@ -69,6 +69,43 @@ public abstract class DrillTable implements Table{
     return TableType.TABLE;
   }
 
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + ((selection == null) ? 0 : selection.hashCode());
+    result = prime * result + ((storageEngineConfig == null) ? 0 : storageEngineConfig.hashCode());
+    result = prime * result + ((storageEngineName == null) ? 0 : storageEngineName.hashCode());
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj)
+      return true;
+    if (obj == null)
+      return false;
+    if (getClass() != obj.getClass())
+      return false;
+    DrillTable other = (DrillTable) obj;
+    if (selection == null) {
+      if (other.selection != null)
+        return false;
+    } else if (!selection.equals(other.selection))
+      return false;
+    if (storageEngineConfig == null) {
+      if (other.storageEngineConfig != null)
+        return false;
+    } else if (!storageEngineConfig.equals(other.storageEngineConfig))
+      return false;
+    if (storageEngineName == null) {
+      if (other.storageEngineName != null)
+        return false;
+    } else if (!storageEngineName.equals(other.storageEngineName))
+      return false;
+    return true;
+  }
+
   
   
 }

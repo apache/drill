@@ -17,15 +17,15 @@
  */
 package org.apache.drill.exec.record.vector;
 
-import com.google.common.collect.Lists;
-
+import static org.junit.Assert.assertEquals;
 import io.netty.buffer.ByteBuf;
 
-import org.apache.drill.common.config.DrillConfig;
+import java.util.List;
+
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.common.types.TypeProtos.*;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.TopLevelAllocator;
@@ -33,29 +33,25 @@ import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.WritableBatch;
-import org.apache.drill.exec.vector.*;
+import org.apache.drill.exec.vector.AllocationHelper;
+import org.apache.drill.exec.vector.IntVector;
+import org.apache.drill.exec.vector.NullableVarCharVector;
+import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.VarCharVector;
 import org.junit.Test;
 
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-
+import com.google.common.collect.Lists;
 
 public class TestLoad {
   @Test
-  public void testLoadValueVector() {
+  public void testLoadValueVector() throws Exception {
     BufferAllocator allocator = new TopLevelAllocator();
-    ValueVector fixedV = new IntVector(
-      MaterializedField.create(new SchemaPath("ints", ExpressionPosition.UNKNOWN), Types.required(MinorType.INT)),
-      allocator);
-    ValueVector varlenV = new VarCharVector(
-      MaterializedField.create(new SchemaPath("chars", ExpressionPosition.UNKNOWN), Types.required(MinorType.VARCHAR)),
-      allocator
-    );
-    ValueVector nullableVarlenV = new NullableVarCharVector(
-      MaterializedField.create(new SchemaPath("chars", ExpressionPosition.UNKNOWN), Types.optional(MinorType.VARCHAR)),
-      allocator
-    );
+    ValueVector fixedV = new IntVector(MaterializedField.create(new SchemaPath("ints", ExpressionPosition.UNKNOWN),
+        Types.required(MinorType.INT)), allocator);
+    ValueVector varlenV = new VarCharVector(MaterializedField.create(
+        new SchemaPath("chars", ExpressionPosition.UNKNOWN), Types.required(MinorType.VARCHAR)), allocator);
+    ValueVector nullableVarlenV = new NullableVarCharVector(MaterializedField.create(new SchemaPath("chars",
+        ExpressionPosition.UNKNOWN), Types.optional(MinorType.VARCHAR)), allocator);
 
     List<ValueVector> vectors = Lists.newArrayList(fixedV, varlenV, nullableVarlenV);
     for (ValueVector v : vectors) {
@@ -78,49 +74,46 @@ public class TestLoad {
       index += byteBufs[i].writerIndex();
     }
     byteBuf.writerIndex(bytes);
-    try {
-      batchLoader.load(writableBatch.getDef(), byteBuf);
-      boolean firstColumn = true;
-      int recordCount = 0;
+    
+    batchLoader.load(writableBatch.getDef(), byteBuf);
+    boolean firstColumn = true;
+    int recordCount = 0;
+    for (VectorWrapper<?> v : batchLoader) {
+      if (firstColumn) {
+        firstColumn = false;
+      } else {
+        System.out.print("\t");
+      }
+      System.out.print(v.getField().getName());
+      System.out.print("[");
+      System.out.print(v.getField().getType().getMinorType());
+      System.out.print("]");
+    }
+
+    System.out.println();
+    for (int r = 0; r < batchLoader.getRecordCount(); r++) {
+      boolean first = true;
+      recordCount++;
       for (VectorWrapper<?> v : batchLoader) {
-        if (firstColumn) {
-          firstColumn = false;
+        if (first) {
+          first = false;
         } else {
           System.out.print("\t");
         }
-        System.out.print(v.getField().getName());
-        System.out.print("[");
-        System.out.print(v.getField().getType().getMinorType());
-        System.out.print("]");
-      }
-
-      System.out.println();
-      for (int r = 0; r < batchLoader.getRecordCount(); r++) {
-        boolean first = true;
-        recordCount++;
-        for (VectorWrapper<?> v : batchLoader) {
-          if (first) {
-            first = false;
-          } else {
-            System.out.print("\t");
-          }
-          ValueVector.Accessor accessor = v.getValueVector().getAccessor();
-          if (v.getField().getType().getMinorType() == TypeProtos.MinorType.VARCHAR) {
-            Object obj = accessor.getObject(r) ;
-            if(obj != null)
-              System.out.print(new String((byte[]) accessor.getObject(r)));
-            else
-              System.out.print("NULL");
-          } else {
+        ValueVector.Accessor accessor = v.getValueVector().getAccessor();
+        if (v.getField().getType().getMinorType() == TypeProtos.MinorType.VARCHAR) {
+          Object obj = accessor.getObject(r);
+          if (obj != null)
             System.out.print(accessor.getObject(r));
-          }
+          else
+            System.out.print("NULL");
+        } else {
+          System.out.print(accessor.getObject(r));
         }
-        if (!first) System.out.println();
       }
-      assertEquals(100, recordCount);
-    } catch (Exception e) {
-        e.printStackTrace();
+      if (!first) System.out.println();
     }
+    assertEquals(100, recordCount);
   }
 
 }

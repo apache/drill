@@ -37,6 +37,7 @@ public class DrillImplementor {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillImplementor.class);
   
   private Set<DrillTable> tables = Sets.newHashSet();
+  private Set<String> storageEngineNames = Sets.newHashSet();
   private LogicalPlanBuilder planBuilder = new LogicalPlanBuilder();
   private LogicalPlan plan;
   private final DrillParseContext context;
@@ -52,7 +53,7 @@ public class DrillImplementor {
   }
 
   public void registerSource(DrillTable table){
-    if(tables.add(table)){
+    if(tables.add(table) && storageEngineNames.add(table.getStorageEngineName())){
       planBuilder.addStorageEngine(table.getStorageEngineName(), table.getStorageEngineConfig());
     }
   }
