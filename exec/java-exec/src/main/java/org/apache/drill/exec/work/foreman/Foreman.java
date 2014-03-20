@@ -228,7 +228,7 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
     QueryResult header = QueryResult.newBuilder() //
         .setQueryId(context.getQueryId()) //
         .setRowCount(1) //
-        .setDef(RecordBatchDef.newBuilder().addField(vector.getMetadata()).build()) //
+        .setDef(RecordBatchDef.newBuilder().addField(vector.getMetadata()).setRecordCount(1).build()) //
         .setIsLastChunk(false) //
         .build();
     QueryWritableBatch b1 = new QueryWritableBatch(header, vector.getBuffers());
