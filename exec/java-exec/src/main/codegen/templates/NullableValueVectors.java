@@ -392,6 +392,7 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
     public void generateTestData(){
       bits.getMutator().generateTestData();
       values.getMutator().generateTestData();
+      <#if type.major = "VarLen">lastSet = valueCount;</#if>
     }
     
     public void reset(){
