@@ -1,5 +1,5 @@
 #!/bin/bash
-
+#
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
 # this work for additional information regarding copyright ownership.
@@ -19,37 +19,6 @@ bin=`dirname "${BASH_SOURCE-$0}"`
 bin=`cd "$bin">/dev/null; pwd`
 
 . "$bin"/drill-config.sh
-
-if [ -z $JAVA_HOME ]
-then
-  JAVA=`which java`
-else
-  JAVA=`find -L $JAVA_HOME -name java | head -n 1`
-fi
-
-if [ -e $JAVA ]; then
-  echo ""
-else
-  echo "Java not found."
-  exit 1
-fi
-
-$JAVA -version 2>&1 | grep "version" | egrep -e "1.7" > /dev/null
-if [ $? -ne 0 ]; then
-  echo "Java 1.7 is required to run Apache Drill."
-  exit 1
-fi
-
-# get log directory
-if [ "$DRILL_LOG_DIR" = "" ]; then
-  export DRILL_LOG_DIR=/var/log/drill
-fi
-
-CP=$DRILL_HOME/jars/*:$CP
-CP=$DRILL_HOME/lib/*:$CP
-
-CP=$DRILL_CONF_DIR:$CP
-CP=$HADOOP_CLASSPATH:$CP
 
 DRILL_SHELL_JAVA_OPTS="$DRILL_SHELL_JAVA_OPTS -Dlog.path=$DRILL_LOG_DIR/submitter.log"
 
