@@ -63,4 +63,12 @@ public class OperatorCost {
     return combine(this, c2);
   }
   
+  public int compare(OperatorCost c2) {
+	float thisTotal = this.network + this.disk + this.memory + this.cpu;
+	float c2Total   = c2.network + c2.disk + c2.memory + c2.cpu;
+	if (thisTotal < c2Total) return -1;
+	else if (thisTotal == c2Total) return 0;
+	else return 1;
+  } 
+  
 }

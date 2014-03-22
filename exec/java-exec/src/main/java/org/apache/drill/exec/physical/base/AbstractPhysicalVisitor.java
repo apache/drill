@@ -63,6 +63,11 @@ public abstract class AbstractPhysicalVisitor<T, X, E extends Throwable> impleme
   }
 
   @Override
+  public T visitHashAggregate(HashAggregate agg, X value) throws E {
+	return visitOp(agg, value);  
+  }
+  
+  @Override
   public T visitSender(Sender sender, X value) throws E {
     return visitOp(sender, value);
   }

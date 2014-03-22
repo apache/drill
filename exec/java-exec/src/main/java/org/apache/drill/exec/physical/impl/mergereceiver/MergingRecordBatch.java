@@ -40,7 +40,7 @@ import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.ValueVectorReadExpression;
-import org.apache.drill.exec.expr.fn.ComparatorFunctionHelper;
+import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.MergingReceiverPOP;
 import org.apache.drill.exec.proto.UserBitShared;
@@ -540,7 +540,7 @@ public class MergingRecordBatch implements RecordBatch {
                                                                                 rightVar.ref("isSet"));
 
       // generate the comparison function
-      LogicalExpression fh = ComparatorFunctionHelper.get(left, right, context.getFunctionRegistry());
+      LogicalExpression fh = FunctionGenerationHelper.getComparator(left, right, context.getFunctionRegistry());
       ClassGenerator.HoldingContainer out = cg.addExpr(fh, false);
 
       // generate less than/greater than checks (fixing results for ASCending vs. DESCending)

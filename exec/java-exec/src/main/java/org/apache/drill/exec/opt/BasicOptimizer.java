@@ -53,6 +53,8 @@ import org.apache.drill.exec.physical.config.Screen;
 import org.apache.drill.exec.physical.config.SelectionVectorRemover;
 import org.apache.drill.exec.physical.config.Sort;
 import org.apache.drill.exec.physical.config.StreamingAggregate;
+import org.apache.drill.exec.physical.config.HashAggregate;
+import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.store.StoragePlugin;
 import org.eigenbase.rel.RelFieldCollation.Direction;
 import org.eigenbase.rel.RelFieldCollation.NullDirection;
@@ -153,8 +155,6 @@ public class BasicOptimizer extends Optimizer{
       PhysicalOperator input = limit.getInput().accept(this, value);
       return new SelectionVectorRemover(new Limit(input, limit.getFirst(), limit.getLast()));
     }
-
-
 
     @Override
     public PhysicalOperator visitJoin(Join join, Object value) throws OptimizerException {

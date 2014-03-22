@@ -95,5 +95,9 @@ public class SimpleRootExec implements RootExec, Iterable<ValueVector>{
     return incoming.getRecordCount();
   }
   
+  /// Temporary: for exposing the incoming batch to TestHashTable
+  public RecordBatch getIncoming() {
+	  return incoming;
+  }
   
 }

@@ -22,13 +22,11 @@ import java.util.Arrays;
 import org.apache.drill.exec.expr.DirectExpression;
 
 import com.google.common.base.Preconditions;
-import com.sun.codemodel.JExpr;
-import com.sun.codemodel.JExpression;
 
 
 public class MappingSet {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MappingSet.class);
-  
+
   private GeneratorMapping constant;
   private GeneratorMapping[] mappings;
   private int mappingIndex;
@@ -37,12 +35,20 @@ public class MappingSet {
   private DirectExpression writeIndex;
   private DirectExpression incoming;
   private DirectExpression outgoing;
-  
-  
+  private DirectExpression workspace;
+  private DirectExpression workspaceIndex;
+
   public MappingSet(GeneratorMapping mapping) {
-    this("inIndex", "outIndex", new GeneratorMapping[]{mapping, mapping});
+    this("inIndex", "outIndex", new GeneratorMapping[] { mapping, mapping });
   }
-  
+
+  public MappingSet(String readIndex, String writeIndex, String workspaceIndex, String incoming, String outgoing,
+      String workspace, GeneratorMapping... mappings) {
+    this(readIndex, writeIndex, incoming, outgoing, mappings);
+    this.workspaceIndex = DirectExpression.direct(workspaceIndex);
+    this.workspace = DirectExpression.direct(workspace);
+  }
+
   public MappingSet(GeneratorMapping... mappings) {
     this("inIndex", "outIndex", mappings);
   }
@@ -50,7 +56,7 @@ public class MappingSet {
   public MappingSet(String readIndex, String writeIndex, GeneratorMapping... mappings) {
     this(readIndex, writeIndex, "incoming", "outgoing", mappings);
   }
-  
+
   public MappingSet(String readIndex, String writeIndex, String incoming, String outgoing, GeneratorMapping... mappings) {
     this.readIndex = DirectExpression.direct(readIndex);
     this.writeIndex = DirectExpression.direct(writeIndex);
@@ -58,64 +64,79 @@ public class MappingSet {
     this.outgoing = DirectExpression.direct(outgoing);
     Preconditions.checkArgument(mappings.length >= 2);
     this.constant = mappings[0];
-    
-    //Make sure the constant GM is different from other GM. If it is identical, clone another copy.
-    for (int i = 1; i< mappings.length; i++) {
+
+    // Make sure the constant GM is different from other GM. If it is identical, clone another copy.
+    for (int i = 1; i < mappings.length; i++) {
       if (mappings[0] == mappings[i]) {
         this.constant = new GeneratorMapping(mappings[0]);
         break;
       }
     }
-    
+
     this.mappings = Arrays.copyOfRange(mappings, 1, mappings.length);
     this.current = this.mappings[0];
   }
 
-  public void enterConstant(){
+  public void enterConstant() {
     assert constant != current;
     current = constant;
   }
-  
-  public void exitConstant(){
+
+  public void exitConstant() {
     assert constant == current;
     current = mappings[mappingIndex];
   }
-  
+
   public boolean isWithinConstant() {
     return constant == current;
   }
-  
-  public void enterChild(){
+
+  public void enterChild() {
     assert current == mappings[mappingIndex];
     mappingIndex++;
-    if(mappingIndex >= mappings.length) throw new IllegalStateException("This generator does not support mappings beyond");
+    if (mappingIndex >= mappings.length)
+      throw new IllegalStateException("This generator does not support mappings beyond");
     current = mappings[mappingIndex];
   }
-  
-  public void exitChild(){
+
+  public void exitChild() {
     assert current == mappings[mappingIndex];
     mappingIndex--;
-    if(mappingIndex < 0) throw new IllegalStateException("You tried to traverse higher than the provided mapping provides.");
+    if (mappingIndex < 0)
+      throw new IllegalStateException("You tried to traverse higher than the provided mapping provides.");
     current = mappings[mappingIndex];
   }
-  
-  public GeneratorMapping getCurrentMapping(){
+
+  public GeneratorMapping getCurrentMapping() {
     return current;
   }
-  
-  public DirectExpression getValueWriteIndex(){
+
+  public DirectExpression getValueWriteIndex() {
     return writeIndex;
   }
-  
-  public DirectExpression getValueReadIndex(){
+
+  public DirectExpression getValueReadIndex() {
     return readIndex;
   }
-  
-  public DirectExpression getOutgoing(){
+
+  public DirectExpression getOutgoing() {
     return outgoing;
   }
-  
-  public DirectExpression getIncoming(){
+
+  public DirectExpression getIncoming() {
     return incoming;
   }
+
+  public DirectExpression getWorkspaceIndex() {
+    return workspaceIndex;
+  }
+
+  public DirectExpression getWorkspace() {
+    return workspace;
+  }
+
+  public boolean isHashAggMapping() {
+    return workspace != null;
+  }
+
 }

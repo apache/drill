@@ -132,4 +132,66 @@ public class TypeHelper {
     throw new UnsupportedOperationException(type.getMinorType() + " type is not supported. Mode: " + type.getMode());
   }
 
+  public static ValueHolder getValue(ValueVector vector, int index) {
+    MajorType type = vector.getField().getType();
+    ValueHolder holder;
+    switch(type.getMinorType()) {
+<#list vv.types as type>
+  <#list type.minor as minor>
+    case ${minor.class?upper_case} :
+      <#if minor.class?starts_with("Var")>
+         throw new UnsupportedOperationException(type.getMinorType() + " type is not supported."); 
+      <#else>
+      holder = new ${minor.class}Holder(); 
+      ((${minor.class}Holder)holder).value = ((${minor.class}Vector) vector).getAccessor().get(index);
+      break;
+      </#if>
+  </#list>
+</#list>
+    default:
+      throw new UnsupportedOperationException(type.getMinorType() + " type is not supported."); 
+    }
+    return holder;
+  }
+
+  public static void setValue(ValueVector vector, int index, ValueHolder holder) {
+    MajorType type = vector.getField().getType();
+
+    switch(type.getMinorType()) {
+<#list vv.types as type>
+  <#list type.minor as minor>
+    case ${minor.class?upper_case} :
+      ((${minor.class}Vector) vector).getMutator().set(index, (${minor.class}Holder) holder);
+      break;
+  </#list>
+</#list>
+    default:
+      throw new UnsupportedOperationException(type.getMinorType() + " type is not supported.");    
+    }
+  }
+
+  public static boolean compareValues(ValueVector v1, int v1index, ValueVector v2, int v2index) {
+    MajorType type1 = v1.getField().getType();
+    MajorType type2 = v2.getField().getType();
+
+    if (type1.getMinorType() != type2.getMinorType()) {
+      return false;
+    }
+
+    switch(type1.getMinorType()) {
+<#list vv.types as type>
+  <#list type.minor as minor>
+    case ${minor.class?upper_case} :
+      if ( ((${minor.class}Vector) v1).getAccessor().get(v1index) == 
+           ((${minor.class}Vector) v2).getAccessor().get(v2index) ) 
+        return true;
+      break;
+  </#list>
+</#list>
+    default:
+      break;
+    }
+    return false;
+  }
+
 }

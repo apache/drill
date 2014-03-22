@@ -17,27 +17,25 @@
  */
 package org.apache.drill.exec.physical.impl.aggregate;
 
-import org.apache.drill.exec.compile.TemplateClassDefinition;
-import org.apache.drill.exec.exception.SchemaChangeException;
+import java.util.List;
+
+import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.physical.impl.aggregate.AggBatch.AggOutcome;
+import org.apache.drill.exec.physical.config.HashAggregate;
+import org.apache.drill.exec.physical.impl.BatchCreator;
+import org.apache.drill.exec.physical.impl.aggregate.HashAggBatch;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.record.RecordBatch.IterOutcome;
-import org.apache.drill.exec.vector.allocator.VectorAllocator;
 
-public interface Aggregator {
+import com.google.common.base.Preconditions;
 
-  public static TemplateClassDefinition<Aggregator> TEMPLATE_DEFINITION = new TemplateClassDefinition<Aggregator>(Aggregator.class, AggTemplate.class);
+public class HashAggBatchCreator implements BatchCreator<HashAggregate>{
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HashAggBatchCreator.class);
+
+  @Override
+  public RecordBatch getBatch(FragmentContext context, HashAggregate config, List<RecordBatch> children) throws ExecutionSetupException {
+    Preconditions.checkArgument(children.size() == 1);
+    return new HashAggBatch(config, children.iterator().next(), context);
+  }
   
-  public abstract void setup(FragmentContext context, RecordBatch incoming, RecordBatch outgoing,
-      VectorAllocator[] allocators) throws SchemaChangeException;
-
-  public abstract IterOutcome getOutcome();
-
-  public abstract int getOutputCount();
-
-  public abstract AggOutcome doWork();
-
-  public abstract void cleanup();
-
+  
 }

@@ -31,7 +31,7 @@ import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
-import org.apache.drill.exec.expr.fn.ComparatorFunctionHelper;
+import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.Sort;
 import org.apache.drill.exec.record.AbstractRecordBatch;
@@ -186,7 +186,7 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
       g.setMappingSet(mainMapping);
       
       // next we wrap the two comparison sides and add the expression block for the comparison.
-      LogicalExpression fh = ComparatorFunctionHelper.get(left, right, context.getFunctionRegistry());
+      LogicalExpression fh = FunctionGenerationHelper.getComparator(left, right, context.getFunctionRegistry());
       HoldingContainer out = g.addExpr(fh, false);
       JConditional jc = g.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)));
       

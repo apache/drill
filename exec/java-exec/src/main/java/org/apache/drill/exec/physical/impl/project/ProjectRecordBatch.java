@@ -162,7 +162,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
     container.buildSchema(incoming.getSchema().getSelectionVectorMode());
     
     try {
-      this.projector = context.getImplementationClass(cg.getClassGenerator());
+      this.projector = context.getImplementationClass(cg.getCodeGenerator());
       projector.setup(context, incoming, this, transfers);
     } catch (ClassTransformationException | IOException e) {
       throw new SchemaChangeException("Failure while attempting to load generated class", e);

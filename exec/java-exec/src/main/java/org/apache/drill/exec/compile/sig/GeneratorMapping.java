@@ -67,7 +67,7 @@ public class GeneratorMapping {
       Preconditions.checkNotNull(eval, "The current mapping does not have an eval method defined.");
       return eval;
     case RESET:
-      Preconditions.checkNotNull(reset, "The current mapping does not have a cleanup method defined.");
+      Preconditions.checkNotNull(reset, "The current mapping does not have a reset method defined.");
       return reset;
     case SETUP:
       Preconditions.checkNotNull(setup, "The current mapping does not have a setup method defined.");

@@ -128,7 +128,7 @@ public class FragmentContext implements Closeable {
   }
 
   public <T> T getImplementationClass(ClassGenerator<T> cg) throws ClassTransformationException, IOException {
-    return getImplementationClass(cg.getClassGenerator());
+    return getImplementationClass(cg.getCodeGenerator());
   }
   
   public <T> T getImplementationClass(CodeGenerator<T> cg) throws ClassTransformationException, IOException {

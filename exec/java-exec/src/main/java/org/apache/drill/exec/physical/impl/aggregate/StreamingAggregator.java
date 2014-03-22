@@ -17,24 +17,30 @@
  */
 package org.apache.drill.exec.physical.impl.aggregate;
 
-import java.util.List;
-
-import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.exec.compile.TemplateClassDefinition;
+import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.physical.config.StreamingAggregate;
-import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.record.RecordBatch;
+import org.apache.drill.exec.record.RecordBatch.IterOutcome;
+import org.apache.drill.exec.vector.allocator.VectorAllocator;
 
-import com.google.common.base.Preconditions;
+public interface StreamingAggregator {
 
-public class AggBatchCreator implements BatchCreator<StreamingAggregate>{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AggBatchCreator.class);
+  public static TemplateClassDefinition<StreamingAggregator> TEMPLATE_DEFINITION = new TemplateClassDefinition<StreamingAggregator>(StreamingAggregator.class, StreamingAggTemplate.class);
 
-  @Override
-  public RecordBatch getBatch(FragmentContext context, StreamingAggregate config, List<RecordBatch> children) throws ExecutionSetupException {
-    Preconditions.checkArgument(children.size() == 1);
-    return new AggBatch(config, children.iterator().next(), context);
-  }
+  public static enum AggOutcome {
+	    RETURN_OUTCOME, CLEANUP_AND_RETURN, UPDATE_AGGREGATOR;
+	  }
   
-  
+  public abstract void setup(FragmentContext context, RecordBatch incoming, RecordBatch outgoing,
+      VectorAllocator[] allocators) throws SchemaChangeException;
+
+  public abstract IterOutcome getOutcome();
+
+  public abstract int getOutputCount();
+
+  public abstract AggOutcome doWork();
+
+  public abstract void cleanup();
+
 }

@@ -36,7 +36,7 @@ import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.HoldingContainerExpression;
 import org.apache.drill.exec.expr.TypeHelper;
-import org.apache.drill.exec.expr.fn.ComparatorFunctionHelper;
+import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.MergeJoinPOP;
 import org.apache.drill.exec.physical.impl.filter.ReturnValueExpression;
@@ -296,7 +296,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
           ._return(JExpr.lit(1));
     }
 
-    LogicalExpression fh = ComparatorFunctionHelper.get(compareLeftExprHolder,
+    LogicalExpression fh = FunctionGenerationHelper.getComparator(compareLeftExprHolder,
       compareRightExprHolder,
       context.getFunctionRegistry());
     cg.addExpr(new ReturnValueExpression(fh, false), false);
@@ -347,7 +347,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
 
     // check value equality
 
-    LogicalExpression gh = ComparatorFunctionHelper.get(compareThisLeftExprHolder,
+    LogicalExpression gh = FunctionGenerationHelper.getComparator(compareThisLeftExprHolder,
       compareNextLeftExprHolder,
       context.getFunctionRegistry());
     cg.addExpr(new ReturnValueExpression(gh, false), false);

@@ -29,6 +29,7 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.expr.DrillFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
+import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
@@ -154,7 +155,25 @@ public class FunctionConverter {
       }else{
         // workspace work.
 //        logger.debug("Found workspace field {}:{}", field.getType(), field.getName());
-        workspaceFields.add(new WorkspaceReference(field.getType(), field.getName()));
+        //workspaceFields.add(new WorkspaceReference(field.getType(), field.getName()));
+        WorkspaceReference wsReference = new WorkspaceReference(field.getType(), field.getName());
+             
+        if (template.scope() == FunctionScope.POINT_AGGREGATE && !ValueHolder.class.isAssignableFrom(field.getType()) ) {
+          return failure(String.format("Aggregate function '%s' workspace variable '%s' is of type '%s'. Please change it to Holder type.", template.name(), field.getName(), field.getType()), clazz, field);          
+        }
+ 
+        //If the workspace var is of Holder type, get its MajorType and assign to WorkspaceReference.
+        if(ValueHolder.class.isAssignableFrom(field.getType())){
+          MajorType majorType = null;
+          try{
+            majorType = getStaticFieldValue("TYPE", field.getType(), MajorType.class);
+          }catch(Exception e){
+            return failure("Failure while trying to access the ValueHolder's TYPE static variable.  All ValueHolders must contain a static TYPE variable that defines their MajorType.", e, clazz, field.getName());
+          }
+          wsReference.setMajorType(majorType);
+        }
+        
+        workspaceFields.add(wsReference);
       }
       
     }

@@ -21,6 +21,8 @@ data: {
     MathFunctionTypes: tdd(../data/MathFunctionTypes.tdd)
     mathFunc:tdd(../data/MathFunc.tdd)
     drillOI:tdd(../data/HiveTypes.tdd)
+    aggrtypes1: tdd(../data/AggrTypes1.tdd),
+    aggrtypes2: tdd(../data/AggrTypes2.tdd)
 }
 freemarkerLinks: {
     includes: includes/

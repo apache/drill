@@ -20,7 +20,9 @@ package org.apache.drill.exec.expr;
 import static org.apache.drill.exec.compile.sig.GeneratorMapping.GM;
 
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.drill.common.expression.LogicalExpression;
@@ -33,6 +35,7 @@ import org.apache.drill.exec.compile.sig.GeneratorMapping;
 import org.apache.drill.exec.compile.sig.MappingSet;
 import org.apache.drill.exec.compile.sig.SignatureHolder;
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.expr.fn.DrillFuncHolder.WorkspaceReference;
 import org.apache.drill.exec.record.TypedFieldId;
 
 import com.beust.jcommander.internal.Lists;
@@ -44,6 +47,7 @@ import com.sun.codemodel.JClassAlreadyExistsException;
 import com.sun.codemodel.JCodeModel;
 import com.sun.codemodel.JDefinedClass;
 import com.sun.codemodel.JExpr;
+import com.sun.codemodel.JExpression;
 import com.sun.codemodel.JFieldRef;
 import com.sun.codemodel.JMethod;
 import com.sun.codemodel.JMod;
@@ -63,7 +67,9 @@ public class ClassGenerator<T>{
   private final EvaluationVisitor evaluationVisitor;
   private final Map<ValueVectorSetup, JVar> vvDeclaration = Maps.newHashMap();
   private final Map<String, ClassGenerator<T>> innerClasses = Maps.newHashMap();
-  private final CodeGenerator<T> classGenerator;
+  private final List<TypedFieldId> workspaceTypes = Lists.newArrayList();
+  private final Map<WorkspaceReference, JVar> workspaceVectors = Maps.newHashMap();
+  private final CodeGenerator<T> codeGenerator;
 
   public final JDefinedClass clazz;
   private final LinkedList<JBlock>[] blocks;
@@ -78,8 +84,8 @@ public class ClassGenerator<T>{
 
   
   @SuppressWarnings("unchecked")
-  ClassGenerator(CodeGenerator<T> classGenerator, MappingSet mappingSet, SignatureHolder signature, EvaluationVisitor eval, JDefinedClass clazz, JCodeModel model) throws JClassAlreadyExistsException {
-    this.classGenerator = classGenerator;
+  ClassGenerator(CodeGenerator<T> codeGenerator, MappingSet mappingSet, SignatureHolder signature, EvaluationVisitor eval, JDefinedClass clazz, JCodeModel model) throws JClassAlreadyExistsException {
+    this.codeGenerator = codeGenerator;
     this.clazz = clazz;
     this.mappings = mappingSet;
     this.sig = signature;
@@ -94,7 +100,7 @@ public class ClassGenerator<T>{
     for(SignatureHolder child : signature.getChildHolders()){
       String innerClassName = child.getSignatureClass().getSimpleName();
       JDefinedClass innerClazz = clazz._class(Modifier.FINAL + Modifier.PRIVATE, innerClassName);
-      innerClasses.put(innerClassName, new ClassGenerator<>(classGenerator, mappingSet, child, eval, innerClazz, model));
+      innerClasses.put(innerClassName, new ClassGenerator<>(codeGenerator, mappingSet, child, eval, innerClazz, model));
     }
   }
 
@@ -112,8 +118,8 @@ public class ClassGenerator<T>{
     this.mappings = mappings;
   }
   
-  public CodeGenerator<T> getClassGenerator() {
-    return classGenerator;
+  public CodeGenerator<T> getCodeGenerator() {
+    return codeGenerator;
   }
 
   private GeneratorMapping getCurrentMapping(){
@@ -242,6 +248,9 @@ public class ClassGenerator<T>{
     return clazz.field(JMod.NONE, t, prefix + index++);
   }
 
+  public JVar declareClassField(String prefix, JType t, JExpression init){
+    return clazz.field(JMod.NONE, t, prefix + index++, init);
+  }
   
   public HoldingContainer declare(MajorType t){
     return declare(t, true);
@@ -263,6 +272,14 @@ public class ClassGenerator<T>{
     return new HoldingContainer(t, var, var.ref("value"), outputSet);
   }
   
+  public List<TypedFieldId> getWorkspaceTypes() {
+    return this.workspaceTypes;
+  }
+
+  public Map<WorkspaceReference, JVar> getWorkspaceVectors() {
+    return this.workspaceVectors;
+  }
+
   private static class ValueVectorSetup{
     final DirectExpression batch;
     final TypedFieldId fieldId;
