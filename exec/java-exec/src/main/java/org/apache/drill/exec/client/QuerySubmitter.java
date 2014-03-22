@@ -68,7 +68,7 @@ public class QuerySubmitter {
       System.exit(0);
     }
 
-    System.exit(submitter.submitQuery(o.location, o.queryString, o.planType, o.zk, o.local, o.bits, o.format));
+    System.exit(submitter.submitQuery(o.location, o.queryString, o.planType, o.zk, o.local, o.bits, o.format, o.width));
   }
 
   static class Options {
@@ -95,6 +95,9 @@ public class QuerySubmitter {
 
     @Parameter(names = {"--format"}, description = "output format, csv,tsv,table", required = false)
     public String format = "table";
+
+    @Parameter(names = {"-w", "--width"}, description = "max column width", required = false)
+    public int width = VectorUtil.DEFAULT_COLUMN_WIDTH;
   }
 
   public enum Format {
@@ -102,6 +105,10 @@ public class QuerySubmitter {
   }
 
   public int submitQuery(String planLocation, String queryString, String type, String zkQuorum, boolean local, int bits, String format) throws Exception {
+      return submitQuery(planLocation, queryString, type, zkQuorum, local, bits, format, VectorUtil.DEFAULT_COLUMN_WIDTH);
+  }
+
+  public int submitQuery(String planLocation, String queryString, String type, String zkQuorum, boolean local, int bits, String format, int width) throws Exception {
     DrillConfig config = DrillConfig.create();
     DrillClient client = null;
 
@@ -168,7 +175,7 @@ public class QuerySubmitter {
       }
       Stopwatch watch = new Stopwatch();
       for (String query : queries) {
-        listener = new QueryResultsListener(outputFormat);
+        listener = new QueryResultsListener(outputFormat, width);
         watch.start();
         client.runQuery(queryType, query, listener);
         int rows = listener.await();
@@ -190,10 +197,12 @@ public class QuerySubmitter {
     private CountDownLatch latch = new CountDownLatch(1);
     RecordBatchLoader loader = new RecordBatchLoader(new BootStrapContext(DrillConfig.create()).getAllocator());
     Format format;
+    int    columnWidth;
     volatile Exception exception;
 
-    public QueryResultsListener(Format format) {
+    public QueryResultsListener(Format format, int columnWidth) {
       this.format = format;
+      this.columnWidth = columnWidth;
     }
 
     @Override
@@ -215,7 +224,7 @@ public class QuerySubmitter {
 
         switch(format) {
           case TABLE:
-            VectorUtil.showVectorAccessibleContent(loader);
+            VectorUtil.showVectorAccessibleContent(loader, columnWidth);
             break;
           case TSV:
             VectorUtil.showVectorAccessibleContent(loader, "\t");

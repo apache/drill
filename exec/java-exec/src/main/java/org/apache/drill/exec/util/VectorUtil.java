@@ -29,6 +29,8 @@ import com.beust.jcommander.internal.Lists;
 
 public class VectorUtil {
 
+  public static final int DEFAULT_COLUMN_WIDTH = 15;
+
   public static void showVectorAccessibleContent(VectorAccessible va, final String delimiter) {
 
     int rows = va.getRecordCount();
@@ -68,6 +70,9 @@ public class VectorUtil {
   }
 
   public static void showVectorAccessibleContent(VectorAccessible va) {
+      showVectorAccessibleContent(va, DEFAULT_COLUMN_WIDTH);
+  }
+  public static void showVectorAccessibleContent(VectorAccessible va, int columnWidth) {
 
     int rows = va.getRecordCount();
     List<String> columns = Lists.newArrayList();
@@ -75,28 +80,31 @@ public class VectorUtil {
       columns.add(vw.getValueVector().getField().getName());
     }
 
-    int width = columns.size();
+    int width = columns.size() * (columnWidth + 2);
+
+    String format = ("| %-" + columnWidth + "s");
+
     for (int row = 0; row < rows; row++) {
       if (row%50 == 0) {
-        System.out.println(StringUtils.repeat("-", width*17 + 1));
+        System.out.println(StringUtils.repeat("-", width + 1));
         for (String column : columns) {
-          System.out.printf("| %-15s", column.length() <= 15 ? column : column.substring(0, 14));
+          System.out.printf(format, column.length() <= columnWidth ? column : column.substring(0, columnWidth - 1));
         }
         System.out.printf("|\n");
-        System.out.println(StringUtils.repeat("-", width*17 + 1));
+        System.out.println(StringUtils.repeat("-", width + 1));
       }
       for (VectorWrapper<?> vw : va) {
         Object o = vw.getValueVector().getAccessor().getObject(row);
         if (o == null) {
           //null value
-          System.out.printf("| %-15s", "");
+          System.out.printf(format, "");
         }
         else if (o instanceof byte[]) {
           String value = new String((byte[]) o);
-          System.out.printf("| %-15s",value.length() <= 15 ? value : value.substring(0, 14));
+          System.out.printf(format, value.length() <= columnWidth ? value : value.substring(0, columnWidth - 1));
         } else {
           String value = o.toString();
-          System.out.printf("| %-15s",value.length() <= 15 ? value : value.substring(0,14));
+          System.out.printf(format, value.length() <= columnWidth ? value : value.substring(0,columnWidth - 1));
         }
       }
       System.out.printf("|\n");
@@ -107,7 +115,7 @@ public class VectorUtil {
     }
     
     if (rows > 0 )
-      System.out.println(StringUtils.repeat("-", width*17 + 1));
+      System.out.println(StringUtils.repeat("-", width + 1));
   }
 
 
