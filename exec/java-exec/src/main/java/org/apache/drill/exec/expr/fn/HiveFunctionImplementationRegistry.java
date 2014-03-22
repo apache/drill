@@ -38,11 +38,11 @@ import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import com.google.common.collect.ArrayListMultimap;
 
 public class HiveFunctionImplementationRegistry {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillFunctionImplementationRegistry.class);
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveFunctionImplementationRegistry.class);
 
   private ArrayListMultimap<String, Class<? extends GenericUDF>> methodsGenericUDF = ArrayListMultimap.create();
   private ArrayListMultimap<String, Class<? extends UDF>> methodsUDF = ArrayListMultimap.create();
-  private HashSet<Class> nonDeterministicUDFs = new HashSet<>();
+  private HashSet<Class<?>> nonDeterministicUDFs = new HashSet<>();
 
   /**
    * Scan the classpath for implementation of GenericUDF/UDF interfaces,
@@ -62,20 +62,20 @@ public class HiveFunctionImplementationRegistry {
 
   private <C,I> void register(Class<? extends I> clazz, ArrayListMultimap<String,Class<? extends I>> methods) {
     Description desc = clazz.getAnnotation(Description.class);
-    if (desc != null) {
-      // if the function is non-deterministic add it to the list
-      UDFType type = clazz.getAnnotation(UDFType.class);
-      if (type != null && type.deterministic())
-        nonDeterministicUDFs.add(clazz);
+    String[] names;
+    if(desc != null){
+      names = desc.name().split(",");
+      for(int i=0; i<names.length; i++) names[i] = names[i].trim();
+    }else{
+      names = new String[]{clazz.getName().replace('.', '_')};
+    }
+    
+    UDFType type = clazz.getAnnotation(UDFType.class);
+    if (type != null && type.deterministic()) nonDeterministicUDFs.add(clazz);
 
-      String[] names = desc.name().split(",");
-      for(int i=0; i<names.length; i++)
-        names[i] = names[i].trim();
 
-      for(int i=0; i<names.length;i++)
-        methods.put(names[i], clazz);
-    } else {
-      logger.warn("Unable to initialize function for class {}", clazz.getName());
+    for(int i=0; i<names.length;i++){
+      methods.put(names[i], clazz);
     }
   }
 

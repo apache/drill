@@ -20,6 +20,7 @@ package org.apache.drill.common.expression;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.drill.common.expression.visitors.ExpressionValidationError;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 
 import com.google.common.base.Joiner;

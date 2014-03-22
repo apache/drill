@@ -21,6 +21,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
 import java.util.List;
 
+import org.apache.drill.common.expression.visitors.ExpressionValidationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

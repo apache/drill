@@ -40,8 +40,7 @@ public class DrillFunctionImplementationRegistry {
       if(holder != null){
         // register handle for each name the function can be referred to
         String[] names = holder.getRegisteredNames();
-        for(String name : names)
-          methods.put(name, holder);
+        for(String name : names) methods.put(name, holder);
       }else{
         logger.warn("Unable to initialize function for class {}", clazz.getName());
       }

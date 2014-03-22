@@ -15,24 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.common.expression;
+package org.apache.drill.common.expression.visitors;
 
-public class ExpressionValidationException extends RuntimeException {
+public class ExpressionValidationError {
+    String message;
 
-  public ExpressionValidationException() {
-    super();
-  }
+    public ExpressionValidationError(String message) {
+        this.message = message;
+    }
 
-  public ExpressionValidationException(String arg0, Throwable arg1) {
-    super(arg0, arg1);
-  }
-
-  public ExpressionValidationException(String arg0) {
-    super(arg0);
-  }
-
-  public ExpressionValidationException(Throwable arg0) {
-    super(arg0);
-  }
-
+    @Override
+    public String toString() {
+        return message;
+    }
 }

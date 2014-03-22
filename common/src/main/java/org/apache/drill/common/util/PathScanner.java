@@ -79,6 +79,7 @@ public class PathScanner {
       Set<Class<? extends T>> classes = getReflections().getSubTypesOf(baseClass);
       for(Iterator<Class<? extends T>> i = classes.iterator(); i.hasNext();){
         Class<? extends T> c = i.next();
+        assert baseClass.isAssignableFrom(c);
         if(Modifier.isAbstract(c.getModifiers())) i.remove();
       }
       return classes;

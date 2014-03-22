@@ -17,6 +17,7 @@
  */
 package org.apache.drill.common.expression.visitors;
 
+import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.IfExpression;
@@ -25,88 +26,93 @@ import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.ValueExpressions.BooleanExpression;
 import org.apache.drill.common.expression.ValueExpressions.DoubleExpression;
-import org.apache.drill.common.expression.ValueExpressions.LongExpression;
-import org.apache.drill.common.expression.ValueExpressions.IntExpression;
 import org.apache.drill.common.expression.ValueExpressions.FloatExpression;
+import org.apache.drill.common.expression.ValueExpressions.IntExpression;
+import org.apache.drill.common.expression.ValueExpressions.LongExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 
-public final class ConstantChecker extends SimpleExprVisitor<Boolean>{
-	
+final class ConstantChecker implements ExprVisitor<Boolean, ErrorCollector, RuntimeException> {
+
+
   private final static ConstantChecker INSTANCE = new ConstantChecker();
   
   private ConstantChecker(){}
   
-  public static boolean onlyIncludesConstants(LogicalExpression e){
-    return e.accept(INSTANCE, null);
+  public static void checkConstants(LogicalExpression e, ErrorCollector errors){
+    e.accept(INSTANCE, errors);
   }
 
   @Override
-  public Boolean visitFunctionCall(FunctionCall call) {
-    throw new UnsupportedOperationException("FunctionCall is not expected here. "+
-      "It should have been converted to FunctionHolderExpression in materialization");
+  public Boolean visitFunctionCall(FunctionCall call, ErrorCollector errors) {
+    throw new UnsupportedOperationException("FunctionCall is not expected here. "
+        + "It should have been converted to FunctionHolderExpression in materialization");
   }
 
   @Override
-  public Boolean visitFunctionHolderExpression(FunctionHolderExpression holder) {
-    for(int i=0; i<holder.args.size(); i++) {
-      if (holder.argConstantOnly(i) && !holder.args.get(i).accept(this, null)) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Function '").append(holder.getName())
-          .append("' expects constant input for argument number ").append(i);
-        throw new UnsupportedOperationException(sb.toString());
+  public Boolean visitFunctionHolderExpression(FunctionHolderExpression holder, ErrorCollector errors) {
+    boolean allArgsAreConstant = true;
+    for (int i = 0; i < holder.args.size(); i++) {
+      boolean thisArgIsConstant = holder.args.get(i).accept(this, errors);
+      if(!thisArgIsConstant){
+        allArgsAreConstant = false;
+        if (holder.argConstantOnly(i)) {
+          errors.addGeneralError( //
+              holder.args.get(i).getPosition(), //
+              String.format("Function %s expects constant input for argument number %d", holder.getName(), i));
+        }
       }
     }
-    return true;
+    return allArgsAreConstant;
   }
 
   @Override
-  public Boolean visitIfExpression(IfExpression ifExpr) {
-    for(IfCondition c : ifExpr.conditions){
-      if(!c.condition.accept(this, null) || !c.expression.accept(this, null)) return false;
+  public Boolean visitIfExpression(IfExpression ifExpr, ErrorCollector errors) {
+    for (IfCondition c : ifExpr.conditions) {
+      if (!c.condition.accept(this, errors) || !c.expression.accept(this, errors))
+        return false;
     }
-    if(!ifExpr.elseExpression.accept(this, null)) return false;
+    if (!ifExpr.elseExpression.accept(this, errors)) return false;
     return true;
   }
 
   @Override
-  public Boolean visitSchemaPath(SchemaPath path) {
+  public Boolean visitSchemaPath(SchemaPath path, ErrorCollector errors) {
     return false;
   }
 
   @Override
-  public Boolean visitIntConstant(IntExpression intExpr) {
+  public Boolean visitIntConstant(IntExpression intExpr, ErrorCollector errors) {
     return true;
   }
 
   @Override
-  public Boolean visitFloatConstant(FloatExpression fExpr) {
+  public Boolean visitFloatConstant(FloatExpression fExpr, ErrorCollector errors) {
     return true;
   }
 
   @Override
-  public Boolean visitLongConstant(LongExpression intExpr) {
+  public Boolean visitLongConstant(LongExpression intExpr, ErrorCollector errors) {
     return true;
   }
 
   @Override
-  public Boolean visitDoubleConstant(DoubleExpression dExpr) {
+  public Boolean visitDoubleConstant(DoubleExpression dExpr, ErrorCollector errors) {
     return true;
   }
 
   @Override
-  public Boolean visitBooleanConstant(BooleanExpression e) {
+  public Boolean visitBooleanConstant(BooleanExpression e, ErrorCollector errors) {
     return true;
   }
 
   @Override
-  public Boolean visitQuotedStringConstant(QuotedString e) {
+  public Boolean visitQuotedStringConstant(QuotedString e, ErrorCollector errors) {
     return true;
   }
 
   @Override
-  public Boolean visitUnknown(LogicalExpression e, Void value) throws RuntimeException {
+  public Boolean visitUnknown(LogicalExpression e, ErrorCollector errors){
     return false;
   }
-	
-  
+
 }
