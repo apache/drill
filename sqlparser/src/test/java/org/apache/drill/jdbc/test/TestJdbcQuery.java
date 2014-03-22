@@ -94,7 +94,18 @@ public class TestJdbcQuery {
   public void testWildcard() throws Exception{
     testQuery(String.format("select * from dfs.`%s/../sample-data/region.parquet`", WORKING_PATH));
   }
-  
+
+  @Test
+  public void testCharLiteral() throws Exception {
+    testQuery(String.format("select 'test literal' from INFORMATION_SCHEMA.TABLES LIMIT 1"));
+  }
+
+  @Test
+  @Ignore // failing due to a bug in cast to varchar function
+  public void testVarCharLiteral() throws Exception {
+    testQuery(String.format("select cast('test literal' as VARCHAR) from INFORMATION_SCHEMA.TABLES LIMIT 1"));
+  }
+
   @Test 
   public void testLogicalExplain() throws Exception{
     testQuery(String.format("EXPLAIN PLAN WITHOUT IMPLEMENTATION FOR select * from dfs.`%s/../sample-data/region.parquet`", WORKING_PATH));

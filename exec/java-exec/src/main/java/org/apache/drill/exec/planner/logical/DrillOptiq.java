@@ -47,6 +47,7 @@ import org.eigenbase.sql.SqlSyntax;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 
 import com.google.common.collect.Lists;
+import org.eigenbase.util.NlsString;
 
 /**
  * Utilities for Drill's planner.
@@ -190,7 +191,7 @@ public class DrillOptiq {
       case BOOLEAN:
         return ValueExpressions.getBit(((Boolean) literal.getValue()));
       case CHAR:
-        return ValueExpressions.getChar(((String) literal.getValue()));
+        return ValueExpressions.getChar(((NlsString)literal.getValue()).getValue());
       case DOUBLE:
         double d = ((BigDecimal) literal.getValue()).doubleValue();
         return ValueExpressions.getFloat8(d);
@@ -202,7 +203,7 @@ public class DrillOptiq {
         int i = ((BigDecimal) literal.getValue()).intValue();
         return ValueExpressions.getInt(i);
       case VARCHAR:
-        return ValueExpressions.getChar(((String) literal.getValue()));
+        return ValueExpressions.getChar(((NlsString)literal.getValue()).getValue());
       default:
         throw new UnsupportedOperationException(String.format("Unable to convert the value of %s and type %s to a Drill constant expression.", literal, literal.getTypeName()));
       }
