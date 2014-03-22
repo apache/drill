@@ -17,6 +17,7 @@
  */
 package org.apache.drill.common.expression.visitors;
 
+import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.IfExpression;
@@ -110,6 +111,11 @@ public final class AggregateChecker extends SimpleExprVisitor<Boolean>{
   @Override
   public Boolean visitUnknown(LogicalExpression e, Void value) throws RuntimeException {
     return false;
+  }
+
+  @Override
+  public Boolean visitCastExpression(CastExpression e, Void value) throws RuntimeException {
+    return e.getInput().accept(this, value);
   }
 	
   

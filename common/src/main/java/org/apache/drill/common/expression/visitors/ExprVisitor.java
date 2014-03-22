@@ -17,6 +17,7 @@
  */
 package org.apache.drill.common.expression.visitors;
 
+import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.IfExpression;
@@ -24,10 +25,10 @@ import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.ValueExpressions.BooleanExpression;
 import org.apache.drill.common.expression.ValueExpressions.DoubleExpression;
-import org.apache.drill.common.expression.ValueExpressions.LongExpression;
-import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.expression.ValueExpressions.FloatExpression;
 import org.apache.drill.common.expression.ValueExpressions.IntExpression;
+import org.apache.drill.common.expression.ValueExpressions.LongExpression;
+import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 
 
 public interface ExprVisitor<T, VAL, EXCEP extends Exception> {
@@ -42,4 +43,6 @@ public interface ExprVisitor<T, VAL, EXCEP extends Exception> {
   public T visitBooleanConstant(BooleanExpression e, VAL value) throws EXCEP;
   public T visitQuotedStringConstant(QuotedString e, VAL value) throws EXCEP;
   public T visitUnknown(LogicalExpression e, VAL value) throws EXCEP;
+  public T visitCastExpression(CastExpression e, VAL value) throws EXCEP;
+  
 }

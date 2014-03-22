@@ -72,17 +72,7 @@ public class FunctionCallFactory {
    *             expr -- input expression
    */
   public static LogicalExpression createCast(MajorType type, ExpressionPosition ep, LogicalExpression expr){
-    String castFuncWithType = "cast" + type.getMinorType().name();
-
-    List<LogicalExpression> newArgs = Lists.newArrayList();
-    newArgs.add(expr);  //input_expr
-
-    //VarLen type
-    if (!Types.isFixedWidthType(type)) {
-      newArgs.add(new ValueExpressions.LongExpression(type.getWidth(), null));
-    }
-
-    return new FunctionCall(castFuncWithType, newArgs, ep);
+    return new CastExpression(expr, type, ep);
   }
 
   public static LogicalExpression createExpression(String functionName, List<LogicalExpression> args){

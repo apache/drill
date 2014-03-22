@@ -17,9 +17,10 @@
  */
 package org.apache.drill.exec.expr;
 
-import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
+import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.IfExpression;
@@ -27,6 +28,7 @@ import org.apache.drill.common.expression.IfExpression.IfCondition;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.TypedNullConstant;
+import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.expression.ValueExpressions.BooleanExpression;
 import org.apache.drill.common.expression.ValueExpressions.DoubleExpression;
 import org.apache.drill.common.expression.ValueExpressions.LongExpression;
@@ -35,10 +37,9 @@ import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
-
+import org.apache.drill.exec.compile.sig.ConstantExpressionIdentifier;
 import org.apache.drill.exec.expr.ClassGenerator.BlockType;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
-import org.apache.drill.exec.compile.sig.ConstantExpressionIdentifier;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.expr.fn.HiveFuncHolder;
@@ -46,6 +47,7 @@ import org.apache.drill.exec.physical.impl.filter.ReturnValueExpression;
 import org.apache.drill.exec.record.NullExpression;
 import org.apache.drill.exec.vector.ValueHolderHelper;
 
+import com.google.common.collect.Lists;
 import com.sun.codemodel.JBlock;
 import com.sun.codemodel.JClass;
 import com.sun.codemodel.JConditional;
@@ -317,6 +319,22 @@ public class EvaluationVisitor {
       setup.assign(var, ((JClass)generator.getModel().ref(ValueHolderHelper.class)).staticInvoke("getVarCharHolder").arg(stringLiteral));
       return new HoldingContainer(majorType, var, null, null);
     }
+
+    @Override
+    public HoldingContainer visitCastExpression(CastExpression e, ClassGenerator<?> value) throws RuntimeException {
+      // we create
+      MajorType type = e.getMajorType();
+      String castFuncWithType = "cast" + type.getMinorType().name();
+
+      List<LogicalExpression> newArgs = Lists.newArrayList();
+      newArgs.add(e.getInput());  //input_expr
+
+      //VarLen type
+      if (!Types.isFixedWidthType(type)) {
+        newArgs.add(new ValueExpressions.LongExpression(type.getWidth(), null));
+      }
+      FunctionCall fc = new FunctionCall(castFuncWithType, newArgs, e.getPosition());
+      return fc.accept(this, value);    }
   }
 
   private class ConstantFilter extends EvalVisitor {

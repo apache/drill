@@ -30,7 +30,7 @@ public class RpcExceptionHandler implements ChannelHandler{
   @Override
   public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
     
-    if(!ctx.channel().isOpen()){
+    if(!ctx.channel().isOpen() || cause.getMessage().equals("Connection reset by peer")){
       logger.warn("Exception with closed channel", cause);
       return;
     }else{

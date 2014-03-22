@@ -20,9 +20,12 @@ package org.apache.drill.common.expression;
 import org.apache.drill.common.expression.IfExpression.IfCondition;
 import org.apache.drill.common.expression.ValueExpressions.BooleanExpression;
 import org.apache.drill.common.expression.ValueExpressions.DoubleExpression;
+import org.apache.drill.common.expression.ValueExpressions.FloatExpression;
+import org.apache.drill.common.expression.ValueExpressions.IntExpression;
 import org.apache.drill.common.expression.ValueExpressions.LongExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
+import org.apache.drill.common.types.TypeProtos.MajorType;
 
 import com.google.common.collect.ImmutableList;
 
@@ -96,6 +99,59 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
     sb.append("\"");
     return null;
   }
+
+  @Override
+  public Void visitCastExpression(CastExpression e, StringBuilder sb) throws RuntimeException {
+    MajorType mt = e.getMajorType();
+    
+    sb.append("cast( (");
+    e.getInput().accept(this, sb);
+    sb.append(" ) as ");
+    sb.append(mt.getMinorType().name());
+    
+    switch(mt.getMinorType()){
+    case FLOAT4:
+    case FLOAT8:
+    case INT:
+    case SMALLINT:
+    case BIGINT:
+    case UINT1:
+    case UINT2:
+    case UINT4:
+    case UINT8:
+      // do nothing else.
+      break;
+    case VAR16CHAR:
+    case VARBINARY:
+    case VARCHAR:
+    case FIXED16CHAR:
+    case FIXEDBINARY:
+    case FIXEDCHAR:
+      // add size in parens
+      sb.append("(");
+      sb.append(mt.getWidth());
+      sb.append(")");
+      break;
+    default:
+      throw new UnsupportedOperationException(String.format("Unable to convert cast expression %s into string.", e));
+    }
+    sb.append(" )");
+    return null;
+  }
+
+  @Override
+  public Void visitFloatConstant(FloatExpression fExpr, StringBuilder sb) throws RuntimeException {
+    sb.append(fExpr.getFloat());
+    return null;
+  }
+
+  @Override
+  public Void visitIntConstant(IntExpression intExpr, StringBuilder sb) throws RuntimeException {
+    sb.append(intExpr.getInt());
+    return null;
+  }
+  
+  
   
   
 }

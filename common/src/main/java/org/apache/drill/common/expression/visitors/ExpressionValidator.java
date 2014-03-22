@@ -17,6 +17,7 @@
  */
 package org.apache.drill.common.expression.visitors;
 
+import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.FunctionHolderExpression;
@@ -135,6 +136,11 @@ public class ExpressionValidator implements ExprVisitor<Void, ErrorCollector, Ru
   @Override
   public Void visitUnknown(LogicalExpression e, ErrorCollector value) throws RuntimeException {
     return null;
+  }
+
+  @Override
+  public Void visitCastExpression(CastExpression e, ErrorCollector value) throws RuntimeException {
+    return e.accept(this, value);
   }
 
 }

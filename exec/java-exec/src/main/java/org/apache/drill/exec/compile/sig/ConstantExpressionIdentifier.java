@@ -22,6 +22,7 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.IfExpression;
@@ -136,6 +137,12 @@ public class ConstantExpressionIdentifier implements ExprVisitor<Boolean, Identi
   @Override
   public Boolean visitQuotedStringConstant(QuotedString e, IdentityHashMap<LogicalExpression, Object> value){
     return true;
+  }
+
+  @Override
+  public Boolean visitCastExpression(CastExpression e, IdentityHashMap<LogicalExpression, Object> value)
+      throws RuntimeException {
+    return e.getInput().accept(this, value);
   }
 
   @Override

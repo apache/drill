@@ -101,7 +101,6 @@ public class TestJdbcQuery {
   }
 
   @Test
-  @Ignore // failing due to a bug in cast to varchar function
   public void testVarCharLiteral() throws Exception {
     testQuery(String.format("select cast('test literal' as VARCHAR) from INFORMATION_SCHEMA.TABLES LIMIT 1"));
   }

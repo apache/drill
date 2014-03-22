@@ -21,16 +21,17 @@ import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FieldReference;
-import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.FunctionCallFactory;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.ValueExpressions;
-import org.apache.drill.common.expression.ValueExpressions.LongExpression;
+import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.record.NullExpression;
 import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.rex.RexCall;
 import org.eigenbase.rex.RexCorrelVariable;
@@ -45,9 +46,9 @@ import org.eigenbase.rex.RexRangeRef;
 import org.eigenbase.rex.RexVisitorImpl;
 import org.eigenbase.sql.SqlSyntax;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
+import org.eigenbase.util.NlsString;
 
 import com.google.common.collect.Lists;
-import org.eigenbase.util.NlsString;
 
 /**
  * Utilities for Drill's planner.
@@ -163,20 +164,21 @@ public class DrillOptiq {
 
     private LogicalExpression getDrillCastFunctionFromOptiq(RexCall call){
       LogicalExpression arg = call.getOperands().get(0).accept(this);
-      List<LogicalExpression> args = Collections.singletonList(arg);
-      String fname = null;
+      MajorType castType = null;
+      
       switch(call.getType().getSqlTypeName().getName()){
-      case "VARCHAR": {
-        args = Lists.newArrayList(arg, new LongExpression(call.getType().getPrecision()));
-        return FunctionCallFactory.createExpression("castVARCHAR", args);
-      }
-      case "INTEGER": fname = "castINT"; break;
-      case "FLOAT": fname = "castFLOAT4"; break;
-      case "DOUBLE": fname = "castFLOAT8"; break;
+      case "VARCHAR": 
+        castType = Types.required(MinorType.VARCHAR).toBuilder().setWidth(call.getType().getPrecision()).build();
+        break;
+      
+      case "INTEGER": castType = Types.required(MinorType.INT); break;
+      case "FLOAT": Types.required(MinorType.FLOAT4); break;
+      case "DOUBLE": Types.required(MinorType.FLOAT8); break;
       case "DECIMAL": throw new UnsupportedOperationException("Need to add decimal.");
-      default: fname = "cast" + call.getType().getSqlTypeName().getName();
+      default: castType = Types.required(MinorType.valueOf(call.getType().getSqlTypeName().getName()));
       }
-      return FunctionCallFactory.createExpression(fname, args);
+      
+      return FunctionCallFactory.createCast(castType, ExpressionPosition.UNKNOWN, arg);
 
     }
     
