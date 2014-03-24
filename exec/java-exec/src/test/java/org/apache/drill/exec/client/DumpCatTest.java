@@ -103,7 +103,7 @@ public class DumpCatTest {
       System.out.println("File Name: " + filename);
 
       Configuration conf = new Configuration();
-      conf.set("fs.name.default", c.getString(ExecConstants.TRACE_DUMP_FILESYSTEM));
+      conf.set(FileSystem.FS_DEFAULT_NAME_KEY, c.getString(ExecConstants.TRACE_DUMP_FILESYSTEM));
 
       FileSystem fs = FileSystem.get(conf);
       Path path = new Path(filename);

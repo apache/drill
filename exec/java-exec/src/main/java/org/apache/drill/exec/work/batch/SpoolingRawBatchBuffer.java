@@ -53,7 +53,6 @@ import com.google.common.collect.Queues;
 public class SpoolingRawBatchBuffer implements RawBatchBuffer {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SpoolingRawBatchBuffer.class);
 
-  private static String HADOOP_FILESYSTEM_DEFAULT_NAME = "fs.default.name";
   private static String DRILL_LOCAL_IMPL_STRING = "fs.drill-local.impl";
   private static final float STOP_SPOOLING_FRACTION = (float) 0.5;
 
@@ -72,7 +71,7 @@ public class SpoolingRawBatchBuffer implements RawBatchBuffer {
     this.context = context;
     this.threshold = context.getConfig().getLong(ExecConstants.SPOOLING_BUFFER_MEMORY);
     Configuration conf = new Configuration();
-    conf.set(HADOOP_FILESYSTEM_DEFAULT_NAME, context.getConfig().getString(ExecConstants.TEMP_FILESYSTEM));
+    conf.set(FileSystem.FS_DEFAULT_NAME_KEY, context.getConfig().getString(ExecConstants.TEMP_FILESYSTEM));
     conf.set(DRILL_LOCAL_IMPL_STRING, LocalSyncableFileSystem.class.getName());
     this.fs = FileSystem.get(conf);
     this.path = new Path(getDir(), getFileName());

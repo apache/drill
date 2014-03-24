@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.CommandNeedRetryException;
 import org.apache.hadoop.hive.ql.Driver;
@@ -59,7 +60,7 @@ public class HiveTestDataGenerator {
     HiveConf conf = new HiveConf();
 
     conf.set("javax.jdo.option.ConnectionURL", String.format("jdbc:derby:;databaseName=%s;create=true", DB_DIR));
-    conf.set("fs.default.name", "file:///");
+    conf.set(FileSystem.FS_DEFAULT_NAME_KEY, "file:///");
     conf.set("hive.metastore.warehouse.dir", WH_DIR);
 
     String tableName = "kv";

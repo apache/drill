@@ -77,7 +77,7 @@ public class TraceRecordBatch extends AbstractSingleRecordBatch<Trace> {
     /* Create the log file we will dump to and initialize the file descriptors */
     try {
       Configuration conf = new Configuration();
-      conf.set("fs.name.default", ExecConstants.TRACE_DUMP_FILESYSTEM);
+      conf.set(FileSystem.FS_DEFAULT_NAME_KEY, context.getConfig().getString(ExecConstants.TRACE_DUMP_FILESYSTEM));
       FileSystem fs = FileSystem.get(conf);
 
       /* create the file */

@@ -75,7 +75,7 @@ public class TestWriteToDisk {
     VectorAccessibleSerializable wrap = new VectorAccessibleSerializable(batch, context.getAllocator());
 
     Configuration conf = new Configuration();
-    conf.set("fs.name.default", "file:///");
+    conf.set(FileSystem.FS_DEFAULT_NAME_KEY, "file:///");
     FileSystem fs = FileSystem.get(conf);
     Path path = new Path("/tmp/drillSerializable");
     if (fs.exists(path)) fs.delete(path, false);

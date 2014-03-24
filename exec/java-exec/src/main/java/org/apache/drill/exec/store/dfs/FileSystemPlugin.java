@@ -38,6 +38,7 @@ import org.apache.hadoop.conf.Configuration;
 
 import com.beust.jcommander.internal.Lists;
 import com.beust.jcommander.internal.Maps;
+import org.apache.hadoop.fs.FileSystem;
 
 /**
  * A Storage engine associated with a Hadoop FileSystem Implementation. Examples include HDFS, MapRFS, QuantacastFileSystem,
@@ -61,7 +62,7 @@ public class FileSystemPlugin extends AbstractStoragePlugin{
       this.context = context;
       
       Configuration fsConf = new Configuration();
-      fsConf.set("fs.default.name", config.connection);
+      fsConf.set(FileSystem.FS_DEFAULT_NAME_KEY, config.connection);
       fsConf.set("fs.classpath.impl", ClassPathFileSystem.class.getName());
       this.fs = FileSystemCreator.getFileSystem(context.getConfig(), fsConf);
       this.formatsByName = FormatCreator.getFormatPlugins(context, fs, config);

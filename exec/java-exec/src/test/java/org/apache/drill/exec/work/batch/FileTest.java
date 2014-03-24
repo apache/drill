@@ -31,7 +31,7 @@ import java.util.concurrent.TimeUnit;
 public class FileTest {
   public static void main(String[] args) throws IOException {
     Configuration conf = new Configuration();
-    conf.set("fs.default.name", "sync:///");
+    conf.set(FileSystem.FS_DEFAULT_NAME_KEY, "sync:///");
     System.out.println(FileSystem.getDefaultUri(conf));
     FileSystem fs = FileSystem.get(conf);
 //    FileSystem fs = new LocalSyncableFileSystem(conf);
