@@ -301,7 +301,9 @@ public class JSONRecordReader implements RecordReader {
               rowIndex,
               colIndex,
               groupCount);
-
+          if(readType == ReadType.ARRAY) {
+            groupCount--;
+          }
           isFull = isFull || currentFieldFull;
         }
         token = parser.nextToken();

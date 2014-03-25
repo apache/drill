@@ -387,4 +387,33 @@ public class JSONRecordReaderTest {
     assertEquals(0, jr.next());
     assertTrue(mutator.getRemovedFields().isEmpty());
   }
+  
+  @Test
+  public void testJsonArrayandNormalFields(@Injectable final FragmentContext context) throws ExecutionSetupException, IOException {
+    new Expectations() {
+      {
+        context.getAllocator();
+        returns(new TopLevelAllocator());
+      }
+    };
+
+    JSONRecordReader jr = new JSONRecordReader(context,
+        FileUtils.getResourceAsFile("/scan_json_test_7.json").toURI().toString(),
+        FileSystem.getLocal(new Configuration()), null, null);
+
+    MockOutputMutator mutator = new MockOutputMutator();
+    List<ValueVector> addFields = mutator.getAddFields();
+    jr.setup(mutator);
+    assertEquals(2, jr.next());
+    assertEquals(3, addFields.size());
+    
+    assertField(addFields.get(0), 0, MinorType.VARCHAR, "ABC", "test");
+    assertField(addFields.get(2), 0, MinorType.VARCHAR, "drill", "a");
+    assertField(addFields.get(0), 1, MinorType.VARCHAR, "abc", "test");
+    assertField(addFields.get(2), 1, MinorType.VARCHAR, "apache", "a");
+
+
+    assertEquals(0, jr.next());
+    assertTrue(mutator.getRemovedFields().isEmpty());
+  }
 }
