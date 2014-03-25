@@ -50,7 +50,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
 
   public void setup(RecordBatch incoming) {
     //TODO: max bufferLength should = parameter.len
-    buffer = incoming.getContext().getAllocator().buffer(${type.bufferLength});
+    buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte[${type.bufferLength}]);
   }
 
   public void eval() {

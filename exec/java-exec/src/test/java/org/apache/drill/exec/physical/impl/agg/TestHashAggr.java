@@ -19,9 +19,10 @@
 package org.apache.drill.exec.physical.impl.agg;
 
 import org.apache.drill.BaseTestQuery;
+import org.junit.Ignore;
 import org.junit.Test;
 
- 
+@Ignore // DRILL-443
 public class TestHashAggr extends BaseTestQuery{
 
   

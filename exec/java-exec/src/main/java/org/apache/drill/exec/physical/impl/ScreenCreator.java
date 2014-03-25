@@ -70,6 +70,11 @@ public class ScreenCreator implements RootCreator<Screen>{
       this.connection = context.getConnection();
     }
     
+    private void closeAllocator(){
+      sendCount.waitForSendComplete();
+      context.getAllocator().close();
+    }
+    
     @Override
     public boolean next() {
       if(!ok){
@@ -81,6 +86,7 @@ public class ScreenCreator implements RootCreator<Screen>{
 //      logger.debug("Screen Outcome {}", outcome);
       switch(outcome){
       case STOP: {
+          closeAllocator();
           QueryResult header = QueryResult.newBuilder() //
               .setQueryId(context.getHandle().getQueryId()) //
               .setRowCount(0) //
@@ -95,6 +101,7 @@ public class ScreenCreator implements RootCreator<Screen>{
           return false;
       }
       case NONE: {
+        closeAllocator();
         context.getStats().batchesCompleted.inc(1);
         QueryResult header = QueryResult.newBuilder() //
             .setQueryId(context.getHandle().getQueryId()) //

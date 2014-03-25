@@ -18,8 +18,10 @@
 package org.apache.drill.exec.physical.impl.join;
 
 import org.apache.drill.exec.physical.impl.join.JoinWorker.JoinOutcome;
+import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
+import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 
 /**
@@ -137,6 +139,7 @@ public final class JoinStatus {
       return false;
     if (!isLeftPositionInCurrentBatch()) {
       leftPosition = 0;
+      releaseData(left);
       lastLeft = left.next();
       return lastLeft == IterOutcome.OK;
     }
@@ -155,6 +158,7 @@ public final class JoinStatus {
       return false;
     if (!isRightPositionInCurrentBatch()) {
       rightPosition = 0;
+      releaseData(right);
       lastRight = right.next();
       return lastRight == IterOutcome.OK;
     }
@@ -162,6 +166,13 @@ public final class JoinStatus {
     return true;
   }
 
+  private void releaseData(RecordBatch b){
+    for(VectorWrapper<?> v : b){
+      v.clear();
+    }
+    if(b.getSchema().getSelectionVectorMode() == SelectionVectorMode.TWO_BYTE) b.getSelectionVector2().clear();
+  }
+  
   /**
    * Check if the left record position can advance by one in the current batch.
    */

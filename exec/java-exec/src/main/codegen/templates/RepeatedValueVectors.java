@@ -56,7 +56,7 @@ package org.apache.drill.exec.vector;
   }
 
   public int getValueCapacity(){
-    return values.getValueCapacity();
+    return Math.min(values.getValueCapacity(), offsets.getValueCapacity());
   }
   
   public int getBufferSize(){
@@ -324,8 +324,7 @@ package org.apache.drill.exec.vector;
     }
     
     public void generateTestData(){
-      setValueCount(offsets.getAccessor().getValueCount() - 1);
-      int valCount = offsets.getValueCapacity();
+      int valCount = getValueCapacity();
       int[] sizes = {1,2,0,6};
       int size = 0;
       int runningOffset = 0;
@@ -334,6 +333,7 @@ package org.apache.drill.exec.vector;
         offsets.getMutator().set(i, runningOffset);  
       }
       values.getMutator().generateTestData();
+      setValueCount(valCount-1);
     }
     
     public void reset(){

@@ -105,7 +105,8 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
       logger.debug("Aggregator response {}, records {}", out, aggregator.getOutputCount());
       switch(out){
       case CLEANUP_AND_RETURN:
-        container.zeroVectors();
+        incoming.cleanup();
+        container.clear();
         done = true;
         return aggregator.getOutcome();
       case RETURN_OUTCOME:
