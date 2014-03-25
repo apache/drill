@@ -255,6 +255,10 @@ public class Types {
     return type.getMinorType() == MinorType.LATE;
   }
   
+  public static MajorType withMode(MinorType type, DataMode mode){
+    return MajorType.newBuilder().setMode(mode).setMinorType(type).build();
+  }
+  
   public static MajorType required(MinorType type){
     return MajorType.newBuilder().setMode(DataMode.REQUIRED).setMinorType(type).build();
   }
@@ -279,6 +283,54 @@ public class Types {
         throw new UnsupportedOperationException();
     }
   }
+
+  public static MajorType getMajorTypeFromName(String typeName) {
+    return getMajorTypeFromName(typeName, DataMode.REQUIRED);
+  }
   
-  
+  public static MajorType getMajorTypeFromName(String typeName, DataMode mode) {
+    switch (typeName) {
+    case "bool":
+    case "boolean":
+      return withMode(MinorType.BIT, mode);
+    case "tinyint":
+      return withMode(MinorType.TINYINT, mode);
+    case "uint1":
+      return withMode(MinorType.UINT1, mode);
+    case "smallint":
+      return withMode(MinorType.SMALLINT, mode);
+    case "uint2":
+      return withMode(MinorType.UINT2, mode);
+    case "int":
+      return withMode(MinorType.INT, mode);
+    case "uint4":
+      return withMode(MinorType.UINT4, mode);
+    case "bigint":
+      return withMode(MinorType.BIGINT, mode);
+    case "uint8":
+      return withMode(MinorType.UINT8, mode);
+    case "float":
+      return withMode(MinorType.FLOAT4, mode);
+    case "double":
+      return withMode(MinorType.FLOAT8, mode);
+    case "decimal":
+      return withMode(MinorType.DECIMAL38SPARSE, mode);
+    case "utf8":
+    case "varchar":
+      return withMode(MinorType.VARCHAR, mode);
+    case "utf16":
+    case "string":
+    case "var16char":
+      return withMode(MinorType.VAR16CHAR, mode);
+    case "date":
+      return withMode(MinorType.DATE, mode);
+    case "time":
+      return withMode(MinorType.TIME, mode);
+    case "binary":
+      return withMode(MinorType.VARBINARY, mode);
+    default:
+      throw new UnsupportedOperationException("Could not determine type: " + typeName);
+    }
+  }
+
 }

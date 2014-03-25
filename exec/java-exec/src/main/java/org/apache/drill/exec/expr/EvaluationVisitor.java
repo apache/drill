@@ -23,6 +23,7 @@ import java.util.Set;
 import io.netty.buffer.ByteBuf;
 import com.google.common.collect.Lists;
 import org.apache.drill.common.expression.CastExpression;
+import org.apache.drill.common.expression.ConvertExpression;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.IfExpression;
@@ -440,7 +441,18 @@ public class EvaluationVisitor {
         "It should have been converted to FunctionHolderExpression in materialization");
     }
 
+    @Override
+    public HoldingContainer visitConvertExpression(ConvertExpression e, ClassGenerator<?> value) throws RuntimeException {
+      String convertFunctionName = e.getConvertFunction() + e.getConversionType();
+
+      List<LogicalExpression> newArgs = Lists.newArrayList();
+      newArgs.add(e.getInput());  //input_expr
+
+      FunctionCall fc = new FunctionCall(convertFunctionName, newArgs, e.getPosition());
+      return fc.accept(this, value);
+    }
   }
+
   private class ConstantFilter extends EvalVisitor {
 
     private Set<LogicalExpression> constantBoundaries;

@@ -202,7 +202,7 @@ public class HiveRecordReader implements RecordReader {
       }
       for (int i = 0; i < selectedPartitionNames.size(); i++) {
         String type = selectedPartitionTypes.get(i);
-        MaterializedField field = MaterializedField.create(SchemaPath.getSimplePath(columnNames.get(i)), getMajorType(type));
+        MaterializedField field = MaterializedField.create(SchemaPath.getSimplePath(columnNames.get(i)), Types.getMajorTypeFromName(type));
         ValueVector vv = TypeHelper.getNewVector(field, context.getAllocator());
         pVectors.add(vv);
         output.addField(vv);
@@ -312,35 +312,6 @@ public class HiveRecordReader implements RecordReader {
         return Short.parseShort(value);
       case "string":
         return value.getBytes();
-      default:
-        throw new UnsupportedOperationException("Could not determine type: " + type);
-    }
-  }
-
-  public static TypeProtos.MajorType getMajorType(String type) {
-    switch(type) {
-      case "binary":
-        return Types.required(TypeProtos.MinorType.VARBINARY);
-      case "boolean":
-        return Types.required(TypeProtos.MinorType.BIT);
-      case "tinyint":
-        return Types.required(TypeProtos.MinorType.TINYINT);
-      case "decimal":
-        return Types.required(TypeProtos.MinorType.DECIMAL38SPARSE);
-      case "double":
-        return Types.required(TypeProtos.MinorType.FLOAT8);
-      case "float":
-        return Types.required(TypeProtos.MinorType.FLOAT4);
-      case "int":
-        return Types.required(TypeProtos.MinorType.INT);
-      case "bigint":
-        return Types.required(TypeProtos.MinorType.BIGINT);
-      case "smallint":
-        return Types.required(TypeProtos.MinorType.SMALLINT);
-      case "string":
-        return Types.required(TypeProtos.MinorType.VARCHAR);
-      case "varchar":
-
       default:
         throw new UnsupportedOperationException("Could not determine type: " + type);
     }

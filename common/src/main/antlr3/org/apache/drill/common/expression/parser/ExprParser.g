@@ -73,7 +73,12 @@ parse returns [LogicalExpression e]
 functionCall returns [LogicalExpression e]
   :  Identifier OParen exprList? CParen {$e = FunctionCallFactory.createExpression($Identifier.text, pos($Identifier), $exprList.listE);  }
   ;
-  
+
+convertCall returns [LogicalExpression e]
+  :  Convert OParen expression Comma String CParen
+      { $e = FunctionCallFactory.createConvert($Convert.text, $String.text, $expression.e, pos($Convert));}
+  ;
+
 castCall returns [LogicalExpression e]
 	@init{
   	  List<LogicalExpression> exprs = new ArrayList<LogicalExpression>();
@@ -299,6 +304,7 @@ arraySegment returns [PathSegment seg]
 
 lookup returns [LogicalExpression e]
   :  functionCall {$e = $functionCall.e ;}
+  | convertCall {$e = $convertCall.e; }
   | castCall {$e = $castCall.e; }
   | pathSegment {$e = new SchemaPath($pathSegment.seg, pos($pathSegment.start) ); }
   | String {$e = new ValueExpressions.QuotedString($String.text, pos($String) ); }

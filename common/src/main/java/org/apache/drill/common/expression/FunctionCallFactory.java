@@ -79,6 +79,10 @@ public class FunctionCallFactory {
     return new CastExpression(expr, type, ep);
   }
 
+  public static LogicalExpression createConvert(String function, String conversionType, LogicalExpression expr, ExpressionPosition ep) {
+    return new ConvertExpression(function, conversionType, expr, ep);
+  }
+
   public static LogicalExpression createExpression(String functionName, List<LogicalExpression> args){
     return createExpression(functionName, ExpressionPosition.UNKNOWN, args);
   }

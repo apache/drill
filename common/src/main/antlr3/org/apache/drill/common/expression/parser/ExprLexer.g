@@ -36,6 +36,7 @@ Case     : 'case';
 When     : 'when';
 
 Cast: 'cast';
+Convert  : 'convert_' ('from' | 'to');
 Nullable: 'nullable';
 Repeat: 'repeat';
 As: 'as';

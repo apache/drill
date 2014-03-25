@@ -21,6 +21,7 @@ import java.util.List;
 
 import com.google.common.base.Joiner;
 import org.apache.drill.common.expression.CastExpression;
+import org.apache.drill.common.expression.ConvertExpression;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FunctionCall;
@@ -337,6 +338,17 @@ public class ExpressionTreeMaterializer {
     @Override
     public LogicalExpression visitQuotedStringConstant(QuotedString e, FunctionImplementationRegistry registry) {
       return e;
+    }
+
+    @Override
+    public LogicalExpression visitConvertExpression(ConvertExpression e, FunctionImplementationRegistry value) {
+      String convertFunctionName = e.getConvertFunction() + e.getConversionType();
+
+      List<LogicalExpression> newArgs = Lists.newArrayList();
+      newArgs.add(e.getInput());  //input_expr
+
+      FunctionCall fc = new FunctionCall(convertFunctionName, newArgs, e.getPosition());
+      return fc.accept(this, value);
     }
 
     @Override

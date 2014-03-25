@@ -18,6 +18,7 @@
 package org.apache.drill.common.expression.visitors;
 
 import org.apache.drill.common.expression.CastExpression;
+import org.apache.drill.common.expression.ConvertExpression;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.IfExpression;
@@ -140,6 +141,11 @@ public abstract class AbstractExprVisitor<T, VAL, EXCEP extends Exception> imple
 
   @Override
   public T visitCastExpression(CastExpression e, VAL value) throws EXCEP {
+    return visitUnknown(e, value);
+  }
+
+  @Override
+  public T visitConvertExpression(ConvertExpression e, VAL value) throws EXCEP {
     return visitUnknown(e, value);
   }
 

@@ -18,6 +18,7 @@
 package org.apache.drill.common.expression.visitors;
 
 import org.apache.drill.common.expression.CastExpression;
+import org.apache.drill.common.expression.ConvertExpression;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.IfExpression;
@@ -62,5 +63,5 @@ public interface ExprVisitor<T, VAL, EXCEP extends Exception> {
   public T visitQuotedStringConstant(QuotedString e, VAL value) throws EXCEP;
   public T visitUnknown(LogicalExpression e, VAL value) throws EXCEP;
   public T visitCastExpression(CastExpression e, VAL value) throws EXCEP;
-  
+  public T visitConvertExpression(ConvertExpression e, VAL value) throws EXCEP;
 }
