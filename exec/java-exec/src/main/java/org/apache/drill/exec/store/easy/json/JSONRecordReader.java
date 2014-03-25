@@ -159,6 +159,7 @@ public class JSONRecordReader implements RecordReader {
 
     } catch (IOException | SchemaChangeException e) {
       logger.error("Error reading next in Json reader", e);
+      throw new DrillRuntimeException(e);
     }
 
     for (VectorHolder holder : valueVectorMap.values()) {
