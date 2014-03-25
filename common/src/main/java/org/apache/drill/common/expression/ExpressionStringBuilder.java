@@ -238,6 +238,14 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
   }
 
   @Override
+  public Void visitConvertExpression(ConvertExpression e, StringBuilder sb) throws RuntimeException {
+    sb.append(e.getConvertFunction()).append("(");
+    e.getInput().accept(this, sb);
+    sb.append(", \"").append(e.getConversionType()).append("\")");
+    return null;
+  }
+
+  @Override
   public Void visitCastExpression(CastExpression e, StringBuilder sb) throws RuntimeException {
     MajorType mt = e.getMajorType();
 
@@ -309,8 +317,5 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
     sb.append(intExpr.getInt());
     return null;
   }
-
-
-
 
 }

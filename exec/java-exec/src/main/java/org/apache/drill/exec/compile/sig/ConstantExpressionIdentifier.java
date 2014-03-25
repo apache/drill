@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.drill.common.expression.CastExpression;
+import org.apache.drill.common.expression.ConvertExpression;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.IfExpression;
@@ -202,5 +203,10 @@ public class ConstantExpressionIdentifier implements ExprVisitor<Boolean, Identi
   public Boolean visitUnknown(LogicalExpression e, IdentityHashMap<LogicalExpression, Object> value){
     return checkChildren(e, value, false);
   }
-  
+
+  @Override
+  public Boolean visitConvertExpression(ConvertExpression e,
+      IdentityHashMap<LogicalExpression, Object> value) throws RuntimeException {
+    return e.getInput().accept(this, value);
+  }
 }

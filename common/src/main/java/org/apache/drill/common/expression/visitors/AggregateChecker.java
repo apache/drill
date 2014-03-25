@@ -18,6 +18,7 @@
 package org.apache.drill.common.expression.visitors;
 
 import org.apache.drill.common.expression.CastExpression;
+import org.apache.drill.common.expression.ConvertExpression;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.FunctionHolderExpression;
@@ -147,9 +148,15 @@ public final class AggregateChecker implements ExprVisitor<Boolean, ErrorCollect
   }
 
   @Override
+  public Boolean visitConvertExpression(ConvertExpression e, ErrorCollector errors) throws RuntimeException {
+    return e.getInput().accept(this, errors);
+  }
+
+  @Override
   public Boolean visitDateConstant(DateExpression intExpr, ErrorCollector errors) {
       return false;
   }
+
   @Override
   public Boolean visitTimeConstant(TimeExpression intExpr, ErrorCollector errors) {
       return false;
@@ -164,8 +171,10 @@ public final class AggregateChecker implements ExprVisitor<Boolean, ErrorCollect
   public Boolean visitIntervalYearConstant(IntervalYearExpression intExpr, ErrorCollector errors) {
       return false;
   }
+
   @Override
   public Boolean visitIntervalDayConstant(IntervalDayExpression intExpr, ErrorCollector errors) {
       return false;
   }
+
 }

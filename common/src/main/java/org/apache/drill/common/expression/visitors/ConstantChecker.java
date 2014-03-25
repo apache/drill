@@ -18,6 +18,7 @@
 package org.apache.drill.common.expression.visitors;
 
 import org.apache.drill.common.expression.CastExpression;
+import org.apache.drill.common.expression.ConvertExpression;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.FunctionHolderExpression;
@@ -175,4 +176,8 @@ final class ConstantChecker implements ExprVisitor<Boolean, ErrorCollector, Runt
     return e.getInput().accept(this, value);
   }
 
+  @Override
+  public Boolean visitConvertExpression(ConvertExpression e, ErrorCollector value) throws RuntimeException {
+    return e.getInput().accept(this, value);
+  }
 }
