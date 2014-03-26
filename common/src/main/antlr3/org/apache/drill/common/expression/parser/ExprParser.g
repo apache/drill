@@ -37,7 +37,7 @@ import java.util.*;
 import org.apache.drill.common.expression.*;
 import org.apache.drill.common.types.*;
 import org.apache.drill.common.types.TypeProtos.*;
-
+import org.apache.drill.common.exceptions.ExpressionParsingException;
 }
 
 @members{
@@ -50,6 +50,13 @@ import org.apache.drill.common.types.TypeProtos.*;
   
   public ExpressionPosition pos(Token token){
     return new ExpressionPosition(fullExpression, token.getTokenIndex());
+  }
+  
+  @Override    
+  public void displayRecognitionError(String[] tokenNames, RecognitionException e) {
+	String hdr = getErrorHeader(e);
+    String msg = getErrorMessage(e, tokenNames);
+    throw new ExpressionParsingException("Expression has syntax error! " + hdr + ":" + msg);
   }
 }
 

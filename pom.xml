@@ -120,6 +120,7 @@
             <exclude>**/target/**</exclude>
             <exclude>**/*.iml</exclude>
             <exclude>**/*.tdd</exclude>
+            <exclude>**/*.project</exclude>
           </excludes>
         </configuration>
       </plugin>

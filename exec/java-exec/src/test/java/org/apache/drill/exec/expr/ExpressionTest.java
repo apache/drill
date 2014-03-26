@@ -27,6 +27,7 @@ import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.RecognitionException;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.exceptions.ExpressionParsingException;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.ExpressionPosition;
@@ -91,6 +92,16 @@ public class ExpressionTest {
     };
     System.out.println(getExpressionCode("1 + alpha", batch));
 
+  }
+
+  @Test(expected = ExpressionParsingException.class)
+  public void testExprParseError(@Injectable RecordBatch batch) throws Exception {
+    getExpressionCode("less than(1, 2)", batch);
+  }
+
+  @Test
+  public void testExprParseNoError(@Injectable RecordBatch batch) throws Exception {
+    getExpressionCode("equal(1, 2)", batch);
   }
 
   // HELPER METHODS //
