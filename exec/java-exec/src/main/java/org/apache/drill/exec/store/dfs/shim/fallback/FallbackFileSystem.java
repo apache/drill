@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.List;
 
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.exec.store.dfs.DrillPathFilter;
 import org.apache.drill.exec.store.dfs.shim.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.shim.DrillInputStream;
 import org.apache.drill.exec.store.dfs.shim.DrillOutputStream;
@@ -65,9 +66,13 @@ public class FallbackFileSystem extends DrillFileSystem {
   private void addRecursiveStatus(FileStatus parent, List<FileStatus> listToFill) throws IOException {
     if (parent.isDir()) {
       Path pattern = new Path(parent.getPath(), "*");
-      FileStatus[] sub = fs.globStatus(pattern);
+      FileStatus[] sub = fs.globStatus(pattern, new DrillPathFilter());
       for(FileStatus s : sub){
-        listToFill.add(s);
+        if (s.isDir()) {
+          addRecursiveStatus(s, listToFill);
+        } else {
+          listToFill.add(s);
+        }
       }
     } else {
       listToFill.add(parent);

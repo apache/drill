@@ -81,7 +81,7 @@ public class WorkspaceSchemaFactory implements ExpandingConcurrentMap.MapValueFa
             logger.debug("File read failed.", e);
           }
         }
-        fileSelection = fileSelection.minusDirectorries(fs);
+        fileSelection = fileSelection.minusDirectories(fs);
       }
 
       for (FormatMatcher m : fileMatchers) {

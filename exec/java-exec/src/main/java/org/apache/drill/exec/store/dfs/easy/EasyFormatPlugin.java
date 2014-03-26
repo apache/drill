@@ -20,12 +20,16 @@ package org.apache.drill.exec.store.dfs.easy;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.physical.impl.ScanBatch;
@@ -41,8 +45,6 @@ import org.apache.drill.exec.store.dfs.shim.DrillFileSystem;
 
 import com.beust.jcommander.internal.Lists;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.io.compress.CompressionCodecFactory;
 
 public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements FormatPlugin {
@@ -108,17 +110,55 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
 
   
   RecordBatch getBatch(FragmentContext context, EasySubScan scan) throws ExecutionSetupException {
+    String partitionDesignator = context.getConfig().getString(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL);
+    List<SchemaPath> columns = scan.getColumns();
     List<RecordReader> readers = Lists.newArrayList();
-    for(FileWork work : scan.getWorkUnits()){
-      readers.add(getRecordReader(context, work, scan.getColumns())); 
+    List<String[]> partitionColumns = Lists.newArrayList();
+    List<Integer> selectedPartitionColumns = Lists.newArrayList();
+    boolean selectAllColumns = false;
+
+    if (columns == null || columns.size() == 0) {
+      selectAllColumns = true;
+    } else {
+      Pattern pattern = Pattern.compile(String.format("%s[0-9]+", partitionDesignator));
+      for (SchemaPath column : columns) {
+        Matcher m = pattern.matcher(column.getAsUnescapedPath());
+        if (m.matches()) {
+          scan.getColumns().remove(column);
+          selectedPartitionColumns.add(Integer.parseInt(column.getAsUnescapedPath().toString().substring(partitionDesignator.length())));
+        }
+      }
     }
-    
-    return new ScanBatch(context, readers.iterator());
+    int numParts = 0;
+    for(FileWork work : scan.getWorkUnits()){
+      readers.add(getRecordReader(context, work, scan.getColumns()));
+      if (scan.getSelectionRoot() != null) {
+        String[] r = scan.getSelectionRoot().split("/");
+        String[] p = work.getPath().split("/");
+        if (p.length > r.length) {
+          String[] q = ArrayUtils.subarray(p, r.length, p.length - 1);
+          partitionColumns.add(q);
+          numParts = Math.max(numParts, q.length);
+        } else {
+          partitionColumns.add(new String[] {});
+        }
+      } else {
+        partitionColumns.add(new String[] {});
+      }
+    }
+
+    if (selectAllColumns) {
+      for (int i = 0; i < numParts; i++) {
+        selectedPartitionColumns.add(i);
+      }
+    }
+
+    return new ScanBatch(context, readers.iterator(), partitionColumns, selectedPartitionColumns);
   }
   
   @Override
   public AbstractGroupScan getGroupScan(FileSelection selection) throws IOException {
-    return new EasyGroupScan(selection, this, null);
+    return new EasyGroupScan(selection, this, null, selection.selectionRoot);
   }
 
   @Override

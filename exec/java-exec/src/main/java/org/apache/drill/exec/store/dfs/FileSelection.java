@@ -20,8 +20,10 @@ package org.apache.drill.exec.store.dfs;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-import java.util.regex.Pattern;
 
+import com.google.common.base.Preconditions;
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.drill.exec.store.dfs.shim.DrillFileSystem;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
@@ -41,21 +43,31 @@ public class FileSelection {
   private List<FileStatus> statuses;
 
   public List<String> files;
+  public String selectionRoot;
 
   public FileSelection() {
   }
-  
+
+  public FileSelection(List<String> files, String selectionRoot, boolean dummy) {
+    this.files = files;
+    this.selectionRoot = selectionRoot;
+  }
   
   public FileSelection(List<String> files, boolean dummy){
     this.files = files;
   }
 
   public FileSelection(List<FileStatus> statuses) {
+    this(statuses, null);
+  }
+
+  public FileSelection(List<FileStatus> statuses, String selectionRoot) {
     this.statuses = statuses;
     this.files = Lists.newArrayList();
     for (FileStatus f : statuses) {
       files.add(f.getPath().toString());
     }
+    this.selectionRoot = selectionRoot;
   }
 
   public boolean containsDirectories(DrillFileSystem fs) throws IOException {
@@ -66,7 +78,7 @@ public class FileSelection {
     return false;
   }
 
-  public FileSelection minusDirectorries(DrillFileSystem fs) throws IOException {
+  public FileSelection minusDirectories(DrillFileSystem fs) throws IOException {
     init(fs);
     List<FileStatus> newList = Lists.newArrayList();
     for (FileStatus p : statuses) {
@@ -75,12 +87,11 @@ public class FileSelection {
         for (FileStatus s : statuses) {
           newList.add(s);
         }
-
       } else {
         newList.add(p);
       }
     }
-    return new FileSelection(newList);
+    return new FileSelection(newList, selectionRoot);
   }
 
   public FileStatus getFirstPath(DrillFileSystem fs) throws IOException {
@@ -116,11 +127,15 @@ public class FileSelection {
     if ( !(path.contains("*") || path.contains("?")) ) {
       Path p = new Path(parent, path);
       FileStatus status = fs.getFileStatus(p);
-      return new FileSelection(Collections.singletonList(status));
+      return new FileSelection(Collections.singletonList(status), p.toUri().getPath());
     } else {
-      FileStatus[] status = fs.getUnderlying().globStatus(new Path(parent, path));
+      Path p = new Path(parent, path);
+      FileStatus[] status = fs.getUnderlying().globStatus(p);
       if(status == null || status.length == 0) return null;
-      return new FileSelection(Lists.newArrayList(status));
+      String[] s = p.toUri().getPath().split("/");
+      String newPath = StringUtils.join(ArrayUtils.subarray(s, 0, s.length - 1), "/");
+      Preconditions.checkState(!newPath.contains("*") && !newPath.contains("?"), String.format("Unsupported selection path: %s", p));
+      return new FileSelection(Lists.newArrayList(status), newPath);
     }
   }
 

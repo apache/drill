@@ -17,11 +17,19 @@
  */
 package org.apache.drill.exec.physical.impl;
 
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -36,9 +44,13 @@ import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.store.RecordReader;
+import org.apache.drill.exec.vector.AllocationHelper;
+import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.ValueVector;
 
 import com.google.common.collect.Maps;
+import org.apache.drill.exec.vector.VarCharVector;
+import org.apache.drill.exec.vector.allocator.VectorAllocator;
 
 /**
  * Record batch used for a particular scan. Operators against one or more
@@ -56,14 +68,29 @@ public class ScanBatch implements RecordBatch {
   private RecordReader currentReader;
   private BatchSchema schema;
   private final Mutator mutator = new Mutator();
+  private Iterator<String[]> partitionColumns;
+  private String[] partitionValues;
+  List<ValueVector> partitionVectors;
+  List<Integer> selectedPartitionColumns;
+  private String partitionColumnDesignator;
 
-  public ScanBatch(FragmentContext context, Iterator<RecordReader> readers) throws ExecutionSetupException {
+  public ScanBatch(FragmentContext context, Iterator<RecordReader> readers, List<String[]> partitionColumns, List<Integer> selectedPartitionColumns) throws ExecutionSetupException {
     this.context = context;
     this.readers = readers;
     if (!readers.hasNext())
       throw new ExecutionSetupException("A scan batch must contain at least one reader.");
     this.currentReader = readers.next();
     this.currentReader.setup(mutator);
+    this.partitionColumns = partitionColumns.iterator();
+    this.partitionValues = this.partitionColumns.hasNext() ? this.partitionColumns.next() : null;
+    this.selectedPartitionColumns = selectedPartitionColumns;
+    DrillConfig config = context.getConfig(); //This nonsense it is to not break all the stupid unit tests using SimpleRootExec
+    this.partitionColumnDesignator = config == null ? "dir" : config.getString(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL);
+    addPartitionVectors();
+  }
+
+  public ScanBatch(FragmentContext context, Iterator<RecordReader> readers) throws ExecutionSetupException {
+    this(context, readers, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
   }
 
   @Override
@@ -101,7 +128,10 @@ public class ScanBatch implements RecordBatch {
         }
         currentReader.cleanup();
         currentReader = readers.next();
+        partitionValues = partitionColumns.hasNext() ? partitionColumns.next() : null;
+        mutator.removeAllFields();
         currentReader.setup(mutator);
+        addPartitionVectors();
       } catch (ExecutionSetupException e) {
         this.context.fail(e);
         releaseAssets();
@@ -109,11 +139,48 @@ public class ScanBatch implements RecordBatch {
       }
     }
 
+    populatePartitionVectors();
     if (schemaChanged) {
       schemaChanged = false;
       return IterOutcome.OK_NEW_SCHEMA;
     } else {
       return IterOutcome.OK;
+    }
+  }
+
+  private void addPartitionVectors() {
+    partitionVectors = Lists.newArrayList();
+    for (int i : selectedPartitionColumns) {
+      MaterializedField field;
+      ValueVector v;
+      if (partitionValues.length > i) {
+        field = MaterializedField.create(SchemaPath.getSimplePath(partitionColumnDesignator + i), Types.required(MinorType.VARCHAR));
+        v = new VarCharVector(field, context.getAllocator());
+      } else {
+        field = MaterializedField.create(SchemaPath.getSimplePath(partitionColumnDesignator + i), Types.optional(MinorType.VARCHAR));
+        v = new NullableVarCharVector(field, context.getAllocator());
+      }
+      mutator.addField(v);
+      partitionVectors.add(v);
+    }
+  }
+
+  private void populatePartitionVectors() {
+    for (int i : selectedPartitionColumns) {
+      if (partitionValues.length > i) {
+        VarCharVector v = (VarCharVector) partitionVectors.get(i);
+        String val = partitionValues[i];
+        byte[] bytes = val.getBytes();
+        AllocationHelper.allocate(v, recordCount, val.length());
+        for (int j = 0; j < recordCount; j++) {
+          v.getMutator().set(j, bytes);
+        }
+        v.getMutator().setValueCount(recordCount);
+      } else {
+        NullableVarCharVector v = (NullableVarCharVector) partitionVectors.get(i);
+        AllocationHelper.allocate(v, recordCount, 0);
+        v.getMutator().setValueCount(recordCount);
+      }
     }
   }
 

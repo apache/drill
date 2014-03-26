@@ -17,6 +17,7 @@
  */
 package org.apache.drill;
 
+import org.apache.drill.common.util.FileUtils;
 import org.junit.Test;
 
 public class TestExampleQueries extends BaseTestQuery{
@@ -40,6 +41,20 @@ public class TestExampleQueries extends BaseTestQuery{
   @Test
   public void testSelectWithLimit() throws Exception{
     test("select employee_id,  first_name, last_name from cp.`employee.json` order by employee_id limit 5 offset 10");
+  }
+
+  @Test
+  public void testText() throws Exception {
+    String root = FileUtils.getResourceAsFile("/store/text/data/regions.csv").toURI().toString();
+    String query = String.format("select * from dfs.`%s`", root);
+    test(query);
+  }
+
+  @Test
+  public void testTextPartitions() throws Exception {
+    String root = FileUtils.getResourceAsFile("/store/text/data/").toURI().toString();
+    String query = String.format("select * from dfs.`%s`", root);
+    test(query);
   }
 
   @Test

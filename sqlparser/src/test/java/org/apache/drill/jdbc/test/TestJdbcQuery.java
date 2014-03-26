@@ -26,6 +26,7 @@ import java.sql.Statement;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.base.Function;
+import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.store.hive.HiveTestDataGenerator;
 import org.apache.drill.jdbc.Driver;

@@ -25,7 +25,6 @@ import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
-import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.physical.base.AbstractSubScan;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.dfs.NamedFormatPluginConfig;
@@ -45,6 +44,7 @@ public class EasySubScan extends AbstractSubScan{
   private final List<FileWorkImpl> files;
   private final EasyFormatPlugin<?> formatPlugin;
   private final List<SchemaPath> columns;
+  private String selectionRoot;
   
   @JsonCreator
   public EasySubScan(
@@ -52,19 +52,27 @@ public class EasySubScan extends AbstractSubScan{
       @JsonProperty("storage") StoragePluginConfig storageConfig, //
       @JsonProperty("format") FormatPluginConfig formatConfig, //
       @JacksonInject StoragePluginRegistry engineRegistry, // 
-      @JsonProperty("columns") List<SchemaPath> columns //
+      @JsonProperty("columns") List<SchemaPath> columns, //
+      @JsonProperty("selectionRoot") String selectionRoot
       ) throws IOException, ExecutionSetupException {
 
     this.formatPlugin = (EasyFormatPlugin<?>) engineRegistry.getFormatPlugin(storageConfig, formatConfig);
     Preconditions.checkNotNull(this.formatPlugin);
     this.files = files;
     this.columns = columns;
+    this.selectionRoot = selectionRoot;
   }
   
-  public EasySubScan(List<FileWorkImpl> files, EasyFormatPlugin<?> plugin, List<SchemaPath> columns){
+  public EasySubScan(List<FileWorkImpl> files, EasyFormatPlugin<?> plugin, List<SchemaPath> columns, String selectionRoot){
     this.formatPlugin = plugin;
     this.files = files;
     this.columns = columns;
+    this.selectionRoot = selectionRoot;
+  }
+
+  @JsonProperty
+  public String getSelectionRoot() {
+    return selectionRoot;
   }
   
   @JsonIgnore

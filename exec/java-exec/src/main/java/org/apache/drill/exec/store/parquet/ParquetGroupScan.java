@@ -22,7 +22,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.PhysicalOperatorSetupException;
 import org.apache.drill.common.expression.FieldReference;
@@ -38,7 +37,6 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.Size;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.dfs.ReadEntryFromHDFS;
 import org.apache.drill.exec.store.dfs.ReadEntryWithPath;
 import org.apache.drill.exec.store.dfs.easy.FileWork;
@@ -89,6 +87,7 @@ public class ParquetGroupScan extends AbstractGroupScan {
   private final ParquetFormatConfig formatConfig;
   private final FileSystem fs;
   private List<EndpointAffinity> endpointAffinities;
+  private String selectionRoot;
 
   private List<SchemaPath> columns;
 
@@ -112,7 +111,8 @@ public class ParquetGroupScan extends AbstractGroupScan {
       @JsonProperty("storage") StoragePluginConfig storageConfig, //
       @JsonProperty("format") FormatPluginConfig formatConfig, //
       @JacksonInject StoragePluginRegistry engineRegistry, // 
-      @JsonProperty("columns") List<SchemaPath> columns //
+      @JsonProperty("columns") List<SchemaPath> columns, //
+      @JsonProperty("selectionRoot") String selectionRoot //
       ) throws IOException, ExecutionSetupException {
     this.columns = columns;
     if(formatConfig == null) formatConfig = new ParquetFormatConfig();
@@ -123,12 +123,18 @@ public class ParquetGroupScan extends AbstractGroupScan {
     this.fs = formatPlugin.getFileSystem().getUnderlying();
     this.formatConfig = formatPlugin.getConfig();
     this.entries = entries;
+    this.selectionRoot = selectionRoot;
     this.readFooterFromEntries();
 
   }
 
+  public String getSelectionRoot() {
+    return selectionRoot;
+  }
+
   public ParquetGroupScan(List<FileStatus> files, //
-      ParquetFormatPlugin formatPlugin) //
+      ParquetFormatPlugin formatPlugin, //
+      String selectionRoot) //
       throws IOException {
     this.formatPlugin = formatPlugin;
     this.columns = null;
@@ -140,6 +146,8 @@ public class ParquetGroupScan extends AbstractGroupScan {
       entries.add(new ReadEntryWithPath(file.getPath().toString()));
     }
     
+    this.selectionRoot = selectionRoot;
+
     readFooter(files);
   }
 
@@ -202,6 +210,7 @@ public class ParquetGroupScan extends AbstractGroupScan {
 
     private EndpointByteMap byteMap;
     private int rowGroupIndex;
+    private String root;
 
     @JsonCreator
     public RowGroupInfo(@JsonProperty("path") String path, @JsonProperty("start") long start,
@@ -282,7 +291,7 @@ public class ParquetGroupScan extends AbstractGroupScan {
     Preconditions.checkArgument(!rowGroupsForMinor.isEmpty(),
         String.format("MinorFragmentId %d has no read entries assigned", minorFragmentId));
 
-    return new ParquetRowGroupScan(formatPlugin, convertToReadEntries(rowGroupsForMinor), columns);
+    return new ParquetRowGroupScan(formatPlugin, convertToReadEntries(rowGroupsForMinor), columns, selectionRoot);
   }
 
   

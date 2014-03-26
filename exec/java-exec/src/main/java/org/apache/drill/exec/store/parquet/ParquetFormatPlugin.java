@@ -26,12 +26,7 @@ import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.QueryOptimizerRule;
-import org.apache.drill.exec.store.dfs.BasicFormatMatcher;
-import org.apache.drill.exec.store.dfs.FileSelection;
-import org.apache.drill.exec.store.dfs.FormatMatcher;
-import org.apache.drill.exec.store.dfs.FormatPlugin;
-import org.apache.drill.exec.store.dfs.FormatSelection;
-import org.apache.drill.exec.store.dfs.MagicString;
+import org.apache.drill.exec.store.dfs.*;
 import org.apache.drill.exec.store.dfs.shim.DrillFileSystem;
 import org.apache.drill.exec.store.mock.MockStorageEngine;
 import org.apache.hadoop.conf.Configuration;
@@ -39,7 +34,6 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 
 import org.apache.hadoop.fs.PathFilter;
-import org.apache.hadoop.mapred.Utils;
 import parquet.format.converter.ParquetMetadataConverter;
 import parquet.hadoop.CodecFactoryExposer;
 import parquet.hadoop.ParquetFileWriter;
@@ -101,7 +95,7 @@ public class ParquetFormatPlugin implements FormatPlugin{
 
   @Override
   public ParquetGroupScan getGroupScan(FileSelection selection) throws IOException {
-    return new ParquetGroupScan( selection.getFileStatusList(fs), this);
+    return new ParquetGroupScan(selection.getFileStatusList(fs), this, selection.selectionRoot);
   }
 
   @Override
@@ -170,15 +164,7 @@ public class ParquetFormatPlugin implements FormatPlugin{
           return true;
         } else {
 
-          PathFilter filter = new Utils.OutputFileUtils.OutputFilesFilter() {
-            @Override
-            public boolean accept(Path path) {
-              if (path.toString().contains("_metadata")) {
-                return false;
-              }
-              return super.accept(path);
-            }
-          };
+          PathFilter filter = new DrillPathFilter();
 
           FileStatus[] files = fs.getUnderlying().listStatus(dir.getPath(), filter);
           if (files.length == 0) {

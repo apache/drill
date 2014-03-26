@@ -32,11 +32,8 @@ import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.Size;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
-import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.dfs.FileSelection;
-import org.apache.drill.exec.store.dfs.shim.DrillFileSystem;
-import org.apache.drill.exec.store.easy.text.TextFormatPlugin;
 import org.apache.drill.exec.store.schedule.AffinityCreator;
 import org.apache.drill.exec.store.schedule.AssignmentCreator;
 import org.apache.drill.exec.store.schedule.BlockMapBuilder;
@@ -64,6 +61,7 @@ public class EasyGroupScan extends AbstractGroupScan{
   private ListMultimap<Integer, CompleteFileWork> mappings;
   private List<CompleteFileWork> chunks;
   private List<EndpointAffinity> endpointAffinities;
+  private String selectionRoot;
 
   @JsonCreator
   public EasyGroupScan(
@@ -71,7 +69,8 @@ public class EasyGroupScan extends AbstractGroupScan{
       @JsonProperty("storage") StoragePluginConfig storageConfig, //
       @JsonProperty("format") FormatPluginConfig formatConfig, //
       @JacksonInject StoragePluginRegistry engineRegistry, // 
-      @JsonProperty("columns") List<SchemaPath> columns
+      @JsonProperty("columns") List<SchemaPath> columns,
+      @JsonProperty("selectionRoot") String selectionRoot
       ) throws IOException, ExecutionSetupException {
 
     this.formatPlugin = (EasyFormatPlugin<?>) engineRegistry.getFormatPlugin(storageConfig, formatConfig);
@@ -87,12 +86,14 @@ public class EasyGroupScan extends AbstractGroupScan{
     }
     maxWidth = chunks.size();
     this.columns = columns;
+    this.selectionRoot = selectionRoot;
   }
   
   public EasyGroupScan(
       FileSelection selection, //
       EasyFormatPlugin<?> formatPlugin, // 
-      List<SchemaPath> columns
+      List<SchemaPath> columns,
+      String selectionRoot
       ) throws IOException{
     this.selection = selection;
     this.formatPlugin = formatPlugin;
@@ -106,6 +107,11 @@ public class EasyGroupScan extends AbstractGroupScan{
       this.endpointAffinities = Collections.emptyList();
     }
     maxWidth = chunks.size();
+    this.selectionRoot = selectionRoot;
+  }
+
+  public String getSelectionRoot() {
+    return selectionRoot;
   }
 
   @Override
@@ -170,7 +176,7 @@ public class EasyGroupScan extends AbstractGroupScan{
     Preconditions.checkArgument(!filesForMinor.isEmpty(),
         String.format("MinorFragmentId %d has no read entries assigned", minorFragmentId));
 
-    return new EasySubScan(convert(filesForMinor), formatPlugin, columns);
+    return new EasySubScan(convert(filesForMinor), formatPlugin, columns, selectionRoot);
   }
   
   private List<FileWorkImpl> convert(List<CompleteFileWork> list){

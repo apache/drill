@@ -262,7 +262,7 @@
             <forkCount>8</forkCount>
             <reuseForks>true</reuseForks>
             <additionalClasspathElements>
-              <additionalClasspathElement>./sqlparser/src/test/resources/storage-engines.json</additionalClasspathElement>
+              <additionalClasspathElement>./sqlparser/src/test/resources/storage-plugins.json</additionalClasspathElement>
             </additionalClasspathElements>
           </configuration>
         </plugin>

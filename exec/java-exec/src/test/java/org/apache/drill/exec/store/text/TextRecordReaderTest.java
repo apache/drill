@@ -71,7 +71,7 @@ public class TextRecordReaderTest extends PopUnitTestBase {
       List<QueryResultBatch> results = client.runQuery(UserProtos.QueryType.PHYSICAL,
               Files.toString(
                       FileUtils.getResourceAsFile("/store/text/test.json"), Charsets.UTF_8)
-                      .replace("#{DATA_FILE}", FileUtils.getResourceAsFile("/store/text/regions.csv").toURI().toString()));
+                      .replace("#{DATA_FILE}", FileUtils.getResourceAsFile("/store/text/data/regions.csv").toURI().toString()));
       int count = 0;
       RecordBatchLoader loader = new RecordBatchLoader(bit1.getContext().getAllocator());
       for(QueryResultBatch b : results) {
