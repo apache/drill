@@ -59,9 +59,12 @@ public class JdbcAssert {
   public static ModelAndSchema withFull(String schema) {
     final Properties info = new Properties();
     info.setProperty("schema", schema);
-    return new ModelAndSchema(info, false);
+    return new ModelAndSchema(info);
   }
 
+  public static ModelAndSchema withNoDefaultSchema() {
+    return new ModelAndSchema();
+  }
 
   static String toString(ResultSet resultSet, int expectedRecordCount) throws SQLException {
     StringBuilder buf = new StringBuilder();
@@ -122,11 +125,11 @@ public class JdbcAssert {
     private final Properties info;
     private final ConnectionFactory connectionFactory;
 
-    public ModelAndSchema(Properties info) {
-      this(info, true);
+    public ModelAndSchema() {
+      this(null);
     }
 
-    public ModelAndSchema(Properties info, final boolean ref) {
+    public ModelAndSchema(Properties info) {
       this.info = info;
       this.connectionFactory = new ConnectionFactory() {
         public Connection createConnection() throws Exception {

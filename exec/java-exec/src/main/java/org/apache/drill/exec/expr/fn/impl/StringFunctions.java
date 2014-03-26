@@ -20,10 +20,6 @@ package org.apache.drill.exec.expr.fn.impl;
 
 import io.netty.buffer.ByteBuf;
 
-import org.apache.drill.common.expression.OutputTypeDeterminer;
-import org.apache.drill.common.types.TypeProtos;
-import org.apache.drill.common.types.TypeProtos.MinorType;
-import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
@@ -33,11 +29,8 @@ import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.BitHolder;
-import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.record.RecordBatch;
-
-import com.fasterxml.jackson.databind.ser.std.NumberSerializers.IntegerSerializer;
 
 public class StringFunctions{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StringFunctions.class);
@@ -65,7 +58,7 @@ public class StringFunctions{
     }
   }
 
-  @FunctionTemplate(name = "similar", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(names = {"similar", "similar to"}, scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
   public static class Similar implements DrillSimpleFunc{    
     @Param VarCharHolder input;
     @Param(constant=true) VarCharHolder pattern;

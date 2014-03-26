@@ -18,7 +18,6 @@
 package org.apache.drill.exec.planner.logical;
 
 import java.math.BigDecimal;
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.drill.common.expression.ExpressionPosition;
@@ -102,17 +101,24 @@ public class DrillOptiq {
         return lastArg;
       case FUNCTION:
         logger.debug("Function");
-        List<LogicalExpression> exprs = Lists.newArrayList();
-        for(RexNode n : call.getOperands()){
-          exprs.add(n.accept(this));
+        return getDrillFunctionFromOptiqCall(call);
+      case PREFIX:
+        logger.debug("Prefix");
+        LogicalExpression arg = call.getOperands().get(0).accept(this);
+        switch(call.getKind()){
+        case NOT:
+          return FunctionCallFactory.createExpression(call.getOperator().getName().toLowerCase(),
+            ExpressionPosition.UNKNOWN, arg);
         }
-        return FunctionCallFactory.createExpression(call.getOperator().getName().toLowerCase(), Lists.newArrayList(exprs));
+        throw new AssertionError("todo: implement syntax " + syntax + "(" + call + ")");
       case SPECIAL:
         logger.debug("Special");
         switch(call.getKind()){
-          
         case CAST:
           return getDrillCastFunctionFromOptiq(call);
+        case LIKE:
+        case SIMILAR:
+          return getDrillFunctionFromOptiqCall(call);
         }
         
         if (call.getOperator() == SqlStdOperatorTable.ITEM) {
@@ -181,8 +187,15 @@ public class DrillOptiq {
       return FunctionCallFactory.createCast(castType, ExpressionPosition.UNKNOWN, arg);
 
     }
-    
-    
+
+    private LogicalExpression getDrillFunctionFromOptiqCall(RexCall call){
+      List<LogicalExpression> args = Lists.newArrayList();
+      for(RexNode n : call.getOperands()){
+        args.add(n.accept(this));
+      }
+
+      return FunctionCallFactory.createExpression(call.getOperator().getName().toLowerCase(), args);
+    }
 
     @Override
     public LogicalExpression visitLiteral(RexLiteral literal) {
