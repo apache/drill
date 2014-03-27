@@ -371,7 +371,7 @@ public class HiveRecordReader implements RecordReader {
       case TIMESTAMP:
 
       default:
-        throw new UnsupportedOperationException("Could not determine type");
+        throw new UnsupportedOperationException("Could not determine type: " + pCat);
     }
   }
 
@@ -468,6 +468,5 @@ public class HiveRecordReader implements RecordReader {
 
   @Override
   public void cleanup() {
-    //To change body of implemented methods use File | Settings | File Templates.
   }
 }

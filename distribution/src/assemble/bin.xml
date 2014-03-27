@@ -89,6 +89,10 @@
       <outputDirectory></outputDirectory>
     </file>
     <file>
+      <source>target/classes/git.properties</source>
+      <outputDirectory></outputDirectory>
+    </file>
+    <file>
       <source>src/resources/runbit</source>
       <outputDirectory>bin</outputDirectory>
     </file>

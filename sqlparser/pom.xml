@@ -86,6 +86,7 @@
           <excludes>
             <exclude>**/.buildpath</exclude>
             <exclude>**/*.json</exclude>
+            <exclude>**/git.properties</exclude>
             <exclude>**/donuts-output-data.txt</exclude>
             <exclude>**/derby.log</exclude>
           </excludes>
