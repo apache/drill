@@ -58,7 +58,7 @@ public class TypeHelper {
         case OPTIONAL:
           return new Nullable${minor.class}Accessor((Nullable${minor.class}Vector) vector);
         case REPEATED:
-          throw new UnsupportedOperationException();
+          return new GenericAccessor(vector);
       }
     </#list>
     </#list>
