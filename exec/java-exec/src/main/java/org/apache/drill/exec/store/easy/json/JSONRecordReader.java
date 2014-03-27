@@ -104,6 +104,7 @@ public class JSONRecordReader implements RecordReader {
   @Override
   public void setup(OutputMutator output) throws ExecutionSetupException {
     outputMutator = output;
+    output.removeAllFields();
     currentSchema = new ObjectSchema();
     diffSchema = new DiffSchema();
     removedFields = Lists.newArrayList();
