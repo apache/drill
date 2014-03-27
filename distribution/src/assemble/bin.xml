@@ -38,6 +38,7 @@
         <include>org.apache.drill:drill-common:jar:rebuffed</include>
         <include>org.apache.drill.exec:drill-java-exec:jar:rebuffed</include>
         <include>org.apache.drill.contrib:storage-hive:jar</include>
+        <include>org.apache.drill.contrib.data:tpch-sample-data:jar</include>
       </includes>
       
       

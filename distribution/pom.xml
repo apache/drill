@@ -46,6 +46,11 @@
       <classifier>rebuffed</classifier>
     </dependency>
     <dependency>
+      <groupId>org.apache.drill.contrib.data</groupId>
+      <artifactId>tpch-sample-data</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.apache.drill.exec</groupId>
       <artifactId>drill-buffers</artifactId>
       <version>${project.version}</version>
