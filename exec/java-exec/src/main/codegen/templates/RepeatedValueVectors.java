@@ -323,17 +323,16 @@ package org.apache.drill.exec.vector;
       values.getMutator().setValueCount(childValueCount);
     }
     
-    public void generateTestData(){
-      int valCount = getValueCapacity();
+    public void generateTestData(final int valCount){
       int[] sizes = {1,2,0,6};
       int size = 0;
       int runningOffset = 0;
-      for(int i =1; i < valCount; i++, size++){
+      for(int i =1; i < valCount+1; i++, size++){
         runningOffset += sizes[size % sizes.length];
         offsets.getMutator().set(i, runningOffset);  
       }
-      values.getMutator().generateTestData();
-      setValueCount(valCount-1);
+      values.getMutator().generateTestData(valCount*9);
+      setValueCount(size);
     }
     
     public void reset(){

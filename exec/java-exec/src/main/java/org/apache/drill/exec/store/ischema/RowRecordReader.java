@@ -43,7 +43,7 @@ public class RowRecordReader implements RecordReader {
   protected final FragmentContext context;
   protected OutputMutator output;
   
-  private int bufSize = 32*1024*1024;
+  private int bufSize = 256*1024;
   private int maxRowCount;
   /**
    * Construct a RecordReader which uses rows from a RowProvider and puts them into a set of value vectors.

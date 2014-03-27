@@ -56,7 +56,7 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
   }
   
   public int getValueCapacity(){
-    return bits.getValueCapacity();
+    return Math.min(bits.getValueCapacity(), values.getValueCapacity());
   }
   
   @Override
@@ -389,10 +389,11 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
       return valueCount == setCount;
     }
     
-    public void generateTestData(){
-      bits.getMutator().generateTestData();
-      values.getMutator().generateTestData();
+    public void generateTestData(int valueCount){
+      bits.getMutator().generateTestData(valueCount);
+      values.getMutator().generateTestData(valueCount);
       <#if type.major = "VarLen">lastSet = valueCount;</#if>
+      setValueCount(valueCount);
     }
     
     public void reset(){

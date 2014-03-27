@@ -240,13 +240,14 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
     }
 
     @Override
-    public final void generateTestData() {
+    public final void generateTestData(int values) {
       boolean even = true;
-      for (int i = 0; i < valueCapacity; i++, even = !even) {
+      for (int i = 0; i < values; i++, even = !even) {
         if (even) {
           set(i, 1);
         }
       }
+      setValueCount(values);
     }
 
   }

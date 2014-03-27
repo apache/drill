@@ -97,8 +97,7 @@ public class TestBitRpc {
           MaterializedField.create(new SchemaPath("a", ExpressionPosition.UNKNOWN), Types.required(MinorType.FLOAT8)),
           allocator);
       v.allocateNew(records);
-      v.getMutator().generateTestData();
-      v.getMutator().setValueCount(records);
+      v.getMutator().generateTestData(records);
       vectors.add(v);
     }
     return WritableBatch.getBatchNoHV(records, vectors, false);

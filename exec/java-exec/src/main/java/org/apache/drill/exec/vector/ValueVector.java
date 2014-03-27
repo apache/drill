@@ -141,6 +141,6 @@ public interface ValueVector extends Closeable {
 
     public void reset();
 
-    public void generateTestData();
+    public void generateTestData(int values);
   }
 }

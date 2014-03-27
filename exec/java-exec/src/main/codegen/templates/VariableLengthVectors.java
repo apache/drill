@@ -385,15 +385,16 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     }
 
     @Override
-    public void generateTestData(){
+    public void generateTestData(int size){
       boolean even = true;
-      for(int i =0; i < getValueCapacity(); i++, even = !even){
+      for(int i =0; i < size; i++, even = !even){
         if(even){
           set(i, new String("aaaaa").getBytes(Charsets.UTF_8));
         }else{
           set(i, new String("bbbbbbbbbb").getBytes(Charsets.UTF_8));
         }
       }
+      setValueCount(size);
     }
   }
   

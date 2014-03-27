@@ -56,8 +56,7 @@ public class TestLoad {
     List<ValueVector> vectors = Lists.newArrayList(fixedV, varlenV, nullableVarlenV);
     for (ValueVector v : vectors) {
       AllocationHelper.allocate(v, 100, 50);
-      v.getMutator().generateTestData();
-      v.getMutator().setValueCount(100);
+      v.getMutator().generateTestData(100);
     }
 
     WritableBatch writableBatch = WritableBatch.getBatchNoHV(100, vectors, false);

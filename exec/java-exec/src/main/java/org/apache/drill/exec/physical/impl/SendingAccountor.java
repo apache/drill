@@ -39,7 +39,7 @@ public class SendingAccountor {
     wait.release();
   }
 
-  public void waitForSendComplete() {
+  public synchronized void waitForSendComplete() {
     try {
       wait.acquire(batchesSent);
       batchesSent = 0;

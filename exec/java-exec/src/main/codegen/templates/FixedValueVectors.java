@@ -245,8 +245,8 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
    }
    
    @Override
-   public void generateTestData() {
-     setValueCount(getValueCapacity());
+   public void generateTestData(int count) {
+     setValueCount(count);
      boolean even = true;
      for(int i =0; i < valueCount; i++, even = !even){
        byte b = even ? Byte.MIN_VALUE : Byte.MAX_VALUE;
@@ -276,8 +276,8 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
    }
 
    @Override
-   public void generateTestData() {
-     setValueCount(getValueCapacity());
+   public void generateTestData(int size) {
+     setValueCount(size);
      boolean even = true;
      for(int i =0; i < valueCount; i++, even = !even){
        if(even){
