@@ -22,10 +22,9 @@ import org.apache.drill.BaseTestQuery;
 import org.junit.Ignore;
 import org.junit.Test;
 
-@Ignore // DRILL-443
+
 public class TestHashAggr extends BaseTestQuery{
 
-  
   @Test
   public void testQ6() throws Exception{
     testPhysicalFromFile("agg/hashagg/q6.json");
@@ -41,15 +40,16 @@ public class TestHashAggr extends BaseTestQuery{
     testPhysicalFromFile("agg/hashagg/q7_2.json");
   }
   
-  
+  @Ignore // ignore temporarily since this shows memory leak in ParquetRecordReader (DRILL-443)
   @Test
   public void testQ8_1() throws Exception{
     testPhysicalFromFile("agg/hashagg/q8_1.json");
   }
   
+  @Ignore // ignore temporarily since this shows memory leak in ParquetRecordReader (DRILL-443)
   @Test
   public void test8() throws Exception{
     testPhysicalFromFile("agg/hashagg/q8.json");
   }
-  
+
 }

@@ -239,6 +239,9 @@ public abstract class HashTableTemplate implements HashTable {
 
       }      
 
+      links.clear();
+      hashValues.clear();
+      
       links = newLinks;
       hashValues = newHashValues;
     }
@@ -287,11 +290,9 @@ public abstract class HashTableTemplate implements HashTable {
     }
     
     private void clear() {
-      htContainer = null;
+      htContainer.clear();;
       links.clear();
-      links = null;
       hashValues.clear();
-      hashValues = null;
     }
 
     // These methods will be code-generated 
@@ -377,8 +378,7 @@ public abstract class HashTableTemplate implements HashTable {
     batchHolders.clear();
     batchHolders = null;
     startIndices.clear();
-    startIndices = null;
-    currentIdxHolder = null; 
+    currentIdxHolder = null;
     numEntries = 0;
   }
 
@@ -572,7 +572,8 @@ public abstract class HashTableTemplate implements HashTable {
       int batchStartIdx = i * BATCH_SIZE;
       bh.rehash(tableSize, newStartIndices, batchStartIdx);  
     }    
-   
+    
+    startIndices.clear();
     startIndices = newStartIndices;
 
     if (EXTRA_DEBUG) {

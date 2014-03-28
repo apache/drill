@@ -40,6 +40,7 @@ import org.apache.drill.exec.physical.config.HashAggregate;
 import org.apache.drill.exec.physical.impl.common.ChainedHashTable;
 import org.apache.drill.exec.physical.impl.common.HashTable;
 import org.apache.drill.exec.physical.impl.common.HashTableConfig;
+import org.apache.drill.exec.physical.impl.common.HashTableTemplate.BatchHolder;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
@@ -58,7 +59,8 @@ import com.google.common.collect.Lists;
 public abstract class HashAggTemplate implements HashAggregator {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HashAggregator.class);
   
-  private static final boolean EXTRA_DEBUG = false;
+  private static final boolean EXTRA_DEBUG_1 = false;
+  private static final boolean EXTRA_DEBUG_2 = false; 
   private static final String TOO_BIG_ERROR = "Couldn't add value to an empty batch.  This likely means that a single value is too long for a varlen field.";
   private boolean first = true;
   private boolean newSchema = false;
@@ -120,7 +122,7 @@ public abstract class HashAggTemplate implements HashAggregator {
     private boolean outputValues() { 
       for (int i = 0; i <= maxOccupiedIdx; i++) { 
         if (outputRecordValues(i, outputCount) ) {
-          if (EXTRA_DEBUG) logger.debug("Outputting values to {}", outputCount) ;
+          if (EXTRA_DEBUG_2) logger.debug("Outputting values to {}", outputCount) ;
           outputCount++;
         } else {
           return false;
@@ -129,6 +131,10 @@ public abstract class HashAggTemplate implements HashAggregator {
       return true;
     }
 
+    private void clear() {
+      aggrValuesContainer.clear();
+    }
+    
     // Code-generated methods (implemented in HashAggBatch)
 
     @RuntimeOverridden
@@ -199,25 +205,28 @@ public abstract class HashAggTemplate implements HashAggregator {
 
       outside: while(true) {
         // loop through existing records, aggregating the values as necessary.
+        if (EXTRA_DEBUG_1) logger.debug ("Starting outer loop of doWork()...");
         for (; underlyingIndex < incoming.getRecordCount(); incIndex()) {
-          if(EXTRA_DEBUG) logger.debug("Doing loop with values underlying {}, current {}", underlyingIndex, currentIndex);
+          if(EXTRA_DEBUG_2) logger.debug("Doing loop with values underlying {}, current {}", underlyingIndex, currentIndex);
           checkGroupAndAggrValues(currentIndex); 
         }
 
+        if (EXTRA_DEBUG_1) logger.debug("Processed {} records", underlyingIndex);
+        
         try{
 
           while(true){
             IterOutcome out = incoming.next();
-            if(EXTRA_DEBUG) logger.debug("Received IterOutcome of {}", out);
+            if(EXTRA_DEBUG_1) logger.debug("Received IterOutcome of {}", out);
             switch(out){
             case NOT_YET:
               this.outcome = out;
               return AggOutcome.RETURN_OUTCOME;
               
             case OK_NEW_SCHEMA:
-              if(EXTRA_DEBUG) logger.debug("Received new schema.  Batch has {} records.", incoming.getRecordCount());
-              newSchema = true;
-              
+              if(EXTRA_DEBUG_1) logger.debug("Received new schema.  Batch has {} records.", incoming.getRecordCount());
+              newSchema = true;              
+              this.cleanup();
               // TODO: new schema case needs to be handled appropriately
               return AggOutcome.UPDATE_AGGREGATOR;
 
@@ -229,14 +238,20 @@ public abstract class HashAggTemplate implements HashAggregator {
                 checkGroupAndAggrValues(currentIndex);
                 incIndex();
                 
-                if(EXTRA_DEBUG) logger.debug("Continuing outside loop");
+                if(EXTRA_DEBUG_1) logger.debug("Continuing outside loop");
                 continue outside;
               }
 
             case NONE:
               outcome = out;
               outputKeysAndValues() ; 
-
+              
+              // cleanup my internal state since there is nothing more to return
+              this.cleanup();
+              // cleanup incoming batch since output of aggregation does not need
+              // any references to the incoming
+              
+              incoming.cleanup();
               return setOkAndReturn();
 
             case STOP:
@@ -257,12 +272,12 @@ public abstract class HashAggTemplate implements HashAggregator {
 
   private void allocateOutgoing() {
     for (VectorAllocator a : keyAllocators) {
-      if(EXTRA_DEBUG) logger.debug("Outgoing batch: Allocating {} with {} records.", a, numGroupedRecords);
+      if(EXTRA_DEBUG_2) logger.debug("Outgoing batch: Allocating {} with {} records.", a, numGroupedRecords);
       a.alloc(numGroupedRecords);
     }
 
     for (VectorAllocator a : valueAllocators) {
-      if(EXTRA_DEBUG) logger.debug("Outgoing batch: Allocating {} with {} records.", a, numGroupedRecords);
+      if(EXTRA_DEBUG_2) logger.debug("Outgoing batch: Allocating {} with {} records.", a, numGroupedRecords);
       a.alloc(numGroupedRecords);
     }
   }
@@ -283,6 +298,10 @@ public abstract class HashAggTemplate implements HashAggregator {
     htable = null;
     htIdxHolder = null; 
     materializedValueFields = null;
+
+    for (BatchHolder bh : batchHolders) {
+      bh.clear();
+    }
     batchHolders.clear();
     batchHolders = null; 
   }
@@ -323,7 +342,7 @@ public abstract class HashAggTemplate implements HashAggregator {
     BatchHolder bh = new BatchHolder(); 
     batchHolders.add(bh);
 
-    if (EXTRA_DEBUG) logger.debug("HashAggregate: Added new batch; num batches = {}.", batchHolders.size());
+    if (EXTRA_DEBUG_1) logger.debug("HashAggregate: Added new batch; num batches = {}.", batchHolders.size());
 
     int batchIdx = batchHolders.size() - 1;
     bh.setup(batchIdx); 
@@ -382,7 +401,7 @@ public abstract class HashAggTemplate implements HashAggregator {
       int idxWithinBatch = currentIdx & HashTable.BATCH_MASK;
 
       if (putStatus == HashTable.PutStatus.KEY_PRESENT) {
-        if (EXTRA_DEBUG) logger.debug("Group-by key already present in hash table, updating the aggregate values");
+        if (EXTRA_DEBUG_2) logger.debug("Group-by key already present in hash table, updating the aggregate values");
 
         // debugging
         //if (holder.value == 100018 || holder.value == 100021) {
@@ -391,7 +410,7 @@ public abstract class HashAggTemplate implements HashAggregator {
 
       } 
       else if (putStatus == HashTable.PutStatus.KEY_ADDED) {
-        if (EXTRA_DEBUG) logger.debug("Group-by key was added to hash table, inserting new aggregate values") ;
+        if (EXTRA_DEBUG_2) logger.debug("Group-by key was added to hash table, inserting new aggregate values") ;
 
         // debugging
         // if (holder.value == 100018 || holder.value == 100021) {

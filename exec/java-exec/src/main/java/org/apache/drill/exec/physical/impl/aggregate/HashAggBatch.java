@@ -121,17 +121,21 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
       }
     }
 
+
     if (aggregator.allFlushed()) {
       return IterOutcome.NONE;
     }
 
+    logger.debug("Starting aggregator doWork; incoming record count = {} ", incoming.getRecordCount());
+    
     while(true){
       AggOutcome out = aggregator.doWork();
       logger.debug("Aggregator response {}, records {}", out, aggregator.getOutputCount());
       switch(out){
       case CLEANUP_AND_RETURN:
-        container.zeroVectors();
-        aggregator.cleanup(); 
+        container.clear();
+        aggregator.cleanup();
+        incoming.cleanup();
         done = true;
         return aggregator.getOutcome();
       case RETURN_OUTCOME:
