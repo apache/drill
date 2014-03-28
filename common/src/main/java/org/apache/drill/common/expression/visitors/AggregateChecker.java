@@ -18,6 +18,7 @@
 package org.apache.drill.common.expression.visitors;
 
 import org.apache.drill.common.expression.CastExpression;
+import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.IfExpression;
@@ -31,92 +32,90 @@ import org.apache.drill.common.expression.ValueExpressions.FloatExpression;
 import org.apache.drill.common.expression.ValueExpressions.IntExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 
-public final class AggregateChecker extends SimpleExprVisitor<Boolean>{
-	
+public final class AggregateChecker implements ExprVisitor<Boolean, ErrorCollector, RuntimeException>{
+
   public static final AggregateChecker INSTANCE = new AggregateChecker();
-  
-  private AggregateChecker(){};
-  
-  public static boolean isAggregating(LogicalExpression e){
-    return e.accept(INSTANCE, null);
+
+  public static boolean isAggregating(LogicalExpression e, ErrorCollector errors){
+    return e.accept(INSTANCE, errors);
   }
 
   @Override
-  public Boolean visitFunctionCall(FunctionCall call) {
+  public Boolean visitFunctionCall(FunctionCall call, ErrorCollector errors) {
     throw new UnsupportedOperationException("FunctionCall is not expected here. "+
       "It should have been converted to FunctionHolderExpression in materialization");
   }
 
   @Override
-  public Boolean visitFunctionHolderExpression(FunctionHolderExpression holder) throws RuntimeException {
+  public Boolean visitFunctionHolderExpression(FunctionHolderExpression holder, ErrorCollector errors) {
     if(holder.isAggregating()){
-      for(LogicalExpression e : holder.args){
-        if(e.accept(this, null))
-          throw new IllegalArgumentException(String.format(
-            "Your aggregating function call %s also includes arguments that contain aggregations."+
-            " This isn't allowed.", holder.getName()));
+      for (int i = 0; i < holder.args.size(); i++) {
+        LogicalExpression e = holder.args.get(i);
+        if(e.accept(this, errors)){
+          errors.addGeneralError(e.getPosition(),
+            String.format("Aggregating function call %s includes nested aggregations at arguments number %d. " +
+              "This isn't allowed.", holder.getName(), i));
+        }
       }
       return true;
     }else{
       for(LogicalExpression e : holder.args){
-        if(e.accept(this, null)) return true;
+        if(e.accept(this, errors)) return true;
       }
       return false;
     }
   }
 
   @Override
-  public Boolean visitIfExpression(IfExpression ifExpr) {
+  public Boolean visitIfExpression(IfExpression ifExpr, ErrorCollector errors) {
     for(IfCondition c : ifExpr.conditions){
-      if(c.condition.accept(this, null) || c.expression.accept(this, null)) return true;
+      if(c.condition.accept(this, errors) || c.expression.accept(this, errors)) return true;
     }
-    return ifExpr.elseExpression.accept(this, null);
+    return ifExpr.elseExpression.accept(this, errors);
   }
 
   @Override
-  public Boolean visitSchemaPath(SchemaPath path) {
+  public Boolean visitSchemaPath(SchemaPath path, ErrorCollector errors) {
     return false;
   }
 
   @Override
-  public Boolean visitIntConstant(IntExpression intExpr) {
+  public Boolean visitIntConstant(IntExpression intExpr, ErrorCollector errors) {
     return false;
   }
 
   @Override
-  public Boolean visitFloatConstant(FloatExpression fExpr) {
+  public Boolean visitFloatConstant(FloatExpression fExpr, ErrorCollector errors) {
     return false;
   }
 
   @Override
-  public Boolean visitLongConstant(LongExpression intExpr) {
+  public Boolean visitLongConstant(LongExpression intExpr, ErrorCollector errors) {
     return false;
   }
 
   @Override
-  public Boolean visitDoubleConstant(DoubleExpression dExpr) {
+  public Boolean visitDoubleConstant(DoubleExpression dExpr, ErrorCollector errors) {
     return false;
   }
 
   @Override
-  public Boolean visitBooleanConstant(BooleanExpression e) {
+  public Boolean visitBooleanConstant(BooleanExpression e, ErrorCollector errors) {
     return false;
   }
 
   @Override
-  public Boolean visitQuotedStringConstant(QuotedString e) {
+  public Boolean visitQuotedStringConstant(QuotedString e, ErrorCollector errors) {
     return false;
   }
 
   @Override
-  public Boolean visitUnknown(LogicalExpression e, Void value) throws RuntimeException {
+  public Boolean visitUnknown(LogicalExpression e, ErrorCollector errors) {
     return false;
   }
 
   @Override
-  public Boolean visitCastExpression(CastExpression e, Void value) throws RuntimeException {
-    return e.getInput().accept(this, value);
+  public Boolean visitCastExpression(CastExpression e, ErrorCollector errors) {
+    return e.getInput().accept(this, errors);
   }
-	
-  
 }

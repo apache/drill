@@ -52,7 +52,7 @@ public class ExpressionValidator implements ExprVisitor<Void, ErrorCollector, Ru
   public Void visitFunctionHolderExpression(FunctionHolderExpression holder, ErrorCollector errors)
       throws RuntimeException {
     // make sure aggregate functions are not nested inside aggregate functions
-    AggregateChecker.isAggregating(holder);
+    AggregateChecker.isAggregating(holder, errors);
 
     // make sure arguments are constant if the function implementation expects constants for any arguments
     ConstantChecker.checkConstants(holder, errors);
