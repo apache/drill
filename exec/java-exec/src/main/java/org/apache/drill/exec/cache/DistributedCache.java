@@ -26,15 +26,16 @@ import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 
 public interface DistributedCache extends Closeable{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DistributedCache.class);
-  
+
   public void run() throws DrillbitStartupException;
-  
+
 //  public void updateLocalQueueLength(int length);
-//  public List<WorkQueueStatus> getQueueLengths(); 
-  
+//  public List<WorkQueueStatus> getQueueLengths();
+
   public PlanFragment getFragment(FragmentHandle handle);
   public void storeFragment(PlanFragment fragment);
   public <V extends DrillSerializable> DistributedMultiMap<V> getMultiMap(Class<V> clazz);
   public <V extends DrillSerializable> DistributedMap<V> getMap(Class<V> clazz);
+  public <V extends DrillSerializable> DistributedMap<V> getNamedMap(String name, Class<V> clazz);
   public Counter getCounter(String name);
 }

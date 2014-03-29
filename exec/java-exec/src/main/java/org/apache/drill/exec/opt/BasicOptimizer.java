@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.LogicalPlan;
@@ -53,8 +54,8 @@ import org.apache.drill.exec.physical.config.Screen;
 import org.apache.drill.exec.physical.config.SelectionVectorRemover;
 import org.apache.drill.exec.physical.config.Sort;
 import org.apache.drill.exec.physical.config.StreamingAggregate;
-import org.apache.drill.exec.physical.config.HashAggregate;
-import org.apache.drill.exec.physical.OperatorCost;
+import org.apache.drill.exec.rpc.user.UserServer;
+import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.StoragePlugin;
 import org.eigenbase.rel.RelFieldCollation.Direction;
 import org.eigenbase.rel.RelFieldCollation.NullDirection;
@@ -62,13 +63,46 @@ import org.eigenbase.rel.RelFieldCollation.NullDirection;
 import com.beust.jcommander.internal.Lists;
 
 public class BasicOptimizer extends Optimizer{
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BasicOptimizer.class);
 
   private DrillConfig config;
   private QueryContext context;
+  private UserServer.UserClientConnection userSession;
 
-  public BasicOptimizer(DrillConfig config, QueryContext context){
+  public BasicOptimizer(DrillConfig config, QueryContext context, UserServer.UserClientConnection userSession){
     this.config = config;
     this.context = context;
+    this.userSession = userSession;
+    logCurrentOptionValues();
+  }
+
+  private void logCurrentOptionValues(){
+//    Iterator<DrillOptionValue> optionVals = userSession.getSessionOptionIterator();
+//    DrillOptionValue val = null;
+//    String output = "";
+//    output += "SessionOptions: {\n";
+//    for ( ;optionVals.hasNext(); val = optionVals.next()){
+//      if (val != null) {
+//        output += val.getOptionName() + ":" + val.getValue() + ",\n";
+//      }
+//    }
+//    output += "}";
+//    logger.debug(output);
+  }
+
+  /**
+   * Get the current value of an option. Session options override global options.
+   *
+   * @param name - the name of the option
+   * @return - value of the option
+   */
+  private Object getOptionValue(String name) {
+//    Object val = userSession.getSessionLevelOption(name);
+//    if (val == null) {
+//      context.getOptionValue(name);
+//    }
+//    return val;
+    return null;
   }
 
   @Override
@@ -90,7 +124,8 @@ public class BasicOptimizer extends Optimizer{
     PlanProperties props = PlanProperties.builder()
         .type(PlanProperties.PlanType.APACHE_DRILL_PHYSICAL)
         .version(plan.getProperties().version)
-        .generator(plan.getProperties().generator).build();
+        .generator(plan.getProperties().generator)
+        .options(new JSONOptions(context.getOptions().getSessionOptionList())).build();
     PhysicalPlan p = new PhysicalPlan(props, physOps);
     return p;
     //return new PhysicalPlan(props, physOps);
@@ -103,9 +138,19 @@ public class BasicOptimizer extends Optimizer{
 
   public static class BasicOptimizationContext implements OptimizationContext {
 
+    private OptionManager ops;
+    public BasicOptimizationContext(QueryContext c){
+      this.ops = c.getOptions();
+    }
+
     @Override
     public int getPriority() {
       return 1;
+    }
+
+    @Override
+    public OptionManager getOptions() {
+      return ops;
     }
   }
 
@@ -121,10 +166,10 @@ public class BasicOptimizer extends Optimizer{
 
     @Override
     public PhysicalOperator visitGroupingAggregate(GroupingAggregate groupBy, Object value) throws OptimizerException {
-      
+
       List<Ordering> orderDefs = Lists.newArrayList();
 
-      
+
       PhysicalOperator input = groupBy.getInput().accept(this, value);
 
       if(groupBy.getKeys().length > 0){
@@ -133,7 +178,7 @@ public class BasicOptimizer extends Optimizer{
         }
         input = new Sort(input, orderDefs, false);
       }
-      
+
       StreamingAggregate sa = new StreamingAggregate(input, groupBy.getKeys(), groupBy.getExprs(), 1.0f);
       return sa;
     }
@@ -165,7 +210,7 @@ public class BasicOptimizer extends Optimizer{
       }
       leftOp = new Sort(leftOp, leftOrderDefs, false);
       leftOp = new SelectionVectorRemover(leftOp);
-      
+
       PhysicalOperator rightOp = join.getRight().accept(this, value);
       List<Ordering> rightOrderDefs = Lists.newArrayList();
       for(JoinCondition jc : join.getConditions()){
@@ -173,7 +218,7 @@ public class BasicOptimizer extends Optimizer{
       }
       rightOp = new Sort(rightOp, rightOrderDefs, false);
       rightOp = new SelectionVectorRemover(rightOp);
-      
+
       MergeJoinPOP mjp = new MergeJoinPOP(leftOp, rightOp, Arrays.asList(join.getConditions()), join.getJoinType());
       return new SelectionVectorRemover(mjp);
     }

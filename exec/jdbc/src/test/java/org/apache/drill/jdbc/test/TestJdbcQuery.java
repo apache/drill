@@ -272,6 +272,8 @@ public class TestJdbcQuery extends JdbcTest{
         "TABLE_SCHEMA=hive.default; TABLE_NAME=kv\n" +
         "TABLE_SCHEMA=hive.db1; TABLE_NAME=kv_db1\n" +
         "TABLE_SCHEMA=hive; TABLE_NAME=kv\n" +
+        "TABLE_SCHEMA=sys; TABLE_NAME=drillbits\n" +
+        "TABLE_SCHEMA=sys; TABLE_NAME=options\n" +
         "TABLE_SCHEMA=INFORMATION_SCHEMA; TABLE_NAME=VIEWS\n" +
         "TABLE_SCHEMA=INFORMATION_SCHEMA; TABLE_NAME=COLUMNS\n" +
         "TABLE_SCHEMA=INFORMATION_SCHEMA; TABLE_NAME=TABLES\n" +
@@ -322,6 +324,7 @@ public class TestJdbcQuery extends JdbcTest{
         "SCHEMA_NAME=dfs\n" +
         "SCHEMA_NAME=cp.default\n" +
         "SCHEMA_NAME=cp\n" +
+        "SCHEMA_NAME=sys\n" +
         "SCHEMA_NAME=INFORMATION_SCHEMA\n";
 
     JdbcAssert.withNoDefaultSchema().sql("SHOW DATABASES").returns(expected);

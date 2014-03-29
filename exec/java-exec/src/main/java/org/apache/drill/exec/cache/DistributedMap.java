@@ -17,9 +17,10 @@
  */
 package org.apache.drill.exec.cache;
 
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-public interface DistributedMap<V extends DrillSerializable> {
+public interface DistributedMap<V extends DrillSerializable> extends Iterable<Map.Entry<String, V>>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DistributedMap.class);
   public V get(String key);
   public void put(String key, V value);

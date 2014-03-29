@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,10 +17,9 @@
  ******************************************************************************/
 package org.apache.drill.common.logical;
 
+import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.logical.PlanProperties.Generator.ResultMode;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
@@ -33,12 +32,13 @@ public class PlanProperties {
   public int version;
 	public Generator generator;
 	public ResultMode resultMode;
+  public JSONOptions options;
 
 //	@JsonInclude(Include.NON_NULL)
 	public static class Generator{
 		public String type;
 		public String info;
-	  
+
 		public static enum ResultMode{
 	    EXEC, LOGICAL, PHYSICAL;
 	  }
@@ -52,12 +52,14 @@ public class PlanProperties {
   private PlanProperties(@JsonProperty("version") int version,
                          @JsonProperty("generator") Generator generator,
                          @JsonProperty("type") PlanType type,
-                         @JsonProperty("mode") ResultMode resultMode
+                         @JsonProperty("mode") ResultMode resultMode,
+                         @JsonProperty("options") JSONOptions options
                          ) {
     this.version = version;
     this.generator = generator;
     this.type = type;
     this.resultMode = resultMode == null ? ResultMode.EXEC : resultMode;
+    this.options = options;
   }
 
   public static PlanPropertiesBuilder builder() {
@@ -69,6 +71,7 @@ public class PlanProperties {
     private Generator generator;
     private PlanType type;
     private ResultMode mode = ResultMode.EXEC;
+    private JSONOptions options;
 
     public PlanPropertiesBuilder type(PlanType type) {
       this.type = type;
@@ -84,9 +87,14 @@ public class PlanProperties {
       this.generator = new Generator(type, info);
       return this;
     }
-    
+
     public PlanPropertiesBuilder resultMode(ResultMode mode){
       this.mode = mode;
+      return this;
+    }
+
+    public PlanPropertiesBuilder options(JSONOptions options){
+      this.options = options;
       return this;
     }
 
@@ -96,7 +104,7 @@ public class PlanProperties {
     }
 
     public PlanProperties build() {
-      return new PlanProperties(version, generator, type, mode);
+      return new PlanProperties(version, generator, type, mode, options);
     }
   }
 }

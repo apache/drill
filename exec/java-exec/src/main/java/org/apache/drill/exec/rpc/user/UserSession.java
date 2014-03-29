@@ -18,14 +18,18 @@
 package org.apache.drill.exec.rpc.user;
 
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.Map;
 
-import com.google.common.collect.Maps;
 import net.hydromatic.optiq.SchemaPlus;
 
 import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.proto.UserProtos.Property;
 import org.apache.drill.exec.proto.UserProtos.UserProperties;
+import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.server.options.SessionOptionManager;
+
+import com.google.common.collect.Maps;
 
 public class UserSession {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserSession.class);
@@ -36,16 +40,21 @@ public class UserSession {
   private boolean enableExchanges = true;
   private UserCredentials credentials;
   private Map<String, String> properties;
+  private OptionManager options;
 
-  public UserSession(UserCredentials credentials, UserProperties properties) throws IOException{
+  public UserSession(OptionManager systemOptions, UserCredentials credentials, UserProperties properties) throws IOException{
     this.credentials = credentials;
-
+    this.options = new SessionOptionManager(systemOptions);
     this.properties = Maps.newHashMap();
     if (properties == null) return;
     for (int i=0; i<properties.getPropertiesCount(); i++) {
       Property prop = properties.getProperties(i);
       this.properties.put(prop.getKey(), prop.getValue());
     }
+  }
+
+  public OptionManager getOptions(){
+    return options;
   }
 
   public DrillUser getUser(){
@@ -95,4 +104,5 @@ public class UserSession {
     }
     return schema;
   }
+
 }

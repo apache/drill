@@ -25,6 +25,7 @@ import net.hydromatic.optiq.tools.ValidationException;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.sql.DirectPlan;
+import org.eigenbase.sql.SqlLiteral;
 import org.eigenbase.sql.SqlNode;
 import org.eigenbase.sql.SqlSetOption;
 
@@ -46,10 +47,23 @@ public class SetOptionHandler implements SqlHandler{
     String scope = option.getScope();
     String name = option.getName();
     SqlNode value = option.getValue();
-    if(name.equals("NO_EXCHANGES")){
-      context.getPlannerSettings().setSingleMode(true);
+    if(value instanceof SqlLiteral){
+      switch(scope.toLowerCase()){
+      case "session":
+        context.getOptions().setOption(option.getName(), (SqlLiteral) value);
+        break;
+      case "system":
+        context.getOptions().getSystemManager().setOption(name, (SqlLiteral) value);
+        break;
+      default:
+        throw new ValidationException("Invalid OPTION scope.  Scope must be SESSION or SYSTEM.");
+      }
+
+    }else{
+      throw new ValidationException("Sql options can only be literals.");
     }
-    return DirectPlan.createDirectPlan(context, true, "disabled exchanges.");
+
+    return DirectPlan.createDirectPlan(context, true, String.format("%s updated.", name));
 
   }
 

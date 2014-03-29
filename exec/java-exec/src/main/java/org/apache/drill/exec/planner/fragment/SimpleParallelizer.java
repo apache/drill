@@ -23,6 +23,7 @@ import java.util.List;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.PhysicalOperatorSetupException;
 import org.apache.drill.exec.exception.FragmentSetupException;
+import org.apache.drill.exec.expr.fn.impl.DateUtility;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
@@ -31,6 +32,7 @@ import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
+import org.apache.drill.exec.server.options.OptionList;
 import org.apache.drill.exec.work.QueryWorkUnit;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -67,13 +69,13 @@ public class SimpleParallelizer {
    * @return The list of generated PlanFragment protobuf objects to be assigned out to the individual nodes.
    * @throws ExecutionSetupException
    */
-  public QueryWorkUnit getFragments(DrillbitEndpoint foremanNode, QueryId queryId, Collection<DrillbitEndpoint> activeEndpoints, PhysicalPlanReader reader, Fragment rootNode, PlanningSet planningSet,
+  public QueryWorkUnit getFragments(OptionList options, DrillbitEndpoint foremanNode, QueryId queryId, Collection<DrillbitEndpoint> activeEndpoints, PhysicalPlanReader reader, Fragment rootNode, PlanningSet planningSet,
                                     int globalMaxWidth, int maxWidthPerEndpoint) throws ExecutionSetupException {
     assignEndpoints(activeEndpoints, planningSet, globalMaxWidth, maxWidthPerEndpoint);
-    return generateWorkUnit(foremanNode, queryId, reader, rootNode, planningSet);
+    return generateWorkUnit(options, foremanNode, queryId, reader, rootNode, planningSet);
   }
 
-  private QueryWorkUnit generateWorkUnit(DrillbitEndpoint foremanNode, QueryId queryId, PhysicalPlanReader reader, Fragment rootNode,
+  private QueryWorkUnit generateWorkUnit(OptionList options, DrillbitEndpoint foremanNode, QueryId queryId, PhysicalPlanReader reader, Fragment rootNode,
                                          PlanningSet planningSet) throws ExecutionSetupException {
 
     List<PlanFragment> fragments = Lists.newArrayList();
@@ -109,8 +111,10 @@ public class SimpleParallelizer {
 
         // get plan as JSON
         String plan;
+        String optionsData;
         try {
           plan = reader.writeJson(root);
+          optionsData = reader.writeJson(options);
         } catch (JsonProcessingException e) {
           throw new FragmentSetupException("Failure while trying to convert fragment into json.", e);
         }
@@ -135,6 +139,7 @@ public class SimpleParallelizer {
             .setTimeZone(timeZone)//
             .setMemInitial(wrapper.getInitialAllocation())//
             .setMemMax(wrapper.getMaxAllocation())
+            .setOptionsJson(optionsData)
             .build();
 
         if (isRootNode) {

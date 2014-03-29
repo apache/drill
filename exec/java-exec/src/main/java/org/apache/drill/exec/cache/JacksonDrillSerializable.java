@@ -66,21 +66,4 @@ public abstract class JacksonDrillSerializable<T> implements DrillSerializable, 
     return obj;
   }
 
-  public static class StoragePluginsSerializable extends JacksonDrillSerializable<StoragePlugins> {
-
-    public StoragePluginsSerializable(DrillbitContext context, StoragePlugins obj) {
-      super(context, obj);
-    }
-
-    public StoragePluginsSerializable(BufferAllocator allocator) {
-    }
-
-    public StoragePluginsSerializable() {
-    }
-
-    @Override
-    public void readFromStream(InputStream input) throws IOException {
-      readFromStream(input, StoragePlugins.class);
-    }
-  }
 }

@@ -1,0 +1,85 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.drill.exec.server.options;
+
+import java.util.Iterator;
+import java.util.Map.Entry;
+
+import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.exec.server.options.OptionValue.Kind;
+import org.apache.drill.exec.server.options.OptionValue.OptionType;
+
+import com.typesafe.config.ConfigValue;
+
+public class DrillConfigIterator implements Iterable<OptionValue> {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillConfigIterator.class);
+
+  DrillConfig c;
+  public DrillConfigIterator(DrillConfig c){
+    this.c = c;
+  }
+
+  @Override
+  public Iterator<OptionValue> iterator() {
+    return new Iter(c);
+  }
+
+  public class Iter implements Iterator<OptionValue>{
+
+    Iterator<Entry<String, ConfigValue>> entries;
+    public Iter(DrillConfig c){
+      entries = c.entrySet().iterator();
+    }
+    @Override
+    public boolean hasNext() {
+      return entries.hasNext();
+    }
+
+    @Override
+    public OptionValue next() {
+      Entry<String, ConfigValue> e = entries.next();
+      OptionValue v = new OptionValue();
+      v.name = e.getKey();
+      ConfigValue cv = e.getValue();
+      v.type = OptionType.BOOT;
+      switch(cv.valueType()){
+      case BOOLEAN:
+        v.kind = Kind.BOOLEAN;
+        v.bool_val = (Boolean) cv.unwrapped();
+        break;
+      case LIST:
+      case OBJECT:
+      case STRING:
+        v.string_val = cv.render();
+        break;
+      case NUMBER:
+        v.kind = Kind.LONG;
+        v.num_val = ((Number)cv.unwrapped()).longValue();
+        break;
+      }
+      return v;
+    }
+
+    @Override
+    public void remove() {
+      throw new UnsupportedOperationException();
+    }
+
+  }
+
+}

@@ -30,14 +30,14 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalOperatorUtil;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.record.MajorTypeSerDe;
+import org.apache.drill.exec.server.options.OptionList;
+import org.apache.drill.exec.store.StoragePluginRegistry;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.InjectableValues;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.store.StoragePluginRegistry;
 
 public class PhysicalPlanReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PhysicalPlanReader.class);
@@ -56,8 +56,8 @@ public class PhysicalPlanReader {
         .addDeserializer(DrillbitEndpoint.class, new DrillbitEndpointSerDe.De()) //
         .addSerializer(MajorType.class, new MajorTypeSerDe.Se())
         .addDeserializer(MajorType.class, new MajorTypeSerDe.De());
-        
-        
+
+
     mapper.registerModule(deserModule);
     mapper.registerSubtypes(PhysicalOperatorUtil.getSubTypes(config));
     InjectableValues injectables = new InjectableValues.Std() //
@@ -78,10 +78,14 @@ public class PhysicalPlanReader {
     this(config, mapper, endpoint, null);
   }
 
+  public String writeJson(OptionList list) throws JsonProcessingException{
+    return mapper.writeValueAsString(list);
+  }
+
   public String writeJson(PhysicalOperator op) throws JsonProcessingException{
     return mapper.writeValueAsString(op);
   }
-  
+
   public PhysicalPlan readPhysicalPlan(String json) throws JsonProcessingException, IOException {
     logger.debug("Reading physical plan {}", json);
     return physicalPlanReader.readValue(json);

@@ -25,8 +25,14 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.pojo.Writers.BitWriter;
+import org.apache.drill.exec.store.pojo.Writers.DoubleWriter;
+import org.apache.drill.exec.store.pojo.Writers.EnumWriter;
 import org.apache.drill.exec.store.pojo.Writers.IntWriter;
 import org.apache.drill.exec.store.pojo.Writers.LongWriter;
+import org.apache.drill.exec.store.pojo.Writers.NBigIntWriter;
+import org.apache.drill.exec.store.pojo.Writers.NBooleanWriter;
+import org.apache.drill.exec.store.pojo.Writers.NDoubleWriter;
+import org.apache.drill.exec.store.pojo.Writers.NIntWriter;
 import org.apache.drill.exec.store.pojo.Writers.StringWriter;
 
 public class PojoRecordReader<T> implements RecordReader{
@@ -48,7 +54,7 @@ public class PojoRecordReader<T> implements RecordReader{
   @Override
   public void setup(OutputMutator output) throws ExecutionSetupException {
     try{
-      Field[] fields = pojoClass.getFields();
+      Field[] fields = pojoClass.getDeclaredFields();
       writers = new PojoWriter[fields.length];
       for(int i = 0; i < writers.length; i++){
         Field f = fields[i];
@@ -56,6 +62,18 @@ public class PojoRecordReader<T> implements RecordReader{
 
         if(type == int.class){
           writers[i] = new IntWriter(f);
+        }else if(type == Integer.class){
+          writers[i] = new NIntWriter(f);
+        }else if(type == Long.class){
+          writers[i] = new NBigIntWriter(f);
+        }else if(type == Boolean.class){
+          writers[i] = new NBooleanWriter(f);
+        }else if(type == double.class){
+          writers[i] = new DoubleWriter(f);
+        }else if(type == Double.class){
+          writers[i] = new NDoubleWriter(f);
+        }else if(type.isEnum()){
+          writers[i] = new EnumWriter(f);
         }else if(type == boolean.class){
           writers[i] = new BitWriter(f);
         }else if(type == long.class){

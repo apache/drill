@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import com.google.common.base.Preconditions;
 import net.hydromatic.linq4j.expressions.DefaultExpression;
 import net.hydromatic.linq4j.expressions.Expression;
 import net.hydromatic.optiq.SchemaPlus;
@@ -40,10 +39,9 @@ import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.util.PathScanner;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.planner.logical.DrillRuleSets;
 import org.apache.drill.exec.cache.DistributedMap;
-import org.apache.drill.exec.cache.JacksonDrillSerializable.StoragePluginsSerializable;
 import org.apache.drill.exec.exception.DrillbitStartupException;
+import org.apache.drill.exec.planner.logical.DrillRuleSets;
 import org.apache.drill.exec.planner.logical.StoragePlugins;
 import org.apache.drill.exec.rpc.user.DrillUser;
 import org.apache.drill.exec.server.DrillbitContext;
@@ -51,9 +49,12 @@ import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.dfs.FormatPlugin;
 import org.apache.drill.exec.store.ischema.InfoSchemaConfig;
 import org.apache.drill.exec.store.ischema.InfoSchemaStoragePlugin;
+import org.apache.drill.exec.store.sys.SystemTablePlugin;
+import org.apache.drill.exec.store.sys.SystemTablePluginConfig;
 import org.eigenbase.relopt.RelOptRule;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSet.Builder;
@@ -91,9 +92,9 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
       int i =0;
       for(Constructor<?> c : plugin.getConstructors()){
         Class<?>[] params = c.getParameterTypes();
-        if(params.length != 3 
-            || params[1] != DrillbitContext.class 
-            || !StoragePluginConfig.class.isAssignableFrom(params[0]) 
+        if(params.length != 3
+            || params[1] != DrillbitContext.class
+            || !StoragePluginConfig.class.isAssignableFrom(params[0])
             || params[2] != String.class){
           logger.info("Skipping StoragePlugin constructor {} for plugin class {} since it doesn't implement a [constructor(StoragePluginConfig, DrillbitContext, String)]", c, plugin);
           continue;
@@ -109,7 +110,7 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
     // create registered plugins defined in "storage-plugins.json"
     this.plugins = ImmutableMap.copyOf(createPlugins());
 
-    // query registered engines for optimizer rules and build the storage plugin RuleSet 
+    // query registered engines for optimizer rules and build the storage plugin RuleSet
     Builder<RelOptRule> setBuilder = ImmutableSet.builder();
     for (StoragePlugin plugin : this.plugins.values()) {
       Set<StoragePluginOptimizerRule> rules = plugin.getOptimizerRules();
@@ -135,17 +136,15 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
         String pluginsData = Resources.toString(url, Charsets.UTF_8);
         plugins = context.getConfig().getMapper().readValue(pluginsData, StoragePlugins.class);
       }
-      DistributedMap<StoragePluginsSerializable> map = context.getCache().getMap(StoragePluginsSerializable.class);
-      StoragePluginsSerializable cachedPluginsSerializable = map.get("storage-plugins");
-      if (cachedPluginsSerializable != null) {
-        cachedPlugins = cachedPluginsSerializable.getObj();
+      DistributedMap<StoragePlugins> map = context.getCache().getMap(StoragePlugins.class);
+      cachedPlugins = map.get("storage-plugins");
+      if (cachedPlugins != null) {
         logger.debug("Found cached storage plugin config: {}", cachedPlugins);
       } else {
         Preconditions.checkNotNull(plugins,"No storage plugin configuration found");
         logger.debug("caching storage plugin config {}", plugins);
-        map.put("storage-plugins", new StoragePluginsSerializable(context, plugins));
-        cachedPluginsSerializable = map.get("storage-plugins");
-        cachedPlugins = cachedPluginsSerializable.getObj();
+        map.put("storage-plugins", plugins);
+        cachedPlugins = map.get("storage-plugins");
       }
       if(!(plugins == null || cachedPlugins.equals(plugins))) {
         logger.error("Storage plugin config mismatch. {}. {}", plugins, cachedPlugins);
@@ -155,7 +154,7 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
     }catch(IOException e){
       throw new IllegalStateException("Failure while reading storage plugins data.", e);
     }
-    
+
     for(Map.Entry<String, StoragePluginConfig> config : cachedPlugins){
       try{
         StoragePlugin plugin = create(config.getKey(), config.getValue());
@@ -165,14 +164,15 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
       }
     }
     activePlugins.put("INFORMATION_SCHEMA", new InfoSchemaStoragePlugin(new InfoSchemaConfig(), context, "INFORMATION_SCHEMA"));
-    
+    activePlugins.put("sys", new SystemTablePlugin(SystemTablePluginConfig.INSTANCE, context, "sys"));
+
     return activePlugins;
   }
 
   public StoragePlugin getPlugin(String registeredStoragePluginName) throws ExecutionSetupException {
     return plugins.get(registeredStoragePluginName);
   }
-  
+
   public StoragePlugin getPlugin(StoragePluginConfig config) throws ExecutionSetupException {
     if(config instanceof NamedStoragePluginConfig){
       return plugins.get(((NamedStoragePluginConfig) config).name);

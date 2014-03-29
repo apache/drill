@@ -28,6 +28,7 @@ import org.apache.drill.exec.proto.UserProtos.RequestResults;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
 import org.apache.drill.exec.rpc.Acks;
 import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
+import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.SchemaFactory;
 import org.apache.drill.exec.work.WorkManager.WorkerBee;
 import org.apache.drill.exec.work.foreman.Foreman;
@@ -73,5 +74,9 @@ public class UserWorker{
 
   public SchemaFactory getSchemaFactory(){
     return bee.getContext().getSchemaFactory();
+  }
+
+  public OptionManager getSystemOptions(){
+    return bee.getContext().getOptionManager();
   }
 }

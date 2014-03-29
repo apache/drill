@@ -21,8 +21,11 @@ import io.netty.buffer.ByteBuf;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.List;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.ExpressionPosition;
@@ -31,7 +34,9 @@ import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.logical.PlanProperties.Generator.ResultMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
+import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.cache.DistributedMultiMap;
 import org.apache.drill.exec.exception.FragmentSetupException;
 import org.apache.drill.exec.exception.OptimizerException;
 import org.apache.drill.exec.ops.QueryContext;
@@ -49,6 +54,7 @@ import org.apache.drill.exec.planner.sql.DirectPlan;
 import org.apache.drill.exec.planner.sql.DrillSqlWorker;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
+import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.RecordBatchDef;
@@ -186,6 +192,7 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
     }
   }
 
+
   private void parseAndRunLogicalPlan(String json) {
 
     try {
@@ -260,6 +267,7 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
     }
   }
 
+
   private void runPhysicalPlan(PhysicalPlan plan) {
 
     if(plan.getProperties().resultMode != ResultMode.EXEC){
@@ -280,7 +288,7 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
     SimpleParallelizer parallelizer = new SimpleParallelizer();
 
     try {
-      QueryWorkUnit work = parallelizer.getFragments(context.getCurrentEndpoint(), queryId, context.getActiveEndpoints(),
+      QueryWorkUnit work = parallelizer.getFragments(context.getOptions().getSessionOptionList(), context.getCurrentEndpoint(), queryId, context.getActiveEndpoints(),
               context.getPlanReader(), rootFragment, planningSet, context.getConfig().getInt(ExecConstants.GLOBAL_MAX_WIDTH),
               context.getConfig().getInt(ExecConstants.MAX_WIDTH_PER_ENDPOINT));
 
@@ -329,7 +337,7 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
 
   private PhysicalPlan convert(LogicalPlan plan) throws OptimizerException {
     if(logger.isDebugEnabled()) logger.debug("Converting logical plan {}.", plan.toJsonStringSafe(context.getConfig()));
-    return new BasicOptimizer(DrillConfig.create(), context).optimize(new BasicOptimizer.BasicOptimizationContext(), plan);
+    return new BasicOptimizer(DrillConfig.create(), context, initiatingClient).optimize(new BasicOptimizer.BasicOptimizationContext(context), plan);
   }
 
   public QueryResult getResult(UserClientConnection connection, RequestResults req) {

@@ -49,21 +49,21 @@ import org.apache.drill.exec.work.fragment.NonRootStatusReporter;
 
 public class ControlHandlerImpl implements ControlMessageHandler {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ControlHandlerImpl.class);
-  
+
   private final WorkerBee bee;
-  
+
   public ControlHandlerImpl(WorkerBee bee) {
     super();
     this.bee = bee;
   }
 
-  
+
   @Override
   public Response handle(ControlConnection connection, int rpcType, ByteBuf pBody, ByteBuf dBody) throws RpcException {
     if(RpcConstants.EXTRA_DEBUGGING) logger.debug("Received bit com message of type {}", rpcType);
 
     switch (rpcType) {
-    
+
     case RpcType.REQ_CANCEL_FRAGMENT_VALUE:
       FragmentHandle handle = get(pBody, FragmentHandle.PARSER);
       cancelFragment(handle);
@@ -80,28 +80,28 @@ public class ControlHandlerImpl implements ControlMessageHandler {
         startNewRemoteFragment(fragment);
         return DataRpcConfig.OK;
 
-      } catch (OutOfMemoryException e) {
-        logger.error("Failure while attempting to start remote fragment.", fragment, e);
+      } catch (ExecutionSetupException e) {
+        logger.error("Failure while attempting to start remote fragment.", fragment);
         return new Response(RpcType.ACK, Acks.FAIL);
       }
-      
+
     default:
       throw new RpcException("Not yet supported.");
     }
 
   }
-  
-  
-  
+
+
+
   /* (non-Javadoc)
    * @see org.apache.drill.exec.work.batch.BitComHandler#startNewRemoteFragment(org.apache.drill.exec.proto.ExecProtos.PlanFragment)
    */
   @Override
-  public void startNewRemoteFragment(PlanFragment fragment) throws OutOfMemoryException{
+  public void startNewRemoteFragment(PlanFragment fragment) throws ExecutionSetupException{
     logger.debug("Received remote fragment start instruction", fragment);
     FragmentContext context = new FragmentContext(bee.getContext(), fragment, null, new FunctionImplementationRegistry(bee.getContext().getConfig()));
     ControlTunnel tunnel = bee.getContext().getController().getTunnel(fragment.getForeman());
-    
+
     NonRootStatusReporter listener = new NonRootStatusReporter(context, tunnel);
     try{
       FragmentRoot rootOperator = bee.getContext().getPlanReader().readFragmentOperator(fragment.getFragmentJson());
@@ -117,15 +117,15 @@ public class ControlHandlerImpl implements ControlMessageHandler {
       listener.fail(fragment.getHandle(), "Failure due to uncaught exception", e);
     } catch (OutOfMemoryError t) {
       if(t.getMessage().startsWith("Direct buffer")){
-        listener.fail(fragment.getHandle(), "Failure due to error", t);  
+        listener.fail(fragment.getHandle(), "Failure due to error", t);
       }else{
         throw t;
       }
-      
+
     }
-    
+
   }
-  
+
   /* (non-Javadoc)
    * @see org.apache.drill.exec.work.batch.BitComHandler#cancelFragment(org.apache.drill.exec.proto.ExecProtos.FragmentHandle)
    */
@@ -141,10 +141,10 @@ public class ControlHandlerImpl implements ControlMessageHandler {
       FragmentExecutor runner = bee.getFragmentRunner(handle);
       if(runner != null) runner.cancel();
     }
-    
+
     return Acks.OK;
   }
-  
-  
-  
+
+
+
 }

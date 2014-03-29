@@ -22,7 +22,6 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import java.util.Collection;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.cache.DistributedCache;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
@@ -33,9 +32,10 @@ import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.rpc.control.Controller;
 import org.apache.drill.exec.rpc.control.WorkEventBus;
 import org.apache.drill.exec.rpc.data.DataConnectionCreator;
+import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.StoragePluginRegistry.DrillSchemaFactory;
-import org.apache.drill.exec.store.StoragePlugin;
 
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Preconditions;
@@ -55,6 +55,7 @@ public class DrillbitContext {
   private final Controller controller;
   private final WorkEventBus workBus;
   private final FunctionImplementationRegistry functionRegistry;
+  private final SystemOptionManager systemOptions;
 
   public DrillbitContext(DrillbitEndpoint endpoint, BootStrapContext context, ClusterCoordinator coord, Controller controller, DataConnectionCreator connectionsPool, DistributedCache cache, WorkEventBus workBus) {
     super();
@@ -73,6 +74,9 @@ public class DrillbitContext {
     this.reader = new PhysicalPlanReader(context.getConfig(), context.getConfig().getMapper(), endpoint, storagePlugins);
     this.operatorCreatorRegistry = new OperatorCreatorRegistry(context.getConfig());
     this.functionRegistry = new FunctionImplementationRegistry(context.getConfig());
+    this.systemOptions = new SystemOptionManager(cache);
+
+//    this.globalDrillOptions = new DistributedGlobalOptions(this.cache);
   }
 
   public FunctionImplementationRegistry getFunctionImplementationRegistry() {
@@ -81,6 +85,10 @@ public class DrillbitContext {
 
   public WorkEventBus getWorkBus(){
     return workBus;
+  }
+
+  public SystemOptionManager getOptionManager() {
+    return systemOptions;
   }
 
   public DrillbitEndpoint getEndpoint(){

@@ -27,7 +27,12 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
 import org.apache.drill.exec.vector.BigIntVector;
 import org.apache.drill.exec.vector.BitVector;
+import org.apache.drill.exec.vector.Float8Vector;
 import org.apache.drill.exec.vector.IntVector;
+import org.apache.drill.exec.vector.NullableBigIntVector;
+import org.apache.drill.exec.vector.NullableBitVector;
+import org.apache.drill.exec.vector.NullableFloat8Vector;
+import org.apache.drill.exec.vector.NullableIntVector;
 import org.apache.drill.exec.vector.NullableVarCharVector;
 
 import com.google.common.base.Charsets;
@@ -81,18 +86,32 @@ public class Writers {
 
   }
 
-  public static class StringWriter extends AbstractWriter<NullableVarCharVector>{
+  public static class DoubleWriter extends AbstractWriter<Float8Vector>{
 
+    public DoubleWriter(Field field) {
+      super(field, Types.required(MinorType.FLOAT8));
+      if(field.getType() != double.class) throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean writeField(Object pojo, int outboundIndex) throws IllegalArgumentException, IllegalAccessException {
+      double d = field.getDouble(pojo);
+
+      return vector.getMutator().setSafe(outboundIndex, d);
+    }
+
+  }
+
+  private abstract static class AbstractStringWriter extends AbstractWriter<NullableVarCharVector>{
     private ByteBuf data;
     private final NullableVarCharHolder h = new NullableVarCharHolder();
 
-    public StringWriter(Field field) {
+    public AbstractStringWriter(Field field) {
       super(field, Types.optional(MinorType.VARCHAR));
-      if(field.getType() != String.class) throw new IllegalStateException();
       ensureLength(100);
     }
 
-    private void ensureLength(int len){
+    void ensureLength(int len){
       if(data == null || data.capacity() < len){
         if(data != null) data.release();
         data = UnpooledByteBufAllocator.DEFAULT.buffer(len);
@@ -103,11 +122,9 @@ public class Writers {
       data.release();
     }
 
-    @Override
-    public boolean writeField(Object pojo, int outboundIndex) throws IllegalArgumentException, IllegalAccessException {
-      String s = (String) field.get(pojo);
+    public boolean writeString(String s, int outboundIndex) throws IllegalArgumentException, IllegalAccessException {
       if(s == null){
-        h.isSet = 0;
+        return true;
       }else{
         h.isSet = 1;
         byte[] bytes = s.getBytes(Charsets.UTF_8);
@@ -117,10 +134,108 @@ public class Writers {
         h.buffer = data;
         h.start = 0;
         h.end = bytes.length;
+        return vector.getMutator().setSafe(outboundIndex, h);
 
       }
 
-      return vector.getMutator().setSafe(outboundIndex, h);
+    }
+
+  }
+
+  public static class EnumWriter extends AbstractStringWriter{
+    public EnumWriter(Field field) {
+      super(field);
+      if(!field.getType().isEnum()) throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean writeField(Object pojo, int outboundIndex) throws IllegalArgumentException, IllegalAccessException {
+      Enum<?> e= ((Enum<?>) field.get(pojo));
+      if(e == null) return true;
+      return writeString(e.name(), outboundIndex);
+    }
+  }
+
+  public static class StringWriter extends AbstractStringWriter {
+    public StringWriter(Field field) {
+      super(field);
+      if(field.getType() != String.class) throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean writeField(Object pojo, int outboundIndex) throws IllegalArgumentException, IllegalAccessException {
+      String s = (String) field.get(pojo);
+      return writeString(s, outboundIndex);
+    }
+  }
+
+  public static class NIntWriter extends AbstractWriter<NullableIntVector>{
+
+    public NIntWriter(Field field) {
+      super(field, Types.optional(MinorType.INT));
+      if(field.getType() != Integer.class) throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean writeField(Object pojo, int outboundIndex) throws IllegalArgumentException, IllegalAccessException {
+      Integer i = (Integer) field.get(pojo);
+      if(i != null){
+        return vector.getMutator().setSafe(outboundIndex, i);
+      }
+      return true;
+    }
+
+  }
+
+  public static class NBigIntWriter extends AbstractWriter<NullableBigIntVector>{
+
+    public NBigIntWriter(Field field) {
+      super(field, Types.optional(MinorType.BIGINT));
+      if(field.getType() != Long.class) throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean writeField(Object pojo, int outboundIndex) throws IllegalArgumentException, IllegalAccessException {
+      Long o = (Long) field.get(pojo);
+      if(o != null){
+        return vector.getMutator().setSafe(outboundIndex, o);
+      }
+      return true;
+    }
+
+  }
+
+  public static class NBooleanWriter extends AbstractWriter<NullableBitVector>{
+
+    public NBooleanWriter(Field field) {
+      super(field, Types.optional(MinorType.BIT));
+      if(field.getType() != Boolean.class) throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean writeField(Object pojo, int outboundIndex) throws IllegalArgumentException, IllegalAccessException {
+      Boolean o = (Boolean) field.get(pojo);
+      if(o != null){
+        return vector.getMutator().setSafe(outboundIndex, o ? 1 : 0);
+      }
+      return true;
+    }
+
+  }
+  public static class NDoubleWriter extends AbstractWriter<NullableFloat8Vector>{
+
+    public NDoubleWriter(Field field) {
+      super(field, Types.optional(MinorType.FLOAT8));
+      if(field.getType() != Double.class) throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean writeField(Object pojo, int outboundIndex) throws IllegalArgumentException, IllegalAccessException {
+      Double o = (Double) field.get(pojo);
+      if(o != null){
+        return vector.getMutator().setSafe(outboundIndex, o);
+      }
+      return true;
     }
 
   }

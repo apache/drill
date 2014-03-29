@@ -39,6 +39,9 @@ import org.apache.drill.exec.planner.sql.DrillSqlWorker;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.server.options.SessionOptionManager;
+import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.junit.Rule;
 import org.junit.rules.TestRule;
@@ -51,7 +54,7 @@ import com.google.common.io.Resources;
 public class PlanningBase extends ExecTest{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PlanningBase.class);
 
-  @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(30000);
+  @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(10000);
 
   @Mocked DrillbitContext dbContext;
   @Mocked QueryContext context;
@@ -68,6 +71,10 @@ public class PlanningBase extends ExecTest{
     final DistributedCache cache = new LocalCache();
     cache.run();
 
+    final SystemOptionManager opt = new SystemOptionManager(cache);
+    opt.init();
+    final OptionManager sess = new SessionOptionManager(opt);
+
     new NonStrictExpectations() {
       {
         dbContext.getMetrics();
@@ -76,6 +83,8 @@ public class PlanningBase extends ExecTest{
         result = new TopLevelAllocator();
         dbContext.getConfig();
         result = config;
+        dbContext.getOptionManager();
+        result = opt;
         dbContext.getCache();
         result = cache;
       }
@@ -88,6 +97,7 @@ public class PlanningBase extends ExecTest{
     registry.getSchemaFactory().registerSchemas(null, root);
 
 
+
     new NonStrictExpectations() {
       {
         context.getNewDefaultSchema();
@@ -97,13 +107,15 @@ public class PlanningBase extends ExecTest{
         context.getFunctionRegistry();
         result = functionRegistry;
         context.getSession();
-        result = new UserSession(null, null);
+        result = new UserSession(null, null, null);
         context.getCurrentEndpoint();
         result = DrillbitEndpoint.getDefaultInstance();
         context.getActiveEndpoints();
         result = ImmutableList.of(DrillbitEndpoint.getDefaultInstance());
         context.getPlannerSettings();
-        result = new PlannerSettings();
+        result = new PlannerSettings(sess);
+        context.getOptions();
+        result = sess;
         context.getConfig();
         result = config;
         context.getCache();

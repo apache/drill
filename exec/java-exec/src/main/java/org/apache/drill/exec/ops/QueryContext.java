@@ -23,6 +23,7 @@ import net.hydromatic.optiq.SchemaPlus;
 import net.hydromatic.optiq.tools.Frameworks;
 
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.exceptions.ExpressionParsingException;
 import org.apache.drill.exec.cache.DistributedCache;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
@@ -33,7 +34,10 @@ import org.apache.drill.exec.rpc.control.WorkEventBus;
 import org.apache.drill.exec.rpc.data.DataConnectionCreator;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.eigenbase.sql.SqlLiteral;
 
 public class QueryContext{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryContext.class);
@@ -52,7 +56,7 @@ public class QueryContext{
     this.workBus = drllbitContext.getWorkBus();
     this.session = session;
     this.timer = new Multitimer<>(QuerySetup.class);
-    this.plannerSettings = new PlannerSettings();
+    this.plannerSettings = new PlannerSettings(session.getOptions());
   }
 
   public PlannerSettings getPlannerSettings(){
@@ -79,6 +83,9 @@ public class QueryContext{
     return rootSchema;
   }
 
+  public OptionManager getOptions(){
+    return session.getOptions();
+  }
   public DrillbitEndpoint getCurrentEndpoint(){
     return drillbitContext.getEndpoint();
   }

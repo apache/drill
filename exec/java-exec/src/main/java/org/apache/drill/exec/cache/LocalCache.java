@@ -17,14 +17,15 @@
  */
 package org.apache.drill.exec.cache;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -38,6 +39,7 @@ import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -49,10 +51,13 @@ public class LocalCache implements DistributedCache {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LocalCache.class);
 
   private volatile Map<FragmentHandle, PlanFragment> handles;
+  private volatile ConcurrentMap<String, DistributedMap<?>> namedMaps;
   private volatile ConcurrentMap<Class<?>, DistributedMap<?>> maps;
   private volatile ConcurrentMap<Class<?>, DistributedMultiMap<?>> multiMaps;
   private volatile ConcurrentMap<String, Counter> counters;
   private static final BufferAllocator allocator = new TopLevelAllocator();
+
+  private static final ObjectMapper mapper = DrillConfig.create().getMapper();
 
   @Override
   public void close() throws IOException {
@@ -65,6 +70,7 @@ public class LocalCache implements DistributedCache {
     maps = Maps.newConcurrentMap();
     multiMaps = Maps.newConcurrentMap();
     counters = Maps.newConcurrentMap();
+    namedMaps = Maps.newConcurrentMap();
   }
 
   @Override
@@ -78,7 +84,7 @@ public class LocalCache implements DistributedCache {
 //    logger.debug("Storing fragment: {}", fragment);
     handles.put(fragment.getHandle(), fragment);
   }
-  
+
   @Override
   public <V extends DrillSerializable> DistributedMultiMap<V> getMultiMap(Class<V> clazz) {
     DistributedMultiMap<V> mmap = (DistributedMultiMap<V>) multiMaps.get(clazz);
@@ -101,6 +107,18 @@ public class LocalCache implements DistributedCache {
     }
   }
 
+
+  @Override
+  public <V extends DrillSerializable> DistributedMap<V> getNamedMap(String name, Class<V> clazz) {
+    DistributedMap m = namedMaps.get(clazz);
+    if (m == null) {
+      namedMaps.putIfAbsent(name, new LocalDistributedMapImpl<V>(clazz));
+      return (DistributedMap<V>) namedMaps.get(name);
+    } else {
+      return m;
+    }
+  }
+
   @Override
   public Counter getCounter(String name) {
     Counter c = counters.get(name);
@@ -113,6 +131,16 @@ public class LocalCache implements DistributedCache {
   }
 
   public static ByteArrayDataOutput serialize(DrillSerializable obj) {
+    if(obj instanceof JacksonSerializable){
+      try{
+        ByteArrayDataOutput out = ByteStreams.newDataOutput();
+        out.write(mapper.writeValueAsBytes(obj));
+        return out;
+      }catch(Exception e){
+        throw new RuntimeException(e);
+      }
+    }
+
     ByteArrayDataOutput out = ByteStreams.newDataOutput();
     OutputStream outputStream = DataOutputOutputStream.constructOutputStream(out);
     try {
@@ -129,6 +157,14 @@ public class LocalCache implements DistributedCache {
   }
 
   public static <V extends DrillSerializable> V deserialize(byte[] bytes, Class<V> clazz) {
+    if(JacksonSerializable.class.isAssignableFrom(clazz)){
+      try{
+        return (V) mapper.readValue(bytes, clazz);
+      }catch(Exception e){
+        throw new RuntimeException(e);
+      }
+    }
+
     ByteArrayDataInput in = ByteStreams.newDataInput(bytes);
     InputStream inputStream = DataInputInputStream.constructInputStream(in);
     try {
@@ -165,8 +201,8 @@ public class LocalCache implements DistributedCache {
   }
 
   public static class LocalDistributedMapImpl<V extends DrillSerializable> implements DistributedMap<V> {
-    private ConcurrentMap<String, ByteArrayDataOutput> m;
-    private Class<V> clazz;
+    protected ConcurrentMap<String, ByteArrayDataOutput> m;
+    protected Class<V> clazz;
 
     public LocalDistributedMapImpl(Class<V> clazz) {
       m = Maps.newConcurrentMap();
@@ -195,6 +231,56 @@ public class LocalCache implements DistributedCache {
     public void putIfAbsent(String key, V value, long ttl, TimeUnit timeUnit) {
       m.putIfAbsent(key, serialize(value));
       logger.warn("Expiration not implemented in local map cache");
+    }
+
+    private class DeserializingTransformer implements Iterator<Map.Entry<String, V> >{
+      private Iterator<Map.Entry<String, ByteArrayDataOutput>> inner;
+
+      public DeserializingTransformer(Iterator<Entry<String, ByteArrayDataOutput>> inner) {
+        super();
+        this.inner = inner;
+      }
+
+      @Override
+      public boolean hasNext() {
+        return inner.hasNext();
+      }
+
+      @Override
+      public Entry<String, V> next() {
+        return newEntry(inner.next());
+      }
+
+      @Override
+      public void remove() {
+        throw new UnsupportedOperationException();
+      }
+
+      public Entry<String, V> newEntry(final Entry<String, ByteArrayDataOutput> input) {
+        return new Map.Entry<String, V>(){
+
+          @Override
+          public String getKey() {
+            return input.getKey();
+          }
+
+          @Override
+          public V getValue() {
+            return deserialize(input.getValue().toByteArray(), clazz);
+          }
+
+          @Override
+          public V setValue(V value) {
+            throw new UnsupportedOperationException();
+          }
+
+        };
+      }
+
+    }
+    @Override
+    public Iterator<Entry<String, V>> iterator() {
+      return new DeserializingTransformer(m.entrySet().iterator());
     }
   }
 

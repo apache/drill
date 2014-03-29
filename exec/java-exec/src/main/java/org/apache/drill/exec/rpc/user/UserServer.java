@@ -17,12 +17,12 @@
  */
 package org.apache.drill.exec.rpc.user;
 
-import java.io.IOException;
-
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.channel.Channel;
 import io.netty.channel.EventLoopGroup;
+
+import java.io.IOException;
 
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.physical.impl.materialize.QueryWritableBatch;
@@ -100,12 +100,13 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
   public class UserClientConnection extends RemoteConnection {
 
     private UserSession session;
+
     public UserClientConnection(Channel channel) {
       super(channel);
     }
 
     void setUser(UserCredentials credentials, UserProperties props) throws IOException{
-      session = new UserSession(credentials, props);
+      session = new UserSession(worker.getSystemOptions(), credentials, props);
     }
 
     public UserSession getSession(){
@@ -114,7 +115,6 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
 
     public void sendResult(RpcOutcomeListener<Ack> listener, QueryWritableBatch result){
 //      logger.debug("Sending result to client with {}", result);
-
       send(listener, this, RpcType.QUERY_RESULT, result.getHeader(), Ack.class, result.getBuffers());
     }
 
@@ -122,6 +122,8 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
     public BufferAllocator getAllocator() {
       return alloc;
     }
+
+
   }
 
   @Override

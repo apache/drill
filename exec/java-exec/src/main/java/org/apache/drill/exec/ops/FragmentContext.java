@@ -27,6 +27,7 @@ import net.hydromatic.optiq.tools.Frameworks;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.compile.ClassTransformer;
 import org.apache.drill.exec.compile.QueryClassLoader;
 import org.apache.drill.exec.exception.ClassTransformationException;
@@ -42,6 +43,9 @@ import org.apache.drill.exec.rpc.control.ControlTunnel;
 import org.apache.drill.exec.rpc.data.DataTunnel;
 import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
 import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.exec.server.options.FragmentOptionsManager;
+import org.apache.drill.exec.server.options.OptionList;
+import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.work.batch.IncomingBuffers;
 
 import com.beust.jcommander.internal.Lists;
@@ -68,12 +72,13 @@ public class FragmentContext implements Closeable {
   private IncomingBuffers buffers;
   private final long queryStartTime;
   private final int rootFragmentTimeZone;
+  private final OptionManager sessionOptions;
 
   private volatile Throwable failureCause;
   private volatile boolean failed = false;
 
   public FragmentContext(DrillbitContext dbContext, PlanFragment fragment, UserClientConnection connection,
-      FunctionImplementationRegistry funcRegistry) throws OutOfMemoryException {
+      FunctionImplementationRegistry funcRegistry) throws OutOfMemoryException, ExecutionSetupException {
     this.loader = new QueryClassLoader(true);
     this.transformer = new ClassTransformer();
     this.stats = new FragmentStats(dbContext.getMetrics());
@@ -85,7 +90,22 @@ public class FragmentContext implements Closeable {
     this.rootFragmentTimeZone = fragment.getTimeZone();
     logger.debug("Getting initial memory allocation of {}", fragment.getMemInitial());
     logger.debug("Fragment max allocation: {}", fragment.getMemMax());
+    try{
+      OptionList list;
+      if(!fragment.hasOptionsJson() || fragment.getOptionsJson().isEmpty()){
+        list = new OptionList();
+      }else{
+        list = dbContext.getConfig().getMapper().readValue(fragment.getOptionsJson(), OptionList.class);
+      }
+      this.sessionOptions = new FragmentOptionsManager(context.getOptionManager(), list);
+    }catch(Exception e){
+      throw new ExecutionSetupException("Failure while reading plan options.", e);
+    }
     this.allocator = context.getAllocator().getChildAllocator(fragment.getHandle(), fragment.getMemInitial(), fragment.getMemMax());
+  }
+
+  public OptionManager getOptions(){
+    return sessionOptions;
   }
 
   public void setBuffers(IncomingBuffers buffers) {

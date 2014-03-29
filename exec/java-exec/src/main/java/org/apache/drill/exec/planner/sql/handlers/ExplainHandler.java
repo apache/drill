@@ -59,7 +59,7 @@ public class ExplainHandler extends DefaultSqlHandler{
     log("Drill Logical", drel);
 
     if(mode == ResultMode.LOGICAL){
-      LogicalExplain logicalResult = new LogicalExplain(drel);
+      LogicalExplain logicalResult = new LogicalExplain(drel, level, context);
       return DirectPlan.createDirectPlan(context, logicalResult);
     }
 
@@ -68,7 +68,7 @@ public class ExplainHandler extends DefaultSqlHandler{
     PhysicalOperator pop = convertToPop(prel);
     PhysicalPlan plan = convertToPlan(pop);
     log("Drill Plan", plan);
-    PhysicalExplain physicalResult = new PhysicalExplain(prel, plan);
+    PhysicalExplain physicalResult = new PhysicalExplain(prel, plan, level, context);
     return DirectPlan.createDirectPlan(context, physicalResult);
   }
 
@@ -93,11 +93,11 @@ public class ExplainHandler extends DefaultSqlHandler{
   }
 
 
-  public class LogicalExplain{
+  public static class LogicalExplain{
     public String text;
     public String json;
 
-    public LogicalExplain(RelNode node){
+    public LogicalExplain(RelNode node, SqlExplainLevel level, QueryContext context){
       this.text = RelOptUtil.toString(node, level);
       DrillImplementor implementor = new DrillImplementor(new DrillParseContext(), ResultMode.LOGICAL);
       implementor.go( (DrillRel) node);
@@ -106,11 +106,11 @@ public class ExplainHandler extends DefaultSqlHandler{
     }
   }
 
-  public class PhysicalExplain{
+  public static class PhysicalExplain{
     public String text;
     public String json;
 
-    public PhysicalExplain(RelNode node, PhysicalPlan plan){
+    public PhysicalExplain(RelNode node, PhysicalPlan plan, SqlExplainLevel level, QueryContext context){
       this.text = RelOptUtil.toString(node, level);
       this.json = plan.unparse(context.getConfig().getMapper().writer());
     }

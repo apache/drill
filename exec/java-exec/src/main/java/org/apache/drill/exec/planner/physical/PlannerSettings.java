@@ -19,17 +19,24 @@ package org.apache.drill.exec.planner.physical;
 
 import net.hydromatic.optiq.tools.FrameworkContext;
 
+import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.server.options.OptionValidator;
+import org.apache.drill.exec.server.options.TypeValidators.BooleanValidator;
+
 public class PlannerSettings implements FrameworkContext{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PlannerSettings.class);
 
-  private boolean singleMode;
 
-  public boolean isSingleMode() {
-    return singleMode;
+  public static final OptionValidator EXCHANGE = new BooleanValidator("planner.disable_exchanges", false);
+
+  public OptionManager options;
+
+  public PlannerSettings(OptionManager options){
+    this.options = options;
   }
 
-  public void setSingleMode(boolean singleMode) {
-    this.singleMode = singleMode;
+  public boolean isSingleMode() {
+    return options.getOption(EXCHANGE.getOptionName()).bool_val;
   }
 
   @Override

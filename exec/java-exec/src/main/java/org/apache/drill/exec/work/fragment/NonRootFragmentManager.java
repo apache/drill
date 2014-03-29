@@ -60,8 +60,8 @@ public class NonRootFragmentManager implements FragmentManager {
       this.context.setBuffers(buffers);
       this.runnerListener = new NonRootStatusReporter(this.context, context.getController().getTunnel(fragment.getForeman()));
       this.reader = context.getPlanReader();
-      
-    }catch(IOException e){
+
+    }catch(ExecutionSetupException | IOException e){
       throw new FragmentSetupException("Failure while decoding fragment.", e);
     }
   }
@@ -92,7 +92,7 @@ public class NonRootFragmentManager implements FragmentManager {
         return null;
       }
     }
-    
+
   }
 
   /* (non-Javadoc)

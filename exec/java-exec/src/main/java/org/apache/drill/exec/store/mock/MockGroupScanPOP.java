@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -29,6 +30,7 @@ import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
+import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.Size;
 import org.apache.drill.exec.physical.base.SubScan;
@@ -74,13 +76,13 @@ public class MockGroupScanPOP extends AbstractGroupScan {
   public List<MockScanEntry> getReadEntries() {
     return readEntries;
   }
-  
+
   public static class MockScanEntry{
 
     private final int records;
     private final MockColumn[] types;
     private final int recordSize;
-    
+
 
     @JsonCreator
     public MockScanEntry(@JsonProperty("records") int records, @JsonProperty("types") MockColumn[] types) {
@@ -97,7 +99,7 @@ public class MockGroupScanPOP extends AbstractGroupScan {
     public OperatorCost getCost() {
       return new OperatorCost(1, 2, 1, 1);
     }
-    
+
     public int getRecords() {
       return records;
     }
@@ -116,7 +118,7 @@ public class MockGroupScanPOP extends AbstractGroupScan {
       return "MockScanEntry [records=" + records + ", columns=" + Arrays.toString(types) + "]";
     }
   }
-  
+
   @JsonInclude(Include.NON_NULL)
   public static class MockColumn{
     @JsonProperty("type") public MinorType minorType;
@@ -125,8 +127,8 @@ public class MockGroupScanPOP extends AbstractGroupScan {
     public Integer width;
     public Integer precision;
     public Integer scale;
-    
-    
+
+
     @JsonCreator
     public MockColumn(@JsonProperty("name") String name, @JsonProperty("type") MinorType minorType, @JsonProperty("mode") DataMode mode, @JsonProperty("width") Integer width, @JsonProperty("precision") Integer precision, @JsonProperty("scale") Integer scale) {
       this.name = name;
@@ -136,7 +138,7 @@ public class MockGroupScanPOP extends AbstractGroupScan {
       this.precision = precision;
       this.scale = scale;
     }
-    
+
     @JsonProperty("type")
     public MinorType getMinorType() {
       return minorType;
@@ -156,7 +158,7 @@ public class MockGroupScanPOP extends AbstractGroupScan {
     public Integer getScale() {
       return scale;
     }
-    
+
     @JsonIgnore
     public MajorType getMajorType(){
       MajorType.Builder b = MajorType.newBuilder();
@@ -172,7 +174,7 @@ public class MockGroupScanPOP extends AbstractGroupScan {
     public String toString() {
       return "MockColumn [minorType=" + minorType + ", name=" + name + ", mode=" + mode + "]";
     }
-    
+
   }
 
   @Override
@@ -184,7 +186,7 @@ public class MockGroupScanPOP extends AbstractGroupScan {
   @Override
   public void applyAssignments(List<DrillbitEndpoint> endpoints) {
     Preconditions.checkArgument(endpoints.size() <= getReadEntries().size());
-    
+
     mappings = new LinkedList[endpoints.size()];
 
     int i =0;
@@ -227,6 +229,11 @@ public class MockGroupScanPOP extends AbstractGroupScan {
     Preconditions.checkArgument(children.isEmpty());
     return new MockGroupScanPOP(url, readEntries);
 
+  }
+
+  @Override
+  public GroupScan clone(List<SchemaPath> columns) {
+    return this;
   }
 
   @Override

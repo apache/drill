@@ -27,6 +27,7 @@ import org.apache.drill.exec.planner.fragment.MakeFragmentsVisitor;
 import org.apache.drill.exec.planner.fragment.PlanningSet;
 import org.apache.drill.exec.planner.fragment.SimpleParallelizer;
 import org.apache.drill.exec.planner.fragment.StatsCollector;
+import org.apache.drill.exec.server.options.OptionList;
 import org.apache.drill.exec.work.QueryWorkUnit;
 
 /**
@@ -34,25 +35,25 @@ import org.apache.drill.exec.work.QueryWorkUnit;
  */
 public class SimpleExecPlanner implements ExecPlanner{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SimpleExecPlanner.class);
-  
+
   private MakeFragmentsVisitor fragmenter = new MakeFragmentsVisitor();
   private SimpleParallelizer parallelizer = new SimpleParallelizer();
 
   @Override
   public QueryWorkUnit getWorkUnit(QueryContext context, PhysicalPlan plan, int maxWidth) throws ExecutionSetupException {
-    
+
     // get the root physical operator and split the plan into sub fragments.
     PhysicalOperator root = plan.getSortedOperators(false).iterator().next();
     Fragment fragmentRoot = root.accept(fragmenter, null);
-    
+
     // generate a planning set and collect stats.
     PlanningSet planningSet = StatsCollector.collectStats(fragmentRoot);
 
     int maxWidthPerEndpoint = context.getConfig().getInt(ExecConstants.MAX_WIDTH_PER_ENDPOINT);
-    
-    return parallelizer.getFragments(context.getCurrentEndpoint(), context.getQueryId(), context.getActiveEndpoints(),
+
+    return parallelizer.getFragments(new OptionList(), context.getCurrentEndpoint(), context.getQueryId(), context.getActiveEndpoints(),
             context.getPlanReader(), fragmentRoot, planningSet, maxWidth, maxWidthPerEndpoint);
-    
-    
+
+
   }
 }

@@ -77,6 +77,7 @@ message PlanFragment {
   optional int64 query_start_time = 14; // start time of query in milliseconds
   optional exec.shared.UserCredentials credentials = 15;
   optional int32 time_zone = 16;
+  optional string options_json = 17;
 }
 
 message WorkQueueStatus{
