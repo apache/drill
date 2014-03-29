@@ -26,6 +26,11 @@ import org.apache.drill.common.expression.ValueExpressions.IntExpression;
 import org.apache.drill.common.expression.ValueExpressions.FloatExpression;
 import org.apache.drill.common.expression.ValueExpressions.DoubleExpression;
 import org.apache.drill.common.expression.ValueExpressions.LongExpression;
+import org.apache.drill.common.expression.ValueExpressions.DateExpression;
+import org.apache.drill.common.expression.ValueExpressions.IntervalYearExpression;
+import org.apache.drill.common.expression.ValueExpressions.IntervalDayExpression;
+import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
+import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 
 public abstract class SimpleExprVisitor<T> implements ExprVisitor<T, Void, RuntimeException>{
@@ -66,6 +71,32 @@ public abstract class SimpleExprVisitor<T> implements ExprVisitor<T, Void, Runti
   }
 
   @Override
+  public T visitDateConstant(DateExpression intExpr, Void value) throws RuntimeException {
+    return visitDateConstant(intExpr);
+  }
+
+
+  @Override
+  public T visitTimeConstant(TimeExpression intExpr, Void value) throws RuntimeException {
+    return visitTimeConstant(intExpr);
+  }
+
+  @Override
+  public T visitIntervalYearConstant(IntervalYearExpression intExpr, Void value) throws RuntimeException {
+    return visitIntervalYearConstant(intExpr);
+  }
+
+  @Override
+  public T visitIntervalDayConstant(IntervalDayExpression intExpr, Void value) throws RuntimeException {
+    return visitIntervalDayConstant(intExpr);
+  }
+
+  @Override
+  public T visitTimeStampConstant(TimeStampExpression intExpr, Void value) throws RuntimeException {
+    return visitTimeStampConstant(intExpr);
+  }
+
+  @Override
   public T visitDoubleConstant(DoubleExpression dExpr, Void value) throws RuntimeException {
     return visitDoubleConstant(dExpr);
   }
@@ -88,6 +119,11 @@ public abstract class SimpleExprVisitor<T> implements ExprVisitor<T, Void, Runti
   public abstract T visitIntConstant(IntExpression intExpr);
   public abstract T visitFloatConstant(FloatExpression fExpr);
   public abstract T visitLongConstant(LongExpression intExpr);
+  public abstract T visitDateConstant(DateExpression intExpr);
+  public abstract T visitTimeConstant(TimeExpression intExpr);
+  public abstract T visitIntervalYearConstant(IntervalYearExpression intExpr);
+  public abstract T visitIntervalDayConstant(IntervalDayExpression intExpr);
+  public abstract T visitTimeStampConstant(TimeStampExpression intExpr);
   public abstract T visitDoubleConstant(DoubleExpression dExpr);
   public abstract T visitBooleanConstant(BooleanExpression e);
   public abstract T visitQuotedStringConstant(QuotedString e); 

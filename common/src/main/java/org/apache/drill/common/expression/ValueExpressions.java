@@ -17,6 +17,7 @@
  */
 package org.apache.drill.common.expression;
 
+import java.util.GregorianCalendar;
 import java.util.Iterator;
 
 import org.apache.drill.common.expression.visitors.ExprVisitor;
@@ -51,6 +52,26 @@ public class ValueExpressions {
   public static LogicalExpression getChar(String s){
     return new QuotedString(s, ExpressionPosition.UNKNOWN);
   }
+
+  public static LogicalExpression getDate(GregorianCalendar date) {
+    return new org.apache.drill.common.expression.ValueExpressions.DateExpression(date.getTimeInMillis());
+  }
+
+  public static LogicalExpression getTime(GregorianCalendar time) {
+      return new TimeExpression((int) time.getTimeInMillis());
+  }
+
+  public static LogicalExpression getTimeStamp(GregorianCalendar date) {
+    return new org.apache.drill.common.expression.ValueExpressions.TimeStampExpression(date.getTimeInMillis());
+  }
+  public static LogicalExpression getIntervalYear(int months) {
+    return new IntervalYearExpression(months);
+  }
+
+  public static LogicalExpression getIntervalDay(long intervalInMillis) {
+      return new IntervalDayExpression(intervalInMillis);
+  }
+
   
 
   public static LogicalExpression getNumericExpression(String s, ExpressionPosition ep) {
@@ -243,6 +264,194 @@ public class ValueExpressions {
       return visitor.visitLongConstant(this, value);
     }
     
+    @Override
+    public Iterator<LogicalExpression> iterator() {
+      return Iterators.emptyIterator();
+    }
+
+  }
+
+
+  public static class DateExpression extends LogicalExpressionBase {
+
+    private static final MajorType DATE_CONSTANT = Types.required(MinorType.DATE);
+
+    private long dateInMillis;
+
+    public DateExpression(long l) {
+      this(l, ExpressionPosition.UNKNOWN);
+    }
+
+      public DateExpression(long dateInMillis, ExpressionPosition pos) {
+      super(pos);
+      this.dateInMillis = dateInMillis;
+    }
+
+    public long getDate() {
+      return dateInMillis;
+    }
+
+    @Override
+    public MajorType getMajorType() {
+      return DATE_CONSTANT;
+    }
+
+    @Override
+    public <T, V, E extends Exception> T accept(ExprVisitor<T, V, E> visitor, V value) throws E {
+      return visitor.visitDateConstant(this, value);
+    }
+
+    @Override
+    public Iterator<LogicalExpression> iterator() {
+      return Iterators.emptyIterator();
+    }
+
+  }
+
+
+  public static class TimeExpression extends LogicalExpressionBase {
+
+    private static final MajorType TIME_CONSTANT = Types.required(MinorType.TIME);
+
+    private int timeInMillis;
+
+    public TimeExpression(int timeInMillis) {
+      this(timeInMillis, ExpressionPosition.UNKNOWN);
+    }
+
+      public TimeExpression(int timeInMillis, ExpressionPosition pos) {
+      super(pos);
+      this.timeInMillis = timeInMillis;
+    }
+
+    public int getTime() {
+      return timeInMillis;
+    }
+
+    @Override
+    public MajorType getMajorType() {
+      return TIME_CONSTANT;
+    }
+
+    @Override
+    public <T, V, E extends Exception> T accept(ExprVisitor<T, V, E> visitor, V value) throws E {
+      return visitor.visitTimeConstant(this, value);
+    }
+
+    @Override
+    public Iterator<LogicalExpression> iterator() {
+      return Iterators.emptyIterator();
+    }
+
+  }
+
+  public static class TimeStampExpression extends LogicalExpressionBase {
+
+    private static final MajorType TIMESTAMP_CONSTANT = Types.required(MinorType.TIMESTAMP);
+
+    private long timeInMillis;
+
+    public TimeStampExpression(long timeInMillis) {
+      this(timeInMillis, ExpressionPosition.UNKNOWN);
+    }
+
+      public TimeStampExpression(long timeInMillis, ExpressionPosition pos) {
+      super(pos);
+      this.timeInMillis = timeInMillis;
+    }
+
+    public long getTimeStamp() {
+      return timeInMillis;
+    }
+
+    @Override
+    public MajorType getMajorType() {
+      return TIMESTAMP_CONSTANT;
+    }
+
+    @Override
+    public <T, V, E extends Exception> T accept(ExprVisitor<T, V, E> visitor, V value) throws E {
+      return visitor.visitTimeStampConstant(this, value);
+    }
+
+    @Override
+    public Iterator<LogicalExpression> iterator() {
+      return Iterators.emptyIterator();
+    }
+
+  }
+
+  public static class IntervalYearExpression extends LogicalExpressionBase {
+
+    private static final MajorType INTERVALYEAR_CONSTANT = Types.required(MinorType.INTERVALYEAR);
+
+    private int months;
+
+    public IntervalYearExpression(int months) {
+      this(months, ExpressionPosition.UNKNOWN);
+    }
+
+      public IntervalYearExpression(int months, ExpressionPosition pos) {
+      super(pos);
+      this.months = months;
+    }
+
+    public int getIntervalYear() {
+      return months;
+    }
+
+    @Override
+    public MajorType getMajorType() {
+      return INTERVALYEAR_CONSTANT;
+    }
+
+    @Override
+    public <T, V, E extends Exception> T accept(ExprVisitor<T, V, E> visitor, V value) throws E {
+      return visitor.visitIntervalYearConstant(this, value);
+    }
+
+    @Override
+    public Iterator<LogicalExpression> iterator() {
+      return Iterators.emptyIterator();
+    }
+
+  }
+
+  public static class IntervalDayExpression extends LogicalExpressionBase {
+
+    private static final MajorType INTERVALDAY_CONSTANT = Types.required(MinorType.INTERVALDAY);
+
+    private int days;
+    private int millis;
+
+    public IntervalDayExpression(long intervalInMillis) {
+      this((int) intervalInMillis / (1000 * 60 * 60 * 24), (int) (intervalInMillis % (1000 * 60 * 60 * 24)), ExpressionPosition.UNKNOWN);
+    }
+
+      public IntervalDayExpression(int days, int millis, ExpressionPosition pos) {
+      super(pos);
+      this.days = days;
+      this.millis = millis;
+    }
+
+    public int getIntervalDay() {
+      return days;
+    }
+
+    public int getIntervalMillis() {
+        return millis;
+    }
+
+    @Override
+    public MajorType getMajorType() {
+      return INTERVALDAY_CONSTANT;
+    }
+
+    @Override
+    public <T, V, E extends Exception> T accept(ExprVisitor<T, V, E> visitor, V value) throws E {
+      return visitor.visitIntervalDayConstant(this, value);
+    }
+
     @Override
     public Iterator<LogicalExpression> iterator() {
       return Iterators.emptyIterator();

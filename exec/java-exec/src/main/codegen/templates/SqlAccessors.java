@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 
+import java.lang.Override;
+
 <@pp.dropOutputFile />
 <#list vv.types as type>
 <#list type.minor as minor>
@@ -95,10 +97,22 @@ public class ${name}Accessor extends AbstractSqlAccessor{
   </#switch>
 
   <#else>
+  <#if minor.class == "TimeStampTZ">
+  @Override
+  public Timestamp getTimestamp(int index) {
+      return (Timestamp) (ac.getObject(index));
+  }
+  <#elseif minor.class == "Interval" || minor.class == "IntervalDay">
+  @Override
+  public byte[] getBytes(int index) {
+      return null;
+  }
+  <#else>
   @Override
   public ${javaType} get${javaType?cap_first}(int index){
     return ac.get(index);
   }
+  </#if>
   </#if>
   
   @Override

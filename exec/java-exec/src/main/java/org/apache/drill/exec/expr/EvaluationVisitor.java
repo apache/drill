@@ -32,6 +32,11 @@ import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.expression.ValueExpressions.BooleanExpression;
 import org.apache.drill.common.expression.ValueExpressions.DoubleExpression;
 import org.apache.drill.common.expression.ValueExpressions.LongExpression;
+import org.apache.drill.common.expression.ValueExpressions.DateExpression;
+import org.apache.drill.common.expression.ValueExpressions.IntervalYearExpression;
+import org.apache.drill.common.expression.ValueExpressions.IntervalDayExpression;
+import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
+import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 import org.apache.drill.common.types.TypeProtos.MajorType;
@@ -185,6 +190,34 @@ public class EvaluationVisitor {
     }
 
     @Override
+    public HoldingContainer visitDateConstant(DateExpression e, ClassGenerator<?> generator) throws RuntimeException {
+      HoldingContainer out = generator.declare(e.getMajorType());
+      generator.getEvalBlock().assign(out.getValue(), JExpr.lit(e.getDate()));
+      return out;
+    }
+
+    @Override
+    public HoldingContainer visitTimeConstant(TimeExpression e, ClassGenerator<?> generator) throws RuntimeException {
+      HoldingContainer out = generator.declare(e.getMajorType());
+      generator.getEvalBlock().assign(out.getValue(), JExpr.lit(e.getTime()));
+      return out;
+    }
+
+    @Override
+    public HoldingContainer visitIntervalYearConstant(IntervalYearExpression e, ClassGenerator<?> generator) throws RuntimeException {
+      HoldingContainer out = generator.declare(e.getMajorType());
+      generator.getEvalBlock().assign(out.getValue(), JExpr.lit(e.getIntervalYear()));
+      return out;
+    }
+
+    @Override
+    public HoldingContainer visitTimeStampConstant(TimeStampExpression e, ClassGenerator<?> generator) throws RuntimeException {
+      HoldingContainer out = generator.declare(e.getMajorType());
+      generator.getEvalBlock().assign(out.getValue(), JExpr.lit(e.getTimeStamp()));
+      return out;
+    }
+
+    @Override
     public HoldingContainer visitDoubleConstant(DoubleExpression e, ClassGenerator<?> generator) throws RuntimeException {
       HoldingContainer out = generator.declare(e.getMajorType());
       generator.getEvalBlock().assign(out.getValue(), JExpr.lit(e.getDouble()));
@@ -321,6 +354,20 @@ public class EvaluationVisitor {
     }
 
     @Override
+    public HoldingContainer visitIntervalDayConstant(IntervalDayExpression e, ClassGenerator<?> generator)
+        throws RuntimeException {
+      MajorType majorType = Types.required(MinorType.INTERVALDAY);
+      JBlock setup = generator.getBlock(BlockType.SETUP);
+      JType holderType = generator.getHolderType(majorType);
+      JVar var = generator.declareClassField("intervalday", holderType);
+      JExpression dayLiteral = JExpr.lit(e.getIntervalDay());
+      JExpression millisLiteral = JExpr.lit(e.getIntervalMillis());
+
+      setup.assign(var, ((JClass)generator.getModel().ref(ValueHolderHelper.class)).staticInvoke("getIntervalDayHolder").arg(dayLiteral).arg(millisLiteral));
+      return new HoldingContainer(majorType, var, null, null);
+    }
+
+    @Override
     public HoldingContainer visitCastExpression(CastExpression e, ClassGenerator<?> value) throws RuntimeException {
       // we create
       MajorType type = e.getMajorType();
@@ -414,6 +461,63 @@ public class EvaluationVisitor {
     }
 
     @Override
+    public HoldingContainer visitDateConstant(DateExpression e, ClassGenerator<?> generator) throws RuntimeException {
+      if (constantBoundaries.contains(e)) {
+        generator.getMappingSet().enterConstant();
+        HoldingContainer c = super.visitDateConstant(e, generator);
+
+        return renderConstantExpression(generator, c);
+      } else if (generator.getMappingSet().isWithinConstant()) {
+        return super.visitDateConstant(e, generator).setConstant(true);
+      } else {
+        return super.visitDateConstant(e, generator);
+      }
+    }
+
+
+    @Override
+    public HoldingContainer visitTimeConstant(TimeExpression e, ClassGenerator<?> generator) throws RuntimeException {
+      if (constantBoundaries.contains(e)) {
+        generator.getMappingSet().enterConstant();
+        HoldingContainer c = super.visitTimeConstant(e, generator);
+
+        return renderConstantExpression(generator, c);
+      } else if (generator.getMappingSet().isWithinConstant()) {
+        return super.visitTimeConstant(e, generator).setConstant(true);
+      } else {
+        return super.visitTimeConstant(e, generator);
+      }
+    }
+
+    @Override
+    public HoldingContainer visitIntervalYearConstant(IntervalYearExpression e, ClassGenerator<?> generator) throws RuntimeException {
+      if (constantBoundaries.contains(e)) {
+        generator.getMappingSet().enterConstant();
+        HoldingContainer c = super.visitIntervalYearConstant(e, generator);
+
+        return renderConstantExpression(generator, c);
+      } else if (generator.getMappingSet().isWithinConstant()) {
+        return super.visitIntervalYearConstant(e, generator).setConstant(true);
+      } else {
+        return super.visitIntervalYearConstant(e, generator);
+      }
+    }
+
+    @Override
+    public HoldingContainer visitTimeStampConstant(TimeStampExpression e, ClassGenerator<?> generator) throws RuntimeException {
+      if (constantBoundaries.contains(e)) {
+        generator.getMappingSet().enterConstant();
+        HoldingContainer c = super.visitTimeStampConstant(e, generator);
+
+        return renderConstantExpression(generator, c);
+      } else if (generator.getMappingSet().isWithinConstant()) {
+        return super.visitTimeStampConstant(e, generator).setConstant(true);
+      } else {
+        return super.visitTimeStampConstant(e, generator);
+      }
+    }
+
+    @Override
     public HoldingContainer visitDoubleConstant(DoubleExpression e, ClassGenerator<?> generator) throws RuntimeException {
       if (constantBoundaries.contains(e)) {
         generator.getMappingSet().enterConstant();
@@ -473,6 +577,22 @@ public class EvaluationVisitor {
         return super.visitQuotedStringConstant(e, generator).setConstant(true);
       } else {
         return super.visitQuotedStringConstant(e, generator);          
+      }
+    }
+
+
+    @Override
+    public HoldingContainer visitIntervalDayConstant(IntervalDayExpression e, ClassGenerator<?> generator)
+        throws RuntimeException {
+      if (constantBoundaries.contains(e)) {
+        generator.getMappingSet().enterConstant();
+        HoldingContainer c = super.visitIntervalDayConstant(e, generator);
+
+        return renderConstantExpression(generator, c);
+      } else if (generator.getMappingSet().isWithinConstant()) {
+        return super.visitIntervalDayConstant(e, generator).setConstant(true);
+      } else {
+        return super.visitIntervalDayConstant(e, generator);
       }
     }
 
