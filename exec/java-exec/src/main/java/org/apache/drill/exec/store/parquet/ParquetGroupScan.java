@@ -96,7 +96,7 @@ public class ParquetGroupScan extends AbstractGroupScan {
     return entries;
   }
 
-  @JsonProperty("storageengine")
+  @JsonProperty("format")
   public ParquetFormatConfig getEngineConfig() {
     return this.formatConfig;
   }

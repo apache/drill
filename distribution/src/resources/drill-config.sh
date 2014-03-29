@@ -89,6 +89,20 @@ if [ "${HADOOP_HOME}x" != "x" ] ; then
   done
   HADOOP_CLASSPATH=$HADOOP_HOME/conf:$HADOOP_CLASSPATH
 fi
+if [ "${HBASE_HOME}x" != "x" ]
+then
+  HBASE_CLASSPATH=""
+  for jar in `ls $HBASE_HOME/*jar`
+  do
+    echo $jar | grep -v -f $DRILL_HOME/bin/hadoop-excludes.txt >/dev/null
+    if [ "$?" -eq "0" ]
+    then
+      HBASE_CLASSPATH=$jar:$HBASE_CLASSPATH
+    fi
+  done
+  HBASE_CLASSPATH=$HBASE_HOME/conf:$HBASE_CLASSPATH
+  export HBASE_CLASSPATH=$HBASE_CLASSPATH
+fi
 
 # Setup Drill classpath entries
 CP=$DRILL_HOME/jars/*:$DRILL_CLASSPATH
