@@ -78,6 +78,8 @@ public class SimpleParallelizer {
     PlanFragment rootFragment = null;
     FragmentRoot rootOperator = null;
 
+    long queryStartTime = System.currentTimeMillis();
+
     // now we generate all the individual plan fragments and associated assignments. Note, we need all endpoints
     // assigned before we can materialize, so we start a new loop here rather than utilizing the previous one.
     for (Wrapper wrapper : planningSet) {
@@ -125,6 +127,7 @@ public class SimpleParallelizer {
             .setHandle(handle) //
             .setAssignment(wrapper.getAssignedEndpoint(minorFragmentId)) //
             .setLeafFragment(isLeafFragment) //
+            .setQueryStartTime(queryStartTime)
             .build();
 
         if (isRootNode) {

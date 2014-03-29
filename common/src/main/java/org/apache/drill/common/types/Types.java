@@ -68,7 +68,7 @@ public class Types {
       return java.sql.Types.BOOLEAN;
     case DATE:
       return java.sql.Types.DATE;
-    case DATETIME:
+    case TIMESTAMP:
       return java.sql.Types.DATE;
     case DECIMAL12:
     case DECIMAL16:
@@ -93,6 +93,8 @@ public class Types {
       return java.sql.Types.DECIMAL;
     case NULL:
     case INTERVAL:
+    case INTERVALYEAR:
+    case INTERVALDAY:
     case LATE:
     case REPEATMAP:
       return java.sql.Types.OTHER;
@@ -100,7 +102,7 @@ public class Types {
       return java.sql.Types.SMALLINT;
     case TIME:
       return java.sql.Types.TIME;
-    case TIMESTAMP:
+    case TIMESTAMPTZ:
       return java.sql.Types.TIMESTAMP;
     case TIMETZ:
       return java.sql.Types.DATE;
@@ -153,6 +155,10 @@ public class Types {
     case UINT2:
     case UINT4:
     case UINT8:
+    case INTERVALYEAR:
+    case DATE:
+    case TIME:
+    case TIMESTAMP:
       return false;
     
     default: 
@@ -207,7 +213,6 @@ public class Types {
     case MAP:
     case REPEATMAP:
       return Comparability.NONE;
-    case INTERVAL:
     case BIT:
       return Comparability.EQUAL;
     default:

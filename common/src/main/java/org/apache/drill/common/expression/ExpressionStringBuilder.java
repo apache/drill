@@ -23,6 +23,11 @@ import org.apache.drill.common.expression.ValueExpressions.DoubleExpression;
 import org.apache.drill.common.expression.ValueExpressions.FloatExpression;
 import org.apache.drill.common.expression.ValueExpressions.IntExpression;
 import org.apache.drill.common.expression.ValueExpressions.LongExpression;
+import org.apache.drill.common.expression.ValueExpressions.DateExpression;
+import org.apache.drill.common.expression.ValueExpressions.IntervalYearExpression;
+import org.apache.drill.common.expression.ValueExpressions.IntervalDayExpression;
+import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
+import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 import org.apache.drill.common.types.TypeProtos.MajorType;
@@ -80,6 +85,37 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
     return null;
   }
 
+
+  @Override
+  public Void visitDateConstant(DateExpression lExpr, StringBuilder sb) throws RuntimeException {
+    sb.append(lExpr.getDate());
+    return null;
+  }
+
+  @Override
+  public Void visitTimeConstant(TimeExpression lExpr, StringBuilder sb) throws RuntimeException {
+    sb.append(lExpr.getTime());
+    return null;
+  }
+
+  @Override
+  public Void visitTimeStampConstant(TimeStampExpression lExpr, StringBuilder sb) throws RuntimeException {
+    sb.append(lExpr.getTimeStamp());
+    return null;
+  }
+
+  @Override
+  public Void visitIntervalYearConstant(IntervalYearExpression lExpr, StringBuilder sb) throws RuntimeException {
+    sb.append(lExpr.getIntervalYear());
+    return null;
+  }
+
+  @Override
+  public Void visitIntervalDayConstant(IntervalDayExpression lExpr, StringBuilder sb) throws RuntimeException {
+    sb.append(lExpr.getIntervalDay() + " " + lExpr.getIntervalMillis());
+    return null;
+  }
+
   @Override
   public Void visitDoubleConstant(DoubleExpression dExpr, StringBuilder sb) throws RuntimeException {
     sb.append(dExpr.getDouble());
@@ -119,6 +155,13 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
     case UINT2:
     case UINT4:
     case UINT8:
+    case DATE:
+    case TIMESTAMP:
+    case TIMESTAMPTZ:
+    case TIME:
+    case INTERVAL:
+    case INTERVALDAY:
+    case INTERVALYEAR:
       // do nothing else.
       break;
     case VAR16CHAR:

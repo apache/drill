@@ -34,6 +34,13 @@ public class CastFunctions {
     TYPE2FUNC.put(MinorType.VARCHAR, "castVARCHAR");
     TYPE2FUNC.put(MinorType.VAR16CHAR, "castVAR16CHAR");
     TYPE2FUNC.put(MinorType.VARBINARY, "castVARBINARY");
+    TYPE2FUNC.put(MinorType.DATE, "castDATE");
+    TYPE2FUNC.put(MinorType.TIME, "castTIME");
+    TYPE2FUNC.put(MinorType.TIMESTAMP, "castTIMESTAMP");
+    TYPE2FUNC.put(MinorType.TIMESTAMPTZ, "castTIMESTAMPTZ");
+    TYPE2FUNC.put(MinorType.INTERVALDAY, "castINTERVALDAY");
+    TYPE2FUNC.put(MinorType.INTERVALYEAR, "castINTERVALYEAR");
+    TYPE2FUNC.put(MinorType.INTERVAL, "castINTERVAL");
   }
 
   public static String getCastFunc(MinorType targetMinorType) {

@@ -241,7 +241,8 @@ public class TypeCastRules {
     /** DATE cast able from **/
     rule = new HashSet<MinorType>();
     rule.add(MinorType.DATE);
-    rule.add(MinorType.DATETIME);
+    rule.add(MinorType.TIMESTAMP);
+    rule.add(MinorType.TIMESTAMPTZ);
     rule.add(MinorType.FIXEDCHAR);
     rule.add(MinorType.FIXED16CHAR);
     rule.add(MinorType.FIXEDBINARY);
@@ -253,7 +254,8 @@ public class TypeCastRules {
     /** TIME cast able from **/
     rule = new HashSet<MinorType>();
     rule.add(MinorType.TIME);
-    rule.add(MinorType.DATETIME);
+    rule.add(MinorType.TIMESTAMP);
+    rule.add(MinorType.TIMESTAMPTZ);
     rule.add(MinorType.FIXEDCHAR);
     rule.add(MinorType.FIXED16CHAR);
     rule.add(MinorType.FIXEDBINARY);
@@ -262,9 +264,9 @@ public class TypeCastRules {
     rule.add(MinorType.VARBINARY);
     rules.put(MinorType.TIME, rule);
 
-    /** DATETIME cast able from **/
+    /** TIMESTAMP cast able from **/
     rule = new HashSet<MinorType>();
-    rule.add(MinorType.DATETIME);
+    rule.add(MinorType.TIMESTAMP);
     rule.add(MinorType.TINYINT);
     rule.add(MinorType.SMALLINT);
     rule.add(MinorType.INT);
@@ -275,8 +277,70 @@ public class TypeCastRules {
     rule.add(MinorType.DECIMAL16);
     rule.add(MinorType.DATE);
     rule.add(MinorType.TIME);
+    rule.add(MinorType.TIMESTAMPTZ);
+    rules.put(MinorType.TIMESTAMP, rule);
+
+    /** TIMESTAMPTZ cast able from **/
+    rule = new HashSet<MinorType>();
+    rule.add(MinorType.TIMESTAMPTZ);
+    rule.add(MinorType.DATE);
     rule.add(MinorType.TIMESTAMP);
-    rules.put(MinorType.DATETIME, rule);
+    rule.add(MinorType.TIME);
+    rule.add(MinorType.FIXEDCHAR);
+    rule.add(MinorType.FIXED16CHAR);
+    rule.add(MinorType.FIXEDBINARY);
+    rule.add(MinorType.VARCHAR);
+    rule.add(MinorType.VAR16CHAR);
+    rule.add(MinorType.VARBINARY);
+    rules.put(MinorType.TIMESTAMPTZ, rule);
+
+    /** Interval cast able from **/
+    rule = new HashSet<MinorType>();
+    rule.add(MinorType.INTERVAL);
+    rule.add(MinorType.INTERVALDAY);
+    rule.add(MinorType.INTERVALYEAR);
+    rule.add(MinorType.DATE);
+    rule.add(MinorType.TIMESTAMP);
+    rule.add(MinorType.TIMESTAMPTZ);
+    rule.add(MinorType.FIXEDCHAR);
+    rule.add(MinorType.FIXED16CHAR);
+    rule.add(MinorType.FIXEDBINARY);
+    rule.add(MinorType.VARCHAR);
+    rule.add(MinorType.VAR16CHAR);
+    rule.add(MinorType.VARBINARY);
+    rules.put(MinorType.INTERVAL, rule);
+
+    /** INTERVAL YEAR cast able from **/
+    rule = new HashSet<MinorType>();
+    rule.add(MinorType.INTERVALYEAR);
+    rule.add(MinorType.INTERVAL);
+    rule.add(MinorType.INTERVALDAY);
+    rule.add(MinorType.DATE);
+    rule.add(MinorType.TIMESTAMP);
+    rule.add(MinorType.TIMESTAMPTZ);
+    rule.add(MinorType.FIXEDCHAR);
+    rule.add(MinorType.FIXED16CHAR);
+    rule.add(MinorType.FIXEDBINARY);
+    rule.add(MinorType.VARCHAR);
+    rule.add(MinorType.VAR16CHAR);
+    rule.add(MinorType.VARBINARY);
+    rules.put(MinorType.INTERVALYEAR, rule);
+
+    /** INTERVAL DAY cast able from **/
+    rule = new HashSet<MinorType>();
+    rule.add(MinorType.INTERVALDAY);
+    rule.add(MinorType.INTERVALYEAR);
+    rule.add(MinorType.INTERVAL);
+    rule.add(MinorType.DATE);
+    rule.add(MinorType.TIMESTAMP);
+    rule.add(MinorType.TIMESTAMPTZ);
+    rule.add(MinorType.FIXEDCHAR);
+    rule.add(MinorType.FIXED16CHAR);
+    rule.add(MinorType.FIXEDBINARY);
+    rule.add(MinorType.VARCHAR);
+    rule.add(MinorType.VAR16CHAR);
+    rule.add(MinorType.VARBINARY);
+    rules.put(MinorType.INTERVALDAY, rule);
 
     /** FLOAT4 cast able from **/
     rule = new HashSet<MinorType>();
@@ -328,7 +392,7 @@ public class TypeCastRules {
     rule.add(MinorType.DECIMAL12);
     rule.add(MinorType.DECIMAL16);
     rule.add(MinorType.MONEY);
-    rule.add(MinorType.TIMESTAMP);
+    rule.add(MinorType.TIMESTAMPTZ);
     rule.add(MinorType.FLOAT4);
     rule.add(MinorType.FLOAT8);
     rule.add(MinorType.BIT);
@@ -351,7 +415,7 @@ public class TypeCastRules {
     rule.add(MinorType.DECIMAL12);
     rule.add(MinorType.DECIMAL16);
     rule.add(MinorType.MONEY);
-    rule.add(MinorType.TIMESTAMP);
+    rule.add(MinorType.TIMESTAMPTZ);
     rule.add(MinorType.FLOAT4);
     rule.add(MinorType.FLOAT8);
     rule.add(MinorType.BIT);
@@ -363,7 +427,11 @@ public class TypeCastRules {
     rule.add(MinorType.FIXEDBINARY);
     rule.add(MinorType.DATE);
     rule.add(MinorType.TIME);
-    rule.add(MinorType.DATETIME);
+    rule.add(MinorType.TIMESTAMP);
+    rule.add(MinorType.TIMESTAMPTZ);
+    rule.add(MinorType.INTERVAL);
+    rule.add(MinorType.INTERVALYEAR);
+    rule.add(MinorType.INTERVALDAY);
     rules.put(MinorType.FIXEDCHAR, rule);
 
     /** FIXED16CHAR cast able from **/
@@ -377,7 +445,7 @@ public class TypeCastRules {
     rule.add(MinorType.DECIMAL12);
     rule.add(MinorType.DECIMAL16);
     rule.add(MinorType.MONEY);
-    rule.add(MinorType.TIMESTAMP);
+    rule.add(MinorType.TIMESTAMPTZ);
     rule.add(MinorType.FLOAT4);
     rule.add(MinorType.FLOAT8);
     rule.add(MinorType.BIT);
@@ -389,7 +457,11 @@ public class TypeCastRules {
     rule.add(MinorType.FIXEDBINARY);
     rule.add(MinorType.DATE);
     rule.add(MinorType.TIME);
-    rule.add(MinorType.DATETIME);
+    rule.add(MinorType.TIMESTAMP);
+    rule.add(MinorType.TIMESTAMPTZ);
+    rule.add(MinorType.INTERVAL);
+    rule.add(MinorType.INTERVALYEAR);
+    rule.add(MinorType.INTERVALDAY);
     rules.put(MinorType.FIXED16CHAR, rule);
 
     /** FIXEDBINARY cast able from **/
@@ -403,7 +475,7 @@ public class TypeCastRules {
     rule.add(MinorType.DECIMAL12);
     rule.add(MinorType.DECIMAL16);
     rule.add(MinorType.MONEY);
-    rule.add(MinorType.TIMESTAMP);
+    rule.add(MinorType.TIMESTAMPTZ);
     rule.add(MinorType.FLOAT4);
     rule.add(MinorType.FLOAT8);
     rule.add(MinorType.BIT);
@@ -424,7 +496,7 @@ public class TypeCastRules {
     rule.add(MinorType.DECIMAL12);
     rule.add(MinorType.DECIMAL16);
     rule.add(MinorType.MONEY);
-    rule.add(MinorType.TIMESTAMP);
+    rule.add(MinorType.TIMESTAMPTZ);
     rule.add(MinorType.FLOAT4);
     rule.add(MinorType.FLOAT8);
     rule.add(MinorType.BIT);
@@ -436,7 +508,11 @@ public class TypeCastRules {
     rule.add(MinorType.FIXEDBINARY);
     rule.add(MinorType.DATE);
     rule.add(MinorType.TIME);
-    rule.add(MinorType.DATETIME);
+    rule.add(MinorType.TIMESTAMP);
+    rule.add(MinorType.TIMESTAMPTZ);
+    rule.add(MinorType.INTERVAL);
+    rule.add(MinorType.INTERVALYEAR);
+    rule.add(MinorType.INTERVALDAY);
     rules.put(MinorType.VARCHAR, rule);
 
     /** VAR16CHAR cast able from **/
@@ -450,7 +526,7 @@ public class TypeCastRules {
     rule.add(MinorType.DECIMAL12);
     rule.add(MinorType.DECIMAL16);
     rule.add(MinorType.MONEY);
-    rule.add(MinorType.TIMESTAMP);
+    rule.add(MinorType.TIMESTAMPTZ);
     rule.add(MinorType.FLOAT4);
     rule.add(MinorType.FLOAT8);
     rule.add(MinorType.BIT);
@@ -462,7 +538,11 @@ public class TypeCastRules {
     rule.add(MinorType.FIXEDBINARY);
     rule.add(MinorType.DATE);
     rule.add(MinorType.TIME);
-    rule.add(MinorType.DATETIME);
+    rule.add(MinorType.TIMESTAMP);
+    rule.add(MinorType.TIMESTAMPTZ);
+    rule.add(MinorType.INTERVAL);
+    rule.add(MinorType.INTERVALYEAR);
+    rule.add(MinorType.INTERVALDAY);
     rules.put(MinorType.VAR16CHAR, rule);
 
     /** VARBINARY cast able from **/
@@ -476,7 +556,7 @@ public class TypeCastRules {
     rule.add(MinorType.DECIMAL12);
     rule.add(MinorType.DECIMAL16);
     rule.add(MinorType.MONEY);
-    rule.add(MinorType.TIMESTAMP);
+    rule.add(MinorType.TIMESTAMPTZ);
     rule.add(MinorType.FLOAT4);
     rule.add(MinorType.FLOAT8);
     rule.add(MinorType.BIT);
