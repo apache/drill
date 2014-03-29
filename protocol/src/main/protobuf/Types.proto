@@ -37,8 +37,8 @@ enum MinorType {
     DATE = 12;   //  days since 4713bc 
     TIME = 13;   //  time in micros before or after 2000/1/1
     TIMETZ = 14;   //  time in micros before or after 2000/1/1 with timezone
-    TIMESTAMP = 15;   //  unix epoch time in millis
-    DATETIME = 16;   //  TBD
+    TIMESTAMPTZ = 15;   //  unix epoch time in millis
+    TIMESTAMP = 16;   //  TBD
     INTERVAL = 17;   //  TBD
     FLOAT4 = 18;   //  4 byte ieee 754 
     FLOAT8 = 19;   //  8 byte ieee 754
@@ -58,7 +58,8 @@ enum MinorType {
 //    MSGPACK2 = 35;   //  msgpack encoded complex type. (up to 2^16 in length)
 //    MSGPACK4 = 36;   //  msgpack encoded complex type. (up to 2^32 in length)
     NULL = 37; // a value of unknown type (e.g. a missing reference).
-    
+    INTERVALYEAR = 38; // Interval type specifying YEAR to MONTH
+    INTERVALDAY = 39; // Interval type specifying DAY to SECONDS
 }
 
 message MajorType {
@@ -66,7 +67,8 @@ message MajorType {
   optional DataMode mode = 2;
   optional int32 width = 3; // optional width for fixed size values.
   optional int32 precision = 4; // used for decimal types
-  optional int32 scale = 5; // used for decimal types 
+  optional int32 scale = 5; // used for decimal types
+  optional int32 timeZone = 6; // used by TimeStamp type
 }
 
 

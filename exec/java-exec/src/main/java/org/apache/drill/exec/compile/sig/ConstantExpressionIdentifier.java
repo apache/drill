@@ -32,6 +32,11 @@ import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.expression.ValueExpressions.BooleanExpression;
 import org.apache.drill.common.expression.ValueExpressions.DoubleExpression;
 import org.apache.drill.common.expression.ValueExpressions.LongExpression;
+import org.apache.drill.common.expression.ValueExpressions.DateExpression;
+import org.apache.drill.common.expression.ValueExpressions.IntervalYearExpression;
+import org.apache.drill.common.expression.ValueExpressions.IntervalDayExpression;
+import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
+import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
 
@@ -121,6 +126,31 @@ public class ConstantExpressionIdentifier implements ExprVisitor<Boolean, Identi
 
   @Override
   public Boolean visitLongConstant(LongExpression intExpr, IdentityHashMap<LogicalExpression, Object> value){
+    return true;
+  }
+
+  @Override
+  public Boolean visitDateConstant(DateExpression intExpr, IdentityHashMap<LogicalExpression, Object> value){
+    return true;
+  }
+
+  @Override
+  public Boolean visitTimeConstant(TimeExpression intExpr, IdentityHashMap<LogicalExpression, Object> value){
+    return true;
+  }
+
+  @Override
+  public Boolean visitIntervalYearConstant(IntervalYearExpression intExpr, IdentityHashMap<LogicalExpression, Object> value){
+    return true;
+  }
+
+  @Override
+  public Boolean visitIntervalDayConstant(IntervalDayExpression intExpr, IdentityHashMap<LogicalExpression, Object> value){
+    return true;
+  }
+
+  @Override
+  public Boolean visitTimeStampConstant(TimeStampExpression intExpr, IdentityHashMap<LogicalExpression, Object> value){
     return true;
   }
 

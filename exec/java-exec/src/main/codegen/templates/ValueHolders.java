@@ -44,8 +44,20 @@ public final class ${className} implements ValueHolder{
       <#if type.major != "VarLen">
       
       <#if (type.width > 8)>
+      <#if (minor.class == "TimeStampTZ")>
+      public long value;
+      public int index;
+      <#elseif (minor.class == "Interval")>
+      public int months;
+      public int days;
+      public int milliSeconds;
+      <#elseif (minor.class == "IntervalDay")>
+      public int days;
+      public int milliSeconds;
+      <#else>
       public int start;
       public ByteBuf buffer;
+      </#if>
       <#else>
         public ${minor.javaType!type.javaType} value;
       

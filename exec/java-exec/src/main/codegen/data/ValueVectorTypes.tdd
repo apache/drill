@@ -57,6 +57,8 @@
         { class: "Int", valueHolder: "IntHolder" },
         { class: "UInt4", valueHolder: "UInt4Holder" },
         { class: "Float4", javaType: "float" },
+        { class: "Time", javaType: "int"},
+        { class: "IntervalYear", javaType: "int"}
         <#-- 
         { class: "Decimal4", maxPrecisionDigits: 8, scale: 4, javaType: "float"},
         { class: "Date" }
@@ -72,15 +74,31 @@
         { class: "BigInt" },
         { class: "UInt8" },
         { class: "Float8", javaType: "double" , boxedType: "Double"},
-        <#-- 
+        { class: "Date", javaType: "long"},
+        { class: "TimeStamp", javaType: "long"}
+        <#--
         { class: "Decimal8", maxPrecisionDigits: 18, scale: 4, javaType: "double", boxedType: "Double"},
-        { class: "Money", maxPrecisionDigits: 2, scale: 1, }, 
-        { class: "Time" },
-        { class: "TimeStamp" },
-        { class: "DateTime" }
+        { class: "Money", maxPrecisionDigits: 2, scale: 1, },
         -->
       ]
     },
+    {
+      major: "Fixed",
+      width: 12,
+      javaType: "ByteBuf"
+      minor: [
+        { class: "TimeStampTZ", milliSecondsSize: 8 },
+        { class: "IntervalDay", milliSecondsOffset: 4 }
+      ]
+    },
+    {
+      major: "Fixed",
+      width: 16,
+      javaType: "ByteBuf"
+      minor: [
+        { class: "Interval", daysOffset: 4, milliSecondsOffset: 8}
+      ]
+    }
     <#--
     {
       major: "Fixed",

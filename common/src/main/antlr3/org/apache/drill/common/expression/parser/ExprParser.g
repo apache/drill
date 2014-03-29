@@ -91,19 +91,30 @@ repeat returns [Boolean isRep]
 dataType returns [MajorType type]
 	: numType  {$type =$numType.type;}
 	| charType {$type =$charType.type;}
-	; 
+	| dateType {$type =$dateType.type;}
+	;
   
 numType returns [MajorType type]
 	: INT    { $type = Types.required(TypeProtos.MinorType.INT); }
 	| BIGINT { $type = Types.required(TypeProtos.MinorType.BIGINT); }
 	| FLOAT4 { $type = Types.required(TypeProtos.MinorType.FLOAT4); }
 	| FLOAT8 { $type = Types.required(TypeProtos.MinorType.FLOAT8); }
-	; 
+	;
 
 charType returns [MajorType type]
 	:  VARCHAR typeLen {$type = TypeProtos.MajorType.newBuilder().setMinorType(TypeProtos.MinorType.VARCHAR).setMode(DataMode.REQUIRED).setWidth($typeLen.length.intValue()).build(); }
 	|  VARBINARY typeLen {$type = TypeProtos.MajorType.newBuilder().setMinorType(TypeProtos.MinorType.VARBINARY).setMode(DataMode.REQUIRED).setWidth($typeLen.length.intValue()).build();}	
 	; 
+
+dateType returns [MajorType type]
+    : DATE { $type = Types.required(TypeProtos.MinorType.DATE); }
+    | TIMESTAMP   { $type = Types.required(TypeProtos.MinorType.TIMESTAMP); }
+    | TIME   { $type = Types.required(TypeProtos.MinorType.TIME); }
+    | TIMESTAMPTZ   { $type = Types.required(TypeProtos.MinorType.TIMESTAMPTZ); }
+    | INTERVAL { $type = Types.required(TypeProtos.MinorType.INTERVAL); }
+    | INTERVALYEAR { $type = Types.required(TypeProtos.MinorType.INTERVALYEAR); }
+    | INTERVALDAY { $type = Types.required(TypeProtos.MinorType.INTERVALDAY); }
+    ;
 
 typeLen returns [Integer length]
     : OParen Number CParen {$length = Integer.parseInt($Number.text);}

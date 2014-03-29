@@ -33,6 +33,11 @@ import org.apache.drill.common.expression.ValueExpressions.BooleanExpression;
 import org.apache.drill.common.expression.ValueExpressions.DoubleExpression;
 import org.apache.drill.common.expression.ValueExpressions.FloatExpression;
 import org.apache.drill.common.expression.ValueExpressions.LongExpression;
+import org.apache.drill.common.expression.ValueExpressions.DateExpression;
+import org.apache.drill.common.expression.ValueExpressions.IntervalYearExpression;
+import org.apache.drill.common.expression.ValueExpressions.IntervalDayExpression;
+import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
+import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
 import org.apache.drill.common.expression.ValueExpressions.IntExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.expression.fn.CastFunctions;
@@ -228,6 +233,31 @@ public class ExpressionTreeMaterializer {
 
     @Override
     public LogicalExpression visitLongConstant(LongExpression intExpr, FunctionImplementationRegistry registry) {
+      return intExpr;
+    }
+
+    @Override
+    public LogicalExpression visitDateConstant(DateExpression intExpr, FunctionImplementationRegistry registry) {
+      return intExpr;
+    }
+
+    @Override
+    public LogicalExpression visitTimeConstant(TimeExpression intExpr, FunctionImplementationRegistry registry) {
+      return intExpr;
+    }
+
+    @Override
+    public LogicalExpression visitTimeStampConstant(TimeStampExpression intExpr, FunctionImplementationRegistry registry) {
+      return intExpr;
+    }
+
+    @Override
+    public LogicalExpression visitIntervalYearConstant(IntervalYearExpression intExpr, FunctionImplementationRegistry registry) {
+      return intExpr;
+    }
+
+    @Override
+    public LogicalExpression visitIntervalDayConstant(IntervalDayExpression intExpr, FunctionImplementationRegistry registry) {
       return intExpr;
     }
 

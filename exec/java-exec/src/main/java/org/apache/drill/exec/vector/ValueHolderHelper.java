@@ -20,6 +20,7 @@ package org.apache.drill.exec.vector;
 import io.netty.buffer.UnpooledByteBufAllocator;
 
 import org.apache.drill.exec.expr.holders.VarCharHolder;
+import org.apache.drill.exec.expr.holders.IntervalDayHolder;
 
 import com.google.common.base.Charsets;
 
@@ -36,5 +37,14 @@ public class ValueHolderHelper {
     vch.buffer = UnpooledByteBufAllocator.DEFAULT.buffer(s.length()); // use the length of input string to allocate buffer. 
     vch.buffer.setBytes(0, b);
     return vch;
+  }
+
+  public static IntervalDayHolder getIntervalDayHolder(int days, int millis) {
+      IntervalDayHolder dch = new IntervalDayHolder();
+
+      dch.days = days;
+      dch.milliSeconds = millis;
+
+      return dch;
   }
 }

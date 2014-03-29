@@ -15,6 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+import java.lang.Long;
+import java.lang.Override;
+import java.sql.Time;
+import java.sql.Timestamp;
+
 <@pp.dropOutputFile />
 <#list vv.types as type>
 <#list type.minor as minor>
@@ -175,11 +181,122 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
       return dst;
     }
 
+    <#if (minor.class == "TimeStampTZ")>
+    public void get(int index, ${minor.class}Holder holder){
+      holder.value = data.getLong(index * ${type.width});
+      holder.index = data.getInt((index * ${type.width})+ ${minor.milliSecondsSize});
+    }
+
+    void get(int index, Nullable${minor.class}Holder holder){
+      holder.value = data.getLong(index * ${type.width});
+      holder.index = data.getInt((index * ${type.width})+ ${minor.milliSecondsSize});
+    }
+
+    @Override
+    public Object getObject(int index) {
+
+        return new Timestamp(data.getLong(index * ${type.width}));
+    }
+
+    <#elseif (minor.class == "Interval")>
+    public void get(int index, ${minor.class}Holder holder){
+
+      int offsetIndex = index * ${type.width};
+      holder.months = data.getInt(offsetIndex);
+      holder.days = data.getInt(offsetIndex + ${minor.daysOffset});
+      holder.milliSeconds = data.getInt(offsetIndex + ${minor.milliSecondsOffset});
+    }
+
+    void get(int index, Nullable${minor.class}Holder holder){
+      int offsetIndex = index * ${type.width};
+      holder.months = data.getInt(offsetIndex);
+      holder.days = data.getInt(offsetIndex + ${minor.daysOffset});
+      holder.milliSeconds = data.getInt(offsetIndex + ${minor.milliSecondsOffset});
+    }
+
+    @Override
+    public Object getObject(int index) {
+
+      int offsetIndex = index * ${type.width};
+
+      int months  = data.getInt(offsetIndex);
+      int days    = data.getInt(offsetIndex + ${minor.daysOffset});
+      int millis = data.getInt(offsetIndex + ${minor.milliSecondsOffset});
+
+      int years  = (months / org.apache.drill.exec.expr.fn.impl.DateUtility.yearsToMonths);
+      months = (months % org.apache.drill.exec.expr.fn.impl.DateUtility.yearsToMonths);
+
+      int hours  = millis / (org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis);
+      millis     = millis % (org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis);
+
+      int minutes = millis / (org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis);
+      millis      = millis % (org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis);
+
+      long seconds = millis / (org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis);
+      millis      = millis % (org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis);
+
+      String yearString = (Math.abs(years) == 1) ? " year " : " years ";
+      String monthString = (Math.abs(months) == 1) ? " month " : " months ";
+      String dayString = (Math.abs(days) == 1) ? " day " : " days ";
+
+
+      return(new StringBuilder().
+             append(years).append(yearString).
+             append(months).append(monthString).
+             append(days).append(dayString).
+             append(hours).append(":").
+             append(minutes).append(":").
+             append(seconds).append(".").
+             append(millis));
+    }
+
+    <#elseif (minor.class == "IntervalDay")>
+    public void get(int index, ${minor.class}Holder holder){
+
+      int offsetIndex = index * ${type.width};
+      holder.days = data.getInt(offsetIndex);
+      holder.milliSeconds = data.getInt(offsetIndex + ${minor.milliSecondsOffset});
+    }
+
+    void get(int index, Nullable${minor.class}Holder holder){
+      int offsetIndex = index * ${type.width};
+      holder.days = data.getInt(offsetIndex);
+      holder.milliSeconds = data.getInt(offsetIndex + ${minor.milliSecondsOffset});
+    }
+
+    @Override
+    public Object getObject(int index) {
+      int offsetIndex = index * ${type.width};
+
+      int millis = data.getInt(offsetIndex + ${minor.milliSecondsOffset});
+      int  days   = data.getInt(offsetIndex);
+
+      int hours  = millis / (org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis);
+      millis     = millis % (org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis);
+
+      int minutes = millis / (org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis);
+      millis      = millis % (org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis);
+
+      int seconds = millis / (org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis);
+      millis      = millis % (org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis);
+
+      String dayString = (Math.abs(days) == 1) ? " day " : " days ";
+
+      return(new StringBuilder().
+              append(days).append(dayString).
+              append(hours).append(":").
+              append(minutes).append(":").
+              append(seconds).append(".").
+              append(millis));
+    }
+
+    <#else>
+
     public void get(int index, ${minor.class}Holder holder){
       holder.buffer = data;
       holder.start = index * ${type.width};
     }
-    
+
     void get(int index, Nullable${minor.class}Holder holder){
       holder.buffer = data;
       holder.start = index * ${type.width};
@@ -192,15 +309,60 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
       return dst;
     }
 
+    </#if>
+
     <#else> <#-- type.width <= 8 -->
 
     public ${minor.javaType!type.javaType} get(int index) {
       return data.get${(minor.javaType!type.javaType)?cap_first}(index * ${type.width});
     }
 
+    <#if minor.class == "Date">
+    public Object getObject(int index) {
+        org.joda.time.DateTime date = new org.joda.time.DateTime(get(index), org.joda.time.DateTimeZone.UTC);
+        date = date.withZoneRetainFields(org.joda.time.DateTimeZone.getDefault());
+
+        return new Date(date.getMillis());
+
+    }
+    <#elseif minor.class == "TimeStamp">
+    public Object getObject(int index) {
+        org.joda.time.DateTime date = new org.joda.time.DateTime(get(index), org.joda.time.DateTimeZone.UTC);
+        date = date.withZoneRetainFields(org.joda.time.DateTimeZone.getDefault());
+
+        return new Date(date.getMillis());
+    }
+    <#elseif minor.class == "IntervalYear">
+    public Object getObject(int index) {
+
+      int value = get(index);
+
+      int years  = (value / org.apache.drill.exec.expr.fn.impl.DateUtility.yearsToMonths);
+      int months = (value % org.apache.drill.exec.expr.fn.impl.DateUtility.yearsToMonths);
+
+      String yearString = (Math.abs(years) == 1) ? " year " : " years ";
+      String monthString = (Math.abs(months) == 1) ? " month " : " months ";
+
+
+      return(new StringBuilder().append(years).append(yearString).append(months).append(monthString));
+
+
+    }
+    <#elseif minor.class == "Time">
+    @Override
+    public Object getObject(int index) {
+
+        org.joda.time.DateTime time = new org.joda.time.DateTime(get(index), org.joda.time.DateTimeZone.UTC);
+        time = time.withZoneRetainFields(org.joda.time.DateTimeZone.getDefault());
+
+        return new Time(time.getMillis());
+    }
+
+    <#else>
     public Object getObject(int index) {
       return get(index);
     }
+    </#if>
     
     public void get(int index, ${minor.class}Holder holder){
       holder.value = data.get${(minor.javaType!type.javaType)?cap_first}(index * ${type.width});
@@ -237,7 +399,81 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
    public void set(int index, <#if (type.width > 4)>${minor.javaType!type.javaType}<#else>int</#if> value) {
      data.setBytes(index * ${type.width}, value);
    }
-   
+
+   <#if (minor.class == "TimeStampTZ")>
+   public void set(int index, ${minor.class}Holder holder){
+     data.setLong((index * ${type.width}), holder.value);
+     data.setInt(((index * ${type.width}) + ${minor.milliSecondsSize}), holder.index);
+
+   }
+
+   void set(int index, Nullable${minor.class}Holder holder){
+     data.setLong((index * ${type.width}), holder.value);
+     data.setInt(((index * ${type.width}) + ${minor.milliSecondsSize}), holder.index);
+   }
+
+   public boolean setSafe(int index, ${minor.class}Holder holder){
+     if(index >= getValueCapacity()) return false;
+     set(index, holder);
+     return true;
+   }
+
+   public boolean setSafe(int index, Nullable${minor.class}Holder holder){
+     if(index >= getValueCapacity()) return false;
+     set(index, holder);
+     return true;
+   }
+   <#elseif (minor.class == "Interval")>
+   public void set(int index, ${minor.class}Holder holder){
+     int offsetIndex = index * ${type.width};
+     data.setInt(offsetIndex, holder.months);
+     data.setInt((offsetIndex + ${minor.daysOffset}), holder.days);
+     data.setInt((offsetIndex + ${minor.milliSecondsOffset}), holder.milliSeconds);
+   }
+
+   void set(int index, Nullable${minor.class}Holder holder){
+     int offsetIndex = index * ${type.width};
+     data.setInt(offsetIndex, holder.months);
+     data.setInt((offsetIndex + ${minor.daysOffset}), holder.days);
+     data.setInt((offsetIndex + ${minor.milliSecondsOffset}), holder.milliSeconds);
+   }
+
+   public boolean setSafe(int index, ${minor.class}Holder holder){
+     if(index >= getValueCapacity()) return false;
+     set(index, holder);
+     return true;
+   }
+
+   public boolean setSafe(int index, Nullable${minor.class}Holder holder){
+     if(index >= getValueCapacity()) return false;
+     set(index, holder);
+     return true;
+   }
+   <#elseif (minor.class == "IntervalDay")>
+   public void set(int index, ${minor.class}Holder holder){
+     int offsetIndex = index * ${type.width};
+     data.setInt(offsetIndex, holder.days);
+     data.setInt((offsetIndex + ${minor.milliSecondsOffset}), holder.milliSeconds);
+   }
+
+   void set(int index, Nullable${minor.class}Holder holder){
+     int offsetIndex = index * ${type.width};
+     data.setInt(offsetIndex, holder.days);
+     data.setInt((offsetIndex + ${minor.milliSecondsOffset}), holder.milliSeconds);
+   }
+
+   public boolean setSafe(int index, ${minor.class}Holder holder){
+     if(index >= getValueCapacity()) return false;
+     set(index, holder);
+     return true;
+   }
+
+   public boolean setSafe(int index, Nullable${minor.class}Holder holder){
+     if(index >= getValueCapacity()) return false;
+     set(index, holder);
+     return true;
+   }
+   <#else>
    public void set(int index, ${minor.class}Holder holder){
      data.setBytes(index * ${type.width}, holder.buffer, holder.start, ${type.width});
    }
@@ -251,7 +487,8 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
    void set(int index, Nullable${minor.class}Holder holder){
      data.setBytes(index * ${type.width}, holder.buffer, holder.start, ${type.width});
    }
-   
+   </#if>
+
    @Override
    public void generateTestData(int count) {
      setValueCount(count);

@@ -3113,6 +3113,24 @@ public final class BitControl {
      * </pre>
      */
     long getMemMax();
+
+    // optional int64 query_start_time = 14;
+    /**
+     * <code>optional int64 query_start_time = 14;</code>
+     *
+     * <pre>
+     * start time of query in milliseconds
+     * </pre>
+     */
+    boolean hasQueryStartTime();
+    /**
+     * <code>optional int64 query_start_time = 14;</code>
+     *
+     * <pre>
+     * start time of query in milliseconds
+     * </pre>
+     */
+    long getQueryStartTime();
   }
   /**
    * Protobuf type {@code exec.bit.control.PlanFragment}
@@ -3242,6 +3260,11 @@ public final class BitControl {
             case 104: {
               bitField0_ |= 0x00000400;
               memMax_ = input.readInt64();
+              break;
+            }
+            case 112: {
+              bitField0_ |= 0x00000800;
+              queryStartTime_ = input.readInt64();
               break;
             }
           }
@@ -3521,6 +3544,30 @@ public final class BitControl {
       return memMax_;
     }
 
+    // optional int64 query_start_time = 14;
+    public static final int QUERY_START_TIME_FIELD_NUMBER = 14;
+    private long queryStartTime_;
+    /**
+     * <code>optional int64 query_start_time = 14;</code>
+     *
+     * <pre>
+     * start time of query in milliseconds
+     * </pre>
+     */
+    public boolean hasQueryStartTime() {
+      return ((bitField0_ & 0x00000800) == 0x00000800);
+    }
+    /**
+     * <code>optional int64 query_start_time = 14;</code>
+     *
+     * <pre>
+     * start time of query in milliseconds
+     * </pre>
+     */
+    public long getQueryStartTime() {
+      return queryStartTime_;
+    }
+
     private void initFields() {
       handle_ = org.apache.drill.exec.proto.ExecProtos.FragmentHandle.getDefaultInstance();
       networkCost_ = 0F;
@@ -3533,6 +3580,7 @@ public final class BitControl {
       foreman_ = org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.getDefaultInstance();
       memInitial_ = 20000000L;
       memMax_ = 20000000000L;
+      queryStartTime_ = 0L;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -3578,6 +3626,9 @@ public final class BitControl {
       }
       if (((bitField0_ & 0x00000400) == 0x00000400)) {
         output.writeInt64(13, memMax_);
+      }
+      if (((bitField0_ & 0x00000800) == 0x00000800)) {
+        output.writeInt64(14, queryStartTime_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -3631,6 +3682,10 @@ public final class BitControl {
       if (((bitField0_ & 0x00000400) == 0x00000400)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt64Size(13, memMax_);
+      }
+      if (((bitField0_ & 0x00000800) == 0x00000800)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(14, queryStartTime_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -3785,6 +3840,8 @@ public final class BitControl {
         bitField0_ = (bitField0_ & ~0x00000200);
         memMax_ = 20000000000L;
         bitField0_ = (bitField0_ & ~0x00000400);
+        queryStartTime_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000800);
         return this;
       }
 
@@ -3869,6 +3926,10 @@ public final class BitControl {
           to_bitField0_ |= 0x00000400;
         }
         result.memMax_ = memMax_;
+        if (((from_bitField0_ & 0x00000800) == 0x00000800)) {
+          to_bitField0_ |= 0x00000800;
+        }
+        result.queryStartTime_ = queryStartTime_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -3919,6 +3980,9 @@ public final class BitControl {
         }
         if (other.hasMemMax()) {
           setMemMax(other.getMemMax());
+        }
+        if (other.hasQueryStartTime()) {
+          setQueryStartTime(other.getQueryStartTime());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -4631,6 +4695,55 @@ public final class BitControl {
       public Builder clearMemMax() {
         bitField0_ = (bitField0_ & ~0x00000400);
         memMax_ = 20000000000L;
+        onChanged();
+        return this;
+      }
+
+      // optional int64 query_start_time = 14;
+      private long queryStartTime_ ;
+      /**
+       * <code>optional int64 query_start_time = 14;</code>
+       *
+       * <pre>
+       * start time of query in milliseconds
+       * </pre>
+       */
+      public boolean hasQueryStartTime() {
+        return ((bitField0_ & 0x00000800) == 0x00000800);
+      }
+      /**
+       * <code>optional int64 query_start_time = 14;</code>
+       *
+       * <pre>
+       * start time of query in milliseconds
+       * </pre>
+       */
+      public long getQueryStartTime() {
+        return queryStartTime_;
+      }
+      /**
+       * <code>optional int64 query_start_time = 14;</code>
+       *
+       * <pre>
+       * start time of query in milliseconds
+       * </pre>
+       */
+      public Builder setQueryStartTime(long value) {
+        bitField0_ |= 0x00000800;
+        queryStartTime_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int64 query_start_time = 14;</code>
+       *
+       * <pre>
+       * start time of query in milliseconds
+       * </pre>
+       */
+      public Builder clearQueryStartTime() {
+        bitField0_ = (bitField0_ & ~0x00000800);
+        queryStartTime_ = 0L;
         onChanged();
         return this;
       }
@@ -5367,7 +5480,7 @@ public final class BitControl {
       "shared.DrillPBError\022\024\n\014running_time\030\t \001(" +
       "\003\"k\n\rFragmentState\022\013\n\007SENDING\020\000\022\027\n\023AWAIT" +
       "ING_ALLOCATION\020\001\022\013\n\007RUNNING\020\002\022\014\n\010FINISHE" +
-      "D\020\003\022\r\n\tCANCELLED\020\004\022\n\n\006FAILED\020\005\"\310\002\n\014PlanF" +
+      "D\020\003\022\r\n\tCANCELLED\020\004\022\n\n\006FAILED\020\005\"\342\002\n\014PlanF" +
       "ragment\022(\n\006handle\030\001 \001(\0132\030.exec.bit.Fragm",
       "entHandle\022\024\n\014network_cost\030\004 \001(\002\022\020\n\010cpu_c" +
       "ost\030\005 \001(\002\022\021\n\tdisk_cost\030\006 \001(\002\022\023\n\013memory_c" +
@@ -5376,16 +5489,16 @@ public final class BitControl {
       "leaf_fragment\030\t \001(\010\022\'\n\007foreman\030\013 \001(\0132\026.e" +
       "xec.DrillbitEndpoint\022\035\n\013mem_initial\030\014 \001(" +
       "\003:\01020000000\022\034\n\007mem_max\030\r \001(\003:\0132000000000" +
-      "0\"f\n\017WorkQueueStatus\022(\n\010endpoint\030\001 \001(\0132\026" +
-      ".exec.DrillbitEndpoint\022\024\n\014queue_length\030\002" +
-      " \001(\005\022\023\n\013report_time\030\003 \001(\003*\332\001\n\007RpcType\022\r\n",
-      "\tHANDSHAKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\033\n\027RE" +
-      "Q_INIATILIZE_FRAGMENT\020\003\022\027\n\023REQ_CANCEL_FR" +
-      "AGMENT\020\006\022\027\n\023REQ_FRAGMENT_STATUS\020\007\022\022\n\016REQ" +
-      "_BIT_STATUS\020\010\022\030\n\024RESP_FRAGMENT_HANDLE\020\t\022" +
-      "\030\n\024RESP_FRAGMENT_STATUS\020\n\022\023\n\017RESP_BIT_ST" +
-      "ATUS\020\013B+\n\033org.apache.drill.exec.protoB\nB" +
-      "itControlH\001"
+      "0\022\030\n\020query_start_time\030\016 \001(\003\"f\n\017WorkQueue" +
+      "Status\022(\n\010endpoint\030\001 \001(\0132\026.exec.Drillbit" +
+      "Endpoint\022\024\n\014queue_length\030\002 \001(\005\022\023\n\013report",
+      "_time\030\003 \001(\003*\332\001\n\007RpcType\022\r\n\tHANDSHAKE\020\000\022\007" +
+      "\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\033\n\027REQ_INIATILIZE_F" +
+      "RAGMENT\020\003\022\027\n\023REQ_CANCEL_FRAGMENT\020\006\022\027\n\023RE" +
+      "Q_FRAGMENT_STATUS\020\007\022\022\n\016REQ_BIT_STATUS\020\010\022" +
+      "\030\n\024RESP_FRAGMENT_HANDLE\020\t\022\030\n\024RESP_FRAGME" +
+      "NT_STATUS\020\n\022\023\n\017RESP_BIT_STATUS\020\013B+\n\033org." +
+      "apache.drill.exec.protoB\nBitControlH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -5415,7 +5528,7 @@ public final class BitControl {
           internal_static_exec_bit_control_PlanFragment_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_bit_control_PlanFragment_descriptor,
-              new java.lang.String[] { "Handle", "NetworkCost", "CpuCost", "DiskCost", "MemoryCost", "FragmentJson", "Assignment", "LeafFragment", "Foreman", "MemInitial", "MemMax", });
+              new java.lang.String[] { "Handle", "NetworkCost", "CpuCost", "DiskCost", "MemoryCost", "FragmentJson", "Assignment", "LeafFragment", "Foreman", "MemInitial", "MemMax", "QueryStartTime", });
           internal_static_exec_bit_control_WorkQueueStatus_descriptor =
             getDescriptor().getMessageTypes().get(4);
           internal_static_exec_bit_control_WorkQueueStatus_fieldAccessorTable = new

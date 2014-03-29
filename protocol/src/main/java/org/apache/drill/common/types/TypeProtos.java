@@ -151,21 +151,21 @@ public final class TypeProtos {
      */
     TIMETZ(14, 14),
     /**
-     * <code>TIMESTAMP = 15;</code>
+     * <code>TIMESTAMPTZ = 15;</code>
      *
      * <pre>
      *  unix epoch time in millis
      * </pre>
      */
-    TIMESTAMP(15, 15),
+    TIMESTAMPTZ(15, 15),
     /**
-     * <code>DATETIME = 16;</code>
+     * <code>TIMESTAMP = 16;</code>
      *
      * <pre>
      *  TBD
      * </pre>
      */
-    DATETIME(16, 16),
+    TIMESTAMP(16, 16),
     /**
      * <code>INTERVAL = 17;</code>
      *
@@ -285,6 +285,22 @@ public final class TypeProtos {
      * </pre>
      */
     NULL(31, 37),
+    /**
+     * <code>INTERVALYEAR = 38;</code>
+     *
+     * <pre>
+     * Interval type specifying YEAR to MONTH
+     * </pre>
+     */
+    INTERVALYEAR(32, 38),
+    /**
+     * <code>INTERVALDAY = 39;</code>
+     *
+     * <pre>
+     * Interval type specifying DAY to SECONDS
+     * </pre>
+     */
+    INTERVALDAY(33, 39),
     ;
 
     /**
@@ -408,21 +424,21 @@ public final class TypeProtos {
      */
     public static final int TIMETZ_VALUE = 14;
     /**
-     * <code>TIMESTAMP = 15;</code>
+     * <code>TIMESTAMPTZ = 15;</code>
      *
      * <pre>
      *  unix epoch time in millis
      * </pre>
      */
-    public static final int TIMESTAMP_VALUE = 15;
+    public static final int TIMESTAMPTZ_VALUE = 15;
     /**
-     * <code>DATETIME = 16;</code>
+     * <code>TIMESTAMP = 16;</code>
      *
      * <pre>
      *  TBD
      * </pre>
      */
-    public static final int DATETIME_VALUE = 16;
+    public static final int TIMESTAMP_VALUE = 16;
     /**
      * <code>INTERVAL = 17;</code>
      *
@@ -542,6 +558,22 @@ public final class TypeProtos {
      * </pre>
      */
     public static final int NULL_VALUE = 37;
+    /**
+     * <code>INTERVALYEAR = 38;</code>
+     *
+     * <pre>
+     * Interval type specifying YEAR to MONTH
+     * </pre>
+     */
+    public static final int INTERVALYEAR_VALUE = 38;
+    /**
+     * <code>INTERVALDAY = 39;</code>
+     *
+     * <pre>
+     * Interval type specifying DAY to SECONDS
+     * </pre>
+     */
+    public static final int INTERVALDAY_VALUE = 39;
 
 
     public final int getNumber() { return value; }
@@ -563,8 +595,8 @@ public final class TypeProtos {
         case 12: return DATE;
         case 13: return TIME;
         case 14: return TIMETZ;
-        case 15: return TIMESTAMP;
-        case 16: return DATETIME;
+        case 15: return TIMESTAMPTZ;
+        case 16: return TIMESTAMP;
         case 17: return INTERVAL;
         case 18: return FLOAT4;
         case 19: return FLOAT8;
@@ -580,6 +612,8 @@ public final class TypeProtos {
         case 31: return UINT4;
         case 32: return UINT8;
         case 37: return NULL;
+        case 38: return INTERVALYEAR;
+        case 39: return INTERVALDAY;
         default: return null;
       }
     }
@@ -810,7 +844,7 @@ public final class TypeProtos {
      * <code>optional int32 scale = 5;</code>
      *
      * <pre>
-     * used for decimal types 
+     * used for decimal types
      * </pre>
      */
     boolean hasScale();
@@ -818,10 +852,28 @@ public final class TypeProtos {
      * <code>optional int32 scale = 5;</code>
      *
      * <pre>
-     * used for decimal types 
+     * used for decimal types
      * </pre>
      */
     int getScale();
+
+    // optional int32 timeZone = 6;
+    /**
+     * <code>optional int32 timeZone = 6;</code>
+     *
+     * <pre>
+     * used by TimeStamp type
+     * </pre>
+     */
+    boolean hasTimeZone();
+    /**
+     * <code>optional int32 timeZone = 6;</code>
+     *
+     * <pre>
+     * used by TimeStamp type
+     * </pre>
+     */
+    int getTimeZone();
   }
   /**
    * Protobuf type {@code common.MajorType}
@@ -909,6 +961,11 @@ public final class TypeProtos {
             case 40: {
               bitField0_ |= 0x00000010;
               scale_ = input.readInt32();
+              break;
+            }
+            case 48: {
+              bitField0_ |= 0x00000020;
+              timeZone_ = input.readInt32();
               break;
             }
           }
@@ -1038,7 +1095,7 @@ public final class TypeProtos {
      * <code>optional int32 scale = 5;</code>
      *
      * <pre>
-     * used for decimal types 
+     * used for decimal types
      * </pre>
      */
     public boolean hasScale() {
@@ -1048,11 +1105,35 @@ public final class TypeProtos {
      * <code>optional int32 scale = 5;</code>
      *
      * <pre>
-     * used for decimal types 
+     * used for decimal types
      * </pre>
      */
     public int getScale() {
       return scale_;
+    }
+
+    // optional int32 timeZone = 6;
+    public static final int TIMEZONE_FIELD_NUMBER = 6;
+    private int timeZone_;
+    /**
+     * <code>optional int32 timeZone = 6;</code>
+     *
+     * <pre>
+     * used by TimeStamp type
+     * </pre>
+     */
+    public boolean hasTimeZone() {
+      return ((bitField0_ & 0x00000020) == 0x00000020);
+    }
+    /**
+     * <code>optional int32 timeZone = 6;</code>
+     *
+     * <pre>
+     * used by TimeStamp type
+     * </pre>
+     */
+    public int getTimeZone() {
+      return timeZone_;
     }
 
     private void initFields() {
@@ -1061,6 +1142,7 @@ public final class TypeProtos {
       width_ = 0;
       precision_ = 0;
       scale_ = 0;
+      timeZone_ = 0;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -1088,6 +1170,9 @@ public final class TypeProtos {
       }
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
         output.writeInt32(5, scale_);
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        output.writeInt32(6, timeZone_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -1117,6 +1202,10 @@ public final class TypeProtos {
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(5, scale_);
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(6, timeZone_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -1244,6 +1333,8 @@ public final class TypeProtos {
         bitField0_ = (bitField0_ & ~0x00000008);
         scale_ = 0;
         bitField0_ = (bitField0_ & ~0x00000010);
+        timeZone_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000020);
         return this;
       }
 
@@ -1292,6 +1383,10 @@ public final class TypeProtos {
           to_bitField0_ |= 0x00000010;
         }
         result.scale_ = scale_;
+        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+          to_bitField0_ |= 0x00000020;
+        }
+        result.timeZone_ = timeZone_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -1322,6 +1417,9 @@ public final class TypeProtos {
         }
         if (other.hasScale()) {
           setScale(other.getScale());
+        }
+        if (other.hasTimeZone()) {
+          setTimeZone(other.getTimeZone());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -1526,7 +1624,7 @@ public final class TypeProtos {
        * <code>optional int32 scale = 5;</code>
        *
        * <pre>
-       * used for decimal types 
+       * used for decimal types
        * </pre>
        */
       public boolean hasScale() {
@@ -1536,7 +1634,7 @@ public final class TypeProtos {
        * <code>optional int32 scale = 5;</code>
        *
        * <pre>
-       * used for decimal types 
+       * used for decimal types
        * </pre>
        */
       public int getScale() {
@@ -1546,7 +1644,7 @@ public final class TypeProtos {
        * <code>optional int32 scale = 5;</code>
        *
        * <pre>
-       * used for decimal types 
+       * used for decimal types
        * </pre>
        */
       public Builder setScale(int value) {
@@ -1559,12 +1657,61 @@ public final class TypeProtos {
        * <code>optional int32 scale = 5;</code>
        *
        * <pre>
-       * used for decimal types 
+       * used for decimal types
        * </pre>
        */
       public Builder clearScale() {
         bitField0_ = (bitField0_ & ~0x00000010);
         scale_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional int32 timeZone = 6;
+      private int timeZone_ ;
+      /**
+       * <code>optional int32 timeZone = 6;</code>
+       *
+       * <pre>
+       * used by TimeStamp type
+       * </pre>
+       */
+      public boolean hasTimeZone() {
+        return ((bitField0_ & 0x00000020) == 0x00000020);
+      }
+      /**
+       * <code>optional int32 timeZone = 6;</code>
+       *
+       * <pre>
+       * used by TimeStamp type
+       * </pre>
+       */
+      public int getTimeZone() {
+        return timeZone_;
+      }
+      /**
+       * <code>optional int32 timeZone = 6;</code>
+       *
+       * <pre>
+       * used by TimeStamp type
+       * </pre>
+       */
+      public Builder setTimeZone(int value) {
+        bitField0_ |= 0x00000020;
+        timeZone_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 timeZone = 6;</code>
+       *
+       * <pre>
+       * used by TimeStamp type
+       * </pre>
+       */
+      public Builder clearTimeZone() {
+        bitField0_ = (bitField0_ & ~0x00000020);
+        timeZone_ = 0;
         onChanged();
         return this;
       }
@@ -1594,23 +1741,25 @@ public final class TypeProtos {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\013Types.proto\022\006common\"\203\001\n\tMajorType\022%\n\nm" +
+      "\n\013Types.proto\022\006common\"\225\001\n\tMajorType\022%\n\nm" +
       "inor_type\030\001 \001(\0162\021.common.MinorType\022\036\n\004mo" +
       "de\030\002 \001(\0162\020.common.DataMode\022\r\n\005width\030\003 \001(" +
-      "\005\022\021\n\tprecision\030\004 \001(\005\022\r\n\005scale\030\005 \001(\005*\240\003\n\t" +
-      "MinorType\022\010\n\004LATE\020\000\022\007\n\003MAP\020\001\022\r\n\tREPEATMA" +
-      "P\020\002\022\013\n\007TINYINT\020\003\022\014\n\010SMALLINT\020\004\022\007\n\003INT\020\005\022" +
-      "\n\n\006BIGINT\020\006\022\014\n\010DECIMAL4\020\007\022\014\n\010DECIMAL8\020\010\022" +
-      "\r\n\tDECIMAL12\020\t\022\r\n\tDECIMAL16\020\n\022\t\n\005MONEY\020\013" +
-      "\022\010\n\004DATE\020\014\022\010\n\004TIME\020\r\022\n\n\006TIMETZ\020\016\022\r\n\tTIME" +
-      "STAMP\020\017\022\014\n\010DATETIME\020\020\022\014\n\010INTERVAL\020\021\022\n\n\006F",
-      "LOAT4\020\022\022\n\n\006FLOAT8\020\023\022\007\n\003BIT\020\024\022\r\n\tFIXEDCHA" +
-      "R\020\025\022\017\n\013FIXED16CHAR\020\026\022\017\n\013FIXEDBINARY\020\027\022\013\n" +
-      "\007VARCHAR\020\030\022\r\n\tVAR16CHAR\020\031\022\r\n\tVARBINARY\020\032" +
-      "\022\t\n\005UINT1\020\035\022\t\n\005UINT2\020\036\022\t\n\005UINT4\020\037\022\t\n\005UIN" +
-      "T8\020 \022\010\n\004NULL\020%*4\n\010DataMode\022\014\n\010OPTIONAL\020\000" +
-      "\022\014\n\010REQUIRED\020\001\022\014\n\010REPEATED\020\002B-\n\035org.apac" +
-      "he.drill.common.typesB\nTypeProtosH\001"
+      "\005\022\021\n\tprecision\030\004 \001(\005\022\r\n\005scale\030\005 \001(\005\022\020\n\010t" +
+      "imeZone\030\006 \001(\005*\306\003\n\tMinorType\022\010\n\004LATE\020\000\022\007\n" +
+      "\003MAP\020\001\022\r\n\tREPEATMAP\020\002\022\013\n\007TINYINT\020\003\022\014\n\010SM" +
+      "ALLINT\020\004\022\007\n\003INT\020\005\022\n\n\006BIGINT\020\006\022\014\n\010DECIMAL" +
+      "4\020\007\022\014\n\010DECIMAL8\020\010\022\r\n\tDECIMAL12\020\t\022\r\n\tDECI" +
+      "MAL16\020\n\022\t\n\005MONEY\020\013\022\010\n\004DATE\020\014\022\010\n\004TIME\020\r\022\n" +
+      "\n\006TIMETZ\020\016\022\017\n\013TIMESTAMPTZ\020\017\022\r\n\tTIMESTAMP",
+      "\020\020\022\014\n\010INTERVAL\020\021\022\n\n\006FLOAT4\020\022\022\n\n\006FLOAT8\020\023" +
+      "\022\007\n\003BIT\020\024\022\r\n\tFIXEDCHAR\020\025\022\017\n\013FIXED16CHAR\020" +
+      "\026\022\017\n\013FIXEDBINARY\020\027\022\013\n\007VARCHAR\020\030\022\r\n\tVAR16" +
+      "CHAR\020\031\022\r\n\tVARBINARY\020\032\022\t\n\005UINT1\020\035\022\t\n\005UINT" +
+      "2\020\036\022\t\n\005UINT4\020\037\022\t\n\005UINT8\020 \022\010\n\004NULL\020%\022\020\n\014I" +
+      "NTERVALYEAR\020&\022\017\n\013INTERVALDAY\020\'*4\n\010DataMo" +
+      "de\022\014\n\010OPTIONAL\020\000\022\014\n\010REQUIRED\020\001\022\014\n\010REPEAT" +
+      "ED\020\002B-\n\035org.apache.drill.common.typesB\nT" +
+      "ypeProtosH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -1622,7 +1771,7 @@ public final class TypeProtos {
           internal_static_common_MajorType_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_common_MajorType_descriptor,
-              new java.lang.String[] { "MinorType", "Mode", "Width", "Precision", "Scale", });
+              new java.lang.String[] { "MinorType", "Mode", "Width", "Precision", "Scale", "TimeZone", });
           return null;
         }
       };

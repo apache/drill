@@ -17,6 +17,7 @@
  */
 import org.apache.drill.exec.vector.NullableVectorDefinitionSetter;
 
+import java.lang.Override;
 import java.lang.UnsupportedOperationException;
 
 <@pp.dropOutputFile />
@@ -266,12 +267,12 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
       holder.isSet = bits.getAccessor().get(index);
       values.getAccessor().get(index, holder);
     }
-    
+
     @Override
     public Object getObject(int index) {
       return isNull(index) ? null : values.getAccessor().getObject(index);
     }
-    
+
     public int getValueCount(){
       return valueCount;
     }
@@ -362,7 +363,7 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
       <#if type.major == "VarLen">lastSet = index;</#if>
     }
     
-    public boolean setSafe(int index, <#if type.major == "VarLen">Nullable${minor.class}Holder <#elseif (type.width < 4)>int<#else>${minor.javaType!type.javaType}</#if> value){
+    public boolean setSafe(int index, <#if type.major == "VarLen" || minor.class == "TimeStampTZ" || minor.class == "Interval" || minor.class == "IntervalDay">Nullable${minor.class}Holder <#elseif (type.width < 4)>int<#else>${minor.javaType!type.javaType}</#if> value){
       <#if type.major == "VarLen">
       for (int i = lastSet + 1; i < index; i++) {
         values.getMutator().set(i, new byte[]{});

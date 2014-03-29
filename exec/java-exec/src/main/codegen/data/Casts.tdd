@@ -48,6 +48,37 @@
     {from: "Float8", to: "VarBinary", major: "TargetVarlen", javaType: "Double", bufferLength:"100"},     
     
     {from: "VarBinary", to: "VarChar", major: "SrcVarlenTargetVarlen"},
-    {from: "VarChar", to: "VarBinary", major: "SrcVarlenTargetVarlen"}     
+    {from: "VarChar", to: "VarBinary", major: "SrcVarlenTargetVarlen"},
+
+    {from: "Date", to: "TimeStamp", major: "Date"},
+    {from: "Date", to: "TimeStampTZ", major: "Date"},
+    {from: "TimeStamp", to: "Date", major: "Date"},
+    {from: "TimeStamp", to: "TimeStampTZ", major: "Date"},
+    {from: "TimeStampTZ", to: "Date", major: "Date"},
+    {from: "TimeStampTZ", to: "TimeStamp", major: "Date"},
+
+    {from: "VarChar", to: "Date", major: "VarCharDate"},
+    {from: "VarChar", to: "TimeStamp", major: "VarCharDate"},
+    {from: "VarChar", to: "TimeStampTZ", major: "VarCharDate"},
+    {from: "VarChar", to: "Time", major: "VarCharDate"},
+
+    {from: "Date", to: "VarChar", major: "DateVarChar", bufferLength: "10"}
+    {from: "TimeStamp", to: "VarChar", major: "DateVarChar", bufferLength: "23"},
+    {from: "Time", to: "VarChar", major: "DateVarChar", bufferLength: "12"},
+    {from: "TimeStampTZ", to: "VarChar", major: "DateVarChar", bufferLength: "54"},
+
+    {from: "VarChar", to: "Interval", major: "VarCharInterval"},
+    {from: "VarChar", to: "IntervalDay", major: "VarCharInterval"},
+    {from: "VarChar", to: "IntervalYear", major: "VarCharInterval"},
+
+    {from: "Interval", to: "VarChar", major: "IntervalVarChar", bufferLength: "65"},
+    {from: "IntervalYear", to: "VarChar", major: "IntervalYearVarChar", bufferLength: "35"},
+    {from: "IntervalDay", to: "VarChar", major: "IntervalDayVarChar", bufferLength: "43"},
+
+    {from: "IntervalYear", to: "Interval", major: "IntervalSimpleToComplex", months: "in.value", days: "0", millis: "0"},
+    {from: "IntervalDay", to: "Interval", major: "IntervalSimpleToComplex", months: "0", days: "in.days", millis: "in.milliSeconds"},
+    {from: "Interval", to: "IntervalYear", major: "IntervalComplexToSimple"},
+    {from: "Interval", to: "IntervalDay", major: "IntervalComplexToSimple"}
+
   ]
 } 

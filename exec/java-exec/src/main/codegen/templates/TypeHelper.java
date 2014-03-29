@@ -139,7 +139,7 @@ public class TypeHelper {
 <#list vv.types as type>
   <#list type.minor as minor>
     case ${minor.class?upper_case} :
-      <#if minor.class?starts_with("Var")>
+      <#if minor.class?starts_with("Var") || minor.class == "TimeStampTZ" || minor.class == "IntervalDay" || minor.class == "Interval">
          throw new UnsupportedOperationException(type.getMinorType() + " type is not supported."); 
       <#else>
       holder = new ${minor.class}Holder(); 

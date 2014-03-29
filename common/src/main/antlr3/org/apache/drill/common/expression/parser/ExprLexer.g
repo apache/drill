@@ -46,6 +46,13 @@ FLOAT4   : 'float4';
 FLOAT8   : 'float8';
 VARCHAR  : 'varchar';
 VARBINARY: 'varbinary';
+DATE     : 'date';
+TIMESTAMP: 'timestamp';
+TIME     : 'time';
+TIMESTAMPTZ: 'timestamptz';
+INTERVAL : 'interval';
+INTERVALYEAR : 'intervalyear';
+INTERVALDAY : 'intervalday';
 
 Or       : '||' | 'or' | 'OR' | 'Or';
 And      : '&&' | 'and' | 'AND' ;

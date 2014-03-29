@@ -28,6 +28,11 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.ValueExpressions.BooleanExpression;
 import org.apache.drill.common.expression.ValueExpressions.DoubleExpression;
 import org.apache.drill.common.expression.ValueExpressions.LongExpression;
+import org.apache.drill.common.expression.ValueExpressions.DateExpression;
+import org.apache.drill.common.expression.ValueExpressions.IntervalYearExpression;
+import org.apache.drill.common.expression.ValueExpressions.IntervalDayExpression;
+import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
+import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
 import org.apache.drill.common.expression.ValueExpressions.FloatExpression;
 import org.apache.drill.common.expression.ValueExpressions.IntExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
@@ -117,5 +122,28 @@ public final class AggregateChecker implements ExprVisitor<Boolean, ErrorCollect
   @Override
   public Boolean visitCastExpression(CastExpression e, ErrorCollector errors) {
     return e.getInput().accept(this, errors);
+  }
+
+  @Override
+  public Boolean visitDateConstant(DateExpression intExpr, ErrorCollector errors) {
+      return false;
+  }
+  @Override
+  public Boolean visitTimeConstant(TimeExpression intExpr, ErrorCollector errors) {
+      return false;
+  }
+
+  @Override
+  public Boolean visitTimeStampConstant(TimeStampExpression intExpr, ErrorCollector errors) {
+      return false;
+  }
+
+  @Override
+  public Boolean visitIntervalYearConstant(IntervalYearExpression intExpr, ErrorCollector errors) {
+      return false;
+  }
+  @Override
+  public Boolean visitIntervalDayConstant(IntervalDayExpression intExpr, ErrorCollector errors) {
+      return false;
   }
 }

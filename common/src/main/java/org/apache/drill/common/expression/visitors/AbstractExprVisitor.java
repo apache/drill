@@ -28,6 +28,11 @@ import org.apache.drill.common.expression.ValueExpressions.FloatExpression;
 import org.apache.drill.common.expression.ValueExpressions.IntExpression;
 import org.apache.drill.common.expression.ValueExpressions.DoubleExpression;
 import org.apache.drill.common.expression.ValueExpressions.LongExpression;
+import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
+import org.apache.drill.common.expression.ValueExpressions.DateExpression;
+import org.apache.drill.common.expression.ValueExpressions.IntervalYearExpression;
+import org.apache.drill.common.expression.ValueExpressions.IntervalDayExpression;
+import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 
 public abstract class AbstractExprVisitor<T, VAL, EXCEP extends Exception> implements ExprVisitor<T, VAL, EXCEP> {
@@ -65,6 +70,31 @@ public abstract class AbstractExprVisitor<T, VAL, EXCEP extends Exception> imple
 
   @Override
   public T visitLongConstant(LongExpression intExpr, VAL value) throws EXCEP {
+    return visitUnknown(intExpr, value);
+  }
+
+  @Override
+  public T visitDateConstant(DateExpression intExpr, VAL value) throws EXCEP {
+    return visitUnknown(intExpr, value);
+  }
+
+  @Override
+  public T visitTimeConstant(TimeExpression intExpr, VAL value) throws EXCEP {
+    return visitUnknown(intExpr, value);
+  }
+
+  @Override
+  public T visitTimeStampConstant(TimeStampExpression intExpr, VAL value) throws EXCEP {
+    return visitUnknown(intExpr, value);
+  }
+
+  @Override
+  public T visitIntervalYearConstant(IntervalYearExpression intExpr, VAL value) throws EXCEP {
+    return visitUnknown(intExpr, value);
+  }
+
+  @Override
+  public T visitIntervalDayConstant(IntervalDayExpression intExpr, VAL value) throws EXCEP {
     return visitUnknown(intExpr, value);
   }
 

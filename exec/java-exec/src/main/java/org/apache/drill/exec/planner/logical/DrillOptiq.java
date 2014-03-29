@@ -18,6 +18,7 @@
 package org.apache.drill.exec.planner.logical;
 
 import java.math.BigDecimal;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 import org.apache.drill.common.expression.ExpressionPosition;
@@ -173,17 +174,18 @@ public class DrillOptiq {
       MajorType castType = null;
       
       switch(call.getType().getSqlTypeName().getName()){
-      case "VARCHAR": 
-      case "CHAR":
-        castType = Types.required(MinorType.VARCHAR).toBuilder().setWidth(call.getType().getPrecision()).build();
-        break;
+        case "VARCHAR":
+        case "CHAR":
+          castType = Types.required(MinorType.VARCHAR).toBuilder().setWidth(call.getType().getPrecision()).build();
+          break;
       
-      case "INTEGER": castType = Types.required(MinorType.INT); break;
-      case "FLOAT": Types.required(MinorType.FLOAT4); break;
-      case "DOUBLE": Types.required(MinorType.FLOAT8); break;
-      case "DECIMAL": throw new UnsupportedOperationException("Need to add decimal.");
-      
-      default: castType = Types.required(MinorType.valueOf(call.getType().getSqlTypeName().getName()));
+        case "INTEGER": castType = Types.required(MinorType.INT); break;
+        case "FLOAT": Types.required(MinorType.FLOAT4); break;
+        case "DOUBLE": Types.required(MinorType.FLOAT8); break;
+        case "DECIMAL": throw new UnsupportedOperationException("Need to add decimal.");
+        case "INTERVAL_YEAR_MONTH": Types.required(MinorType.INTERVALYEAR); break;
+        case "INTERVAL_DAY_TIME": Types.required(MinorType.INTERVALDAY); break;
+        default: castType = Types.required(MinorType.valueOf(call.getType().getSqlTypeName().getName()));
       }
       
       return FunctionCallFactory.createCast(castType, ExpressionPosition.UNKNOWN, arg);
@@ -222,6 +224,16 @@ public class DrillOptiq {
         return ValueExpressions.getFloat8(dbl);
       case VARCHAR:
         return ValueExpressions.getChar(((NlsString)literal.getValue()).getValue());
+      case DATE:
+        return (ValueExpressions.getDate((GregorianCalendar)literal.getValue()));
+      case TIME:
+          return (ValueExpressions.getTime((GregorianCalendar)literal.getValue()));
+      case TIMESTAMP:
+          return (ValueExpressions.getTimeStamp((GregorianCalendar) literal.getValue()));
+      case INTERVAL_YEAR_MONTH:
+          return (ValueExpressions.getIntervalYear(((BigDecimal) (literal.getValue())).intValue()));
+      case INTERVAL_DAY_TIME:
+          return (ValueExpressions.getIntervalDay(((BigDecimal) (literal.getValue())).longValue()));
       default:
         throw new UnsupportedOperationException(String.format("Unable to convert the value of %s and type %s to a Drill constant expression.", literal, literal.getTypeName()));
       }
