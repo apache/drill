@@ -22,9 +22,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import net.hydromatic.optiq.Function;
 import net.hydromatic.optiq.Schema;
 import net.hydromatic.optiq.SchemaPlus;
-import net.hydromatic.optiq.TableFunction;
 
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.store.AbstractSchema;
@@ -87,13 +87,13 @@ public class FileSystemSchemaFactory implements SchemaFactory{
     }
 
     @Override
-    public Collection<TableFunction> getTableFunctions(String name) {
-      return defaultSchema.getTableFunctions(name);
+    public Collection<Function> getFunctions(String name) {
+      return defaultSchema.getFunctions(name);
     }
 
     @Override
-    public Set<String> getTableFunctionNames() {
-      return defaultSchema.getTableFunctionNames();
+    public Set<String> getFunctionNames() {
+      return defaultSchema.getFunctionNames();
     }
 
     @Override

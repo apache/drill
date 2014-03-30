@@ -180,7 +180,7 @@ public abstract class DrillFuncHolder {
     return this.parameters[i].type;
   }
 
-  public int getParmSize() {
+  public int getParamCount() {
     return this.parameters.length;
   }
 

@@ -578,11 +578,11 @@ public class TypeCastRules {
   public static int getCost(FunctionCall call, DrillFuncHolder holder) {
     int cost = 0;
 
-    if (call.args.size() != holder.getParmSize()) {
+    if (call.args.size() != holder.getParamCount()) {
       return -1;
     }
       
-    for (int i = 0; i < holder.getParmSize(); i++) {
+    for (int i = 0; i < holder.getParamCount(); i++) {
       MajorType argType = call.args.get(i).getMajorType();
       MajorType parmType = holder.getParmMajorType(i);
 

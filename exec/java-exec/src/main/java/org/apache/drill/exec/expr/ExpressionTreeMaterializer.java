@@ -107,6 +107,7 @@ public class ExpressionTreeMaterializer {
       List<LogicalExpression> args = Lists.newArrayList();
       for (int i = 0; i < call.args.size(); ++i) {
         LogicalExpression newExpr = call.args.get(i).accept(this, registry);
+        assert newExpr != null : String.format("Materialization of %s return a null expression.", call.args.get(i));
         args.add(newExpr);
       }
 
@@ -150,7 +151,7 @@ public class ExpressionTreeMaterializer {
 
             if (matchedCastFuncHolder == null) {
               logFunctionResolutionError(errorCollector, castCall);
-              return null;
+              return NullExpression.INSTANCE;
             }
 
             argsWithCast.add(new DrillFuncHolderExpr(call.getName(), matchedCastFuncHolder, castArgs, ExpressionPosition.UNKNOWN));

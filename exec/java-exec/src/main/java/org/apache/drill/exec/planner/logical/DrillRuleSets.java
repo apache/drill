@@ -30,8 +30,10 @@ import org.apache.drill.exec.planner.physical.ScreenPrule;
 import org.apache.drill.exec.planner.physical.SortConvertPrule;
 import org.apache.drill.exec.planner.physical.SortPrule;
 import org.apache.drill.exec.planner.physical.StreamAggPrule;
+import org.eigenbase.rel.rules.PushFilterPastJoinRule;
+import org.eigenbase.rel.rules.PushFilterPastProjectRule;
+import org.eigenbase.rel.rules.PushJoinThroughJoinRule;
 import org.eigenbase.relopt.RelOptRule;
-import org.eigenbase.relopt.volcano.AbstractConverter;
 import org.eigenbase.relopt.volcano.AbstractConverter.ExpandConversionRule;
 
 import com.google.common.collect.ImmutableSet;
@@ -40,6 +42,12 @@ public class DrillRuleSets {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillRuleSets.class);
 
   public static final RuleSet DRILL_BASIC_RULES = new DrillRuleSet(ImmutableSet.of( //
+      // Add support for WHERE style joins.
+      PushFilterPastProjectRule.INSTANCE,
+      PushFilterPastJoinRule.FILTER_ON_JOIN,
+      PushJoinThroughJoinRule.RIGHT, 
+      PushJoinThroughJoinRule.LEFT, 
+      // End supprot for WHERE style joins.
       
       DrillScanRule.INSTANCE,
       DrillFilterRule.INSTANCE,
@@ -50,6 +58,9 @@ public class DrillRuleSets {
       DrillSortRule.INSTANCE,
       DrillJoinRule.INSTANCE,
       DrillUnionRule.INSTANCE
+      
+      
+
       ));
   
   public static final RuleSet DRILL_PHYSICAL_MEM = new DrillRuleSet(ImmutableSet.of( //

@@ -118,7 +118,7 @@ public class GCompare${left}${right}{
       }
   }
   
-  @FunctionTemplate(names = {"less than", "<"}, scope = FunctionTemplate.FunctionScope.SIMPLE)
+  @FunctionTemplate(names = {"less_than", "<"}, scope = FunctionTemplate.FunctionScope.SIMPLE)
   public static class LessThan${left}${right} implements DrillSimpleFunc {
 
       @Param ${left}Holder left;
@@ -149,7 +149,7 @@ public class GCompare${left}${right}{
       }
   }
   
-  @FunctionTemplate(names = {"less than or equal to", "<="}, scope = FunctionTemplate.FunctionScope.SIMPLE)
+  @FunctionTemplate(names = {"less_than_or_equal_to", "<="}, scope = FunctionTemplate.FunctionScope.SIMPLE)
   public static class LessThanE${left}${right} implements DrillSimpleFunc {
 
       @Param ${left}Holder left;
@@ -180,7 +180,7 @@ public class GCompare${left}${right}{
     }
   }
   
-  @FunctionTemplate(names = {"greater than", ">"}, scope = FunctionTemplate.FunctionScope.SIMPLE)
+  @FunctionTemplate(names = {"greater_than", ">"}, scope = FunctionTemplate.FunctionScope.SIMPLE)
   public static class GreaterThan${left}${right} implements DrillSimpleFunc {
 
       @Param ${left}Holder left;
@@ -211,7 +211,7 @@ public class GCompare${left}${right}{
     }
   }
   
-  @FunctionTemplate(names = {"greater than or equal to", ">="}, scope = FunctionTemplate.FunctionScope.SIMPLE)
+  @FunctionTemplate(names = {"greater_than_or_equal_to", ">="}, scope = FunctionTemplate.FunctionScope.SIMPLE)
   public static class GreaterThanE${left}${right} implements DrillSimpleFunc {
 
       @Param ${left}Holder left;
@@ -273,7 +273,7 @@ public class GCompare${left}${right}{
       }
   }
   
-  @FunctionTemplate(names = {"not equal","<>","!="}, scope = FunctionTemplate.FunctionScope.SIMPLE)
+  @FunctionTemplate(names = {"not_equal","<>","!="}, scope = FunctionTemplate.FunctionScope.SIMPLE)
   public static class NotEquals${left}${right} implements DrillSimpleFunc {
 
       @Param ${left}Holder left;

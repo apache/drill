@@ -31,10 +31,10 @@ import java.util.Set;
 import net.hydromatic.linq4j.expressions.DefaultExpression;
 import net.hydromatic.linq4j.expressions.Expression;
 import net.hydromatic.linq4j.function.Function1;
+import net.hydromatic.optiq.Function;
 import net.hydromatic.optiq.Schema;
 import net.hydromatic.optiq.SchemaPlus;
 import net.hydromatic.optiq.Table;
-import net.hydromatic.optiq.TableFunction;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -221,13 +221,13 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
     }
 
     @Override
-    public Collection<TableFunction> getTableFunctions(String name) {
-      return inner.getTableFunctions(name);
+    public Collection<Function> getFunctions(String name) {
+      return inner.getFunctions(name);
     }
 
     @Override
-    public Set<String> getTableFunctionNames() {
-      return inner.getTableFunctionNames();
+    public Set<String> getFunctionNames() {
+      return inner.getFunctionNames();
     }
 
     @Override
@@ -274,12 +274,12 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
     }
 
     @Override
-    public Collection<TableFunction> getTableFunctions(String name) {
+    public Collection<Function> getFunctions(String name) {
       return Collections.emptyList();
     }
 
     @Override
-    public Set<String> getTableFunctionNames() {
+    public Set<String> getFunctionNames() {
       return Collections.emptySet();
     }
 
@@ -311,7 +311,7 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
     }
 
     @Override
-    public void add(String name, TableFunction table) {
+    public void add(String name, Function table) {
       throw new UnsupportedOperationException();
     }
 

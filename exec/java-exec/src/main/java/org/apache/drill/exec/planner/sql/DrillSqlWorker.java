@@ -35,17 +35,16 @@ import org.apache.drill.exec.client.QuerySubmitter;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
-import org.apache.drill.exec.planner.logical.DrillStoreRel;
 import org.apache.drill.exec.planner.logical.DrillImplementor;
 import org.apache.drill.exec.planner.logical.DrillParseContext;
 import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillRuleSets;
 import org.apache.drill.exec.planner.logical.DrillScreenRel;
+import org.apache.drill.exec.planner.logical.DrillStoreRel;
 import org.apache.drill.exec.planner.physical.DrillDistributionTrait;
 import org.apache.drill.exec.planner.physical.DrillDistributionTraitDef;
 import org.apache.drill.exec.planner.physical.PhysicalPlanCreator;
 import org.apache.drill.exec.planner.physical.Prel;
-import org.apache.drill.exec.planner.physical.DrillDistributionTrait.DistributionField;
 import org.apache.drill.exec.store.StoragePluginRegistry.DrillSchemaFactory;
 import org.eigenbase.rel.RelCollationTraitDef;
 import org.eigenbase.rel.RelNode;
@@ -58,11 +57,9 @@ import org.eigenbase.sql.SqlExplainLevel;
 import org.eigenbase.sql.SqlKind;
 import org.eigenbase.sql.SqlLiteral;
 import org.eigenbase.sql.SqlNode;
-import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.parser.SqlParseException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableList;
 
 public class DrillSqlWorker {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillSqlWorker.class);
@@ -78,7 +75,9 @@ public class DrillSqlWorker {
     traitDefs.add(DrillDistributionTraitDef.INSTANCE);    
     traitDefs.add(RelCollationTraitDef.INSTANCE);
     
-    this.planner = Frameworks.getPlanner(Lex.MYSQL, schemaFactory, SqlStdOperatorTable.instance(), traitDefs, RULES);
+    DrillOperatorTable table = new DrillOperatorTable(registry);
+    DrillParserFactory factory = new DrillParserFactory(table);
+    this.planner = Frameworks.getPlanner(Lex.MYSQL, factory, schemaFactory, table, traitDefs, RULES);
 //    this.planner = Frameworks.getPlanner(Lex.MYSQL, SqlParserImpl.FACTORY, schemaFactory, SqlStdOperatorTable.instance(), traitDefs, RULES);
   }
   

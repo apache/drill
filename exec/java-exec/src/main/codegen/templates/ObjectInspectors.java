@@ -65,6 +65,27 @@ public class Drill${entry.holder}ObjectInspector extends AbstractPrimitiveObject
     else
     return ((NullableVar16CharHolder)o).toString();
   }
+<#elseif entry.minorType == "VARBINARY">  
+@Override
+public org.apache.hadoop.io.BytesWritable getPrimitiveWritableObject(Object o) {
+  throw new UnsupportedOperationException();
+}
+
+@Override
+public byte[] getPrimitiveJavaObject(Object o) {
+  if (o instanceof VarBinaryHolder){
+    VarBinaryHolder h = (VarBinaryHolder)o;
+    byte[] buf = new byte[h.end-h.start];
+    h.buffer.getBytes(h.start, buf, 0, h.end-h.start);
+    return buf;
+  }else{
+    NullableVarBinaryHolder h = (NullableVarBinaryHolder)o;
+    byte[] buf = new byte[h.end-h.start];
+    h.buffer.getBytes(h.start, buf, 0, h.end-h.start);
+    return buf;
+    
+  }
+}
 <#elseif entry.minorType == "BIT">
   @Override
   public boolean get(Object o) {

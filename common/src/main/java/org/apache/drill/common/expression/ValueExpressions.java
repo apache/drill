@@ -420,12 +420,13 @@ public class ValueExpressions {
   public static class IntervalDayExpression extends LogicalExpressionBase {
 
     private static final MajorType INTERVALDAY_CONSTANT = Types.required(MinorType.INTERVALDAY);
-
+    private static final long MILLIS_IN_DAY = 1000 * 60 * 60 * 24;
+    
     private int days;
     private int millis;
-
+    
     public IntervalDayExpression(long intervalInMillis) {
-      this((int) intervalInMillis / (1000 * 60 * 60 * 24), (int) (intervalInMillis % (1000 * 60 * 60 * 24)), ExpressionPosition.UNKNOWN);
+      this((int) (intervalInMillis / MILLIS_IN_DAY), (int) (intervalInMillis % MILLIS_IN_DAY), ExpressionPosition.UNKNOWN);
     }
 
       public IntervalDayExpression(int days, int millis, ExpressionPosition pos) {

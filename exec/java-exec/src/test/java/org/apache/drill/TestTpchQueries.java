@@ -36,7 +36,7 @@ public class TestTpchQueries extends BaseTestQuery{
   }
 
   @Test
-  @Ignore // DRILL-436
+  @Ignore
   public void tpch03() throws Exception{
     testSqlFromFile("queries/tpch/03.sql");
   }

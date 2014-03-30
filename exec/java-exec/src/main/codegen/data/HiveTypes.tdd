@@ -87,6 +87,14 @@
       javaType: "",
       minorType: "VAR16CHAR",
       holder: "Var16Char"
+    },
+    {
+      hiveType: "BINARY",
+      hiveOI: "BinaryObjectInspector",
+      serdeConstant: "BINARY_TYPE_NAME",
+      javaType: "",
+      minorType: "VARBINARY",
+      holder: "VarBinary"
     }
   ]
 }

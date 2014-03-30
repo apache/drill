@@ -15,29 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.drill.exec.planner.sql;
 
+import org.apache.drill.exec.planner.types.RelDataTypeDrillImpl;
+import org.apache.drill.exec.planner.types.RelDataTypeHolder;
 import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.sql.SqlCall;
-import org.eigenbase.sql.SqlFunction;
-import org.eigenbase.sql.SqlFunctionCategory;
-import org.eigenbase.sql.SqlKind;
+import org.eigenbase.reltype.RelDataTypeFactory;
+import org.eigenbase.reltype.RelProtoDataType;
 import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.sql.validate.SqlValidator;
-import org.eigenbase.sql.validate.SqlValidatorScope;
 
-public class DrillSqlOperator extends SqlFunction {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillSqlOperator.class);
-
-  DrillSqlOperator(String name, int argCount) {
-    super(name, SqlKind.OTHER_FUNCTION, DynamicReturnType.INSTANCE, null, new Checker(argCount), SqlFunctionCategory.USER_DEFINED_FUNCTION);
-  }
+class DynamicType implements RelProtoDataType {
 
   @Override
-  public RelDataType deriveType(SqlValidator validator, SqlValidatorScope scope, SqlCall call) {
-    return validator.getTypeFactory().createSqlType(SqlTypeName.ANY);
-//    return new RelDataTypeDrillImpl(new RelDataTypeHolder(), validator.getTypeFactory());
+  public RelDataType apply(RelDataTypeFactory factory) {
+    return factory.createSqlType(SqlTypeName.ANY);
+//    return new RelDataTypeDrillImpl(new RelDataTypeHolder(), factory);
   }
 
 }

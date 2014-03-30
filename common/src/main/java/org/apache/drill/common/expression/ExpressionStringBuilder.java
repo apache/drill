@@ -17,20 +17,27 @@
  */
 package org.apache.drill.common.expression;
 
+import java.io.IOException;
+
 import org.apache.drill.common.expression.IfExpression.IfCondition;
 import org.apache.drill.common.expression.ValueExpressions.BooleanExpression;
+import org.apache.drill.common.expression.ValueExpressions.DateExpression;
 import org.apache.drill.common.expression.ValueExpressions.DoubleExpression;
 import org.apache.drill.common.expression.ValueExpressions.FloatExpression;
 import org.apache.drill.common.expression.ValueExpressions.IntExpression;
-import org.apache.drill.common.expression.ValueExpressions.LongExpression;
-import org.apache.drill.common.expression.ValueExpressions.DateExpression;
-import org.apache.drill.common.expression.ValueExpressions.IntervalYearExpression;
 import org.apache.drill.common.expression.ValueExpressions.IntervalDayExpression;
-import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
-import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
+import org.apache.drill.common.expression.ValueExpressions.IntervalYearExpression;
+import org.apache.drill.common.expression.ValueExpressions.LongExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
+import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
+import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
 import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.joda.time.Period;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.DateTimeFormatterBuilder;
+import org.joda.time.format.DateTimeParser;
 
 import com.google.common.collect.ImmutableList;
 
@@ -88,31 +95,56 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
 
   @Override
   public Void visitDateConstant(DateExpression lExpr, StringBuilder sb) throws RuntimeException {
+    sb.append("cast( ");
     sb.append(lExpr.getDate());
+    sb.append(" as DATE)");
     return null;
   }
 
   @Override
   public Void visitTimeConstant(TimeExpression lExpr, StringBuilder sb) throws RuntimeException {
+    sb.append("cast( ");
     sb.append(lExpr.getTime());
+    sb.append(" as TIME)");
     return null;
   }
 
+  static final DateTimeFormatter TIMESTAMP_FORMAT;
+  static {
+    DateTimeFormatter dateFormatter = DateTimeFormat.forPattern("yyyy-MM-dd");
+    DateTimeParser optionalTime = DateTimeFormat.forPattern(" HH:mm:ss").getParser();
+    DateTimeParser optionalSec = DateTimeFormat.forPattern(".SSS").getParser();
+
+    TIMESTAMP_FORMAT = new DateTimeFormatterBuilder().append(dateFormatter).appendOptional(optionalTime).appendOptional(optionalSec).toFormatter();
+
+  }
+  
   @Override
   public Void visitTimeStampConstant(TimeStampExpression lExpr, StringBuilder sb) throws RuntimeException {
+    sb.append("cast( \"");
+    try {
+      TIMESTAMP_FORMAT.printTo(sb, lExpr.getTimeStamp());
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
     sb.append(lExpr.getTimeStamp());
+    sb.append(" \" as TIMESTAMP)");
     return null;
   }
 
   @Override
   public Void visitIntervalYearConstant(IntervalYearExpression lExpr, StringBuilder sb) throws RuntimeException {
-    sb.append(lExpr.getIntervalYear());
+    sb.append("cast( \"");
+    sb.append(Period.years(lExpr.getIntervalYear()).toString());
+    sb.append(" \" as INTERVAL)");
     return null;
   }
 
   @Override
   public Void visitIntervalDayConstant(IntervalDayExpression lExpr, StringBuilder sb) throws RuntimeException {
-    sb.append(lExpr.getIntervalDay() + " " + lExpr.getIntervalMillis());
+    sb.append("cast( \"");
+    sb.append(Period.days(lExpr.getIntervalDay()).plusMillis(lExpr.getIntervalMillis()).toString());
+    sb.append(" \" as INTERVAL)");
     return null;
   }
 

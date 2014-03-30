@@ -32,7 +32,7 @@ import com.google.common.io.Resources;
 public class BaseTestQuery {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseTestQuery.class);
   
-  @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(10000);
+  @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(20000);
   
   protected void test(String sql) throws Exception{
     boolean good = false;

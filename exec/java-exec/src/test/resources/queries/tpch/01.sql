@@ -13,8 +13,8 @@ select
   count(*) as count_order
 from
   cp.`tpch/lineitem.parquet`
--- where
---  l_shipdate <= date '1998-12-01' - interval '120' day (3)
+where
+  l_shipdate <= date '1998-12-01' - interval '120' day (3)
 group by
   l_returnflag,
   l_linestatus

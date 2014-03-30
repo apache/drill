@@ -53,7 +53,7 @@ public class GCompare${type.name}Functions {
       }
   }
 
-  @FunctionTemplate(name = "less than", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "less_than", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
   public static class LessThan${type.name} implements DrillSimpleFunc {
 
       @Param ${type.name}Holder left;
@@ -69,7 +69,7 @@ public class GCompare${type.name}Functions {
       }
   }
 
-  @FunctionTemplate(name = "less than or equal to", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "less_than_or_equal_to", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
   public static class LessThanE${type.name} implements DrillSimpleFunc {
 
       @Param ${type.name}Holder left;
@@ -85,7 +85,7 @@ public class GCompare${type.name}Functions {
     }
   }
 
-  @FunctionTemplate(name = "greater than", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "greater_than", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
   public static class GreaterThan${type.name} implements DrillSimpleFunc {
 
       @Param ${type.name}Holder left;
@@ -101,7 +101,7 @@ public class GCompare${type.name}Functions {
     }
   }
 
-  @FunctionTemplate(name = "greater than or equal to", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "greater_than_or_equal_to", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
   public static class GreaterThanE${type.name} implements DrillSimpleFunc {
 
       @Param ${type.name}Holder left;
@@ -132,7 +132,7 @@ public class GCompare${type.name}Functions {
       }
   }
 
-  @FunctionTemplate(name = "not equal", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "not_equal", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
   public static class NotEquals${type.name} implements DrillSimpleFunc {
 
       @Param ${type.name}Holder left;
@@ -211,7 +211,7 @@ public class GCompare${type.name}Functions {
       }
   }
 
-  @FunctionTemplate(name = "less than", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "less_than", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
   public static class LessThan${type.name} implements DrillSimpleFunc {
 
       @Param ${type.name}Holder left;
@@ -234,7 +234,7 @@ public class GCompare${type.name}Functions {
       }
   }
 
-  @FunctionTemplate(name = "less than or equal to", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "less_than_or_equal_to", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
   public static class LessThanE${type.name} implements DrillSimpleFunc {
 
       @Param ${type.name}Holder left;
@@ -257,7 +257,7 @@ public class GCompare${type.name}Functions {
     }
   }
 
-  @FunctionTemplate(name = "greater than", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "greater_than", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
   public static class GreaterThan${type.name} implements DrillSimpleFunc {
 
       @Param ${type.name}Holder left;
@@ -280,7 +280,7 @@ public class GCompare${type.name}Functions {
     }
   }
 
-  @FunctionTemplate(name = "greater than or equal to", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "greater_than_or_equal_to", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
   public static class GreaterThanE${type.name} implements DrillSimpleFunc {
 
       @Param ${type.name}Holder left;
@@ -326,7 +326,7 @@ public class GCompare${type.name}Functions {
       }
   }
 
-  @FunctionTemplate(name = "not equal", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "not_equal", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
   public static class NotEquals${type.name} implements DrillSimpleFunc {
 
       @Param ${type.name}Holder left;

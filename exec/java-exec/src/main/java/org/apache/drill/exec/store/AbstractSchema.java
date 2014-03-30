@@ -23,9 +23,9 @@ import java.util.Set;
 
 import net.hydromatic.linq4j.expressions.DefaultExpression;
 import net.hydromatic.linq4j.expressions.Expression;
+import net.hydromatic.optiq.Function;
 import net.hydromatic.optiq.Schema;
 import net.hydromatic.optiq.SchemaPlus;
-import net.hydromatic.optiq.TableFunction;
 
 import org.apache.drill.exec.planner.logical.DrillTable;
 
@@ -55,16 +55,14 @@ public abstract class AbstractSchema implements Schema{
   }
 
   @Override
-  public Collection<TableFunction> getTableFunctions(String name) {
+  public Collection<Function> getFunctions(String name) {
     return Collections.emptyList();
   }
 
   @Override
-  public Set<String> getTableFunctionNames() {
+  public Set<String> getFunctionNames() {
     return Collections.emptySet();
   }
-  
-  
 
   @Override
   public Schema getSubSchema(String name) {
