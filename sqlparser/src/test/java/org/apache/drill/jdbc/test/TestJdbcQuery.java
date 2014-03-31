@@ -186,4 +186,12 @@ public class TestJdbcQuery {
         "TABLE_NAME=SCHEMATA\n"
       );
   }
+
+
+  @Test
+  public void testIntegerLiteral() throws Exception{
+    JdbcAssert.withNoDefaultSchema()
+      .sql("select substring('asd' from 1 for 2) from INFORMATION_SCHEMA.`TABLES` limit 1")
+      .returns("EXPR$0=as\n");
+  }
 }

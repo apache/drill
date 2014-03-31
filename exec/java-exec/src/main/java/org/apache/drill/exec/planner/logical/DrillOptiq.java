@@ -222,7 +222,7 @@ public class DrillOptiq {
 
     @Override
     public LogicalExpression visitLiteral(RexLiteral literal) {
-      switch(literal.getTypeName()){
+      switch(literal.getType().getSqlTypeName()){
       case BIGINT:
         long l = ((BigDecimal) literal.getValue()).longValue();
         return ValueExpressions.getBigInt(l);
@@ -237,6 +237,8 @@ public class DrillOptiq {
         float f = ((BigDecimal) literal.getValue()).floatValue();
         return ValueExpressions.getFloat4(f);
       case INTEGER:
+        int a = ((BigDecimal) literal.getValue()).intValue();
+        return ValueExpressions.getInt(a);
       case DECIMAL:
         double dbl = ((BigDecimal) literal.getValue()).doubleValue();
         logger.warn("Converting exact decimal into approximate decimal.  Should be fixed once decimal is implemented.");
