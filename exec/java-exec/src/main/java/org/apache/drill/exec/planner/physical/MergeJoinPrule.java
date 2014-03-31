@@ -56,21 +56,27 @@ public class MergeJoinPrule extends RelOptRule {
   @Override
   public void onMatch(RelOptRuleCall call) {
     final DrillJoinRel join = (DrillJoinRel) call.rel(0);
-    final RelNode left = call.rel(1);
-    final RelNode right = call.rel(2);
-
-    RelCollation collationLeft = getCollation(join.getLeftKeys());
-    RelCollation collationRight = getCollation(join.getRightKeys());
-    DrillDistributionTrait hashLeftPartition = new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED, ImmutableList.copyOf(getDistributionField(join.getLeftKeys())));
-    DrillDistributionTrait hashRightPartition = new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED, ImmutableList.copyOf(getDistributionField(join.getRightKeys())));
     
-    final RelTraitSet traitsLeft = left.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(collationLeft).plus(hashLeftPartition);   
-    final RelTraitSet traitsRight = right.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(collationRight).plus(hashRightPartition);
+    try {            
+      if (join.getCondition().isAlwaysTrue()) {
+        throw new InvalidRelException("MergeJoinPrel does not support cartesian product join");
+      }
+  
+      final RelNode left = call.rel(1);
+      final RelNode right = call.rel(2);
+  
+      RelCollation collationLeft = getCollation(join.getLeftKeys());
+      RelCollation collationRight = getCollation(join.getRightKeys());
+      DrillDistributionTrait hashLeftPartition = new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED, ImmutableList.copyOf(getDistributionField(join.getLeftKeys())));
+      DrillDistributionTrait hashRightPartition = new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED, ImmutableList.copyOf(getDistributionField(join.getRightKeys())));
+      
+      final RelTraitSet traitsLeft = left.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(collationLeft).plus(hashLeftPartition);   
+      final RelTraitSet traitsRight = right.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(collationRight).plus(hashRightPartition);
+      
+      final RelNode convertedLeft = convert(left, traitsLeft);
+      final RelNode convertedRight = convert(right, traitsRight);
+      
     
-    final RelNode convertedLeft = convert(left, traitsLeft);
-    final RelNode convertedRight = convert(right, traitsRight);
-    
-    try {          
       MergeJoinPrel newJoin = new MergeJoinPrel(join.getCluster(), traitsLeft, convertedLeft, convertedRight, join.getCondition(),
                                                 join.getJoinType());
       call.transformTo(newJoin);

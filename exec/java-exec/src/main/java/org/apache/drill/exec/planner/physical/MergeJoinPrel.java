@@ -51,6 +51,10 @@ public class MergeJoinPrel  extends DrillJoinRelBase implements Prel {
       JoinRelType joinType) throws InvalidRelException {
     super(cluster, traits, left, right, condition, joinType);
 
+    if (condition.isAlwaysTrue()) {
+      throw new InvalidRelException("MergeJoinPrel does not support cartesian product join");
+    }
+    
     RexNode remaining = RelOptUtil.splitJoinCondition(left, right, condition, leftKeys, rightKeys);
     if (!remaining.isAlwaysTrue()) {
       throw new InvalidRelException("MergeJoinPrel only supports equi-join");

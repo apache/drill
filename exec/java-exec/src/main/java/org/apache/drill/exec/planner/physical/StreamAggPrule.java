@@ -54,10 +54,14 @@ public class StreamAggPrule extends RelOptRule {
     final RelNode input = call.rel(1);
     RelCollation collation = getCollation(aggregate);
 
-    DrillDistributionTrait hashDistribution = 
-        new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED, ImmutableList.copyOf(getDistributionField(aggregate)));
+    DrillDistributionTrait toDist = null;
+    if (!aggregate.getGroupSet().isEmpty()) {
+      toDist = new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED, ImmutableList.copyOf(getDistributionField(aggregate)));
+    } else {
+      toDist = DrillDistributionTrait.SINGLETON;
+    }
     
-    final RelTraitSet traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(collation).plus(hashDistribution);
+    final RelTraitSet traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(collation).plus(toDist);
     
     final RelNode convertedInput = convert(input, traits);
     
@@ -82,12 +86,21 @@ public class StreamAggPrule extends RelOptRule {
   }
 
   private List<DistributionField> getDistributionField(DrillAggregateRel rel) {
+    
+    //For now, we use the GROUPBY keys as the distribution keys. 
+    //Ideally, we should pick a set of distributions keys such that they distribute the rows most "evenly", with least "skewness".
+    //This can be done if later on we have more statistics for the data stream. 
+    
     List<DistributionField> groupByFields = Lists.newArrayList();
 
     for (int group : BitSets.toIter(rel.getGroupSet())) {
       DistributionField field = new DistributionField(group);
       groupByFields.add(field);
     }    
+    
+//    if (groupByFields.isEmpty()) {
+//      groupByFields.add(new DistributionField(0));
+//    }
     
     return groupByFields;
   }
