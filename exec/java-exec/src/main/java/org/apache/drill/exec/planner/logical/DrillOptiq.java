@@ -24,6 +24,8 @@ import java.util.List;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.FunctionCallFactory;
+import org.apache.drill.common.expression.IfExpression;
+import org.apache.drill.common.expression.IfExpression.IfCondition;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.ValueExpressions;
@@ -120,6 +122,23 @@ public class DrillOptiq {
         case LIKE:
         case SIMILAR:
           return getDrillFunctionFromOptiqCall(call);
+        case CASE:
+          List<LogicalExpression> caseArgs = Lists.newArrayList();
+          for(RexNode r : call.getOperands()){
+            caseArgs.add(r.accept(this));
+          }
+
+          caseArgs = Lists.reverse(caseArgs);
+          // number of arguements are always going to be odd, because
+          // Optiq adds "null" for the missing else expression at the end
+          assert caseArgs.size()%2 == 1;
+          LogicalExpression elseExpression = caseArgs.get(0);
+          for (int i=1; i<caseArgs.size(); i=i+2) {
+            elseExpression = IfExpression.newBuilder()
+              .setElse(elseExpression)
+              .addCondition(new IfCondition(caseArgs.get(i + 1), caseArgs.get(i))).build();
+          }
+          return elseExpression;
         }
         
         if (call.getOperator() == SqlStdOperatorTable.ITEM) {
@@ -227,13 +246,15 @@ public class DrillOptiq {
       case DATE:
         return (ValueExpressions.getDate((GregorianCalendar)literal.getValue()));
       case TIME:
-          return (ValueExpressions.getTime((GregorianCalendar)literal.getValue()));
+        return (ValueExpressions.getTime((GregorianCalendar)literal.getValue()));
       case TIMESTAMP:
-          return (ValueExpressions.getTimeStamp((GregorianCalendar) literal.getValue()));
+        return (ValueExpressions.getTimeStamp((GregorianCalendar) literal.getValue()));
       case INTERVAL_YEAR_MONTH:
-          return (ValueExpressions.getIntervalYear(((BigDecimal) (literal.getValue())).intValue()));
+        return (ValueExpressions.getIntervalYear(((BigDecimal) (literal.getValue())).intValue()));
       case INTERVAL_DAY_TIME:
-          return (ValueExpressions.getIntervalDay(((BigDecimal) (literal.getValue())).longValue()));
+        return (ValueExpressions.getIntervalDay(((BigDecimal) (literal.getValue())).longValue()));
+      case NULL:
+        return NullExpression.INSTANCE;
       default:
         throw new UnsupportedOperationException(String.format("Unable to convert the value of %s and type %s to a Drill constant expression.", literal, literal.getTypeName()));
       }
