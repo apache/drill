@@ -29,29 +29,17 @@ import com.google.common.collect.Lists;
 public class RelDataTypeHolder {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RelDataTypeHolder.class);
 
-  List<String> fieldNames = Lists.newArrayList();
+  List<RelDataTypeField> fields = Lists.newArrayList();
 
   public List<RelDataTypeField> getFieldList(RelDataTypeFactory typeFactory) {
-
+    
     addStarIfEmpty();
-
-    List<RelDataTypeField> fields = Lists.newArrayList();
-
-    int i = 0;
-    for (String fieldName : fieldNames) {
-
-//      RelDataTypeField field = new RelDataTypeFieldImpl(fieldName, i, new RelDataTypeDrillImpl(new RelDataTypeHolder(), typeFactory));
-      RelDataTypeField field = new RelDataTypeFieldImpl(fieldName, i, typeFactory.createSqlType(SqlTypeName.ANY));
-      fields.add(field);
-      i++;
-    }
-
     return fields;
   }
 
   public int getFieldCount() {
     addStarIfEmpty();
-    return fieldNames.size();
+    return fields.size();
   }
 
   private void addStarIfEmpty(){
@@ -61,26 +49,27 @@ public class RelDataTypeHolder {
   public RelDataTypeField getField(RelDataTypeFactory typeFactory, String fieldName) {
 
     /* First check if this field name exists in our field list */
-    int i = 0;
-    for (String name : fieldNames) {
-      if (name.equalsIgnoreCase(fieldName)) {
-        return new RelDataTypeFieldImpl(name, i, typeFactory.createSqlType(SqlTypeName.ANY));
+    for (RelDataTypeField f : fields) {
+      if (fieldName.equalsIgnoreCase(f.getName())) {
+        return f;
       }
-      i++;
     }
 
     /* This field does not exist in our field list add it */
-    RelDataTypeField newField = new RelDataTypeFieldImpl(fieldName, fieldNames.size(),
-        typeFactory.createSqlType(SqlTypeName.ANY));
+    RelDataTypeField newField = new RelDataTypeFieldImpl(fieldName, fields.size(), typeFactory.createSqlType(SqlTypeName.ANY));
 
     /* Add the name to our list of field names */
-    fieldNames.add(fieldName);
+    fields.add(newField);
 
     return newField;
   }
 
   public List<String> getFieldNames() {
-    addStarIfEmpty();
+    List<String> fieldNames = Lists.newArrayList();
+    for(RelDataTypeField f : fields){
+      fieldNames.add(f.getName());
+    };
+    
     return fieldNames;
   }
 }

@@ -34,7 +34,6 @@ import com.beust.jcommander.internal.Lists;
 public class WorkspaceSchemaFactory implements ExpandingConcurrentMap.MapValueFactory<String, DrillTable> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WorkspaceSchemaFactory.class);
 
-  private ExpandingConcurrentMap<String, DrillTable> tables = new ExpandingConcurrentMap<String, DrillTable>(this);
   private final List<FormatMatcher> fileMatchers;
   private final List<FormatMatcher> dirMatchers;
 
@@ -105,6 +104,8 @@ public class WorkspaceSchemaFactory implements ExpandingConcurrentMap.MapValueFa
 
   public class WorkspaceSchema extends AbstractSchema {
 
+    private ExpandingConcurrentMap<String, DrillTable> tables = new ExpandingConcurrentMap<String, DrillTable>(WorkspaceSchemaFactory.this);
+    
     public WorkspaceSchema(String name) {
       super(name);
     }

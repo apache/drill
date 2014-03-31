@@ -1,24 +1,24 @@
 -- tpch4 using 1395599672 as a seed to the RNG
 select
-  o_orderpriority,
+  o.o_orderpriority,
   count(*) as order_count
 from
-  cp.`tpch/orders.parquet`
+  cp.`tpch/orders.parquet` o
 
 where
---  o_orderdate >= date '1996-10-01'
---  and o_orderdate < date '1996-10-01' + interval '3' month
---  and 
+  o.o_orderdate >= date '1996-10-01'
+  and o.o_orderdate < date '1996-10-01' + interval '3' month
+  and 
   exists (
     select
       *
     from
-      cp.`tpch/lineitem.parquet`
+      cp.`tpch/lineitem.parquet` l
     where
-      l_orderkey = o_orderkey
-      and l_commitdate < l_receiptdate
+      l.l_orderkey = o.o_orderkey
+      and l.l_commitdate < l.l_receiptdate
   )
 group by
-  o_orderpriority
+  o.o_orderpriority
 order by
-  o_orderpriority;
+  o.o_orderpriority;

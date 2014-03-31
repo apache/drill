@@ -6,8 +6,8 @@ select
 from
   (
     select
-      n_name as nation,
-      extract(year from o_orderdate) as o_year,
+      n.n_name as nation,
+      extract(year from o.o_orderdate) as o_year,
       l.l_extendedprice * (1 - l.l_discount) - ps.ps_supplycost * l.l_quantity as amount
     from
       cp.`tpch/part.parquet` p,
