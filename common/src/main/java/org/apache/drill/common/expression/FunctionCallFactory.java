@@ -47,7 +47,8 @@ public class FunctionCallFactory {
     opToFuncTable.put("^", "xor");
 
     opToFuncTable.put("||", "or");
-    opToFuncTable.put("&&", "and");
+    opToFuncTable.put("and", "booleanAnd");
+    opToFuncTable.put("&&", "booleanAnd");
     opToFuncTable.put(">", "greater_than");
     opToFuncTable.put("<", "less_than");
     opToFuncTable.put("==", "equal");

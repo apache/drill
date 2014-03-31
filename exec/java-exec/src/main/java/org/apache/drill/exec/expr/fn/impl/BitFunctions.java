@@ -43,7 +43,7 @@ public class BitFunctions {
     }
   }  
 
-  @FunctionTemplate(names = {"and", "&&"}, scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(names = {"booleanAnd", "and", "&&"}, scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
   public static class BitAnd implements DrillSimpleFunc {
 
     @Param BitHolder left;
