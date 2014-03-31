@@ -139,8 +139,9 @@ public class MergingRecordBatch implements RecordBatch {
           context.fail(e);
           return IterOutcome.STOP;
         }
-        if (rawBatch.getHeader().getDef().getRecordCount() != 0)
+        if (rawBatch.getHeader().getDef().getRecordCount() != 0) {
           rawBatches.add(rawBatch);
+        }
       }
 
       // allocate the incoming record batch loaders
@@ -179,7 +180,7 @@ public class MergingRecordBatch implements RecordBatch {
 
         // allocate a new value vector
         ValueVector outgoingVector = TypeHelper.getNewVector(v.getField(), context.getAllocator());
-        VectorAllocator allocator = VectorAllocator.getAllocator(v.getValueVector(), outgoingVector);
+        VectorAllocator allocator = VectorAllocator.getAllocator(outgoingVector, 50);
         allocator.alloc(DEFAULT_ALLOC_RECORD_COUNT);
         allocators.add(allocator);
         outgoingContainer.add(outgoingVector);
@@ -371,6 +372,7 @@ public class MergingRecordBatch implements RecordBatch {
     final ClassGenerator<MergingReceiverGeneratorBase> cg =
         CodeGenerator.getRoot(MergingReceiverGeneratorBase.TEMPLATE_DEFINITION, context.getFunctionRegistry());
     JExpression inIndex = JExpr.direct("inIndex");
+    JExpression outIndex = JExpr.direct("outIndex");
 
     JType valueVector2DArray = cg.getModel().ref(ValueVector.class).array().array();
     JType valueVectorArray = cg.getModel().ref(ValueVector.class).array();
@@ -587,7 +589,7 @@ public class MergingRecordBatch implements RecordBatch {
         ((JExpression) JExpr.cast(vvClass, outgoingVectors.component(JExpr.lit(fieldIdx))))
           .invoke("copyFrom")
           .arg(inIndex)
-          .arg(outgoingBatch.invoke("getRecordCount"))
+          .arg(outIndex)
           .arg(JExpr.cast(vvClass,
                           ((JExpression) incomingVectors.component(JExpr.direct("inBatch")))
                             .component(JExpr.lit(fieldIdx)))));
