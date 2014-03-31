@@ -74,6 +74,14 @@ public final class UserProtos {
      * <code>QUERY_HANDLE = 7;</code>
      */
     QUERY_HANDLE(7, 7),
+    /**
+     * <code>REQ_META_FUNCTIONS = 8;</code>
+     */
+    REQ_META_FUNCTIONS(8, 8),
+    /**
+     * <code>RESP_FUNCTION_LIST = 9;</code>
+     */
+    RESP_FUNCTION_LIST(9, 9),
     ;
 
     /**
@@ -116,6 +124,14 @@ public final class UserProtos {
      * <code>QUERY_HANDLE = 7;</code>
      */
     public static final int QUERY_HANDLE_VALUE = 7;
+    /**
+     * <code>REQ_META_FUNCTIONS = 8;</code>
+     */
+    public static final int REQ_META_FUNCTIONS_VALUE = 8;
+    /**
+     * <code>RESP_FUNCTION_LIST = 9;</code>
+     */
+    public static final int RESP_FUNCTION_LIST_VALUE = 9;
 
 
     public final int getNumber() { return value; }
@@ -130,6 +146,8 @@ public final class UserProtos {
         case 5: return REQUEST_RESULTS;
         case 6: return QUERY_RESULT;
         case 7: return QUERY_HANDLE;
+        case 8: return REQ_META_FUNCTIONS;
+        case 9: return RESP_FUNCTION_LIST;
         default: return null;
       }
     }
@@ -5211,14 +5229,15 @@ public final class UserProtos {
       "2\033.exec.shared.RecordBatchDef\022\026\n\016schema_" +
       "changed\030\013 \001(\010\"b\n\nQueryState\022\013\n\007PENDING\020\000" +
       "\022\013\n\007RUNNING\020\001\022\r\n\tCOMPLETED\020\002\022\014\n\010CANCELED" +
-      "\020\003\022\n\n\006FAILED\020\004\022\021\n\rUNKNOWN_QUERY\020\005*\210\001\n\007Rp" +
+      "\020\003\022\n\n\006FAILED\020\004\022\021\n\rUNKNOWN_QUERY\020\005*\270\001\n\007Rp" +
       "cType\022\r\n\tHANDSHAKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE" +
       "\020\002\022\r\n\tRUN_QUERY\020\003\022\020\n\014CANCEL_QUERY\020\004\022\023\n\017R" +
       "EQUEST_RESULTS\020\005\022\020\n\014QUERY_RESULT\020\006\022\020\n\014QU" +
-      "ERY_HANDLE\020\007*/\n\tQueryType\022\007\n\003SQL\020\001\022\013\n\007LO" +
-      "GICAL\020\002\022\014\n\010PHYSICAL\020\003*#\n\020QueryResultsMod" +
-      "e\022\017\n\013STREAM_FULL\020\001B+\n\033org.apache.drill.e",
-      "xec.protoB\nUserProtosH\001"
+      "ERY_HANDLE\020\007\022\026\n\022REQ_META_FUNCTIONS\020\010\022\026\n\022" +
+      "RESP_FUNCTION_LIST\020\t*/\n\tQueryType\022\007\n\003SQL" +
+      "\020\001\022\013\n\007LOGICAL\020\002\022\014\n\010PHYSICAL\020\003*#\n\020QueryRe",
+      "sultsMode\022\017\n\013STREAM_FULL\020\001B+\n\033org.apache" +
+      ".drill.exec.protoB\nUserProtosH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {

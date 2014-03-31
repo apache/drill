@@ -57,6 +57,20 @@
     </repository>
 
     <repository>
+      <!--  Keep until we move back to released optiq versions. -->
+      <id>mapr-drill-optiq-snapshots</id>
+      <name>MapR Drill Optiq Snapshots</name>
+      <url>http://repository.mapr.com/nexus/content/repositories/drill-optiq/</url>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+    
+
+    <repository>
       <id>pentaho</id>
       <name>Pentaho</name>
       <url>http://repo.pentaho.org/artifactory/repo</url>

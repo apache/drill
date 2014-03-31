@@ -32,24 +32,14 @@ import org.apache.drill.exec.planner.logical.DrillTable;
 public abstract class AbstractSchema implements Schema{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractSchema.class);
 
-  private final SchemaHolder parentSchema;
-
   protected final String name;
   private static final Expression EXPRESSION = new DefaultExpression(Object.class);
 
-  public AbstractSchema(SchemaHolder parentSchema, String name) {
+  public AbstractSchema(String name) {
     super();
-    this.parentSchema = parentSchema;
     this.name = name;
   }
 
-  
-  @Override
-  public SchemaPlus getParentSchema() {
-    return parentSchema.getSchema();
-  }
-
-  @Override
   public String getName() {
     return name;
   }
@@ -75,11 +65,6 @@ public abstract class AbstractSchema implements Schema{
   }
 
   @Override
-  public Expression getExpression() {
-    return EXPRESSION;
-  }
-
-  @Override
   public boolean isMutable() {
     return false;
   }
@@ -92,6 +77,11 @@ public abstract class AbstractSchema implements Schema{
   @Override
   public Set<String> getTableNames() {
     return Collections.emptySet();
+  }
+
+  @Override
+  public Expression getExpression(SchemaPlus parentSchema, String name) {
+    return EXPRESSION;
   }
   
   

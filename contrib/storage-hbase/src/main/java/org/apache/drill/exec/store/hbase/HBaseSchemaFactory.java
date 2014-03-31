@@ -21,16 +21,17 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Set;
 
-import com.google.common.collect.Sets;
 import net.hydromatic.optiq.Schema;
 import net.hydromatic.optiq.SchemaPlus;
+
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.logical.DynamicDrillTable;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.SchemaFactory;
-import org.apache.drill.exec.store.SchemaHolder;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
+
+import com.google.common.collect.Sets;
 
 public class HBaseSchemaFactory implements SchemaFactory {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBaseSchemaFactory.class);
@@ -45,22 +46,19 @@ public class HBaseSchemaFactory implements SchemaFactory {
 
   @Override
   public Schema add(SchemaPlus parent) {
-    HBaseSchema schema = new HBaseSchema(new SchemaHolder(parent), schemaName);
-    SchemaPlus hPlus = parent.add(schema);
+    HBaseSchema schema = new HBaseSchema(schemaName);
+    SchemaPlus hPlus = parent.add(schemaName, schema);
     schema.setHolder(hPlus);
     return schema;
   }
 
   class HBaseSchema extends AbstractSchema {
 
-    private final SchemaHolder holder = new SchemaHolder();
-
-    public HBaseSchema(SchemaHolder parentSchema, String name) {
-      super(parentSchema, name);
+    public HBaseSchema(String name) {
+      super(name);
     }
 
     public void setHolder(SchemaPlus plusOfThis) {
-      holder.setSchema(plusOfThis);
     }
 
     @Override

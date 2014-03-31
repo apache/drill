@@ -29,7 +29,6 @@ import net.hydromatic.optiq.SchemaPlus;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.SchemaFactory;
-import org.apache.drill.exec.store.SchemaHolder;
 import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory.WorkspaceSchema;
 
 import com.google.common.collect.Maps;
@@ -53,8 +52,9 @@ public class FileSystemSchemaFactory implements SchemaFactory{
 
   @Override
   public Schema add(SchemaPlus parent) {
-    FileSystemSchema schema = new FileSystemSchema(parent, schemaName);
-    schema.setHolder(parent.add(schema));
+    FileSystemSchema schema = new FileSystemSchema(schemaName);
+    SchemaPlus plusOfThis = parent.add(schema.getName(), schema);
+    schema.setPlus(plusOfThis);
     return schema;
   }
 
@@ -62,22 +62,20 @@ public class FileSystemSchemaFactory implements SchemaFactory{
 
     private final WorkspaceSchema defaultSchema;
     private final Map<String, WorkspaceSchema> schemaMap = Maps.newHashMap();
-    final SchemaHolder selfHolder = new SchemaHolder();
     
-    public FileSystemSchema(SchemaPlus parentSchema, String name) {
-      super(new SchemaHolder(parentSchema), name);
+    public FileSystemSchema(String name) {
+      super(name);
       for(WorkspaceSchemaFactory f :  factories){
-        WorkspaceSchema s = f.create(selfHolder);
+        WorkspaceSchema s = f.createSchema();
         schemaMap.put(s.getName(), s);
       }
       
       defaultSchema = schemaMap.get("default");
     }
 
-    void setHolder(SchemaPlus plusOfThis){
-      selfHolder.setSchema(plusOfThis);
+    void setPlus(SchemaPlus plusOfThis){
       for(WorkspaceSchema s : schemaMap.values()){
-        plusOfThis.add(s);
+        plusOfThis.add(s.getName(), s);
       }
     }
     

@@ -184,7 +184,7 @@ public class OptiqProvider  {
      * Start scanning an Optiq Schema.
      * @param root - where to start
      */
-    protected void scanSchema(Schema root) {
+    protected void scanSchema(SchemaPlus root) {
       scanSchema(root.getName(), root);
     }
     

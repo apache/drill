@@ -26,12 +26,10 @@ import net.hydromatic.optiq.SchemaPlus;
 
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.logical.StoragePluginConfig;
-import org.apache.drill.common.logical.data.Scan;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
-import org.apache.drill.exec.store.SchemaHolder;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -67,15 +65,15 @@ public class InfoSchemaStoragePlugin extends AbstractStoragePlugin{
   
   @Override
   public Schema createAndAddSchema(SchemaPlus parent) {
-    Schema s = new ISchema(parent, this);
-    parent.add(s);
+    ISchema s = new ISchema(parent, this);
+    parent.add(s.getName(), s);
     return s;
   }
   
   private class ISchema extends AbstractSchema{
     private Map<String, InfoSchemaDrillTable> tables;
     public ISchema(SchemaPlus parent, InfoSchemaStoragePlugin plugin){
-      super(new SchemaHolder(parent), "INFORMATION_SCHEMA");
+      super("INFORMATION_SCHEMA");
       Map<String, InfoSchemaDrillTable> tbls = Maps.newHashMap();
       for(SelectedTable tbl : SelectedTable.values()){
         tbls.put(tbl.name(), new InfoSchemaDrillTable(plugin, "INFORMATION_SCHEMA", tbl, config));  

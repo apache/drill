@@ -22,7 +22,6 @@ import java.util.Set;
 
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.store.AbstractSchema;
-import org.apache.drill.exec.store.SchemaHolder;
 import org.apache.drill.exec.store.hive.schema.HiveSchemaFactory.HiveSchema;
 
 import com.google.common.collect.Sets;
@@ -36,9 +35,8 @@ public class HiveDatabaseSchema extends AbstractSchema{
   public HiveDatabaseSchema( //
       List<String> tableList, //
       HiveSchema hiveSchema, //
-      SchemaHolder parentSchema, //
       String name) {
-    super(parentSchema, name);
+    super(name);
     this.hiveSchema = hiveSchema;
     this.tables = Sets.newHashSet(tableList);
   }

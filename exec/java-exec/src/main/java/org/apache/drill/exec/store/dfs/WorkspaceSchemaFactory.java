@@ -26,7 +26,6 @@ import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.logical.DynamicDrillTable;
 import org.apache.drill.exec.planner.sql.ExpandingConcurrentMap;
 import org.apache.drill.exec.store.AbstractSchema;
-import org.apache.drill.exec.store.SchemaHolder;
 import org.apache.drill.exec.store.dfs.shim.DrillFileSystem;
 import org.apache.hadoop.fs.Path;
 
@@ -62,8 +61,8 @@ public class WorkspaceSchemaFactory implements ExpandingConcurrentMap.MapValueFa
     this.schemaName = schemaName;
   }
 
-  public WorkspaceSchema create(SchemaHolder holder) {
-    return new WorkspaceSchema(holder, schemaName);
+  public WorkspaceSchema createSchema() {
+    return new WorkspaceSchema(schemaName);
   }
 
   @Override
@@ -106,8 +105,8 @@ public class WorkspaceSchemaFactory implements ExpandingConcurrentMap.MapValueFa
 
   public class WorkspaceSchema extends AbstractSchema {
 
-    public WorkspaceSchema(SchemaHolder parentSchema, String name) {
-      super(parentSchema, name);
+    public WorkspaceSchema(String name) {
+      super(name);
     }
 
     @Override

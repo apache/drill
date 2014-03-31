@@ -48,8 +48,6 @@ message RunQuery {
   optional string plan = 3;
 }
 
-message 
-
 enum QueryType {
   SQL = 1;
   LOGICAL = 2;

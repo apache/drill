@@ -51,6 +51,7 @@ import org.apache.drill.exec.store.ischema.InfoSchemaStoragePlugin;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.google.common.io.Resources;
 
 
@@ -62,6 +63,8 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
 
   private DrillbitContext context;
   private final DrillSchemaFactory schemaFactory = new DrillSchemaFactory();
+  
+  private static final Expression EXPRESSION = new DefaultExpression(Object.class);
   
   public StoragePluginRegistry(DrillbitContext context) {
     try{
@@ -201,16 +204,6 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
     }
 
     @Override
-    public SchemaPlus getParentSchema() {
-      return inner.getParentSchema();
-    }
-
-    @Override
-    public String getName() {
-      return inner.getName();
-    }
-
-    @Override
     public Table getTable(String name) {
       return inner.getTable(name);
     }
@@ -234,24 +227,12 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
     public Set<String> getSubSchemaNames() {
       return inner.getSubSchemaNames();
     }
-
-    @Override
-    public Expression getExpression() {
-      return inner.getExpression();
-    }
-
-    @Override
-    public SchemaPlus addRecursive(Schema schema) {
-      return schema.getParentSchema().add(schema);
-    }
-    
-    
     
   }
 
   private class OrphanPlus implements SchemaPlus{
 
-    private HashMap<String, SchemaPlus> schemas = new HashMap();
+    private HashMap<String, SchemaPlus> schemas = Maps.newHashMap();
     
     @Override
     public SchemaPlus getParentSchema() {
@@ -289,20 +270,8 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
     }
 
     @Override
-    public Expression getExpression() {
-      return new DefaultExpression(Object.class);
-    }
-
-    @Override
     public SchemaPlus getSubSchema(String name) {
       return schemas.get(name);
-    }
-
-    @Override
-    public SchemaPlus add(Schema schema) {
-      OrphanPlusWrap plus = new OrphanPlusWrap(schema);
-      schemas.put(schema.getName(), plus);
-      return plus;
     }
 
     @Override
@@ -326,10 +295,17 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
     }
 
     @Override
-    public SchemaPlus addRecursive(Schema schema) {
-      return schema.getParentSchema().add(schema);
+    public Expression getExpression(SchemaPlus parentSchema, String name) {
+      return EXPRESSION;
     }
-    
+
+    @Override
+    public SchemaPlus add(String name, Schema schema) {
+      OrphanPlusWrap plus = new OrphanPlusWrap(schema);
+      schemas.put(name, plus);
+      return plus;
+    }
+
   }
   
 }

@@ -30,11 +30,8 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.SchemaFactory;
-import org.apache.drill.exec.store.SchemaHolder;
-import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory.WorkspaceSchema;
 import org.apache.drill.exec.store.hive.HiveReadEntry;
 import org.apache.drill.exec.store.hive.HiveStoragePlugin;
-import org.apache.drill.exec.store.hive.HiveStoragePluginConfig;
 import org.apache.drill.exec.store.hive.HiveTable;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
@@ -174,20 +171,18 @@ public class HiveSchemaFactory implements SchemaFactory {
 
   @Override
   public Schema add(SchemaPlus parent) {
-    HiveSchema schema = new HiveSchema(new SchemaHolder(parent), schemaName);
-    SchemaPlus hPlus = parent.add(schema);
+    HiveSchema schema = new HiveSchema(schemaName);
+    SchemaPlus hPlus = parent.add(schemaName, schema);
     schema.setHolder(hPlus);
     return schema;
   }
 
   class HiveSchema extends AbstractSchema {
 
-    private final SchemaHolder holder = new SchemaHolder();
-
     private HiveDatabaseSchema defaultSchema;
     
-    public HiveSchema(SchemaHolder parentSchema, String name) {
-      super(parentSchema, name);
+    public HiveSchema(String name) {
+      super(name);
       getSubSchema("default");
     }
     
@@ -196,7 +191,7 @@ public class HiveSchemaFactory implements SchemaFactory {
       List<String> tables;
       try {
         tables = tableNameLoader.get(name);
-        HiveDatabaseSchema schema = new HiveDatabaseSchema(tables, this, holder, name);
+        HiveDatabaseSchema schema = new HiveDatabaseSchema(tables, this, name);
         if(name.equals("default")){
           this.defaultSchema = schema;
         }
@@ -210,9 +205,8 @@ public class HiveSchemaFactory implements SchemaFactory {
     
 
     void setHolder(SchemaPlus plusOfThis){
-      holder.setSchema(plusOfThis);
       for(String s : getSubSchemaNames()){
-        plusOfThis.add(getSubSchema(s));
+        plusOfThis.add(s, getSubSchema(s));
       }
     }
     
