@@ -14,11 +14,11 @@ where
   and p.p_size in (38, 2, 8, 31, 44, 5, 14, 24)
   and ps.ps_suppkey not in (
     select
-      s_suppkey
+      s.s_suppkey
     from
-      cp.`tpch/supplier.parquet`
+      cp.`tpch/supplier.parquet` s
     where
-      s_comment like '%Customer%Complaints%'
+      s.s_comment like '%Customer%Complaints%'
   )
 group by
   p.p_brand,

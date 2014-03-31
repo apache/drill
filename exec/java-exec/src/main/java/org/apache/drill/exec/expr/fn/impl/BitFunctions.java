@@ -29,7 +29,7 @@ import org.apache.drill.exec.record.RecordBatch;
 
 public class BitFunctions {
   
-  @FunctionTemplate(names = {"or", "||"}, scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(names = {"booleanOr", "or", "||"}, scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
   public static class BitOr implements DrillSimpleFunc {
 
     @Param BitHolder left;
