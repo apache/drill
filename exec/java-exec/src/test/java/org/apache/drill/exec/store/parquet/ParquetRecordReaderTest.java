@@ -284,14 +284,13 @@ public class ParquetRecordReaderTest extends BaseTestQuery{
    */
   public void testNullableColumnsVarLen() throws Exception {
     HashMap<String, FieldInfo> fields = new HashMap<>();
-    ParquetTestProperties props = new ParquetTestProperties(1, 300000, DEFAULT_BYTES_PER_PAGE, fields);
+    ParquetTestProperties props = new ParquetTestProperties(1, 3000000, DEFAULT_BYTES_PER_PAGE, fields);
     byte[] val = {'b'};
     byte[] val2 = {'b', '2'};
     byte[] val3 = {'b', '3'};
     byte[] val4 = { 'l','o','n','g','e','r',' ','s','t','r','i','n','g'};
     Object[] boolVals = { val, val2, val4};
     props.fields.put("a", new FieldInfo("boolean", "a", 1, boolVals, TypeProtos.MinorType.BIT, props));
-    //
     testParquetFullEngineEventBased(false, "/parquet/parquet_nullable_varlen.json", "/tmp/nullable_varlen.parquet", 1, props);
     fields.clear();
     // pass strings instead of byte arrays
@@ -299,6 +298,18 @@ public class ParquetRecordReaderTest extends BaseTestQuery{
     props.fields.put("a", new FieldInfo("boolean", "a", 1, boolVals2, TypeProtos.MinorType.BIT, props));
     testParquetFullEngineEventBased(false, "/parquet/parquet_scan_screen_read_entry_replace.json",
         "\"/tmp/varLen.parquet/a\"", "unused", 1, props);
+  }
+
+  @Ignore
+  @Test
+  public void testDictionaryEncoding() throws Exception {
+    HashMap<String, FieldInfo> fields = new HashMap<>();
+    ParquetTestProperties props = new ParquetTestProperties(1, 300000, DEFAULT_BYTES_PER_PAGE, fields);
+    Object[] boolVals2 = { "b", "b2", "b3"};
+    props.fields.put("a", new FieldInfo("boolean", "a", 1, boolVals2, TypeProtos.MinorType.BIT, props));
+    // test dictionary encoding
+    testParquetFullEngineEventBased(false, "/parquet/parquet_scan_screen_read_entry_replace.json",
+        "\"/tmp/dictionary_pig.parquet/a\"", "unused", 1, props);
   }
 
   @Test

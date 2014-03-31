@@ -36,6 +36,11 @@ abstract class ColumnReader<V extends ValueVector> {
   
   // Value Vector for this column
   final V valueVec;
+
+  ColumnDescriptor getColumnDescriptor() {
+    return columnDescriptor;
+  }
+
   // column description from the parquet library
   final ColumnDescriptor columnDescriptor;
   // metadata of the column, from the parquet library

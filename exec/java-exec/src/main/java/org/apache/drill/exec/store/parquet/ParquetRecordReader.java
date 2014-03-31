@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import com.google.common.base.Preconditions;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.ExpressionPosition;
@@ -54,13 +55,18 @@ import parquet.format.SchemaElement;
 import parquet.format.converter.ParquetMetadataConverter;
 import parquet.hadoop.CodecFactoryExposer;
 import parquet.hadoop.ParquetFileWriter;
+import parquet.column.Encoding;
+import parquet.hadoop.CodecFactoryExposer;
+import parquet.hadoop.metadata.BlockMetaData;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
 import parquet.hadoop.metadata.ParquetMetadata;
 import parquet.schema.PrimitiveType;
 
+import org.apache.drill.exec.store.parquet.VarLengthColumnReaders.*;
+
 import com.google.common.base.Joiner;
 
-class ParquetRecordReader implements RecordReader {
+public class ParquetRecordReader implements RecordReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetRecordReader.class);
 
   // this value has been inflated to read in multiple value vectors at once, and then break them up into smaller vectors
@@ -241,8 +247,8 @@ class ParquetRecordReader implements RecordReader {
     try {
       ValueVector v;
       ConvertedType convertedType;
-      ArrayList<VarLenBinaryReader.VarLengthColumn> varLengthColumns = new ArrayList<>();
-      ArrayList<VarLenBinaryReader.NullableVarLengthColumn> nullableVarLengthColumns = new ArrayList<>();
+      ArrayList<VarLengthColumn> varLengthColumns = new ArrayList<>();
+      ArrayList<NullableVarLengthColumn> nullableVarLengthColumns = new ArrayList<>();
       // initialize all of the column read status objects
       boolean fieldFixedLength = false;
       for (int i = 0; i < columns.size(); ++i) {
@@ -250,6 +256,7 @@ class ParquetRecordReader implements RecordReader {
         columnChunkMetaData = footer.getBlocks().get(0).getColumns().get(i);
         convertedType = convertedTypes.get(column.getPath()[0]);
         MajorType type = toMajorType(column.getType(), getDataMode(column), convertedType);
+//        Preconditions.checkArgument(!columnChunkMetaData.getEncodings().contains(Encoding.PLAIN_DICTIONARY), "Dictionary Encoding not currently supported");
         field = MaterializedField.create(toFieldName(column.getPath()), type);
         // the field was not requested to be read
         if ( ! fieldSelected(field)) continue;
@@ -264,20 +271,20 @@ class ParquetRecordReader implements RecordReader {
           if (column.getMaxDefinitionLevel() == 0){// column is required
             if (convertedType == ConvertedType.UTF8) {
               varLengthColumns.add(
-                new VarLenBinaryReader.VarCharColumn(this, -1, column, columnChunkMetaData, false, (VarCharVector) v, convertedType));
+                new VarCharColumn(this, -1, column, columnChunkMetaData, false, (VarCharVector) v, convertedType));
             } else {
               varLengthColumns.add(
-                  new VarLenBinaryReader.VarBinaryColumn(this, -1, column, columnChunkMetaData, false, (VarBinaryVector) v, convertedType));
+                  new VarBinaryColumn(this, -1, column, columnChunkMetaData, false, (VarBinaryVector) v, convertedType));
             }
           }
           else{
             if (convertedType == ConvertedType.UTF8) {
               nullableVarLengthColumns.add(
-                new VarLenBinaryReader.NullableVarCharColumn(this, -1, column, columnChunkMetaData, false,
+                new NullableVarCharColumn(this, -1, column, columnChunkMetaData, false,
                     (NullableVarCharVector) v, convertedType));
             } else {
               nullableVarLengthColumns.add(
-                new VarLenBinaryReader.NullableVarBinaryColumn(this, -1, column, columnChunkMetaData, false,
+                new NullableVarBinaryColumn(this, -1, column, columnChunkMetaData, false,
                   (NullableVarBinaryVector) v, convertedType));
             }
           }
@@ -314,11 +321,11 @@ class ParquetRecordReader implements RecordReader {
       AllocationHelper.allocate(column.valueVec, recordsPerBatch, 10, 5);
       column.valuesReadInCurrentPass = 0;
     }
-    for (VarLenBinaryReader.VarLengthColumn r : varLengthReader.columns){
+    for (VarLengthColumn r : varLengthReader.columns){
       AllocationHelper.allocate(r.valueVec, recordsPerBatch, 10, 5);
       r.valuesReadInCurrentPass = 0;
     }
-    for (VarLenBinaryReader.NullableVarLengthColumn r : varLengthReader.nullableColumns){
+    for (NullableVarLengthColumn r : varLengthReader.nullableColumns){
       AllocationHelper.allocate(r.valueVec, recordsPerBatch, 10, 5);
       r.valuesReadInCurrentPass = 0;
     }
@@ -535,10 +542,10 @@ class ParquetRecordReader implements RecordReader {
     }
     columnStatuses.clear();
 
-    for (VarLenBinaryReader.VarLengthColumn r : varLengthReader.columns){
+    for (VarLengthColumn r : varLengthReader.columns){
       r.clear();
     }
-    for (VarLenBinaryReader.NullableVarLengthColumn r : varLengthReader.nullableColumns){
+    for (NullableVarLengthColumn r : varLengthReader.nullableColumns){
       r.clear();
     }
     varLengthReader.columns.clear();

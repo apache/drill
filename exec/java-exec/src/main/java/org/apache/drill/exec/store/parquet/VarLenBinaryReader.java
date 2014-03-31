@@ -17,19 +17,10 @@
  */
 package org.apache.drill.exec.store.parquet;
 
-import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.vector.*;
-import org.apache.drill.exec.vector.NullableVarBinaryVector;
-import org.apache.drill.exec.vector.NullableVarCharVector;
-import org.apache.drill.exec.vector.VarBinaryVector;
-import org.apache.drill.exec.vector.VarCharVector;
+import org.apache.drill.exec.store.parquet.VarLengthColumnReaders.*;
 import parquet.bytes.BytesUtils;
-import parquet.column.ColumnDescriptor;
-import parquet.format.ConvertedType;
-import parquet.hadoop.metadata.ColumnChunkMetaData;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 
 public class VarLenBinaryReader {
@@ -43,164 +34,6 @@ public class VarLenBinaryReader {
     this.parentReader = parentReader;
     this.nullableColumns = nullableColumns;
     this.columns = columns;
-  }
-
-  public static abstract class VarLengthColumn<V extends ValueVector> extends ColumnReader {
-
-    VarLengthColumn(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
-                    ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, V v,
-                    ConvertedType convertedType) throws ExecutionSetupException {
-      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, convertedType);
-    }
-
-    @Override
-    protected void readField(long recordsToRead, ColumnReader firstColumnStatus) {
-      throw new UnsupportedOperationException();
-    }
-
-    public abstract boolean setSafe(int index, byte[] bytes, int start, int length);
-
-    public abstract int capacity();
-
-  }
-
-  public static abstract class NullableVarLengthColumn<V extends ValueVector> extends ColumnReader {
-
-    int nullsRead;
-    boolean currentValNull = false;
-
-    NullableVarLengthColumn(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
-                            ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, V v,
-                            ConvertedType convertedType ) throws ExecutionSetupException {
-      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, convertedType);
-    }
-
-    public abstract boolean setSafe(int index, byte[] value, int start, int length);
-
-    public abstract int capacity();
-
-    @Override
-    protected void readField(long recordsToRead, ColumnReader firstColumnStatus) {
-      throw new UnsupportedOperationException();
-    }
-  }
-
-  public static class VarCharColumn extends VarLengthColumn <VarCharVector> {
-
-    // store a hard reference to the vector (which is also stored in the superclass) to prevent repetitive casting
-    protected VarCharVector varCharVector;
-
-    VarCharColumn(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
-                    ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, VarCharVector v,
-                    ConvertedType convertedType) throws ExecutionSetupException {
-      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, convertedType);
-      varCharVector = v;
-    }
-
-    @Override
-    protected void readField(long recordsToRead, ColumnReader firstColumnStatus) {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public boolean setSafe(int index, byte[] bytes, int start, int length) {
-      return varCharVector.getMutator().setSafe(valuesReadInCurrentPass, bytes,
-          (int) (pageReadStatus.readPosInBytes + 4), dataTypeLengthInBits);
-    }
-
-    @Override
-    public int capacity() {
-      return varCharVector.getData().capacity();
-    }
-  }
-
-  public static class NullableVarCharColumn extends NullableVarLengthColumn <NullableVarCharVector> {
-
-    int nullsRead;
-    boolean currentValNull = false;
-    // store a hard reference to the vector (which is also stored in the superclass) to prevent repetitive casting
-    protected NullableVarCharVector nullableVarCharVector;
-
-    NullableVarCharColumn(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
-                            ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, NullableVarCharVector v,
-                            ConvertedType convertedType ) throws ExecutionSetupException {
-      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, convertedType);
-      nullableVarCharVector = v;
-    }
-
-    public boolean setSafe(int index, byte[] value, int start, int length) {
-      return nullableVarCharVector.getMutator().setSafe(index, value,
-          start, length);
-    }
-
-    @Override
-    public int capacity() {
-      return nullableVarCharVector.getData().capacity();
-    }
-
-    @Override
-    protected void readField(long recordsToRead, ColumnReader firstColumnStatus) {
-      throw new UnsupportedOperationException();
-    }
-  }
-
-  public static class VarBinaryColumn extends VarLengthColumn <VarBinaryVector> {
-
-    // store a hard reference to the vector (which is also stored in the superclass) to prevent repetitive casting
-    protected VarBinaryVector varBinaryVector;
-
-    VarBinaryColumn(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
-                  ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, VarBinaryVector v,
-                  ConvertedType convertedType) throws ExecutionSetupException {
-      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, convertedType);
-      varBinaryVector = v;
-    }
-
-    @Override
-    protected void readField(long recordsToRead, ColumnReader firstColumnStatus) {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public boolean setSafe(int index, byte[] bytes, int start, int length) {
-      return varBinaryVector.getMutator().setSafe(valuesReadInCurrentPass, bytes,
-          (int) (pageReadStatus.readPosInBytes + 4), dataTypeLengthInBits);
-    }
-
-    @Override
-    public int capacity() {
-      return varBinaryVector.getData().capacity();
-    }
-  }
-
-  public static class NullableVarBinaryColumn extends NullableVarLengthColumn <NullableVarBinaryVector> {
-
-    int nullsRead;
-    boolean currentValNull = false;
-    // store a hard reference to the vector (which is also stored in the superclass) to prevent repetitive casting
-    protected NullableVarBinaryVector nullableVarBinaryVector;
-
-    NullableVarBinaryColumn(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
-                          ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, NullableVarBinaryVector v,
-                          ConvertedType convertedType ) throws ExecutionSetupException {
-      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, convertedType);
-      nullableVarBinaryVector = v;
-    }
-
-    public boolean setSafe(int index, byte[] value, int start, int length) {
-      return nullableVarBinaryVector.getMutator().setSafe(index, value,
-          start, length);
-    }
-
-    @Override
-    public int capacity() {
-      return nullableVarBinaryVector.getData().capacity();
-    }
-
-    @Override
-    protected void readField(long recordsToRead, ColumnReader firstColumnStatus) {
-      throw new UnsupportedOperationException();
-    }
   }
 
   /**
@@ -278,9 +111,16 @@ public class VarLenBinaryReader {
           continue;// field is null, no length to add to data vector
         }
 
-        // re-purposing  this field here for length in BYTES to prevent repetitive multiplication/division
-        columnReader.dataTypeLengthInBits = BytesUtils.readIntLittleEndian(bytes,
-            (int) columnReader.pageReadStatus.readPosInBytes);
+        if (columnReader.usingDictionary) {
+          columnReader.currDictVal = columnReader.pageReadStatus.valueReader.readBytes();
+          // re-purposing  this field here for length in BYTES to prevent repetitive multiplication/division
+          columnReader.dataTypeLengthInBits = columnReader.currDictVal.length();
+        }
+        else {
+          // re-purposing  this field here for length in BYTES to prevent repetitive multiplication/division
+          columnReader.dataTypeLengthInBits = BytesUtils.readIntLittleEndian(bytes,
+              (int) columnReader.pageReadStatus.readPosInBytes);
+        }
         lengthVarFieldsInCurrentRecord += columnReader.dataTypeLengthInBits;
 
         if (columnReader.bytesReadInCurrentPass + columnReader.dataTypeLengthInBits > columnReader.capacity()) {
@@ -308,7 +148,7 @@ public class VarLenBinaryReader {
         // again, I am re-purposing the unused field here, it is a length n BYTES, not bits
         if (!columnReader.currentValNull && columnReader.dataTypeLengthInBits > 0){
           boolean success = columnReader.setSafe(columnReader.valuesReadInCurrentPass, bytes,
-              (int) columnReader.pageReadStatus.readPosInBytes + 4, columnReader.dataTypeLengthInBits);
+                (int) columnReader.pageReadStatus.readPosInBytes + 4, columnReader.dataTypeLengthInBits);
           assert success;
         }
         columnReader.currentValNull = false;

@@ -32,16 +32,20 @@ class ColumnDataReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ColumnDataReader.class);
   
   private final long endPosition;
-  private final FSDataInputStream input;
+  public final FSDataInputStream input;
   
-  public ColumnDataReader(FileSystem fs, Path path, long start, long length) throws IOException{
-    this.input = fs.open(path, 64 * 1024);
+  public ColumnDataReader(FSDataInputStream input, long start, long length) throws IOException{
+    this.input = input;
     this.input.seek(start);
     this.endPosition = start + length;
   }
   
   public PageHeader readPageHeader() throws IOException{
+    try{
     return Util.readPageHeader(input);
+    }catch (IOException e) {
+      throw e;
+    }
   }
   
   public BytesInput getPageAsBytesInput(int pageLength) throws IOException{
