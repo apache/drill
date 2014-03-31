@@ -14,8 +14,8 @@ where
   c.c_mktsegment = 'HOUSEHOLD'
   and c.c_custkey = o.o_custkey
   and l.l_orderkey = o.o_orderkey
---  and o.o_orderdate < date '1995-03-25'
---  and l.l_shipdate > date '1995-03-25'
+  and o.o_orderdate < date '1995-03-25'
+  and l.l_shipdate > date '1995-03-25'
 
 group by
   l.l_orderkey,

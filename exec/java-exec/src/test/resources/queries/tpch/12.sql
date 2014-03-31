@@ -21,8 +21,8 @@ where
   and l.l_shipmode in ('TRUCK', 'REG AIR')
   and l.l_commitdate < l.l_receiptdate
   and l.l_shipdate < l.l_commitdate
---  and l.l_receiptdate >= date '1994-01-01'
---  and l.l_receiptdate < date '1994-01-01' + interval '1' year
+  and l.l_receiptdate >= date '1994-01-01'
+  and l.l_receiptdate < date '1994-01-01' + interval '1' year
 group by
   l.l_shipmode
 order by
