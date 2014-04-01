@@ -32,6 +32,7 @@ import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.expression.ValueExpressions.BooleanExpression;
 import org.apache.drill.common.expression.ValueExpressions.DoubleExpression;
 import org.apache.drill.common.expression.ValueExpressions.LongExpression;
+import org.apache.drill.common.expression.ValueExpressions.IntExpression;
 import org.apache.drill.common.expression.ValueExpressions.DateExpression;
 import org.apache.drill.common.expression.ValueExpressions.IntervalYearExpression;
 import org.apache.drill.common.expression.ValueExpressions.IntervalDayExpression;
@@ -140,7 +141,7 @@ public class EvaluationVisitor {
           if (HoldingContainer.isOptional()) {
             jc = conditionalBlock._if(HoldingContainer.getIsSet().cand(HoldingContainer.getValue()));
           } else {
-            jc = conditionalBlock._if(HoldingContainer.getValue());
+            jc = conditionalBlock._if(HoldingContainer.getValue().eq(JExpr.lit(1)));
           }
         } else {
           if (HoldingContainer.isOptional()) {
@@ -186,6 +187,13 @@ public class EvaluationVisitor {
     public HoldingContainer visitLongConstant(LongExpression e, ClassGenerator<?> generator) throws RuntimeException {     
       HoldingContainer out = generator.declare(e.getMajorType());
       generator.getEvalBlock().assign(out.getValue(), JExpr.lit(e.getLong()));
+      return out;
+    }
+
+    @Override
+    public HoldingContainer visitIntConstant(IntExpression e, ClassGenerator<?> generator) throws RuntimeException {
+      HoldingContainer out = generator.declare(e.getMajorType());
+      generator.getEvalBlock().assign(out.getValue(), JExpr.lit(e.getInt()));
       return out;
     }
 
@@ -457,6 +465,21 @@ public class EvaluationVisitor {
         return super.visitLongConstant(e, generator).setConstant(true);
       } else {
         return super.visitLongConstant(e, generator);
+      }
+    }
+
+    @Override
+    public HoldingContainer visitIntConstant(IntExpression e, ClassGenerator<?> generator) throws RuntimeException {
+      if (constantBoundaries.contains(e)) {
+        generator.getMappingSet().enterConstant();
+        HoldingContainer c = super.visitIntConstant(e, generator);
+        //generator.getMappingSet().exitConstant();
+        //return c;
+        return renderConstantExpression(generator, c);
+      } else if (generator.getMappingSet().isWithinConstant()) {
+        return super.visitIntConstant(e, generator).setConstant(true);
+      } else {
+        return super.visitIntConstant(e, generator);
       }
     }
 

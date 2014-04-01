@@ -75,6 +75,9 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
       c.expression.accept(this, sb);
       sb.append(" ) ");
     }
+    sb.append(" else (");
+    ifExpr.elseExpression.accept(this, sb);
+    sb.append(" ) ");
     sb.append(" end ");
     sb.append(" ) ");
     return null;

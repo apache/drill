@@ -44,6 +44,7 @@ import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.vector.BigIntVector;
+import org.apache.drill.exec.vector.IntVector;
 import org.apache.drill.exec.vector.Float8Vector;
 
 import org.junit.Test;
@@ -77,9 +78,9 @@ public class TestMathFunctions {
         SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
 
         while(exec.next()) {
-            BigIntVector intMulVector = exec.getValueVectorById(new SchemaPath("INTMUL", ExpressionPosition.UNKNOWN), BigIntVector.class);
+            IntVector intMulVector = exec.getValueVectorById(new SchemaPath("INTMUL", ExpressionPosition.UNKNOWN), IntVector.class);
             Float8Vector floatMulVector = exec.getValueVectorById(new SchemaPath("FLOATMUL", ExpressionPosition.UNKNOWN), Float8Vector.class);
-            BigIntVector intAddVector = exec.getValueVectorById(new SchemaPath("INTADD", ExpressionPosition.UNKNOWN), BigIntVector.class);
+            IntVector intAddVector = exec.getValueVectorById(new SchemaPath("INTADD", ExpressionPosition.UNKNOWN), IntVector.class);
             Float8Vector floatAddVector = exec.getValueVectorById(new SchemaPath("FLOATADD", ExpressionPosition.UNKNOWN), Float8Vector.class);
             assertEquals(exec.getRecordCount(), 1);
             assertEquals(intMulVector.getAccessor().get(0), 2);

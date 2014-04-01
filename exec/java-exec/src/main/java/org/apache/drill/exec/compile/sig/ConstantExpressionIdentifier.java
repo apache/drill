@@ -114,7 +114,6 @@ public class ConstantExpressionIdentifier implements ExprVisitor<Boolean, Identi
 
   @Override
   public Boolean visitIntConstant(ValueExpressions.IntExpression intExpr, IdentityHashMap<LogicalExpression, Object> value) throws RuntimeException {
-    value.put(intExpr, true);
     return true;
   }
 

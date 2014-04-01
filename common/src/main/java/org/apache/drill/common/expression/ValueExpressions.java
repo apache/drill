@@ -35,7 +35,7 @@ public class ValueExpressions {
   }
   
   public static LogicalExpression getInt(int i){
-    return new LongExpression(i);
+    return new IntExpression(i, ExpressionPosition.UNKNOWN);
   }
   
   public static LogicalExpression getFloat8(double d){
@@ -75,6 +75,12 @@ public class ValueExpressions {
   
 
   public static LogicalExpression getNumericExpression(String s, ExpressionPosition ep) {
+    try {
+        int a = Integer.parseInt(s);
+        return new IntExpression(a, ep);
+    } catch (Exception e) {
+
+    }
     try {
       long l = Long.parseLong(s);
       return new LongExpression(l, ep);
