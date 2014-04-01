@@ -199,11 +199,11 @@ public class DrillOptiq {
           break;
       
         case "INTEGER": castType = Types.required(MinorType.INT); break;
-        case "FLOAT": Types.required(MinorType.FLOAT4); break;
-        case "DOUBLE": Types.required(MinorType.FLOAT8); break;
+        case "FLOAT": castType = Types.required(MinorType.FLOAT4); break;
+        case "DOUBLE": castType = Types.required(MinorType.FLOAT8); break;
         case "DECIMAL": throw new UnsupportedOperationException("Need to add decimal.");
-        case "INTERVAL_YEAR_MONTH": Types.required(MinorType.INTERVALYEAR); break;
-        case "INTERVAL_DAY_TIME": Types.required(MinorType.INTERVALDAY); break;
+        case "INTERVAL_YEAR_MONTH": castType = Types.required(MinorType.INTERVALYEAR); break;
+        case "INTERVAL_DAY_TIME": castType = Types.required(MinorType.INTERVALDAY); break;
         default: castType = Types.required(MinorType.valueOf(call.getType().getSqlTypeName().getName()));
       }
       

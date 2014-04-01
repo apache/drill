@@ -139,7 +139,7 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
   public Void visitIntervalYearConstant(IntervalYearExpression lExpr, StringBuilder sb) throws RuntimeException {
     sb.append("cast( \"");
     sb.append(Period.years(lExpr.getIntervalYear()).toString());
-    sb.append("\" as INTERVAL)");
+    sb.append("\" as INTERVALYEAR)");
     return null;
   }
 
@@ -147,7 +147,7 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
   public Void visitIntervalDayConstant(IntervalDayExpression lExpr, StringBuilder sb) throws RuntimeException {
     sb.append("cast( \"");
     sb.append(Period.days(lExpr.getIntervalDay()).plusMillis(lExpr.getIntervalMillis()).toString());
-    sb.append("\" as INTERVAL)");
+    sb.append("\" as INTERVALDAY)");
     return null;
   }
 
