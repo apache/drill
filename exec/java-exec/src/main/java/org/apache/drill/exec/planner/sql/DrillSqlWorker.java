@@ -115,13 +115,18 @@ public class DrillSqlWorker {
     
     SqlNode validatedNode = planner.validate(sqlNode);
     RelNode relNode = planner.convert(validatedNode);
+    
+    System.out.println(RelOptUtil.toString(relNode, SqlExplainLevel.ALL_ATTRIBUTES));
+    
     RelNode convertedRelNode = planner.transform(LOGICAL_RULES, planner.getEmptyTraitSet().plus(DrillRel.DRILL_LOGICAL), relNode);
     if(convertedRelNode instanceof DrillStoreRel){
       throw new UnsupportedOperationException();
     }else{
       convertedRelNode = new DrillScreenRel(convertedRelNode.getCluster(), convertedRelNode.getTraitSet(), convertedRelNode);
     }
-
+    
+    System.out.println(RelOptUtil.toString(convertedRelNode, SqlExplainLevel.ALL_ATTRIBUTES));
+    
     return new RelResult(resultMode, convertedRelNode);
   }
   
