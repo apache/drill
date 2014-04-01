@@ -95,7 +95,6 @@ public class PartitionSenderRootExec implements RootExec {
     logger.debug("Partitioner.next(): got next record batch with status {}", out);
     switch(out){
       case NONE:
-      case STOP:
         try {
           // send any pending batches
           for (OutgoingRecordBatch batch : outgoing) {
@@ -106,6 +105,12 @@ public class PartitionSenderRootExec implements RootExec {
           incoming.kill();
           logger.error("Error while creating partitioning sender or flushing outgoing batches", e);
           context.fail(e);
+        }
+        return false;
+
+      case STOP:
+        for (OutgoingRecordBatch batch : outgoing) {
+          batch.clear();
         }
         return false;
 
