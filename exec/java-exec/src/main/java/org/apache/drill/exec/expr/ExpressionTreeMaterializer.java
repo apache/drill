@@ -127,27 +127,34 @@ public class ExpressionTreeMaterializer {
       if (matchedFuncHolder!=null) {
         //Compare parm type against arg type. Insert cast on top of arg, whenever necessary.
         for (int i = 0; i < call.args.size(); ++i) {
-          LogicalExpression currentArg = call.args.get(i);
-
           TypeProtos.MajorType parmType = matchedFuncHolder.getParmMajorType(i);
 
           //Case 1: If  1) the argument is NullExpression
           //            2) the parameter of matchedFuncHolder allows null input, or func's null_handling is NULL_IF_NULL (means null and non-null are exchangable).
           //        then replace NullExpression with a TypedNullConstant
-          if (currentArg.equals(NullExpression.INSTANCE) &&
+          if (call.args.get(i).equals(NullExpression.INSTANCE) &&
             ( parmType.getMode().equals(TypeProtos.DataMode.OPTIONAL) ||
               matchedFuncHolder.getNullHandling() == FunctionTemplate.NullHandling.NULL_IF_NULL)) {
             argsWithCast.add(new TypedNullConstant(parmType));
-          } else if (Types.softEquals(parmType, currentArg.getMajorType(), matchedFuncHolder.getNullHandling() ==
+          } else if (Types.softEquals(parmType, call.args.get(i).getMajorType(), matchedFuncHolder.getNullHandling() ==
             FunctionTemplate.NullHandling.NULL_IF_NULL)) {
             //Case 2: argument and parameter matches. Do nothing.
             argsWithCast.add(call.args.get(i));
           } else {
             //Case 3: insert cast if param type is different from arg type.
+            String castFuncName = CastFunctions.getCastFunc(parmType.getMinorType());
+            List<LogicalExpression> castArgs = Lists.newArrayList();
+            castArgs.add(call.args.get(i));  //input_expr
+            FunctionCall castCall = new FunctionCall(castFuncName, castArgs, ExpressionPosition.UNKNOWN);
+            DrillFuncHolder matchedCastFuncHolder = resolver.getBestMatch(
+              registry.getDrillRegistry().getMethods().get(castFuncName), castCall);
 
-            // Create the desired output type and CasExpression and traverse the visitor pattern
-            CastExpression castExpression = new CastExpression(currentArg, parmType, ExpressionPosition.UNKNOWN);
-            argsWithCast.add(castExpression.accept(this, registry));
+            if (matchedCastFuncHolder == null) {
+              logFunctionResolutionError(errorCollector, castCall);
+              return NullExpression.INSTANCE;
+            }
+
+            argsWithCast.add(new DrillFuncHolderExpr(call.getName(), matchedCastFuncHolder, castArgs, ExpressionPosition.UNKNOWN));
           }
         }
         return new DrillFuncHolderExpr(call.getName(), matchedFuncHolder, argsWithCast, call.getPosition());
