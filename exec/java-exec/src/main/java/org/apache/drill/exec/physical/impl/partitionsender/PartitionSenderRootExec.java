@@ -133,6 +133,9 @@ public class PartitionSenderRootExec implements RootExec {
         }
       case OK:
         partitioner.partitionBatch(incoming);
+        for (VectorWrapper v : incoming) {
+          v.clear();
+        }
         context.getStats().batchesCompleted.inc(1);
         context.getStats().recordsCompleted.inc(incoming.getRecordCount());
         return true;
