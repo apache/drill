@@ -15,26 +15,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.drill.exec.expr.fn.impl;
 
 import org.apache.drill.exec.expr.DrillSimpleFunc;
-import org.apache.drill.exec.expr.annotations.FunctionTemplate;
-import org.apache.drill.exec.expr.annotations.Output;
-import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.holders.BitHolder;
-import org.apache.drill.exec.expr.holders.NullableFloat8Holder;
+import org.apache.drill.exec.expr.annotations.*;
+import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
 
-@FunctionTemplate(names = {"isNull", "isnull"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
-public class IsNull implements DrillSimpleFunc {
+public class IsTrue {
 
-  @Param NullableFloat8Holder input;
-  @Output BitHolder out;
+  @FunctionTemplate(names = {"isTrue", "istrue", "is true"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  public static class Optional implements DrillSimpleFunc {
 
-  public void setup(RecordBatch incoming) { }
+    @Param NullableBitHolder in;
+    @Output BitHolder out;
 
-  public void eval() {
-    out.value = (input.isSet == 0 ? 1 : 0);
+    public void setup(RecordBatch incoming) { }
+
+    public void eval() {
+      if (in.isSet == 0)
+        out.value = 0;
+      else
+        out.value = in.value;
+    }
+  }
+
+  @FunctionTemplate(names = {"isTrue", "istrue", "is true"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  public static class Required implements DrillSimpleFunc {
+
+    @Param BitHolder in;
+    @Output BitHolder out;
+
+    public void setup(RecordBatch incoming) { }
+
+    public void eval() {
+      out.value = in.value;
+    }
   }
 }
-

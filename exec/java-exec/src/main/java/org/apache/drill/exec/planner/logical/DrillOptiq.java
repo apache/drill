@@ -105,6 +105,17 @@ public class DrillOptiq {
       case FUNCTION:
         logger.debug("Function");
         return getDrillFunctionFromOptiqCall(call);
+      case POSTFIX:
+        logger.debug("Postfix");
+        switch(call.getKind()){
+        case IS_NULL:
+        case IS_TRUE:
+        case IS_FALSE:
+        case OTHER:
+          return FunctionCallFactory.createExpression(call.getOperator().getName().toLowerCase(),
+              ExpressionPosition.UNKNOWN, call.getOperands().get(0).accept(this));
+        }
+        throw new AssertionError("todo: implement syntax " + syntax + "(" + call + ")");
       case PREFIX:
         logger.debug("Prefix");
         LogicalExpression arg = call.getOperands().get(0).accept(this);

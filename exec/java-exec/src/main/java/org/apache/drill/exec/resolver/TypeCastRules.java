@@ -565,8 +565,10 @@ public class TypeCastRules {
     rules.put(MinorType.VARBINARY, rule);
   }
 
-  public static boolean isCastable(MajorType from, MajorType to) {
-    return from.getMinorType().equals(MinorType.NULL) ||      //null could be casted to any other type. 
+  public static boolean isCastable(MajorType from, MajorType to, NullHandling nullHandling) {
+    if (nullHandling == NullHandling.INTERNAL && from.getMode() != to.getMode()) return false;
+
+    return from.getMinorType().equals(MinorType.NULL) ||      //null could be casted to any other type.
            (rules.get(to.getMinorType()) == null ? false : rules.get(to.getMinorType()).contains(from.getMinorType()));
   }
 
@@ -586,7 +588,7 @@ public class TypeCastRules {
       MajorType argType = call.args.get(i).getMajorType();
       MajorType parmType = holder.getParmMajorType(i);
 
-      if (!TypeCastRules.isCastable(argType, parmType)) {
+      if (!TypeCastRules.isCastable(argType, parmType, holder.getNullHandling())) {
         return -1;
       }
 
