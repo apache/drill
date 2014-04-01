@@ -90,29 +90,30 @@ public class ValueExpressions {
       return new Decimal38Expression(i, ExpressionPosition.UNKNOWN);
   }
 
-    public static LogicalExpression getNumericExpression(String s, ExpressionPosition ep) {
+  public static LogicalExpression getNumericExpression(String sign, String s, ExpressionPosition ep) {
+    String numStr = (sign == null) ? s : sign+s; 
     try {
-        int a = Integer.parseInt(s);
+        int a = Integer.parseInt(numStr);
         return new IntExpression(a, ep);
     } catch (Exception e) {
 
     }
     try {
-      long l = Long.parseLong(s);
+      long l = Long.parseLong(numStr);
       return new LongExpression(l, ep);
     } catch (Exception e) {
 
     }
 
     try {
-      double d = Double.parseDouble(s);
+      double d = Double.parseDouble(numStr);
       return new DoubleExpression(d, ep);
     } catch (Exception e) {
 
     }
 
     throw new IllegalArgumentException(String.format("Unable to parse string %s as integer or floating point number.",
-        s));
+        numStr));
 
   }
 
