@@ -171,7 +171,7 @@ public class OutgoingRecordBatch implements VectorAccessible {
 
       // allocate a new value vector
       ValueVector outgoingVector = TypeHelper.getNewVector(v.getField(), context.getAllocator());
-      VectorAllocator.getAllocator(v.getValueVector(), outgoingVector).alloc(recordCapacity);
+      VectorAllocator.getAllocator(outgoingVector, 100).alloc(recordCapacity);
       vectorContainer.add(outgoingVector);
       logger.debug("Reallocating to cap " + recordCapacity + " because of newly init'd vector : " + v.getValueVector());
     }
