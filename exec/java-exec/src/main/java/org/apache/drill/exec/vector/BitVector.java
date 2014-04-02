@@ -242,6 +242,18 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
       return true;
     }
 
+    public boolean setSafe(int index, BitHolder holder) {
+      if(index >= getValueCapacity()) return false;
+      set(index, holder.value);
+      return true;
+    }
+
+    public boolean setSafe(int index, NullableBitHolder holder) {
+      if(index >= getValueCapacity()) return false;
+      set(index, holder.value);
+      return true;
+    }
+
     public final void setValueCount(int valueCount) {
       BitVector.this.valueCount = valueCount;
       data.writerIndex(getSizeFromCount(valueCount));

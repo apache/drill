@@ -17,10 +17,12 @@
 {
   aggrtypes: [
     {className: "Min", funcName: "min", types: [
+      {inputType: "Bit", outputType: "Bit", runningType: "Bit"},
       {inputType: "Int", outputType: "Int", runningType: "Int"},
       {inputType: "BigInt", outputType: "BigInt", runningType: "BigInt"},
+      {inputType: "NullableBit", outputType: "Bit", runningType: "Bit"},
       {inputType: "NullableInt", outputType: "Int", runningType: "Int"},
-      {inputType: "NullableBigInt", outputType: "BigInt", runningType: "BigInt"},    
+      {inputType: "NullableBigInt", outputType: "BigInt", runningType: "BigInt"},
       {inputType: "Float4", outputType: "Float4", runningType: "Float4"},
       {inputType: "Float8", outputType: "Float8", runningType: "Float8"},
       {inputType: "NullableFloat4", outputType: "Float4", runningType: "Float4"},
@@ -28,8 +30,11 @@
      ]
    },
    {className: "Max", funcName: "max", types: [
+      {inputType: "Bit", outputType: "Bit", runningType: "Bit"},
       {inputType: "Int", outputType: "Int", runningType: "Int"},
       {inputType: "BigInt", outputType: "BigInt", runningType: "BigInt"},
+      {inputType: "NullableBit", outputType: "Bit", runningType: "Bit"},
+      {inputType: "NullableInt", outputType: "Int", runningType: "Int"},
       {inputType: "NullableInt", outputType: "Int", runningType: "Int"},
       {inputType: "NullableBigInt", outputType: "BigInt", runningType: "BigInt"},
       {inputType: "Float4", outputType: "Float4", runningType: "Float4"},
@@ -39,8 +44,11 @@
      ]
    },
    {className: "Sum", funcName: "sum", types: [   
+      {inputType: "Bit", outputType: "Bit", runningType: "Bit"},
       {inputType: "Int", outputType: "BigInt", runningType: "BigInt"},
       {inputType: "BigInt", outputType: "BigInt", runningType: "BigInt"},
+      {inputType: "NullableBit", outputType: "Bit", runningType: "Bit"},
+      {inputType: "NullableInt", outputType: "Int", runningType: "Int"},
       {inputType: "NullableInt", outputType: "BigInt", runningType: "BigInt"},
       {inputType: "NullableBigInt", outputType: "BigInt", runningType: "BigInt"},
       {inputType: "Float4", outputType: "Float8", runningType: "Float8"},
@@ -50,8 +58,11 @@
      ]
    }, 
    {className: "Count", funcName: "count", types: [
+      {inputType: "Bit", outputType: "Bit", runningType: "Bit"},
       {inputType: "Int", outputType: "BigInt", runningType: "BigInt"},
       {inputType: "BigInt", outputType: "BigInt", runningType: "BigInt"},
+      {inputType: "NullableBit", outputType: "Bit", runningType: "Bit"},
+      {inputType: "NullableInt", outputType: "Int", runningType: "Int"},
       {inputType: "NullableInt", outputType: "BigInt", runningType: "BigInt"},
       {inputType: "NullableBigInt", outputType: "BigInt", runningType: "BigInt"},
       {inputType: "Float4", outputType: "BigInt", runningType: "BigInt"},
