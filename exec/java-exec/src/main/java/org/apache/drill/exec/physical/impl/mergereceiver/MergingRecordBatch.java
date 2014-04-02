@@ -146,6 +146,9 @@ public class MergingRecordBatch implements RecordBatch {
 
       // allocate the incoming record batch loaders
       senderCount = rawBatches.size();
+      if (senderCount == 0) {
+        return IterOutcome.NONE;
+      }
       incomingBatches = new RawFragmentBatch[senderCount];
       batchOffsets = new int[senderCount];
       batchLoaders = new RecordBatchLoader[senderCount];
@@ -634,8 +637,10 @@ public class MergingRecordBatch implements RecordBatch {
   @Override
   public void cleanup() {
     outgoingContainer.clear();
-    for(RecordBatchLoader rbl : batchLoaders){
-      rbl.clear();
+    if (batchLoaders != null) {
+      for(RecordBatchLoader rbl : batchLoaders){
+        rbl.clear();
+      }
     }
   }
 
