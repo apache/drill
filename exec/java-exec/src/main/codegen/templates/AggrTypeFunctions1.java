@@ -61,7 +61,9 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 	<#if aggrtype.funcName == "sum" || aggrtype.funcName == "count">
 	  value.value = 0;
 	<#elseif aggrtype.funcName == "min">
-	  <#if type.runningType?starts_with("Int")>
+    <#if type.runningType?starts_with("Bit")>
+        value.value = 1;
+	  <#elseif type.runningType?starts_with("Int")>
 	    value.value = Integer.MAX_VALUE;
 	  <#elseif type.runningType?starts_with("BigInt")>
 	    value.value = Long.MAX_VALUE;
@@ -71,7 +73,9 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 		value.value = Double.MAX_VALUE;	    
 	  </#if>
 	<#elseif aggrtype.funcName == "max">
-	  <#if type.runningType?starts_with("Int")>
+    <#if type.runningType?starts_with("Bit")>
+        value.value = 0;
+	  <#elseif type.runningType?starts_with("Int")>
 	    value.value = Integer.MIN_VALUE;
 	  <#elseif type.runningType?starts_with("BigInt")>
 	    value.value = Long.MIN_VALUE;
