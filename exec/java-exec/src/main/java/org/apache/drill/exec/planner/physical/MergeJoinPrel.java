@@ -18,15 +18,14 @@
 package org.apache.drill.exec.planner.physical;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.logical.data.JoinCondition;
-import org.apache.drill.common.logical.data.LogicalOperator;
+import org.apache.drill.common.logical.data.NamedExpression;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.MergeJoinPOP;
+import org.apache.drill.exec.physical.config.Project;
 import org.apache.drill.exec.physical.config.SelectionVectorRemover;
 import org.apache.drill.exec.planner.common.DrillJoinRelBase;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
@@ -59,7 +58,6 @@ public class MergeJoinPrel  extends DrillJoinRelBase implements Prel {
     if (!remaining.isAlwaysTrue()) {
       throw new InvalidRelException("MergeJoinPrel only supports equi-join");
     }
-    //this.joinConditions = joinConditions;
   }
 
   
@@ -74,15 +72,20 @@ public class MergeJoinPrel  extends DrillJoinRelBase implements Prel {
 
   @Override  
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {    
-    PhysicalOperator leftPop = ((Prel) getLeft()).getPhysicalOperator(creator);
+    final List<String> fields = getRowType().getFieldNames();
+    assert isUnique(fields);
+    final int leftCount = left.getRowType().getFieldCount();
+    final List<String> leftFields = fields.subList(0, leftCount);
+    final List<String> rightFields = fields.subList(leftCount, fields.size());
 
+    PhysicalOperator leftPop = implementInput(creator, 0, left);
+    PhysicalOperator rightPop = implementInput(creator, leftCount, right);
+   
     //Currently, only accepts "NONE" or "SV2". For other, requires SelectionVectorRemover
     if (leftPop.getSVMode().equals(SelectionVectorMode.FOUR_BYTE)) {
       leftPop = new SelectionVectorRemover(leftPop);
       creator.addPhysicalOperator(leftPop);
     }
-
-    PhysicalOperator rightPop = ((Prel) getRight()).getPhysicalOperator(creator);
 
     //Currently, only accepts "NONE" or "SV2". For other, requires SelectionVectorRemover
     if (rightPop.getSVMode().equals(SelectionVectorMode.FOUR_BYTE)) {
@@ -91,18 +94,13 @@ public class MergeJoinPrel  extends DrillJoinRelBase implements Prel {
     }
     
     JoinRelType jtype = this.getJoinType();
-    
-    final List<String> fields = getRowType().getFieldNames();
-    assert isUnique(fields);
-    final int leftCount = left.getRowType().getFieldCount();
-    final List<String> leftFields = fields.subList(0, leftCount);
-    final List<String> rightFields = fields.subList(leftCount, fields.size());
-    
+            
     List<JoinCondition> conditions = Lists.newArrayList();
     
     for (Pair<Integer, Integer> pair : Pair.zip(leftKeys, rightKeys)) {
       conditions.add(new JoinCondition("==", new FieldReference(leftFields.get(pair.left)), new FieldReference(rightFields.get(pair.right))));
     }
+    
     MergeJoinPOP mjoin = new MergeJoinPOP(leftPop, rightPop, conditions, jtype);
     creator.addPhysicalOperator(mjoin);
    
@@ -117,7 +115,48 @@ public class MergeJoinPrel  extends DrillJoinRelBase implements Prel {
     return this.rightKeys;
   }
   
-//  public JoinCondition[] getJoinConditions() {
-//    return joinConditions;
-//  }
+  /**
+   * Check to make sure that the fields of the inputs are the same as the output field names.  If not, insert a project renaming them.
+   * @param implementor
+   * @param i
+   * @param offset
+   * @param input
+   * @return
+   */
+  private PhysicalOperator implementInput(PhysicalPlanCreator creator, int offset, RelNode input) throws IOException {
+    final PhysicalOperator inputOp = ((Prel) input).getPhysicalOperator(creator); 
+    assert uniqueFieldNames(input.getRowType());
+    final List<String> fields = getRowType().getFieldNames();
+    final List<String> inputFields = input.getRowType().getFieldNames();
+    final List<String> outputFields = fields.subList(offset, offset + inputFields.size());
+    if (!outputFields.equals(inputFields)) {
+      // Ensure that input field names are the same as output field names.
+      // If there are duplicate field names on left and right, fields will get
+      // lost.
+      return rename(creator, inputOp, inputFields, outputFields);
+    } else {
+      return inputOp;
+    }
+  }
+
+  private PhysicalOperator rename(PhysicalPlanCreator creator, PhysicalOperator inputOp, List<String> inputFields, List<String> outputFields) {
+    List<NamedExpression> exprs = Lists.newArrayList();
+    
+    //Currently, Project only accepts "NONE". For other, requires SelectionVectorRemover
+    if (!inputOp.getSVMode().equals(SelectionVectorMode.NONE)) {
+      inputOp = new SelectionVectorRemover(inputOp);
+      creator.addPhysicalOperator(inputOp);
+    }
+
+    for (Pair<String, String> pair : Pair.zip(inputFields, outputFields)) {
+      exprs.add(new NamedExpression(new FieldReference(pair.left), new FieldReference("output." + pair.right)));
+    }
+    
+    Project proj = new Project(exprs, inputOp);
+    
+    creator.addPhysicalOperator(proj);
+    return proj;
+  }
+
+  
 }

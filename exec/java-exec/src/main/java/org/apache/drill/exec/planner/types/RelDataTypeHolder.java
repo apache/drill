@@ -31,19 +31,22 @@ public class RelDataTypeHolder {
 
   List<RelDataTypeField> fields = Lists.newArrayList();
 
+  private RelDataTypeFactory typeFactory;
+  
   public List<RelDataTypeField> getFieldList(RelDataTypeFactory typeFactory) {
     
-    addStarIfEmpty();
+    addStarIfEmpty(typeFactory);
     return fields;
   }
 
   public int getFieldCount() {
-    addStarIfEmpty();
+    addStarIfEmpty(this.typeFactory);
     return fields.size();
   }
 
-  private void addStarIfEmpty(){
-    //if (fieldNames.isEmpty()) fieldNames.add("*");
+  private void addStarIfEmpty(RelDataTypeFactory typeFactory){
+//    RelDataTypeField starCol = getField(typeFactory, "*");
+//    if (fields.isEmpty()) fields.add(starCol);
   }
   
   public RelDataTypeField getField(RelDataTypeFactory typeFactory, String fieldName) {
@@ -72,4 +75,9 @@ public class RelDataTypeHolder {
     
     return fieldNames;
   }
+  
+  public void setRelDataTypeFactory(RelDataTypeFactory typeFactory) {
+    this.typeFactory = typeFactory;
+  }
+  
 }

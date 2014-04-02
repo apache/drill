@@ -41,6 +41,7 @@ public class RelDataTypeDrillImpl extends RelDataTypeImpl {
     public RelDataTypeDrillImpl(RelDataTypeHolder holder, RelDataTypeFactory typeFactory) {
         this.typeFactory = typeFactory;
         this.holder = holder;
+        this.holder.setRelDataTypeFactory(typeFactory);
         computeDigest();
     }
     
@@ -76,7 +77,7 @@ public class RelDataTypeDrillImpl extends RelDataTypeImpl {
 
     @Override
     protected void generateTypeString(StringBuilder sb, boolean withDetail) {
-       sb.append("DrillRecordRow");
+       sb.append("(DrillRecordRow" + getFieldNames() + ")");
     }
 
     @Override
