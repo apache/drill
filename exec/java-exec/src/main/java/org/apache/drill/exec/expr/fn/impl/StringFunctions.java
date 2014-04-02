@@ -29,6 +29,7 @@ import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.BitHolder;
+import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.record.RecordBatch;
 
@@ -779,4 +780,24 @@ public class StringFunctions{
     } 
     
   }
+
+  // Converts a hex encoded string into a varbinary type.
+  // "\xca\xfe\xba\xbe" => (byte[]) {(byte)0xca, (byte)0xfe, (byte)0xba, (byte)0xbe}
+  @FunctionTemplate(name = "binary_string", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  public static class BinaryString implements DrillSimpleFunc {
+
+    @Param  VarCharHolder in;
+    @Output VarBinaryHolder out;
+
+    public void setup(RecordBatch incoming) { }
+
+    public void eval() {
+      out.buffer = in.buffer;
+      out.start = in.start;
+      out.end = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.parseBinaryString(in.buffer, in.start, in.end);
+      out.buffer.readerIndex(out.start);
+      out.buffer.writerIndex(out.end);
+    }
+  }
+
 }
