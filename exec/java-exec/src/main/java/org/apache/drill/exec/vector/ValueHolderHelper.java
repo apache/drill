@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.vector;
 
+import java.nio.ByteOrder;
+
 import io.netty.buffer.UnpooledByteBufAllocator;
 
 import org.apache.drill.exec.expr.holders.VarCharHolder;
@@ -34,7 +36,7 @@ public class ValueHolderHelper {
     byte[] b = s.getBytes(Charsets.UTF_8);
     vch.start = 0;
     vch.end = b.length;
-    vch.buffer = UnpooledByteBufAllocator.DEFAULT.buffer(s.length()); // use the length of input string to allocate buffer. 
+    vch.buffer = UnpooledByteBufAllocator.DEFAULT.buffer(s.length()).order(ByteOrder.LITTLE_ENDIAN); // use the length of input string to allocate buffer. 
     vch.buffer.setBytes(0, b);
     return vch;
   }
