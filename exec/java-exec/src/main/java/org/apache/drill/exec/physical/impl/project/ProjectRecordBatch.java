@@ -18,7 +18,9 @@
 package org.apache.drill.exec.physical.impl.project;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
@@ -118,8 +120,12 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
     final List<TransferPair> transfers = Lists.newArrayList();
     
     final ClassGenerator<Projector> cg = CodeGenerator.getRoot(Projector.TEMPLATE_DEFINITION, context.getFunctionRegistry());
-    
-    if(isAnyWildcard(exprs)){
+
+    Set<Integer> transferFieldIds = new HashSet();
+
+    boolean isAnyWildcard = isAnyWildcard(exprs);
+
+    if(isAnyWildcard){
       for(VectorWrapper<?> wrapper : incoming){
         ValueVector vvIn = wrapper.getValueVector();
         TransferPair tp = wrapper.getValueVector().getTransferPair(new FieldReference(vvIn.getField().getName()));
@@ -134,9 +140,12 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
         if(collector.hasErrors()){
           throw new SchemaChangeException(String.format("Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));
         }
-        
+
+
         // add value vector to transfer if direct reference and this is allowed, otherwise, add to evaluation stack.
-        if(expr instanceof ValueVectorReadExpression && incoming.getSchema().getSelectionVectorMode() == SelectionVectorMode.NONE){
+        if(expr instanceof ValueVectorReadExpression && incoming.getSchema().getSelectionVectorMode() == SelectionVectorMode.NONE &&
+                !isAnyWildcard &&
+                !transferFieldIds.contains(((ValueVectorReadExpression) expr).getFieldId().getFieldId())) {
           ValueVectorReadExpression vectorRead = (ValueVectorReadExpression) expr;
           ValueVector vvIn = incoming.getValueAccessorById(vectorRead.getFieldId().getFieldId(), TypeHelper.getValueVectorClass(vectorRead.getMajorType().getMinorType(), vectorRead.getMajorType().getMode())).getValueVector();
           Preconditions.checkNotNull(incoming);
@@ -144,6 +153,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
           TransferPair tp = vvIn.getTransferPair(getRef(namedExpression));
           transfers.add(tp);
           container.add(tp.getTo());
+          transferFieldIds.add(vectorRead.getFieldId().getFieldId());
           logger.debug("Added transfer.");
         }else{
           // need to do evaluation.
