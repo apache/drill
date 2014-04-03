@@ -377,19 +377,9 @@ public class EvaluationVisitor {
 
     @Override
     public HoldingContainer visitCastExpression(CastExpression e, ClassGenerator<?> value) throws RuntimeException {
-      // we create
-      MajorType type = e.getMajorType();
-      String castFuncWithType = "cast" + type.getMinorType().name();
-
-      List<LogicalExpression> newArgs = Lists.newArrayList();
-      newArgs.add(e.getInput());  //input_expr
-
-      //VarLen type
-      if (!Types.isFixedWidthType(type)) {
-        newArgs.add(new ValueExpressions.LongExpression(type.getWidth(), null));
-      }
-      FunctionCall fc = new FunctionCall(castFuncWithType, newArgs, e.getPosition());
-      return fc.accept(this, value);    }
+      throw new UnsupportedOperationException("CastExpression is not expected here. "+
+        "It should have been converted to FunctionHolderExpression in materialization");
+    }
   }
 
   private class ConstantFilter extends EvalVisitor {

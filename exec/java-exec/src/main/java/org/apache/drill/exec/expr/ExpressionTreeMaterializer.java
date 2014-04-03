@@ -289,70 +289,65 @@ public class ExpressionTreeMaterializer {
       if(castEqual(e.getPosition(), newMajor, input.getMajorType())) return input; // don't do pointless cast.
       
       
-      if(newMinor == MinorType.LATE || newMinor == MinorType.NULL){
-        // if the type still isn't fully bound, leave as cast expression.
-        return new CastExpression(input, e.getMajorType(), e.getPosition());
-      }else{
-        // if the type is fully bound, convert to functioncall and materialze the function.
-        MajorType type = e.getMajorType();
-        String castFuncWithType = "cast" + type.getMinorType().name();
-
-        List<LogicalExpression> newArgs = Lists.newArrayList();
-        newArgs.add(e.getInput());  //input_expr
-
-        //VarLen type
-        if (!Types.isFixedWidthType(type)) {
-          newArgs.add(new ValueExpressions.LongExpression(type.getWidth(), null));
-        }
-        FunctionCall fc = new FunctionCall(castFuncWithType, newArgs, e.getPosition());
-        return fc.accept(this, value);   
+      if(newMinor == MinorType.LATE){
+        throw new UnsupportedOperationException("LATE binding is not supported");
+      } else if (newMinor == MinorType.NULL){
+        // convert it into null expression
+        return NullExpression.INSTANCE;
       }
-      
-      
-      
+
+      // if the type is fully bound, convert to functioncall and materialze the function.
+      MajorType type = e.getMajorType();
+      String castFuncWithType = "cast" + type.getMinorType().name();
+
+      List<LogicalExpression> newArgs = Lists.newArrayList();
+      newArgs.add(e.getInput());  //input_expr
+
+      //VarLen type
+      if (!Types.isFixedWidthType(type)) {
+        newArgs.add(new ValueExpressions.LongExpression(type.getWidth(), null));
+      }
+      FunctionCall fc = new FunctionCall(castFuncWithType, newArgs, e.getPosition());
+      return fc.accept(this, value);
     }
   
-  private boolean castEqual(ExpressionPosition pos, MajorType from, MajorType to){
-    if(!from.getMinorType().equals(to.getMinorType())) return false;
-    switch(from.getMinorType()){
-    case FLOAT4:
-    case FLOAT8:
-    case INT:
-    case BIGINT:
-    case BIT:
-    case TINYINT:
-    case UINT1:
-    case UINT2:
-    case UINT4:
-    case UINT8:      
-      // nothing else matters.
-      return true;
-     
-    case FIXED16CHAR:
-    case FIXEDBINARY:
-    case FIXEDCHAR:
-      // width always matters
-      this.errorCollector.addGeneralError(pos, "Casting fixed width types are not yet supported..");
-      return false;
-      
-    case VAR16CHAR:
-    case VARBINARY:
-    case VARCHAR:
-      if(to.getWidth() < from.getWidth() && to.getWidth() > 0){
-        this.errorCollector.addGeneralError(pos, "Casting from a longer variable length type to a shorter variable length type is not currently supported.");
-        return false;
-      }else{
+    private boolean castEqual(ExpressionPosition pos, MajorType from, MajorType to){
+      if(!from.getMinorType().equals(to.getMinorType())) return false;
+      switch(from.getMinorType()){
+      case FLOAT4:
+      case FLOAT8:
+      case INT:
+      case BIGINT:
+      case BIT:
+      case TINYINT:
+      case UINT1:
+      case UINT2:
+      case UINT4:
+      case UINT8:
+        // nothing else matters.
         return true;
+
+      case FIXED16CHAR:
+      case FIXEDBINARY:
+      case FIXEDCHAR:
+        // width always matters
+        this.errorCollector.addGeneralError(pos, "Casting fixed width types are not yet supported..");
+        return false;
+
+      case VAR16CHAR:
+      case VARBINARY:
+      case VARCHAR:
+        if(to.getWidth() < from.getWidth() && to.getWidth() > 0){
+          this.errorCollector.addGeneralError(pos, "Casting from a longer variable length type to a shorter variable length type is not currently supported.");
+          return false;
+        }else{
+          return true;
+        }
+
+      default:
+        errorCollector.addGeneralError(pos, String.format("Casting rules are unknown for type %s.", from));
+        return false;
       }
-
-    default:
-      errorCollector.addGeneralError(pos, String.format("Casting rules are unknown for type %s.", from));
-      return false;
-    
     }
-
   }
-  
-  }
-
 }
