@@ -59,6 +59,10 @@
             <artifactId>libthrift</artifactId>
             <groupId>org.apache.thrift</groupId>
         </exclusion>
+        <exclusion>
+          <artifactId>jruby-complete</artifactId>
+          <groupId>org.jruby</groupId>
+        </exclusion>
       </exclusions>
     </dependency>
 
