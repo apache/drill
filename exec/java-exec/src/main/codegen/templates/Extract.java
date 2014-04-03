@@ -31,8 +31,8 @@ import org.apache.drill.exec.record.RecordBatch;
 
 public class ${className} {
 
-<#list extract.toTypes as toUnit>
 <#list extract.fromTypes as fromUnit>
+<#list extract.toTypes as toUnit>
 <#if fromUnit == "Date" || fromUnit == "Time" || fromUnit == "TimeStamp">
   @FunctionTemplate(name = "extract${toUnit}", scope = FunctionTemplate.FunctionScope.SIMPLE,
       nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
@@ -40,23 +40,26 @@ public class ${className} {
 
     @Param ${fromUnit}Holder in;
     @Output BigIntHolder out;
+    @Workspace org.joda.time.MutableDateTime dateTime;
 
-    public void setup(RecordBatch incoming) { }
+    public void setup(RecordBatch incoming) {
+      dateTime = new org.joda.time.MutableDateTime(org.joda.time.DateTimeZone.UTC);
+    }
 
     public void eval() {
-      org.joda.time.MutableDateTime temp = new org.joda.time.MutableDateTime(in.value, org.joda.time.DateTimeZone.UTC);
+      dateTime.setMillis(in.value);
     <#if toUnit == "Second">
-      out.value = temp.getSecondOfMinute();
+      out.value = dateTime.getSecondOfMinute();
     <#elseif toUnit = "Minute">
-      out.value = temp.getMinuteOfHour();
+      out.value = dateTime.getMinuteOfHour();
     <#elseif toUnit = "Hour">
-      out.value = temp.getHourOfDay();
+      out.value = dateTime.getHourOfDay();
     <#elseif toUnit = "Day">
-      out.value = temp.getDayOfMonth();
+      out.value = dateTime.getDayOfMonth();
     <#elseif toUnit = "Month">
-      out.value = temp.getMonthOfYear();
+      out.value = dateTime.getMonthOfYear();
     <#elseif toUnit = "Year">
-      out.value = temp.getYear();
+      out.value = dateTime.getYear();
     </#if>
     }
   }
@@ -71,48 +74,50 @@ public class ${className} {
     public void setup(RecordBatch incoming) { }
 
     public void eval() {
-    <#if fromUnit == "Interval">
-
-      int years  = (in.months / org.apache.drill.exec.expr.fn.impl.DateUtility.yearsToMonths);
-      int months = (in.months % org.apache.drill.exec.expr.fn.impl.DateUtility.yearsToMonths);
-
-      int millis = in.milliSeconds;
-
-      int hours  = millis / (org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis);
-      millis     = millis % (org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis);
-
-      int minutes = millis / (org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis);
-      millis      = millis % (org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis);
-
-      int seconds = millis / (org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis);
-      millis      = millis % (org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis);
-      org.joda.time.Period temp = new org.joda.time.Period(years, months, 0, in.days, hours, minutes, seconds, millis);
-
-    <#elseif fromUnit == "IntervalDay">
-
-      int millis = in.milliSeconds;
-
-      int hours  = millis / (org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis);
-      millis     = millis % (org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis);
-
-      int minutes = millis / (org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis);
-      millis      = millis % (org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis);
-
-      int seconds = millis / (org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis);
-      millis      = millis % (org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis);
-      org.joda.time.Period temp = new org.joda.time.Period(0, 0, 0, in.days, hours, minutes, seconds, millis);
-
-    <#else>
-
-      int years  = (in.value / org.apache.drill.exec.expr.fn.impl.DateUtility.yearsToMonths);
-      int months = (in.value % org.apache.drill.exec.expr.fn.impl.DateUtility.yearsToMonths);
-      org.joda.time.Period temp = new org.joda.time.Period(years, months, 0, 0, 0, 0, 0, 0);
-
+  <#if fromUnit == "Interval">
+    <#if toUnit == "Year">
+      out.value = (in.months / org.apache.drill.exec.expr.fn.impl.DateUtility.yearsToMonths);
+    <#elseif toUnit == "Month">
+      out.value = (in.months % org.apache.drill.exec.expr.fn.impl.DateUtility.yearsToMonths);
+    <#elseif toUnit == "Day">
+      out.value = in.days;
+    <#elseif toUnit == "Hour">
+      out.value = in.milliSeconds/(org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis);
+    <#elseif toUnit == "Minute">
+      int millis = in.milliSeconds % (org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis);
+      out.value = millis / (org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis);
+    <#elseif toUnit == "Second">
+      int millis = in.milliSeconds % (org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis);
+      millis = millis % (org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis);
+      out.value = millis / (org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis);
     </#if>
-      out.value = temp.get${toUnit}s();
+  <#elseif fromUnit == "IntervalDay">
+    <#if toUnit == "Year" || toUnit == "Month">
+      out.value = 0;
+    <#elseif toUnit == "Day">
+      out.value = in.days;
+    <#elseif toUnit == "Hour">
+      out.value = in.milliSeconds/(org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis);
+    <#elseif toUnit == "Minute">
+      int millis = in.milliSeconds % (org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis);
+      out.value = millis / (org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis);
+    <#elseif toUnit == "Second">
+      int millis = in.milliSeconds % (org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis);
+      millis = millis % (org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis);
+      out.value = millis / (org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis);
+    </#if>
+  <#else> <#-- IntervalYear type -->
+    <#if toUnit == "Year">
+      out.value = (in.value / org.apache.drill.exec.expr.fn.impl.DateUtility.yearsToMonths);
+    <#elseif toUnit == "Month">
+      out.value = (in.value % org.apache.drill.exec.expr.fn.impl.DateUtility.yearsToMonths);
+    <#else>
+      out.value = 0;
+    </#if>
+  </#if>
     }
   }
-  </#if>
+</#if>
 </#list>
 </#list>
 }
