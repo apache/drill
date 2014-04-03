@@ -55,6 +55,10 @@
           <artifactId>asm</artifactId>
           <groupId>asm</groupId>
         </exclusion>
+        <exclusion>
+          <artifactId>jruby-complete</artifactId>
+          <groupId>org.jruby</groupId>
+        </exclusion>
       </exclusions>
     </dependency>
 
