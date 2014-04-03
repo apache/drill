@@ -23,6 +23,7 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector4;
+import org.eigenbase.rel.JoinRelType;
 
 /**
  * The status of the current join.  Maintained outside the individually compiled join templates so that we can carry status across multiple schemas.
@@ -48,6 +49,8 @@ public final class JoinStatus {
   public MergeJoinBatch outputBatch;
   public SelectionVector4 sv4;
 
+  private final JoinRelType joinType;
+
   public boolean ok = true;
   private boolean initialSet = false;
   private boolean leftRepeating = false;
@@ -57,6 +60,7 @@ public final class JoinStatus {
     this.left = left;
     this.right = right;
     this.outputBatch = output;
+    this.joinType = output.getJoinType();
   }
 
   public final void ensureInitial(){
@@ -204,17 +208,25 @@ public final class JoinStatus {
   public JoinOutcome getOutcome(){
     if (!ok)
       return JoinOutcome.FAILURE;
-    if (lastLeft == IterOutcome.OK && lastRight == IterOutcome.OK)
+    if (bothMatches(IterOutcome.NONE) ||
+            (joinType == JoinRelType.INNER && eitherMatches(IterOutcome.NONE)) ||
+            (joinType == JoinRelType.LEFT && lastLeft == IterOutcome.NONE) ||
+            (joinType == JoinRelType.RIGHT && lastRight == IterOutcome.NONE))
+      return JoinOutcome.NO_MORE_DATA;
+    if (bothMatches(IterOutcome.OK) ||
+            (eitherMatches(IterOutcome.NONE) && eitherMatches(IterOutcome.OK)))
       return JoinOutcome.BATCH_RETURNED;
-    if (eitherMatches(IterOutcome.NONE))
-      return JoinOutcome.NO_MORE_DATA;    
     if (eitherMatches(IterOutcome.OK_NEW_SCHEMA))
       return JoinOutcome.SCHEMA_CHANGED;
     if (eitherMatches(IterOutcome.NOT_YET))
       return JoinOutcome.WAITING;
     return JoinOutcome.FAILURE;
   }
-  
+
+  private boolean bothMatches(IterOutcome outcome){
+    return lastLeft == outcome && lastRight == outcome;
+  }
+
   private boolean eitherMatches(IterOutcome outcome){
     return lastLeft == outcome || lastRight == outcome;
   }

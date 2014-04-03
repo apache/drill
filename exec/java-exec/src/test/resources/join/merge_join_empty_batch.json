@@ -36,6 +36,7 @@
       right: 1,
       left: 2,
       pop: "merge-join",
+      join-type: "${JOIN_TYPE}",
       join-conditions: [ {relationship: "==", left: "blue1", right: "blue"} ]
     },
     {

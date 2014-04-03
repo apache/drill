@@ -53,6 +53,7 @@ import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.vector.ValueVector;
 import org.junit.AfterClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.beust.jcommander.internal.Lists;
@@ -299,7 +300,29 @@ public class TestMergeJoin extends PopUnitTestBase {
   }
 
   @Test
-  public void testMergeJoinEmptyBatch() throws Exception {
+  public void testMergeJoinInnerEmptyBatch() throws Exception {
+    RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
+
+    try(Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
+        DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
+
+      bit1.run();
+      client.connect();
+      List<QueryResultBatch> results = client.runQuery(UserProtos.QueryType.PHYSICAL,
+              Files.toString(FileUtils.getResourceAsFile("/join/merge_join_empty_batch.json"),
+                      Charsets.UTF_8)
+                      .replace("${JOIN_TYPE}", "INNER"));
+      int count = 0;
+      for(QueryResultBatch b : results) {
+        if (b.getHeader().getRowCount() != 0)
+          count += b.getHeader().getRowCount();
+      }
+      assertEquals(0, count);
+    }
+  }
+
+  @Test
+  public void testMergeJoinLeftEmptyBatch() throws Exception {
     RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
     try(Drillbit bit1 = new Drillbit(CONFIG, serviceSet);      
@@ -309,7 +332,30 @@ public class TestMergeJoin extends PopUnitTestBase {
       client.connect();
       List<QueryResultBatch> results = client.runQuery(UserProtos.QueryType.PHYSICAL,
           Files.toString(FileUtils.getResourceAsFile("/join/merge_join_empty_batch.json"),
-              Charsets.UTF_8));
+              Charsets.UTF_8)
+              .replace("${JOIN_TYPE}", "LEFT"));
+      int count = 0;
+      for(QueryResultBatch b : results) {
+        if (b.getHeader().getRowCount() != 0)
+          count += b.getHeader().getRowCount();
+      }
+      assertEquals(50, count);
+    }
+  }
+
+  @Test
+  public void testMergeJoinRightEmptyBatch() throws Exception {
+    RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
+
+    try(Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
+        DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
+
+      bit1.run();
+      client.connect();
+      List<QueryResultBatch> results = client.runQuery(UserProtos.QueryType.PHYSICAL,
+              Files.toString(FileUtils.getResourceAsFile("/join/merge_join_empty_batch.json"),
+                      Charsets.UTF_8)
+                      .replace("${JOIN_TYPE}", "RIGHT"));
       int count = 0;
       for(QueryResultBatch b : results) {
         if (b.getHeader().getRowCount() != 0)
@@ -317,9 +363,8 @@ public class TestMergeJoin extends PopUnitTestBase {
       }
       assertEquals(0, count);
     }
-  }  
-  
-  
+  }
+
   @AfterClass
   public static void tearDown() throws Exception{
     // pause to get logger to catch up.
