@@ -18,7 +18,7 @@ where
       cp.`tpch/lineitem.parquet`
     group by
       l_orderkey having
-        sum(l_quantity) > 313
+        sum(l_quantity) > 300
   )
   and c.c_custkey = o.o_custkey
   and o.o_orderkey = l.l_orderkey
