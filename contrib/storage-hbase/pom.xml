@@ -55,6 +55,10 @@
           <artifactId>asm</artifactId>
           <groupId>asm</groupId>
         </exclusion>
+          <exclusion>
+            <artifactId>libthrift</artifactId>
+            <groupId>org.apache.thrift</groupId>
+        </exclusion>
       </exclusions>
     </dependency>
 
