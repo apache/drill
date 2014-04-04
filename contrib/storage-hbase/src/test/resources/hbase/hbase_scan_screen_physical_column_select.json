@@ -9,10 +9,7 @@
   graph : [ {
     pop : "hbase-scan",
     @id : 1,
-    entries : [
-    {
-      tableName : "testTable"
-    }],
+    tableName : "testTable",
     storage:
     {
       "type":"hbase",

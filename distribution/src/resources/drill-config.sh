@@ -111,6 +111,9 @@ CP=$DRILL_HOME/contrib/*:$CP
 if [ "${HADOOP_CLASSPATH}x" != "x" ]; then
   CP=$HADOOP_CLASSPATH:$CP
 fi
+if [ "${HBASE_CLASSPATH}x" != "x" ]; then
+  CP=$HBASE_CLASSPATH:$CP
+fi
 CP=$DRILL_CONF_DIR:$CP
 
 # Newer versions of glibc use an arena memory allocator that causes virtual
