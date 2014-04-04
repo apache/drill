@@ -236,22 +236,27 @@ public class MergingRecordBatch implements RecordBatch {
 
       if (node.valueIndex == batchLoaders[node.batchId].getRecordCount() - 1) {
         // reached the end of an incoming record batch
+        RawFragmentBatch nextBatch = null;
         try {
-          incomingBatches[node.batchId] = fragProviders[node.batchId].getNext();
+          nextBatch = fragProviders[node.batchId].getNext();
+
+          while (nextBatch != null && nextBatch.getHeader().getDef().getRecordCount() == 0) {
+            nextBatch = fragProviders[node.batchId].getNext();
+          }
         } catch (IOException e) {
           context.fail(e);
           return IterOutcome.STOP;
         }
 
-        if (incomingBatches[node.batchId].getHeader().getIsLastBatch() ||
-            incomingBatches[node.batchId].getHeader().getDef().getRecordCount() == 0) {
+        incomingBatches[node.batchId] = nextBatch;
+
+        if (nextBatch == null) {
           // batch is empty
-          incomingBatches[node.batchId].release();
           boolean allBatchesEmpty = true;
 
           for (RawFragmentBatch batch : incomingBatches) {
             // see if all batches are empty so we can return OK_* or NONE
-            if (!batch.getHeader().getIsLastBatch()) {
+            if (batch != null) {
               allBatchesEmpty = false;
               break;
             }
