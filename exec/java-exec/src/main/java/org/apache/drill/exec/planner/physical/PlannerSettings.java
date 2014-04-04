@@ -26,6 +26,8 @@ import org.apache.drill.exec.server.options.TypeValidators.BooleanValidator;
 public class PlannerSettings implements FrameworkContext{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PlannerSettings.class);
 
+  private int numEndPoints = 0;
+  private boolean useDefaultCosting = false; // True: use default Optiq costing, False: use Drill costing
 
   public static final OptionValidator EXCHANGE = new BooleanValidator("planner.disable_exchanges", false);
 
@@ -39,6 +41,22 @@ public class PlannerSettings implements FrameworkContext{
     return options.getOption(EXCHANGE.getOptionName()).bool_val;
   }
 
+  public int numEndPoints() {
+    return numEndPoints;  
+  }
+  
+  public boolean useDefaultCosting() {
+    return useDefaultCosting;
+  }
+    
+  public void setNumEndPoints(int numEndPoints) {
+    this.numEndPoints = numEndPoints;
+  }
+
+  public void setUseDefaultCosting(boolean defcost) {
+    this.useDefaultCosting = defcost;
+  }
+  
   @Override
   public <T> T unwrap(Class<T> clazz) {
     if(clazz == PlannerSettings.class){

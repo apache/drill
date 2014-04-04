@@ -41,6 +41,12 @@ public class DrillAggregateRule extends RelOptRule {
   public void onMatch(RelOptRuleCall call) {
     final AggregateRel aggregate = (AggregateRel) call.rel(0);
     final RelNode input = call.rel(1);
+
+    if (aggregate.containsDistinctCall()) {
+      // currently, don't use this rule if any of the aggregates contains DISTINCT
+      return;
+    }
+    
     final RelTraitSet traits = aggregate.getTraitSet().plus(DrillRel.DRILL_LOGICAL);
     final RelNode convertedInput = convert(input, traits);
     try {

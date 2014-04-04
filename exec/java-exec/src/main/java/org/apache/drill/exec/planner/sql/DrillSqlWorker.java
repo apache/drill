@@ -31,6 +31,8 @@ import net.hydromatic.optiq.tools.ValidationException;
 
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
+import org.apache.drill.exec.planner.cost.DrillCostBase;
+import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
 import org.apache.drill.exec.planner.logical.DrillRuleSets;
 import org.apache.drill.exec.planner.physical.DrillDistributionTraitDef;
 import org.apache.drill.exec.planner.sql.handlers.DefaultSqlHandler;
@@ -38,10 +40,19 @@ import org.apache.drill.exec.planner.sql.handlers.ExplainHandler;
 import org.apache.drill.exec.planner.sql.handlers.SetOptionHandler;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandler;
 import org.apache.drill.exec.planner.sql.parser.DrillSqlCall;
+import org.apache.drill.exec.planner.sql.handlers.UseSchemaHandler;
+import org.apache.drill.exec.planner.sql.parser.SqlDescribeTable;
+import org.apache.drill.exec.planner.sql.parser.SqlShowSchemas;
+import org.apache.drill.exec.planner.sql.parser.SqlShowTables;
+import org.apache.drill.exec.planner.sql.parser.SqlUseSchema;
+import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.drill.exec.planner.sql.parser.impl.DrillParserImpl;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.eigenbase.rel.RelCollationTraitDef;
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.metadata.RelMetadataQuery;
 import org.eigenbase.relopt.ConventionTraitDef;
+import org.eigenbase.relopt.RelOptCostFactory;
 import org.eigenbase.relopt.RelTraitDef;
 import org.eigenbase.sql.SqlNode;
 import org.eigenbase.sql.parser.SqlParseException;
@@ -65,6 +76,8 @@ public class DrillSqlWorker {
     traitDefs.add(RelCollationTraitDef.INSTANCE);
     this.context = context;
     DrillOperatorTable table = new DrillOperatorTable(context.getFunctionRegistry());
+    RelOptCostFactory costFactory = (context.getPlannerSettings().useDefaultCosting()) ? 
+        null : new DrillCostBase.DrillCostFactory() ;
     StdFrameworkConfig config = StdFrameworkConfig.newBuilder() //
         .lex(Lex.MYSQL) //
         .parserFactory(DrillParserImpl.FACTORY) //
@@ -74,6 +87,7 @@ public class DrillSqlWorker {
         .convertletTable(new DrillConvertletTable()) //
         .context(context.getPlannerSettings()) //
         .ruleSets(getRules(context.getStorage())) //
+        .costFactory(costFactory) //
         .build();
     this.planner = Frameworks.getPlanner(config);
 

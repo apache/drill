@@ -22,6 +22,17 @@ import java.util.Iterator;
 import net.hydromatic.optiq.tools.RuleSet;
 
 import org.apache.drill.exec.planner.physical.*;
+import org.apache.drill.exec.planner.physical.FilterPrule;
+import org.apache.drill.exec.planner.physical.HashAggPrule;
+import org.apache.drill.exec.planner.physical.HashJoinPrule;
+import org.apache.drill.exec.planner.physical.LimitPrule;
+import org.apache.drill.exec.planner.physical.MergeJoinPrule;
+import org.apache.drill.exec.planner.physical.ProjectPrule;
+import org.apache.drill.exec.planner.physical.ScanPrule;
+import org.apache.drill.exec.planner.physical.ScreenPrule;
+import org.apache.drill.exec.planner.physical.SortConvertPrule;
+import org.apache.drill.exec.planner.physical.SortPrule;
+import org.apache.drill.exec.planner.physical.StreamAggPrule;
 import org.eigenbase.rel.RelFactories;
 import org.eigenbase.rel.rules.MergeProjectRule;
 import org.eigenbase.rel.rules.PushFilterPastJoinRule;
@@ -49,7 +60,7 @@ public class DrillRuleSets {
       PushFilterPastJoinRule.FILTER_ON_JOIN,
       PushJoinThroughJoinRule.RIGHT,
       PushJoinThroughJoinRule.LEFT,
-      // End supprot for WHERE style joins.
+      // End support for WHERE style joins.
 
       //Add back rules
 
@@ -106,7 +117,9 @@ public class DrillRuleSets {
       ScreenPrule.INSTANCE,
       ExpandConversionRule.INSTANCE,
       StreamAggPrule.INSTANCE,
+      HashAggPrule.INSTANCE,
       MergeJoinPrule.INSTANCE,
+      HashJoinPrule.INSTANCE,
       FilterPrule.INSTANCE,
       LimitPrule.INSTANCE,
 

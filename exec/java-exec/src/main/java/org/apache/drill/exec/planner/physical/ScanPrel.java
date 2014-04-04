@@ -25,11 +25,20 @@ import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.Size;
 import org.eigenbase.rel.AbstractRelNode;
+import org.apache.drill.exec.planner.common.DrillScanRelBase;
+import org.apache.drill.exec.planner.cost.DrillCostBase;
+import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
+import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
+import org.apache.drill.exec.store.StoragePlugin;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.RelWriter;
+import org.eigenbase.rel.metadata.RelMetadataQuery;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanner;
+import org.eigenbase.relopt.RelOptCost;
+import org.eigenbase.relopt.RelOptPlanner;
+import org.eigenbase.relopt.RelOptTable;
 import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.reltype.RelDataType;
 
@@ -66,21 +75,6 @@ public class ScanPrel extends AbstractRelNode implements DrillScanPrel {
   }
 
   @Override
-  public RelOptCost computeSelfCost(RelOptPlanner planner) {
-    OperatorCost scanCost = this.groupScan.getCost();
-    Size scanSize = this.groupScan.getSize();
-    int columnCount = this.getRowType().getFieldCount();
-
-    // FIXME: Use the new cost model
-    return this
-        .getCluster()
-        .getPlanner()
-        .getCostFactory()
-        .makeCost(scanSize.getRecordCount() * columnCount, scanCost.getCpu(),
-            scanCost.getNetwork() * scanCost.getDisk());
-  }
-
-  @Override
   public GroupScan getGroupScan() {
     return groupScan;
   }
@@ -100,4 +94,33 @@ public class ScanPrel extends AbstractRelNode implements DrillScanPrel {
     return this.rowType;
   }
 
+  @Override
+  public double getRows() {
+    return this.groupScan.getSize().getRecordCount();
+  }
+  
+  @Override
+  public RelOptCost computeSelfCost(RelOptPlanner planner) {
+    Size scanSize = this.groupScan.getSize();
+    int columnCount = this.getRowType().getFieldCount();   
+    
+    if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
+      OperatorCost scanCost = this.groupScan.getCost();
+      return planner.getCostFactory().makeCost(scanSize.getRecordCount() * columnCount, scanCost.getCpu(), scanCost.getDisk());
+    }
+    
+    // double rowCount = RelMetadataQuery.getRowCount(this);
+    double rowCount = scanSize.getRecordCount();
+    
+    double cpuCost = rowCount * columnCount; // for now, assume cpu cost is proportional to row count. 
+    // Even though scan is reading from disk, in the currently generated plans all plans will
+    // need to read the same amount of data, so keeping the disk io cost 0 is ok for now.  
+    // In the future we might consider alternative scans that go against projections or 
+    // different compression schemes etc that affect the amount of data read. Such alternatives
+    // would affect both cpu and io cost. 
+    double ioCost = 0;
+    DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
+    return costFactory.makeCost(rowCount, cpuCost, ioCost, 0);   
+  }
+  
 }

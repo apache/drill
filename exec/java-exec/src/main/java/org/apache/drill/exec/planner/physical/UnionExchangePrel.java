@@ -24,9 +24,12 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.Screen;
 import org.apache.drill.exec.physical.config.SelectionVectorRemover;
 import org.apache.drill.exec.physical.config.UnionExchange;
+import org.apache.drill.exec.planner.cost.DrillCostBase;
+import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.SingleRel;
+import org.eigenbase.rel.metadata.RelMetadataQuery;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanner;
@@ -39,10 +42,30 @@ public class UnionExchangePrel extends SingleRel implements Prel {
     assert input.getConvention() == Prel.DRILL_PHYSICAL;
   }
 
+  /**    
+   * A UnionExchange processes a total of M rows coming from N senders and 
+   * combines them into a single output stream.  Note that there is 
+   * no sort or merge operation going on. For costing purposes, we can
+   * assume each sender is sending M/N rows to a single receiver. 
+   * (See DrillCostBase for symbol notations)
+   * C =  CPU cost of SV remover for M/N rows 
+   *      + Network cost of sending M/N rows to 1 destination. 
+   * So, C = (s * M/N) + (w * M/N) 
+   * Total cost = N * C
+   */    
   @Override
   public RelOptCost computeSelfCost(RelOptPlanner planner) {
-    return super.computeSelfCost(planner).multiplyBy(0.1);
-    //return planner.getCostFactory().makeCost(50, 50, 50);
+    if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
+      return super.computeSelfCost(planner).multiplyBy(.1); 
+    }
+    
+    RelNode child = this.getChild();
+    double inputRows = RelMetadataQuery.getRowCount(child);
+    int  rowWidth = child.getRowType().getFieldCount() * DrillCostBase.AVG_FIELD_WIDTH;    
+    double svrCpuCost = DrillCostBase.SVR_CPU_COST * inputRows;
+    double networkCost = DrillCostBase.BYTE_NETWORK_COST * inputRows * rowWidth;
+    DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
+    return costFactory.makeCost(inputRows, svrCpuCost, 0, networkCost);   
   }
 
   @Override

@@ -137,7 +137,6 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
       case CLEANUP_AND_RETURN:
         container.clear();
         aggregator.cleanup();
-        incoming.cleanup();
         done = true;
         return aggregator.getOutcome();
       case RETURN_OUTCOME:
@@ -277,6 +276,11 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
    
   }
 
+  @Override
+  public void cleanup() {
+    super.cleanup();
+    incoming.cleanup();
+  }
 
   @Override
   protected void killIncoming() {

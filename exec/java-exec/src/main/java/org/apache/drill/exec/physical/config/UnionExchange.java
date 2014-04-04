@@ -75,10 +75,4 @@ public class UnionExchange extends AbstractExchange{
     return new UnionExchange(child);
   }
 
-  @Override
-  public boolean supportsSelectionVector() {
-    return false;
-  }
-  
-  
 }

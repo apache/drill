@@ -95,7 +95,7 @@ public abstract class HashAggTemplate implements HashAggregator {
   public class BatchHolder {
 
     private VectorContainer aggrValuesContainer; // container for aggr values (workspace variables)
-    int maxOccupiedIdx = 0;
+    int maxOccupiedIdx = -1;
 
     private BatchHolder() {
 
@@ -288,6 +288,13 @@ public abstract class HashAggTemplate implements HashAggregator {
   }
 
   private void allocateOutgoing() {
+
+    // At present, since we output all records at once, we create the outgoing batch
+    // with a size of numGroupedRecords..however this has to be restricted to max of 64K right
+    // now otherwise downstream operators will break.
+    // TODO: allow outputting arbitrarily large number of records in batches
+    assert (numGroupedRecords < Character.MAX_VALUE);
+    
     for (VectorAllocator a : keyAllocators) {
       if(EXTRA_DEBUG_2) logger.debug("Outgoing batch: Allocating {} with {} records.", a, numGroupedRecords);
       a.alloc(numGroupedRecords);

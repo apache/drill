@@ -153,8 +153,6 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
         status.resetOutputPos();
 
       if (outcome == JoinOutcome.NO_MORE_DATA) {
-        left.cleanup();
-        right.cleanup();
         logger.debug("NO MORE DATA; returning {}  NONE");
         return IterOutcome.NONE;
       }
@@ -186,8 +184,6 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
         kill();
         return IterOutcome.STOP;
       case NO_MORE_DATA:
-        left.cleanup();
-        right.cleanup();
         logger.debug("NO MORE DATA; returning {}", (status.getOutPosition() > 0 ? (first ? "OK_NEW_SCHEMA" : "OK") : "NONE"));
         return status.getOutPosition() > 0 ? (first ? IterOutcome.OK_NEW_SCHEMA : IterOutcome.OK): IterOutcome.NONE;
       case SCHEMA_CHANGED:
@@ -222,6 +218,13 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
     right.kill();
   }
 
+  @Override
+  public void cleanup() {
+      super.cleanup();
+
+      left.cleanup();
+      right.cleanup();
+  }
   
   private void generateDoCompareNextLeft(ClassGenerator<JoinWorker> cg, JVar incomingRecordBatch, 
       JVar incomingLeftRecordBatch, JVar joinStatus, ErrorCollector collector) throws ClassTransformationException {

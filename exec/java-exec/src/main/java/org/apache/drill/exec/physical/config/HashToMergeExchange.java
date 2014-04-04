@@ -15,38 +15,41 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.drill.exec.physical.config;
 
 import java.util.List;
 
-import org.apache.drill.common.exceptions.PhysicalOperatorSetupException;
+import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.logical.data.Order.Ordering;
 import org.apache.drill.exec.physical.base.AbstractExchange;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.Receiver;
 import org.apache.drill.exec.physical.base.Sender;
-import org.apache.drill.exec.proto.CoordinationProtos;
+import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
-@JsonTypeName("single-merge-exchange")
-public class SingleMergeExchange extends AbstractExchange {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SingleMergeExchange.class);
+@JsonTypeName("hash-to-merge-exchange")
+public class HashToMergeExchange extends AbstractExchange{
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HashToMergeExchange.class);
 
-  private final List<Ordering> orderExpr;
+  
+  private final LogicalExpression distExpr;
+  private final List<Ordering> orderExprs;
 
-  // ephemeral for setup tasks
-  private List<CoordinationProtos.DrillbitEndpoint> senderLocations;
-  private CoordinationProtos.DrillbitEndpoint receiverLocation;
-
+  //ephemeral for setup tasks.
+  private List<DrillbitEndpoint> senderLocations;
+  private List<DrillbitEndpoint> receiverLocations;
+  
   @JsonCreator
-  public SingleMergeExchange(@JsonProperty("child") PhysicalOperator child,
-                             @JsonProperty("orderings") List<Ordering> orderExpr) {
+  public HashToMergeExchange(@JsonProperty("child") PhysicalOperator child, 
+      @JsonProperty("expr") LogicalExpression expr,
+      @JsonProperty("orderings") List<Ordering> orderExprs) {
     super(child);
-    this.orderExpr = orderExpr;
+    this.distExpr = expr;
+    this.orderExprs = orderExprs;
   }
 
   @Override
@@ -54,39 +57,37 @@ public class SingleMergeExchange extends AbstractExchange {
     return Integer.MAX_VALUE;
   }
 
+
   @Override
-  protected void setupSenders(List<CoordinationProtos.DrillbitEndpoint> senderLocations) {
+  protected void setupSenders(List<DrillbitEndpoint> senderLocations) {
     this.senderLocations = senderLocations;
   }
 
   @Override
-  protected void setupReceivers(List<CoordinationProtos.DrillbitEndpoint> receiverLocations)
-      throws PhysicalOperatorSetupException {
-
-    if (receiverLocations.size() != 1)
-      throw new PhysicalOperatorSetupException("SingleMergeExchange only supports a single receiver endpoint");
-    receiverLocation = receiverLocations.iterator().next();
-
+  protected void setupReceivers(List<DrillbitEndpoint> receiverLocations) {
+    this.receiverLocations = receiverLocations;
   }
 
   @Override
   public Sender getSender(int minorFragmentId, PhysicalOperator child) {
-    return new SingleSender(receiverMajorFragmentId, child, receiverLocation);
+    return new HashPartitionSender(receiverMajorFragmentId, child, distExpr, receiverLocations);
   }
 
   @Override
   public Receiver getReceiver(int minorFragmentId) {
-    return new MergingReceiverPOP(senderMajorFragmentId, senderLocations, orderExpr);
+    return new MergingReceiverPOP(senderMajorFragmentId, senderLocations, orderExprs);
   }
 
   @Override
   protected PhysicalOperator getNewWithChild(PhysicalOperator child) {
-    return new SingleMergeExchange(child, orderExpr);
+    return new HashToMergeExchange(child, distExpr, orderExprs);
   }
 
-  @JsonProperty("orderings")
-  public List<Ordering> getOrderings() {
-    return this.orderExpr;
+  @JsonProperty("orderExpr")
+  public List<Ordering> getOrderExpressions(){
+    return orderExprs;
   }
 
+  
+  
 }

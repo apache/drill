@@ -31,12 +31,10 @@ import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.logical.data.NamedExpression;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.physical.config.SingleMergeExchange;
-import org.apache.drill.exec.physical.config.StreamingAggregate;
+import org.apache.drill.exec.physical.config.HashAggregate;
 import org.apache.drill.exec.planner.cost.DrillCostBase;
 import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
 import org.apache.drill.exec.planner.logical.DrillParseContext;
-import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.eigenbase.rel.AggregateCall;
 import org.eigenbase.rel.AggregateRelBase;
 import org.eigenbase.rel.InvalidRelException;
@@ -49,23 +47,18 @@ import org.eigenbase.relopt.RelTraitSet;
 
 import com.beust.jcommander.internal.Lists;
 
-public class StreamAggPrel extends AggregateRelBase implements Prel{
+public class HashAggPrel extends AggregateRelBase implements Prel{
 
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StreamAggPrel.class);
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HashAggPrel.class);
 
-  public StreamAggPrel(RelOptCluster cluster, RelTraitSet traits, RelNode child, BitSet groupSet,
+  public HashAggPrel(RelOptCluster cluster, RelTraitSet traits, RelNode child, BitSet groupSet,
       List<AggregateCall> aggCalls) throws InvalidRelException {
     super(cluster, traits, child, groupSet, aggCalls);
-    for (AggregateCall aggCall : aggCalls) {
-      if (aggCall.isDistinct()) {
-        throw new InvalidRelException("DrillAggregateRel does not support DISTINCT aggregates");
-      }
-    }
   }
 
   public AggregateRelBase copy(RelTraitSet traitSet, RelNode input, BitSet groupSet, List<AggregateCall> aggCalls) {
     try {
-      return new StreamAggPrel(getCluster(), traitSet, input, getGroupSet(), aggCalls);
+      return new HashAggPrel(getCluster(), traitSet, input, getGroupSet(), aggCalls);
     } catch (InvalidRelException e) {
       throw new AssertionError(e);
     }
@@ -75,31 +68,34 @@ public class StreamAggPrel extends AggregateRelBase implements Prel{
   public RelOptCost computeSelfCost(RelOptPlanner planner) {
     if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
       return super.computeSelfCost(planner).multiplyBy(.1); 
-    }    
+    }
     RelNode child = this.getChild();
     double inputRows = RelMetadataQuery.getRowCount(child);
 
     int numGroupByFields = this.getGroupCount();
     int numAggrFields = this.aggCalls.size();
-    double cpuCost = DrillCostBase.COMPARE_CPU_COST * numGroupByFields * inputRows;
+    // cpu cost of hashing each grouping key
+    double cpuCost = DrillCostBase.HASH_CPU_COST * numGroupByFields * inputRows;
     // add cpu cost for computing the aggregate functions
     cpuCost += DrillCostBase.FUNC_CPU_COST * numAggrFields * inputRows;
+    double diskIOCost = 0; // assume in-memory for now until we enforce operator-level memory constraints
     DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
-    return costFactory.makeCost(inputRows, cpuCost, 0 /* disk i/o cost */, 0 /* network cost */);    
+    return costFactory.makeCost(inputRows, cpuCost, diskIOCost, 0 /* network cost */);    
   }
-   
+
   @Override
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
+    
     final List<String> childFields = getChild().getRowType().getFieldNames();
     final List<String> fields = getRowType().getFieldNames();
     List<NamedExpression> keys = Lists.newArrayList();
     List<NamedExpression> exprs = Lists.newArrayList();
-
+    
     for (int group : BitSets.toIter(groupSet)) {
       FieldReference fr = new FieldReference(childFields.get(group), ExpressionPosition.UNKNOWN);
       keys.add(new NamedExpression(fr, fr));
     }
-
+    
     for (Ord<AggregateCall> aggCall : Ord.zip(aggCalls)) {
       FieldReference ref = new FieldReference(fields.get(groupSet.cardinality() + aggCall.i));
       LogicalExpression expr = toDrill(aggCall.e, childFields, new DrillParseContext());
@@ -107,22 +103,25 @@ public class StreamAggPrel extends AggregateRelBase implements Prel{
     }
 
     Prel child = (Prel) this.getChild();
-    StreamingAggregate g = new StreamingAggregate(child.getPhysicalOperator(creator), keys.toArray(new NamedExpression[keys.size()]), exprs.toArray(new NamedExpression[exprs.size()]), 1.0f);
-
-    return g;
+    HashAggregate g = new HashAggregate(child.getPhysicalOperator(creator), 
+        keys.toArray(new NamedExpression[keys.size()]), 
+        exprs.toArray(new NamedExpression[exprs.size()]), 
+        1.0f);
+    
+    return g;    
 
   }
-
+  
   private LogicalExpression toDrill(AggregateCall call, List<String> fn, DrillParseContext pContext) {
     List<LogicalExpression> args = Lists.newArrayList();
     for(Integer i : call.getArgList()){
       args.add(new FieldReference(fn.get(i)));
     }
-
+    
     // for count(1).
     if(args.isEmpty()) args.add(new ValueExpressions.LongExpression(1l));
     LogicalExpression expr = new FunctionCall(call.getAggregation().getName().toLowerCase(), args, ExpressionPosition.UNKNOWN );
     return expr;
   }
-
+ 
 }

@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.JsonNode;
+
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -62,6 +63,7 @@ import org.apache.drill.exec.proto.UserProtos.QueryResult;
 import org.apache.drill.exec.proto.UserProtos.QueryResult.QueryState;
 import org.apache.drill.exec.proto.UserProtos.RequestResults;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
+import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.rpc.BaseRpcOutcomeListener;
 import org.apache.drill.exec.rpc.RpcException;
@@ -166,6 +168,9 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
    * Called by execution pool to do foreman setup. Actual query execution is a separate phase (and can be scheduled).
    */
   public void run() {
+    
+    final String originalThread = Thread.currentThread().getName();
+    Thread.currentThread().setName(QueryIdHelper.getQueryId(queryId) + ":foreman");
     // convert a run query request into action
     try{
       switch (queryRequest.getType()) {
@@ -189,6 +194,8 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
       System.out.println("Out of memory, exiting.");
       System.out.flush();
       System.exit(-1);
+    }finally{
+      Thread.currentThread().setName(originalThread);
     }
   }
 

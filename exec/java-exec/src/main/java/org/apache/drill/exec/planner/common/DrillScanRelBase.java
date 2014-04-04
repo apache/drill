@@ -25,7 +25,9 @@ import org.eigenbase.relopt.RelOptTable;
 import org.eigenbase.relopt.RelTraitSet;
 
 /**
- * Base class for logical and physical Scans implemented in Drill
+ * Base class for logical scan rel implemented in Drill. 
+ * NOTE: we should eventually make this class independent of TableAccessRelBase and then 
+ * make it the base class for logical and physical scan rels.
  */
 public abstract class DrillScanRelBase extends TableAccessRelBase implements DrillRelNode {
   protected final DrillTable drillTable;
@@ -35,4 +37,5 @@ public abstract class DrillScanRelBase extends TableAccessRelBase implements Dri
     this.drillTable = table.unwrap(DrillTable.class);
     assert drillTable != null;
   }
+  
 }

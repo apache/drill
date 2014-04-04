@@ -71,9 +71,4 @@ public class BroadcastExchange extends AbstractExchange {
   public int getMaxSendWidth() {
     return Integer.MAX_VALUE;
   }
-
-  @Override
-  public boolean supportsSelectionVector() {
-    return true;
-  }
 }

@@ -91,13 +91,4 @@ public interface Exchange extends PhysicalOperator {
    */
   public PhysicalOperator getChild();
   
-  
-  
-  /**
-   * Informs the planner whether or not this particular exchange supports an incoming stream that has an attached selection vector. 
-   * @param mode
-   * @return
-   */
-  @JsonIgnore
-  public boolean supportsSelectionVector();
 }

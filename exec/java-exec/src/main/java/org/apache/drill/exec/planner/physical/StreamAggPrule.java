@@ -31,7 +31,6 @@ import org.eigenbase.rel.RelCollation;
 import org.eigenbase.rel.RelCollationImpl;
 import org.eigenbase.rel.RelFieldCollation;
 import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptRule;
 import org.eigenbase.relopt.RelOptRuleCall;
 import org.eigenbase.relopt.RelTraitSet;
@@ -40,7 +39,7 @@ import org.eigenbase.trace.EigenbaseTrace;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
-public class StreamAggPrule extends RelOptRule {
+public class StreamAggPrule extends AggPruleBase {
   public static final RelOptRule INSTANCE = new StreamAggPrule();
   protected static final Logger tracer = EigenbaseTrace.getPlannerTracer();
 
@@ -54,25 +53,75 @@ public class StreamAggPrule extends RelOptRule {
     final RelNode input = aggregate.getChild();
     RelCollation collation = getCollation(aggregate);
 
-    DrillDistributionTrait toDist = null;
-    if (!aggregate.getGroupSet().isEmpty()) {
-      toDist = new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED, ImmutableList.copyOf(getDistributionField(aggregate)));
-    } else {
-      toDist = DrillDistributionTrait.SINGLETON;
-    }
+    RelTraitSet traits = null;
+
+    try {
+      if (aggregate.getGroupSet().isEmpty()) {
+        DrillDistributionTrait singleDist = DrillDistributionTrait.SINGLETON;
+        traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(collation).plus(singleDist);
+        createTransformRequest(call, aggregate, input, traits);
+      } else {
+
+        // hash distribute on all grouping keys
+        DrillDistributionTrait distOnAllKeys = 
+            new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED, 
+                                       ImmutableList.copyOf(getDistributionField(aggregate, true)));
+         
+        traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(collation).plus(distOnAllKeys);
+        createTransformRequest(call, aggregate, input, traits);
+
+        // hash distribute on one grouping key
+        DrillDistributionTrait distOnOneKey = 
+            new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED, 
+                                       ImmutableList.copyOf(getDistributionField(aggregate, false)));
     
-    final RelTraitSet traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(collation).plus(toDist);
-    
-    final RelNode convertedInput = convert(input, traits);
-    
-    try {          
-      StreamAggPrel newAgg = new StreamAggPrel(aggregate.getCluster(), traits, convertedInput, aggregate.getGroupSet(),
-          aggregate.getAggCallList());
-      
-      call.transformTo(newAgg);
+        traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(collation).plus(distOnOneKey);
+        // Temporarily commenting out the single distkey plan since a few tpch queries (e.g 01.sql) get stuck
+        // in VolcanoPlanner.canonize() method. Note that the corresponding single distkey plan for HashAggr works
+        // ok.  One possibility is that here we have dist on single key but collation on all keys, so that 
+        // might be causing some problem. 
+        /// TODO: re-enable this plan after resolving the issue.  
+        // createTransformRequest(call, aggregate, input, traits);
+       
+        
+ /*       
+        // create a 2-phase plan - commented out for now until we resolve planning for 'ANY' distribution 
+        traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(collation).plus(DrillDistributionTrait.ANY);
+
+        RelNode convertedInput = convert(input, traits);
+        StreamAggPrel phase1Agg = new StreamAggPrel(aggregate.getCluster(), traits, convertedInput,
+                                                    aggregate.getGroupSet(),
+                                                    aggregate.getAggCallList());
+
+        int numEndPoints = PrelUtil.getSettings(phase1Agg.getCluster()).numEndPoints();
+        
+        HashToMergeExchangePrel exch =
+            new HashToMergeExchangePrel(phase1Agg.getCluster(), phase1Agg.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(distOnAllKeys),
+                                        phase1Agg, ImmutableList.copyOf(getDistributionField(aggregate, true)),
+                                        collation,
+                                        numEndPoints);
+        
+        StreamAggPrel phase2Agg =  new StreamAggPrel(aggregate.getCluster(), traits, exch,
+                                                     aggregate.getGroupSet(),
+                                                     aggregate.getAggCallList());
+
+        call.transformTo(phase2Agg);      
+  */     
+      } 
     } catch (InvalidRelException e) {
       tracer.warning(e.toString());
     }
+  }
+
+  private void createTransformRequest(RelOptRuleCall call, DrillAggregateRel aggregate, 
+                                      RelNode input, RelTraitSet traits) throws InvalidRelException {
+
+    final RelNode convertedInput = convert(input, traits);
+    
+    StreamAggPrel newAgg = new StreamAggPrel(aggregate.getCluster(), traits, convertedInput, aggregate.getGroupSet(),
+                                             aggregate.getAggCallList());
+      
+    call.transformTo(newAgg);
   }
   
   
@@ -83,25 +132,5 @@ public class StreamAggPrule extends RelOptRule {
       fields.add(new RelFieldCollation(group));
     }
     return RelCollationImpl.of(fields);
-  }
-
-  private List<DistributionField> getDistributionField(DrillAggregateRel rel) {
-    
-    //For now, we use the GROUPBY keys as the distribution keys. 
-    //Ideally, we should pick a set of distributions keys such that they distribute the rows most "evenly", with least "skewness".
-    //This can be done if later on we have more statistics for the data stream. 
-    
-    List<DistributionField> groupByFields = Lists.newArrayList();
-
-    for (int group : BitSets.toIter(rel.getGroupSet())) {
-      DistributionField field = new DistributionField(group);
-      groupByFields.add(field);
-    }    
-    
-//    if (groupByFields.isEmpty()) {
-//      groupByFields.add(new DistributionField(0));
-//    }
-    
-    return groupByFields;
   }
 }

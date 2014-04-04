@@ -23,10 +23,13 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.ExternalSort;
 import org.apache.drill.exec.physical.config.SingleMergeExchange;
 import org.apache.drill.exec.physical.config.Sort;
+import org.apache.drill.exec.planner.cost.DrillCostBase;
+import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.eigenbase.rel.RelCollation;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.SortRel;
+import org.eigenbase.rel.metadata.RelMetadataQuery;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanner;
@@ -43,6 +46,23 @@ public class SortPrel extends SortRel implements Prel {
   /** Creates a DrillSortRel with offset and fetch. */
   public SortPrel(RelOptCluster cluster, RelTraitSet traits, RelNode input, RelCollation collation, RexNode offset, RexNode fetch) {
     super(cluster, traits, input, collation, offset, fetch);
+  }
+
+  @Override
+  public RelOptCost computeSelfCost(RelOptPlanner planner) {
+    if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
+      //We use multiplier 0.05 for TopN operator, and 0.1 for Sort, to make TopN a preferred choice.
+      return super.computeSelfCost(planner).multiplyBy(.1); 
+    }
+    
+    RelNode child = this.getChild();
+    double inputRows = RelMetadataQuery.getRowCount(child);
+    // int  rowWidth = child.getRowType().getPrecision();
+    int numSortFields = this.collation.getFieldCollations().size();
+    double cpuCost = DrillCostBase.COMPARE_CPU_COST * numSortFields * inputRows * (Math.log(inputRows)/Math.log(2)); 
+    double diskIOCost = 0; // assume in-memory for now until we enforce operator-level memory constraints
+    DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
+    return costFactory.makeCost(inputRows, cpuCost, diskIOCost, 0);    
   }
 
   @Override
@@ -68,11 +88,4 @@ public class SortPrel extends SortRel implements Prel {
       RexNode fetch) {
     return new SortPrel(getCluster(), traitSet, newInput, newCollation);
   }
-
-  @Override
-  public RelOptCost computeSelfCost(RelOptPlanner planner) {
-    //We use multiplier 0.05 for TopN operator, and 0.1 for Sort, to make TopN a preferred choice.
-    return super.computeSelfCost(planner).multiplyBy(0.1);
-  }
-
 }

@@ -113,7 +113,7 @@ public abstract class HashTableTemplate implements HashTable {
     // Array of hash values - this is useful when resizing the hash table
     private IntVector hashValues;
 
-    int maxOccupiedIdx = 0;
+    int maxOccupiedIdx = -1;
 
     private BatchHolder(int idx) {
 

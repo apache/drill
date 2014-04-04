@@ -28,6 +28,7 @@ import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.Size;
 import org.apache.drill.exec.planner.common.DrillScanRelBase;
+import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
 import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.drill.exec.planner.torel.ConversionContext;
 import org.eigenbase.relopt.RelOptCluster;
@@ -90,21 +91,39 @@ public class DrillScanRel extends DrillScanRelBase implements DrillRel {
     return this.rowType;
   }
 
-  @Override
-  public RelOptCost computeSelfCost(RelOptPlanner planner) {
-    OperatorCost scanCost = groupScan.getCost();
-    Size scanSize = groupScan.getSize();
-    int columnCount = this.getRowType().getFieldCount();
 
-    // FIXME: Use the new cost model
-    return this
-        .getCluster()
-        .getPlanner()
-        .getCostFactory()
-        .makeCost(scanSize.getRecordCount() * columnCount, scanCost.getCpu(),
-            scanCost.getNetwork() * scanCost.getDisk());
+  @Override
+  public double getRows() {
+    return this.groupScan.getSize().getRecordCount();
   }
 
+  /// TODO: this method is same as the one for ScanPrel...eventually we should consolidate
+  /// this and few other methods in a common base class which would be extended
+  /// by both logical and physical rels.
+  @Override
+  public RelOptCost computeSelfCost(RelOptPlanner planner) {
+    Size scanSize = this.groupScan.getSize();
+    int columnCount = this.getRowType().getFieldCount();   
+    
+    if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
+      OperatorCost scanCost = this.groupScan.getCost();
+      return planner.getCostFactory().makeCost(scanSize.getRecordCount() * columnCount, scanCost.getCpu(), scanCost.getDisk());
+    }
+    
+    // double rowCount = RelMetadataQuery.getRowCount(this);
+    double rowCount = scanSize.getRecordCount();
+    
+    double cpuCost = rowCount * columnCount; // for now, assume cpu cost is proportional to row count. 
+    // Even though scan is reading from disk, in the currently generated plans all plans will
+    // need to read the same amount of data, so keeping the disk io cost 0 is ok for now.  
+    // In the future we might consider alternative scans that go against projections or 
+    // different compression schemes etc that affect the amount of data read. Such alternatives
+    // would affect both cpu and io cost. 
+    double ioCost = 0;
+    DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
+    return costFactory.makeCost(rowCount, cpuCost, ioCost, 0);   
+  }  
+  
   public GroupScan getGroupScan() {
     return groupScan;
   }

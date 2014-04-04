@@ -23,6 +23,7 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.RootExec;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus.FragmentState;
+import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
 import org.apache.drill.exec.work.CancelableQuery;
 import org.apache.drill.exec.work.StatusProvider;
@@ -67,6 +68,13 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
   
   @Override
   public void run() {
+    final String originalThread = Thread.currentThread().getName();
+    String newThreadName = String.format("%s:frag:%s:%s", //
+        QueryIdHelper.getQueryId(context.getHandle().getQueryId()), //
+        context.getHandle().getMajorFragmentId(),
+        context.getHandle().getMinorFragmentId()
+        );
+    Thread.currentThread().setName(newThreadName);
     
     boolean closed = false;
     logger.debug("Starting fragment runner. {}:{}", context.getHandle().getMajorFragmentId(), context.getHandle().getMinorFragmentId());
@@ -99,6 +107,7 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
       logger.debug("Caught exception while running fragment", ex);
       internalFail(ex);
     }finally{
+      Thread.currentThread().setName(originalThread);
       t.stop();
       if(!closed) try{
         context.close();

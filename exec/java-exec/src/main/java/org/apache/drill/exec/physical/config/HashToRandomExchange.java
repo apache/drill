@@ -79,11 +79,6 @@ public class HashToRandomExchange extends AbstractExchange{
     return new HashToRandomExchange(child, expr);
   }
 
-  @Override
-  public boolean supportsSelectionVector() {
-    return true;
-  }
-
   @JsonProperty("expr")
   public LogicalExpression getExpression(){
     return expr;

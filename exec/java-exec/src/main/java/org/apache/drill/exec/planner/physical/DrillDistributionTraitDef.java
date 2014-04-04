@@ -17,9 +17,6 @@
  */
 package org.apache.drill.exec.planner.physical;
 
-import org.eigenbase.rel.RelCollation;
-import org.eigenbase.rel.RelCollationImpl;
-import org.eigenbase.rel.RelCollationTraitDef;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.RelTraitDef;
@@ -47,7 +44,7 @@ public class DrillDistributionTraitDef extends RelTraitDef<DrillDistributionTrai
   public String getSimpleName() {
     return this.getClass().getSimpleName();
   }
-
+  
   // implement RelTraitDef
   public RelNode convert(
       RelOptPlanner planner,
@@ -66,19 +63,21 @@ public class DrillDistributionTraitDef extends RelTraitDef<DrillDistributionTrai
     // We do not want to convert from "ANY", since it's abstract. 
     // Source trait should be concrete type: SINGLETON, HASH_DISTRIBUTED, etc.
     if (currentDist.equals(DrillDistributionTrait.DEFAULT)) {
-      return null;
+        return null;
     }
     
-    RelCollation collation = null;
-    
     switch(toDist.getType()){
-      // UnionExchange, HashToRandomExchange, OrderedPartitionExchange destroy the ordering property, therefore RelCollation is set to default, which is EMPTY.
+      // UnionExchange, HashToRandomExchange, OrderedPartitionExchange and BroadcastExchange destroy the ordering property,
+      // therefore RelCollation is set to default, which is EMPTY.
       case SINGLETON:         
         return new UnionExchangePrel(rel.getCluster(), planner.emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(toDist), rel);
       case HASH_DISTRIBUTED:
-        return new HashToRandomExchangePrel(rel.getCluster(), planner.emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(toDist), rel, toDist.getFields());
+        return new HashToRandomExchangePrel(rel.getCluster(), planner.emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(toDist), rel, 
+                                            toDist.getFields());
       case RANGE_DISTRIBUTED:
         return new OrderedPartitionExchangePrel(rel.getCluster(), planner.emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(toDist), rel);
+      case BROADCAST_DISTRIBUTED:
+        return new BroadcastExchangePrel(rel.getCluster(), planner.emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(toDist), rel);
       default:
         return null;
     }

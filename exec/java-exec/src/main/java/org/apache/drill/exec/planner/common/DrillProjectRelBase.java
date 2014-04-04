@@ -22,10 +22,14 @@ import java.util.List;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.logical.data.NamedExpression;
+import org.apache.drill.exec.planner.cost.DrillCostBase;
+import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
 import org.apache.drill.exec.planner.logical.DrillOptiq;
 import org.apache.drill.exec.planner.logical.DrillParseContext;
+import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.eigenbase.rel.ProjectRelBase;
 import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.metadata.RelMetadataQuery;
 import org.eigenbase.relopt.Convention;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptCost;
@@ -50,7 +54,15 @@ public abstract class DrillProjectRelBase extends ProjectRelBase implements Dril
 
   @Override
   public RelOptCost computeSelfCost(RelOptPlanner planner) {
-    return super.computeSelfCost(planner).multiplyBy(0.1);
+    if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
+      return super.computeSelfCost(planner).multiplyBy(.1); 
+    }
+    
+    // cost is proportional to the number of rows and number of columns being projected
+    double rowCount = RelMetadataQuery.getRowCount(this);
+    double cpuCost = DrillCostBase.PROJECT_CPU_COST * getRowType().getFieldCount();
+    DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
+    return costFactory.makeCost(rowCount, cpuCost, 0, 0);    
   }
 
   private List<Pair<RexNode, String>> projects() {

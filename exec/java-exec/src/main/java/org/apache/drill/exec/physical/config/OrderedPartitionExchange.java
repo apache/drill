@@ -100,14 +100,4 @@ public class OrderedPartitionExchange extends AbstractExchange {
   protected PhysicalOperator getNewWithChild(PhysicalOperator child) {
     return new OrderedPartitionExchange(orderings, ref, child, recordsToSample, samplingFactor, completionFactor);
   }
-
-  @Override
-  public boolean supportsSelectionVector() {
-    return true;
-  }
-
-  
-
-  
-  
 }

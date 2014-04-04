@@ -82,7 +82,8 @@ public class WorkManager implements Closeable{
   
   public void start(DrillbitEndpoint endpoint, DistributedCache cache, Controller controller, DataConnectionCreator data, ClusterCoordinator coord){
     this.dContext = new DrillbitContext(endpoint, bContext, coord, controller, data, cache, workBus);
-    executor = Executors.newFixedThreadPool(dContext.getConfig().getInt(ExecConstants.EXECUTOR_THREADS), new NamedThreadFactory("WorkManager-"));
+ //   executor = Executors.newFixedThreadPool(dContext.getConfig().getInt(ExecConstants.EXECUTOR_THREADS)
+    executor = Executors.newCachedThreadPool(new NamedThreadFactory("WorkManager-"));
     eventThread.start();
   }
   

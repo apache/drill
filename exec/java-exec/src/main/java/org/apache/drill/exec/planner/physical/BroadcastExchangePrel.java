@@ -1,4 +1,4 @@
-/**
+/*******************************************************************************
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -14,15 +14,18 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
+ ******************************************************************************/
+
 package org.apache.drill.exec.planner.physical;
 
 import java.io.IOException;
 import java.util.List;
 
 import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.physical.config.BroadcastExchange;
+import org.apache.drill.exec.physical.config.SelectionVectorRemover;
 import org.apache.drill.exec.planner.cost.DrillCostBase;
-import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
+import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.SingleRel;
 import org.eigenbase.rel.metadata.RelMetadataQuery;
@@ -31,37 +34,50 @@ import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.RelTraitSet;
 
-public class OrderedPartitionExchangePrel extends SingleRel implements Prel {
-
-  public OrderedPartitionExchangePrel(RelOptCluster cluster, RelTraitSet traitSet, RelNode input) {
+public class BroadcastExchangePrel extends SingleRel implements Prel {
+  
+  public BroadcastExchangePrel(RelOptCluster cluster, RelTraitSet traitSet, RelNode input) {
     super(cluster, traitSet, input);
     assert input.getConvention() == Prel.DRILL_PHYSICAL;
   }
 
+  /**
+   * In a BroadcastExchange, each sender is sending data to N receivers (for costing
+   * purposes we assume it is also sending to itself). 
+   */
   @Override
   public RelOptCost computeSelfCost(RelOptPlanner planner) {
-    if (PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
+    if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
       return super.computeSelfCost(planner).multiplyBy(.1); 
-    }    
-    RelNode child = this.getChild();
-    double inputRows = RelMetadataQuery.getRowCount(child);
+    }
 
+    RelNode child = this.getChild();
+   
+    double inputRows = RelMetadataQuery.getRowCount(child);
     int  rowWidth = child.getRowType().getFieldCount() * DrillCostBase.AVG_FIELD_WIDTH;
-    
-    double rangePartitionCpuCost = DrillCostBase.RANGE_PARTITION_CPU_COST * inputRows;
-    double svrCpuCost = DrillCostBase.SVR_CPU_COST * inputRows;
-    double networkCost = DrillCostBase.BYTE_NETWORK_COST * inputRows * rowWidth;
-    DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
-    return costFactory.makeCost(inputRows, rangePartitionCpuCost + svrCpuCost, 0, networkCost);  
+    double cpuCost = DrillCostBase.SVR_CPU_COST * inputRows ;
+    int numEndPoints = PrelUtil.getSettings(getCluster()).numEndPoints();
+    double networkCost = DrillCostBase.BYTE_NETWORK_COST * inputRows * rowWidth * numEndPoints;
+    return new DrillCostBase(inputRows, cpuCost, 0, networkCost);
   }
 
   @Override
   public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
-    return new OrderedPartitionExchangePrel(getCluster(), traitSet, sole(inputs));
+    return new BroadcastExchangePrel(getCluster(), traitSet, sole(inputs));
   }
   
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
-    throw new IOException(this.getClass().getSimpleName() + " not supported yet!");
+    Prel child = (Prel) this.getChild();
+    
+    PhysicalOperator childPOP = child.getPhysicalOperator(creator);
+    
+    //Currently, only accepts "NONE". For other, requires SelectionVectorRemover
+    if (!childPOP.getSVMode().equals(SelectionVectorMode.NONE)) {
+      childPOP = new SelectionVectorRemover(childPOP);
+    }
+
+    BroadcastExchange g = new BroadcastExchange(childPOP);
+    return g;    
   }
   
 }
