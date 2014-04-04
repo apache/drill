@@ -119,11 +119,13 @@ public class HBaseGroupScan extends AbstractGroupScan {
     for (ServerName sn : regionsMap.values()) {
       String host = sn.getHostname();
       DrillbitEndpoint ep = endpointMap.get(host);
-      EndpointAffinity affinity = affinityMap.get(ep);
-      if (affinity == null) {
-        affinityMap.put(ep, new EndpointAffinity(ep, 1));
-      } else {
-        affinity.addAffinity(1);
+      if (ep != null) {
+        EndpointAffinity affinity = affinityMap.get(ep);
+        if (affinity == null) {
+          affinityMap.put(ep, new EndpointAffinity(ep, 1));
+        } else {
+          affinity.addAffinity(1);
+        }
       }
     }
     this.endpointAffinities = Lists.newArrayList(affinityMap.values());
@@ -151,12 +153,17 @@ public class HBaseGroupScan extends AbstractGroupScan {
       Iterator<Integer> ints = Iterators.cycle(incomingEndpointMap.get(s));
       mapIterator.put(s, ints);
     }
+    Iterator<Integer> nullIterator = Iterators.cycle(incomingEndpointMap.values());
     for (HRegionInfo regionInfo : regionsMap.keySet()) {
       logger.debug("creating read entry. start key: {} end key: {}", Bytes.toStringBinary(regionInfo.getStartKey()), Bytes.toStringBinary(regionInfo.getEndKey()));
       HBaseSubScan.HBaseSubScanReadEntry p = new HBaseSubScan.HBaseSubScanReadEntry(
           tableName, Bytes.toStringBinary(regionInfo.getStartKey()), Bytes.toStringBinary(regionInfo.getEndKey()));
       String host = regionsMap.get(regionInfo).getHostname();
-      mappings.put(mapIterator.get(host).next(), p);
+      Iterator<Integer> indexIterator = mapIterator.get(host);
+      if (indexIterator == null) {
+        indexIterator = nullIterator;
+      }
+      mappings.put(indexIterator.next(), p);
     }
   }
 
