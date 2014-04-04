@@ -67,6 +67,11 @@ public class HBaseGroupScan extends AbstractGroupScan {
     return columns;
   }
 
+  @JsonProperty
+  public String getTableName() {
+    return tableName;
+  }
+
   private String tableName;
   private HBaseStoragePlugin storagePlugin;
   private HBaseStoragePluginConfig storagePluginConfig;
@@ -77,17 +82,16 @@ public class HBaseGroupScan extends AbstractGroupScan {
   private NavigableMap<HRegionInfo,ServerName> regionsMap;
 
   @JsonCreator
-  public HBaseGroupScan(@JsonProperty("entries") List<HTableReadEntry> entries,
+  public HBaseGroupScan(@JsonProperty("tableName") String tableName,
                           @JsonProperty("storage") HBaseStoragePluginConfig storageEngineConfig,
                           @JsonProperty("columns") List<SchemaPath> columns,
                           @JacksonInject StoragePluginRegistry engineRegistry,
                           @JsonProperty("ref") FieldReference ref
                            )throws IOException, ExecutionSetupException {
-    Preconditions.checkArgument(entries.size() == 1);
     engineRegistry.init(DrillConfig.create());
     this.storagePlugin = (HBaseStoragePlugin) engineRegistry.getEngine(storageEngineConfig);
     this.storagePluginConfig = storageEngineConfig;
-    this.tableName = entries.get(0).getTableName();
+    this.tableName = tableName;
     this.ref = ref;
     this.columns = columns;
     getRegionInfos();
