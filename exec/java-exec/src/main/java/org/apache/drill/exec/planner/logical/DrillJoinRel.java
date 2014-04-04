@@ -42,19 +42,40 @@ import org.eigenbase.rex.RexUtil;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.util.Pair;
 
+import com.google.hive12.common.collect.Lists;
+
 /**
  * Join implemented in Drill.
  */
 public class DrillJoinRel extends DrillJoinRelBase implements DrillRel {
+
   /** Creates a DrillJoinRel. */
   public DrillJoinRel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, RexNode condition,
       JoinRelType joinType) throws InvalidRelException {
     super(cluster, traits, left, right, condition, joinType);
 
     RexNode remaining = RelOptUtil.splitJoinCondition(left, right, condition, leftKeys, rightKeys);
-    if (!remaining.isAlwaysTrue()) {
+    if (!remaining.isAlwaysTrue() && (leftKeys.size() == 0 || rightKeys.size() == 0)) {
       throw new InvalidRelException("DrillJoinRel only supports equi-join");
     }
+  }
+
+  public DrillJoinRel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, RexNode condition,
+      JoinRelType joinType, List<Integer> leftKeys, List<Integer> rightKeys, boolean checkCartesian) throws InvalidRelException {
+    super(cluster, traits, left, right, condition, joinType);
+    
+    assert (leftKeys != null && rightKeys != null);
+    
+    if (checkCartesian)  {
+      List<Integer> tmpLeftKeys = Lists.newArrayList();
+      List<Integer> tmpRightKeys = Lists.newArrayList();
+      RexNode remaining = RelOptUtil.splitJoinCondition(left, right, condition, tmpLeftKeys, tmpRightKeys);
+      if (!remaining.isAlwaysTrue() && (tmpLeftKeys.size() == 0 || tmpRightKeys.size() == 0)) {
+        throw new InvalidRelException("DrillJoinRel only supports equi-join");
+      }
+    }
+    this.leftKeys = leftKeys;
+    this.rightKeys = rightKeys;
   }
   
   @Override
@@ -141,7 +162,9 @@ public class DrillJoinRel extends DrillJoinRelBase implements DrillRel {
                 );
     }
     RexNode rexCondition = RexUtil.composeConjunction(context.getRexBuilder(), joinConditions, false);
-    return new DrillJoinRel(context.getCluster(), context.getLogicalTraits(), left, right, rexCondition, join.getJoinType());
+    DrillJoinRel joinRel = new DrillJoinRel(context.getCluster(), context.getLogicalTraits(), left, right, rexCondition, join.getJoinType());
+
+    return joinRel;
   }
   
 }

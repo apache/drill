@@ -45,8 +45,8 @@ import com.google.common.collect.Lists;
  * Base class for logical and physical Joins implemented in Drill.
  */
 public abstract class DrillJoinRelBase extends JoinRelBase implements DrillRelNode {
-  protected final List<Integer> leftKeys = new ArrayList<>();
-  protected final List<Integer> rightKeys = new ArrayList<>();
+  protected List<Integer> leftKeys = Lists.newArrayList();
+  protected List<Integer> rightKeys = Lists.newArrayList() ;
 
   public DrillJoinRelBase(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, RexNode condition,
       JoinRelType joinType) throws InvalidRelException {

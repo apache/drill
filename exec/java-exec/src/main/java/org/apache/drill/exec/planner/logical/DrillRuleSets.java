@@ -90,8 +90,8 @@ public class DrillRuleSets {
       DrillLimitRule.INSTANCE,
       DrillSortRule.INSTANCE,
       DrillJoinRule.INSTANCE,
-      DrillUnionRule.INSTANCE      
-
+      DrillUnionRule.INSTANCE,      
+      MergeProjectRule.INSTANCE
       ));
   
   public static final RuleSet DRILL_PHYSICAL_MEM = new DrillRuleSet(ImmutableSet.of( //

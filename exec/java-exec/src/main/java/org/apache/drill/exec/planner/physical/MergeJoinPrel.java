@@ -55,7 +55,7 @@ public class MergeJoinPrel  extends DrillJoinRelBase implements Prel {
     }
     
     RexNode remaining = RelOptUtil.splitJoinCondition(left, right, condition, leftKeys, rightKeys);
-    if (!remaining.isAlwaysTrue()) {
+    if (!remaining.isAlwaysTrue() && (leftKeys.size() == 0 || rightKeys.size() == 0)) {
       throw new InvalidRelException("MergeJoinPrel only supports equi-join");
     }
   }
