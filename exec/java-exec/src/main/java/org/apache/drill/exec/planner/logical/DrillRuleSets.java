@@ -69,7 +69,7 @@ public class DrillRuleSets {
 //      UnionToDistinctRule.INSTANCE,
 //      RemoveTrivialProjectRule.INSTANCE,
 //      RemoveTrivialCalcRule.INSTANCE,
-//      RemoveSortRule.INSTANCE,
+      RemoveSortRule.INSTANCE,
 
 //      TableAccessRule.INSTANCE, //
       //MergeProjectRule.INSTANCE, //
