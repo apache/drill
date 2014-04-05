@@ -56,7 +56,7 @@ public class DrillRuleSets {
 //      TableAccessRule.instance, //
 //      MergeProjectRule.instance, //
 //      PushFilterPastProjectRule.instance, //
-//      PushFilterPastJoinRule.FILTER_ON_JOIN, //
+        PushFilterPastJoinRule.FILTER_ON_JOIN, //
 //      RemoveDistinctAggregateRule.instance, //
 //      ReduceAggregatesRule.instance, //
 //      SwapJoinRule.instance, //

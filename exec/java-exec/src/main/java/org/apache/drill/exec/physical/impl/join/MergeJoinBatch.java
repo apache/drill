@@ -102,8 +102,10 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
   
   protected MergeJoinBatch(MergeJoinPOP popConfig, FragmentContext context, RecordBatch left, RecordBatch right) {
     super(popConfig, context);
-    // currently only one join condition is supported
-    assert popConfig.getConditions().size() >= 1 : String.format("Merge Join currently does not support cartisian join.  This join operator was configured with %d condition(s).", popConfig.getConditions().size());
+ 
+    if (popConfig.getConditions().size() == 0) {
+      throw new UnsupportedOperationException("Merge Join currently does not support cartesian join.  This join operator was configured with 0 conditions");
+    }
     this.left = left;
     this.right = right;
     this.status = new JoinStatus(left, right, this);
@@ -204,6 +206,9 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
   private void generateDoCompareNextLeft(ClassGenerator<JoinWorker> cg, JVar incomingRecordBatch, 
       JVar incomingLeftRecordBatch, JVar joinStatus, ErrorCollector collector) throws ClassTransformationException {
     boolean nextLeftIndexDeclared = false;
+
+    cg.setMappingSet(compareLeftMapping);
+    
     for (JoinCondition condition : conditions) {
       final LogicalExpression leftFieldExpr = condition.getLeft();
 
@@ -261,7 +266,6 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
     
     //Pass the equality check for all the join conditions. Finally, return 0.
     cg.getEvalBlock()._return(JExpr.lit(0));
-    
   }  
   
   private JoinWorker generateNewWorker() throws ClassTransformationException, IOException, SchemaChangeException{
@@ -376,6 +380,8 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
   private void generateDoCompare(ClassGenerator<JoinWorker> cg, JVar incomingRecordBatch, 
       JVar incomingLeftRecordBatch, JVar incomingRightRecordBatch, ErrorCollector collector) throws ClassTransformationException {
     
+    cg.setMappingSet(compareMapping);
+    
     for (JoinCondition condition : conditions) {
       final LogicalExpression leftFieldExpr = condition.getLeft();
       final LogicalExpression rightFieldExpr = condition.getRight();
@@ -440,5 +446,4 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
     //Pass the equality check for all the join conditions. Finally, return 0.    
     cg.getEvalBlock()._return(JExpr.lit(0));  
   }
-  
 }
