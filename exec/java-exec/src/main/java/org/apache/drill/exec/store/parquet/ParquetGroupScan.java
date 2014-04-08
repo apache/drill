@@ -336,4 +336,16 @@ public class ParquetGroupScan extends AbstractGroupScan {
     return this;
   }
 
+  @Override
+  public String getDigest() {
+    return toString();
+  }
+
+  @Override
+  public String toString() {
+    return "ParquetGroupScan [entries=" + entries
+        + ", selectionRoot=" + selectionRoot
+        + ", columns=" + columns + "]";
+  }
+
 }

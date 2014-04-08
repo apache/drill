@@ -78,4 +78,9 @@ public class DirectGroupScan extends AbstractGroupScan{
     return Collections.emptyList();
   }
 
+  @Override
+  public String getDigest() {
+    return String.valueOf(reader);
+  }
+
 }

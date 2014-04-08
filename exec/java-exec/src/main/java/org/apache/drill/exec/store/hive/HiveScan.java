@@ -22,6 +22,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
+
 import org.apache.commons.codec.binary.Base64;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -244,4 +245,17 @@ public class HiveScan extends AbstractGroupScan {
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException {
     return new HiveScan(hiveReadEntry, storagePlugin, columns);
   }
+
+  @Override
+  public String getDigest() {
+    return toString();
+  }
+
+  @Override
+  public String toString() {
+    return "HiveScan [table=" + table 
+        + ", inputSplits=" + inputSplits
+        + ", columns=" + columns + "]";
+  }
+
 }

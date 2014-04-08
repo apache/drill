@@ -81,4 +81,10 @@ public class InfoSchemaGroupScan extends AbstractGroupScan{
   public List<EndpointAffinity> getOperatorAffinity() {
     return Collections.emptyList();
   }
+
+  @Override
+  public String getDigest() {
+    return this.table.toString();
+  }
+
 }

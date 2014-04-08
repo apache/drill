@@ -17,5 +17,13 @@
  */
 package org.apache.drill.exec.store;
 
-public interface QueryOptimizerRule {
+import org.eigenbase.relopt.RelOptRule;
+import org.eigenbase.relopt.RelOptRuleOperand;
+
+public abstract class StoragePluginOptimizerRule extends RelOptRule {
+
+  public StoragePluginOptimizerRule(RelOptRuleOperand operand, String description) {
+    super(operand, description);
+  }
+
 }

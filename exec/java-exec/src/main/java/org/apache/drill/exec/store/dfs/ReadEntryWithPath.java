@@ -34,4 +34,9 @@ public class ReadEntryWithPath {
    return path;
   }
 
+  @Override
+  public String toString() {
+    return "ReadEntryWithPath [path=" + path + "]";
+  }
+
 }

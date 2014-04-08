@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.mock;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -109,6 +110,11 @@ public class MockGroupScanPOP extends AbstractGroupScan {
     public Size getSize() {
       return new Size(records, recordSize);
     }
+
+    @Override
+    public String toString() {
+      return "MockScanEntry [records=" + records + ", columns=" + Arrays.toString(types) + "]";
+    }
   }
   
   @JsonInclude(Include.NON_NULL)
@@ -160,6 +166,11 @@ public class MockGroupScanPOP extends AbstractGroupScan {
       if(width != null) b.setWidth(width);
       if(scale != null) b.setScale(scale);
       return b.build();
+    }
+
+    @Override
+    public String toString() {
+      return "MockColumn [minorType=" + minorType + ", name=" + name + ", mode=" + mode + "]";
     }
     
   }
@@ -216,6 +227,17 @@ public class MockGroupScanPOP extends AbstractGroupScan {
     Preconditions.checkArgument(children.isEmpty());
     return new MockGroupScanPOP(url, readEntries);
 
+  }
+
+  @Override
+  public String getDigest() {
+    return toString();
+  }
+
+  @Override
+  public String toString() {
+    return "MockGroupScanPOP [url=" + url
+        + ", readEntries=" + readEntries + "]";
   }
 
 }

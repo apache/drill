@@ -18,11 +18,12 @@
 package org.apache.drill.exec.store;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
+import java.util.Set;
 
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
+
+import com.google.common.collect.ImmutableSet;
 
 public abstract class AbstractStoragePlugin implements StoragePlugin{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractStoragePlugin.class);
@@ -41,8 +42,8 @@ public abstract class AbstractStoragePlugin implements StoragePlugin{
   }
 
   @Override
-  public List<QueryOptimizerRule> getOptimizerRules() {
-    return Collections.emptyList();
+  public Set<StoragePluginOptimizerRule> getOptimizerRules() {
+    return ImmutableSet.of();
   }
 
   @Override

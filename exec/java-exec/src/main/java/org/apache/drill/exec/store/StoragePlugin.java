@@ -18,7 +18,7 @@
 package org.apache.drill.exec.store;
 
 import java.io.IOException;
-import java.util.List;
+import java.util.Set;
 
 import net.hydromatic.optiq.SchemaPlus;
 
@@ -32,7 +32,7 @@ public interface StoragePlugin extends SchemaFactory{
 
   public boolean supportsWrite();
 
-  public List<QueryOptimizerRule> getOptimizerRules();
+  public Set<StoragePluginOptimizerRule> getOptimizerRules();
 
   /**
    * Get the physical scan operator for the particular GroupScan (read) node.

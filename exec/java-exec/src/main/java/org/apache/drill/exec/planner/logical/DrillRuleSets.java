@@ -36,20 +36,15 @@ import org.eigenbase.rel.rules.MergeProjectRule;
 import org.eigenbase.rel.rules.PushFilterPastJoinRule;
 import org.eigenbase.rel.rules.PushFilterPastProjectRule;
 import org.eigenbase.rel.rules.PushJoinThroughJoinRule;
-import org.eigenbase.rel.rules.PushSortPastProjectRule;
 import org.eigenbase.rel.rules.ReduceAggregatesRule;
 import org.eigenbase.rel.rules.RemoveDistinctAggregateRule;
 import org.eigenbase.rel.rules.RemoveDistinctRule;
 import org.eigenbase.rel.rules.RemoveSortRule;
-import org.eigenbase.rel.rules.RemoveTrivialCalcRule;
-import org.eigenbase.rel.rules.RemoveTrivialProjectRule;
-import org.eigenbase.rel.rules.SwapJoinRule;
-import org.eigenbase.rel.rules.TableAccessRule;
-import org.eigenbase.rel.rules.UnionToDistinctRule;
 import org.eigenbase.relopt.RelOptRule;
 import org.eigenbase.relopt.volcano.AbstractConverter.ExpandConversionRule;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSet.Builder;
 
 public class DrillRuleSets {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillRuleSets.class);
@@ -143,6 +138,20 @@ public class DrillRuleSets {
       ProjectPrule.INSTANCE
 
     ));
+
+  public static RuleSet create(ImmutableSet<RelOptRule> rules) {
+    return new DrillRuleSet(rules);
+  }
+
+  public static RuleSet mergedRuleSets(RuleSet...ruleSets) {
+    Builder<RelOptRule> relOptRuleSetBuilder = ImmutableSet.builder();
+    for (RuleSet ruleSet : ruleSets) {
+      for (RelOptRule relOptRule : ruleSet) {
+        relOptRuleSetBuilder.add(relOptRule);
+      }
+    }
+    return new DrillRuleSet(relOptRuleSetBuilder.build());
+  }
 
   private static class DrillRuleSet implements RuleSet{
     final ImmutableSet<RelOptRule> rules;

@@ -33,9 +33,20 @@ import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.logical.DrillRuleSets;
 import org.apache.drill.exec.planner.physical.DrillDistributionTraitDef;
-import org.apache.drill.exec.planner.sql.handlers.*;
-import org.apache.drill.exec.planner.sql.parser.*;
+import org.apache.drill.exec.planner.sql.handlers.DefaultSqlHandler;
+import org.apache.drill.exec.planner.sql.handlers.DescribeTableHandler;
+import org.apache.drill.exec.planner.sql.handlers.ExplainHandler;
+import org.apache.drill.exec.planner.sql.handlers.SetOptionHandler;
+import org.apache.drill.exec.planner.sql.handlers.ShowSchemasHandler;
+import org.apache.drill.exec.planner.sql.handlers.ShowTablesHandler;
+import org.apache.drill.exec.planner.sql.handlers.SqlHandler;
+import org.apache.drill.exec.planner.sql.handlers.UseSchemaHandler;
+import org.apache.drill.exec.planner.sql.parser.SqlDescribeTable;
+import org.apache.drill.exec.planner.sql.parser.SqlShowSchemas;
+import org.apache.drill.exec.planner.sql.parser.SqlShowTables;
+import org.apache.drill.exec.planner.sql.parser.SqlUseSchema;
 import org.apache.drill.exec.planner.sql.parser.impl.DrillParserImpl;
+import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.eigenbase.rel.RelCollationTraitDef;
 import org.eigenbase.relopt.ConventionTraitDef;
 import org.eigenbase.relopt.RelTraitDef;
@@ -47,10 +58,11 @@ public class DrillSqlWorker {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillSqlWorker.class);
 
   private final Planner planner;
-  private final static RuleSet[] RULES = new RuleSet[]{DrillRuleSets.DRILL_BASIC_RULES, DrillRuleSets.DRILL_PHYSICAL_MEM};
   public final static int LOGICAL_RULES = 0;
   public final static int PHYSICAL_MEM_RULES = 1;
   private final QueryContext context;
+
+  private static volatile RuleSet[] allRules;
 
   public DrillSqlWorker(QueryContext context) throws Exception {
     final List<RelTraitDef> traitDefs = new ArrayList<RelTraitDef>();
@@ -68,10 +80,23 @@ public class DrillSqlWorker {
         .traitDefs(traitDefs) //
         .convertletTable(StandardConvertletTable.INSTANCE) //
         .context(context.getPlannerSettings()) //
-        .ruleSets(RULES) //
+        .ruleSets(getRules(context.getStorage())) //
         .build();
     this.planner = Frameworks.getPlanner(config);
 
+  }
+
+  private static RuleSet[] getRules(StoragePluginRegistry storagePluginRegistry) {
+    if (allRules == null) {
+      synchronized (DrillSqlWorker.class) {
+        if (allRules == null) {
+          RuleSet dirllPhysicalMem = DrillRuleSets.mergedRuleSets(
+              DrillRuleSets.DRILL_PHYSICAL_MEM, storagePluginRegistry.getStoragePluginRuleSet());
+          allRules = new RuleSet[] {DrillRuleSets.DRILL_BASIC_RULES, dirllPhysicalMem};
+        }
+      }
+    }
+    return allRules;
   }
 
   public PhysicalPlan getPlan(String sql) throws SqlParseException, ValidationException, RelConversionException, IOException{

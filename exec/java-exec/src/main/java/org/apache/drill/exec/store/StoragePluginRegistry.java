@@ -26,12 +26,13 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import com.google.common.base.Preconditions;
 import net.hydromatic.linq4j.expressions.DefaultExpression;
 import net.hydromatic.linq4j.expressions.Expression;
 import net.hydromatic.optiq.SchemaPlus;
-import net.hydromatic.optiq.tools.Frameworks;
+import net.hydromatic.optiq.tools.RuleSet;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -39,6 +40,7 @@ import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.util.PathScanner;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.planner.logical.DrillRuleSets;
 import org.apache.drill.exec.cache.DistributedMap;
 import org.apache.drill.exec.cache.JacksonDrillSerializable.StoragePluginsSerializable;
 import org.apache.drill.exec.exception.DrillbitStartupException;
@@ -49,9 +51,12 @@ import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.dfs.FormatPlugin;
 import org.apache.drill.exec.store.ischema.InfoSchemaConfig;
 import org.apache.drill.exec.store.ischema.InfoSchemaStoragePlugin;
+import org.eigenbase.relopt.RelOptRule;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSet.Builder;
 import com.google.common.io.Resources;
 
 
@@ -63,6 +68,8 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
 
   private DrillbitContext context;
   private final DrillSchemaFactory schemaFactory = new DrillSchemaFactory();
+
+  private RuleSet storagePluginsRuleSet;
 
   private static final Expression EXPRESSION = new DefaultExpression(Object.class);
 
@@ -84,7 +91,10 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
       int i =0;
       for(Constructor<?> c : plugin.getConstructors()){
         Class<?>[] params = c.getParameterTypes();
-        if(params.length != 3 || params[1] != DrillbitContext.class || !StoragePluginConfig.class.isAssignableFrom(params[0]) || params[2] != String.class){
+        if(params.length != 3 
+            || params[1] != DrillbitContext.class 
+            || !StoragePluginConfig.class.isAssignableFrom(params[0]) 
+            || params[2] != String.class){
           logger.info("Skipping StoragePlugin constructor {} for plugin class {} since it doesn't implement a [constructor(StoragePluginConfig, DrillbitContext, String)]", c, plugin);
           continue;
         }
@@ -96,10 +106,20 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
       }
     }
 
+    // create registered plugins defined in "storage-plugins.json"
     this.plugins = ImmutableMap.copyOf(createPlugins());
 
+    // query registered engines for optimizer rules and build the storage plugin RuleSet 
+    Builder<RelOptRule> setBuilder = ImmutableSet.builder();
+    for (StoragePlugin plugin : this.plugins.values()) {
+      Set<StoragePluginOptimizerRule> rules = plugin.getOptimizerRules();
+      if (rules != null && rules.size() > 0) {
+        setBuilder.addAll(rules);
+      }
+    }
+    this.storagePluginsRuleSet = DrillRuleSets.create(setBuilder.build());
   }
-  
+
   private Map<String, StoragePlugin> createPlugins() throws DrillbitStartupException {
     /*
      * Check if "storage-plugins.json" exists. Also check if "storage-plugins" object exists in Distributed Cache.
@@ -190,6 +210,10 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
   @Override
   public Iterator<Entry<String, StoragePlugin>> iterator() {
     return plugins.entrySet().iterator();
+  }
+
+  public RuleSet getStoragePluginRuleSet() {
+    return storagePluginsRuleSet;
   }
 
   public DrillSchemaFactory getSchemaFactory(){

@@ -197,4 +197,9 @@ public class HBaseGroupScan extends AbstractGroupScan {
     return this;
   }
 
+  @Override
+  public String getDigest() {
+    return toString();
+  }
+
 }

@@ -37,4 +37,11 @@ public interface GroupScan extends Scan, HasAffinity{
 
   @JsonIgnore
   public int getMaxParallelizationWidth();
+
+  /**
+   * Returns a signature of the {@link GroupScan} which should usually be composed of
+   * all its attributes which could describe it uniquely.
+   */
+  @JsonIgnore
+  public abstract String getDigest();
 }

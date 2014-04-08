@@ -18,14 +18,13 @@
 package org.apache.drill.exec.store.dfs;
 
 import java.io.IOException;
-import java.util.List;
+import java.util.Set;
 
-import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.store.QueryOptimizerRule;
+import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 import org.apache.drill.exec.store.dfs.shim.DrillFileSystem;
 
 /**
@@ -41,7 +40,7 @@ public interface FormatPlugin {
   
   public AbstractGroupScan getGroupScan(FileSelection selection) throws IOException;
 
-  public List<QueryOptimizerRule> getOptimizerRules();
+  public Set<StoragePluginOptimizerRule> getOptimizerRules();
   
   public FormatPluginConfig getConfig();
   public StoragePluginConfig getStorageConfig();

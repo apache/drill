@@ -81,7 +81,7 @@ public class PlanningBase extends ExecTest{
       }
     };
 
-    StoragePluginRegistry registry = new StoragePluginRegistry(dbContext);
+    final StoragePluginRegistry registry = new StoragePluginRegistry(dbContext);
     registry.init();
     final FunctionImplementationRegistry functionRegistry = new FunctionImplementationRegistry(config);
     final SchemaPlus root = Frameworks.createRootSchema();
@@ -92,6 +92,8 @@ public class PlanningBase extends ExecTest{
       {
         context.getNewDefaultSchema();
         result = root;
+        context.getStorage();
+        result = registry;
         context.getFunctionRegistry();
         result = functionRegistry;
         context.getSession();

@@ -18,26 +18,31 @@
 package org.apache.drill.exec.store.parquet;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
 
-import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.store.QueryOptimizerRule;
-import org.apache.drill.exec.store.dfs.*;
+import org.apache.drill.exec.store.StoragePluginOptimizerRule;
+import org.apache.drill.exec.store.dfs.BasicFormatMatcher;
+import org.apache.drill.exec.store.dfs.DrillPathFilter;
+import org.apache.drill.exec.store.dfs.FileSelection;
+import org.apache.drill.exec.store.dfs.FormatMatcher;
+import org.apache.drill.exec.store.dfs.FormatPlugin;
+import org.apache.drill.exec.store.dfs.FormatSelection;
+import org.apache.drill.exec.store.dfs.MagicString;
 import org.apache.drill.exec.store.dfs.shim.DrillFileSystem;
 import org.apache.drill.exec.store.mock.MockStorageEngine;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
-
 import org.apache.hadoop.fs.PathFilter;
+
 import parquet.format.converter.ParquetMetadataConverter;
 import parquet.hadoop.CodecFactoryExposer;
 import parquet.hadoop.ParquetFileWriter;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
 public class ParquetFormatPlugin implements FormatPlugin{
@@ -89,8 +94,8 @@ public class ParquetFormatPlugin implements FormatPlugin{
   }
   
   @Override
-  public List<QueryOptimizerRule> getOptimizerRules() {
-    return Collections.emptyList();
+  public Set<StoragePluginOptimizerRule> getOptimizerRules() {
+    return ImmutableSet.of();
   }
 
   @Override

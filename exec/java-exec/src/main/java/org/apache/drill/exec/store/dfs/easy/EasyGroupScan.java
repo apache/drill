@@ -22,7 +22,6 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
@@ -196,4 +195,15 @@ public class EasyGroupScan extends AbstractGroupScan{
   public FormatPluginConfig getFormatConfig(){
     return formatPlugin.getConfig();
   }
+
+  @Override
+  public String toString() {
+    return "EasyGroupScan [selectionRoot=" + selectionRoot + "]";
+  }
+
+  @Override
+  public String getDigest() {
+    return toString();
+  }
+
 }
