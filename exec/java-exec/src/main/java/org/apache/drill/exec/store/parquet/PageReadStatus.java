@@ -76,6 +76,8 @@ final class PageReadStatus {
    */
   public boolean next() throws IOException {
 
+    currentPage = null;
+
     if(!dataReader.hasRemainder()) return false;
 
     // next, we need to decompress the bytes

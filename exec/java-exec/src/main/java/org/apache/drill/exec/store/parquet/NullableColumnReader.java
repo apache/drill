@@ -116,7 +116,9 @@ abstract class NullableColumnReader extends ColumnReader{
         totalValuesRead += recordsReadInThisIteration;
         pageReadStatus.valuesRead += recordsReadInThisIteration;
         if (readStartInBytes + readLength >= pageReadStatus.byteLength && bitsUsed == 0) {
-          pageReadStatus.next();
+          if (!pageReadStatus.next()) {
+            break;
+          }
         } else {
           pageReadStatus.readPosInBytes = readStartInBytes + readLength;
         }
