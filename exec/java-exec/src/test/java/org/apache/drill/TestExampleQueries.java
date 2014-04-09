@@ -56,6 +56,16 @@ public class TestExampleQueries {
   public void testGroupBy() throws Exception{
     test("select marital_status, COUNT(1) as cnt from cp.`employee.json` group by marital_status");
   }
+
+  @Test
+  public void testExpalinPhysical() throws Exception{
+    test("explain plan for select marital_status, COUNT(1) as cnt from cp.`employee.json` group by marital_status");
+  }
+
+  @Test
+  public void testExpalinLogical() throws Exception{
+    test("explain plan without implementation for select marital_status, COUNT(1) as cnt from cp.`employee.json` group by marital_status");
+  }
   
   private void test(String sql) throws Exception{
     boolean good = false;

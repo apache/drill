@@ -60,6 +60,7 @@ import org.eigenbase.sql.SqlNode;
 import org.eigenbase.sql.parser.SqlParseException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.hive12.common.base.Preconditions;
 
 public class DrillSqlWorker {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillSqlWorker.class);
@@ -81,7 +82,7 @@ public class DrillSqlWorker {
 //    this.planner = Frameworks.getPlanner(Lex.MYSQL, SqlParserImpl.FACTORY, schemaFactory, SqlStdOperatorTable.instance(), traitDefs, RULES);
   }
   
-  private class RelResult{
+  public class RelResult{
     final ResultMode mode;
     final RelNode node;
     public RelResult(ResultMode mode, RelNode node) {
@@ -89,18 +90,28 @@ public class DrillSqlWorker {
       this.mode = mode;
       this.node = node;
     }
+    
+    public ResultMode getMode() {
+      return this.mode;
+    }
   }
 
   /*
-   * Return the logical DrillRel tree 
+   * Given a SQL string, return the logical DrillRel tree, plus mode (execute, or EXPLAIN mode).  
    */
-  private RelResult getRel(String sql) throws SqlParseException, ValidationException, RelConversionException{
-    SqlNode sqlNode = planner.parse(sql);
-    
+  public RelResult getLogicalRel(String sql) throws SqlParseException, ValidationException, RelConversionException{
+    if(logger.isDebugEnabled()) {
+      logger.debug("SQL : " + sql);
+    }
+
+    // Call optiq to parse the SQL string. 
+    SqlNode sqlNode = planner.parse(sql);  
     ResultMode resultMode = ResultMode.EXEC;
     
+    //Process EXPLAIN
     if(sqlNode.getKind() == SqlKind.EXPLAIN){
       SqlExplain explain = (SqlExplain) sqlNode;
+      sqlNode = explain.operand(0);
       SqlExplain.Depth depth = (SqlExplain.Depth) explain.getDepth();
       switch(depth){
       case LOGICAL:
@@ -113,11 +124,16 @@ public class DrillSqlWorker {
       }
     }
     
+    // Call optiq to validate SqlNode tree and convert it to RelNode tree. 
     SqlNode validatedNode = planner.validate(sqlNode);
     RelNode relNode = planner.convert(validatedNode);
     
-    System.out.println(RelOptUtil.toString(relNode, SqlExplainLevel.ALL_ATTRIBUTES));
+    //Debug
+    if(logger.isDebugEnabled()) {
+      logger.debug("RelNode tree : " + RelOptUtil.toString(relNode, SqlExplainLevel.ALL_ATTRIBUTES));
+    }
     
+    // Call optiq to transform RelNode into Drill Logical RelNode tree. 
     RelNode convertedRelNode = planner.transform(LOGICAL_RULES, relNode.getTraitSet().plus(DrillRel.DRILL_LOGICAL), relNode);
     if(convertedRelNode instanceof DrillStoreRel){
       throw new UnsupportedOperationException();
@@ -125,15 +141,35 @@ public class DrillSqlWorker {
       convertedRelNode = new DrillScreenRel(convertedRelNode.getCluster(), convertedRelNode.getTraitSet(), convertedRelNode);
     }
     
-    System.out.println(RelOptUtil.toString(convertedRelNode, SqlExplainLevel.ALL_ATTRIBUTES));
+    //Debug
+    if(logger.isDebugEnabled()) {
+      logger.debug("Drill LogicalRel tree : " + RelOptUtil.toString(convertedRelNode, SqlExplainLevel.ALL_ATTRIBUTES));
+    }
     
     return new RelResult(resultMode, convertedRelNode);
   }
   
-  
-  
+  /*
+   * Given a Drill LogicalRel tree, return Drill Logical Plan. 
+   * @param relResult :  RelResult whose node is the root of Drill logicalrel tree.
+   */
+  public LogicalPlan getLogicalPlan(RelResult relResult) throws SqlParseException, ValidationException, RelConversionException{
+    RelNode logicalRelRoot = relResult.node;
+    
+    Preconditions.checkArgument(logicalRelRoot.getConvention() == DrillRel.DRILL_LOGICAL);
+    
+    DrillImplementor implementor = new DrillImplementor(new DrillParseContext(), relResult.mode);
+    implementor.go( (DrillRel) logicalRelRoot);
+    planner.close();
+    planner.reset();
+    return implementor.getPlan();    
+  }
+
+  /*
+   * Given a SQL string, return the Drill logical plan.
+   */
   public LogicalPlan getLogicalPlan(String sql) throws SqlParseException, ValidationException, RelConversionException{
-    RelResult result = getRel(sql);
+    RelResult result = getLogicalRel(sql);
 
     RelNode convertedRelNode = planner.transform(LOGICAL_RULES, result.node.getTraitSet().plus(DrillRel.DRILL_LOGICAL), result.node);
     if(convertedRelNode instanceof DrillStoreRel){
@@ -145,22 +181,51 @@ public class DrillSqlWorker {
     implementor.go( (DrillRel) convertedRelNode);
     planner.close();
     planner.reset();
-    return implementor.getPlan();
+    return implementor.getPlan();    
+  }
+
+  /*
+   * Given a Drill LogicalRel tree, return Drill Physical plan.
+   * @param relResult : RelResult whose node is the root of Drill logicalrel tree.
+   * @param qcontext  : QueryContext used by PhysicalPlanCreator. 
+   */
+  public PhysicalPlan getPhysicalPlan(RelResult relResult, QueryContext qcontext) throws SqlParseException, ValidationException, RelConversionException, IOException {
+    RelNode logicalRelRoot = relResult.node;
     
+    Preconditions.checkArgument(logicalRelRoot.getConvention() == DrillRel.DRILL_LOGICAL);
+    
+    RelTraitSet traits = logicalRelRoot.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(DrillDistributionTrait.SINGLETON);    
+    Prel phyRelNode = (Prel) planner.transform(PHYSICAL_MEM_RULES, traits, logicalRelRoot);
+    
+    //Debug
+    if(logger.isDebugEnabled()) {     
+      String msg = RelOptUtil.toString(phyRelNode, SqlExplainLevel.ALL_ATTRIBUTES);
+      logger.debug("Drill PhysicalRel tree: " + msg);
+    }
+    
+    PhysicalPlanCreator pplanCreator = new PhysicalPlanCreator(qcontext);
+    PhysicalPlan plan = pplanCreator.build(phyRelNode, true /* rebuild */);
+        
+    planner.close();
+    planner.reset();
+    return plan;
   }
   
+  /*
+   * Given a SQL string, return Drill physical plan. 
+   */
   public PhysicalPlan getPhysicalPlan(String sql, QueryContext qcontext) throws SqlParseException, ValidationException, RelConversionException, IOException {
-    RelResult result = getRel(sql);
+    RelResult result = getLogicalRel(sql);
 
     RelTraitSet traits = result.node.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(DrillDistributionTrait.SINGLETON);    
     Prel phyRelNode = (Prel) planner.transform(PHYSICAL_MEM_RULES, traits, result.node);
     
     //Debug.
-    System.err.println("SQL : " + sql);
-    logger.debug("SQL : " + sql);
-    String msg = RelOptUtil.toString(phyRelNode, SqlExplainLevel.ALL_ATTRIBUTES);
-    System.out.println(msg);
-    logger.debug(msg);
+    if(logger.isDebugEnabled()) {     
+      logger.debug("SQL : " + sql);
+      String msg = RelOptUtil.toString(phyRelNode, SqlExplainLevel.ALL_ATTRIBUTES);
+      logger.debug("Drill PhysicalRel tree: " + msg);      
+    }
         
     PhysicalPlanCreator pplanCreator = new PhysicalPlanCreator(qcontext);
     PhysicalPlan plan = pplanCreator.build(phyRelNode, true /* rebuild */);
@@ -171,20 +236,4 @@ public class DrillSqlWorker {
 
   }
  
-  public void runPhysicalPlan(PhysicalPlan phyPlan, DrillConfig config) {
-    QuerySubmitter qs = new QuerySubmitter();
-    
-    ObjectMapper mapper = config.getMapper();
-    
-    try {
-      String phyPlanStr = mapper.writeValueAsString(phyPlan);
-      
-      System.out.println(phyPlanStr);
-      
-      qs.submitQuery(null, phyPlanStr, "physical", null, true, 1, "csv");
-    } catch (Exception e) {
-      System.err.println("Query fails " + e.toString());
-    }
-  }
-
 }

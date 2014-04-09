@@ -47,6 +47,7 @@ import org.apache.drill.exec.planner.fragment.PlanningSet;
 import org.apache.drill.exec.planner.fragment.SimpleParallelizer;
 import org.apache.drill.exec.planner.fragment.StatsCollector;
 import org.apache.drill.exec.planner.sql.DrillSqlWorker;
+import org.apache.drill.exec.planner.sql.DrillSqlWorker.RelResult;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
@@ -348,11 +349,24 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
     try{
       DrillSqlWorker sqlWorker = new DrillSqlWorker(context.getFactory(), context.getFunctionRegistry());
       
-      PhysicalPlan physical = sqlWorker.getPhysicalPlan(sql, context);
+      RelResult relResult = sqlWorker.getLogicalRel(sql);
       
+      //EXPLAIN logical
+      if (relResult.getMode() == ResultMode.LOGICAL) {
+        returnLogical(sqlWorker.getLogicalPlan(relResult));
+        return;
+      }
+      
+      PhysicalPlan physical = sqlWorker.getPhysicalPlan(relResult, context);
+            
       if(logger.isDebugEnabled()) {
         logger.debug("Distributed Physical {}", context.getConfig().getMapper().writeValueAsString(physical));
-        System.out.println(context.getConfig().getMapper().writeValueAsString(physical));
+      }
+      
+      //EXPLAIN physical
+      if (relResult.getMode() == ResultMode.PHYSICAL) {
+        returnPhysical(physical);
+        return;
       }
       
       runPhysicalPlan(physical);
