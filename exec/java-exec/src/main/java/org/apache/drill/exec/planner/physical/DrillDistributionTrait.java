@@ -138,7 +138,7 @@ public class DrillDistributionTrait implements RelTrait {
     }
     
     public String toString() {
-      return new Integer(fieldId).toString();
+      return String.format("[$%s]", this.fieldId);
     }
   }
   

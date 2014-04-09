@@ -27,6 +27,7 @@ import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.torel.ConversionContext;
 import org.eigenbase.rel.InvalidRelException;
 import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.RelWriter;
 import org.eigenbase.rel.SingleRel;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelTraitSet;
@@ -54,4 +55,12 @@ public abstract class DrillLimitRelBase extends SingleRel implements DrillRelNod
   public RexNode getFetch() {
     return this.fetch;
   }
+  
+  public RelWriter explainTerms(RelWriter pw) {
+    super.explainTerms(pw);
+    pw.itemIf("offset", offset, offset != null);
+    pw.itemIf("fetch", fetch, fetch != null);
+    return pw;
+  }  
+
 }

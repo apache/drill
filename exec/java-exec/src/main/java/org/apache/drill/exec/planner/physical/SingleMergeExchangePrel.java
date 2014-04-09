@@ -21,6 +21,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.hydromatic.linq4j.Ord;
+
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.logical.data.Order.Ordering;
@@ -32,6 +34,7 @@ import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.eigenbase.rel.RelCollation;
 import org.eigenbase.rel.RelFieldCollation;
 import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.RelWriter;
 import org.eigenbase.rel.SingleRel;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptCost;
@@ -76,5 +79,18 @@ public class SingleMergeExchangePrel extends SingleRel implements Prel {
     creator.addPhysicalOperator(g);
     return g;    
   }
-    
+  
+  @Override
+  public RelWriter explainTerms(RelWriter pw) {
+    super.explainTerms(pw);
+    if (pw.nest()) {
+      pw.item("collation", collation);
+    } else {
+      for (Ord<RelFieldCollation> ord : Ord.zip(collation.getFieldCollations())) {
+        pw.item("sort" + ord.i, ord.e);
+      }
+    }
+    return pw;
+  }  
+  
 }

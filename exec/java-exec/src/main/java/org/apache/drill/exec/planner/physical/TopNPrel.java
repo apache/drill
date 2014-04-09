@@ -18,31 +18,35 @@
 package org.apache.drill.exec.planner.physical;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.physical.config.ExternalSort;
-import org.apache.drill.exec.physical.config.SingleMergeExchange;
-import org.apache.drill.exec.physical.config.Sort;
-import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
+import org.apache.drill.exec.physical.config.TopN;
 import org.eigenbase.rel.RelCollation;
 import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.SortRel;
+import org.eigenbase.rel.RelWriter;
+import org.eigenbase.rel.SingleRel;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.RelTraitSet;
+import org.eigenbase.rex.RexLiteral;
 import org.eigenbase.rex.RexNode;
 
-public class SortPrel extends SortRel implements Prel {
+public class TopNPrel extends SingleRel implements Prel {
 
-  /** Creates a DrillSortRel. */
-  public SortPrel(RelOptCluster cluster, RelTraitSet traits, RelNode input, RelCollation collation) {
-    super(cluster, traits, input, collation);
+  protected int limit;
+  protected final RelCollation collation;
+  
+  public TopNPrel(RelOptCluster cluster, RelTraitSet traitSet, RelNode child, int limit, RelCollation collation) {
+    super(cluster, traitSet, child);
+    this.limit = limit;
+    this.collation = collation;
   }
 
-  /** Creates a DrillSortRel with offset and fetch. */
-  public SortPrel(RelOptCluster cluster, RelTraitSet traits, RelNode input, RelCollation collation, RexNode offset, RexNode fetch) {
-    super(cluster, traits, input, collation, offset, fetch);
+  @Override
+  public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
+    return new TopNPrel(getCluster(), traitSet, sole(inputs), this.limit, this.collation);
   }
 
   @Override
@@ -50,31 +54,25 @@ public class SortPrel extends SortRel implements Prel {
     Prel child = (Prel) this.getChild();
     
     PhysicalOperator childPOP = child.getPhysicalOperator(creator);
+     
+    TopN topN = new TopN(childPOP, PrelUtil.getOrdering(this.collation, getChild().getRowType()), false, this.limit);
     
-    if (childPOP.getSVMode().equals(SelectionVectorMode.FOUR_BYTE)) {
-      throw new UnsupportedOperationException();
-    }
+    creator.addPhysicalOperator(topN);
     
-    Sort g = new ExternalSort(childPOP, PrelUtil.getOrdering(this.collation, getChild().getRowType()), false);
-    
-    creator.addPhysicalOperator(g);
-    
-    return g;    
-  }
-
-  public SortPrel copy(
-      RelTraitSet traitSet,
-      RelNode newInput,
-      RelCollation newCollation,
-      RexNode offset,
-      RexNode fetch) {
-    return new SortPrel(getCluster(), traitSet, newInput, newCollation);
+    return topN;
   }
   
   @Override
   public RelOptCost computeSelfCost(RelOptPlanner planner) {
     //We use multiplier 0.05 for TopN operator, and 0.1 for Sort, to make TopN a preferred choice. 
-    return super.computeSelfCost(planner).multiplyBy(0.1);
+    return super.computeSelfCost(planner).multiplyBy(0.05);
   }
+
   
+  @Override
+  public RelWriter explainTerms(RelWriter pw) {
+    return super.explainTerms(pw)
+        .item("limit", limit);
+  }
+
 }

@@ -139,6 +139,7 @@ public class TestJdbcDistQuery {
   }
 
   @Test
+  //NPE at ExternalSortBatch.java : 151
   public void testSortSingleFile() throws Exception{
     testQuery(String.format("select R_REGIONKEY "
         + "from dfs.`%s/../sample-data/regionsSF/` "
@@ -146,6 +147,7 @@ public class TestJdbcDistQuery {
   }
 
   @Test
+  //NPE at ExternalSortBatch.java : 151
   public void testSortMultiFile() throws Exception{
     testQuery(String.format("select R_REGIONKEY "
         + "from dfs.`%s/../sample-data/regionsMF/` "

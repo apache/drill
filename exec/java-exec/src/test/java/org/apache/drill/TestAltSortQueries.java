@@ -19,23 +19,41 @@ package org.apache.drill;
 
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.client.QuerySubmitter;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
 
-public class TestExampleQueries {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestExampleQueries.class);
+public class TestAltSortQueries {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestAltSortQueries.class);
   
   @Rule public TestRule TIMEOUT = TestTools.getTimeoutRule(10000000);
-  
+
+  @Test
+  public void testOrderBy() throws Exception{
+    test("select R_REGIONKEY " +
+         "from dfs.`[WORKING_PATH]/../../sample-data/region.parquet` " +
+         "order by R_REGIONKEY");   
+  }  
+
+  @Test 
+  public void testOrderBySingleFile() throws Exception{
+    test("select R_REGIONKEY " +
+         "from dfs.`[WORKING_PATH]/../../sample-data/regionsSF/` " +
+         "order by R_REGIONKEY");   
+  }  
+    
   @Test
   public void testSelectWithLimit() throws Exception{
-    test("select employee_id,  first_name, last_name from cp.`employee.json` order by employee_id limit 5 offset 10");
+    test("select employee_id,  first_name, last_name from cp.`employee.json` order by employee_id limit 5 ");
   }
-  
+
   @Test
-  public void testJoin() throws Exception{
+  public void testSelectWithLimitOffset() throws Exception{
+    test("select employee_id,  first_name, last_name from cp.`employee.json` order by employee_id limit 5 offset 10 ");
+  }
+
+  @Test
+  public void testJoinWithLimit() throws Exception{
     test("SELECT\n" + 
         "  nations.N_NAME,\n" + 
         "  regions.R_NAME\n" + 
@@ -43,29 +61,11 @@ public class TestExampleQueries {
         "  dfs.`[WORKING_PATH]/../../sample-data/nation.parquet` nations\n" + 
         "JOIN\n" + 
         "  dfs.`[WORKING_PATH]/../../sample-data/region.parquet` regions\n" + 
-        "  on nations.N_REGIONKEY = regions.R_REGIONKEY");
+        "  on nations.N_REGIONKEY = regions.R_REGIONKEY" +
+        " order by regions.R_NAME, nations.N_NAME " + 
+        " limit 5");
   }
-  
-  
-  @Test
-  public void testWhere() throws Exception{
-    test("select * from cp.`employee.json` where employee_id > 10 and employee_id < 20");
-  }
-
-  @Test
-  public void testGroupBy() throws Exception{
-    test("select marital_status, COUNT(1) as cnt from cp.`employee.json` group by marital_status");
-  }
-
-  @Test
-  public void testExpalinPhysical() throws Exception{
-    test("explain plan for select marital_status, COUNT(1) as cnt from cp.`employee.json` group by marital_status");
-  }
-
-  @Test
-  public void testExpalinLogical() throws Exception{
-    test("explain plan without implementation for select marital_status, COUNT(1) as cnt from cp.`employee.json` group by marital_status");
-  }
+    
   
   private void test(String sql) throws Exception{
     boolean good = false;

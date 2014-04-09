@@ -20,12 +20,15 @@ package org.apache.drill.exec.planner.physical;
 import java.io.IOException;
 import java.util.List;
 
+import net.hydromatic.linq4j.Ord;
+
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.HashToRandomExchange;
 import org.apache.drill.exec.physical.config.SelectionVectorRemover;
 import org.apache.drill.exec.planner.physical.DrillDistributionTrait.DistributionField;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.RelWriter;
 import org.eigenbase.rel.SingleRel;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptCost;
@@ -73,5 +76,14 @@ public class HashToRandomExchangePrel extends SingleRel implements Prel {
   public List<DistributionField> getFields() {
     return this.fields;
   }
+  
+  @Override
+  public RelWriter explainTerms(RelWriter pw) {
+    super.explainTerms(pw);
+      for (Ord<DistributionField> ord : Ord.zip(fields)) {
+        pw.item("dist" + ord.i, ord.e);
+      }
+    return pw;
+  }  
   
 }
