@@ -106,8 +106,12 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
   @Override
   public void cleanup() {
     super.cleanup();
-    sv4.clear();
-    priorityQueue.cleanup();
+    if (sv4 != null) {
+      sv4.clear();
+    }
+    if (priorityQueue != null) {
+      priorityQueue.cleanup();
+    }
     incoming.cleanup();
   }
 

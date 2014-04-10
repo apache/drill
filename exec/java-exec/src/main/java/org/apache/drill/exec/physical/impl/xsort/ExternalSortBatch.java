@@ -148,7 +148,9 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     if (builder != null) {
       builder.clear();
     }
-    sv4.clear();
+    if (sv4 != null) {
+      sv4.clear();
+    }
   }
 
   @Override
