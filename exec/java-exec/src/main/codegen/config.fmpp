@@ -23,8 +23,9 @@ data: {
     drillOI:tdd(../data/HiveTypes.tdd),
     aggrtypes1: tdd(../data/AggrTypes1.tdd),
     aggrtypes2: tdd(../data/AggrTypes2.tdd),
-    date: tdd(../data/DateTypes.tdd)
-    extract: tdd(../data/ExtractTypes.tdd)
+    date: tdd(../data/DateTypes.tdd),
+    extract: tdd(../data/ExtractTypes.tdd),
+    parser: tdd(../data/Parser.tdd)
 }
 freemarkerLinks: {
     includes: includes/

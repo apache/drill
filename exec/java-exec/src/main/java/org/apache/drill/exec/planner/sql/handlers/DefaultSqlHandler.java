@@ -23,7 +23,6 @@ import java.util.List;
 
 import net.hydromatic.optiq.tools.Planner;
 import net.hydromatic.optiq.tools.RelConversionException;
-import net.hydromatic.optiq.tools.RuleSet;
 import net.hydromatic.optiq.tools.ValidationException;
 
 import org.apache.drill.common.logical.PlanProperties;
@@ -51,7 +50,7 @@ import org.eigenbase.sql.SqlNode;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Preconditions;
-import com.google.hive12.common.collect.Lists;
+import com.google.common.collect.Lists;
 
 public class DefaultSqlHandler implements SqlHandler{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DefaultSqlHandler.class);
@@ -83,7 +82,8 @@ public class DefaultSqlHandler implements SqlHandler{
   @Override
   public PhysicalPlan getPlan(SqlNode sqlNode) throws ValidationException, RelConversionException, IOException {
 
-    SqlNode validated = validateNode(sqlNode);
+    SqlNode rewrittenSqlNode = rewrite(sqlNode);
+    SqlNode validated = validateNode(rewrittenSqlNode);
     RelNode rel = convertToRel(validated);
     log("Optiq Logical", rel);
     DrillRel drel = convertToDrel(rel);
@@ -156,6 +156,18 @@ public class DefaultSqlHandler implements SqlHandler{
       return null;
     }
 
+  }
+
+  /**
+   * Rewrite the parse tree. Used before validating the parse tree.
+   * Useful if a particular statement needs to converted into another statement.
+   *
+   * @param node
+   * @return Rewritten sql parse tree
+   * @throws RelConversionException
+   */
+  public SqlNode rewrite(SqlNode node) throws RelConversionException{
+    return node;
   }
 
   public static <T> T unwrap(Object o, Class<T> clazz) throws RelConversionException{

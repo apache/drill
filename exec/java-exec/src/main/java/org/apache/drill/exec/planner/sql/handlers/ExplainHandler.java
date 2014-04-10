@@ -51,8 +51,7 @@ public class ExplainHandler extends DefaultSqlHandler{
 
   @Override
   public PhysicalPlan getPlan(SqlNode node) throws ValidationException, RelConversionException, IOException {
-    SqlExplain explain = unwrap(node, SqlExplain.class);
-    SqlNode sqlNode = rewrite(explain);
+    SqlNode sqlNode = rewrite(node);
     SqlNode validated = validateNode(sqlNode);
     RelNode rel = convertToRel(validated);
     DrillRel drel = convertToDrel(rel);
@@ -69,8 +68,10 @@ public class ExplainHandler extends DefaultSqlHandler{
     return DirectPlan.createDirectPlan(context, physicalResult);
   }
 
-  private SqlNode rewrite(SqlExplain node) {
-    SqlLiteral op = (SqlLiteral) node.operand(2);
+  @Override
+  public SqlNode rewrite(SqlNode sqlNode) throws RelConversionException{
+    SqlExplain node = unwrap(sqlNode, SqlExplain.class);
+    SqlLiteral op = node.operand(2);
     SqlExplain.Depth depth = (SqlExplain.Depth) op.getValue();
 
     switch(depth){
