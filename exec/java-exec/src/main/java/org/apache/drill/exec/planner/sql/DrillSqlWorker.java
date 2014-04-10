@@ -32,16 +32,14 @@ import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.logical.DrillRuleSets;
 import org.apache.drill.exec.planner.physical.DrillDistributionTraitDef;
-import org.apache.drill.exec.planner.sql.handlers.DefaultSqlHandler;
-import org.apache.drill.exec.planner.sql.handlers.ExplainHandler;
-import org.apache.drill.exec.planner.sql.handlers.SetOptionHandler;
-import org.apache.drill.exec.planner.sql.handlers.SqlHandler;
+import org.apache.drill.exec.planner.sql.handlers.*;
+import org.apache.drill.exec.planner.sql.parser.*;
+import org.apache.drill.exec.planner.sql.parser.impl.DrillParserImpl;
 import org.eigenbase.rel.RelCollationTraitDef;
 import org.eigenbase.relopt.ConventionTraitDef;
 import org.eigenbase.relopt.RelTraitDef;
 import org.eigenbase.sql.SqlNode;
 import org.eigenbase.sql.parser.SqlParseException;
-import org.eigenbase.sql.parser.impl.SqlParserImpl;
 import org.eigenbase.sql2rel.StandardConvertletTable;
 
 public class DrillSqlWorker {
@@ -61,8 +59,7 @@ public class DrillSqlWorker {
     traitDefs.add(RelCollationTraitDef.INSTANCE);
     this.context = context;
     DrillOperatorTable table = new DrillOperatorTable(context.getFunctionRegistry());
-    this.planner = Frameworks.getPlanner(Lex.MYSQL, SqlParserImpl.FACTORY, context.getNewDefaultSchema(), table, traitDefs, StandardConvertletTable.INSTANCE, RULES);
-
+    this.planner = Frameworks.getPlanner(Lex.MYSQL, DrillParserImpl.FACTORY, context.getNewDefaultSchema(), table, traitDefs, StandardConvertletTable.INSTANCE, RULES);
   }
 
   public PhysicalPlan getPlan(String sql) throws SqlParseException, ValidationException, RelConversionException, IOException{
@@ -78,6 +75,11 @@ public class DrillSqlWorker {
     case SET_OPTION:
       handler = new SetOptionHandler(context);
       break;
+    case OTHER:
+      if (sqlNode instanceof SqlShowTables){ handler = new ShowTablesHandler(planner, context); break; }
+      else if (sqlNode instanceof SqlShowSchemas){ handler = new ShowSchemasHandler(planner, context); break; }
+      else if (sqlNode instanceof SqlDescribeTable){ handler = new DescribeTableHandler(planner, context); break; }
+      // fallthrough
     default:
       handler = new DefaultSqlHandler(planner, context);
     }
