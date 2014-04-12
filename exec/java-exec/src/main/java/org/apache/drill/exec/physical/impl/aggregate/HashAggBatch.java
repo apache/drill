@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.ExpressionPosition;
@@ -42,6 +43,7 @@ import org.apache.drill.exec.expr.HoldingContainerExpression;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.ValueVectorWriteExpression;
 import org.apache.drill.exec.expr.holders.IntHolder;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.HashAggregate;
 import org.apache.drill.exec.record.AbstractRecordBatch;
@@ -85,7 +87,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
   private final MappingSet UpdateAggrValuesMapping = new MappingSet("incomingRowIdx" /* read index */, "outRowIdx" /* write index */, "htRowIdx" /* workspace index */, "incoming" /* read container */, "outgoing" /* write container */, "aggrValuesContainer" /* workspace container */, UPDATE_AGGR_INSIDE, UPDATE_AGGR_OUTSIDE, UPDATE_AGGR_INSIDE);
 
 
-  public HashAggBatch(HashAggregate popConfig, RecordBatch incoming, FragmentContext context) {
+  public HashAggBatch(HashAggregate popConfig, RecordBatch incoming, FragmentContext context) throws ExecutionSetupException {
     super(popConfig, context);
     this.incoming = incoming;
   }
@@ -197,7 +199,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
       if(expr == null) continue;
 
       final MaterializedField outputField = MaterializedField.create(ne.getRef(), expr.getMajorType());
-      ValueVector vv = TypeHelper.getNewVector(outputField, context.getAllocator());
+      ValueVector vv = TypeHelper.getNewVector(outputField, oContext.getAllocator());
       keyAllocators.add(VectorAllocator.getAllocator(vv, 50));
 
       // add this group-by vector to the output container 
@@ -213,7 +215,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
       if(expr == null) continue;
       
       final MaterializedField outputField = MaterializedField.create(ne.getRef(), expr.getMajorType());
-      ValueVector vv = TypeHelper.getNewVector(outputField, context.getAllocator());
+      ValueVector vv = TypeHelper.getNewVector(outputField, oContext.getAllocator());
       valueAllocators.add(VectorAllocator.getAllocator(vv, 50));
       aggrOutFieldIds[i] = container.add(vv);
 
@@ -227,7 +229,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
     container.buildSchema(SelectionVectorMode.NONE);
     HashAggregator agg = context.getImplementationClass(top);
 
-    agg.setup(popConfig, context, incoming, this, 
+    agg.setup(popConfig, context, oContext.getAllocator(), incoming, this,
               aggrExprs, 
               cgInner.getWorkspaceTypes(),
               groupByOutFieldIds,

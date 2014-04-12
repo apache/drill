@@ -33,6 +33,11 @@ import org.apache.drill.exec.record.TransferPair;
  */
 public interface ValueVector extends Closeable {
 
+  /**
+   * Allocate new buffers. ValueVector implements logic to determine how much to allocate.
+   */
+  public void allocateNew();
+
   public int getBufferSize();
   
   /**

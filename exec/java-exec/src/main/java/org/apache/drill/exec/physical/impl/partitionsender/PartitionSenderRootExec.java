@@ -29,13 +29,17 @@ import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.TypeHelper;
+import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.config.HashPartitionSender;
 import org.apache.drill.exec.physical.impl.RootExec;
 import org.apache.drill.exec.physical.impl.SendingAccountor;
 import org.apache.drill.exec.physical.impl.filter.ReturnValueExpression;
 import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
+import org.apache.drill.exec.record.AbstractRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorWrapper;
@@ -57,6 +61,7 @@ public class PartitionSenderRootExec implements RootExec {
   private OutgoingRecordBatch[] outgoing;
   private Partitioner partitioner;
   private FragmentContext context;
+  private OperatorContext oContext;
   private boolean ok = true;
   private AtomicLong batchesSent = new AtomicLong(0);
   private final SendingAccountor sendCount = new SendingAccountor();
@@ -64,11 +69,12 @@ public class PartitionSenderRootExec implements RootExec {
 
   public PartitionSenderRootExec(FragmentContext context,
                                  RecordBatch incoming,
-                                 HashPartitionSender operator) {
+                                 HashPartitionSender operator) throws OutOfMemoryException {
 
     this.incoming = incoming;
     this.operator = operator;
     this.context = context;
+    this.oContext = new OperatorContext(operator, context);
     this.outgoing = new OutgoingRecordBatch[operator.getDestinations().size()];
     int fieldId = 0;
     for (CoordinationProtos.DrillbitEndpoint endpoint : operator.getDestinations()) {
@@ -77,6 +83,7 @@ public class PartitionSenderRootExec implements RootExec {
                                                     context.getDataTunnel(endpoint, opposite),
                                                     incoming,
                                                     context,
+                                                    oContext.getAllocator(),
                                                     fieldId);
       fieldId++;
     }
@@ -252,16 +259,17 @@ public class PartitionSenderRootExec implements RootExec {
       // ((IntVector) outgoingVectors[bucket][0]).copyFrom(inIndex,
       //                                                     outgoingBatches[bucket].getRecordCount(),
       //                                                     vv1);
-      cg.getEvalBlock().add(
+      cg.getEvalBlock()._if(
         ((JExpression) JExpr.cast(vvClass,
               ((JExpression)
                      outgoingVectors
                        .component(bucket))
                        .component(JExpr.lit(fieldId))))
-                       .invoke("copyFrom")
+                       .invoke("copyFromSafe")
                        .arg(inIndex)
                        .arg(((JExpression) outgoingBatches.component(bucket)).invoke("getRecordCount"))
-                       .arg(incomingVV));
+                       .arg(incomingVV).not())._then().add(((JExpression) outgoingBatches.component(bucket)).invoke("flush"))
+                       ._return();
 
       ++fieldId;
     }
@@ -306,7 +314,8 @@ public class PartitionSenderRootExec implements RootExec {
     for(OutgoingRecordBatch b : outgoing){
       b.clear();
     }
-    incoming.cleanup();
     sendCount.waitForSendComplete();
+    oContext.close();
+    incoming.cleanup();
   }
 }

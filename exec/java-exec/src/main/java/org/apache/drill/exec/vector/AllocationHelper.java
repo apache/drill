@@ -32,7 +32,7 @@ public class AllocationHelper {
     }else if(v instanceof RepeatedFixedWidthVector){
       ((RepeatedFixedWidthVector) v).allocateNew(valueCount, valueCount * repeatedPerTop);
     }else if(v instanceof RepeatedVariableWidthVector){
-      ((RepeatedVariableWidthVector) v).allocateNew(valueCount * bytesPerValue, valueCount, valueCount * repeatedPerTop);
+      ((RepeatedVariableWidthVector) v).allocateNew(valueCount * bytesPerValue * repeatedPerTop, valueCount, valueCount * repeatedPerTop);
     }else{
       throw new UnsupportedOperationException();
     }

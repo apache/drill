@@ -19,6 +19,7 @@ package org.apache.drill.exec.physical.impl.TopN;
 
 import org.apache.drill.exec.compile.TemplateClassDefinition;
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.sort.RecordBatchData;
 import org.apache.drill.exec.record.VectorContainer;
@@ -26,7 +27,7 @@ import org.apache.drill.exec.record.selection.SelectionVector4;
 
 public interface PriorityQueue {
   public void add(FragmentContext context, RecordBatchData batch) throws SchemaChangeException;
-  public void init(int limit, FragmentContext context, boolean hasSv2) throws SchemaChangeException;
+  public void init(int limit, FragmentContext context, BufferAllocator allocator, boolean hasSv2) throws SchemaChangeException;
   public void generate() throws SchemaChangeException;
   public VectorContainer getHyperBatch();
   public SelectionVector4 getHeapSv4();

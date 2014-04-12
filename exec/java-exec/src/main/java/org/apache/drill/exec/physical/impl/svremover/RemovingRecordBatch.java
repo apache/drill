@@ -25,6 +25,8 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.TypeHelper;
+import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.SelectionVectorRemover;
 import org.apache.drill.exec.record.*;
@@ -54,8 +56,10 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
 
   private Copier copier;
   private int recordCount;
-  
-  public RemovingRecordBatch(SelectionVectorRemover popConfig, FragmentContext context, RecordBatch incoming) {
+  private boolean hasRemainder;
+  private int remainderIndex;
+
+  public RemovingRecordBatch(SelectionVectorRemover popConfig, FragmentContext context, RecordBatch incoming) throws OutOfMemoryException {
     super(popConfig, context, incoming);
     logger.debug("Created.");
   }
@@ -88,12 +92,64 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
   }
 
   @Override
+  public IterOutcome next() {
+    if (hasRemainder) {
+      handleRemainder();
+      return IterOutcome.OK;
+    }
+    return super.next();
+  }
+
+  @Override
   protected void doWork() {
     recordCount = incoming.getRecordCount();
-    copier.copyRecords();
-    for(VectorWrapper<?> v : container){
-      ValueVector.Mutator m = v.getValueVector().getMutator();
-      m.setValueCount(recordCount);
+    int copiedRecords = copier.copyRecords(0, recordCount);
+    if (copiedRecords < recordCount) {
+      for(VectorWrapper<?> v : container){
+        ValueVector.Mutator m = v.getValueVector().getMutator();
+        m.setValueCount(copiedRecords);
+      }
+      hasRemainder = true;
+      remainderIndex = copiedRecords;
+      this.recordCount = remainderIndex;
+    } else {
+      for(VectorWrapper<?> v : container){
+        ValueVector.Mutator m = v.getValueVector().getMutator();
+        m.setValueCount(recordCount);
+      }
+      if (incoming.getSchema().getSelectionVectorMode() != SelectionVectorMode.FOUR_BYTE) {
+        for(VectorWrapper<?> v: incoming) {
+          v.clear();
+        }
+        if (incoming.getSchema().getSelectionVectorMode() == SelectionVectorMode.TWO_BYTE) {
+          incoming.getSelectionVector2().clear();
+        }
+      }
+    }
+  }
+
+  private void handleRemainder() {
+    int remainingRecordCount = incoming.getRecordCount() - remainderIndex;
+    int copiedRecords = copier.copyRecords(0, recordCount);
+    if (copiedRecords < remainingRecordCount) {
+      for(VectorWrapper<?> v : container){
+        ValueVector.Mutator m = v.getValueVector().getMutator();
+        m.setValueCount(copiedRecords);
+      }
+      remainderIndex += copiedRecords;
+      this.recordCount = copiedRecords;
+    } else {
+      for(VectorWrapper<?> v : container){
+        ValueVector.Mutator m = v.getValueVector().getMutator();
+        m.setValueCount(remainingRecordCount);
+      }
+      if (incoming.getSchema().getSelectionVectorMode() != SelectionVectorMode.FOUR_BYTE) {
+        for(VectorWrapper<?> v: incoming) {
+          v.clear();
+        }
+      }
+      remainderIndex = 0;
+      hasRemainder = false;
     }
   }
 
@@ -116,10 +172,12 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
     }
 
     @Override
-    public void copyRecords() {
+    public int copyRecords(int index, int recordCount) {
+      assert index == 0 && recordCount == incoming.getRecordCount() : "Straight copier cannot split batch";
       for(TransferPair tp : pairs){
         tp.transfer();
       }
+      return recordCount;
     }
 
     public List<ValueVector> getOut() {
@@ -140,7 +198,7 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
     
     List<VectorAllocator> allocators = Lists.newArrayList();
     for(VectorWrapper<?> i : incoming){
-      ValueVector v = TypeHelper.getNewVector(i.getField(), context.getAllocator());
+      ValueVector v = TypeHelper.getNewVector(i.getField(), oContext.getAllocator());
       container.add(v);
       allocators.add(VectorAllocator.getAllocator(i.getValueVector(), v));
     }
@@ -158,15 +216,15 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
 
   private Copier getGenerated4Copier() throws SchemaChangeException {
     Preconditions.checkArgument(incoming.getSchema().getSelectionVectorMode() == SelectionVectorMode.FOUR_BYTE);
-    return getGenerated4Copier(incoming, context, container, this);
+    return getGenerated4Copier(incoming, context, oContext.getAllocator(), container, this);
   }
   
-  public static Copier getGenerated4Copier(RecordBatch batch, FragmentContext context, VectorContainer container, RecordBatch outgoing) throws SchemaChangeException{
+  public static Copier getGenerated4Copier(RecordBatch batch, FragmentContext context, BufferAllocator allocator, VectorContainer container, RecordBatch outgoing) throws SchemaChangeException{
 
     List<VectorAllocator> allocators = Lists.newArrayList();
     for(VectorWrapper<?> i : batch){
       
-      ValueVector v = TypeHelper.getNewVector(i.getField(), context.getAllocator());
+      ValueVector v = TypeHelper.getNewVector(i.getField(), allocator);
       container.add(v);
       allocators.add(getAllocator4(v));
     }
@@ -195,23 +253,27 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
 
       if(hyper){
         
-        g.getEvalBlock().add( 
+        g.getEvalBlock()._if(
             outVV
-            .invoke("copyFrom")
+            .invoke("copyFromSafe")
             .arg(
                 inIndex.band(JExpr.lit((int) Character.MAX_VALUE)))
             .arg(outIndex)
             .arg(
                 inVV.component(inIndex.shrz(JExpr.lit(16)))
                 )
-            );  
+            .not()
+            )
+            ._then()._return(JExpr.FALSE);
       }else{
-        g.getEvalBlock().add(outVV.invoke("copyFrom").arg(inIndex).arg(outIndex).arg(inVV));
+        g.getEvalBlock()._if(outVV.invoke("copyFromSafe").arg(inIndex).arg(outIndex).arg(inVV).not())._then()._return(JExpr.FALSE);
       }
       
       
       fieldId++;
     }
+    g.rotateBlock();
+    g.getEvalBlock()._return(JExpr.TRUE);
   }
   
 

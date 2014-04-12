@@ -80,9 +80,9 @@ public class StatsCollector {
     }
 
     @Override
-    public Void visitSubScan(SubScan subScan, Wrapper value) throws RuntimeException {
+    public Void visitSubScan(SubScan subScan, Wrapper wrapper) throws RuntimeException {
       // TODO - implement this
-      return super.visitOp(subScan, value);
+      return super.visitOp(subScan, wrapper);
     }
 
     @Override
@@ -93,9 +93,9 @@ public class StatsCollector {
     }
 
     @Override
-    public Void visitLimit(Limit limit, Wrapper value) throws RuntimeException {
+    public Void visitLimit(Limit limit, Wrapper wrapper) throws RuntimeException {
       // TODO: Implement this
-      return visitOp(limit, value);
+      return visitOp(limit, wrapper);
     }
 
     @Override

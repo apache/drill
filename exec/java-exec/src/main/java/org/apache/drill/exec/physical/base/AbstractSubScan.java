@@ -27,7 +27,7 @@ import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 
 import com.google.common.collect.Iterators;
 
-public abstract class AbstractSubScan implements SubScan{
+public abstract class AbstractSubScan extends AbstractBase implements SubScan{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractSubScan.class);
 
   @Override
@@ -72,5 +72,4 @@ public abstract class AbstractSubScan implements SubScan{
   public SelectionVectorMode getSVMode() {
     return SelectionVectorMode.NONE;
   }
-  
 }

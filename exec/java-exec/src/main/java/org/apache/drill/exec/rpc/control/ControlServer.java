@@ -25,10 +25,7 @@ import io.netty.util.concurrent.GenericFutureListener;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.BitControl.BitControlHandshake;
 import org.apache.drill.exec.proto.BitControl.RpcType;
-import org.apache.drill.exec.rpc.BasicServer;
-import org.apache.drill.exec.rpc.ProtobufLengthDecoder;
-import org.apache.drill.exec.rpc.Response;
-import org.apache.drill.exec.rpc.RpcException;
+import org.apache.drill.exec.rpc.*;
 import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.work.batch.ControlMessageHandler;
 
@@ -98,8 +95,8 @@ public class ControlServer extends BasicServer<RpcType, ControlConnection>{
   }
 
   @Override
-  public ProtobufLengthDecoder getDecoder(BufferAllocator allocator) {
-    return new ControlProtobufLengthDecoder(allocator);
+  public ProtobufLengthDecoder getDecoder(BufferAllocator allocator, OutOfMemoryHandler outOfMemoryHandler) {
+    return new ControlProtobufLengthDecoder(allocator, outOfMemoryHandler);
   }
 
   private class ProxyCloseHandler implements GenericFutureListener<ChannelFuture> {

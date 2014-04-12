@@ -111,7 +111,7 @@ public class TraceRecordBatch extends AbstractSingleRecordBatch<Trace> {
     }
     WritableBatch batch = WritableBatch.getBatchNoHVWrap(incoming.getRecordCount(), incoming, incomingHasSv2 ? true
         : false);
-    VectorAccessibleSerializable wrap = new VectorAccessibleSerializable(batch, sv, context.getAllocator());
+    VectorAccessibleSerializable wrap = new VectorAccessibleSerializable(batch, sv, oContext.getAllocator());
 
     try {
       wrap.writeToStreamAndRetain(fos);
@@ -119,6 +119,9 @@ public class TraceRecordBatch extends AbstractSingleRecordBatch<Trace> {
       throw new RuntimeException(e);
     }
     batch.reconstructContainer(container);
+    if (incomingHasSv2) {
+      sv = wrap.getSv2();
+    }
   }
 
   @Override
@@ -161,6 +164,7 @@ public class TraceRecordBatch extends AbstractSingleRecordBatch<Trace> {
       logger.error("Unable to close file descriptors for file: " + getFileName());
     }
     super.cleanup();
+    incoming.cleanup();
   }
 
 }

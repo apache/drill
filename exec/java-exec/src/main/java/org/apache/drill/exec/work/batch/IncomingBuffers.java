@@ -64,6 +64,16 @@ public class IncomingBuffers {
   public boolean batchArrived(RawFragmentBatch batch) throws FragmentSetupException {
     // no need to do anything if we've already enabled running.
 //    logger.debug("New Batch Arrived {}", batch);
+    if (batch.getHeader().getIsOutOfMemory()) {
+      for (DataCollector fSet : fragCounts.values()) {
+        try {
+          fSet.batchArrived(0, batch);
+        } catch (IOException e) {
+          throw new RuntimeException();
+        }
+      }
+      return false;
+    }
     if(batch.getHeader().getIsLastBatch()){
       streamsRemaining.decrementAndGet();
     }

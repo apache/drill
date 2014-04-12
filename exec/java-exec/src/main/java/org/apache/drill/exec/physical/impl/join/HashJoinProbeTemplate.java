@@ -94,7 +94,8 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
 
     public void executeProjectRightPhase() {
         while (outputRecords < RecordBatch.MAX_BATCH_SIZE && recordsProcessed < recordsToProcess) {
-            projectBuildRecord(unmatchedBuildIndexes.get(recordsProcessed++), outputRecords++);
+            boolean success = projectBuildRecord(unmatchedBuildIndexes.get(recordsProcessed++), outputRecords++);
+            assert success;
         }
     }
 
@@ -146,8 +147,10 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
                      */
                     hjHelper.setRecordMatched(currentCompositeIdx);
 
-                    projectBuildRecord(currentCompositeIdx, outputRecords);
-                    projectProbeRecord(recordsProcessed, outputRecords);
+                    boolean success = projectBuildRecord(currentCompositeIdx, outputRecords);
+                    assert success;
+                    success = projectProbeRecord(recordsProcessed, outputRecords);
+                    assert success;
                     outputRecords++;
 
                     /* Projected single row from the build side with matching key but there
@@ -179,7 +182,8 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
             }
             else {
                 hjHelper.setRecordMatched(currentCompositeIdx);
-                projectBuildRecord(currentCompositeIdx, outputRecords);
+                boolean success = projectBuildRecord(currentCompositeIdx, outputRecords);
+                assert success;
                 projectProbeRecord(recordsProcessed, outputRecords);
                 outputRecords++;
 
@@ -221,6 +225,6 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
 
     public abstract void doSetup(@Named("context") FragmentContext context, @Named("buildBatch") VectorContainer buildBatch, @Named("probeBatch") RecordBatch probeBatch,
                                  @Named("outgoing") RecordBatch outgoing);
-    public abstract void projectBuildRecord(@Named("buildIndex") int buildIndex, @Named("outIndex") int outIndex);
-    public abstract void projectProbeRecord(@Named("probeIndex") int probeIndex, @Named("outIndex") int outIndex);
+    public abstract boolean projectBuildRecord(@Named("buildIndex") int buildIndex, @Named("outIndex") int outIndex);
+    public abstract boolean projectProbeRecord(@Named("probeIndex") int probeIndex, @Named("outIndex") int outIndex);
 }

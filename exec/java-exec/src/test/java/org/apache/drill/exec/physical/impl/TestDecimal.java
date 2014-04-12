@@ -34,6 +34,7 @@ import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.rpc.user.QueryResultBatch;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
+import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarCharVector;
 import org.junit.Ignore;
@@ -244,7 +245,7 @@ public class TestDecimal extends PopUnitTestBase{
             QueryResultBatch batch = results.get(0);
             assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
 
-            batchLoader.getValueAccessorById(0, VarCharVector.class);
+            batchLoader.getValueAccessorById(0, NullableVarCharVector.class);
 
             String sortOutput[] = {"-100000000001.000000000000",
                                    "-100000000001.000000000000",
@@ -264,7 +265,7 @@ public class TestDecimal extends PopUnitTestBase{
             ValueVector.Accessor accessor = v.getValueVector().getAccessor();
 
             for (int i = 0; i < accessor.getValueCount(); i++) {
-                assertEquals(accessor.getObject(i), sortOutput[i]);
+                assertEquals(sortOutput[i], accessor.getObject(i));
             }
             assertEquals(10, accessor.getValueCount());
         }

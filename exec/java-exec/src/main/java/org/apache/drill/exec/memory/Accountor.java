@@ -39,10 +39,12 @@ public class Accountor {
   private final long total;
   private ConcurrentMap<ByteBuf, DebugStackTrace> buffers = Maps.newConcurrentMap();
   private final FragmentHandle handle;
+  private Accountor parent;
 
   public Accountor(FragmentHandle handle, Accountor parent, long max, long preAllocated) {
     // TODO: fix preallocation stuff
     AtomicRemainder parentRemainder = parent != null ? parent.remainder : null;
+    this.parent = parent;
     this.remainder = new AtomicRemainder(parentRemainder, max, preAllocated);
     this.total = max;
     this.handle = handle;
@@ -51,6 +53,13 @@ public class Accountor {
     } else {
       buffers = null;
     }
+  }
+
+  public long getAvailable() {
+    if (parent != null) {
+      return Math.min(parent.getAvailable(), getCapacity() - getAllocation());
+    }
+    return getCapacity() - getAllocation();
   }
 
   public long getCapacity() {
@@ -62,9 +71,7 @@ public class Accountor {
   }
 
   public boolean reserve(long size) {
-    //TODO: for now, we won't stop reservation.
-    remainder.get(size);
-    return true;
+    return remainder.get(size);
   }
 
   public void forceAdditionalReservation(long size) {
@@ -89,7 +96,7 @@ public class Accountor {
       if(buf != null){
         DebugStackTrace dst = buffers.get(buf);
         if(dst == null) throw new IllegalStateException("Partially releasing a buffer that has already been released. Buffer: " + buf);
-        dst.size =- size;
+        dst.size -= size;
         if(dst.size < 0){
           throw new IllegalStateException("Partially releasing a buffer that has already been released. Buffer: " + buf);
         }
@@ -150,7 +157,7 @@ public class Accountor {
     
   }
 
-  private class DebugStackTrace {
+  public class DebugStackTrace {
 
     private StackTraceElement[] elements;
     private long size;

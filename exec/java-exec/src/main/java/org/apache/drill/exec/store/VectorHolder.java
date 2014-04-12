@@ -25,16 +25,27 @@ public class VectorHolder {
   private int length;
   private ValueVector vector;
   private int currentLength;
+  private boolean repeated;
 
   
   public VectorHolder(int length, ValueVector vector) {
     this.length = length;
     this.vector = vector;
+    if (vector instanceof RepeatedFixedWidthVector || vector instanceof  RepeatedVariableWidthVector) {
+      repeated = true;
+    }
   }
   
   public VectorHolder(ValueVector vector) {
     this.length = vector.getValueCapacity();
     this.vector = vector;
+    if (vector instanceof RepeatedFixedWidthVector || vector instanceof  RepeatedVariableWidthVector) {
+      repeated = true;
+    }
+  }
+
+  public boolean isRepeated() {
+    return repeated;
   }
 
   public ValueVector getValueVector() {

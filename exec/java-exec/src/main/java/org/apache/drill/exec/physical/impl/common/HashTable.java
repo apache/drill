@@ -20,6 +20,7 @@ package org.apache.drill.exec.physical.impl.common;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.exec.compile.TemplateClassDefinition;
 import org.apache.drill.exec.expr.holders.IntHolder;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorContainer;
@@ -43,7 +44,7 @@ public interface HashTable {
   static final public int BATCH_SIZE = Character.MAX_VALUE+1;
   static final public int BATCH_MASK = 0x0000FFFF;
 
-  public void setup(HashTableConfig htConfig, FragmentContext context, 
+  public void setup(HashTableConfig htConfig, FragmentContext context, BufferAllocator allocator,
                     RecordBatch incomingBuild, RecordBatch incomingProbe, 
                     RecordBatch outgoing, VectorContainer htContainerOrig);
 

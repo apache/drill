@@ -66,6 +66,6 @@ public class HiveScanBatchCreator implements BatchCreator<HiveSubScan> {
         }
       }
     }
-    return new ScanBatch(context, readers.iterator());
+    return new ScanBatch(config, context, readers.iterator());
   }
 }

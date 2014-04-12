@@ -18,16 +18,19 @@
 package org.apache.drill.exec.record;
 
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 
 public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> extends AbstractRecordBatch<T> {
   final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(this.getClass());
-  
+
   protected final RecordBatch incoming;
   private boolean first = true;
+  protected boolean outOfMemory = false;
   
-  public AbstractSingleRecordBatch(T popConfig, FragmentContext context, RecordBatch incoming) {
+  public AbstractSingleRecordBatch(T popConfig, FragmentContext context, RecordBatch incoming) throws OutOfMemoryException {
     super(popConfig, context);
     this.incoming = incoming;
   }
@@ -46,7 +49,8 @@ public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> exte
     case NONE:
     case NOT_YET:
     case STOP:
-      cleanup();
+      return upstream;
+    case OUT_OF_MEMORY:
       return upstream;
     case OK_NEW_SCHEMA:
       try{
@@ -60,6 +64,10 @@ public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> exte
       // fall through.
     case OK:
       doWork();
+      if (outOfMemory) {
+        outOfMemory = false;
+        return IterOutcome.OUT_OF_MEMORY;
+      }
       return upstream; // change if upstream changed, otherwise normal.
     default:
       throw new UnsupportedOperationException();
@@ -69,8 +77,8 @@ public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> exte
   @Override
   public void cleanup() {
 //    logger.debug("Cleaning up.");
-    incoming.cleanup();
     super.cleanup();
+    incoming.cleanup();
   }
 
   protected abstract void setupNewSchema() throws SchemaChangeException;

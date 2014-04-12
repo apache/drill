@@ -20,6 +20,7 @@ package org.apache.drill.exec.physical.impl.limit;
 import com.beust.jcommander.internal.Lists;
 import com.google.common.base.Objects;
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.Limit;
 import org.apache.drill.exec.record.*;
@@ -38,9 +39,9 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
   private boolean skipBatch;
   List<TransferPair> transfers = Lists.newArrayList();
 
-  public LimitRecordBatch(Limit popConfig, FragmentContext context, RecordBatch incoming) {
+  public LimitRecordBatch(Limit popConfig, FragmentContext context, RecordBatch incoming) throws OutOfMemoryException {
     super(popConfig, context, incoming);
-    outgoingSv = new SelectionVector2(context.getAllocator());
+    outgoingSv = new SelectionVector2(oContext.getAllocator());
     recordsToSkip = popConfig.getFirst();
     noEndLimit = popConfig.getLast() == null;
     if(!noEndLimit) {
@@ -79,8 +80,7 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
   @Override
   public IterOutcome next() {
     if(!noEndLimit && recordsLeft <= 0) {
-      killIncoming();
-      cleanup();
+      // don't kill incoming batches or call cleanup yet, as this could close allocators before the buffers have been cleared
       return IterOutcome.NONE;
     }
 
@@ -160,7 +160,7 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
 
   @Override
   public void cleanup(){
-    super.cleanup();
     outgoingSv.clear();
+    super.cleanup();
   }
 }

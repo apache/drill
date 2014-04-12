@@ -40,6 +40,7 @@ import org.apache.drill.exec.expr.holders.NullableBitHolder;
 import org.apache.drill.exec.expr.holders.NullableFloat4Holder;
 import org.apache.drill.exec.expr.holders.NullableIntHolder;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
@@ -65,7 +66,7 @@ import com.google.common.collect.Maps;
 
 public class JSONRecordReader implements RecordReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JSONRecordReader.class);
-  private static final int DEFAULT_LENGTH = 256 * 1024; // 256kb
+  private static final int DEFAULT_LENGTH = 4000;
   public static final Charset UTF_8 = Charset.forName("UTF-8");
 
   private final Map<String, VectorHolder> valueVectorMap;
@@ -78,22 +79,20 @@ public class JSONRecordReader implements RecordReader {
   private RecordSchema currentSchema;
   private List<Field> removedFields;
   private OutputMutator outputMutator;
-  private BufferAllocator allocator;
   private int batchSize;
   private final List<SchemaPath> columns;
 
   public JSONRecordReader(FragmentContext fragmentContext, String inputPath, FileSystem fileSystem, int batchSize,
-                          List<SchemaPath> columns) {
+                          List<SchemaPath> columns) throws OutOfMemoryException {
     this.hadoopPath = new Path(inputPath);
     this.fileSystem = fileSystem;
-    this.allocator = fragmentContext.getAllocator();
     this.batchSize = batchSize;
     valueVectorMap = Maps.newHashMap();
     this.columns = columns;
   }
 
   public JSONRecordReader(FragmentContext fragmentContext, String inputPath, FileSystem fileSystem,
-                          List<SchemaPath> columns) {
+                          List<SchemaPath> columns) throws OutOfMemoryException {
     this(fragmentContext, inputPath, fileSystem, DEFAULT_LENGTH, columns);
   }
 
@@ -162,7 +161,10 @@ public class JSONRecordReader implements RecordReader {
     }
 
     for (VectorHolder holder : valueVectorMap.values()) {
-      holder.populateVectorLength();
+      if (holder.isRepeated()) {
+        holder.setGroupCount(nextRowIndex);
+      }
+      holder.getValueVector().getMutator().setValueCount(nextRowIndex);
     }
 
     return nextRowIndex;
@@ -198,10 +200,6 @@ public class JSONRecordReader implements RecordReader {
 
   private List<Field> getRemovedFields() {
     return removedFields;
-  }
-
-  public BufferAllocator getAllocator() {
-    return allocator;
   }
 
   private boolean fieldSelected(String field){
@@ -523,11 +521,10 @@ public class JSONRecordReader implements RecordReader {
 
       MaterializedField f = MaterializedField.create(SchemaPath.getCompoundPath(fullFieldName.split("\\.")), type);
 
-      ValueVector v = TypeHelper.getNewVector(f, allocator);
+      ValueVector v = outputMutator.addField(f, TypeHelper.getValueVectorClass(minorType, type.getMode()));
       AllocationHelper.allocate(v, batchSize, 50);
       holder = new VectorHolder(v);
       valueVectorMap.put(fullFieldName, holder);
-      outputMutator.addField(v);
       return holder;
     }
     return holder;

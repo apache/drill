@@ -132,7 +132,9 @@ public class SimpleParallelizer {
             .setAssignment(wrapper.getAssignedEndpoint(minorFragmentId)) //
             .setLeafFragment(isLeafFragment) //
             .setQueryStartTime(queryStartTime)
-            .setTimeZone(timeZone)
+            .setTimeZone(timeZone)//
+            .setMemInitial(wrapper.getInitialAllocation())//
+            .setMemMax(wrapper.getMaxAllocation())
             .build();
 
         if (isRootNode) {

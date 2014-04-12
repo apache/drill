@@ -32,20 +32,19 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.ops.OperatorContext;
+import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.record.*;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
-import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.record.TypedFieldId;
-import org.apache.drill.exec.record.VectorContainer;
-import org.apache.drill.exec.record.VectorWrapper;
-import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.NullableVarCharVector;
+import org.apache.drill.exec.util.BatchPrinter;
+import org.apache.drill.exec.util.VectorUtil;
 import org.apache.drill.exec.vector.ValueVector;
 
 import com.google.common.collect.Maps;
@@ -58,12 +57,16 @@ import org.apache.drill.exec.vector.allocator.VectorAllocator;
 public class ScanBatch implements RecordBatch {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScanBatch.class);
 
+  private static final long ALLOCATOR_INITIAL_RESERVATION = 1*1024*1024;
+  private static final long ALLOCATOR_MAX_RESERVATION = 20L*1000*1000*1000;
+
   final Map<MaterializedField, ValueVector> fieldVectorMap = Maps.newHashMap();
 
   private final VectorContainer container = new VectorContainer();
   private int recordCount;
   private boolean schemaChanged = true;
   private final FragmentContext context;
+  private final OperatorContext oContext;
   private Iterator<RecordReader> readers;
   private RecordReader currentReader;
   private BatchSchema schema;
@@ -74,12 +77,13 @@ public class ScanBatch implements RecordBatch {
   List<Integer> selectedPartitionColumns;
   private String partitionColumnDesignator;
 
-  public ScanBatch(FragmentContext context, Iterator<RecordReader> readers, List<String[]> partitionColumns, List<Integer> selectedPartitionColumns) throws ExecutionSetupException {
+  public ScanBatch(PhysicalOperator subScanConfig, FragmentContext context, Iterator<RecordReader> readers, List<String[]> partitionColumns, List<Integer> selectedPartitionColumns) throws ExecutionSetupException {
     this.context = context;
     this.readers = readers;
     if (!readers.hasNext())
       throw new ExecutionSetupException("A scan batch must contain at least one reader.");
     this.currentReader = readers.next();
+    this.oContext = new OperatorContext(subScanConfig, context);
     this.currentReader.setup(mutator);
     this.partitionColumns = partitionColumns.iterator();
     this.partitionValues = this.partitionColumns.hasNext() ? this.partitionColumns.next() : null;
@@ -89,8 +93,8 @@ public class ScanBatch implements RecordBatch {
     addPartitionVectors();
   }
 
-  public ScanBatch(FragmentContext context, Iterator<RecordReader> readers) throws ExecutionSetupException {
-    this(context, readers, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
+  public ScanBatch(PhysicalOperator subScanConfig, FragmentContext context, Iterator<RecordReader> readers) throws ExecutionSetupException {
+    this(subScanConfig, context, readers, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
   }
 
   @Override
@@ -173,7 +177,7 @@ public class ScanBatch implements RecordBatch {
         byte[] bytes = val.getBytes();
         AllocationHelper.allocate(v, recordCount, val.length());
         for (int j = 0; j < recordCount; j++) {
-          v.getMutator().set(j, bytes);
+          v.getMutator().setSafe(j, bytes);
         }
         v.getMutator().setValueCount(recordCount);
       } else {
@@ -239,7 +243,7 @@ public class ScanBatch implements RecordBatch {
     @SuppressWarnings("unchecked")
     @Override
     public <T extends ValueVector> T addField(MaterializedField field, Class<T> clazz) throws SchemaChangeException {
-      ValueVector v = TypeHelper.getNewVector(field, context.getAllocator());
+      ValueVector v = TypeHelper.getNewVector(field, oContext.getAllocator());
       if(!clazz.isAssignableFrom(v.getClass())) throw new SchemaChangeException(String.format("The class that was provided %s does not correspond to the expected vector type of %s.", clazz.getSimpleName(), v.getClass().getSimpleName()));
       addField(v);
       return (T) v;
@@ -259,6 +263,7 @@ public class ScanBatch implements RecordBatch {
 
   public void cleanup(){
     container.clear();
+    oContext.close();
   }
 
 }

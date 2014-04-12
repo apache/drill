@@ -26,6 +26,7 @@ import net.hydromatic.optiq.SchemaPlus;
 import net.hydromatic.optiq.tools.Frameworks;
 
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.compile.ClassTransformer;
 import org.apache.drill.exec.compile.QueryClassLoader;
 import org.apache.drill.exec.exception.ClassTransformationException;
@@ -83,6 +84,7 @@ public class FragmentContext implements Closeable {
     this.queryStartTime = fragment.getQueryStartTime();
     this.rootFragmentTimeZone = fragment.getTimeZone();
     logger.debug("Getting initial memory allocation of {}", fragment.getMemInitial());
+    logger.debug("Fragment max allocation: {}", fragment.getMemMax());
     this.allocator = context.getAllocator().getChildAllocator(fragment.getHandle(), fragment.getMemInitial(), fragment.getMemMax());
   }
 
@@ -138,8 +140,13 @@ public class FragmentContext implements Closeable {
    * Get this fragment's allocator.
    * @return
    */
+  @Deprecated
   public BufferAllocator getAllocator() {
     return allocator;
+  }
+
+  public BufferAllocator getNewChildAllocator(long initialReservation, long maximumReservation) throws OutOfMemoryException {
+    return allocator.getChildAllocator(getHandle(), initialReservation, maximumReservation);
   }
 
   public <T> T getImplementationClass(ClassGenerator<T> cg) throws ClassTransformationException, IOException {

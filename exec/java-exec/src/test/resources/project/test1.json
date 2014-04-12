@@ -14,8 +14,9 @@
             entries:[
             	{records: 100, types: [
             	  {name: "blue", type: "INT", mode: "REQUIRED"},
-            	  {name: "red", type: "BIGINT", mode: "REQUIRED"},
-            	  {name: "green", type: "INT", mode: "REQUIRED"}
+            	  {name: "red", type: "BIGINT", mode: "OPTIONAL"},
+            	  {name: "green", type: "INT", mode: "REQUIRED"},
+            	  {name: "orange", type: "VARCHAR", mode: "OPTIONAL"}
             	]}
             ]
         },
@@ -25,7 +26,9 @@
             pop:"project",
             exprs: [
               { ref: "col1", expr:"red + 1" },
-              { ref: "col2", expr:"red + 2" }
+              { ref: "col2", expr:"red + 2" },
+              { ref: "col3", expr:"orange"},
+              { ref: "col4", expr:"orange"}
             ]
         },
         {

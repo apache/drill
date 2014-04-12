@@ -18,6 +18,7 @@
 package org.apache.drill.exec.physical.impl.xsort;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Stopwatch;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.sort.Sorter;
@@ -29,6 +30,7 @@ import org.apache.hadoop.util.IndexedSortable;
 import org.apache.hadoop.util.QuickSort;
 
 import javax.inject.Named;
+import java.util.concurrent.TimeUnit;
 
 public abstract class SingleBatchSorterTemplate implements SingleBatchSorter, IndexedSortable{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SingleBatchSorterTemplate.class);
@@ -44,7 +46,10 @@ public abstract class SingleBatchSorterTemplate implements SingleBatchSorter, In
   @Override
   public void sort(SelectionVector2 vector2){
     QuickSort qs = new QuickSort();
+    Stopwatch watch = new Stopwatch();
+    watch.start();
     qs.sort(this, 0, vector2.getCount());
+    logger.debug("Took {} us to sort {} records", watch.elapsed(TimeUnit.MICROSECONDS), vector2.getCount());
   }
 
   @Override

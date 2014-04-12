@@ -73,7 +73,7 @@ public abstract class BasicServer<T extends EnumLite, C extends RemoteConnection
             ch.closeFuture().addListener(getCloseHandler(connection));
 
             ch.pipeline().addLast( //
-                getDecoder(connection.getAllocator()), //
+                getDecoder(connection.getAllocator(), getOutOfMemoryHandler()), //
                 new RpcDecoder("s-" + rpcConfig.getName()), //
                 new RpcEncoder("s-" + rpcConfig.getName()), //
                 getHandshakeHandler(connection), new InboundHandler(connection), //
@@ -85,7 +85,11 @@ public abstract class BasicServer<T extends EnumLite, C extends RemoteConnection
         });
   }
 
-  public abstract ProtobufLengthDecoder getDecoder(BufferAllocator allocator);
+  public OutOfMemoryHandler getOutOfMemoryHandler() {
+    return OutOfMemoryHandler.DEFAULT_INSTANCE;
+  }
+
+  public abstract ProtobufLengthDecoder getDecoder(BufferAllocator allocator, OutOfMemoryHandler outOfMemoryHandler);
   
   @Override
   public boolean isClient() {

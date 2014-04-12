@@ -22,6 +22,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.sun.codemodel.JExpr;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.FieldReference;
@@ -34,13 +35,16 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ClassGenerator;
+import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.ValueVectorReadExpression;
 import org.apache.drill.exec.expr.ValueVectorWriteExpression;
+import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.Project;
+import org.apache.drill.exec.physical.impl.filter.ReturnValueExpression;
 import org.apache.drill.exec.record.AbstractSingleRecordBatch;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.MaterializedField;
@@ -48,6 +52,7 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorWrapper;
+import org.apache.drill.exec.util.VectorUtil;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.ValueVector;
 
@@ -59,26 +64,81 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
 
   private Projector projector;
   private List<ValueVector> allocationVectors;
+  private boolean hasRemainder = false;
+  private int remainderIndex = 0;
+  private int recordCount;
 
-  public ProjectRecordBatch(Project pop, RecordBatch incoming, FragmentContext context){
+  public ProjectRecordBatch(Project pop, RecordBatch incoming, FragmentContext context) throws OutOfMemoryException {
     super(pop, context, incoming);
   }
 
   @Override
   public int getRecordCount() {
-    return incoming.getRecordCount();
+    return recordCount;
+  }
+
+  @Override
+  public IterOutcome next() {
+    if (hasRemainder) {
+      handleRemainder();
+      return IterOutcome.OK;
+    }
+    return super.next();
   }
 
   @Override
   protected void doWork() {
-    int recordCount = incoming.getRecordCount();
+//    VectorUtil.showVectorAccessibleContent(incoming, ",");
+    int incomingRecordCount = incoming.getRecordCount();
     for(ValueVector v : this.allocationVectors){
-      AllocationHelper.allocate(v, recordCount, 250);
+      AllocationHelper.allocate(v, incomingRecordCount, 250);
     }
-    projector.projectRecords(recordCount, 0);
-    for(VectorWrapper<?> v : container){
-      ValueVector.Mutator m = v.getValueVector().getMutator();
-      m.setValueCount(recordCount);
+    int outputRecords = projector.projectRecords(0, incomingRecordCount, 0);
+    if (outputRecords < incomingRecordCount) {
+      for(VectorWrapper<?> v : container){
+        ValueVector.Mutator m = v.getValueVector().getMutator();
+        m.setValueCount(outputRecords);
+      }
+      hasRemainder = true;
+      remainderIndex = outputRecords;
+      this.recordCount = remainderIndex;
+    } else {
+      for(VectorWrapper<?> v : container){
+        ValueVector.Mutator m = v.getValueVector().getMutator();
+        m.setValueCount(incomingRecordCount);
+      }
+      for(VectorWrapper<?> v: incoming) {
+        v.clear();
+      }
+      this.recordCount = outputRecords;
+    }
+  }
+
+  private void handleRemainder() {
+    int remainingRecordCount = incoming.getRecordCount() - remainderIndex;
+    for(ValueVector v : this.allocationVectors){
+      AllocationHelper.allocate(v, remainingRecordCount, 250);
+    }
+    int outputIndex = projector.projectRecords(remainderIndex, remainingRecordCount, 0);
+    if (outputIndex < incoming.getRecordCount()) {
+      for(VectorWrapper<?> v : container){
+        ValueVector.Mutator m = v.getValueVector().getMutator();
+        m.setValueCount(outputIndex - remainderIndex);
+      }
+      hasRemainder = true;
+      this.recordCount = outputIndex - remainderIndex;
+      remainderIndex = outputIndex;
+    } else {
+      for(VectorWrapper<?> v : container){
+        ValueVector.Mutator m = v.getValueVector().getMutator();
+        m.setValueCount(remainingRecordCount);
+      }
+      hasRemainder = false;
+      remainderIndex = 0;
+      for(VectorWrapper<?> v: incoming) {
+        v.clear();
+      }
+      this.recordCount = remainingRecordCount;
     }
   }
 
@@ -156,17 +216,20 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
 //          logger.debug("Added transfer.");
         }else{
           // need to do evaluation.
-          ValueVector vector = TypeHelper.getNewVector(outputField, context.getAllocator());
+          ValueVector vector = TypeHelper.getNewVector(outputField, oContext.getAllocator());
           allocationVectors.add(vector);
           TypedFieldId fid = container.add(vector);
-          ValueVectorWriteExpression write = new ValueVectorWriteExpression(fid, expr);
-          cg.addExpr(write);
-//          logger.debug("Added eval.");
+          ValueVectorWriteExpression write = new ValueVectorWriteExpression(fid, expr, true);
+          HoldingContainer hc = cg.addExpr(write);
+          cg.getEvalBlock()._if(hc.getValue().eq(JExpr.lit(0)))._then()._return(JExpr.FALSE);
+          logger.debug("Added eval.");
         }
-    }
+      }
 
 
     }
+    cg.rotateBlock();
+    cg.getEvalBlock()._return(JExpr.TRUE);
 
     container.buildSchema(incoming.getSchema().getSelectionVectorMode());
 

@@ -149,7 +149,7 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
       if (!ctx.channel().isOpen()) return;
       if (RpcConstants.EXTRA_DEBUGGING) logger.debug("Received message {}", msg);
       switch (msg.mode) {
-      case REQUEST:
+      case REQUEST: {
         // handle message and ack.
         Response r = handle(connection, msg.rpcType, msg.pBody, msg.dBody);
         msg.release();  // we release our ownership.  Handle could have taken over ownership.
@@ -159,6 +159,7 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
         if (RpcConstants.EXTRA_DEBUGGING) logger.debug("Adding message to outbound buffer. {}", outMessage);
         ctx.writeAndFlush(outMessage);
         break;
+      }
 
       case RESPONSE:
         try{

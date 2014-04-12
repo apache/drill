@@ -106,6 +106,10 @@ abstract class PooledByteBufL<T> extends AbstractReferenceCountedByteBuf {
     public final ByteBuf capacity(int newCapacity) {
         ensureAccessible();
 
+        if (chunk.parent == null) {
+          return this; //TODO figure out if this is the correct behavior
+        }
+
         // Check for the easy resizing cases, and return if successfully resized.
         if (chunk.unpooled) {
             if (newCapacity == length) {

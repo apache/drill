@@ -123,6 +123,6 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
       }
     }
 
-    return new ScanBatch(context, readers.iterator(), partitionColumns, selectedPartitionColumns);
+    return new ScanBatch(rowGroupScan, context, readers.iterator(), partitionColumns, selectedPartitionColumns);
   }
 }

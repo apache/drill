@@ -26,6 +26,8 @@ import com.google.common.base.Preconditions;
 public abstract class AbstractBase implements PhysicalOperator{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractBase.class);
 
+  protected long initialAllocation = 1000000L;
+  protected long maxAllocation = 10000000000L;
 
 
   @Override
@@ -47,6 +49,16 @@ public abstract class AbstractBase implements PhysicalOperator{
   @Override
   public SelectionVectorMode getSVMode() {
     return SelectionVectorMode.NONE;
+  }
+
+  @Override
+  public long getInitialAllocation() {
+    return initialAllocation;
+  }
+
+  @Override
+  public long getMaxAllocation() {
+    return maxAllocation;
   }
   
 }

@@ -451,6 +451,10 @@ public class TestConvertFunctions extends PopUnitTestBase {
       assertEquals(testName, expectedResults, results[0]);
     }
 
+    exec.stop();
+
+    context.close();
+
     allocator.close();
 
     if(context.getFailureCause() != null){

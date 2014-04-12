@@ -80,7 +80,7 @@ public class SimpleRootExec implements RootExec, Iterable<ValueVector>{
 
   @Override
   public void stop() {
-    incoming.kill();
+    incoming.cleanup();
   }
 
   @Override

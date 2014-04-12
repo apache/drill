@@ -19,6 +19,7 @@ package org.apache.drill.exec.physical.impl.xsort;
 
 import org.apache.drill.exec.compile.TemplateClassDefinition;
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.selection.SelectionVector4;
@@ -27,7 +28,7 @@ import org.apache.drill.exec.vector.allocator.VectorAllocator;
 import java.util.List;
 
 public interface PriorityQueueSelector {
-  public void setup(FragmentContext context, VectorAccessible hyperBatch, SelectionVector4 sv4, List<BatchGroup> batchGroups) throws SchemaChangeException;
+  public void setup(FragmentContext context, BufferAllocator allocator, VectorAccessible hyperBatch, SelectionVector4 sv4, List<BatchGroup> batchGroups) throws SchemaChangeException;
   public int next();
   public void cleanup();
 

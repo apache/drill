@@ -79,6 +79,8 @@ public class TestTraceMultiRecordBatch extends ExecTest {
         while(exec.next()) {
         }
 
+        exec.stop();
+
         if(context.getFailureCause() != null){
             throw context.getFailureCause();
         }

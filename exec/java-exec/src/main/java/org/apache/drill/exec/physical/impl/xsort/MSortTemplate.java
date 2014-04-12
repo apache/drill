@@ -33,15 +33,18 @@ import java.util.Queue;
 
 public abstract class MSortTemplate implements MSorter, IndexedSortable{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MSortTemplate.class);
-  
+
+  private BufferAllocator allocator;
   private SelectionVector4 vector4;
   private SelectionVector4 aux;
   private long compares;
   private Queue<Integer> runStarts = Queues.newLinkedBlockingQueue();
   private Queue<Integer> newRunStarts;
 
-  
-  public void setup(FragmentContext context, SelectionVector4 vector4, VectorContainer hyperBatch) throws SchemaChangeException{
+
+  @Override
+  public void setup(FragmentContext context, BufferAllocator allocator, SelectionVector4 vector4, VectorContainer hyperBatch) throws SchemaChangeException{
+    this.allocator = allocator;
     // we pass in the local hyperBatch since that is where we'll be reading data.
     Preconditions.checkNotNull(vector4);
     this.vector4 = vector4.createNewWrapperCurrent();
@@ -60,7 +63,7 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable{
         throw new UnsupportedOperationException("Missing batch");
       }
     }
-    BufferAllocator.PreAllocator preAlloc = context.getAllocator().getNewPreAllocator();
+    BufferAllocator.PreAllocator preAlloc = allocator.getNewPreAllocator();
     preAlloc.preAllocate(4 * this.vector4.getTotalCount());
     aux = new SelectionVector4(preAlloc.getAllocation(), this.vector4.getTotalCount(), Character.MAX_VALUE);
   }

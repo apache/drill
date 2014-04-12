@@ -38,6 +38,8 @@ import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
+import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.MergeJoinPOP;
 import org.apache.drill.exec.physical.impl.join.JoinWorker.JoinOutcome;
@@ -64,6 +66,9 @@ import com.sun.codemodel.JVar;
 public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MergeJoinBatch.class);
+
+  public static final long ALLOCATOR_INITIAL_RESERVATION = 1*1024*1024;
+  public static final long ALLOCATOR_MAX_RESERVATION = 20L*1000*1000*1000;
     
   public final MappingSet setupMapping =
       new MappingSet("null", "null", 
@@ -103,9 +108,9 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
   private JoinWorker worker;
   public MergeJoinBatchBuilder batchBuilder;
   
-  protected MergeJoinBatch(MergeJoinPOP popConfig, FragmentContext context, RecordBatch left, RecordBatch right) {
+  protected MergeJoinBatch(MergeJoinPOP popConfig, FragmentContext context, RecordBatch left, RecordBatch right) throws OutOfMemoryException {
     super(popConfig, context);
- 
+
     if (popConfig.getConditions().size() == 0) {
       throw new UnsupportedOperationException("Merge Join currently does not support cartesian join.  This join operator was configured with 0 conditions");
     }
@@ -113,7 +118,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
     this.right = right;
     this.joinType = popConfig.getJoinType();
     this.status = new JoinStatus(left, right, this);
-    this.batchBuilder = new MergeJoinBatchBuilder(context, status);
+    this.batchBuilder = new MergeJoinBatchBuilder(oContext.getAllocator(), status);
     this.conditions = popConfig.getConditions();
   }
 
@@ -204,7 +209,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
   }
 
   public void resetBatchBuilder() {
-    batchBuilder = new MergeJoinBatchBuilder(context, status);
+    batchBuilder = new MergeJoinBatchBuilder(oContext.getAllocator(), status);
   }
 
   public void addRightToBatchBuilder() {
@@ -384,7 +389,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
     // add fields from both batches
     if (leftCount > 0) {
       for (VectorWrapper<?> w : left) {
-        ValueVector outgoingVector = TypeHelper.getNewVector(w.getField(), context.getAllocator());
+        ValueVector outgoingVector = TypeHelper.getNewVector(w.getField(), oContext.getAllocator());
         VectorAllocator.getAllocator(outgoingVector, (int) Math.ceil(w.getValueVector().getBufferSize() / left.getRecordCount())).alloc(joinBatchSize);
         container.add(outgoingVector);
       }
@@ -392,7 +397,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
 
     if (rightCount > 0) {
       for (VectorWrapper<?> w : right) {
-        ValueVector outgoingVector = TypeHelper.getNewVector(w.getField(), context.getAllocator());
+        ValueVector outgoingVector = TypeHelper.getNewVector(w.getField(), oContext.getAllocator());
         VectorAllocator.getAllocator(outgoingVector, (int) Math.ceil(w.getValueVector().getBufferSize() / right.getRecordCount())).alloc(joinBatchSize);
         container.add(outgoingVector);
       }

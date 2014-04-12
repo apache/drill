@@ -37,8 +37,10 @@ import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
+import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
 import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.exec.vector.ValueVector;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Test;
@@ -73,6 +75,8 @@ public class TestSimpleFilter extends ExecTest {
       assertEquals(50, exec.getRecordCount());
     }
 
+    exec.stop();
+
     if(context.getFailureCause() != null){
       throw context.getFailureCause();
     }
@@ -100,6 +104,7 @@ public class TestSimpleFilter extends ExecTest {
       }
       recordCount += exec.getSelectionVector4().getCount();
     }
+    exec.stop();
     assertEquals(50, recordCount);
 
     if(context.getFailureCause() != null){

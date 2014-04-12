@@ -35,6 +35,8 @@ import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.HoldingContainerExpression;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
+import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.TopN;
 import org.apache.drill.exec.physical.impl.sort.RecordBatchData;
@@ -57,6 +59,8 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TopNBatch.class);
 
   private static final long MAX_SORT_BYTES = 1L * 1024 * 1024 * 1024;
+  public static final long ALLOCATOR_INITIAL_RESERVATION = 1*1024*1024;
+  public static final long ALLOCATOR_MAX_RESERVATION = 20L*1000*1000*1000;
   private  final int batchPurgeThreshold;
 
   public final MappingSet MAIN_MAPPING = new MappingSet( (String) null, null, ClassGenerator.DEFAULT_SCALAR_MAP, ClassGenerator.DEFAULT_SCALAR_MAP);
@@ -73,7 +77,7 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
   private int batchCount;
   private Copier copier;
 
-  public TopNBatch(TopN popConfig, FragmentContext context, RecordBatch incoming) {
+  public TopNBatch(TopN popConfig, FragmentContext context, RecordBatch incoming) throws OutOfMemoryException {
     super(popConfig, context);
     this.incoming = incoming;
     this.config = popConfig;
@@ -88,7 +92,6 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
   @Override
   public void kill() {
     incoming.kill();
-    cleanup();
   }
 
   @Override
@@ -105,13 +108,13 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
   
   @Override
   public void cleanup() {
-    super.cleanup();
     if (sv4 != null) {
       sv4.clear();
     }
     if (priorityQueue != null) {
       priorityQueue.cleanup();
     }
+    super.cleanup();
     incoming.cleanup();
   }
 
@@ -121,7 +124,6 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
       if(getSelectionVector4().next()){
         return IterOutcome.OK;
       }else{
-        cleanup();
         return IterOutcome.NONE;
       }
     }
@@ -139,7 +141,6 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
         case NOT_YET:
           throw new UnsupportedOperationException();
         case STOP:
-          cleanup();
           return upstream;
         case OK_NEW_SCHEMA:
           // only change in the case that the schema truly changes.  Artificial schema changes are ignored.
@@ -198,21 +199,22 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
     SimpleRecordBatch batch = new SimpleRecordBatch(c, selectionVector4, context);
     SimpleRecordBatch newBatch = new SimpleRecordBatch(newContainer, null, context);
     if (copier == null) {
-      copier = RemovingRecordBatch.getGenerated4Copier(batch, context, newContainer, newBatch);
+      copier = RemovingRecordBatch.getGenerated4Copier(batch, context, oContext.getAllocator(),  newContainer, newBatch);
     } else {
       List<VectorAllocator> allocators = Lists.newArrayList();
       for(VectorWrapper<?> i : batch){
 
-        ValueVector v = TypeHelper.getNewVector(i.getField(), context.getAllocator());
+        ValueVector v = TypeHelper.getNewVector(i.getField(), oContext.getAllocator());
         newContainer.add(v);
         allocators.add(RemovingRecordBatch.getAllocator4(v));
       }
       copier.setupRemover(context, batch, newBatch, allocators.toArray(new VectorAllocator[allocators.size()]));
     }
-    SortRecordBatchBuilder builder = new SortRecordBatchBuilder(context.getAllocator(), MAX_SORT_BYTES);
+    SortRecordBatchBuilder builder = new SortRecordBatchBuilder(oContext.getAllocator(), MAX_SORT_BYTES);
     do {
       int count = selectionVector4.getCount();
-      copier.copyRecords();
+      int copiedRecords = copier.copyRecords(0, count);
+      assert copiedRecords == count;
       for(VectorWrapper<?> v : newContainer){
         ValueVector.Mutator m = v.getValueVector().getMutator();
         m.setValueCount(count);
@@ -264,7 +266,7 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
     g.getEvalBlock()._return(JExpr.lit(0));
 
     PriorityQueue q = context.getImplementationClass(cg);
-    q.init(config.getLimit(), context, schema.getSelectionVectorMode() == BatchSchema.SelectionVectorMode.TWO_BYTE);
+    q.init(config.getLimit(), context, oContext.getAllocator(), schema.getSelectionVectorMode() == BatchSchema.SelectionVectorMode.TWO_BYTE);
     return q;
   }
   

@@ -48,6 +48,8 @@ public class Wrapper {
   private final Stats stats;
   private boolean endpointsAssigned;
   private Map<DrillbitEndpoint, EndpointAffinity> endpointAffinity = Maps.newHashMap();
+  private long initialAllocation = 0;
+  private long maxAllocation = 0;
 
   // a list of assigned endpoints. Technically, there could repeated endpoints in this list if we'd like to assign the
   // same fragment multiple times to the same endpoint.
@@ -97,6 +99,19 @@ public class Wrapper {
 
   public Fragment getNode() {
     return node;
+  }
+
+  public long getInitialAllocation() {
+    return initialAllocation;
+  }
+
+  public long getMaxAllocation() {
+    return maxAllocation;
+  }
+
+  public void addAllocation(PhysicalOperator pop) {
+    initialAllocation += pop.getInitialAllocation();
+    maxAllocation += pop.getMaxAllocation();
   }
 
   private class AssignEndpointsToScanAndStore extends AbstractPhysicalVisitor<Void, List<DrillbitEndpoint>, PhysicalOperatorSetupException>{

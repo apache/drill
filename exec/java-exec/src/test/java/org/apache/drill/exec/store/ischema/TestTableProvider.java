@@ -27,6 +27,7 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
@@ -40,26 +41,27 @@ import org.junit.Test;
 /**
  * Using a test table with two columns, create data and verify the values are in the record batch.
  */
+@Ignore
 public class TestTableProvider extends ExecTest {
 
   @Test
-  public void zeroRead() {
+  public void zeroRead() throws OutOfMemoryException {
     readTestTable(0);
   }
 
   @Test
-  public void oneRead() {
+  public void oneRead() throws OutOfMemoryException {
     readTestTable(1);
   }
 
   @Test
-  public void smallRead() {
+  public void smallRead() throws OutOfMemoryException {
     readTestTable(10);
   }
 
   @Test
   @Ignore // due to out of heap space
-  public void largeRead() {
+  public void largeRead() throws OutOfMemoryException {
     readTestTable(1024*1024);
   }
 
@@ -68,7 +70,7 @@ public class TestTableProvider extends ExecTest {
    * Read record batches from the test table and verify the contents.
    * @param nrRows - the total number of rows expected.
    */
-  private void readTestTable(int nrRows) {
+  private void readTestTable(int nrRows) throws OutOfMemoryException {
 
     // Mock up a context with a BufferAllocator
     FragmentContext context = mock(FragmentContext.class);

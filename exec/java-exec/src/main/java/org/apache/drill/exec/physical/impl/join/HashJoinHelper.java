@@ -25,6 +25,7 @@ import java.util.List;
 import io.netty.buffer.ByteBuf;
 
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.physical.impl.common.HashTable;
@@ -60,6 +61,7 @@ public class HashJoinHelper {
 
     // Fragment context
     FragmentContext context;
+    BufferAllocator allocator;
 
     // Constant to indicate index is empty.
     static final int INDEX_EMPTY = -1;
@@ -67,8 +69,9 @@ public class HashJoinHelper {
     // bits to shift while obtaining batch index from SV4
     static final int SHIFT_SIZE = 16;
 
-    public HashJoinHelper(FragmentContext context) {
+    public HashJoinHelper(FragmentContext context, BufferAllocator allocator) {
         this.context = context;
+        this.allocator = allocator;
     }
 
     public void addStartIndexBatch() throws SchemaChangeException {
@@ -102,7 +105,7 @@ public class HashJoinHelper {
 
     public SelectionVector4 getNewSV4(int recordCount) throws SchemaChangeException {
 
-        ByteBuf vector = context.getAllocator().buffer((recordCount * 4));
+        ByteBuf vector = allocator.buffer((recordCount * 4));
 
         SelectionVector4 sv4 = new SelectionVector4(vector, recordCount, recordCount);
 

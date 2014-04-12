@@ -23,6 +23,8 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
+import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
@@ -38,11 +40,12 @@ public class MockRecordReader implements RecordReader {
   private OutputMutator output;
   private MockScanEntry config;
   private FragmentContext context;
+  private BufferAllocator alcator;
   private ValueVector[] valueVectors;
   private int recordsRead;
   private int batchRecordCount;
 
-  public MockRecordReader(FragmentContext context, MockScanEntry config) {
+  public MockRecordReader(FragmentContext context, MockScanEntry config) throws OutOfMemoryException {
     this.context = context;
     this.config = config;
   }
@@ -55,14 +58,11 @@ public class MockRecordReader implements RecordReader {
     return x;
   }
 
-  private ValueVector getVector(String name, MajorType type, int length) {
+  private MaterializedField getVector(String name, MajorType type, int length) {
     assert context != null : "Context shouldn't be null.";
     MaterializedField f = MaterializedField.create(SchemaPath.getSimplePath(name), type);
-    ValueVector v;
-    v = TypeHelper.getNewVector(f, context.getAllocator());
-    AllocationHelper.allocate(v, length, 50, 4);
 
-    return v;
+    return f;
 
   }
 
@@ -75,8 +75,8 @@ public class MockRecordReader implements RecordReader {
       batchRecordCount = 250000 / estimateRowSize;
 
       for (int i = 0; i < config.getTypes().length; i++) {
-        valueVectors[i] = getVector(config.getTypes()[i].getName(), config.getTypes()[i].getMajorType(), batchRecordCount);
-        output.addField(valueVectors[i]);
+        MajorType type = config.getTypes()[i].getMajorType();
+        valueVectors[i] = output.addField(getVector(config.getTypes()[i].getName(), type, batchRecordCount), TypeHelper.getValueVectorClass(type.getMinorType(), type.getMode()));
       }
       output.setNewSchema();
     } catch (SchemaChangeException e) {

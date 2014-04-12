@@ -22,10 +22,13 @@ import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.PooledByteBufAllocatorL;
 import io.netty.buffer.PooledUnsafeDirectByteBufL;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.util.AssertionUtil;
 
@@ -40,6 +43,10 @@ public class TopLevelAllocator implements BufferAllocator {
   public TopLevelAllocator() {
     this(DrillConfig.getMaxDirectMemory());
   }
+
+  public TopLevelAllocator(DrillConfig config) {
+    this(Math.min(DrillConfig.getMaxDirectMemory(), config.getLong(ExecConstants.TOP_LEVEL_MAX_ALLOC)));
+  }
   
   public TopLevelAllocator(long maximumAllocation) {
     this.acct = new Accountor(null, null, maximumAllocation, 0);
@@ -50,7 +57,7 @@ public class TopLevelAllocator implements BufferAllocator {
     if(!acct.reserve(min)) return null;
     ByteBuf buffer = innerAllocator.directBuffer(min, max);
     AccountingByteBuf wrapped = new AccountingByteBuf(acct, (PooledUnsafeDirectByteBufL) buffer);
-    acct.reserved(buffer.capacity() - min, wrapped);
+    acct.reserved(min, wrapped);
     return wrapped;
   }
   
@@ -74,15 +81,19 @@ public class TopLevelAllocator implements BufferAllocator {
     if(!acct.reserve(initialReservation)){
       throw new OutOfMemoryException(String.format("You attempted to create a new child allocator with initial reservation %d but only %d bytes of memory were available.", initialReservation, acct.getCapacity() - acct.getAllocation()));
     };
-    ChildAllocator allocator = new ChildAllocator(handle, acct, initialReservation, maximumReservation);
+    ChildAllocator allocator = new ChildAllocator(handle, acct, maximumReservation, initialReservation);
     if(ENABLE_ACCOUNTING) children.add(allocator);
     return allocator;
   }
 
   @Override
   public void close() {
-    if(ENABLE_ACCOUNTING && !children.isEmpty()){
-      throw new IllegalStateException("Failure while trying to close allocator: Child level allocators not closed.");
+    if (ENABLE_ACCOUNTING) {
+      for (ChildAllocator child : children) {
+        if (!child.isClosed()) {
+          throw new IllegalStateException("Failure while trying to close allocator: Child level allocators not closed.");
+        }
+      }
     }
     acct.close();
   }
@@ -91,14 +102,20 @@ public class TopLevelAllocator implements BufferAllocator {
   private class ChildAllocator implements BufferAllocator{
 
     private Accountor childAcct;
-    
+    private Map<ChildAllocator, StackTraceElement[]> children = new HashMap<>();
+    private boolean closed = false;
+    private FragmentHandle handle;
+
     public ChildAllocator(FragmentHandle handle, Accountor parentAccountor, long max, long pre) throws OutOfMemoryException{
+      assert max >= pre;
       childAcct = new Accountor(handle, parentAccountor, max, pre);
+      this.handle = handle;
     }
     
     @Override
     public AccountingByteBuf buffer(int size, int max) {
       if(!childAcct.reserve(size)){
+        logger.warn("Unable to allocate buffer of size {} due to memory limit. Current allocation: {}", size, getAllocatedMemory());
         return null;
       };
       
@@ -121,9 +138,11 @@ public class TopLevelAllocator implements BufferAllocator {
     public BufferAllocator getChildAllocator(FragmentHandle handle, long initialReservation, long maximumReservation)
         throws OutOfMemoryException {
       if(!childAcct.reserve(initialReservation)){
-        throw new OutOfMemoryException(String.format("You attempted to create a new child allocator with initial reservation %d but only %d bytes of memory were available.", initialReservation, childAcct.getCapacity() - childAcct.getAllocation()));
+        throw new OutOfMemoryException(String.format("You attempted to create a new child allocator with initial reservation %d but only %d bytes of memory were available.", initialReservation, childAcct.getAvailable()));
       };
-      return new ChildAllocator(handle, childAcct, maximumReservation, initialReservation);
+      ChildAllocator newChildAllocator = new ChildAllocator(handle, childAcct, maximumReservation, initialReservation);
+      this.children.put(newChildAllocator, Thread.currentThread().getStackTrace());
+      return newChildAllocator;
     }
 
     public PreAllocator getNewPreAllocator(){
@@ -132,7 +151,28 @@ public class TopLevelAllocator implements BufferAllocator {
 
     @Override
     public void close() {
+      if (ENABLE_ACCOUNTING) {
+        for (ChildAllocator child : children.keySet()) {
+          if (!child.isClosed()) {
+            StringBuilder sb = new StringBuilder();
+            StackTraceElement[] elements = children.get(child);
+            for (int i = 3; i < elements.length; i++) {
+              sb.append("\t\t");
+              sb.append(elements[i]);
+              sb.append("\n");
+            }
+            throw new IllegalStateException(String.format(
+                    "Failure while trying to close child allocator: Child level allocators not closed. Fragment %d:%d. Stack trace: \n %s",
+                    handle.getMajorFragmentId(), handle.getMinorFragmentId(), sb.toString()));
+          }
+        }
+      }
       childAcct.close();
+      closed = true;
+    }
+
+    public boolean isClosed() {
+      return closed;
     }
 
     @Override

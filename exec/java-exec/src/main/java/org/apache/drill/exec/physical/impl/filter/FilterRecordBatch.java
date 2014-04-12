@@ -30,6 +30,7 @@ import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.Filter;
 import org.apache.drill.exec.record.*;
@@ -50,7 +51,7 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
   private BufferAllocator.PreAllocator svAllocator;
   private Filterer filter;
 
-  public FilterRecordBatch(Filter pop, RecordBatch incoming, FragmentContext context) {
+  public FilterRecordBatch(Filter pop, RecordBatch incoming, FragmentContext context) throws OutOfMemoryException {
     super(pop, context, incoming);
   }
   
@@ -78,17 +79,18 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
   protected void doWork() {
     int recordCount = incoming.getRecordCount();
     filter.filterBatch(recordCount);
-    for(VectorWrapper<?> v : container){
-      ValueVector.Mutator m = v.getValueVector().getMutator();
-      m.setValueCount(recordCount);
-    }
+//    for(VectorWrapper<?> v : container){
+//      ValueVector.Mutator m = v.getValueVector().getMutator();
+//      m.setValueCount(recordCount);
+//    }
   }
   
   
   @Override
   public void cleanup() {
-    super.cleanup();
     if(sv2 != null) sv2.clear();
+    if(sv4 != null) sv4.clear();
+    super.cleanup();
   }
 
   @Override
@@ -97,16 +99,16 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
 
     switch(incoming.getSchema().getSelectionVectorMode()){
       case NONE:
-        sv2 = new SelectionVector2(context.getAllocator());
+        sv2 = new SelectionVector2(oContext.getAllocator());
         this.filter = generateSV2Filterer();
         break;
       case TWO_BYTE:
-        sv2 = new SelectionVector2(context.getAllocator());
+        sv2 = new SelectionVector2(oContext.getAllocator());
         this.filter = generateSV2Filterer();
         break;
       case FOUR_BYTE:
         // set up the multi-batch selection vector
-        this.svAllocator = context.getAllocator().getNewPreAllocator();
+        this.svAllocator = oContext.getAllocator().getNewPreAllocator();
         if (!svAllocator.preAllocate(incoming.getRecordCount()*4))
           throw new SchemaChangeException("Attempted to filter an SV4 which exceeds allowed memory (" +
                                           incoming.getRecordCount() * 4 + " bytes)");

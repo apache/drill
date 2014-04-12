@@ -97,8 +97,8 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
     @Override
     public void stop() {
       ok = false;
-      incoming.cleanup();
       sendCount.waitForSendComplete();
+      incoming.cleanup();
     }
     
     

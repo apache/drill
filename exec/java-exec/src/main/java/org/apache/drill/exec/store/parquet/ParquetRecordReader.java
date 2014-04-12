@@ -29,6 +29,7 @@ import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
@@ -77,7 +78,6 @@ class ParquetRecordReader implements RecordReader {
 
   private List<ColumnReader> columnStatuses;
   FileSystem fileSystem;
-  BufferAllocator allocator;
   private long batchSize;
   Path hadoopPath;
   private VarLenBinaryReader varLengthReader;
@@ -107,7 +107,6 @@ class ParquetRecordReader implements RecordReader {
                              String path, int rowGroupIndex, FileSystem fs,
                              CodecFactoryExposer codecFactoryExposer, ParquetMetadata footer,
                              List<SchemaPath> columns) throws ExecutionSetupException {
-    this.allocator = fragmentContext.getAllocator();
     hadoopPath = new Path(path);
     fileSystem = fs;
     this.codecFactoryExposer = codecFactoryExposer;
@@ -214,13 +213,13 @@ class ParquetRecordReader implements RecordReader {
       for (int i = 0; i < columns.size(); ++i) {
         column = columns.get(i);
         columnChunkMetaData = footer.getBlocks().get(0).getColumns().get(i);
-        field = MaterializedField.create(toFieldName(column.getPath()),
-            toMajorType(column.getType(), getDataMode(column)));
+        MajorType type = toMajorType(column.getType(), getDataMode(column));
+        field = MaterializedField.create(toFieldName(column.getPath()), type);
         // the field was not requested to be read
         if ( ! fieldSelected(field)) continue;
 
         fieldFixedLength = column.getType() != PrimitiveType.PrimitiveTypeName.BINARY;
-        ValueVector v = TypeHelper.getNewVector(field, allocator);
+        ValueVector v = output.addField(field, TypeHelper.getValueVectorClass(type.getMinorType(), type.getMode()));
         if (column.getType() != PrimitiveType.PrimitiveTypeName.BINARY) {
           createFixedColumnReader(fieldFixedLength, column, columnChunkMetaData, recordsPerBatch, v);
         } else {
@@ -237,17 +236,8 @@ class ParquetRecordReader implements RecordReader {
       throw new ExecutionSetupException(e);
     }
 
-    output.removeAllFields();
+//    output.removeAllFields();
     try {
-      for (ColumnReader crs : columnStatuses) {
-        output.addField(crs.valueVecHolder.getValueVector());
-      }
-      for (VarLenBinaryReader.VarLengthColumn r : varLengthReader.columns) {
-        output.addField(r.valueVecHolder.getValueVector());
-      }
-      for (VarLenBinaryReader.NullableVarLengthColumn r : varLengthReader.nullableColumns) {
-        output.addField(r.valueVecHolder.getValueVector());
-      }
       output.setNewSchema();
     }catch(SchemaChangeException e) {
       throw new ExecutionSetupException("Error setting up output mutator.", e);

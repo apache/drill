@@ -25,5 +25,5 @@ public interface RawFragmentBatchProvider {
   
   public RawFragmentBatch getNext() throws IOException;
   public void kill(FragmentContext context);
-  
+  public void cleanup();
 }

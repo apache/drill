@@ -24,6 +24,7 @@ import java.util.Iterator;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.HashPartitionSender;
 import org.apache.drill.exec.physical.impl.SendingAccountor;
@@ -42,6 +43,7 @@ import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.rpc.BaseRpcOutcomeListener;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.data.DataTunnel;
+import org.apache.drill.exec.util.VectorUtil;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.allocator.VectorAllocator;
 import org.apache.drill.exec.work.ErrorHelper;
@@ -60,6 +62,7 @@ public class OutgoingRecordBatch implements VectorAccessible {
   private final HashPartitionSender operator;
   private final RecordBatch incoming;
   private final FragmentContext context;
+  private final BufferAllocator allocator;
   private final VectorContainer vectorContainer = new VectorContainer();
   private final SendingAccountor sendCount;
   private final int oppositeMinorFragmentId;
@@ -72,9 +75,11 @@ public class OutgoingRecordBatch implements VectorAccessible {
   private static int DEFAULT_ALLOC_SIZE = 20000;
   private static int DEFAULT_VARIABLE_WIDTH_SIZE = 2048;
 
-  public OutgoingRecordBatch(SendingAccountor sendCount, HashPartitionSender operator, DataTunnel tunnel, RecordBatch incoming, FragmentContext context, int oppositeMinorFragmentId) {
+  public OutgoingRecordBatch(SendingAccountor sendCount, HashPartitionSender operator, DataTunnel tunnel, RecordBatch incoming,
+                             FragmentContext context, BufferAllocator allocator, int oppositeMinorFragmentId) {
     this.incoming = incoming;
     this.context = context;
+    this.allocator = allocator;
     this.operator = operator;
     this.tunnel = tunnel;
     this.sendCount = sendCount;
@@ -110,6 +115,7 @@ public class OutgoingRecordBatch implements VectorAccessible {
       for(VectorWrapper<?> w : vectorContainer){
         w.getValueVector().getMutator().setValueCount(recordCount);
       }
+
 
 //      BatchPrinter.printBatch(vectorContainer);
 
@@ -170,7 +176,7 @@ public class OutgoingRecordBatch implements VectorAccessible {
       bldr.addField(v.getField());
 
       // allocate a new value vector
-      ValueVector outgoingVector = TypeHelper.getNewVector(v.getField(), context.getAllocator());
+      ValueVector outgoingVector = TypeHelper.getNewVector(v.getField(), allocator);
       VectorAllocator.getAllocator(outgoingVector, 100).alloc(recordCapacity);
       vectorContainer.add(outgoingVector);
 //      logger.debug("Reallocating to cap " + recordCapacity + " because of newly init'd vector : " + v.getValueVector());

@@ -19,6 +19,7 @@ package org.apache.drill.exec.physical.impl.join;
 
 import com.google.common.collect.ArrayListMultimap;
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.BufferAllocator.PreAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.sort.RecordBatchData;
@@ -38,10 +39,10 @@ public class MergeJoinBatchBuilder {
   private PreAllocator svAllocator;
   private JoinStatus status;
 
-  public MergeJoinBatchBuilder(FragmentContext context, JoinStatus status) {
+  public MergeJoinBatchBuilder(BufferAllocator allocator, JoinStatus status) {
     this.container = new VectorContainer();
     this.status = status;
-    this.svAllocator = context.getAllocator().getNewPreAllocator();
+    this.svAllocator = allocator.getNewPreAllocator();
   }
 
   public boolean add(RecordBatch batch) {

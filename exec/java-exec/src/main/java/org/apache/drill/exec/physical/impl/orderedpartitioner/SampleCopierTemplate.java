@@ -44,19 +44,22 @@ public abstract class SampleCopierTemplate implements SampleCopier {
   
 
   @Override
-  public void copyRecords(int skip, int start, int total) {
+  public boolean copyRecords(int skip, int start, int total) {
     final int recordCount = sv4.getCount();
     int outgoingPosition = 0;
     int increment = skip > 0 ? skip : 1;
     for(int svIndex = start; svIndex < sv4.getCount() && outputRecords < total; svIndex += increment, outgoingPosition++){
       int deRefIndex = sv4.get(svIndex);
-      doEval(deRefIndex, outgoingPosition);
+      if (!doEval(deRefIndex, outgoingPosition)) {
+        return false;
+      }
       outputRecords++;
     }
+    return true;
   }
   
   public abstract void doSetup(@Named("context") FragmentContext context, @Named("incoming") VectorAccessible incoming, @Named("outgoing") VectorAccessible outgoing);
-  public abstract void doEval(@Named("inIndex") int inIndex, @Named("outIndex") int outIndex);
+  public abstract boolean doEval(@Named("inIndex") int inIndex, @Named("outIndex") int outIndex);
 
         
 

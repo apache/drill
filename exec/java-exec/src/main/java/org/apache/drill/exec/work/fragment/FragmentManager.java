@@ -21,6 +21,7 @@ import org.apache.drill.exec.exception.FragmentSetupException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.record.RawFragmentBatch;
+import org.apache.drill.exec.rpc.RemoteConnection;
 
 /**
  * The Fragment Manager is responsible managing incoming data and executing a fragment. Once enough data and resources
@@ -51,4 +52,12 @@ public interface FragmentManager {
   public abstract FragmentHandle getHandle();
   
   public abstract FragmentContext getFragmentContext();
+
+  public abstract void addConnection(RemoteConnection connection);
+
+  /**
+   *  Sets autoRead property on all connections
+   * @param autoRead
+   */
+  public abstract void setAutoRead(boolean autoRead);
 }

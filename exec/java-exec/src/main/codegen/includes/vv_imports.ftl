@@ -22,6 +22,7 @@ import io.netty.buffer.ByteBufInputStream;
 
 import org.apache.commons.lang3.ArrayUtils;
 
+import org.apache.drill.exec.memory.AccountingByteBuf;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.SchemaDefProtos;
 import org.apache.drill.exec.proto.UserBitShared.FieldMetadata;

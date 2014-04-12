@@ -45,7 +45,8 @@ public interface RecordBatch extends VectorAccessible {
     OK_NEW_SCHEMA, // A full collection of records
     STOP, // Informs parent nodes that the query has terminated. In this case, a consumer can consume their QueryContext
           // to understand the current state of things.
-    NOT_YET // used by batches that haven't received incoming data yet.
+    NOT_YET, // used by batches that haven't received incoming data yet.
+    OUT_OF_MEMORY // an upstream operator was unable to allocate memory. A batch receiving this should release memory if it can
   }
 
   public static enum SetupOutcome {

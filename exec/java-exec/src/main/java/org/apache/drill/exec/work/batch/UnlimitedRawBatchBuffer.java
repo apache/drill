@@ -52,6 +52,11 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
   }
 
   @Override
+  public void cleanup() {
+
+  }
+
+  @Override
   public void kill(FragmentContext context) {
     while(!buffer.isEmpty()){
       RawFragmentBatch batch = buffer.poll();

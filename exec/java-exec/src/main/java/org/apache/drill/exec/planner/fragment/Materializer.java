@@ -33,6 +33,7 @@ public class Materializer extends AbstractPhysicalVisitor<PhysicalOperator, Mate
   
   @Override
   public PhysicalOperator visitExchange(Exchange exchange, IndexedFragmentNode iNode) throws ExecutionSetupException {
+    iNode.addAllocation(exchange);
     if(exchange == iNode.getNode().getSendingExchange()){
       
       // this is a sending exchange.
@@ -56,6 +57,7 @@ public class Materializer extends AbstractPhysicalVisitor<PhysicalOperator, Mate
 
   @Override
   public PhysicalOperator visitSubScan(SubScan subScan, IndexedFragmentNode value) throws ExecutionSetupException {
+    value.addAllocation(subScan);
     // TODO - implement this
     return super.visitOp(subScan, value);
   }
@@ -63,6 +65,8 @@ public class Materializer extends AbstractPhysicalVisitor<PhysicalOperator, Mate
   @Override
   public PhysicalOperator visitStore(Store store, IndexedFragmentNode iNode) throws ExecutionSetupException {
     PhysicalOperator child = store.getChild().accept(this, iNode);
+
+    iNode.addAllocation(store);
     
     try {
       PhysicalOperator o = store.getSpecificStore(child, iNode.getMinorFragmentId());
@@ -75,6 +79,7 @@ public class Materializer extends AbstractPhysicalVisitor<PhysicalOperator, Mate
 
   @Override
   public PhysicalOperator visitOp(PhysicalOperator op, IndexedFragmentNode iNode) throws ExecutionSetupException {
+    iNode.addAllocation(op);
 //    logger.debug("Visiting catch all: {}", op);
     List<PhysicalOperator> children = Lists.newArrayList();
     for(PhysicalOperator child : op){
@@ -103,6 +108,10 @@ public class Materializer extends AbstractPhysicalVisitor<PhysicalOperator, Mate
 
     public Wrapper getInfo() {
       return info;
+    }
+
+    public void addAllocation(PhysicalOperator pop) {
+      info.addAllocation(pop);
     }
     
   }

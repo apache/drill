@@ -98,6 +98,7 @@ public class TestHashJoin extends PopUnitTestBase{
             bitContext.getMetrics(); result = new MetricRegistry();
             bitContext.getAllocator(); result = new TopLevelAllocator();
             bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
+            bitContext.getConfig(); result = c;
         }};
 
         PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
@@ -110,6 +111,7 @@ public class TestHashJoin extends PopUnitTestBase{
         while (exec.next()) {
             totalRecordCount += exec.getRecordCount();
         }
+        exec.stop();
         assertEquals(expectedRows, totalRecordCount);
         System.out.println("Total Record Count: " + totalRecordCount);
         if (context.getFailureCause() != null)
@@ -140,8 +142,7 @@ public class TestHashJoin extends PopUnitTestBase{
     }
 
     @Test
-    public void simpleEqualityJoin(@Injectable final DrillbitContext bitContext,
-                                   @Injectable UserServer.UserClientConnection connection) throws Throwable {
+    public void simpleEqualityJoin() throws Throwable {
 
         // Function checks for casting from Float, Double to Decimal data types
         try (RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();

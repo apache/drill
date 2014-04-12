@@ -22,11 +22,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-import java.util.concurrent.PriorityBlockingQueue;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.cache.DistributedCache;
@@ -71,7 +67,7 @@ public class WorkManager implements Closeable{
   private final UserWorker userWorker;
   private final WorkerBee bee;
   private final WorkEventBus workBus;
-  private Executor executor;
+  private ExecutorService executor;
   private final EventThread eventThread;
   
   public WorkManager(BootStrapContext context){
@@ -108,6 +104,11 @@ public class WorkManager implements Closeable{
   
   @Override
   public void close() throws IOException {
+    try {
+      executor.awaitTermination(1, TimeUnit.SECONDS);
+    } catch (InterruptedException e) {
+      logger.warn("Executor interrupted while awaiting termination");
+    }
   }
   
 

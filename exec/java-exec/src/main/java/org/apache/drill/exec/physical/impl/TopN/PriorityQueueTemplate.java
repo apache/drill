@@ -38,16 +38,18 @@ public abstract class PriorityQueueTemplate implements PriorityQueue {
   private SelectionVector4 finalSv4;//This is for final sorted output
   private ExpandableHyperContainer hyperBatch;
   private FragmentContext context;
+  private BufferAllocator allocator;
   private int limit;
   private int queueSize = 0;
   private int batchCount = 0;
   private boolean hasSv2;
 
   @Override
-  public void init(int limit, FragmentContext context, boolean hasSv2) throws SchemaChangeException {
+  public void init(int limit, FragmentContext context, BufferAllocator allocator,  boolean hasSv2) throws SchemaChangeException {
     this.limit = limit;
     this.context = context;
-    BufferAllocator.PreAllocator preAlloc = context.getAllocator().getNewPreAllocator();
+    this.allocator = allocator;
+    BufferAllocator.PreAllocator preAlloc = allocator.getNewPreAllocator();
     preAlloc.preAllocate(4 * (limit + 1));
     heapSv4 = new SelectionVector4(preAlloc.getAllocation(), limit, Character.MAX_VALUE);
     this.hasSv2 = hasSv2;
@@ -64,7 +66,7 @@ public abstract class PriorityQueueTemplate implements PriorityQueue {
     newContainer.buildSchema(BatchSchema.SelectionVectorMode.FOUR_BYTE);
     this.hyperBatch = new ExpandableHyperContainer(newContainer);
     this.batchCount = hyperBatch.iterator().next().getValueVectors().length;
-    BufferAllocator.PreAllocator preAlloc = context.getAllocator().getNewPreAllocator();
+    BufferAllocator.PreAllocator preAlloc = allocator.getNewPreAllocator();
     preAlloc.preAllocate(4 * (limit + 1));
     this.heapSv4 = new SelectionVector4(preAlloc.getAllocation(), limit, Character.MAX_VALUE);
     for (int i = 0; i < v4.getTotalCount(); i++) {
@@ -113,7 +115,7 @@ public abstract class PriorityQueueTemplate implements PriorityQueue {
   public void generate() throws SchemaChangeException {
     Stopwatch watch = new Stopwatch();
     watch.start();
-    BufferAllocator.PreAllocator preAlloc = context.getAllocator().getNewPreAllocator();
+    BufferAllocator.PreAllocator preAlloc = allocator.getNewPreAllocator();
     preAlloc.preAllocate(4 * queueSize);
     finalSv4 = new SelectionVector4(preAlloc.getAllocation(), queueSize, 4000);
     for (int i = queueSize - 1; i >= 0; i--) {

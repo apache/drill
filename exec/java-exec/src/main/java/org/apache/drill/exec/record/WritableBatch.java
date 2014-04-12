@@ -71,6 +71,7 @@ public class WritableBatch {
         cbb.addComponent(buf);
       }
 
+
       List<FieldMetadata> fields = def.getFieldList();
 
       int bufferOffset = 0;
@@ -83,7 +84,10 @@ public class WritableBatch {
       for (VectorWrapper<?> vv : container) {
         FieldMetadata fmd = fields.get(vectorIndex);
         ValueVector v = vv.getValueVector();
-        v.load(fmd, cbb.slice(bufferOffset, fmd.getBufferLength()));
+        ByteBuf bb = cbb.slice(bufferOffset, fmd.getBufferLength());
+//        v.load(fmd, cbb.slice(bufferOffset, fmd.getBufferLength()));
+        v.load(fmd, bb);
+        bb.release();
         vectorIndex++;
         bufferOffset += fmd.getBufferLength();
       }

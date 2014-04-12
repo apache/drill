@@ -22,20 +22,14 @@ import java.util.Iterator;
 
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.UserBitShared.RecordBatchDef;
-import org.apache.drill.exec.record.BatchSchema;
-import org.apache.drill.exec.record.RawFragmentBatch;
-import org.apache.drill.exec.record.RawFragmentBatchProvider;
-import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.record.RecordBatchLoader;
-import org.apache.drill.exec.record.TypedFieldId;
-import org.apache.drill.exec.record.VectorWrapper;
-import org.apache.drill.exec.record.WritableBatch;
+import org.apache.drill.exec.record.*;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 
-public class WireRecordBatch implements RecordBatch{
+public class WireRecordBatch implements RecordBatch {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WireRecordBatch.class);
 
   private RecordBatchLoader batchLoader;
@@ -44,10 +38,10 @@ public class WireRecordBatch implements RecordBatch{
   private BatchSchema schema;
 
   
-  public WireRecordBatch(FragmentContext context, RawFragmentBatchProvider fragProvider) {
+  public WireRecordBatch(FragmentContext context, RawFragmentBatchProvider fragProvider) throws OutOfMemoryException {
     this.fragProvider = fragProvider;
     this.context = context;
-    this.batchLoader = new RecordBatchLoader(context.getAllocator());
+    this.batchLoader = new RecordBatchLoader(null);
   }
 
   @Override
@@ -69,7 +63,7 @@ public class WireRecordBatch implements RecordBatch{
   public void kill() {
     fragProvider.kill(context);
   }
-  
+
   @Override
   public Iterator<VectorWrapper<?>> iterator() {
     return batchLoader.iterator();
@@ -101,15 +95,19 @@ public class WireRecordBatch implements RecordBatch{
       RawFragmentBatch batch = fragProvider.getNext();
     
       // skip over empty batches. we do this since these are basically control messages.
-      while(batch != null && batch.getHeader().getDef().getRecordCount() == 0){
+      while(batch != null && !batch.getHeader().getIsOutOfMemory() && batch.getHeader().getDef().getRecordCount() == 0){
         batch = fragProvider.getNext();
       }
-    
+
       if (batch == null){
         batchLoader.clear();
         return IterOutcome.NONE;
       }
-      
+
+      if (batch.getHeader().getIsOutOfMemory()) {
+        return IterOutcome.OUT_OF_MEMORY;
+      }
+    
 
 //      logger.debug("Next received batch {}", batch);
 
@@ -136,7 +134,7 @@ public class WireRecordBatch implements RecordBatch{
 
   @Override
   public void cleanup() {
+    fragProvider.cleanup();
   }
-  
-  
+
 }

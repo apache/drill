@@ -23,6 +23,8 @@ import net.hydromatic.optiq.SchemaPlus;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.store.RecordReader;
@@ -38,9 +40,13 @@ import org.apache.drill.exec.vector.ValueVector;
 public class RowRecordReader implements RecordReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RowRecordReader.class);
 
+  public static final long ALLOCATOR_INITIAL_RESERVATION = 1*1024*1024;
+  public static final long ALLOCATOR_MAX_RESERVATION = 20L*1000*1000*1000;
+
   protected final VectorSet batch;
   protected final RowProvider provider;
   protected final FragmentContext context;
+  protected final BufferAllocator allocator;
   protected OutputMutator output;
   
   private int bufSize = 256*1024;
@@ -50,14 +56,16 @@ public class RowRecordReader implements RecordReader {
    * @param context
    * @param vectors
    */
-  public RowRecordReader(FragmentContext context, VectorSet batch, RowProvider provider) {
+  public RowRecordReader(FragmentContext context, VectorSet batch, RowProvider provider) throws OutOfMemoryException {
     this.context = context;
+    this.allocator = context.getNewChildAllocator(ALLOCATOR_INITIAL_RESERVATION, ALLOCATOR_MAX_RESERVATION);
     this.provider = provider;
     this.batch = batch;
   }
  
-  public RowRecordReader(FragmentContext context, SelectedTable table, SchemaPlus rootSchema){
+  public RowRecordReader(FragmentContext context, SelectedTable table, SchemaPlus rootSchema) throws OutOfMemoryException {
     this.context = context;
+    this.allocator = context.getNewChildAllocator(ALLOCATOR_INITIAL_RESERVATION, ALLOCATOR_MAX_RESERVATION);
     this.provider = table.getProvider(rootSchema);
     this.batch = table.getFixedTable();
   }
@@ -68,7 +76,7 @@ public class RowRecordReader implements RecordReader {
   @Override
   public void setup(OutputMutator output) throws ExecutionSetupException {
     this.output = output; 
-    batch.createVectors(context.getAllocator());
+    batch.createVectors(allocator);
     
     // Inform drill of the output columns. They were set up when the vector handler was created.
     //  Note we are currently working with fixed tables.

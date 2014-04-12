@@ -40,6 +40,8 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.expr.TypeHelper;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
@@ -50,8 +52,7 @@ import org.apache.drill.exec.store.easy.json.JSONRecordReader;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.*;
 
 import com.google.common.collect.Lists;
 
@@ -59,13 +60,29 @@ import com.google.common.collect.Lists;
 public class JSONRecordReaderTest extends ExecTest {
   private static final Charset UTF_8 = Charset.forName("UTF-8");
 
+  private static MockOutputMutator mutator = new MockOutputMutator();
+
   private String getResource(String resourceName) {
     return "resource:" + resourceName;
   }
 
-  class MockOutputMutator implements OutputMutator {
-    List<MaterializedField> removedFields = Lists.newArrayList();
+  @After
+  public void setup() {
+    for (ValueVector v: mutator.getAddFields()) {
+      v.clear();
+    }
+    mutator.removeAllFields();
+    mutator.removedFields.clear();
+  }
+   @AfterClass
+   public static void cleanup() {
+     mutator.close();
+   }
+
+  static class MockOutputMutator implements OutputMutator {
+    public List<MaterializedField> removedFields = Lists.newArrayList();
     List<ValueVector> addFields = Lists.newArrayList();
+    private BufferAllocator allocator = new TopLevelAllocator();
 
     @Override
     public void removeField(MaterializedField field) throws SchemaChangeException {
@@ -96,7 +113,14 @@ public class JSONRecordReaderTest extends ExecTest {
 
     @Override
     public <T extends ValueVector> T addField(MaterializedField field, Class<T> clazz) throws SchemaChangeException {
-      return null;
+      ValueVector v = TypeHelper.getNewVector(field, allocator);
+      if(!clazz.isAssignableFrom(v.getClass())) throw new SchemaChangeException(String.format("The class that was provided %s does not correspond to the expected vector type of %s.", clazz.getSimpleName(), v.getClass().getSimpleName()));
+      addField(v);
+      return (T) v;
+    }
+
+    public void close() {
+      allocator.close();
     }
   }
 
@@ -137,17 +161,10 @@ public class JSONRecordReaderTest extends ExecTest {
   @Test
   public void testSameSchemaInSameBatch(@Injectable final FragmentContext context) throws IOException,
       ExecutionSetupException {
-    new Expectations() {
-      {
-        context.getAllocator();
-        returns(new TopLevelAllocator());
-      }
-    };
     JSONRecordReader jr = new JSONRecordReader(context,
         FileUtils.getResourceAsFile("/scan_json_test_1.json").toURI().toString(),
         FileSystem.getLocal(new Configuration()), null);
 
-    MockOutputMutator mutator = new MockOutputMutator();
     List<ValueVector> addFields = mutator.getAddFields();
     jr.setup(mutator);
     assertEquals(2, jr.next());
@@ -166,18 +183,11 @@ public class JSONRecordReaderTest extends ExecTest {
   @Test
   public void testChangedSchemaInSameBatch(@Injectable final FragmentContext context) throws IOException,
       ExecutionSetupException {
-    new Expectations() {
-      {
-        context.getAllocator();
-        returns(new TopLevelAllocator());
-      }
-    };
 
     JSONRecordReader jr = new JSONRecordReader(context,
         FileUtils.getResourceAsFile("/scan_json_test_2.json").toURI().toString(),
         FileSystem.getLocal(new Configuration()), null);
 
-    MockOutputMutator mutator = new MockOutputMutator();
     List<ValueVector> addFields = mutator.getAddFields();
 
     jr.setup(mutator);
@@ -207,18 +217,11 @@ public class JSONRecordReaderTest extends ExecTest {
   @Test
   public void testChangedSchemaInTwoBatchesColumnSelect(@Injectable final FragmentContext context) throws IOException,
       ExecutionSetupException {
-    new Expectations() {
-      {
-        context.getAllocator();
-        returns(new TopLevelAllocator());
-      }
-    };
 
     JSONRecordReader jr = new JSONRecordReader(context,
         FileUtils.getResourceAsFile("/scan_json_test_2.json").toURI().toString(),
         FileSystem.getLocal(new Configuration()),
         64, Arrays.asList(new SchemaPath("test", ExpressionPosition.UNKNOWN))); // batch only fits 1 int
-    MockOutputMutator mutator = new MockOutputMutator();
     List<ValueVector> addFields = mutator.getAddFields();
     List<MaterializedField> removedFields = mutator.getRemovedFields();
 
@@ -242,18 +245,11 @@ public class JSONRecordReaderTest extends ExecTest {
   @Test
   public void testChangedSchemaInTwoBatches(@Injectable final FragmentContext context) throws IOException,
       ExecutionSetupException {
-    new Expectations() {
-      {
-        context.getAllocator();
-        returns(new TopLevelAllocator());
-      }
-    };
 
     JSONRecordReader jr = new JSONRecordReader(context,
         FileUtils.getResourceAsFile("/scan_json_test_2.json").toURI().toString(),
         FileSystem.getLocal(new Configuration()),
         64, null); // batch only fits 1 int
-    MockOutputMutator mutator = new MockOutputMutator();
     List<ValueVector> addFields = mutator.getAddFields();
     List<MaterializedField> removedFields = mutator.getRemovedFields();
 
@@ -302,18 +298,11 @@ public class JSONRecordReaderTest extends ExecTest {
   @Test
   @Ignore // until repeated map
   public void testNestedFieldInSameBatch(@Injectable final FragmentContext context) throws ExecutionSetupException, IOException {
-    new Expectations() {
-      {
-        context.getAllocator();
-        returns(new TopLevelAllocator());
-      }
-    };
 
     JSONRecordReader jr = new JSONRecordReader(context,
         FileUtils.getResourceAsFile("/scan_json_test_3.json").toURI().toString(),
         FileSystem.getLocal(new Configuration()), null);
 
-    MockOutputMutator mutator = new MockOutputMutator();
     List<ValueVector> addFields = mutator.getAddFields();
     jr.setup(mutator);
     assertEquals(2, jr.next());
@@ -332,18 +321,11 @@ public class JSONRecordReaderTest extends ExecTest {
   @Test
   @Ignore // until repeated map is added.
   public void testRepeatedFields(@Injectable final FragmentContext context) throws ExecutionSetupException, IOException {
-    new Expectations() {
-      {
-        context.getAllocator();
-        returns(new TopLevelAllocator());
-      }
-    };
 
     JSONRecordReader jr = new JSONRecordReader(context,
         FileUtils.getResourceAsFile("/scan_json_test_4.json").toURI().toString(),
         FileSystem.getLocal(new Configuration()), null);
 
-    MockOutputMutator mutator = new MockOutputMutator();
     List<ValueVector> addFields = mutator.getAddFields();
     jr.setup(mutator);
     assertEquals(2, jr.next());
@@ -365,18 +347,11 @@ public class JSONRecordReaderTest extends ExecTest {
 
   @Test
   public void testRepeatedMissingFields(@Injectable final FragmentContext context) throws ExecutionSetupException, IOException {
-    new Expectations() {
-      {
-        context.getAllocator();
-        returns(new TopLevelAllocator());
-      }
-    };
 
     JSONRecordReader jr = new JSONRecordReader(context,
         FileUtils.getResourceAsFile("/scan_json_test_5.json").toURI().toString(),
         FileSystem.getLocal(new Configuration()), null);
 
-    MockOutputMutator mutator = new MockOutputMutator();
     List<ValueVector> addFields = mutator.getAddFields();
     jr.setup(mutator);
     assertEquals(9, jr.next());
@@ -398,18 +373,11 @@ public class JSONRecordReaderTest extends ExecTest {
 
   @Test
   public void testJsonArrayandNormalFields(@Injectable final FragmentContext context) throws ExecutionSetupException, IOException {
-    new Expectations() {
-      {
-        context.getAllocator();
-        returns(new TopLevelAllocator());
-      }
-    };
 
     JSONRecordReader jr = new JSONRecordReader(context,
         FileUtils.getResourceAsFile("/scan_json_test_7.json").toURI().toString(),
         FileSystem.getLocal(new Configuration()), null);
 
-    MockOutputMutator mutator = new MockOutputMutator();
     List<ValueVector> addFields = mutator.getAddFields();
     jr.setup(mutator);
     assertEquals(2, jr.next());

@@ -41,7 +41,7 @@ public class InboundRpcMessage extends RpcMessage{
   }
   
   void release(){
-    pBody.release();
+    if (pBody != null) pBody.release();
     if(dBody != null) dBody.release();
   }
 

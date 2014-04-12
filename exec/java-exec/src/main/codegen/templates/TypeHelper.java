@@ -66,7 +66,7 @@ public class TypeHelper {
     throw new UnsupportedOperationException();
   }
   
-  public static Class<?> getValueVectorClass(MinorType type, DataMode mode){
+  public static Class<? extends ValueVector> getValueVectorClass(MinorType type, DataMode mode){
     switch (type) {
 <#list vv.types as type>
   <#list type.minor as minor>
@@ -162,7 +162,7 @@ public class TypeHelper {
 <#list vv.types as type>
   <#list type.minor as minor>
     case ${minor.class?upper_case} :
-      ((${minor.class}Vector) vector).getMutator().set(index, (${minor.class}Holder) holder);
+      ((${minor.class}Vector) vector).getMutator().setSafe(index, (${minor.class}Holder) holder);
       break;
   </#list>
 </#list>

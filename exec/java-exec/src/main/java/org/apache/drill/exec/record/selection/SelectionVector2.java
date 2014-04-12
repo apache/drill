@@ -77,10 +77,14 @@ public class SelectionVector2 implements Closeable{
   public void setIndex(int index, char value){
     buffer.setChar(index * RECORD_SIZE, value);
   }
-  
-  public void allocateNew(int size){
+
+  public boolean allocateNew(int size){
     clear();
     buffer = allocator.buffer(size * RECORD_SIZE);
+    if (buffer == null) {
+      return false;
+    }
+    return true;
   }
 
   public SelectionVector2 clone(){
@@ -98,7 +102,7 @@ public class SelectionVector2 implements Closeable{
   }
   
   public void clear() {
-    if (buffer != DeadBuf.DEAD_BUFFER) {
+    if (buffer != null && buffer != DeadBuf.DEAD_BUFFER) {
       buffer.release();
       buffer = DeadBuf.DEAD_BUFFER;
       recordCount = 0;

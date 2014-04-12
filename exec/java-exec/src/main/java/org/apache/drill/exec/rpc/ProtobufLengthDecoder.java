@@ -18,6 +18,8 @@
 package org.apache.drill.exec.rpc;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.SwappedByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import io.netty.handler.codec.CorruptedFrameException;
@@ -27,6 +29,7 @@ import java.util.List;
 import org.apache.drill.exec.memory.BufferAllocator;
 
 import com.google.protobuf.CodedInputStream;
+import org.apache.drill.exec.proto.GeneralRPCProtos.RpcMode;
 
 /**
  * Modified version of ProtobufVarint32FrameDecoder that avoids bytebuf copy.
@@ -34,12 +37,13 @@ import com.google.protobuf.CodedInputStream;
 public class ProtobufLengthDecoder extends ByteToMessageDecoder {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProtobufLengthDecoder.class);
 
-  
   private BufferAllocator allocator;
+  private OutOfMemoryHandler outOfMemoryHandler;
   
-  public ProtobufLengthDecoder(BufferAllocator allocator) {
+  public ProtobufLengthDecoder(BufferAllocator allocator, OutOfMemoryHandler outOfMemoryHandler) {
     super();
     this.allocator = allocator;
+    this.outOfMemoryHandler = outOfMemoryHandler;
   }
 
 
@@ -82,6 +86,7 @@ public class ProtobufLengthDecoder extends ByteToMessageDecoder {
           if(outBuf == null){
             logger.warn("Failure allocating buffer on incoming stream due to memory limits.  Current Allocation: {}.", allocator.getAllocatedMemory());
             in.resetReaderIndex();
+            outOfMemoryHandler.handle();
             return;
           }
           outBuf.writeBytes(in, in.readerIndex(), length);
@@ -102,6 +107,11 @@ public class ProtobufLengthDecoder extends ByteToMessageDecoder {
     // Couldn't find the byte whose MSB is off.
     throw new CorruptedFrameException("length wider than 32-bit");
 
+  }
+
+  @Override
+  public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
+    ctx.fireChannelReadComplete();
   }
 
 }

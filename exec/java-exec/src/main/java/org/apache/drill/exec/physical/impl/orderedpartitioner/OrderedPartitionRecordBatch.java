@@ -41,12 +41,15 @@ import org.apache.drill.exec.compile.sig.MappingSet;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ClassGenerator;
+import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.ValueVectorReadExpression;
 import org.apache.drill.exec.expr.ValueVectorWriteExpression;
 import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
+import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.OrderedPartitionSender;
 import org.apache.drill.exec.physical.impl.sort.SortBatch;
@@ -84,6 +87,9 @@ import com.sun.codemodel.JExpr;
 public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPartitionSender> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OrderedPartitionRecordBatch.class);
 
+  private static final long ALLOCATOR_INITIAL_RESERVATION = 1*1024*1024;
+  private static final long ALLOCATOR_MAX_RESERVATION = 20L*1000*1000*1000;
+
   public final MappingSet mainMapping = new MappingSet( (String) null, null, ClassGenerator.DEFAULT_CONSTANT_MAP,
       ClassGenerator.DEFAULT_SCALAR_MAP);
   public final MappingSet incomingMapping = new MappingSet("inIndex", null, "incoming", null,
@@ -115,7 +121,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
   private final String mapKey;
   private List<VectorContainer> sampledIncomingBatches;
 
-  public OrderedPartitionRecordBatch(OrderedPartitionSender pop, RecordBatch incoming, FragmentContext context) {
+  public OrderedPartitionRecordBatch(OrderedPartitionSender pop, RecordBatch incoming, FragmentContext context) throws OutOfMemoryException {
     super(pop, context);
     this.incoming = incoming;
     this.partitions = pop.getDestinations().size();
@@ -134,13 +140,14 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
 
     SchemaPath outputPath = popConfig.getRef();
     MaterializedField outputField = MaterializedField.create(outputPath, Types.required(TypeProtos.MinorType.INT));
-    this.partitionKeyVector = (IntVector) TypeHelper.getNewVector(outputField, context.getAllocator());
+    this.partitionKeyVector = (IntVector) TypeHelper.getNewVector(outputField, oContext.getAllocator());
 
   }
 
 
   @Override
   public void cleanup() {
+    incoming.cleanup();
     super.cleanup();
     this.partitionVectors.clear();
     this.partitionKeyVector.clear();
@@ -153,7 +160,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
 
     // Start collecting batches until recordsToSample records have been collected
 
-    SortRecordBatchBuilder builder = new SortRecordBatchBuilder(context.getAllocator(), MAX_SORT_BYTES);
+    SortRecordBatchBuilder builder = new SortRecordBatchBuilder(oContext.getAllocator(), MAX_SORT_BYTES);
     builder.add(incoming);
 
     recordsSampled += incoming.getRecordCount();
@@ -190,9 +197,20 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
     // popConfig.orderings.
 
     VectorContainer containerToCache = new VectorContainer();
-    SampleCopier copier = getCopier(sv4, sortedSamples, containerToCache, popConfig.getOrderings());
-    copier.copyRecords(recordsSampled / (samplingFactor * partitions), 0, samplingFactor * partitions);
-
+    List<ValueVector> localAllocationVectors = Lists.newArrayList();
+    SampleCopier copier = getCopier(sv4, sortedSamples, containerToCache, popConfig.getOrderings(), localAllocationVectors);
+    int allocationSize = 50;
+    while (true) {
+      for (ValueVector vv : localAllocationVectors) {
+        AllocationHelper.allocate(vv, samplingFactor * partitions, allocationSize);
+      }
+      if (copier.copyRecords(recordsSampled / (samplingFactor * partitions), 0, samplingFactor * partitions)) {
+        break;
+      } else {
+        containerToCache.zeroVectors();
+        allocationSize *= 2;
+      }
+    }
     for (VectorWrapper<?> vw : containerToCache) {
       vw.getValueVector().getMutator().setValueCount(copier.getOutputRecords());
     }
@@ -202,7 +220,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
     // into a serializable wrapper object, and then add to distributed map
 
     WritableBatch batch = WritableBatch.getBatchNoHVWrap(containerToCache.getRecordCount(), containerToCache, false);
-    VectorAccessibleSerializable sampleToSave = new VectorAccessibleSerializable(batch, context.getAllocator());
+    VectorAccessibleSerializable sampleToSave = new VectorAccessibleSerializable(batch, oContext.getAllocator());
 
     mmap.put(mapKey, sampleToSave);
     this.sampledIncomingBatches = builder.getHeldRecordBatches();
@@ -283,7 +301,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
 
     // Get all samples from distributed map
 
-    SortRecordBatchBuilder containerBuilder = new SortRecordBatchBuilder(context.getAllocator(), MAX_SORT_BYTES);
+    SortRecordBatchBuilder containerBuilder = new SortRecordBatchBuilder(oContext.getAllocator(), MAX_SORT_BYTES);
     for (VectorAccessibleSerializable w : mmap.get(mapKey)) {
       containerBuilder.add(w.get());
     }
@@ -306,12 +324,25 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
     // Copy every Nth record from the samples into a candidate partition table, where N = totalSampledRecords/partitions
     // Attempt to push this to the distributed map. Only the first candidate to get pushed will be used.
     VectorContainer candidatePartitionTable = new VectorContainer();
-    SampleCopier copier = getCopier(newSv4, allSamplesContainer, candidatePartitionTable, orderDefs);
-    int skipRecords = containerBuilder.getSv4().getTotalCount() / partitions;
-    copier.copyRecords(skipRecords, skipRecords, partitions - 1);
-    assert copier.getOutputRecords() == partitions - 1 : String.format("output records: %d partitions: %d", copier.getOutputRecords(), partitions);
-    for (VectorWrapper<?> vw : candidatePartitionTable) {
-      vw.getValueVector().getMutator().setValueCount(copier.getOutputRecords());
+    SampleCopier copier = null;
+    List<ValueVector> localAllocationVectors = Lists.newArrayList();
+    copier = getCopier(newSv4, allSamplesContainer, candidatePartitionTable, orderDefs, localAllocationVectors);
+    int allocationSize = 50;
+    while (true) {
+      for (ValueVector vv : localAllocationVectors) {
+        AllocationHelper.allocate(vv, samplingFactor * partitions, allocationSize);
+      }
+      int skipRecords = containerBuilder.getSv4().getTotalCount() / partitions;
+      if (copier.copyRecords(skipRecords, skipRecords, partitions - 1)) {
+        assert copier.getOutputRecords() == partitions - 1 : String.format("output records: %d partitions: %d", copier.getOutputRecords(), partitions);
+        for (VectorWrapper<?> vw : candidatePartitionTable) {
+          vw.getValueVector().getMutator().setValueCount(copier.getOutputRecords());
+        }
+        break;
+      } else {
+        candidatePartitionTable.zeroVectors();
+        allocationSize *= 2;
+      }
     }
     candidatePartitionTable.setRecordCount(copier.getOutputRecords());
     WritableBatch batch = WritableBatch.getBatchNoHVWrap(candidatePartitionTable.getRecordCount(), candidatePartitionTable, false);
@@ -339,8 +370,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
    * @throws SchemaChangeException
    */
   private SampleCopier getCopier(SelectionVector4 sv4, VectorContainer incoming, VectorContainer outgoing,
-      List<Ordering> orderings) throws SchemaChangeException {
-    List<ValueVector> localAllocationVectors = Lists.newArrayList();
+      List<Ordering> orderings, List<ValueVector> localAllocationVectors) throws SchemaChangeException {
     final ErrorCollector collector = new ErrorCollectorImpl();
     final ClassGenerator<SampleCopier> cg = CodeGenerator.getRoot(SampleCopier.TEMPLATE_DEFINITION,
         context.getFunctionRegistry());
@@ -358,16 +388,15 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
             "Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));
       }
 
-      ValueVector vector = TypeHelper.getNewVector(outputField, context.getAllocator());
+      ValueVector vector = TypeHelper.getNewVector(outputField, oContext.getAllocator());
       localAllocationVectors.add(vector);
       TypedFieldId fid = outgoing.add(vector);
-      ValueVectorWriteExpression write = new ValueVectorWriteExpression(fid, expr);
-      cg.addExpr(write);
-      logger.debug("Added eval.");
+      ValueVectorWriteExpression write = new ValueVectorWriteExpression(fid, expr, true);
+      HoldingContainer hc = cg.addExpr(write);
+      cg.getEvalBlock()._if(hc.getValue().eq(JExpr.lit(0)))._then()._return(JExpr.FALSE);
     }
-    for (ValueVector vv : localAllocationVectors) {
-      AllocationHelper.allocate(vv, samplingFactor * partitions, 50);
-    }
+    cg.rotateBlock();
+    cg.getEvalBlock()._return(JExpr.TRUE);
     outgoing.buildSchema(BatchSchema.SelectionVectorMode.NONE);
     try {
       SampleCopier sampleCopier = context.getImplementationClass(cg);

@@ -73,6 +73,11 @@ public class TestComparisonFunctions extends ExecTest {
       assertEquals(String.format("Expression: %s;", expression), expectedResults, exec.getSelectionVector2().getCount());
     }
 
+    exec.stop();
+
+    context.close();
+
+
     if(context.getFailureCause() != null){
       throw context.getFailureCause();
     }

@@ -59,11 +59,11 @@ public class TestValueVector extends ExecTest {
     v.allocateNew(1024);
 
     // Put and set a few values
-    m.set(0, 100);
-    m.set(1, 101);
-    m.set(100, 102);
-    m.set(1022, 103);
-    m.set(1023, 104);
+    m.setSafe(0, 100);
+    m.setSafe(1, 101);
+    m.setSafe(100, 102);
+    m.setSafe(1022, 103);
+    m.setSafe(1023, 104);
     assertEquals(100, v.getAccessor().get(0));
     assertEquals(101, v.getAccessor().get(1));
     assertEquals(102, v.getAccessor().get(100));

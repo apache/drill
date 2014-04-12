@@ -20,7 +20,11 @@ package org.apache.drill.exec.record;
 import java.util.Iterator;
 
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
@@ -31,11 +35,13 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
   protected final VectorContainer container = new VectorContainer();
   protected final T popConfig;
   protected final FragmentContext context;
-  
-  protected AbstractRecordBatch(T popConfig, FragmentContext context) {
+  protected final OperatorContext oContext;
+
+  protected AbstractRecordBatch(T popConfig, FragmentContext context) throws OutOfMemoryException {
     super();
     this.context = context;
     this.popConfig = popConfig;
+    this.oContext = new OperatorContext(popConfig, context);
   }
   
   @Override
@@ -60,13 +66,13 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
   @Override
   public void kill() {
     killIncoming();
-    cleanup();
   }
   
   protected abstract void killIncoming();
   
   public void cleanup(){
     container.clear();
+    oContext.close();
   }
  
   @Override
@@ -97,6 +103,4 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
     return batch;
     
   }
-  
-  
 }

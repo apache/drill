@@ -88,7 +88,7 @@ public class BatchGroup implements VectorAccessible {
     watch.start();
     outputBatch.writeToStream(outputStream);
     newContainer.zeroVectors();
-    logger.debug("Took {} us to spill {} records", watch.elapsed(TimeUnit.MICROSECONDS), recordCount);
+//    logger.debug("Took {} us to spill {} records", watch.elapsed(TimeUnit.MICROSECONDS), recordCount);
     spilledBatches++;
   }
 

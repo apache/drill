@@ -1267,6 +1267,16 @@ public final class BitData {
      * <code>optional bool isLastBatch = 5;</code>
      */
     boolean getIsLastBatch();
+
+    // optional bool isOutOfMemory = 6 [default = false];
+    /**
+     * <code>optional bool isOutOfMemory = 6 [default = false];</code>
+     */
+    boolean hasIsOutOfMemory();
+    /**
+     * <code>optional bool isOutOfMemory = 6 [default = false];</code>
+     */
+    boolean getIsOutOfMemory();
   }
   /**
    * Protobuf type {@code exec.bit.data.FragmentRecordBatch}
@@ -1358,6 +1368,11 @@ public final class BitData {
             case 40: {
               bitField0_ |= 0x00000010;
               isLastBatch_ = input.readBool();
+              break;
+            }
+            case 48: {
+              bitField0_ |= 0x00000020;
+              isOutOfMemory_ = input.readBool();
               break;
             }
           }
@@ -1492,12 +1507,29 @@ public final class BitData {
       return isLastBatch_;
     }
 
+    // optional bool isOutOfMemory = 6 [default = false];
+    public static final int ISOUTOFMEMORY_FIELD_NUMBER = 6;
+    private boolean isOutOfMemory_;
+    /**
+     * <code>optional bool isOutOfMemory = 6 [default = false];</code>
+     */
+    public boolean hasIsOutOfMemory() {
+      return ((bitField0_ & 0x00000020) == 0x00000020);
+    }
+    /**
+     * <code>optional bool isOutOfMemory = 6 [default = false];</code>
+     */
+    public boolean getIsOutOfMemory() {
+      return isOutOfMemory_;
+    }
+
     private void initFields() {
       handle_ = org.apache.drill.exec.proto.ExecProtos.FragmentHandle.getDefaultInstance();
       sendingMajorFragmentId_ = 0;
       sendingMinorFragmentId_ = 0;
       def_ = org.apache.drill.exec.proto.UserBitShared.RecordBatchDef.getDefaultInstance();
       isLastBatch_ = false;
+      isOutOfMemory_ = false;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -1525,6 +1557,9 @@ public final class BitData {
       }
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
         output.writeBool(5, isLastBatch_);
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        output.writeBool(6, isOutOfMemory_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -1554,6 +1589,10 @@ public final class BitData {
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBoolSize(5, isLastBatch_);
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBoolSize(6, isOutOfMemory_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -1691,6 +1730,8 @@ public final class BitData {
         bitField0_ = (bitField0_ & ~0x00000008);
         isLastBatch_ = false;
         bitField0_ = (bitField0_ & ~0x00000010);
+        isOutOfMemory_ = false;
+        bitField0_ = (bitField0_ & ~0x00000020);
         return this;
       }
 
@@ -1747,6 +1788,10 @@ public final class BitData {
           to_bitField0_ |= 0x00000010;
         }
         result.isLastBatch_ = isLastBatch_;
+        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+          to_bitField0_ |= 0x00000020;
+        }
+        result.isOutOfMemory_ = isOutOfMemory_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -1777,6 +1822,9 @@ public final class BitData {
         }
         if (other.hasIsLastBatch()) {
           setIsLastBatch(other.getIsLastBatch());
+        }
+        if (other.hasIsOutOfMemory()) {
+          setIsOutOfMemory(other.getIsOutOfMemory());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -2138,6 +2186,39 @@ public final class BitData {
         return this;
       }
 
+      // optional bool isOutOfMemory = 6 [default = false];
+      private boolean isOutOfMemory_ ;
+      /**
+       * <code>optional bool isOutOfMemory = 6 [default = false];</code>
+       */
+      public boolean hasIsOutOfMemory() {
+        return ((bitField0_ & 0x00000020) == 0x00000020);
+      }
+      /**
+       * <code>optional bool isOutOfMemory = 6 [default = false];</code>
+       */
+      public boolean getIsOutOfMemory() {
+        return isOutOfMemory_;
+      }
+      /**
+       * <code>optional bool isOutOfMemory = 6 [default = false];</code>
+       */
+      public Builder setIsOutOfMemory(boolean value) {
+        bitField0_ |= 0x00000020;
+        isOutOfMemory_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bool isOutOfMemory = 6 [default = false];</code>
+       */
+      public Builder clearIsOutOfMemory() {
+        bitField0_ = (bitField0_ & ~0x00000020);
+        isOutOfMemory_ = false;
+        onChanged();
+        return this;
+      }
+
       // @@protoc_insertion_point(builder_scope:exec.bit.data.FragmentRecordBatch)
     }
 
@@ -2179,15 +2260,16 @@ public final class BitData {
       "\013rpc_version\030\001 \001(\005\0222\n\007channel\030\002 \001(\0162\027.ex" +
       "ec.shared.RpcChannel:\010BIT_DATA\022(\n\006handle" +
       "\030\003 \001(\0132\030.exec.bit.FragmentHandle\")\n\022BitS" +
-      "erverHandshake\022\023\n\013rpc_version\030\001 \001(\005\"\304\001\n\023" +
+      "erverHandshake\022\023\n\013rpc_version\030\001 \001(\005\"\342\001\n\023" +
       "FragmentRecordBatch\022(\n\006handle\030\001 \001(\0132\030.ex" +
       "ec.bit.FragmentHandle\022!\n\031sending_major_f" +
       "ragment_id\030\002 \001(\005\022!\n\031sending_minor_fragme",
       "nt_id\030\003 \001(\005\022(\n\003def\030\004 \001(\0132\033.exec.shared.R" +
-      "ecordBatchDef\022\023\n\013isLastBatch\030\005 \001(\010*D\n\007Rp" +
-      "cType\022\r\n\tHANDSHAKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE" +
-      "\020\002\022\024\n\020REQ_RECORD_BATCH\020\003B(\n\033org.apache.d" +
-      "rill.exec.protoB\007BitDataH\001"
+      "ecordBatchDef\022\023\n\013isLastBatch\030\005 \001(\010\022\034\n\ris" +
+      "OutOfMemory\030\006 \001(\010:\005false*D\n\007RpcType\022\r\n\tH" +
+      "ANDSHAKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\024\n\020REQ_" +
+      "RECORD_BATCH\020\003B(\n\033org.apache.drill.exec." +
+      "protoB\007BitDataH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -2211,7 +2293,7 @@ public final class BitData {
           internal_static_exec_bit_data_FragmentRecordBatch_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_bit_data_FragmentRecordBatch_descriptor,
-              new java.lang.String[] { "Handle", "SendingMajorFragmentId", "SendingMinorFragmentId", "Def", "IsLastBatch", });
+              new java.lang.String[] { "Handle", "SendingMajorFragmentId", "SendingMinorFragmentId", "Def", "IsLastBatch", "IsOutOfMemory", });
           return null;
         }
       };

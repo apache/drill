@@ -29,6 +29,7 @@ import org.apache.drill.common.logical.data.NamedExpression;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.VectorContainer;
@@ -76,6 +77,8 @@ public abstract class HashTableTemplate implements HashTable {
 
   private FragmentContext context;
 
+  private BufferAllocator allocator;
+
   // The incoming build side record batch
   private RecordBatch incomingBuild;
 
@@ -119,7 +122,7 @@ public abstract class HashTableTemplate implements HashTable {
       } else { // otherwise create a new one using the original's fields
         htContainer = new VectorContainer();
         for (VectorWrapper<?> w : htContainerOrig) {
-          ValueVector vv = TypeHelper.getNewVector(w.getField(), context.getAllocator());
+          ValueVector vv = TypeHelper.getNewVector(w.getField(), allocator);
           VectorAllocator.getAllocator(vv, 50 /* avg width */).alloc(HashTable.BATCH_SIZE);
           htContainer.add(vv);
         }
@@ -131,10 +134,10 @@ public abstract class HashTableTemplate implements HashTable {
 
     private void init(IntVector links, IntVector hashValues, int size) {
       for (int i=0; i < size; i++) {
-        links.getMutator().set(i, EMPTY_SLOT);
+        links.getMutator().setSafe(i, EMPTY_SLOT);
       }
       for (int i=0; i < size; i++) {
-        hashValues.getMutator().set(i, 0);
+        hashValues.getMutator().setSafe(i, 0);
       }
       links.getMutator().setValueCount(size);
       hashValues.getMutator().setValueCount(size);
@@ -181,8 +184,8 @@ public abstract class HashTableTemplate implements HashTable {
 
       // since this is the last entry in the hash chain, the links array at position currentIdx
       // will point to a null (empty) slot
-      links.getMutator().set(currentIdxWithinBatch, EMPTY_SLOT);
-      hashValues.getMutator().set(currentIdxWithinBatch, hashValue);
+      links.getMutator().setSafe(currentIdxWithinBatch, EMPTY_SLOT);
+      hashValues.getMutator().setSafe(currentIdxWithinBatch, hashValue);
 
       maxOccupiedIdx = Math.max(maxOccupiedIdx, currentIdxWithinBatch);
 
@@ -192,7 +195,7 @@ public abstract class HashTableTemplate implements HashTable {
     }
 
     private void updateLinks(int lastEntryIdxWithinBatch, int currentIdx) {
-      links.getMutator().set(lastEntryIdxWithinBatch, currentIdx);
+      links.getMutator().setSafe(lastEntryIdxWithinBatch, currentIdx);
     }
 
     private void rehash(int numbuckets, IntVector newStartIndices, int batchStartIdx) {
@@ -211,9 +214,9 @@ public abstract class HashTableTemplate implements HashTable {
         int newStartIdx = newStartIndices.getAccessor().get(bucketIdx);
 
         if (newStartIdx == EMPTY_SLOT) { // new bucket was empty
-          newStartIndices.getMutator().set(bucketIdx, entryIdx); // update the start index to point to entry
-          newLinks.getMutator().set(entryIdxWithinBatch, EMPTY_SLOT);
-          newHashValues.getMutator().set(entryIdxWithinBatch, hash);
+          newStartIndices.getMutator().setSafe(bucketIdx, entryIdx); // update the start index to point to entry
+          newLinks.getMutator().setSafe(entryIdxWithinBatch, EMPTY_SLOT);
+          newHashValues.getMutator().setSafe(entryIdxWithinBatch, hash);
 
           if (EXTRA_DEBUG) logger.debug("New bucket was empty. bucketIdx = {}, newStartIndices[ {} ] = {}, newLinks[ {} ] = {}, hash value = {}.", bucketIdx, bucketIdx, newStartIndices.getAccessor().get(bucketIdx), entryIdxWithinBatch, newLinks.getAccessor().get(entryIdxWithinBatch), newHashValues.getAccessor().get(entryIdxWithinBatch));
 
@@ -224,9 +227,9 @@ public abstract class HashTableTemplate implements HashTable {
           while (true) {
             idxWithinBatch = idx & BATCH_MASK;
             if (newLinks.getAccessor().get(idxWithinBatch) == EMPTY_SLOT) {
-              newLinks.getMutator().set(idxWithinBatch, entryIdx);
-              newLinks.getMutator().set(entryIdxWithinBatch, EMPTY_SLOT);
-              newHashValues.getMutator().set(entryIdxWithinBatch, hash);
+              newLinks.getMutator().setSafe(idxWithinBatch, entryIdx);
+              newLinks.getMutator().setSafe(entryIdxWithinBatch, EMPTY_SLOT);
+              newHashValues.getMutator().setSafe(entryIdxWithinBatch, hash);
 
               if (EXTRA_DEBUG) logger.debug("Followed hash chain in new bucket. bucketIdx = {}, newLinks[ {} ] = {}, newLinks[ {} ] = {}, hash value = {}.", bucketIdx, idxWithinBatch, newLinks.getAccessor().get(idxWithinBatch), entryIdxWithinBatch, newLinks.getAccessor().get(entryIdxWithinBatch), newHashValues.getAccessor().get(entryIdxWithinBatch));
 
@@ -319,7 +322,7 @@ public abstract class HashTableTemplate implements HashTable {
 
 
   @Override
-  public void setup(HashTableConfig htConfig, FragmentContext context,
+  public void setup(HashTableConfig htConfig, FragmentContext context, BufferAllocator allocator,
                     RecordBatch incomingBuild, RecordBatch incomingProbe,
                     RecordBatch outgoing, VectorContainer htContainerOrig) {
     float loadf = htConfig.getLoadFactor();
@@ -333,6 +336,7 @@ public abstract class HashTableTemplate implements HashTable {
 
     this.htConfig = htConfig;
     this.context = context;
+    this.allocator = allocator;
     this.incomingBuild = incomingBuild;
     this.incomingProbe = incomingProbe;
     this.outgoing = outgoing;
@@ -419,7 +423,7 @@ public abstract class HashTableTemplate implements HashTable {
 
       if (insertEntry(incomingRowIdx, currentIdx, hash, lastEntryBatch, lastEntryIdxWithinBatch)) {
         // update the start index array
-        startIndices.getMutator().set(getBucketIndex(hash, numBuckets()), currentIdx);
+        startIndices.getMutator().setSafe(getBucketIndex(hash, numBuckets()), currentIdx);
         htIdxHolder.value = currentIdx;
         return PutStatus.KEY_ADDED;
       }
@@ -600,10 +604,10 @@ public abstract class HashTableTemplate implements HashTable {
   }
 
   private IntVector allocMetadataVector(int size, int initialValue) {
-    IntVector vector = (IntVector) TypeHelper.getNewVector(dummyIntField, context.getAllocator());
+    IntVector vector = (IntVector) TypeHelper.getNewVector(dummyIntField, allocator);
     vector.allocateNew(size);
     for (int i=0; i < size; i++) {
-      vector.getMutator().set(i, initialValue);
+      vector.getMutator().setSafe(i, initialValue);
     }
     vector.getMutator().setValueCount(size);
     return vector;

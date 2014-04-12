@@ -32,6 +32,8 @@ import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
+import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.Sort;
 import org.apache.drill.exec.record.AbstractRecordBatch;
@@ -60,10 +62,10 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
   private Sorter sorter;
   private BatchSchema schema;
 
-  public SortBatch(Sort popConfig, FragmentContext context, RecordBatch incoming) {
+  public SortBatch(Sort popConfig, FragmentContext context, RecordBatch incoming) throws OutOfMemoryException {
     super(popConfig, context);
     this.incoming = incoming;
-    this.builder = new SortRecordBatchBuilder(context.getAllocator(), MAX_SORT_BYTES);
+    this.builder = new SortRecordBatchBuilder(oContext.getAllocator(), MAX_SORT_BYTES);
   }
 
   @Override
@@ -74,7 +76,6 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
   @Override
   public void kill() {
     incoming.kill();
-    cleanup();
   }
 
   @Override
@@ -91,9 +92,9 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
 
   @Override
   public void cleanup() {
+    builder.clear();
     super.cleanup();
     incoming.cleanup();
-    builder.clear();
   }
 
   @Override
@@ -116,7 +117,6 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
         case NOT_YET:
           throw new UnsupportedOperationException();
         case STOP:
-          cleanup();
           return upstream;
         case OK_NEW_SCHEMA:
           // only change in the case that the schema truly changes.  Artificial schema changes are ignored.

@@ -153,7 +153,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
       }
     }
 
-    return new ScanBatch(context, readers.iterator(), partitionColumns, selectedPartitionColumns);
+    return new ScanBatch(scan, context, readers.iterator(), partitionColumns, selectedPartitionColumns);
   }
   
   @Override

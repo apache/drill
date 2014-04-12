@@ -42,7 +42,9 @@ import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
 import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.exec.util.VectorUtil;
 import org.apache.drill.exec.vector.BigIntVector;
+import org.apache.drill.exec.vector.NullableBigIntVector;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Test;
@@ -74,19 +76,18 @@ public class TestSimpleProjection extends ExecTest {
     SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
 
     while(exec.next()){
-      BigIntVector c1 = exec.getValueVectorById(new SchemaPath("col1", ExpressionPosition.UNKNOWN), BigIntVector.class);
-      BigIntVector c2 = exec.getValueVectorById(new SchemaPath("col2", ExpressionPosition.UNKNOWN), BigIntVector.class);
+      VectorUtil.showVectorAccessibleContent(exec.getIncoming(), "\t");
+      NullableBigIntVector c1 = exec.getValueVectorById(new SchemaPath("col1", ExpressionPosition.UNKNOWN), NullableBigIntVector.class);
+      NullableBigIntVector c2 = exec.getValueVectorById(new SchemaPath("col2", ExpressionPosition.UNKNOWN), NullableBigIntVector.class);
       int x = 0;
-      BigIntVector.Accessor a1, a2;
+      NullableBigIntVector.Accessor a1, a2;
       a1 = c1.getAccessor();
       a2 = c2.getAccessor();
 
       for(int i =0; i < c1.getAccessor().getValueCount(); i++){
-        assertEquals(a1.get(i)+1, a2.get(i));
-        x += a1.get(i);
+        if (!a1.isNull(i)) assertEquals(a1.get(i)+1, a2.get(i));
+        x += a1.isNull(i) ? 0 : a1.get(i);
       }
-
-      System.out.println(x);
     }
 
     if(context.getFailureCause() != null){

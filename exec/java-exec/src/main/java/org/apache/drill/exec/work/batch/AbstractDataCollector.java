@@ -81,6 +81,11 @@ public abstract class AbstractDataCollector implements DataCollector{
   public abstract void streamFinished(int minorFragmentId);
   
   public boolean batchArrived(int minorFragmentId, RawFragmentBatch batch)  throws IOException {
+    if (batch.getHeader().getIsOutOfMemory()) {
+      for (RawBatchBuffer buffer : buffers) {
+        buffer.enqueue(batch);
+      }
+    }
     boolean decremented = false;
     if (remainders.compareAndSet(minorFragmentId, 0, 1)) {
       int rem = remainingRequired.decrementAndGet();

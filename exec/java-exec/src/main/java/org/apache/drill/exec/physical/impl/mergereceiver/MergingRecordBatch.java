@@ -41,19 +41,12 @@ import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.ValueVectorReadExpression;
 import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
+import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.MergingReceiverPOP;
 import org.apache.drill.exec.proto.UserBitShared;
-import org.apache.drill.exec.record.BatchSchema;
-import org.apache.drill.exec.record.RawFragmentBatch;
-import org.apache.drill.exec.record.RawFragmentBatchProvider;
-import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.record.RecordBatchLoader;
-import org.apache.drill.exec.record.SchemaBuilder;
-import org.apache.drill.exec.record.TypedFieldId;
-import org.apache.drill.exec.record.VectorContainer;
-import org.apache.drill.exec.record.VectorWrapper;
-import org.apache.drill.exec.record.WritableBatch;
+import org.apache.drill.exec.record.*;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.ValueVector;
@@ -74,8 +67,11 @@ import com.sun.codemodel.JVar;
 /**
  * The MergingRecordBatch merges pre-sorted record batches from remote senders.
  */
-public class MergingRecordBatch implements RecordBatch {
+public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> implements RecordBatch {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MergingRecordBatch.class);
+
+  private static final long ALLOCATOR_INITIAL_RESERVATION = 1*1024*1024;
+  private static final long ALLOCATOR_MAX_RESERVATION = 20L*1000*1000*1000;
 
   private RecordBatchLoader[] batchLoaders;
   private RawFragmentBatchProvider[] fragProviders;
@@ -98,8 +94,9 @@ public class MergingRecordBatch implements RecordBatch {
 
   public MergingRecordBatch(FragmentContext context,
                             MergingReceiverPOP config,
-                            RawFragmentBatchProvider[] fragProviders) {
+                            RawFragmentBatchProvider[] fragProviders) throws OutOfMemoryException {
 
+    super(config, context);
     this.fragProviders = fragProviders;
     this.context = context;
     this.config = config;
@@ -154,7 +151,7 @@ public class MergingRecordBatch implements RecordBatch {
       batchLoaders = new RecordBatchLoader[senderCount];
       for (int i = 0; i < senderCount; ++i) {
         incomingBatches[i] = rawBatches.get(i);
-        batchLoaders[i] = new RecordBatchLoader(context.getAllocator());
+        batchLoaders[i] = new RecordBatchLoader(oContext.getAllocator());
       }
 
       int i = 0;
@@ -182,7 +179,7 @@ public class MergingRecordBatch implements RecordBatch {
         bldr.addField(v.getField());
 
         // allocate a new value vector
-        ValueVector outgoingVector = TypeHelper.getNewVector(v.getField(), context.getAllocator());
+        ValueVector outgoingVector = TypeHelper.getNewVector(v.getField(), oContext.getAllocator());
         VectorAllocator allocator = VectorAllocator.getAllocator(outgoingVector, 50);
         allocator.alloc(DEFAULT_ALLOC_RECORD_COUNT);
         allocators.add(allocator);
@@ -226,7 +223,10 @@ public class MergingRecordBatch implements RecordBatch {
     while (!pqueue.isEmpty()) {
       // pop next value from pq and copy to outgoing batch
       Node node = pqueue.peek();
-      copyRecordToOutgoingBatch(pqueue.poll());
+      if (!copyRecordToOutgoingBatch(node)) {
+        break;
+      }
+      pqueue.poll();
 
       if (isOutgoingFull()) {
         // set a flag so that we reallocate on the next iteration
@@ -320,10 +320,15 @@ public class MergingRecordBatch implements RecordBatch {
 
   @Override
   public void kill() {
+    cleanup();
     for (RawFragmentBatchProvider provider : fragProviders) {
       provider.kill(context);
     }
-    
+  }
+
+  @Override
+  protected void killIncoming() {
+    //No op
   }
 
   @Override
@@ -593,17 +598,19 @@ public class MergingRecordBatch implements RecordBatch {
       // ((IntVector) outgoingVectors[i]).copyFrom(inIndex,
       //                                           outgoingBatch.getRecordCount(),
       //                                           (IntVector) vv1);
-      cg.getEvalBlock().add(
+      cg.getEvalBlock()._if(
         ((JExpression) JExpr.cast(vvClass, outgoingVectors.component(JExpr.lit(fieldIdx))))
-          .invoke("copyFrom")
+          .invoke("copyFromSafe")
           .arg(inIndex)
           .arg(outIndex)
           .arg(JExpr.cast(vvClass,
                           ((JExpression) incomingVectors.component(JExpr.direct("inBatch")))
-                            .component(JExpr.lit(fieldIdx)))));
+                            .component(JExpr.lit(fieldIdx)))).not())._then()._return(JExpr.FALSE);
 
       ++fieldIdx;
     }
+    cg.rotateBlock();
+    cg.getEvalBlock()._return(JExpr.TRUE);
 
     // compile generated code and call the generated setup method
     MergingReceiverGeneratorBase newMerger;
@@ -618,12 +625,17 @@ public class MergingRecordBatch implements RecordBatch {
 
   /**
    * Copy the record referenced by the supplied node to the next output position.
-   * Side Effect: increments outgoing position
+   * Side Effect: increments outgoing position if successful
    *
    * @param node Reference to the next record to copy from the incoming batches
    */
-  private void copyRecordToOutgoingBatch(Node node) {
-    merger.doCopy(node.batchId, node.valueIndex, outgoingPosition++);
+  private boolean copyRecordToOutgoingBatch(Node node) {
+    if (!merger.doCopy(node.batchId, node.valueIndex, outgoingPosition)) {
+      return false;
+    } else {
+      outgoingPosition++;
+      return true;
+    }
   }
 
   /**
@@ -645,6 +657,12 @@ public class MergingRecordBatch implements RecordBatch {
     if (batchLoaders != null) {
       for(RecordBatchLoader rbl : batchLoaders){
         rbl.clear();
+      }
+    }
+    oContext.close();
+    if (fragProviders != null) {
+      for (RawFragmentBatchProvider f : fragProviders) {
+        f.cleanup();
       }
     }
   }

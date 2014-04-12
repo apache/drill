@@ -51,11 +51,11 @@ public class SortPrel extends SortRel implements Prel {
 
     PhysicalOperator childPOP = child.getPhysicalOperator(creator);
 
-    childPOP = PrelUtil.removeSvIfRequired(childPOP, SelectionVectorMode.NONE);
-    Sort g = new Sort(childPOP, PrelUtil.getOrdering(this.collation, getChild().getRowType()), false);
+//    childPOP = PrelUtil.removeSvIfRequired(childPOP, SelectionVectorMode.NONE);
+//    Sort g = new Sort(childPOP, PrelUtil.getOrdering(this.collation, getChild().getRowType()), false);
 
-//    childPOP = PrelUtil.removeSvIfRequired(childPOP, SelectionVectorMode.NONE, SelectionVectorMode.TWO_BYTE);
-//    Sort g = new ExternalSort(childPOP, PrelUtil.getOrdering(this.collation, getChild().getRowType()), false);
+    childPOP = PrelUtil.removeSvIfRequired(childPOP, SelectionVectorMode.NONE, SelectionVectorMode.TWO_BYTE);
+    Sort g = new ExternalSort(childPOP, PrelUtil.getOrdering(this.collation, getChild().getRowType()), false);
 
     return g;
   }

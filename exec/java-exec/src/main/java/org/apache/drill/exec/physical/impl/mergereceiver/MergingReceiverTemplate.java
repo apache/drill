@@ -55,7 +55,7 @@ public abstract class MergingReceiverTemplate implements MergingReceiverGenerato
    * @param inIndex incoming record position to copy from
    * @param outIndex outgoing record position to copy to
    */
-  public abstract void doCopy(@Named("inBatch") int inBatch, @Named("inIndex") int inIndex, @Named("outIndex") int outIndex);
+  public abstract boolean doCopy(@Named("inBatch") int inBatch, @Named("inIndex") int inIndex, @Named("outIndex") int outIndex);
 
 //  public abstract void doEval(@Named("inBatch") int inBatch, @Named("inIndex") int inIndex, @Named("outIndex") int outIndex);
 

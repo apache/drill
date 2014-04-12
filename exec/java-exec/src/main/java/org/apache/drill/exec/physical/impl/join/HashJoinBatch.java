@@ -20,6 +20,8 @@ package org.apache.drill.exec.physical.impl.join;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.logical.data.JoinCondition;
 import org.apache.drill.common.logical.data.NamedExpression;
+import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.record.*;
 import org.eigenbase.rel.JoinRelType;
 
@@ -50,6 +52,10 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.allocator.VectorAllocator;
 
 public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
+
+  public static final long ALLOCATOR_INITIAL_RESERVATION = 1*1024*1024;
+  public static final long ALLOCATOR_MAX_RESERVATION = 20L*1000*1000*1000;
+
     // Probe side record batch
     private final RecordBatch left;
 
@@ -136,7 +142,7 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
             if (hashJoinProbe == null) {
 
                 // Initialize the hash join helper context
-                hjHelper = new HashJoinHelper(context);
+                hjHelper = new HashJoinHelper(context, oContext.getAllocator());
 
                 /* Build phase requires setting up the hash table. Hash table will
                  * materialize both the build and probe side expressions while
@@ -185,13 +191,11 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
             }
 
             // No more output records, clean up and return
-            cleanup();
             return IterOutcome.NONE;
 
         } catch (ClassTransformationException | SchemaChangeException | IOException e) {
             context.fail(e);
             killIncoming();
-            cleanup();
             return IterOutcome.STOP;
         }
     }
@@ -222,7 +226,7 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
 
 
         // Create the chained hash table
-        ChainedHashTable ht  = new ChainedHashTable(htConfig, context, this.right, this.left, null);
+        ChainedHashTable ht  = new ChainedHashTable(htConfig, context, oContext.getAllocator(), this.right, this.left, null);
         hashTable = ht.createAndSetupHashTable(null);
     }
 
@@ -322,15 +326,16 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
 
                 JVar inVV = g.declareVectorValueSetupAndMember("buildBatch", new TypedFieldId(vv.getField().getType(), fieldId, true));
                 JVar outVV = g.declareVectorValueSetupAndMember("outgoing", new TypedFieldId(vv.getField().getType(), fieldId, false));
-
-                g.getEvalBlock().add(outVV.invoke("copyFrom")
-                        .arg(buildIndex.band(JExpr.lit((int) Character.MAX_VALUE)))
-                        .arg(outIndex)
-                        .arg(inVV.component(buildIndex.shrz(JExpr.lit(16)))));
+                g.getEvalBlock()._if(outVV.invoke("copyFromSafe")
+                  .arg(buildIndex.band(JExpr.lit((int) Character.MAX_VALUE)))
+                  .arg(outIndex)
+                  .arg(inVV.component(buildIndex.shrz(JExpr.lit(16)))).not())._then()._return(JExpr.FALSE);
 
                 fieldId++;
             }
         }
+        g.rotateBlock();
+        g.getEvalBlock()._return(JExpr.TRUE);
 
         // Generate the code to project probe side records
         g.setMappingSet(projectProbeMapping);
@@ -350,13 +355,17 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
                 JVar inVV = g.declareVectorValueSetupAndMember("probeBatch", new TypedFieldId(vv.getField().getType(), fieldId, false));
                 JVar outVV = g.declareVectorValueSetupAndMember("outgoing", new TypedFieldId(vv.getField().getType(), outputFieldId, false));
 
-                g.getEvalBlock().add(outVV.invoke("copyFrom").arg(probeIndex).arg(outIndex).arg(inVV));
+                g.getEvalBlock()._if(outVV.invoke("copyFromSafe").arg(probeIndex).arg(outIndex).arg(inVV).not())._then()._return(JExpr.FALSE);
 
                 fieldId++;
                 outputFieldId++;
             }
+            g.rotateBlock();
+            g.getEvalBlock()._return(JExpr.TRUE);
+
             recordCount = left.getRecordCount();
         }
+
 
         HashJoinProbe hj = context.getImplementationClass(cg);
 
@@ -370,7 +379,7 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
         }
     }
 
-    public HashJoinBatch(HashJoinPOP popConfig, FragmentContext context, RecordBatch left, RecordBatch right) {
+    public HashJoinBatch(HashJoinPOP popConfig, FragmentContext context, RecordBatch left, RecordBatch right) throws OutOfMemoryException {
         super(popConfig, context);
         this.left = left;
         this.right = right;
@@ -382,13 +391,11 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
     public void killIncoming() {
         this.left.kill();
         this.right.kill();
-        cleanup();
     }
 
     @Override
     public void cleanup() {
-        left.cleanup();
-        right.cleanup();
+        hyperContainer.clear();
         hjHelper.clear();
         container.clear();
 
@@ -398,5 +405,7 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
             hashTable.clear();
         }
         super.cleanup();
+        left.cleanup();
+        right.cleanup();
     }
 }

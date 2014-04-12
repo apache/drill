@@ -22,6 +22,9 @@ import org.apache.drill.exec.physical.impl.OutputMutator;
 
 public interface RecordReader {
 
+  public static final long ALLOCATOR_INITIAL_RESERVATION = 1*1024*1024;
+  public static final long ALLOCATOR_MAX_RESERVATION = 20L*1000*1000*1000;
+
   /**
    * Configure the RecordReader with the provided schema and the record batch that should be written to.
    * 

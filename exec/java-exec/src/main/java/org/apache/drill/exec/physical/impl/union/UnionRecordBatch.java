@@ -18,7 +18,9 @@
 package org.apache.drill.exec.physical.impl.union;
 
 import com.google.common.collect.Lists;
+import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.config.Union;
 import org.apache.drill.exec.record.*;
 import org.apache.drill.exec.record.selection.SelectionVector2;
@@ -39,14 +41,13 @@ public class UnionRecordBatch extends AbstractRecordBatch<Union> {
   private ArrayList<TransferPair> transfers;
   private int outRecordCount;
 
-  public UnionRecordBatch(Union config, List<RecordBatch> children, FragmentContext context) {
+  public UnionRecordBatch(Union config, List<RecordBatch> children, FragmentContext context) throws OutOfMemoryException {
     super(config, context);
     this.incoming = children;
     this.incomingIterator = incoming.iterator();
     current = incomingIterator.next();
     sv = null;
   }
-
 
   @Override
   public int getRecordCount() {
@@ -119,10 +120,10 @@ public class UnionRecordBatch extends AbstractRecordBatch<Union> {
       transfer.transfer();
     }
 
-    for (VectorWrapper<?> vw : this.container) {
-      ValueVector.Mutator m = vw.getValueVector().getMutator();
-      m.setValueCount(outRecordCount);
-    }
+//    for (VectorWrapper<?> vw : this.container) {
+//      ValueVector.Mutator m = vw.getValueVector().getMutator();
+//      m.setValueCount(outRecordCount);
+//    }
 
   }
 

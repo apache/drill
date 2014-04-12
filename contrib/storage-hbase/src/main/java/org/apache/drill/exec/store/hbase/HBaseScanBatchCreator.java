@@ -47,6 +47,6 @@ public class HBaseScanBatchCreator implements BatchCreator<HBaseSubScan>{
         throw new ExecutionSetupException(e1);
       }
     }
-    return new ScanBatch(context, readers.iterator());
+    return new ScanBatch(subScan, context, readers.iterator());
   }
 }

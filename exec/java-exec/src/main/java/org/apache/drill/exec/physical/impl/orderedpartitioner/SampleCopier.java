@@ -27,7 +27,7 @@ public interface SampleCopier {
   public static TemplateClassDefinition<SampleCopier> TEMPLATE_DEFINITION = new TemplateClassDefinition<SampleCopier>(SampleCopier.class, SampleCopierTemplate.class);
 
   public void setupCopier(FragmentContext context, SelectionVector4 sv4, VectorAccessible incoming, VectorAccessible outgoing) throws SchemaChangeException;
-  public abstract void copyRecords(int skip, int start, int total);
+  public abstract boolean copyRecords(int skip, int start, int total);
   public int getOutputRecords();
 
 }

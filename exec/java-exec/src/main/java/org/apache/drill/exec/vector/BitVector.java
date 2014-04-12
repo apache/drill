@@ -22,6 +22,7 @@ import io.netty.buffer.ByteBuf;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.exec.expr.holders.BitHolder;
 import org.apache.drill.exec.expr.holders.NullableBitHolder;
+import org.apache.drill.exec.memory.AccountingByteBuf;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared.FieldMetadata;
 import org.apache.drill.exec.record.MaterializedField;
@@ -37,6 +38,9 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
 
   private final Accessor accessor = new Accessor();
   private final Mutator mutator = new Mutator();
+
+  private int allocationValueCount = 4000;
+  private int allocationMonitor = 0;
 
   private int valueCapacity;
 
@@ -55,6 +59,19 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
 
   private int getSizeFromCount(int valueCount) {
     return (int) Math.ceil((float)valueCount / 8.0);
+  }
+
+  private int getByteIndex(int index) {
+    return (int) Math.floor((float) index / 8.0);
+  }
+
+  public void allocateNew() {
+    clear();
+    if (allocationMonitor > 5) {
+      allocationValueCount = Math.min(1, (int)(allocationValueCount * 0.9));
+    } else if (allocationMonitor < -5) {
+      allocationValueCount = (int) (allocationValueCount * 1.1);
+    }
   }
 
   /**
@@ -132,6 +149,37 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
     clear();
   }
 
+  public void splitAndTransferTo(int startIndex, int length, BitVector target) {
+    assert startIndex + length <= valueCount;
+    int firstByte = getByteIndex(startIndex);
+    int lastByte = getSizeFromCount(startIndex + length) - 1;
+    int offset = startIndex % 8;
+    if (offset == 0) {
+      // slice
+      target.data = this.data.slice(firstByte, lastByte - firstByte + 1);
+      target.data.retain();
+    } else {
+      // Copy data
+      target.clear();
+      target.allocateNew(length);
+      if ((startIndex + length) % 8 == 0) {
+        lastByte++;
+      }
+      int i = firstByte;
+      // TODO maybe do this one word at a time, rather than byte?
+      for (; i <= lastByte - 1; i++) {
+        target.data.setByte(i - firstByte, (((this.data.getByte(i) & 0xFF) >>> offset) + (this.data.getByte(i + 1) <<  (8 - offset))));
+      }
+      if (startIndex + length == this.valueCount) {
+        target.data.setByte(i - firstByte, ((this.data.getByte(lastByte) & 0xFF) >>> offset));
+      }
+    }
+  }
+
+  private void copyTo(int startIndex, int length, BitVector target) {
+
+  }
+
   private class TransferImpl implements TransferPair {
     BitVector to;
 
@@ -149,6 +197,10 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
 
     public void transfer() {
       transferTo(to);
+    }
+
+    public void splitAndTransfer(int startIndex, int length) {
+      splitAndTransferTo(startIndex, length, to);
     }
 
     @Override
@@ -237,7 +289,10 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
     }
     
     public boolean setSafe(int index, int value) {
-      if(index >= getValueCapacity()) return false;
+      if(index >= getValueCapacity()) {
+        allocationMonitor--;
+        return false;
+      }
       set(index, value);
       return true;
     }
@@ -256,7 +311,15 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
 
     public final void setValueCount(int valueCount) {
       BitVector.this.valueCount = valueCount;
-      data.writerIndex(getSizeFromCount(valueCount));
+      int idx = getSizeFromCount(valueCount);
+      if (((float) data.capacity()) / idx > 1.1) {
+        allocationMonitor++;
+      }
+      data.writerIndex(idx);
+      if (data instanceof AccountingByteBuf) {
+        data.capacity(idx);
+        data.writerIndex(idx);
+      }
     }
 
     @Override

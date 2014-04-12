@@ -39,6 +39,8 @@ import org.apache.drill.exec.expr.HoldingContainerExpression;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.ValueVectorWriteExpression;
 import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
+import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.StreamingAggregate;
 import org.apache.drill.exec.physical.impl.aggregate.StreamingAggregator.AggOutcome;
@@ -64,7 +66,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
   private final RecordBatch incoming;
   private boolean done = false;
 
-  public StreamingAggBatch(StreamingAggregate popConfig, RecordBatch incoming, FragmentContext context) {
+  public StreamingAggBatch(StreamingAggregate popConfig, RecordBatch incoming, FragmentContext context) throws OutOfMemoryException {
     super(popConfig, context);
     this.incoming = incoming;
   }
@@ -105,7 +107,6 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
       logger.debug("Aggregator response {}, records {}", out, aggregator.getOutputCount());
       switch(out){
       case CLEANUP_AND_RETURN:
-        incoming.cleanup();
         container.clear();
         done = true;
         return aggregator.getOutcome();
@@ -165,7 +166,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
       if(expr == null) continue;
       keyExprs[i] = expr;
       final MaterializedField outputField = MaterializedField.create(ne.getRef(), expr.getMajorType());
-      ValueVector vector = TypeHelper.getNewVector(outputField, context.getAllocator());
+      ValueVector vector = TypeHelper.getNewVector(outputField, oContext.getAllocator());
       allocators.add(VectorAllocator.getAllocator(vector, 50));
       keyOutputIds[i] = container.add(vector);
     }
@@ -176,7 +177,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
       if(expr == null) continue;
       
       final MaterializedField outputField = MaterializedField.create(ne.getRef(), expr.getMajorType());
-      ValueVector vector = TypeHelper.getNewVector(outputField, context.getAllocator());
+      ValueVector vector = TypeHelper.getNewVector(outputField, oContext.getAllocator());
       allocators.add(VectorAllocator.getAllocator(vector, 50));
       TypedFieldId id = container.add(vector);
       valueExprs[i] = new ValueVectorWriteExpression(id, expr, true);
@@ -315,7 +316,11 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
    
   }
 
-  
+  @Override
+  public void cleanup() {
+    super.cleanup();
+    incoming.cleanup();
+  }
   
   @Override
   protected void killIncoming() {

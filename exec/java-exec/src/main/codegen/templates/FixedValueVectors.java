@@ -49,6 +49,9 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
 
   private final Accessor accessor = new Accessor();
   private final Mutator mutator = new Mutator();
+
+  private int allocationValueCount = 4000;
+  private int allocationMonitor = 0;
   
   public ${minor.class}Vector(MaterializedField field, BufferAllocator allocator) {
     super(field, allocator);
@@ -65,12 +68,24 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
   public Mutator getMutator(){
     return mutator;
   }
-  
-  
 
-  /**
-   * Allocate a new buffer that supports setting at least the provided number of values.  May actually be sized bigger depending on underlying buffer rounding size. Must be called prior to using the ValueVector.
-   * @param valueCount
+
+  public void allocateNew() {
+    clear();
+    if (allocationMonitor > 5) {
+      allocationValueCount = Math.max(2, (int) (allocationValueCount * 0.9));
+      allocationMonitor = 0;
+    } else if (allocationMonitor < -5) {
+      allocationValueCount = (int) (allocationValueCount * 1.1);
+      allocationMonitor = 0;
+    }
+    this.data = allocator.buffer(allocationValueCount * ${type.width});
+    this.data.readerIndex(0);
+  }
+
+    /**
+     * Allocate a new buffer that supports setting at least the provided number of values.  May actually be sized bigger depending on underlying buffer rounding size. Must be called prior to using the ValueVector.
+     * @param valueCount
    */
   public void allocateNew(int valueCount) {
     clear();
@@ -121,6 +136,14 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     target.valueCount = valueCount;
     clear();
   }
+
+  public void splitAndTransferTo(int startIndex, int length, ${minor.class}Vector target) {
+    int currentWriterIndex = data.writerIndex();
+    int startPoint = startIndex * ${type.width};
+    int sliceLength = length * ${type.width};
+    target.data = this.data.slice(startPoint, sliceLength);
+    target.data.retain();
+  }
   
   private class TransferImpl implements TransferPair{
     ${minor.class}Vector to;
@@ -140,6 +163,10 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     public void transfer(){
       transferTo(to);
     }
+
+    public void splitAndTransfer(int startIndex, int length) {
+      splitAndTransferTo(startIndex, length, to);
+    }
     
     @Override
     public void copyValue(int fromIndex, int toIndex) {
@@ -147,9 +174,9 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     }
   }
   
-  public void copyFrom(int fromIndex, int thisIndex, ${minor.class}Vector from){
+  protected void copyFrom(int fromIndex, int thisIndex, ${minor.class}Vector from){
     <#if (type.width > 8)>
-    data.getBytes(fromIndex * ${type.width}, from.data, thisIndex * ${type.width}, ${type.width});
+    from.data.getBytes(fromIndex * ${type.width}, data, thisIndex * ${type.width}, ${type.width});
     <#else> <#-- type.width <= 8 -->
     data.set${(minor.javaType!type.javaType)?cap_first}(thisIndex * ${type.width}, 
         from.data.get${(minor.javaType!type.javaType)?cap_first}(fromIndex * ${type.width})
@@ -477,14 +504,23 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
      data.setBytes(index * ${type.width}, value, 0, ${type.width});
    }
 
+   public boolean setSafe(int index, <#if (type.width > 4)>${minor.javaType!type.javaType}<#else>int</#if> value) {
+     if(index >= getValueCapacity()) {
+       allocationMonitor--;
+       return false;
+     }
+     data.setBytes(index * ${type.width}, value, 0, ${type.width});
+     return true;
+   }
+
    <#if (minor.class == "TimeStampTZ")>
-   public void set(int index, ${minor.class}Holder holder){
+   protected void set(int index, ${minor.class}Holder holder){
      data.setLong((index * ${type.width}), holder.value);
      data.setInt(((index * ${type.width}) + ${minor.milliSecondsSize}), holder.index);
 
    }
 
-   void set(int index, Nullable${minor.class}Holder holder){
+   protected void set(int index, Nullable${minor.class}Holder holder){
      data.setLong((index * ${type.width}), holder.value);
      data.setInt(((index * ${type.width}) + ${minor.milliSecondsSize}), holder.index);
    }
@@ -501,14 +537,14 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
      return true;
    }
    <#elseif (minor.class == "Interval")>
-   public void set(int index, ${minor.class}Holder holder){
+   protected void set(int index, ${minor.class}Holder holder){
      int offsetIndex = index * ${type.width};
      data.setInt(offsetIndex, holder.months);
      data.setInt((offsetIndex + ${minor.daysOffset}), holder.days);
      data.setInt((offsetIndex + ${minor.milliSecondsOffset}), holder.milliSeconds);
    }
 
-   void set(int index, Nullable${minor.class}Holder holder){
+   protected void set(int index, Nullable${minor.class}Holder holder){
      int offsetIndex = index * ${type.width};
      data.setInt(offsetIndex, holder.months);
      data.setInt((offsetIndex + ${minor.daysOffset}), holder.days);
@@ -527,13 +563,13 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
      return true;
    }
    <#elseif (minor.class == "IntervalDay")>
-   public void set(int index, ${minor.class}Holder holder){
+   protected void set(int index, ${minor.class}Holder holder){
      int offsetIndex = index * ${type.width};
      data.setInt(offsetIndex, holder.days);
      data.setInt((offsetIndex + ${minor.milliSecondsOffset}), holder.milliSeconds);
    }
 
-   void set(int index, Nullable${minor.class}Holder holder){
+   protected void set(int index, Nullable${minor.class}Holder holder){
      int offsetIndex = index * ${type.width};
      data.setInt(offsetIndex, holder.days);
      data.setInt((offsetIndex + ${minor.milliSecondsOffset}), holder.milliSeconds);
@@ -595,7 +631,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
    }
 
    <#else>
-   public void set(int index, ${minor.class}Holder holder){
+   protected void set(int index, ${minor.class}Holder holder){
      data.setBytes(index * ${type.width}, holder.buffer, holder.start, ${type.width});
    }
    
@@ -605,7 +641,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
      return true;
    }
 
-   void set(int index, Nullable${minor.class}Holder holder){
+   protected void set(int index, Nullable${minor.class}Holder holder){
      data.setBytes(index * ${type.width}, holder.buffer, holder.start, ${type.width});
    }
    </#if>
@@ -628,17 +664,32 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
    }
    
    public boolean setSafe(int index, <#if (type.width >= 4)>${minor.javaType!type.javaType}<#else>int</#if> value) {
-     if(index >= getValueCapacity()) return false;
+     if(index >= getValueCapacity()) {
+       allocationMonitor--;
+       return false;
+     }
      set(index, value);
      return true;
    }
 
-   public void set(int index, ${minor.class}Holder holder){
+   protected void set(int index, ${minor.class}Holder holder){
      data.set${(minor.javaType!type.javaType)?cap_first}(index * ${type.width}, holder.value);
    }
 
-   void set(int index, Nullable${minor.class}Holder holder){
+   public boolean setSafe(int index, ${minor.class}Holder holder){
+     if(index >= getValueCapacity()) return false;
+     set(index, holder);
+     return true;
+   }
+
+   protected void set(int index, Nullable${minor.class}Holder holder){
      data.set${(minor.javaType!type.javaType)?cap_first}(index * ${type.width}, holder.value);
+   }
+
+   public boolean setSafe(int index, Nullable${minor.class}Holder holder){
+     if(index >= getValueCapacity()) return false;
+     set(index, holder);
+     return true;
    }
 
    @Override
@@ -659,8 +710,17 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
 
   
    public void setValueCount(int valueCount) {
+     int currentValueCapacity = getValueCapacity();
      ${minor.class}Vector.this.valueCount = valueCount;
-     data.writerIndex(${type.width} * valueCount);
+     int idx = (${type.width} * valueCount);
+     if (((float) currentValueCapacity) / idx > 1.1) {
+       allocationMonitor++;
+     }
+     data.writerIndex(idx);
+     if (data instanceof AccountingByteBuf) {
+       data.capacity(idx);
+       data.writerIndex(idx);
+     }
    }
 
 

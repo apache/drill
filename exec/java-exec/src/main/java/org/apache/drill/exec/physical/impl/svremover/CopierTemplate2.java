@@ -48,22 +48,20 @@ public abstract class CopierTemplate2 implements Copier{
   }
   
   @Override
-  public void copyRecords(){
-    final int recordCount = sv2.getCount();
+  public int copyRecords(int index, int recordCount){
     allocateVectors(recordCount);
     int outgoingPosition = 0;
     
-    for(int svIndex = 0; svIndex < recordCount; svIndex++, outgoingPosition++){
-      doEval(sv2.getIndex(svIndex), outgoingPosition);
+    for(int svIndex = index; svIndex < index + recordCount; svIndex++, outgoingPosition++){
+      if (!doEval(sv2.getIndex(svIndex), outgoingPosition)) {
+        break;
+      }
     }
-//    logger.debug("This: {}, Incoming: {}", System.identityHashCode(this), incoming);
-    for(VectorWrapper<?> v : incoming){
-      v.clear();
-    }
+    return outgoingPosition;
   }
   
   public abstract void doSetup(@Named("context") FragmentContext context, @Named("incoming") RecordBatch incoming, @Named("outgoing") RecordBatch outgoing);
-  public abstract void doEval(@Named("inIndex") int inIndex, @Named("outIndex") int outIndex);
+  public abstract boolean doEval(@Named("inIndex") int inIndex, @Named("outIndex") int outIndex);
 
         
 

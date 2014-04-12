@@ -28,7 +28,7 @@ import org.apache.drill.exec.record.TransferPair;
 public interface Projector {
 
   public abstract void setup(FragmentContext context, RecordBatch incoming,  RecordBatch outgoing, List<TransferPair> transfers)  throws SchemaChangeException;
-  public abstract int projectRecords(int recordCount, int firstOutputIndex);
+  public abstract int projectRecords(int startIndex, int recordCount, int firstOutputIndex);
 
   public static TemplateClassDefinition<Projector> TEMPLATE_DEFINITION = new TemplateClassDefinition<Projector>(Projector.class, ProjectorTemplate.class);
 

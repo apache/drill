@@ -21,7 +21,11 @@ import org.apache.drill.exec.exception.FragmentSetupException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.record.RawFragmentBatch;
+import org.apache.drill.exec.rpc.RemoteConnection;
 import org.apache.drill.exec.work.batch.IncomingBuffers;
+
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class RootFragmentManager implements FragmentManager{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RootFragmentManager.class);
@@ -30,6 +34,7 @@ public class RootFragmentManager implements FragmentManager{
   private final FragmentExecutor runner;
   private final FragmentHandle handle;
   private volatile boolean cancel = false;
+  private List<RemoteConnection> connections = new CopyOnWriteArrayList<>();
   
   public RootFragmentManager(FragmentHandle handle, IncomingBuffers buffers, FragmentExecutor runner) {
     super();
@@ -66,7 +71,17 @@ public class RootFragmentManager implements FragmentManager{
   public FragmentContext getFragmentContext() {
     return runner.getContext();
   }
-  
-  
-  
+
+  @Override
+  public void addConnection(RemoteConnection connection) {
+    connections.add(connection);
+  }
+
+  @Override
+  public void setAutoRead(boolean autoRead) {
+    for (RemoteConnection c : connections) {
+      c.setAutoRead(autoRead);
+    }
+  }
+
 }

@@ -20,6 +20,7 @@ package org.apache.drill.exec.physical.base;
 import java.util.Iterator;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.drill.common.expression.SchemaPath;
 
 import com.google.common.collect.Iterators;
@@ -45,6 +46,18 @@ public abstract class AbstractGroupScan extends AbstractBase implements GroupSca
 
   @Override
   public GroupScan clone(List<SchemaPath> columns) {
-    throw new UnsupportedOperationException(String.format("%s does not implmemnt clone(columns) method!", this.getClass().getCanonicalName()));
+    throw new UnsupportedOperationException(String.format("%s does not implement clone(columns) method!", this.getClass().getCanonicalName()));
+  }
+
+  @Override
+  @JsonIgnore
+  public long getInitialAllocation() {
+    return 0;
+  }
+
+  @Override
+  @JsonIgnore
+  public long getMaxAllocation() {
+    return 0;
   }
 }

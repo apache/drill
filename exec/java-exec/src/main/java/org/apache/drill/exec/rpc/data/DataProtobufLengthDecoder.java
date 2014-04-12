@@ -23,12 +23,13 @@ import io.netty.channel.ChannelHandlerContext;
 import java.util.List;
 
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.rpc.OutOfMemoryHandler;
 import org.apache.drill.exec.rpc.ProtobufLengthDecoder;
 
 public class DataProtobufLengthDecoder extends ProtobufLengthDecoder{
 
-  public DataProtobufLengthDecoder(BufferAllocator allocator) {
-    super(allocator);
+  public DataProtobufLengthDecoder(BufferAllocator allocator, OutOfMemoryHandler outOfMemoryHandler) {
+    super(allocator, outOfMemoryHandler);
     
   }
   

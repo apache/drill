@@ -15,6 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+import java.lang.Override;
+
 <@pp.dropOutputFile />
 <#list vv.types as type>
 <#list type.minor as minor>
@@ -40,6 +43,7 @@ package org.apache.drill.exec.vector;
 
   private int parentValueCount;
   private int childValueCount;
+  protected int sliceOffset = 0;
   
   private final UInt4Vector offsets;   // offsets to start of each record
   private final ${minor.class}Vector values;
@@ -83,6 +87,14 @@ package org.apache.drill.exec.vector;
     target.childValueCount = childValueCount;
     clear();
   }
+
+  public void splitAndTransferTo(int startIndex, int length, Repeated${minor.class}Vector target) {
+   int startValue = offsets.getAccessor().get(startIndex);
+    int endValue = offsets.getAccessor().get(startIndex + length);
+    values.splitAndTransferTo(startValue, endValue - startValue, target.values);
+    offsets.splitAndTransferTo(startIndex, length, target.offsets);
+    sliceOffset = startIndex;
+  }
   
   private class TransferImpl implements TransferPair{
     Repeated${minor.class}Vector to;
@@ -101,6 +113,10 @@ package org.apache.drill.exec.vector;
     
     public void transfer(){
       transferTo(to);
+    }
+
+    public void splitAndTransfer(int startIndex, int length) {
+      splitAndTransferTo(startIndex, length, to);
     }
     
     @Override
@@ -150,6 +166,14 @@ package org.apache.drill.exec.vector;
              .setBufferLength(getBufferSize())
              .build();
   }
+
+  public void allocateNew() {
+    offsets.allocateNew();
+    values.allocateNew();
+    mutator.reset();
+    accessor.reset();
+    sliceOffset = 0;
+  }
   
   public void allocateNew(int totalBytes, int parentValueCount, int childValueCount) {
     offsets.allocateNew(parentValueCount+1);
@@ -157,6 +181,7 @@ package org.apache.drill.exec.vector;
     values.allocateNew(totalBytes, childValueCount);
     mutator.reset();
     accessor.reset();
+    sliceOffset = 0;
   }
   
   @Override
@@ -191,6 +216,15 @@ package org.apache.drill.exec.vector;
              .setValueCount(this.childValueCount)
              .setBufferLength(getBufferSize())
              .build();
+  }
+
+  @Override
+  public void allocateNew() {
+    clear();
+    offsets.allocateNew();
+    values.allocateNew();
+    mutator.reset();
+    accessor.reset();
   }
   
   public void allocateNew(int parentValueCount, int childValueCount) {
@@ -251,8 +285,8 @@ package org.apache.drill.exec.vector;
     
     public Object getObject(int index) {
       List<Object> vals = Lists.newArrayList();
-      int start = offsets.getAccessor().get(index);
-      int end = offsets.getAccessor().get(index+1);
+      int start = offsets.getAccessor().get(index) - sliceOffset;
+      int end = offsets.getAccessor().get(index+1) - sliceOffset;
       for(int i = start; i < end; i++){
         vals.add(values.getAccessor().getObject(i));
       }
@@ -270,7 +304,7 @@ package org.apache.drill.exec.vector;
     public <#if type.major == "VarLen">byte[]
            <#else>${minor.javaType!type.javaType}
            </#if> get(int index, int positionIndex) {
-      return values.getAccessor().get(offsets.getAccessor().get(index) + positionIndex);
+      return values.getAccessor().get(offsets.getAccessor().get(index) - sliceOffset + positionIndex);
     }
         
            
@@ -279,8 +313,8 @@ package org.apache.drill.exec.vector;
     }
     
     public void get(int index, Repeated${minor.class}Holder holder){
-      holder.start = offsets.getAccessor().get(index);
-      holder.end =  offsets.getAccessor().get(index+1);
+      holder.start = offsets.getAccessor().get(index) - sliceOffset;
+      holder.end =  offsets.getAccessor().get(index+1) - sliceOffset;
       holder.vector = values;
     }
 

@@ -29,13 +29,17 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.BitData;
 import org.apache.drill.exec.proto.ExecProtos;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.record.RawFragmentBatch;
 import org.apache.drill.exec.rpc.RemoteConnection;
+import org.apache.drill.exec.rpc.data.BitServerConnection;
 import org.apache.drill.exec.store.LocalSyncableFileSystem;
+import org.apache.drill.exec.work.fragment.FragmentManager;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -55,20 +59,27 @@ public class SpoolingRawBatchBuffer implements RawBatchBuffer {
 
   private static String DRILL_LOCAL_IMPL_STRING = "fs.drill-local.impl";
   private static final float STOP_SPOOLING_FRACTION = (float) 0.5;
+  public static final long ALLOCATOR_INITIAL_RESERVATION = 1*1024*1024;
+  public static final long ALLOCATOR_MAX_RESERVATION = 20L*1000*1000*1000;
 
   private final LinkedBlockingDeque<RawFragmentBatchWrapper> buffer = Queues.newLinkedBlockingDeque();
   private volatile boolean finished = false;
   private volatile long queueSize = 0;
   private long threshold;
   private FragmentContext context;
+  private BufferAllocator allocator;
   private volatile AtomicBoolean spooling = new AtomicBoolean(false);
   private FileSystem fs;
   private Path path;
   private FSDataOutputStream outputStream;
   private FSDataInputStream inputStream;
+  private boolean outOfMemory = false;
+  private boolean closed = false;
+  private FragmentManager fragmentManager;
 
-  public SpoolingRawBatchBuffer(FragmentContext context) throws IOException {
+  public SpoolingRawBatchBuffer(FragmentContext context) throws IOException, OutOfMemoryException {
     this.context = context;
+    this.allocator = context.getNewChildAllocator(ALLOCATOR_INITIAL_RESERVATION, ALLOCATOR_MAX_RESERVATION);
     this.threshold = context.getConfig().getLong(ExecConstants.SPOOLING_BUFFER_MEMORY);
     Configuration conf = new Configuration();
     conf.set(FileSystem.FS_DEFAULT_NAME_KEY, context.getConfig().getString(ExecConstants.TEMP_FILESYSTEM));
@@ -86,6 +97,20 @@ public class SpoolingRawBatchBuffer implements RawBatchBuffer {
 
   @Override
   public synchronized void enqueue(RawFragmentBatch batch) throws IOException {
+    if (batch.getHeader().getIsOutOfMemory()) {
+      if (fragmentManager == null) {
+        fragmentManager = ((BitServerConnection) batch.getConnection()).getFragmentManager();
+      }
+//      fragmentManager.setAutoRead(false);
+//      logger.debug("Setting autoRead false");
+      if (!outOfMemory && !buffer.peekFirst().isOutOfMemory()) {
+        logger.debug("Adding OOM message to front of queue. Current queue size: {}", buffer.size());
+        buffer.addFirst(new RawFragmentBatchWrapper(batch, true));
+      } else {
+        logger.debug("ignoring duplicate OOM message");
+      }
+      return;
+    }
     RawFragmentBatchWrapper wrapper;
     boolean spool = spooling.get();
     wrapper = new RawFragmentBatchWrapper(batch, !spool);
@@ -105,7 +130,7 @@ public class SpoolingRawBatchBuffer implements RawBatchBuffer {
 
   @Override
   public void kill(FragmentContext context) {
-    cleanup();
+    allocator.close();
   }
 
   
@@ -116,6 +141,11 @@ public class SpoolingRawBatchBuffer implements RawBatchBuffer {
 
   @Override
   public RawFragmentBatch getNext() throws IOException {
+    if (outOfMemory && buffer.size() < 10) {
+      outOfMemory = false;
+      fragmentManager.setAutoRead(true);
+      logger.debug("Setting autoRead true");
+    }
     boolean spool = spooling.get();
     RawFragmentBatchWrapper w = buffer.poll();
     RawFragmentBatch batch;
@@ -123,21 +153,27 @@ public class SpoolingRawBatchBuffer implements RawBatchBuffer {
       try {
         w = buffer.take();
         batch = w.get();
+        if (batch.getHeader().getIsOutOfMemory()) {
+          outOfMemory = true;
+          return batch;
+        }
         queueSize -= w.getBodySize();
         return batch;
       } catch (InterruptedException e) {
-        cleanup();
         return null;
       }
     }
     if (w == null) {
-      cleanup();
       return null;
     }
 
     batch = w.get();
+    if (batch.getHeader().getIsOutOfMemory()) {
+      outOfMemory = true;
+      return batch;
+    }
     queueSize -= w.getBodySize();
-    assert queueSize >= 0;
+//    assert queueSize >= 0;
     if (spool && queueSize < threshold * STOP_SPOOLING_FRACTION) {
       logger.debug("buffer size {} less than {}x threshold. Stop spooling.", queueSize, STOP_SPOOLING_FRACTION);
       spooling.set(false);
@@ -145,7 +181,13 @@ public class SpoolingRawBatchBuffer implements RawBatchBuffer {
     return batch;
   }
 
-  private void cleanup() {
+  public void cleanup() {
+    if (closed) {
+      logger.warn("Tried cleanup twice");
+      return;
+    }
+    closed = true;
+    allocator.close();
     try {
       if (outputStream != null) {
         outputStream.close();
@@ -171,6 +213,7 @@ public class SpoolingRawBatchBuffer implements RawBatchBuffer {
     private boolean available;
     private CountDownLatch latch = new CountDownLatch(1);
     private int bodyLength;
+    private boolean outOfMemory = false;
 
     public RawFragmentBatchWrapper(RawFragmentBatch batch, boolean available) {
       Preconditions.checkNotNull(batch);
@@ -225,13 +268,21 @@ public class SpoolingRawBatchBuffer implements RawBatchBuffer {
       Stopwatch watch = new Stopwatch();
       watch.start();
       BitData.FragmentRecordBatch header = BitData.FragmentRecordBatch.parseDelimitedFrom(stream);
-      ByteBuf buf = context.getAllocator().buffer(bodyLength);
+      ByteBuf buf = allocator.buffer(bodyLength);
       buf.writeBytes(stream, bodyLength);
       batch = new RawFragmentBatch(null, header, buf);
       available = true;
       latch.countDown();
       long t = watch.elapsed(TimeUnit.MICROSECONDS);
       logger.debug("Took {} us to read {} from disk. Rate {} mb/s", t, bodyLength, bodyLength / t);
+    }
+
+    private boolean isOutOfMemory() {
+      return outOfMemory;
+    }
+
+    private void setOutOfMemory(boolean outOfMemory) {
+      this.outOfMemory = outOfMemory;
     }
   }
 

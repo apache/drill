@@ -87,4 +87,14 @@ public interface  PhysicalOperator extends GraphValue<PhysicalOperator> {
   @JsonIgnore
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException;
 
+  /**
+   * @return The memory to preallocate for this operator
+   */
+  public long getInitialAllocation();
+
+  /**
+   * @return The maximum memory this operator can allocate
+   */
+  public long getMaxAllocation();
+
 }

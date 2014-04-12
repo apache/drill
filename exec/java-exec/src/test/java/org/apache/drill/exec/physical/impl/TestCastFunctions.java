@@ -110,6 +110,7 @@ public class TestCastFunctions extends PopUnitTestBase{
       assertEquals(5, count);
     }
 
+    context.close();
     allocator.close();
 
     if(context.getFailureCause() != null){
@@ -154,6 +155,7 @@ public class TestCastFunctions extends PopUnitTestBase{
       assertEquals(5, count);
     }
 
+    context.close();
     allocator.close();
 
     if(context.getFailureCause() != null){
@@ -196,6 +198,7 @@ public class TestCastFunctions extends PopUnitTestBase{
       assertEquals(5, count);
     }
 
+    context.close();
     allocator.close();
 
     if(context.getFailureCause() != null){
@@ -239,6 +242,7 @@ public class TestCastFunctions extends PopUnitTestBase{
       assertEquals(5, count);
     }
 
+    context.close();
     allocator.close();
 
     if(context.getFailureCause() != null){
@@ -282,6 +286,7 @@ public class TestCastFunctions extends PopUnitTestBase{
       assertEquals(5, count);
     }
 
+    context.close();
     allocator.close();
 
     if(context.getFailureCause() != null){
@@ -326,6 +331,7 @@ public class TestCastFunctions extends PopUnitTestBase{
       assertEquals(5, count);
     }
 
+    context.close();
     allocator.close();
 
     if(context.getFailureCause() != null){
@@ -369,6 +375,7 @@ public class TestCastFunctions extends PopUnitTestBase{
       assertEquals(5, count);
     }
 
+    context.close();
     allocator.close();
 
     if(context.getFailureCause() != null){
@@ -401,6 +408,7 @@ public class TestCastFunctions extends PopUnitTestBase{
     while(exec.next()){
     }
 
+    context.close();
     allocator.close();
 
     assertTrue(context.isFailed());

@@ -35,7 +35,7 @@ public interface MergingReceiverGeneratorBase {
   public abstract int doCompare(MergingRecordBatch.Node left,
                                 MergingRecordBatch.Node right);
 
-  public abstract void doCopy(int inBatch, int inIndex, int outIndex);
+  public abstract boolean doCopy(int inBatch, int inIndex, int outIndex);
 
   public static TemplateClassDefinition<MergingReceiverGeneratorBase> TEMPLATE_DEFINITION =
       new TemplateClassDefinition<>(MergingReceiverGeneratorBase.class, MergingReceiverTemplate.class);

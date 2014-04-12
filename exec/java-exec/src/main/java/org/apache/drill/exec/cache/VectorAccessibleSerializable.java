@@ -157,7 +157,7 @@ public class VectorAccessibleSerializable implements DrillSerializable {
     if (svMode == BatchSchema.SelectionVectorMode.TWO_BYTE)
     {
       svCount = sv2.getCount();
-      svBuf = sv2.getBuffer();
+      svBuf = sv2.getBuffer(); //this calls retain() internally
     }
 
     try
@@ -170,6 +170,7 @@ public class VectorAccessibleSerializable implements DrillSerializable {
       {
         svBuf.getBytes(0, output, svBuf.readableBytes());
         sv2.setBuffer(svBuf);
+        svBuf.release(); // sv2 now owns the buffer
         sv2.setRecordCount(svCount);
       }
 

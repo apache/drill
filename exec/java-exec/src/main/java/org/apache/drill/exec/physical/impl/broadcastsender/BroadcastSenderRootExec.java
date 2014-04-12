@@ -128,6 +128,6 @@ public class BroadcastSenderRootExec implements RootExec {
   @Override
   public void stop() {
       ok = false;
-      incoming.kill();
+      incoming.cleanup();
   }
 }

@@ -67,23 +67,26 @@ public class QueryResultHandler {
         failAll();
       }
     }
-      
+
     if(failed){
       l.submissionFailed(new RpcException("Remote failure while running query." + batch.getHeader().getErrorList()));
       resultsListener.remove(result.getQueryId(), l);
     }else{
+      try {
       l.resultArrived(batch, throttle);
+      } catch (Exception e) {
+        batch.release();
+        l.submissionFailed(new RpcException(e));
+      }
     }
     
     if (
         (failed || result.getIsLastChunk())
-        && 
+        &&
         (!(l instanceof BufferingListener) || ((BufferingListener)l).output != null)
         ) {
       resultsListener.remove(result.getQueryId(), l);
     }
-
-
   }
 
   private void failAll() {

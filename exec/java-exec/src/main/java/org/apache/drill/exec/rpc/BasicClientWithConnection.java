@@ -46,7 +46,7 @@ public abstract class BasicClientWithConnection<T extends EnumLite, HANDSHAKE_SE
   protected GenericFutureListener<ChannelFuture> getCloseHandler(ServerConnection clientConnection) {
     return getCloseHandler(clientConnection.getChannel());
   }
-  
+
   @Override
   protected Response handle(ServerConnection connection, int rpcType, ByteBuf pBody, ByteBuf dBody) throws RpcException {
     return handleReponse( (ConnectionThrottle) connection, rpcType, pBody, dBody);

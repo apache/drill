@@ -21,6 +21,7 @@ import org.apache.drill.exec.vector.ValueVector;
 
 public interface TransferPair {
   public void transfer();
+  public void splitAndTransfer(int startIndex, int length);
   public ValueVector getTo();
   public void copyValue(int from, int to);
 }

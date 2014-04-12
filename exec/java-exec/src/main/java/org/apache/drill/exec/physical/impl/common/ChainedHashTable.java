@@ -41,6 +41,7 @@ import org.apache.drill.exec.expr.ValueVectorReadExpression;
 import org.apache.drill.exec.expr.ValueVectorWriteExpression;
 import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
 import org.apache.drill.exec.expr.fn.impl.BitFunctions;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
@@ -93,18 +94,21 @@ public class ChainedHashTable {
 
   private HashTableConfig htConfig;
   private final FragmentContext context;
+  private final BufferAllocator allocator;
   private final RecordBatch incomingBuild;
   private final RecordBatch incomingProbe;
   private final RecordBatch outgoing;
 
   public ChainedHashTable(HashTableConfig htConfig, 
                           FragmentContext context,
+                          BufferAllocator allocator,
                           RecordBatch incomingBuild, 
                           RecordBatch incomingProbe,
                           RecordBatch outgoing)  {
 
     this.htConfig = htConfig;
     this.context = context;
+    this.allocator = allocator;
     this.incomingBuild = incomingBuild;
     this.incomingProbe = incomingProbe;
     this.outgoing = outgoing;
@@ -136,7 +140,7 @@ public class ChainedHashTable {
       
       final MaterializedField outputField = MaterializedField.create(ne.getRef(), expr.getMajorType());
       // create a type-specific ValueVector for this key
-      ValueVector vv = TypeHelper.getNewVector(outputField, context.getAllocator());
+      ValueVector vv = TypeHelper.getNewVector(outputField, allocator);
       VectorAllocator.getAllocator(vv, 50 /* avg width */).alloc(HashTable.BATCH_SIZE);
       htKeyFieldIds[i] = htContainerOrig.add(vv);
       
@@ -171,7 +175,7 @@ public class ChainedHashTable {
     setupGetHash(cg /* use top level code generator for getHash */,  GetHashIncomingProbeMapping, keyExprsProbe);
 
     HashTable ht = context.getImplementationClass(top);
-    ht.setup(htConfig, context, incomingBuild, incomingProbe, outgoing, htContainerOrig);
+    ht.setup(htConfig, context, allocator, incomingBuild, incomingProbe, outgoing, htContainerOrig);
 
     return ht;
   }

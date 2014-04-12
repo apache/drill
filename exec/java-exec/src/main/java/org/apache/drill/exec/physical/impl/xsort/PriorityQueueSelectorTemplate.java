@@ -35,20 +35,22 @@ public abstract class PriorityQueueSelectorTemplate implements PriorityQueueSele
   private SelectionVector4 vector4;
   private List<BatchGroup> batchGroups;
   private FragmentContext context;
+  private BufferAllocator allocator;
   private int size;
   private int queueSize = 0;
   private int targetRecordCount = ExternalSortBatch.TARGET_RECORD_COUNT;
   private VectorAccessible hyperBatch;
 
   @Override
-  public void setup(FragmentContext context, VectorAccessible hyperBatch, SelectionVector4 sv4, List<BatchGroup> batchGroups) throws SchemaChangeException {
+  public void setup(FragmentContext context, BufferAllocator allocator, VectorAccessible hyperBatch, SelectionVector4 sv4, List<BatchGroup> batchGroups) throws SchemaChangeException {
     this.context = context;
+    this.allocator = allocator;
     this.sv4 = sv4;
     this.batchGroups = batchGroups;
     this.size = batchGroups.size();
     this.hyperBatch = hyperBatch;
 
-    BufferAllocator.PreAllocator preAlloc = context.getAllocator().getNewPreAllocator();
+    BufferAllocator.PreAllocator preAlloc = allocator.getNewPreAllocator();
     preAlloc.preAllocate(4 * size);
     vector4 = new SelectionVector4(preAlloc.getAllocation(), size, Character.MAX_VALUE);
     doSetup(context, hyperBatch, null);
@@ -78,6 +80,7 @@ public abstract class PriorityQueueSelectorTemplate implements PriorityQueueSele
       } else if (nextIndex == -2) {
         vector4.set(0, batch - 1, 0);
         sv4.setCount(outgoingIndex);
+        assert outgoingIndex != 0;
         return outgoingIndex;
       } else {
         vector4.set(0, batch, nextIndex);

@@ -23,11 +23,14 @@ import java.util.Properties;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
@@ -209,10 +212,10 @@ public class HiveRecordReader implements RecordReader {
     try {
       for (int i = 0; i < columnNames.size(); i++) {
         PrimitiveCategory pCat = primitiveCategories.get(i);
-        MaterializedField field = MaterializedField.create(SchemaPath.getSimplePath(columnNames.get(i)), getMajorType(pCat));
-        ValueVector vv = TypeHelper.getNewVector(field, context.getAllocator());
+        MajorType type = getMajorType(pCat);
+        MaterializedField field = MaterializedField.create(SchemaPath.getSimplePath(columnNames.get(i)), type);
+        ValueVector vv = output.addField(field, TypeHelper.getValueVectorClass(type.getMinorType(), type.getMode()));
         vectors.add(vv);
-        output.addField(vv);
       }
       for (int i = 0; i < selectedPartitionNames.size(); i++) {
         String type = selectedPartitionTypes.get(i);
@@ -249,7 +252,7 @@ public class HiveRecordReader implements RecordReader {
           TinyIntVector v = (TinyIntVector) vector;
           byte value = (byte) val;
           for (int j = 0; j < recordCount; j++) {
-            v.getMutator().set(j, value);
+            v.getMutator().setSafe(j, value);
           }
           break;
         }
@@ -257,7 +260,7 @@ public class HiveRecordReader implements RecordReader {
           Float8Vector v = (Float8Vector) vector;
           double value = (double) val;
           for (int j = 0; j < recordCount; j++) {
-            v.getMutator().set(j, value);
+            v.getMutator().setSafe(j, value);
           }
           break;
         }
@@ -265,7 +268,7 @@ public class HiveRecordReader implements RecordReader {
           Float4Vector v = (Float4Vector) vector;
           float value = (float) val;
           for (int j = 0; j < recordCount; j++) {
-            v.getMutator().set(j, value);
+            v.getMutator().setSafe(j, value);
           }
           break;
         }
@@ -273,7 +276,7 @@ public class HiveRecordReader implements RecordReader {
           IntVector v = (IntVector) vector;
           int value = (int) val;
           for (int j = 0; j < recordCount; j++) {
-            v.getMutator().set(j, value);
+            v.getMutator().setSafe(j, value);
           }
           break;
         }
@@ -281,7 +284,7 @@ public class HiveRecordReader implements RecordReader {
           BigIntVector v = (BigIntVector) vector;
           long value = (long) val;
           for (int j = 0; j < recordCount; j++) {
-            v.getMutator().set(j, value);
+            v.getMutator().setSafe(j, value);
           }
           break;
         }
@@ -289,7 +292,7 @@ public class HiveRecordReader implements RecordReader {
           SmallIntVector v = (SmallIntVector) vector;
           short value = (short) val;
           for (int j = 0; j < recordCount; j++) {
-            v.getMutator().set(j, value);
+            v.getMutator().setSafe(j, value);
           }
           break;
         }
@@ -297,7 +300,7 @@ public class HiveRecordReader implements RecordReader {
           VarCharVector v = (VarCharVector) vector;
           byte[] value = (byte[]) val;
           for (int j = 0; j < recordCount; j++) {
-            v.getMutator().set(j, value);
+            v.getMutator().setSafe(j, value);
           }
           break;
         }

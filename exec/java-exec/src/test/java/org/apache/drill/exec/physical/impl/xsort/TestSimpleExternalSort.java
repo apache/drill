@@ -131,7 +131,6 @@ public class TestSimpleExternalSort extends PopUnitTestBase {
 
 
         BigIntVector.Accessor a1 = c1.getAccessor();
-//        IntVector.Accessor a2 = c2.getAccessor();
 
         for(int i =0; i < c1.getAccessor().getValueCount(); i++){
           recordCount++;
@@ -147,4 +146,54 @@ public class TestSimpleExternalSort extends PopUnitTestBase {
     }
   }
 
+  @Test
+  public void outOfMemoryExternalSort() throws Throwable{
+    RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
+
+    DrillConfig config = DrillConfig.create("drill-oom-xsort.conf");
+
+    try(Drillbit bit1 = new Drillbit(config, serviceSet);
+        DrillClient client = new DrillClient(config, serviceSet.getCoordinator());) {
+
+      bit1.run();
+      client.connect();
+      List<QueryResultBatch> results = client.runQuery(UserProtos.QueryType.PHYSICAL,
+              Files.toString(FileUtils.getResourceAsFile("/xsort/oom_sort_test.json"),
+                      Charsets.UTF_8));
+      int count = 0;
+      for(QueryResultBatch b : results) {
+        if (b.getHeader().getRowCount() != 0)
+          count += b.getHeader().getRowCount();
+      }
+      assertEquals(10000000, count);
+
+      long previousBigInt = Long.MAX_VALUE;
+
+      int recordCount = 0;
+      int batchCount = 0;
+
+      for (QueryResultBatch b : results) {
+        if (b.getHeader().getRowCount() == 0) break;
+        batchCount++;
+        RecordBatchLoader loader = new RecordBatchLoader(bit1.getContext().getAllocator());
+        loader.load(b.getHeader().getDef(),b.getData());
+        BigIntVector c1 = (BigIntVector) loader.getValueAccessorById(loader.getValueVectorId(new SchemaPath("blue", ExpressionPosition.UNKNOWN)).getFieldId(), BigIntVector.class).getValueVector();
+
+
+        BigIntVector.Accessor a1 = c1.getAccessor();
+
+        for(int i =0; i < c1.getAccessor().getValueCount(); i++){
+          recordCount++;
+          assertTrue(String.format("%d < %d", previousBigInt, a1.get(i)), previousBigInt >= a1.get(i));
+          previousBigInt = a1.get(i);
+        }
+        assertTrue(String.format("%d == %d", a1.get(0), a1.get(a1.getValueCount() - 1)), a1.get(0) != a1.get(a1.getValueCount() - 1));
+        loader.clear();
+        b.release();
+      }
+
+      System.out.println(String.format("Sorted %,d records in %d batches.", recordCount, batchCount));
+
+    }
+  }
 }

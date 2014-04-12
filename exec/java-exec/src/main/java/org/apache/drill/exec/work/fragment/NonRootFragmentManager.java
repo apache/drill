@@ -18,6 +18,8 @@
 package org.apache.drill.exec.work.fragment;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.exception.FragmentSetupException;
@@ -31,6 +33,7 @@ import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.record.RawFragmentBatch;
+import org.apache.drill.exec.rpc.RemoteConnection;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.work.batch.IncomingBuffers;
 
@@ -46,6 +49,7 @@ public class NonRootFragmentManager implements FragmentManager {
   private volatile boolean cancel = false;
   private final FragmentContext context;
   private final PhysicalPlanReader reader;
+  private List<RemoteConnection> connections = new CopyOnWriteArrayList<>();
   
   public NonRootFragmentManager(PlanFragment fragment, DrillbitContext context) throws FragmentSetupException{
     try{
@@ -118,8 +122,17 @@ public class NonRootFragmentManager implements FragmentManager {
   public FragmentContext getFragmentContext() {
     return context;
   }
-  
-  
 
-  
+  @Override
+  public void addConnection(RemoteConnection connection) {
+    connections.add(connection);
+  }
+
+  @Override
+  public void setAutoRead(boolean autoRead) {
+    for (RemoteConnection c : connections) {
+      c.setAutoRead(autoRead);
+    }
+  }
+
 }

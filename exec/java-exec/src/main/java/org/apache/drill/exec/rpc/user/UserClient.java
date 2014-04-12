@@ -30,11 +30,7 @@ import org.apache.drill.exec.proto.UserProtos.RpcType;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
 import org.apache.drill.exec.proto.UserProtos.UserProperties;
 import org.apache.drill.exec.proto.UserProtos.UserToBitHandshake;
-import org.apache.drill.exec.rpc.BasicClientWithConnection;
-import org.apache.drill.exec.rpc.ProtobufLengthDecoder;
-import org.apache.drill.exec.rpc.Response;
-import org.apache.drill.exec.rpc.RpcConnectionHandler;
-import org.apache.drill.exec.rpc.RpcException;
+import org.apache.drill.exec.rpc.*;
 
 import com.google.protobuf.MessageLite;
 
@@ -104,7 +100,7 @@ public class UserClient extends BasicClientWithConnection<RpcType, UserToBitHand
   
   @Override
   public ProtobufLengthDecoder getDecoder(BufferAllocator allocator) {
-    return new UserProtobufLengthDecoder(allocator);
+    return new UserProtobufLengthDecoder(allocator, OutOfMemoryHandler.DEFAULT_INSTANCE);
   }
 
 }

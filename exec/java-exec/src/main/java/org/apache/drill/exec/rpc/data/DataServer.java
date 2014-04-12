@@ -22,16 +22,15 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.util.concurrent.GenericFutureListener;
 
+import org.apache.drill.exec.exception.FragmentSetupException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.BitData.BitClientHandshake;
 import org.apache.drill.exec.proto.BitData.BitServerHandshake;
 import org.apache.drill.exec.proto.BitData.FragmentRecordBatch;
 import org.apache.drill.exec.proto.BitData.RpcType;
 import org.apache.drill.exec.proto.UserBitShared.RpcChannel;
-import org.apache.drill.exec.rpc.BasicServer;
-import org.apache.drill.exec.rpc.ProtobufLengthDecoder;
-import org.apache.drill.exec.rpc.Response;
-import org.apache.drill.exec.rpc.RpcException;
+import org.apache.drill.exec.record.RawFragmentBatch;
+import org.apache.drill.exec.rpc.*;
 import org.apache.drill.exec.rpc.control.WorkEventBus;
 import org.apache.drill.exec.server.BootStrapContext;
 
@@ -44,6 +43,7 @@ public class DataServer extends BasicServer<RpcType, BitServerConnection> {
   private final BootStrapContext context;
   private final WorkEventBus workBus;
   private final DataResponseHandler dataHandler;
+  private BitServerConnection connection;
 
   public DataServer(BootStrapContext context, WorkEventBus workBus, DataResponseHandler dataHandler) {
     super(DataRpcConfig.MAPPING, context.getAllocator().getUnderlyingAllocator(), context.getBitLoopGroup());
@@ -65,7 +65,7 @@ public class DataServer extends BasicServer<RpcType, BitServerConnection> {
 
   @Override
   public BitServerConnection initRemoteConnection(Channel channel) {
-    return new BitServerConnection(channel, context.getAllocator());
+    return connection = new BitServerConnection(channel, context.getAllocator());
   }
 
   @Override
@@ -88,6 +88,7 @@ public class DataServer extends BasicServer<RpcType, BitServerConnection> {
 
     };
   }
+
 
   @Override
   protected Response handle(BitServerConnection connection, int rpcType, ByteBuf pBody, ByteBuf body) throws RpcException {
@@ -121,8 +122,26 @@ public class DataServer extends BasicServer<RpcType, BitServerConnection> {
 
   }
 
+  private final static FragmentRecordBatch OOM_FRAGMENT = FragmentRecordBatch.newBuilder().setIsOutOfMemory(true).build();
+
   @Override
-  public ProtobufLengthDecoder getDecoder(BufferAllocator allocator) {
-    return new DataProtobufLengthDecoder(allocator);
+  public OutOfMemoryHandler getOutOfMemoryHandler() {
+    return new OutOfMemoryHandler() {
+      @Override
+      public void handle() {
+        try {
+          logger.debug("Setting autoRead false");
+          connection.getFragmentManager().setAutoRead(false);
+          connection.getFragmentManager().handle(new RawFragmentBatch(connection, OOM_FRAGMENT, null));
+        } catch (FragmentSetupException e) {
+          throw new RuntimeException();
+        }
+      }
+    };
+  }
+
+  @Override
+  public ProtobufLengthDecoder getDecoder(BufferAllocator allocator, OutOfMemoryHandler outOfMemoryHandler) {
+    return new DataProtobufLengthDecoder(allocator, outOfMemoryHandler);
   }
 }

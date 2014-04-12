@@ -35,6 +35,7 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.holders.IntHolder;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.HashAggregate;
 import org.apache.drill.exec.physical.impl.common.ChainedHashTable;
@@ -58,6 +59,9 @@ import com.google.common.collect.Lists;
 
 public abstract class HashAggTemplate implements HashAggregator {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HashAggregator.class);
+
+  private static final long ALLOCATOR_INITIAL_RESERVATION = 1*1024*1024;
+  private static final long ALLOCATOR_MAX_RESERVATION = 20L*1000*1000*1000;
   
   private static final boolean EXTRA_DEBUG_1 = false;
   private static final boolean EXTRA_DEBUG_2 = false; 
@@ -75,6 +79,7 @@ public abstract class HashAggTemplate implements HashAggregator {
   private VectorAllocator[] keyAllocators;
   private VectorAllocator[] valueAllocators;
   private FragmentContext context;
+  private BufferAllocator allocator;
 
   private HashAggregate hashAggrConfig;
   private HashTable htable;
@@ -101,7 +106,7 @@ public abstract class HashAggTemplate implements HashAggregator {
       for(int i = 0; i < materializedValueFields.length; i++) { 
         MaterializedField outputField = materializedValueFields[i];
         // Create a type-specific ValueVector for this value
-        vector = TypeHelper.getNewVector(outputField, context.getAllocator()) ;
+        vector = TypeHelper.getNewVector(outputField, allocator) ;
         VectorAllocator.getAllocator(vector, 50 /* avg. width */).alloc(HashTable.BATCH_SIZE) ;
         
         aggrValuesContainer.add(vector) ;
@@ -149,7 +154,7 @@ public abstract class HashAggTemplate implements HashAggregator {
 
 
   @Override
-  public void setup(HashAggregate hashAggrConfig, FragmentContext context, RecordBatch incoming, RecordBatch outgoing, 
+  public void setup(HashAggregate hashAggrConfig, FragmentContext context, BufferAllocator allocator, RecordBatch incoming, RecordBatch outgoing,
                     LogicalExpression[] valueExprs, 
                     List<TypedFieldId> valueFieldIds,
                     TypedFieldId[] groupByOutFieldIds,
@@ -164,6 +169,7 @@ public abstract class HashAggTemplate implements HashAggregator {
     }
      
     this.context = context;
+    this.allocator = allocator;
     this.incoming = incoming;
     this.schema = incoming.getSchema();
     this.keyAllocators = keyAllocators;
@@ -193,7 +199,7 @@ public abstract class HashAggTemplate implements HashAggregator {
       }
     }
 
-    ChainedHashTable ht = new ChainedHashTable(hashAggrConfig.getHtConfig(), context, incoming, null /* no incoming probe */, outgoing) ;
+    ChainedHashTable ht = new ChainedHashTable(hashAggrConfig.getHtConfig(), context, allocator, incoming, null /* no incoming probe */, outgoing) ;
     this.htable = ht.createAndSetupHashTable(groupByOutFieldIds) ;
 
     batchHolders = new ArrayList<BatchHolder>();

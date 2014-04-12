@@ -63,10 +63,10 @@ public class TestWriteToDisk  extends ExecTest{
     vectorList.add(intVector);
     vectorList.add(binVector);
 
-    intVector.getMutator().set(0, 0); binVector.getMutator().set(0, "ZERO".getBytes());
-    intVector.getMutator().set(1, 1); binVector.getMutator().set(1, "ONE".getBytes());
-    intVector.getMutator().set(2, 2); binVector.getMutator().set(2, "TWO".getBytes());
-    intVector.getMutator().set(3, 3); binVector.getMutator().set(3, "THREE".getBytes());
+    intVector.getMutator().setSafe(0, 0); binVector.getMutator().setSafe(0, "ZERO".getBytes());
+    intVector.getMutator().setSafe(1, 1); binVector.getMutator().setSafe(1, "ONE".getBytes());
+    intVector.getMutator().setSafe(2, 2); binVector.getMutator().setSafe(2, "TWO".getBytes());
+    intVector.getMutator().setSafe(3, 3); binVector.getMutator().setSafe(3, "THREE".getBytes());
     intVector.getMutator().setValueCount(4);
     binVector.getMutator().setValueCount(4);
 
