@@ -34,7 +34,7 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
   private IterOutcome lastOutcome = null;
   private boolean first = true;
   private boolean newSchema = false;
-  private int previousIndex = 0;
+  private int previousIndex = -1;
   private int underlyingIndex = 0;
   private int currentIndex;
   private int addedRecordCount = 0;
@@ -123,7 +123,11 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
       // loop through existing records, adding as necessary.
         for (; underlyingIndex < incoming.getRecordCount(); incIndex()) {
           if(EXTRA_DEBUG) logger.debug("Doing loop with values underlying {}, current {}", underlyingIndex, currentIndex);
-          if (isSame( previousIndex, currentIndex )) {
+          if (previousIndex == -1) {
+            if (EXTRA_DEBUG) logger.debug("Adding the initial row's keys and values.");
+            addRecordInc(currentIndex);
+          }
+          else if (isSame( previousIndex, currentIndex )) {
             if(EXTRA_DEBUG) logger.debug("Values were found the same, adding.");
             addRecordInc(currentIndex);
           } else {
