@@ -44,9 +44,9 @@ import org.eigenbase.relopt.RelTraitSet;
 import com.beust.jcommander.internal.Lists;
 
 public class SingleMergeExchangePrel extends SingleRel implements Prel {
-  
-  private final RelCollation collation ; 
-  
+
+  private final RelCollation collation ;
+
   public SingleMergeExchangePrel(RelOptCluster cluster, RelTraitSet traitSet, RelNode input, RelCollation collation) {
     super(cluster, traitSet, input);
     this.collation = collation;
@@ -63,23 +63,21 @@ public class SingleMergeExchangePrel extends SingleRel implements Prel {
   public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
     return new SingleMergeExchangePrel(getCluster(), traitSet, sole(inputs), collation);
   }
-  
-  public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {    
+
+  public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
     Prel child = (Prel) this.getChild();
-    
+
     PhysicalOperator childPOP = child.getPhysicalOperator(creator);
-    
+
+    if(PlanningSettings.get(getCluster()).isSingleMode()) return childPOP;
+
     //Currently, only accepts "NONE". For other, requires SelectionVectorRemover
-    if (!childPOP.getSVMode().equals(SelectionVectorMode.NONE)) {
-      childPOP = new SelectionVectorRemover(childPOP);
-      creator.addPhysicalOperator(childPOP);
-    }
+    childPOP = PrelUtil.removeSvIfRequired(childPOP, SelectionVectorMode.NONE);
 
     SingleMergeExchange g = new SingleMergeExchange(childPOP, PrelUtil.getOrdering(this.collation, getChild().getRowType()));
-    creator.addPhysicalOperator(g);
-    return g;    
+    return g;
   }
-  
+
   @Override
   public RelWriter explainTerms(RelWriter pw) {
     super.explainTerms(pw);
@@ -91,6 +89,6 @@ public class SingleMergeExchangePrel extends SingleRel implements Prel {
       }
     }
     return pw;
-  }  
-  
+  }
+
 }

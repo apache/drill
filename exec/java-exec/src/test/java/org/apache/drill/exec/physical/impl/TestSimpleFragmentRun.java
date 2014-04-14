@@ -52,10 +52,10 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
 
   @Test
   public void runNoExchangeFragment() throws Exception {
-    try(RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet(); 
-        Drillbit bit = new Drillbit(CONFIG, serviceSet); 
+    try(RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
+        Drillbit bit = new Drillbit(CONFIG, serviceSet);
         DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());){
-    
+
     // run query.
     bit.run();
     client.connect();
@@ -81,7 +81,7 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
           } else {
             System.out.print("\t");
           }
-          System.out.print(value.getField().getName());
+          System.out.print(value.getField().toExpr());
           System.out.print("[");
           System.out.print(value.getField().getType().getMinorType());
           System.out.print("]");
@@ -102,6 +102,7 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
         }
         if(!first) System.out.println();
       }
+      batch.release();
     }
     logger.debug("Received results {}", results);
     assertEquals(recordCount, 200);
@@ -151,7 +152,7 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
           } else {
             System.out.print("\t");
           }
-          System.out.print(v.getField().getName());
+          System.out.print(v.getField().toExpr());
           System.out.print("[");
           System.out.print(v.getField().getType().getMinorType());
           System.out.print("]");
@@ -175,6 +176,8 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
           }
           if (!first) System.out.println();
         }
+        batchLoader.clear();
+        batch.release();
       }
 
       assertEquals(2, recordCount);

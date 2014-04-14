@@ -57,7 +57,7 @@ class ParquetRecordReader implements RecordReader {
   private static final long DEFAULT_BATCH_LENGTH = 256 * 1024 * NUMBER_OF_VECTORS; // 256kb
   private static final long DEFAULT_BATCH_LENGTH_IN_BITS = DEFAULT_BATCH_LENGTH * 8; // 256kb
   private static final char DEFAULT_RECORDS_TO_READ_IF_NOT_FIXED_WIDTH = 32*1024;
-  
+
   // TODO - should probably find a smarter way to set this, currently 1 megabyte
   private static final int VAR_LEN_FIELD_LENGTH = 1024 * 1024 * 1;
   public static final int PARQUET_PAGE_MAX_SIZE = 1024 * 1024 * 1;
@@ -164,7 +164,7 @@ class ParquetRecordReader implements RecordReader {
 
   @Override
   public void setup(OutputMutator output) throws ExecutionSetupException {
-    
+
     columnStatuses = new ArrayList<>();
     totalRecords = footer.getBlocks().get(rowGroupIndex).getRowCount();
     List<ColumnDescriptor> columns = footer.getFileMetaData().getSchema().getColumns();
@@ -256,7 +256,7 @@ class ParquetRecordReader implements RecordReader {
   }
 
   private SchemaPath toFieldName(String[] paths) {
-    return new SchemaPath(Joiner.on('/').join(paths), ExpressionPosition.UNKNOWN);
+    return SchemaPath.getCompoundPath(paths);
   }
 
   private TypeProtos.DataMode getDataMode(ColumnDescriptor column) {

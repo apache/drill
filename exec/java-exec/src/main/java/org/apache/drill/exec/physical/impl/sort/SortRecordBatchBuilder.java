@@ -38,7 +38,7 @@ import com.google.common.collect.Lists;
 
 public class SortRecordBatchBuilder {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SortRecordBatchBuilder.class);
-  
+
   private final ArrayListMultimap<BatchSchema, RecordBatchData> batches = ArrayListMultimap.create();
 
   private int recordCount;
@@ -47,12 +47,12 @@ public class SortRecordBatchBuilder {
   private final long maxBytes;
   private SelectionVector4 sv4;
   final PreAllocator svAllocator;
-  
+
   public SortRecordBatchBuilder(BufferAllocator a, long maxBytes){
     this.maxBytes = maxBytes;
     this.svAllocator = a.getNewPreAllocator();
   }
-  
+
   private long getSize(VectorAccessible batch){
     long bytes = 0;
     for(VectorWrapper<?> v : batch){
@@ -60,11 +60,11 @@ public class SortRecordBatchBuilder {
     }
     return bytes;
   }
-  
+
   /**
-   * Add another record batch to the set of record batches.  
+   * Add another record batch to the set of record batches.
    * @param batch
-   * @return True if the requested add completed successfully.  Returns false in the case that this builder is full and cannot receive additional packages. 
+   * @return True if the requested add completed successfully.  Returns false in the case that this builder is full and cannot receive additional packages.
    * @throws SchemaChangeException
    */
   public boolean add(VectorAccessible batch){
@@ -79,7 +79,7 @@ public class SortRecordBatchBuilder {
     if(batchBytes + runningBytes > maxBytes) return false; // enough data memory.
     if(runningBatches+1 > Character.MAX_VALUE) return false; // allowed in batch.
     if(!svAllocator.preAllocate(batch.getRecordCount()*4)) return false;  // sv allocation available.
-      
+
 
     if (batch.getRecordCount() == 0) return true;
     RecordBatchData bd = new RecordBatchData(batch);
@@ -112,15 +112,21 @@ public class SortRecordBatchBuilder {
     return true;
   }
 
+  public boolean isEmpty(){
+    return batches.isEmpty();
+  }
+
   public void build(FragmentContext context, VectorContainer outputContainer) throws SchemaChangeException{
     outputContainer.clear();
     if(batches.keySet().size() > 1) throw new SchemaChangeException("Sort currently only supports a single schema.");
     if(batches.size() > Character.MAX_VALUE) throw new SchemaChangeException("Sort cannot work on more than %d batches at a time.", (int) Character.MAX_VALUE);
-    assert batches.keySet().size() > 0;
+    if(batches.keys().size() < 1){
+      assert false : "Invalid to have an empty set of batches with no schemas.";
+    }
     sv4 = new SelectionVector4(svAllocator.getAllocation(), recordCount, Character.MAX_VALUE);
     BatchSchema schema = batches.keySet().iterator().next();
     List<RecordBatchData> data = batches.get(schema);
-    
+
     // now we're going to generate the sv4 pointers
     switch(schema.getSelectionVectorMode()){
     case NONE: {
@@ -150,7 +156,7 @@ public class SortRecordBatchBuilder {
     default:
       throw new UnsupportedOperationException();
     }
-    
+
     // next, we'll create lists of each of the vector types.
     ArrayListMultimap<MaterializedField, ValueVector> vectors = ArrayListMultimap.create();
     for(RecordBatchData rbd : batches.values()){
@@ -158,12 +164,12 @@ public class SortRecordBatchBuilder {
         vectors.put(v.getField(), v);
       }
     }
-    
+
     for(MaterializedField f : vectors.keySet()){
       List<ValueVector> v = vectors.get(f);
       outputContainer.addHyperList(v, false);
     }
-    
+
     outputContainer.buildSchema(SelectionVectorMode.FOUR_BYTE);
   }
 
@@ -177,7 +183,7 @@ public class SortRecordBatchBuilder {
     }
     if(sv4 != null) sv4.clear();
   }
-  
+
   public List<VectorContainer> getHeldRecordBatches() {
     ArrayList<VectorContainer> containerList = Lists.newArrayList();
     for (BatchSchema bs : batches.keySet()) {
@@ -190,5 +196,5 @@ public class SortRecordBatchBuilder {
     batches.clear();
     return containerList;
   }
-  
+
 }

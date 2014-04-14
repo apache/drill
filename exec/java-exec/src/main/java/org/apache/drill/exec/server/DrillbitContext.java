@@ -43,7 +43,7 @@ import com.google.common.base.Preconditions;
 public class DrillbitContext {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillbitContext.class);
 
-  private BootStrapContext context;
+  private final BootStrapContext context;
 
   private PhysicalPlanReader reader;
   private final ClusterCoordinator coord;
@@ -55,7 +55,7 @@ public class DrillbitContext {
   private final Controller controller;
   private final WorkEventBus workBus;
   private final FunctionImplementationRegistry functionRegistry;
-  
+
   public DrillbitContext(DrillbitEndpoint endpoint, BootStrapContext context, ClusterCoordinator coord, Controller controller, DataConnectionCreator connectionsPool, DistributedCache cache, WorkEventBus workBus) {
     super();
     Preconditions.checkNotNull(endpoint);
@@ -74,7 +74,7 @@ public class DrillbitContext {
     this.operatorCreatorRegistry = new OperatorCreatorRegistry(context.getConfig());
     this.functionRegistry = new FunctionImplementationRegistry(context.getConfig());
   }
-  
+
   public FunctionImplementationRegistry getFunctionImplementationRegistry() {
     return functionRegistry;
   }
@@ -82,15 +82,15 @@ public class DrillbitContext {
   public WorkEventBus getWorkBus(){
     return workBus;
   }
-  
+
   public DrillbitEndpoint getEndpoint(){
     return endpoint;
   }
-  
+
   public DrillConfig getConfig() {
     return context.getConfig();
   }
-  
+
   public Collection<DrillbitEndpoint> getBits(){
     return coord.getAvailableEndpoints();
   }
@@ -106,34 +106,34 @@ public class DrillbitContext {
   public StoragePluginRegistry getStorage(){
     return this.storagePlugins;
   }
-  
+
   public NioEventLoopGroup getBitLoopGroup(){
     return context.getBitLoopGroup();
   }
-  
-  
+
+
   public DataConnectionCreator getDataConnectionsPool(){
     return connectionsPool;
   }
-  
+
   public Controller getController(){
     return controller;
   }
-  
+
   public MetricRegistry getMetrics(){
     return context.getMetrics();
   }
-  
+
   public DistributedCache getCache(){
     return cache;
   }
-  
+
   public PhysicalPlanReader getPlanReader(){
     return reader;
   }
-  
+
   public DrillSchemaFactory getSchemaFactory(){
     return storagePlugins.getSchemaFactory();
   }
-  
+
 }

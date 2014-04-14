@@ -54,8 +54,8 @@ public class TestBroadcastExchange extends PopUnitTestBase {
       List<QueryResultBatch> results = client.runQuery(UserProtos.QueryType.PHYSICAL, physicalPlan);
       int count = 0;
       for(QueryResultBatch b : results) {
-        if (b.getHeader().getRowCount() != 0)
-          count += b.getHeader().getRowCount();
+        if (b.getHeader().getRowCount() != 0) count += b.getHeader().getRowCount();
+        b.release();
       }
       assertEquals(25, count);
     }
@@ -78,8 +78,8 @@ public class TestBroadcastExchange extends PopUnitTestBase {
       List<QueryResultBatch> results = client.runQuery(UserProtos.QueryType.PHYSICAL, physicalPlan);
       int count = 0;
       for(QueryResultBatch b : results) {
-        if (b.getHeader().getRowCount() != 0)
-          count += b.getHeader().getRowCount();
+        if (b.getHeader().getRowCount() != 0) count += b.getHeader().getRowCount();
+        b.release();
       }
       System.out.println(count);
     }

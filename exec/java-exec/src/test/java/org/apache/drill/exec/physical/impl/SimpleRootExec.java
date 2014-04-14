@@ -33,24 +33,25 @@ import org.apache.drill.exec.vector.ValueVector;
 
 import com.beust.jcommander.internal.Lists;
 
+@Deprecated
 public class SimpleRootExec implements RootExec, Iterable<ValueVector>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SimpleRootExec.class);
 
   private RecordBatch incoming;
-  
+
   public SimpleRootExec(RootExec e){
     if(e instanceof ScreenRoot){
-      incoming = ((ScreenRoot)e).getIncoming();  
+      incoming = ((ScreenRoot)e).getIncoming();
     }else{
       throw new UnsupportedOperationException();
     }
-    
+
   }
 
   public FragmentContext getContext(){
     return incoming.getContext();
   }
-  
+
   public SelectionVector2 getSelectionVector2(){
     return incoming.getSelectionVector2();
   }
@@ -64,7 +65,7 @@ public class SimpleRootExec implements RootExec, Iterable<ValueVector>{
     TypedFieldId tfid = incoming.getValueVectorId(path);
     return (T) incoming.getValueAccessorById(tfid.getFieldId(), vvClass).getValueVector();
   }
-  
+
   @Override
   public boolean next() {
     switch(incoming.next()){
@@ -94,10 +95,10 @@ public class SimpleRootExec implements RootExec, Iterable<ValueVector>{
   public int getRecordCount(){
     return incoming.getRecordCount();
   }
-  
+
   /// Temporary: for exposing the incoming batch to TestHashTable
   public RecordBatch getIncoming() {
 	  return incoming;
   }
-  
+
 }

@@ -33,7 +33,7 @@ public class ScreenPrel extends DrillScreenRelBase implements Prel {
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScreenPrel.class);
 
-  
+
   public ScreenPrel(RelOptCluster cluster, RelTraitSet traits, RelNode child) {
     super(Prel.DRILL_PHYSICAL, cluster, traits, child);
   }
@@ -42,22 +42,18 @@ public class ScreenPrel extends DrillScreenRelBase implements Prel {
   public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
     return new ScreenPrel(getCluster(), traitSet, sole(inputs));
   }
-  
-  @Override  
+
+  @Override
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
     Prel child = (Prel) this.getChild();
-    
+
     PhysicalOperator childPOP = child.getPhysicalOperator(creator);
-    
+
     //Currently, Screen only accepts "NONE". For other, requires SelectionVectorRemover
-    if (!childPOP.getSVMode().equals(SelectionVectorMode.NONE)) {
-      childPOP = new SelectionVectorRemover(childPOP);
-      creator.addPhysicalOperator(childPOP);
-    }
+    childPOP = PrelUtil.removeSvIfRequired(childPOP, SelectionVectorMode.NONE);
 
     Screen s = new Screen(childPOP, creator.getContext().getCurrentEndpoint());
-    creator.addPhysicalOperator(s);
-    return s; 
+    return s;
   }
 
 }

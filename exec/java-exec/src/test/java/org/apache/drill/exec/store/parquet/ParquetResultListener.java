@@ -24,6 +24,7 @@ import java.util.HashMap;
 
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
@@ -42,15 +43,16 @@ public class ParquetResultListener implements UserResultsListener {
   private SettableFuture<Void> future = SettableFuture.create();
   int count = 0;
   int totalRecords;
-  RecordBatchLoader batchLoader;
+
   boolean testValues;
+  BufferAllocator allocator;
 
   int batchCounter = 1;
-  HashMap<String, Integer> valuesChecked = new HashMap();
+  HashMap<String, Integer> valuesChecked = new HashMap<>();
   ParquetTestProperties props;
 
-  ParquetResultListener(RecordBatchLoader batchLoader, ParquetTestProperties props, int numberOfTimesRead, boolean testValues){
-    this.batchLoader = batchLoader;
+  ParquetResultListener(BufferAllocator allocator, ParquetTestProperties props, int numberOfTimesRead, boolean testValues){
+    this.allocator = allocator;
     this.props = props;
     this.totalRecords = props.recordsPerRowGroup * props.numberRowGroups * numberOfTimesRead;
     this.testValues = testValues;
@@ -83,7 +85,7 @@ public class ParquetResultListener implements UserResultsListener {
   }
 
   @Override
-  public void resultArrived(QueryResultBatch result, ConnectionThrottle throttle) {
+  synchronized public void resultArrived(QueryResultBatch result, ConnectionThrottle throttle) {
     logger.debug("result arrived in test batch listener.");
     if(result.getHeader().getIsLastChunk()){
       future.set(null);
@@ -92,6 +94,7 @@ public class ParquetResultListener implements UserResultsListener {
     FieldInfo currentField;
     count += result.getHeader().getRowCount();
     boolean schemaChanged = false;
+    RecordBatchLoader batchLoader = new RecordBatchLoader(allocator);
     try {
       schemaChanged = batchLoader.load(result.getHeader().getDef(), result.getData());
     } catch (SchemaChangeException e) {
@@ -105,15 +108,15 @@ public class ParquetResultListener implements UserResultsListener {
 
     for (VectorWrapper vw : batchLoader) {
       ValueVector vv = vw.getValueVector();
-      currentField = props.fields.get(vv.getField().getName());
+      currentField = props.fields.get(vv.getField().getAsSchemaPath().getRootSegment().getPath());
       if (ParquetRecordReaderTest.VERBOSE_DEBUG){
         System.out.println("\n" + (String) currentField.name);
       }
-      if ( ! valuesChecked.containsKey(vv.getField().getName())){
-        valuesChecked.put(vv.getField().getName(), 0);
+      if ( ! valuesChecked.containsKey(vv.getField().getAsSchemaPath().getRootSegment().getPath())){
+        valuesChecked.put(vv.getField().getAsSchemaPath().getRootSegment().getPath(), 0);
         columnValCounter = 0;
       } else {
-        columnValCounter = valuesChecked.get(vv.getField().getName());
+        columnValCounter = valuesChecked.get(vv.getField().getAsSchemaPath().getRootSegment().getPath());
       }
       for (int j = 0; j < vv.getAccessor().getValueCount(); j++) {
         if (ParquetRecordReaderTest.VERBOSE_DEBUG){
@@ -138,8 +141,8 @@ public class ParquetResultListener implements UserResultsListener {
       if (ParquetRecordReaderTest.VERBOSE_DEBUG){
         System.out.println("\n" + vv.getAccessor().getValueCount());
       }
-      valuesChecked.remove(vv.getField().getName());
-      valuesChecked.put(vv.getField().getName(), columnValCounter);
+      valuesChecked.remove(vv.getField().getAsSchemaPath().getRootSegment().getPath());
+      valuesChecked.put(vv.getField().getAsSchemaPath().getRootSegment().getPath(), columnValCounter);
     }
 
     if (ParquetRecordReaderTest.VERBOSE_DEBUG){
@@ -149,7 +152,7 @@ public class ParquetResultListener implements UserResultsListener {
           System.out.println();
           for (VectorWrapper vw : batchLoader) {
             ValueVector v = vw.getValueVector();
-            System.out.print(Strings.padStart(v.getField().getName(), 20, ' ') + " ");
+            System.out.print(Strings.padStart(v.getField().getAsSchemaPath().getRootSegment().getPath(), 20, ' ') + " ");
 
           }
           System.out.println();
@@ -185,7 +188,10 @@ public class ParquetResultListener implements UserResultsListener {
       }
 
       assert valuesChecked.keySet().size() > 0;
+      result.release();
       future.set(null);
+    }else{
+      result.release();
     }
   }
 

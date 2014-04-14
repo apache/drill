@@ -44,7 +44,7 @@ import com.beust.jcommander.internal.Lists;
 public class MergeJoinPrel  extends DrillJoinRelBase implements Prel {
 
   //private final JoinCondition[] joinConditions; // Drill's representation of join conditions
-  
+
   /** Creates a MergeJoiPrel. */
   public MergeJoinPrel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, RexNode condition,
       JoinRelType joinType) throws InvalidRelException {
@@ -53,15 +53,15 @@ public class MergeJoinPrel  extends DrillJoinRelBase implements Prel {
     if (condition.isAlwaysTrue()) {
       throw new InvalidRelException("MergeJoinPrel does not support cartesian product join");
     }
-    
+
     RexNode remaining = RelOptUtil.splitJoinCondition(left, right, condition, leftKeys, rightKeys);
     if (!remaining.isAlwaysTrue() && (leftKeys.size() == 0 || rightKeys.size() == 0)) {
       throw new InvalidRelException("MergeJoinPrel only supports equi-join");
     }
   }
 
-  
-  @Override 
+
+  @Override
   public JoinRelBase copy(RelTraitSet traitSet, RexNode conditionExpr, RelNode left, RelNode right, JoinRelType joinType) {
     try {
       return new MergeJoinPrel(this.getCluster(), traitSet, left, right, conditionExpr, joinType);
@@ -70,8 +70,8 @@ public class MergeJoinPrel  extends DrillJoinRelBase implements Prel {
     }
   }
 
-  @Override  
-  public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {    
+  @Override
+  public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
     final List<String> fields = getRowType().getFieldNames();
     assert isUnique(fields);
     final int leftCount = left.getRowType().getFieldCount();
@@ -80,41 +80,34 @@ public class MergeJoinPrel  extends DrillJoinRelBase implements Prel {
 
     PhysicalOperator leftPop = implementInput(creator, 0, left);
     PhysicalOperator rightPop = implementInput(creator, leftCount, right);
-   
-    //Currently, only accepts "NONE" or "SV2". For other, requires SelectionVectorRemover
-    if (leftPop.getSVMode().equals(SelectionVectorMode.FOUR_BYTE)) {
-      leftPop = new SelectionVectorRemover(leftPop);
-      creator.addPhysicalOperator(leftPop);
-    }
 
     //Currently, only accepts "NONE" or "SV2". For other, requires SelectionVectorRemover
-    if (rightPop.getSVMode().equals(SelectionVectorMode.FOUR_BYTE)) {
-      rightPop = new SelectionVectorRemover(rightPop);
-      creator.addPhysicalOperator(rightPop);
-    }
-    
+    leftPop = PrelUtil.removeSvIfRequired(leftPop, SelectionVectorMode.NONE, SelectionVectorMode.TWO_BYTE);
+
+    //Currently, only accepts "NONE" or "SV2". For other, requires SelectionVectorRemover
+    rightPop = PrelUtil.removeSvIfRequired(rightPop, SelectionVectorMode.NONE, SelectionVectorMode.TWO_BYTE);
+
     JoinRelType jtype = this.getJoinType();
-            
+
     List<JoinCondition> conditions = Lists.newArrayList();
-    
+
     for (Pair<Integer, Integer> pair : Pair.zip(leftKeys, rightKeys)) {
       conditions.add(new JoinCondition("==", new FieldReference(leftFields.get(pair.left)), new FieldReference(rightFields.get(pair.right))));
     }
-    
+
     MergeJoinPOP mjoin = new MergeJoinPOP(leftPop, rightPop, conditions, jtype);
-    creator.addPhysicalOperator(mjoin);
-   
+
     return mjoin;
   }
 
   public List<Integer> getLeftKeys() {
     return this.leftKeys;
   }
-  
+
   public List<Integer> getRightKeys() {
     return this.rightKeys;
   }
-  
+
   /**
    * Check to make sure that the fields of the inputs are the same as the output field names.  If not, insert a project renaming them.
    * @param implementor
@@ -124,7 +117,7 @@ public class MergeJoinPrel  extends DrillJoinRelBase implements Prel {
    * @return
    */
   private PhysicalOperator implementInput(PhysicalPlanCreator creator, int offset, RelNode input) throws IOException {
-    final PhysicalOperator inputOp = ((Prel) input).getPhysicalOperator(creator); 
+    final PhysicalOperator inputOp = ((Prel) input).getPhysicalOperator(creator);
     assert uniqueFieldNames(input.getRowType());
     final List<String> fields = getRowType().getFieldNames();
     final List<String> inputFields = input.getRowType().getFieldNames();
@@ -141,22 +134,18 @@ public class MergeJoinPrel  extends DrillJoinRelBase implements Prel {
 
   private PhysicalOperator rename(PhysicalPlanCreator creator, PhysicalOperator inputOp, List<String> inputFields, List<String> outputFields) {
     List<NamedExpression> exprs = Lists.newArrayList();
-    
+
     //Currently, Project only accepts "NONE". For other, requires SelectionVectorRemover
-    if (!inputOp.getSVMode().equals(SelectionVectorMode.NONE)) {
-      inputOp = new SelectionVectorRemover(inputOp);
-      creator.addPhysicalOperator(inputOp);
-    }
+    inputOp = PrelUtil.removeSvIfRequired(inputOp, SelectionVectorMode.NONE);
 
     for (Pair<String, String> pair : Pair.zip(inputFields, outputFields)) {
-      exprs.add(new NamedExpression(new FieldReference(pair.left), new FieldReference("output." + pair.right)));
+      exprs.add(new NamedExpression(new FieldReference(pair.left), new FieldReference(pair.right)));
     }
-    
+
     Project proj = new Project(exprs, inputOp);
-    
-    creator.addPhysicalOperator(proj);
+
     return proj;
   }
 
-  
+
 }

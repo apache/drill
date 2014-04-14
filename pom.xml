@@ -253,9 +253,11 @@
         </plugin>
         <plugin>
           <artifactId>maven-surefire-plugin</artifactId>
-          <version>2.15</version>
+          <version>2.17</version>
           <configuration>
-            <argLine>-Xms1g -Xmx1g -XX:MaxDirectMemorySize=6096M </argLine>
+            <argLine>-Xms1g -Xmx2g -XX:MaxDirectMemorySize=6096M </argLine>
+            <forkCount>8</forkCount>
+            <reuseForks>true</reuseForks>
             <additionalClasspathElements>
               <additionalClasspathElement>./sqlparser/src/test/resources/storage-engines.json</additionalClasspathElement>
             </additionalClasspathElements>
@@ -608,7 +610,7 @@
           <dependency>
             <groupId>net.hydromatic</groupId>
             <artifactId>optiq-core</artifactId>
-            <version>0.6-SNAPSHOT</version>
+            <version>0.6</version>
             <exclusions>
               <exclusion>
                 <groupId>org.jgrapht</groupId>

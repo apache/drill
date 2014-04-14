@@ -17,10 +17,13 @@
  */
 package org.apache.drill.exec.record;
 
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.PathSegment;
+import org.apache.drill.common.expression.PathSegment.NameSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
@@ -29,21 +32,28 @@ import org.apache.drill.exec.proto.SchemaDefProtos.FieldDef;
 import org.apache.drill.exec.proto.SchemaDefProtos.NamePart;
 import org.apache.drill.exec.proto.SchemaDefProtos.NamePart.Type;
 
+import com.beust.jcommander.internal.Lists;
+
 public class MaterializedField{
   private final FieldDef def;
 
   public MaterializedField(FieldDef def) {
     this.def = def;
   }
-  
+
   public static MaterializedField create(FieldDef def){
     return new MaterializedField(def);
   }
-  
+
   public MaterializedField clone(FieldReference ref){
     return create(ref, def.getMajorType());
   }
-  
+
+  public static MaterializedField create(String path, MajorType type){
+    SchemaPath p = SchemaPath.getSimplePath(path);
+    return create(p, type);
+  }
+
   public static MaterializedField create(SchemaPath path, MajorType type) {
     FieldDef.Builder b = FieldDef.newBuilder();
     b.setMajorType(type);
@@ -68,25 +78,42 @@ public class MaterializedField{
   public FieldDef getDef() {
     return def;
   }
-  
-  public String getName(){
-    StringBuilder sb = new StringBuilder();
-    boolean first = true;
-    for(NamePart np : def.getNameList()){
-      if(np.getType() == Type.ARRAY){
-        sb.append("[]");
+
+  public SchemaPath getAsSchemaPath(){
+    List<NamePart> nameList = def.getNameList();
+    Collections.reverse(Lists.newArrayList(nameList));
+    PathSegment seg = null;
+    for(NamePart p : nameList){
+      if(p.getType() == NamePart.Type.ARRAY){
+        throw new UnsupportedOperationException();
       }else{
-        if(first){
-          first = false;
-        }else{
-          sb.append(".");
-        }
-        sb.append(np.getName());
-        
+        seg = new NameSegment(p.getName(), seg);
       }
     }
-    return sb.toString();
+    if( !(seg instanceof NameSegment) ) throw new UnsupportedOperationException();
+    return new SchemaPath( (NameSegment) seg);
   }
+
+//  public String getName(){
+//    StringBuilder sb = new StringBuilder();
+//    boolean first = true;
+//    for(NamePart np : def.getNameList()){
+//      if(np.getType() == Type.ARRAY){
+//        sb.append("[]");
+//      }else{
+//        if(first){
+//          first = false;
+//        }else{
+//          sb.append(".");
+//        }
+//        sb.append('`');
+//        sb.append(np.getName());
+//        sb.append('`');
+//
+//      }
+//    }
+//    return sb.toString();
+//  }
 
   public int getWidth() {
     return def.getMajorType().getWidth();
@@ -103,7 +130,7 @@ public class MaterializedField{
   public DataMode getDataMode() {
     return def.getMajorType().getMode();
   }
-  
+
   public MaterializedField getOtherNullableVersion(){
     MajorType mt = def.getMajorType();
     DataMode newDataMode = null;
@@ -119,14 +146,14 @@ public class MaterializedField{
     }
     return new MaterializedField(def.toBuilder().setMajorType(mt.toBuilder().setMode(newDataMode).build()).build());
   }
-  
+
   public Class<?> getValueClass() {
     return TypeHelper.getValueVectorClass(getType().getMinorType(), getDataMode());
   }
 
   public boolean matches(SchemaPath path) {
     Iterator<NamePart> iter = def.getNameList().iterator();
-    
+
     for (PathSegment p = path.getRootSegment();; p = p.getChild()) {
       if(p == null) break;
       if (!iter.hasNext()) return false;
@@ -139,14 +166,14 @@ public class MaterializedField{
         if (p.getNameSegment().getPath().equalsIgnoreCase(n.getName())) continue;
         return false;
       }
-      
+
     }
     // we've reviewed all path segments. confirm that we don't have any extra name parts.
     return !iter.hasNext();
   }
-  
-  
-  
+
+
+
   @Override
   public int hashCode() {
     final int prime = 31;
@@ -177,4 +204,7 @@ public class MaterializedField{
     return "MaterializedField [" + def.toString() + "]";
   }
 
+  public String toExpr(){
+    return this.getAsSchemaPath().toExpr();
+  }
 }

@@ -41,11 +41,12 @@ public abstract class Field {
 
   public MaterializedField getAsMaterializedField(FieldReference ref) {
     assert (ref!=null);
-    return MaterializedField.create(new SchemaPath(ref.getPath() + "." + getFieldName(), ExpressionPosition.UNKNOWN), fieldType);  
+
+    return MaterializedField.create(ref.getChild(getFieldName()), fieldType);
   }
 
   public MaterializedField getAsMaterializedField() {
-      return MaterializedField.create(new SchemaPath(getFieldName(), ExpressionPosition.UNKNOWN), fieldType);    
+      return MaterializedField.create(SchemaPath.getCompoundPath(getFieldName().split("\\.")), fieldType);
   }
 
   public abstract String getFieldName();

@@ -35,6 +35,8 @@ package org.apache.drill.common.expression.parser;
 import org.antlr.runtime.BitSet;
 import java.util.*;
 import org.apache.drill.common.expression.*;
+import org.apache.drill.common.expression.PathSegment.NameSegment;
+import org.apache.drill.common.expression.PathSegment.ArraySegment;
 import org.apache.drill.common.types.*;
 import org.apache.drill.common.types.TypeProtos.*;
 import org.apache.drill.common.exceptions.ExpressionParsingException;
@@ -267,12 +269,28 @@ atom returns [LogicalExpression e]
   |  lookup {$e = $lookup.e; }
   ;
 
+pathSegment returns [NameSegment seg]
+  : s1=nameSegment {$seg = $s1.seg;}
+  ;
+
+nameSegment returns [NameSegment seg]
+  : QuotedIdentifier ( (Period s1=pathSegment) | s2=arraySegment)? {$seg = new NameSegment($QuotedIdentifier.text, ($s1.seg == null ? $s2.seg : $s1.seg) ); }
+  | Identifier ( (Period s1=pathSegment) | s2=arraySegment)? {$seg = new NameSegment($Identifier.text, ($s1.seg == null ? $s2.seg : $s1.seg) ); }
+  ;
+  
+arraySegment returns [PathSegment seg]
+  :  OBracket Number CBracket ( (Period s1=pathSegment) | s2=arraySegment)? {$seg = new ArraySegment($Number.text, ($s1.seg == null ? $s2.seg : $s1.seg) ); }
+  ;
+
 
 lookup returns [LogicalExpression e]
   :  functionCall {$e = $functionCall.e ;}
   | castCall {$e = $castCall.e; }
-  | Identifier {$e = new SchemaPath($Identifier.text, pos($Identifier) ); }
+  | pathSegment {$e = new SchemaPath($pathSegment.seg, pos($pathSegment.start) ); }
   | String {$e = new ValueExpressions.QuotedString($String.text, pos($String) ); }
   | OParen expression CParen  {$e = $expression.e; }
   | SingleQuote Identifier SingleQuote {$e = new SchemaPath($Identifier.text, pos($Identifier) ); }
   ;
+  
+  
+  

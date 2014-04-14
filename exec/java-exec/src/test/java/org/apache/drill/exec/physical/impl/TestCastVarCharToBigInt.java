@@ -96,6 +96,11 @@ public class TestCastVarCharToBigInt extends PopUnitTestBase {
                 assertEquals(accessor.getObject(1), 2007L);
                 assertEquals(accessor.getObject(2), 2006L);
             }
+
+            for(QueryResultBatch b : results){
+              b.release();
+            }
+            batchLoader.clear();
         }
     }
 }

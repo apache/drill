@@ -25,7 +25,7 @@
             child: 1,
             pop:"project",
             exprs: [
-		{ ref: "varchar_cast", expr:"cast(\"abc\" as int)" }
+		{ ref: "varchar_cast", expr:"cast('abc' as int)" }
             ]
         },
         {

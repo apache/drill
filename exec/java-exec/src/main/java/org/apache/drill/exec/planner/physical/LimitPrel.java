@@ -52,9 +52,9 @@ public class LimitPrel extends DrillLimitRelBase implements Prel {
   @Override
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
     Prel child = (Prel) this.getChild();
-    
+
     PhysicalOperator childPOP = child.getPhysicalOperator(creator);
-    
+
     // First offset to include into results (inclusive). Null implies it is starting from offset 0
     int first = offset != null ? Math.max(0, RexLiteral.intValue(offset)) : 0;
 
@@ -63,16 +63,14 @@ public class LimitPrel extends DrillLimitRelBase implements Prel {
     Integer last = fetch != null ? Math.max(0, RexLiteral.intValue(fetch)) + first : null;
 
     Limit limit = new Limit(childPOP, first, last);
-    
-    creator.addPhysicalOperator(limit);
-    
+
     return limit;
   }
-  
+
 //  @Override
 //  public LogicalOperator implement(DrillImplementor implementor) {
 //    LogicalOperator inputOp = implementor.visitChild(this, 0, getChild());
-//    
+//
 //    // First offset to include into results (inclusive). Null implies it is starting from offset 0
 //    int first = offset != null ? Math.max(0, RexLiteral.intValue(offset)) : 0;
 //
@@ -83,7 +81,7 @@ public class LimitPrel extends DrillLimitRelBase implements Prel {
 //    limit.setInput(inputOp);
 //    return limit;
 //  }
-  
+
 //  public static LimitPrel convert(Limit limit, ConversionContext context) throws InvalidRelException{
 //    RelNode input = context.toRel(limit.getInput());
 //    RexNode first = context.getRexBuilder().makeExactLiteral(BigDecimal.valueOf(limit.getFirst()), context.getTypeFactory().createSqlType(SqlTypeName.INTEGER));

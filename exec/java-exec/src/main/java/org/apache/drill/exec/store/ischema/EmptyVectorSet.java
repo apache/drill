@@ -43,7 +43,7 @@ import org.apache.drill.exec.vector.VarCharVector;
  * handles the generic handling of the vectors.
  */
 public abstract class EmptyVectorSet implements VectorSet {
-  
+
   protected List<ValueVector> vectors;
 
   /**
@@ -61,18 +61,18 @@ public abstract class EmptyVectorSet implements VectorSet {
    */
   @Override
   public void beginBatch(int maxRows) {
-    
+
     // Allocate memory for each column (value vector)
     for (ValueVector v: vectors) {
       AllocationHelper.allocate(v, maxRows, 100); // TODO: later, use configured size
     }
   }
-  
-  
+
+
   /**
-   * Write a row to the value vectors. 
+   * Write a row to the value vectors.
    * This is a routine to "assign generic objects to generic ValueVectors"
-   * which can be overridden to optimize for fixed types of vectors and 
+   * which can be overridden to optimize for fixed types of vectors and
    * fixed types of values.
    * @param index - the position within the value vectors.
    * @param row - the objects to write into the vectors
@@ -84,25 +84,25 @@ public abstract class EmptyVectorSet implements VectorSet {
       if (!setSafe(vectors.get(i), index, row[i])) {
         return false;
       }
-    } 
+    }
     return true;
   }
-  
 
-  
+
+
   /**
    * Signal the end of the current batch.
    * @param actualRowCount
    */
   @Override
   public void endBatch(int actualRowCount) {
-    
+
     // Finalize each of the value vectors.
     for (ValueVector v: vectors) {
       v.getMutator().setValueCount(actualRowCount);
     }
   }
-  
+
   /**
    * When everything is done, free up the resources.
    */
@@ -112,15 +112,15 @@ public abstract class EmptyVectorSet implements VectorSet {
       v.close();
     }
   }
-  
-  
+
+
   /**
    * Make the value vectors visible to whomever needs them.
    */
   public List<ValueVector> getValueVectors() {
     return vectors;
   }
-  
+
 
   /**
    * Estimate how many rows will fit in a given amount of memory.
@@ -133,23 +133,23 @@ public abstract class EmptyVectorSet implements VectorSet {
   }
 
 
- 
+
   /**
    * Estimate the size of an average row. Used for allocating memory.
    * Override when more information is known about the data.
    * @return bytes per row.
    */
   protected int getEstimatedRowSize() {
-    
+
     // Add up the sizes of the vectors
     int size = 0;
     for (ValueVector v: vectors) {
-      size += TypeHelper.getSize(v.getField().getType());  
+      size += TypeHelper.getSize(v.getField().getType());
     }
     return size;
   }
-  
-  
+
+
   /**
    * Helper function to create value vectors for a set of columns.
    * @param names - the names of the fields
@@ -162,8 +162,8 @@ public abstract class EmptyVectorSet implements VectorSet {
       vectors.add(createVector(names[i], types[i], allocator));
     }
   }
-  
- 
+
+
   /**
    * Create a value vector for a single column.
    * @param name - the name of the field
@@ -174,8 +174,8 @@ public abstract class EmptyVectorSet implements VectorSet {
   private static ValueVector createVector(String name, MajorType type, BufferAllocator allocator) {
     return TypeHelper.getNewVector(field(name, type), allocator);
   }
-  
-  
+
+
   /**
    * Helper function to create a MaterializedField, used to create a ValueVector.
    * @param name - the name of the field
@@ -183,10 +183,10 @@ public abstract class EmptyVectorSet implements VectorSet {
    * @return the MaterializedField
    */
   private static MaterializedField field(String name, MajorType majorType) {
-    return MaterializedField.create(new SchemaPath(name, ExpressionPosition.UNKNOWN), majorType);
+    return MaterializedField.create(SchemaPath.getSimplePath(name), majorType);
   }
-  
-  
+
+
   //////////////////////////////////////////////////////////////////
   //
   // The following section contains wrappers around ValueVectors.
@@ -200,14 +200,14 @@ public abstract class EmptyVectorSet implements VectorSet {
   //
   ///////////////////////////////////////////////////////////////////
   static final Charset UTF8 = Charset.forName("UTF-8");
-  
-  
-  // Here are the types used in information schema. 
+
+
+  // Here are the types used in information schema.
   public static final MajorType VARCHAR = Types.required(MinorType.VARCHAR);
   public static final MajorType INT = Types.required(MinorType.INT);
   //public static final MajorType NULLABLINT = Types.optional(MinorType.INT);
-  
-  
+
+
   /**
    * A generic routine to set a Java value into a value vector. It assumes the types are compatible.
    * When a subclass knows the types of its columns, it should use the strongly typed routines instead.
@@ -224,17 +224,17 @@ public abstract class EmptyVectorSet implements VectorSet {
     }
   }
 
-  
+
   /**
-   * Strongly typed routines for setting a Java value into a value vector. 
+   * Strongly typed routines for setting a Java value into a value vector.
    * @return true if the value was successfully set.
    */
   protected static boolean setSafe(VarCharVector v, int index, String string) {
     return v.getMutator().setSafe(index, string.getBytes(UTF8));
-  } 
-  
+  }
+
   protected static boolean setSafe(IntVector v, int index, int value) {
     return v.getMutator().setSafe(index, value);
   }
-   
+
 }

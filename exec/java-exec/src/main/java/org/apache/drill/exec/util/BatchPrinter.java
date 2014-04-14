@@ -18,7 +18,9 @@
 package org.apache.drill.exec.util;
 
 import com.beust.jcommander.internal.Lists;
+
 import org.apache.commons.lang.StringUtils;
+import org.apache.drill.common.expression.ExpressionStringBuilder;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorWrapper;
@@ -37,7 +39,7 @@ public class BatchPrinter {
     List<ValueVector> vectors = Lists.newArrayList();
     int numBatches = 0;
     for (VectorWrapper vw : batch) {
-      columns.add(vw.getValueVectors()[0].getField().getName());
+      columns.add(vw.getValueVectors()[0].getField().getAsSchemaPath().toExpr());
       numBatches = vw.getValueVectors().length;
     }
     int width = columns.size();
@@ -60,7 +62,7 @@ public class BatchPrinter {
     List<String> columns = Lists.newArrayList();
     List<ValueVector> vectors = Lists.newArrayList();
     for (VectorWrapper vw : batch) {
-      columns.add(vw.getValueVector().getField().getName());
+      columns.add(vw.getValueVector().getField().getAsSchemaPath().toExpr());
       vectors.add(vw.getValueVector());
     }
     int width = columns.size();

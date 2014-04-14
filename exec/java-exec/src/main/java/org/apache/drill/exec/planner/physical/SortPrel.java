@@ -48,18 +48,16 @@ public class SortPrel extends SortRel implements Prel {
   @Override
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
     Prel child = (Prel) this.getChild();
-    
+
     PhysicalOperator childPOP = child.getPhysicalOperator(creator);
-    
-    if (childPOP.getSVMode().equals(SelectionVectorMode.FOUR_BYTE)) {
-      throw new UnsupportedOperationException();
-    }
-    
-    Sort g = new ExternalSort(childPOP, PrelUtil.getOrdering(this.collation, getChild().getRowType()), false);
-    
-    creator.addPhysicalOperator(g);
-    
-    return g;    
+
+    childPOP = PrelUtil.removeSvIfRequired(childPOP, SelectionVectorMode.NONE);
+    Sort g = new Sort(childPOP, PrelUtil.getOrdering(this.collation, getChild().getRowType()), false);
+
+//    childPOP = PrelUtil.removeSvIfRequired(childPOP, SelectionVectorMode.NONE, SelectionVectorMode.TWO_BYTE);
+//    Sort g = new ExternalSort(childPOP, PrelUtil.getOrdering(this.collation, getChild().getRowType()), false);
+
+    return g;
   }
 
   public SortPrel copy(
@@ -70,11 +68,11 @@ public class SortPrel extends SortRel implements Prel {
       RexNode fetch) {
     return new SortPrel(getCluster(), traitSet, newInput, newCollation);
   }
-  
+
   @Override
   public RelOptCost computeSelfCost(RelOptPlanner planner) {
-    //We use multiplier 0.05 for TopN operator, and 0.1 for Sort, to make TopN a preferred choice. 
+    //We use multiplier 0.05 for TopN operator, and 0.1 for Sort, to make TopN a preferred choice.
     return super.computeSelfCost(planner).multiplyBy(0.1);
   }
-  
+
 }

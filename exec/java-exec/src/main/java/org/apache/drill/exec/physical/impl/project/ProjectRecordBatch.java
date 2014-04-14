@@ -24,10 +24,10 @@ import java.util.Set;
 
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
-import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.PathSegment;
+import org.apache.drill.common.expression.PathSegment.NameSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.data.NamedExpression;
 import org.apache.drill.exec.exception.ClassTransformationException;
@@ -58,11 +58,11 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
 
   private Projector projector;
   private List<ValueVector> allocationVectors;
-  
+
   public ProjectRecordBatch(Project pop, RecordBatch incoming, FragmentContext context){
     super(pop, context, incoming);
   }
-  
+
   @Override
   public int getRecordCount() {
     return incoming.getRecordCount();
@@ -85,32 +85,27 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
   private FieldReference getRef(NamedExpression e){
     FieldReference ref = e.getRef();
     PathSegment seg = ref.getRootSegment();
-    if(seg.isNamed() && "output".contentEquals(seg.getNameSegment().getPath())){
-      return new FieldReference(ref.getPath().toString().subSequence(7, ref.getPath().length()), ref.getPosition());
-    }
+
+//    if(seg.isNamed() && "output".contentEquals(seg.getNameSegment().getPath())){
+//      return new FieldReference(ref.getPath().toString().subSequence(7, ref.getPath().length()), ref.getPosition());
+//    }
     return ref;
   }
-  
+
   private boolean isAnyWildcard(List<NamedExpression> exprs){
     for(NamedExpression e : exprs){
       if(isWildcard(e)) return true;
     }
     return false;
   }
-  
+
   private boolean isWildcard(NamedExpression ex){
-    LogicalExpression expr = ex.getExpr();
-    LogicalExpression ref = ex.getRef();
-    if(expr instanceof SchemaPath && ref instanceof SchemaPath){
-      PathSegment e = ((SchemaPath) expr).getRootSegment();
-      PathSegment n = ((SchemaPath) ref).getRootSegment();
-      if(e.isNamed() && e.getNameSegment().getPath().equals("*") && n.isNamed() && n.getChild() != null && n.getChild().isNamed() && n.getChild().getNameSegment().getPath().equals("*")){
-        return true;
-      }
-    }
-    return false;
+    if( !(ex.getExpr() instanceof SchemaPath)) return false;
+    NameSegment expr = ((SchemaPath)ex.getExpr()).getRootSegment();
+    NameSegment ref = ex.getRef().getRootSegment();
+    return ref.getPath().equals("*") && expr.getPath().equals("*");
   }
-  
+
   @Override
   protected void setupNewSchema() throws SchemaChangeException{
     this.allocationVectors = Lists.newArrayList();
@@ -118,7 +113,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
     final List<NamedExpression> exprs = popConfig.getExprs();
     final ErrorCollector collector = new ErrorCollectorImpl();
     final List<TransferPair> transfers = Lists.newArrayList();
-    
+
     final ClassGenerator<Projector> cg = CodeGenerator.getRoot(Projector.TEMPLATE_DEFINITION, context.getFunctionRegistry());
 
     Set<Integer> transferFieldIds = new HashSet();
@@ -128,7 +123,9 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
     if(isAnyWildcard){
       for(VectorWrapper<?> wrapper : incoming){
         ValueVector vvIn = wrapper.getValueVector();
-        TransferPair tp = wrapper.getValueVector().getTransferPair(new FieldReference(vvIn.getField().getName()));
+        String name = vvIn.getField().getDef().getName(vvIn.getField().getDef().getNameCount() - 1).getName();
+        FieldReference ref = new FieldReference(name);
+        TransferPair tp = wrapper.getValueVector().getTransferPair(ref);
         transfers.add(tp);
         container.add(tp.getTo());
       }
@@ -154,7 +151,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
           transfers.add(tp);
           container.add(tp.getTo());
           transferFieldIds.add(vectorRead.getFieldId().getFieldId());
-          logger.debug("Added transfer.");
+//          logger.debug("Added transfer.");
         }else{
           // need to do evaluation.
           ValueVector vector = TypeHelper.getNewVector(outputField, context.getAllocator());
@@ -162,15 +159,15 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
           TypedFieldId fid = container.add(vector);
           ValueVectorWriteExpression write = new ValueVectorWriteExpression(fid, expr);
           cg.addExpr(write);
-          logger.debug("Added eval.");
+//          logger.debug("Added eval.");
         }
     }
 
-      
+
     }
-    
+
     container.buildSchema(incoming.getSchema().getSelectionVectorMode());
-    
+
     try {
       this.projector = context.getImplementationClass(cg.getCodeGenerator());
       projector.setup(context, incoming, this, transfers);
@@ -178,6 +175,6 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
       throw new SchemaChangeException("Failure while attempting to load generated class", e);
     }
   }
-  
-  
+
+
 }

@@ -23,13 +23,13 @@
             child: 1,
             pop:"project",
             exprs: [
-							{ ref: "col1", expr: "right(\"abcdef\", 2)"},
-							{ ref: "col2", expr: "right(\"abcdef\", 6)"}, 
-              { ref: "col3", expr: "right(\"abcdef\", 7)"},
-              { ref: "col4", expr: "right(\"abcdef\", -2)"},
-              { ref: "col5", expr: "right(\"abcdef\", -5)"},
-              { ref: "col6", expr: "right(\"abcdef\", -6)"},
-              { ref: "col7", expr: "right(\"abcdef\", -7)"}
+							{ ref: "col1", expr: "right('abcdef', 2)"},
+							{ ref: "col2", expr: "right('abcdef', 6)"}, 
+              { ref: "col3", expr: "right('abcdef', 7)"},
+              { ref: "col4", expr: "right('abcdef', -2)"},
+              { ref: "col5", expr: "right('abcdef', -5)"},
+              { ref: "col6", expr: "right('abcdef', -6)"},
+              { ref: "col7", expr: "right('abcdef', -7)"}
      			]
         },
         {

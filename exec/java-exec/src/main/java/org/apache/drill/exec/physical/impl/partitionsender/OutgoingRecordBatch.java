@@ -98,7 +98,7 @@ public class OutgoingRecordBatch implements VectorAccessible {
 
   /**
    * Send the record batch to the target node, then reset the value vectors
-   * 
+   *
    * @return true if a flush was needed; otherwise false
    * @throws SchemaChangeException
    */
@@ -106,7 +106,7 @@ public class OutgoingRecordBatch implements VectorAccessible {
     final ExecProtos.FragmentHandle handle = context.getHandle();
 
     if (recordCount != 0) {
-      
+
       for(VectorWrapper<?> w : vectorContainer){
         w.getValueVector().getMutator().setValueCount(recordCount);
       }
@@ -147,7 +147,7 @@ public class OutgoingRecordBatch implements VectorAccessible {
     recordCount = 0;
     vectorContainer.zeroVectors();
     for (VectorWrapper<?> v : vectorContainer) {
-      logger.debug("Reallocating vv to capacity " + DEFAULT_ALLOC_SIZE + " after flush.");
+//      logger.debug("Reallocating vv to capacity " + DEFAULT_ALLOC_SIZE + " after flush.");
       VectorAllocator.getAllocator(v.getValueVector(), DEFAULT_VARIABLE_WIDTH_SIZE).alloc(DEFAULT_ALLOC_SIZE);
     }
     if (!ok) { throw new SchemaChangeException("Flush ended NOT OK!"); }
@@ -173,10 +173,10 @@ public class OutgoingRecordBatch implements VectorAccessible {
       ValueVector outgoingVector = TypeHelper.getNewVector(v.getField(), context.getAllocator());
       VectorAllocator.getAllocator(outgoingVector, 100).alloc(recordCapacity);
       vectorContainer.add(outgoingVector);
-      logger.debug("Reallocating to cap " + recordCapacity + " because of newly init'd vector : " + v.getValueVector());
+//      logger.debug("Reallocating to cap " + recordCapacity + " because of newly init'd vector : " + v.getValueVector());
     }
     outSchema = bldr.build();
-    logger.debug("Initialized OutgoingRecordBatch.  RecordCount: " + recordCount + ", cap: " + recordCapacity + " Schema: " + outSchema);
+//    logger.debug("Initialized OutgoingRecordBatch.  RecordCount: " + recordCount + ", cap: " + recordCapacity + " Schema: " + outSchema);
   }
 
   /**
@@ -226,11 +226,11 @@ public class OutgoingRecordBatch implements VectorAccessible {
     return WritableBatch.getBatchNoHVWrap(recordCount, this, false);
   }
 
-  
+
   private StatusHandler statusHandler = new StatusHandler();
   private class StatusHandler extends BaseRpcOutcomeListener<GeneralRPCProtos.Ack> {
     RpcException ex;
-    
+
     @Override
     public void success(Ack value, ByteBuf buffer) {
       sendCount.decrement();

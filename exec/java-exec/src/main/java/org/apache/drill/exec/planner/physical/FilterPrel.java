@@ -40,19 +40,18 @@ public class FilterPrel extends DrillFilterRelBase implements Prel {
   public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
     return new FilterPrel(getCluster(), traitSet, sole(inputs), getCondition());
   }
-  
+
   @Override
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
     Prel child = (Prel) this.getChild();
-    
+
     PhysicalOperator childPOP = child.getPhysicalOperator(creator);
-    
-    //Currently, Filter only accepts "NONE", SV2, SV4. 
-    
+
+    //Currently, Filter accepts "NONE", SV2, SV4.
+
     Filter p = new Filter(childPOP, getFilterExpression(new DrillParseContext()), 1.0f);
-    creator.addPhysicalOperator(p);
-    
+
     return p;
   }
-  
+
 }

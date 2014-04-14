@@ -29,26 +29,30 @@ import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 
-public class IteratorValidatorBatchIterator implements RecordBatch{
+public class IteratorValidatorBatchIterator implements RecordBatch {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(IteratorValidatorBatchIterator.class);
 
   private IterOutcome state = IterOutcome.NOT_YET;
   private final RecordBatch incoming;
-  
-  public IteratorValidatorBatchIterator(RecordBatch incoming){
+
+  public IteratorValidatorBatchIterator(RecordBatch incoming) {
     this.incoming = incoming;
   }
-  
-  private void validateReadState(){
-    switch(state){
+
+  private void validateReadState() {
+    switch (state) {
     case OK:
     case OK_NEW_SCHEMA:
       return;
     default:
-      throw new IllegalStateException(String.format("You tried to do a batch data read operation when you were in a state of %s.  You can only do this type of operation when you are in a state of OK or OK_NEW_SCHEMA.", state.name()));
+      throw new IllegalStateException(
+          String
+              .format(
+                  "You tried to do a batch data read operation when you were in a state of %s.  You can only do this type of operation when you are in a state of OK or OK_NEW_SCHEMA.",
+                  state.name()));
     }
   }
-  
+
   @Override
   public Iterator<VectorWrapper<?>> iterator() {
     validateReadState();
@@ -105,10 +109,17 @@ public class IteratorValidatorBatchIterator implements RecordBatch{
   public IterOutcome next() {
     if(state == IterOutcome.NONE ) throw new IllegalStateException("The incoming iterator has previously moved to a state of NONE. You should not be attempting to call next() again.");
     state = incoming.next();
-    
-    if ((state == IterOutcome.OK || state == IterOutcome.OK_NEW_SCHEMA) && incoming.getRecordCount() > MAX_BATCH_SIZE)
-      throw new IllegalStateException (String.format("Incoming batch of %s has size %d, which is beyond the limit of %d",  incoming.getClass().getName(), incoming.getRecordCount(), MAX_BATCH_SIZE)); 
-    
+
+    if(state == IterOutcome.OK || state == IterOutcome.OK_NEW_SCHEMA) {
+      BatchSchema schema = incoming.getSchema();
+      if(schema.getFieldCount() == 0){
+        throw new IllegalStateException ("Incoming batch has an empty schema. This is not allowed.");
+      }
+     if(incoming.getRecordCount() > MAX_BATCH_SIZE){
+       throw new IllegalStateException (String.format("Incoming batch of %s has size %d, which is beyond the limit of %d",  incoming.getClass().getName(), incoming.getRecordCount(), MAX_BATCH_SIZE));
+      }
+    }
+
     return state;
   }
 

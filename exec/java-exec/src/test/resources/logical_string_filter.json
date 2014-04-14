@@ -26,7 +26,7 @@
     op : "filter",
     @id : 2,
     input : 1,
-    expr : " (_MAP.R_NAME)  == (\"AFRICA\") "
+    expr : " (_MAP.R_NAME)  == ('AFRICA') "
   }, {
     op : "project",
     @id : 3,

@@ -131,6 +131,11 @@ public class TestExtractFunctions extends PopUnitTestBase {
           assertEquals(expectedValues[i][j], vv.getAccessor().get(i));
         }
       }
+
+      for(QueryResultBatch b : results){
+        b.release();
+      }
+      batchLoader.clear();
     }
   }
 }

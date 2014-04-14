@@ -51,7 +51,7 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
   public void addHyperList(List<ValueVector> vectors) {
     addHyperList(vectors, true);
   }
-  
+
   public void addHyperList(List<ValueVector> vectors, boolean releasable) {
     schema = null;
     ValueVector[] vv = new ValueVector[vectors.size()];
@@ -66,7 +66,7 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
    * container have the same TypedFieldIds as the existing container, allowing interchangeability in generated code. In
    * the case of hyper vectors, this container actually doesn't do a full transfer, rather creating a clone vector
    * wrapper only.
-   * 
+   *
    * @param incoming
    *          The RecordBatch iterator the contains the batch we should take over.
    * @return A cloned vector container.
@@ -129,9 +129,12 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
   public TypedFieldId getValueVectorId(SchemaPath path) {
     for (int i = 0; i < wrappers.size(); i++) {
       VectorWrapper<?> va = wrappers.get(i);
-      if (va.getField().matches(path))
+      SchemaPath w = va.getField().getAsSchemaPath();
+      if (w.equals(path)){
         return new TypedFieldId(va.getField().getType(), i, va.isHyper());
+      }
     }
+
     if(path.getRootSegment().isNamed() && path.getRootSegment().getNameSegment().getPath().equals("_MAP") && path.getRootSegment().isLastPath()) throw new UnsupportedOperationException("Drill does not yet support map references.");
     return null;
   }
@@ -190,7 +193,7 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
     Preconditions.checkState(recordCount != -1, "Record count not set for this vector container");
     return recordCount;
   }
-  
+
   public void zeroVectors(){
     for (VectorWrapper<?> w : wrappers) {
       w.clear();

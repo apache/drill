@@ -21,12 +21,12 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 
-import net.hydromatic.optiq.Schema;
 import net.hydromatic.optiq.SchemaPlus;
 
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.planner.logical.DrillTable;
+import org.apache.drill.exec.rpc.user.DrillUser;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
@@ -40,13 +40,13 @@ public class InfoSchemaStoragePlugin extends AbstractStoragePlugin{
   private final InfoSchemaConfig config;
   private final DrillbitContext context;
   private final String name;
-  
+
   public InfoSchemaStoragePlugin(InfoSchemaConfig config, DrillbitContext context, String name){
     this.config = config;
     this.context = context;
     this.name = name;
   }
-  
+
   @Override
   public boolean supportsRead() {
     return true;
@@ -62,34 +62,33 @@ public class InfoSchemaStoragePlugin extends AbstractStoragePlugin{
   public StoragePluginConfig getConfig() {
     return this.config;
   }
-  
+
   @Override
-  public Schema createAndAddSchema(SchemaPlus parent) {
+  public void registerSchemas(DrillUser user, SchemaPlus parent) {
     ISchema s = new ISchema(parent, this);
     parent.add(s.getName(), s);
-    return s;
   }
-  
+
   private class ISchema extends AbstractSchema{
     private Map<String, InfoSchemaDrillTable> tables;
     public ISchema(SchemaPlus parent, InfoSchemaStoragePlugin plugin){
       super("INFORMATION_SCHEMA");
       Map<String, InfoSchemaDrillTable> tbls = Maps.newHashMap();
       for(SelectedTable tbl : SelectedTable.values()){
-        tbls.put(tbl.name(), new InfoSchemaDrillTable(plugin, "INFORMATION_SCHEMA", tbl, config));  
+        tbls.put(tbl.name(), new InfoSchemaDrillTable(plugin, "INFORMATION_SCHEMA", tbl, config));
       }
       this.tables = ImmutableMap.copyOf(tbls);
     }
-    
+
     @Override
     public DrillTable getTable(String name) {
       return tables.get(name);
     }
-    
+
     @Override
     public Set<String> getTableNames() {
       return tables.keySet();
     }
-    
+
   }
 }

@@ -27,6 +27,7 @@ import net.hydromatic.optiq.Schema;
 import net.hydromatic.optiq.SchemaPlus;
 
 import org.apache.drill.exec.planner.logical.DrillTable;
+import org.apache.drill.exec.rpc.user.DrillUser;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.SchemaFactory;
 import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory.WorkspaceSchema;
@@ -42,8 +43,8 @@ public class FileSystemSchemaFactory implements SchemaFactory{
 
   private List<WorkspaceSchemaFactory> factories;
   private String schemaName;
-  
-  
+
+
   public FileSystemSchemaFactory(String schemaName, List<WorkspaceSchemaFactory> factories) {
     super();
     this.schemaName = schemaName;
@@ -51,25 +52,24 @@ public class FileSystemSchemaFactory implements SchemaFactory{
   }
 
   @Override
-  public Schema add(SchemaPlus parent) {
+  public void registerSchemas(DrillUser user, SchemaPlus parent) {
     FileSystemSchema schema = new FileSystemSchema(schemaName);
     SchemaPlus plusOfThis = parent.add(schema.getName(), schema);
     schema.setPlus(plusOfThis);
-    return schema;
   }
 
   public class FileSystemSchema extends AbstractSchema{
 
     private final WorkspaceSchema defaultSchema;
     private final Map<String, WorkspaceSchema> schemaMap = Maps.newHashMap();
-    
+
     public FileSystemSchema(String name) {
       super(name);
       for(WorkspaceSchemaFactory f :  factories){
         WorkspaceSchema s = f.createSchema();
         schemaMap.put(s.getName(), s);
       }
-      
+
       defaultSchema = schemaMap.get("default");
     }
 
@@ -78,7 +78,7 @@ public class FileSystemSchemaFactory implements SchemaFactory{
         plusOfThis.add(s.getName(), s);
       }
     }
-    
+
     @Override
     public DrillTable getTable(String name) {
       return defaultSchema.getTable(name);
@@ -108,7 +108,7 @@ public class FileSystemSchemaFactory implements SchemaFactory{
     public Set<String> getTableNames() {
       return defaultSchema.getTableNames();
     }
-    
+
   }
 
 }

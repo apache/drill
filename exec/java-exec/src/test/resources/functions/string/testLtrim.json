@@ -23,12 +23,12 @@
             child: 1,
             pop:"project",
             exprs: [
-						  { ref: "col1", expr: "ltrim(\"abcdef\", \"abc\")"},
-						  { ref: "col2", expr: "ltrim(\"abcdef\", \"\")"},
-						  { ref: "col3", expr: "ltrim(\"abcdabc\", \"abc\")"},
-						  { ref: "col4", expr: "ltrim(\"abc\", \"abc\")"},
-						  { ref: "col5", expr: "ltrim(\"\", \"abc\")"},
-						  { ref: "col6", expr: "ltrim(\"\", \"\")"}
+						  { ref: "col1", expr: "ltrim('abcdef', 'abc')"},
+						  { ref: "col2", expr: "ltrim('abcdef', '')"},
+						  { ref: "col3", expr: "ltrim('abcdabc', 'abc')"},
+						  { ref: "col4", expr: "ltrim('abc', 'abc')"},
+						  { ref: "col5", expr: "ltrim('', 'abc')"},
+						  { ref: "col6", expr: "ltrim('', '')"}
         ]
         },
         {

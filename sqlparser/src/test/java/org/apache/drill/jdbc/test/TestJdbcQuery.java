@@ -39,7 +39,7 @@ import com.google.common.base.Stopwatch;
 public class TestJdbcQuery {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestJdbcQuery.class);
 
-  
+
   // Set a timeout unless we're debugging.
   @Rule public TestRule TIMEOUT = TestTools.getTimeoutRule(200000000);
 
@@ -47,14 +47,14 @@ public class TestJdbcQuery {
   static{
     Driver.load();
     WORKING_PATH = Paths.get("").toAbsolutePath().toString();
-    
+
   }
-  
+
   @BeforeClass
   public static void generateHive() throws Exception{
     new HiveTestDataGenerator().generateTestData();
   }
-  
+
   @Test
   @Ignore
   public void testHiveRead() throws Exception{
@@ -73,6 +73,7 @@ public class TestJdbcQuery {
     testQuery("select * from cp.`employee.json`");
   }
 
+
   @Test
   public void testInfoSchema() throws Exception{
 //    testQuery("select * from INFORMATION_SCHEMA.SCHEMATA");
@@ -81,19 +82,19 @@ public class TestJdbcQuery {
 //    testQuery("select * from INFORMATION_SCHEMA.TABLES");
 //    testQuery("select * from INFORMATION_SCHEMA.COLUMNS");
   }
-  
-  @Test 
+
+  @Test
   public void testCast() throws Exception{
-    testQuery(String.format("select R_REGIONKEY, cast(R_NAME as varchar(15)) as region, cast(R_COMMENT as varchar(255)) as comment from dfs.`%s/../sample-data/region.parquet`", WORKING_PATH));    
+    testQuery(String.format("select R_REGIONKEY, cast(R_NAME as varchar(15)) as region, cast(R_COMMENT as varchar(255)) as comment from dfs.`%s/../sample-data/region.parquet`", WORKING_PATH));
   }
 
-  @Test 
+  @Test
   @Ignore
   public void testWorkspace() throws Exception{
     testQuery(String.format("select * from dfs.home.`%s/../sample-data/region.parquet`", WORKING_PATH));
   }
 
-  @Test 
+  @Test
   @Ignore
   public void testWildcard() throws Exception{
     testQuery(String.format("select * from dfs.`%s/../sample-data/region.parquet`", WORKING_PATH));
@@ -109,25 +110,24 @@ public class TestJdbcQuery {
     testQuery(String.format("select cast('test literal' as VARCHAR) from INFORMATION_SCHEMA.TABLES LIMIT 1"));
   }
 
-  @Test 
+  @Test
   @Ignore
   public void testLogicalExplain() throws Exception{
     testQuery(String.format("EXPLAIN PLAN WITHOUT IMPLEMENTATION FOR select * from dfs.`%s/../sample-data/region.parquet`", WORKING_PATH));
   }
 
-  @Test 
+  @Test
   @Ignore
   public void testPhysicalExplain() throws Exception{
     testQuery(String.format("EXPLAIN PLAN FOR select * from dfs.`%s/../sample-data/region.parquet`", WORKING_PATH));
   }
-  
-  @Test 
+
+  @Test
   @Ignore
   public void checkUnknownColumn() throws Exception{
     testQuery(String.format("SELECT unknownColumn FROM dfs.`%s/../sample-data/region.parquet`", WORKING_PATH));
   }
 
-  
   private void testQuery(String sql) throws Exception{
     boolean success = false;
     try (Connection c = DriverManager.getConnection("jdbc:drill:zk=local", null);) {

@@ -40,42 +40,42 @@ import org.junit.Test;
  * Using a test table with two columns, create data and verify the values are in the record batch.
  */
 public class TestTableProvider {
-  
+
   @Test
   public void zeroRead() {
     readTestTable(0);
   }
-  
+
   @Test
   public void oneRead() {
     readTestTable(1);
   }
-  
+
   @Test
   public void smallRead() {
     readTestTable(10);
   }
-  
+
   @Test
   @Ignore // due to out of heap space
   public void largeRead() {
     readTestTable(1024*1024);
   }
-  
-  
+
+
   /**
    * Read record batches from the test table and verify the contents.
    * @param nrRows - the total number of rows expected.
    */
   private void readTestTable(int nrRows) {
-    
+
     // Mock up a context with a BufferAllocator
     FragmentContext context = mock(FragmentContext.class);
     when(context.getAllocator()).thenReturn(new TopLevelAllocator());
-    
+
     // Create a RecordReader which reads from the test table.
     RecordReader reader = new RowRecordReader(context, new TestTable(), new TestProvider(nrRows));
-    
+
     // Create an dummy output mutator for the RecordReader.
     TestOutput output = new TestOutput();
     try {reader.setup(output);}
@@ -86,10 +86,10 @@ public class TestTableProvider {
     for (;;) {
       int count = reader.next();
       if (count == 0) break;
-      
+
       // Do for each row in the batch
       for (int row=0; row<count; row++, rowNumber++) {
-        
+
         // Verify the row has an integer and string containing the row number
         int intValue = (int)output.get(1, row);
         String strValue = (String)output.get(0, row);
@@ -97,12 +97,12 @@ public class TestTableProvider {
         Assert.assertEquals(rowNumber, Integer.parseInt(strValue));
       }
     }
-  
+
   // Verify we read the correct number of rows.
   Assert.assertEquals(nrRows, rowNumber);
   }
 
-  
+
   /**
    * Class to define the table we want to create. Two columns - string, integer
    */
@@ -114,8 +114,8 @@ public class TestTableProvider {
       super(tableName, fieldNames, fieldTypes);
     }
   }
-  
-  
+
+
   /**
    * Class to generate data for the table
    */
@@ -130,28 +130,33 @@ public class TestTableProvider {
       }
     }
   }
-  
-  
-  
-  
-  /** 
-   * A dummy OutputMutator so we can examine the contents of the current batch 
+
+
+
+
+  /**
+   * A dummy OutputMutator so we can examine the contents of the current batch
    */
   static class TestOutput implements OutputMutator {
     List<ValueVector> vectors = new ArrayList<ValueVector>();
 
     public void addField(ValueVector vector) throws SchemaChangeException {
-      vectors.add(vector); 
+      vectors.add(vector);
     }
-    
+
     public Object get(int column, int row) {
       return vectors.get(column).getAccessor().getObject(row);
     }
-     
+
     public void removeField(MaterializedField field) {}
     public void removeAllFields() {}
     public void setNewSchema() {}
+
+    @Override
+    public <T extends ValueVector> T addField(MaterializedField field, Class<T> clazz) throws SchemaChangeException {
+      return null;
+    }
   }
-  
- 
+
+
 }

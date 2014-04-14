@@ -38,7 +38,7 @@ public class ScanPrel extends DrillScanRelBase implements Prel{
     super(DRILL_PHYSICAL, cluster, traits, tbl);
   }
 
-  
+
   @Override
   public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
     return super.copy(traitSet, inputs);
@@ -55,10 +55,9 @@ public class ScanPrel extends DrillScanRelBase implements Prel{
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
     StoragePlugin plugin = this.drillTable.getPlugin();
     GroupScan scan = plugin.getPhysicalScan(new JSONOptions(drillTable.getSelection()));
-    creator.addPhysicalOperator(scan);
-    
-    return scan;    
+
+    return scan;
   }
-  
-  
+
+
 }

@@ -19,60 +19,135 @@ package org.apache.drill;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.List;
 
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.TestTools;
+import org.apache.drill.common.util.TestTools.TestLogReporter;
+import org.apache.drill.exec.client.DrillClient;
+import org.apache.drill.exec.client.PrintingResultsListener;
 import org.apache.drill.exec.client.QuerySubmitter;
-import org.apache.drill.exec.store.ResourceInputStream;
+import org.apache.drill.exec.client.QuerySubmitter.Format;
+import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.proto.UserProtos.QueryType;
+import org.apache.drill.exec.rpc.user.QueryResultBatch;
+import org.apache.drill.exec.rpc.user.UserResultsListener;
+import org.apache.drill.exec.server.Drillbit;
+import org.apache.drill.exec.server.RemoteServiceSet;
+import org.apache.drill.exec.util.VectorUtil;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.rules.TestRule;
+import org.junit.rules.TestWatcher;
+import org.junit.runner.Description;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
 public class BaseTestQuery {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseTestQuery.class);
-  
+
+  // make it static so we can use after class
+  static final TestLogReporter LOG_OUTCOME = TestTools.getTestLogReporter(logger);
+
   @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(20000);
-  
-  protected void test(String sql) throws Exception{
-    boolean good = false;
-    sql = sql.replace("[WORKING_PATH]", TestTools.getWorkingPath());
-    
-    try{
-      QuerySubmitter s = new QuerySubmitter();
-      s.submitQuery(null, sql, "sql", null, true, 1, "tsv");
-      good = true;
-    }finally{
-      if(!good) Thread.sleep(2000);
+  @Rule public final TestLogReporter logOutcome = LOG_OUTCOME;
+
+  @AfterClass
+  public static void letLogsCatchUp() throws InterruptedException{
+    LOG_OUTCOME.sleepIfFailure();
+  }
+
+  public final TestRule resetWatcher = new TestWatcher() {
+    @Override
+    protected void failed(Throwable e, Description description) {
+      try {
+        resetClientAndBit();
+      } catch (Exception e1) {
+        throw new RuntimeException("Failure while resetting client.", e1);
+      }
+    }
+  };
+
+  static DrillClient client;
+  static Drillbit bit;
+  static RemoteServiceSet serviceSet;
+  static DrillConfig config;
+  static QuerySubmitter submitter = new QuerySubmitter();
+
+  static void resetClientAndBit() throws Exception{
+    closeClient();
+    openClient();
+  }
+
+  @BeforeClass
+  public static void openClient() throws Exception{
+    config = DrillConfig.create();
+    serviceSet = RemoteServiceSet.getLocalServiceSet();
+    bit = new Drillbit(config, serviceSet);
+    bit.run();
+    client = new DrillClient(config, serviceSet.getCoordinator());
+    client.connect();
+  }
+
+  protected BufferAllocator getAllocator(){
+    return client.getAllocator();
+  }
+
+  @AfterClass
+  public static void closeClient() throws IOException{
+    if(client != null) client.close();
+    if(bit != null) bit.close();
+    if(serviceSet != null) serviceSet.close();
+  }
+
+
+  protected List<QueryResultBatch> testSqlWithResults(String sql) throws Exception{
+    return testRunAndReturn(QueryType.SQL, sql);
+  }
+
+  protected List<QueryResultBatch> testLogicalWithResults(String logical) throws Exception{
+    return testRunAndReturn(QueryType.LOGICAL, logical);
+  }
+
+  protected List<QueryResultBatch> testPhysicalWithResults(String physical) throws Exception{
+    return testRunAndReturn(QueryType.PHYSICAL, physical);
+  }
+
+  private List<QueryResultBatch>  testRunAndReturn(QueryType type, String query) throws Exception{
+    query = query.replace("[WORKING_PATH]", TestTools.getWorkingPath());
+    return client.runQuery(type, query);
+  }
+
+  private int testRunAndPrint(QueryType type, String query) throws Exception{
+    query = query.replace("[WORKING_PATH]", TestTools.getWorkingPath());
+    PrintingResultsListener resultListener = new PrintingResultsListener(Format.TSV, VectorUtil.DEFAULT_COLUMN_WIDTH);
+    client.runQuery(type, query, resultListener);
+    return resultListener.await();
+  }
+
+  protected void testWithListener(QueryType type, String query, UserResultsListener resultListener){
+    query = query.replace("[WORKING_PATH]", TestTools.getWorkingPath());
+    client.runQuery(type, query, resultListener);
+  }
+
+  protected void test(String query) throws Exception{
+    String[] queries = query.split(";");
+    for(String q : queries){
+      if(q.trim().isEmpty()) continue;
+      testRunAndPrint(QueryType.SQL, q);
     }
   }
-  
-  protected void testLogical(String logical) throws Exception{
-    boolean good = false;
-    logical = logical.replace("[WORKING_PATH]", TestTools.getWorkingPath());
-    
-    try{
-      QuerySubmitter s = new QuerySubmitter();
-      s.submitQuery(null, logical, "logical", null, true, 1, "tsv");
-      good = true;
-    }finally{
-      if(!good) Thread.sleep(2000);
-    }
+
+  protected int testLogical(String query) throws Exception{
+    return testRunAndPrint(QueryType.LOGICAL, query);
   }
-  
-  protected void testPhysical(String physical) throws Exception{
-    boolean good = false;
-    physical = physical.replace("[WORKING_PATH]", TestTools.getWorkingPath());
-    
-    try{
-      QuerySubmitter s = new QuerySubmitter();
-      s.submitQuery(null, physical, "physical", null, true, 1, "tsv");
-      good = true;
-    }finally{
-      if(!good) Thread.sleep(2000);
-    }
+
+  protected int testPhysical(String query) throws Exception{
+    return testRunAndPrint(QueryType.PHYSICAL, query);
   }
-  
+
   protected void testPhysicalFromFile(String file) throws Exception{
     testPhysical(getFile(file));
   }
@@ -82,7 +157,8 @@ public class BaseTestQuery {
   protected void testSqlFromFile(String file) throws Exception{
     test(getFile(file));
   }
-  
+
+
   protected String getFile(String resource) throws IOException{
     URL url = Resources.getResource(resource);
     if(url == null){

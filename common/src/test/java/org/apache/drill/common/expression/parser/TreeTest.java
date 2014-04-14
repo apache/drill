@@ -17,46 +17,98 @@
  */
 package org.apache.drill.common.expression.parser;
 
-import java.io.File;
+import java.io.IOException;
 
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.CommonTokenStream;
-import org.antlr.runtime.tree.CommonTree;
-import org.antlr.runtime.tree.DOTTreeGenerator;
-import org.antlr.stringtemplate.StringTemplate;
+import org.antlr.runtime.RecognitionException;
+import org.apache.drill.common.expression.ExpressionStringBuilder;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.parser.ExprParser.parse_return;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class TreeTest {
-  public static void main(String[] args) throws Exception {
 
-    ExprLexer lexer = new ExprLexer(
-        new ANTLRStringStream(
-            "if ($F1) then case when (_MAP.R_NAME = 'AFRICA') then 2 else 4 end else if(4==3) then 1 else if(x==3) then 7 else (if(2==1) then 6 else 4 end) end"));
-    // ExprLexer lexer = new ExprLexer(new
-    // ANTLRStringStream("if ('blue.red') then 'orange' else if (false) then 1 else 0 end"));
-    // ExprLexer lexer = new ExprLexer(new ANTLRStringStream("2+2"));
 
+  @Test
+  public void testIfWithCase() throws Exception{
+    testExpressionParsing("if ($F1) then case when (_MAP.R_NAME = 'AFRICA') then 2 else 4 end else if(4==3) then 1 else if(x==3) then 7 else (if(2==1) then 6 else 4 end) end");
+  }
+
+  @Test
+  public void testAdd() throws Exception{
+    testExpressionParsing("2+2");
+  }
+
+  @Test
+  public void testIf() throws Exception{
+    testExpressionParsing("if ('blue.red') then 'orange' else if (false) then 1 else 0 end");
+  }
+
+  @Test
+  public void testQuotedIdentifier() throws Exception{
+    testExpressionParsing("`hello friend`.`goodbye`");
+  }
+
+  @Test
+  public void testSpecialQuoted() throws Exception{
+    testExpressionParsing("`*0` + `*` ");
+  }
+
+  @Test
+  public void testQuotedIdentifier2() throws Exception{
+    testExpressionParsing("`hello friend`.goodbye");
+  }
+
+  @Test
+  public void testComplexIdentifier() throws Exception{
+    testExpressionParsing("goodbye[4].`hello`");
+  }
+
+  private LogicalExpression parseExpression(String expr) throws RecognitionException, IOException{
+
+    ExprLexer lexer = new ExprLexer(new ANTLRStringStream(expr));
     CommonTokenStream tokens = new CommonTokenStream(lexer);
+
+//    tokens.fill();
+//    for(Token t : (List<Token>) tokens.getTokens()){
+//      System.out.println(t + "" + t.getType());
+//    }
+//    tokens.rewind();
 
     ExprParser parser = new ExprParser(tokens);
     parse_return ret = parser.parse();
-    LogicalExpression e = ret.e;
-    ObjectMapper mapper = new ObjectMapper();
-    mapper.enable(SerializationFeature.INDENT_OUTPUT);
-    System.out.println(mapper.writeValueAsString(e));
 
-    // print the tree
-    CommonTree tree = (CommonTree) ret.getTree();
-    DOTTreeGenerator gen = new DOTTreeGenerator();
-    StringTemplate st = gen.toDOT(tree);
-
-    Files.write(st.toString(), new File("/Users/jnadeau/Documents/tree.dot"), Charsets.UTF_8);
+    return ret.e;
 
   }
+
+  private String serializeExpression(LogicalExpression expr){
+
+    ExpressionStringBuilder b = new ExpressionStringBuilder();
+    StringBuilder sb = new StringBuilder();
+    expr.accept(b, sb);
+    return sb.toString();
+  }
+
+  /**
+   * Attempt to parse an expression.  Once parsed, convert it to a string and then parse it again to make sure serialization works.
+   * @param expr
+   * @throws RecognitionException
+   * @throws IOException
+   */
+  private void testExpressionParsing(String expr) throws RecognitionException, IOException{
+    System.out.println("-----" + expr + "-----");
+    LogicalExpression e = parseExpression(expr);
+
+    String newStringExpr = serializeExpression(e);
+    System.out.println(newStringExpr);
+    LogicalExpression e2 = parseExpression(newStringExpr);
+    //Assert.assertEquals(e, e2);
+
+  }
+
+
+
 }

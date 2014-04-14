@@ -28,15 +28,16 @@ import org.apache.drill.exec.proto.UserProtos.RequestResults;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
 import org.apache.drill.exec.rpc.Acks;
 import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
+import org.apache.drill.exec.store.SchemaFactory;
 import org.apache.drill.exec.work.WorkManager.WorkerBee;
 import org.apache.drill.exec.work.foreman.Foreman;
 import org.apache.drill.exec.work.fragment.FragmentExecutor;
 
 public class UserWorker{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserWorker.class);
-  
+
   private final WorkerBee bee;
-    
+
   public UserWorker(WorkerBee bee) {
     super();
     this.bee = bee;
@@ -49,7 +50,7 @@ public class UserWorker{
     bee.addNewForeman(foreman);
     return id;
   }
-  
+
   public QueryResult getResult(UserClientConnection connection, RequestResults req){
     Foreman foreman = bee.getForemanForQueryId(req.getQueryId());
     if(foreman == null) return QueryResult.newBuilder().setQueryState(QueryState.UNKNOWN_QUERY).build();
@@ -63,10 +64,14 @@ public class UserWorker{
     }
     return Acks.OK;
   }
-  
+
   public Ack cancelFragment(FragmentHandle handle){
     FragmentExecutor runner = bee.getFragmentRunner(handle);
     if(runner != null) runner.cancel();
     return Acks.OK;
+  }
+
+  public SchemaFactory getSchemaFactory(){
+    return bee.getContext().getSchemaFactory();
   }
 }

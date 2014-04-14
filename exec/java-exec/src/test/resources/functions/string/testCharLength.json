@@ -23,16 +23,16 @@
             child: 1,
             pop:"project",
             exprs: [
-						  { ref: "col1", expr: "char_length(\"aababcdf\")"},
-						  { ref: "col2", expr: "char_length(\"\")"},
+						  { ref: "col1", expr: "char_length('aababcdf')"},
+						  { ref: "col2", expr: "char_length('')"},
 						  { ref: "col3", expr: "char_length(varcharcol)"},
 						  { ref: "col4", expr: "char_length(nullvarcharcol)"},
-						  { ref: "col5", expr: "character_length(\"aababcdf\")"},
-						  { ref: "col6", expr: "character_length(\"\")"},
+						  { ref: "col5", expr: "character_length('aababcdf')"},
+						  { ref: "col6", expr: "character_length('')"},
   					  { ref: "col7", expr: "character_length(varcharcol)"},
 						  { ref: "col8", expr: "character_length(nullvarcharcol)"},
-						  { ref: "col9", expr: "length(\"aababcdf\")"},
-						  { ref: "col10", expr: "length(\"\")"},
+						  { ref: "col9", expr: "length('aababcdf')"},
+						  { ref: "col10", expr: "length('')"},
   					  { ref: "col11", expr: "length(varcharcol)"},
 						  { ref: "col12", expr: "length(nullvarcharcol)"}
           ]

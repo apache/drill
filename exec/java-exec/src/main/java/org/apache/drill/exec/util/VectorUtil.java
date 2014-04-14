@@ -36,7 +36,7 @@ public class VectorUtil {
     int rows = va.getRecordCount();
     List<String> columns = Lists.newArrayList();
     for (VectorWrapper<?> vw : va) {
-      columns.add(vw.getValueVector().getField().getName());
+      columns.add(vw.getValueVector().getField().getAsSchemaPath().toExpr());
     }
 
     int width = columns.size();
@@ -63,7 +63,7 @@ public class VectorUtil {
         columnCounter++;
       }
     }
-    
+
     for (VectorWrapper<?> vw : va) {
       vw.clear();
     }
@@ -77,7 +77,7 @@ public class VectorUtil {
     int rows = va.getRecordCount();
     List<String> columns = Lists.newArrayList();
     for (VectorWrapper<?> vw : va) {
-      columns.add(vw.getValueVector().getField().getName());
+      columns.add(vw.getValueVector().getField().getAsSchemaPath().toExpr());
     }
 
     int width = columns.size() * (columnWidth + 2);
@@ -113,7 +113,7 @@ public class VectorUtil {
     for (VectorWrapper<?> vw : va) {
       vw.clear();
     }
-    
+
     if (rows > 0 )
       System.out.println(StringUtils.repeat("-", width + 1));
   }

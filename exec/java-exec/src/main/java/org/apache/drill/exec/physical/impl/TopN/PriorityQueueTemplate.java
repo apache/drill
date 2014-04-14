@@ -33,7 +33,7 @@ import java.util.concurrent.TimeUnit;
 
 public abstract class PriorityQueueTemplate implements PriorityQueue {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PriorityQueueTemplate.class);
-  
+
   private SelectionVector4 heapSv4;//This holds the heap
   private SelectionVector4 finalSv4;//This is for final sorted output
   private ExpandableHyperContainer hyperBatch;
@@ -58,7 +58,7 @@ public abstract class PriorityQueueTemplate implements PriorityQueue {
     BatchSchema schema = container.getSchema();
     VectorContainer newContainer = new VectorContainer();
     for (MaterializedField field : schema) {
-      int id = container.getValueVectorId(new SchemaPath(field.getName(), ExpressionPosition.UNKNOWN)).getFieldId();
+      int id = container.getValueVectorId(field.getAsSchemaPath()).getFieldId();
       newContainer.add(container.getValueAccessorById(id, field.getValueClass()).getValueVectors());
     }
     newContainer.buildSchema(BatchSchema.SelectionVectorMode.FOUR_BYTE);
@@ -72,7 +72,7 @@ public abstract class PriorityQueueTemplate implements PriorityQueue {
     }
     v4.clear();
   }
-  
+
   @Override
   public void add(FragmentContext context, RecordBatchData batch) throws SchemaChangeException{
     Stopwatch watch = new Stopwatch();
@@ -184,13 +184,13 @@ public abstract class PriorityQueueTemplate implements PriorityQueue {
     siftDown();
     return value;
   }
-  
+
   public void swap(int sv0, int sv1) {
     int tmp = heapSv4.get(sv0);
     heapSv4.set(sv0, heapSv4.get(sv1));
     heapSv4.set(sv1, tmp);
   }
-  
+
   public int compare(int leftIndex, int rightIndex) {
     int sv1 = heapSv4.get(leftIndex);
     int sv2 = heapSv4.get(rightIndex);

@@ -54,6 +54,7 @@ public class TestUnionExchange extends PopUnitTestBase {
       for(QueryResultBatch b : results) {
         if (b.getHeader().getRowCount() != 0)
           count += b.getHeader().getRowCount();
+        b.release();
       }
       assertEquals(150, count);
     }

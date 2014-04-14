@@ -51,6 +51,7 @@ import org.apache.drill.exec.rpc.control.WorkEventBus;
 import org.apache.drill.exec.rpc.data.DataConnectionCreator;
 import org.apache.drill.exec.rpc.user.QueryResultBatch;
 import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.DrillbitContext;
@@ -107,7 +108,7 @@ public class TestOptiqPlans {
     };
     RemoteServiceSet lss = RemoteServiceSet.getLocalServiceSet();
     DrillbitContext bitContext = new DrillbitContext(DrillbitEndpoint.getDefaultInstance(), context, coord, controller, com, cache, workBus);
-    QueryContext qc = new QueryContext(QueryId.getDefaultInstance(), bitContext);
+    QueryContext qc = new QueryContext(new UserSession(null, null, null), QueryId.getDefaultInstance(), bitContext);
     PhysicalPlanReader reader = bitContext.getPlanReader();
     LogicalPlan plan = reader.readLogicalPlan(Files.toString(FileUtils.getResourceAsFile(file), Charsets.UTF_8));
     PhysicalPlan pp = new BasicOptimizer(DrillConfig.create(), qc).optimize(
@@ -137,7 +138,7 @@ public class TestOptiqPlans {
         System.out.println(String.format("Got %d results", b.getHeader().getRowCount()));
         loader.load(b.getHeader().getDef(), b.getData());
         for (VectorWrapper<?> vw : loader) {
-          System.out.println(vw.getValueVector().getField().getName());
+          System.out.println(vw.getValueVector().getField().toExpr());
           ValueVector vv = vw.getValueVector();
           for (int i = 0; i < vv.getAccessor().getValueCount(); i++) {
             Object o = vv.getAccessor().getObject(i);
@@ -165,7 +166,7 @@ public class TestOptiqPlans {
         System.out.println(String.format("Got %d results", b.getHeader().getRowCount()));
         loader.load(b.getHeader().getDef(), b.getData());
         for (VectorWrapper<?> vw : loader) {
-          System.out.println(vw.getValueVector().getField().getName());
+          System.out.println(vw.getValueVector().getField().toExpr());
           ValueVector vv = vw.getValueVector();
           for (int i = 0; i < vv.getAccessor().getValueCount(); i++) {
             Object o = vv.getAccessor().getObject(i);
@@ -193,7 +194,7 @@ public class TestOptiqPlans {
         System.out.println(String.format("Got %d results", b.getHeader().getRowCount()));
         loader.load(b.getHeader().getDef(), b.getData());
         for (VectorWrapper<?> vw : loader) {
-          System.out.println(vw.getValueVector().getField().getName());
+          System.out.println(vw.getValueVector().getField().toExpr());
           ValueVector vv = vw.getValueVector();
           for (int i = 0; i < vv.getAccessor().getValueCount(); i++) {
             Object o = vv.getAccessor().getObject(i);
@@ -231,7 +232,7 @@ public class TestOptiqPlans {
         System.out.println(String.format("Got %d results", b.getHeader().getRowCount()));
         loader.load(b.getHeader().getDef(), b.getData());
         for (VectorWrapper vw : loader) {
-          System.out.println(vw.getValueVector().getField().getName());
+          System.out.println(vw.getValueVector().getField().toExpr());
           ValueVector vv = vw.getValueVector();
           for (int i = 0; i < vv.getAccessor().getValueCount(); i++) {
             Object o = vv.getAccessor().getObject(i);
@@ -269,7 +270,7 @@ public class TestOptiqPlans {
         System.out.println(String.format("Got %d results", b.getHeader().getRowCount()));
         loader.load(b.getHeader().getDef(), b.getData());
         for (VectorWrapper vw : loader) {
-          System.out.println(vw.getValueVector().getField().getName());
+          System.out.println(vw.getValueVector().getField().toExpr());
           ValueVector vv = vw.getValueVector();
           for (int i = 0; i < vv.getAccessor().getValueCount(); i++) {
             Object o = vv.getAccessor().getObject(i);

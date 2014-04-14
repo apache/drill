@@ -37,7 +37,7 @@ public class TopNPrel extends SingleRel implements Prel {
 
   protected int limit;
   protected final RelCollation collation;
-  
+
   public TopNPrel(RelOptCluster cluster, RelTraitSet traitSet, RelNode child, int limit, RelCollation collation) {
     super(cluster, traitSet, child);
     this.limit = limit;
@@ -52,23 +52,21 @@ public class TopNPrel extends SingleRel implements Prel {
   @Override
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
     Prel child = (Prel) this.getChild();
-    
+
     PhysicalOperator childPOP = child.getPhysicalOperator(creator);
-     
+
     TopN topN = new TopN(childPOP, PrelUtil.getOrdering(this.collation, getChild().getRowType()), false, this.limit);
-    
-    creator.addPhysicalOperator(topN);
-    
+
     return topN;
   }
-  
+
   @Override
   public RelOptCost computeSelfCost(RelOptPlanner planner) {
-    //We use multiplier 0.05 for TopN operator, and 0.1 for Sort, to make TopN a preferred choice. 
+    //We use multiplier 0.05 for TopN operator, and 0.1 for Sort, to make TopN a preferred choice.
     return super.computeSelfCost(planner).multiplyBy(0.05);
   }
 
-  
+
   @Override
   public RelWriter explainTerms(RelWriter pw) {
     return super.explainTerms(pw)

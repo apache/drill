@@ -113,7 +113,10 @@ public class TestOrderedPartitionExchange extends PopUnitTestBase {
             }
           }
           partitionRecordCounts.add(partitionRecordCount);
+          loader.clear();
         }
+
+        b.release();
       }
       double[] values = new double[partitionRecordCounts.size()];
       int i = 0;

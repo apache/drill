@@ -52,48 +52,48 @@ public class TestOrphanSchema {
   public void testTables() {
     displayTable(new InfoSchemaTable.Tables(), new OptiqProvider.Tables(root));
   }
-  
+
   @Test
   public void testSchemata() {
     displayTable(new InfoSchemaTable.Schemata(), new OptiqProvider.Schemata(root));
   }
-  
-  
+
+
   @Test
   public void testViews() {
     displayTable(new InfoSchemaTable.Views(), new OptiqProvider.Views(root));
   }
-  
+
   @Test
   public void testCatalogs() {
     displayTable(new InfoSchemaTable.Catalogs(), new OptiqProvider.Catalogs(root));
   }
-  
+
   @Test
   public void testColumns() {
     displayTable(new InfoSchemaTable.Columns(), new OptiqProvider.Columns(root));
   }
-  
-  
+
+
   private void displayTable(FixedTable table, RowProvider provider) {
 
     // Set up a mock context
     FragmentContext context = mock(FragmentContext.class);
     when(context.getAllocator()).thenReturn(new TopLevelAllocator());
-    
+
     // Create a RecordReader which reads from the test table.
     RecordReader reader = new RowRecordReader(context, table, provider);
-    
+
     // Create an dummy output mutator for the RecordReader.
     TestOutput output = new TestOutput();
     try {reader.setup(output);}
     catch (ExecutionSetupException e) {Assert.fail("reader threw an exception");}
-    
+
     // print out headers
     System.out.printf("\n%20s\n", table.getName());
     System.out.printf("%10s", "RowNumber");
     for (ValueVector v: table.getValueVectors()) {
-      System.out.printf(" | %16s", v.getField().getName());
+      System.out.printf(" | %16s", v.getField().toExpr());
     }
     System.out.println();
 
@@ -102,40 +102,45 @@ public class TestOrphanSchema {
     for (;;) {
       int count = reader.next();
       if (count == 0) break;
-      
+
       // Do for each row in the batch
       for (int row=0; row<count; row++, rowNumber++) {
-       
+
         // Display the row
         System.out.printf("%10d", rowNumber);
         for (ValueVector v: table.getValueVectors()) {
           System.out.printf(" | %16s", v.getAccessor().getObject(row));
         }
         System.out.println();
-        
+
       }
     }
   }
 
-  
-  /** 
-   * A dummy OutputMutator so we can examine the contents of the current batch 
+
+  /**
+   * A dummy OutputMutator so we can examine the contents of the current batch
    */
   static class TestOutput implements OutputMutator {
     List<ValueVector> vectors = new ArrayList<ValueVector>();
 
     public void addField(ValueVector vector) throws SchemaChangeException {
-      vectors.add(vector); 
+      vectors.add(vector);
     }
-    
+
     public Object get(int column, int row) {
       return vectors.get(column).getAccessor().getObject(row);
     }
-     
+
     public void removeField(MaterializedField field) {}
     public void removeAllFields() {}
     public void setNewSchema() {}
+
+    @Override
+    public <T extends ValueVector> T addField(MaterializedField field, Class<T> clazz) throws SchemaChangeException {
+      return null;
+    }
   }
-  
- 
+
+
 }

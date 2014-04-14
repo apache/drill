@@ -24,6 +24,7 @@ import net.hydromatic.optiq.SchemaPlus;
 
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.exec.rpc.user.DrillUser;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.hive.schema.HiveSchemaFactory;
@@ -35,7 +36,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class HiveStoragePlugin extends AbstractStoragePlugin {
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveStoragePlugin.class);
-  
+
   private final HiveStoragePluginConfig config;
   private final HiveSchemaFactory schemaFactory;
   private final DrillbitContext context;
@@ -55,7 +56,7 @@ public class HiveStoragePlugin extends AbstractStoragePlugin {
   public String getName(){
     return name;
   }
-  
+
   public DrillbitContext getContext() {
     return context;
   }
@@ -71,8 +72,8 @@ public class HiveStoragePlugin extends AbstractStoragePlugin {
   }
 
   @Override
-  public Schema createAndAddSchema(SchemaPlus parent) {
-    return schemaFactory.add(parent);
+  public void registerSchemas(DrillUser user, SchemaPlus parent) {
+    schemaFactory.registerSchemas(user, parent);
   }
 
 

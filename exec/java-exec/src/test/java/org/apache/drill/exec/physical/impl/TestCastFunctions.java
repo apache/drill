@@ -37,6 +37,7 @@ import org.apache.drill.exec.expr.holders.Float8Holder;
 import org.apache.drill.exec.expr.holders.IntHolder;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
@@ -58,12 +59,9 @@ import org.apache.drill.exec.vector.BigIntVector;
 import org.apache.drill.exec.vector.Float4Vector;
 import org.apache.drill.exec.vector.Float8Vector;
 import org.apache.drill.exec.vector.IntVector;
-import org.apache.drill.exec.vector.NullableVarCharVector;
-import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarBinaryVector;
 import org.apache.drill.exec.vector.VarCharVector;
 import org.junit.After;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.codahale.metrics.MetricRegistry;
@@ -80,9 +78,12 @@ public class TestCastFunctions extends PopUnitTestBase{
   // cast to bigint.
   public void testCastBigInt(@Injectable final DrillbitContext bitContext,
                             @Injectable UserServer.UserClientConnection connection) throws Throwable{
+
+    final BufferAllocator allocator = new TopLevelAllocator();
+
     new NonStrictExpectations(){{
       bitContext.getMetrics(); result = new MetricRegistry();
-      bitContext.getAllocator(); result = new TopLevelAllocator();
+      bitContext.getAllocator(); result = allocator;
       bitContext.getConfig(); result = c;
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
     }};
@@ -92,22 +93,24 @@ public class TestCastFunctions extends PopUnitTestBase{
     FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
     FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
     SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
-    
+
     while(exec.next()){
       BigIntVector c0 = exec.getValueVectorById(new SchemaPath("varchar_cast", ExpressionPosition.UNKNOWN), BigIntVector.class);
       BigIntVector.Accessor a0;
       a0 = c0.getAccessor();
-      
+
       int count = 0;
-      for(int i = 0; i < c0.getAccessor().getValueCount(); i++){        
+      for(int i = 0; i < c0.getAccessor().getValueCount(); i++){
           BigIntHolder holder0 = new BigIntHolder();
           a0.get(i, holder0);
           assertEquals(1256, holder0.value);
           ++count;
-        
+
       }
       assertEquals(5, count);
     }
+
+    allocator.close();
 
     if(context.getFailureCause() != null){
       throw context.getFailureCause();
@@ -120,9 +123,11 @@ public class TestCastFunctions extends PopUnitTestBase{
   public void testCastInt(@Injectable final DrillbitContext bitContext,
                             @Injectable UserServer.UserClientConnection connection) throws Throwable{
 
+    final BufferAllocator allocator = new TopLevelAllocator();
+
     new NonStrictExpectations(){{
       bitContext.getMetrics(); result = new MetricRegistry();
-      bitContext.getAllocator(); result = new TopLevelAllocator();
+      bitContext.getAllocator(); result = allocator;
       bitContext.getConfig(); result = c;
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
     }};
@@ -132,22 +137,24 @@ public class TestCastFunctions extends PopUnitTestBase{
     FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
     FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
     SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
-    
+
     while(exec.next()){
       IntVector c0 = exec.getValueVectorById(new SchemaPath("varchar_cast", ExpressionPosition.UNKNOWN), IntVector.class);
       IntVector.Accessor a0;
       a0 = c0.getAccessor();
-      
+
       int count = 0;
-      for(int i = 0; i < c0.getAccessor().getValueCount(); i++){        
+      for(int i = 0; i < c0.getAccessor().getValueCount(); i++){
           IntHolder holder0 = new IntHolder();
           a0.get(i, holder0);
           assertEquals(1256, holder0.value);
           ++count;
-        
+
       }
       assertEquals(5, count);
     }
+
+    allocator.close();
 
     if(context.getFailureCause() != null){
       throw context.getFailureCause();
@@ -159,10 +166,10 @@ public class TestCastFunctions extends PopUnitTestBase{
   //cast to float4
   public void testCastFloat4(@Injectable final DrillbitContext bitContext,
                             @Injectable UserServer.UserClientConnection connection) throws Throwable{
-
+    final BufferAllocator allocator = new TopLevelAllocator();
     new NonStrictExpectations(){{
       bitContext.getMetrics(); result = new MetricRegistry();
-      bitContext.getAllocator(); result = new TopLevelAllocator();
+      bitContext.getAllocator(); result = allocator;
       bitContext.getConfig(); result = c;
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
     }};
@@ -172,22 +179,24 @@ public class TestCastFunctions extends PopUnitTestBase{
     FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
     FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
     SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
-    
+
     while(exec.next()){
       Float4Vector c0 = exec.getValueVectorById(new SchemaPath("varchar_cast2", ExpressionPosition.UNKNOWN), Float4Vector.class);
       Float4Vector.Accessor a0;
       a0 = c0.getAccessor();
-      
+
       int count = 0;
-      for(int i = 0; i < c0.getAccessor().getValueCount(); i++){        
+      for(int i = 0; i < c0.getAccessor().getValueCount(); i++){
           Float4Holder holder0 = new Float4Holder();
           a0.get(i, holder0);
           assertEquals(12.56, holder0.value, 0.001);
           ++count;
-        
+
       }
       assertEquals(5, count);
     }
+
+    allocator.close();
 
     if(context.getFailureCause() != null){
       throw context.getFailureCause();
@@ -200,9 +209,10 @@ public class TestCastFunctions extends PopUnitTestBase{
   public void testCastFloat8(@Injectable final DrillbitContext bitContext,
                             @Injectable UserServer.UserClientConnection connection) throws Throwable{
 
+    final BufferAllocator allocator = new TopLevelAllocator();
     new NonStrictExpectations(){{
       bitContext.getMetrics(); result = new MetricRegistry();
-      bitContext.getAllocator(); result = new TopLevelAllocator();
+      bitContext.getAllocator(); result = allocator;
       bitContext.getConfig(); result = c;
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
     }};
@@ -212,22 +222,24 @@ public class TestCastFunctions extends PopUnitTestBase{
     FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
     FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
     SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
-    
+
     while(exec.next()){
       Float8Vector c0 = exec.getValueVectorById(new SchemaPath("varchar_cast2", ExpressionPosition.UNKNOWN), Float8Vector.class);
       Float8Vector.Accessor a0;
       a0 = c0.getAccessor();
-      
+
       int count = 0;
-      for(int i = 0; i < c0.getAccessor().getValueCount(); i++){        
+      for(int i = 0; i < c0.getAccessor().getValueCount(); i++){
           Float8Holder holder0 = new Float8Holder();
           a0.get(i, holder0);
           assertEquals(12.56, holder0.value, 0.001);
           ++count;
-        
+
       }
       assertEquals(5, count);
     }
+
+    allocator.close();
 
     if(context.getFailureCause() != null){
       throw context.getFailureCause();
@@ -240,9 +252,10 @@ public class TestCastFunctions extends PopUnitTestBase{
   public void testCastVarChar(@Injectable final DrillbitContext bitContext,
                             @Injectable UserServer.UserClientConnection connection) throws Throwable{
 
+    final BufferAllocator allocator = new TopLevelAllocator();
     new NonStrictExpectations(){{
       bitContext.getMetrics(); result = new MetricRegistry();
-      bitContext.getAllocator(); result = new TopLevelAllocator();
+      bitContext.getAllocator(); result = allocator;
       bitContext.getConfig(); result = c;
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
     }};
@@ -252,22 +265,24 @@ public class TestCastFunctions extends PopUnitTestBase{
     FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
     FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
     SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
-    
+
     while(exec.next()){
       VarCharVector c0 = exec.getValueVectorById(new SchemaPath("int_lit_cast", ExpressionPosition.UNKNOWN), VarCharVector.class);
       VarCharVector.Accessor a0;
       a0 = c0.getAccessor();
-      
+
       int count = 0;
-      for(int i = 0; i < c0.getAccessor().getValueCount(); i++){        
+      for(int i = 0; i < c0.getAccessor().getValueCount(); i++){
           VarCharHolder holder0 = new VarCharHolder();
           a0.get(i, holder0);
           assertEquals("123", holder0.toString());
           ++count;
-        
+
       }
       assertEquals(5, count);
     }
+
+    allocator.close();
 
     if(context.getFailureCause() != null){
       throw context.getFailureCause();
@@ -280,9 +295,11 @@ public class TestCastFunctions extends PopUnitTestBase{
   public void testCastVarBinary(@Injectable final DrillbitContext bitContext,
                             @Injectable UserServer.UserClientConnection connection) throws Throwable{
 
+    final BufferAllocator allocator = new TopLevelAllocator();
+
     new NonStrictExpectations(){{
       bitContext.getMetrics(); result = new MetricRegistry();
-      bitContext.getAllocator(); result = new TopLevelAllocator();
+      bitContext.getAllocator(); result = allocator;
       bitContext.getConfig(); result = c;
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
     }};
@@ -292,22 +309,24 @@ public class TestCastFunctions extends PopUnitTestBase{
     FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
     FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
     SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
-    
+
     while(exec.next()){
       VarBinaryVector c0 = exec.getValueVectorById(new SchemaPath("int_lit_cast", ExpressionPosition.UNKNOWN), VarBinaryVector.class);
       VarBinaryVector.Accessor a0;
       a0 = c0.getAccessor();
-      
+
       int count = 0;
-      for(int i = 0; i < c0.getAccessor().getValueCount(); i++){        
+      for(int i = 0; i < c0.getAccessor().getValueCount(); i++){
           VarBinaryHolder holder0 = new VarBinaryHolder();
           a0.get(i, holder0);
           assertEquals("123", holder0.toString());
           ++count;
-        
+
       }
       assertEquals(5, count);
     }
+
+    allocator.close();
 
     if(context.getFailureCause() != null){
       throw context.getFailureCause();
@@ -320,9 +339,10 @@ public class TestCastFunctions extends PopUnitTestBase{
   public void testCastNested(@Injectable final DrillbitContext bitContext,
                             @Injectable UserServer.UserClientConnection connection) throws Throwable{
 
+    final BufferAllocator allocator = new TopLevelAllocator();
     new NonStrictExpectations(){{
       bitContext.getMetrics(); result = new MetricRegistry();
-      bitContext.getAllocator(); result = new TopLevelAllocator();
+      bitContext.getAllocator(); result = allocator;
       bitContext.getConfig(); result = c;
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
     }};
@@ -332,26 +352,30 @@ public class TestCastFunctions extends PopUnitTestBase{
     FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
     FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
     SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
-    
+
     while(exec.next()){
       IntVector c0 = exec.getValueVectorById(new SchemaPath("add_cast", ExpressionPosition.UNKNOWN),IntVector.class);
       IntVector.Accessor a0;
       a0 = c0.getAccessor();
-      
+
       int count = 0;
-      for(int i = 0; i < c0.getAccessor().getValueCount(); i++){        
+      for(int i = 0; i < c0.getAccessor().getValueCount(); i++){
           IntHolder holder0 = new IntHolder();
           a0.get(i, holder0);
           assertEquals(300, holder0.value);
           ++count;
-        
+
       }
       assertEquals(5, count);
     }
 
+    allocator.close();
+
     if(context.getFailureCause() != null){
       throw context.getFailureCause();
     }
+
+
     assertTrue(!context.isFailed());
   }
 
@@ -359,9 +383,11 @@ public class TestCastFunctions extends PopUnitTestBase{
   public void testCastNumException(@Injectable final DrillbitContext bitContext,
                             @Injectable UserServer.UserClientConnection connection) throws Throwable{
 
+    final BufferAllocator allocator = new TopLevelAllocator();
+
     new NonStrictExpectations(){{
       bitContext.getMetrics(); result = new MetricRegistry();
-      bitContext.getAllocator(); result = new TopLevelAllocator();
+      bitContext.getAllocator(); result = allocator;
       bitContext.getConfig(); result = c;
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
     }};
@@ -371,18 +397,20 @@ public class TestCastFunctions extends PopUnitTestBase{
     FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
     FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
     SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
-    
+
     while(exec.next()){
     }
 
+    allocator.close();
+
     assertTrue(context.isFailed());
-    
+
     if(context.getFailureCause() != null){
       throw context.getFailureCause();
     }
 
   }
-  
+
   @Test
   public void testCastFromNullablCol() throws Throwable {
     RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
@@ -390,43 +418,48 @@ public class TestCastFunctions extends PopUnitTestBase{
     try(Drillbit bit = new Drillbit(CONFIG, serviceSet);
         DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
       bit.run();
-      
+
       client.connect();
       List<QueryResultBatch> results = client.runQuery(UserProtos.QueryType.PHYSICAL,
-          Files.toString(FileUtils.getResourceAsFile("/functions/cast/testCastVarCharNull.json"), Charsets.UTF_8).replace("#{TEST_FILE}", "/jsoninput/input1.json"));      
-    
+          Files.toString(FileUtils.getResourceAsFile("/functions/cast/testCastVarCharNull.json"), Charsets.UTF_8).replace("#{TEST_FILE}", "/jsoninput/input1.json"));
+
       QueryResultBatch batch = results.get(0);
 
       RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
       batchLoader.load(batch.getHeader().getDef(), batch.getData());
-     
+
       Object [][] result = getRunResult(batchLoader);
-      
+
       Object [][] expected = new Object[2][2];
-      
+
       expected[0][0] = new String("2001");
       expected[0][1] = new String("1.2");
-      
+
       expected[1][0] = new String("-2002");
       expected[1][1] = new String("-1.2");
- 
+
       assertEquals(result.length, expected.length);
       assertEquals(result[0].length, expected[0].length);
-      
+
       for (int i = 0; i<result.length; i++ ) {
         for (int j = 0; j<result[0].length; j++) {
           assertEquals(String.format("Column %s at row %s have wrong result",  j, i), result[i][j], expected[i][j]);
         }
-      }     
-    }  
+      }
+      batchLoader.clear();
+      for(QueryResultBatch b : results){
+        b.release();
+      }
+
+    }
   }
 
   private Object[][] getRunResult(VectorAccessible va) {
     int size = 0;
     for (VectorWrapper v : va) {
-      size++;     
-    }   
-  
+      size++;
+    }
+
     Object[][] res = new Object [va.getRecordCount()][size];
     for (int j = 0; j < va.getRecordCount(); j++) {
       int i = 0;
@@ -434,13 +467,13 @@ public class TestCastFunctions extends PopUnitTestBase{
         Object o =  v.getValueVector().getAccessor().getObject(j);
         if (o instanceof byte[]) {
           res[j][i++] =  new String((byte[]) o);
-        } else { 
+        } else {
           res[j][i++] = o;
         }
       }
     }
     return res;
- }  
+ }
 
   @After
   public void tearDown() throws Exception{

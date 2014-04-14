@@ -33,22 +33,22 @@ public class ValueExpressions {
   public static LogicalExpression getBigInt(long l){
     return new LongExpression(l);
   }
-  
+
   public static LogicalExpression getInt(int i){
     return new IntExpression(i, ExpressionPosition.UNKNOWN);
   }
-  
+
   public static LogicalExpression getFloat8(double d){
     return new DoubleExpression(d, ExpressionPosition.UNKNOWN);
   }
   public static LogicalExpression getFloat4(float f){
     return new DoubleExpression(f, ExpressionPosition.UNKNOWN);
   }
-  
+
   public static LogicalExpression getBit(boolean b){
     return new BooleanExpression(Boolean.toString(b), ExpressionPosition.UNKNOWN);
   }
-  
+
   public static LogicalExpression getChar(String s){
     return new QuotedString(s, ExpressionPosition.UNKNOWN);
   }
@@ -72,7 +72,7 @@ public class ValueExpressions {
       return new IntervalDayExpression(intervalInMillis);
   }
 
-  
+
 
   public static LogicalExpression getNumericExpression(String s, ExpressionPosition ep) {
     try {
@@ -109,7 +109,7 @@ public class ValueExpressions {
     }
 
     protected abstract V parseValue(String s);
-    
+
     @Override
     public Iterator<LogicalExpression> iterator() {
       return Iterators.emptyIterator();
@@ -119,13 +119,13 @@ public class ValueExpressions {
   }
 
   public static class BooleanExpression extends ValueExpression<Boolean> {
-    
-    
+
+
     public BooleanExpression(String value, ExpressionPosition pos) {
       super(value, pos);
     }
 
-    
+
     @Override
     protected Boolean parseValue(String s) {
       return Boolean.parseBoolean(s);
@@ -250,7 +250,7 @@ public class ValueExpressions {
     public LongExpression(long l) {
       this(l, ExpressionPosition.UNKNOWN);
     }
-    
+
       public LongExpression(long l, ExpressionPosition pos) {
       super(pos);
       this.l = l;
@@ -269,7 +269,7 @@ public class ValueExpressions {
     public <T, V, E extends Exception> T accept(ExprVisitor<T, V, E> visitor, V value) throws E {
       return visitor.visitLongConstant(this, value);
     }
-    
+
     @Override
     public Iterator<LogicalExpression> iterator() {
       return Iterators.emptyIterator();
@@ -427,10 +427,10 @@ public class ValueExpressions {
 
     private static final MajorType INTERVALDAY_CONSTANT = Types.required(MinorType.INTERVALDAY);
     private static final long MILLIS_IN_DAY = 1000 * 60 * 60 * 24;
-    
+
     private int days;
     private int millis;
-    
+
     public IntervalDayExpression(long intervalInMillis) {
       this((int) (intervalInMillis / MILLIS_IN_DAY), (int) (intervalInMillis % MILLIS_IN_DAY), ExpressionPosition.UNKNOWN);
     }
@@ -490,34 +490,4 @@ public class ValueExpressions {
     }
   }
 
-  public static enum CollisionBehavior {
-    SKIP("-"), // keep the old value.
-    FAIL("!"), // give up on the record
-    REPLACE("+"), // replace the old value with the new value.
-    ARRAYIFY("]"), // replace the current position with an array. Then place the
-                   // old and new value in the array.
-    OBJECTIFY("}"), // replace the current position with a map. Give the two
-                    // values names of 'old' and 'new'.
-    MERGE_OVERRIDE("%"); // do your best to do a deep merge of the old and new
-                         // values.
-
-    private String identifier;
-
-    private CollisionBehavior(String identifier) {
-      this.identifier = identifier;
-    }
-
-    public static final CollisionBehavior DEFAULT = FAIL;
-
-    public static final CollisionBehavior find(String c) {
-      if (c == null || c.isEmpty())
-        return DEFAULT;
-
-      for (CollisionBehavior b : values()) {
-        if (b.identifier.equals(c))
-          return b;
-      }
-      return DEFAULT;
-    }
-  }
 }

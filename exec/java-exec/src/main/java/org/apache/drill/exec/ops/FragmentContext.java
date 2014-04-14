@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import net.hydromatic.optiq.SchemaPlus;
+import net.hydromatic.optiq.tools.Frameworks;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.compile.ClassTransformer;
@@ -96,9 +97,11 @@ public class FragmentContext implements Closeable {
   public DrillbitContext getDrillbitContext() {
     return context;
   }
-  
+
   public SchemaPlus getRootSchema(){
-    return context.getStorage().getSchemaFactory().getOrphanedRootSchema();
+    SchemaPlus root = Frameworks.createRootSchema();
+    context.getStorage().getSchemaFactory().registerSchemas(null, root);
+    return root;
   }
 
   /**
@@ -116,7 +119,7 @@ public class FragmentContext implements Closeable {
   public long getQueryStartTime() {
       return this.queryStartTime;
   }
-  
+
   /**
    * The FragmentHandle for this Fragment
    * @return FragmentHandle
@@ -136,10 +139,10 @@ public class FragmentContext implements Closeable {
   public <T> T getImplementationClass(ClassGenerator<T> cg) throws ClassTransformationException, IOException {
     return getImplementationClass(cg.getCodeGenerator());
   }
-  
+
   public <T> T getImplementationClass(CodeGenerator<T> cg) throws ClassTransformationException, IOException {
     long t1 = System.nanoTime();
-    
+
     T t = transformer.getImplementationClass(this.loader, cg.getDefinition(), cg.generate(),
         cg.getMaterializedClassName());
     logger.debug("Compile time: {} millis.", (System.nanoTime() - t1) / 1000 / 1000);
@@ -177,7 +180,7 @@ public class FragmentContext implements Closeable {
   public void addDaemonThread(Thread thread) {
     daemonThreads.add(thread);
     thread.start();
-    
+
   }
 
   public IncomingBuffers getBuffers() {

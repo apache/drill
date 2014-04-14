@@ -50,14 +50,14 @@ import com.google.common.io.Files;
  * methods and fields of the class to merge to the class that is being visited.
  */
 class MergeAdapter extends ClassVisitor {
-  
+
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MergeAdapter.class);
-  
+
   private ClassNode classToMerge;
   private ClassSet set;
-  
+
   private Set<String> mergingNames = Sets.newHashSet();
-  
+
   private MergeAdapter(ClassSet set, ClassVisitor cv, ClassNode cn) {
     super(Opcodes.ASM4, cv);
     this.classToMerge = cn;
@@ -88,16 +88,16 @@ class MergeAdapter extends ClassVisitor {
     System.out.println("Annotation");
     return super.visitAnnotation(desc, visible);
   }
-  
+
   // visit the class
   public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
     // use the access and names of the impl class.
     if(name.contains("$")){
       super.visit(version, access, name, signature, superName, interfaces);
     }else{
-      super.visit(version, access ^ Modifier.ABSTRACT | Modifier.FINAL, name, signature, superName, interfaces);  
+      super.visit(version, access ^ Modifier.ABSTRACT | Modifier.FINAL, name, signature, superName, interfaces);
     }
-    
+
 //    this.cname = name;
   }
 
@@ -107,8 +107,8 @@ class MergeAdapter extends ClassVisitor {
 
     // skip all abstract methods as they should have implementations.
     if ((access & Modifier.ABSTRACT) != 0 || mergingNames.contains(arg1)) {
-      
-      logger.debug("Skipping copy of '{}()' since it is abstract or listed elsewhere.", arg1);
+
+//      logger.debug("Skipping copy of '{}()' since it is abstract or listed elsewhere.", arg1);
       return null;
     }
     if(arg3 != null){
@@ -156,8 +156,8 @@ class MergeAdapter extends ClassVisitor {
   public FieldVisitor visitField(int access, String name, String desc, String signature, Object value) {
     return super.visitField(access, name, desc, signature, value);
   }
-  
-  
+
+
   public static class MergedClassResult{
     public byte[] bytes;
     public Collection<String> innerClasses;
@@ -166,32 +166,32 @@ class MergeAdapter extends ClassVisitor {
       this.bytes = bytes;
       this.innerClasses = innerClasses;
     }
-    
-    
+
+
   }
-  
+
   public static MergedClassResult getMergedClass(ClassSet set, byte[] precompiledClass, ClassNode generatedClass) throws IOException{
 
     // Setup adapters for merging, remapping class names and class writing. This is done in reverse order of how they
     // will be evaluated.
-    
+
     ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
     RemapClasses re = new RemapClasses(set);
     ClassVisitor remappingAdapter = new RemappingClassAdapter(cw, re);
     ClassVisitor visitor = remappingAdapter;
     if(generatedClass != null){
-      visitor = new MergeAdapter(set, remappingAdapter, generatedClass);  
+      visitor = new MergeAdapter(set, remappingAdapter, generatedClass);
     }
     ClassReader tReader = new ClassReader(precompiledClass);
     tReader.accept(visitor, ClassReader.EXPAND_FRAMES);
     byte[] outputClass = cw.toByteArray();
-    
+
     // enable when you want all the generated merged class files to also be written to disk.
     //Files.write(outputClass, new File(String.format("/tmp/drill-generated-classes/%s-output.class", set.generated.dot)));
 
     return new MergedClassResult(outputClass, re.getInnerClasses());
   }
-  
+
 
   static class RemapClasses extends Remapper {
 
@@ -208,15 +208,15 @@ class MergeAdapter extends ClassVisitor {
 
     @Override
     public String map(String typeName) {
-      
+
       // remap the names of all classes that start with the old class name.
       if (typeName.startsWith(top.precompiled.slash)) {
-        
+
         // write down all the sub classes.
         if (typeName.startsWith(current.precompiled.slash + "$")){
           innerClasses.add(typeName);
         }
-          
+
         return typeName.replace(top.precompiled.slash, top.generated.slash);
       }
       return typeName;

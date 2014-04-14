@@ -170,7 +170,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
         int count = selector.next();
         if(count > 0){
           long t = w.elapsed(TimeUnit.MICROSECONDS);
-          logger.debug("Took {} us to merge {} records", t, count);
+//          logger.debug("Took {} us to merge {} records", t, count);
           container.setRecordCount(count);
           return IterOutcome.OK;
         }else{
@@ -185,7 +185,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
         Stopwatch watch = new Stopwatch();
         watch.start();
         IterOutcome upstream = incoming.next();
-        logger.debug("Took {} us to get next", watch.elapsed(TimeUnit.MICROSECONDS));
+//        logger.debug("Took {} us to get next", watch.elapsed(TimeUnit.MICROSECONDS));
         switch (upstream) {
         case NONE:
           break outer;
@@ -215,7 +215,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
           Stopwatch w = new Stopwatch();
           w.start();
           sorter.sort(sv2);
-          logger.debug("Took {} us to sort {} records", w.elapsed(TimeUnit.MICROSECONDS), sv2.getCount());
+//          logger.debug("Took {} us to sort {} records", w.elapsed(TimeUnit.MICROSECONDS), sv2.getCount());
           batchGroups.add(new BatchGroup(new RecordBatchData(incoming).getContainer(), sv2));
           batchesSinceLastSpill++;
           if (batchGroups.size() > SPILL_THRESHOLD && batchesSinceLastSpill >= SPILL_BATCH_GROUP_SIZE) {
@@ -223,7 +223,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
             batchesSinceLastSpill = 0;
           }
           long t = w.elapsed(TimeUnit.MICROSECONDS);
-          logger.debug("Took {} us to sort {} records", t, count);
+//          logger.debug("Took {} us to sort {} records", t, count);
           break;
         default:
           throw new UnsupportedOperationException();
@@ -343,11 +343,11 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
       ValueVector[] vectors = new ValueVector[batchGroupList.size() * 2];
       int i = 0;
       for (BatchGroup group : batchGroupList) {
-        vectors[i++] = group.getValueAccessorById(group.getValueVectorId(new SchemaPath(field.getName(),ExpressionPosition.UNKNOWN)).getFieldId(),
+        vectors[i++] = group.getValueAccessorById(group.getValueVectorId(field.getAsSchemaPath()).getFieldId(),
                 field.getValueClass()).getValueVector();
         if (group.hasSecond()) {
           VectorContainer c = group.getSecondContainer();
-          vectors[i++] = c.getValueAccessorById(c.getValueVectorId(new SchemaPath(field.getName(),ExpressionPosition.UNKNOWN)).getFieldId(),
+          vectors[i++] = c.getValueAccessorById(c.getValueVectorId(field.getAsSchemaPath()).getFieldId(),
                   field.getValueClass()).getValueVector();
         } else {
           vectors[i] = vectors[i - 1].getTransferPair().getTo(); //this vector should never be used. Just want to avoid having null elements in the hyper vector

@@ -23,9 +23,9 @@
             child: 1,
             pop:"project",
             exprs: [
-              { ref: "lower", expr: "lower(\"ABcEFgh\")"}, 
-              { ref: "lower", expr: "lower(\"aBc\")"}, 
-              { ref: "lower", expr: "lower(\"\")"}
+              { ref: "lower", expr: "lower('ABcEFgh')"}, 
+              { ref: "lower", expr: "lower('aBc')"}, 
+              { ref: "lower", expr: "lower('')"}
            ]
         },
         {

@@ -26,6 +26,7 @@ import net.hydromatic.optiq.SchemaPlus;
 
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.logical.DynamicDrillTable;
+import org.apache.drill.exec.rpc.user.DrillUser;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.SchemaFactory;
 import org.apache.hadoop.hbase.HTableDescriptor;
@@ -38,18 +39,17 @@ public class HBaseSchemaFactory implements SchemaFactory {
 
   final String schemaName;
   final HBaseStoragePlugin plugin;
-  
+
   public HBaseSchemaFactory(HBaseStoragePlugin plugin, String name) throws IOException {
     this.plugin = plugin;
     this.schemaName = name;
   }
 
   @Override
-  public Schema add(SchemaPlus parent) {
+  public void registerSchemas(DrillUser user, SchemaPlus parent) {
     HBaseSchema schema = new HBaseSchema(schemaName);
     SchemaPlus hPlus = parent.add(schemaName, schema);
     schema.setHolder(hPlus);
-    return schema;
   }
 
   class HBaseSchema extends AbstractSchema {

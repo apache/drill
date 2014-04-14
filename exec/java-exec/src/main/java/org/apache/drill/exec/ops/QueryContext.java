@@ -19,6 +19,9 @@ package org.apache.drill.exec.ops;
 
 import java.util.Collection;
 
+import net.hydromatic.optiq.SchemaPlus;
+import net.hydromatic.optiq.tools.Frameworks;
+
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.cache.DistributedCache;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
@@ -27,28 +30,48 @@ import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.rpc.control.WorkEventBus;
 import org.apache.drill.exec.rpc.data.DataConnectionCreator;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.apache.drill.exec.store.StoragePluginRegistry.DrillSchemaFactory;
 
 public class QueryContext {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryContext.class);
-  
-  private QueryId queryId;
-  private DrillbitContext drillbitContext;
-  private WorkEventBus workBus;
-  
-  public QueryContext(QueryId queryId, DrillbitContext drllbitContext) {
+
+  private final QueryId queryId;
+  private final DrillbitContext drillbitContext;
+  private final WorkEventBus workBus;
+  private UserSession session;
+  public final Multitimer<QuerySetup> timer;
+
+  public QueryContext(UserSession session, QueryId queryId, DrillbitContext drllbitContext) {
     super();
     this.queryId = queryId;
     this.drillbitContext = drllbitContext;
     this.workBus = drllbitContext.getWorkBus();
+    this.session = session;
+    this.timer = new Multitimer<>(QuerySetup.class);
   }
-  
+
+  public UserSession getSession(){
+    return session;
+  }
+
+  public SchemaPlus getNewDefaultSchema(){
+    SchemaPlus rootSchema = Frameworks.createRootSchema();
+    drillbitContext.getSchemaFactory().registerSchemas(session.getUser(), rootSchema);
+    SchemaPlus defaultSchema = session.getDefaultSchema(rootSchema);
+    if(defaultSchema == null){
+      return rootSchema;
+    }else{
+      return defaultSchema;
+    }
+  }
+
+
   public DrillbitEndpoint getCurrentEndpoint(){
     return drillbitContext.getEndpoint();
   }
-  
+
   public QueryId getQueryId() {
     return queryId;
   }
@@ -56,36 +79,32 @@ public class QueryContext {
   public StoragePluginRegistry getStorage(){
     return drillbitContext.getStorage();
   }
-  
-  
+
+
   public DistributedCache getCache(){
     return drillbitContext.getCache();
   }
-  
+
   public Collection<DrillbitEndpoint> getActiveEndpoints(){
     return drillbitContext.getBits();
   }
-  
+
   public PhysicalPlanReader getPlanReader(){
     return drillbitContext.getPlanReader();
   }
-  
+
   public DataConnectionCreator getDataConnectionsPool(){
     return drillbitContext.getDataConnectionsPool();
   }
-  
+
   public DrillConfig getConfig(){
     return drillbitContext.getConfig();
   }
-  
+
   public WorkEventBus getWorkBus(){
     return workBus;
   }
 
-  public DrillSchemaFactory getFactory(){
-    return drillbitContext.getSchemaFactory();
-  }
-  
   public FunctionImplementationRegistry getFunctionRegistry(){
     return drillbitContext.getFunctionImplementationRegistry();
   }

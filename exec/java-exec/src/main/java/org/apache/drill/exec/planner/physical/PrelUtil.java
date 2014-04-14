@@ -24,8 +24,10 @@ import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.logical.data.Order.Ordering;
-import org.apache.drill.exec.expr.fn.impl.HashFunctions;
+import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.physical.config.SelectionVectorRemover;
 import org.apache.drill.exec.planner.physical.DrillDistributionTrait.DistributionField;
+import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.eigenbase.rel.RelCollation;
 import org.eigenbase.rel.RelFieldCollation;
 import org.eigenbase.reltype.RelDataType;
@@ -37,14 +39,14 @@ public class PrelUtil {
 
   public static List<Ordering> getOrdering(RelCollation collation, RelDataType rowType) {
     List<Ordering> orderExpr = Lists.newArrayList();
-    
+
     final List<String> childFields = rowType.getFieldNames();
-    
-    for (RelFieldCollation fc: collation.getFieldCollations() ) {      
+
+    for (RelFieldCollation fc: collation.getFieldCollations() ) {
       FieldReference fr = new FieldReference(childFields.get(fc.getFieldIndex()), ExpressionPosition.UNKNOWN);
       orderExpr.add(new Ordering(fc.getDirection(), fr, fc.nullDirection));
     }
-    
+
     return orderExpr;
   }
 
@@ -53,20 +55,31 @@ public class PrelUtil {
    */
   public static LogicalExpression getHashExpression(List<DistributionField> fields, RelDataType rowType) {
     assert fields.size() > 0;
-    
+
     final List<String> childFields = rowType.getFieldNames();
-    
-    FieldReference fr = new FieldReference(childFields.get(fields.get(0).getFieldId()), ExpressionPosition.UNKNOWN);    
+
+    FieldReference fr = new FieldReference(childFields.get(fields.get(0).getFieldId()), ExpressionPosition.UNKNOWN);
     FunctionCall func = new FunctionCall("hash",  ImmutableList.of((LogicalExpression)fr), ExpressionPosition.UNKNOWN);
-    
-    for (int i = 1; i<fields.size(); i++) {     
-      fr = new FieldReference(childFields.get(fields.get(i).getFieldId()), ExpressionPosition.UNKNOWN);      
+
+    for (int i = 1; i<fields.size(); i++) {
+      fr = new FieldReference(childFields.get(fields.get(i).getFieldId()), ExpressionPosition.UNKNOWN);
       FunctionCall func2 = new FunctionCall("hash",  ImmutableList.of((LogicalExpression)fr), ExpressionPosition.UNKNOWN);
-      
+
       func = new FunctionCall("xor", ImmutableList.of((LogicalExpression)func, (LogicalExpression)func2), ExpressionPosition.UNKNOWN);
     }
-    
+
     return func;
   }
+
+
+  public static PhysicalOperator removeSvIfRequired(PhysicalOperator child, SelectionVectorMode... allowed){
+    SelectionVectorMode current = child.getSVMode();
+    for(SelectionVectorMode m : allowed){
+      if(current == m) return child;
+    }
+    return new SelectionVectorRemover(child);
+  }
+
+
 
 }

@@ -60,10 +60,10 @@
     "pop" : "project",
     "@id" : 5,
     "exprs" : [ {
-      "ref" : "output.ps_partkey",
+      "ref" : "ps_partkey",
       "expr" : "ps_partkey"
     }, {
-      "ref" : "output.ps_suppkey",
+      "ref" : "ps_suppkey",
       "expr" : "ps_suppkey"
     } ],
     "child" : 4
@@ -108,16 +108,16 @@
     "pop" : "project",
     "@id" : 10,
     "exprs" : [ {
-      "ref" : "output.l_partkey",
+      "ref" : "l_partkey",
       "expr" : "l_partkey"
     }, {
-      "ref" : "output.l_suppkey",
+      "ref" : "l_suppkey",
       "expr" : "l_suppkey"
     }, {
-      "ref" : "output.ps_partkey",
+      "ref" : "ps_partkey",
       "expr" : "ps_partkey"
     }, {
-      "ref" : "output.ps_suppkey",
+      "ref" : "ps_suppkey",
       "expr" : "ps_suppkey"
     } ],
     "child" : 9

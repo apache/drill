@@ -66,7 +66,7 @@ public class TestMergingReceiver extends PopUnitTestBase {
           List<Object> row = Lists.newArrayList();
           batchLoader.load(b.getHeader().getDef(), b.getData());
           for (VectorWrapper<?> vw : batchLoader)
-            row.add(vw.getValueVector().getField().getName() + ":" + vw.getValueVector().getAccessor().getObject(valueIdx));
+            row.add(vw.getValueVector().getField().toExpr() + ":" + vw.getValueVector().getAccessor().getObject(valueIdx));
           for (Object cell : row) {
             if (cell == null) {
               System.out.print("<null>    ");
@@ -79,6 +79,8 @@ public class TestMergingReceiver extends PopUnitTestBase {
           }
           System.out.println();
         }
+        b.release();
+        batchLoader.clear();
       }
       assertEquals(200, count);
     }
@@ -108,8 +110,8 @@ public class TestMergingReceiver extends PopUnitTestBase {
           List<Object> row = Lists.newArrayList();
           batchLoader.load(b.getHeader().getDef(), b.getData());
           for (VectorWrapper vw : batchLoader) {
-            row.add(vw.getValueVector().getField().getName() + ":" + vw.getValueVector().getAccessor().getObject(valueIdx));
-            if (vw.getValueVector().getField().getName().equals("blue")) {
+            row.add(vw.getValueVector().getField().toExpr() + ":" + vw.getValueVector().getAccessor().getObject(valueIdx));
+            if (vw.getValueVector().getField().getAsSchemaPath().getRootSegment().getPath().equals("blue")) {
               // assert order is ascending
               if (((Long)vw.getValueVector().getAccessor().getObject(valueIdx)).longValue() == 0) continue; // ignore initial 0's from sort
               if (lastBlueValue != null)
@@ -125,6 +127,8 @@ public class TestMergingReceiver extends PopUnitTestBase {
           }
           System.out.println();
         }
+        b.release();
+        batchLoader.clear();
       }
       assertEquals(400, count);
     }
@@ -153,7 +157,7 @@ public class TestMergingReceiver extends PopUnitTestBase {
           List<Object> row = Lists.newArrayList();
           batchLoader.load(b.getHeader().getDef(), b.getData());
           for (VectorWrapper vw : batchLoader)
-            row.add(vw.getValueVector().getField().getName() + ":" + vw.getValueVector().getAccessor().getObject(valueIdx));
+            row.add(vw.getValueVector().getField().toExpr() + ":" + vw.getValueVector().getAccessor().getObject(valueIdx));
           for (Object cell : row) {
             if (cell == null) {
               System.out.print("<null>    ");
@@ -166,6 +170,8 @@ public class TestMergingReceiver extends PopUnitTestBase {
           }
           System.out.println();
         }
+        b.release();
+        batchLoader.clear();
       }
       assertEquals(100, count);
     }

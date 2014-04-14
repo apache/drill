@@ -58,12 +58,12 @@ public class DrillRuleSets {
       // Add support for WHERE style joins.
       PushFilterPastProjectRule.INSTANCE,
       PushFilterPastJoinRule.FILTER_ON_JOIN,
-      PushJoinThroughJoinRule.RIGHT, 
-      PushJoinThroughJoinRule.LEFT, 
+      PushJoinThroughJoinRule.RIGHT,
+      PushJoinThroughJoinRule.LEFT,
       // End supprot for WHERE style joins.
-      
+
       //Add back rules
-      
+
       ExpandConversionRule.INSTANCE,
 //      SwapJoinRule.INSTANCE,
       RemoveDistinctRule.INSTANCE,
@@ -80,7 +80,7 @@ public class DrillRuleSets {
 //      SwapJoinRule.INSTANCE, //
 //      PushJoinThroughJoinRule.RIGHT, //
 //      PushJoinThroughJoinRule.LEFT, //
-//      PushSortPastProjectRule.INSTANCE, //      
+//      PushSortPastProjectRule.INSTANCE, //
 
       ////////////////////////////////
       DrillScanRule.INSTANCE,
@@ -91,10 +91,10 @@ public class DrillRuleSets {
       DrillLimitRule.INSTANCE,
       DrillSortRule.INSTANCE,
       DrillJoinRule.INSTANCE,
-      DrillUnionRule.INSTANCE,      
+      DrillUnionRule.INSTANCE,
       MergeProjectRule.INSTANCE
       ));
-  
+
   public static final RuleSet DRILL_PHYSICAL_MEM = new DrillRuleSet(ImmutableSet.of( //
 //      DrillScanRule.INSTANCE,
 //      DrillFilterRule.INSTANCE,
@@ -115,8 +115,9 @@ public class DrillRuleSets {
       StreamAggPrule.INSTANCE,
       MergeJoinPrule.INSTANCE,
       FilterPrule.INSTANCE,
-      LimitPrule.INSTANCE,
-      PushLimitToTopN.INSTANCE
+      LimitPrule.INSTANCE
+
+//      PushLimitToTopN.INSTANCE
 
 //    ExpandConversionRule.INSTANCE,
 //    SwapJoinRule.INSTANCE,
@@ -135,14 +136,14 @@ public class DrillRuleSets {
 //    SwapJoinRule.INSTANCE, //
 //    PushJoinThroughJoinRule.RIGHT, //
 //    PushJoinThroughJoinRule.LEFT, //
-//    PushSortPastProjectRule.INSTANCE, //      
+//    PushSortPastProjectRule.INSTANCE, //
     ));
-  
+
   public static final RuleSet DRILL_PHYSICAL_DISK = new DrillRuleSet(ImmutableSet.of( //
       ProjectPrule.INSTANCE
-  
+
     ));
-  
+
   private static class DrillRuleSet implements RuleSet{
     final ImmutableSet<RelOptRule> rules;
 

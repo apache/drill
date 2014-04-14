@@ -17,8 +17,9 @@
  */
 package org.apache.drill.exec.rpc.user;
 
+import java.io.IOException;
+
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.channel.Channel;
 import io.netty.channel.EventLoopGroup;
@@ -26,18 +27,19 @@ import io.netty.channel.EventLoopGroup;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.physical.impl.materialize.QueryWritableBatch;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
+import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.proto.UserProtos.BitToUserHandshake;
 import org.apache.drill.exec.proto.UserProtos.RequestResults;
 import org.apache.drill.exec.proto.UserProtos.RpcType;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
 import org.apache.drill.exec.proto.UserProtos.UserToBitHandshake;
+import org.apache.drill.exec.rpc.Acks;
 import org.apache.drill.exec.rpc.BasicServer;
 import org.apache.drill.exec.rpc.ProtobufLengthDecoder;
 import org.apache.drill.exec.rpc.RemoteConnection;
 import org.apache.drill.exec.rpc.Response;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
-import org.apache.drill.exec.rpc.data.DataProtobufLengthDecoder;
 import org.apache.drill.exec.work.user.UserWorker;
 
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -93,21 +95,35 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
         throw new RpcException("Failure while decoding RequestResults body.", e);
       }
 
+    case RpcType.CANCEL_QUERY_VALUE:
+      logger.warn("Cancel requested but not supported yet.");
+      return new Response(RpcType.ACK, Acks.OK);
+
     default:
       throw new UnsupportedOperationException(String.format("UserServer received rpc of unknown type.  Type was %d.", rpcType));
     }
 
   }
 
-  
+
   public class UserClientConnection extends RemoteConnection {
+
+    private UserSession session;
     public UserClientConnection(Channel channel) {
       super(channel);
     }
 
+    void setUser(UserCredentials credentials) throws IOException{
+      session = new UserSession(this, credentials, worker.getSchemaFactory());
+    }
+
+    public UserSession getSession(){
+      return session;
+    }
+
     public void sendResult(RpcOutcomeListener<Ack> listener, QueryWritableBatch result){
 //      logger.debug("Sending result to client with {}", result);
-      
+
       send(listener, this, RpcType.QUERY_RESULT, result.getHeader(), Ack.class, result.getBuffers());
     }
 
@@ -122,15 +138,16 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
   public UserClientConnection initRemoteConnection(Channel channel) {
     return new UserClientConnection(channel);
   }
-  
+
   @Override
-  protected ServerHandshakeHandler<UserToBitHandshake> getHandshakeHandler(UserClientConnection connection) {
+  protected ServerHandshakeHandler<UserToBitHandshake> getHandshakeHandler(final UserClientConnection connection) {
     return new ServerHandshakeHandler<UserToBitHandshake>(RpcType.HANDSHAKE, UserToBitHandshake.PARSER){
 
       @Override
       public MessageLite getHandshakeResponse(UserToBitHandshake inbound) throws Exception {
 //        logger.debug("Handling handshake from user to bit. {}", inbound);
         if(inbound.getRpcVersion() != UserRpcConfig.RPC_VERSION) throw new RpcException(String.format("Invalid rpc version.  Expected %d, actual %d.", inbound.getRpcVersion(), UserRpcConfig.RPC_VERSION));
+        connection.setUser(inbound.getCredentials());
         return BitToUserHandshake.newBuilder().setRpcVersion(UserRpcConfig.RPC_VERSION).build();
       }
 

@@ -403,6 +403,20 @@ public final class UserProtos {
      * <code>optional int32 rpc_version = 3;</code>
      */
     int getRpcVersion();
+
+    // optional .exec.shared.UserCredentials credentials = 4;
+    /**
+     * <code>optional .exec.shared.UserCredentials credentials = 4;</code>
+     */
+    boolean hasCredentials();
+    /**
+     * <code>optional .exec.shared.UserCredentials credentials = 4;</code>
+     */
+    org.apache.drill.exec.proto.UserBitShared.UserCredentials getCredentials();
+    /**
+     * <code>optional .exec.shared.UserCredentials credentials = 4;</code>
+     */
+    org.apache.drill.exec.proto.UserBitShared.UserCredentialsOrBuilder getCredentialsOrBuilder();
   }
   /**
    * Protobuf type {@code exec.user.UserToBitHandshake}
@@ -474,6 +488,19 @@ public final class UserProtos {
             case 24: {
               bitField0_ |= 0x00000004;
               rpcVersion_ = input.readInt32();
+              break;
+            }
+            case 34: {
+              org.apache.drill.exec.proto.UserBitShared.UserCredentials.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000008) == 0x00000008)) {
+                subBuilder = credentials_.toBuilder();
+              }
+              credentials_ = input.readMessage(org.apache.drill.exec.proto.UserBitShared.UserCredentials.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(credentials_);
+                credentials_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000008;
               break;
             }
           }
@@ -564,10 +591,33 @@ public final class UserProtos {
       return rpcVersion_;
     }
 
+    // optional .exec.shared.UserCredentials credentials = 4;
+    public static final int CREDENTIALS_FIELD_NUMBER = 4;
+    private org.apache.drill.exec.proto.UserBitShared.UserCredentials credentials_;
+    /**
+     * <code>optional .exec.shared.UserCredentials credentials = 4;</code>
+     */
+    public boolean hasCredentials() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <code>optional .exec.shared.UserCredentials credentials = 4;</code>
+     */
+    public org.apache.drill.exec.proto.UserBitShared.UserCredentials getCredentials() {
+      return credentials_;
+    }
+    /**
+     * <code>optional .exec.shared.UserCredentials credentials = 4;</code>
+     */
+    public org.apache.drill.exec.proto.UserBitShared.UserCredentialsOrBuilder getCredentialsOrBuilder() {
+      return credentials_;
+    }
+
     private void initFields() {
       channel_ = org.apache.drill.exec.proto.UserBitShared.RpcChannel.USER;
       supportListening_ = false;
       rpcVersion_ = 0;
+      credentials_ = org.apache.drill.exec.proto.UserBitShared.UserCredentials.getDefaultInstance();
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -590,6 +640,9 @@ public final class UserProtos {
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         output.writeInt32(3, rpcVersion_);
       }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeMessage(4, credentials_);
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -610,6 +663,10 @@ public final class UserProtos {
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(3, rpcVersion_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(4, credentials_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -719,6 +776,7 @@ public final class UserProtos {
       }
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          getCredentialsFieldBuilder();
         }
       }
       private static Builder create() {
@@ -733,6 +791,12 @@ public final class UserProtos {
         bitField0_ = (bitField0_ & ~0x00000002);
         rpcVersion_ = 0;
         bitField0_ = (bitField0_ & ~0x00000004);
+        if (credentialsBuilder_ == null) {
+          credentials_ = org.apache.drill.exec.proto.UserBitShared.UserCredentials.getDefaultInstance();
+        } else {
+          credentialsBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000008);
         return this;
       }
 
@@ -773,6 +837,14 @@ public final class UserProtos {
           to_bitField0_ |= 0x00000004;
         }
         result.rpcVersion_ = rpcVersion_;
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        if (credentialsBuilder_ == null) {
+          result.credentials_ = credentials_;
+        } else {
+          result.credentials_ = credentialsBuilder_.build();
+        }
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -797,6 +869,9 @@ public final class UserProtos {
         }
         if (other.hasRpcVersion()) {
           setRpcVersion(other.getRpcVersion());
+        }
+        if (other.hasCredentials()) {
+          mergeCredentials(other.getCredentials());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -925,6 +1000,123 @@ public final class UserProtos {
         rpcVersion_ = 0;
         onChanged();
         return this;
+      }
+
+      // optional .exec.shared.UserCredentials credentials = 4;
+      private org.apache.drill.exec.proto.UserBitShared.UserCredentials credentials_ = org.apache.drill.exec.proto.UserBitShared.UserCredentials.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserBitShared.UserCredentials, org.apache.drill.exec.proto.UserBitShared.UserCredentials.Builder, org.apache.drill.exec.proto.UserBitShared.UserCredentialsOrBuilder> credentialsBuilder_;
+      /**
+       * <code>optional .exec.shared.UserCredentials credentials = 4;</code>
+       */
+      public boolean hasCredentials() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>optional .exec.shared.UserCredentials credentials = 4;</code>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.UserCredentials getCredentials() {
+        if (credentialsBuilder_ == null) {
+          return credentials_;
+        } else {
+          return credentialsBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .exec.shared.UserCredentials credentials = 4;</code>
+       */
+      public Builder setCredentials(org.apache.drill.exec.proto.UserBitShared.UserCredentials value) {
+        if (credentialsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          credentials_ = value;
+          onChanged();
+        } else {
+          credentialsBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000008;
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.UserCredentials credentials = 4;</code>
+       */
+      public Builder setCredentials(
+          org.apache.drill.exec.proto.UserBitShared.UserCredentials.Builder builderForValue) {
+        if (credentialsBuilder_ == null) {
+          credentials_ = builderForValue.build();
+          onChanged();
+        } else {
+          credentialsBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000008;
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.UserCredentials credentials = 4;</code>
+       */
+      public Builder mergeCredentials(org.apache.drill.exec.proto.UserBitShared.UserCredentials value) {
+        if (credentialsBuilder_ == null) {
+          if (((bitField0_ & 0x00000008) == 0x00000008) &&
+              credentials_ != org.apache.drill.exec.proto.UserBitShared.UserCredentials.getDefaultInstance()) {
+            credentials_ =
+              org.apache.drill.exec.proto.UserBitShared.UserCredentials.newBuilder(credentials_).mergeFrom(value).buildPartial();
+          } else {
+            credentials_ = value;
+          }
+          onChanged();
+        } else {
+          credentialsBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000008;
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.UserCredentials credentials = 4;</code>
+       */
+      public Builder clearCredentials() {
+        if (credentialsBuilder_ == null) {
+          credentials_ = org.apache.drill.exec.proto.UserBitShared.UserCredentials.getDefaultInstance();
+          onChanged();
+        } else {
+          credentialsBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000008);
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.UserCredentials credentials = 4;</code>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.UserCredentials.Builder getCredentialsBuilder() {
+        bitField0_ |= 0x00000008;
+        onChanged();
+        return getCredentialsFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .exec.shared.UserCredentials credentials = 4;</code>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.UserCredentialsOrBuilder getCredentialsOrBuilder() {
+        if (credentialsBuilder_ != null) {
+          return credentialsBuilder_.getMessageOrBuilder();
+        } else {
+          return credentials_;
+        }
+      }
+      /**
+       * <code>optional .exec.shared.UserCredentials credentials = 4;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserBitShared.UserCredentials, org.apache.drill.exec.proto.UserBitShared.UserCredentials.Builder, org.apache.drill.exec.proto.UserBitShared.UserCredentialsOrBuilder> 
+          getCredentialsFieldBuilder() {
+        if (credentialsBuilder_ == null) {
+          credentialsBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              org.apache.drill.exec.proto.UserBitShared.UserCredentials, org.apache.drill.exec.proto.UserBitShared.UserCredentials.Builder, org.apache.drill.exec.proto.UserBitShared.UserCredentialsOrBuilder>(
+                  credentials_,
+                  getParentForChildren(),
+                  isClean());
+          credentials_ = null;
+        }
+        return credentialsBuilder_;
       }
 
       // @@protoc_insertion_point(builder_scope:exec.user.UserToBitHandshake)
@@ -5207,37 +5399,39 @@ public final class UserProtos {
   static {
     java.lang.String[] descriptorData = {
       "\n\nUser.proto\022\texec.user\032\017SchemaDef.proto" +
-      "\032\023UserBitShared.proto\"t\n\022UserToBitHandsh" +
-      "ake\022.\n\007channel\030\001 \001(\0162\027.exec.shared.RpcCh" +
-      "annel:\004USER\022\031\n\021support_listening\030\002 \001(\010\022\023" +
-      "\n\013rpc_version\030\003 \001(\005\"S\n\016RequestResults\022&\n" +
-      "\010query_id\030\001 \001(\0132\024.exec.shared.QueryId\022\031\n" +
-      "\021maximum_responses\030\002 \001(\005\"o\n\010RunQuery\0221\n\014" +
-      "results_mode\030\001 \001(\0162\033.exec.user.QueryResu" +
-      "ltsMode\022\"\n\004type\030\002 \001(\0162\024.exec.user.QueryT" +
-      "ype\022\014\n\004plan\030\003 \001(\t\")\n\022BitToUserHandshake\022",
-      "\023\n\013rpc_version\030\002 \001(\005\"7\n\nNodeStatus\022\017\n\007no" +
-      "de_id\030\001 \001(\005\022\030\n\020memory_footprint\030\002 \001(\003\"\331\003" +
-      "\n\013QueryResult\0226\n\013query_state\030\001 \001(\0162!.exe" +
-      "c.user.QueryResult.QueryState\022&\n\010query_i" +
-      "d\030\002 \001(\0132\024.exec.shared.QueryId\022\025\n\ris_last" +
-      "_chunk\030\003 \001(\010\022\021\n\trow_count\030\004 \001(\005\022\024\n\014recor" +
-      "ds_scan\030\005 \001(\003\022\025\n\rrecords_error\030\006 \001(\003\022\027\n\017" +
-      "submission_time\030\007 \001(\003\022*\n\013node_status\030\010 \003" +
-      "(\0132\025.exec.user.NodeStatus\022(\n\005error\030\t \003(\013" +
-      "2\031.exec.shared.DrillPBError\022(\n\003def\030\n \001(\013",
-      "2\033.exec.shared.RecordBatchDef\022\026\n\016schema_" +
-      "changed\030\013 \001(\010\"b\n\nQueryState\022\013\n\007PENDING\020\000" +
-      "\022\013\n\007RUNNING\020\001\022\r\n\tCOMPLETED\020\002\022\014\n\010CANCELED" +
-      "\020\003\022\n\n\006FAILED\020\004\022\021\n\rUNKNOWN_QUERY\020\005*\270\001\n\007Rp" +
-      "cType\022\r\n\tHANDSHAKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE" +
-      "\020\002\022\r\n\tRUN_QUERY\020\003\022\020\n\014CANCEL_QUERY\020\004\022\023\n\017R" +
-      "EQUEST_RESULTS\020\005\022\020\n\014QUERY_RESULT\020\006\022\020\n\014QU" +
-      "ERY_HANDLE\020\007\022\026\n\022REQ_META_FUNCTIONS\020\010\022\026\n\022" +
-      "RESP_FUNCTION_LIST\020\t*/\n\tQueryType\022\007\n\003SQL" +
-      "\020\001\022\013\n\007LOGICAL\020\002\022\014\n\010PHYSICAL\020\003*#\n\020QueryRe",
-      "sultsMode\022\017\n\013STREAM_FULL\020\001B+\n\033org.apache" +
-      ".drill.exec.protoB\nUserProtosH\001"
+      "\032\023UserBitShared.proto\"\247\001\n\022UserToBitHands" +
+      "hake\022.\n\007channel\030\001 \001(\0162\027.exec.shared.RpcC" +
+      "hannel:\004USER\022\031\n\021support_listening\030\002 \001(\010\022" +
+      "\023\n\013rpc_version\030\003 \001(\005\0221\n\013credentials\030\004 \001(" +
+      "\0132\034.exec.shared.UserCredentials\"S\n\016Reque" +
+      "stResults\022&\n\010query_id\030\001 \001(\0132\024.exec.share" +
+      "d.QueryId\022\031\n\021maximum_responses\030\002 \001(\005\"o\n\010" +
+      "RunQuery\0221\n\014results_mode\030\001 \001(\0162\033.exec.us" +
+      "er.QueryResultsMode\022\"\n\004type\030\002 \001(\0162\024.exec",
+      ".user.QueryType\022\014\n\004plan\030\003 \001(\t\")\n\022BitToUs" +
+      "erHandshake\022\023\n\013rpc_version\030\002 \001(\005\"7\n\nNode" +
+      "Status\022\017\n\007node_id\030\001 \001(\005\022\030\n\020memory_footpr" +
+      "int\030\002 \001(\003\"\331\003\n\013QueryResult\0226\n\013query_state" +
+      "\030\001 \001(\0162!.exec.user.QueryResult.QueryStat" +
+      "e\022&\n\010query_id\030\002 \001(\0132\024.exec.shared.QueryI" +
+      "d\022\025\n\ris_last_chunk\030\003 \001(\010\022\021\n\trow_count\030\004 " +
+      "\001(\005\022\024\n\014records_scan\030\005 \001(\003\022\025\n\rrecords_err" +
+      "or\030\006 \001(\003\022\027\n\017submission_time\030\007 \001(\003\022*\n\013nod" +
+      "e_status\030\010 \003(\0132\025.exec.user.NodeStatus\022(\n",
+      "\005error\030\t \003(\0132\031.exec.shared.DrillPBError\022" +
+      "(\n\003def\030\n \001(\0132\033.exec.shared.RecordBatchDe" +
+      "f\022\026\n\016schema_changed\030\013 \001(\010\"b\n\nQueryState\022" +
+      "\013\n\007PENDING\020\000\022\013\n\007RUNNING\020\001\022\r\n\tCOMPLETED\020\002" +
+      "\022\014\n\010CANCELED\020\003\022\n\n\006FAILED\020\004\022\021\n\rUNKNOWN_QU" +
+      "ERY\020\005*\270\001\n\007RpcType\022\r\n\tHANDSHAKE\020\000\022\007\n\003ACK\020" +
+      "\001\022\013\n\007GOODBYE\020\002\022\r\n\tRUN_QUERY\020\003\022\020\n\014CANCEL_" +
+      "QUERY\020\004\022\023\n\017REQUEST_RESULTS\020\005\022\020\n\014QUERY_RE" +
+      "SULT\020\006\022\020\n\014QUERY_HANDLE\020\007\022\026\n\022REQ_META_FUN" +
+      "CTIONS\020\010\022\026\n\022RESP_FUNCTION_LIST\020\t*/\n\tQuer",
+      "yType\022\007\n\003SQL\020\001\022\013\n\007LOGICAL\020\002\022\014\n\010PHYSICAL\020" +
+      "\003*#\n\020QueryResultsMode\022\017\n\013STREAM_FULL\020\001B+" +
+      "\n\033org.apache.drill.exec.protoB\nUserProto" +
+      "sH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -5249,7 +5443,7 @@ public final class UserProtos {
           internal_static_exec_user_UserToBitHandshake_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_user_UserToBitHandshake_descriptor,
-              new java.lang.String[] { "Channel", "SupportListening", "RpcVersion", });
+              new java.lang.String[] { "Channel", "SupportListening", "RpcVersion", "Credentials", });
           internal_static_exec_user_RequestResults_descriptor =
             getDescriptor().getMessageTypes().get(1);
           internal_static_exec_user_RequestResults_fieldAccessorTable = new

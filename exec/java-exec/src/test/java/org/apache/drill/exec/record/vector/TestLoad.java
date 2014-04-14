@@ -73,7 +73,7 @@ public class TestLoad {
       index += byteBufs[i].writerIndex();
     }
     byteBuf.writerIndex(bytes);
-    
+
     batchLoader.load(writableBatch.getDef(), byteBuf);
     boolean firstColumn = true;
     int recordCount = 0;
@@ -83,7 +83,7 @@ public class TestLoad {
       } else {
         System.out.print("\t");
       }
-      System.out.print(v.getField().getName());
+      System.out.print(v.getField().toExpr());
       System.out.print("[");
       System.out.print(v.getField().getType().getMinorType());
       System.out.print("]");

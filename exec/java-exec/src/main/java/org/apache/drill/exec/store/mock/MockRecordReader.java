@@ -57,11 +57,11 @@ public class MockRecordReader implements RecordReader {
 
   private ValueVector getVector(String name, MajorType type, int length) {
     assert context != null : "Context shouldn't be null.";
-    MaterializedField f = MaterializedField.create(new SchemaPath(name, ExpressionPosition.UNKNOWN), type);
+    MaterializedField f = MaterializedField.create(SchemaPath.getSimplePath(name), type);
     ValueVector v;
     v = TypeHelper.getNewVector(f, context.getAllocator());
     AllocationHelper.allocate(v, length, 50, 4);
-    
+
     return v;
 
   }
@@ -88,17 +88,17 @@ public class MockRecordReader implements RecordReader {
   @Override
   public int next() {
     if(recordsRead >= this.config.getRecords()) return 0;
-    
+
     int recordSetSize = Math.min(batchRecordCount, this.config.getRecords() - recordsRead);
-    
+
     recordsRead += recordSetSize;
     for(ValueVector v : valueVectors){
       AllocationHelper.allocate(v, recordSetSize, 50, 10);
-      
+
 //      logger.debug(String.format("MockRecordReader:  Generating %d records of random data for VV of type %s.", recordSetSize, v.getClass().getName()));
       ValueVector.Mutator m = v.getMutator();
       m.generateTestData(recordSetSize);
-      
+
     }
     return recordSetSize;
   }

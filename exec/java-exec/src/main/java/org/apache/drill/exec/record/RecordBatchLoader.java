@@ -61,13 +61,14 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
 //    logger.debug("Loading record batch with def {} and data {}", def, buf);
     this.valueCount = def.getRecordCount();
     boolean schemaChanged = schema == null;
-
+//    logger.info("Load, ThreadID: {}", Thread.currentThread().getId(), new RuntimeException("For Stack Trace Only"));
+//    System.out.println("Load, ThreadId: " + Thread.currentThread().getId());
     Map<FieldDef, ValueVector> oldFields = Maps.newHashMap();
     for(VectorWrapper<?> w : container){
       ValueVector v = w.getValueVector();
       oldFields.put(v.getField().getDef(), v);
     }
-    
+
     VectorContainer newVectors = new VectorContainer();
 
     List<FieldMetadata> fields = def.getFieldList();
@@ -114,10 +115,10 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
   public TypedFieldId getValueVectorId(SchemaPath path) {
     return container.getValueVectorId(path);
   }
-  
-  
-  
-//  
+
+
+
+//
 //  @SuppressWarnings("unchecked")
 //  public <T extends ValueVector> T getValueVectorId(int fieldId, Class<?> clazz) {
 //    ValueVector v = container.get(fieldId);
@@ -138,7 +139,7 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
   public VectorWrapper<?> getValueAccessorById(int fieldId, Class<?> clazz){
     return container.getValueAccessorById(fieldId, clazz);
   }
-  
+
   public WritableBatch getWritableBatch(){
     boolean isSV2 = (schema.getSelectionVectorMode() == BatchSchema.SelectionVectorMode.TWO_BYTE);
     return WritableBatch.getBatchNoHVWrap(valueCount, container, isSV2);

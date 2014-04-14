@@ -17,98 +17,79 @@
  */
 package org.apache.drill.common.expression;
 
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import org.apache.drill.common.expression.ValueExpressions.CollisionBehavior;
+import org.antlr.runtime.ANTLRStringStream;
+import org.antlr.runtime.CommonTokenStream;
+import org.antlr.runtime.RecognitionException;
+import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.expression.PathSegment.NameSegment;
+import org.apache.drill.common.expression.parser.ExprLexer;
+import org.apache.drill.common.expression.parser.ExprParser;
+import org.apache.drill.common.expression.parser.ExprParser.parse_return;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.Types;
 
-import com.google.common.base.Joiner;
+import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.google.common.collect.Iterators;
-import com.google.protobuf.DescriptorProtos.UninterpretedOption.NamePart;
 
 public class SchemaPath extends LogicalExpressionBase {
 
-  // reads well in RegexBuddy
-  private static final String ENTIRE_REGEX = "^\n" + "(?:                # first match required\n"
-      + "\\[\\d+\\]             # array index only\n" + "|\n" + "'?\n" + "[^\\.\\[\\+\\-\\!\\]\\}]+  # identifier\n"
-      + "'?\n" + "(?:\\[\\d+\\])?\n" + ")\n" + "[\\+\\-\\!\\]\\}]?\n" +
+  private final NameSegment rootSegment;
 
-      "# secondary matches (starts with dot)\n" + "(?:\n" + "\\.\n" + "(?:                # first match required\n"
-      + "\\[\\d+\\]             # array index only\n" + "|\n" + "'?\n" + "[^\\.\\[\\+\\-\\!\\]\\}]+  # identifier\n"
-      + "'?\n" + "(?:\\[\\d+\\])?\n" + ")\n" + "[\\+\\-\\!\\]\\}]?\n" +
 
-      ")*$";
+  public static SchemaPath getSimplePath(String name){
+    return getCompoundPath(name);
+  }
 
-  // reads well in RegexBuddy
-  private static final String SEGMENT_REGEX = "(?:\n" + "\\[(\\d+)\\]\n" + "|\n" + "'?\n"
-      + "([^\\.\\[\\+\\-\\!\\]\\}]+)  # identifier\n" + "'?\n" + ")\n"
-      + "([\\+\\-\\!\\]\\}]?)         # collision type";
-  private static final int GROUP_INDEX = 1;
-  private static final int GROUP_PATH_SEGMENT = 2;
-  private static final int GROUP_COLLISION = 3;
+  public static SchemaPath getCompoundPath(String... strings){
+    List<String> paths = Arrays.asList(strings);
+    Collections.reverse(paths);
+    NameSegment s = null;
+    for(String p : paths){
+      s = new NameSegment(p);
+    }
+    return new SchemaPath(s);
+  }
 
-  private final static Pattern SEGMENT_PATTERN = Pattern.compile(SEGMENT_REGEX, Pattern.COMMENTS);
-  private final static Pattern ENTIRE_PATTERN = Pattern.compile(ENTIRE_REGEX, Pattern.COMMENTS);
 
-  private final CharSequence originalPath;
-  private final PathSegment rootSegment;
+
+  /**
+   *
+   * @param simpleName
+   */
+  @Deprecated
+  public SchemaPath(String simpleName, ExpressionPosition pos){
+    super(pos);
+    this.rootSegment = new NameSegment(simpleName);
+    if(simpleName.contains(".")) throw new IllegalStateException("This is deprecated and only supports simpe paths.");
+  }
 
   public SchemaPath(SchemaPath path){
     super(path.getPosition());
-    this.originalPath = path.originalPath;
     this.rootSegment = path.rootSegment;
   }
 
-  public SchemaPath(String str){
-    this(str, ExpressionPosition.UNKNOWN);
-  }
-  
-  public SchemaPath(CharSequence str, ExpressionPosition pos) {
-    super(pos);
-
-    if (!ENTIRE_PATTERN.matcher(str).matches())
-      throw new IllegalArgumentException("Identifier doesn't match expected pattern.");
-    this.originalPath = str;
-    Matcher m = SEGMENT_PATTERN.matcher(str);
-    PathSegment r = null;
-    PathSegment previous = null;
-    PathSegment current;
-    while (m.find()) {
-      CollisionBehavior col = (m.start(GROUP_COLLISION) != -1) ? CollisionBehavior.find(m.group(GROUP_COLLISION))
-          : CollisionBehavior.DEFAULT;
-
-      if (m.start(GROUP_INDEX) != -1) {
-        String d = m.group(GROUP_INDEX);
-        current = new PathSegment.ArraySegment(Integer.parseInt(d), col);
-      } else {
-        String i = m.group(GROUP_PATH_SEGMENT);
-        current = new PathSegment.NameSegment(i, col);
-      }
-      if (previous == null) {
-        r = current;
-      } else {
-        previous.setChild(current);
-      }
-      previous = current;
-    }
-
-    rootSegment = r;
-
-  }
-  
-  private SchemaPath(SchemaPath parent, String[] childPaths){
+  public SchemaPath(NameSegment rootSegment){
     super(ExpressionPosition.UNKNOWN);
-    SchemaPath p = new SchemaPath(Joiner.on('.').join(childPaths), ExpressionPosition.UNKNOWN);
-    this.originalPath = parent.originalPath + "." + p.originalPath;
-    PathSegment seg = parent.getRootSegment().clone();
-    this.rootSegment = seg;
-    while(!seg.isLastPath()) seg = seg.getChild();
-    seg.setChild(p.getRootSegment());
+    this.rootSegment = rootSegment;
+  }
+
+  public SchemaPath(NameSegment rootSegment, ExpressionPosition pos){
+    super(pos);
+    this.rootSegment = rootSegment;
   }
 
   @Override
@@ -116,16 +97,13 @@ public class SchemaPath extends LogicalExpressionBase {
     return visitor.visitSchemaPath(this, value);
   }
 
-  public SchemaPath getChild(String... childPaths){
-    return new SchemaPath(this, childPaths);
-  }
-  
-  public PathSegment getRootSegment() {
-    return rootSegment;
+  public SchemaPath getChild(String childPath){
+    rootSegment.cloneWithNewChild(new NameSegment(childPath));
+    return new SchemaPath(rootSegment);
   }
 
-  public CharSequence getPath() {
-    return originalPath;
+  public NameSegment getRootSegment() {
+    return rootSegment;
   }
 
   @Override
@@ -147,7 +125,7 @@ public class SchemaPath extends LogicalExpressionBase {
       return true;
     if (obj == null)
       return false;
-    if (getClass() != obj.getClass())
+    if ( !(obj instanceof SchemaPath))
       return false;
     SchemaPath other = (SchemaPath) obj;
     if (rootSegment == null) {
@@ -163,9 +141,54 @@ public class SchemaPath extends LogicalExpressionBase {
     return Iterators.emptyIterator();
   }
 
+
   @Override
   public String toString() {
-    return "SchemaPath [rootSegment=" + rootSegment + "]";
+    String expr = ExpressionStringBuilder.toString(this);
+    return "SchemaPath ["+ expr + "]";
+  }
+
+  public String toExpr(){
+    return ExpressionStringBuilder.toString(this);
+  }
+
+
+  public static class De extends StdDeserializer<SchemaPath> {
+    DrillConfig config;
+
+    public De(DrillConfig config) {
+      super(LogicalExpression.class);
+      this.config = config;
+    }
+
+    @Override
+    public SchemaPath deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException,
+        JsonProcessingException {
+      String expr = jp.getText();
+
+      if (expr == null || expr.isEmpty())
+        return null;
+      try {
+        // logger.debug("Parsing expression string '{}'", expr);
+        ExprLexer lexer = new ExprLexer(new ANTLRStringStream(expr));
+        CommonTokenStream tokens = new CommonTokenStream(lexer);
+        ExprParser parser = new ExprParser(tokens);
+
+        //TODO: move functionregistry and error collector to injectables.
+        //ctxt.findInjectableValue(valueId, forProperty, beanInstance)
+        parse_return ret = parser.parse();
+
+        // ret.e.resolveAndValidate(expr, errorCollector);
+        if(ret.e instanceof SchemaPath){
+          return (SchemaPath) ret.e;
+        }else{
+          throw new IllegalStateException("Schema path is not a valid format.");
+        }
+      } catch (RecognitionException e) {
+        throw new RuntimeException(e);
+      }
+    }
+
   }
 
 }

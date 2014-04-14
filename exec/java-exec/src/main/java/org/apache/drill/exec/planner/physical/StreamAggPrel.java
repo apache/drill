@@ -67,21 +67,21 @@ public class StreamAggPrel extends AggregateRelBase implements Prel{
       throw new AssertionError(e);
     }
   }
-   
+
   @Override
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
     // Prel child = (Prel) this.getChild();
-    
+
     final List<String> childFields = getChild().getRowType().getFieldNames();
     final List<String> fields = getRowType().getFieldNames();
     List<NamedExpression> keys = Lists.newArrayList();
     List<NamedExpression> exprs = Lists.newArrayList();
-    
+
     for (int group : BitSets.toIter(groupSet)) {
       FieldReference fr = new FieldReference(childFields.get(group), ExpressionPosition.UNKNOWN);
       keys.add(new NamedExpression(fr, fr));
     }
-    
+
     for (Ord<AggregateCall> aggCall : Ord.zip(aggCalls)) {
       FieldReference ref = new FieldReference(fields.get(groupSet.cardinality() + aggCall.i));
       LogicalExpression expr = toDrill(aggCall.e, childFields, new DrillParseContext());
@@ -90,22 +90,21 @@ public class StreamAggPrel extends AggregateRelBase implements Prel{
 
     Prel child = (Prel) this.getChild();
     StreamingAggregate g = new StreamingAggregate(child.getPhysicalOperator(creator), keys.toArray(new NamedExpression[keys.size()]), exprs.toArray(new NamedExpression[exprs.size()]), 1.0f);
-    creator.addPhysicalOperator(g);
-    
-    return g;    
+
+    return g;
 
   }
-  
+
   private LogicalExpression toDrill(AggregateCall call, List<String> fn, DrillParseContext pContext) {
     List<LogicalExpression> args = Lists.newArrayList();
     for(Integer i : call.getArgList()){
       args.add(new FieldReference(fn.get(i)));
     }
-    
+
     // for count(1).
     if(args.isEmpty()) args.add(new ValueExpressions.LongExpression(1l));
     LogicalExpression expr = new FunctionCall(call.getAggregation().getName().toLowerCase(), args, ExpressionPosition.UNKNOWN );
     return expr;
   }
- 
+
 }

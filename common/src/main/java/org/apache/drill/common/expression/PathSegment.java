@@ -17,38 +17,42 @@
  */
 package org.apache.drill.common.expression;
 
-import org.apache.drill.common.expression.ValueExpressions.CollisionBehavior;
 
 
 
 public abstract class PathSegment{
 
-  protected final ValueExpressions.CollisionBehavior collision;
   protected PathSegment child;
 
-  protected PathSegment(CollisionBehavior collision){
-    this.collision = collision;
-  }
-  
+  public abstract PathSegment cloneWithNewChild(PathSegment segment);
   public abstract PathSegment clone();
-  
+
   public static class ArraySegment extends PathSegment{
     private final int index;
-    
-    public ArraySegment(int index, ValueExpressions.CollisionBehavior collision){
-      super(collision);
+
+    public ArraySegment(String numberAsText, PathSegment child){
+      this.child = child;
+      this.index = Integer.parseInt(numberAsText);
+    }
+
+    public ArraySegment(int index, PathSegment child){
+      this.child = child;
+      this.index = index;
+    }
+
+    public ArraySegment(int index){
       if(index < 0 ) throw new IllegalArgumentException();
       this.index = index;
     }
-    
+
     public int getIndex(){
       return index;
     }
-    
+
     public boolean isArray(){
       return true;
     }
-    
+
     public boolean isNamed(){
       return false;
     }
@@ -60,37 +64,49 @@ public abstract class PathSegment{
 
     @Override
     public String toString() {
-      return "ArraySegment [index=" + index + ", getCollisionBehavior()=" + getCollisionBehavior() + ", getChild()="
-          + getChild() + "]";
+      return "ArraySegment [index=" + index + ", getChild()=" + getChild() + "]";
     }
 
     @Override
     public PathSegment clone() {
-      PathSegment seg = new ArraySegment(index, collision);
+      PathSegment seg = new ArraySegment(index);
       if(child != null) seg.setChild(child.clone());
       return seg;
     }
-    
+
+    public ArraySegment cloneWithNewChild(PathSegment newChild){
+      ArraySegment seg = new ArraySegment(index);
+      if(child != null){
+        seg.setChild(child.cloneWithNewChild(newChild));
+      }else{
+        seg.setChild(newChild);
+      }
+      return seg;
+    }
   }
-  
-  
-  
+
+
+
   public static class NameSegment extends PathSegment{
     private final String path;
-    
-    public NameSegment(CharSequence n, ValueExpressions.CollisionBehavior collision){
-      super(collision);
+
+    public NameSegment(CharSequence n, PathSegment child){
+      this.child = child;
       this.path = n.toString();
     }
-    
-    public String getPath(){
-      return path;        
+
+    public NameSegment(CharSequence n){
+      this.path = n.toString();
     }
-    
+
+    public String getPath(){
+      return path;
+    }
+
     public boolean isArray(){
       return false;
     }
-    
+
     public boolean isNamed(){
       return true;
     }
@@ -102,15 +118,14 @@ public abstract class PathSegment{
 
     @Override
     public String toString() {
-      return "NameSegment [path=" + path + ", getCollisionBehavior()=" + getCollisionBehavior() + ", getChild()="
-          + getChild() + "]";
+      return "NameSegment [path=" + path + ", getChild()=" + getChild() + "]";
     }
 
     @Override
     public int hashCode() {
       final int prime = 31;
       int result = 1;
-      result = prime * result + ((path == null) ? 0 : path.hashCode());
+      result = prime * result + ((path == null) ? 0 : path.toLowerCase().hashCode());
       return result;
     }
 
@@ -132,16 +147,27 @@ public abstract class PathSegment{
     }
 
     @Override
-    public PathSegment clone() {
-      PathSegment s = new NameSegment(this.path, this.collision);
+    public NameSegment clone() {
+      NameSegment s = new NameSegment(this.path);
       if(child != null) s.setChild(child.clone());
       return s;
     }
-    
-    
-    
+
+
+    @Override
+    public NameSegment cloneWithNewChild(PathSegment newChild) {
+      NameSegment s = new NameSegment(this.path);
+      if(child != null){
+        s.setChild(child.cloneWithNewChild(newChild));
+      }else{
+        s.setChild(newChild);
+      }
+      return s;
+    }
+
+
   }
-  
+
   public NameSegment getNameSegment(){
     throw new UnsupportedOperationException();
   }
@@ -150,12 +176,8 @@ public abstract class PathSegment{
   }
   public abstract boolean isArray();
   public abstract boolean isNamed();
-  
-  
-  public ValueExpressions.CollisionBehavior getCollisionBehavior(){
-    return collision;
-  }
-  
+
+
   public boolean isLastPath(){
     return child == null;
   }
@@ -168,6 +190,6 @@ public abstract class PathSegment{
     this.child = child;
   }
 
-  
-  
+
+
 }

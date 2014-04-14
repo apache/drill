@@ -30,19 +30,23 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import mockit.Injectable;
+
+import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.ExpressionPosition;
-import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
+import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.proto.BitControl;
 import org.apache.drill.exec.proto.UserProtos;
+import org.apache.drill.exec.proto.UserProtos.QueryType;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.rpc.user.UserServer;
@@ -74,7 +78,7 @@ import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
-public class ParquetRecordReaderTest {
+public class ParquetRecordReaderTest extends BaseTestQuery{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetRecordReaderTest.class);
 
   static boolean VERBOSE_DEBUG = false;
@@ -127,58 +131,36 @@ public class ParquetRecordReaderTest {
     testParquetFullEngineRemote(planName, fileName, 1, numberRowGroups, recordsPerRowGroup);
   }
 
-  
+
   public void testParquetFullEngineLocalPath(String planFileName, String filename, int numberOfTimesRead /* specified in json plan */, int numberOfRowGroups, int recordsPerRowGroup) throws Exception{
     testParquetFullEngineLocalText(Files.toString(FileUtils.getResourceAsFile(planFileName), Charsets.UTF_8), filename, numberOfTimesRead, numberOfRowGroups, recordsPerRowGroup);
   }
-  
+
   //specific tests should call this method, but it is not marked as a test itself intentionally
   public void testParquetFullEngineLocalText(String planText, String filename, int numberOfTimesRead /* specified in json plan */, int numberOfRowGroups, int recordsPerRowGroup) throws Exception{
-    
-    RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
+    testFull(QueryType.LOGICAL, planText, filename, numberOfTimesRead, numberOfRowGroups, recordsPerRowGroup);
+  }
 
-    DrillConfig config = DrillConfig.create();
+  private void testFull(QueryType type, String planText, String filename, int numberOfTimesRead /* specified in json plan */, int numberOfRowGroups, int recordsPerRowGroup) throws Exception{
 
-    try(Drillbit bit1 = new Drillbit(config, serviceSet); DrillClient client = new DrillClient(config, serviceSet.getCoordinator());){
-      bit1.run();
-      client.connect();
-      RecordBatchLoader batchLoader = new RecordBatchLoader(client.getAllocator());
-      HashMap<String, FieldInfo> fields = new HashMap<>();
-      ParquetTestProperties props = new ParquetTestProperties(numberRowGroups, recordsPerRowGroup, DEFAULT_BYTES_PER_PAGE, fields);
-      TestFileGenerator.populateFieldInfoMap(props);
-      ParquetResultListener resultListener = new ParquetResultListener(batchLoader, props, numberOfTimesRead, true);
-      Stopwatch watch = new Stopwatch().start();
-      client.runQuery(UserProtos.QueryType.LOGICAL, planText, resultListener);
-      resultListener.getResults();
-      System.out.println(String.format("Took %d ms to run query", watch.elapsed(TimeUnit.MILLISECONDS)));
-
-    }
+//    RecordBatchLoader batchLoader = new RecordBatchLoader(getAllocator());
+    HashMap<String, FieldInfo> fields = new HashMap<>();
+    ParquetTestProperties props = new ParquetTestProperties(numberRowGroups, recordsPerRowGroup, DEFAULT_BYTES_PER_PAGE, fields);
+    TestFileGenerator.populateFieldInfoMap(props);
+    ParquetResultListener resultListener = new ParquetResultListener(getAllocator(), props, numberOfTimesRead, true);
+    Stopwatch watch = new Stopwatch().start();
+    testWithListener(type, planText, resultListener);
+    resultListener.getResults();
+//    batchLoader.clear();
+    System.out.println(String.format("Took %d ms to run query", watch.elapsed(TimeUnit.MILLISECONDS)));
 
   }
 
 
   //use this method to submit physical plan
   public void testParquetFullEngineLocalTextDistributed(String planName, String filename, int numberOfTimesRead /* specified in json plan */, int numberOfRowGroups, int recordsPerRowGroup) throws Exception{
-
-    RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
-
-    DrillConfig config = DrillConfig.create();
-
-    try(Drillbit bit1 = new Drillbit(config, serviceSet); DrillClient client = new DrillClient(config, serviceSet.getCoordinator());){
-      bit1.run();
-      client.connect();
-      RecordBatchLoader batchLoader = new RecordBatchLoader(client.getAllocator());
-      HashMap<String, FieldInfo> fields = new HashMap<>();
-      ParquetTestProperties props = new ParquetTestProperties(numberRowGroups, recordsPerRowGroup, DEFAULT_BYTES_PER_PAGE, fields);
-      TestFileGenerator.populateFieldInfoMap(props);
-      ParquetResultListener resultListener = new ParquetResultListener(batchLoader, props, numberOfTimesRead, true);
-      Stopwatch watch = new Stopwatch().start();
-      client.runQuery(UserProtos.QueryType.PHYSICAL, Files.toString(FileUtils.getResourceAsFile(planName), Charsets.UTF_8), resultListener);
-      resultListener.getResults();
-      System.out.println(String.format("Took %d ms to run query", watch.elapsed(TimeUnit.MILLISECONDS)));
-
-    }
-
+    String planText = Files.toString(FileUtils.getResourceAsFile(planName), Charsets.UTF_8);
+    testFull(QueryType.PHYSICAL, planText, filename, numberOfTimesRead, numberOfRowGroups, recordsPerRowGroup);
   }
 
   public String pad(String value, int length) {
@@ -197,20 +179,12 @@ public class ParquetRecordReaderTest {
   }
 
   public void testParquetFullEngineRemote(String plan, String filename, int numberOfTimesRead /* specified in json plan */, int numberOfRowGroups, int recordsPerRowGroup) throws Exception{
-
-    DrillConfig config = DrillConfig.create();
-
-    try(DrillClient client = new DrillClient(config);){
-      client.connect();
-      RecordBatchLoader batchLoader = new RecordBatchLoader(client.getAllocator());
-      HashMap<String, FieldInfo> fields = new HashMap<>();
-      ParquetTestProperties props = new ParquetTestProperties(numberRowGroups, recordsPerRowGroup, DEFAULT_BYTES_PER_PAGE, fields);
-      TestFileGenerator.populateFieldInfoMap(props);
-      ParquetResultListener resultListener = new ParquetResultListener(batchLoader, props, numberOfTimesRead, true);
-      client.runQuery(UserProtos.QueryType.PHYSICAL, Files.toString(FileUtils.getResourceAsFile(plan), Charsets.UTF_8), resultListener);
-      resultListener.getResults();
-    }
-
+    HashMap<String, FieldInfo> fields = new HashMap<>();
+    ParquetTestProperties props = new ParquetTestProperties(numberRowGroups, recordsPerRowGroup, DEFAULT_BYTES_PER_PAGE, fields);
+    TestFileGenerator.populateFieldInfoMap(props);
+    ParquetResultListener resultListener = new ParquetResultListener(getAllocator(), props, numberOfTimesRead, true);
+    testWithListener(UserProtos.QueryType.PHYSICAL, Files.toString(FileUtils.getResourceAsFile(plan), Charsets.UTF_8), resultListener);
+    resultListener.getResults();
   }
 
   class MockOutputMutator implements OutputMutator {
@@ -242,6 +216,11 @@ public class ParquetRecordReaderTest {
 
     List<ValueVector> getAddFields() {
       return addFields;
+    }
+
+    @Override
+    public <T extends ValueVector> T addField(MaterializedField field, Class<T> clazz) throws SchemaChangeException {
+      return null;
     }
   }
 
@@ -427,10 +406,11 @@ public class ParquetRecordReaderTest {
     int totalRowCount = 0;
 
     FileSystem fs = new CachedSingleFileSystem(fileName);
+    BufferAllocator allocator = new TopLevelAllocator();
     for(int i = 0; i < 25; i++){
       ParquetRecordReader rr = new ParquetRecordReader(context, 256000, fileName, 0, fs,
           new CodecFactoryExposer(dfsConfig), f.getParquetMetadata(), columns);
-      TestOutputMutator mutator = new TestOutputMutator();
+      TestOutputMutator mutator = new TestOutputMutator(allocator);
       rr.setup(mutator);
       Stopwatch watch = new Stopwatch();
       watch.start();
@@ -442,6 +422,8 @@ public class ParquetRecordReaderTest {
       System.out.println(String.format("Time completed: %s. ", watch.elapsed(TimeUnit.MILLISECONDS)));
       rr.cleanup();
     }
+
+    allocator.close();
     System.out.println(String.format("Total row count %s", totalRowCount));
   }
 
@@ -462,28 +444,23 @@ public class ParquetRecordReaderTest {
   public void testParquetFullEngineEventBased(boolean testValues, boolean generateNew, String plan, String readEntries, String filename,
                                               int numberOfTimesRead /* specified in json plan */, ParquetTestProperties props,
                                               boolean runAsLogicalPlan) throws Exception{
-    RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
     if (generateNew) TestFileGenerator.generateParquetFile(filename, props);
-    DrillConfig config = DrillConfig.create();
-    try(Drillbit bit1 = new Drillbit(config, serviceSet); DrillClient client = new DrillClient(config, serviceSet.getCoordinator());){
-      bit1.run();
-      client.connect();
-      RecordBatchLoader batchLoader = new RecordBatchLoader(bit1.getContext().getAllocator());
-      ParquetResultListener resultListener = new ParquetResultListener(batchLoader, props, numberOfTimesRead, testValues);
-      long C = System.nanoTime();
-      String planText = Files.toString(FileUtils.getResourceAsFile(plan), Charsets.UTF_8);
-      // substitute in the string for the read entries, allows reuse of the plan file for several tests
-      if (readEntries != null) {
-        planText = planText.replaceFirst( "&REPLACED_IN_PARQUET_TEST&", readEntries);
-      }
-      if (runAsLogicalPlan)
-        client.runQuery(UserProtos.QueryType.LOGICAL, planText, resultListener);
-      else
-        client.runQuery(UserProtos.QueryType.PHYSICAL, planText, resultListener);
-      resultListener.getResults();
-      long D = System.nanoTime();
-      System.out.println(String.format("Took %f s to run query", (float)(D-C) / 1E9));
+
+    ParquetResultListener resultListener = new ParquetResultListener(getAllocator(), props, numberOfTimesRead, testValues);
+    long C = System.nanoTime();
+    String planText = Files.toString(FileUtils.getResourceAsFile(plan), Charsets.UTF_8);
+    // substitute in the string for the read entries, allows reuse of the plan file for several tests
+    if (readEntries != null) {
+      planText = planText.replaceFirst( "&REPLACED_IN_PARQUET_TEST&", readEntries);
     }
+    if (runAsLogicalPlan){
+      this.testWithListener(QueryType.LOGICAL, planText, resultListener);
+    }else{
+      this.testWithListener(QueryType.PHYSICAL, planText, resultListener);
+    }
+    resultListener.getResults();
+    long D = System.nanoTime();
+    System.out.println(String.format("Took %f s to run query", (float)(D-C) / 1E9));
   }
 
 }

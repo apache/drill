@@ -139,7 +139,7 @@ public class HiveRecordReader implements RecordReader {
         List<Integer> columnIds = Lists.newArrayList();
         columnNames = Lists.newArrayList();
         for (FieldReference field : columns) {
-          String columnName = field.getPath().toString();
+          String columnName = field.getRootSegment().getPath();
           if (!tableColumns.contains(columnName)) {
             if (partition != null && partitionNames.contains(columnName)) {
               selectedPartitionNames.add(columnName);
@@ -195,14 +195,14 @@ public class HiveRecordReader implements RecordReader {
     try {
       for (int i = 0; i < columnNames.size(); i++) {
         PrimitiveCategory pCat = primitiveCategories.get(i);
-        MaterializedField field = MaterializedField.create(new SchemaPath(columnNames.get(i), ExpressionPosition.UNKNOWN), getMajorType(pCat));
+        MaterializedField field = MaterializedField.create(SchemaPath.getSimplePath(columnNames.get(i)), getMajorType(pCat));
         ValueVector vv = TypeHelper.getNewVector(field, context.getAllocator());
         vectors.add(vv);
         output.addField(vv);
       }
       for (int i = 0; i < selectedPartitionNames.size(); i++) {
         String type = selectedPartitionTypes.get(i);
-        MaterializedField field = MaterializedField.create(new SchemaPath(selectedPartitionNames.get(i), ExpressionPosition.UNKNOWN), getMajorType(type));
+        MaterializedField field = MaterializedField.create(SchemaPath.getSimplePath(columnNames.get(i)), getMajorType(type));
         ValueVector vv = TypeHelper.getNewVector(field, context.getAllocator());
         pVectors.add(vv);
         output.addField(vv);

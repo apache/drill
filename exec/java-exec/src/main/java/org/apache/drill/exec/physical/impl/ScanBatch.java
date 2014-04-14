@@ -23,6 +23,7 @@ import java.util.Map;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
@@ -168,6 +169,15 @@ public class ScanBatch implements RecordBatch {
       ScanBatch.this.schemaChanged = true;
     }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T extends ValueVector> T addField(MaterializedField field, Class<T> clazz) throws SchemaChangeException {
+      ValueVector v = TypeHelper.getNewVector(field, context.getAllocator());
+      if(!clazz.isAssignableFrom(v.getClass())) throw new SchemaChangeException(String.format("The class that was provided %s does not correspond to the expected vector type of %s.", clazz.getSimpleName(), v.getClass().getSimpleName()));
+      addField(v);
+      return (T) v;
+    }
+
   }
 
   @Override
@@ -179,7 +189,7 @@ public class ScanBatch implements RecordBatch {
   public WritableBatch getWritableBatch() {
     return WritableBatch.get(this);
   }
-  
+
   public void cleanup(){
     container.clear();
   }

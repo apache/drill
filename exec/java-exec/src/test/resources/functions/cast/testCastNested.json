@@ -31,7 +31,7 @@
 		{ ref: "int_float4_add", expr:"cast(intcol as bigint) + cast(float4col as bigint)" },
 		{ ref: "bigintcol", expr:"bigintcol" },
 		{ ref: "bigint2varchar2int", expr:"cast(cast(bigintcol as varchar(8)) as int)" },
-                { ref: "add_cast", expr:"cast(\"100\" as int) + cast(cast(200 as varchar(8)) as int)"}
+                { ref: "add_cast", expr:"cast('100' as int) + cast(cast(200 as varchar(8)) as int)"}
             ]
         },
         {

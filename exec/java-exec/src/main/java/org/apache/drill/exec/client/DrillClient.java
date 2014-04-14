@@ -59,7 +59,7 @@ import com.google.common.util.concurrent.SettableFuture;
  */
 public class DrillClient implements Closeable, ConnectionThrottle{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillClient.class);
-  
+
   DrillConfig config;
   private UserClient client;
   private volatile ClusterCoordinator clusterCoordinator;
@@ -67,7 +67,8 @@ public class DrillClient implements Closeable, ConnectionThrottle{
   private final TopLevelAllocator allocator = new TopLevelAllocator(Long.MAX_VALUE);
   private int reconnectTimes;
   private int reconnectDelay;
-  
+  private final boolean ownsZkConnection;
+
   public DrillClient() {
     this(DrillConfig.create());
   }
@@ -79,25 +80,26 @@ public class DrillClient implements Closeable, ConnectionThrottle{
   public DrillClient(DrillConfig config) {
     this(config, null);
   }
-  
+
   public DrillClient(DrillConfig config, ClusterCoordinator coordinator){
+    this.ownsZkConnection = coordinator == null;
     this.config = config;
     this.clusterCoordinator = coordinator;
     this.reconnectTimes = config.getInt(ExecConstants.BIT_RETRY_TIMES);
     this.reconnectDelay = config.getInt(ExecConstants.BIT_RETRY_DELAY);
   }
-  
+
   public DrillConfig getConfig(){
     return config;
   }
-  
+
   @Override
   public void setAutoRead(boolean enableAutoRead) {
     client.setAutoRead(enableAutoRead);
   }
 
-  
-  
+
+
   /**
    * Connects the client to a Drillbit server
    *
@@ -106,11 +108,11 @@ public class DrillClient implements Closeable, ConnectionThrottle{
   public void connect() throws RpcException {
     connect((String) null);
   }
-    
+
   public synchronized void connect(String connect) throws RpcException {
     if (connected) return;
 
-    if (clusterCoordinator == null) {
+    if (ownsZkConnection) {
       try {
         this.clusterCoordinator = new ZKClusterCoordinator(this.config, connect);
         this.clusterCoordinator.start(10000);
@@ -171,6 +173,16 @@ public class DrillClient implements Closeable, ConnectionThrottle{
    */
   public void close(){
     this.client.close();
+    if(ownsZkConnection){
+      try {
+        this.clusterCoordinator.close();
+      } catch (IOException e) {
+        logger.warn("Error while closing Cluster Coordinator.", e);
+      }
+    }
+
+    // TODO: fix tests that fail when this is called.
+    //allocator.close();
     connected = false;
   }
 
@@ -187,12 +199,12 @@ public class DrillClient implements Closeable, ConnectionThrottle{
     client.submitQuery(listener,query);
     return listener.getResults();
   }
-  
+
   public void cancelQuery(QueryId id){
     client.send(RpcType.CANCEL_QUERY, id, Ack.class);
   }
-  
-  
+
+
   /**
    * Submits a Logical plan for direct execution (bypasses parsing)
    *
@@ -203,7 +215,7 @@ public class DrillClient implements Closeable, ConnectionThrottle{
   public void runQuery(QueryType type, String plan, UserResultsListener resultsListener){
     client.submitQuery(resultsListener, newBuilder().setResultsMode(STREAM_FULL).setType(type).setPlan(plan).build());
   }
-  
+
   private class ListHoldingResultsListener implements UserResultsListener {
     private Vector<QueryResultBatch> results = new Vector<QueryResultBatch>();
     private SettableFuture<List<QueryResultBatch>> future = SettableFuture.create();
@@ -245,7 +257,7 @@ public class DrillClient implements Closeable, ConnectionThrottle{
         future.set(results);
       }
     }
-  
+
     public List<QueryResultBatch> getResults() throws RpcException{
       try{
         return future.get();
@@ -258,7 +270,7 @@ public class DrillClient implements Closeable, ConnectionThrottle{
     public void queryIdArrived(QueryId queryId) {
     }
   }
-  
+
   private class FutureHandler extends AbstractCheckedFuture<Void, RpcException> implements RpcConnectionHandler<ServerConnection>, DrillRpcFuture<Void>{
 
     protected FutureHandler() {
@@ -278,7 +290,7 @@ public class DrillClient implements Closeable, ConnectionThrottle{
     private SettableFuture<Void> getInner(){
       return (SettableFuture<Void>) delegate();
     }
-    
+
     @Override
     protected RpcException mapException(Exception e) {
       return RpcException.mapException(e);
@@ -288,7 +300,7 @@ public class DrillClient implements Closeable, ConnectionThrottle{
     public ByteBuf getBuffer() {
       return null;
     }
-    
+
   }
 
 }

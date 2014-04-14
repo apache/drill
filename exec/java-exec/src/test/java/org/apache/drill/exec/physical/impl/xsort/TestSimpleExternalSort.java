@@ -41,8 +41,8 @@ import static org.junit.Assert.assertTrue;
 public class TestSimpleExternalSort extends PopUnitTestBase {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestSimpleExternalSort.class);
   DrillConfig c = DrillConfig.create();
-  
-  
+
+
   @Test
   public void sortOneKeyDescendingMergeSort() throws Throwable{
     RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
@@ -85,6 +85,8 @@ public class TestSimpleExternalSort extends PopUnitTestBase {
           assertTrue(String.format("%d > %d", previousBigInt, a1.get(i)), previousBigInt >= a1.get(i));
           previousBigInt = a1.get(i);
         }
+        loader.clear();
+        b.release();
       }
 
       System.out.println(String.format("Sorted %,d records in %d batches.", recordCount, batchCount));
@@ -136,6 +138,8 @@ public class TestSimpleExternalSort extends PopUnitTestBase {
           assertTrue(String.format("%d < %d", previousBigInt, a1.get(i)), previousBigInt >= a1.get(i));
           previousBigInt = a1.get(i);
         }
+        loader.clear();
+        b.release();
       }
 
       System.out.println(String.format("Sorted %,d records in %d batches.", recordCount, batchCount));

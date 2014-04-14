@@ -23,10 +23,10 @@
             child: 1,
             pop:"project",
             exprs: [
-              { ref: "issimilar", expr:" similar(\"abc\", \"abc\")" },
-              { ref: "issimilar", expr:" similar(\"abc\", \"a\")" },
-              { ref: "issimilar", expr:" similar(\"abc\", \"%(b|d)%\")" },
-              { ref: "issimilar", expr:" similar(\"abc\", \"(b|c)%\")" }
+              { ref: "issimilar", expr:" similar('abc', 'abc')" },
+              { ref: "issimilar", expr:" similar('abc', 'a')" },
+              { ref: "issimilar", expr:" similar('abc', '%(b|d)%')" },
+              { ref: "issimilar", expr:" similar('abc', '(b|c)%')" }
            ]
         },
         {

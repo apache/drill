@@ -31,8 +31,8 @@
 		{ ref: "int_cast", expr:"cast(intcol as float8)" },
 		{ ref: "bigintcol", expr:"bigintcol"  },
 		{ ref: "bigint_cast", expr:"cast(bigintcol as float8)" },
-		{ ref: "varchar_cast1", expr:"cast(\"1256\" as float8)" },
-		{ ref: "varchar_cast2", expr:"cast(\"12.56\" as float8)" }
+		{ ref: "varchar_cast1", expr:"cast('1256' as float8)" },
+		{ ref: "varchar_cast2", expr:"cast('12.56' as float8)" }
             ]
         },
         {

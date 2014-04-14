@@ -17,11 +17,12 @@
  */
 package org.apache.drill.exec.store;
 
-import net.hydromatic.optiq.Schema;
 import net.hydromatic.optiq.SchemaPlus;
+
+import org.apache.drill.exec.rpc.user.DrillUser;
 
 public interface SchemaFactory {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SchemaFactory.class);
-  
-  public Schema add(SchemaPlus parent);
+
+  public void registerSchemas(DrillUser user, SchemaPlus parent);
 }

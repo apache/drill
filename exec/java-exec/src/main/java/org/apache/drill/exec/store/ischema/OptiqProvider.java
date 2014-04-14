@@ -20,10 +20,10 @@ package org.apache.drill.exec.store.ischema;
 import net.hydromatic.optiq.Schema;
 import net.hydromatic.optiq.SchemaPlus;
 import net.hydromatic.optiq.Table;
+import net.hydromatic.optiq.jdbc.JavaTypeFactoryImpl;
 
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeField;
-import org.eigenbase.sql.type.SqlTypeFactoryImpl;
 import org.eigenbase.sql.type.SqlTypeName;
 
 /**
@@ -41,7 +41,7 @@ public class OptiqProvider  {
   /**
    * Provide data for TABLES table.
    */
-  static public class Tables extends Abstract { 
+  static public class Tables extends Abstract {
     Tables(SchemaPlus root) {
       super(root);
     }
@@ -70,7 +70,7 @@ public class OptiqProvider  {
     }
   }
 
-  
+
 
   /**
    * Provide data for COLUMNS data.
@@ -86,7 +86,7 @@ public class OptiqProvider  {
       String columnName = field.getName();
       RelDataType type = field.getType();
       SqlTypeName sqlType = type.getSqlTypeName();
-      
+
       int position = field.getIndex();
       String nullable;
       if (type.isNullable()) nullable = "YES";
@@ -151,19 +151,19 @@ public class OptiqProvider  {
     public void generateRows() {
 
       // Scan the root schema for subschema, tables, columns.
-      scanSchema(root); 
+      scanSchema(root);
     }
   }
 
 
 
   /**
-   * An OptiqScanner scans the Optiq schema, generating rows for each 
+   * An OptiqScanner scans the Optiq schema, generating rows for each
    * schema, table or column. It is intended to be subclassed, where the
    * subclass does what it needs when visiting a Optiq schema structure.
    */
   // We would really prefer multiple inheritance from both OptiqScanner and PipeProvider,
-  //   but making one a subclass of the other works for now. 
+  //   but making one a subclass of the other works for now.
   //   TODO: Refactor to avoid subclassing of what should be an unrelated class.
   abstract static class OptiqScanner extends PipeProvider {
 
@@ -187,7 +187,7 @@ public class OptiqProvider  {
     protected void scanSchema(SchemaPlus root) {
       scanSchema(root.getName(), root);
     }
-    
+
     /**
      * Recursively scan the schema, invoking the visitor as appropriate.
      * @param schemaPath - the path to the current schema, so far,
@@ -195,7 +195,7 @@ public class OptiqProvider  {
      * @param visitor - the methods to invoke at each entity in the schema.
      */
     private void scanSchema(String schemaPath, Schema schema) {
-      
+
       // If we have an empty schema path, then don't insert a leading dot.
       String separator;
       if (schemaPath == "") separator = "";
@@ -213,18 +213,18 @@ public class OptiqProvider  {
         for (String tableName: schema.getTableNames()) {
           if(visitTableName(schemaPath, tableName)){
             Table table = schema.getTable(tableName);
-            
+
             // Visit the table, and if requested ...
             if (visitTable(schemaPath,  tableName, table)) {
 
               // ... do for each of the table's fields.
-              RelDataType tableRow = table.getRowType(new SqlTypeFactoryImpl()); // TODO: Is this correct?
+              RelDataType tableRow = table.getRowType(new JavaTypeFactoryImpl()); // TODO: Is this correct?
               for (RelDataTypeField field: tableRow.getFieldList()) {
 
                 // Visit the field.
                 visitField(schemaPath,  tableName, field);
               }
-            }            
+            }
           }
         }
       }

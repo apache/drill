@@ -29,7 +29,10 @@ import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
+import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
+import org.apache.drill.exec.rpc.user.DrillUser;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.ClassPathFileSystem;
@@ -39,6 +42,7 @@ import org.apache.hadoop.conf.Configuration;
 
 import com.beust.jcommander.internal.Lists;
 import com.beust.jcommander.internal.Maps;
+
 import org.apache.hadoop.fs.FileSystem;
 
 /**
@@ -56,12 +60,12 @@ public class FileSystemPlugin extends AbstractStoragePlugin{
   private FileSystemConfig config;
   private DrillbitContext context;
   private final DrillFileSystem fs;
-  
+
   public FileSystemPlugin(FileSystemConfig config, DrillbitContext context, String name) throws ExecutionSetupException{
     try{
       this.config = config;
       this.context = context;
-      
+
       Configuration fsConf = new Configuration();
       fsConf.set(FileSystem.FS_DEFAULT_NAME_KEY, config.connection);
       fsConf.set("fs.classpath.impl", ClassPathFileSystem.class.getName());
@@ -73,7 +77,7 @@ public class FileSystemPlugin extends AbstractStoragePlugin{
         matchers.add(p.getMatcher());
         formatPluginsByConfig.put(p.getConfig(), p);
       }
-      
+
       List<WorkspaceSchemaFactory> factories = null;
       if(config.workspaces == null || config.workspaces.isEmpty()){
         factories = Collections.singletonList(new WorkspaceSchemaFactory(this, "default", name, fs, "/", matchers));
@@ -88,12 +92,12 @@ public class FileSystemPlugin extends AbstractStoragePlugin{
       throw new ExecutionSetupException("Failure setting up file system plugin.", e);
     }
   }
-  
+
   @Override
   public boolean supportsRead() {
     return true;
   }
-  
+
   @Override
   public StoragePluginConfig getConfig() {
     return config;
@@ -111,16 +115,16 @@ public class FileSystemPlugin extends AbstractStoragePlugin{
     if(plugin == null) throw new IOException(String.format("Failure getting requested format plugin named '%s'.  It was not one of the format plugins registered.", formatSelection.getFormat()));
     return plugin.getGroupScan(formatSelection.getSelection());
   }
-  
+
   @Override
-  public Schema createAndAddSchema(SchemaPlus parent) {
-    return schemaFactory.add(parent);
+  public void registerSchemas(DrillUser user, SchemaPlus parent) {
+    schemaFactory.registerSchemas(user, parent);
   }
-  
+
   public FormatPlugin getFormatPlugin(String name){
     return formatsByName.get(name);
   }
-  
+
   public FormatPlugin getFormatPlugin(FormatPluginConfig config){
     if(config instanceof NamedFormatPluginConfig){
       return formatsByName.get(((NamedFormatPluginConfig) config).name);

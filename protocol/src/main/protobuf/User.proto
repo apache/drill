@@ -35,7 +35,9 @@ message UserToBitHandshake {
   optional exec.shared.RpcChannel channel = 1 [default = USER];
   optional bool support_listening = 2;
   optional int32 rpc_version = 3;
+  optional exec.shared.UserCredentials credentials = 4;
 }
+
 
 message RequestResults {
   optional exec.shared.QueryId query_id = 1;

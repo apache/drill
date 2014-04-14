@@ -36,8 +36,8 @@ import org.eigenbase.rex.RexNode;
 
 public class ProjectPrel extends DrillProjectRelBase implements Prel{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProjectPrel.class);
-  
-  
+
+
   protected ProjectPrel(RelOptCluster cluster, RelTraitSet traits, RelNode child, List<RexNode> exps,
       RelDataType rowType) {
     super(DRILL_PHYSICAL, cluster, traits, child, exps, rowType);
@@ -51,18 +51,14 @@ public class ProjectPrel extends DrillProjectRelBase implements Prel{
   @Override
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
     Prel child = (Prel) this.getChild();
-    
+
     PhysicalOperator childPOP = child.getPhysicalOperator(creator);
-    
+
     //Currently, Project only accepts "NONE". For other, requires SelectionVectorRemover
-    if (!childPOP.getSVMode().equals(SelectionVectorMode.NONE)) {
-      childPOP = new SelectionVectorRemover(childPOP);
-      creator.addPhysicalOperator(childPOP);
-    }
-    
+    childPOP = PrelUtil.removeSvIfRequired(childPOP, SelectionVectorMode.NONE);
+
     Project p = new Project(this.getProjectExpressions(new DrillParseContext()),  childPOP);
-    creator.addPhysicalOperator(p);
-    
+
     return p;
   }
 

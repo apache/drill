@@ -28,6 +28,7 @@ import net.hydromatic.optiq.SchemaPlus;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.planner.logical.DrillTable;
+import org.apache.drill.exec.rpc.user.DrillUser;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.SchemaFactory;
 import org.apache.drill.exec.store.hive.HiveReadEntry;
@@ -62,7 +63,7 @@ public class HiveSchemaFactory implements SchemaFactory {
   public HiveSchemaFactory(HiveStoragePlugin plugin, String name, HiveConf hiveConf) throws ExecutionSetupException {
     this.schemaName = name;
     this.plugin = plugin;
-    
+
     try {
       this.mClient = new HiveMetaStoreClient(hiveConf);
     } catch (MetaException e) {
@@ -170,22 +171,21 @@ public class HiveSchemaFactory implements SchemaFactory {
   }
 
   @Override
-  public Schema add(SchemaPlus parent) {
+  public void registerSchemas(DrillUser user, SchemaPlus parent) {
     HiveSchema schema = new HiveSchema(schemaName);
     SchemaPlus hPlus = parent.add(schemaName, schema);
     schema.setHolder(hPlus);
-    return schema;
   }
 
   class HiveSchema extends AbstractSchema {
 
     private HiveDatabaseSchema defaultSchema;
-    
+
     public HiveSchema(String name) {
       super(name);
       getSubSchema("default");
     }
-    
+
     @Override
     public Schema getSubSchema(String name) {
       List<String> tables;
@@ -200,16 +200,16 @@ public class HiveSchemaFactory implements SchemaFactory {
         logger.warn("Failure while attempting to access HiveDatabase '{}'.", name, e.getCause());
         return null;
       }
-      
+
     }
-    
+
 
     void setHolder(SchemaPlus plusOfThis){
       for(String s : getSubSchemaNames()){
         plusOfThis.add(s, getSubSchema(s));
       }
     }
-    
+
 
     @Override
     public Set<String> getSubSchemaNames() {
@@ -224,7 +224,7 @@ public class HiveSchemaFactory implements SchemaFactory {
 
     @Override
     public DrillTable getTable(String name) {
-      if(defaultSchema == null){ 
+      if(defaultSchema == null){
         return super.getTable(name);
       }
       return defaultSchema.getTable(name);
@@ -246,13 +246,13 @@ public class HiveSchemaFactory implements SchemaFactory {
         return Collections.emptyList();
       }
     }
-    
+
     DrillTable getDrillTable(String dbName, String t){
       HiveReadEntry entry = getSelectionBaseOnName(dbName, t);
       if(entry == null) return null;
       return new DrillHiveTable(schemaName, plugin, entry);
     }
-    
+
     HiveReadEntry getSelectionBaseOnName(String dbName, String t) {
       if(dbName == null) dbName = "default";
       try{
@@ -262,7 +262,7 @@ public class HiveSchemaFactory implements SchemaFactory {
         return null;
       }
     }
-    
+
   }
 
 

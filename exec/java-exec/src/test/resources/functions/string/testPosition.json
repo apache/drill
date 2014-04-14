@@ -23,14 +23,14 @@
             child: 1,
             pop:"project",
             exprs: [
-              { ref: "col1", expr: "position(\"abc\", \"AabcabcB\")"},
-              { ref: "col2", expr: "position(\"\", \"AabcabcB\")"},
-              { ref: "col3", expr: "position(\"abc\", \"\")"},
-              { ref: "col4", expr: "position(\"\", \"\")"},
-              { ref: "col5", expr: "strpos(\"AabcabcB\", \"abc\")" },
-              { ref: "col6", expr: "strpos(\"\", \"AabcabcB\")"},
-              { ref: "col7", expr: "strpos(\"\", \"abc\")"},
-              { ref: "col8", expr: "strpos(\"\", \"\")"}
+              { ref: "col1", expr: "position('abc', 'AabcabcB')"},
+              { ref: "col2", expr: "position('', 'AabcabcB')"},
+              { ref: "col3", expr: "position('abc', '')"},
+              { ref: "col4", expr: "position('', '')"},
+              { ref: "col5", expr: "strpos('AabcabcB', 'abc')" },
+              { ref: "col6", expr: "strpos('', 'AabcabcB')"},
+              { ref: "col7", expr: "strpos('', 'abc')"},
+              { ref: "col8", expr: "strpos('', '')"}
            ]
         },
         {

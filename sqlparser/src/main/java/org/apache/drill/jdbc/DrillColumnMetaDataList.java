@@ -33,17 +33,17 @@ public class DrillColumnMetaDataList extends BasicList<ColumnMetaData>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillColumnMetaDataList.class);
 
   private ColumnMetaData[] columns = new ColumnMetaData[0];
-  
+
   @Override
   public int size() {
     return columns.length;
   }
-  
+
   @Override
   public ColumnMetaData get(int index) {
     return columns[index];
   }
-  
+
   public void updateColumnMetaData(String catalogName, String schemaName, String tableName, BatchSchema schema){
 
     columns = new ColumnMetaData[schema.getFieldCount()];
@@ -56,11 +56,11 @@ public class DrillColumnMetaDataList extends BasicList<ColumnMetaData>{
           true, // caseSensitive
           false, // searchable
           false, // currency
-          f.getDataMode() == DataMode.OPTIONAL ? ResultSetMetaData.columnNullable : ResultSetMetaData.columnNoNulls, //nullability 
+          f.getDataMode() == DataMode.OPTIONAL ? ResultSetMetaData.columnNullable : ResultSetMetaData.columnNoNulls, //nullability
           !Types.isUnSigned(t), // signed
           10, // display size.
-          f.getName(), // label
-          f.getName(), // columnname
+          f.getAsSchemaPath().getRootSegment().getPath(), // label
+          f.getAsSchemaPath().getRootSegment().getPath(), // columnname
           schemaName, // schemaname
           t.hasPrecision() ? t.getPrecision() : 0, // precision
           t.hasScale() ? t.getScale() : 0, // scale
@@ -77,5 +77,5 @@ public class DrillColumnMetaDataList extends BasicList<ColumnMetaData>{
       columns[i] =col;
     }
   }
-  
+
 }

@@ -59,7 +59,7 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
   private final SortRecordBatchBuilder builder;
   private Sorter sorter;
   private BatchSchema schema;
-  
+
   public SortBatch(Sort popConfig, FragmentContext context, RecordBatch incoming) {
     super(popConfig, context);
     this.incoming = incoming;
@@ -87,8 +87,8 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
     return builder.getSv4();
   }
 
-  
-  
+
+
   @Override
   public void cleanup() {
     super.cleanup();
@@ -105,8 +105,8 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
         return IterOutcome.NONE;
       }
     }
-    
-    
+
+
     try{
       outer: while (true) {
         IterOutcome upstream = incoming.next();
@@ -134,19 +134,19 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
           throw new UnsupportedOperationException();
         }
       }
-      
-      if (schema == null){
+
+      if (schema == null || builder.isEmpty()){
         // builder may be null at this point if the first incoming batch is empty
         return IterOutcome.NONE;
       }
-        
+
       builder.build(context, container);
       sorter = createNewSorter();
       sorter.setup(context, getSelectionVector4(), this.container);
       sorter.sort(getSelectionVector4(), this.container);
 
       return IterOutcome.OK_NEW_SCHEMA;
-      
+
     }catch(SchemaChangeException | ClassTransformationException | IOException ex){
       kill();
       logger.error("Failure during query", ex);
@@ -163,19 +163,19 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
     final MappingSet mainMapping = new MappingSet( (String) null, null, ClassGenerator.DEFAULT_CONSTANT_MAP, ClassGenerator.DEFAULT_SCALAR_MAP);
     final MappingSet leftMapping = new MappingSet("leftIndex", null, ClassGenerator.DEFAULT_CONSTANT_MAP, ClassGenerator.DEFAULT_SCALAR_MAP);
     final MappingSet rightMapping = new MappingSet("rightIndex", null, ClassGenerator.DEFAULT_CONSTANT_MAP, ClassGenerator.DEFAULT_SCALAR_MAP);
-    
+
     return createNewSorter(context, orderings, batch, mainMapping, leftMapping, rightMapping);
   }
-  
+
   public static Sorter createNewSorter(FragmentContext context, List<Ordering> orderings, VectorAccessible batch, MappingSet mainMapping, MappingSet leftMapping, MappingSet rightMapping)
           throws ClassTransformationException, IOException, SchemaChangeException{
     CodeGenerator<Sorter> cg = CodeGenerator.get(Sorter.TEMPLATE_DEFINITION, context.getFunctionRegistry());
     ClassGenerator<Sorter> g = cg.getRoot();
     g.setMappingSet(mainMapping);
-    
+
     for(Ordering od : orderings){
       // first, we rewrite the evaluation stack for each side of the comparison.
-      ErrorCollector collector = new ErrorCollectorImpl(); 
+      ErrorCollector collector = new ErrorCollectorImpl();
       final LogicalExpression expr = ExpressionTreeMaterializer.materialize(od.getExpr(), batch, collector,context.getFunctionRegistry());
       if(collector.hasErrors()) throw new SchemaChangeException("Failure while materializing expression. " + collector.toErrorString());
       g.setMappingSet(leftMapping);
@@ -183,26 +183,26 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
       g.setMappingSet(rightMapping);
       HoldingContainer right = g.addExpr(expr, false);
       g.setMappingSet(mainMapping);
-      
+
       // next we wrap the two comparison sides and add the expression block for the comparison.
       LogicalExpression fh = FunctionGenerationHelper.getComparator(left, right, context.getFunctionRegistry());
       HoldingContainer out = g.addExpr(fh, false);
       JConditional jc = g.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)));
-      
+
       if(od.getDirection() == Direction.ASCENDING){
         jc._then()._return(out.getValue());
       }else{
         jc._then()._return(out.getValue().minus());
       }
     }
-    
+
     g.getEvalBlock()._return(JExpr.lit(0));
-    
+
     return context.getImplementationClass(cg);
 
 
   }
-  
+
   @Override
   public WritableBatch getWritableBatch() {
     throw new UnsupportedOperationException("A sort batch is not writable.");
@@ -213,7 +213,7 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
     incoming.kill();
   }
 
-  
-  
+
+
 
 }

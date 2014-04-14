@@ -40,8 +40,8 @@ import com.google.common.io.Files;
 
 public class TestDistributedFragmentRun extends PopUnitTestBase{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestDistributedFragmentRun.class);
-  
-  @Test 
+
+  @Test
   public void oneBitOneExchangeOneEntryRun() throws Exception{
     RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
@@ -52,10 +52,11 @@ public class TestDistributedFragmentRun extends PopUnitTestBase{
       int count = 0;
       for(QueryResultBatch b : results){
         count += b.getHeader().getRowCount();
+        b.release();
       }
       assertEquals(100, count);
     }
-    
+
 
   }
 
@@ -71,6 +72,7 @@ public class TestDistributedFragmentRun extends PopUnitTestBase{
       int count = 0;
       for(QueryResultBatch b : results){
         count += b.getHeader().getRowCount();
+        b.release();
       }
       assertEquals(200, count);
     }
@@ -89,6 +91,7 @@ public class TestDistributedFragmentRun extends PopUnitTestBase{
             int count = 0;
             for(QueryResultBatch b : results){
                 count += b.getHeader().getRowCount();
+                b.release();
             }
             assertEquals(100, count);
         }
@@ -108,6 +111,7 @@ public class TestDistributedFragmentRun extends PopUnitTestBase{
         int count = 0;
       for(QueryResultBatch b : results){
         count += b.getHeader().getRowCount();
+        b.release();
       }
       assertEquals(200, count);
     }

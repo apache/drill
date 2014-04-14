@@ -59,8 +59,8 @@ import static org.junit.Assert.assertTrue;
 public class TestSimpleTopN extends PopUnitTestBase {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestSimpleTopN.class);
   DrillConfig c = DrillConfig.create();
-  
-  
+
+
   @Test
   public void sortOneKeyAscending() throws Throwable{
     RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
@@ -103,14 +103,16 @@ public class TestSimpleTopN extends PopUnitTestBase {
           assertTrue(previousBigInt <= a1.get(i));
           previousBigInt = a1.get(i);
         }
+        loader.clear();
+        b.release();
       }
 
       System.out.println(String.format("Sorted %,d records in %d batches.", recordCount, batchCount));
 
     }
-    
+
 
   }
-  
+
 
 }

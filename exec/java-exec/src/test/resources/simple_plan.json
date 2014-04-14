@@ -45,11 +45,11 @@
       transforms:[
         {
           ref:"userId",
-          expr:"regex_like('activity.cookie', \"persistent=([^;]*)\")"
+          expr:"regex_like('activity.cookie', 'persistent=([^;]*)')"
         },
         {
           ref:"session",
-          expr:"regex_like('activity.cookie', \"session=([^;]*)\")"
+          expr:"regex_like('activity.cookie', 'session=([^;]*)')"
         }
       ]
     },
@@ -61,11 +61,11 @@
       transforms:[
         {
           ref:"userId",
-          expr:"regex_like('activity.cookie', \"persistent=([^;]*)\")"
+          expr:"regex_like('activity.cookie', 'persistent=([^;]*)')"
         },
         {
           ref:"session",
-          expr:"regex_like('activity.cookie', \"session=([^;]*)\")"
+          expr:"regex_like('activity.cookie', 'session=([^;]*)')"
         }
       ]
     },
@@ -80,7 +80,7 @@
           transforms:[
             {
               ref:"happy",
-              expr:"regex_like('ep2', \"dink\")"
+              expr:"regex_like('ep2', 'dink')"
             }
           ]
         }
@@ -105,7 +105,7 @@
       transforms:[
         {
           ref:"happy",
-          expr:"regex_like('ep2', \"dink\")"
+          expr:"regex_like('ep2', 'dink')"
         }
       ]
     },

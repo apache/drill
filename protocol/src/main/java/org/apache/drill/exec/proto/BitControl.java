@@ -3131,6 +3131,20 @@ public final class BitControl {
      * </pre>
      */
     long getQueryStartTime();
+
+    // optional .exec.shared.UserCredentials credentials = 15;
+    /**
+     * <code>optional .exec.shared.UserCredentials credentials = 15;</code>
+     */
+    boolean hasCredentials();
+    /**
+     * <code>optional .exec.shared.UserCredentials credentials = 15;</code>
+     */
+    org.apache.drill.exec.proto.UserBitShared.UserCredentials getCredentials();
+    /**
+     * <code>optional .exec.shared.UserCredentials credentials = 15;</code>
+     */
+    org.apache.drill.exec.proto.UserBitShared.UserCredentialsOrBuilder getCredentialsOrBuilder();
   }
   /**
    * Protobuf type {@code exec.bit.control.PlanFragment}
@@ -3265,6 +3279,19 @@ public final class BitControl {
             case 112: {
               bitField0_ |= 0x00000800;
               queryStartTime_ = input.readInt64();
+              break;
+            }
+            case 122: {
+              org.apache.drill.exec.proto.UserBitShared.UserCredentials.Builder subBuilder = null;
+              if (((bitField0_ & 0x00001000) == 0x00001000)) {
+                subBuilder = credentials_.toBuilder();
+              }
+              credentials_ = input.readMessage(org.apache.drill.exec.proto.UserBitShared.UserCredentials.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(credentials_);
+                credentials_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00001000;
               break;
             }
           }
@@ -3568,6 +3595,28 @@ public final class BitControl {
       return queryStartTime_;
     }
 
+    // optional .exec.shared.UserCredentials credentials = 15;
+    public static final int CREDENTIALS_FIELD_NUMBER = 15;
+    private org.apache.drill.exec.proto.UserBitShared.UserCredentials credentials_;
+    /**
+     * <code>optional .exec.shared.UserCredentials credentials = 15;</code>
+     */
+    public boolean hasCredentials() {
+      return ((bitField0_ & 0x00001000) == 0x00001000);
+    }
+    /**
+     * <code>optional .exec.shared.UserCredentials credentials = 15;</code>
+     */
+    public org.apache.drill.exec.proto.UserBitShared.UserCredentials getCredentials() {
+      return credentials_;
+    }
+    /**
+     * <code>optional .exec.shared.UserCredentials credentials = 15;</code>
+     */
+    public org.apache.drill.exec.proto.UserBitShared.UserCredentialsOrBuilder getCredentialsOrBuilder() {
+      return credentials_;
+    }
+
     private void initFields() {
       handle_ = org.apache.drill.exec.proto.ExecProtos.FragmentHandle.getDefaultInstance();
       networkCost_ = 0F;
@@ -3581,6 +3630,7 @@ public final class BitControl {
       memInitial_ = 20000000L;
       memMax_ = 20000000000L;
       queryStartTime_ = 0L;
+      credentials_ = org.apache.drill.exec.proto.UserBitShared.UserCredentials.getDefaultInstance();
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -3629,6 +3679,9 @@ public final class BitControl {
       }
       if (((bitField0_ & 0x00000800) == 0x00000800)) {
         output.writeInt64(14, queryStartTime_);
+      }
+      if (((bitField0_ & 0x00001000) == 0x00001000)) {
+        output.writeMessage(15, credentials_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -3686,6 +3739,10 @@ public final class BitControl {
       if (((bitField0_ & 0x00000800) == 0x00000800)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt64Size(14, queryStartTime_);
+      }
+      if (((bitField0_ & 0x00001000) == 0x00001000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(15, credentials_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -3798,6 +3855,7 @@ public final class BitControl {
           getHandleFieldBuilder();
           getAssignmentFieldBuilder();
           getForemanFieldBuilder();
+          getCredentialsFieldBuilder();
         }
       }
       private static Builder create() {
@@ -3842,6 +3900,12 @@ public final class BitControl {
         bitField0_ = (bitField0_ & ~0x00000400);
         queryStartTime_ = 0L;
         bitField0_ = (bitField0_ & ~0x00000800);
+        if (credentialsBuilder_ == null) {
+          credentials_ = org.apache.drill.exec.proto.UserBitShared.UserCredentials.getDefaultInstance();
+        } else {
+          credentialsBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00001000);
         return this;
       }
 
@@ -3930,6 +3994,14 @@ public final class BitControl {
           to_bitField0_ |= 0x00000800;
         }
         result.queryStartTime_ = queryStartTime_;
+        if (((from_bitField0_ & 0x00001000) == 0x00001000)) {
+          to_bitField0_ |= 0x00001000;
+        }
+        if (credentialsBuilder_ == null) {
+          result.credentials_ = credentials_;
+        } else {
+          result.credentials_ = credentialsBuilder_.build();
+        }
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -3983,6 +4055,9 @@ public final class BitControl {
         }
         if (other.hasQueryStartTime()) {
           setQueryStartTime(other.getQueryStartTime());
+        }
+        if (other.hasCredentials()) {
+          mergeCredentials(other.getCredentials());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -4748,6 +4823,123 @@ public final class BitControl {
         return this;
       }
 
+      // optional .exec.shared.UserCredentials credentials = 15;
+      private org.apache.drill.exec.proto.UserBitShared.UserCredentials credentials_ = org.apache.drill.exec.proto.UserBitShared.UserCredentials.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserBitShared.UserCredentials, org.apache.drill.exec.proto.UserBitShared.UserCredentials.Builder, org.apache.drill.exec.proto.UserBitShared.UserCredentialsOrBuilder> credentialsBuilder_;
+      /**
+       * <code>optional .exec.shared.UserCredentials credentials = 15;</code>
+       */
+      public boolean hasCredentials() {
+        return ((bitField0_ & 0x00001000) == 0x00001000);
+      }
+      /**
+       * <code>optional .exec.shared.UserCredentials credentials = 15;</code>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.UserCredentials getCredentials() {
+        if (credentialsBuilder_ == null) {
+          return credentials_;
+        } else {
+          return credentialsBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .exec.shared.UserCredentials credentials = 15;</code>
+       */
+      public Builder setCredentials(org.apache.drill.exec.proto.UserBitShared.UserCredentials value) {
+        if (credentialsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          credentials_ = value;
+          onChanged();
+        } else {
+          credentialsBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00001000;
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.UserCredentials credentials = 15;</code>
+       */
+      public Builder setCredentials(
+          org.apache.drill.exec.proto.UserBitShared.UserCredentials.Builder builderForValue) {
+        if (credentialsBuilder_ == null) {
+          credentials_ = builderForValue.build();
+          onChanged();
+        } else {
+          credentialsBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00001000;
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.UserCredentials credentials = 15;</code>
+       */
+      public Builder mergeCredentials(org.apache.drill.exec.proto.UserBitShared.UserCredentials value) {
+        if (credentialsBuilder_ == null) {
+          if (((bitField0_ & 0x00001000) == 0x00001000) &&
+              credentials_ != org.apache.drill.exec.proto.UserBitShared.UserCredentials.getDefaultInstance()) {
+            credentials_ =
+              org.apache.drill.exec.proto.UserBitShared.UserCredentials.newBuilder(credentials_).mergeFrom(value).buildPartial();
+          } else {
+            credentials_ = value;
+          }
+          onChanged();
+        } else {
+          credentialsBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00001000;
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.UserCredentials credentials = 15;</code>
+       */
+      public Builder clearCredentials() {
+        if (credentialsBuilder_ == null) {
+          credentials_ = org.apache.drill.exec.proto.UserBitShared.UserCredentials.getDefaultInstance();
+          onChanged();
+        } else {
+          credentialsBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00001000);
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.UserCredentials credentials = 15;</code>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.UserCredentials.Builder getCredentialsBuilder() {
+        bitField0_ |= 0x00001000;
+        onChanged();
+        return getCredentialsFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .exec.shared.UserCredentials credentials = 15;</code>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.UserCredentialsOrBuilder getCredentialsOrBuilder() {
+        if (credentialsBuilder_ != null) {
+          return credentialsBuilder_.getMessageOrBuilder();
+        } else {
+          return credentials_;
+        }
+      }
+      /**
+       * <code>optional .exec.shared.UserCredentials credentials = 15;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserBitShared.UserCredentials, org.apache.drill.exec.proto.UserBitShared.UserCredentials.Builder, org.apache.drill.exec.proto.UserBitShared.UserCredentialsOrBuilder> 
+          getCredentialsFieldBuilder() {
+        if (credentialsBuilder_ == null) {
+          credentialsBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              org.apache.drill.exec.proto.UserBitShared.UserCredentials, org.apache.drill.exec.proto.UserBitShared.UserCredentials.Builder, org.apache.drill.exec.proto.UserBitShared.UserCredentialsOrBuilder>(
+                  credentials_,
+                  getParentForChildren(),
+                  isClean());
+          credentials_ = null;
+        }
+        return credentialsBuilder_;
+      }
+
       // @@protoc_insertion_point(builder_scope:exec.bit.control.PlanFragment)
     }
 
@@ -5480,7 +5672,7 @@ public final class BitControl {
       "shared.DrillPBError\022\024\n\014running_time\030\t \001(" +
       "\003\"k\n\rFragmentState\022\013\n\007SENDING\020\000\022\027\n\023AWAIT" +
       "ING_ALLOCATION\020\001\022\013\n\007RUNNING\020\002\022\014\n\010FINISHE" +
-      "D\020\003\022\r\n\tCANCELLED\020\004\022\n\n\006FAILED\020\005\"\342\002\n\014PlanF" +
+      "D\020\003\022\r\n\tCANCELLED\020\004\022\n\n\006FAILED\020\005\"\225\003\n\014PlanF" +
       "ragment\022(\n\006handle\030\001 \001(\0132\030.exec.bit.Fragm",
       "entHandle\022\024\n\014network_cost\030\004 \001(\002\022\020\n\010cpu_c" +
       "ost\030\005 \001(\002\022\021\n\tdisk_cost\030\006 \001(\002\022\023\n\013memory_c" +
@@ -5489,16 +5681,18 @@ public final class BitControl {
       "leaf_fragment\030\t \001(\010\022\'\n\007foreman\030\013 \001(\0132\026.e" +
       "xec.DrillbitEndpoint\022\035\n\013mem_initial\030\014 \001(" +
       "\003:\01020000000\022\034\n\007mem_max\030\r \001(\003:\0132000000000" +
-      "0\022\030\n\020query_start_time\030\016 \001(\003\"f\n\017WorkQueue" +
-      "Status\022(\n\010endpoint\030\001 \001(\0132\026.exec.Drillbit" +
-      "Endpoint\022\024\n\014queue_length\030\002 \001(\005\022\023\n\013report",
-      "_time\030\003 \001(\003*\332\001\n\007RpcType\022\r\n\tHANDSHAKE\020\000\022\007" +
-      "\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\033\n\027REQ_INIATILIZE_F" +
-      "RAGMENT\020\003\022\027\n\023REQ_CANCEL_FRAGMENT\020\006\022\027\n\023RE" +
-      "Q_FRAGMENT_STATUS\020\007\022\022\n\016REQ_BIT_STATUS\020\010\022" +
-      "\030\n\024RESP_FRAGMENT_HANDLE\020\t\022\030\n\024RESP_FRAGME" +
-      "NT_STATUS\020\n\022\023\n\017RESP_BIT_STATUS\020\013B+\n\033org." +
-      "apache.drill.exec.protoB\nBitControlH\001"
+      "0\022\030\n\020query_start_time\030\016 \001(\003\0221\n\013credentia" +
+      "ls\030\017 \001(\0132\034.exec.shared.UserCredentials\"f" +
+      "\n\017WorkQueueStatus\022(\n\010endpoint\030\001 \001(\0132\026.ex",
+      "ec.DrillbitEndpoint\022\024\n\014queue_length\030\002 \001(" +
+      "\005\022\023\n\013report_time\030\003 \001(\003*\332\001\n\007RpcType\022\r\n\tHA" +
+      "NDSHAKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\033\n\027REQ_I" +
+      "NIATILIZE_FRAGMENT\020\003\022\027\n\023REQ_CANCEL_FRAGM" +
+      "ENT\020\006\022\027\n\023REQ_FRAGMENT_STATUS\020\007\022\022\n\016REQ_BI" +
+      "T_STATUS\020\010\022\030\n\024RESP_FRAGMENT_HANDLE\020\t\022\030\n\024" +
+      "RESP_FRAGMENT_STATUS\020\n\022\023\n\017RESP_BIT_STATU" +
+      "S\020\013B+\n\033org.apache.drill.exec.protoB\nBitC" +
+      "ontrolH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -5528,7 +5722,7 @@ public final class BitControl {
           internal_static_exec_bit_control_PlanFragment_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_bit_control_PlanFragment_descriptor,
-              new java.lang.String[] { "Handle", "NetworkCost", "CpuCost", "DiskCost", "MemoryCost", "FragmentJson", "Assignment", "LeafFragment", "Foreman", "MemInitial", "MemMax", "QueryStartTime", });
+              new java.lang.String[] { "Handle", "NetworkCost", "CpuCost", "DiskCost", "MemoryCost", "FragmentJson", "Assignment", "LeafFragment", "Foreman", "MemInitial", "MemMax", "QueryStartTime", "Credentials", });
           internal_static_exec_bit_control_WorkQueueStatus_descriptor =
             getDescriptor().getMessageTypes().get(4);
           internal_static_exec_bit_control_WorkQueueStatus_fieldAccessorTable = new

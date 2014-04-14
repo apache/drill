@@ -26,10 +26,10 @@
     pop : "project",
     @id : 2,
     exprs : [ {
-      ref : "output.$f0",
+      ref : "$f0",
       expr : "O_CUSTKEY"
     }, {
-      ref : "output.$f1",
+      ref : "$f1",
       expr : "O_ORDERKEY"
     } ],
     child : 1

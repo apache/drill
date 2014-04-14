@@ -54,6 +54,7 @@ public class TestSpoolingBuffer {
       for(QueryResultBatch b : results) {
         if (b.getHeader().getRowCount() != 0)
           count += b.getHeader().getRowCount();
+        b.release();
       }
       assertEquals(500024, count);
     }

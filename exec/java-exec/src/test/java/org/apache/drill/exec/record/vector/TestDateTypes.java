@@ -99,6 +99,11 @@ public class TestDateTypes extends PopUnitTestBase {
                 assertTrue((accessor.getObject(1)).equals("2008-12-28"));
                 assertTrue((accessor.getObject(2)).equals("2000-02-27"));
             }
+
+            batchLoader.clear();
+            for(QueryResultBatch b : results){
+              b.release();
+            }
         }
     }
 
@@ -130,6 +135,11 @@ public class TestDateTypes extends PopUnitTestBase {
                 assertEquals((accessor.getObject(1)), new String("2000-02-27"));
                 assertEquals((accessor.getObject(2)), new String("2008-12-28"));
             }
+
+            batchLoader.clear();
+            for(QueryResultBatch b : results){
+              b.release();
+            }
         }
     }
 
@@ -160,6 +170,11 @@ public class TestDateTypes extends PopUnitTestBase {
                 assertTrue(accessor.getObject(0).equals("1970-01-02 10:20:33.000"));
                 assertTrue((accessor.getObject(1)).equals("2008-12-28 11:34:00.129"));
                 assertTrue((accessor.getObject(2)).equals("2000-02-27 14:24:00.000"));
+            }
+
+            batchLoader.clear();
+            for(QueryResultBatch b : results){
+              b.release();
             }
         }
     }
@@ -213,6 +228,11 @@ public class TestDateTypes extends PopUnitTestBase {
             assertTrue((accessor.getObject(3)).equals("1 day 1:20:35.897"));
             assertTrue((accessor.getObject(4)).equals("0 days 0:0:35.4"));
             assertTrue((accessor.getObject(5)).equals("1 day 0:-39:-25.0"));
+
+            batchLoader.clear();
+            for(QueryResultBatch b : results){
+              b.release();
+            }
         }
     }
 
@@ -250,6 +270,11 @@ public class TestDateTypes extends PopUnitTestBase {
 
                 assertTrue((accessor.getObject(0)).equals(result[idx++]));
             }
+
+            batchLoader.clear();
+            for(QueryResultBatch b : results){
+              b.release();
+            }
         }
     }
 
@@ -279,6 +304,11 @@ public class TestDateTypes extends PopUnitTestBase {
 
                 assertTrue((accessor.getObject(0)).equals("2008-03-27"));
 
+            }
+
+            batchLoader.clear();
+            for(QueryResultBatch b : results){
+              b.release();
             }
         }
     }

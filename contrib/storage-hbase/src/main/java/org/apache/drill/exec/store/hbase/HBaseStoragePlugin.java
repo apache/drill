@@ -19,11 +19,10 @@ package org.apache.drill.exec.store.hbase;
 
 import java.io.IOException;
 
-import net.hydromatic.optiq.Schema;
 import net.hydromatic.optiq.SchemaPlus;
 
 import org.apache.drill.common.JSONOptions;
-import org.apache.drill.common.logical.StoragePluginConfig;
+import org.apache.drill.exec.rpc.user.DrillUser;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 
@@ -63,8 +62,8 @@ public class HBaseStoragePlugin extends AbstractStoragePlugin {
   }
 
   @Override
-  public Schema createAndAddSchema(SchemaPlus parent) {
-    return schemaFactory.add(parent);
+  public void registerSchemas(DrillUser user, SchemaPlus parent) {
+    schemaFactory.registerSchemas(user, parent);
   }
 
   @Override

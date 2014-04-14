@@ -17,16 +17,17 @@
  */
 package org.apache.drill.exec.store.hbase;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.Lists;
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hasher;
-import com.google.common.hash.Hashing;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.PathSegment;
+import org.apache.drill.common.expression.PathSegment.NameSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
@@ -48,15 +49,19 @@ import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.util.Bytes;
 
-import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.TimeUnit;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Stopwatch;
+import com.google.common.collect.Lists;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
 
 public class HBaseRecordReader implements RecordReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBaseRecordReader.class);
 
   private static final String ROW_KEY = "row_key";
   private static final int TARGET_RECORD_COUNT = 4000;
+  private static final SchemaPath ROW_KEY_PATH = SchemaPath.getSimplePath(ROW_KEY);
 
   private List<SchemaPath> columns;
   private OutputMutator outputMutator;
@@ -75,16 +80,16 @@ public class HBaseRecordReader implements RecordReader {
     this.context = context;
     if (columns != null && columns.size() != 0) {
       for (SchemaPath column : columns) {
-        if (column.getPath().toString().equalsIgnoreCase(ROW_KEY)) {
-          rowKeySchemaPath = new SchemaPath(ROW_KEY);
+        if (column.getRootSegment().getPath().toString().equalsIgnoreCase(ROW_KEY)) {
+          rowKeySchemaPath = ROW_KEY_PATH;
           continue;
         }
-        PathSegment root = column.getRootSegment();
+        NameSegment root = column.getRootSegment();
         assert root != null;
         PathSegment child = root.getChild();
-        byte[] family = root.getNameSegment().getPath().toString().getBytes();
+        byte[] family = root.getPath().toString().getBytes();
         if (child != null) {
-          Preconditions.checkArgument(child.getChild() == null, "Unsupported column name: " + column.getPath());
+          Preconditions.checkArgument(child.getChild() == null, "Unsupported column name: " + column.toString());
           byte[] qualifier = child.getNameSegment().getPath().toString().getBytes();
           scan.addColumn(family, qualifier);
         } else {
@@ -96,7 +101,7 @@ public class HBaseRecordReader implements RecordReader {
       if (this.columns == null) {
         this.columns = Lists.newArrayList();
       }
-      rowKeySchemaPath = new SchemaPath(ROW_KEY);
+      rowKeySchemaPath = ROW_KEY_PATH;
       this.columns.add(rowKeySchemaPath);
     }
 
@@ -127,7 +132,8 @@ public class HBaseRecordReader implements RecordReader {
           MaterializedField field = MaterializedField.create(column, Types.optional(TypeProtos.MinorType.VARBINARY));
           NullableVarBinaryVector v = new NullableVarBinaryVector(field, context.getAllocator());
           output.addField(v);
-          vvMap.put(new FamilyQualifierWrapper(column.getPath().toString()), v);
+          String fullyQualified = column.getRootSegment().getPath() + "." + column.getRootSegment().getChild().getNameSegment().getPath();
+          vvMap.put(new FamilyQualifierWrapper(fullyQualified), v);
         }
       } catch (SchemaChangeException e) {
         throw new ExecutionSetupException(e);
@@ -206,7 +212,7 @@ public class HBaseRecordReader implements RecordReader {
   }
 
   private NullableVarBinaryVector addNewVector(String column) {
-    MaterializedField field = MaterializedField.create(new SchemaPath(column, ExpressionPosition.UNKNOWN), Types.optional(TypeProtos.MinorType.VARBINARY));
+    MaterializedField field = MaterializedField.create(SchemaPath.getCompoundPath(column.split("\\.")), Types.optional(TypeProtos.MinorType.VARBINARY));
     NullableVarBinaryVector v = new NullableVarBinaryVector(field, context.getAllocator());
     VectorAllocator.getAllocator(v, 100).alloc(TARGET_RECORD_COUNT);
     vvMap.put(new FamilyQualifierWrapper(column), v);

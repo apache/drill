@@ -20,8 +20,8 @@ package org.apache.drill.exec.memory;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * 
- * 
+ *
+ *
  * TODO: Fix this so that preallocation can never be released back to general pool until allocator is closed.
  */
 public class AtomicRemainder {
@@ -32,6 +32,7 @@ public class AtomicRemainder {
   private final AtomicLong unaccountable;
   private final long max;
   private final long pre;
+  private boolean closed = false;
 
   public AtomicRemainder(AtomicRemainder parent, long max, long pre) {
     this.parent = parent;
@@ -52,7 +53,7 @@ public class AtomicRemainder {
   /**
    * Automatically allocate memory. This is used when an actual allocation happened to be larger than requested. This
    * memory has already been used up so it must be accurately accounted for in future allocations.
-   * 
+   *
    * @param size
    */
   public void forceGet(long size) {
@@ -101,7 +102,7 @@ public class AtomicRemainder {
 
   /**
    * Return the memory accounting to the allocation pool. Make sure to first maintain hold of the preallocated memory.
-   * 
+   *
    * @param size
    */
   public void returnAllocation(long size) {
@@ -115,4 +116,10 @@ public class AtomicRemainder {
     }
   }
 
+  public void close(){
+    if(!closed){
+      closed = true;
+//      if(parent != null) parent.returnAllocation(pre);
+    }
+  }
 }

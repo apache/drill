@@ -68,7 +68,7 @@ public class DumpCat {
       System.out.println(String.format("Trace file %s not created", o.location));
       System.exit(-1);
     }
- 
+
     FileInputStream input = new FileInputStream(file.getAbsoluteFile());
 
     if (o.batch < 0) {
@@ -142,11 +142,11 @@ public class DumpCat {
       String avgRecSizeStr = null;
       if (this.rows>0)
         avgRecSizeStr = String.format("Average Record Size : %d ", this.dataSize/this.rows);
-      else 
+      else
         avgRecSizeStr = "Average Record Size : 0";
-      
+
       return String.format("Records : %d / %d \n", this.selectedRows, this.rows) +
-             avgRecSizeStr + 
+             avgRecSizeStr +
              String.format("\n Total Data Size : %d", this.dataSize);
     }
   }
@@ -188,7 +188,7 @@ public class DumpCat {
 
        prevSchema = vectorContainer.getSchema();
        batchNum ++;
- 
+
        vectorContainer.zeroVectors();
     }
 
@@ -253,7 +253,7 @@ public class DumpCat {
       for (VectorWrapper w : vectorContainer) {
         MaterializedField field = w.getValueVector().getField();
         System.out.println (String.format("name : %s, minor_type : %s, data_mode : %s",
-                                          field.getName(),
+                                          field.toExpr(),
                                           field.getType().getMinorType().toString(),
                                           field.isNullable() ? "nullable":"non-nullable"
                           ));

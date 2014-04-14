@@ -84,9 +84,9 @@ import com.sun.codemodel.JExpr;
 public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPartitionSender> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OrderedPartitionRecordBatch.class);
 
-  public final MappingSet mainMapping = new MappingSet( (String) null, null, ClassGenerator.DEFAULT_CONSTANT_MAP, 
+  public final MappingSet mainMapping = new MappingSet( (String) null, null, ClassGenerator.DEFAULT_CONSTANT_MAP,
       ClassGenerator.DEFAULT_SCALAR_MAP);
-  public final MappingSet incomingMapping = new MappingSet("inIndex", null, "incoming", null, 
+  public final MappingSet incomingMapping = new MappingSet("inIndex", null, "incoming", null,
       ClassGenerator.DEFAULT_CONSTANT_MAP, ClassGenerator.DEFAULT_SCALAR_MAP);
   public final MappingSet partitionMapping = new MappingSet("partitionIndex", null, "partitionVectors", null,
       ClassGenerator.DEFAULT_CONSTANT_MAP, ClassGenerator.DEFAULT_SCALAR_MAP);
@@ -131,14 +131,14 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
 
     this.mapKey = String.format("%s_%d", context.getHandle().getQueryId(), context.getHandle().getMajorFragmentId());
     this.minorFragmentSampleCount = cache.getCounter(mapKey);
-    
-    SchemaPath outputPath = new SchemaPath(popConfig.getRef().getPath(), ExpressionPosition.UNKNOWN);
+
+    SchemaPath outputPath = popConfig.getRef();
     MaterializedField outputField = MaterializedField.create(outputPath, Types.required(TypeProtos.MinorType.INT));
     this.partitionKeyVector = (IntVector) TypeHelper.getNewVector(outputField, context.getAllocator());
-    
+
   }
 
-  
+
   @Override
   public void cleanup() {
     super.cleanup();
@@ -152,10 +152,10 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
     IterOutcome upstream;
 
     // Start collecting batches until recordsToSample records have been collected
-    
+
     SortRecordBatchBuilder builder = new SortRecordBatchBuilder(context.getAllocator(), MAX_SORT_BYTES);
     builder.add(incoming);
-    
+
     recordsSampled += incoming.getRecordCount();
 
     outer: while (recordsSampled < recordsToSample) {
@@ -211,8 +211,8 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
     containerToCache.clear();
     sampleToSave.clear();
     return true;
-    
-    
+
+
   }
 
   /**
@@ -221,7 +221,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
    * distributed cache. Once a sufficient fraction of the fragments have shared their samples, each fragment grabs all
    * the samples, sorts all the records, builds a partition table, and attempts to push the partition table to the
    * distributed cache. Whichever table gets pushed first becomes the table used by all fragments for partitioning.
-   * 
+   *
    * @return True is successful. False if failed.
    */
   private boolean getPartitionVectors() {
@@ -232,7 +232,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
       if (!saveSamples()){
         return false;
       }
-      
+
       VectorAccessibleSerializable finalTable = null;
 
       long val = minorFragmentSampleCount.incrementAndGet();
@@ -282,7 +282,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
   private void buildTable() throws SchemaChangeException, ClassTransformationException, IOException {
 
     // Get all samples from distributed map
-    
+
     SortRecordBatchBuilder containerBuilder = new SortRecordBatchBuilder(context.getAllocator(), MAX_SORT_BYTES);
     for (VectorAccessibleSerializable w : mmap.get(mapKey)) {
       containerBuilder.add(w.get());
@@ -293,7 +293,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
     List<Ordering> orderDefs = Lists.newArrayList();
     int i = 0;
     for (Ordering od : popConfig.getOrderings()) {
-      SchemaPath sp = new SchemaPath("f" + i++, ExpressionPosition.UNKNOWN);
+      SchemaPath sp = SchemaPath.getSimplePath("f" + i++);
       orderDefs.add(new Ordering(od.getDirection(), new FieldReference(sp)));
     }
 
@@ -317,7 +317,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
     WritableBatch batch = WritableBatch.getBatchNoHVWrap(candidatePartitionTable.getRecordCount(), candidatePartitionTable, false);
     VectorAccessibleSerializable wrap = new VectorAccessibleSerializable(batch, context.getDrillbitContext().getAllocator());
     tableMap.putIfAbsent(mapKey + "final", wrap, 1, TimeUnit.MINUTES);
-    
+
     candidatePartitionTable.clear();
     allSamplesContainer.clear();
     containerBuilder.clear();
@@ -330,7 +330,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
    * outgoing. Each Ordering in orderings generates a column, and evaluation of the expression associated with each
    * Ordering determines the value of each column. These records will later be sorted based on the values in each
    * column, in the same order as the orderings.
-   * 
+   *
    * @param sv4
    * @param incoming
    * @param outgoing
@@ -348,7 +348,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
     int i = 0;
     for (Ordering od : orderings) {
       final LogicalExpression expr = ExpressionTreeMaterializer.materialize(od.getExpr(), incoming, collector, context.getFunctionRegistry());
-      SchemaPath schemaPath = new SchemaPath("f" + i++, ExpressionPosition.UNKNOWN);
+      SchemaPath schemaPath = SchemaPath.getSimplePath("f" + i++);
       TypeProtos.MajorType.Builder builder = TypeProtos.MajorType.newBuilder().mergeFrom(expr.getMajorType())
           .clearMode().setMode(TypeProtos.DataMode.REQUIRED);
       TypeProtos.MajorType newType = builder.build();
@@ -423,9 +423,9 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
     if (this.first && upstream == IterOutcome.OK_NEW_SCHEMA) {
       if (!getPartitionVectors()){
         cleanup();
-        return IterOutcome.STOP;   
+        return IterOutcome.STOP;
       }
-      
+
       batchQueue = new LinkedBlockingQueue<>(this.sampledIncomingBatches);
       first = false;
 
@@ -497,7 +497,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
   /**
    * Sets up projection that will transfer all of the columns in batch, and also populate the partition column based on
    * which partition a record falls into in the partition table
-   * 
+   *
    * @param batch
    * @throws SchemaChangeException
    */
@@ -547,7 +547,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
 
     try {
       this.projector = context.getImplementationClass(cg);
-      projector.setup(context, batch, this, transfers, partitionVectors, partitions, new SchemaPath(popConfig.getRef().getPath(), ExpressionPosition.UNKNOWN));
+      projector.setup(context, batch, this, transfers, partitionVectors, partitions, popConfig.getRef());
     } catch (ClassTransformationException | IOException e) {
       throw new SchemaChangeException("Failure while attempting to load generated class", e);
     }

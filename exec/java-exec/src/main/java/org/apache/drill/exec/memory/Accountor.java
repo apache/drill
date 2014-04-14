@@ -39,7 +39,7 @@ public class Accountor {
   private final long total;
   private ConcurrentMap<ByteBuf, DebugStackTrace> buffers = Maps.newConcurrentMap();
   private final FragmentHandle handle;
-  
+
   public Accountor(FragmentHandle handle, Accountor parent, long max, long preAllocated) {
     // TODO: fix preallocation stuff
     AtomicRemainder parentRemainder = parent != null ? parent.remainder : null;
@@ -106,7 +106,7 @@ public class Accountor {
       }
       sb.append(".\n");
 
-      
+
       Multimap<DebugStackTrace, DebugStackTrace> multi = LinkedListMultimap.create();
       for (DebugStackTrace t : buffers.values()) {
         multi.put(t, t);
@@ -114,7 +114,7 @@ public class Accountor {
 
       for (DebugStackTrace entry : multi.keySet()) {
         Collection<DebugStackTrace> allocs = multi.get(entry);
-        
+
         sb.append("\n\n\tTotal ");
         sb.append(allocs.size());
         sb.append(" allocation(s) of byte size(s): ");
@@ -127,20 +127,21 @@ public class Accountor {
           }
           sb.append(", ");
         }
-        
+
         sb.append("at stack location:\n");
         entry.addToString(sb);
       }
-      
+
       throw new IllegalStateException(sb.toString());
-      
+
     }
 
-    
+    remainder.close();
+
   }
 
   private class DebugStackTrace {
-    
+
     private StackTraceElement[] elements;
     private long size;
     private String desc;

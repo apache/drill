@@ -44,6 +44,19 @@ import com.google.common.collect.ImmutableList;
 public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBuilder, RuntimeException>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExpressionStringBuilder.class);
 
+  static final ExpressionStringBuilder INSTANCE = new ExpressionStringBuilder();
+
+  public static String toString(LogicalExpression expr){
+    StringBuilder sb = new StringBuilder();
+    expr.accept(INSTANCE, sb);
+    return sb.toString();
+  }
+
+  public static void toString(LogicalExpression expr, StringBuilder sb){
+    expr.accept(INSTANCE, sb);
+  }
+
+
   @Override
   public Void visitFunctionCall(FunctionCall call, StringBuilder sb) throws RuntimeException {
     ImmutableList<LogicalExpression> args = call.args;
@@ -85,7 +98,26 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
 
   @Override
   public Void visitSchemaPath(SchemaPath path, StringBuilder sb) throws RuntimeException {
-    sb.append(path.getPath());
+    PathSegment seg = path.getRootSegment();
+    if(seg.isArray()) throw new IllegalStateException("Drill doesn't currently support top level arrays");
+    sb.append('`');
+    sb.append(seg.getNameSegment().getPath());
+    sb.append('`');
+
+    while( (seg = seg.getChild()) != null){
+      if(seg.isNamed()){
+        sb.append('.');
+        sb.append('`');
+        sb.append(seg.getNameSegment().getPath());
+        sb.append('`');
+      }else{
+        sb.append('[');
+        sb.append(seg.getArraySegment().getIndex());
+        sb.append(']');
+      }
+    }
+
+
     return null;
   }
 
@@ -121,33 +153,33 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
     TIMESTAMP_FORMAT = new DateTimeFormatterBuilder().append(dateFormatter).appendOptional(optionalTime).appendOptional(optionalSec).toFormatter();
 
   }
-  
+
   @Override
   public Void visitTimeStampConstant(TimeStampExpression lExpr, StringBuilder sb) throws RuntimeException {
-    sb.append("cast( \"");
+    sb.append("cast( '");
     try {
       TIMESTAMP_FORMAT.printTo(sb, lExpr.getTimeStamp());
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
     sb.append(lExpr.getTimeStamp());
-    sb.append(" \" as TIMESTAMP)");
+    sb.append(" ' as TIMESTAMP)");
     return null;
   }
 
   @Override
   public Void visitIntervalYearConstant(IntervalYearExpression lExpr, StringBuilder sb) throws RuntimeException {
-    sb.append("cast( \"");
+    sb.append("cast( '");
     sb.append(Period.years(lExpr.getIntervalYear()).toString());
-    sb.append("\" as INTERVALYEAR)");
+    sb.append("' as INTERVALYEAR)");
     return null;
   }
 
   @Override
   public Void visitIntervalDayConstant(IntervalDayExpression lExpr, StringBuilder sb) throws RuntimeException {
-    sb.append("cast( \"");
+    sb.append("cast( '");
     sb.append(Period.days(lExpr.getIntervalDay()).plusMillis(lExpr.getIntervalMillis()).toString());
-    sb.append("\" as INTERVALDAY)");
+    sb.append("' as INTERVALDAY)");
     return null;
   }
 
@@ -165,21 +197,21 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
 
   @Override
   public Void visitQuotedStringConstant(QuotedString e, StringBuilder sb) throws RuntimeException {
-    sb.append("\"");
+    sb.append("'");
     sb.append(e.value);
-    sb.append("\"");
+    sb.append("'");
     return null;
   }
 
   @Override
   public Void visitCastExpression(CastExpression e, StringBuilder sb) throws RuntimeException {
     MajorType mt = e.getMajorType();
-    
+
     sb.append("cast( (");
     e.getInput().accept(this, sb);
     sb.append(" ) as ");
     sb.append(mt.getMinorType().name());
-    
+
     switch(mt.getMinorType()){
     case FLOAT4:
     case FLOAT8:
@@ -228,8 +260,8 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
     sb.append(intExpr.getInt());
     return null;
   }
-  
-  
-  
-  
+
+
+
+
 }

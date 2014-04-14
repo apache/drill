@@ -38,47 +38,43 @@ public class PhysicalPlanCreator {
   private List<PhysicalOperator> popList;
   private final QueryContext context;
   PhysicalPlan plan = null;
-  
+
   public PhysicalPlanCreator(QueryContext context) {
     this.context = context;
     popList = Lists.newArrayList();
   }
-  
+
   public QueryContext getContext() {
     return context;
   }
-  
-  public void addPhysicalOperator(PhysicalOperator op) {
-    popList.add(op);  
-  }
-  
+
   public PhysicalPlan build(Prel rootPrel, boolean forceRebuild) {
 
     if (plan != null && !forceRebuild) {
       return plan;
     }
-    
+
     PlanPropertiesBuilder propsBuilder = PlanProperties.builder();
     propsBuilder.type(PlanType.APACHE_DRILL_PHYSICAL);
     propsBuilder.version(1);
     propsBuilder.resultMode(ResultMode.EXEC);
     propsBuilder.generator(PhysicalPlanCreator.class.getName(), "");
 
-    
-    try { 
-      // invoke getPhysicalOperator on the root Prel which will recursively invoke it 
+
+    try {
+      // invoke getPhysicalOperator on the root Prel which will recursively invoke it
       // on the descendants and we should have a well-formed physical operator tree
       PhysicalOperator rootPOP = rootPrel.getPhysicalOperator(this);
       if (rootPOP != null) {
-        assert (popList.size() > 0); //getPhysicalOperator() is supposed to populate this list 
+        assert (popList.size() > 0); //getPhysicalOperator() is supposed to populate this list
         plan = new PhysicalPlan(propsBuilder.build(), popList);
       }
-      
+
     } catch (IOException e) {
       plan = null;
       throw new UnsupportedOperationException("Physical plan created failed with error : " + e.toString());
     }
-    
+
     return plan;
   }
 

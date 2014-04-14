@@ -18,11 +18,15 @@
 package org.apache.drill.exec.physical.impl;
 
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.ValueVector;
 
 public interface OutputMutator {
   public void removeField(MaterializedField field) throws SchemaChangeException;
+  public <T extends ValueVector> T addField(MaterializedField field, Class<T> clazz) throws SchemaChangeException ;
+
+  @Deprecated
   public void addField(ValueVector vector) throws SchemaChangeException ;
   public void removeAllFields();
   public void setNewSchema() throws SchemaChangeException;

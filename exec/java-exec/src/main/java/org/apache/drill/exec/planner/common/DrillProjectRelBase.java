@@ -40,7 +40,7 @@ import com.google.common.collect.Lists;
 /**
  *
  * Base class for logical and physical Project implemented in Drill
- */ 
+ */
 public abstract class DrillProjectRelBase extends ProjectRelBase implements DrillRelNode {
   protected DrillProjectRelBase(Convention convention, RelOptCluster cluster, RelTraitSet traits, RelNode child, List<RexNode> exps,
       RelDataType rowType) {
@@ -61,7 +61,7 @@ public abstract class DrillProjectRelBase extends ProjectRelBase implements Dril
     List<NamedExpression> expressions = Lists.newArrayList();
     for (Pair<RexNode, String> pair : projects()) {
       LogicalExpression expr = DrillOptiq.toDrill(context, getChild(), pair.left);
-      expressions.add(new NamedExpression(expr, new FieldReference("output." + pair.right)));
+      expressions.add(new NamedExpression(expr, new FieldReference(pair.right)));
     }
     return expressions;
   }

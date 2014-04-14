@@ -92,7 +92,7 @@ public class JSONRecordReader implements RecordReader {
     this.columns = columns;
   }
 
-  public JSONRecordReader(FragmentContext fragmentContext, String inputPath, FileSystem fileSystem, 
+  public JSONRecordReader(FragmentContext fragmentContext, String inputPath, FileSystem fileSystem,
                           List<SchemaPath> columns) {
     this(fragmentContext, inputPath, fileSystem, DEFAULT_LENGTH, columns);
   }
@@ -204,7 +204,8 @@ public class JSONRecordReader implements RecordReader {
   }
 
   private boolean fieldSelected(String field){
-    SchemaPath sp = new SchemaPath(field, ExpressionPosition.UNKNOWN);
+
+    SchemaPath sp = SchemaPath.getCompoundPath(field.split("\\."));
     if (this.columns != null && this.columns.size() > 0){
       for (SchemaPath expr : this.columns){
         if ( sp.equals(expr)){
@@ -519,7 +520,7 @@ public class JSONRecordReader implements RecordReader {
         return null;
       }
 
-      MaterializedField f = MaterializedField.create(new SchemaPath(fullFieldName, ExpressionPosition.UNKNOWN), type);
+      MaterializedField f = MaterializedField.create(SchemaPath.getCompoundPath(fullFieldName.split("\\.")), type);
 
       ValueVector v = TypeHelper.getNewVector(f, allocator);
       AllocationHelper.allocate(v, batchSize, 50);

@@ -52,14 +52,14 @@ import com.codahale.metrics.MetricRegistry;
 public class TestAgg {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestAgg.class);
   DrillConfig c = DrillConfig.create();
-  
+
   private SimpleRootExec doTest(final DrillbitContext bitContext, UserClientConnection connection, String file) throws Exception{
     new NonStrictExpectations(){{
       bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = new TopLevelAllocator();
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
     }};
-    
+
     PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
     PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile(file), Charsets.UTF_8));
     FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
@@ -67,44 +67,44 @@ public class TestAgg {
     SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
     return exec;
   }
-  
+
   @Test
   public void oneKeyAgg(@Injectable final DrillbitContext bitContext, @Injectable UserClientConnection connection) throws Throwable{
     SimpleRootExec exec = doTest(bitContext, connection, "/agg/test1.json");
-    
+
     while(exec.next()){
-      BigIntVector cnt = exec.getValueVectorById(new SchemaPath("cnt", ExpressionPosition.UNKNOWN), BigIntVector.class);
-      IntVector key = exec.getValueVectorById(new SchemaPath("blue", ExpressionPosition.UNKNOWN), IntVector.class);
+      BigIntVector cnt = exec.getValueVectorById(SchemaPath.getSimplePath("cnt"), BigIntVector.class);
+      IntVector key = exec.getValueVectorById(SchemaPath.getSimplePath("blue"), IntVector.class);
       long[] cntArr = {10001, 9999};
       int[] keyArr = {Integer.MIN_VALUE, Integer.MAX_VALUE};
-      
+
       for(int i =0; i < exec.getRecordCount(); i++){
         assertEquals(cntArr[i], cnt.getAccessor().getObject(i));
         assertEquals(keyArr[i], key.getAccessor().getObject(i));
       }
     }
-    
+
     if(exec.getContext().getFailureCause() != null){
       throw exec.getContext().getFailureCause();
     }
     assertTrue(!exec.getContext().isFailed());
 
   }
-  
+
   @Test
   public void twoKeyAgg(@Injectable final DrillbitContext bitContext, @Injectable UserClientConnection connection) throws Throwable{
     SimpleRootExec exec = doTest(bitContext, connection, "/agg/twokey.json");
-    
+
     while(exec.next()){
-      IntVector key1 = exec.getValueVectorById(new SchemaPath("key1", ExpressionPosition.UNKNOWN), IntVector.class);
-      BigIntVector key2 = exec.getValueVectorById(new SchemaPath("key2", ExpressionPosition.UNKNOWN), BigIntVector.class);
-      BigIntVector cnt = exec.getValueVectorById(new SchemaPath("cnt", ExpressionPosition.UNKNOWN), BigIntVector.class);
-      BigIntVector total = exec.getValueVectorById(new SchemaPath("total", ExpressionPosition.UNKNOWN), BigIntVector.class);
+      IntVector key1 = exec.getValueVectorById(SchemaPath.getSimplePath("key1"), IntVector.class);
+      BigIntVector key2 = exec.getValueVectorById(SchemaPath.getSimplePath("key2"), BigIntVector.class);
+      BigIntVector cnt = exec.getValueVectorById(SchemaPath.getSimplePath("cnt"), BigIntVector.class);
+      BigIntVector total = exec.getValueVectorById(SchemaPath.getSimplePath("total"), BigIntVector.class);
       int[] keyArr1 = {Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE};
       long[] keyArr2 = {0,1,2,0,1,2};
       long[] cntArr = {34,34,34,34,34,34};
       long[] totalArr = {0,34,68,0,34,68};
-      
+
       for(int i =0; i < exec.getRecordCount(); i++){
 //        System.out.print(key1.getAccessor().getObject(i));
 //        System.out.print("\t");
@@ -120,14 +120,14 @@ public class TestAgg {
         assertEquals(totalArr[i], total.getAccessor().getObject(i));
       }
     }
-    
+
     if(exec.getContext().getFailureCause() != null){
       throw exec.getContext().getFailureCause();
     }
     assertTrue(!exec.getContext().isFailed());
 
   }
-  
+
   @AfterClass
   public static void tearDown() throws Exception{
     // pause to get logger to catch up.

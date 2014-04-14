@@ -21,6 +21,7 @@ import java.io.IOException;
 
 import org.apache.drill.common.expression.FieldReference.De;
 import org.apache.drill.common.expression.FieldReference.Se;
+import org.apache.drill.common.expression.PathSegment.NameSegment;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 
 import com.fasterxml.jackson.core.JsonGenerationException;
@@ -41,18 +42,32 @@ public class FieldReference extends SchemaPath {
 
   public FieldReference(SchemaPath sp){
     super(sp);
+    checkData();
   }
-  
+
+  private void checkData(){
+    if(getRootSegment().getChild() != null) throw new UnsupportedOperationException("Field references must be singular names.");
+
+  }
+
+
+  private void checkSimpleString(CharSequence value){
+    if(value.toString().contains(".")) throw new UnsupportedOperationException("Field references must be singular names.");
+  }
+
   public FieldReference(CharSequence value){
-    super(value, ExpressionPosition.UNKNOWN);
+    this(value, ExpressionPosition.UNKNOWN);
+    checkSimpleString(value);
   }
-  
+
   public FieldReference(CharSequence value, ExpressionPosition pos) {
-    super(value, pos);
+    super(new NameSegment(value), pos);
+    checkData();
+    checkSimpleString(value);
   }
 
   public FieldReference(String value, ExpressionPosition pos, MajorType dataType) {
-    super(value, pos);
+    this(value, pos);
     this.overrideType = dataType;
   }
 
@@ -74,7 +89,9 @@ public class FieldReference extends SchemaPath {
     @Override
     public FieldReference deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException,
         JsonProcessingException {
-      return new FieldReference(this._parseString(jp, ctxt), ExpressionPosition.UNKNOWN);
+      String ref = this._parseString(jp, ctxt);
+      ref = ref.replace("`", "");
+      return new FieldReference(ref, ExpressionPosition.UNKNOWN);
     }
 
   }
@@ -88,7 +105,7 @@ public class FieldReference extends SchemaPath {
     @Override
     public void serialize(FieldReference value, JsonGenerator jgen, SerializerProvider provider) throws IOException,
         JsonGenerationException {
-      jgen.writeString(value.getPath().toString());
+      jgen.writeString('`' + value.getRootSegment().getNameSegment().getPath() + '`');
     }
 
   }

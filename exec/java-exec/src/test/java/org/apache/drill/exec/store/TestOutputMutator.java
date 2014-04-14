@@ -21,6 +21,8 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.expr.TypeHelper;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.MaterializedField;
@@ -35,6 +37,11 @@ public class TestOutputMutator implements OutputMutator, Iterable<VectorWrapper<
 
   private final VectorContainer container = new VectorContainer();
   private final Map<MaterializedField, ValueVector> fieldVectorMap = Maps.newHashMap();
+  private final BufferAllocator allocator;
+
+  public TestOutputMutator(BufferAllocator allocator){
+    this.allocator = allocator;
+  }
 
   public void removeField(MaterializedField field) throws SchemaChangeException {
     ValueVector vector = fieldVectorMap.remove(field);
@@ -69,6 +76,14 @@ public class TestOutputMutator implements OutputMutator, Iterable<VectorWrapper<
 
   public void clear(){
     removeAllFields();
+  }
+
+  @Override
+  public <T extends ValueVector> T addField(MaterializedField field, Class<T> clazz) throws SchemaChangeException {
+    ValueVector v = TypeHelper.getNewVector(field, allocator);
+    if(!clazz.isAssignableFrom(v.getClass())) throw new SchemaChangeException(String.format("The class that was provided %s does not correspond to the expected vector type of %s.", clazz.getSimpleName(), v.getClass().getSimpleName()));
+    addField(v);
+    return (T) v;
   }
 
 }

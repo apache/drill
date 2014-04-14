@@ -87,7 +87,7 @@ public class TestMergeJoin extends PopUnitTestBase {
     while (exec.next()) {
       totalRecordCount += exec.getRecordCount();
       for (ValueVector v : exec)
-        System.out.print("[" + v.getField().getName() + "]        ");
+        System.out.print("[" + v.getField().toExpr() + "]        ");
       System.out.println("\n");
       for (int valueIdx = 0; valueIdx < exec.getRecordCount(); valueIdx++) {
         List<Object> row = new ArrayList();
@@ -95,7 +95,7 @@ public class TestMergeJoin extends PopUnitTestBase {
            row.add(v.getAccessor().getObject(valueIdx));
         }
         for (Object cell : row) {
-          if (cell == null) { 
+          if (cell == null) {
             System.out.print("<null>          ");
             continue;
           }
@@ -142,11 +142,11 @@ public class TestMergeJoin extends PopUnitTestBase {
       totalRecordCount += exec.getRecordCount();
       System.out.println("got next with record count: " + exec.getRecordCount() + " (total: " + totalRecordCount + "):");
       System.out.println("       t1                 t2");
-                          
+
       for (int valueIdx = 0; valueIdx < exec.getRecordCount(); valueIdx++) {
         List<Object> row = Lists.newArrayList();
         for (ValueVector v : exec)
-          row.add(v.getField().getName() + ":" + v.getAccessor().getObject(valueIdx));
+          row.add(v.getField().toExpr() + ":" + v.getAccessor().getObject(valueIdx));
         for (Object cell : row) {
           if (cell == null) {
             System.out.print("<null>    ");
@@ -199,7 +199,7 @@ public class TestMergeJoin extends PopUnitTestBase {
       for (int valueIdx = 0; valueIdx < exec.getRecordCount(); valueIdx++) {
         List<Object> row = Lists.newArrayList();
         for (ValueVector v : exec)
-          row.add(v.getField().getName() + ":" + v.getAccessor().getObject(valueIdx));
+          row.add(v.getField().toExpr() + ":" + v.getAccessor().getObject(valueIdx));
         for (Object cell : row) {
           if (cell == null) {
             System.out.print("<null>    ");
@@ -251,7 +251,7 @@ public class TestMergeJoin extends PopUnitTestBase {
       for (int valueIdx = 0; valueIdx < exec.getRecordCount(); valueIdx++) {
         List<Object> row = Lists.newArrayList();
         for (ValueVector v : exec)
-          row.add(v.getField().getName() + ":" + v.getAccessor().getObject(valueIdx));
+          row.add(v.getField().toExpr() + ":" + v.getAccessor().getObject(valueIdx));
         for (Object cell : row) {
           if (cell == null) {
             System.out.print("<null>    ");
@@ -282,7 +282,7 @@ public class TestMergeJoin extends PopUnitTestBase {
       bitContext.getConfig(); result = c;
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
     }};
-    
+
     PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
     PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/join/join_batchsize.json"), Charsets.UTF_8));
     FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
@@ -291,7 +291,7 @@ public class TestMergeJoin extends PopUnitTestBase {
     while(exec.next()){
       assertEquals(100, exec.getRecordCount());
     }
-    
+
     if(context.getFailureCause() != null){
       throw context.getFailureCause();
     }
@@ -325,7 +325,7 @@ public class TestMergeJoin extends PopUnitTestBase {
   public void testMergeJoinLeftEmptyBatch() throws Exception {
     RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
-    try(Drillbit bit1 = new Drillbit(CONFIG, serviceSet);      
+    try(Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
         DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
 
       bit1.run();
@@ -371,7 +371,7 @@ public class TestMergeJoin extends PopUnitTestBase {
     Thread.sleep(1000);
   }
 
-  
+
 }
 
 

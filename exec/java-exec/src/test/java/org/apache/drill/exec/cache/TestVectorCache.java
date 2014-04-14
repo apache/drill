@@ -46,7 +46,7 @@ public class TestVectorCache {
     HazelCache cache = new HazelCache(config, context.getAllocator());
     cache.run();
 
-    MaterializedField intField = MaterializedField.create(new SchemaPath("int", ExpressionPosition.UNKNOWN), Types.required(TypeProtos.MinorType.INT));
+    MaterializedField intField = MaterializedField.create(SchemaPath.getSimplePath("int"), Types.required(TypeProtos.MinorType.INT));
     IntVector intVector = (IntVector)TypeHelper.getNewVector(intField, context.getAllocator());
     MaterializedField binField = MaterializedField.create(new SchemaPath("binary", ExpressionPosition.UNKNOWN), Types.required(TypeProtos.MinorType.VARBINARY));
     VarBinaryVector binVector = (VarBinaryVector)TypeHelper.getNewVector(binField, context.getAllocator());

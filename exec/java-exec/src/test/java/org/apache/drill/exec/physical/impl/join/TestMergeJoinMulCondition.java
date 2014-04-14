@@ -38,7 +38,7 @@ import com.google.common.io.Files;
 
 public class TestMergeJoinMulCondition extends PopUnitTestBase {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestMergeJoinMulCondition.class);
-  
+
   @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(200000);
 
   @Test
@@ -47,7 +47,7 @@ public class TestMergeJoinMulCondition extends PopUnitTestBase {
   //      + " from cp.`tpch/lineitem.parquet` l join "
   //      + "      cp.`tpch/partsupp.parquet` ps"
   //      + " on l.l_partkey = ps.ps_partkey and "
-  //      + "    l.l_suppkey = ps.ps_suppkey";    
+  //      + "    l.l_suppkey = ps.ps_suppkey";
   public void testMergeJoinMultiKeys() throws Exception {
     RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
@@ -61,11 +61,13 @@ public class TestMergeJoinMulCondition extends PopUnitTestBase {
               Charsets.UTF_8));
       int count = 0;
       for(QueryResultBatch b : results) {
-        if (b.getHeader().getRowCount() != 0)
+        if (b.getHeader().getRowCount() != 0){
           count += b.getHeader().getRowCount();
+        }
+        b.release();
       }
       assertEquals(60175, count);
     }
   }
-    
+
 }

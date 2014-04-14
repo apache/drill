@@ -66,26 +66,26 @@ public class DrillOperatorTable extends SqlStdOperatorTable {
     // TODO: add hive functions.
   }
 
+
+
   @Override
-  public List<SqlOperator> lookupOperatorOverloads(SqlIdentifier opName, SqlFunctionCategory category, SqlSyntax syntax) {
+  public void lookupOperatorOverloads(SqlIdentifier opName, SqlFunctionCategory category, SqlSyntax syntax, List<SqlOperator> operatorList) {
     if (syntax == SqlSyntax.FUNCTION) {
+
+      // add optiq.
+      inner.lookupOperatorOverloads(opName, category, syntax, operatorList);
+
+      if(!operatorList.isEmpty()){
+        return;
+      }
+
       List<SqlOperator> drillOps = opMap.get(opName.getSimple());
-      if (drillOps == null || drillOps.isEmpty())
-        return inner.lookupOperatorOverloads(opName, category, syntax);
-
-      List<SqlOperator> optiqOps = inner.lookupOperatorOverloads(opName, category, syntax);
-      if (optiqOps.isEmpty())
-        return drillOps;
-
-      // combine the two.
-      List<SqlOperator> both = Lists.newArrayList();
-      both.addAll(optiqOps);
-      both.addAll(drillOps);
-
-      return both;
+      if(drillOps != null){
+        operatorList.addAll(drillOps);
+      }
 
     } else {
-      return inner.lookupOperatorOverloads(opName, category, syntax);
+      inner.lookupOperatorOverloads(opName, category, syntax, operatorList);
     }
   }
 

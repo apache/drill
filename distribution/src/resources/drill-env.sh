@@ -13,4 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 DRILL_MAX_DIRECT_MEMORY="8G"
-export DRILL_JAVA_OPTS="-XX:MaxDirectMemorySize=$DRILL_MAX_DIRECT_MEMORY"
+DRILL_INIT_HEAP="1g"
+DRILL_MAX_HEAP="4g"
+export DRILL_JAVA_OPTS="-Xms$DRILL_INIT_HEAP -Xmx$DRILL_MAX_HEAP -XX:MaxDirectMemorySize=$DRILL_MAX_DIRECT_MEMORY"
