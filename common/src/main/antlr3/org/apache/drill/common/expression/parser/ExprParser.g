@@ -278,13 +278,13 @@ xorExpr returns [LogicalExpression e]
   
 unaryExpr returns [LogicalExpression e]
   :  sign=(Plus|Minus)? Number {$e = ValueExpressions.getNumericExpression($sign.text, $Number.text, pos(($sign != null) ? $sign : $Number)); }
-  |  Minus atom {$e = FunctionCallFactory.createExpression("u-", pos($atom.start), $atom.e); }
-  |  Excl atom {$e= FunctionCallFactory.createExpression("!", pos($atom.start), $atom.e); }
+  |  Minus atom {$e = FunctionCallFactory.createExpression("u-", pos($Minus), $atom.e); }
+  |  Excl atom {$e= FunctionCallFactory.createExpression("!", pos($Excl), $atom.e); }
   |  atom {$e = $atom.e; }
   ;
 
 atom returns [LogicalExpression e]
-  :  Bool {$e = new ValueExpressions.BooleanExpression($Bool.text, pos($atom.start)); }
+  :  Bool {$e = new ValueExpressions.BooleanExpression($Bool.text, pos($Bool)); }
   |  lookup {$e = $lookup.e; }
   ;
 
