@@ -194,4 +194,72 @@ public class TestJdbcQuery {
       .sql("select substring('asd' from 1 for 2) from INFORMATION_SCHEMA.`TABLES` limit 1")
       .returns("EXPR$0=as\n");
   }
+
+  @Test
+  public void testNullOpForNullableType() throws Exception{
+    JdbcAssert.withNoDefaultSchema()
+        .sql("SELECT * FROM cp.`test_null_op.json` WHERE intType IS NULL AND varCharType IS NOT NULL")
+        .returns("intType=null; varCharType=val2");
+  }
+
+  @Test
+  public void testNullOpForNonNullableType() throws Exception{
+    // output of (intType IS NULL) is a non-nullable type
+    JdbcAssert.withNoDefaultSchema()
+        .sql("SELECT * FROM cp.`test_null_op.json` "+
+            "WHERE (intType IS NULL) IS NULL AND (varCharType IS NOT NULL) IS NOT NULL")
+        .returns("");
+  }
+
+  @Test
+  public void testTrueOpForNullableType() throws Exception{
+    JdbcAssert.withNoDefaultSchema()
+        .sql("SELECT data FROM cp.`test_true_false_op.json` WHERE booleanType IS TRUE")
+        .returns("data=set to true");
+
+    JdbcAssert.withNoDefaultSchema()
+        .sql("SELECT data FROM cp.`test_true_false_op.json` WHERE booleanType IS FALSE")
+        .returns("data=set to false");
+
+    JdbcAssert.withNoDefaultSchema()
+        .sql("SELECT data FROM cp.`test_true_false_op.json` WHERE booleanType IS NOT TRUE")
+        .returns(
+            "data=set to false\n" +
+            "data=not set"
+        );
+
+    JdbcAssert.withNoDefaultSchema()
+        .sql("SELECT data FROM cp.`test_true_false_op.json` WHERE booleanType IS NOT FALSE")
+        .returns(
+            "data=set to true\n" +
+            "data=not set"
+        );
+  }
+
+
+  @Test
+  public void testTrueOpForNonNullableType() throws Exception{
+    // Output of IS TRUE (and others) is a Non-nullable type
+    JdbcAssert.withNoDefaultSchema()
+        .sql("SELECT data FROM cp.`test_true_false_op.json` WHERE (booleanType IS TRUE) IS TRUE")
+        .returns("data=set to true");
+
+    JdbcAssert.withNoDefaultSchema()
+        .sql("SELECT data FROM cp.`test_true_false_op.json` WHERE (booleanType IS FALSE) IS FALSE")
+        .returns(
+            "data=set to true\n" +
+            "data=not set"
+        );
+
+    JdbcAssert.withNoDefaultSchema()
+        .sql("SELECT data FROM cp.`test_true_false_op.json` WHERE (booleanType IS NOT TRUE) IS NOT TRUE")
+        .returns("data=set to true");
+
+    JdbcAssert.withNoDefaultSchema()
+        .sql("SELECT data FROM cp.`test_true_false_op.json` WHERE (booleanType IS NOT FALSE) IS NOT FALSE")
+        .returns(
+            "data=set to true\n" +
+            "data=not set"
+        );
+  }
 }

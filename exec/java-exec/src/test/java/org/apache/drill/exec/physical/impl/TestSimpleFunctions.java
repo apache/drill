@@ -144,62 +144,6 @@ public class TestSimpleFunctions {
   }
 
   @Test
-  public void testIsNull(@Injectable final DrillbitContext bitContext,
-                         @Injectable UserServer.UserClientConnection connection) throws Throwable {
-
-    new NonStrictExpectations(){{
-      bitContext.getMetrics(); result = new MetricRegistry();
-      bitContext.getAllocator(); result = new TopLevelAllocator();
-      bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
-    }};
-
-    PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
-    PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/functions/testIsNull.json"), Charsets.UTF_8));
-    FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
-    FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
-    SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
-
-    while(exec.next()){
-      assertEquals(50, exec.getSelectionVector2().getCount());
-    }
-
-    if(context.getFailureCause() != null){
-      throw context.getFailureCause();
-    }
-
-    assertTrue(!context.isFailed());
-
-  }
-
-  @Test
-  public void testIsNotNull(@Injectable final DrillbitContext bitContext,
-                            @Injectable UserServer.UserClientConnection connection) throws Throwable{
-
-    new NonStrictExpectations(){{
-      bitContext.getMetrics(); result = new MetricRegistry();
-      bitContext.getAllocator(); result = new TopLevelAllocator();
-      bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
-    }};
-
-    PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
-    PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/functions/testIsNotNull.json"), Charsets.UTF_8));
-    FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
-    FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
-    SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
-
-    while(exec.next()){
-      assertEquals(50, exec.getSelectionVector2().getCount());
-    }
-
-    if(context.getFailureCause() != null){
-      throw context.getFailureCause();
-    }
-
-    assertTrue(!context.isFailed());
-
-  }
-
-  @Test
   public void testSubstring(@Injectable final DrillbitContext bitContext,
                             @Injectable UserServer.UserClientConnection connection) throws Throwable{
 
