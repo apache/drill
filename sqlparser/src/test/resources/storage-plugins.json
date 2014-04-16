@@ -4,7 +4,6 @@
       type: "file",
       connection: "file:///",
       workspaces: {
-        default: "/",
         home: "/"
       },
       formats: {
