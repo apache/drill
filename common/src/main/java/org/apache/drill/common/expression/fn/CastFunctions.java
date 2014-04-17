@@ -41,6 +41,12 @@ public class CastFunctions {
     TYPE2FUNC.put(MinorType.INTERVALDAY, "castINTERVALDAY");
     TYPE2FUNC.put(MinorType.INTERVALYEAR, "castINTERVALYEAR");
     TYPE2FUNC.put(MinorType.INTERVAL, "castINTERVAL");
+    TYPE2FUNC.put(MinorType.DECIMAL9, "castDECIMAL9");
+    TYPE2FUNC.put(MinorType.DECIMAL18, "castDECIMAL18");
+    TYPE2FUNC.put(MinorType.DECIMAL28SPARSE, "castDECIMAL28SPARSE");
+    TYPE2FUNC.put(MinorType.DECIMAL28DENSE, "castDECIMAL28DENSE");
+    TYPE2FUNC.put(MinorType.DECIMAL38SPARSE, "castDECIMAL38SPARSE");
+    TYPE2FUNC.put(MinorType.DECIMAL38DENSE, "castDECIMAL38DENSE");
   }
 
   public static String getCastFunc(MinorType targetMinorType) {

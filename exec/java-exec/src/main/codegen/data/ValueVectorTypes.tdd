@@ -59,10 +59,7 @@
         { class: "Float4", javaType: "float" },
         { class: "Time", javaType: "int"},
         { class: "IntervalYear", javaType: "int"}
-        <#-- 
-        { class: "Decimal4", maxPrecisionDigits: 8, scale: 4, javaType: "float"},
-        { class: "Date" }
-        -->
+        { class: "Decimal9", maxPrecisionDigits: 9},
       ]
     },
     {
@@ -76,8 +73,8 @@
         { class: "Float8", javaType: "double" , boxedType: "Double"},
         { class: "Date", javaType: "long"},
         { class: "TimeStamp", javaType: "long"}
+        { class: "Decimal18", maxPrecisionDigits: 18},
         <#--
-        { class: "Decimal8", maxPrecisionDigits: 18, scale: 4, javaType: "double", boxedType: "Double"},
         { class: "Money", maxPrecisionDigits: 2, scale: 1, },
         -->
       ]
@@ -98,16 +95,17 @@
       minor: [
         { class: "Interval", daysOffset: 4, milliSecondsOffset: 8}
       ]
-    }
-    <#--
+    },
     {
       major: "Fixed",
       width: 12,
       javaType: "ByteBuf",
       minor: [
-        { class: "Decimal12", maxPrecisionDigits: 28, scale: 5},
+        <#--
         { class: "TimeTZ" },
         { class: "Interval" }
+        -->
+        { class: "Decimal28Dense", maxPrecisionDigits: 28, nDecimalDigits: 3}
       ]
     },
     {
@@ -115,10 +113,25 @@
       width: 16,
       javaType: "ByteBuf",
       minor: [
-        { class: "Decimal16", maxPrecisionDigits: 37, scale: 6}
+        { class: "Decimal38Dense", maxPrecisionDigits: 38, nDecimalDigits: 4}
       ]
     },
-    -->
+    {
+      major: "Fixed",
+      width: 24,
+      javaType: "ByteBuf",
+      minor: [
+        { class: "Decimal38Sparse", maxPrecisionDigits: 38, nDecimalDigits: 6}
+      ]
+    },
+    {
+      major: "Fixed",
+      width: 20,
+      javaType: "ByteBuf",
+      minor: [
+        { class: "Decimal28Sparse", maxPrecisionDigits: 28, nDecimalDigits: 5}
+      ]
+    },
     {
       major: "VarLen",
       width: 4,

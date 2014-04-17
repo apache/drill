@@ -28,6 +28,10 @@ import org.apache.drill.common.expression.ValueExpressions.IntExpression;
 import org.apache.drill.common.expression.ValueExpressions.IntervalDayExpression;
 import org.apache.drill.common.expression.ValueExpressions.IntervalYearExpression;
 import org.apache.drill.common.expression.ValueExpressions.LongExpression;
+import org.apache.drill.common.expression.ValueExpressions.Decimal9Expression;
+import org.apache.drill.common.expression.ValueExpressions.Decimal18Expression;
+import org.apache.drill.common.expression.ValueExpressions.Decimal28Expression;
+import org.apache.drill.common.expression.ValueExpressions.Decimal38Expression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
 import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
@@ -40,6 +44,9 @@ import org.joda.time.format.DateTimeFormatterBuilder;
 import org.joda.time.format.DateTimeParser;
 
 import com.google.common.collect.ImmutableList;
+import org.apache.drill.common.util.DecimalUtility;
+
+import java.math.BigDecimal;
 
 public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBuilder, RuntimeException>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExpressionStringBuilder.class);
@@ -184,6 +191,33 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
   }
 
   @Override
+  public Void visitDecimal9Constant(Decimal9Expression decExpr, StringBuilder sb) throws RuntimeException {
+    BigDecimal value = new BigDecimal(decExpr.getIntFromDecimal());
+    sb.append((value.setScale(decExpr.getScale())).toString());
+    return null;
+  }
+
+  @Override
+  public Void visitDecimal18Constant(Decimal18Expression decExpr, StringBuilder sb) throws RuntimeException {
+    BigDecimal value = new BigDecimal(decExpr.getLongFromDecimal());
+    sb.append((value.setScale(decExpr.getScale())).toString());
+    return null;
+  }
+
+
+  @Override
+  public Void visitDecimal28Constant(Decimal28Expression decExpr, StringBuilder sb) throws RuntimeException {
+    sb.append(decExpr.toString());
+    return null;
+  }
+
+  @Override
+  public Void visitDecimal38Constant(Decimal38Expression decExpr, StringBuilder sb) throws RuntimeException {
+    sb.append(decExpr.getBigDecimal().toString());
+    return null;
+  }
+
+  @Override
   public Void visitDoubleConstant(DoubleExpression dExpr, StringBuilder sb) throws RuntimeException {
     sb.append(dExpr.getDouble());
     return null;
@@ -237,9 +271,24 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
     case FIXED16CHAR:
     case FIXEDBINARY:
     case FIXEDCHAR:
+
       // add size in parens
       sb.append("(");
       sb.append(mt.getWidth());
+      sb.append(")");
+      break;
+    case DECIMAL9:
+    case DECIMAL18:
+    case DECIMAL28DENSE:
+    case DECIMAL28SPARSE:
+    case DECIMAL38DENSE:
+    case DECIMAL38SPARSE:
+
+      // add scale and precision
+      sb.append("(");
+      sb.append(mt.getPrecision());
+      sb.append(", ");
+      sb.append(mt.getScale());
       sb.append(")");
       break;
     default:

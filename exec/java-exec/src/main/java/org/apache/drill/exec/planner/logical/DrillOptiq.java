@@ -30,8 +30,10 @@ import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.expr.EvaluationVisitor;
 import org.apache.drill.exec.record.NullExpression;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.reltype.RelDataTypeField;
@@ -204,15 +206,37 @@ public class DrillOptiq {
       MajorType castType = null;
       
       switch(call.getType().getSqlTypeName().getName()){
-        case "VARCHAR":
-        case "CHAR":
-          castType = Types.required(MinorType.VARCHAR).toBuilder().setWidth(call.getType().getPrecision()).build();
+      case "VARCHAR":
+      case "CHAR":
+        castType = Types.required(MinorType.VARCHAR).toBuilder().setWidth(call.getType().getPrecision()).build();
+        break;
+      
+      case "INTEGER": castType = Types.required(MinorType.INT); break;
+      case "FLOAT": castType = Types.required(MinorType.FLOAT4); break;
+      case "DOUBLE": castType = Types.required(MinorType.FLOAT8); break;
+      case "DECIMAL":
+
+          int precision = call.getType().getPrecision();
+          int scale = call.getType().getScale();
+
+          if (precision <= 9) {
+              castType = TypeProtos.MajorType.newBuilder().setMinorType(MinorType.DECIMAL9).setPrecision(precision).setScale(scale).build();
+          } else if (precision <= 18) {
+              castType = TypeProtos.MajorType.newBuilder().setMinorType(MinorType.DECIMAL18).setPrecision(precision).setScale(scale).build();
+          } else if (precision <= 28) {
+              // Inject a cast to SPARSE before casting to the dense type.
+              castType = TypeProtos.MajorType.newBuilder().setMinorType(MinorType.DECIMAL28SPARSE).setPrecision(precision).setScale(scale).build();
+              arg = FunctionCallFactory.createCast(castType, ExpressionPosition.UNKNOWN, arg);
+              castType = TypeProtos.MajorType.newBuilder().setMinorType(MinorType.DECIMAL28DENSE).setPrecision(precision).setScale(scale).build();
+          } else if (precision <= 38) {
+              castType = TypeProtos.MajorType.newBuilder().setMinorType(MinorType.DECIMAL38SPARSE).setPrecision(precision).setScale(scale).build();
+              arg = FunctionCallFactory.createCast(castType, ExpressionPosition.UNKNOWN, arg);
+              castType = TypeProtos.MajorType.newBuilder().setMinorType(MinorType.DECIMAL38DENSE).setPrecision(precision).setScale(scale).build();
+          } else {
+              throw new UnsupportedOperationException("Only Decimal types with precision range 0 - 38 is supported");
+          }
           break;
       
-        case "INTEGER": castType = Types.required(MinorType.INT); break;
-        case "FLOAT": castType = Types.required(MinorType.FLOAT4); break;
-        case "DOUBLE": castType = Types.required(MinorType.FLOAT8); break;
-        case "DECIMAL": throw new UnsupportedOperationException("Need to add decimal.");
         case "INTERVAL_YEAR_MONTH": castType = Types.required(MinorType.INTERVALYEAR); break;
         case "INTERVAL_DAY_TIME": castType = Types.required(MinorType.INTERVALDAY); break;
         default: castType = Types.required(MinorType.valueOf(call.getType().getSqlTypeName().getName()));
@@ -251,6 +275,20 @@ public class DrillOptiq {
         int a = ((BigDecimal) literal.getValue()).intValue();
         return ValueExpressions.getInt(a);
       case DECIMAL:
+        /* TODO: Enable using Decimal literals once we have more functions implemented for Decimal
+         * For now continue using Double instead of decimals
+
+        int precision = ((BigDecimal) literal.getValue()).precision();
+        if (precision <= 9) {
+            return ValueExpressions.getDecimal9((BigDecimal)literal.getValue());
+        } else if (precision <= 18) {
+            return ValueExpressions.getDecimal18((BigDecimal)literal.getValue());
+        } else if (precision <= 28) {
+            return ValueExpressions.getDecimal28((BigDecimal)literal.getValue());
+        } else if (precision <= 38) {
+            return ValueExpressions.getDecimal38((BigDecimal)literal.getValue());
+        } */
+
         double dbl = ((BigDecimal) literal.getValue()).doubleValue();
         logger.warn("Converting exact decimal into approximate decimal.  Should be fixed once decimal is implemented.");
         return ValueExpressions.getFloat8(dbl);

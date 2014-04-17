@@ -326,7 +326,7 @@ public class HiveRecordReader implements RecordReader {
       case "tinyint":
         return Types.required(TypeProtos.MinorType.TINYINT);
       case "decimal":
-        return Types.required(TypeProtos.MinorType.DECIMAL16);
+        return Types.required(TypeProtos.MinorType.DECIMAL38SPARSE);
       case "double":
         return Types.required(TypeProtos.MinorType.FLOAT8);
       case "float":
@@ -355,7 +355,7 @@ public class HiveRecordReader implements RecordReader {
       case BYTE:
         return Types.required(TypeProtos.MinorType.TINYINT);
       case DECIMAL:
-        return Types.required(TypeProtos.MinorType.DECIMAL16);
+        return Types.required(TypeProtos.MinorType.DECIMAL38SPARSE);
       case DOUBLE:
         return Types.required(TypeProtos.MinorType.FLOAT8);
       case FLOAT:

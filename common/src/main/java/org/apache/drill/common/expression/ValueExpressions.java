@@ -18,6 +18,7 @@
 package org.apache.drill.common.expression;
 
 import java.util.GregorianCalendar;
+import java.math.BigDecimal;
 import java.util.Iterator;
 
 import org.apache.drill.common.expression.visitors.ExprVisitor;
@@ -25,6 +26,7 @@ import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
+import org.apache.drill.common.util.DecimalUtility;
 
 import com.google.common.collect.Iterators;
 
@@ -72,9 +74,23 @@ public class ValueExpressions {
       return new IntervalDayExpression(intervalInMillis);
   }
 
+  public static LogicalExpression getDecimal9(BigDecimal i) {
+    return new Decimal9Expression(i, ExpressionPosition.UNKNOWN);
+  }
 
+  public static LogicalExpression getDecimal18(BigDecimal i) {
+    return new Decimal18Expression(i, ExpressionPosition.UNKNOWN);
+  }
 
-  public static LogicalExpression getNumericExpression(String s, ExpressionPosition ep) {
+  public static LogicalExpression getDecimal28(BigDecimal i) {
+    return new Decimal28Expression(i, ExpressionPosition.UNKNOWN);
+  }
+
+  public static LogicalExpression getDecimal38(BigDecimal i) {
+      return new Decimal38Expression(i, ExpressionPosition.UNKNOWN);
+  }
+
+    public static LogicalExpression getNumericExpression(String s, ExpressionPosition ep) {
     try {
         int a = Integer.parseInt(s);
         return new IntExpression(a, ep);
@@ -209,6 +225,154 @@ public class ValueExpressions {
     }
 
   }
+
+  public static class Decimal9Expression extends LogicalExpressionBase {
+
+    private int decimal;
+    private int scale;
+    private int precision;
+
+    public Decimal9Expression(BigDecimal input, ExpressionPosition pos) {
+      super(pos);
+      this.scale = input.scale();
+      this.precision = input.precision();
+      this.decimal = DecimalUtility.getDecimal9FromBigDecimal(input, scale, precision);
+    }
+
+
+    public int getIntFromDecimal() {
+      return decimal;
+    }
+
+    public int getScale() {
+      return scale;
+    }
+
+    public int getPrecision() {
+      return precision;
+    }
+
+    @Override
+    public MajorType getMajorType() {
+      return MajorType.newBuilder().setMinorType(MinorType.DECIMAL9).setScale(scale).setPrecision(precision).setMode(DataMode.REQUIRED).build();
+    }
+
+    @Override
+    public <T, V, E extends Exception> T accept(ExprVisitor<T, V, E> visitor, V value) throws E {
+      return visitor.visitDecimal9Constant(this, value);
+    }
+
+    @Override
+    public Iterator<LogicalExpression> iterator() {
+      return Iterators.emptyIterator();
+    }
+
+  }
+
+  public static class Decimal18Expression extends LogicalExpressionBase {
+
+    private long decimal;
+    private int scale;
+    private int precision;
+
+    public Decimal18Expression(BigDecimal input, ExpressionPosition pos) {
+      super(pos);
+      this.scale = input.scale();
+      this.precision = input.precision();
+      this.decimal = DecimalUtility.getDecimal18FromBigDecimal(input, scale, precision);
+    }
+
+
+    public long getLongFromDecimal() {
+      return decimal;
+    }
+
+    public int getScale() {
+      return scale;
+    }
+
+    public int getPrecision() {
+      return precision;
+    }
+
+    @Override
+    public MajorType getMajorType() {
+      return MajorType.newBuilder().setMinorType(MinorType.DECIMAL18).setScale(scale).setPrecision(precision).setMode(DataMode.REQUIRED).build();
+    }
+
+    @Override
+    public <T, V, E extends Exception> T accept(ExprVisitor<T, V, E> visitor, V value) throws E {
+      return visitor.visitDecimal18Constant(this, value);
+    }
+
+    @Override
+    public Iterator<LogicalExpression> iterator() {
+      return Iterators.emptyIterator();
+    }
+
+  }
+
+  public static class Decimal28Expression extends LogicalExpressionBase {
+
+    private BigDecimal bigDecimal;
+
+    public Decimal28Expression(BigDecimal input, ExpressionPosition pos) {
+      super(pos);
+      this.bigDecimal = input;
+    }
+
+
+    public BigDecimal getBigDecimal() {
+      return bigDecimal;
+    }
+
+    @Override
+    public MajorType getMajorType() {
+      return MajorType.newBuilder().setMinorType(MinorType.DECIMAL28SPARSE).setScale(bigDecimal.scale()).setPrecision(bigDecimal.precision()).setMode(DataMode.REQUIRED).build();
+    }
+
+    @Override
+    public <T, V, E extends Exception> T accept(ExprVisitor<T, V, E> visitor, V value) throws E {
+      return visitor.visitDecimal28Constant(this, value);
+    }
+
+    @Override
+    public Iterator<LogicalExpression> iterator() {
+      return Iterators.emptyIterator();
+    }
+
+  }
+
+  public static class Decimal38Expression extends LogicalExpressionBase {
+
+    private BigDecimal bigDecimal;
+
+    public Decimal38Expression(BigDecimal input, ExpressionPosition pos) {
+      super(pos);
+      this.bigDecimal = input;
+    }
+
+    public BigDecimal getBigDecimal() {
+      return bigDecimal;
+    }
+
+    @Override
+    public MajorType getMajorType() {
+      return MajorType.newBuilder().setMinorType(MinorType.DECIMAL38SPARSE).setScale(bigDecimal.scale()).setPrecision(bigDecimal.precision()).setMode(DataMode.REQUIRED).build();
+    }
+
+    @Override
+    public <T, V, E extends Exception> T accept(ExprVisitor<T, V, E> visitor, V value) throws E {
+      return visitor.visitDecimal38Constant(this, value);
+    }
+
+    @Override
+    public Iterator<LogicalExpression> iterator() {
+      return Iterators.emptyIterator();
+    }
+
+  }
+
 
   public static class DoubleExpression extends LogicalExpressionBase {
     private double d;

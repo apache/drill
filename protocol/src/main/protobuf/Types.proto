@@ -29,12 +29,12 @@ enum MinorType {
     SMALLINT = 4;   //  two byte signed integer
     INT = 5;   //  four byte signed integer
     BIGINT = 6;   //  eight byte signed integer
-    DECIMAL4 = 7;   //  a decimal supporting precision between 1 and 8 (4 bits for decimal location, 1 sign)
-    DECIMAL8 = 8;   //  a decimal supporting precision between 9 and 18 (5 bits for decimal location, 1 sign)
-    DECIMAL12 = 9;   //  a decimal supporting precision between 19 and 28 (5 bits for decimal location, 1 sign)
-    DECIMAL16 = 10;   //  a decimal supporting precision between 29 and 37 (6 bits for decimal location, 1 sign)
+    DECIMAL9 = 7;   //  a decimal supporting precision between 1 and 9
+    DECIMAL18 = 8;   //  a decimal supporting precision between 10 and 18
+    DECIMAL28SPARSE = 9;   //  a decimal supporting precision between 19 and 28
+    DECIMAL38SPARSE = 10;   //  a decimal supporting precision between 29 and 38
     MONEY = 11;   //  signed decimal with two digit precision
-    DATE = 12;   //  days since 4713bc 
+    DATE = 12;   //  days since 4713bc
     TIME = 13;   //  time in micros before or after 2000/1/1
     TIMETZ = 14;   //  time in micros before or after 2000/1/1 with timezone
     TIMESTAMPTZ = 15;   //  unix epoch time in millis
@@ -53,6 +53,8 @@ enum MinorType {
     UINT2 = 30;   //  unsigned 2 byte integer
     UINT4 = 31;   //  unsigned 4 byte integer
     UINT8 = 32;   //  unsigned 8 byte integer
+    DECIMAL28DENSE = 33; // dense decimal representation, supporting precision between 19 and 28
+    DECIMAL38DENSE = 34; // dense decimal representation, supporting precision between 28 and 38
 //    PROTO2 = 33;   //  protobuf encoded complex type. (up to 2^16 in length)
 //    PROTO4 = 34;   //  protobuf encoded complex type. (up to 2^32 in length)
 //    MSGPACK2 = 35;   //  msgpack encoded complex type. (up to 2^16 in length)

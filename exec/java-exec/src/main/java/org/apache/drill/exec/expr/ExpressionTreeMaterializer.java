@@ -38,6 +38,10 @@ import org.apache.drill.common.expression.ValueExpressions.IntervalYearExpressio
 import org.apache.drill.common.expression.ValueExpressions.IntervalDayExpression;
 import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
 import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
+import org.apache.drill.common.expression.ValueExpressions.Decimal9Expression;
+import org.apache.drill.common.expression.ValueExpressions.Decimal18Expression;
+import org.apache.drill.common.expression.ValueExpressions.Decimal28Expression;
+import org.apache.drill.common.expression.ValueExpressions.Decimal38Expression;
 import org.apache.drill.common.expression.ValueExpressions.IntExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.expression.fn.CastFunctions;
@@ -127,24 +131,34 @@ public class ExpressionTreeMaterializer {
       if (matchedFuncHolder!=null) {
         //Compare parm type against arg type. Insert cast on top of arg, whenever necessary.
         for (int i = 0; i < call.args.size(); ++i) {
+
+          LogicalExpression currentArg = call.args.get(i);
+
           TypeProtos.MajorType parmType = matchedFuncHolder.getParmMajorType(i);
 
           //Case 1: If  1) the argument is NullExpression
           //            2) the parameter of matchedFuncHolder allows null input, or func's null_handling is NULL_IF_NULL (means null and non-null are exchangable).
           //        then replace NullExpression with a TypedNullConstant
-          if (call.args.get(i).equals(NullExpression.INSTANCE) &&
+          if (currentArg.equals(NullExpression.INSTANCE) &&
             ( parmType.getMode().equals(TypeProtos.DataMode.OPTIONAL) ||
               matchedFuncHolder.getNullHandling() == FunctionTemplate.NullHandling.NULL_IF_NULL)) {
             argsWithCast.add(new TypedNullConstant(parmType));
-          } else if (Types.softEquals(parmType, call.args.get(i).getMajorType(), matchedFuncHolder.getNullHandling() ==
-            FunctionTemplate.NullHandling.NULL_IF_NULL)) {
+          } else if (Types.softEquals(parmType, currentArg.getMajorType(), matchedFuncHolder.getNullHandling() ==
+                  FunctionTemplate.NullHandling.NULL_IF_NULL)) {
             //Case 2: argument and parameter matches. Do nothing.
-            argsWithCast.add(call.args.get(i));
+            argsWithCast.add(currentArg);
           } else {
             //Case 3: insert cast if param type is different from arg type.
             String castFuncName = CastFunctions.getCastFunc(parmType.getMinorType());
             List<LogicalExpression> castArgs = Lists.newArrayList();
             castArgs.add(call.args.get(i));  //input_expr
+
+            if (parmType.getMinorType().name().startsWith("DECIMAL")) {
+              // Add the scale and precision to the arguments of the implicit cast
+              castArgs.add(new ValueExpressions.LongExpression(currentArg.getMajorType().getPrecision(), null));
+              castArgs.add(new ValueExpressions.LongExpression(currentArg.getMajorType().getScale(), null));
+            }
+
             FunctionCall castCall = new FunctionCall(castFuncName, castArgs, ExpressionPosition.UNKNOWN);
             DrillFuncHolder matchedCastFuncHolder = resolver.getBestMatch(
               registry.getDrillRegistry().getMethods().get(castFuncName), castCall);
@@ -155,6 +169,7 @@ public class ExpressionTreeMaterializer {
             }
 
             argsWithCast.add(new DrillFuncHolderExpr(call.getName(), matchedCastFuncHolder, castArgs, ExpressionPosition.UNKNOWN));
+
           }
         }
         return new DrillFuncHolderExpr(call.getName(), matchedFuncHolder, argsWithCast, call.getPosition());
@@ -263,6 +278,26 @@ public class ExpressionTreeMaterializer {
     }
 
     @Override
+    public LogicalExpression visitDecimal9Constant(Decimal9Expression decExpr, FunctionImplementationRegistry registry) {
+      return decExpr;
+    }
+
+    @Override
+    public LogicalExpression visitDecimal18Constant(Decimal18Expression decExpr, FunctionImplementationRegistry registry) {
+      return decExpr;
+    }
+
+    @Override
+    public LogicalExpression visitDecimal28Constant(Decimal28Expression decExpr, FunctionImplementationRegistry registry) {
+      return decExpr;
+    }
+
+    @Override
+    public LogicalExpression visitDecimal38Constant(Decimal38Expression decExpr, FunctionImplementationRegistry registry) {
+      return decExpr;
+    }
+
+    @Override
     public LogicalExpression visitDoubleConstant(DoubleExpression dExpr, FunctionImplementationRegistry registry) {
       return dExpr;
     }
@@ -288,27 +323,29 @@ public class ExpressionTreeMaterializer {
       
       if(castEqual(e.getPosition(), newMajor, input.getMajorType())) return input; // don't do pointless cast.
       
-      
-      if(newMinor == MinorType.LATE){
-        throw new UnsupportedOperationException("LATE binding is not supported");
-      } else if (newMinor == MinorType.NULL){
-        // convert it into null expression
-        return NullExpression.INSTANCE;
+      if(newMinor == MinorType.LATE || newMinor == MinorType.NULL){
+        // if the type still isn't fully bound, leave as cast expression.
+        return new CastExpression(input, e.getMajorType(), e.getPosition());
+      }else{
+        // if the type is fully bound, convert to functioncall and materialze the function.
+        MajorType type = e.getMajorType();
+
+        // Get the cast function name from the map
+        String castFuncWithType = CastFunctions.getCastFunc(type.getMinorType());
+
+        List<LogicalExpression> newArgs = Lists.newArrayList();
+        newArgs.add(e.getInput());  //input_expr
+
+        //VarLen type
+        if (!Types.isFixedWidthType(type)) {
+          newArgs.add(new ValueExpressions.LongExpression(type.getWidth(), null));
+        } else if (type.getMinorType().name().startsWith("DECIMAL")) {
+            newArgs.add(new ValueExpressions.LongExpression(type.getPrecision(), null));
+            newArgs.add(new ValueExpressions.LongExpression(type.getScale(), null));
+        }
+        FunctionCall fc = new FunctionCall(castFuncWithType, newArgs, e.getPosition());
+        return fc.accept(this, value);   
       }
-
-      // if the type is fully bound, convert to functioncall and materialze the function.
-      MajorType type = e.getMajorType();
-      String castFuncWithType = "cast" + type.getMinorType().name();
-
-      List<LogicalExpression> newArgs = Lists.newArrayList();
-      newArgs.add(e.getInput());  //input_expr
-
-      //VarLen type
-      if (!Types.isFixedWidthType(type)) {
-        newArgs.add(new ValueExpressions.LongExpression(type.getWidth(), null));
-      }
-      FunctionCall fc = new FunctionCall(castFuncWithType, newArgs, e.getPosition());
-      return fc.accept(this, value);
     }
   
     private boolean castEqual(ExpressionPosition pos, MajorType from, MajorType to){
@@ -326,6 +363,16 @@ public class ExpressionTreeMaterializer {
       case UINT8:
         // nothing else matters.
         return true;
+    case DECIMAL9:
+    case DECIMAL18:
+    case DECIMAL28DENSE:
+    case DECIMAL28SPARSE:
+    case DECIMAL38DENSE:
+    case DECIMAL38SPARSE:
+      if (to.getScale() == from.getScale() && to.getPrecision() == from.getPrecision()) {
+        return true;
+      }
+      return false;
 
       case FIXED16CHAR:
       case FIXEDBINARY:

@@ -33,6 +33,10 @@ import org.apache.drill.common.expression.ValueExpressions.DateExpression;
 import org.apache.drill.common.expression.ValueExpressions.IntervalYearExpression;
 import org.apache.drill.common.expression.ValueExpressions.IntervalDayExpression;
 import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
+import org.apache.drill.common.expression.ValueExpressions.Decimal9Expression;
+import org.apache.drill.common.expression.ValueExpressions.Decimal18Expression;
+import org.apache.drill.common.expression.ValueExpressions.Decimal28Expression;
+import org.apache.drill.common.expression.ValueExpressions.Decimal38Expression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 
 public abstract class AbstractExprVisitor<T, VAL, EXCEP extends Exception> implements ExprVisitor<T, VAL, EXCEP> {
@@ -71,6 +75,27 @@ public abstract class AbstractExprVisitor<T, VAL, EXCEP extends Exception> imple
   @Override
   public T visitLongConstant(LongExpression intExpr, VAL value) throws EXCEP {
     return visitUnknown(intExpr, value);
+  }
+
+
+  @Override
+  public T visitDecimal9Constant(Decimal9Expression decExpr, VAL value) throws EXCEP {
+    return visitUnknown(decExpr, value);
+  }
+
+  @Override
+  public T visitDecimal18Constant(Decimal18Expression decExpr, VAL value) throws EXCEP {
+    return visitUnknown(decExpr, value);
+  }
+
+  @Override
+  public T visitDecimal28Constant(Decimal28Expression decExpr, VAL value) throws EXCEP {
+    return visitUnknown(decExpr, value);
+  }
+
+  @Override
+  public T visitDecimal38Constant(Decimal38Expression decExpr, VAL value) throws EXCEP {
+    return visitUnknown(decExpr, value);
   }
 
   @Override
