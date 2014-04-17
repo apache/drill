@@ -181,15 +181,17 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
     List<VectorAllocator> keyAllocators = Lists.newArrayList();
     List<VectorAllocator> valueAllocators = Lists.newArrayList();
     
-    aggrExprs = new LogicalExpression[popConfig.getAggrExprs().length];
-    groupByOutFieldIds = new TypedFieldId[popConfig.getGroupByExprs().length];
-    aggrOutFieldIds = new TypedFieldId[popConfig.getAggrExprs().length];    
+    int numGroupByExprs = (popConfig.getGroupByExprs() != null) ? popConfig.getGroupByExprs().length : 0;
+    int numAggrExprs = (popConfig.getAggrExprs() != null) ? popConfig.getAggrExprs().length : 0;
+    aggrExprs = new LogicalExpression[numAggrExprs];
+    groupByOutFieldIds = new TypedFieldId[numGroupByExprs];
+    aggrOutFieldIds = new TypedFieldId[numAggrExprs];    
 
     ErrorCollector collector = new ErrorCollectorImpl();
 
     int i;
 
-    for(i = 0; i < popConfig.getGroupByExprs().length; i++) {
+    for(i = 0; i < numGroupByExprs; i++) {
       NamedExpression ne = popConfig.getGroupByExprs()[i];
       final LogicalExpression expr = ExpressionTreeMaterializer.materialize(ne.getExpr(), incoming, collector, context.getFunctionRegistry() );
       if(expr == null) continue;
@@ -202,7 +204,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
       groupByOutFieldIds[i] = container.add(vv);
     }
 
-    for(i = 0; i < aggrExprs.length; i++){
+    for(i = 0; i < numAggrExprs; i++){
       NamedExpression ne = popConfig.getAggrExprs()[i];
       final LogicalExpression expr = ExpressionTreeMaterializer.materialize(ne.getExpr(), incoming, collector, context.getFunctionRegistry() );
   

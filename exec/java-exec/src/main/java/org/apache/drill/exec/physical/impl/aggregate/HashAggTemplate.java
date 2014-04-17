@@ -155,9 +155,14 @@ public abstract class HashAggTemplate implements HashAggregator {
                     TypedFieldId[] groupByOutFieldIds,
                     VectorAllocator[] keyAllocators, VectorAllocator[] valueAllocators) 
     throws SchemaChangeException, ClassTransformationException, IOException {
-
-    if (valueFieldIds.size() < valueExprs.length) throw new IllegalArgumentException("Wrong number of workspace variables.");
-
+    
+    if (valueExprs == null || valueFieldIds == null) {
+      throw new IllegalArgumentException("Invalid aggr value exprs or workspace variables.");
+    }
+    if (valueFieldIds.size() < valueExprs.length) {
+      throw new IllegalArgumentException("Wrong number of workspace variables.");
+    }
+     
     this.context = context;
     this.incoming = incoming;
     this.schema = incoming.getSchema();
@@ -180,10 +185,12 @@ public abstract class HashAggTemplate implements HashAggregator {
     this.htIdxHolder = new IntHolder(); 
     materializedValueFields = new MaterializedField[valueFieldIds.size()];
 
-    int i = 0;
-    FieldReference ref = new FieldReference("dummy", ExpressionPosition.UNKNOWN, valueFieldIds.get(0).getType());
-    for (TypedFieldId id : valueFieldIds) {
-      materializedValueFields[i++] = MaterializedField.create(ref, id.getType());
+    if (valueFieldIds.size() > 0) {
+      int i = 0;
+      FieldReference ref = new FieldReference("dummy", ExpressionPosition.UNKNOWN, valueFieldIds.get(0).getType());
+      for (TypedFieldId id : valueFieldIds) {
+        materializedValueFields[i++] = MaterializedField.create(ref, id.getType());
+      }
     }
 
     ChainedHashTable ht = new ChainedHashTable(hashAggrConfig.getHtConfig(), context, incoming, null /* no incoming probe */, outgoing) ;

@@ -39,6 +39,11 @@ public class TestHashAggr extends BaseTestQuery{
   public void testQ7_2() throws Exception{
     testPhysicalFromFile("agg/hashagg/q7_2.json");
   }
+ 
+  @Test
+  public void testQ7_3() throws Exception{
+    testPhysicalFromFile("agg/hashagg/q7_3.json");
+  }  
   
   @Ignore // ignore temporarily since this shows memory leak in ParquetRecordReader (DRILL-443)
   @Test
