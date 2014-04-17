@@ -84,6 +84,7 @@ public class ChainedHashTable {
   private final MappingSet KeyMatchIncomingBuildMapping = new MappingSet("incomingRowIdx", null, "incomingBuild", null, KEY_MATCH_BUILD, KEY_MATCH_BUILD);
   private final MappingSet KeyMatchIncomingProbeMapping = new MappingSet("incomingRowIdx", null, "incomingProbe", null, KEY_MATCH_PROBE, KEY_MATCH_PROBE);
   private final MappingSet KeyMatchHtableMapping = new MappingSet("htRowIdx", null, "htContainer", null, KEY_MATCH_BUILD, KEY_MATCH_BUILD);
+  private final MappingSet KeyMatchHtableProbeMapping = new MappingSet("htRowIdx", null, "htContainer", null, KEY_MATCH_PROBE, KEY_MATCH_PROBE);
   private final MappingSet GetHashIncomingBuildMapping = new MappingSet("incomingRowIdx", null, "incomingBuild", null, GET_HASH_BUILD, GET_HASH_BUILD);
   private final MappingSet GetHashIncomingProbeMapping = new MappingSet("incomingRowIdx", null, "incomingProbe", null, GET_HASH_PROBE, GET_HASH_PROBE);
   private final MappingSet SetValueMapping = new MappingSet("incomingRowIdx" /* read index */, "htRowIdx" /* write index */, "incomingBuild" /* read container */, "htContainer" /* write container */, SET_VALUE, SET_VALUE);
@@ -114,10 +115,6 @@ public class ChainedHashTable {
     ClassGenerator<HashTable> cg = top.getRoot();
     ClassGenerator<HashTable> cgInner = cg.getInnerGenerator("BatchHolder");
 
-    if (outKeyFieldIds.length > htConfig.getKeyExprsBuild().length) {
-      throw new IllegalArgumentException("Mismatched number of output key fields.");
-    }
-
     LogicalExpression[] keyExprsBuild = new LogicalExpression[htConfig.getKeyExprsBuild().length];
     LogicalExpression[] keyExprsProbe = null;
     boolean isProbe = (htConfig.getKeyExprsProbe() != null) ;
@@ -146,27 +143,34 @@ public class ChainedHashTable {
       i++;
     }
 
-    if (isProbe) { 
+    if (isProbe) {
+      i = 0;
       for (NamedExpression ne : htConfig.getKeyExprsProbe()) { 
         final LogicalExpression expr = ExpressionTreeMaterializer.materialize(ne.getExpr(), incomingProbe, collector, context.getFunctionRegistry());
         if(collector.hasErrors()) throw new SchemaChangeException("Failure while materializing expression. " + collector.toErrorString());
         if (expr == null) continue;
         keyExprsProbe[i] = expr;
+        i++;
       }
     }
 
     // generate code for isKeyMatch(), setValue(), getHash() and outputRecordKeys()
-
     setupIsKeyMatchInternal(cgInner, KeyMatchIncomingBuildMapping, KeyMatchHtableMapping, keyExprsBuild, htKeyFieldIds);
-    setupIsKeyMatchInternal(cgInner, KeyMatchIncomingProbeMapping, KeyMatchHtableMapping, keyExprsProbe, htKeyFieldIds) ;
+    setupIsKeyMatchInternal(cgInner, KeyMatchIncomingProbeMapping, KeyMatchHtableProbeMapping, keyExprsProbe, htKeyFieldIds) ;
 
     setupSetValue(cgInner, keyExprsBuild, htKeyFieldIds);
-    setupOutputRecordKeys(cgInner, htKeyFieldIds, outKeyFieldIds);    
+    if (outgoing != null) {
+
+      if (outKeyFieldIds.length > htConfig.getKeyExprsBuild().length) {
+        throw new IllegalArgumentException("Mismatched number of output key fields.");
+      }
+    }
+    setupOutputRecordKeys(cgInner, htKeyFieldIds, outKeyFieldIds);
 
     setupGetHash(cg /* use top level code generator for getHash */,  GetHashIncomingBuildMapping, keyExprsBuild);
     setupGetHash(cg /* use top level code generator for getHash */,  GetHashIncomingProbeMapping, keyExprsProbe);
 
-    HashTable ht = context.getImplementationClass(top); 
+    HashTable ht = context.getImplementationClass(top);
     ht.setup(htConfig, context, incomingBuild, incomingProbe, outgoing, htContainerOrig);
 
     return ht;
@@ -227,14 +231,18 @@ public class ChainedHashTable {
 
     cg.setMappingSet(OutputRecordKeysMapping);
 
-    for (int i = 0; i < outKeyFieldIds.length; i++) {
-      ValueVectorReadExpression vvrExpr = new ValueVectorReadExpression(htKeyFieldIds[i]);
-      ValueVectorWriteExpression vvwExpr = new ValueVectorWriteExpression(outKeyFieldIds[i], vvrExpr, true);
-      HoldingContainer hc = cg.addExpr(vvwExpr);
-      cg.getEvalBlock()._if(hc.getValue().eq(JExpr.lit(0)))._then()._return(JExpr.FALSE);
-    }
+    if (outKeyFieldIds != null) {
+      for (int i = 0; i < outKeyFieldIds.length; i++) {
+        ValueVectorReadExpression vvrExpr = new ValueVectorReadExpression(htKeyFieldIds[i]);
+        ValueVectorWriteExpression vvwExpr = new ValueVectorWriteExpression(outKeyFieldIds[i], vvrExpr, true);
+        HoldingContainer hc = cg.addExpr(vvwExpr);
+        cg.getEvalBlock()._if(hc.getValue().eq(JExpr.lit(0)))._then()._return(JExpr.FALSE);
+      }
 
-    cg.getEvalBlock()._return(JExpr.TRUE);
+      cg.getEvalBlock()._return(JExpr.TRUE);
+    } else {
+      cg.getEvalBlock()._return(JExpr.FALSE);
+    }
   }
 
   private void setupGetHash(ClassGenerator<HashTable> cg, MappingSet incomingMapping, LogicalExpression[] keyExprs) throws SchemaChangeException {
