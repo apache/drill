@@ -266,11 +266,30 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
     public void get(int index, Nullable${minor.class}Holder holder){
       holder.isSet = bits.getAccessor().get(index);
       values.getAccessor().get(index, holder);
+
+      <#if minor.class.startsWith("Decimal")>
+      holder.scale = getField().getScale();
+      holder.precision = getField().getPrecision();
+      </#if>
     }
 
     @Override
     public Object getObject(int index) {
-      return isNull(index) ? null : values.getAccessor().getObject(index);
+
+      if (isNull(index)) {
+          return null;
+      }
+      <#if minor.class == "Decimal9" || minor.class == "Decimal18">
+      // Get the value and construct a BigDecimal Object
+      BigInteger value = BigInteger.valueOf(((${type.boxedType})values.getAccessor().get(index)).${type.javaType}Value());
+      return new BigDecimal(value, getField().getScale());
+      <#elseif minor.class == "Decimal38Sparse" || minor.class == "Decimal28Sparse">
+      return org.apache.drill.common.util.DecimalUtility.getBigDecimalFromSparse(values.getData(), index * ${type.width}, ${minor.nDecimalDigits}, getField().getScale());
+      <#elseif minor.class == "Decimal38Dense" || minor.class == "Decimal28Dense">
+      return org.apache.drill.common.util.DecimalUtility.getBigDecimalFromDense(values.getData(), index * ${type.width}, ${minor.nDecimalDigits}, getField().getScale(), ${minor.maxPrecisionDigits}, ${type.width});
+      <#else>
+      return values.getAccessor().getObject(index);
+      </#if>
     }
 
     public int getValueCount(){
@@ -362,8 +381,15 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
       values.getMutator().set(index, holder);
       <#if type.major == "VarLen">lastSet = index;</#if>
     }
-    
-    public boolean setSafe(int index, <#if type.major == "VarLen" || minor.class == "TimeStampTZ" || minor.class == "Interval" || minor.class == "IntervalDay">Nullable${minor.class}Holder <#elseif (type.width < 4)>int<#else>${minor.javaType!type.javaType}</#if> value){
+
+    //public boolean setSafe(int index, <#if type.major == "VarLen" || minor.class == "TimeStampTZ" || minor.class == "Interval" || minor.class == "IntervalDay">Nullable${minor.class}Holder <#elseif (type.width < 4)>int<#else>${minor.javaType!type.javaType}</#if> value){
+
+    <#if type.major == "VarLen" || minor.class == "Decimal28Sparse" || minor.class == "Decimal38Sparse" || minor.class == "Decimal28Dense" || minor.class == "Decimal38Dense" || minor.class == "TimeStampTZ" || minor.class == "Interval" || minor.class == "IntervalDay">
+    public boolean setSafe(int index, Nullable${minor.class}Holder value) {
+    <#else>
+    public boolean setSafe(int index, ${minor.javaType!type.javaType} value) {
+    </#if>
+
       <#if type.major == "VarLen">
       for (int i = lastSet + 1; i < index; i++) {
         values.getMutator().set(i, new byte[]{});

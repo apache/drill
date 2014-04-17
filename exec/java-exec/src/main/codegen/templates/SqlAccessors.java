@@ -107,6 +107,11 @@ public class ${name}Accessor extends AbstractSqlAccessor{
   public byte[] getBytes(int index) {
       return null;
   }
+  <#elseif minor.class.startsWith("Decimal")>
+  @Override
+  public BigDecimal getBigDecimal(int index) {
+      return (BigDecimal) ac.getObject(index);
+  }
   <#else>
   @Override
   public ${javaType} get${javaType?cap_first}(int index){

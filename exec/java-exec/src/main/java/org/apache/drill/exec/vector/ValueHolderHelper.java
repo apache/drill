@@ -18,13 +18,22 @@
 package org.apache.drill.exec.vector;
 
 import java.nio.ByteOrder;
-
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.SwappedByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.buffer.UnpooledByteBufAllocator;
 
+import org.apache.drill.common.util.DecimalUtility;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.expr.holders.IntervalDayHolder;
+import org.apache.drill.exec.expr.holders.Decimal9Holder;
+import org.apache.drill.exec.expr.holders.Decimal18Holder;
+import org.apache.drill.exec.expr.holders.Decimal28SparseHolder;
+import org.apache.drill.exec.expr.holders.Decimal38SparseHolder;
 
 import com.google.common.base.Charsets;
+
+import java.math.BigDecimal;
 
 
 public class ValueHolderHelper {
@@ -46,6 +55,63 @@ public class ValueHolderHelper {
 
       dch.days = days;
       dch.milliSeconds = millis;
+      return dch;
+  }
+
+  public static Decimal9Holder getDecimal9Holder(int decimal, int scale, int precision) {
+    Decimal9Holder dch = new Decimal9Holder();
+
+    dch.scale = scale;
+    dch.precision = precision;
+    dch.value = decimal;
+
+    return dch;
+  }
+
+  public static Decimal18Holder getDecimal18Holder(long decimal, int scale, int precision) {
+    Decimal18Holder dch = new Decimal18Holder();
+
+    dch.scale = scale;
+    dch.precision = precision;
+    dch.value = decimal;
+
+    return dch;
+  }
+
+  public static Decimal28SparseHolder getDecimal28Holder(String decimal) {
+
+    Decimal28SparseHolder dch = new Decimal28SparseHolder();
+
+    BigDecimal bigDecimal = new BigDecimal(decimal);
+
+    dch.scale = bigDecimal.scale();
+    dch.precision = bigDecimal.precision();
+    dch.sign = (bigDecimal.signum() == -1);
+    dch.start = 0;
+
+    dch.buffer = Unpooled.wrappedBuffer(new byte[5 * DecimalUtility.integerSize]);
+    dch.buffer = new SwappedByteBuf(dch.buffer);
+    DecimalUtility.getSparseFromBigDecimal(bigDecimal, dch.buffer, dch.start, dch.scale, dch.precision, dch.nDecimalDigits);
+
+    return dch;
+  }
+
+  public static Decimal38SparseHolder getDecimal38Holder(String decimal) {
+
+
+      Decimal38SparseHolder dch = new Decimal38SparseHolder();
+
+      BigDecimal bigDecimal = new BigDecimal(decimal);
+
+      dch.scale = bigDecimal.scale();
+      dch.precision = bigDecimal.precision();
+      dch.sign = (bigDecimal.signum() == -1);
+      dch.start = 0;
+
+
+      dch.buffer = Unpooled.wrappedBuffer(new byte[dch.maxPrecision * DecimalUtility.integerSize]);
+      dch.buffer = new SwappedByteBuf(dch.buffer);
+      DecimalUtility.getSparseFromBigDecimal(bigDecimal, dch.buffer, dch.start, dch.scale, dch.precision, dch.nDecimalDigits);
 
       return dch;
   }

@@ -58,12 +58,14 @@ public static final Map<MinorType, Integer> precedenceMap;
   	precedenceMap.put(MinorType.BIGINT, i += 2);
   	precedenceMap.put(MinorType.UINT8, i += 2);
   	precedenceMap.put(MinorType.MONEY, i += 2);
-  	precedenceMap.put(MinorType.DECIMAL4, i += 2);
-  	precedenceMap.put(MinorType.DECIMAL8, i += 2);
-  	precedenceMap.put(MinorType.DECIMAL12, i += 2);
-  	precedenceMap.put(MinorType.DECIMAL16, i += 2);
   	precedenceMap.put(MinorType.FLOAT4, i += 2);
   	precedenceMap.put(MinorType.FLOAT8, i += 2);
+ 	precedenceMap.put(MinorType.DECIMAL9, i += 2);
+  	precedenceMap.put(MinorType.DECIMAL18, i += 2);
+   	precedenceMap.put(MinorType.DECIMAL28DENSE, i += 2);
+  	precedenceMap.put(MinorType.DECIMAL28SPARSE, i += 2);
+    precedenceMap.put(MinorType.DECIMAL38DENSE, i += 2);
+    precedenceMap.put(MinorType.DECIMAL38SPARSE, i += 2);
   	precedenceMap.put(MinorType.TIME, i += 2);
   	precedenceMap.put(MinorType.DATE, i += 2);
   	precedenceMap.put(MinorType.TIMESTAMP, i += 2);
@@ -72,7 +74,6 @@ public static final Map<MinorType, Integer> precedenceMap;
     precedenceMap.put(MinorType.INTERVALDAY, i+= 2);
     precedenceMap.put(MinorType.INTERVALYEAR, i+= 2);
     precedenceMap.put(MinorType.INTERVAL, i+= 2);
-
   }
 
 }

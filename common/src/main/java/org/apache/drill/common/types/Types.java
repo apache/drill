@@ -39,9 +39,12 @@ public class Types {
     
     switch(type.getMinorType()){
     case BIGINT:
-    case DECIMAL16:
-    case DECIMAL4:
-    case DECIMAL8:
+    case DECIMAL38SPARSE:
+    case DECIMAL38DENSE:
+    case DECIMAL28SPARSE:
+    case DECIMAL28DENSE:
+    case DECIMAL18:
+    case DECIMAL9:
     case FLOAT4:
     case FLOAT8:
     case INT:
@@ -70,10 +73,12 @@ public class Types {
       return java.sql.Types.DATE;
     case TIMESTAMP:
       return java.sql.Types.DATE;
-    case DECIMAL12:
-    case DECIMAL16:
-    case DECIMAL4:
-    case DECIMAL8:
+    case DECIMAL9:
+    case DECIMAL18:
+    case DECIMAL28DENSE:
+    case DECIMAL28SPARSE:
+    case DECIMAL38DENSE:
+    case DECIMAL38SPARSE:
       return java.sql.Types.DECIMAL;
     case FIXED16CHAR:
       return java.sql.Types.NCHAR;
@@ -143,8 +148,6 @@ public class Types {
     if(type.getMode() == REPEATED) return true;
     switch(type.getMinorType()){
     case BIGINT:
-    case DECIMAL4:
-    case DECIMAL8:
     case FLOAT4:
     case FLOAT8:
     case INT:

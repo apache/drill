@@ -36,6 +36,10 @@ import org.apache.drill.common.expression.ValueExpressions.IntervalYearExpressio
 import org.apache.drill.common.expression.ValueExpressions.IntervalDayExpression;
 import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
 import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
+import org.apache.drill.common.expression.ValueExpressions.Decimal9Expression;
+import org.apache.drill.common.expression.ValueExpressions.Decimal18Expression;
+import org.apache.drill.common.expression.ValueExpressions.Decimal28Expression;
+import org.apache.drill.common.expression.ValueExpressions.Decimal38Expression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
@@ -123,6 +127,26 @@ public class ExpressionValidator implements ExprVisitor<Void, ErrorCollector, Ru
     return null;
   }
 
+  @Override
+  public Void visitDecimal9Constant(Decimal9Expression decExpr, ErrorCollector errors) throws RuntimeException {
+    return null;
+  }
+
+  @Override
+  public Void visitDecimal18Constant(Decimal18Expression decExpr, ErrorCollector errors) throws RuntimeException {
+    return null;
+  }
+
+  @Override
+  public Void visitDecimal28Constant(Decimal28Expression decExpr, ErrorCollector errors) throws RuntimeException {
+    return null;
+  }
+
+  @Override
+  public Void visitDecimal38Constant(Decimal38Expression decExpr, ErrorCollector errors) throws RuntimeException {
+    return null;
+  }
+    
   @Override
   public Void visitDateConstant(DateExpression intExpr, ErrorCollector errors) throws RuntimeException {
     return null;

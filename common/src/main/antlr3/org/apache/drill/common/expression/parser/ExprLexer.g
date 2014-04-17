@@ -53,8 +53,13 @@ TIMESTAMPTZ: 'timestamptz' | 'TIMESTAMPTZ';
 INTERVAL : 'interval' | 'INTERVAL';
 INTERVALYEAR : 'intervalyear' | 'INTERVALYEAR';
 INTERVALDAY : 'intervalday' | 'INTERVALDAY';
-
 Period : '.';
+DECIMAL9 : 'decimal9';
+DECIMAL18 : 'decimal18';
+DECIMAL28DENSE : 'decimal28dense';
+DECIMAL28SPARSE : 'decimal28sparse';
+DECIMAL38DENSE : 'decimal38dense';
+DECIMAL38SPARSE : 'decimal38sparse';
 Or       : '||' | 'or' | 'OR' | 'Or';
 And      : '&&' | 'and' | 'AND' ;
 Equals   : '==' | '=';

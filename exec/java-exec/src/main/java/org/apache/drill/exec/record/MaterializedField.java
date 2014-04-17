@@ -22,9 +22,12 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.drill.common.expression.FieldReference;
+import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.PathSegment.NameSegment;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.logical.data.NamedExpression;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.expr.TypeHelper;
@@ -123,6 +126,12 @@ public class MaterializedField{
     return def.getMajorType();
   }
 
+  public int getScale() {
+      return def.getMajorType().getScale();
+  }
+  public int getPrecision() {
+      return def.getMajorType().getPrecision();
+  }
   public boolean isNullable() {
     return def.getMajorType().getMode() == DataMode.OPTIONAL;
   }

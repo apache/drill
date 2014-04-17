@@ -31,6 +31,10 @@ import org.apache.drill.common.expression.ValueExpressions.IntervalYearExpressio
 import org.apache.drill.common.expression.ValueExpressions.IntervalDayExpression;
 import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
 import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
+import org.apache.drill.common.expression.ValueExpressions.Decimal9Expression;
+import org.apache.drill.common.expression.ValueExpressions.Decimal18Expression;
+import org.apache.drill.common.expression.ValueExpressions.Decimal28Expression;
+import org.apache.drill.common.expression.ValueExpressions.Decimal38Expression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 
 public abstract class SimpleExprVisitor<T> implements ExprVisitor<T, Void, RuntimeException>{
@@ -97,6 +101,26 @@ public abstract class SimpleExprVisitor<T> implements ExprVisitor<T, Void, Runti
   }
 
   @Override
+  public T visitDecimal9Constant(Decimal9Expression decExpr, Void value) throws RuntimeException {
+    return visitDecimal9Constant(decExpr);
+  }
+
+  @Override
+  public T visitDecimal18Constant(Decimal18Expression decExpr, Void value) throws RuntimeException {
+    return visitDecimal18Constant(decExpr);
+  }
+
+  @Override
+  public T visitDecimal28Constant(Decimal28Expression decExpr, Void value) throws RuntimeException {
+    return visitDecimal28Constant(decExpr);
+  }
+
+  @Override
+  public T visitDecimal38Constant(Decimal38Expression decExpr, Void value) throws RuntimeException {
+    return visitDecimal38Constant(decExpr);
+  }
+
+  @Override
   public T visitDoubleConstant(DoubleExpression dExpr, Void value) throws RuntimeException {
     return visitDoubleConstant(dExpr);
   }
@@ -124,6 +148,10 @@ public abstract class SimpleExprVisitor<T> implements ExprVisitor<T, Void, Runti
   public abstract T visitIntervalYearConstant(IntervalYearExpression intExpr);
   public abstract T visitIntervalDayConstant(IntervalDayExpression intExpr);
   public abstract T visitTimeStampConstant(TimeStampExpression intExpr);
+  public abstract T visitDecimal9Constant(Decimal9Expression intExpr);
+  public abstract T visitDecimal18Constant(Decimal18Expression intExpr);
+  public abstract T visitDecimal28Constant(Decimal28Expression intExpr);
+  public abstract T visitDecimal38Constant(Decimal38Expression intExpr);
   public abstract T visitDoubleConstant(DoubleExpression dExpr);
   public abstract T visitBooleanConstant(BooleanExpression e);
   public abstract T visitQuotedStringConstant(QuotedString e); 

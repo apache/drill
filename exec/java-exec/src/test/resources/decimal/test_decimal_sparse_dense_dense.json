@@ -1,0 +1,56 @@
+{
+  "head" : {
+    "version" : 1,
+    "generator" : {
+      "type" : "org.apache.drill.exec.planner.logical.DrillImplementor",
+      "info" : ""
+    },
+    "type" : "APACHE_DRILL_PHYSICAL",
+    "resultMode" : "EXEC"
+  },
+  graph:[
+  {
+      @id:1,
+      pop:"fs-scan",
+      format: {type: "json"},
+      storage:{type: "file", connection: "classpath:///"},
+      files:["#{TEST_FILE}"]
+  }, {
+    "pop" : "project",
+    "@id" : 2,
+    "exprs" : [ {
+      "ref" : "DECIMAL28SPARSE",
+      "expr" : " (cast(DEC9 as decimal28sparse(28, 4))) "
+    }
+    ],
+
+    "child" : 1
+  },
+{
+    "pop" : "project",
+    "@id" : 3,
+    "exprs" : [ {
+      "ref" : "DECIMAL28DENSE",
+      "expr" : " cast(DECIMAL28SPARSE as decimal28dense(28, 4))  "
+    }
+    ],
+
+    "child" : 2
+  },
+{
+    "pop" : "project",
+    "@id" : 4,
+    "exprs" : [ {
+      "ref" : "DECIMAL38DENSE",
+      "expr" : " cast(DECIMAL28DENSE as decimal38dense(38, 4))  "
+    }
+    ],
+
+    "child" : 3
+  },
+{
+    "pop" : "screen",
+    "@id" : 5,
+    "child" : 4
+  } ]
+}

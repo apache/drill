@@ -20,6 +20,8 @@ import java.lang.Long;
 import java.lang.Override;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 
 <@pp.dropOutputFile />
 <#list vv.types as type>
@@ -44,9 +46,7 @@ package org.apache.drill.exec.vector;
  */
 @SuppressWarnings("unused")
 public final class ${minor.class}Vector extends BaseDataValueVector implements FixedWidthVector{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(${minor.class}Vector.class);
 
- 
   private final Accessor accessor = new Accessor();
   private final Mutator mutator = new Mutator();
   
@@ -176,8 +176,10 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     <#if (type.width > 8)>
 
     public ${minor.javaType!type.javaType} get(int index) {
-      ByteBuf dst = allocator.buffer(${type.width});
+      ByteBuf dst = io.netty.buffer.Unpooled.wrappedBuffer(new byte[${type.width}]);
+      //dst = new io.netty.buffer.SwappedByteBuf(dst);
       data.getBytes(index * ${type.width}, dst, 0, ${type.width});
+
       return dst;
     }
 
@@ -290,8 +292,63 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
               append(millis));
     }
 
-    <#else>
+    <#elseif (minor.class == "Decimal28Sparse") || (minor.class == "Decimal38Sparse") || (minor.class == "Decimal28Dense") || (minor.class == "Decimal38Dense")>
 
+    public void get(int index, ${minor.class}Holder holder) {
+
+        holder.start = index * ${type.width};
+
+        holder.buffer = data;
+
+        /* The buffer within the value vector is little endian.
+         * For the dense representation though, we use big endian
+         * byte ordering (internally). This is because we shift bits to the right and
+         * big endian ordering makes sense for this purpose.  So we have to deal with
+         * the sign bit for the two representation in a slightly different fashion
+         */
+
+        // Get the sign of the decimal
+          <#if minor.class.endsWith("Sparse")>
+          if ((holder.buffer.getInt(holder.start) & 0x80000000) != 0) {
+          <#elseif minor.class.endsWith("Dense")>
+          if ((holder.buffer.getInt(holder.start) & 0x00000080) != 0) {
+          </#if>
+            holder.sign = true;
+        }
+
+        holder.scale = getField().getScale();
+        holder.precision = getField().getPrecision();
+
+
+    }
+
+    void get(int index, Nullable${minor.class}Holder holder) {
+
+        holder.start = index * ${type.width};
+
+        holder.buffer = data;
+
+          // Get the sign the of the decimal
+          <#if minor.class.endsWith("Sparse")>
+          if ((holder.buffer.getInt(holder.start) & 0x80000000) != 0) {
+          <#elseif minor.class.endsWith("Dense")>
+          if ((holder.buffer.getInt(holder.start) & 0x00000080) != 0) {
+          </#if>
+            holder.sign = true;
+        }
+    }
+
+      @Override
+      public Object getObject(int index) {
+      <#if (minor.class == "Decimal28Sparse") || (minor.class == "Decimal38Sparse")>
+      // Get the BigDecimal object
+      return org.apache.drill.common.util.DecimalUtility.getBigDecimalFromSparse(data, index * ${type.width}, ${minor.nDecimalDigits}, getField().getScale());
+      <#else>
+      return org.apache.drill.common.util.DecimalUtility.getBigDecimalFromDense(data, index * ${type.width}, ${minor.nDecimalDigits}, getField().getScale(), ${minor.maxPrecisionDigits}, ${type.width});
+      </#if>
+    }
+
+    <#else>
     public void get(int index, ${minor.class}Holder holder){
       holder.buffer = data;
       holder.start = index * ${type.width};
@@ -304,13 +361,18 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
 
     @Override
     public Object getObject(int index) {
-      ByteBuf dst = allocator.buffer(${type.width});
-      data.getBytes(index, dst, 0, ${type.width});
+
+      ByteBuf dst = io.netty.buffer.Unpooled.wrappedBuffer(new byte[${type.width}]);
+      //dst = new io.netty.buffer.SwappedByteBuf(dst);
+      data.getBytes(index * ${type.width}, dst, 0, ${type.width});
+
       return dst;
+
+
+
     }
 
     </#if>
-
     <#else> <#-- type.width <= 8 -->
 
     public ${minor.javaType!type.javaType} get(int index) {
@@ -358,17 +420,32 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
         return new Time(time.getMillis());
     }
 
+
+
+    <#elseif minor.class == "Decimal9" || minor.class == "Decimal18">
+    @Override
+    public Object getObject(int index) {
+
+        BigInteger value = BigInteger.valueOf(((${type.boxedType})get(index)).${type.javaType}Value());
+        return new BigDecimal(value, getField().getScale());
+    }
+
     <#else>
     public Object getObject(int index) {
       return get(index);
     }
     </#if>
-    
     public void get(int index, ${minor.class}Holder holder){
+      <#if minor.class.startsWith("Decimal")>
+      holder.scale = getField().getScale();
+      holder.precision = getField().getPrecision();
+      </#if>
+
       holder.value = data.get${(minor.javaType!type.javaType)?cap_first}(index * ${type.width});
     }
 
     void get(int index, Nullable${minor.class}Holder holder){
+
       holder.value = data.get${(minor.javaType!type.javaType)?cap_first}(index * ${type.width});
     }
 
@@ -397,7 +474,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     */
   <#if (type.width > 8)>
    public void set(int index, <#if (type.width > 4)>${minor.javaType!type.javaType}<#else>int</#if> value) {
-     data.setBytes(index * ${type.width}, value);
+     data.setBytes(index * ${type.width}, value, 0, ${type.width});
    }
 
    <#if (minor.class == "TimeStampTZ")>
@@ -473,6 +550,50 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
      set(index, holder);
      return true;
    }
+
+   <#elseif (minor.class == "Decimal28Sparse" || minor.class == "Decimal38Sparse") || (minor.class == "Decimal28Dense") || (minor.class == "Decimal38Dense")>
+
+   public void set(int index, ${minor.class}Holder holder){
+      data.setBytes(index * ${type.width}, holder.buffer, holder.start, ${type.width});
+
+      // Set the sign of the decimal
+      if (holder.sign == true) {
+          int value = data.getInt(index * ${type.width});
+          <#if minor.class.endsWith("Sparse")>
+          data.setInt(index * ${type.width}, (value | 0x80000000));
+          <#elseif minor.class.endsWith("Dense")>
+          data.setInt(index * ${type.width}, (value | 0x00000080));
+          </#if>
+
+      }
+   }
+
+   void set(int index, Nullable${minor.class}Holder holder){
+       data.setBytes(index * ${type.width}, holder.buffer, holder.start, ${type.width});
+
+      // Set the sign of the decimal
+      if (holder.sign == true) {
+          int value = data.getInt(index * ${type.width});
+          <#if minor.class.endsWith("Sparse")>
+          data.setInt(index * ${type.width}, (value | 0x80000000));
+          <#elseif minor.class.endsWith("Dense")>
+          data.setInt(index * ${type.width}, (value | 0x00000080));
+          </#if>
+      }
+   }
+
+   public boolean setSafe(int index,  Nullable${minor.class}Holder holder){
+       if(index >= getValueCapacity()) return false;
+       set(index, holder);
+       return true;
+   }
+
+   public boolean setSafe(int index,  ${minor.class}Holder holder){
+       if(index >= getValueCapacity()) return false;
+       set(index, holder);
+       return true;
+   }
+
    <#else>
    public void set(int index, ${minor.class}Holder holder){
      data.setBytes(index * ${type.width}, holder.buffer, holder.start, ${type.width});
@@ -500,8 +621,8 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
        }
      }
    }
-   
-  <#else> <#-- type.width <= 8 -->
+
+   <#else> <#-- type.width <= 8 -->
    public void set(int index, <#if (type.width >= 4)>${minor.javaType!type.javaType}<#else>int</#if> value) {
      data.set${(minor.javaType!type.javaType)?cap_first}(index * ${type.width}, value);
    }
