@@ -26,7 +26,10 @@ data: {
     date: tdd(../data/DateTypes.tdd),
     extract: tdd(../data/ExtractTypes.tdd),
     parser: tdd(../data/Parser.tdd),
-    decimal: tdd(../data/DecimalTypes.tdd)
+    decimal: tdd(../data/DecimalTypes.tdd),
+    dateIntervalFunc: tdd(../data/DateIntervalFunc.tdd),
+    intervalNumericTypes: tdd(../data/IntervalNumericTypes.tdd),
+    extract: tdd(../data/ExtractTypes.tdd)
 }
 freemarkerLinks: {
     includes: includes/
