@@ -1,0 +1,36 @@
+{
+  "head" : {
+    "version" : 1,
+    "generator" : {
+      "type" : "org.apache.drill.exec.planner.logical.DrillImplementor",
+      "info" : ""
+    },
+    "type" : "APACHE_DRILL_PHYSICAL",
+    "resultMode" : "EXEC"
+  },
+  graph:[
+  {
+      @id:1,
+      pop:"fs-scan",
+      format: {type: "json"},
+      storage:{type: "file", connection: "classpath:///"},
+      files:["#{TEST_FILE}"]
+  },
+        {
+            pop:"project",
+            @id:2,
+            child: 1,
+            exprs: [
+              { ref: "Date1", expr: "to_char((cast('2008-2-23' as date)), 'yyyy-MMM-dd')"},
+              { ref: "Time1", expr: "to_char(cast('12:20:30' as time), 'HH mm ss')"},
+              { ref: "TimeStamp2", expr: "to_char(cast('2008-2-23 12:00:00' as timestamp), 'yyyy MMM dd HH:mm:ss')"},
+              { ref: "TimeStampTZ1", expr: "to_char(cast('2008-2-23 12:00:00 America/Los_Angeles' as timestamptz), 'yyyy-MM-dd HH:mm:ss ZZZ')"}
+            ]
+        },
+        {
+            @id: 3,
+            child: 2,
+            pop: "screen"
+        }
+    ]
+}

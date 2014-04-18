@@ -22,25 +22,34 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
+import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
-import org.apache.drill.exec.expr.holders.DateHolder;
+import org.apache.drill.exec.expr.holders.TimeStampTZHolder;
 import org.apache.drill.exec.record.RecordBatch;
+import org.joda.time.DateTime;
 
 @SuppressWarnings("unused")
-@FunctionTemplate(names = {"castDATE", "to_date"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls= NullHandling.NULL_IF_NULL)
-public class CastBigIntDate implements DrillSimpleFunc {
+@FunctionTemplate(names = {"castTIMESTAMPTZ", "to_timestamptz"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls= NullHandling.NULL_IF_NULL)
+public class CastBigIntTimeStampTZ implements DrillSimpleFunc {
 
-  @Param
-  BigIntHolder in;
-  @Output
-  DateHolder out;
+    @Param
+    BigIntHolder in;
+    @Workspace
+    int timeZoneIndex;
+    @Output
+    TimeStampTZHolder out;
 
-  @Override
-  public void setup(RecordBatch incoming) {
-  }
+    @Override
+    public void setup(RecordBatch incoming) {
+        org.joda.time.DateTime temp = new org.joda.time.DateTime();
 
-  @Override
-  public void eval() {
-    out.value = in.value;
-  }
+        // Store the local time zone index
+        timeZoneIndex = org.apache.drill.exec.expr.fn.impl.DateUtility.getIndex(temp.getZone().toString());
+    }
+
+    @Override
+    public void eval() {
+        out.value = in.value;
+        out.index = timeZoneIndex;
+    }
 }
