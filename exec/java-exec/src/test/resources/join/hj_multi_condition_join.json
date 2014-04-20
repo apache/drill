@@ -27,10 +27,10 @@
       "pop" : "project",
       "@id" : 3,
       "exprs" : [ {
-        "ref" : "output.A",
+        "ref" : "A",
         "expr" : "A"
       },
-      { "ref" : "output.CCOL", "expr" : "C" }
+      { "ref" : "CCOL", "expr" : "C" }
       ],
 
       "child" : 1
@@ -39,10 +39,10 @@
       "pop" : "project",
       "@id" : 4,
       "exprs" : [ {
-        "ref" : "output.B",
+        "ref" : "B",
         "expr" : "B"
       },
-      { "ref" : "output.DCOL", "expr" : "D" }
+      { "ref" : "DCOL", "expr" : "D" }
       ],
 
       "child" : 2
