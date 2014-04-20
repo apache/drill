@@ -24,13 +24,13 @@
     pop : "project",
     @id : 2,
     exprs : [ {
-      ref : "output.$f0",
+      ref : "$f0",
       expr : "N_REGIONKEY"
     }, {
-      ref : "output.$f1",
+      ref : "$f1",
       expr : "N_NATIONKEY"
     }, {
-      ref : "output.$f2",
+      ref : "$f2",
       expr : "N_NAME"
     } ],
     child : 1
