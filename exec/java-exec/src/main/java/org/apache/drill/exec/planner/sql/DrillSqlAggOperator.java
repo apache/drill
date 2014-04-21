@@ -53,7 +53,7 @@ public class DrillSqlAggOperator extends SqlAggFunction {
 
   
   DrillSqlAggOperator(String name, int argCount) {
-    super(name, SqlKind.OTHER_FUNCTION, DynamicReturnType.INSTANCE, null, new Checker(argCount), SqlFunctionCategory.USER_DEFINED_FUNCTION);
+    super(name, new SqlIdentifier(name, SqlParserPos.ZERO), SqlKind.OTHER_FUNCTION, DynamicReturnType.INSTANCE, null, new Checker(argCount), SqlFunctionCategory.USER_DEFINED_FUNCTION);
   }
 
   @Override

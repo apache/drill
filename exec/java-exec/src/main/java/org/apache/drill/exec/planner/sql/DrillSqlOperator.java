@@ -23,6 +23,8 @@ import org.eigenbase.sql.SqlCall;
 import org.eigenbase.sql.SqlFunction;
 import org.eigenbase.sql.SqlFunctionCategory;
 import org.eigenbase.sql.SqlKind;
+import org.eigenbase.sql.SqlIdentifier;
+import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.validate.SqlValidatorScope;
@@ -31,7 +33,7 @@ public class DrillSqlOperator extends SqlFunction {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillSqlOperator.class);
 
   DrillSqlOperator(String name, int argCount) {
-    super(name, SqlKind.OTHER_FUNCTION, DynamicReturnType.INSTANCE, null, new Checker(argCount), SqlFunctionCategory.USER_DEFINED_FUNCTION);
+    super(new SqlIdentifier(name, SqlParserPos.ZERO), DynamicReturnType.INSTANCE, null, new Checker(argCount), null, SqlFunctionCategory.USER_DEFINED_FUNCTION);
   }
 
   @Override
