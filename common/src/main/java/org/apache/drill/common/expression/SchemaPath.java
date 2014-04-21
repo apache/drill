@@ -59,7 +59,7 @@ public class SchemaPath extends LogicalExpressionBase {
     Collections.reverse(paths);
     NameSegment s = null;
     for(String p : paths){
-      s = new NameSegment(p);
+      s = new NameSegment(p, s);
     }
     return new SchemaPath(s);
   }
