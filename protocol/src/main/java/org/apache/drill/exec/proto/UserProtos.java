@@ -371,6 +371,1335 @@ public final class UserProtos {
     // @@protoc_insertion_point(enum_scope:exec.user.QueryResultsMode)
   }
 
+  public interface PropertyOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // required string key = 1;
+    /**
+     * <code>required string key = 1;</code>
+     */
+    boolean hasKey();
+    /**
+     * <code>required string key = 1;</code>
+     */
+    java.lang.String getKey();
+    /**
+     * <code>required string key = 1;</code>
+     */
+    com.google.protobuf.ByteString
+        getKeyBytes();
+
+    // required string value = 2;
+    /**
+     * <code>required string value = 2;</code>
+     */
+    boolean hasValue();
+    /**
+     * <code>required string value = 2;</code>
+     */
+    java.lang.String getValue();
+    /**
+     * <code>required string value = 2;</code>
+     */
+    com.google.protobuf.ByteString
+        getValueBytes();
+  }
+  /**
+   * Protobuf type {@code exec.user.Property}
+   */
+  public static final class Property extends
+      com.google.protobuf.GeneratedMessage
+      implements PropertyOrBuilder {
+    // Use Property.newBuilder() to construct.
+    private Property(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private Property(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final Property defaultInstance;
+    public static Property getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public Property getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private Property(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              key_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              bitField0_ |= 0x00000002;
+              value_ = input.readBytes();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_Property_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_Property_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.apache.drill.exec.proto.UserProtos.Property.class, org.apache.drill.exec.proto.UserProtos.Property.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<Property> PARSER =
+        new com.google.protobuf.AbstractParser<Property>() {
+      public Property parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new Property(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<Property> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    // required string key = 1;
+    public static final int KEY_FIELD_NUMBER = 1;
+    private java.lang.Object key_;
+    /**
+     * <code>required string key = 1;</code>
+     */
+    public boolean hasKey() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required string key = 1;</code>
+     */
+    public java.lang.String getKey() {
+      java.lang.Object ref = key_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          key_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>required string key = 1;</code>
+     */
+    public com.google.protobuf.ByteString
+        getKeyBytes() {
+      java.lang.Object ref = key_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        key_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // required string value = 2;
+    public static final int VALUE_FIELD_NUMBER = 2;
+    private java.lang.Object value_;
+    /**
+     * <code>required string value = 2;</code>
+     */
+    public boolean hasValue() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>required string value = 2;</code>
+     */
+    public java.lang.String getValue() {
+      java.lang.Object ref = value_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          value_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>required string value = 2;</code>
+     */
+    public com.google.protobuf.ByteString
+        getValueBytes() {
+      java.lang.Object ref = value_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        value_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    private void initFields() {
+      key_ = "";
+      value_ = "";
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      if (!hasKey()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasValue()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, getKeyBytes());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBytes(2, getValueBytes());
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, getKeyBytes());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, getValueBytes());
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static org.apache.drill.exec.proto.UserProtos.Property parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.Property parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.Property parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.Property parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.Property parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.Property parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.Property parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.Property parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.Property parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.Property parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.apache.drill.exec.proto.UserProtos.Property prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code exec.user.Property}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.drill.exec.proto.UserProtos.PropertyOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_Property_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_Property_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.apache.drill.exec.proto.UserProtos.Property.class, org.apache.drill.exec.proto.UserProtos.Property.Builder.class);
+      }
+
+      // Construct using org.apache.drill.exec.proto.UserProtos.Property.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        key_ = "";
+        bitField0_ = (bitField0_ & ~0x00000001);
+        value_ = "";
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_Property_descriptor;
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.Property getDefaultInstanceForType() {
+        return org.apache.drill.exec.proto.UserProtos.Property.getDefaultInstance();
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.Property build() {
+        org.apache.drill.exec.proto.UserProtos.Property result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.Property buildPartial() {
+        org.apache.drill.exec.proto.UserProtos.Property result = new org.apache.drill.exec.proto.UserProtos.Property(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.key_ = key_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.value_ = value_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.apache.drill.exec.proto.UserProtos.Property) {
+          return mergeFrom((org.apache.drill.exec.proto.UserProtos.Property)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.apache.drill.exec.proto.UserProtos.Property other) {
+        if (other == org.apache.drill.exec.proto.UserProtos.Property.getDefaultInstance()) return this;
+        if (other.hasKey()) {
+          bitField0_ |= 0x00000001;
+          key_ = other.key_;
+          onChanged();
+        }
+        if (other.hasValue()) {
+          bitField0_ |= 0x00000002;
+          value_ = other.value_;
+          onChanged();
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasKey()) {
+          
+          return false;
+        }
+        if (!hasValue()) {
+          
+          return false;
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.apache.drill.exec.proto.UserProtos.Property parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.apache.drill.exec.proto.UserProtos.Property) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      // required string key = 1;
+      private java.lang.Object key_ = "";
+      /**
+       * <code>required string key = 1;</code>
+       */
+      public boolean hasKey() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required string key = 1;</code>
+       */
+      public java.lang.String getKey() {
+        java.lang.Object ref = key_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          key_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>required string key = 1;</code>
+       */
+      public com.google.protobuf.ByteString
+          getKeyBytes() {
+        java.lang.Object ref = key_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          key_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>required string key = 1;</code>
+       */
+      public Builder setKey(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        key_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required string key = 1;</code>
+       */
+      public Builder clearKey() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        key_ = getDefaultInstance().getKey();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required string key = 1;</code>
+       */
+      public Builder setKeyBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        key_ = value;
+        onChanged();
+        return this;
+      }
+
+      // required string value = 2;
+      private java.lang.Object value_ = "";
+      /**
+       * <code>required string value = 2;</code>
+       */
+      public boolean hasValue() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>required string value = 2;</code>
+       */
+      public java.lang.String getValue() {
+        java.lang.Object ref = value_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          value_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>required string value = 2;</code>
+       */
+      public com.google.protobuf.ByteString
+          getValueBytes() {
+        java.lang.Object ref = value_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          value_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>required string value = 2;</code>
+       */
+      public Builder setValue(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        value_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required string value = 2;</code>
+       */
+      public Builder clearValue() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        value_ = getDefaultInstance().getValue();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required string value = 2;</code>
+       */
+      public Builder setValueBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        value_ = value;
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:exec.user.Property)
+    }
+
+    static {
+      defaultInstance = new Property(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:exec.user.Property)
+  }
+
+  public interface UserPropertiesOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // repeated .exec.user.Property properties = 1;
+    /**
+     * <code>repeated .exec.user.Property properties = 1;</code>
+     */
+    java.util.List<org.apache.drill.exec.proto.UserProtos.Property> 
+        getPropertiesList();
+    /**
+     * <code>repeated .exec.user.Property properties = 1;</code>
+     */
+    org.apache.drill.exec.proto.UserProtos.Property getProperties(int index);
+    /**
+     * <code>repeated .exec.user.Property properties = 1;</code>
+     */
+    int getPropertiesCount();
+    /**
+     * <code>repeated .exec.user.Property properties = 1;</code>
+     */
+    java.util.List<? extends org.apache.drill.exec.proto.UserProtos.PropertyOrBuilder> 
+        getPropertiesOrBuilderList();
+    /**
+     * <code>repeated .exec.user.Property properties = 1;</code>
+     */
+    org.apache.drill.exec.proto.UserProtos.PropertyOrBuilder getPropertiesOrBuilder(
+        int index);
+  }
+  /**
+   * Protobuf type {@code exec.user.UserProperties}
+   */
+  public static final class UserProperties extends
+      com.google.protobuf.GeneratedMessage
+      implements UserPropertiesOrBuilder {
+    // Use UserProperties.newBuilder() to construct.
+    private UserProperties(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private UserProperties(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final UserProperties defaultInstance;
+    public static UserProperties getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public UserProperties getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private UserProperties(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+                properties_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserProtos.Property>();
+                mutable_bitField0_ |= 0x00000001;
+              }
+              properties_.add(input.readMessage(org.apache.drill.exec.proto.UserProtos.Property.PARSER, extensionRegistry));
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+          properties_ = java.util.Collections.unmodifiableList(properties_);
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_UserProperties_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_UserProperties_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.apache.drill.exec.proto.UserProtos.UserProperties.class, org.apache.drill.exec.proto.UserProtos.UserProperties.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<UserProperties> PARSER =
+        new com.google.protobuf.AbstractParser<UserProperties>() {
+      public UserProperties parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new UserProperties(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<UserProperties> getParserForType() {
+      return PARSER;
+    }
+
+    // repeated .exec.user.Property properties = 1;
+    public static final int PROPERTIES_FIELD_NUMBER = 1;
+    private java.util.List<org.apache.drill.exec.proto.UserProtos.Property> properties_;
+    /**
+     * <code>repeated .exec.user.Property properties = 1;</code>
+     */
+    public java.util.List<org.apache.drill.exec.proto.UserProtos.Property> getPropertiesList() {
+      return properties_;
+    }
+    /**
+     * <code>repeated .exec.user.Property properties = 1;</code>
+     */
+    public java.util.List<? extends org.apache.drill.exec.proto.UserProtos.PropertyOrBuilder> 
+        getPropertiesOrBuilderList() {
+      return properties_;
+    }
+    /**
+     * <code>repeated .exec.user.Property properties = 1;</code>
+     */
+    public int getPropertiesCount() {
+      return properties_.size();
+    }
+    /**
+     * <code>repeated .exec.user.Property properties = 1;</code>
+     */
+    public org.apache.drill.exec.proto.UserProtos.Property getProperties(int index) {
+      return properties_.get(index);
+    }
+    /**
+     * <code>repeated .exec.user.Property properties = 1;</code>
+     */
+    public org.apache.drill.exec.proto.UserProtos.PropertyOrBuilder getPropertiesOrBuilder(
+        int index) {
+      return properties_.get(index);
+    }
+
+    private void initFields() {
+      properties_ = java.util.Collections.emptyList();
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      for (int i = 0; i < getPropertiesCount(); i++) {
+        if (!getProperties(i).isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      for (int i = 0; i < properties_.size(); i++) {
+        output.writeMessage(1, properties_.get(i));
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      for (int i = 0; i < properties_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(1, properties_.get(i));
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static org.apache.drill.exec.proto.UserProtos.UserProperties parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.UserProperties parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.UserProperties parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.UserProperties parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.UserProperties parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.UserProperties parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.UserProperties parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.UserProperties parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.UserProperties parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserProtos.UserProperties parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.apache.drill.exec.proto.UserProtos.UserProperties prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code exec.user.UserProperties}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.drill.exec.proto.UserProtos.UserPropertiesOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_UserProperties_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_UserProperties_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.apache.drill.exec.proto.UserProtos.UserProperties.class, org.apache.drill.exec.proto.UserProtos.UserProperties.Builder.class);
+      }
+
+      // Construct using org.apache.drill.exec.proto.UserProtos.UserProperties.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          getPropertiesFieldBuilder();
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        if (propertiesBuilder_ == null) {
+          properties_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+        } else {
+          propertiesBuilder_.clear();
+        }
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.apache.drill.exec.proto.UserProtos.internal_static_exec_user_UserProperties_descriptor;
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.UserProperties getDefaultInstanceForType() {
+        return org.apache.drill.exec.proto.UserProtos.UserProperties.getDefaultInstance();
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.UserProperties build() {
+        org.apache.drill.exec.proto.UserProtos.UserProperties result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.apache.drill.exec.proto.UserProtos.UserProperties buildPartial() {
+        org.apache.drill.exec.proto.UserProtos.UserProperties result = new org.apache.drill.exec.proto.UserProtos.UserProperties(this);
+        int from_bitField0_ = bitField0_;
+        if (propertiesBuilder_ == null) {
+          if (((bitField0_ & 0x00000001) == 0x00000001)) {
+            properties_ = java.util.Collections.unmodifiableList(properties_);
+            bitField0_ = (bitField0_ & ~0x00000001);
+          }
+          result.properties_ = properties_;
+        } else {
+          result.properties_ = propertiesBuilder_.build();
+        }
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.apache.drill.exec.proto.UserProtos.UserProperties) {
+          return mergeFrom((org.apache.drill.exec.proto.UserProtos.UserProperties)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.apache.drill.exec.proto.UserProtos.UserProperties other) {
+        if (other == org.apache.drill.exec.proto.UserProtos.UserProperties.getDefaultInstance()) return this;
+        if (propertiesBuilder_ == null) {
+          if (!other.properties_.isEmpty()) {
+            if (properties_.isEmpty()) {
+              properties_ = other.properties_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+            } else {
+              ensurePropertiesIsMutable();
+              properties_.addAll(other.properties_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.properties_.isEmpty()) {
+            if (propertiesBuilder_.isEmpty()) {
+              propertiesBuilder_.dispose();
+              propertiesBuilder_ = null;
+              properties_ = other.properties_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+              propertiesBuilder_ = 
+                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+                   getPropertiesFieldBuilder() : null;
+            } else {
+              propertiesBuilder_.addAllMessages(other.properties_);
+            }
+          }
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        for (int i = 0; i < getPropertiesCount(); i++) {
+          if (!getProperties(i).isInitialized()) {
+            
+            return false;
+          }
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.apache.drill.exec.proto.UserProtos.UserProperties parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.apache.drill.exec.proto.UserProtos.UserProperties) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      // repeated .exec.user.Property properties = 1;
+      private java.util.List<org.apache.drill.exec.proto.UserProtos.Property> properties_ =
+        java.util.Collections.emptyList();
+      private void ensurePropertiesIsMutable() {
+        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+          properties_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserProtos.Property>(properties_);
+          bitField0_ |= 0x00000001;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilder<
+          org.apache.drill.exec.proto.UserProtos.Property, org.apache.drill.exec.proto.UserProtos.Property.Builder, org.apache.drill.exec.proto.UserProtos.PropertyOrBuilder> propertiesBuilder_;
+
+      /**
+       * <code>repeated .exec.user.Property properties = 1;</code>
+       */
+      public java.util.List<org.apache.drill.exec.proto.UserProtos.Property> getPropertiesList() {
+        if (propertiesBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(properties_);
+        } else {
+          return propertiesBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .exec.user.Property properties = 1;</code>
+       */
+      public int getPropertiesCount() {
+        if (propertiesBuilder_ == null) {
+          return properties_.size();
+        } else {
+          return propertiesBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .exec.user.Property properties = 1;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.Property getProperties(int index) {
+        if (propertiesBuilder_ == null) {
+          return properties_.get(index);
+        } else {
+          return propertiesBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .exec.user.Property properties = 1;</code>
+       */
+      public Builder setProperties(
+          int index, org.apache.drill.exec.proto.UserProtos.Property value) {
+        if (propertiesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensurePropertiesIsMutable();
+          properties_.set(index, value);
+          onChanged();
+        } else {
+          propertiesBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.Property properties = 1;</code>
+       */
+      public Builder setProperties(
+          int index, org.apache.drill.exec.proto.UserProtos.Property.Builder builderForValue) {
+        if (propertiesBuilder_ == null) {
+          ensurePropertiesIsMutable();
+          properties_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          propertiesBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.Property properties = 1;</code>
+       */
+      public Builder addProperties(org.apache.drill.exec.proto.UserProtos.Property value) {
+        if (propertiesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensurePropertiesIsMutable();
+          properties_.add(value);
+          onChanged();
+        } else {
+          propertiesBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.Property properties = 1;</code>
+       */
+      public Builder addProperties(
+          int index, org.apache.drill.exec.proto.UserProtos.Property value) {
+        if (propertiesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensurePropertiesIsMutable();
+          properties_.add(index, value);
+          onChanged();
+        } else {
+          propertiesBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.Property properties = 1;</code>
+       */
+      public Builder addProperties(
+          org.apache.drill.exec.proto.UserProtos.Property.Builder builderForValue) {
+        if (propertiesBuilder_ == null) {
+          ensurePropertiesIsMutable();
+          properties_.add(builderForValue.build());
+          onChanged();
+        } else {
+          propertiesBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.Property properties = 1;</code>
+       */
+      public Builder addProperties(
+          int index, org.apache.drill.exec.proto.UserProtos.Property.Builder builderForValue) {
+        if (propertiesBuilder_ == null) {
+          ensurePropertiesIsMutable();
+          properties_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          propertiesBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.Property properties = 1;</code>
+       */
+      public Builder addAllProperties(
+          java.lang.Iterable<? extends org.apache.drill.exec.proto.UserProtos.Property> values) {
+        if (propertiesBuilder_ == null) {
+          ensurePropertiesIsMutable();
+          super.addAll(values, properties_);
+          onChanged();
+        } else {
+          propertiesBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.Property properties = 1;</code>
+       */
+      public Builder clearProperties() {
+        if (propertiesBuilder_ == null) {
+          properties_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+          onChanged();
+        } else {
+          propertiesBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.Property properties = 1;</code>
+       */
+      public Builder removeProperties(int index) {
+        if (propertiesBuilder_ == null) {
+          ensurePropertiesIsMutable();
+          properties_.remove(index);
+          onChanged();
+        } else {
+          propertiesBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .exec.user.Property properties = 1;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.Property.Builder getPropertiesBuilder(
+          int index) {
+        return getPropertiesFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .exec.user.Property properties = 1;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.PropertyOrBuilder getPropertiesOrBuilder(
+          int index) {
+        if (propertiesBuilder_ == null) {
+          return properties_.get(index);  } else {
+          return propertiesBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .exec.user.Property properties = 1;</code>
+       */
+      public java.util.List<? extends org.apache.drill.exec.proto.UserProtos.PropertyOrBuilder> 
+           getPropertiesOrBuilderList() {
+        if (propertiesBuilder_ != null) {
+          return propertiesBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(properties_);
+        }
+      }
+      /**
+       * <code>repeated .exec.user.Property properties = 1;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.Property.Builder addPropertiesBuilder() {
+        return getPropertiesFieldBuilder().addBuilder(
+            org.apache.drill.exec.proto.UserProtos.Property.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .exec.user.Property properties = 1;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.Property.Builder addPropertiesBuilder(
+          int index) {
+        return getPropertiesFieldBuilder().addBuilder(
+            index, org.apache.drill.exec.proto.UserProtos.Property.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .exec.user.Property properties = 1;</code>
+       */
+      public java.util.List<org.apache.drill.exec.proto.UserProtos.Property.Builder> 
+           getPropertiesBuilderList() {
+        return getPropertiesFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilder<
+          org.apache.drill.exec.proto.UserProtos.Property, org.apache.drill.exec.proto.UserProtos.Property.Builder, org.apache.drill.exec.proto.UserProtos.PropertyOrBuilder> 
+          getPropertiesFieldBuilder() {
+        if (propertiesBuilder_ == null) {
+          propertiesBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
+              org.apache.drill.exec.proto.UserProtos.Property, org.apache.drill.exec.proto.UserProtos.Property.Builder, org.apache.drill.exec.proto.UserProtos.PropertyOrBuilder>(
+                  properties_,
+                  ((bitField0_ & 0x00000001) == 0x00000001),
+                  getParentForChildren(),
+                  isClean());
+          properties_ = null;
+        }
+        return propertiesBuilder_;
+      }
+
+      // @@protoc_insertion_point(builder_scope:exec.user.UserProperties)
+    }
+
+    static {
+      defaultInstance = new UserProperties(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:exec.user.UserProperties)
+  }
+
   public interface UserToBitHandshakeOrBuilder
       extends com.google.protobuf.MessageOrBuilder {
 
@@ -417,6 +1746,20 @@ public final class UserProtos {
      * <code>optional .exec.shared.UserCredentials credentials = 4;</code>
      */
     org.apache.drill.exec.proto.UserBitShared.UserCredentialsOrBuilder getCredentialsOrBuilder();
+
+    // optional .exec.user.UserProperties properties = 5;
+    /**
+     * <code>optional .exec.user.UserProperties properties = 5;</code>
+     */
+    boolean hasProperties();
+    /**
+     * <code>optional .exec.user.UserProperties properties = 5;</code>
+     */
+    org.apache.drill.exec.proto.UserProtos.UserProperties getProperties();
+    /**
+     * <code>optional .exec.user.UserProperties properties = 5;</code>
+     */
+    org.apache.drill.exec.proto.UserProtos.UserPropertiesOrBuilder getPropertiesOrBuilder();
   }
   /**
    * Protobuf type {@code exec.user.UserToBitHandshake}
@@ -501,6 +1844,19 @@ public final class UserProtos {
                 credentials_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000008;
+              break;
+            }
+            case 42: {
+              org.apache.drill.exec.proto.UserProtos.UserProperties.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000010) == 0x00000010)) {
+                subBuilder = properties_.toBuilder();
+              }
+              properties_ = input.readMessage(org.apache.drill.exec.proto.UserProtos.UserProperties.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(properties_);
+                properties_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000010;
               break;
             }
           }
@@ -613,17 +1969,46 @@ public final class UserProtos {
       return credentials_;
     }
 
+    // optional .exec.user.UserProperties properties = 5;
+    public static final int PROPERTIES_FIELD_NUMBER = 5;
+    private org.apache.drill.exec.proto.UserProtos.UserProperties properties_;
+    /**
+     * <code>optional .exec.user.UserProperties properties = 5;</code>
+     */
+    public boolean hasProperties() {
+      return ((bitField0_ & 0x00000010) == 0x00000010);
+    }
+    /**
+     * <code>optional .exec.user.UserProperties properties = 5;</code>
+     */
+    public org.apache.drill.exec.proto.UserProtos.UserProperties getProperties() {
+      return properties_;
+    }
+    /**
+     * <code>optional .exec.user.UserProperties properties = 5;</code>
+     */
+    public org.apache.drill.exec.proto.UserProtos.UserPropertiesOrBuilder getPropertiesOrBuilder() {
+      return properties_;
+    }
+
     private void initFields() {
       channel_ = org.apache.drill.exec.proto.UserBitShared.RpcChannel.USER;
       supportListening_ = false;
       rpcVersion_ = 0;
       credentials_ = org.apache.drill.exec.proto.UserBitShared.UserCredentials.getDefaultInstance();
+      properties_ = org.apache.drill.exec.proto.UserProtos.UserProperties.getDefaultInstance();
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized != -1) return isInitialized == 1;
 
+      if (hasProperties()) {
+        if (!getProperties().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
       memoizedIsInitialized = 1;
       return true;
     }
@@ -642,6 +2027,9 @@ public final class UserProtos {
       }
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         output.writeMessage(4, credentials_);
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        output.writeMessage(5, properties_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -667,6 +2055,10 @@ public final class UserProtos {
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(4, credentials_);
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(5, properties_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -777,6 +2169,7 @@ public final class UserProtos {
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
           getCredentialsFieldBuilder();
+          getPropertiesFieldBuilder();
         }
       }
       private static Builder create() {
@@ -797,6 +2190,12 @@ public final class UserProtos {
           credentialsBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000008);
+        if (propertiesBuilder_ == null) {
+          properties_ = org.apache.drill.exec.proto.UserProtos.UserProperties.getDefaultInstance();
+        } else {
+          propertiesBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000010);
         return this;
       }
 
@@ -845,6 +2244,14 @@ public final class UserProtos {
         } else {
           result.credentials_ = credentialsBuilder_.build();
         }
+        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+          to_bitField0_ |= 0x00000010;
+        }
+        if (propertiesBuilder_ == null) {
+          result.properties_ = properties_;
+        } else {
+          result.properties_ = propertiesBuilder_.build();
+        }
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -873,11 +2280,20 @@ public final class UserProtos {
         if (other.hasCredentials()) {
           mergeCredentials(other.getCredentials());
         }
+        if (other.hasProperties()) {
+          mergeProperties(other.getProperties());
+        }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
       }
 
       public final boolean isInitialized() {
+        if (hasProperties()) {
+          if (!getProperties().isInitialized()) {
+            
+            return false;
+          }
+        }
         return true;
       }
 
@@ -1117,6 +2533,123 @@ public final class UserProtos {
           credentials_ = null;
         }
         return credentialsBuilder_;
+      }
+
+      // optional .exec.user.UserProperties properties = 5;
+      private org.apache.drill.exec.proto.UserProtos.UserProperties properties_ = org.apache.drill.exec.proto.UserProtos.UserProperties.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserProtos.UserProperties, org.apache.drill.exec.proto.UserProtos.UserProperties.Builder, org.apache.drill.exec.proto.UserProtos.UserPropertiesOrBuilder> propertiesBuilder_;
+      /**
+       * <code>optional .exec.user.UserProperties properties = 5;</code>
+       */
+      public boolean hasProperties() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      /**
+       * <code>optional .exec.user.UserProperties properties = 5;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.UserProperties getProperties() {
+        if (propertiesBuilder_ == null) {
+          return properties_;
+        } else {
+          return propertiesBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .exec.user.UserProperties properties = 5;</code>
+       */
+      public Builder setProperties(org.apache.drill.exec.proto.UserProtos.UserProperties value) {
+        if (propertiesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          properties_ = value;
+          onChanged();
+        } else {
+          propertiesBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000010;
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.UserProperties properties = 5;</code>
+       */
+      public Builder setProperties(
+          org.apache.drill.exec.proto.UserProtos.UserProperties.Builder builderForValue) {
+        if (propertiesBuilder_ == null) {
+          properties_ = builderForValue.build();
+          onChanged();
+        } else {
+          propertiesBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000010;
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.UserProperties properties = 5;</code>
+       */
+      public Builder mergeProperties(org.apache.drill.exec.proto.UserProtos.UserProperties value) {
+        if (propertiesBuilder_ == null) {
+          if (((bitField0_ & 0x00000010) == 0x00000010) &&
+              properties_ != org.apache.drill.exec.proto.UserProtos.UserProperties.getDefaultInstance()) {
+            properties_ =
+              org.apache.drill.exec.proto.UserProtos.UserProperties.newBuilder(properties_).mergeFrom(value).buildPartial();
+          } else {
+            properties_ = value;
+          }
+          onChanged();
+        } else {
+          propertiesBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000010;
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.UserProperties properties = 5;</code>
+       */
+      public Builder clearProperties() {
+        if (propertiesBuilder_ == null) {
+          properties_ = org.apache.drill.exec.proto.UserProtos.UserProperties.getDefaultInstance();
+          onChanged();
+        } else {
+          propertiesBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000010);
+        return this;
+      }
+      /**
+       * <code>optional .exec.user.UserProperties properties = 5;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.UserProperties.Builder getPropertiesBuilder() {
+        bitField0_ |= 0x00000010;
+        onChanged();
+        return getPropertiesFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .exec.user.UserProperties properties = 5;</code>
+       */
+      public org.apache.drill.exec.proto.UserProtos.UserPropertiesOrBuilder getPropertiesOrBuilder() {
+        if (propertiesBuilder_ != null) {
+          return propertiesBuilder_.getMessageOrBuilder();
+        } else {
+          return properties_;
+        }
+      }
+      /**
+       * <code>optional .exec.user.UserProperties properties = 5;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserProtos.UserProperties, org.apache.drill.exec.proto.UserProtos.UserProperties.Builder, org.apache.drill.exec.proto.UserProtos.UserPropertiesOrBuilder> 
+          getPropertiesFieldBuilder() {
+        if (propertiesBuilder_ == null) {
+          propertiesBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              org.apache.drill.exec.proto.UserProtos.UserProperties, org.apache.drill.exec.proto.UserProtos.UserProperties.Builder, org.apache.drill.exec.proto.UserProtos.UserPropertiesOrBuilder>(
+                  properties_,
+                  getParentForChildren(),
+                  isClean());
+          properties_ = null;
+        }
+        return propertiesBuilder_;
       }
 
       // @@protoc_insertion_point(builder_scope:exec.user.UserToBitHandshake)
@@ -5360,6 +6893,16 @@ public final class UserProtos {
   }
 
   private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_exec_user_Property_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_exec_user_Property_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_exec_user_UserProperties_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_exec_user_UserProperties_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_exec_user_UserToBitHandshake_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
@@ -5399,77 +6942,92 @@ public final class UserProtos {
   static {
     java.lang.String[] descriptorData = {
       "\n\nUser.proto\022\texec.user\032\017SchemaDef.proto" +
-      "\032\023UserBitShared.proto\"\247\001\n\022UserToBitHands" +
-      "hake\022.\n\007channel\030\001 \001(\0162\027.exec.shared.RpcC" +
-      "hannel:\004USER\022\031\n\021support_listening\030\002 \001(\010\022" +
-      "\023\n\013rpc_version\030\003 \001(\005\0221\n\013credentials\030\004 \001(" +
-      "\0132\034.exec.shared.UserCredentials\"S\n\016Reque" +
-      "stResults\022&\n\010query_id\030\001 \001(\0132\024.exec.share" +
-      "d.QueryId\022\031\n\021maximum_responses\030\002 \001(\005\"o\n\010" +
-      "RunQuery\0221\n\014results_mode\030\001 \001(\0162\033.exec.us" +
-      "er.QueryResultsMode\022\"\n\004type\030\002 \001(\0162\024.exec",
-      ".user.QueryType\022\014\n\004plan\030\003 \001(\t\")\n\022BitToUs" +
-      "erHandshake\022\023\n\013rpc_version\030\002 \001(\005\"7\n\nNode" +
-      "Status\022\017\n\007node_id\030\001 \001(\005\022\030\n\020memory_footpr" +
-      "int\030\002 \001(\003\"\331\003\n\013QueryResult\0226\n\013query_state" +
-      "\030\001 \001(\0162!.exec.user.QueryResult.QueryStat" +
-      "e\022&\n\010query_id\030\002 \001(\0132\024.exec.shared.QueryI" +
-      "d\022\025\n\ris_last_chunk\030\003 \001(\010\022\021\n\trow_count\030\004 " +
-      "\001(\005\022\024\n\014records_scan\030\005 \001(\003\022\025\n\rrecords_err" +
-      "or\030\006 \001(\003\022\027\n\017submission_time\030\007 \001(\003\022*\n\013nod" +
-      "e_status\030\010 \003(\0132\025.exec.user.NodeStatus\022(\n",
-      "\005error\030\t \003(\0132\031.exec.shared.DrillPBError\022" +
-      "(\n\003def\030\n \001(\0132\033.exec.shared.RecordBatchDe" +
-      "f\022\026\n\016schema_changed\030\013 \001(\010\"b\n\nQueryState\022" +
-      "\013\n\007PENDING\020\000\022\013\n\007RUNNING\020\001\022\r\n\tCOMPLETED\020\002" +
-      "\022\014\n\010CANCELED\020\003\022\n\n\006FAILED\020\004\022\021\n\rUNKNOWN_QU" +
-      "ERY\020\005*\270\001\n\007RpcType\022\r\n\tHANDSHAKE\020\000\022\007\n\003ACK\020" +
-      "\001\022\013\n\007GOODBYE\020\002\022\r\n\tRUN_QUERY\020\003\022\020\n\014CANCEL_" +
-      "QUERY\020\004\022\023\n\017REQUEST_RESULTS\020\005\022\020\n\014QUERY_RE" +
-      "SULT\020\006\022\020\n\014QUERY_HANDLE\020\007\022\026\n\022REQ_META_FUN" +
-      "CTIONS\020\010\022\026\n\022RESP_FUNCTION_LIST\020\t*/\n\tQuer",
-      "yType\022\007\n\003SQL\020\001\022\013\n\007LOGICAL\020\002\022\014\n\010PHYSICAL\020" +
-      "\003*#\n\020QueryResultsMode\022\017\n\013STREAM_FULL\020\001B+" +
-      "\n\033org.apache.drill.exec.protoB\nUserProto" +
-      "sH\001"
+      "\032\023UserBitShared.proto\"&\n\010Property\022\013\n\003key" +
+      "\030\001 \002(\t\022\r\n\005value\030\002 \002(\t\"9\n\016UserProperties\022" +
+      "\'\n\nproperties\030\001 \003(\0132\023.exec.user.Property" +
+      "\"\326\001\n\022UserToBitHandshake\022.\n\007channel\030\001 \001(\016" +
+      "2\027.exec.shared.RpcChannel:\004USER\022\031\n\021suppo" +
+      "rt_listening\030\002 \001(\010\022\023\n\013rpc_version\030\003 \001(\005\022" +
+      "1\n\013credentials\030\004 \001(\0132\034.exec.shared.UserC" +
+      "redentials\022-\n\nproperties\030\005 \001(\0132\031.exec.us" +
+      "er.UserProperties\"S\n\016RequestResults\022&\n\010q",
+      "uery_id\030\001 \001(\0132\024.exec.shared.QueryId\022\031\n\021m" +
+      "aximum_responses\030\002 \001(\005\"o\n\010RunQuery\0221\n\014re" +
+      "sults_mode\030\001 \001(\0162\033.exec.user.QueryResult" +
+      "sMode\022\"\n\004type\030\002 \001(\0162\024.exec.user.QueryTyp" +
+      "e\022\014\n\004plan\030\003 \001(\t\")\n\022BitToUserHandshake\022\023\n" +
+      "\013rpc_version\030\002 \001(\005\"7\n\nNodeStatus\022\017\n\007node" +
+      "_id\030\001 \001(\005\022\030\n\020memory_footprint\030\002 \001(\003\"\331\003\n\013" +
+      "QueryResult\0226\n\013query_state\030\001 \001(\0162!.exec." +
+      "user.QueryResult.QueryState\022&\n\010query_id\030" +
+      "\002 \001(\0132\024.exec.shared.QueryId\022\025\n\ris_last_c",
+      "hunk\030\003 \001(\010\022\021\n\trow_count\030\004 \001(\005\022\024\n\014records" +
+      "_scan\030\005 \001(\003\022\025\n\rrecords_error\030\006 \001(\003\022\027\n\017su" +
+      "bmission_time\030\007 \001(\003\022*\n\013node_status\030\010 \003(\013" +
+      "2\025.exec.user.NodeStatus\022(\n\005error\030\t \003(\0132\031" +
+      ".exec.shared.DrillPBError\022(\n\003def\030\n \001(\0132\033" +
+      ".exec.shared.RecordBatchDef\022\026\n\016schema_ch" +
+      "anged\030\013 \001(\010\"b\n\nQueryState\022\013\n\007PENDING\020\000\022\013" +
+      "\n\007RUNNING\020\001\022\r\n\tCOMPLETED\020\002\022\014\n\010CANCELED\020\003" +
+      "\022\n\n\006FAILED\020\004\022\021\n\rUNKNOWN_QUERY\020\005*\270\001\n\007RpcT" +
+      "ype\022\r\n\tHANDSHAKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002",
+      "\022\r\n\tRUN_QUERY\020\003\022\020\n\014CANCEL_QUERY\020\004\022\023\n\017REQ" +
+      "UEST_RESULTS\020\005\022\020\n\014QUERY_RESULT\020\006\022\020\n\014QUER" +
+      "Y_HANDLE\020\007\022\026\n\022REQ_META_FUNCTIONS\020\010\022\026\n\022RE" +
+      "SP_FUNCTION_LIST\020\t*/\n\tQueryType\022\007\n\003SQL\020\001" +
+      "\022\013\n\007LOGICAL\020\002\022\014\n\010PHYSICAL\020\003*#\n\020QueryResu" +
+      "ltsMode\022\017\n\013STREAM_FULL\020\001B+\n\033org.apache.d" +
+      "rill.exec.protoB\nUserProtosH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
         public com.google.protobuf.ExtensionRegistry assignDescriptors(
             com.google.protobuf.Descriptors.FileDescriptor root) {
           descriptor = root;
-          internal_static_exec_user_UserToBitHandshake_descriptor =
+          internal_static_exec_user_Property_descriptor =
             getDescriptor().getMessageTypes().get(0);
+          internal_static_exec_user_Property_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_exec_user_Property_descriptor,
+              new java.lang.String[] { "Key", "Value", });
+          internal_static_exec_user_UserProperties_descriptor =
+            getDescriptor().getMessageTypes().get(1);
+          internal_static_exec_user_UserProperties_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_exec_user_UserProperties_descriptor,
+              new java.lang.String[] { "Properties", });
+          internal_static_exec_user_UserToBitHandshake_descriptor =
+            getDescriptor().getMessageTypes().get(2);
           internal_static_exec_user_UserToBitHandshake_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_user_UserToBitHandshake_descriptor,
-              new java.lang.String[] { "Channel", "SupportListening", "RpcVersion", "Credentials", });
+              new java.lang.String[] { "Channel", "SupportListening", "RpcVersion", "Credentials", "Properties", });
           internal_static_exec_user_RequestResults_descriptor =
-            getDescriptor().getMessageTypes().get(1);
+            getDescriptor().getMessageTypes().get(3);
           internal_static_exec_user_RequestResults_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_user_RequestResults_descriptor,
               new java.lang.String[] { "QueryId", "MaximumResponses", });
           internal_static_exec_user_RunQuery_descriptor =
-            getDescriptor().getMessageTypes().get(2);
+            getDescriptor().getMessageTypes().get(4);
           internal_static_exec_user_RunQuery_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_user_RunQuery_descriptor,
               new java.lang.String[] { "ResultsMode", "Type", "Plan", });
           internal_static_exec_user_BitToUserHandshake_descriptor =
-            getDescriptor().getMessageTypes().get(3);
+            getDescriptor().getMessageTypes().get(5);
           internal_static_exec_user_BitToUserHandshake_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_user_BitToUserHandshake_descriptor,
               new java.lang.String[] { "RpcVersion", });
           internal_static_exec_user_NodeStatus_descriptor =
-            getDescriptor().getMessageTypes().get(4);
+            getDescriptor().getMessageTypes().get(6);
           internal_static_exec_user_NodeStatus_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_user_NodeStatus_descriptor,
               new java.lang.String[] { "NodeId", "MemoryFootprint", });
           internal_static_exec_user_QueryResult_descriptor =
-            getDescriptor().getMessageTypes().get(5);
+            getDescriptor().getMessageTypes().get(7);
           internal_static_exec_user_QueryResult_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_user_QueryResult_descriptor,

@@ -87,7 +87,7 @@ public class PlanningBase {
         context.getFunctionRegistry();
         result = functionRegistry;
         context.getSession();
-        result = new UserSession(null, null, null);
+        result = new UserSession(null, null);
         context.getCurrentEndpoint();
         result = DrillbitEndpoint.getDefaultInstance();
         context.getActiveEndpoints();

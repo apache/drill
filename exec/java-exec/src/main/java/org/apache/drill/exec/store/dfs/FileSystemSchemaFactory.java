@@ -96,12 +96,12 @@ public class FileSystemSchemaFactory implements SchemaFactory{
 
     @Override
     public Schema getSubSchema(String name) {
-      return defaultSchema.getSubSchema(name);
+      return schemaMap.get(name);
     }
 
     @Override
     public Set<String> getSubSchemaNames() {
-      return defaultSchema.getSubSchemaNames();
+      return schemaMap.keySet();
     }
 
     @Override

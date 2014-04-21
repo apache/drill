@@ -32,13 +32,15 @@
     "SCHEMAS",
     "SHOW",
     "TABLES"
+    "USE"
   ]
 
   # List of methods for parsing custom SQL statements.
   statementParserMethods: [
     "SqlShowTables()",
     "SqlShowSchemas()",
-    "SqlDescribeTable()"
+    "SqlDescribeTable()",
+    "SqlUseSchema()"
   ]
 
   # List of methods for parsing custom literals.

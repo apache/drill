@@ -31,13 +31,22 @@ enum RpcType {
 	
 }
 
+message Property {
+  required string key = 1;
+  required string value = 2;
+}
+
+message UserProperties {
+  repeated Property properties = 1;
+}
+
 message UserToBitHandshake {
   optional exec.shared.RpcChannel channel = 1 [default = USER];
   optional bool support_listening = 2;
   optional int32 rpc_version = 3;
   optional exec.shared.UserCredentials credentials = 4;
+  optional UserProperties properties = 5;
 }
-
 
 message RequestResults {
   optional exec.shared.QueryId query_id = 1;

@@ -91,6 +91,7 @@ public class DrillSqlWorker {
       if (sqlNode instanceof SqlShowTables){ handler = new ShowTablesHandler(planner, context); break; }
       else if (sqlNode instanceof SqlShowSchemas){ handler = new ShowSchemasHandler(planner, context); break; }
       else if (sqlNode instanceof SqlDescribeTable){ handler = new DescribeTableHandler(planner, context); break; }
+      else if (sqlNode instanceof SqlUseSchema){ handler = new UseSchemaHandler(context); break; }
       // fallthrough
     default:
       handler = new DefaultSqlHandler(planner, context);

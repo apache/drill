@@ -63,15 +63,25 @@ public class HiveTestDataGenerator {
     conf.set(FileSystem.FS_DEFAULT_NAME_KEY, "file:///");
     conf.set("hive.metastore.warehouse.dir", WH_DIR);
 
-    String tableName = "kv";
-
     SessionState ss = new SessionState(new HiveConf(SessionState.class));
     SessionState.start(ss);
     hiveDriver = new Driver(conf);
-    executeQuery(String.format("CREATE TABLE IF NOT EXISTS default.kv(key INT, value STRING) "+
-      "ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE", tableName));
-    executeQuery(String.format("LOAD DATA LOCAL INPATH '%s' OVERWRITE INTO TABLE %s", generateTestDataFile(), tableName));
-      ss.close();
+
+    // generate (key, value) test data
+    String testDataFile = generateTestDataFile();
+
+    createTableAndLoadData("default", "kv", testDataFile);
+    executeQuery("CREATE DATABASE IF NOT EXISTS db1");
+    createTableAndLoadData("db1", "kv_db1", testDataFile);
+
+    ss.close();
+  }
+
+  private void createTableAndLoadData(String dbName, String tblName, String dataFile) {
+    executeQuery(String.format("USE %s", dbName));
+    executeQuery(String.format("CREATE TABLE IF NOT EXISTS %s.%s(key INT, value STRING) "+
+        "ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE", dbName, tblName));
+    executeQuery(String.format("LOAD DATA LOCAL INPATH '%s' OVERWRITE INTO TABLE %s.%s", dataFile, dbName, tblName));
   }
 
   private String generateTestDataFile() throws Exception {

@@ -25,9 +25,11 @@ import java.sql.ResultSetMetaData;
 import java.sql.Statement;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.base.Function;
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.store.hive.HiveTestDataGenerator;
 import org.apache.drill.jdbc.Driver;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -62,7 +64,6 @@ public class TestJdbcQuery {
   }
 
   @Test
-  @Ignore // something not working here.
   public void testHiveReadWithDb() throws Exception{
     testQuery("select * from hive.`default`.kv");
   }
@@ -268,6 +269,7 @@ public class TestJdbcQuery {
       .sql("SHOW TABLES")
       .returns(
         "TABLE_SCHEMA=hive.default; TABLE_NAME=kv\n" +
+        "TABLE_SCHEMA=hive.db1; TABLE_NAME=kv_db1\n" +
         "TABLE_SCHEMA=hive; TABLE_NAME=kv\n" +
         "TABLE_SCHEMA=INFORMATION_SCHEMA; TABLE_NAME=VIEWS\n" +
         "TABLE_SCHEMA=INFORMATION_SCHEMA; TABLE_NAME=COLUMNS\n" +
@@ -312,6 +314,7 @@ public class TestJdbcQuery {
   public void testShowDatabases() throws Exception{
     String expected =
         "SCHEMA_NAME=hive.default\n" +
+        "SCHEMA_NAME=hive.db1\n" +
         "SCHEMA_NAME=hive\n" +
         "SCHEMA_NAME=dfs.home\n" +
         "SCHEMA_NAME=dfs.default\n" +
@@ -337,6 +340,7 @@ public class TestJdbcQuery {
       .sql("SHOW DATABASES LIKE '%i%'")
       .returns(
         "SCHEMA_NAME=hive.default\n"+
+        "SCHEMA_NAME=hive.db1\n"+
         "SCHEMA_NAME=hive\n"
       );
   }
@@ -399,5 +403,94 @@ public class TestJdbcQuery {
         "COLUMN_NAME=SCHEMA_NAME; DATA_TYPE=VARCHAR; IS_NULLABLE=NO\n"+
         "COLUMN_NAME=SCHEMA_OWNER; DATA_TYPE=VARCHAR; IS_NULLABLE=NO\n"
       );
+  }
+
+  @Test
+  public void testDefaultSchemaDfs() throws Exception{
+    JdbcAssert.withFull("dfs")
+      .sql(String.format("SELECT R_REGIONKEY FROM `%s/../sample-data/region.parquet` LIMIT 2", WORKING_PATH))
+      .returns(
+        "R_REGIONKEY=0\n" +
+        "R_REGIONKEY=1\n"
+      );
+  }
+
+  @Test
+  public void testDefaultSchemaClasspath() throws Exception{
+    JdbcAssert.withFull("cp")
+      .sql("SELECT full_name FROM `employee.json` LIMIT 2")
+      .returns(
+        "full_name=Sheri Nowmer\n" +
+        "full_name=Derrick Whelply\n"
+      );
+  }
+
+  @Test
+  public void testDefaultSchemaHive() throws Exception{
+    JdbcAssert.withFull("hive")
+      .sql("SELECT * FROM kv LIMIT 2")
+      .returns(
+        "key=1; value= key_1\n" +
+        "key=2; value= key_2\n"
+      );
+  }
+
+  @Test
+  public void testDefaultTwoLevelSchemaHive() throws Exception{
+    JdbcAssert.withFull("hive.db1")
+      .sql("SELECT * FROM `kv_db1` LIMIT 2")
+      .returns(
+        "key=1; value= key_1\n" +
+        "key=2; value= key_2\n"
+      );
+  }
+
+  @Test
+  public void testQueryFromNonDefaultSchema() throws Exception{
+    JdbcAssert.withFull("hive")
+      .sql("SELECT full_name FROM cp.`employee.json` LIMIT 2")
+      .returns(
+        "full_name=Sheri Nowmer\n" +
+        "full_name=Derrick Whelply\n"
+      );
+  }
+
+  @Test
+  public void testUseSchema() throws Exception{
+    JdbcAssert.withNoDefaultSchema()
+      .sql("USE hive.`default`")
+      .returns("ok=true; summary=Default schema changed to 'hive.default'");
+  }
+
+  @Test
+  public void testUseSchemaNegative() throws Exception{
+    JdbcAssert.withNoDefaultSchema()
+        .sql("USE invalid.schema")
+        .returns("ok=false; summary=Failed to change default schema to 'invalid.schema'");
+  }
+
+  @Test
+  public void testUseSchemaAndQuery() throws Exception{
+    JdbcAssert.withNoDefaultSchema().withConnection(new Function<Connection, Void>() {
+      public Void apply(Connection connection) {
+        try {
+          Statement statement = connection.createStatement();
+          ResultSet resultSet = statement.executeQuery("USE hive.db1");
+          String result = JdbcAssert.toString(resultSet).trim();
+          String expected = "ok=true; summary=Default schema changed to 'hive.db1'";
+          Assert.assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected), expected.equals(result));
+
+
+          resultSet = statement.executeQuery("SELECT * FROM kv_db1 LIMIT 2");
+          result = JdbcAssert.toString(resultSet).trim();
+          expected = "key=1; value= key_1\nkey=2; value= key_2";
+          Assert.assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected), expected.equals(result));
+          statement.close();
+          return null;
+        } catch (Exception e) {
+          throw new RuntimeException(e);
+        }
+      }
+    });
   }
 }

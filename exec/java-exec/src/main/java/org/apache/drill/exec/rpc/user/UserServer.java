@@ -32,6 +32,7 @@ import org.apache.drill.exec.proto.UserProtos.BitToUserHandshake;
 import org.apache.drill.exec.proto.UserProtos.RequestResults;
 import org.apache.drill.exec.proto.UserProtos.RpcType;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
+import org.apache.drill.exec.proto.UserProtos.UserProperties;
 import org.apache.drill.exec.proto.UserProtos.UserToBitHandshake;
 import org.apache.drill.exec.rpc.Acks;
 import org.apache.drill.exec.rpc.BasicServer;
@@ -73,10 +74,6 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
       throws RpcException {
     switch (rpcType) {
 
-    case RpcType.HANDSHAKE_VALUE:
-      // logger.debug("Received handshake, responding in kind.");
-      return new Response(RpcType.HANDSHAKE, BitToUserHandshake.getDefaultInstance());
-
     case RpcType.RUN_QUERY_VALUE:
       // logger.debug("Received query to run.  Returning query handle.");
       try {
@@ -113,8 +110,8 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
       super(channel);
     }
 
-    void setUser(UserCredentials credentials) throws IOException{
-      session = new UserSession(this, credentials, worker.getSchemaFactory());
+    void setUser(UserCredentials credentials, UserProperties props) throws IOException{
+      session = new UserSession(credentials, props);
     }
 
     public UserSession getSession(){
@@ -131,7 +128,6 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
     public BufferAllocator getAllocator() {
       return alloc;
     }
-
   }
 
   @Override
@@ -147,10 +143,9 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
       public MessageLite getHandshakeResponse(UserToBitHandshake inbound) throws Exception {
 //        logger.debug("Handling handshake from user to bit. {}", inbound);
         if(inbound.getRpcVersion() != UserRpcConfig.RPC_VERSION) throw new RpcException(String.format("Invalid rpc version.  Expected %d, actual %d.", inbound.getRpcVersion(), UserRpcConfig.RPC_VERSION));
-        connection.setUser(inbound.getCredentials());
+        connection.setUser(inbound.getCredentials(), inbound.getProperties());
         return BitToUserHandshake.newBuilder().setRpcVersion(UserRpcConfig.RPC_VERSION).build();
       }
-
     };
   }
 

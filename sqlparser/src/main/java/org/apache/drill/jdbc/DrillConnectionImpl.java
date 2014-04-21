@@ -79,10 +79,10 @@ abstract class DrillConnectionImpl extends AvaticaConnection implements org.apac
           bit = null;
         }
         this.client = new DrillClient(driver.getConfig(), set.getCoordinator());
-        this.client.connect(null);
+        this.client.connect(null, info);
       }else{
         this.client = new DrillClient();
-        this.client.connect(config.getZookeeperConnectionString());
+        this.client.connect(config.getZookeeperConnectionString(), info);
       }
     }catch(RpcException e){
       throw new SQLException("Failure while attempting to connect to Drill.", e);
