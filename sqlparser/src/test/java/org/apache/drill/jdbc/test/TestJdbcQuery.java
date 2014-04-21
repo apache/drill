@@ -102,12 +102,12 @@ public class TestJdbcQuery {
 
   @Test
   public void testCharLiteral() throws Exception {
-    testQuery(String.format("select 'test literal' from INFORMATION_SCHEMA.TABLES LIMIT 1"));
+    testQuery("select 'test literal' from INFORMATION_SCHEMA.`TABLES` LIMIT 1");
   }
 
   @Test
   public void testVarCharLiteral() throws Exception {
-    testQuery(String.format("select cast('test literal' as VARCHAR) from INFORMATION_SCHEMA.TABLES LIMIT 1"));
+    testQuery("select cast('test literal' as VARCHAR) from INFORMATION_SCHEMA.`TABLES` LIMIT 1");
   }
 
   @Test
@@ -236,7 +236,6 @@ public class TestJdbcQuery {
         );
   }
 
-
   @Test
   public void testTrueOpForNonNullableType() throws Exception{
     // Output of IS TRUE (and others) is a Non-nullable type
@@ -261,5 +260,144 @@ public class TestJdbcQuery {
             "data=set to true\n" +
             "data=not set"
         );
+  }
+
+  @Test
+  public void testShowTables() throws Exception{
+    JdbcAssert.withNoDefaultSchema()
+      .sql("SHOW TABLES")
+      .returns(
+        "TABLE_SCHEMA=hive.default; TABLE_NAME=kv\n" +
+        "TABLE_SCHEMA=hive; TABLE_NAME=kv\n" +
+        "TABLE_SCHEMA=INFORMATION_SCHEMA; TABLE_NAME=VIEWS\n" +
+        "TABLE_SCHEMA=INFORMATION_SCHEMA; TABLE_NAME=COLUMNS\n" +
+        "TABLE_SCHEMA=INFORMATION_SCHEMA; TABLE_NAME=TABLES\n" +
+        "TABLE_SCHEMA=INFORMATION_SCHEMA; TABLE_NAME=CATALOGS\n" +
+        "TABLE_SCHEMA=INFORMATION_SCHEMA; TABLE_NAME=SCHEMATA\n"
+      );
+  }
+
+  @Test
+  public void testShowTablesFromDb() throws Exception{
+    JdbcAssert.withNoDefaultSchema()
+      .sql("SHOW TABLES FROM INFORMATION_SCHEMA")
+      .returns(
+        "TABLE_SCHEMA=INFORMATION_SCHEMA; TABLE_NAME=VIEWS\n" +
+        "TABLE_SCHEMA=INFORMATION_SCHEMA; TABLE_NAME=COLUMNS\n" +
+        "TABLE_SCHEMA=INFORMATION_SCHEMA; TABLE_NAME=TABLES\n" +
+        "TABLE_SCHEMA=INFORMATION_SCHEMA; TABLE_NAME=CATALOGS\n" +
+        "TABLE_SCHEMA=INFORMATION_SCHEMA; TABLE_NAME=SCHEMATA\n"
+      );
+
+    JdbcAssert.withNoDefaultSchema()
+      .sql("SHOW TABLES IN hive")
+      .returns("TABLE_SCHEMA=hive; TABLE_NAME=kv\n");
+  }
+
+  @Test
+  public void testShowTablesFromDbWhere() throws Exception{
+    JdbcAssert.withNoDefaultSchema()
+      .sql("SHOW TABLES FROM INFORMATION_SCHEMA WHERE TABLE_NAME='VIEWS'")
+      .returns("TABLE_SCHEMA=INFORMATION_SCHEMA; TABLE_NAME=VIEWS\n");
+  }
+
+  @Test
+  public void testShowTablesLike() throws Exception{
+    JdbcAssert.withNoDefaultSchema()
+      .sql("SHOW TABLES LIKE '%CH%'")
+      .returns("TABLE_SCHEMA=INFORMATION_SCHEMA; TABLE_NAME=SCHEMATA\n");
+  }
+
+  @Test
+  public void testShowDatabases() throws Exception{
+    String expected =
+        "SCHEMA_NAME=hive.default\n" +
+        "SCHEMA_NAME=hive\n" +
+        "SCHEMA_NAME=dfs.home\n" +
+        "SCHEMA_NAME=dfs.default\n" +
+        "SCHEMA_NAME=dfs\n" +
+        "SCHEMA_NAME=cp.default\n" +
+        "SCHEMA_NAME=cp\n" +
+        "SCHEMA_NAME=INFORMATION_SCHEMA\n";
+
+    JdbcAssert.withNoDefaultSchema().sql("SHOW DATABASES").returns(expected);
+    JdbcAssert.withNoDefaultSchema().sql("SHOW SCHEMAS").returns(expected);
+  }
+
+  @Test
+  public void testShowDatabasesWhere() throws Exception{
+    JdbcAssert.withNoDefaultSchema()
+      .sql("SHOW DATABASES WHERE SCHEMA_NAME='dfs'")
+      .returns("SCHEMA_NAME=dfs\n");
+  }
+
+  @Test
+  public void testShowDatabasesLike() throws Exception{
+    JdbcAssert.withNoDefaultSchema()
+      .sql("SHOW DATABASES LIKE '%i%'")
+      .returns(
+        "SCHEMA_NAME=hive.default\n"+
+        "SCHEMA_NAME=hive\n"
+      );
+  }
+
+  @Test
+  public void testDescribeTable() throws Exception{
+    JdbcAssert.withNoDefaultSchema()
+      .sql("DESCRIBE CATALOGS")
+      .returns(
+        "COLUMN_NAME=CATALOG_NAME; DATA_TYPE=VARCHAR; IS_NULLABLE=NO\n"+
+        "COLUMN_NAME=CATALOG_DESCRIPTION; DATA_TYPE=VARCHAR; IS_NULLABLE=NO\n"+
+        "COLUMN_NAME=CATALOG_CONNECT; DATA_TYPE=VARCHAR; IS_NULLABLE=NO\n"
+      );
+  }
+
+  @Test
+  public void testDescribeTableWithSchema() throws Exception{
+    JdbcAssert.withNoDefaultSchema()
+      .sql("DESCRIBE INFORMATION_SCHEMA.`TABLES`")
+      .returns(
+        "COLUMN_NAME=TABLE_CATALOG; DATA_TYPE=VARCHAR; IS_NULLABLE=NO\n"+
+        "COLUMN_NAME=TABLE_SCHEMA; DATA_TYPE=VARCHAR; IS_NULLABLE=NO\n"+
+        "COLUMN_NAME=TABLE_NAME; DATA_TYPE=VARCHAR; IS_NULLABLE=NO\n"+
+        "COLUMN_NAME=TABLE_TYPE; DATA_TYPE=VARCHAR; IS_NULLABLE=NO\n"
+      );
+  }
+
+  @Test
+  @Ignore // DRILL-399 - default schema doesn't work
+  public void testDescribeTableWithColumnName() throws Exception{
+    JdbcAssert.withFull("INFORMATION_SCHEMA")
+        .sql("DESCRIBE `TABLES` TABLE_CATALOG")
+        .returns("COLUMN_NAME=TABLE_CATALOG; DATA_TYPE=VARCHAR; IS_NULLABLE=NO\n");
+  }
+
+  @Test
+  public void testDescribeTableWithSchemaAndColumnName() throws Exception{
+    JdbcAssert.withNoDefaultSchema()
+      .sql("DESCRIBE INFORMATION_SCHEMA.`TABLES` TABLE_CATALOG")
+      .returns("COLUMN_NAME=TABLE_CATALOG; DATA_TYPE=VARCHAR; IS_NULLABLE=NO\n");
+  }
+
+  @Test
+  @Ignore // DRILL-399 - default schema doesn't work
+  public void testDescribeTableWithColQualifier() throws Exception{
+    JdbcAssert.withFull("INFORMATION_SCHEMA")
+      .sql("DESCRIBE COLUMNS 'TABLE%'")
+      .returns(
+        "COLUMN_NAME=TABLE_CATALOG; DATA_TYPE=VARCHAR; IS_NULLABLE=NO\n"+
+        "COLUMN_NAME=TABLE_SCHEMA; DATA_TYPE=VARCHAR; IS_NULLABLE=NO\n"+
+        "COLUMN_NAME=TABLE_NAME; DATA_TYPE=VARCHAR; IS_NULLABLE=NO\n"
+      );
+  }
+
+  @Test
+  public void testDescribeTableWithSchemaAndColQualifier() throws Exception{
+    JdbcAssert.withNoDefaultSchema()
+      .sql("DESCRIBE INFORMATION_SCHEMA.SCHEMATA 'SCHEMA%'")
+      .returns(
+        "COLUMN_NAME=SCHEMA_NAME; DATA_TYPE=VARCHAR; IS_NULLABLE=NO\n"+
+        "COLUMN_NAME=SCHEMA_OWNER; DATA_TYPE=VARCHAR; IS_NULLABLE=NO\n"
+      );
   }
 }

@@ -59,7 +59,8 @@ public class OptiqProvider  {
   static public class Schemata extends Abstract {
     @Override
     public boolean visitSchema(String schemaName, Schema schema) {
-      if (schemaName != null && schemaName != "") {
+      if (schemaName != null && schemaName != "" &&
+          !schemaName.equals("metadata") /* workaround until Drill upgrades to Optiq version which has the fix for #256 */) {
           writeRow("DRILL", schemaName, "<owner>");
       }
       return false;
@@ -173,7 +174,9 @@ public class OptiqProvider  {
      *    If the schema visitor returns true, then visit the tables.
      *    If the table visitor returns true, then visit the fields (columns).
      */
-    public boolean visitSchema(String schemaName, Schema schema){return true;}
+    public boolean visitSchema(String schemaName, Schema schema){
+      return !schemaName.equals("metadata"); //workaround until Drill upgrades to Optiq version which has the fix for #256
+    }
     public boolean visitTableName(String schemaName, String tableName){return true;}
     public boolean visitTable(String schemaName, String tableName, Table table){return true;}
     public boolean visitField(String schemaName, String tableName, RelDataTypeField field){return true;}
