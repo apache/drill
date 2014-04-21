@@ -36,7 +36,7 @@ public class VectorUtil {
     int rows = va.getRecordCount();
     List<String> columns = Lists.newArrayList();
     for (VectorWrapper<?> vw : va) {
-      columns.add(vw.getValueVector().getField().getAsSchemaPath().toExpr());
+      columns.add(vw.getValueVector().getField().getAsSchemaPath().getAsUnescapedPath());
     }
 
     int width = columns.size();
@@ -77,7 +77,7 @@ public class VectorUtil {
     int rows = va.getRecordCount();
     List<String> columns = Lists.newArrayList();
     for (VectorWrapper<?> vw : va) {
-      columns.add(vw.getValueVector().getField().getAsSchemaPath().toExpr());
+      columns.add(vw.getValueVector().getField().getAsSchemaPath().getAsUnescapedPath());
     }
 
     int width = columns.size() * (columnWidth + 2);

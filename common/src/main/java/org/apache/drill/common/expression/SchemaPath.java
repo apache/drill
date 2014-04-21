@@ -152,6 +152,25 @@ public class SchemaPath extends LogicalExpressionBase {
     return ExpressionStringBuilder.toString(this);
   }
 
+  public String getAsUnescapedPath(){
+    StringBuilder sb = new StringBuilder();
+    PathSegment seg = getRootSegment();
+    if(seg.isArray()) throw new IllegalStateException("Drill doesn't currently support top level arrays");
+    sb.append(seg.getNameSegment().getPath());
+
+    while( (seg = seg.getChild()) != null){
+      if(seg.isNamed()){
+        sb.append('.');
+        sb.append(seg.getNameSegment().getPath());
+      }else{
+        sb.append('[');
+        sb.append(seg.getArraySegment().getIndex());
+        sb.append(']');
+      }
+    }
+    return sb.toString();
+  }
+
 
   public static class De extends StdDeserializer<SchemaPath> {
     DrillConfig config;
