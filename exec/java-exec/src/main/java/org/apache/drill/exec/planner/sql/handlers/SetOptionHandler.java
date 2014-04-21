@@ -47,7 +47,7 @@ public class SetOptionHandler implements SqlHandler{
     String name = option.getName();
     SqlNode value = option.getValue();
     if(name.equals("NO_EXCHANGES")){
-      context.getSession().enableExchanges(false);
+      context.getPlannerSettings().setSingleMode(true);
     }
     return DirectPlan.createDirectPlan(context, true, "disabled exchanges.");
 

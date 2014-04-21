@@ -17,12 +17,10 @@
  */
 package org.apache.drill.exec.planner.physical;
 
-import org.eigenbase.relopt.RelOptCluster;
+import net.hydromatic.optiq.tools.FrameworkContext;
 
-public class PlanningSettings {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PlanningSettings.class);
-
-  private static ThreadLocal<PlanningSettings> settings = new ThreadLocal<>();
+public class PlannerSettings implements FrameworkContext{
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PlannerSettings.class);
 
   private boolean singleMode;
 
@@ -34,23 +32,13 @@ public class PlanningSettings {
     this.singleMode = singleMode;
   }
 
-  /**
-   * Convenience method to extract planning settings from RelOptCluster. Uses threadlocal until Optiq supports
-   * passthrough.
-   */
-  public static PlanningSettings get(RelOptCluster cluster) {
-    PlanningSettings s = settings.get();
-    if (s == null) {
-      s = new PlanningSettings();
-      settings.set(s);
+  @Override
+  public <T> T unwrap(Class<T> clazz) {
+    if(clazz == PlannerSettings.class){
+      return (T) this;
+    }else{
+      return null;
     }
-
-    return s;
-  }
-
-
-  public static PlanningSettings get(){
-    return get(null);
   }
 
 

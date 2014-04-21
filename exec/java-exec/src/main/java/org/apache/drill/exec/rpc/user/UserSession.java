@@ -30,7 +30,6 @@ public class UserSession {
 
   private DrillUser user;
   private String defaultSchema = "";
-  private boolean enableExchanges = true;
   private UserClientConnection connection;
 
   public UserSession(UserClientConnection connection, UserCredentials credentials, SchemaFactory factory) throws IOException{
@@ -64,14 +63,6 @@ public class UserSession {
       if(schema == null) break;
     }
     return schema;
-  }
-
-  public void enableExchanges(boolean enableExchanges){
-    this.enableExchanges = enableExchanges;
-  }
-
-  public boolean isEnableExchanges() {
-    return enableExchanges;
   }
 
   public boolean setSessionOption(String name, String value){

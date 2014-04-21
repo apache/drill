@@ -31,6 +31,7 @@ import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.sql.DrillSqlWorker;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.rpc.user.UserSession;
@@ -91,6 +92,8 @@ public class PlanningBase {
         result = DrillbitEndpoint.getDefaultInstance();
         context.getActiveEndpoints();
         result = ImmutableList.of(DrillbitEndpoint.getDefaultInstance());
+        context.getPlannerSettings();
+        result = new PlannerSettings();
         context.getConfig();
         result = config;
       }

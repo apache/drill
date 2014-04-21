@@ -30,6 +30,7 @@ import org.apache.drill.exec.planner.physical.DrillDistributionTrait.Distributio
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.eigenbase.rel.RelCollation;
 import org.eigenbase.rel.RelFieldCollation;
+import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.reltype.RelDataType;
 
 import com.beust.jcommander.internal.Lists;
@@ -71,6 +72,9 @@ public class PrelUtil {
     return func;
   }
 
+  public static PlannerSettings getSettings(RelOptCluster cluster){
+    return cluster.getPlanner().getFrameworkContext().unwrap(PlannerSettings.class);
+  }
 
   public static PhysicalOperator removeSvIfRequired(PhysicalOperator child, SelectionVectorMode... allowed){
     SelectionVectorMode current = child.getSVMode();

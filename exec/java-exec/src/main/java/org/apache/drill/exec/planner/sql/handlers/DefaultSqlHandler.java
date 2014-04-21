@@ -40,7 +40,7 @@ import org.apache.drill.exec.planner.logical.DrillScreenRel;
 import org.apache.drill.exec.planner.logical.DrillStoreRel;
 import org.apache.drill.exec.planner.physical.DrillDistributionTrait;
 import org.apache.drill.exec.planner.physical.PhysicalPlanCreator;
-import org.apache.drill.exec.planner.physical.PlanningSettings;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.sql.DrillSqlWorker;
 import org.eigenbase.rel.RelNode;
@@ -123,13 +123,8 @@ public class DefaultSqlHandler implements SqlHandler{
 
   protected PhysicalOperator convertToPop(Prel prel) throws IOException{
 
-    boolean singleMode = !context.getSession().isEnableExchanges();
-
-    if(singleMode) PlanningSettings.get().setSingleMode(true);
     PhysicalPlanCreator creator = new PhysicalPlanCreator(context);
     PhysicalOperator op =  prel.getPhysicalOperator(creator);
-
-    if(singleMode) PlanningSettings.get().setSingleMode(false);
     return op;
   }
 

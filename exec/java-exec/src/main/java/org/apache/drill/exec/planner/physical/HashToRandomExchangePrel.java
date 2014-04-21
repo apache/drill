@@ -62,7 +62,7 @@ public class HashToRandomExchangePrel extends SingleRel implements Prel {
 
     PhysicalOperator childPOP = child.getPhysicalOperator(creator);
 
-    if(PlanningSettings.get(getCluster()).isSingleMode()) return childPOP;
+    if(PrelUtil.getSettings(getCluster()).isSingleMode()) return childPOP;
 
     //Currently, only accepts "NONE". For other, requires SelectionVectorRemover
     childPOP = PrelUtil.removeSvIfRequired(childPOP, SelectionVectorMode.NONE);

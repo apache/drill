@@ -26,6 +26,7 @@ import net.hydromatic.optiq.tools.Frameworks;
 import net.hydromatic.optiq.tools.Planner;
 import net.hydromatic.optiq.tools.RelConversionException;
 import net.hydromatic.optiq.tools.RuleSet;
+import net.hydromatic.optiq.tools.StdFrameworkConfig;
 import net.hydromatic.optiq.tools.ValidationException;
 
 import org.apache.drill.exec.ops.QueryContext;
@@ -61,7 +62,17 @@ public class DrillSqlWorker {
     traitDefs.add(RelCollationTraitDef.INSTANCE);
     this.context = context;
     DrillOperatorTable table = new DrillOperatorTable(context.getFunctionRegistry());
-    this.planner = Frameworks.getPlanner(Lex.MYSQL, SqlParserImpl.FACTORY, context.getNewDefaultSchema(), table, traitDefs, StandardConvertletTable.INSTANCE, RULES);
+    StdFrameworkConfig config = StdFrameworkConfig.newBuilder() //
+        .lex(Lex.MYSQL) //
+        .parserFactory(SqlParserImpl.FACTORY) //
+        .defaultSchema(context.getNewDefaultSchema()) //
+        .operatorTable(table) //
+        .traitDefs(traitDefs) //
+        .convertletTable(StandardConvertletTable.INSTANCE) //
+        .context(context.getPlannerSettings()) //
+        .ruleSets(RULES) //
+        .build();
+    this.planner = Frameworks.getPlanner(config);
 
   }
 

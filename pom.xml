@@ -178,6 +178,8 @@
         <configuration>
           <source>1.7</source>
           <target>1.7</target>
+          <maxmem>2g</maxmem>
+          <fork>true</fork>
         </configuration>
       </plugin>
       <plugin>
@@ -610,7 +612,7 @@
           <dependency>
             <groupId>net.hydromatic</groupId>
             <artifactId>optiq-core</artifactId>
-            <version>0.6</version>
+            <version>0.7-SNAPSHOT</version>
             <exclusions>
               <exclusion>
                 <groupId>org.jgrapht</groupId>

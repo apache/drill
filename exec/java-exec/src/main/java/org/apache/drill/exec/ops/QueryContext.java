@@ -26,6 +26,7 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.cache.DistributedCache;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.rpc.control.WorkEventBus;
@@ -34,7 +35,7 @@ import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 
-public class QueryContext {
+public class QueryContext{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryContext.class);
 
   private final QueryId queryId;
@@ -42,6 +43,7 @@ public class QueryContext {
   private final WorkEventBus workBus;
   private UserSession session;
   public final Multitimer<QuerySetup> timer;
+  private final PlannerSettings plannerSettings;
 
   public QueryContext(UserSession session, QueryId queryId, DrillbitContext drllbitContext) {
     super();
@@ -50,6 +52,11 @@ public class QueryContext {
     this.workBus = drllbitContext.getWorkBus();
     this.session = session;
     this.timer = new Multitimer<>(QuerySetup.class);
+    this.plannerSettings = new PlannerSettings();
+  }
+
+  public PlannerSettings getPlannerSettings(){
+    return plannerSettings;
   }
 
   public UserSession getSession(){
@@ -108,4 +115,5 @@ public class QueryContext {
   public FunctionImplementationRegistry getFunctionRegistry(){
     return drillbitContext.getFunctionImplementationRegistry();
   }
+
 }
