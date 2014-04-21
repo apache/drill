@@ -64,8 +64,7 @@ public class QueryContext{
   }
 
   public SchemaPlus getNewDefaultSchema(){
-    SchemaPlus rootSchema = Frameworks.createRootSchema();
-    drillbitContext.getSchemaFactory().registerSchemas(session.getUser(), rootSchema);
+    SchemaPlus rootSchema = getRootSchema();
     SchemaPlus defaultSchema = session.getDefaultSchema(rootSchema);
     if(defaultSchema == null){
       return rootSchema;
@@ -74,6 +73,11 @@ public class QueryContext{
     }
   }
 
+  public SchemaPlus getRootSchema(){
+    SchemaPlus rootSchema = Frameworks.createRootSchema();
+    drillbitContext.getSchemaFactory().registerSchemas(session.getUser(), rootSchema);
+    return rootSchema;
+  }
 
   public DrillbitEndpoint getCurrentEndpoint(){
     return drillbitContext.getEndpoint();

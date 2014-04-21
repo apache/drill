@@ -100,3 +100,16 @@ SqlNode SqlDescribeTable() :
         return new SqlDescribeTable(pos, table, column, columnPattern);
     }
 }
+
+SqlNode SqlUseSchema():
+{
+    SqlIdentifier schema;
+    SqlParserPos pos;
+}
+{
+    <USE> { pos = getPos(); }
+    schema = CompoundIdentifier()
+    {
+        return new SqlUseSchema(pos, schema);
+    }
+}

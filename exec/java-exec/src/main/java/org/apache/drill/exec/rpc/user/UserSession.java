@@ -18,54 +18,81 @@
 package org.apache.drill.exec.rpc.user;
 
 import java.io.IOException;
+import java.util.Map;
 
+import com.google.common.collect.Maps;
 import net.hydromatic.optiq.SchemaPlus;
 
 import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
-import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
-import org.apache.drill.exec.store.SchemaFactory;
+import org.apache.drill.exec.proto.UserProtos.Property;
+import org.apache.drill.exec.proto.UserProtos.UserProperties;
 
 public class UserSession {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UserSession.class);
 
+  public static final String SCHEMA = "schema";
+
   private DrillUser user;
-  private String defaultSchema = "";
-  private UserClientConnection connection;
+  private boolean enableExchanges = true;
+  private UserCredentials credentials;
+  private Map<String, String> properties;
 
-  public UserSession(UserClientConnection connection, UserCredentials credentials, SchemaFactory factory) throws IOException{
-    this.connection = connection;
+  public UserSession(UserCredentials credentials, UserProperties properties) throws IOException{
+    this.credentials = credentials;
+
+    this.properties = Maps.newHashMap();
+    if (properties == null) return;
+    for (int i=0; i<properties.getPropertiesCount(); i++) {
+      Property prop = properties.getProperties(i);
+      this.properties.put(prop.getKey(), prop.getValue());
+    }
   }
-
 
   public DrillUser getUser(){
     return user;
   }
 
-
   /**
    * Update the schema path for the session.
    * @param fullPath The desired path to set to.
    * @param schema The root schema to find this path within.
-   * @return true if the path was set succesfully.  false if this path was unavailable.
+   * @return true if the path was set successfully.  false if this path was unavailable.
    */
   public boolean setDefaultSchemaPath(String fullPath, SchemaPlus schema){
-    SchemaPlus newDefault = getDefaultSchema(schema);
+    SchemaPlus newDefault = findSchema(schema, fullPath);
     if(newDefault == null) return false;
-    this.defaultSchema = fullPath;
+    setProp(SCHEMA, fullPath);
     return true;
   }
 
+  /**
+   * Get default schema from current default schema path and given schema tree.
+   * @param rootSchema
+   * @return A {@link net.hydromatic.optiq.SchemaPlus} object.
+   */
   public SchemaPlus getDefaultSchema(SchemaPlus rootSchema){
-    String[] paths = defaultSchema.split("\\.");
+    return findSchema(rootSchema, getProp(SCHEMA));
+  }
+
+  public boolean setSessionOption(String name, String value){
+    return true;
+  }
+
+  private String getProp(String key) {
+    return properties.get(key) != null ? properties.get(key) : "";
+  }
+
+  private void setProp(String key, String value) {
+    properties.put(key, value);
+  }
+
+  private SchemaPlus findSchema(SchemaPlus rootSchema, String schemaPath) {
+    String[] paths = schemaPath.split("\\.");
     SchemaPlus schema = rootSchema;
     for(String p : paths){
       schema = schema.getSubSchema(p);
       if(schema == null) break;
     }
     return schema;
-  }
-
-  public boolean setSessionOption(String name, String value){
-    return true;
   }
 }

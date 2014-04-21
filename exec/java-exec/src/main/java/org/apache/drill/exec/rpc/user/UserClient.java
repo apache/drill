@@ -28,6 +28,7 @@ import org.apache.drill.exec.proto.UserProtos.BitToUserHandshake;
 import org.apache.drill.exec.proto.UserProtos.QueryResult;
 import org.apache.drill.exec.proto.UserProtos.RpcType;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
+import org.apache.drill.exec.proto.UserProtos.UserProperties;
 import org.apache.drill.exec.proto.UserProtos.UserToBitHandshake;
 import org.apache.drill.exec.rpc.BasicClientWithConnection;
 import org.apache.drill.exec.rpc.ProtobufLengthDecoder;
@@ -50,9 +51,16 @@ public class UserClient extends BasicClientWithConnection<RpcType, UserToBitHand
     send(queryResultHandler.getWrappedListener(resultsListener), RpcType.RUN_QUERY, query, QueryId.class);
   }
 
-  public void connect(RpcConnectionHandler<ServerConnection> handler, DrillbitEndpoint endpoint) throws RpcException, InterruptedException {
-    UserToBitHandshake hs = UserToBitHandshake.newBuilder().setRpcVersion(UserRpcConfig.RPC_VERSION).setSupportListening(true).build();
-    this.connectAsClient(handler, hs, endpoint.getAddress(), endpoint.getUserPort());
+  public void connect(RpcConnectionHandler<ServerConnection> handler, DrillbitEndpoint endpoint, UserProperties props)
+      throws RpcException, InterruptedException {
+    UserToBitHandshake.Builder hsBuilder = UserToBitHandshake.newBuilder()
+        .setRpcVersion(UserRpcConfig.RPC_VERSION)
+        .setSupportListening(true);
+
+    if (props != null)
+      hsBuilder.setProperties(props);
+
+    this.connectAsClient(handler, hsBuilder.build(), endpoint.getAddress(), endpoint.getUserPort());
   }
 
   @Override
