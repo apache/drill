@@ -37,6 +37,10 @@ import org.apache.drill.common.expression.ValueExpressions.IntervalYearExpressio
 import org.apache.drill.common.expression.ValueExpressions.IntervalDayExpression;
 import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
 import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
+import org.apache.drill.common.expression.ValueExpressions.Decimal9Expression;
+import org.apache.drill.common.expression.ValueExpressions.Decimal18Expression;
+import org.apache.drill.common.expression.ValueExpressions.Decimal28Expression;
+import org.apache.drill.common.expression.ValueExpressions.Decimal38Expression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
 
@@ -134,12 +138,27 @@ public class ConstantExpressionIdentifier implements ExprVisitor<Boolean, Identi
   }
 
   @Override
+  public Boolean visitDecimal9Constant(Decimal9Expression decExpr, IdentityHashMap<LogicalExpression, Object> value){
+    return true;
+  }
+
+  @Override
   public Boolean visitTimeConstant(TimeExpression intExpr, IdentityHashMap<LogicalExpression, Object> value){
     return true;
   }
 
   @Override
+  public Boolean visitDecimal18Constant(Decimal18Expression decExpr, IdentityHashMap<LogicalExpression, Object> value){
+    return true;
+  }
+
+  @Override
   public Boolean visitIntervalYearConstant(IntervalYearExpression intExpr, IdentityHashMap<LogicalExpression, Object> value){
+    return true;
+  }
+
+  @Override
+  public Boolean visitDecimal28Constant(Decimal28Expression decExpr, IdentityHashMap<LogicalExpression, Object> value){
     return true;
   }
 
@@ -150,6 +169,11 @@ public class ConstantExpressionIdentifier implements ExprVisitor<Boolean, Identi
 
   @Override
   public Boolean visitTimeStampConstant(TimeStampExpression intExpr, IdentityHashMap<LogicalExpression, Object> value){
+    return true;
+  }
+
+  @Override
+  public Boolean visitDecimal38Constant(Decimal38Expression decExpr, IdentityHashMap<LogicalExpression, Object> value){
     return true;
   }
 

@@ -35,6 +35,10 @@ import org.apache.drill.common.expression.ValueExpressions.IntervalYearExpressio
 import org.apache.drill.common.expression.ValueExpressions.IntervalDayExpression;
 import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
 import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
+import org.apache.drill.common.expression.ValueExpressions.Decimal9Expression;
+import org.apache.drill.common.expression.ValueExpressions.Decimal18Expression;
+import org.apache.drill.common.expression.ValueExpressions.Decimal28Expression;
+import org.apache.drill.common.expression.ValueExpressions.Decimal38Expression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 
 final class ConstantChecker implements ExprVisitor<Boolean, ErrorCollector, RuntimeException> {
@@ -124,6 +128,26 @@ final class ConstantChecker implements ExprVisitor<Boolean, ErrorCollector, Runt
   @Override
   public Boolean visitIntervalDayConstant(IntervalDayExpression intExpr, ErrorCollector errors) {
       return true;
+  }
+
+  @Override
+  public Boolean visitDecimal9Constant(Decimal9Expression decExpr, ErrorCollector errors) {
+    return false;
+  }
+
+  @Override
+  public Boolean visitDecimal18Constant(Decimal18Expression decExpr, ErrorCollector errors) {
+    return false;
+  }
+
+  @Override
+  public Boolean visitDecimal28Constant(Decimal28Expression decExpr, ErrorCollector errors) {
+    return false;
+  }
+
+  @Override
+  public Boolean visitDecimal38Constant(Decimal38Expression decExpr, ErrorCollector errors) {
+    return false;
   }
 
   @Override

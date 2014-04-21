@@ -101,12 +101,26 @@ numType returns [MajorType type]
 	| BIGINT { $type = Types.required(TypeProtos.MinorType.BIGINT); }
 	| FLOAT4 { $type = Types.required(TypeProtos.MinorType.FLOAT4); }
 	| FLOAT8 { $type = Types.required(TypeProtos.MinorType.FLOAT8); }
+	| DECIMAL9 OParen precision Comma scale CParen { $type = TypeProtos.MajorType.newBuilder().setMinorType(TypeProtos.MinorType.DECIMAL9).setMode(DataMode.REQUIRED).setPrecision($precision.value.intValue()).setScale($scale.value.intValue()).build(); }
+	| DECIMAL18 OParen precision Comma scale CParen { $type = TypeProtos.MajorType.newBuilder().setMinorType(TypeProtos.MinorType.DECIMAL18).setMode(DataMode.REQUIRED).setPrecision($precision.value.intValue()).setScale($scale.value.intValue()).build(); }
+	| DECIMAL28DENSE OParen precision Comma scale CParen { $type = TypeProtos.MajorType.newBuilder().setMinorType(TypeProtos.MinorType.DECIMAL28DENSE).setMode(DataMode.REQUIRED).setPrecision($precision.value.intValue()).setScale($scale.value.intValue()).build(); }
+	| DECIMAL28SPARSE OParen precision Comma scale CParen { $type = TypeProtos.MajorType.newBuilder().setMinorType(TypeProtos.MinorType.DECIMAL28SPARSE).setMode(DataMode.REQUIRED).setPrecision($precision.value.intValue()).setScale($scale.value.intValue()).build(); }
+	| DECIMAL38DENSE OParen precision Comma scale CParen { $type = TypeProtos.MajorType.newBuilder().setMinorType(TypeProtos.MinorType.DECIMAL38DENSE).setMode(DataMode.REQUIRED).setPrecision($precision.value.intValue()).setScale($scale.value.intValue()).build(); }
+	| DECIMAL38SPARSE OParen precision Comma scale CParen { $type = TypeProtos.MajorType.newBuilder().setMinorType(TypeProtos.MinorType.DECIMAL38SPARSE).setMode(DataMode.REQUIRED).setPrecision($precision.value.intValue()).setScale($scale.value.intValue()).build(); }
 	;
 
 charType returns [MajorType type]
 	:  VARCHAR typeLen {$type = TypeProtos.MajorType.newBuilder().setMinorType(TypeProtos.MinorType.VARCHAR).setMode(DataMode.REQUIRED).setWidth($typeLen.length.intValue()).build(); }
 	|  VARBINARY typeLen {$type = TypeProtos.MajorType.newBuilder().setMinorType(TypeProtos.MinorType.VARBINARY).setMode(DataMode.REQUIRED).setWidth($typeLen.length.intValue()).build();}	
-	; 
+	;
+
+precision returns [Integer value]
+    : Number {$value = Integer.parseInt($Number.text); }
+    ;
+
+scale returns [Integer value]
+    : Number {$value = Integer.parseInt($Number.text); }
+    ;
 
 dateType returns [MajorType type]
     : DATE { $type = Types.required(TypeProtos.MinorType.DATE); }
@@ -121,7 +135,7 @@ dateType returns [MajorType type]
 typeLen returns [Integer length]
     : OParen Number CParen {$length = Integer.parseInt($Number.text);}
     ;
-     	
+
 ifStatement returns [LogicalExpression e]
 	@init {
 	  IfExpression.Builder s = IfExpression.newBuilder();

@@ -33,6 +33,10 @@ import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
 import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
 import org.apache.drill.common.expression.ValueExpressions.IntervalYearExpression;
 import org.apache.drill.common.expression.ValueExpressions.IntervalDayExpression;
+import org.apache.drill.common.expression.ValueExpressions.Decimal9Expression;
+import org.apache.drill.common.expression.ValueExpressions.Decimal18Expression;
+import org.apache.drill.common.expression.ValueExpressions.Decimal28Expression;
+import org.apache.drill.common.expression.ValueExpressions.Decimal38Expression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 
 
@@ -49,6 +53,10 @@ public interface ExprVisitor<T, VAL, EXCEP extends Exception> {
   public T visitTimeStampConstant(TimeStampExpression intExpr, VAL value) throws EXCEP;
   public T visitIntervalYearConstant(IntervalYearExpression intExpr, VAL value) throws EXCEP;
   public T visitIntervalDayConstant(IntervalDayExpression intExpr, VAL value) throws EXCEP;
+  public T visitDecimal9Constant(Decimal9Expression decExpr, VAL value) throws EXCEP;
+  public T visitDecimal18Constant(Decimal18Expression decExpr, VAL value) throws EXCEP;
+  public T visitDecimal28Constant(Decimal28Expression decExpr, VAL value) throws EXCEP;
+  public T visitDecimal38Constant(Decimal38Expression decExpr, VAL value) throws EXCEP;
   public T visitDoubleConstant(DoubleExpression dExpr, VAL value) throws EXCEP;
   public T visitBooleanConstant(BooleanExpression e, VAL value) throws EXCEP;
   public T visitQuotedStringConstant(QuotedString e, VAL value) throws EXCEP;

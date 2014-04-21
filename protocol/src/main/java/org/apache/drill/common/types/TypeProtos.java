@@ -87,37 +87,37 @@ public final class TypeProtos {
      */
     BIGINT(6, 6),
     /**
-     * <code>DECIMAL4 = 7;</code>
+     * <code>DECIMAL9 = 7;</code>
      *
      * <pre>
-     *  a decimal supporting precision between 1 and 8 (4 bits for decimal location, 1 sign)
+     *  a decimal supporting precision between 1 and 9
      * </pre>
      */
-    DECIMAL4(7, 7),
+    DECIMAL9(7, 7),
     /**
-     * <code>DECIMAL8 = 8;</code>
+     * <code>DECIMAL18 = 8;</code>
      *
      * <pre>
-     *  a decimal supporting precision between 9 and 18 (5 bits for decimal location, 1 sign)
+     *  a decimal supporting precision between 10 and 18
      * </pre>
      */
-    DECIMAL8(8, 8),
+    DECIMAL18(8, 8),
     /**
-     * <code>DECIMAL12 = 9;</code>
+     * <code>DECIMAL28SPARSE = 9;</code>
      *
      * <pre>
-     *  a decimal supporting precision between 19 and 28 (5 bits for decimal location, 1 sign)
+     *  a decimal supporting precision between 19 and 28
      * </pre>
      */
-    DECIMAL12(9, 9),
+    DECIMAL28SPARSE(9, 9),
     /**
-     * <code>DECIMAL16 = 10;</code>
+     * <code>DECIMAL38SPARSE = 10;</code>
      *
      * <pre>
-     *  a decimal supporting precision between 29 and 37 (6 bits for decimal location, 1 sign)
+     *  a decimal supporting precision between 29 and 38
      * </pre>
      */
-    DECIMAL16(10, 10),
+    DECIMAL38SPARSE(10, 10),
     /**
      * <code>MONEY = 11;</code>
      *
@@ -130,7 +130,7 @@ public final class TypeProtos {
      * <code>DATE = 12;</code>
      *
      * <pre>
-     *  days since 4713bc 
+     *  days since 4713bc
      * </pre>
      */
     DATE(12, 12),
@@ -275,6 +275,22 @@ public final class TypeProtos {
      */
     UINT8(30, 32),
     /**
+     * <code>DECIMAL28DENSE = 33;</code>
+     *
+     * <pre>
+     * dense decimal representation, supporting precision between 19 and 28
+     * </pre>
+     */
+    DECIMAL28DENSE(31, 33),
+    /**
+     * <code>DECIMAL38DENSE = 34;</code>
+     *
+     * <pre>
+     * dense decimal representation, supporting precision between 28 and 38
+     * </pre>
+     */
+    DECIMAL38DENSE(32, 34),
+    /**
      * <code>NULL = 37;</code>
      *
      * <pre>
@@ -284,7 +300,7 @@ public final class TypeProtos {
      *    MSGPACK4 = 36;   //  msgpack encoded complex type. (up to 2^32 in length)
      * </pre>
      */
-    NULL(31, 37),
+    NULL(33, 37),
     /**
      * <code>INTERVALYEAR = 38;</code>
      *
@@ -292,7 +308,7 @@ public final class TypeProtos {
      * Interval type specifying YEAR to MONTH
      * </pre>
      */
-    INTERVALYEAR(32, 38),
+    INTERVALYEAR(34, 38),
     /**
      * <code>INTERVALDAY = 39;</code>
      *
@@ -300,7 +316,7 @@ public final class TypeProtos {
      * Interval type specifying DAY to SECONDS
      * </pre>
      */
-    INTERVALDAY(33, 39),
+    INTERVALDAY(35, 39),
     ;
 
     /**
@@ -360,37 +376,37 @@ public final class TypeProtos {
      */
     public static final int BIGINT_VALUE = 6;
     /**
-     * <code>DECIMAL4 = 7;</code>
+     * <code>DECIMAL9 = 7;</code>
      *
      * <pre>
-     *  a decimal supporting precision between 1 and 8 (4 bits for decimal location, 1 sign)
+     *  a decimal supporting precision between 1 and 9
      * </pre>
      */
-    public static final int DECIMAL4_VALUE = 7;
+    public static final int DECIMAL9_VALUE = 7;
     /**
-     * <code>DECIMAL8 = 8;</code>
+     * <code>DECIMAL18 = 8;</code>
      *
      * <pre>
-     *  a decimal supporting precision between 9 and 18 (5 bits for decimal location, 1 sign)
+     *  a decimal supporting precision between 10 and 18
      * </pre>
      */
-    public static final int DECIMAL8_VALUE = 8;
+    public static final int DECIMAL18_VALUE = 8;
     /**
-     * <code>DECIMAL12 = 9;</code>
+     * <code>DECIMAL28SPARSE = 9;</code>
      *
      * <pre>
-     *  a decimal supporting precision between 19 and 28 (5 bits for decimal location, 1 sign)
+     *  a decimal supporting precision between 19 and 28
      * </pre>
      */
-    public static final int DECIMAL12_VALUE = 9;
+    public static final int DECIMAL28SPARSE_VALUE = 9;
     /**
-     * <code>DECIMAL16 = 10;</code>
+     * <code>DECIMAL38SPARSE = 10;</code>
      *
      * <pre>
-     *  a decimal supporting precision between 29 and 37 (6 bits for decimal location, 1 sign)
+     *  a decimal supporting precision between 29 and 38
      * </pre>
      */
-    public static final int DECIMAL16_VALUE = 10;
+    public static final int DECIMAL38SPARSE_VALUE = 10;
     /**
      * <code>MONEY = 11;</code>
      *
@@ -403,7 +419,7 @@ public final class TypeProtos {
      * <code>DATE = 12;</code>
      *
      * <pre>
-     *  days since 4713bc 
+     *  days since 4713bc
      * </pre>
      */
     public static final int DATE_VALUE = 12;
@@ -548,6 +564,22 @@ public final class TypeProtos {
      */
     public static final int UINT8_VALUE = 32;
     /**
+     * <code>DECIMAL28DENSE = 33;</code>
+     *
+     * <pre>
+     * dense decimal representation, supporting precision between 19 and 28
+     * </pre>
+     */
+    public static final int DECIMAL28DENSE_VALUE = 33;
+    /**
+     * <code>DECIMAL38DENSE = 34;</code>
+     *
+     * <pre>
+     * dense decimal representation, supporting precision between 28 and 38
+     * </pre>
+     */
+    public static final int DECIMAL38DENSE_VALUE = 34;
+    /**
      * <code>NULL = 37;</code>
      *
      * <pre>
@@ -587,10 +619,10 @@ public final class TypeProtos {
         case 4: return SMALLINT;
         case 5: return INT;
         case 6: return BIGINT;
-        case 7: return DECIMAL4;
-        case 8: return DECIMAL8;
-        case 9: return DECIMAL12;
-        case 10: return DECIMAL16;
+        case 7: return DECIMAL9;
+        case 8: return DECIMAL18;
+        case 9: return DECIMAL28SPARSE;
+        case 10: return DECIMAL38SPARSE;
         case 11: return MONEY;
         case 12: return DATE;
         case 13: return TIME;
@@ -611,6 +643,8 @@ public final class TypeProtos {
         case 30: return UINT2;
         case 31: return UINT4;
         case 32: return UINT8;
+        case 33: return DECIMAL28DENSE;
+        case 34: return DECIMAL38DENSE;
         case 37: return NULL;
         case 38: return INTERVALYEAR;
         case 39: return INTERVALDAY;
@@ -1745,21 +1779,22 @@ public final class TypeProtos {
       "inor_type\030\001 \001(\0162\021.common.MinorType\022\036\n\004mo" +
       "de\030\002 \001(\0162\020.common.DataMode\022\r\n\005width\030\003 \001(" +
       "\005\022\021\n\tprecision\030\004 \001(\005\022\r\n\005scale\030\005 \001(\005\022\020\n\010t" +
-      "imeZone\030\006 \001(\005*\306\003\n\tMinorType\022\010\n\004LATE\020\000\022\007\n" +
+      "imeZone\030\006 \001(\005*\373\003\n\tMinorType\022\010\n\004LATE\020\000\022\007\n" +
       "\003MAP\020\001\022\r\n\tREPEATMAP\020\002\022\013\n\007TINYINT\020\003\022\014\n\010SM" +
       "ALLINT\020\004\022\007\n\003INT\020\005\022\n\n\006BIGINT\020\006\022\014\n\010DECIMAL" +
-      "4\020\007\022\014\n\010DECIMAL8\020\010\022\r\n\tDECIMAL12\020\t\022\r\n\tDECI" +
-      "MAL16\020\n\022\t\n\005MONEY\020\013\022\010\n\004DATE\020\014\022\010\n\004TIME\020\r\022\n" +
-      "\n\006TIMETZ\020\016\022\017\n\013TIMESTAMPTZ\020\017\022\r\n\tTIMESTAMP",
-      "\020\020\022\014\n\010INTERVAL\020\021\022\n\n\006FLOAT4\020\022\022\n\n\006FLOAT8\020\023" +
-      "\022\007\n\003BIT\020\024\022\r\n\tFIXEDCHAR\020\025\022\017\n\013FIXED16CHAR\020" +
-      "\026\022\017\n\013FIXEDBINARY\020\027\022\013\n\007VARCHAR\020\030\022\r\n\tVAR16" +
-      "CHAR\020\031\022\r\n\tVARBINARY\020\032\022\t\n\005UINT1\020\035\022\t\n\005UINT" +
-      "2\020\036\022\t\n\005UINT4\020\037\022\t\n\005UINT8\020 \022\010\n\004NULL\020%\022\020\n\014I" +
-      "NTERVALYEAR\020&\022\017\n\013INTERVALDAY\020\'*4\n\010DataMo" +
-      "de\022\014\n\010OPTIONAL\020\000\022\014\n\010REQUIRED\020\001\022\014\n\010REPEAT" +
-      "ED\020\002B-\n\035org.apache.drill.common.typesB\nT" +
-      "ypeProtosH\001"
+      "9\020\007\022\r\n\tDECIMAL18\020\010\022\023\n\017DECIMAL28SPARSE\020\t\022" +
+      "\023\n\017DECIMAL38SPARSE\020\n\022\t\n\005MONEY\020\013\022\010\n\004DATE\020" +
+      "\014\022\010\n\004TIME\020\r\022\n\n\006TIMETZ\020\016\022\017\n\013TIMESTAMPTZ\020\017",
+      "\022\r\n\tTIMESTAMP\020\020\022\014\n\010INTERVAL\020\021\022\n\n\006FLOAT4\020" +
+      "\022\022\n\n\006FLOAT8\020\023\022\007\n\003BIT\020\024\022\r\n\tFIXEDCHAR\020\025\022\017\n" +
+      "\013FIXED16CHAR\020\026\022\017\n\013FIXEDBINARY\020\027\022\013\n\007VARCH" +
+      "AR\020\030\022\r\n\tVAR16CHAR\020\031\022\r\n\tVARBINARY\020\032\022\t\n\005UI" +
+      "NT1\020\035\022\t\n\005UINT2\020\036\022\t\n\005UINT4\020\037\022\t\n\005UINT8\020 \022\022" +
+      "\n\016DECIMAL28DENSE\020!\022\022\n\016DECIMAL38DENSE\020\"\022\010" +
+      "\n\004NULL\020%\022\020\n\014INTERVALYEAR\020&\022\017\n\013INTERVALDA" +
+      "Y\020\'*4\n\010DataMode\022\014\n\010OPTIONAL\020\000\022\014\n\010REQUIRE" +
+      "D\020\001\022\014\n\010REPEATED\020\002B-\n\035org.apache.drill.co" +
+      "mmon.typesB\nTypeProtosH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {

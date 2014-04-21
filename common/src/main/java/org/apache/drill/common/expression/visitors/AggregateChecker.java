@@ -33,6 +33,10 @@ import org.apache.drill.common.expression.ValueExpressions.IntervalYearExpressio
 import org.apache.drill.common.expression.ValueExpressions.IntervalDayExpression;
 import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
 import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
+import org.apache.drill.common.expression.ValueExpressions.Decimal9Expression;
+import org.apache.drill.common.expression.ValueExpressions.Decimal18Expression;
+import org.apache.drill.common.expression.ValueExpressions.Decimal28Expression;
+import org.apache.drill.common.expression.ValueExpressions.Decimal38Expression;
 import org.apache.drill.common.expression.ValueExpressions.FloatExpression;
 import org.apache.drill.common.expression.ValueExpressions.IntExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
@@ -106,6 +110,24 @@ public final class AggregateChecker implements ExprVisitor<Boolean, ErrorCollect
 
   @Override
   public Boolean visitBooleanConstant(BooleanExpression e, ErrorCollector errors) {
+    return false;
+  }
+  public Boolean visitDecimal9Constant(Decimal9Expression decExpr, ErrorCollector errors) {
+    return false;
+  }
+
+  @Override
+  public Boolean visitDecimal18Constant(Decimal18Expression decExpr, ErrorCollector errors) {
+    return false;
+  }
+
+  @Override
+  public Boolean visitDecimal28Constant(Decimal28Expression decExpr, ErrorCollector errors) {
+    return false;
+  }
+
+  @Override
+  public Boolean visitDecimal38Constant(Decimal38Expression decExpr, ErrorCollector errors) {
     return false;
   }
 

@@ -25,7 +25,8 @@ data: {
     aggrtypes2: tdd(../data/AggrTypes2.tdd),
     date: tdd(../data/DateTypes.tdd),
     extract: tdd(../data/ExtractTypes.tdd),
-    parser: tdd(../data/Parser.tdd)
+    parser: tdd(../data/Parser.tdd),
+    decimal: tdd(../data/DecimalTypes.tdd)
 }
 freemarkerLinks: {
     includes: includes/
