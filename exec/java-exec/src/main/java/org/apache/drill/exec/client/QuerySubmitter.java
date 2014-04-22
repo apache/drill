@@ -130,6 +130,9 @@ public class QuerySubmitter {
       }
       return submitQuery(client, plan, type, format, width);
 
+    } catch(Throwable th) {
+      System.err.println("Query Failed due to : " + th.getMessage());
+      return -1;
     }finally{
       if(client != null) client.close();
       if(local){
