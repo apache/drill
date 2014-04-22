@@ -23,7 +23,7 @@ import java.util.List;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.TestTools;
-import org.apache.drill.common.util.TestTools.TestLogReporter;
+import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.client.PrintingResultsListener;
 import org.apache.drill.exec.client.QuerySubmitter;
@@ -37,7 +37,6 @@ import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.util.VectorUtil;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Rule;
 import org.junit.rules.TestRule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
@@ -45,19 +44,8 @@ import org.junit.runner.Description;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
-public class BaseTestQuery {
+public class BaseTestQuery extends ExecTest{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseTestQuery.class);
-
-  // make it static so we can use after class
-  static final TestLogReporter LOG_OUTCOME = TestTools.getTestLogReporter(logger);
-
-  @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(20000);
-  @Rule public final TestLogReporter logOutcome = LOG_OUTCOME;
-
-  @AfterClass
-  public static void letLogsCatchUp() throws InterruptedException{
-    LOG_OUTCOME.sleepIfFailure();
-  }
 
   public final TestRule resetWatcher = new TestWatcher() {
     @Override

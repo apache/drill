@@ -38,6 +38,7 @@ import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -55,7 +56,7 @@ import org.junit.Test;
 import com.google.common.collect.Lists;
 
 
-public class JSONRecordReaderTest {
+public class JSONRecordReaderTest extends ExecTest {
   private static final Charset UTF_8 = Charset.forName("UTF-8");
 
   private String getResource(String resourceName) {

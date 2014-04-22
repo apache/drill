@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.Screen;
@@ -34,23 +35,23 @@ import org.junit.Test;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
-public class TestInjectionValue {
+public class TestInjectionValue extends ExecTest {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestInjectionValue.class);
-  
+
   static DrillConfig config;
-  
+
   @BeforeClass
   public static void setup(){
     config = DrillConfig.create();
   }
-  
+
   @Test
   public void testInjected() throws Exception{
     PhysicalPlanReader r = new PhysicalPlanReader(config, config.getMapper(), DrillbitEndpoint.getDefaultInstance());
     PhysicalPlan p = r.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/physical_screen.json"), Charsets.UTF_8));
-    
+
     List<PhysicalOperator> o = p.getSortedOperators(false);
-    
+
     PhysicalOperator op = o.iterator().next();
     assertEquals(Screen.class, op.getClass());
     Screen s = (Screen) op;

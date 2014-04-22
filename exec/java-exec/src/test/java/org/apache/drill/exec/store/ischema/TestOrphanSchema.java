@@ -26,6 +26,7 @@ import java.util.List;
 import net.hydromatic.optiq.SchemaPlus;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -46,7 +47,7 @@ import org.junit.Test;
  * Using an orphan schema, create and display the various information schema tables.
  * An "orphan schema" is a stand alone schema which is not (yet?) connected to Optiq.
  */
-public class TestOrphanSchema {
+public class TestOrphanSchema extends ExecTest {
   static SchemaPlus root;
 
   @BeforeClass

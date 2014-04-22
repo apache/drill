@@ -23,6 +23,7 @@ import mockit.NonStrictExpectations;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.TopLevelAllocator;
@@ -46,23 +47,23 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.codahale.metrics.MetricRegistry;
 
-public class TestSimpleFilter {
+public class TestSimpleFilter extends ExecTest {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestSimpleFilter.class);
   DrillConfig c = DrillConfig.create();
-  
-  
+
+
   @Test
   public void testFilter(@Injectable final DrillbitContext bitContext, @Injectable UserClientConnection connection) throws Throwable{
 //    System.out.println(System.getProperty("java.class.path"));
 
-    
+
     new NonStrictExpectations(){{
       bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = new TopLevelAllocator();
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
     }};
-    
-    
+
+
     PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
     PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/filter/test1.json"), Charsets.UTF_8));
     FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
@@ -71,7 +72,7 @@ public class TestSimpleFilter {
     while(exec.next()){
       assertEquals(50, exec.getRecordCount());
     }
-    
+
     if(context.getFailureCause() != null){
       throw context.getFailureCause();
     }

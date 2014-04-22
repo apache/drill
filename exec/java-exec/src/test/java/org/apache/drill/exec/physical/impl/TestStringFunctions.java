@@ -27,6 +27,7 @@ import mockit.NonStrictExpectations;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
@@ -53,7 +54,7 @@ import org.junit.Assert;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class TestStringFunctions {
+public class TestStringFunctions extends ExecTest {
     static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestStringFunctions.class);
 
   DrillConfig c = DrillConfig.create();
@@ -64,9 +65,9 @@ public class TestStringFunctions {
   public Object[] getRunResult(SimpleRootExec exec) {
     int size = 0;
     for (ValueVector v : exec) {
-      size++;     
-    }   
-  
+      size++;
+    }
+
     Object[] res = new Object [size];
     int i = 0;
     for (ValueVector v : exec) {
@@ -74,10 +75,10 @@ public class TestStringFunctions {
         res[i++] = new String( ((VarCharVector) v).getAccessor().get(0));
       } else
         res[i++] =  v.getAccessor().getObject(0);
-    }   
+    }
     return res;
  }
-  
+
   public void runTest(@Injectable final DrillbitContext bitContext,
                       @Injectable UserServer.UserClientConnection connection, Object[] expectedResults, String planPath) throws Throwable {
 
@@ -94,15 +95,15 @@ public class TestStringFunctions {
     PhysicalPlan plan = reader.readPhysicalPlan(planString);
     SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
 
-    
-    while(exec.next()){ 
+
+    while(exec.next()){
       Object [] res = getRunResult(exec);
       assertEquals("return count does not match", res.length, expectedResults.length);
-      
+
       for (int i = 0; i<res.length; i++) {
         assertEquals(String.format("column %s does not match", i),  res[i], expectedResults[i]);
       }
-    } 
+    }
 
     if(context.getFailureCause() != null){
       throw context.getFailureCause();
@@ -113,134 +114,134 @@ public class TestStringFunctions {
 
   @Test
   public void testCharLength(@Injectable final DrillbitContext bitContext,
-                           @Injectable UserServer.UserClientConnection connection) throws Throwable{    
+                           @Injectable UserServer.UserClientConnection connection) throws Throwable{
     Object [] expected = new Object[] {new Long(8), new Long(0), new Long(5), new Long(5),
                                        new Long(8), new Long(0), new Long(5), new Long(5),
                                        new Long(8), new Long(0), new Long(5), new Long(5),};
-       
-    runTest(bitContext, connection, expected, "functions/string/testCharLength.json");    
+
+    runTest(bitContext, connection, expected, "functions/string/testCharLength.json");
   }
-  
+
   @Test
   public void testLike(@Injectable final DrillbitContext bitContext,
-                           @Injectable UserServer.UserClientConnection connection) throws Throwable{    
+                           @Injectable UserServer.UserClientConnection connection) throws Throwable{
     Object [] expected = new Object[] {Boolean.TRUE, Boolean.TRUE, Boolean.TRUE, Boolean.FALSE};
-       
-    runTest(bitContext, connection, expected, "functions/string/testLike.json");    
+
+    runTest(bitContext, connection, expected, "functions/string/testLike.json");
   }
 
   @Test
   public void testSimilar(@Injectable final DrillbitContext bitContext,
-                           @Injectable UserServer.UserClientConnection connection) throws Throwable{    
+                           @Injectable UserServer.UserClientConnection connection) throws Throwable{
     Object [] expected = new Object[] {Boolean.TRUE, Boolean.FALSE, Boolean.TRUE, Boolean.FALSE};
-       
-    runTest(bitContext, connection, expected, "functions/string/testSimilar.json");    
+
+    runTest(bitContext, connection, expected, "functions/string/testSimilar.json");
   }
-  
+
   @Test
   public void testLtrim(@Injectable final DrillbitContext bitContext,
-                           @Injectable UserServer.UserClientConnection connection) throws Throwable{    
+                           @Injectable UserServer.UserClientConnection connection) throws Throwable{
     Object [] expected = new Object[] {"def", "abcdef", "dabc", "", "", ""};
-       
-    runTest(bitContext, connection, expected, "functions/string/testLtrim.json");    
+
+    runTest(bitContext, connection, expected, "functions/string/testLtrim.json");
   }
 
   @Test
   public void testReplace(@Injectable final DrillbitContext bitContext,
-                           @Injectable UserServer.UserClientConnection connection) throws Throwable{    
+                           @Injectable UserServer.UserClientConnection connection) throws Throwable{
     Object [] expected = new Object[] {"aABABcdf", "ABABbABbcdf", "aababcdf", "acdf", "ABCD", "abc"};
-       
-    runTest(bitContext, connection, expected, "functions/string/testReplace.json");    
+
+    runTest(bitContext, connection, expected, "functions/string/testReplace.json");
   }
 
   @Test
   public void testRtrim(@Injectable final DrillbitContext bitContext,
-                           @Injectable UserServer.UserClientConnection connection) throws Throwable{    
+                           @Injectable UserServer.UserClientConnection connection) throws Throwable{
     Object [] expected = new Object[] {"abc", "abcdef", "ABd", "", "", ""};
-       
-    runTest(bitContext, connection, expected, "functions/string/testRtrim.json");    
+
+    runTest(bitContext, connection, expected, "functions/string/testRtrim.json");
   }
 
   @Test
   public void testConcat(@Injectable final DrillbitContext bitContext,
-                           @Injectable UserServer.UserClientConnection connection) throws Throwable{    
+                           @Injectable UserServer.UserClientConnection connection) throws Throwable{
     Object [] expected = new Object[] {"abcABC", "abc", "ABC", ""};
-       
-    runTest(bitContext, connection, expected, "functions/string/testConcat.json");    
+
+    runTest(bitContext, connection, expected, "functions/string/testConcat.json");
   }
 
   @Test
   public void testLower(@Injectable final DrillbitContext bitContext,
-                           @Injectable UserServer.UserClientConnection connection) throws Throwable{    
+                           @Injectable UserServer.UserClientConnection connection) throws Throwable{
     Object [] expected = new Object[] {"abcefgh", "abc", ""};
-       
-    runTest(bitContext, connection, expected, "functions/string/testLower.json");    
+
+    runTest(bitContext, connection, expected, "functions/string/testLower.json");
   }
 
   @Test
   public void testPosition(@Injectable final DrillbitContext bitContext,
-                           @Injectable UserServer.UserClientConnection connection) throws Throwable{    
+                           @Injectable UserServer.UserClientConnection connection) throws Throwable{
     Object [] expected = new Object[] {new Long(2), new Long(0), new Long(0), new Long(0),
                                        new Long(2), new Long(0), new Long(0), new Long(0)};
-       
-    runTest(bitContext, connection, expected, "functions/string/testPosition.json");    
-  }
-  
-  @Test
-  public void testRight(@Injectable final DrillbitContext bitContext,
-                           @Injectable UserServer.UserClientConnection connection) throws Throwable{    
-    Object [] expected = new Object[] {"ef", "abcdef", "abcdef", "cdef", "f", "", ""};
-       
-    runTest(bitContext, connection, expected, "functions/string/testRight.json");    
+
+    runTest(bitContext, connection, expected, "functions/string/testPosition.json");
   }
 
-  
+  @Test
+  public void testRight(@Injectable final DrillbitContext bitContext,
+                           @Injectable UserServer.UserClientConnection connection) throws Throwable{
+    Object [] expected = new Object[] {"ef", "abcdef", "abcdef", "cdef", "f", "", ""};
+
+    runTest(bitContext, connection, expected, "functions/string/testRight.json");
+  }
+
+
   @Test
   public void testSubstr(@Injectable final DrillbitContext bitContext,
-                           @Injectable UserServer.UserClientConnection connection) throws Throwable{    
+                           @Injectable UserServer.UserClientConnection connection) throws Throwable{
     Object [] expected = new Object[] {"abc", "bcd", "bcdef", "bcdef", "", "", "", ""};
-       
-    runTest(bitContext, connection, expected, "functions/string/testSubstr.json");    
+
+    runTest(bitContext, connection, expected, "functions/string/testSubstr.json");
   }
-  
+
   @Test
   public void testLeft(@Injectable final DrillbitContext bitContext,
-                           @Injectable UserServer.UserClientConnection connection) throws Throwable{    
+                           @Injectable UserServer.UserClientConnection connection) throws Throwable{
     Object [] expected = new Object[] {"ab", "abcdef", "abcdef", "abcd", "a", "", ""};
-       
-    runTest(bitContext, connection, expected, "functions/string/testLeft.json");    
+
+    runTest(bitContext, connection, expected, "functions/string/testLeft.json");
   }
 
   @Test
   public void testLpad(@Injectable final DrillbitContext bitContext,
-                           @Injectable UserServer.UserClientConnection connection) throws Throwable{    
+                           @Injectable UserServer.UserClientConnection connection) throws Throwable{
     Object [] expected = new Object[] {"", "", "abcdef", "ab", "ab", "abcdef", "AAAAabcdef", "ABABabcdef", "ABCAabcdef", "ABCDabcdef"};
-       
-    runTest(bitContext, connection, expected, "functions/string/testLpad.json");    
+
+    runTest(bitContext, connection, expected, "functions/string/testLpad.json");
   }
 
   @Test
   public void testRegexpReplace(@Injectable final DrillbitContext bitContext,
-                           @Injectable UserServer.UserClientConnection connection) throws Throwable{    
+                           @Injectable UserServer.UserClientConnection connection) throws Throwable{
     Object [] expected = new Object[] {"ThM", "Th", "Thomas"};
-       
-    runTest(bitContext, connection, expected, "functions/string/testRegexpReplace.json");    
+
+    runTest(bitContext, connection, expected, "functions/string/testRegexpReplace.json");
   }
 
   @Test
   public void testRpad(@Injectable final DrillbitContext bitContext,
-                           @Injectable UserServer.UserClientConnection connection) throws Throwable{    
+                           @Injectable UserServer.UserClientConnection connection) throws Throwable{
     Object [] expected = new Object[] {"", "", "abcdef", "ef", "ef", "abcdef", "abcdefAAAA", "abcdefABAB", "abcdefABCA", "abcdefABCD"};
-       
-    runTest(bitContext, connection, expected, "functions/string/testRpad.json");    
+
+    runTest(bitContext, connection, expected, "functions/string/testRpad.json");
   }
 
   @Test
   public void testUpper(@Injectable final DrillbitContext bitContext,
-                           @Injectable UserServer.UserClientConnection connection) throws Throwable{    
+                           @Injectable UserServer.UserClientConnection connection) throws Throwable{
     Object [] expected = new Object[] {"ABCEFGH", "ABC", ""};
-       
-    runTest(bitContext, connection, expected, "functions/string/testUpper.json");    
+
+    runTest(bitContext, connection, expected, "functions/string/testUpper.json");
   }
-  
+
 }

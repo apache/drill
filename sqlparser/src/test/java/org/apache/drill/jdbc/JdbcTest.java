@@ -15,19 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.storage;
+package org.apache.drill.jdbc;
 
-import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.logical.LogicalPlan;
-import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.exec.ExecTest;
 
-public class Simple {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Simple.class);
-  
-  public static void main(String[] args) throws Exception {
-    DrillConfig c = DrillConfig.create();
-    LogicalPlan plan = LogicalPlan.parse(c, FileUtils.getResourceAsString("/jdbc_plan.json"));
-    System.out.println(plan.toJsonString(c));
-  }
-  
+public class JdbcTest extends ExecTest{
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JdbcTest.class);
 }

@@ -25,6 +25,7 @@ import mockit.Injectable;
 import mockit.NonStrictExpectations;
 
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.TopLevelAllocator;
@@ -43,7 +44,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class TestComparisonFunctions {
+public class TestComparisonFunctions extends ExecTest {
     static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestComparisonFunctions.class);
 
   DrillConfig c = DrillConfig.create();

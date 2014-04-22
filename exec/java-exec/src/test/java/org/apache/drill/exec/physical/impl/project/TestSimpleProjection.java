@@ -26,6 +26,7 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.TopLevelAllocator;
@@ -50,11 +51,11 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.codahale.metrics.MetricRegistry;
 
-public class TestSimpleProjection {
+public class TestSimpleProjection extends ExecTest {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestSimpleProjection.class);
   DrillConfig c = DrillConfig.create();
-  
-  
+
+
   @Test
   public void project(@Injectable final DrillbitContext bitContext, @Injectable UserClientConnection connection) throws Throwable{
 
@@ -64,8 +65,8 @@ public class TestSimpleProjection {
       bitContext.getAllocator(); result = new TopLevelAllocator();
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
     }};
-    
-    
+
+
     PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
     PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/project/test1.json"), Charsets.UTF_8));
     FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
@@ -79,12 +80,12 @@ public class TestSimpleProjection {
       BigIntVector.Accessor a1, a2;
       a1 = c1.getAccessor();
       a2 = c2.getAccessor();
-      
+
       for(int i =0; i < c1.getAccessor().getValueCount(); i++){
         assertEquals(a1.get(i)+1, a2.get(i));
         x += a1.get(i);
       }
-      
+
       System.out.println(x);
     }
 
@@ -93,7 +94,7 @@ public class TestSimpleProjection {
     }
     assertTrue(!context.isFailed());
   }
-  
+
   @AfterClass
   public static void tearDown() throws Exception{
     // pause to get logger to catch up.

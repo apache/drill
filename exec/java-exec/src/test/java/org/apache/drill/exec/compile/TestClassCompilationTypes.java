@@ -17,11 +17,12 @@
  */
 package org.apache.drill.exec.compile;
 
+import org.apache.drill.exec.ExecTest;
 import org.codehaus.janino.ExpressionEvaluator;
 import org.junit.Ignore;
 import org.junit.Test;
 
-public class TestClassCompilationTypes {
+public class TestClassCompilationTypes extends ExecTest{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestClassCompilationTypes.class);
 
   @Ignore @Test
@@ -39,7 +40,7 @@ public class TestClassCompilationTypes {
     }
 
   }
-  
+
   private int janino() throws Exception{
     // Compile the expression once; relatively slow.
     org.codehaus.janino.ExpressionEvaluator ee = new org.codehaus.janino.ExpressionEvaluator("c > d ? c : d", // expression
@@ -52,7 +53,7 @@ public class TestClassCompilationTypes {
     return (Integer) ee.evaluate(new Object[] { // parameterValues
         new Integer(10), new Integer(11), });
   }
-  
+
   private int jdk() throws Exception{
     // Compile the expression once; relatively slow.
     ExpressionEvaluator ee = new ExpressionEvaluator("c > d ? c : d", // expression

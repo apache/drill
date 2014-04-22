@@ -26,6 +26,7 @@ import mockit.NonStrictExpectations;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.TopLevelAllocator;
@@ -47,42 +48,42 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class TestSimpleUnion {
+public class TestSimpleUnion extends ExecTest {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestSimpleUnion.class);
   DrillConfig c = DrillConfig.create();
-  
-  
+
+
   @Test
   public void testUnion(@Injectable final DrillbitContext bitContext, @Injectable UserServer.UserClientConnection connection) throws Throwable{
 
-    
+
     new NonStrictExpectations(){{
       bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = new TopLevelAllocator();
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
     }};
-    
-    
+
+
     PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
     PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/union/test1.json"), Charsets.UTF_8));
     FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
     FragmentContext context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
     SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
-    
+
     int[] counts = new int[]{100,50};
     int i=0;
     while(exec.next()){
       System.out.println("iteration count:" + exec.getRecordCount());
       assertEquals(counts[i++], exec.getRecordCount());
     }
-    
+
     if(context.getFailureCause() != null){
       throw context.getFailureCause();
     }
     assertTrue(!context.isFailed());
-    
+
   }
-  
+
   @After
   public void tearDown() throws Exception{
     // pause to get logger to catch up.

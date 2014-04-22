@@ -26,6 +26,7 @@ import mockit.NonStrictExpectations;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.memory.TopLevelAllocator;
@@ -57,10 +58,10 @@ import com.google.common.io.Files;
  * which will produce a dump file.  The dump file will be input into DumpCat to test query mode and batch mode.
  */
 
-public class DumpCatTest {
+public class DumpCatTest  extends ExecTest{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DumpCatTest.class);
   DrillConfig c = DrillConfig.create();
- 
+
   @Test
   public void testDumpCat(@Injectable final DrillbitContext bitContext, @Injectable UserClientConnection connection) throws Throwable
   {
@@ -108,12 +109,12 @@ public class DumpCatTest {
       FileSystem fs = FileSystem.get(conf);
       Path path = new Path(filename);
       assertTrue("Trace file does not exist", fs.exists(path));
- 
+
       DumpCat dumpCat = new DumpCat();
- 
+
       //Test Query mode
       FileInputStream input = new FileInputStream(filename);
- 
+
       dumpCat.doQuery(input);
       input.close();
 

@@ -26,13 +26,12 @@ import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.common.util.PathScanner;
+import org.apache.drill.test.DrillTest;
 import org.junit.Test;
 
-import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
-import com.google.common.io.Files;
 
-public class CheckStorageConfig {
+public class CheckStorageConfig extends DrillTest {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CheckStorageConfig.class);
 
   @Test
@@ -40,7 +39,7 @@ public class CheckStorageConfig {
     Collection<?> engines = PathScanner.scanForImplementations(StoragePluginConfig.class, Lists.newArrayList("org"));
     assertEquals(engines.size(), 1);
   }
-  
+
   @Test
   public void checkPlanParsing() throws Exception{
     LogicalPlan plan = LogicalPlan.parse(DrillConfig.create(), FileUtils.getResourceAsString("/storage_engine_plan.json"));

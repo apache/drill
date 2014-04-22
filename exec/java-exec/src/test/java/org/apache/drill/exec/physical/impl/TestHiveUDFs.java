@@ -23,6 +23,7 @@ import mockit.Injectable;
 import mockit.NonStrictExpectations;
 
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -49,7 +50,7 @@ import com.google.common.io.Resources;
 
 import java.util.Iterator;
 
-public class TestHiveUDFs {
+public class TestHiveUDFs extends ExecTest {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestHiveUDFs.class);
 
   DrillConfig c = DrillConfig.create();

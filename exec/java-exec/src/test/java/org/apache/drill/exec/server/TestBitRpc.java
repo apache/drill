@@ -31,6 +31,7 @@ import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.BitData.FragmentRecordBatch;
@@ -61,7 +62,7 @@ import org.junit.Test;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 
-public class TestBitRpc {
+public class TestBitRpc extends ExecTest {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestBitRpc.class);
 
   @Test

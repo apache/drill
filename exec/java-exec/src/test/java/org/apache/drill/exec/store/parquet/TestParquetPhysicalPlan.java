@@ -23,6 +23,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserProtos;
@@ -43,7 +44,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Stopwatch;
 import com.google.common.io.Resources;
 
-public class TestParquetPhysicalPlan {
+public class TestParquetPhysicalPlan extends ExecTest {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestParquetPhysicalPlan.class);
 
   public String fileName = "parquet/parquet_scan_filter_union_screen_physical.json";

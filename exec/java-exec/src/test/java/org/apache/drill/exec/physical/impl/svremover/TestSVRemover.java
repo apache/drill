@@ -24,6 +24,7 @@ import mockit.NonStrictExpectations;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.TopLevelAllocator;
@@ -48,11 +49,11 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.codahale.metrics.MetricRegistry;
 
-public class TestSVRemover {
+public class TestSVRemover extends ExecTest {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestSVRemover.class);
   DrillConfig c = DrillConfig.create();
-  
-  
+
+
   @Test
   public void testSelectionVectorRemoval(@Injectable final DrillbitContext bitContext, @Injectable UserClientConnection connection) throws Throwable{
 //    System.out.println(System.getProperty("java.class.path"));
@@ -63,8 +64,8 @@ public class TestSVRemover {
       bitContext.getAllocator(); result = new TopLevelAllocator();
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
     }};
-    
-    
+
+
     PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
     PhysicalPlan plan = reader.readPhysicalPlan(Files.toString(FileUtils.getResourceAsFile("/remover/test1.json"), Charsets.UTF_8));
     FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
@@ -77,14 +78,14 @@ public class TestSVRemover {
         assertEquals(count, a.getValueCount());
       }
     }
-    
+
     if(context.getFailureCause() != null){
       throw context.getFailureCause();
     }
     assertTrue(!context.isFailed());
 
   }
-  
+
   @AfterClass
   public static void tearDown() throws Exception{
     // pause to get logger to catch up.

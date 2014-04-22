@@ -25,11 +25,10 @@ import java.sql.ResultSetMetaData;
 import java.sql.Statement;
 import java.util.concurrent.TimeUnit;
 
-import com.google.common.base.Function;
-import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.store.hive.HiveTestDataGenerator;
 import org.apache.drill.jdbc.Driver;
+import org.apache.drill.jdbc.JdbcTest;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -37,9 +36,10 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
 
+import com.google.common.base.Function;
 import com.google.common.base.Stopwatch;
 
-public class TestJdbcQuery {
+public class TestJdbcQuery extends JdbcTest{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestJdbcQuery.class);
 
 

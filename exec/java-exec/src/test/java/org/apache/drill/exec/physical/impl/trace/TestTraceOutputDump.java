@@ -23,6 +23,7 @@ import mockit.NonStrictExpectations;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.cache.VectorAccessibleSerializable;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
@@ -67,7 +68,7 @@ import com.codahale.metrics.MetricRegistry;
  * the record that is dumped (Integer.MIN_VALUE) so we compare it with this
  * known value.
  */
-public class TestTraceOutputDump {
+public class TestTraceOutputDump extends ExecTest {
     static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestTraceOutputDump.class);
     DrillConfig c = DrillConfig.create();
 

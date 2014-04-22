@@ -15,32 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.common.util;
+package org.apache.drill.exec;
 
-import java.nio.file.Paths;
+import org.apache.drill.test.DrillTest;
 
-import org.junit.rules.TestName;
-import org.junit.rules.TestRule;
-import org.junit.rules.Timeout;
-
-public class TestTools {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestTools.class);
-
-  static final boolean IS_DEBUG = java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments()
-      .toString().indexOf("-agentlib:jdwp") > 0;
-  static final String WORKING_PATH = Paths.get("").toAbsolutePath().toString();
-
-  public static TestRule getTimeoutRule() {
-    return getTimeoutRule(10000);
-  }
-
-  public static TestRule getTimeoutRule(int timeout) {
-    return IS_DEBUG ? new TestName() : new Timeout(timeout);
-  }
-
-  public static String getWorkingPath() {
-    return WORKING_PATH;
-  }
+public class ExecTest extends DrillTest{
 
 
 }

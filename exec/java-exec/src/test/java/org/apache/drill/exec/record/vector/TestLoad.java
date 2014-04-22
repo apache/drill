@@ -27,6 +27,7 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.record.MaterializedField;
@@ -42,7 +43,8 @@ import org.junit.Test;
 
 import com.google.common.collect.Lists;
 
-public class TestLoad {
+public class TestLoad extends ExecTest {
+
   @Test
   public void testLoadValueVector() throws Exception {
     BufferAllocator allocator = new TopLevelAllocator();

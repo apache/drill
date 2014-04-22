@@ -20,16 +20,10 @@ package org.apache.drill.exec.opt;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.exec.ExecTest;
 import org.junit.Test;
 
-/**
- * Created with IntelliJ IDEA.
- * User: jaltekruse
- * Date: 6/12/13
- * Time: 12:09 PM
- * To change this template use File | Settings | File Templates.
- */
-public class BasicOptimizerTest {
+public class BasicOptimizerTest extends ExecTest {
 
     @Test
     public void parseSimplePlan() throws Exception{

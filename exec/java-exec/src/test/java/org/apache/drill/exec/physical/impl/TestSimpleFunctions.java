@@ -30,6 +30,7 @@ import org.apache.drill.common.expression.*;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.expr.holders.NullableVarBinaryHolder;
@@ -58,7 +59,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TestSimpleFunctions {
+public class TestSimpleFunctions extends ExecTest {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestSimpleFunctions.class);
 
   DrillConfig c = DrillConfig.create();
@@ -263,7 +264,7 @@ public class TestSimpleFunctions {
     assertTrue(!context.isFailed());
 
   }
-  
+
   @After
   public void tearDown() throws Exception{
     // pause to get logger to catch up.

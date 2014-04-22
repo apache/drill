@@ -25,6 +25,7 @@ import mockit.NonStrictExpectations;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.cache.DistributedCache;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.coord.ClusterCoordinator;
@@ -69,7 +70,7 @@ import com.google.common.io.Files;
 import com.google.common.io.Resources;
 
 @Ignore
-public class TestOptiqPlans {
+public class TestOptiqPlans extends ExecTest {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestOptiqPlans.class);
   DrillConfig c = DrillConfig.create();
 

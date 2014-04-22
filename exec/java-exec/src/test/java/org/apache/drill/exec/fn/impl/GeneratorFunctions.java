@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.fn.impl;
 
+import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
@@ -28,7 +29,7 @@ import org.apache.drill.exec.record.RecordBatch;
 
 import java.util.Random;
 
-public class GeneratorFunctions {
+public class GeneratorFunctions extends ExecTest {
 
   public static final Random random = new Random(1234L);
 

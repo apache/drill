@@ -27,6 +27,7 @@ import mockit.NonStrictExpectations;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.TopLevelAllocator;
@@ -50,7 +51,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class TestSimpleLimit {
+public class TestSimpleLimit extends ExecTest {
   DrillConfig c = DrillConfig.create();
 
   @Test
@@ -87,9 +88,9 @@ public class TestSimpleLimit {
     long start = 30000;
     long end = 100000;
     long expectedSum = (end - start) * (end + start - 1) / 2; //Formula for sum of series
-   
+
     verifySum(bitContext, connection, "test4.json", 70000, expectedSum);
-    
+
 
   }
 

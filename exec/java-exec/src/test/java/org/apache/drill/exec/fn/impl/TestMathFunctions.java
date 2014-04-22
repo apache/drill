@@ -19,8 +19,6 @@
 package org.apache.drill.exec.fn.impl;
 
 import static org.junit.Assert.*;
-import static org.junit.Assert.assertEquals;
-
 import mockit.Injectable;
 import mockit.NonStrictExpectations;
 
@@ -28,6 +26,7 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.TopLevelAllocator;
@@ -46,7 +45,6 @@ import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.vector.BigIntVector;
 import org.apache.drill.exec.vector.IntVector;
 import org.apache.drill.exec.vector.Float8Vector;
-
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
@@ -54,7 +52,7 @@ import com.google.common.io.Files;
 import com.codahale.metrics.MetricRegistry;
 
 
-public class TestMathFunctions {
+public class TestMathFunctions extends ExecTest {
 
     static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestMathFunctions.class);
     DrillConfig c = DrillConfig.create();

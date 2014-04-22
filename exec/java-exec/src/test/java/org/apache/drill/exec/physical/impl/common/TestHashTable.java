@@ -27,6 +27,7 @@ import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.data.NamedExpression;
 import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.expr.holders.IntHolder;
 import org.apache.drill.exec.memory.TopLevelAllocator;
@@ -49,7 +50,7 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.codahale.metrics.MetricRegistry;
 
-public class TestHashTable {
+public class TestHashTable extends ExecTest {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestHashTable.class);
   DrillConfig c = DrillConfig.create();
 
@@ -70,7 +71,7 @@ private SimpleRootExec doTest(final DrillbitContext bitContext, UserClientConnec
     SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
     return exec;
   }
-/* 
+/*
   @Test
   public void testHashTable1(@Injectable final DrillbitContext bitContext, @Injectable UserClientConnection connection) throws Throwable {
     String plan_path = "/common/test_hashtable1.json";
@@ -78,7 +79,7 @@ private SimpleRootExec doTest(final DrillbitContext bitContext, UserClientConnec
 
     SchemaPath regionkey = new SchemaPath("regionkey", ExpressionPosition.UNKNOWN);
     SchemaPath nationkey = new SchemaPath("nationkey", ExpressionPosition.UNKNOWN);
-    
+
     NamedExpression[] keyExprs = new NamedExpression[1];
     keyExprs[0] = new NamedExpression(regionkey, new FieldReference(regionkey));
 
@@ -89,7 +90,7 @@ private SimpleRootExec doTest(final DrillbitContext bitContext, UserClientConnec
 
     for (int i = 0; i < exec.getRecordCount(); i++) {
       HashTable.PutStatus putStatus = htable.put(i, htIdxHolder);
-      assertNotEquals(putStatus, HashTable.PutStatus.PUT_FAILED);      
+      assertNotEquals(putStatus, HashTable.PutStatus.PUT_FAILED);
     }
     assertEquals(htable.size(), 5);
   }

@@ -23,6 +23,7 @@ import mockit.NonStrictExpectations;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -53,7 +54,7 @@ import com.codahale.metrics.MetricRegistry;
  * multiple record batches and when there is a selection vector present in the
  * incoming container of the trace operator.
  */
-public class TestTraceMultiRecordBatch {
+public class TestTraceMultiRecordBatch extends ExecTest {
     static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestTraceOutputDump.class);
     DrillConfig c = DrillConfig.create();
 

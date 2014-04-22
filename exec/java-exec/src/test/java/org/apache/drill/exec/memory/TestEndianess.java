@@ -20,13 +20,14 @@ package org.apache.drill.exec.memory;
 import static org.junit.Assert.assertEquals;
 import io.netty.buffer.ByteBuf;
 
+import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.junit.Test;
 
 
 
-public class TestEndianess {
-  
+public class TestEndianess extends ExecTest{
+
   @Test
   public void testLittleEndian(){
     TopLevelAllocator a = new TopLevelAllocator(Long.MAX_VALUE);
@@ -37,5 +38,5 @@ public class TestEndianess {
     assertEquals((int) b.getByte(2), 0);
     assertEquals((int) b.getByte(3), 0);
   }
-  
+
 }

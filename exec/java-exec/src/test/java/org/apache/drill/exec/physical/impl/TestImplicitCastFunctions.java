@@ -23,6 +23,7 @@ import mockit.Injectable;
 import mockit.NonStrictExpectations;
 
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -41,7 +42,7 @@ import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
-public class TestImplicitCastFunctions {
+public class TestImplicitCastFunctions extends ExecTest {
     static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestImplicitCastFunctions.class);
 
   DrillConfig c = DrillConfig.create();
@@ -52,17 +53,17 @@ public class TestImplicitCastFunctions {
   public Object[] getRunResult(SimpleRootExec exec) {
     int size = 0;
     for (ValueVector v : exec) {
-      size++;     
-    }   
-  
+      size++;
+    }
+
     Object[] res = new Object [size];
     int i = 0;
     for (ValueVector v : exec) {
       res[i++] = v.getAccessor().getObject(0);
-    }   
+    }
     return res;
  }
-  
+
   public void runTest(@Injectable final DrillbitContext bitContext,
                       @Injectable UserServer.UserClientConnection connection, Object[] expectedResults, String planPath) throws Throwable {
 
@@ -79,15 +80,15 @@ public class TestImplicitCastFunctions {
     PhysicalPlan plan = reader.readPhysicalPlan(planString);
     SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
 
-    
-    while(exec.next()){ 
+
+    while(exec.next()){
       Object [] res = getRunResult(exec);
       assertEquals("return count does not match", res.length, expectedResults.length);
-      
+
       for (int i = 0; i<res.length; i++) {
         assertEquals(String.format("column %s does not match", i),  res[i], expectedResults[i]);
       }
-    } 
+    }
 
     if(context.getFailureCause() != null){
       throw context.getFailureCause();
@@ -98,7 +99,7 @@ public class TestImplicitCastFunctions {
 
   @Test
   public void testImplicitCastWithConstant(@Injectable final DrillbitContext bitContext,
-                           @Injectable UserServer.UserClientConnection connection) throws Throwable{    
+                           @Injectable UserServer.UserClientConnection connection) throws Throwable{
     Object [] expected = new Object[21];
     expected [0] = new Double (30.1);
     expected [1] = new Double (30.1);
@@ -113,32 +114,32 @@ public class TestImplicitCastFunctions {
     expected [9] = new Float (30.1);
     expected [10] = new Double (30.1);
     expected [11] = new Double (30.1);
-    
+
     expected [12] = new Float (30.1);
     expected [13] = new Double (30.1);
     expected [14] = new Float (30.1);
     expected [15] = new Double (30.1);
-    
+
     expected [16] = Boolean.TRUE;
     expected [17] = Boolean.TRUE;
     expected [18] = Boolean.TRUE;
     expected [19] = Boolean.TRUE;
     expected [20] = Boolean.TRUE;
-   
-    runTest(bitContext, connection, expected, "functions/cast/testICastConstant.json");    
+
+    runTest(bitContext, connection, expected, "functions/cast/testICastConstant.json");
   }
 
   @Test
   public void testImplicitCastWithMockColumn(@Injectable final DrillbitContext bitContext,
-                           @Injectable UserServer.UserClientConnection connection) throws Throwable{    
+                           @Injectable UserServer.UserClientConnection connection) throws Throwable{
     Object [] expected = new Object[5];
     expected [0] = new Integer (0);
     expected [1] = new Integer (0);
     expected [2] = new Float (-4.2949673E9);
     expected [3] = new Float (-4.2949673E9);
     expected [4] = new Double (-9.223372036854776E18);
-    
-    runTest(bitContext, connection, expected, "functions/cast/testICastMockCol.json");    
+
+    runTest(bitContext, connection, expected, "functions/cast/testICastMockCol.json");
   }
 
     @AfterClass
@@ -146,25 +147,25 @@ public class TestImplicitCastFunctions {
         // pause to get logger to catch up.
         Thread.sleep(1000);
     }
-    
+
     @Test
     public void testImplicitCastWithNullExpression(@Injectable final DrillbitContext bitContext,
-                             @Injectable UserServer.UserClientConnection connection) throws Throwable{    
+                             @Injectable UserServer.UserClientConnection connection) throws Throwable{
       Object [] expected = new Object[10];
-      
+
       expected [0] = Boolean.TRUE;
       expected [1] = Boolean.FALSE;
       expected [2] = Boolean.FALSE;
       expected [3] = Boolean.TRUE;
-       
+
       expected [4] = null;
       expected [5] = null;
       expected [6] = null;
       expected [7] = null;
       expected [8] = null;
       expected [9] = null;
- 
-      runTest(bitContext, connection, expected, "functions/cast/testICastNullExp.json");    
+
+      runTest(bitContext, connection, expected, "functions/cast/testICastNullExp.json");
     }
 
 }

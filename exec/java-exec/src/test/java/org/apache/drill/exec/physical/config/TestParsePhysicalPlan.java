@@ -19,6 +19,7 @@ package org.apache.drill.exec.physical.config;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.proto.CoordinationProtos;
@@ -29,11 +30,11 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
-public class TestParsePhysicalPlan {
+public class TestParsePhysicalPlan extends ExecTest {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestParsePhysicalPlan.class);
-  
-  
-  @Test 
+
+
+  @Test
   public void parseSimplePlan() throws Exception{
     DrillConfig c = DrillConfig.create();
     PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());

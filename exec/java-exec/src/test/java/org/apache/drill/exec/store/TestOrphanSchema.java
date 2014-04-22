@@ -22,7 +22,7 @@ import net.hydromatic.optiq.SchemaPlus;
 import net.hydromatic.optiq.tools.Frameworks;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.exec.cache.HazelCache;
+import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.cache.LocalCache;
 import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.server.DrillbitContext;
@@ -30,7 +30,7 @@ import org.junit.Test;
 
 import com.codahale.metrics.MetricRegistry;
 
-public class TestOrphanSchema {
+public class TestOrphanSchema extends ExecTest {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestOrphanSchema.class);
 
 
@@ -52,7 +52,7 @@ public class TestOrphanSchema {
     };
 
     bitContext.getCache().run();
-    
+
     StoragePluginRegistry r = new StoragePluginRegistry(bitContext);
     SchemaPlus plus = Frameworks.createRootSchema();
     r.init();

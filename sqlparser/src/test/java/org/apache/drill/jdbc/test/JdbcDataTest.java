@@ -35,6 +35,7 @@ import org.apache.drill.common.logical.data.Project;
 import org.apache.drill.common.logical.data.Scan;
 import org.apache.drill.common.logical.data.Store;
 import org.apache.drill.common.logical.data.Union;
+import org.apache.drill.jdbc.JdbcTest;
 import org.apache.drill.jdbc.test.JdbcAssert.TestDataConnection;
 import org.eigenbase.rel.JoinRelType;
 import org.junit.Assert;
@@ -52,7 +53,7 @@ import com.google.common.io.Resources;
 
 
 @Ignore // ignore for now.
-public class JdbcTest {
+public class JdbcDataTest extends JdbcTest{
   private static String MODEL;
   private static String EXPECTED;
 
@@ -65,7 +66,7 @@ public class JdbcTest {
 
   /**
    * Command-line utility to execute a logical plan.
-   * 
+   *
    * <p>
    * The forwarding method ensures that the IDE calls this method with the right classpath.
    * </p>
@@ -271,7 +272,7 @@ public class JdbcTest {
     JdbcAssert.withModel(MODEL, "DONUTS").sql("select * from donuts where 3 < 4").returns(EXPECTED);
   }
 
-  
+
   @Ignore
   @Test
   public void testValues() throws Exception {
@@ -481,7 +482,7 @@ public class JdbcTest {
         .planContains(Limit.class);
   }
 
-  
+
   @Test
   public void testLimitOrderBy() throws Exception {
     TestDataConnection tdc = JdbcAssert
@@ -491,9 +492,9 @@ public class JdbcTest {
             "LASTNAME=Jones");
         tdc.planContains(Limit.class);
         tdc.planContains(Order.class);
-        
+
   }
-  
+
   @Test
   public void testOrderByWithOffset() throws Exception {
     JdbcAssert

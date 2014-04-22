@@ -18,11 +18,13 @@
 package org.apache.drill.exec.cache;
 
 import com.beust.jcommander.internal.Lists;
+
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.record.*;
 import org.apache.drill.exec.server.Drillbit;
@@ -41,7 +43,7 @@ import org.junit.Test;
 
 import java.util.List;
 
-public class TestWriteToDisk {
+public class TestWriteToDisk  extends ExecTest{
 
   @Test
   public void test() throws Exception {

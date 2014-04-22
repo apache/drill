@@ -25,6 +25,7 @@ import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -39,7 +40,7 @@ import org.junit.Test;
 /**
  * Using a test table with two columns, create data and verify the values are in the record batch.
  */
-public class TestTableProvider {
+public class TestTableProvider extends ExecTest {
 
   @Test
   public void zeroRead() {

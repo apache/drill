@@ -24,6 +24,7 @@ import java.nio.charset.Charset;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.proto.SchemaDefProtos.FieldDef;
@@ -35,7 +36,7 @@ import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.UInt4Vector;
 import org.junit.Test;
 
-public class TestValueVector {
+public class TestValueVector extends ExecTest {
 
   TopLevelAllocator allocator = new TopLevelAllocator();
 
@@ -108,7 +109,7 @@ public class TestValueVector {
     boolean b = false;
     try {
       v.getAccessor().get(3);
-    } catch(AssertionError e) { 
+    } catch(AssertionError e) {
       b = true;
     }finally{
       if(!b){
@@ -154,30 +155,30 @@ public class TestValueVector {
       boolean b = false;
       try {
         v.getAccessor().get(3);
-      } catch(AssertionError e) { 
+      } catch(AssertionError e) {
         b = true;
       }finally{
         if(!b){
           assert false;
         }
-      }      
+      }
     }
 
-    
+
     v.allocateNew(2048);
     {
       boolean b = false;
       try {
         v.getAccessor().get(0);
-      } catch(AssertionError e) { 
+      } catch(AssertionError e) {
         b = true;
       }finally{
         if(!b){
           assert false;
         }
-      }   
+      }
     }
-    
+
     m.set(0, 100);
     m.set(1, 101);
     m.set(100, 102);
@@ -190,18 +191,18 @@ public class TestValueVector {
     assertEquals(104, v.getAccessor().get(1023));
 
     // Ensure null values throw
-    
+
     {
       boolean b = false;
       try {
         v.getAccessor().get(3);
-      } catch(AssertionError e) { 
+      } catch(AssertionError e) {
         b = true;
       }finally{
         if(!b){
           assert false;
         }
-      }   
+      }
     }
 
   }
@@ -241,27 +242,27 @@ public class TestValueVector {
       boolean b = false;
       try {
         v.getAccessor().get(3);
-      } catch(AssertionError e) { 
+      } catch(AssertionError e) {
         b = true;
       }finally{
         if(!b){
           assert false;
         }
-      }   
+      }
     }
-    
+
     v.allocateNew(2048);
     {
       boolean b = false;
       try {
         v.getAccessor().get(0);
-      } catch(AssertionError e) { 
+      } catch(AssertionError e) {
         b = true;
       }finally{
         if(!b){
           assert false;
         }
-      }   
+      }
     }
   }
 

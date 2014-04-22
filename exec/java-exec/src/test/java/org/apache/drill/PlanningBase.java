@@ -27,6 +27,7 @@ import net.hydromatic.optiq.tools.Frameworks;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.TestTools;
+import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.cache.DistributedCache;
 import org.apache.drill.exec.cache.LocalCache;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
@@ -47,11 +48,10 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Resources;
 
-public class PlanningBase {
+public class PlanningBase extends ExecTest{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PlanningBase.class);
 
   @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(30000);
-  @Rule public final TestRule LOG_OUTCOME = TestTools.getTestLogReporter(logger);
 
   @Mocked DrillbitContext dbContext;
   @Mocked QueryContext context;

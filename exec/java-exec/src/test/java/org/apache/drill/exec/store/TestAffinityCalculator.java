@@ -24,6 +24,7 @@ import junit.framework.Assert;
 import mockit.Injectable;
 import mockit.NonStrictExpectations;
 
+import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.server.DrillbitContext;
@@ -46,7 +47,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
-public class TestAffinityCalculator {
+public class TestAffinityCalculator extends ExecTest {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestAffinityCalculator.class);
 
   String port = "1234";

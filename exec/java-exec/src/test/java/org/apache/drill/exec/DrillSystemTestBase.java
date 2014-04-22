@@ -17,7 +17,12 @@
  */
 package org.apache.drill.exec;
 
-import com.google.common.collect.ImmutableList;
+import static com.google.common.base.Throwables.propagate;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.server.Drillbit;
@@ -25,17 +30,13 @@ import org.apache.drill.exec.util.MiniZooKeeperCluster;
 import org.junit.BeforeClass;
 import org.slf4j.Logger;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-
-import static com.google.common.base.Throwables.propagate;
+import com.google.common.collect.ImmutableList;
 
 /**
  * Base class for Drill system tests.
  * Starts one or more Drillbits, an embedded ZooKeeper cluster and provides a configured client for testing.
  */
-public class DrillSystemTestBase {
+public class DrillSystemTestBase extends ExecTest{
 
   static final Logger logger = org.slf4j.LoggerFactory.getLogger(DrillConfig.class);
 
@@ -106,7 +107,7 @@ public class DrillSystemTestBase {
   public Drillbit getABit(){
     return this.servers.iterator().next();
   }
-  
+
   public static DrillConfig getConfig(){
     return config;
   }

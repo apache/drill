@@ -20,8 +20,10 @@ package org.apache.drill.exec.expr;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 
-public final class EscapeTest1 {
-  
+import org.apache.drill.exec.ExecTest;
+
+public final class EscapeTest1 extends ExecTest{
+
   public static class Timer{
     long n1;
     String name;
@@ -29,16 +31,16 @@ public final class EscapeTest1 {
       this.n1 = System.nanoTime();
       this.name = name;
     }
-    
+
     public void print(long sum){
       System.out.println(String.format("Completed %s in %d ms.  Output was %d", name, (System.nanoTime() - n1)/1000/1000, sum));
     }
   }
-  
+
   public static Timer time(String name){
     return new Timer(name);
   }
-  
+
   public static void main(String args[]){
     EscapeTest1 et = new EscapeTest1();
     Monkey m = new Monkey();
@@ -52,7 +54,7 @@ public final class EscapeTest1 {
       time("get return alloc").print(et.getReturnAlloc(m));
     }
   }
-  
+
   public long noAlloc(){
     long sum = 0;
     for(int i =0; i < 1000000000; i++){
@@ -60,16 +62,16 @@ public final class EscapeTest1 {
     }
     return sum;
   }
-  
+
   public long alloc(){
     long sum = 0;
     for(int i =0; i < 1000000000; i++){
-      Ad ad = new Ad(i+1, i+2); 
+      Ad ad = new Ad(i+1, i+2);
       sum+= add(ad.x, ad.y);
     }
     return sum;
   }
-  
+
   public long setAlloc(Monkey m){
     long sum = 0;
     for(int i =0; i < 490000000; i++){
@@ -77,18 +79,18 @@ public final class EscapeTest1 {
       m.set(h);
       sum += i;
     }
-    return sum; 
+    return sum;
   }
-  
+
   public long setNoAlloc(Monkey m){
     long sum = 0;
     for(int i =0; i < 490000000; i++){
       m.set(i+1, i+2);
       sum += i;
     }
-    return sum; 
+    return sum;
   }
-  
+
   public long getAlloc(Monkey m){
     long sum = 0;
     for(int i =0; i < 490000000; i++){
@@ -96,9 +98,9 @@ public final class EscapeTest1 {
       m.get(i, i+1, r);
       sum += r.v1 + r.v2;
     }
-    return sum; 
+    return sum;
   }
-  
+
   public long getNoAlloc(Monkey m){
     long sum = 0;
     for(int i =0; i < 490000000; i++){
@@ -106,19 +108,19 @@ public final class EscapeTest1 {
       int i2 = m.getV2(i+1);
       sum += i1 + i2;
     }
-    return sum; 
+    return sum;
   }
-  
+
   public long getReturnAlloc(Monkey m){
     long sum = 0;
     for(int i =0; i < 490000000; i++){
       RR r = m.get(i, i+1);
       sum += r.v1 + r.v2;
     }
-    return sum; 
+    return sum;
   }
-  
-  
+
+
   public class Ad{
     long x;
     long y;
@@ -129,7 +131,7 @@ public final class EscapeTest1 {
     }
   }
 
-  
+
   public static final class EH{
     int index;
     int value;
@@ -139,13 +141,13 @@ public final class EscapeTest1 {
       this.value = value;
     }
   }
-  
+
   public static final class RR{
     int v1;
     int v2;
-    
+
     public RR(){
-      
+
     }
     public RR(int v1, int v2) {
       super();
@@ -153,46 +155,46 @@ public final class EscapeTest1 {
       this.v2 = v2;
     }
   }
-  
+
   public long add(long a, long b){
     return a + b;
   }
-  
-  
+
+
   public final static class Monkey{
     final IntBuffer buf;
-    
+
     public Monkey(){
       ByteBuffer bb = ByteBuffer.allocateDirect(Integer.MAX_VALUE);
       buf = bb.asIntBuffer();
     }
-    
+
     public final void set(int index, int value){
       buf.put(index, value);
     }
-    
+
     public final void set(EH a){
       buf.put(a.index, a.value);
     }
-    
+
     public final int getV1(int index){
       return buf.get(index);
     }
-    
+
     public final int getV2(int index){
       return buf.get(index);
     }
-    
+
     public final RR get(int index1, int index2){
       return new RR(buf.get(index1), buf.get(index2));
     }
-    
+
     public final void get(int index1, int index2, RR rr){
       rr.v1 = buf.get(index1);
       rr.v2 = buf.get(index2);
     }
-    
+
   }
-  
-  
+
+
 }
