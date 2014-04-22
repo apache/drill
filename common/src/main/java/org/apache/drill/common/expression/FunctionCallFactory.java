@@ -104,7 +104,7 @@ public class FunctionCallFactory {
       List<LogicalExpression> l2 = new ArrayList<LogicalExpression>();
       l2.add(first);
       l2.add(args.get(i + 1));
-      first = createExpression(opTypes.get(i), ep, args);
+      first = createExpression(opTypes.get(i), ep, l2);
     }
     return first;
   }
