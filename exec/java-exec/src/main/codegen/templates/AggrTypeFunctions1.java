@@ -48,6 +48,7 @@ public class ${aggrtype.className}Functions {
 	static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(${aggrtype.className}Functions.class);
 
 <#list aggrtype.types as type>
+<#if type.major == "Numeric">
 
 @FunctionTemplate(name = "${aggrtype.funcName}", scope = FunctionTemplate.FunctionScope.POINT_AGGREGATE)
 public static class ${type.inputType}${aggrtype.className} implements DrillAggFunc{
@@ -149,7 +150,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
  
  }
 
-
+</#if>
 </#list>
 }
 </#list>

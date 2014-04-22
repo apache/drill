@@ -19,23 +19,22 @@
 
 
 
-<#list aggrtypes2.aggrtypes as aggrtype>
+<#list aggrtypes3.aggrtypes as aggrtype>
 <@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/gaggr/${aggrtype.className}Functions.java" />
 
 <#include "/@includes/license.ftl" />
 
-<#-- A utility class that is used to generate java code for aggr functions that maintain a sum -->
-<#-- and a running count.  For now, this includes: AVG. -->
+<#-- A utility class that is used to generate java code for aggr functions such as stddev, variance -->
 
-/* 
+/*
  * This class is automatically generated from AggrTypeFunctions2.tdd using FreeMarker.
  */
-
 
 package org.apache.drill.exec.expr.fn.impl.gaggr;
 
 import org.apache.drill.exec.expr.DrillAggFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
+import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
@@ -47,61 +46,81 @@ import org.apache.drill.exec.record.RecordBatch;
 
 public class ${aggrtype.className}Functions {
 	static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(${aggrtype.className}Functions.class);
- 
-<#list aggrtype.types as type>
-<#if type.major == "Numeric">
 
+<#list aggrtype.types as type>
+
+<#if aggrtype.aliasName == "">
 @FunctionTemplate(name = "${aggrtype.funcName}", scope = FunctionTemplate.FunctionScope.POINT_AGGREGATE)
+<#else>
+@FunctionTemplate(names = {"${aggrtype.funcName}", "${aggrtype.aliasName}"}, scope = FunctionTemplate.FunctionScope.POINT_AGGREGATE)
+</#if>
 
 public static class ${type.inputType}${aggrtype.className} implements DrillAggFunc{
 
   @Param ${type.inputType}Holder in;
-  @Workspace ${type.sumRunningType}Holder sum;
+  @Workspace ${type.movingAverageType}Holder avg;
+  @Workspace ${type.movingDeviationType}Holder dev;
   @Workspace ${type.countRunningType}Holder count;
   @Output ${type.outputType}Holder out;
 
   public void setup(RecordBatch b) {
-  	sum = new ${type.sumRunningType}Holder();  
-    count = new ${type.countRunningType}Holder();  
-    sum.value = 0;
-    count.value = 0;
+  	avg = new ${type.movingAverageType}Holder();
+    dev = new ${type.movingDeviationType}Holder();
+    count = new ${type.countRunningType}Holder();
+
+    // Initialize the workspace variables
+    avg.value = 0;
+    dev.value = 0;
+    count.value = 1;
   }
-  
+
   @Override
   public void add() {
-	  <#if type.inputType?starts_with("Nullable")>
-	    sout: {
-	    if (in.isSet == 0) {
-		    // processing nullable input and the value is null, so don't do anything...
-		    break sout;
-	    }  
-	  </#if>
-	  <#if aggrtype.funcName == "avg">
- 	    sum.value += in.value;
- 	    count.value++;
-	  <#else>
-	  // TODO: throw an error ? 
-	  </#if>
 	<#if type.inputType?starts_with("Nullable")>
-    } // end of sout block
+	  sout: {
+	  if (in.isSet == 0) {
+	   // processing nullable input and the value is null, so don't do anything...
+	   break sout;
+	  }
 	</#if>
+
+    // Welford's approach to compute standard deviation
+    double temp = avg.value;
+    avg.value += ((in.value - temp) / count.value);
+    dev.value += (in.value - temp) * (in.value - avg.value);
+    count.value++;
+
+    <#if type.inputType?starts_with("Nullable")>
+    } // end of sout block
+    </#if>
   }
 
   @Override
   public void output() {
-    out.value = sum.value / ((double) count.value);
+    <#if aggrtype.funcName == "stddev_pop">
+    if (count.value > 1)
+      out.value = Math.sqrt((dev.value / (count.value - 1)));
+    <#elseif aggrtype.funcName == "var_pop">
+    if (count.value  > 1)
+      out.value = (dev.value / (count.value - 1));
+    <#elseif aggrtype.funcName == "stddev_samp">
+    if (count.value  > 2)
+      out.value = Math.sqrt((dev.value / (count.value - 2)));
+    <#elseif aggrtype.funcName == "var_samp">
+    if (count.value > 2)
+      out.value = (dev.value / (count.value - 2));
+    </#if>
   }
 
   @Override
   public void reset() {
-    sum.value = 0;
-    count.value = 0;
+    avg.value = 0;
+    dev.value = 0;
+    count.value = 1;
   }
- 
- }
+}
 
-</#if>
+
 </#list>
 }
 </#list>
-
