@@ -179,7 +179,7 @@
         <configuration>
           <source>1.7</source>
           <target>1.7</target>
-          <maxmem>2g</maxmem>
+          <maxmem>2048m</maxmem>
           <fork>true</fork>
         </configuration>
       </plugin>
