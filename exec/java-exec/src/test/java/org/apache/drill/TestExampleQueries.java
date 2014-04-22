@@ -22,6 +22,21 @@ import org.junit.Test;
 public class TestExampleQueries extends BaseTestQuery{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestExampleQueries.class);
 
+  @Test // see DRILL-553
+  public void testQueryWithNullValues() throws Exception {
+    test("select count(*) from cp.`customer.json` limit 1");
+    test("select count(*) from cp.`customer.json` limit 1");
+    test("select count(*) from cp.`customer.json` limit 1");
+    test("select count(*) from cp.`customer.json` limit 1");
+    test("select count(*) from cp.`customer.json` limit 1");
+    test("select count(*) from cp.`customer.json` limit 1");
+    test("select count(*) from cp.`customer.json` limit 1");
+    test("select count(*) from cp.`customer.json` limit 1");
+    test("select count(*) from cp.`customer.json` limit 1");
+    test("select count(*) from cp.`customer.json` limit 1");
+    test("select count(*) from cp.`customer.json` limit 1");
+  }
+
   @Test
   public void testSelectWithLimit() throws Exception{
     test("select employee_id,  first_name, last_name from cp.`employee.json` order by employee_id limit 5 offset 10");

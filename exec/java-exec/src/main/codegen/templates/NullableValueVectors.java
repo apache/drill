@@ -302,7 +302,7 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
   public final class Mutator implements ValueVector.Mutator, NullableVectorDefinitionSetter{
     
     private int setCount;
-    <#if type.major = "VarLen"> private int lastSet;</#if>
+    <#if type.major = "VarLen"> private int lastSet = -1;</#if>
 
     private Mutator(){
     }
@@ -433,6 +433,7 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
     
     public void reset(){
       setCount = 0;
+      <#if type.major = "VarLen">lastSet = -1;</#if>
     }
     
   }
