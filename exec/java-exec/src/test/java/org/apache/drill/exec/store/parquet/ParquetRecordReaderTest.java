@@ -103,6 +103,11 @@ public class ParquetRecordReaderTest extends BaseTestQuery{
     testParquetFullEngineLocalPath(planName, fileName, 2, numberRowGroups, recordsPerRowGroup);
   }
 
+  public String getPlanForFile(String pathFileName, String parquetFileName) throws IOException {
+    return Files.toString(FileUtils.getResourceAsFile(pathFileName), Charsets.UTF_8)
+        .replaceFirst("&REPLACED_IN_PARQUET_TEST&", parquetFileName);
+  }
+
   @Test
   public void testMultipleRowGroupsAndReads2() throws Exception {
     String readEntries;
@@ -273,15 +278,27 @@ public class ParquetRecordReaderTest extends BaseTestQuery{
 
   @Ignore
   @Test
+  /**
+   * Tests the reading of nullable var length columns, runs the tests twice, once on a file that has
+   * a converted type of UTF-8 to make sure it can be read
+   */
   public void testNullableColumnsVarLen() throws Exception {
     HashMap<String, FieldInfo> fields = new HashMap<>();
     ParquetTestProperties props = new ParquetTestProperties(1, 300000, DEFAULT_BYTES_PER_PAGE, fields);
     byte[] val = {'b'};
     byte[] val2 = {'b', '2'};
-    byte[] val3 = { 'l','o','n','g','e','r',' ','s','t','r','i','n','g'};
-    Object[] boolVals = { val, val2, val3};
+    byte[] val3 = {'b', '3'};
+    byte[] val4 = { 'l','o','n','g','e','r',' ','s','t','r','i','n','g'};
+    Object[] boolVals = { val, val2, val4};
     props.fields.put("a", new FieldInfo("boolean", "a", 1, boolVals, TypeProtos.MinorType.BIT, props));
+    //
     testParquetFullEngineEventBased(false, "/parquet/parquet_nullable_varlen.json", "/tmp/nullable_varlen.parquet", 1, props);
+    fields.clear();
+    // pass strings instead of byte arrays
+    Object[] boolVals2 = { "b", "b2", "b3"};
+    props.fields.put("a", new FieldInfo("boolean", "a", 1, boolVals2, TypeProtos.MinorType.BIT, props));
+    testParquetFullEngineEventBased(false, "/parquet/parquet_scan_screen_read_entry_replace.json",
+        "\"/tmp/varLen.parquet/a\"", "unused", 1, props);
   }
 
   @Test

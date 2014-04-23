@@ -95,7 +95,7 @@
     <dependency>
       <groupId>com.twitter</groupId>
       <artifactId>parquet-column</artifactId>
-      <version>1.2.8</version>
+      <version>1.4.0</version>
       <exclusions>
         <exclusion>
           <groupId>org.apache.hadoop</groupId>
@@ -110,7 +110,7 @@
     <dependency>
       <groupId>com.twitter</groupId>
       <artifactId>parquet-hadoop</artifactId>
-      <version>1.2.8</version>
+      <version>1.4.0</version>
       <exclusions>
         <exclusion>
           <groupId>org.apache.hadoop</groupId>

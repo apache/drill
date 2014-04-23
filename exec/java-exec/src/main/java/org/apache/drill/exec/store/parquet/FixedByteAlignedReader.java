@@ -21,6 +21,7 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.vector.BaseDataValueVector;
 import org.apache.drill.exec.vector.ValueVector;
 import parquet.column.ColumnDescriptor;
+import parquet.format.ConvertedType;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
 
 class FixedByteAlignedReader extends ColumnReader {
@@ -29,8 +30,8 @@ class FixedByteAlignedReader extends ColumnReader {
 
   
   FixedByteAlignedReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
-                         boolean fixedLength, ValueVector v) throws ExecutionSetupException {
-    super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v);
+                         boolean fixedLength, ValueVector v, ConvertedType convertedType) throws ExecutionSetupException {
+    super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, convertedType);
   }
 
   // this method is called by its superclass during a read loop

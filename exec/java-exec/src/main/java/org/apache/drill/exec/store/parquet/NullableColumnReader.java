@@ -22,6 +22,7 @@ import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.NullableVectorDefinitionSetter;
 import org.apache.drill.exec.vector.ValueVector;
 import parquet.column.ColumnDescriptor;
+import parquet.format.ConvertedType;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
 
 import java.io.IOException;
@@ -35,8 +36,8 @@ abstract class NullableColumnReader extends ColumnReader{
   int bitsUsed;
 
   NullableColumnReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
-               boolean fixedLength, ValueVector v) throws ExecutionSetupException {
-    super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v);
+               boolean fixedLength, ValueVector v, ConvertedType convertedType) throws ExecutionSetupException {
+    super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, convertedType);
   }
 
   public void readAllFixedFields(long recordsToReadInThisPass, ColumnReader firstColumnStatus) throws IOException {
@@ -44,7 +45,7 @@ abstract class NullableColumnReader extends ColumnReader{
     readLength = 0;
     readLengthInBits = 0;
     recordsReadInThisIteration = 0;
-    vectorData = ((BaseValueVector)valueVecHolder.getValueVector()).getData();
+    vectorData = ((BaseValueVector)valueVec).getData();
 
     do {
       // if no page has been read, or all of the records have been read out of a page, read the next one
@@ -72,11 +73,11 @@ abstract class NullableColumnReader extends ColumnReader{
         lastValueWasNull = true;
         nullsFound = 0;
         if (currentValueIndexInVector - totalValuesRead == recordsToReadInThisPass
-            || currentValueIndexInVector >= valueVecHolder.getValueVector().getValueCapacity()){
+            || currentValueIndexInVector >= valueVec.getValueCapacity()){
           break;
         }
         while(currentValueIndexInVector - totalValuesRead < recordsToReadInThisPass
-            && currentValueIndexInVector < valueVecHolder.getValueVector().getValueCapacity()
+            && currentValueIndexInVector < valueVec.getValueCapacity()
             && pageReadStatus.valuesRead + definitionLevelsRead < pageReadStatus.currentPage.getValueCount()){
           currentDefinitionLevel = pageReadStatus.definitionLevels.readInteger();
           definitionLevelsRead++;
@@ -96,7 +97,7 @@ abstract class NullableColumnReader extends ColumnReader{
               lastValueWasNull = false;
             }
             runLength++;
-            ((NullableVectorDefinitionSetter)valueVecHolder.getValueVector().getMutator()).setIndexDefined(currentValueIndexInVector);
+            ((NullableVectorDefinitionSetter)valueVec.getMutator()).setIndexDefined(currentValueIndexInVector);
           }
           currentValueIndexInVector++;
         }
@@ -104,9 +105,9 @@ abstract class NullableColumnReader extends ColumnReader{
         recordsReadInThisIteration = runLength;
 
         readField( runLength, firstColumnStatus);
-        int writerIndex = ((BaseValueVector) valueVecHolder.getValueVector()).getData().writerIndex();
+        int writerIndex = ((BaseValueVector) valueVec).getData().writerIndex();
         if ( dataTypeLengthInBits > 8  || (dataTypeLengthInBits < 8 && totalValuesRead + runLength % 8 == 0)){
-          ((BaseValueVector) valueVecHolder.getValueVector()).getData().setIndex(0, writerIndex + (int) Math.ceil( nullsFound * dataTypeLengthInBits / 8.0));
+          ((BaseValueVector) valueVec).getData().setIndex(0, writerIndex + (int) Math.ceil( nullsFound * dataTypeLengthInBits / 8.0));
         }
         else if (dataTypeLengthInBits < 8){
           rightBitShift += dataTypeLengthInBits * nullsFound;
@@ -125,7 +126,7 @@ abstract class NullableColumnReader extends ColumnReader{
       }
     }
     while (valuesReadInCurrentPass < recordsToReadInThisPass && pageReadStatus.currentPage != null);
-    valueVecHolder.getValueVector().getMutator().setValueCount(
+    valueVec.getMutator().setValueCount(
         valuesReadInCurrentPass);
   }
 

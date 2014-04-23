@@ -21,6 +21,7 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.vector.BaseDataValueVector;
 import org.apache.drill.exec.vector.ValueVector;
 import parquet.column.ColumnDescriptor;
+import parquet.format.ConvertedType;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
 
 final class BitReader extends ColumnReader {
@@ -30,8 +31,8 @@ final class BitReader extends ColumnReader {
   private byte[] bytes;
   
   BitReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
-            boolean fixedLength, ValueVector v) throws ExecutionSetupException {
-    super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v);
+            boolean fixedLength, ValueVector v, ConvertedType convertedType) throws ExecutionSetupException {
+    super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, convertedType);
   }
 
   @Override
@@ -47,11 +48,11 @@ final class BitReader extends ColumnReader {
     bytes = pageReadStatus.pageDataByteArray;
     // standard read, using memory mapping
     if (pageReadStatus.bitShift == 0) {
-      ((BaseDataValueVector) valueVecHolder.getValueVector()).getData().writeBytes(bytes,
+      ((BaseDataValueVector) valueVec).getData().writeBytes(bytes,
           (int) readStartInBytes, (int) readLength);
     } else { // read in individual values, because a bitshift is necessary with where the last page or batch ended
 
-      vectorData = ((BaseDataValueVector) valueVecHolder.getValueVector()).getData();
+      vectorData = ((BaseDataValueVector) valueVec).getData();
       nextByte = bytes[(int) Math.max(0, Math.ceil(pageReadStatus.valuesRead / 8.0) - 1)];
       readLengthInBits = recordsReadInThisIteration + pageReadStatus.bitShift;
 

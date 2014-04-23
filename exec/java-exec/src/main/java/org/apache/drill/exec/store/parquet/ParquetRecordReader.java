@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
@@ -38,12 +39,21 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.store.RecordReader;
-import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.*;
+import org.apache.drill.exec.vector.NullableVarBinaryVector;
+import org.apache.drill.exec.vector.NullableVarCharVector;
+import org.apache.drill.exec.vector.VarBinaryVector;
+import org.apache.drill.exec.vector.VarCharVector;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
 import parquet.column.ColumnDescriptor;
+import parquet.format.ConvertedType;
+import parquet.format.FileMetaData;
+import parquet.format.SchemaElement;
+import parquet.format.converter.ParquetMetadataConverter;
 import parquet.hadoop.CodecFactoryExposer;
+import parquet.hadoop.ParquetFileWriter;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
 import parquet.hadoop.metadata.ParquetMetadata;
 import parquet.schema.PrimitiveType;
@@ -173,11 +183,23 @@ class ParquetRecordReader implements RecordReader {
     int columnsToScan = 0;
 
     MaterializedField field;
+    ParquetMetadataConverter metaConverter = new ParquetMetadataConverter();
+    FileMetaData fileMetaData;
+
+    // TODO - figure out how to deal with this better once we add nested reading, note also look where this map is used below
+    // store a map from column name to converted types if they are non-null
+    HashMap<String, ConvertedType> convertedTypes = new HashMap<>();
+    fileMetaData = new ParquetMetadataConverter().toParquetMetadata(ParquetFileWriter.CURRENT_VERSION, footer);
+    for (SchemaElement se : fileMetaData.getSchema()) {
+      convertedTypes.put(se.getName(), se.getConverted_type());
+    }
+
     // loop to add up the length of the fixed width columns and build the schema
     for (int i = 0; i < columns.size(); ++i) {
       column = columns.get(i);
+      logger.debug("name: " + fileMetaData.getSchema().get(i).name);
       field = MaterializedField.create(toFieldName(column.getPath()),
-          toMajorType(column.getType(), getDataMode(column)));
+          toMajorType(column.getType(), getDataMode(column), convertedTypes.get(column.getPath()[0])));
       if ( ! fieldSelected(field)){
         continue;
       }
@@ -203,9 +225,22 @@ class ParquetRecordReader implements RecordReader {
       return;
     }
     if (allFieldsFixedLength) {
-      recordsPerBatch = (int) Math.min(batchSize / bitWidthAllFixedFields, footer.getBlocks().get(0).getColumns().get(0).getValueCount());
+      recordsPerBatch = (int) Math.min(Math.min(batchSize / bitWidthAllFixedFields,
+          footer.getBlocks().get(0).getColumns().get(0).getValueCount()), 65535);
     }
+    else {
+      recordsPerBatch = DEFAULT_RECORDS_TO_READ_IF_NOT_FIXED_WIDTH;
+    }
+//    for (SchemaElement se : fileMetaData.getSchema()) {
+//      if (fieldSelected())
+//      System.out.println("convertedtype :" + se.getConverted_type());
+//      System.out.println("name:" + se.getName());
+//      System.out.println();
+//
+//    }
     try {
+      ValueVector v;
+      ConvertedType convertedType;
       ArrayList<VarLenBinaryReader.VarLengthColumn> varLengthColumns = new ArrayList<>();
       ArrayList<VarLenBinaryReader.NullableVarLengthColumn> nullableVarLengthColumns = new ArrayList<>();
       // initialize all of the column read status objects
@@ -213,21 +248,38 @@ class ParquetRecordReader implements RecordReader {
       for (int i = 0; i < columns.size(); ++i) {
         column = columns.get(i);
         columnChunkMetaData = footer.getBlocks().get(0).getColumns().get(i);
-        MajorType type = toMajorType(column.getType(), getDataMode(column));
+        convertedType = convertedTypes.get(column.getPath()[0]);
+        MajorType type = toMajorType(column.getType(), getDataMode(column), convertedType);
         field = MaterializedField.create(toFieldName(column.getPath()), type);
         // the field was not requested to be read
         if ( ! fieldSelected(field)) continue;
 
+        //convertedTypes.put()
         fieldFixedLength = column.getType() != PrimitiveType.PrimitiveTypeName.BINARY;
-        ValueVector v = output.addField(field, TypeHelper.getValueVectorClass(type.getMinorType(), type.getMode()));
+        v = output.addField(field, TypeHelper.getValueVectorClass(type.getMinorType(), type.getMode()));
         if (column.getType() != PrimitiveType.PrimitiveTypeName.BINARY) {
-          createFixedColumnReader(fieldFixedLength, column, columnChunkMetaData, recordsPerBatch, v);
+          createFixedColumnReader(fieldFixedLength, column, columnChunkMetaData, recordsPerBatch, v,
+            convertedType);
         } else {
           if (column.getMaxDefinitionLevel() == 0){// column is required
-            varLengthColumns.add(new VarLenBinaryReader.VarLengthColumn(this, -1, column, columnChunkMetaData, false, v));
+            if (convertedType == ConvertedType.UTF8) {
+              varLengthColumns.add(
+                new VarLenBinaryReader.VarCharColumn(this, -1, column, columnChunkMetaData, false, (VarCharVector) v, convertedType));
+            } else {
+              varLengthColumns.add(
+                  new VarLenBinaryReader.VarBinaryColumn(this, -1, column, columnChunkMetaData, false, (VarBinaryVector) v, convertedType));
+            }
           }
           else{
-            nullableVarLengthColumns.add(new VarLenBinaryReader.NullableVarLengthColumn(this, -1, column, columnChunkMetaData, false, v));
+            if (convertedType == ConvertedType.UTF8) {
+              nullableVarLengthColumns.add(
+                new VarLenBinaryReader.NullableVarCharColumn(this, -1, column, columnChunkMetaData, false,
+                    (NullableVarCharVector) v, convertedType));
+            } else {
+              nullableVarLengthColumns.add(
+                new VarLenBinaryReader.NullableVarBinaryColumn(this, -1, column, columnChunkMetaData, false,
+                  (NullableVarBinaryVector) v, convertedType));
+            }
           }
         }
       }
@@ -259,15 +311,15 @@ class ParquetRecordReader implements RecordReader {
 
   private void resetBatch() {
     for (ColumnReader column : columnStatuses) {
-      column.valueVecHolder.reset();
+      AllocationHelper.allocate(column.valueVec, recordsPerBatch, 10, 5);
       column.valuesReadInCurrentPass = 0;
     }
     for (VarLenBinaryReader.VarLengthColumn r : varLengthReader.columns){
-      r.valueVecHolder.reset();
+      AllocationHelper.allocate(r.valueVec, recordsPerBatch, 10, 5);
       r.valuesReadInCurrentPass = 0;
     }
     for (VarLenBinaryReader.NullableVarLengthColumn r : varLengthReader.nullableColumns){
-      r.valueVecHolder.reset();
+      AllocationHelper.allocate(r.valueVec, recordsPerBatch, 10, 5);
       r.valuesReadInCurrentPass = 0;
     }
   }
@@ -281,28 +333,29 @@ class ParquetRecordReader implements RecordReader {
    * @throws SchemaChangeException
    */
   private boolean createFixedColumnReader(boolean fixedLength, ColumnDescriptor descriptor,
-                                          ColumnChunkMetaData columnChunkMetaData, int allocateSize, ValueVector v)
+                                          ColumnChunkMetaData columnChunkMetaData, int allocateSize, ValueVector v,
+                                          ConvertedType convertedType)
       throws SchemaChangeException, ExecutionSetupException {
     // if the column is required
     if (descriptor.getMaxDefinitionLevel() == 0){
       if (columnChunkMetaData.getType() == PrimitiveType.PrimitiveTypeName.BOOLEAN){
         columnStatuses.add(new BitReader(this, allocateSize, descriptor, columnChunkMetaData,
-            fixedLength, v));
+            fixedLength, v, convertedType));
       }
       else{
         columnStatuses.add(new FixedByteAlignedReader(this, allocateSize, descriptor, columnChunkMetaData,
-            fixedLength, v));
+            fixedLength, v, convertedType));
       }
       return true;
     }
     else { // if the column is nullable
       if (columnChunkMetaData.getType() == PrimitiveType.PrimitiveTypeName.BOOLEAN){
         columnStatuses.add(new NullableBitReader(this, allocateSize, descriptor, columnChunkMetaData,
-            fixedLength, v));
+            fixedLength, v, convertedType));
       }
       else{
         columnStatuses.add(new NullableFixedByteAlignedReader(this, allocateSize, descriptor, columnChunkMetaData,
-            fixedLength, v));
+            fixedLength, v, convertedType));
       }
       return true;
     }
@@ -363,18 +416,21 @@ class ParquetRecordReader implements RecordReader {
   }
 
   static TypeProtos.MajorType toMajorType(PrimitiveType.PrimitiveTypeName primitiveTypeName,
-                                               TypeProtos.DataMode mode) {
-    return toMajorType(primitiveTypeName, 0, mode);
+                                               TypeProtos.DataMode mode, ConvertedType convertedType) {
+    return toMajorType(primitiveTypeName, 0, mode, convertedType);
   }
 
   static TypeProtos.MajorType toMajorType(PrimitiveType.PrimitiveTypeName primitiveTypeName, int length,
-                                               TypeProtos.DataMode mode) {
+                                               TypeProtos.DataMode mode, ConvertedType convertedType) {
     switch (mode) {
 
       case OPTIONAL:
         switch (primitiveTypeName) {
           case BINARY:
-            return Types.optional(TypeProtos.MinorType.VARBINARY);
+            if (convertedType == ConvertedType.UTF8)
+              return Types.optional(TypeProtos.MinorType.VARCHAR);
+            else
+              return Types.optional(TypeProtos.MinorType.VARBINARY);
           case INT64:
             return Types.optional(TypeProtos.MinorType.BIGINT);
           case INT32:
@@ -400,7 +456,10 @@ class ParquetRecordReader implements RecordReader {
       case REQUIRED:
         switch (primitiveTypeName) {
           case BINARY:
-            return Types.required(TypeProtos.MinorType.VARBINARY);
+            if (convertedType == ConvertedType.UTF8)
+              return Types.required(TypeProtos.MinorType.VARCHAR);
+            else
+              return Types.required(TypeProtos.MinorType.VARBINARY);
           case INT64:
             return Types.required(TypeProtos.MinorType.BIGINT);
           case INT32:
@@ -426,7 +485,10 @@ class ParquetRecordReader implements RecordReader {
       case REPEATED:
         switch (primitiveTypeName) {
           case BINARY:
-            return Types.repeated(TypeProtos.MinorType.VARBINARY);
+            if (convertedType == ConvertedType.UTF8)
+              return Types.required(TypeProtos.MinorType.VARCHAR);
+            else
+              return Types.repeated(TypeProtos.MinorType.VARBINARY);
           case INT64:
             return Types.repeated(TypeProtos.MinorType.BIGINT);
           case INT32:

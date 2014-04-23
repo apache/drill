@@ -115,9 +115,9 @@ final class PageReadStatus {
     if (parentColumnReader.columnDescriptor.getMaxDefinitionLevel() != 0){
       definitionLevels = currentPage.getDlEncoding().getValuesReader(parentColumnReader.columnDescriptor, ValuesType.DEFINITION_LEVEL);
       valueReader = currentPage.getValueEncoding().getValuesReader(parentColumnReader.columnDescriptor, ValuesType.VALUES);
-      int endOfDefinitionLevels = definitionLevels.initFromPage(currentPage.getValueCount(), pageDataByteArray, 0);
-      valueReader.initFromPage(currentPage.getValueCount(), pageDataByteArray, endOfDefinitionLevels);
-      readPosInBytes = endOfDefinitionLevels;
+      definitionLevels.initFromPage(currentPage.getValueCount(), pageDataByteArray, 0);
+      readPosInBytes = definitionLevels.getNextOffset();
+      valueReader.initFromPage(currentPage.getValueCount(), pageDataByteArray, (int) readPosInBytes);
     }
 
     return true;

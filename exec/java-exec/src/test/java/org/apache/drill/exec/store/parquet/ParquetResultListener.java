@@ -78,7 +78,10 @@ public class ParquetResultListener implements UserResultsListener {
 
     T val = (T) valueVector.getAccessor().getObject(index);
     if (val instanceof byte[]) {
-      assertEquals(true, Arrays.equals((byte[]) value, (byte[]) val));
+      assert(Arrays.equals((byte[]) value, (byte[]) val));
+    }
+    else if (val instanceof String) {
+      assert(val.equals(value));
     } else {
       assertEquals(value, val);
     }
@@ -120,16 +123,7 @@ public class ParquetResultListener implements UserResultsListener {
       }
       for (int j = 0; j < vv.getAccessor().getValueCount(); j++) {
         if (ParquetRecordReaderTest.VERBOSE_DEBUG){
-          if (vv.getAccessor().getObject(j) instanceof byte[]){
-            System.out.print("[len:" + ((byte[]) vv.getAccessor().getObject(j)).length + " - (");
-            for (int k = 0; k <  ((byte[]) vv.getAccessor().getObject(j)).length; k++){
-              System.out.print((char)((byte[])vv.getAccessor().getObject(j))[k] + ",");
-            }
-            System.out.print(") ]");
-          }
-          else{
-            System.out.print(Strings.padStart(vv.getAccessor().getObject(j) + "", 20, ' ') + " ");
-          }
+          System.out.print(Strings.padStart(vv.getAccessor().getObject(j) + "", 20, ' ') + " ");
           System.out.print(", " + (j % 25 == 0 ? "\n batch:" + batchCounter + " v:" + j + " - " : ""));
         }
         if (testValues){
@@ -161,20 +155,9 @@ public class ParquetResultListener implements UserResultsListener {
 
         for (VectorWrapper vw : batchLoader) {
           ValueVector v = vw.getValueVector();
-          if (v.getAccessor().getObject(i) instanceof byte[]){
-            System.out.print("[len:" + ((byte[]) v.getAccessor().getObject(i)).length + " - (");
-            for (int j = 0; j <  ((byte[]) v.getAccessor().getObject(i)).length; j++){
-              System.out.print(((byte[])v.getAccessor().getObject(i))[j] + ",");
-            }
-            System.out.print(") ]");
-          }
-          else{
-            System.out.print(Strings.padStart(v.getAccessor().getObject(i) + "", 20, ' ') + " ");
-          }
+          System.out.print(Strings.padStart(v.getAccessor().getObject(i) + "", 20, ' ') + " ");
         }
-        System.out.println(
-
-        );
+        System.out.println();
       }
     }
     batchCounter++;

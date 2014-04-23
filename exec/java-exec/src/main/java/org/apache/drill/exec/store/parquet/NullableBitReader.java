@@ -23,6 +23,7 @@ import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.NullableBitVector;
 import org.apache.drill.exec.vector.ValueVector;
 import parquet.column.ColumnDescriptor;
+import parquet.format.ConvertedType;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
 
 import java.io.IOException;
@@ -38,8 +39,8 @@ import java.io.IOException;
 final class NullableBitReader extends ColumnReader {
 
   NullableBitReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
-                    boolean fixedLength, ValueVector v) throws ExecutionSetupException {
-    super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v);
+                    boolean fixedLength, ValueVector v, ConvertedType convertedType) throws ExecutionSetupException {
+    super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, convertedType);
   }
 
   @Override
@@ -52,7 +53,7 @@ final class NullableBitReader extends ColumnReader {
       defLevel = pageReadStatus.definitionLevels.readInteger();
       // if the value is defined
       if (defLevel == columnDescriptor.getMaxDefinitionLevel()){
-        if (!((NullableBitVector)valueVecHolder.getValueVector()).getMutator().setSafe(i + valuesReadInCurrentPass,
+        if (!((NullableBitVector)valueVec).getMutator().setSafe(i + valuesReadInCurrentPass,
             pageReadStatus.valueReader.readBoolean() ? 1 : 0 )) {
           throw new RuntimeException();
         }

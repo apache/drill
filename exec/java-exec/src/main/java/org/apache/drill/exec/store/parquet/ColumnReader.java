@@ -24,23 +24,26 @@ import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.hadoop.fs.FSDataInputStream;
 import parquet.column.ColumnDescriptor;
+import parquet.format.ConvertedType;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
 import parquet.schema.PrimitiveType;
 
 import java.io.IOException;
 
-abstract class ColumnReader {
+abstract class ColumnReader<V extends ValueVector> {
   
   final ParquetRecordReader parentReader;
   
   // Value Vector for this column
-  final VectorHolder valueVecHolder;
+  final V valueVec;
   // column description from the parquet library
   final ColumnDescriptor columnDescriptor;
   // metadata of the column, from the parquet library
   final ColumnChunkMetaData columnChunkMetaData;
   // status information on the current page
   final PageReadStatus pageReadStatus;
+
+  final ConvertedType convertedType;
 
   // quick reference to see if the field is fixed length (as this requires an instanceof)
   final boolean isFixedLength;
@@ -62,16 +65,17 @@ abstract class ColumnReader {
   long readStartInBytes = 0, readLength = 0, readLengthInBits = 0, recordsReadInThisIteration = 0;
 
   protected ColumnReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
-      ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, ValueVector v) throws ExecutionSetupException {
+      ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, V v, ConvertedType convertedType) throws ExecutionSetupException {
     this.parentReader = parentReader;
     this.columnDescriptor = descriptor;
     this.columnChunkMetaData = columnChunkMetaData;
     this.isFixedLength = fixedLength;
+    this.convertedType = convertedType;
 
     if (allocateSize > 1) {
-      valueVecHolder = new VectorHolder(allocateSize, v);
+      valueVec =  v;
     } else {
-      valueVecHolder = new VectorHolder(5000, v);
+      valueVec =  v;
     }
 
 
@@ -88,7 +92,7 @@ abstract class ColumnReader {
     readLength = 0;
     readLengthInBits = 0;
     recordsReadInThisIteration = 0;
-    vectorData = ((BaseValueVector) valueVecHolder.getValueVector()).getData();
+    vectorData = ((BaseValueVector) valueVec).getData();
     do {
       // if no page has been read, or all of the records have been read out of a page, read the next one
       if (pageReadStatus.currentPage == null || pageReadStatus.valuesRead == pageReadStatus.currentPage.getValueCount()) {
@@ -108,11 +112,11 @@ abstract class ColumnReader {
         pageReadStatus.readPosInBytes = readStartInBytes + readLength;
       }
     } while (valuesReadInCurrentPass < recordsToReadInThisPass && pageReadStatus.currentPage != null);
-    valueVecHolder.getValueVector().getMutator().setValueCount(valuesReadInCurrentPass);
+    valueVec.getMutator().setValueCount(valuesReadInCurrentPass);
   }
 
   public void clear() {
-    this.valueVecHolder.reset();
+    valueVec.clear();
     this.pageReadStatus.clear();
   }
 
