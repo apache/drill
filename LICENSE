@@ -542,7 +542,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 For
-  sqlline (http://github.com/julianhyde/sqlline) sqlline:sqlline:jar:1.1.0
+  sqlline (http://github.com/julianhyde/sqlline) sqlline:sqlline:jar:1.1.6
 
 Copyright (c) 2002,2003,2004,2005,2006,2007 Marc Prud'hommeaux
 Copyright (c) 2004-2010 The Eigenbase Project
