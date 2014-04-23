@@ -79,7 +79,7 @@ public class QueryContext{
   }
 
   public SchemaPlus getRootSchema(){
-    SchemaPlus rootSchema = Frameworks.createRootSchema();
+    SchemaPlus rootSchema = Frameworks.createRootSchema(false);
     drillbitContext.getSchemaFactory().registerSchemas(session, rootSchema);
     return rootSchema;
   }

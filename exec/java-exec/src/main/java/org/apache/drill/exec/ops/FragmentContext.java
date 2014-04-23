@@ -128,7 +128,7 @@ public class FragmentContext implements Closeable {
           "This is a non-root fragment."));
       return null;
     } else {
-      SchemaPlus root = Frameworks.createRootSchema();
+      SchemaPlus root = Frameworks.createRootSchema(false);
       context.getStorage().getSchemaFactory().registerSchemas(connection.getSession(), root);
       return root;
     }

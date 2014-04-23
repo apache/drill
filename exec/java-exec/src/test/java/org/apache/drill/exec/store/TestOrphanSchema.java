@@ -55,7 +55,7 @@ public class TestOrphanSchema extends ExecTest {
     bitContext.getCache().run();
 
     StoragePluginRegistry r = new StoragePluginRegistry(bitContext);
-    SchemaPlus plus = Frameworks.createRootSchema();
+    SchemaPlus plus = Frameworks.createRootSchema(false);
     r.init();
     r.getSchemaFactory().registerSchemas(new UserSession(null, null, null), plus);
 

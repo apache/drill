@@ -55,7 +55,7 @@ public class OrphanSchema {
     // Using the mock context, get the orphan schema.
     StoragePluginRegistry r = new StoragePluginRegistry(bitContext);
     r.init();
-    SchemaPlus plus = Frameworks.createRootSchema();
+    SchemaPlus plus = Frameworks.createRootSchema(false);
     r.getSchemaFactory().registerSchemas(new UserSession(null, null, null), plus);
     return plus;
   }
