@@ -50,7 +50,7 @@ import com.google.common.io.Resources;
 public class PlanningBase {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PlanningBase.class);
 
-  @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(30000);
+  @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(300000);
   @Rule public final TestRule LOG_OUTCOME = TestTools.getTestLogReporter(logger);
 
   @Mocked DrillbitContext dbContext;

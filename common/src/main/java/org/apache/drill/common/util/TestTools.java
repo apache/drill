@@ -34,7 +34,7 @@ public class TestTools {
   static final String WORKING_PATH = Paths.get("").toAbsolutePath().toString();
 
   public static TestRule getTimeoutRule() {
-    return getTimeoutRule(10000);
+    return getTimeoutRule(100000);
   }
 
   public static TestRule getTimeoutRule(int timeout) {

@@ -51,7 +51,7 @@ public class BaseTestQuery {
   // make it static so we can use after class
   static final TestLogReporter LOG_OUTCOME = TestTools.getTestLogReporter(logger);
 
-  @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(20000);
+  @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(200000);
   @Rule public final TestLogReporter logOutcome = LOG_OUTCOME;
 
   @AfterClass
