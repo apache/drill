@@ -180,6 +180,32 @@ public class TestHashJoin extends PopUnitTestBase{
     }
 
     @Test
+    public void hjWithExchange(@Injectable final DrillbitContext bitContext,
+                               @Injectable UserServer.UserClientConnection connection) throws Throwable {
+
+        // Function checks for casting from Float, Double to Decimal data types
+        try (RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
+             Drillbit bit = new Drillbit(CONFIG, serviceSet);
+             DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
+
+            // run query.
+            bit.run();
+            client.connect();
+            List<QueryResultBatch> results = client.runQuery(UserProtos.QueryType.PHYSICAL,
+                    Files.toString(FileUtils.getResourceAsFile("/join/hj_exchanges.json"), Charsets.UTF_8));
+
+            int count = 0;
+            for(QueryResultBatch b : results) {
+                if (b.getHeader().getRowCount() != 0)
+                    count += b.getHeader().getRowCount();
+            }
+
+            System.out.println("Total records: " + count);
+            assertEquals(25, count);
+        }
+    }
+
+    @Test
     public void multipleConditionJoin(@Injectable final DrillbitContext bitContext,
                                       @Injectable UserServer.UserClientConnection connection) throws Throwable {
 

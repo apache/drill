@@ -51,7 +51,6 @@ public class HashJoinPOP extends AbstractBase {
     private final PhysicalOperator right;
     private final List<JoinCondition> conditions;
     private final JoinRelType joinType;
-    private final HashTableConfig htConfig;
 
     @Override
     public OperatorCost getCost() {
@@ -69,23 +68,6 @@ public class HashJoinPOP extends AbstractBase {
         this.right = right;
         this.conditions = conditions;
         this.joinType = joinType;
-
-        int conditionsSize = conditions.size();
-
-        NamedExpression rightExpr[] = new NamedExpression[conditionsSize];
-        NamedExpression leftExpr[] = new NamedExpression[conditionsSize];
-
-        for (int i = 0; i < conditionsSize; i++) {
-            rightExpr[i] = new NamedExpression(conditions.get(i).getRight(), new FieldReference("build_side_" + i ));
-            leftExpr[i] = new NamedExpression(conditions.get(i).getLeft(), new FieldReference("probe_side_" + i));
-
-            // Hash join only supports equality currently.
-            assert conditions.get(i).getRelationship().equals("==");
-        }
-
-        this.htConfig = new HashTableConfig(HashTable.DEFAULT_INITIAL_CAPACITY,
-                                            HashTable.DEFAULT_LOAD_FACTOR,
-                                            rightExpr, leftExpr);
     }
 
     @Override
@@ -123,10 +105,6 @@ public class HashJoinPOP extends AbstractBase {
 
     public List<JoinCondition> getConditions() {
         return conditions;
-    }
-
-    public HashTableConfig getHtConfig() {
-        return htConfig;
     }
 
     public HashJoinPOP flipIfRight(){
