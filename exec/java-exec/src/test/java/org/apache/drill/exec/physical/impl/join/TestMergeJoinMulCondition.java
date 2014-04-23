@@ -39,7 +39,7 @@ import com.google.common.io.Files;
 public class TestMergeJoinMulCondition extends PopUnitTestBase {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestMergeJoinMulCondition.class);
 
-  @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(200000);
+  @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(1000000);
 
   @Test
   //the physical plan is obtained for the following SQL query:
