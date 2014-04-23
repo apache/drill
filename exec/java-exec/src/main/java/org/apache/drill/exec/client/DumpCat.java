@@ -54,7 +54,6 @@ public class DumpCat {
       System.out.println(e.getMessage());
       String[] valid = {"-f", "file"};
       new JCommander(o, valid).usage();
-      jc.usage();
       System.exit(-1);
     }
     if (o.help) {
