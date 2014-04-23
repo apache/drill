@@ -30,8 +30,8 @@
       left: 1,
       right: 2,
       pop: "merge-join",
-      join-type: "INNER",
-      join-conditions: [ { relationship: "==", left: "a", right: "aa" } ]
+      joinType: "INNER",
+      conditions: [ { relationship: "==", left: "a", right: "aa" } ]
     },
     {
       @id: 4,

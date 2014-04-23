@@ -52,7 +52,7 @@
         right: 3,
         left: 4,
         pop: "hash-join",
-        join-conditions: [ {relationship: "==", left: "B", right: "A"} ]
+        conditions: [ {relationship: "==", left: "B", right: "A"} ]
       },
       {
         @id: 6,

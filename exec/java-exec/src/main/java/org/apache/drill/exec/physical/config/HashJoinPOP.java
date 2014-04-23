@@ -62,8 +62,8 @@ public class HashJoinPOP extends AbstractBase {
     public HashJoinPOP(
             @JsonProperty("left") PhysicalOperator left,
             @JsonProperty("right") PhysicalOperator right,
-            @JsonProperty("join-conditions") List<JoinCondition> conditions,
-            @JsonProperty("join-type") JoinRelType joinType
+            @JsonProperty("conditions") List<JoinCondition> conditions,
+            @JsonProperty("joinType") JoinRelType joinType
     ) {
         this.left = left;
         this.right = right;

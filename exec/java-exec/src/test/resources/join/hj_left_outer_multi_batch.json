@@ -36,8 +36,8 @@
       right: 1,
       left: 2,
       pop: "hash-join",
-      join-type: "LEFT",
-      join-conditions: [ {relationship: "==", left: "blue1", right: "blue"} ]
+      joinType: "LEFT",
+      conditions: [ {relationship: "==", left: "blue1", right: "blue"} ]
     },
     {
       @id: 4,
