@@ -78,6 +78,12 @@ public class HazelCache implements DistributedCache {
       .setTypeClass(VectorAccessibleSerializable.class);
     c.setInstanceName(instanceName);
     c.getSerializationConfig().addSerializerConfig(sc);
+    c.getGroupConfig().setName(instanceName);
+    for (String s : DrillConfig.create().getStringList(ExecConstants.HAZELCAST_SUBNETS)) {
+      logger.debug("Adding interface: {}", s);
+      c.getNetworkConfig().getInterfaces().setEnabled(true).addInterface(s);
+    }
+
     instance = getInstanceOrCreateNew(c);
     workQueueLengths = instance.getTopic("queue-length");
     fragments = new HandlePlan(instance);

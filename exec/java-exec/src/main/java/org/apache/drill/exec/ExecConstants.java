@@ -61,5 +61,6 @@ public interface ExecConstants {
   public static final String TEXT_LINE_READER_BATCH_SIZE = "drill.exec.storage.file.text.batch.size";
   public static final String TEXT_LINE_READER_BUFFER_SIZE = "drill.exec.storage.file.text.buffer.size";
   public static final String FILESYSTEM_PARTITION_COLUMN_LABEL = "drill.exec.storage.file.partition.column.label";
+  public static final String HAZELCAST_SUBNETS = "drill.exec.cache.hazel.subnets";
   
 }
