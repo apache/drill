@@ -136,6 +136,7 @@
             <exclude>**/*.iml</exclude>
             <exclude>**/*.tdd</exclude>
             <exclude>**/*.project</exclude>
+            <exclude>.*/**</exclude>
           </excludes>
         </configuration>
       </plugin>
