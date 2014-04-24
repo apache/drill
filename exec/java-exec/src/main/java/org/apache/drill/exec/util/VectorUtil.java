@@ -102,7 +102,7 @@ public class VectorUtil {
         }
         else if (o instanceof byte[]) {
           String value = new String((byte[]) o);
-          System.out.printf("| %-15s",value.length() <= 15 ? value : value.substring(0, 14));
+          System.out.printf(format, value.length() <= columnWidth ? value : value.substring(0, columnWidth - 1));
         } else if (o instanceof List) {
           System.out.printf("| %s", o);
         } else {
