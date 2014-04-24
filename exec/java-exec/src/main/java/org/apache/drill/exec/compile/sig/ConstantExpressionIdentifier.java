@@ -124,7 +124,6 @@ public class ConstantExpressionIdentifier implements ExprVisitor<Boolean, Identi
 
   @Override
   public Boolean visitFloatConstant(ValueExpressions.FloatExpression fExpr, IdentityHashMap<LogicalExpression, Object> value) throws RuntimeException {
-    value.put(fExpr, true);
     return true;
   }
 
