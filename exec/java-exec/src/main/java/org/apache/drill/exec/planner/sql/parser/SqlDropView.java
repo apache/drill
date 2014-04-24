@@ -17,34 +17,24 @@
  */
 package org.apache.drill.exec.planner.sql.parser;
 
-import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableList;
 import net.hydromatic.optiq.tools.Planner;
 import org.apache.drill.exec.ops.QueryContext;
-import org.apache.drill.exec.planner.sql.handlers.DescribeTableHandler;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandler;
+import org.apache.drill.exec.planner.sql.handlers.ViewHandler.DropView;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.SqlParserPos;
 
 import java.util.List;
 
-/**
- * Sql parser tree node to represent statement:
- * { DESCRIBE | DESC } tblname [col_name | wildcard ]
- */
-public class SqlDescribeTable extends DrillSqlCall {
+public class SqlDropView extends DrillSqlCall {
+  public static final SqlSpecialOperator OPERATOR = new SqlSpecialOperator("DROP_VIEW", SqlKind.OTHER);
 
-  private final SqlIdentifier table;
-  private final SqlIdentifier column;
-  private final SqlNode columnQualifier;
+  private SqlIdentifier viewName;
 
-  public static final SqlSpecialOperator OPERATOR =
-    new SqlSpecialOperator("DESCRIBE_TABLE", SqlKind.OTHER);
-
-  public SqlDescribeTable(SqlParserPos pos, SqlIdentifier table, SqlIdentifier column, SqlNode columnQualifier) {
+  public SqlDropView(SqlParserPos pos, SqlIdentifier viewName) {
     super(pos);
-    this.table = table;
-    this.column = column;
-    this.columnQualifier = columnQualifier;
+    this.viewName = viewName;
   }
 
   @Override
@@ -54,28 +44,22 @@ public class SqlDescribeTable extends DrillSqlCall {
 
   @Override
   public List<SqlNode> getOperandList() {
-    List<SqlNode> opList = Lists.newArrayList();
-    opList.add(table);
-    if (column != null) opList.add(column);
-    if (columnQualifier != null) opList.add(columnQualifier);
-    return opList;
+    return ImmutableList.of((SqlNode)viewName);
   }
 
   @Override
   public void unparse(SqlWriter writer, int leftPrec, int rightPrec) {
-    writer.keyword("DESCRIBE");
-    writer.keyword("TABLE");
-    table.unparse(writer, leftPrec, rightPrec);
-    if (column != null) column.unparse(writer, leftPrec, rightPrec);
-    if (columnQualifier != null) columnQualifier.unparse(writer, leftPrec, rightPrec);
+    writer.keyword("DROP");
+    writer.keyword("VIEW");
+    viewName.unparse(writer, leftPrec, rightPrec);
   }
 
   @Override
   public SqlHandler getSqlHandler(Planner planner, QueryContext context) {
-    return new DescribeTableHandler(planner, context);
+    return new DropView(context);
   }
 
-  public SqlIdentifier getTable() { return table; }
-  public SqlIdentifier getColumn() { return column; }
-  public SqlNode getColumnQualifier() { return columnQualifier; }
+  public String getViewName() {
+    return viewName.toString();
+  }
 }

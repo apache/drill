@@ -29,9 +29,10 @@
   # List of keywords.
   keywords: [
     "DATABASES",
+    "REPLACE",
     "SCHEMAS",
     "SHOW",
-    "TABLES"
+    "TABLES",
     "USE"
   ]
 
@@ -40,7 +41,9 @@
     "SqlShowTables()",
     "SqlShowSchemas()",
     "SqlDescribeTable()",
-    "SqlUseSchema()"
+    "SqlUseSchema()",
+    "SqlCreateOrReplaceView()",
+    "SqlDropView()"
   ]
 
   # List of methods for parsing custom literals.

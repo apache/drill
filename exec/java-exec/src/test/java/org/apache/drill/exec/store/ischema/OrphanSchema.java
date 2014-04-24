@@ -25,6 +25,7 @@ import net.hydromatic.optiq.tools.Frameworks;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.cache.LocalCache;
 import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.junit.Test;
@@ -55,7 +56,7 @@ public class OrphanSchema {
     StoragePluginRegistry r = new StoragePluginRegistry(bitContext);
     r.init();
     SchemaPlus plus = Frameworks.createRootSchema();
-    r.getSchemaFactory().registerSchemas(null, plus);
+    r.getSchemaFactory().registerSchemas(new UserSession(null, null, null), plus);
     return plus;
   }
 

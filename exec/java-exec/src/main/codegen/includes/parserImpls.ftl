@@ -113,3 +113,55 @@ SqlNode SqlUseSchema():
         return new SqlUseSchema(pos, schema);
     }
 }
+
+/**
+ * Parses a create view or replace existing view statement.
+ *   CREATE [OR REPLACE] VIEW view_name AS select_statement
+ */
+SqlNode SqlCreateOrReplaceView() :
+{
+    SqlParserPos pos;
+    boolean replaceView = false;
+    SqlIdentifier viewName;
+    SqlNode query;
+    SqlNodeList fieldList = null;
+}
+{
+    <CREATE> { pos = getPos(); }
+    [ <OR> <REPLACE> { replaceView = true; } ]
+    <VIEW>
+    viewName = CompoundIdentifier()
+    [
+        <LPAREN>
+        fieldList = SimpleIdentifierCommaList()
+        <RPAREN>
+        {
+            for(SqlNode node : fieldList)
+            {
+                if (((SqlIdentifier)node).isStar())
+                    throw new ParseException("View's field list has a '*', which is invalid.");
+            }
+        }
+    ]
+    <AS>
+    query = OrderedQueryOrExpr(ExprContext.ACCEPT_QUERY)
+    {
+        return new SqlCreateView(pos, viewName, fieldList, query, replaceView);
+    }
+}
+
+/**
+ * Parses a drop view statement.
+ * DROP VIEW view_name;
+ */
+SqlNode SqlDropView() :
+{
+    SqlParserPos pos;
+}
+{
+    <DROP> { pos = getPos(); }
+    <VIEW>
+    {
+        return new SqlDropView(pos, CompoundIdentifier());
+    }
+}

@@ -18,6 +18,10 @@
 package org.apache.drill.exec.planner.sql.parser;
 
 import com.google.common.collect.ImmutableList;
+import net.hydromatic.optiq.tools.Planner;
+import org.apache.drill.exec.ops.QueryContext;
+import org.apache.drill.exec.planner.sql.handlers.SqlHandler;
+import org.apache.drill.exec.planner.sql.handlers.UseSchemaHandler;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.SqlParserPos;
 
@@ -26,7 +30,7 @@ import java.util.List;
 /**
  * Sql parser tree node to represent <code>USE SCHEMA</code> statement.
  */
-public class SqlUseSchema extends SqlCall {
+public class SqlUseSchema extends DrillSqlCall {
 
   public static final SqlSpecialOperator OPERATOR =
       new SqlSpecialOperator("USE_SCHEMA", SqlKind.OTHER);
@@ -52,6 +56,11 @@ public class SqlUseSchema extends SqlCall {
   public void unparse(SqlWriter writer, int leftPrec, int rightPrec) {
     writer.keyword("USE");
     schema.unparse(writer, leftPrec, rightPrec);
+  }
+
+  @Override
+  public SqlHandler getSqlHandler(Planner planner, QueryContext context) {
+    return new UseSchemaHandler(context);
   }
 
   /**

@@ -25,6 +25,7 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.cache.LocalCache;
 import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.junit.Test;
 
@@ -56,7 +57,7 @@ public class TestOrphanSchema extends ExecTest {
     StoragePluginRegistry r = new StoragePluginRegistry(bitContext);
     SchemaPlus plus = Frameworks.createRootSchema();
     r.init();
-    r.getSchemaFactory().registerSchemas(null, plus);
+    r.getSchemaFactory().registerSchemas(new UserSession(null, null, null), plus);
 
     printSchema(plus, 0);
 

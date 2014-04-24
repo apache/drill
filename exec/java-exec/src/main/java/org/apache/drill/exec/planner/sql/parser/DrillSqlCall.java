@@ -15,15 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store;
+package org.apache.drill.exec.planner.sql.parser;
 
-import net.hydromatic.optiq.SchemaPlus;
+import net.hydromatic.optiq.tools.Planner;
+import org.apache.drill.exec.ops.QueryContext;
+import org.apache.drill.exec.planner.sql.handlers.DefaultSqlHandler;
+import org.apache.drill.exec.planner.sql.handlers.SqlHandler;
+import org.eigenbase.sql.SqlCall;
+import org.eigenbase.sql.parser.SqlParserPos;
 
-import org.apache.drill.exec.rpc.user.DrillUser;
-import org.apache.drill.exec.rpc.user.UserSession;
+/**
+ * SqlCall interface with addition of method to get the handler.
+ */
+public abstract class DrillSqlCall extends SqlCall {
 
-public interface SchemaFactory {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SchemaFactory.class);
+  public DrillSqlCall(SqlParserPos pos) {
+    super(pos);
+  }
 
-  public void registerSchemas(UserSession session, SchemaPlus parent);
+  public SqlHandler getSqlHandler(Planner planner, QueryContext context) {
+    return new DefaultSqlHandler(planner, context);
+  }
 }

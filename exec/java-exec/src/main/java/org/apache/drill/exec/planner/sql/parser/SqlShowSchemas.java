@@ -20,7 +20,8 @@ package org.apache.drill.exec.planner.sql.parser;
 import com.google.common.collect.Lists;
 import net.hydromatic.optiq.tools.Planner;
 import org.apache.drill.exec.ops.QueryContext;
-import org.apache.drill.exec.planner.sql.handlers.DefaultSqlHandler;
+import org.apache.drill.exec.planner.sql.handlers.ShowSchemasHandler;
+import org.apache.drill.exec.planner.sql.handlers.SqlHandler;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.SqlParserPos;
 
@@ -30,7 +31,7 @@ import java.util.List;
  * Sql parse tree node to represent statement:
  * SHOW {DATABASES | SCHEMAS} [LIKE 'pattern' | WHERE expr]
  */
-public class SqlShowSchemas extends SqlCall {
+public class SqlShowSchemas extends DrillSqlCall {
 
   private final SqlNode likePattern;
   private final SqlNode whereClause;
@@ -66,6 +67,11 @@ public class SqlShowSchemas extends SqlCall {
       likePattern.unparse(writer, leftPrec, rightPrec);
     }
     if (whereClause != null) whereClause.unparse(writer, leftPrec, rightPrec);
+  }
+
+  @Override
+  public SqlHandler getSqlHandler(Planner planner, QueryContext context) {
+    return new ShowSchemasHandler(planner, context);
   }
 
   public SqlNode getLikePattern() { return likePattern; }

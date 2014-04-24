@@ -19,29 +19,40 @@ package org.apache.drill.exec.store;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import net.hydromatic.linq4j.expressions.DefaultExpression;
 import net.hydromatic.linq4j.expressions.Expression;
 import net.hydromatic.optiq.Function;
 import net.hydromatic.optiq.Schema;
 import net.hydromatic.optiq.SchemaPlus;
 
+import net.hydromatic.optiq.Table;
 import org.apache.drill.exec.planner.logical.DrillTable;
 
 public abstract class AbstractSchema implements Schema{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractSchema.class);
 
+  protected final List<String> schemaPath;
   protected final String name;
   private static final Expression EXPRESSION = new DefaultExpression(Object.class);
 
-  public AbstractSchema(String name) {
-    super();
+  public AbstractSchema(List<String> parentSchemaPath, String name) {
+    schemaPath = Lists.newArrayList();
+    schemaPath.addAll(parentSchemaPath);
+    schemaPath.add(name);
     this.name = name;
   }
 
   public String getName() {
     return name;
+  }
+
+  public List<String> getSchemaPath() {
+    return schemaPath;
   }
 
   @Override
@@ -70,7 +81,7 @@ public abstract class AbstractSchema implements Schema{
   }
 
   @Override
-  public DrillTable getTable(String name){
+  public Table getTable(String name){
     return null;
   }
 

@@ -44,6 +44,7 @@ import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.planner.logical.DrillRuleSets;
 import org.apache.drill.exec.planner.logical.StoragePlugins;
 import org.apache.drill.exec.rpc.user.DrillUser;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.dfs.FormatPlugin;
@@ -223,9 +224,9 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
   public class DrillSchemaFactory implements SchemaFactory{
 
     @Override
-    public void registerSchemas(DrillUser user, SchemaPlus parent) {
+    public void registerSchemas(UserSession session, SchemaPlus parent) {
       for(Map.Entry<String, StoragePlugin> e : plugins.entrySet()){
-        e.getValue().registerSchemas(user, parent);
+        e.getValue().registerSchemas(session, parent);
       }
     }
 

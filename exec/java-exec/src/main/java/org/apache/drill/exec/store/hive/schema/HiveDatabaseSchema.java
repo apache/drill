@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.hive.schema;
 import java.util.List;
 import java.util.Set;
 
+import net.hydromatic.optiq.Table;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.hive.schema.HiveSchemaFactory.HiveSchema;
@@ -36,13 +37,13 @@ public class HiveDatabaseSchema extends AbstractSchema{
       List<String> tableList, //
       HiveSchema hiveSchema, //
       String name) {
-    super(name);
+    super(hiveSchema.getSchemaPath(), name);
     this.hiveSchema = hiveSchema;
     this.tables = Sets.newHashSet(tableList);
   }
 
   @Override
-  public DrillTable getTable(String tableName) {
+  public Table getTable(String tableName) {
     return hiveSchema.getDrillTable(this.name, tableName);
   }
 

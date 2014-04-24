@@ -18,6 +18,10 @@
 package org.apache.drill.exec.planner.sql.parser;
 
 import com.google.common.collect.Lists;
+import net.hydromatic.optiq.tools.Planner;
+import org.apache.drill.exec.ops.QueryContext;
+import org.apache.drill.exec.planner.sql.handlers.ShowTablesHandler;
+import org.apache.drill.exec.planner.sql.handlers.SqlHandler;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.SqlParserPos;
 
@@ -27,7 +31,7 @@ import java.util.List;
  * Sql parse tree node to represent statement:
  * SHOW TABLES [{FROM | IN} db_name] [LIKE 'pattern' | WHERE expr]
  */
-public class SqlShowTables extends SqlCall {
+public class SqlShowTables extends DrillSqlCall {
 
   private final SqlIdentifier db;
   private final SqlNode likePattern;
@@ -67,6 +71,11 @@ public class SqlShowTables extends SqlCall {
       likePattern.unparse(writer, leftPrec, rightPrec);
     }
     if (whereClause != null) whereClause.unparse(writer, leftPrec, rightPrec);
+  }
+
+  @Override
+  public SqlHandler getSqlHandler(Planner planner, QueryContext context) {
+    return new ShowTablesHandler(planner, context);
   }
 
   public SqlIdentifier getDb() { return db; }

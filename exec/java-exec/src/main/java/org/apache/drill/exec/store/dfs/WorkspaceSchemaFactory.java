@@ -21,10 +21,14 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.base.Joiner;
+import com.google.common.collect.Sets;
+import net.hydromatic.optiq.Table;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.logical.DynamicDrillTable;
 import org.apache.drill.exec.planner.sql.ExpandingConcurrentMap;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.dfs.shim.DrillFileSystem;
 import org.apache.hadoop.fs.Path;
@@ -42,9 +46,10 @@ public class WorkspaceSchemaFactory implements ExpandingConcurrentMap.MapValueFa
   private final String storageEngineName;
   private final String schemaName;
   private final FileSystemPlugin plugin;
+  private final boolean isMutable;
 
   public WorkspaceSchemaFactory(FileSystemPlugin plugin, String schemaName, String storageEngineName, DrillFileSystem fileSystem, String path,
-      List<FormatMatcher> formatMatchers) throws ExecutionSetupException {
+      List<FormatMatcher> formatMatchers, boolean isMutable) throws ExecutionSetupException {
     this.fs = fileSystem;
     this.plugin = plugin;
     this.root = new Path(path);
@@ -58,10 +63,11 @@ public class WorkspaceSchemaFactory implements ExpandingConcurrentMap.MapValueFa
     }
     this.storageEngineName = storageEngineName;
     this.schemaName = schemaName;
+    this.isMutable = isMutable;
   }
 
-  public WorkspaceSchema createSchema() {
-    return new WorkspaceSchema(schemaName);
+  public WorkspaceSchema createSchema(List<String> parentSchemaPath, UserSession session) {
+    return new WorkspaceSchema(parentSchemaPath, schemaName, isMutable, session);
   }
 
   @Override
@@ -105,21 +111,32 @@ public class WorkspaceSchemaFactory implements ExpandingConcurrentMap.MapValueFa
   public class WorkspaceSchema extends AbstractSchema {
 
     private ExpandingConcurrentMap<String, DrillTable> tables = new ExpandingConcurrentMap<String, DrillTable>(WorkspaceSchemaFactory.this);
-    
-    public WorkspaceSchema(String name) {
-      super(name);
+    private boolean isMutable;
+    private UserSession session;
+
+    public WorkspaceSchema(List<String> parentSchemaPath, String name, boolean isMutable, UserSession session) {
+      super(parentSchemaPath, name);
+      this.isMutable = isMutable;
+      this.session = session;
     }
 
     @Override
     public Set<String> getTableNames() {
-      return tables.keySet();
+      return Sets.union(tables.keySet(), session.getViewStore().getViews(Joiner.on(".").join(getSchemaPath())).keySet());
     }
 
     @Override
-    public DrillTable getTable(String name) {
-      return tables.get(name);
+    public Table getTable(String name) {
+      if (tables.containsKey(name))
+        return tables.get(name);
+
+      return session.getViewStore().getViews(Joiner.on(".").join(getSchemaPath())).get(name);
     }
 
+    @Override
+    public boolean isMutable() {
+      return isMutable;
+    }
   }
 
 }

@@ -23,12 +23,14 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.collect.ImmutableList;
 import net.hydromatic.optiq.Schema;
 import net.hydromatic.optiq.SchemaPlus;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.rpc.user.DrillUser;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.SchemaFactory;
 import org.apache.drill.exec.store.hive.HiveReadEntry;
@@ -171,7 +173,7 @@ public class HiveSchemaFactory implements SchemaFactory {
   }
 
   @Override
-  public void registerSchemas(DrillUser user, SchemaPlus parent) {
+  public void registerSchemas(UserSession session, SchemaPlus parent) {
     HiveSchema schema = new HiveSchema(schemaName);
     SchemaPlus hPlus = parent.add(schemaName, schema);
     schema.setHolder(hPlus);
@@ -182,7 +184,7 @@ public class HiveSchemaFactory implements SchemaFactory {
     private HiveDatabaseSchema defaultSchema;
 
     public HiveSchema(String name) {
-      super(name);
+      super(ImmutableList.<String>of(), name);
       getSubSchema("default");
     }
 
@@ -223,7 +225,7 @@ public class HiveSchemaFactory implements SchemaFactory {
     }
 
     @Override
-    public DrillTable getTable(String name) {
+    public net.hydromatic.optiq.Table getTable(String name) {
       if(defaultSchema == null){
         return super.getTable(name);
       }

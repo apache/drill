@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.collect.ImmutableList;
 import net.hydromatic.optiq.SchemaPlus;
 
 import org.apache.drill.common.JSONOptions;
@@ -30,7 +31,7 @@ import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.planner.logical.DrillTable;
-import org.apache.drill.exec.rpc.user.DrillUser;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.DrillConfigIterator;
 import org.apache.drill.exec.server.options.OptionValue;
@@ -60,7 +61,7 @@ public class SystemTablePlugin extends AbstractStoragePlugin{
   }
 
   @Override
-  public void registerSchemas(DrillUser user, SchemaPlus parent) {
+  public void registerSchemas(UserSession session, SchemaPlus parent) {
     parent.add(schema.getName(), schema);
   }
 
@@ -89,7 +90,7 @@ public class SystemTablePlugin extends AbstractStoragePlugin{
     private Set<String> tableNames;
 
     public SystemSchema() {
-      super("sys");
+      super(ImmutableList.<String>of(), "sys");
       Set<String> names = Sets.newHashSet();
       for(SystemTable t : SystemTable.values()){
         names.add(t.getTableName());

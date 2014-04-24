@@ -22,13 +22,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.ImmutableList;
 import net.hydromatic.optiq.SchemaPlus;
 
+import net.hydromatic.optiq.Table;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.rpc.user.DrillUser;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
@@ -66,7 +69,7 @@ public class InfoSchemaStoragePlugin extends AbstractStoragePlugin{
   }
 
   @Override
-  public void registerSchemas(DrillUser user, SchemaPlus parent) {
+  public void registerSchemas(UserSession session, SchemaPlus parent) {
     ISchema s = new ISchema(parent, this);
     parent.add(s.getName(), s);
   }
@@ -74,7 +77,7 @@ public class InfoSchemaStoragePlugin extends AbstractStoragePlugin{
   private class ISchema extends AbstractSchema{
     private Map<String, InfoSchemaDrillTable> tables;
     public ISchema(SchemaPlus parent, InfoSchemaStoragePlugin plugin){
-      super("INFORMATION_SCHEMA");
+      super(ImmutableList.<String>of(), "INFORMATION_SCHEMA");
       Map<String, InfoSchemaDrillTable> tbls = Maps.newHashMap();
       for(SelectedTable tbl : SelectedTable.values()){
         tbls.put(tbl.name(), new InfoSchemaDrillTable(plugin, "INFORMATION_SCHEMA", tbl, config));
@@ -83,7 +86,7 @@ public class InfoSchemaStoragePlugin extends AbstractStoragePlugin{
     }
 
     @Override
-    public DrillTable getTable(String name) {
+    public Table getTable(String name) {
       return tables.get(name);
     }
 

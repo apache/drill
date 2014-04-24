@@ -27,6 +27,7 @@ import org.apache.drill.common.JSONOptions;
 import org.apache.drill.exec.rpc.user.DrillUser;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
@@ -67,8 +68,8 @@ public class HBaseStoragePlugin extends AbstractStoragePlugin {
   }
 
   @Override
-  public void registerSchemas(DrillUser user, SchemaPlus parent) {
-    schemaFactory.registerSchemas(user, parent);
+  public void registerSchemas(UserSession session, SchemaPlus parent) {
+    schemaFactory.registerSchemas(session, parent);
   }
 
   @Override

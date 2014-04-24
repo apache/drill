@@ -25,8 +25,8 @@ import net.hydromatic.optiq.SchemaPlus;
 
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.rpc.user.DrillUser;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.hive.schema.HiveSchemaFactory;
@@ -74,8 +74,8 @@ public class HiveStoragePlugin extends AbstractStoragePlugin {
   }
 
   @Override
-  public void registerSchemas(DrillUser user, SchemaPlus parent) {
-    schemaFactory.registerSchemas(user, parent);
+  public void registerSchemas(UserSession session, SchemaPlus parent) {
+    schemaFactory.registerSchemas(session, parent);
   }
 
 

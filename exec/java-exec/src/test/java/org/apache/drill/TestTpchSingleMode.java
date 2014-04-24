@@ -111,7 +111,7 @@ public class TestTpchSingleMode extends BaseTestQuery{
   }
 
   @Test
-  @Ignore // requires views.
+  @Ignore // Fails with CannotPlanException
   public void tpch15() throws Exception{
     testSingleMode("queries/tpch/15.sql");
   }

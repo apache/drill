@@ -83,16 +83,16 @@ public class FileSystemPlugin extends AbstractStoragePlugin{
 
       List<WorkspaceSchemaFactory> factories = null;
       if(config.workspaces == null || config.workspaces.isEmpty()){
-        factories = Collections.singletonList(new WorkspaceSchemaFactory(this, "default", name, fs, "/", matchers));
+        factories = Collections.singletonList(new WorkspaceSchemaFactory(this, "default", name, fs, "/", matchers, true/*TODO*/));
       }else{
         factories = Lists.newArrayList();
         for(Map.Entry<String, String> space : config.workspaces.entrySet()){
-          factories.add(new WorkspaceSchemaFactory(this, space.getKey(), name, fs, space.getValue(), matchers));
+          factories.add(new WorkspaceSchemaFactory(this, space.getKey(), name, fs, space.getValue(), matchers, true/*TODO*/));
         }
 
         // if the "default" workspace is not given add one.
         if (!config.workspaces.containsKey("default")) {
-          factories.add(new WorkspaceSchemaFactory(this, "default", name, fs, "/", matchers));
+          factories.add(new WorkspaceSchemaFactory(this, "default", name, fs, "/", matchers, true/*TODO*/));
         }
       }
       this.schemaFactory = new FileSystemSchemaFactory(name, factories);
@@ -130,8 +130,8 @@ public class FileSystemPlugin extends AbstractStoragePlugin{
   }
 
   @Override
-  public void registerSchemas(DrillUser user, SchemaPlus parent) {
-    schemaFactory.registerSchemas(user, parent);
+  public void registerSchemas(UserSession session, SchemaPlus parent) {
+    schemaFactory.registerSchemas(session, parent);
   }
 
   public FormatPlugin getFormatPlugin(String name){

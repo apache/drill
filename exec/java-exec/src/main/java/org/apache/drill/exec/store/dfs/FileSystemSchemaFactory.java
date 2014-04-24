@@ -22,12 +22,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.ImmutableList;
 import net.hydromatic.optiq.Function;
 import net.hydromatic.optiq.Schema;
 import net.hydromatic.optiq.SchemaPlus;
 
+import net.hydromatic.optiq.Table;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.rpc.user.DrillUser;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.SchemaFactory;
 import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory.WorkspaceSchema;
@@ -52,8 +55,8 @@ public class FileSystemSchemaFactory implements SchemaFactory{
   }
 
   @Override
-  public void registerSchemas(DrillUser user, SchemaPlus parent) {
-    FileSystemSchema schema = new FileSystemSchema(schemaName);
+  public void registerSchemas(UserSession session, SchemaPlus parent) {
+    FileSystemSchema schema = new FileSystemSchema(schemaName, session);
     SchemaPlus plusOfThis = parent.add(schema.getName(), schema);
     schema.setPlus(plusOfThis);
   }
@@ -63,10 +66,10 @@ public class FileSystemSchemaFactory implements SchemaFactory{
     private final WorkspaceSchema defaultSchema;
     private final Map<String, WorkspaceSchema> schemaMap = Maps.newHashMap();
 
-    public FileSystemSchema(String name) {
-      super(name);
+    public FileSystemSchema(String name, UserSession session) {
+      super(ImmutableList.<String>of(), name);
       for(WorkspaceSchemaFactory f :  factories){
-        WorkspaceSchema s = f.createSchema();
+        WorkspaceSchema s = f.createSchema(getSchemaPath(), session);
         schemaMap.put(s.getName(), s);
       }
 
@@ -80,7 +83,7 @@ public class FileSystemSchemaFactory implements SchemaFactory{
     }
 
     @Override
-    public DrillTable getTable(String name) {
+    public Table getTable(String name) {
       return defaultSchema.getTable(name);
     }
 
@@ -109,6 +112,10 @@ public class FileSystemSchemaFactory implements SchemaFactory{
       return defaultSchema.getTableNames();
     }
 
+    @Override
+    public boolean isMutable() {
+      return defaultSchema.isMutable();
+    }
   }
 
 }

@@ -22,6 +22,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.concurrent.TimeUnit;
 
@@ -38,6 +39,9 @@ import org.junit.rules.TestRule;
 
 import com.google.common.base.Function;
 import com.google.common.base.Stopwatch;
+
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class TestJdbcQuery extends JdbcTest{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestJdbcQuery.class);
@@ -482,13 +486,256 @@ public class TestJdbcQuery extends JdbcTest{
           ResultSet resultSet = statement.executeQuery("USE hive.db1");
           String result = JdbcAssert.toString(resultSet).trim();
           String expected = "ok=true; summary=Default schema changed to 'hive.db1'";
-          Assert.assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected), expected.equals(result));
+          assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected), expected.equals(result));
 
 
           resultSet = statement.executeQuery("SELECT * FROM kv_db1 LIMIT 2");
           result = JdbcAssert.toString(resultSet).trim();
           expected = "key=1; value= key_1\nkey=2; value= key_2";
-          Assert.assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected), expected.equals(result));
+          assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected), expected.equals(result));
+          statement.close();
+          return null;
+        } catch (Exception e) {
+          throw new RuntimeException(e);
+        }
+      }
+    });
+  }
+
+  /** Helper test method for view tests */
+  private void testViewHelper(final String viewCreate, final String viewName,
+                              final String viewQuery, final String queryResult) throws Exception{
+    JdbcAssert.withNoDefaultSchema().withConnection(new Function<Connection, Void>() {
+      public Void apply(Connection connection) {
+        try {
+          Statement statement = connection.createStatement();
+
+          // change default schema
+          statement.executeQuery("USE dfs.`default`");
+
+          // create view
+          ResultSet resultSet = statement.executeQuery(viewCreate);
+          String result = JdbcAssert.toString(resultSet).trim();
+          String viewCreateResult = "ok=true; summary=View '" + viewName + "' created successfully in 'dfs.default' schema";
+          assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, viewCreateResult),
+              viewCreateResult.equals(result));
+
+          // query from view
+          resultSet = statement.executeQuery(viewQuery);
+          result = JdbcAssert.toString(resultSet).trim();
+          assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, queryResult),
+              queryResult.equals(result));
+
+          statement.close();
+          return null;
+        } catch (Exception e) {
+          throw new RuntimeException(e);
+        }
+      }
+    });
+  }
+
+  @Test
+  public void testView1() throws Exception{
+    testViewHelper(
+        "CREATE VIEW testview1 AS SELECT * FROM cp.`region.json`",
+        "testview1",
+        "SELECT * FROM testview1 LIMIT 1",
+        "region_id=0; sales_city=None; sales_state_province=None; sales_district=No District; " +
+            "sales_region=No Region; sales_country=No Country; sales_district_id=0");
+  }
+
+  @Test
+  public void testView2() throws Exception{
+    testViewHelper(
+        "CREATE VIEW testview2 AS SELECT region_id, sales_city FROM cp.`region.json`",
+        "testview2",
+        "SELECT * FROM testview2 LIMIT 2",
+        "region_id=0; sales_city=None\nregion_id=1; sales_city=San Francisco");
+  }
+
+  @Test
+  public void testView3() throws Exception{
+    testViewHelper(
+        "CREATE VIEW testview3(regionid, salescity) AS SELECT region_id, sales_city FROM cp.`region.json`",
+        "testview3",
+        "SELECT * FROM testview3 LIMIT 2",
+        "regionid=0; salescity=None\nregionid=1; salescity=San Francisco");
+  }
+
+  @Test
+  @Ignore // See DRILL-595 - can't project columns from inner query.
+  public void testView4() throws Exception{
+    testViewHelper(
+        "CREATE VIEW testview1 AS SELECT * FROM cp.`region.json`",
+        "testview1",
+        "SELECT region_id, sales_city FROM testview1 LIMIT 2",
+        "");
+  }
+
+  @Test
+  public void testView5() throws Exception{
+    testViewHelper(
+        "CREATE VIEW testview2 AS SELECT region_id, sales_city FROM cp.`region.json`",
+        "testview2",
+        "SELECT region_id, sales_city FROM testview2 LIMIT 2",
+        "region_id=0; sales_city=None\nregion_id=1; sales_city=San Francisco");
+  }
+
+  @Test
+  public void testView6() throws Exception{
+    testViewHelper(
+        "CREATE VIEW testview2 AS SELECT region_id, sales_city FROM cp.`region.json`",
+        "testview2",
+        "SELECT sales_city FROM testview2 LIMIT 2",
+        "sales_city=None\nsales_city=San Francisco");
+  }
+
+  @Test
+  public void testView7() throws Exception{
+    testViewHelper(
+        "CREATE VIEW testview3(regionid, salescity) AS SELECT region_id, sales_city FROM cp.`region.json` LIMIT 2",
+        "testview3",
+        "SELECT regionid, salescity FROM testview3",
+        "regionid=0; salescity=None\nregionid=1; salescity=San Francisco");
+  }
+
+  @Test
+  public void testView8() throws Exception{
+    testViewHelper(
+        "CREATE VIEW testview3(regionid, salescity) AS " +
+            "SELECT region_id, sales_city FROM cp.`region.json` ORDER BY region_id DESC",
+        "testview3",
+        "SELECT regionid FROM testview3 LIMIT 2",
+        "regionid=109\nregionid=108");
+  }
+
+  @Test
+  @Ignore // Query on testview2 fails with CannotPlanException. Seems to be an issue with Union.
+  public void testView9() throws Exception{
+    testViewHelper(
+        "CREATE VIEW testview2 AS " +
+            "SELECT region_id FROM cp.`region.json` " +
+              "UNION " +
+            "SELECT employee_id FROM cp.`employee.json`",
+        "testview2",
+        "SELECT sales_city FROM testview2 LIMIT 2",
+        "sales_city=None\nsales_city=San Francisco");
+  }
+
+  @Test
+  public void testViewOnHiveTable1() throws Exception{
+    testViewHelper(
+        "CREATE VIEW hiveview AS SELECT * FROM hive.kv",
+        "hiveview",
+        "SELECT * FROM hiveview LIMIT 1",
+        "key=1; value= key_1");
+  }
+
+  @Test
+  public void testViewOnHiveTable2() throws Exception{
+    testViewHelper(
+        "CREATE VIEW hiveview AS SELECT * FROM hive.kv",
+        "hiveview",
+        "SELECT key, `value` FROM hiveview LIMIT 1",
+        "key=1; value= key_1");
+  }
+
+  @Test
+  public void testViewOnHiveTable3() throws Exception{
+    testViewHelper(
+        "CREATE VIEW hiveview AS SELECT * FROM hive.kv",
+        "hiveview",
+        "SELECT `value` FROM hiveview LIMIT 1",
+        "value= key_1");
+  }
+
+  @Test
+  public void testViewOnHiveTable4() throws Exception{
+    testViewHelper(
+        "CREATE VIEW hiveview AS SELECT key, `value` FROM hive.kv",
+        "hiveview",
+        "SELECT * FROM hiveview LIMIT 1",
+        "key=1; value= key_1");
+  }
+
+  @Test
+  public void testViewOnHiveTable5() throws Exception{
+    testViewHelper(
+        "CREATE VIEW hiveview AS SELECT key, `value` FROM hive.kv",
+        "hiveview",
+        "SELECT key, `value` FROM hiveview LIMIT 1",
+        "key=1; value= key_1");
+  }
+
+  @Test
+  public void testDropView() throws Exception{
+    JdbcAssert.withNoDefaultSchema().withConnection(new Function<Connection, Void>() {
+      public Void apply(Connection connection) {
+        try {
+          Statement statement = connection.createStatement();
+
+          // change default schema
+          statement.executeQuery("USE dfs.`default`");
+
+          // create view
+          statement.executeQuery(
+              "CREATE VIEW testview3(regionid) AS SELECT region_id FROM cp.`region.json`");
+
+          // query from view
+          ResultSet resultSet = statement.executeQuery("SELECT regionid FROM testview3 LIMIT 1");
+          String result = JdbcAssert.toString(resultSet).trim();
+          String expected = "regionid=0";
+          assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected),
+              expected.equals(result));
+
+          resultSet = statement.executeQuery("DROP VIEW testview3");
+          result = JdbcAssert.toString(resultSet).trim();
+          expected = "ok=true; summary=View 'testview3' deleted successfully from 'dfs.default' schema";
+          assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected),
+              expected.equals(result));
+
+          statement.close();
+          return null;
+        } catch (Exception e) {
+          throw new RuntimeException(e);
+        }
+      }
+    });
+  }
+
+  @Test
+  public void testShowDescribeTablesWithView() throws Exception{
+    JdbcAssert.withNoDefaultSchema().withConnection(new Function<Connection, Void>() {
+      public Void apply(Connection connection) {
+        try {
+          Statement statement = connection.createStatement();
+
+          // change default schema
+          statement.executeQuery("USE dfs.`default`");
+
+          // create view
+          statement.executeQuery(
+              "CREATE VIEW testview3 AS SELECT * FROM hive.kv");
+
+          // show tables on view
+          ResultSet resultSet = statement.executeQuery("SHOW TABLES like 'testview3'");
+          String result = JdbcAssert.toString(resultSet).trim();
+          String expected =
+              "TABLE_SCHEMA=dfs.default; TABLE_NAME=testview3\n" +
+              "TABLE_SCHEMA=dfs; TABLE_NAME=testview3";
+          assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected),
+              expected.equals(result));
+
+          // describe a view
+          resultSet = statement.executeQuery("DESCRIBE dfs.`default`.testview3");
+          result = JdbcAssert.toString(resultSet).trim();
+          expected =
+              "COLUMN_NAME=key; DATA_TYPE=INTEGER; IS_NULLABLE=NO\n" +
+              "COLUMN_NAME=value; DATA_TYPE=VARCHAR; IS_NULLABLE=NO";
+          assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected),
+              expected.equals(result));
+
           statement.close();
           return null;
         } catch (Exception e) {

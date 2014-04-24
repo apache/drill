@@ -123,9 +123,15 @@ public class FragmentContext implements Closeable {
   }
 
   public SchemaPlus getRootSchema(){
-    SchemaPlus root = Frameworks.createRootSchema();
-    context.getStorage().getSchemaFactory().registerSchemas(null, root);
-    return root;
+    if (connection == null) {
+      fail(new UnsupportedOperationException("Schema tree can only be created in root fragment. " +
+          "This is a non-root fragment."));
+      return null;
+    } else {
+      SchemaPlus root = Frameworks.createRootSchema();
+      context.getStorage().getSchemaFactory().registerSchemas(connection.getSession(), root);
+      return root;
+    }
   }
 
   /**

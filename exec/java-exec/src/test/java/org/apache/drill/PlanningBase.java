@@ -94,7 +94,7 @@ public class PlanningBase extends ExecTest{
     registry.init();
     final FunctionImplementationRegistry functionRegistry = new FunctionImplementationRegistry(config);
     final SchemaPlus root = Frameworks.createRootSchema();
-    registry.getSchemaFactory().registerSchemas(null, root);
+    registry.getSchemaFactory().registerSchemas(new UserSession(null, null, null), root);
 
 
 

@@ -34,17 +34,10 @@ import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.logical.DrillRuleSets;
 import org.apache.drill.exec.planner.physical.DrillDistributionTraitDef;
 import org.apache.drill.exec.planner.sql.handlers.DefaultSqlHandler;
-import org.apache.drill.exec.planner.sql.handlers.DescribeTableHandler;
 import org.apache.drill.exec.planner.sql.handlers.ExplainHandler;
 import org.apache.drill.exec.planner.sql.handlers.SetOptionHandler;
-import org.apache.drill.exec.planner.sql.handlers.ShowSchemasHandler;
-import org.apache.drill.exec.planner.sql.handlers.ShowTablesHandler;
 import org.apache.drill.exec.planner.sql.handlers.SqlHandler;
-import org.apache.drill.exec.planner.sql.handlers.UseSchemaHandler;
-import org.apache.drill.exec.planner.sql.parser.SqlDescribeTable;
-import org.apache.drill.exec.planner.sql.parser.SqlShowSchemas;
-import org.apache.drill.exec.planner.sql.parser.SqlShowTables;
-import org.apache.drill.exec.planner.sql.parser.SqlUseSchema;
+import org.apache.drill.exec.planner.sql.parser.DrillSqlCall;
 import org.apache.drill.exec.planner.sql.parser.impl.DrillParserImpl;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.eigenbase.rel.RelCollationTraitDef;
@@ -113,10 +106,10 @@ public class DrillSqlWorker {
       handler = new SetOptionHandler(context);
       break;
     case OTHER:
-      if (sqlNode instanceof SqlShowTables){ handler = new ShowTablesHandler(planner, context); break; }
-      else if (sqlNode instanceof SqlShowSchemas){ handler = new ShowSchemasHandler(planner, context); break; }
-      else if (sqlNode instanceof SqlDescribeTable){ handler = new DescribeTableHandler(planner, context); break; }
-      else if (sqlNode instanceof SqlUseSchema){ handler = new UseSchemaHandler(context); break; }
+      if (sqlNode instanceof DrillSqlCall) {
+        handler = ((DrillSqlCall)sqlNode).getSqlHandler(planner, context);
+        break;
+      }
       // fallthrough
     default:
       handler = new DefaultSqlHandler(planner, context);

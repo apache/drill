@@ -19,14 +19,17 @@ package org.apache.drill.exec.store.hbase;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
+import com.google.common.collect.ImmutableList;
 import net.hydromatic.optiq.Schema;
 import net.hydromatic.optiq.SchemaPlus;
 
+import net.hydromatic.optiq.Table;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.logical.DynamicDrillTable;
-import org.apache.drill.exec.rpc.user.DrillUser;
+import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.SchemaFactory;
 import org.apache.hadoop.hbase.HTableDescriptor;
@@ -46,7 +49,7 @@ public class HBaseSchemaFactory implements SchemaFactory {
   }
 
   @Override
-  public void registerSchemas(DrillUser user, SchemaPlus parent) {
+  public void registerSchemas(UserSession session, SchemaPlus parent) {
     HBaseSchema schema = new HBaseSchema(schemaName);
     SchemaPlus hPlus = parent.add(schemaName, schema);
     schema.setHolder(hPlus);
@@ -55,7 +58,7 @@ public class HBaseSchemaFactory implements SchemaFactory {
   class HBaseSchema extends AbstractSchema {
 
     public HBaseSchema(String name) {
-      super(name);
+      super(ImmutableList.<String>of(), name);
     }
 
     public void setHolder(SchemaPlus plusOfThis) {
@@ -72,7 +75,7 @@ public class HBaseSchemaFactory implements SchemaFactory {
     }
 
     @Override
-    public DrillTable getTable(String name) {
+    public Table getTable(String name) {
       Object selection = new HBaseScanSpec(name);
       return new DynamicDrillTable(plugin, schemaName, selection, plugin.getConfig());
     }

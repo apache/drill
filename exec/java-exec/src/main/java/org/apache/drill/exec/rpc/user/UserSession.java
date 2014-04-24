@@ -41,11 +41,14 @@ public class UserSession {
   private UserCredentials credentials;
   private Map<String, String> properties;
   private OptionManager options;
+  private ViewStore viewStore;
 
   public UserSession(OptionManager systemOptions, UserCredentials credentials, UserProperties properties) throws IOException{
     this.credentials = credentials;
     this.options = new SessionOptionManager(systemOptions);
     this.properties = Maps.newHashMap();
+    this.viewStore = new ViewStore();
+
     if (properties == null) return;
     for (int i=0; i<properties.getPropertiesCount(); i++) {
       Property prop = properties.getProperties(i);
@@ -60,6 +63,8 @@ public class UserSession {
   public DrillUser getUser(){
     return user;
   }
+
+  public ViewStore getViewStore() { return viewStore; }
 
   /**
    * Update the schema path for the session.
