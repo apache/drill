@@ -41,12 +41,7 @@ import com.google.common.io.Files;
 public abstract class PopUnitTestBase  extends ExecTest{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PopUnitTestBase.class);
 
-  // Determine if we are in Eclipse Debug mode.
-  static final boolean IS_DEBUG = java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments().toString().indexOf("-agentlib:jdwp") > 0;
   protected static DrillConfig CONFIG;
-
-  // Set a timeout unless we're debugging.
-  @Rule public TestRule globalTimeout = IS_DEBUG ? new TestName() : new Timeout(500000);
 
   @BeforeClass
   public static void setup() {

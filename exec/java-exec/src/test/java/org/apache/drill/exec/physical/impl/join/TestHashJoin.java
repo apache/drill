@@ -28,6 +28,7 @@ import mockit.NonStrictExpectations;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.TopLevelAllocator;
@@ -47,12 +48,14 @@ import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.vector.ValueVector;
 import org.junit.AfterClass;
+import org.junit.Rule;
 import org.junit.Test;
 
 import com.beust.jcommander.internal.Lists;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.codahale.metrics.MetricRegistry;
+
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -75,6 +78,9 @@ import org.apache.drill.exec.vector.VarCharVector;
 import org.apache.drill.exec.vector.IntVector;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.rules.TestName;
+import org.junit.rules.TestRule;
+import org.junit.rules.Timeout;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
@@ -82,6 +88,8 @@ import com.google.common.io.Files;
 
 public class TestHashJoin extends PopUnitTestBase{
     static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestMergeJoin.class);
+
+    @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(100000);
 
     DrillConfig c = DrillConfig.create();
 
