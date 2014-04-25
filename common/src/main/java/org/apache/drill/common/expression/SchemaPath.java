@@ -27,6 +27,7 @@ import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.RecognitionException;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.expression.PathSegment.ArraySegment;
 import org.apache.drill.common.expression.PathSegment.NameSegment;
 import org.apache.drill.common.expression.parser.ExprLexer;
 import org.apache.drill.common.expression.parser.ExprParser;
@@ -35,14 +36,10 @@ import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.Types;
 
-import com.fasterxml.jackson.core.JsonGenerationException;
-import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.google.common.collect.Iterators;
 
 public class SchemaPath extends LogicalExpressionBase {
@@ -98,8 +95,13 @@ public class SchemaPath extends LogicalExpressionBase {
   }
 
   public SchemaPath getChild(String childPath){
-    rootSegment.cloneWithNewChild(new NameSegment(childPath));
-    return new SchemaPath(rootSegment);
+    NameSegment newRoot = rootSegment.cloneWithNewChild(new NameSegment(childPath));
+    return new SchemaPath(newRoot);
+  }
+
+  public SchemaPath getChild(int index){
+    NameSegment newRoot = rootSegment.cloneWithNewChild(new ArraySegment(index));
+    return new SchemaPath(newRoot);
   }
 
   public NameSegment getRootSegment() {

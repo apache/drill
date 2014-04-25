@@ -50,6 +50,7 @@ import org.eigenbase.rex.RexRangeRef;
 import org.eigenbase.rex.RexVisitorImpl;
 import org.eigenbase.sql.SqlSyntax;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
+import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.util.NlsString;
 
 import com.google.common.collect.Lists;
@@ -59,7 +60,7 @@ import com.google.common.collect.Lists;
  */
 public class DrillOptiq {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillOptiq.class);
-  
+
   /**
    * Converts a tree of {@link RexNode} operators into a scalar expression in Drill syntax.
    */
@@ -71,7 +72,7 @@ public class DrillOptiq {
   private static class RexToDrill extends RexVisitorImpl<LogicalExpression> {
     private final RelNode input;
     private final DrillParseContext context;
-    
+
     RexToDrill(DrillParseContext context, RelNode input) {
       super(true);
       this.context = context;
@@ -84,7 +85,7 @@ public class DrillOptiq {
       final RelDataTypeField field = input.getRowType().getFieldList().get(index);
       return new FieldReference(field.getName());
     }
-    
+
     @Override
     public LogicalExpression visitCall(RexCall call) {
       logger.debug("RexCall {}, {}", call);
@@ -153,13 +154,21 @@ public class DrillOptiq {
           }
           return elseExpression;
         }
-        
+
         if (call.getOperator() == SqlStdOperatorTable.ITEM) {
           SchemaPath left = (SchemaPath) call.getOperands().get(0).accept(this);
           final RexLiteral literal = (RexLiteral) call.getOperands().get(1);
-          return left.getChild(literal.getValue2().toString());
+          switch(literal.getTypeName()){
+          case DECIMAL:
+          case INTEGER:
+            return left.getChild(((BigDecimal)literal.getValue()).intValue());
+          case CHAR:
+            return left.getChild(literal.getValue2().toString());
+          default:
+            // fall through
+          }
         }
-        
+
         // fall through
       default:
         throw new AssertionError("todo: implement syntax " + syntax + "(" + call + ")");
@@ -204,13 +213,13 @@ public class DrillOptiq {
     private LogicalExpression getDrillCastFunctionFromOptiq(RexCall call){
       LogicalExpression arg = call.getOperands().get(0).accept(this);
       MajorType castType = null;
-      
+
       switch(call.getType().getSqlTypeName().getName()){
       case "VARCHAR":
       case "CHAR":
         castType = Types.required(MinorType.VARCHAR).toBuilder().setWidth(call.getType().getPrecision()).build();
         break;
-      
+
       case "INTEGER": castType = Types.required(MinorType.INT); break;
       case "FLOAT": castType = Types.required(MinorType.FLOAT4); break;
       case "DOUBLE": castType = Types.required(MinorType.FLOAT8); break;
@@ -236,12 +245,12 @@ public class DrillOptiq {
               throw new UnsupportedOperationException("Only Decimal types with precision range 0 - 38 is supported");
           }
           break;
-      
+
         case "INTERVAL_YEAR_MONTH": castType = Types.required(MinorType.INTERVALYEAR); break;
         case "INTERVAL_DAY_TIME": castType = Types.required(MinorType.INTERVALDAY); break;
         default: castType = Types.required(MinorType.valueOf(call.getType().getSqlTypeName().getName()));
       }
-      
+
       return FunctionCallFactory.createCast(castType, ExpressionPosition.UNKNOWN, arg);
 
     }
