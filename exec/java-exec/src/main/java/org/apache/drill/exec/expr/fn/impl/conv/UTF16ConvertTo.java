@@ -24,7 +24,6 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.Var16CharHolder;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.record.RecordBatch;
@@ -33,7 +32,6 @@ import org.apache.drill.exec.record.RecordBatch;
 public class UTF16ConvertTo implements DrillSimpleFunc {
 
   @Param Var16CharHolder in;
-  @Param BigIntHolder length;
   @Output VarBinaryHolder out;
 
   @Override
@@ -43,10 +41,6 @@ public class UTF16ConvertTo implements DrillSimpleFunc {
   public void eval() {
     out.buffer = in.buffer;
     out.start =  in.start;
-    if (in.end - in.start <= length.value) {
-      out.end = in.end;
-    } else {
-      out.end = out.start + (int) length.value;
-    }
+    out.end = in.end;
   }
 }

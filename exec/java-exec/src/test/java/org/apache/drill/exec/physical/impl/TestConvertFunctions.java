@@ -348,6 +348,13 @@ public class TestConvertFunctions extends PopUnitTestBase {
   }
 
   @Test
+  public void testUTF8(@Injectable final DrillbitContext bitContext,
+      @Injectable UserServer.UserClientConnection connection) throws Throwable {
+    runTest(bitContext, connection, "convert_from(binary_string('apache_drill'), 'UTF8')", "apache_drill");
+    runTest(bitContext, connection, "convert_to('apache_drill', 'UTF8')", new byte[] {'a', 'p', 'a', 'c', 'h', 'e', '_', 'd', 'r', 'i', 'l', 'l'});
+  }
+
+  @Test
   public void testBigIntVarCharReturnTripConvertLogical() throws Exception {
     RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
