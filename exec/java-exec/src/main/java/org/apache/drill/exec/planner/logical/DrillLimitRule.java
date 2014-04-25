@@ -31,7 +31,7 @@ public class DrillLimitRule extends RelOptRule {
   public static DrillLimitRule INSTANCE = new DrillLimitRule();
 
   private DrillLimitRule() {
-    super(RelOptHelper.some(SortRel.class, Convention.NONE, RelOptHelper.any(RelNode.class)), "DrillLimitRule");
+    super(RelOptHelper.any(SortRel.class, Convention.NONE), "DrillLimitRule");
   }
 
   @Override

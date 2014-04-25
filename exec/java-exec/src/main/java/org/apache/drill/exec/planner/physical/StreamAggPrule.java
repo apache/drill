@@ -45,13 +45,13 @@ public class StreamAggPrule extends RelOptRule {
   protected static final Logger tracer = EigenbaseTrace.getPlannerTracer();
 
   private StreamAggPrule() {
-    super(RelOptHelper.some(DrillAggregateRel.class, RelOptHelper.any(DrillRel.class)), "Prel.StreamAggPrule");
+    super(RelOptHelper.any(DrillAggregateRel.class), "Prel.StreamAggPrule");
   }
 
   @Override
   public void onMatch(RelOptRuleCall call) {
     final DrillAggregateRel aggregate = (DrillAggregateRel) call.rel(0);
-    final RelNode input = call.rel(1);
+    final RelNode input = aggregate.getChild();
     RelCollation collation = getCollation(aggregate);
 
     DrillDistributionTrait toDist = null;

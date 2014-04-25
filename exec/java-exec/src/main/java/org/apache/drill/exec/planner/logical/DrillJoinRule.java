@@ -43,15 +43,15 @@ public class DrillJoinRule extends RelOptRule {
 
   private DrillJoinRule() {
     super(
-        RelOptHelper.some(JoinRel.class, Convention.NONE, RelOptHelper.any(RelNode.class), RelOptHelper.any(RelNode.class)),
+        RelOptHelper.any(JoinRel.class, Convention.NONE),
         "DrillJoinRule");
   }
 
   @Override
   public void onMatch(RelOptRuleCall call) {
     final JoinRel join = (JoinRel) call.rel(0);
-    final RelNode left = call.rel(1);
-    final RelNode right = call.rel(2);
+    final RelNode left = join.getLeft();
+    final RelNode right = join.getRight();
     final RelTraitSet traits = join.getTraitSet().plus(DrillRel.DRILL_LOGICAL);
 
     final RelNode convertedLeft = convert(left, traits);

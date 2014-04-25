@@ -49,7 +49,7 @@ public class MergeJoinPrule extends RelOptRule {
 
   private MergeJoinPrule() {
     super(
-        RelOptHelper.some(DrillJoinRel.class, RelOptHelper.any(RelNode.class), RelOptHelper.any(RelNode.class)),
+        RelOptHelper.any(DrillJoinRel.class),
         "Prel.MergeJoinPrule");
   }
 
@@ -62,8 +62,8 @@ public class MergeJoinPrule extends RelOptRule {
         throw new InvalidRelException("MergeJoinPrel does not support cartesian product join");
       }
   
-      final RelNode left = call.rel(1);
-      final RelNode right = call.rel(2);
+      final RelNode left = join.getLeft();
+      final RelNode right = join.getRight();
   
       RelCollation collationLeft = getCollation(join.getLeftKeys());
       RelCollation collationRight = getCollation(join.getRightKeys());

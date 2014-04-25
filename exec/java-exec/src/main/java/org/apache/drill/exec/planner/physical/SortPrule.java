@@ -47,13 +47,13 @@ public class SortPrule extends RelOptRule{
   public static final RelOptRule INSTANCE = new SortPrule();
 
   private SortPrule() {
-    super(RelOptHelper.some(DrillSortRel.class, DrillRel.DRILL_LOGICAL, RelOptHelper.any(RelNode.class)), "Prel.SortPrule");
+    super(RelOptHelper.any(DrillSortRel.class, DrillRel.DRILL_LOGICAL), "Prel.SortPrule");
   }
 
   @Override
   public void onMatch(RelOptRuleCall call) {
     final DrillSortRel sort = (DrillSortRel) call.rel(0);
-    final RelNode input = call.rel(1);
+    final RelNode input = sort.getChild();
     
     // Keep the collation in logical sort. Convert input into a RelNode with 1) this collation, 2) Physical, 3) hash distributed on 
 

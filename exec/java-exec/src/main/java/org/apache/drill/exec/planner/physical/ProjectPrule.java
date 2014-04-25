@@ -58,11 +58,11 @@ public class ProjectPrule extends RelOptRule {
   @Override
   public void onMatch(RelOptRuleCall call) {
     final DrillProjectRel project = (DrillProjectRel) call.rel(0);
-    final RelNode input = call.rel(1);
+    final RelNode input = project.getChild();
 
     RelTraitSet traits = input.getTraitSet().plus(Prel.DRILL_PHYSICAL);
     RelNode convertedInput = convert(input, traits);
-    
+        
     Map<Integer, Integer> inToOut = getProjectMap(project);
     
     if (convertedInput instanceof RelSubset) {

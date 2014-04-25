@@ -31,13 +31,13 @@ public class DrillFilterRule extends RelOptRule {
   public static final RelOptRule INSTANCE = new DrillFilterRule();
 
   private DrillFilterRule() {
-    super(RelOptHelper.some(FilterRel.class, Convention.NONE, RelOptHelper.any(RelNode.class)), "DrillFilterRule");
+    super(RelOptHelper.any(FilterRel.class, Convention.NONE), "DrillFilterRule");
   }
 
   @Override
   public void onMatch(RelOptRuleCall call) {
     final FilterRel filter = (FilterRel) call.rel(0);
-    final RelNode input = call.rel(1);
+    final RelNode input = filter.getChild();
     final RelTraitSet traits = filter.getTraitSet().plus(DrillRel.DRILL_LOGICAL);
     final RelNode convertedInput = convert(input, traits);
     call.transformTo(new DrillFilterRel(filter.getCluster(), traits, convertedInput, filter.getCondition()));

@@ -28,7 +28,7 @@ public class DrillSortRule extends RelOptRule {
   public static final RelOptRule INSTANCE = new DrillSortRule();
 
   private DrillSortRule() {
-    super(RelOptHelper.some(SortRel.class, Convention.NONE, RelOptHelper.any(RelNode.class)), "DrillSortRule");
+    super(RelOptHelper.any(SortRel.class, Convention.NONE), "DrillSortRule");
   }
 
   @Override
@@ -42,7 +42,7 @@ public class DrillSortRule extends RelOptRule {
 
     final SortRel sort = call.rel(0);
 
-    final RelNode input = call.rel(1);
+    final RelNode input = sort.getChild();
     final RelTraitSet traits = sort.getTraitSet().plus(DrillRel.DRILL_LOGICAL);
 
     final RelNode convertedInput = convert(input, input.getTraitSet().plus(DrillRel.DRILL_LOGICAL));

@@ -31,13 +31,13 @@ public class DrillProjectRule extends RelOptRule {
   public static final RelOptRule INSTANCE = new DrillProjectRule();
 
   private DrillProjectRule() {
-    super(RelOptHelper.some(ProjectRel.class, Convention.NONE, RelOptHelper.any(RelNode.class)), "DrillProjectRule");
+    super(RelOptHelper.any(ProjectRel.class, Convention.NONE), "DrillProjectRule");
   }
 
   @Override
   public void onMatch(RelOptRuleCall call) {
     final ProjectRel project = (ProjectRel) call.rel(0);
-    final RelNode input = call.rel(1);
+    final RelNode input = project.getChild();
     final RelTraitSet traits = project.getTraitSet().plus(DrillRel.DRILL_LOGICAL);
     final RelNode convertedInput = convert(input, traits);
     call.transformTo(new DrillProjectRel(project.getCluster(), traits, convertedInput, project.getProjects(), project

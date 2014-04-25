@@ -32,13 +32,13 @@ public class LimitPrule extends RelOptRule{
 
   
   public LimitPrule() {
-    super(RelOptHelper.some(DrillLimitRel.class, DrillRel.DRILL_LOGICAL, RelOptHelper.any(RelNode.class)), "Prel.LimitPrule");    
+    super(RelOptHelper.any(DrillLimitRel.class, DrillRel.DRILL_LOGICAL), "Prel.LimitPrule");    
   }
   
   @Override
   public void onMatch(RelOptRuleCall call) {
     final DrillLimitRel limit = (DrillLimitRel) call.rel(0);
-    final RelNode input = call.rel(1);
+    final RelNode input = limit.getChild();
     
     final RelTraitSet traits = input.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(DrillDistributionTrait.SINGLETON);
     final RelNode convertedInput = convert(input, traits);

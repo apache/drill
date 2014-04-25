@@ -39,7 +39,7 @@ public class FilterPrule extends RelOptRule {
   @Override
   public void onMatch(RelOptRuleCall call) {
     final DrillFilterRel  filter = (DrillFilterRel) call.rel(0);
-    final RelNode input = call.rel(1);
+    final RelNode input = filter.getChild();
 
     RelTraitSet traits = input.getTraitSet().plus(Prel.DRILL_PHYSICAL);
     RelNode convertedInput = convert(input, traits);
