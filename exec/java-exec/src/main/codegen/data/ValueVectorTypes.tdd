@@ -1,0 +1,154 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+# http:# www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+{
+  modes: [
+    {name: "Optional", prefix: "Nullable"},
+    {name: "Required", prefix: ""},
+    {name: "Repeated", prefix: "Repeated"}
+    ],
+  types: [
+    {
+      major: "Fixed",
+      width: 1,
+      javaType: "byte",
+      boxedType: "Byte",
+      minor: [
+        { class: "TinyInt", valueHolder: "IntHolder"},
+        { class: "UInt1", valueHolder: "UInt1Holder"}
+      ]
+    },
+    {
+      major: "Fixed",
+      width: 2,
+      javaType: "char",
+      boxedType: "Character",
+      minor: [
+        { class: "UInt2", valueHolder: "UInt2Holder"}
+      ]
+    },    {
+      major: "Fixed",
+      width: 2,
+      javaType: "short",
+      boxedType: "Short",
+      minor: [
+        { class: "SmallInt", valueHolder: "Int2Holder"},
+      ]
+    },
+    {
+      major: "Fixed",
+      width: 4,
+      javaType: "int",
+      boxedType: "Integer",
+      minor: [
+        { class: "Int", valueHolder: "IntHolder" },
+        { class: "UInt4", valueHolder: "UInt4Holder" },
+        { class: "Float4", javaType: "float" },
+        { class: "Time", javaType: "int"},
+        { class: "IntervalYear", javaType: "int"}
+        { class: "Decimal9", maxPrecisionDigits: 9},
+      ]
+    },
+    {
+      major: "Fixed",
+      width: 8,
+      javaType: "long",
+      boxedType: "Long",
+      minor: [
+        { class: "BigInt" },
+        { class: "UInt8" },
+        { class: "Float8", javaType: "double" , boxedType: "Double"},
+        { class: "Date", javaType: "long"},
+        { class: "TimeStamp", javaType: "long"}
+        { class: "Decimal18", maxPrecisionDigits: 18},
+        <#--
+        { class: "Money", maxPrecisionDigits: 2, scale: 1, },
+        -->
+      ]
+    },
+    {
+      major: "Fixed",
+      width: 12,
+      javaType: "ByteBuf"
+      minor: [
+        { class: "TimeStampTZ", milliSecondsSize: 8 },
+        { class: "IntervalDay", milliSecondsOffset: 4 }
+      ]
+    },
+    {
+      major: "Fixed",
+      width: 16,
+      javaType: "ByteBuf"
+      minor: [
+        { class: "Interval", daysOffset: 4, milliSecondsOffset: 8}
+      ]
+    },
+    {
+      major: "Fixed",
+      width: 12,
+      javaType: "ByteBuf",
+      minor: [
+        <#--
+        { class: "TimeTZ" },
+        { class: "Interval" }
+        -->
+        { class: "Decimal28Dense", maxPrecisionDigits: 28, nDecimalDigits: 3}
+      ]
+    },
+    {
+      major: "Fixed",
+      width: 16,
+      javaType: "ByteBuf",
+      minor: [
+        { class: "Decimal38Dense", maxPrecisionDigits: 38, nDecimalDigits: 4}
+      ]
+    },
+    {
+      major: "Fixed",
+      width: 24,
+      javaType: "ByteBuf",
+      minor: [
+        { class: "Decimal38Sparse", maxPrecisionDigits: 38, nDecimalDigits: 6}
+      ]
+    },
+    {
+      major: "Fixed",
+      width: 20,
+      javaType: "ByteBuf",
+      minor: [
+        { class: "Decimal28Sparse", maxPrecisionDigits: 28, nDecimalDigits: 5}
+      ]
+    },
+    {
+      major: "VarLen",
+      width: 4,
+      javaType: "int",
+      minor: [
+        { class: "VarBinary" },
+        { class: "VarChar" }
+        { class: "Var16Char" }
+      ]
+    },
+    {
+      major: "Bit",
+      width: 1,
+      javaType: "int",
+      minor: [
+        { class: "Bit" }
+      ]
+    }
+  ]
+}

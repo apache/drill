@@ -1,1 +1,0 @@
-select Links.Backward, Links.Forward, Name.Url from table

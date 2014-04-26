@@ -1,4 +1,0 @@
-{
-      "op" : "constant",
-      "content" : [{ "c1" : 1, "c2" : "string 1" },  {"c1" : 2, "c2" : "string 2" }, { "c1" : 3, "c2" : "string 3" }]
-}

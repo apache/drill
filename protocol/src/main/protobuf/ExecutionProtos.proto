@@ -1,0 +1,15 @@
+package exec.bit;
+
+option java_package = "org.apache.drill.exec.proto";
+option java_outer_classname = "ExecProtos";
+option optimize_for = SPEED;
+
+import "Coordination.proto";
+import "UserBitShared.proto";
+
+message FragmentHandle {
+	optional exec.shared.QueryId query_id = 1;
+	optional int32 major_fragment_id = 2;
+	optional int32 minor_fragment_id = 3;
+}
+

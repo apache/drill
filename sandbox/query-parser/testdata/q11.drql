@@ -1,1 +1,0 @@
-SELECT COUNT(*), word FROM [Table] WHERE word CONTAINS 'th' GROUP BY word LIMIT 5;

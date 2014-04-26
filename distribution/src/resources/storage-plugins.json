@@ -1,0 +1,49 @@
+{
+  "storage":{
+    dfs: {
+      type: "file",
+      connection: "file:///",
+      formats: {
+        "psv" : {
+          type: "text",
+          extensions: [ "tbl" ],
+          delimiter: "|"
+        },
+        "csv" : {
+          type: "text",
+          extensions: [ "csv" ],
+          delimiter: ","
+        },
+        "tsv" : {
+          type: "text",
+          extensions: [ "tsv" ],
+          delimiter: "\t"
+        },
+        "parquet" : {
+          type: "parquet"
+        },
+        "json" : {
+          type: "json"
+        }
+      }
+    },
+    cp: {
+      type: "file",
+      connection: "classpath:///"
+    } 
+
+    /*,
+    hive : {
+        type:"hive",
+        config :
+          {
+            "hive.metastore.uris" : "",
+            "javax.jdo.option.ConnectionURL" : "jdbc:derby:;databaseName=../../sample-data/drill_hive_db;create=true",
+            "hive.metastore.warehouse.dir" : "/tmp/drill_hive_wh",
+            "fs.default.name" : "file:///",
+            "hive.metastore.sasl.enabled" : "false"
+          }
+      }
+      */
+  }
+}

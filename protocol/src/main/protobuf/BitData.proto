@@ -1,0 +1,34 @@
+package exec.bit.data;
+
+option java_package = "org.apache.drill.exec.proto";
+option java_outer_classname = "BitData";
+option optimize_for = SPEED;
+
+import "ExecutionProtos.proto";
+import "Coordination.proto";
+import "UserBitShared.proto";
+
+enum RpcType {
+  HANDSHAKE = 0;
+  ACK = 1;
+  GOODBYE = 2;
+  REQ_RECORD_BATCH = 3; // send record batch, returns Ack
+}
+
+message BitClientHandshake{
+  optional int32 rpc_version = 1;
+  optional exec.shared.RpcChannel channel = 2 [default = BIT_DATA];
+  optional FragmentHandle handle = 3;
+}
+
+message BitServerHandshake{
+  optional int32 rpc_version = 1;
+}
+
+message FragmentRecordBatch{
+  optional FragmentHandle handle = 1;
+  optional int32 sending_major_fragment_id = 2;
+  optional int32 sending_minor_fragment_id = 3;
+  optional exec.shared.RecordBatchDef def = 4;
+  optional bool isLastBatch = 5;
+}

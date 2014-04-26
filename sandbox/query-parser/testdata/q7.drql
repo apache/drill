@@ -1,1 +1,0 @@
-SELECT COUNT(r1.m2.f3) WITHIN r1.m2 AS cnt FROM [Table];
