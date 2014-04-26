@@ -51,7 +51,6 @@ import org.eigenbase.rex.RexRangeRef;
 import org.eigenbase.rex.RexVisitorImpl;
 import org.eigenbase.sql.SqlSyntax;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
-import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.util.NlsString;
 
 import com.google.common.collect.Lists;
@@ -262,6 +261,33 @@ public class DrillOptiq {
       for(RexNode n : call.getOperands()){
         args.add(n.accept(this));
       }
+      String functionName = call.getOperator().getName().toLowerCase();
+
+      /* Rewrite extract functions in the following manner
+       * extract(year, date '2008-2-23') ---> extractYear(date '2008-2-23')
+       */
+      if (functionName.equals("extract")) {
+
+        // Assert that the first argument to extract is a QuotedString
+        assert args.get(0) instanceof ValueExpressions.QuotedString;
+
+        // Get the unit of time to be extracted
+        String timeUnitStr = ((ValueExpressions.QuotedString)args.get(0)).value;
+
+        switch (timeUnitStr){
+          case ("YEAR"):
+          case ("MONTH"):
+          case ("DAY"):
+          case ("HOUR"):
+          case ("MINUTE"):
+          case ("SECOND"):
+            String functionPostfix = timeUnitStr.substring(0, 1).toUpperCase() + timeUnitStr.substring(1).toLowerCase();
+            functionName += functionPostfix;
+            return FunctionCallFactory.createExpression(functionName, args.subList(1, 2));
+          default:
+            throw new UnsupportedOperationException("extract function supports the following time units: YEAR, MONTH, DAY, HOUR, MINUTE, SECOND");
+        }
+      }
 
       // Rewrite DATE_PART functions as extract functions
       if (call.getOperator().getName().equalsIgnoreCase("DATE_PART")) {
@@ -322,6 +348,8 @@ public class DrillOptiq {
         return ValueExpressions.getFloat8(dbl);
       case VARCHAR:
         return ValueExpressions.getChar(((NlsString)literal.getValue()).getValue());
+      case SYMBOL:
+        return ValueExpressions.getChar(literal.getValue().toString());
       case DATE:
         return (ValueExpressions.getDate((GregorianCalendar)literal.getValue()));
       case TIME:

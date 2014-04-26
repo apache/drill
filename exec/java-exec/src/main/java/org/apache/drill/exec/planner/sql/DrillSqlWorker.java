@@ -78,7 +78,7 @@ public class DrillSqlWorker {
         .defaultSchema(context.getNewDefaultSchema()) //
         .operatorTable(table) //
         .traitDefs(traitDefs) //
-        .convertletTable(StandardConvertletTable.INSTANCE) //
+        .convertletTable(new DrillConvertletTable()) //
         .context(context.getPlannerSettings()) //
         .ruleSets(getRules(context.getStorage())) //
         .build();
