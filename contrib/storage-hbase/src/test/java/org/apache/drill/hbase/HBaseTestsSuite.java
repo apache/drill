@@ -18,6 +18,7 @@
 package org.apache.drill.hbase;
 
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -25,10 +26,7 @@ import org.apache.drill.common.util.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HBaseTestingUtility;
-import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HConstants;
-import org.apache.hadoop.hbase.HTableDescriptor;
-import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.mapred.TestTableInputFormat;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -39,11 +37,11 @@ import org.junit.runners.Suite.SuiteClasses;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
-
 @RunWith(Suite.class)
 @SuiteClasses({HBaseRecordReaderTest.class})
 public class HBaseTestsSuite {
   private static final Log LOG = LogFactory.getLog(TestTableInputFormat.class);
+  private static final boolean IS_DEBUG = ManagementFactory.getRuntimeMXBean().getInputArguments().toString().indexOf("-agentlib:jdwp") > 0;
 
   private static Configuration conf;
 
@@ -55,6 +53,9 @@ public class HBaseTestsSuite {
       conf = HBaseConfiguration.create();
     }
     conf.set("hbase.zookeeper.property.clientPort", "2181");
+    if (IS_DEBUG) {
+      conf.set("hbase.regionserver.lease.period","1000000");
+    }
     LOG.info("Starting HBase mini cluster.");
     if (UTIL == null) {
       UTIL = new HBaseTestingUtility(conf);

@@ -20,56 +20,57 @@ package org.apache.drill.exec.store.hbase;
 import org.apache.drill.common.logical.StoragePluginConfigBase;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.client.HConnectionManager.HConnectionKey;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @JsonTypeName("hbase")
 public class HBaseStoragePluginConfig extends StoragePluginConfigBase {
 
-  @JsonIgnore
-  public Configuration conf;
-
   @JsonProperty
   public String zookeeperQuorum;
+
   @JsonProperty
   public int zookeeperPort;
+
+  private Configuration hbaseConf;
+  private HConnectionKey hbaseConfKey;
 
   @JsonCreator
   public HBaseStoragePluginConfig(@JsonProperty("zookeeperQuorum") String zookeeperQuorum,
                                   @JsonProperty("zookeeperPort") int zookeeperPort) {
     this.zookeeperQuorum = zookeeperQuorum;
     this.zookeeperPort = zookeeperPort;
-    conf = HBaseConfiguration.create();
-    if (zookeeperQuorum != null && zookeeperQuorum.length() != 0) {
-      conf.set("hbase.zookeeper.quorum", zookeeperQuorum);
-      conf.setInt("hbase.zookeeper.property.clientPort", zookeeperPort);
-    }
-  }
 
-  /*
-  @JsonIgnore
-  public Configuration getConf() {
-    return conf;
+    this.hbaseConf = HBaseConfiguration.create();
+    if (zookeeperQuorum != null && zookeeperQuorum.length() != 0) {
+      hbaseConf.set("hbase.zookeeper.quorum", zookeeperQuorum);
+      hbaseConf.setInt("hbase.zookeeper.property.clientPort", zookeeperPort);
+    }
+    this.hbaseConfKey = new HConnectionKey(hbaseConf);
   }
-  */
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-
+    if (this == o) {
+      return true;
+    } else if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     HBaseStoragePluginConfig that = (HBaseStoragePluginConfig) o;
-
-    if (conf != null ? !conf.equals(that.conf) : that.conf != null) return false;
-
-    return true;
+    return this.hbaseConfKey.equals(that.hbaseConfKey);
   }
 
   @Override
   public int hashCode() {
-    return conf != null ? conf.hashCode() : 0;
+    return this.hbaseConfKey != null ? this.hbaseConfKey.hashCode() : 0;
+  }
+
+  @JsonIgnore
+  public Configuration getHBaseConf() {
+    return hbaseConf;
   }
 }

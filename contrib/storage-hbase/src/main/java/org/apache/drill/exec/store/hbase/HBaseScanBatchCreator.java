@@ -37,8 +37,8 @@ public class HBaseScanBatchCreator implements BatchCreator<HBaseSubScan>{
   public RecordBatch getBatch(FragmentContext context, HBaseSubScan subScan, List<RecordBatch> children) throws ExecutionSetupException {
     Preconditions.checkArgument(children.isEmpty());
     List<RecordReader> readers = Lists.newArrayList();
-    Configuration config = ((HBaseStoragePluginConfig) subScan.getStorageConfig()).conf;
-    for(HBaseSubScan.HBaseSubScanReadEntry e : subScan.getRowGroupReadEntries()){
+    Configuration config = ((HBaseStoragePluginConfig) subScan.getStorageConfig()).getHBaseConf();
+    for(HBaseSubScan.HBaseSubScanSpec e : subScan.getRegionScanSpecList()){
       try {
         readers.add(
             new HBaseRecordReader(config, e, subScan.getColumns(), context)

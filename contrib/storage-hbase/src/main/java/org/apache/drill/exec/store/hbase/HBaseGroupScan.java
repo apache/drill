@@ -18,12 +18,16 @@
 package org.apache.drill.exec.store.hbase;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.NavigableMap;
+import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Lists;
-import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.EndpointAffinity;
@@ -47,75 +51,98 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ArrayListMultimap;
-
+import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
 
 @JsonTypeName("hbase-scan")
-public class HBaseGroupScan extends AbstractGroupScan {
+public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConstants {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBaseGroupScan.class);
 
-  private ArrayListMultimap<Integer, HBaseSubScan.HBaseSubScanReadEntry> mappings;
-  private Stopwatch watch = new Stopwatch();
-
+  private HBaseStoragePluginConfig storagePluginConfig;
   @JsonProperty("storage")
   public HBaseStoragePluginConfig getStorageConfig() {
     return this.storagePluginConfig;
   }
 
+  private List<SchemaPath> columns;
   @JsonProperty
   public List<SchemaPath> getColumns() {
     return columns;
   }
 
-  private String tableName;
-  private HBaseStoragePlugin storagePlugin;
-  private HBaseStoragePluginConfig storagePluginConfig;
-  private List<EndpointAffinity> endpointAffinities;
-  private List<SchemaPath> columns;
+  private HBaseScanSpec hbaseScanSpec;
+  @JsonProperty
+  public HBaseScanSpec getHBaseScanSpec() {
+    return hbaseScanSpec;
+  }
 
-  private NavigableMap<HRegionInfo,ServerName> regionsMap;
+  @JsonIgnore
+  public HBaseStoragePlugin getStoragePlugin() {
+    return storagePlugin;
+  }
+
+  private Stopwatch watch = new Stopwatch();
+  private ArrayListMultimap<Integer, HBaseSubScan.HBaseSubScanSpec> mappings;
+  private HBaseStoragePlugin storagePlugin;
+  private List<EndpointAffinity> endpointAffinities;
+  private NavigableMap<HRegionInfo,ServerName> regionsToScan;
 
   @JsonCreator
-  public HBaseGroupScan(@JsonProperty("entries") List<HTableReadEntry> entries,
-                          @JsonProperty("storage") HBaseStoragePluginConfig storagePluginConfig,
-                          @JsonProperty("columns") List<SchemaPath> columns,
-                          @JacksonInject StoragePluginRegistry pluginRegistry
-                           )throws IOException, ExecutionSetupException {
-    Preconditions.checkArgument(entries.size() == 1);
+  public HBaseGroupScan(@JsonProperty("hbaseScanSpec") HBaseScanSpec hbaseScanSpec,
+                        @JsonProperty("storage") HBaseStoragePluginConfig storagePluginConfig,
+                        @JsonProperty("columns") List<SchemaPath> columns,
+                        @JacksonInject StoragePluginRegistry pluginRegistry) throws IOException, ExecutionSetupException {
     this.storagePlugin = (HBaseStoragePlugin) pluginRegistry.getPlugin(storagePluginConfig);
     this.storagePluginConfig = storagePluginConfig;
-    this.tableName = entries.get(0).getTableName();
+    this.hbaseScanSpec = hbaseScanSpec;
     this.columns = columns;
     getRegionInfos();
   }
 
-  public HBaseGroupScan(String tableName, HBaseStoragePlugin storageEngine, List<SchemaPath> columns) throws IOException {
+  public HBaseGroupScan(HBaseStoragePlugin storageEngine, HBaseScanSpec scanSpec, List<SchemaPath> columns) {
     this.storagePlugin = storageEngine;
     this.storagePluginConfig = storageEngine.getConfig();
-    this.tableName = tableName;
+    this.hbaseScanSpec = scanSpec;
     this.columns = columns;
     getRegionInfos();
   }
 
-  protected void getRegionInfos() throws IOException {
+  private void getRegionInfos() {
     logger.debug("Getting region locations");
-    HTable table = new HTable(storagePluginConfig.conf, tableName);
-    regionsMap = table.getRegionLocations();
-    regionsMap.values().iterator().next().getHostname();
-    table.close();
+    try {
+      HTable table = new HTable(storagePluginConfig.getHBaseConf(), hbaseScanSpec.getTableName());
+      NavigableMap<HRegionInfo, ServerName> regionsMap = table.getRegionLocations();
+      table.close();
+
+      boolean foundStartRegion = false;
+      regionsToScan = new TreeMap<HRegionInfo, ServerName>();
+      for (Entry<HRegionInfo, ServerName> mapEntry : regionsMap.entrySet()) {
+        HRegionInfo regionInfo = mapEntry.getKey();
+        if (!foundStartRegion && hbaseScanSpec.getStartRow() != null && hbaseScanSpec.getStartRow().length != 0 && !regionInfo.containsRow(hbaseScanSpec.getStartRow())) {
+          continue;
+        }
+        foundStartRegion = true;
+        regionsToScan.put(regionInfo, mapEntry.getValue());
+        if (hbaseScanSpec.getStopRow() != null && hbaseScanSpec.getStopRow().length != 0 && regionInfo.containsRow(hbaseScanSpec.getStopRow())) {
+          break;
+        }
+      }
+    } catch (IOException e) {
+      throw new DrillRuntimeException("Error getting region info for table: " + hbaseScanSpec.getTableName(), e);
+    }
   }
 
   @Override
   public List<EndpointAffinity> getOperatorAffinity() {
     watch.reset();
     watch.start();
-    Map<String, DrillbitEndpoint> endpointMap = new HashMap();
+    Map<String, DrillbitEndpoint> endpointMap = new HashMap<String, DrillbitEndpoint>();
     for (DrillbitEndpoint ep : storagePlugin.getContext().getBits()) {
       endpointMap.put(ep.getAddress(), ep);
     }
 
-    Map<DrillbitEndpoint, EndpointAffinity> affinityMap = new HashMap();
-
-    for (ServerName sn : regionsMap.values()) {
+    Map<DrillbitEndpoint, EndpointAffinity> affinityMap = new HashMap<DrillbitEndpoint, EndpointAffinity>();
+    for (ServerName sn : regionsToScan.values()) {
       String host = sn.getHostname();
       DrillbitEndpoint ep = endpointMap.get(host);
       if (ep != null) {
@@ -140,24 +167,28 @@ public class HBaseGroupScan extends AbstractGroupScan {
   public void applyAssignments(List<DrillbitEndpoint> incomingEndpoints) {
     watch.reset();
     watch.start();
-    Preconditions.checkArgument(incomingEndpoints.size() <= regionsMap.size(),
-        String.format("Incoming endpoints %d is greater than number of row groups %d", incomingEndpoints.size(), regionsMap.size()));
+    Preconditions.checkArgument(incomingEndpoints.size() <= regionsToScan.size(),
+        String.format("Incoming endpoints %d is greater than number of row groups %d", incomingEndpoints.size(), regionsToScan.size()));
+
     mappings = ArrayListMultimap.create();
     ArrayListMultimap<String, Integer> incomingEndpointMap = ArrayListMultimap.create();
     for (int i = 0; i < incomingEndpoints.size(); i++) {
       incomingEndpointMap.put(incomingEndpoints.get(i).getAddress(), i);
     }
-    Map<String, Iterator<Integer>> mapIterator = new HashMap();
+    Map<String, Iterator<Integer>> mapIterator = new HashMap<String, Iterator<Integer>>();
     for (String s : incomingEndpointMap.keySet()) {
       Iterator<Integer> ints = Iterators.cycle(incomingEndpointMap.get(s));
       mapIterator.put(s, ints);
     }
     Iterator<Integer> nullIterator = Iterators.cycle(incomingEndpointMap.values());
-    for (HRegionInfo regionInfo : regionsMap.keySet()) {
+    for (HRegionInfo regionInfo : regionsToScan.keySet()) {
       logger.debug("creating read entry. start key: {} end key: {}", Bytes.toStringBinary(regionInfo.getStartKey()), Bytes.toStringBinary(regionInfo.getEndKey()));
-      HBaseSubScan.HBaseSubScanReadEntry p = new HBaseSubScan.HBaseSubScanReadEntry(
-          tableName, Bytes.toStringBinary(regionInfo.getStartKey()), Bytes.toStringBinary(regionInfo.getEndKey()));
-      String host = regionsMap.get(regionInfo).getHostname();
+      HBaseSubScan.HBaseSubScanSpec p = new HBaseSubScan.HBaseSubScanSpec()
+          .setTableName(hbaseScanSpec.getTableName())
+          .setStartRow((hbaseScanSpec.getStartRow() != null && regionInfo.containsRow(hbaseScanSpec.getStartRow())) ? hbaseScanSpec.getStartRow() : regionInfo.getStartKey())
+          .setStopRow((hbaseScanSpec.getStopRow() != null && regionInfo.containsRow(hbaseScanSpec.getStopRow())) ? hbaseScanSpec.getStopRow() : regionInfo.getEndKey())
+          .setSerializedFilter(hbaseScanSpec.getSerializedFilter());
+      String host = regionsToScan.get(regionInfo).getHostname();
       Iterator<Integer> indexIterator = mapIterator.get(host);
       if (indexIterator == null) {
         indexIterator = nullIterator;
@@ -174,19 +205,23 @@ public class HBaseGroupScan extends AbstractGroupScan {
 
   @Override
   public int getMaxParallelizationWidth() {
-    return regionsMap.size();
+    return regionsToScan.size();
   }
 
   @Override
   public OperatorCost getCost() {
     //TODO Figure out how to properly calculate cost
-    return new OperatorCost(1,1,1,1);
+    return new OperatorCost(regionsToScan.size(), // network
+                            1,  // disk
+                            1,  // memory
+                            1); // cpu
   }
 
   @Override
   public Size getSize() {
     // TODO - this is wrong, need to populate correctly
-    return new Size(10,10);
+    int size = (hbaseScanSpec.getFilter() != null ? 5 : 10) * regionsToScan.size();
+    return new Size(size, size);
   }
 
   @Override
@@ -200,6 +235,13 @@ public class HBaseGroupScan extends AbstractGroupScan {
   @Override
   public String getDigest() {
     return toString();
+  }
+
+  @Override
+  public String toString() {
+    return "HBaseGroupScan [HBaseScanSpec="
+        + hbaseScanSpec + ", columns="
+        + columns + "]";
   }
 
 }

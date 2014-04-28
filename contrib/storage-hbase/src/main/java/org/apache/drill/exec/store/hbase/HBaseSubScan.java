@@ -22,7 +22,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.OperatorCost;
@@ -31,6 +30,8 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.Size;
 import org.apache.drill.exec.physical.base.SubScan;
+import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.hadoop.hbase.filter.Filter;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -39,10 +40,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
-import org.apache.drill.exec.store.StoragePluginRegistry;
 
-// Class containing information for reading a single HBase row group form HDFS
-@JsonTypeName("hbase-row-group-scan")
+// Class containing information for reading a single HBase region
+@JsonTypeName("hbase-region-scan")
 public class HBaseSubScan extends AbstractBase implements SubScan {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBaseSubScan.class);
 
@@ -50,30 +50,30 @@ public class HBaseSubScan extends AbstractBase implements SubScan {
   public final StoragePluginConfig storage;
   @JsonIgnore
   private final HBaseStoragePlugin hbaseStoragePlugin;
-  private final List<HBaseSubScanReadEntry> rowGroupReadEntries;
+  private final List<HBaseSubScanSpec> regionScanSpecList;
   private final List<SchemaPath> columns;
 
   @JsonCreator
-  public HBaseSubScan(@JacksonInject StoragePluginRegistry registry, @JsonProperty("storage") StoragePluginConfig storage,
-                      @JsonProperty("rowGroupReadEntries") LinkedList<HBaseSubScanReadEntry> rowGroupReadEntries,
+  public HBaseSubScan(@JacksonInject StoragePluginRegistry registry,
+                      @JsonProperty("storage") StoragePluginConfig storage,
+                      @JsonProperty("regionScanSpecList") LinkedList<HBaseSubScanSpec> regionScanSpecList,
                       @JsonProperty("columns") List<SchemaPath> columns) throws ExecutionSetupException {
     hbaseStoragePlugin = (HBaseStoragePlugin) registry.getPlugin(storage);
-    this.rowGroupReadEntries = rowGroupReadEntries;
+    this.regionScanSpecList = regionScanSpecList;
     this.storage = storage;
     this.columns = columns;
   }
 
   public HBaseSubScan(HBaseStoragePlugin plugin, HBaseStoragePluginConfig config,
-                      List<HBaseSubScanReadEntry> regionInfoList,
-                      List<SchemaPath> columns) {
+      List<HBaseSubScanSpec> regionInfoList, List<SchemaPath> columns) {
     hbaseStoragePlugin = plugin;
     storage = config;
-    this.rowGroupReadEntries = regionInfoList;
+    this.regionScanSpecList = regionInfoList;
     this.columns = columns;
   }
 
-  public List<HBaseSubScanReadEntry> getRowGroupReadEntries() {
-    return rowGroupReadEntries;
+  public List<HBaseSubScanSpec> getRegionScanSpecList() {
+    return regionScanSpecList;
   }
 
   @JsonIgnore
@@ -113,7 +113,7 @@ public class HBaseSubScan extends AbstractBase implements SubScan {
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
     Preconditions.checkArgument(children.isEmpty());
-    return new HBaseSubScan(hbaseStoragePlugin, (HBaseStoragePluginConfig) storage, rowGroupReadEntries, columns);
+    return new HBaseSubScan(hbaseStoragePlugin, (HBaseStoragePluginConfig) storage, regionScanSpecList, columns);
   }
 
   @Override
@@ -121,31 +121,82 @@ public class HBaseSubScan extends AbstractBase implements SubScan {
     return Iterators.emptyIterator();
   }
 
-  public static class HBaseSubScanReadEntry {
+  public static class HBaseSubScanSpec {
 
-    private String tableName;
-    private String startRow;
-    private String endRow;
+    protected String tableName;
+    protected byte[] startRow;
+    protected byte[] stopRow;
+    protected byte[] serializedFilter;
 
     @parquet.org.codehaus.jackson.annotate.JsonCreator
-    public HBaseSubScanReadEntry(@JsonProperty("tableName") String tableName,
-                                 @JsonProperty("startRow") String startRow, @JsonProperty("endRow") String endRow) {
+    public HBaseSubScanSpec(@JsonProperty("tableName") String tableName,
+                            @JsonProperty("startRow") byte[] startRow,
+                            @JsonProperty("stopRow") byte[] stopRow,
+                            @JsonProperty("serializedFilter") byte[] serializedFilter,
+                            @JsonProperty("filterString") String filterString) {
+      if (serializedFilter != null && filterString != null) {
+        throw new IllegalArgumentException("The parameters 'serializedFilter' or 'filterString' cannot be specified at the same time.");
+      }
       this.tableName = tableName;
       this.startRow = startRow;
-      this.endRow = endRow;
+      this.stopRow = stopRow;
+      if (serializedFilter != null) {
+        this.serializedFilter = serializedFilter;
+      } else {
+        this.serializedFilter = HBaseUtils.serializeFilter(HBaseUtils.parseFilterString(filterString));
+      }
+    }
+
+    /* package */ HBaseSubScanSpec() {
+      // empty constructor, to be used with builder pattern;
+    }
+
+    @JsonIgnore
+    private Filter scanFilter;
+    public Filter getScanFilter() {
+      if (scanFilter == null &&  serializedFilter != null) {
+          scanFilter = HBaseUtils.deserializeFilter(serializedFilter);
+      }
+      return scanFilter;
     }
 
     public String getTableName() {
       return tableName;
     }
 
-    public String getStartRow() {
+    public HBaseSubScanSpec setTableName(String tableName) {
+      this.tableName = tableName;
+      return this;
+    }
+
+    public byte[] getStartRow() {
       return startRow;
     }
 
-    public String getEndRow() {
-      return endRow;
+    public HBaseSubScanSpec setStartRow(byte[] startRow) {
+      this.startRow = startRow;
+      return this;
     }
+
+    public byte[] getStopRow() {
+      return stopRow;
+    }
+
+    public HBaseSubScanSpec setStopRow(byte[] stopRow) {
+      this.stopRow = stopRow;
+      return this;
+    }
+
+    public byte[] getSerializedFilter() {
+      return serializedFilter;
+    }
+
+    public HBaseSubScanSpec setSerializedFilter(byte[] serializedFilter) {
+      this.serializedFilter = serializedFilter;
+      this.scanFilter = null;
+      return this;
+    }
+
   }
 
 }

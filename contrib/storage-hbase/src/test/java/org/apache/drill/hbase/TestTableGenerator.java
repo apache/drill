@@ -19,7 +19,6 @@ package org.apache.drill.hbase;
 
 import java.util.Arrays;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
@@ -36,15 +35,18 @@ public class TestTableGenerator {
   
   public static void generateHBaseTable(HBaseAdmin admin, String tableName, int numberRegions,
       int recordsPerRegion) throws Exception {
-    Configuration conf = admin.getConfiguration();
-    
+    if (admin.tableExists(tableName)) {
+      admin.disableTable(tableName);
+      admin.deleteTable(tableName);
+    }
+      
     byte[][] splitKeys = Arrays.copyOfRange(SPLIT_KEYS, 0, numberRegions-1);
     
     HTableDescriptor desc = new HTableDescriptor(tableName);
     desc.addFamily(new HColumnDescriptor("f"));
     desc.addFamily(new HColumnDescriptor("f2"));
     admin.createTable(desc, splitKeys);
-    HTable table = new HTable(HBaseTestsSuite.getConf(), tableName);
+    HTable table = new HTable(admin.getConfiguration(), tableName);
     Put p = new Put("a1".getBytes());
     p.add("f".getBytes(), "c1".getBytes(), "1".getBytes());
     p.add("f".getBytes(), "c2".getBytes(), "2".getBytes());
@@ -94,6 +96,7 @@ public class TestTableGenerator {
     p.add("f2".getBytes(), "c9".getBytes(), "6".getBytes());
     table.put(p);
     table.flushCommits();
+    table.close();
   }
 
 }

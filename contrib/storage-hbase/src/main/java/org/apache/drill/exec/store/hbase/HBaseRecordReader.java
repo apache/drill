@@ -25,7 +25,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.PathSegment.NameSegment;
 import org.apache.drill.common.expression.SchemaPath;
@@ -56,12 +55,10 @@ import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 
-public class HBaseRecordReader implements RecordReader {
+public class HBaseRecordReader implements RecordReader, DrillHBaseConstants {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBaseRecordReader.class);
 
-  private static final String ROW_KEY = "row_key";
   private static final int TARGET_RECORD_COUNT = 4000;
-  private static final SchemaPath ROW_KEY_PATH = SchemaPath.getSimplePath(ROW_KEY);
 
   private List<SchemaPath> columns;
   private OutputMutator outputMutator;
@@ -74,9 +71,10 @@ public class HBaseRecordReader implements RecordReader {
   private SchemaPath rowKeySchemaPath;
   private HTable table;
 
-  public HBaseRecordReader(Configuration conf, HBaseSubScan.HBaseSubScanReadEntry e, List<SchemaPath> columns, FragmentContext context) {
+  public HBaseRecordReader(Configuration conf, HBaseSubScan.HBaseSubScanSpec e, List<SchemaPath> columns, FragmentContext context) {
     this.columns = columns;
-    this.scan = new Scan(Bytes.toBytesBinary(e.getStartRow()), Bytes.toBytesBinary(e.getEndRow()));
+    this.scan = new Scan(e.getStartRow(), e.getStopRow());
+    this.scan.setFilter(e.getScanFilter());
     this.context = context;
     if (columns != null && columns.size() != 0) {
       for (SchemaPath column : columns) {
@@ -116,10 +114,11 @@ public class HBaseRecordReader implements RecordReader {
   }
 
   @Override
+  @SuppressWarnings("deprecation")
   public void setup(OutputMutator output) throws ExecutionSetupException {
     this.outputMutator = output;
     output.removeAllFields();
-    vvMap = new HashMap();
+    vvMap = new HashMap<FamilyQualifierWrapper, NullableVarBinaryVector>();
 
     // Add Vectors to output in the order specified when creating reader
     for (SchemaPath column : columns) {
@@ -211,6 +210,7 @@ public class HBaseRecordReader implements RecordReader {
     return TARGET_RECORD_COUNT;
   }
 
+  @SuppressWarnings("deprecation")
   private NullableVarBinaryVector addNewVector(String column) {
     MaterializedField field = MaterializedField.create(SchemaPath.getCompoundPath(column.split("\\.")), Types.optional(TypeProtos.MinorType.VARBINARY));
     NullableVarBinaryVector v = new NullableVarBinaryVector(field, context.getAllocator());

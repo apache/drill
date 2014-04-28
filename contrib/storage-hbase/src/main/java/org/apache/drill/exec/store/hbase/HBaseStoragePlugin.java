@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.hbase;
 
 import java.io.IOException;
+import java.util.Set;
 
 import net.hydromatic.optiq.SchemaPlus;
 
@@ -25,9 +26,11 @@ import org.apache.drill.common.JSONOptions;
 import org.apache.drill.exec.rpc.user.DrillUser;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
+import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableSet;
 
 public class HBaseStoragePlugin extends AbstractStoragePlugin {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBaseStoragePlugin.class);
@@ -56,9 +59,8 @@ public class HBaseStoragePlugin extends AbstractStoragePlugin {
 
   @Override
   public HBaseGroupScan getPhysicalScan(JSONOptions selection) throws IOException {
-    HTableReadEntry readEntry = selection.getListWith(new ObjectMapper(),
-        new TypeReference<HTableReadEntry>() {});
-    return new HBaseGroupScan(readEntry.getTableName(), this, null);
+    HBaseScanSpec scanSpec = selection.getListWith(new ObjectMapper(), new TypeReference<HBaseScanSpec>() {});
+    return new HBaseGroupScan(this, scanSpec, null);
   }
 
   @Override
@@ -69,6 +71,10 @@ public class HBaseStoragePlugin extends AbstractStoragePlugin {
   @Override
   public HBaseStoragePluginConfig getConfig() {
     return engineConfig;
+  }
+
+  public Set<StoragePluginOptimizerRule> getOptimizerRules() {
+    return ImmutableSet.of(HBasePushFilterIntoScan.INSTANCE);
   }
 
 }

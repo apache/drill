@@ -73,13 +73,13 @@ public class HBaseSchemaFactory implements SchemaFactory {
 
     @Override
     public DrillTable getTable(String name) {
-      Object selection = new HTableReadEntry(name);
+      Object selection = new HBaseScanSpec(name);
       return new DynamicDrillTable(plugin, schemaName, selection, plugin.getConfig());
     }
 
     @Override
     public Set<String> getTableNames() {
-      try(HBaseAdmin admin = new HBaseAdmin(plugin.getConfig().conf)) {
+      try(HBaseAdmin admin = new HBaseAdmin(plugin.getConfig().getHBaseConf())) {
         HTableDescriptor[] tables = admin.listTables();
         Set<String> tableNames = Sets.newHashSet();
         for (HTableDescriptor table : tables) {

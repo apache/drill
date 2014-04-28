@@ -17,20 +17,11 @@
  */
 package org.apache.drill.exec.store.hbase;
 
+import org.apache.drill.common.expression.SchemaPath;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+public interface DrillHBaseConstants {
+  static final String ROW_KEY = "row_key";
 
-public class HTableReadEntry {
+  static final SchemaPath ROW_KEY_PATH = SchemaPath.getSimplePath(ROW_KEY);
 
-  protected String tableName;
-
-  public String getTableName() {
-    return tableName;
-  }
-
-  @JsonCreator
-  public HTableReadEntry(@JsonProperty("tableName") String tableName) {
-    this.tableName = tableName;
-  }
 }
