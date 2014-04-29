@@ -17,19 +17,22 @@
  */
 package org.apache.drill.exec.store.hive;
 
-import com.fasterxml.jackson.annotation.*;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.io.ByteArrayDataOutput;
-import com.google.common.io.ByteStreams;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.common.expression.FieldReference;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
+import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.Size;
 import org.apache.drill.exec.physical.base.SubScan;
@@ -45,8 +48,15 @@ import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 
-import java.io.IOException;
-import java.util.*;
+import com.fasterxml.jackson.annotation.JacksonInject;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.common.io.ByteArrayDataOutput;
+import com.google.common.io.ByteStreams;
 
 @JsonTypeName("hive-scan")
 public class HiveScan extends AbstractGroupScan {
@@ -55,7 +65,7 @@ public class HiveScan extends AbstractGroupScan {
   @JsonProperty("hive-table")
   public HiveReadEntry hiveReadEntry;
   @JsonIgnore
-  private Table table;
+  private final Table table;
   @JsonIgnore
   private List<InputSplit> inputSplits = Lists.newArrayList();
   @JsonIgnore
@@ -66,10 +76,10 @@ public class HiveScan extends AbstractGroupScan {
   @JsonIgnore
   public List<Partition> partitions;
   @JsonIgnore
-  private Collection<DrillbitEndpoint> endpoints;
+  private final Collection<DrillbitEndpoint> endpoints;
 
   @JsonProperty("columns")
-  public List<FieldReference> columns;
+  public List<SchemaPath> columns;
 
   @JsonIgnore
   List<List<InputSplit>> mappings;
@@ -79,8 +89,8 @@ public class HiveScan extends AbstractGroupScan {
 
   @JsonCreator
   public HiveScan(@JsonProperty("hive-table") HiveReadEntry hiveReadEntry, @JsonProperty("storage-plugin") String storagePluginName,
-                  @JsonProperty("columns") List<FieldReference> columns,
-                  @JacksonInject StoragePluginRegistry pluginRegistry) throws ExecutionSetupException {
+      @JsonProperty("columns") List<SchemaPath> columns,
+      @JacksonInject StoragePluginRegistry pluginRegistry) throws ExecutionSetupException {
     this.hiveReadEntry = hiveReadEntry;
     this.table = hiveReadEntry.getTable();
     this.storagePluginName = storagePluginName;
@@ -91,7 +101,7 @@ public class HiveScan extends AbstractGroupScan {
     endpoints = storagePlugin.getContext().getBits();
   }
 
-  public HiveScan(HiveReadEntry hiveReadEntry, HiveStoragePlugin storagePlugin, List<FieldReference> columns) throws ExecutionSetupException {
+  public HiveScan(HiveReadEntry hiveReadEntry, HiveStoragePlugin storagePlugin, List<SchemaPath> columns) throws ExecutionSetupException {
     this.table = hiveReadEntry.getTable();
     this.hiveReadEntry = hiveReadEntry;
     this.columns = columns;
@@ -101,7 +111,20 @@ public class HiveScan extends AbstractGroupScan {
     this.storagePluginName = storagePlugin.getName();
   }
 
-  public List<FieldReference> getColumns() {
+  private HiveScan(HiveScan that) {
+    this.columns = that.columns;
+    this.endpoints = that.endpoints;
+    this.hiveReadEntry = that.hiveReadEntry;
+    this.inputSplits = that.inputSplits;
+    this.mappings = that.mappings;
+    this.partitionMap = that.partitionMap;
+    this.partitions = that.partitions;
+    this.storagePlugin = that.storagePlugin;
+    this.storagePluginName = that.storagePluginName;
+    this.table = that.table;
+  }
+
+  public List<SchemaPath> getColumns() {
     return columns;
   }
 
@@ -253,9 +276,16 @@ public class HiveScan extends AbstractGroupScan {
 
   @Override
   public String toString() {
-    return "HiveScan [table=" + table 
+    return "HiveScan [table=" + table
         + ", inputSplits=" + inputSplits
         + ", columns=" + columns + "]";
+  }
+
+  @Override
+  public GroupScan clone(List<SchemaPath> columns) {
+    HiveScan newScan = new HiveScan(this);
+    newScan.columns = columns;
+    return newScan;
   }
 
 }

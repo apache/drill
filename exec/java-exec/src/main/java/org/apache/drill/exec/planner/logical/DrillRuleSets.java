@@ -25,7 +25,6 @@ import org.apache.drill.exec.planner.physical.FilterPrule;
 import org.apache.drill.exec.planner.physical.LimitPrule;
 import org.apache.drill.exec.planner.physical.MergeJoinPrule;
 import org.apache.drill.exec.planner.physical.ProjectPrule;
-import org.apache.drill.exec.planner.physical.PushLimitToTopN;
 import org.apache.drill.exec.planner.physical.ScanPrule;
 import org.apache.drill.exec.planner.physical.ScreenPrule;
 import org.apache.drill.exec.planner.physical.SortConvertPrule;
@@ -36,10 +35,13 @@ import org.eigenbase.rel.rules.MergeProjectRule;
 import org.eigenbase.rel.rules.PushFilterPastJoinRule;
 import org.eigenbase.rel.rules.PushFilterPastProjectRule;
 import org.eigenbase.rel.rules.PushJoinThroughJoinRule;
+import org.eigenbase.rel.rules.PushProjectPastFilterRule;
+import org.eigenbase.rel.rules.PushProjectPastJoinRule;
 import org.eigenbase.rel.rules.ReduceAggregatesRule;
 import org.eigenbase.rel.rules.RemoveDistinctAggregateRule;
 import org.eigenbase.rel.rules.RemoveDistinctRule;
 import org.eigenbase.rel.rules.RemoveSortRule;
+import org.eigenbase.rel.rules.RemoveTrivialProjectRule;
 import org.eigenbase.relopt.RelOptRule;
 import org.eigenbase.relopt.volcano.AbstractConverter.ExpandConversionRule;
 
@@ -63,7 +65,7 @@ public class DrillRuleSets {
 //      SwapJoinRule.INSTANCE,
       RemoveDistinctRule.INSTANCE,
 //      UnionToDistinctRule.INSTANCE,
-//      RemoveTrivialProjectRule.INSTANCE,
+      RemoveTrivialProjectRule.INSTANCE,
 //      RemoveTrivialCalcRule.INSTANCE,
       RemoveSortRule.INSTANCE,
 
@@ -72,10 +74,14 @@ public class DrillRuleSets {
       new MergeProjectRule(true, RelFactories.DEFAULT_PROJECT_FACTORY),
       RemoveDistinctAggregateRule.INSTANCE, //
       ReduceAggregatesRule.INSTANCE, //
+      PushProjectPastJoinRule.INSTANCE,
+      PushProjectPastFilterRule.INSTANCE,
 //      SwapJoinRule.INSTANCE, //
 //      PushJoinThroughJoinRule.RIGHT, //
 //      PushJoinThroughJoinRule.LEFT, //
 //      PushSortPastProjectRule.INSTANCE, //
+
+      DrillPushProjIntoScan.INSTANCE,
 
       ////////////////////////////////
       DrillScanRule.INSTANCE,

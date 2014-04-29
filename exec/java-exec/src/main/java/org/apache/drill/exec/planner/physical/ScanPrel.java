@@ -24,65 +24,80 @@ import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.Size;
-import org.apache.drill.exec.planner.common.DrillScanRelBase;
+import org.eigenbase.rel.AbstractRelNode;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.RelWriter;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanner;
-import org.eigenbase.relopt.RelOptTable;
 import org.eigenbase.relopt.RelTraitSet;
+import org.eigenbase.reltype.RelDataType;
 
-public class ScanPrel extends DrillScanRelBase implements Prel{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScanPrel.class);
+public class ScanPrel extends AbstractRelNode implements DrillScanPrel {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory
+      .getLogger(ScanPrel.class);
 
-  protected final GroupScan scan;
+  protected final GroupScan groupScan;
+  private final RelDataType rowType;
 
-  private ScanPrel(RelOptCluster cluster, RelTraitSet traits, RelOptTable tbl, GroupScan scan) {
-    super(DRILL_PHYSICAL, cluster, traits, tbl);
-    this.scan = scan;
+  public ScanPrel(RelOptCluster cluster, RelTraitSet traits,
+      GroupScan groupScan, RelDataType rowType) {
+    super(cluster, traits);
+    this.groupScan = groupScan;
+    this.rowType = rowType;
   }
 
   @Override
   public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
-    return new ScanPrel(this.getCluster(), traitSet, this.getTable(), this.scan);
+    return new ScanPrel(this.getCluster(), traitSet, this.groupScan,
+        this.rowType);
   }
-
 
   @Override
   protected Object clone() throws CloneNotSupportedException {
-    return new ScanPrel(this.getCluster(), this.getTraitSet(), this.getTable(), this.scan);
+    return new ScanPrel(this.getCluster(), this.getTraitSet(), this.groupScan,
+        this.rowType);
   }
 
-
   @Override
-  public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
-    return scan;
+  public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator)
+      throws IOException {
+    return groupScan;
   }
 
   @Override
   public RelOptCost computeSelfCost(RelOptPlanner planner) {
-    OperatorCost scanCost = this.scan.getCost();
-    Size scanSize = this.scan.getSize();
+    OperatorCost scanCost = this.groupScan.getCost();
+    Size scanSize = this.groupScan.getSize();
+    int columnCount = this.getRowType().getFieldCount();
+
     // FIXME: Use the new cost model
-    return this.getCluster().getPlanner().getCostFactory()
-        .makeCost(scanSize.getRecordCount(),
-            scanCost.getCpu(),
-            scanCost.getNetwork() * scanCost.getDisk()); 
+    return this
+        .getCluster()
+        .getPlanner()
+        .getCostFactory()
+        .makeCost(scanSize.getRecordCount() * columnCount, scanCost.getCpu(),
+            scanCost.getNetwork() * scanCost.getDisk());
   }
 
+  @Override
   public GroupScan getGroupScan() {
-    return scan;
+    return groupScan;
   }
 
-  public static ScanPrel create(DrillScanRelBase old, RelTraitSet traitSets, GroupScan scan) {
-    return new ScanPrel(old.getCluster(), traitSets, old.getTable(), scan);
+  public static ScanPrel create(RelNode old, RelTraitSet traitSets,
+      GroupScan scan, RelDataType rowType) {
+    return new ScanPrel(old.getCluster(), traitSets, scan, rowType);
   }
-
 
   @Override
   public RelWriter explainTerms(RelWriter pw) {
-    return super.explainTerms(pw).item("groupscan", scan.getDigest());
+    return super.explainTerms(pw).item("groupscan", groupScan.getDigest());
+  }
+
+  @Override
+  public RelDataType deriveRowType() {
+    return this.rowType;
   }
 
 }

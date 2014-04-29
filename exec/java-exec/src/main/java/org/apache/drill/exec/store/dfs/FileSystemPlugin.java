@@ -27,6 +27,7 @@ import net.hydromatic.optiq.SchemaPlus;
 
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.ops.QueryContext;
@@ -112,6 +113,11 @@ public class FileSystemPlugin extends AbstractStoragePlugin{
 
   @Override
   public AbstractGroupScan getPhysicalScan(JSONOptions selection) throws IOException {
+    return this.getPhysicalScan(selection, null);
+  }
+  
+  @Override
+  public AbstractGroupScan getPhysicalScan(JSONOptions selection, List<SchemaPath> columns) throws IOException {
     FormatSelection formatSelection = selection.getWith(context.getConfig(), FormatSelection.class);
     FormatPlugin plugin;
     if(formatSelection.getFormat() instanceof NamedFormatPluginConfig){
@@ -120,7 +126,7 @@ public class FileSystemPlugin extends AbstractStoragePlugin{
       plugin = formatPluginsByConfig.get(formatSelection.getFormat());
     }
     if(plugin == null) throw new IOException(String.format("Failure getting requested format plugin named '%s'.  It was not one of the format plugins registered.", formatSelection.getFormat()));
-    return plugin.getGroupScan(formatSelection.getSelection());
+    return plugin.getGroupScan(formatSelection.getSelection(), columns);
   }
 
   @Override

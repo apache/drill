@@ -20,7 +20,7 @@ package org.apache.drill.exec.store.hive;
 import com.google.common.collect.Lists;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.common.expression.FieldReference;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.vector.*;
 import org.apache.drill.exec.vector.allocator.VectorAllocator;
@@ -41,7 +41,7 @@ public class HiveTextRecordReader extends HiveRecordReader {
   public final List<Integer> columnIds;
   private final int numCols;
 
-  public HiveTextRecordReader(Table table, Partition partition, InputSplit inputSplit, List<FieldReference> columns, FragmentContext context) throws ExecutionSetupException {
+  public HiveTextRecordReader(Table table, Partition partition, InputSplit inputSplit, List<SchemaPath> columns, FragmentContext context) throws ExecutionSetupException {
     super(table, partition, inputSplit, columns, context);
     String d = table.getSd().getSerdeInfo().getParameters().get("field.delim");
     if (d != null) {

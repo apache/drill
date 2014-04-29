@@ -23,6 +23,7 @@ import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.data.Order.Ordering;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.SelectionVectorRemover;
@@ -83,7 +84,21 @@ public class PrelUtil {
     }
     return new SelectionVectorRemover(child);
   }
+  
+  public static List<SchemaPath> getColumns(RelDataType rowType) {   
+    final List<String> fields = rowType.getFieldNames();
+    
+    if (fields.isEmpty()) return null;
+        
+    List<SchemaPath> columns = Lists.newArrayList();
+    
+    for (String field : fields) {
+      if (field.startsWith("*"))
+        continue;
+      
+      columns.add(SchemaPath.getSimplePath(field));
 
-
-
+    }          
+    return columns;
+  }  
 }

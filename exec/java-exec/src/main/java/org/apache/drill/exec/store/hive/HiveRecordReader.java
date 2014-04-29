@@ -21,7 +21,7 @@ import com.google.common.collect.Lists;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.ExpressionPosition;
-import org.apache.drill.common.expression.FieldReference;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
@@ -65,7 +65,7 @@ public class HiveRecordReader implements RecordReader {
   protected Partition partition;
   protected InputSplit inputSplit;
   protected FragmentContext context;
-  protected List<FieldReference> columns;
+  protected List<SchemaPath> columns;
   protected List<String> columnNames;
   protected List<String> partitionNames = Lists.newArrayList();
   protected List<String> selectedPartitionNames = Lists.newArrayList();
@@ -84,7 +84,7 @@ public class HiveRecordReader implements RecordReader {
 
   protected static final int TARGET_RECORD_COUNT = 4000;
 
-  public HiveRecordReader(Table table, Partition partition, InputSplit inputSplit, List<FieldReference> columns, FragmentContext context) throws ExecutionSetupException {
+  public HiveRecordReader(Table table, Partition partition, InputSplit inputSplit, List<SchemaPath> columns, FragmentContext context) throws ExecutionSetupException {
     this.table = table;
     this.partition = partition;
     this.inputSplit = inputSplit;
@@ -138,8 +138,8 @@ public class HiveRecordReader implements RecordReader {
         tableColumns = sTypeInfo.getAllStructFieldNames();
         List<Integer> columnIds = Lists.newArrayList();
         columnNames = Lists.newArrayList();
-        for (FieldReference field : columns) {
-          String columnName = field.getRootSegment().getPath();
+        for (SchemaPath field : columns) {
+          String columnName = field.getRootSegment().getPath(); //TODO? 
           if (!tableColumns.contains(columnName)) {
             if (partition != null && partitionNames.contains(columnName)) {
               selectedPartitionNames.add(columnName);

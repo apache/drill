@@ -15,24 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.planner.common;
+package org.apache.drill.exec.planner.physical;
 
-import org.apache.drill.exec.planner.logical.DrillTable;
-import org.eigenbase.rel.TableAccessRelBase;
-import org.eigenbase.relopt.Convention;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelOptTable;
-import org.eigenbase.relopt.RelTraitSet;
+import org.apache.drill.exec.physical.base.GroupScan;
 
-/**
- * Base class for logical and physical Scans implemented in Drill
- */
-public abstract class DrillScanRelBase extends TableAccessRelBase implements DrillRelNode {
-  protected final DrillTable drillTable;
-
-  public DrillScanRelBase(Convention convention, RelOptCluster cluster, RelTraitSet traits, RelOptTable table) {
-    super(cluster, traits, table);
-    this.drillTable = table.unwrap(DrillTable.class);
-    assert drillTable != null;
-  }
+public interface DrillScanPrel extends Prel{
+  
+  public GroupScan getGroupScan();
+  
 }

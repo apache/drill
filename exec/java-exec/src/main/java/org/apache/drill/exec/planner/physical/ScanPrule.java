@@ -17,12 +17,11 @@
  */
 package org.apache.drill.exec.planner.physical;
 
-import java.io.IOException;
+import java.util.List;
 
-import org.apache.drill.common.JSONOptions;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.base.GroupScan;
-import org.apache.drill.exec.planner.common.DrillScanRelBase;
-import org.apache.drill.exec.planner.logical.DrillTable;
+import org.apache.drill.exec.planner.logical.DrillScanRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.eigenbase.relopt.RelOptRule;
 import org.eigenbase.relopt.RelOptRuleCall;
@@ -31,27 +30,25 @@ import org.eigenbase.relopt.RelTraitSet;
 public class ScanPrule extends RelOptRule{
   public static final RelOptRule INSTANCE = new ScanPrule();
 
-  
   public ScanPrule() {
-    super(RelOptHelper.any(DrillScanRelBase.class), "Prel.ScanPrule");
-    
+    super(RelOptHelper.any(DrillScanRel.class), "Prel.ScanPrule");
+
   }
   @Override
   public void onMatch(RelOptRuleCall call) {
-    try{
-      final DrillScanRelBase scan = (DrillScanRelBase) call.rel(0);
-      final DrillTable table = scan.getTable().unwrap(DrillTable.class);
+    final DrillScanRel scan = (DrillScanRel) call.rel(0);
 
-      final GroupScan groupScan = table.getPlugin().getPhysicalScan(new JSONOptions(table.getSelection()));
-      final DrillDistributionTrait partition = groupScan.getMaxParallelizationWidth() > 1 ? DrillDistributionTrait.RANDOM_DISTRIBUTED : DrillDistributionTrait.SINGLETON;
-      final RelTraitSet traits = scan.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(partition);
+    List<SchemaPath> columns = PrelUtil.getColumns(scan.getRowType());
 
-      final DrillScanRelBase newScan = ScanPrel.create(scan, traits, groupScan);
-      call.transformTo(newScan);
-    }catch(IOException e){
-      throw new RuntimeException("Failure getting group scan.", e);
-    }
+    GroupScan groupScan = scan.getGroupScan().clone(columns);
+
+    DrillDistributionTrait partition = groupScan.getMaxParallelizationWidth() > 1 ? DrillDistributionTrait.RANDOM_DISTRIBUTED : DrillDistributionTrait.SINGLETON;
+
+    final RelTraitSet traits = scan.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(partition);
+
+    final DrillScanPrel newScan = ScanPrel.create(scan, traits, groupScan, scan.getRowType());
+
+    call.transformTo(newScan);
   }
 
-  
 }

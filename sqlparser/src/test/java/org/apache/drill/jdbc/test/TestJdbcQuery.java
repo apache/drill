@@ -44,7 +44,7 @@ public class TestJdbcQuery extends JdbcTest{
 
 
   // Set a timeout unless we're debugging.
-  @Rule public TestRule TIMEOUT = TestTools.getTimeoutRule(200000000);
+  @Rule public TestRule TIMEOUT = TestTools.getTimeoutRule(20000);
 
   private static final String WORKING_PATH;
   static{
@@ -78,11 +78,11 @@ public class TestJdbcQuery extends JdbcTest{
 
   @Test
   public void testInfoSchema() throws Exception{
-//    testQuery("select * from INFORMATION_SCHEMA.SCHEMATA");
+    testQuery("select * from INFORMATION_SCHEMA.SCHEMATA");
     testQuery("select * from INFORMATION_SCHEMA.CATALOGS");
-//    testQuery("select * from INFORMATION_SCHEMA.VIEWS");
+    testQuery("select * from INFORMATION_SCHEMA.VIEWS");
 //    testQuery("select * from INFORMATION_SCHEMA.TABLES");
-//    testQuery("select * from INFORMATION_SCHEMA.COLUMNS");
+    testQuery("select * from INFORMATION_SCHEMA.COLUMNS");
   }
 
   @Test

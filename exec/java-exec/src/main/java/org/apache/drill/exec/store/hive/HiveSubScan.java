@@ -26,7 +26,7 @@ import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteStreams;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.common.expression.FieldReference;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.base.*;
 import org.apache.hadoop.fs.Path;
@@ -53,14 +53,14 @@ public class HiveSubScan extends AbstractBase implements SubScan {
   public List<String> splitClasses;
 
   @JsonProperty("columns")
-  public List<FieldReference> columns;
+  public List<SchemaPath> columns;
 
   @JsonCreator
   public HiveSubScan(@JsonProperty("hive-table") Table table,
                      @JsonProperty("partition") List<Partition> partitions,
                      @JsonProperty("splits") List<String> encodedSplits,
                      @JsonProperty("splitClasses") List<String> splitClasses,
-                     @JsonProperty("columns") List<FieldReference> columns) throws IOException, ReflectiveOperationException {
+                     @JsonProperty("columns") List<SchemaPath> columns) throws IOException, ReflectiveOperationException {
     this.table = table;
     this.partitions = partitions;
     this.encodedSplits = encodedSplits;
@@ -84,7 +84,7 @@ public class HiveSubScan extends AbstractBase implements SubScan {
     return split;
   }
 
-  public List<FieldReference> getColumns() {
+  public List<SchemaPath> getColumns() {
     return columns;
   }
 

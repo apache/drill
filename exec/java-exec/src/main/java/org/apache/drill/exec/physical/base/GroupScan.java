@@ -21,6 +21,7 @@ import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.PhysicalOperatorSetupException;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -44,4 +45,10 @@ public interface GroupScan extends Scan, HasAffinity{
    */
   @JsonIgnore
   public abstract String getDigest();
+  
+  /**
+   * Returns a clone of Groupscan instance, except that the new GroupScan will use the provided list of columns
+   */
+  @JsonIgnore
+  public GroupScan clone(List<SchemaPath> columns);
 }

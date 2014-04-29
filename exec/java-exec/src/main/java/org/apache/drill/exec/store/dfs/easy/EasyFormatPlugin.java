@@ -162,6 +162,11 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
   }
 
   @Override
+  public AbstractGroupScan getGroupScan(FileSelection selection, List<SchemaPath> columns) throws IOException {
+    return new EasyGroupScan(selection, this, columns, selection.selectionRoot);
+  }
+  
+  @Override
   public FormatPluginConfig getConfig() {
     return formatConfig;
   }

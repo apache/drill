@@ -18,9 +18,11 @@
 package org.apache.drill.exec.store;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.drill.common.JSONOptions;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 
 import com.google.common.collect.ImmutableSet;
@@ -48,9 +50,12 @@ public abstract class AbstractStoragePlugin implements StoragePlugin{
 
   @Override
   public AbstractGroupScan getPhysicalScan(JSONOptions selection) throws IOException {
-    throw new UnsupportedOperationException();
+    return getPhysicalScan(selection, null);
   }
   
-  
-  
+  @Override
+  public AbstractGroupScan getPhysicalScan(JSONOptions selection, List<SchemaPath> columns) throws IOException {
+    throw new UnsupportedOperationException();
+  }
+    
 }

@@ -28,6 +28,7 @@ import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
+import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.Size;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
@@ -55,7 +56,7 @@ public class EasyGroupScan extends AbstractGroupScan{
   private final FileSelection selection;
   private final EasyFormatPlugin<?> formatPlugin;
   private final int maxWidth;
-  private final List<SchemaPath> columns;
+  private List<SchemaPath> columns;
   
   private ListMultimap<Integer, CompleteFileWork> mappings;
   private List<CompleteFileWork> chunks;
@@ -109,6 +110,17 @@ public class EasyGroupScan extends AbstractGroupScan{
     this.selectionRoot = selectionRoot;
   }
 
+  private EasyGroupScan(EasyGroupScan that) {
+    this.chunks = that.chunks;
+    this.columns = that.columns;
+    this.endpointAffinities = that.endpointAffinities;
+    this.formatPlugin = that.formatPlugin;
+    this.mappings = that.mappings;
+    this.maxWidth = that.maxWidth;
+    this.selection = that.selection;
+    this.selectionRoot = that.selectionRoot;
+  }
+  
   public String getSelectionRoot() {
     return selectionRoot;
   }
@@ -206,4 +218,11 @@ public class EasyGroupScan extends AbstractGroupScan{
     return toString();
   }
 
+  @Override
+  public GroupScan clone(List<SchemaPath> columns) {
+    EasyGroupScan newScan = new EasyGroupScan(this);
+    newScan.columns = columns;
+    return newScan;
+  }
+  
 }

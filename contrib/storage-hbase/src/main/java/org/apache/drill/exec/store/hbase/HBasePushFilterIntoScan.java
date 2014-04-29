@@ -49,7 +49,7 @@ public class HBasePushFilterIntoScan extends StoragePluginOptimizerRule {
       return; //no filter pushdown ==> No transformation. 
     }
     final GroupScan newGroupsScan = new HBaseGroupScan(groupScan.getStoragePlugin(), newScanSpec, groupScan.getColumns());
-    final ScanPrel newScanPrel = ScanPrel.create(scan, filter.getTraitSet(), newGroupsScan);
+    final ScanPrel newScanPrel = ScanPrel.create(scan, filter.getTraitSet(), newGroupsScan, scan.getRowType());
     call.transformTo(newScanPrel);
   }
 

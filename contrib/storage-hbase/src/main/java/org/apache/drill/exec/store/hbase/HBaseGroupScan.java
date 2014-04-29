@@ -33,10 +33,12 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
+import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.Size;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.exec.store.dfs.easy.EasyGroupScan;
 import org.apache.hadoop.hbase.HRegionInfo;
 import org.apache.hadoop.hbase.ServerName;
 import org.apache.hadoop.hbase.client.HTable;
@@ -107,6 +109,16 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
     getRegionInfos();
   }
 
+  private HBaseGroupScan(HBaseGroupScan that) {
+    this.columns = that.columns;
+    this.endpointAffinities = that.endpointAffinities;
+    this.hbaseScanSpec = that.hbaseScanSpec;
+    this.mappings = that.mappings;
+    this.regionsToScan = that.regionsToScan;
+    this.storagePlugin = that.storagePlugin;
+    this.storagePluginConfig = that.storagePluginConfig;
+  }
+  
   private void getRegionInfos() {
     logger.debug("Getting region locations");
     try {
@@ -244,4 +256,10 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
         + columns + "]";
   }
 
+  @Override
+  public GroupScan clone(List<SchemaPath> columns) {
+    HBaseGroupScan newScan = new HBaseGroupScan(this);
+    newScan.columns = columns;
+    return newScan;
+  }
 }

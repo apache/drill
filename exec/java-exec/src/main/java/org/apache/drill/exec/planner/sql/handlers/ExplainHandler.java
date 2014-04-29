@@ -44,7 +44,7 @@ public class ExplainHandler extends DefaultSqlHandler{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExplainHandler.class);
 
   private ResultMode mode;
-
+  private SqlExplainLevel level = SqlExplainLevel.ALL_ATTRIBUTES;
   public ExplainHandler(Planner planner, QueryContext context) {
     super(planner, context);
   }
@@ -73,7 +73,7 @@ public class ExplainHandler extends DefaultSqlHandler{
     SqlExplain node = unwrap(sqlNode, SqlExplain.class);
     SqlLiteral op = node.operand(2);
     SqlExplain.Depth depth = (SqlExplain.Depth) op.getValue();
-
+    if(node.getDetailLevel() != null) level = node.getDetailLevel();
     switch(depth){
     case LOGICAL:
       mode = ResultMode.LOGICAL;
@@ -94,7 +94,7 @@ public class ExplainHandler extends DefaultSqlHandler{
     public String json;
 
     public LogicalExplain(RelNode node){
-      this.text = RelOptUtil.toString(node, SqlExplainLevel.DIGEST_ATTRIBUTES);
+      this.text = RelOptUtil.toString(node, level);
       DrillImplementor implementor = new DrillImplementor(new DrillParseContext(), ResultMode.LOGICAL);
       implementor.go( (DrillRel) node);
       LogicalPlan plan = implementor.getPlan();
@@ -107,7 +107,7 @@ public class ExplainHandler extends DefaultSqlHandler{
     public String json;
 
     public PhysicalExplain(RelNode node, PhysicalPlan plan){
-      this.text = RelOptUtil.toString(node, SqlExplainLevel.ALL_ATTRIBUTES);
+      this.text = RelOptUtil.toString(node, level);
       this.json = plan.unparse(context.getConfig().getMapper().writer());
     }
   }

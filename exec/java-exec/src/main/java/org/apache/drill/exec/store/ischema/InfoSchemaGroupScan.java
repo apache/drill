@@ -22,13 +22,16 @@ import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.PhysicalOperatorSetupException;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
+import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.Size;
 import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.store.dfs.easy.EasyGroupScan;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -41,10 +44,23 @@ public class InfoSchemaGroupScan extends AbstractGroupScan{
 
   private final SelectedTable table;
   
+  private List<SchemaPath> columns;
+  
   @JsonCreator
-  public InfoSchemaGroupScan(@JsonProperty("table") SelectedTable table) {
+  public InfoSchemaGroupScan(@JsonProperty("table") SelectedTable table,
+      @JsonProperty("columns") List<SchemaPath> columns) {
     this.table = table;
+    this.columns = columns;
   }
+  
+  private InfoSchemaGroupScan(InfoSchemaGroupScan that) {
+    this.table = that.table;
+    this.columns = that.columns;
+  }
+  
+  public List<SchemaPath> getColumns() {
+    return columns;
+  }  
   
   @Override
   public void applyAssignments(List<DrillbitEndpoint> endpoints) throws PhysicalOperatorSetupException {
@@ -84,7 +100,13 @@ public class InfoSchemaGroupScan extends AbstractGroupScan{
 
   @Override
   public String getDigest() {
-    return this.table.toString();
+    return this.table.toString() + "columns=" + columns;
   }
 
+  @Override
+  public GroupScan clone(List<SchemaPath> columns) {
+    InfoSchemaGroupScan  newScan = new InfoSchemaGroupScan (this);
+    newScan.columns = columns;
+    return newScan;
+  }  
 }

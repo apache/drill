@@ -17,28 +17,52 @@
  */
 package org.apache.drill.exec.planner.logical;
 
+import java.io.IOException;
+
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.common.logical.data.Scan;
+import org.apache.drill.exec.physical.OperatorCost;
+import org.apache.drill.exec.physical.base.GroupScan;
+import org.apache.drill.exec.physical.base.Size;
 import org.apache.drill.exec.planner.common.DrillScanRelBase;
+import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.drill.exec.planner.torel.ConversionContext;
 import org.eigenbase.relopt.RelOptCluster;
+import org.eigenbase.relopt.RelOptCost;
+import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.RelOptTable;
 import org.eigenbase.relopt.RelTraitSet;
+import org.eigenbase.reltype.RelDataType;
 
 /**
  * GroupScan of a Drill table.
  */
 public class DrillScanRel extends DrillScanRelBase implements DrillRel {
-  //private final DrillTable drillTable;
+  final private RelDataType rowType;
+  private GroupScan groupScan;
 
   /** Creates a DrillScan. */
-  public DrillScanRel(RelOptCluster cluster, RelTraitSet traits, RelOptTable table) {
-    super(DRILL_LOGICAL, cluster, traits, table);
-    //this.drillTable = table.unwrap(DrillTable.class);
-    //assert drillTable != null;
+  public DrillScanRel(RelOptCluster cluster, RelTraitSet traits,
+      RelOptTable table) {
+    this(cluster, traits, table, table.getRowType());
   }
 
+  /** Creates a DrillScan. */
+  public DrillScanRel(RelOptCluster cluster, RelTraitSet traits,
+      RelOptTable table, RelDataType rowType) {
+    super(DRILL_LOGICAL, cluster, traits, table);
+    this.rowType = rowType;
+    try {
+      this.groupScan = this.drillTable.getGroupScan().clone(
+          PrelUtil.getColumns(rowType));
+    } catch (IOException e) {
+      this.groupScan = null;
+      e.printStackTrace();
+    }
+  }
+
+  @Override
   public LogicalOperator implement(DrillImplementor implementor) {
     Scan.Builder builder = Scan.builder();
     builder.storageEngine(drillTable.getStorageEngineName());
@@ -46,8 +70,34 @@ public class DrillScanRel extends DrillScanRelBase implements DrillRel {
     implementor.registerSource(drillTable);
     return builder.build();
   }
-  
-  public static DrillScanRel convert(Scan scan, ConversionContext context){
-    return new DrillScanRel(context.getCluster(), context.getLogicalTraits(), context.getTable(scan));
+
+  public static DrillScanRel convert(Scan scan, ConversionContext context) {
+    return new DrillScanRel(context.getCluster(), context.getLogicalTraits(),
+        context.getTable(scan));
   }
+
+  @Override
+  public RelDataType deriveRowType() {
+    return this.rowType;
+  }
+
+  @Override
+  public RelOptCost computeSelfCost(RelOptPlanner planner) {
+    OperatorCost scanCost = groupScan.getCost();
+    Size scanSize = groupScan.getSize();
+    int columnCount = this.getRowType().getFieldCount();
+
+    // FIXME: Use the new cost model
+    return this
+        .getCluster()
+        .getPlanner()
+        .getCostFactory()
+        .makeCost(scanSize.getRecordCount() * columnCount, scanCost.getCpu(),
+            scanCost.getNetwork() * scanCost.getDisk());
+  }
+
+  public GroupScan getGroupScan() {
+    return groupScan;
+  }
+
 }

@@ -19,11 +19,14 @@ package org.apache.drill.exec.store.hbase;
 
 import java.io.IOException;
 import java.util.Set;
+import java.util.List;
 
 import net.hydromatic.optiq.SchemaPlus;
 
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.exec.rpc.user.DrillUser;
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;

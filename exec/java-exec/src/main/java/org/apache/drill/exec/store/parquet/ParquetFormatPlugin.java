@@ -18,9 +18,11 @@
 package org.apache.drill.exec.store.parquet;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
@@ -100,7 +102,12 @@ public class ParquetFormatPlugin implements FormatPlugin{
 
   @Override
   public ParquetGroupScan getGroupScan(FileSelection selection) throws IOException {
-    return new ParquetGroupScan(selection.getFileStatusList(fs), this, selection.selectionRoot);
+    return new ParquetGroupScan(selection.getFileStatusList(fs), this, selection.selectionRoot, null);
+  }
+
+  @Override
+  public ParquetGroupScan getGroupScan(FileSelection selection, List<SchemaPath> columns) throws IOException {
+    return new ParquetGroupScan(selection.getFileStatusList(fs), this, selection.selectionRoot, columns);
   }
 
   @Override

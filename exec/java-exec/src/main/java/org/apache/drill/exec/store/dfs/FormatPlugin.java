@@ -18,8 +18,10 @@
 package org.apache.drill.exec.store.dfs;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Set;
 
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
@@ -37,10 +39,12 @@ public interface FormatPlugin {
   public boolean supportsWrite();
   
   public FormatMatcher getMatcher();
-  
+
   public AbstractGroupScan getGroupScan(FileSelection selection) throws IOException;
 
   public Set<StoragePluginOptimizerRule> getOptimizerRules();
+  
+  public AbstractGroupScan getGroupScan(FileSelection selection, List<SchemaPath> columns) throws IOException;
   
   public FormatPluginConfig getConfig();
   public StoragePluginConfig getStorageConfig();

@@ -17,8 +17,9 @@
  */
 package org.apache.drill.exec.store.text;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
+import java.io.IOException;
+import java.util.List;
+
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.FieldReference;
@@ -36,19 +37,24 @@ import org.apache.drill.exec.vector.RepeatedVarCharVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.*;
+import org.apache.hadoop.mapred.FileSplit;
+import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.Reporter;
+import org.apache.hadoop.mapred.TextInputFormat;
 
-import java.io.IOException;
-import java.util.List;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 
 public class DrillTextRecordReader implements RecordReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillTextRecordReader.class);
+
+  static final String COL_NAME = "columns";
 
   private org.apache.hadoop.mapred.RecordReader<LongWritable, Text> reader;
   private List<ValueVector> vectors = Lists.newArrayList();
   private byte delimiter;
   private int targetRecordCount;
-  private FieldReference ref = new FieldReference("columns");
+  private FieldReference ref = new FieldReference(COL_NAME);
   private FragmentContext context;
   private RepeatedVarCharVector vector;
   private List<Integer> columnIds = Lists.newArrayList();
@@ -63,9 +69,13 @@ public class DrillTextRecordReader implements RecordReader {
     if(columns != null) {
       for (SchemaPath path : columns) {
         assert path.getRootSegment().isNamed();
-        Preconditions.checkArgument(path.getRootSegment().getChild().isArray(),"Selected column must be an array index");
-        int index = path.getRootSegment().getChild().getArraySegment().getIndex();
-        columnIds.add(index);
+        Preconditions.checkArgument(path.getRootSegment().getPath().equals(COL_NAME), "Selected column must have name 'columns'");
+        // FIXME: need re-work for text column push-down.
+        if (path.getRootSegment().getChild() != null) {
+          Preconditions.checkArgument(path.getRootSegment().getChild().isArray(),"Selected column must be an array index");
+          int index = path.getRootSegment().getChild().getArraySegment().getIndex();
+          columnIds.add(index);
+        }
       }
     }
     targetRecordCount = context.getConfig().getInt(ExecConstants.TEXT_LINE_READER_BATCH_SIZE);
@@ -161,7 +171,7 @@ public class DrillTextRecordReader implements RecordReader {
   @Override
   public void cleanup() {
     try {
-    reader.close();
+      reader.close();
     } catch (IOException e) {
       logger.warn("Exception closing reader: {}", e);
     }

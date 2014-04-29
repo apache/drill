@@ -33,6 +33,7 @@ import org.apache.drill.exec.metrics.DrillMetrics;
 import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
+import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.Size;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
@@ -134,10 +135,11 @@ public class ParquetGroupScan extends AbstractGroupScan {
 
   public ParquetGroupScan(List<FileStatus> files, //
       ParquetFormatPlugin formatPlugin, //
-      String selectionRoot) //
+      String selectionRoot,
+      List<SchemaPath> columns) //
       throws IOException {
     this.formatPlugin = formatPlugin;
-    this.columns = null;
+    this.columns = columns;
     this.formatConfig = formatPlugin.getConfig();
     this.fs = formatPlugin.getFileSystem().getUnderlying();
     
@@ -149,6 +151,21 @@ public class ParquetGroupScan extends AbstractGroupScan {
     this.selectionRoot = selectionRoot;
 
     readFooter(files);
+  }
+  
+  /*
+   * This is used to clone another copy of the group scan. 
+   */
+  private ParquetGroupScan(ParquetGroupScan that){
+    this.columns = that.columns;
+    this.endpointAffinities = that.endpointAffinities;
+    this.entries = that.entries;
+    this.formatConfig = that.formatConfig;
+    this.formatPlugin = that.formatPlugin;
+    this.fs = that.fs;
+    this.mappings = that.mappings;
+    this.rowGroupInfos = that.rowGroupInfos;
+    this.selectionRoot = that.selectionRoot;
   }
 
   private void readFooterFromEntries()  throws IOException {
@@ -348,4 +365,10 @@ public class ParquetGroupScan extends AbstractGroupScan {
         + ", columns=" + columns + "]";
   }
 
+  @Override
+  public GroupScan clone(List<SchemaPath> columns) {
+    ParquetGroupScan newScan = new ParquetGroupScan(this);
+    newScan.columns = columns;
+    return newScan;
+  }
 }
