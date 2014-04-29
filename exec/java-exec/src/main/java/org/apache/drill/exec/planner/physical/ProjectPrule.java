@@ -62,39 +62,39 @@ public class ProjectPrule extends RelOptRule {
 
     RelTraitSet traits = input.getTraitSet().plus(Prel.DRILL_PHYSICAL);
     RelNode convertedInput = convert(input, traits);
-        
+
     Map<Integer, Integer> inToOut = getProjectMap(project);
-    
+
     if (convertedInput instanceof RelSubset) {
       RelSubset subset = (RelSubset) convertedInput;
       for (RelNode rel : subset.getRelList()) {
         if (!rel.getTraitSet().getTrait(DrillDistributionTraitDef.INSTANCE).equals(DrillDistributionTrait.DEFAULT)) {
           DrillDistributionTrait childDist = rel.getTraitSet().getTrait(DrillDistributionTraitDef.INSTANCE);
           RelCollation childCollation = rel.getTraitSet().getTrait(RelCollationTraitDef.INSTANCE);
-          
-          
+
+
           DrillDistributionTrait newDist = convertDist(childDist, inToOut);
           RelCollation newCollation = convertRelCollation(childCollation, inToOut);
-          
-          call.transformTo(new ProjectPrel(project.getCluster(), project.getTraitSet().plus(newDist).plus(newCollation).plus(Prel.DRILL_PHYSICAL), 
+
+          call.transformTo(new ProjectPrel(project.getCluster(), project.getTraitSet().plus(newDist).plus(newCollation).plus(Prel.DRILL_PHYSICAL),
               rel, project.getProjects(), project.getRowType()));
         }
       }
-      
+
     } else{
-      call.transformTo(new ProjectPrel(project.getCluster(), convertedInput.getTraitSet(), convertedInput, project.getProjects(), project.getRowType()));        
+      call.transformTo(new ProjectPrel(project.getCluster(), convertedInput.getTraitSet(), convertedInput, project.getProjects(), project.getRowType()));
     }
   }
-  
+
   private DrillDistributionTrait convertDist(DrillDistributionTrait srcDist, Map<Integer, Integer> inToOut) {
     List<DistributionField> newFields = Lists.newArrayList();
-    
+
     for (DistributionField field : srcDist.getFields()) {
       if (inToOut.containsKey(field.getFieldId())) {
         newFields.add(new DistributionField(inToOut.get(field.getFieldId())));
       }
     }
-    
+
     if (newFields.isEmpty()) {
       if (srcDist.getType() != DistributionType.SINGLETON) {
         return DrillDistributionTrait.RANDOM_DISTRIBUTED;
@@ -108,36 +108,36 @@ public class ProjectPrule extends RelOptRule {
 
   private RelCollation convertRelCollation(RelCollation src, Map<Integer, Integer> inToOut) {
     List<RelFieldCollation> newFields = Lists.newArrayList();
-    
+
     for ( RelFieldCollation field : src.getFieldCollations()) {
       if (inToOut.containsKey(field.getFieldIndex())) {
-        newFields.add(new RelFieldCollation(inToOut.get(field.getFieldIndex())));
+        newFields.add(new RelFieldCollation(inToOut.get(field.getFieldIndex()), field.getDirection()));
       }
     }
-    
+
     if (newFields.isEmpty()) {
       return RelCollationImpl.EMPTY;
     } else {
       return RelCollationImpl.of(newFields);
     }
   }
-  
+
   private Map<Integer, Integer> getProjectMap(DrillProjectRel project) {
     Map<Integer, Integer> m = new HashMap<Integer, Integer>();
-    
+
     for (Ord<RexNode> node : Ord.zip(project.getProjects())) {
       if (node.e instanceof RexInputRef) {
         m.put( ((RexInputRef) node.e).getIndex(), node.i);
       } else if (node.e.isA(SqlKind.CAST)) {
         RexNode operand = ((RexCall) node.e).getOperands().get(0);
         if (operand instanceof RexInputRef) {
-          m.put(              
+          m.put(
               ((RexInputRef) operand).getIndex(), node.i);
         }
       }
     }
     return m;
-    
+
   }
-    
+
 }

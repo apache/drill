@@ -40,11 +40,13 @@ import org.eigenbase.rel.rules.PushFilterPastProjectRule;
 import org.eigenbase.rel.rules.PushJoinThroughJoinRule;
 import org.eigenbase.rel.rules.PushProjectPastFilterRule;
 import org.eigenbase.rel.rules.PushProjectPastJoinRule;
+import org.eigenbase.rel.rules.PushSortPastProjectRule;
 import org.eigenbase.rel.rules.ReduceAggregatesRule;
 import org.eigenbase.rel.rules.RemoveDistinctAggregateRule;
 import org.eigenbase.rel.rules.RemoveDistinctRule;
 import org.eigenbase.rel.rules.RemoveSortRule;
 import org.eigenbase.rel.rules.RemoveTrivialProjectRule;
+import org.eigenbase.rel.rules.SwapJoinRule;
 import org.eigenbase.relopt.RelOptRule;
 import org.eigenbase.relopt.volcano.AbstractConverter.ExpandConversionRule;
 
@@ -58,6 +60,7 @@ public class DrillRuleSets {
       // Add support for WHERE style joins.
       PushFilterPastProjectRule.INSTANCE,
       PushFilterPastJoinRule.FILTER_ON_JOIN,
+      PushFilterPastJoinRule.JOIN,
       PushJoinThroughJoinRule.RIGHT,
       PushJoinThroughJoinRule.LEFT,
       // End support for WHERE style joins.
@@ -109,6 +112,9 @@ public class DrillRuleSets {
 //      DrillSortRule.INSTANCE,
 //      DrillJoinRule.INSTANCE,
 //      DrillUnionRule.INSTANCE,
+
+      ConvertCountToDirectScan.AGG_ON_PROJ_ON_SCAN,
+      ConvertCountToDirectScan.AGG_ON_SCAN,
 
       SortConvertPrule.INSTANCE,
       SortPrule.INSTANCE,

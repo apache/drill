@@ -21,6 +21,7 @@ package org.apache.drill;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
+import java.util.Stack;
 
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.util.TestTools;
@@ -31,6 +32,8 @@ import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.eigenbase.sql.SqlExplain.Depth;
 import org.eigenbase.sql.SqlExplainLevel;
+
+import com.google.monitoring.runtime.instrumentation.common.com.google.common.base.Strings;
 
 public class PlanTestBase extends BaseTestQuery {
 
@@ -50,6 +53,38 @@ public class PlanTestBase extends BaseTestQuery {
 
     for (String colNames : expectedSubstrs) {
       assertTrue(planStr.contains(colNames));
+    }
+  }
+
+  /**
+   * This method will take a SQL string statement, get the LOGICAL plan in Optiq
+   * RelNode format. Then check the physical plan against the list expected
+   * substrs. Verify all the expected strings are contained in the physical plan
+   * string.
+   */
+  public void testRelLogicalJoinOrder(String sql, String... expectedSubstrs) throws Exception {
+    String planStr = getDrillRelPlanInString(sql, SqlExplainLevel.EXPPLAN_ATTRIBUTES, Depth.LOGICAL);
+
+    String prefixJoinOrder = getLogicalPrefixJoinOrderFromPlan(planStr);
+    System.out.println(" prefix Join order = \n" + prefixJoinOrder);
+    for (String substr : expectedSubstrs) {
+      assertTrue(String.format("Expected string %s is not in the prefixJoinOrder %s!", substr, prefixJoinOrder), prefixJoinOrder.contains(substr));
+    }
+  }
+
+  /**
+   * This method will take a SQL string statement, get the LOGICAL plan in Optiq
+   * RelNode format. Then check the physical plan against the list expected
+   * substrs. Verify all the expected strings are contained in the physical plan
+   * string.
+   */
+  public void testRelPhysicalJoinOrder(String sql, String... expectedSubstrs) throws Exception {
+    String planStr = getDrillRelPlanInString(sql, SqlExplainLevel.EXPPLAN_ATTRIBUTES, Depth.PHYSICAL);
+
+    String prefixJoinOrder = getPhysicalPrefixJoinOrderFromPlan(planStr);
+    System.out.println(" prefix Join order = \n" + prefixJoinOrder);
+    for (String substr : expectedSubstrs) {
+      assertTrue(String.format("Expected string %s is not in the prefixJoinOrder %s!", substr, prefixJoinOrder), prefixJoinOrder.contains(substr));
     }
   }
 
@@ -84,6 +119,7 @@ public class PlanTestBase extends BaseTestQuery {
       assertTrue(planStr.contains(substr));
     }
   }
+
 
   /**
    * This method will take a SQL string statement, get the PHYSICAL plan in
@@ -120,7 +156,8 @@ public class PlanTestBase extends BaseTestQuery {
    */
   private String getDrillRelPlanInString(String sql, SqlExplainLevel level,
       Depth depth) throws Exception {
-    String levelStr, depthStr;
+    String levelStr = " ", depthStr = " ";
+
     switch (level) {
     case NO_ATTRIBUTES:
       levelStr = "EXCLUDING ATTRIBUTES";
@@ -132,7 +169,7 @@ public class PlanTestBase extends BaseTestQuery {
       levelStr = "INCLUDING ALL ATTRIBUTES";
       break;
     default:
-      throw new UnsupportedOperationException();
+      break;
     }
 
     switch (depth) {
@@ -183,6 +220,49 @@ public class PlanTestBase extends BaseTestQuery {
         Object o = vv.getAccessor().getObject(i);
         builder.append(o);
         System.out.println(vv.getAccessor().getObject(i));
+      }
+    }
+
+    return builder.toString();
+  }
+
+  private String getLogicalPrefixJoinOrderFromPlan(String plan) {
+    return getPrefixJoinOrderFromPlan(plan, "DrillJoinRel", "DrillScanRel");
+
+  }
+
+  private String getPhysicalPrefixJoinOrderFromPlan(String plan) {
+    return getPrefixJoinOrderFromPlan(plan, "JoinPrel", "ScanPrel");
+  }
+
+  private String getPrefixJoinOrderFromPlan(String plan, String joinKeyWord, String scanKeyWord) {
+    StringBuilder builder = new StringBuilder();
+
+    String[] planLines = plan.split("\n");
+    int cnt = 0;
+
+    Stack<Integer> s = new Stack<Integer>();
+
+    for (String line : planLines) {
+      if (line.trim().isEmpty())
+        continue;
+      if (line.contains(joinKeyWord)) {
+        builder.append(Strings.repeat(" ", 2 * s.size()));
+        builder.append(joinKeyWord + "\n");
+        cnt++;
+        s.push(cnt);
+        cnt = 0;
+        continue;
+      }
+
+      if (line.contains(scanKeyWord)) {
+        cnt++;
+        builder.append(Strings.repeat(" ", 2 * s.size()));
+        builder.append(line.trim() + "\n");
+
+        if (cnt == 2) {
+          cnt = s.pop();
+        }
       }
     }
 

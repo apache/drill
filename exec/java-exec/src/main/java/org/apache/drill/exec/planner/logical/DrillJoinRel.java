@@ -63,9 +63,9 @@ public class DrillJoinRel extends DrillJoinRelBase implements DrillRel {
   public DrillJoinRel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, RexNode condition,
       JoinRelType joinType, List<Integer> leftKeys, List<Integer> rightKeys, boolean checkCartesian) throws InvalidRelException {
     super(cluster, traits, left, right, condition, joinType);
-    
+
     assert (leftKeys != null && rightKeys != null);
-    
+
     if (checkCartesian)  {
       List<Integer> tmpLeftKeys = Lists.newArrayList();
       List<Integer> tmpRightKeys = Lists.newArrayList();
@@ -77,7 +77,7 @@ public class DrillJoinRel extends DrillJoinRelBase implements DrillRel {
     this.leftKeys = leftKeys;
     this.rightKeys = rightKeys;
   }
-  
+
   @Override
   public DrillJoinRel copy(RelTraitSet traitSet, RexNode condition, RelNode left, RelNode right, JoinRelType joinType) {
     try {
@@ -102,12 +102,12 @@ public class DrillJoinRel extends DrillJoinRelBase implements DrillRel {
     builder.type(joinType);
     builder.left(leftOp);
     builder.right(rightOp);
-    
+
     for (Pair<Integer, Integer> pair : Pair.zip(leftKeys, rightKeys)) {
       builder.addCondition("==", new FieldReference(leftFields.get(pair.left)), new FieldReference(rightFields.get(pair.right)));
     }
-    
-    return builder.build();  
+
+    return builder.build();
   }
 
   /**
@@ -138,7 +138,7 @@ public class DrillJoinRel extends DrillJoinRelBase implements DrillRel {
     Project.Builder builder = Project.builder();
     builder.setInput(inputOp);
     for (Pair<String, String> pair : Pair.zip(inputFields, outputFields)) {
-      builder.addExpr(new FieldReference("output." + pair.right), new FieldReference(pair.left));
+      builder.addExpr(new FieldReference(pair.right), new FieldReference(pair.left));
     }
     return builder.build();
   }
@@ -146,7 +146,7 @@ public class DrillJoinRel extends DrillJoinRelBase implements DrillRel {
   public static DrillJoinRel convert(Join join, ConversionContext context) throws InvalidRelException{
     RelNode left = context.toRel(join.getLeft());
     RelNode right = context.toRel(join.getRight());
-    
+
     List<RexNode> joinConditions = new ArrayList<RexNode>();
     // right fields appear after the LHS fields.
     final int rightInputOffset = left.getRowType().getFieldCount();
@@ -166,5 +166,5 @@ public class DrillJoinRel extends DrillJoinRelBase implements DrillRel {
 
     return joinRel;
   }
-  
+
 }

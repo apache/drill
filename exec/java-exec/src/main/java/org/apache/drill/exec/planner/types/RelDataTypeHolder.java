@@ -60,7 +60,7 @@ public class RelDataTypeHolder {
     }
 
     /* This field does not exist in our field list add it */
-    RelDataTypeField newField = new RelDataTypeFieldImpl(fieldName, fields.size(), typeFactory.createSqlType(SqlTypeName.ANY));
+    RelDataTypeField newField = new RelDataTypeFieldImpl(fieldName, fields.size(), typeFactory.createTypeWithNullability(typeFactory.createSqlType(SqlTypeName.ANY), true));
 
     /* Add the name to our list of field names */
     fields.add(newField);

@@ -19,16 +19,16 @@ package org.apache.drill.exec.store.parquet;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.PhysicalOperatorSetupException;
-import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
-import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.metrics.DrillMetrics;
 import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.physical.OperatorCost;
@@ -92,6 +92,16 @@ public class ParquetGroupScan extends AbstractGroupScan {
 
   private List<SchemaPath> columns;
 
+  /*
+   * total number of rows (obtained from parquet footer)
+   */
+  private long rowCount;
+
+  /*
+   * total number of non-null value for each column in parquet files.
+   */
+  private Map<SchemaPath, Long> columnValueCounts;
+
   public List<ReadEntryWithPath> getEntries() {
     return entries;
   }
@@ -137,7 +147,7 @@ public class ParquetGroupScan extends AbstractGroupScan {
       ParquetFormatPlugin formatPlugin, //
       String selectionRoot,
       List<SchemaPath> columns) //
-      throws IOException {
+          throws IOException {
     this.formatPlugin = formatPlugin;
     this.columns = columns;
     this.formatConfig = formatPlugin.getConfig();
@@ -164,8 +174,10 @@ public class ParquetGroupScan extends AbstractGroupScan {
     this.formatPlugin = that.formatPlugin;
     this.fs = that.fs;
     this.mappings = that.mappings;
+    this.rowCount = that.rowCount;
     this.rowGroupInfos = that.rowGroupInfos;
     this.selectionRoot = that.selectionRoot;
+    this.columnValueCounts = that.columnValueCounts;
   }
 
   private void readFooterFromEntries()  throws IOException {
@@ -184,6 +196,9 @@ public class ParquetGroupScan extends AbstractGroupScan {
 
     rowGroupInfos = Lists.newArrayList();
     long start = 0, length = 0;
+    rowCount = 0;
+    columnValueCounts = new HashMap<SchemaPath, Long>();
+
     ColumnChunkMetaData columnChunkMetaData;
     for (FileStatus status : statuses) {
       List<Footer> footers = ParquetFileReader.readFooters(formatPlugin.getHadoopConfig(), status);
@@ -195,6 +210,7 @@ public class ParquetGroupScan extends AbstractGroupScan {
         int index = 0;
         ParquetMetadata metadata = footer.getParquetMetadata();
         for (BlockMetaData rowGroup : metadata.getBlocks()) {
+          long valueCountInGrp = 0;
           // need to grab block information from HDFS
           columnChunkMetaData = rowGroup.getColumns().iterator().next();
           start = columnChunkMetaData.getFirstDataPageOffset();
@@ -204,11 +220,19 @@ public class ParquetGroupScan extends AbstractGroupScan {
           length = 0;
           for (ColumnChunkMetaData col : rowGroup.getColumns()) {
             length += col.getTotalSize();
+            valueCountInGrp = Math.max(col.getValueCount(), valueCountInGrp);
+            SchemaPath path = SchemaPath.getSimplePath(col.getPath().toString().replace("[", "").replace("]", "").toLowerCase());
+
+            long valueCount = columnValueCounts.containsKey(path) ? columnValueCounts.get(path) : 0;
+            columnValueCounts.put(path, valueCount + col.getValueCount());
           }
+
           String filePath = footer.getFile().toUri().getPath();
           rowGroupInfos.add(new ParquetGroupScan.RowGroupInfo(filePath, start, length, index));
           logger.debug("rowGroupInfo path: {} start: {} length {}", filePath, start, length);
           index++;
+
+          rowCount += valueCountInGrp;
         }
       }
     }
@@ -341,10 +365,20 @@ public class ParquetGroupScan extends AbstractGroupScan {
 
   @Override
   public Size getSize() {
-    // TODO - this is wrong, need to populate correctly
-    int avgColumnSize = 10;
-    int numColumns = (columns == null || columns.isEmpty()) ? 100 : columns.size();
-    return new Size(10, numColumns*avgColumnSize);
+//    long totalSize = 0;
+//    for (RowGroupInfo rowGrpInfo : rowGroupInfos) {
+//      totalSize += rowGrpInfo.getTotalBytes();
+//    }
+//    int rowSize = (int) (totalSize/rowCount);
+
+    // if all the columns are required.
+    if (columns == null || columns.isEmpty()) {
+      return new Size(rowCount, columnValueCounts.size());
+    } else {
+      // project pushdown : subset of columns are required.
+      return new Size(rowCount, columns.size());
+    }
+
   }
 
   @Override
@@ -379,4 +413,16 @@ public class ParquetGroupScan extends AbstractGroupScan {
     return true;
   }
 
+  @Override
+  public GroupScanProperty getProperty() {
+    return GroupScanProperty.EXACT_ROW_COUNT;
+  }
+
+  /**
+   *  Return column value count for the specified column. If does not contain such column, return 0.
+   */
+  @Override
+  public long getColumnValueCount(SchemaPath column) {
+    return columnValueCounts.containsKey(column) ? columnValueCounts.get(column) : 0;
+  }
 }

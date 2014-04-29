@@ -51,12 +51,16 @@ public class DrillExtractConvertlet implements SqlRexConvertlet {
     final List<RexNode> exprs = new LinkedList<>();
 
     RelDataTypeFactory typeFactory = cx.getTypeFactory();
-    RelDataType returnType = typeFactory.createSqlType(SqlTypeName.BIGINT);
+
     //RelDataType nullableReturnType =
 
     for (SqlNode node: operands) {
        exprs.add(cx.convertExpression(node));
     }
+
+    // Determine NULL-able using 2nd argument's Null-able.
+    RelDataType returnType = typeFactory.createTypeWithNullability(typeFactory.createSqlType(SqlTypeName.BIGINT), exprs.get(1).getType().isNullable());
+
     return rexBuilder.makeCall(returnType, call.getOperator(), exprs);
   }
 }

@@ -90,4 +90,29 @@ public class TestExampleQueries extends BaseTestQuery{
     test("explain plan without implementation for select marital_status, COUNT(1) as cnt from cp.`employee.json` group by marital_status");
   }
 
+  @Test
+  public void testGroupScanRowCountExp1() throws Exception {
+    test("EXPLAIN plan for select count(n_nationkey) as mycnt, count(*) + 2 * count(*) as mycnt2 from cp.`tpch/nation.parquet` ");
+  }
+
+  @Test
+  public void testGroupScanRowCount1() throws Exception {
+    test("select count(n_nationkey) as mycnt, count(*) + 2 * count(*) as mycnt2 from cp.`tpch/nation.parquet` ");
+  }
+
+  @Test
+  public void testColunValueCnt() throws Exception {
+    test("select count( 1 + 2) from cp.`tpch/nation.parquet` ");
+  }
+
+  @Test
+  public void testGroupScanRowCountExp2() throws Exception {
+    test("EXPLAIN plan for select count(*) as mycnt, count(*) + 2 * count(*) as mycnt2 from cp.`tpch/nation.parquet` ");
+  }
+
+  @Test
+  public void testGroupScanRowCount2() throws Exception {
+    test("select count(*) as mycnt, count(*) + 2 * count(*) as mycnt2 from cp.`tpch/nation.parquet` where 1 < 2");
+  }
+
 }

@@ -47,7 +47,7 @@ public class DrillFixedRelDataTypeImpl extends RelDataTypeImpl {
 
   private void addField(String columnName) {
     RelDataTypeField newField = new RelDataTypeFieldImpl(
-        columnName, fields.size(), typeFactory.createSqlType(SqlTypeName.ANY));
+        columnName, fields.size(), typeFactory.createTypeWithNullability(typeFactory.createSqlType(SqlTypeName.ANY), true));
     fields.add(newField);
   }
 
@@ -89,7 +89,7 @@ public class DrillFixedRelDataTypeImpl extends RelDataTypeImpl {
 
   @Override
   public RelDataTypePrecedenceList getPrecedenceList() {
-    return new SqlTypeExplicitPrecedenceList((List<SqlTypeName>) (List) Collections.emptyList());
+    return new SqlTypeExplicitPrecedenceList((List) Collections.emptyList());
   }
 
   @Override
