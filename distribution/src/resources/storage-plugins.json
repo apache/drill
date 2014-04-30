@@ -3,6 +3,17 @@
     dfs: {
       type: "file",
       connection: "file:///",
+      workspaces: {
+        "root" : {
+          location: "/",
+          writable: false
+        },
+        "tmp" : {
+          location: "/tmp",
+          writable: true,
+          storageformat: "csv"
+        }
+      },
       formats: {
         "psv" : {
           type: "text",

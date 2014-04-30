@@ -123,7 +123,7 @@ public class FileSelection {
     return statuses;
   }
 
-  public static FileSelection create(DrillFileSystem fs, Path parent, String path) throws IOException {
+  public static FileSelection create(DrillFileSystem fs, String parent, String path) throws IOException {
     if ( !(path.contains("*") || path.contains("?")) ) {
       Path p = new Path(parent, path);
       FileStatus status = fs.getFileStatus(p);

@@ -1,0 +1,66 @@
+{
+  head:{
+    type:"APACHE_DRILL_PHYSICAL",
+    version:"1",
+    generator:{
+      type:"manual"
+    }
+  },
+  graph:[
+    {
+       @id:1,
+       pop:"mock-scan",
+       url: "http://apache.org",
+       entries:[
+         {records: 66000, types: [
+           {name: "red", type: "INT", mode: "REQUIRED"},
+           {name: "green", type: "INT", mode: "REQUIRED"},
+           {name: "blue", type: "INT", mode: "REQUIRED"}
+         ]},
+         {records: 66000, types: [
+           {name: "blue", type: "INT", mode: "REQUIRED"},
+           {name: "green", type: "INT", mode: "REQUIRED"},
+           {name: "red", type: "INT", mode: "REQUIRED"}
+         ]}
+       ]
+    }, {
+      @id:2,
+      child: 1,
+      pop:"project",
+      exprs: [
+        { ref: "col1", expr:"red" },
+        { ref: "col2", expr:"green" },
+        { ref: "col3", expr:"blue" }
+      ]
+    }, {
+      @id: 3,
+      child: 2,
+      pop: "writer",
+      createTableEntry: {
+        "type" : "filesystem",
+        "config" : {
+          "type" : "file",
+          "connection" : "file:///",
+          "workspaces" : {
+            "root" : {
+              "location" : "/",
+              "writable" : false,
+              "storageformat" : null
+            },
+            "tmp" : {
+              "location" : "/tmp",
+              "writable" : true,
+              "storageformat" : "csv"
+            }
+          }
+        },
+        "format" : "csv",
+        "location" : "/tmp/csvtest"
+      }
+    }, {
+      @id: 4,
+      child: 3,
+      pop: "screen"
+    }
+  ]
+}

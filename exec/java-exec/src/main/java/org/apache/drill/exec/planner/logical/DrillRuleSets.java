@@ -122,7 +122,7 @@ public class DrillRuleSets {
       HashJoinPrule.INSTANCE,
       FilterPrule.INSTANCE,
       LimitPrule.INSTANCE,
-
+      WriterPrule.INSTANCE,
       PushLimitToTopN.INSTANCE
 
 //    ExpandConversionRule.INSTANCE,

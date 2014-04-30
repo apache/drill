@@ -18,8 +18,14 @@
       "type" : "file",
       "connection" : "classpath:///",
       "workspaces" : {
-        "default" : "/",
-        "home" : "/"
+        "default" : {
+          location: "/",
+          writable: false
+        },
+        "home" : {
+          location: "/",
+          writable: false
+        }
       },
       "formats" : null
     },
@@ -41,8 +47,14 @@
       "type" : "file",
       "connection" : "classpath:///",
       "workspaces" : {
-        "default" : "/",
-        "home" : "/"
+        "default" : {
+          location: "/",
+          writable: false
+        },
+        "home" : {
+          location: "/",
+          writable: false
+        }
       },
       "formats" : null
     },

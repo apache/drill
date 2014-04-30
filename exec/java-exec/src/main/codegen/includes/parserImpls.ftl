@@ -133,9 +133,32 @@ SqlNode SqlUseSchema():
     }
 }
 
+/** Parses an optional field list and makes sure no field is a "*". */
+SqlNodeList ParseFieldList(String relType) :
+{
+    SqlNodeList fieldList;
+}
+{
+    <LPAREN>
+    fieldList = SimpleIdentifierCommaList()
+    <RPAREN>
+    {
+        for(SqlNode node : fieldList)
+        {
+            if (((SqlIdentifier)node).isStar())
+                throw new ParseException(String.format("%s's field list has a '*', which is invalid.", relType));
+        }
+        return fieldList;
+    }
+    |
+    {
+        return null;
+    }
+}
+
 /**
  * Parses a create view or replace existing view statement.
- *   CREATE [OR REPLACE] VIEW view_name AS select_statement
+ *   CREATE [OR REPLACE] VIEW view_name [ (field1, field2 ...) ] AS select_statement
  */
 SqlNode SqlCreateOrReplaceView() :
 {
@@ -143,25 +166,14 @@ SqlNode SqlCreateOrReplaceView() :
     boolean replaceView = false;
     SqlIdentifier viewName;
     SqlNode query;
-    SqlNodeList fieldList = null;
+    SqlNodeList fieldList;
 }
 {
     <CREATE> { pos = getPos(); }
     [ <OR> <REPLACE> { replaceView = true; } ]
     <VIEW>
     viewName = CompoundIdentifier()
-    [
-        <LPAREN>
-        fieldList = SimpleIdentifierCommaList()
-        <RPAREN>
-        {
-            for(SqlNode node : fieldList)
-            {
-                if (((SqlIdentifier)node).isStar())
-                    throw new ParseException("View's field list has a '*', which is invalid.");
-            }
-        }
-    ]
+    fieldList = ParseFieldList("View")
     <AS>
     query = OrderedQueryOrExpr(ExprContext.ACCEPT_QUERY)
     {
@@ -182,5 +194,28 @@ SqlNode SqlDropView() :
     <VIEW>
     {
         return new SqlDropView(pos, CompoundIdentifier());
+    }
+}
+
+/**
+ * Parses a CTAS statement.
+ * CREATE TABLE tblname [ (field1, field2, ...) ] AS select_statement.
+ */
+SqlNode SqlCreateTable() :
+{
+    SqlParserPos pos;
+    SqlIdentifier tblName;
+    SqlNodeList fieldList;
+    SqlNode query;
+}
+{
+    <CREATE> { pos = getPos(); }
+    <TABLE>
+    tblName = CompoundIdentifier()
+    fieldList = ParseFieldList("Table")
+    <AS>
+    query = OrderedQueryOrExpr(ExprContext.ACCEPT_QUERY)
+    {
+        return new SqlCreateTable(pos, tblName, fieldList, query);
     }
 }

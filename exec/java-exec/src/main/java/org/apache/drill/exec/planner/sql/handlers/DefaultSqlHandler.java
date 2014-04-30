@@ -51,7 +51,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
-public class DefaultSqlHandler implements SqlHandler{
+public class DefaultSqlHandler extends SqlHandler{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DefaultSqlHandler.class);
 
 
@@ -168,13 +168,5 @@ public class DefaultSqlHandler implements SqlHandler{
    */
   public SqlNode rewrite(SqlNode node) throws RelConversionException{
     return node;
-  }
-
-  public static <T> T unwrap(Object o, Class<T> clazz) throws RelConversionException{
-    if(clazz.isAssignableFrom(o.getClass())){
-      return (T) o;
-    }else{
-      throw new RelConversionException(String.format("Failure trying to treat %s as type %s.", o.getClass().getSimpleName(), clazz.getSimpleName()));
-    }
   }
 }

@@ -327,6 +327,7 @@ public class TestJdbcQuery extends JdbcTest{
         "SCHEMA_NAME=hive\n" +
         "SCHEMA_NAME=dfs.home\n" +
         "SCHEMA_NAME=dfs.default\n" +
+        "SCHEMA_NAME=dfs.tmp\n" +
         "SCHEMA_NAME=dfs\n" +
         "SCHEMA_NAME=cp.default\n" +
         "SCHEMA_NAME=cp\n" +
@@ -513,12 +514,12 @@ public class TestJdbcQuery extends JdbcTest{
           Statement statement = connection.createStatement();
 
           // change default schema
-          statement.executeQuery("USE dfs.`default`");
+          statement.executeQuery("USE dfs.tmp");
 
           // create view
           ResultSet resultSet = statement.executeQuery(viewCreate);
           String result = JdbcAssert.toString(resultSet).trim();
-          String viewCreateResult = "ok=true; summary=View '" + viewName + "' created successfully in 'dfs.default' schema";
+          String viewCreateResult = "ok=true; summary=View '" + viewName + "' created successfully in 'dfs.tmp' schema";
           assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, viewCreateResult),
               viewCreateResult.equals(result));
 
@@ -678,7 +679,7 @@ public class TestJdbcQuery extends JdbcTest{
           Statement statement = connection.createStatement();
 
           // change default schema
-          statement.executeQuery("USE dfs.`default`");
+          statement.executeQuery("USE dfs.tmp");
 
           // create view
           statement.executeQuery(
@@ -693,7 +694,7 @@ public class TestJdbcQuery extends JdbcTest{
 
           resultSet = statement.executeQuery("DROP VIEW testview3");
           result = JdbcAssert.toString(resultSet).trim();
-          expected = "ok=true; summary=View 'testview3' deleted successfully from 'dfs.default' schema";
+          expected = "ok=true; summary=View 'testview3' deleted successfully from 'dfs.tmp' schema";
           assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected),
               expected.equals(result));
 

@@ -46,8 +46,8 @@ public interface PhysicalVisitor<RETURN, EXTRA, EXCEP extends Throwable> {
   public RETURN visitReceiver(Receiver receiver, EXTRA value) throws EXCEP;
   public RETURN visitStreamingAggregate(StreamingAggregate agg, EXTRA value) throws EXCEP;
   public RETURN visitHashAggregate(HashAggregate agg, EXTRA value) throws EXCEP;
+  public RETURN visitWriter(Writer op, EXTRA value) throws EXCEP;
   public RETURN visitOp(PhysicalOperator op, EXTRA value) throws EXCEP;
-  
   
   public RETURN visitHashPartitionSender(HashPartitionSender op, EXTRA value) throws EXCEP;
   public RETURN visitOrderedPartitionSender(OrderedPartitionSender op, EXTRA value) throws EXCEP;

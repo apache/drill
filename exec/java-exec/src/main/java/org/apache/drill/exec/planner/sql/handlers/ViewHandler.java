@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.base.Joiner;
-import net.hydromatic.optiq.SchemaPlus;
 import net.hydromatic.optiq.impl.ViewTable;
 import net.hydromatic.optiq.tools.Planner;
 import net.hydromatic.optiq.tools.RelConversionException;
@@ -39,7 +38,7 @@ import org.eigenbase.rel.RelNode;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.sql.SqlNode;
 
-public abstract class ViewHandler implements SqlHandler{
+public abstract class ViewHandler extends SqlHandler{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ViewHandler.class);
 
   protected Planner planner;
@@ -48,21 +47,6 @@ public abstract class ViewHandler implements SqlHandler{
   public ViewHandler(Planner planner, QueryContext context) {
     this.planner = planner;
     this.context = context;
-  }
-
-  /** From a given SchemaPlus return a mutable Drill schema object AbstractSchema if exists. Otherwise throw errors. */
-  protected static AbstractSchema getDrillSchema(SchemaPlus schemaPlus) throws Exception{
-    AbstractSchema drillSchema;
-    try {
-      drillSchema = schemaPlus.unwrap(AbstractSchema.class);
-    } catch(ClassCastException e) {
-      throw new Exception(String.format("Can't create view in schema '%s'", schemaPlus.getName()), e);
-    }
-
-    if (!drillSchema.isMutable())
-      throw new Exception(String.format("Views are not allowed in schema '%s'", schemaPlus.getName()));
-
-    return drillSchema;
   }
 
   /** Handler for Create View DDL command */
@@ -74,10 +58,10 @@ public abstract class ViewHandler implements SqlHandler{
 
     @Override
     public PhysicalPlan getPlan(SqlNode sqlNode) throws ValidationException, RelConversionException, IOException {
-      SqlCreateView createView = DefaultSqlHandler.unwrap(sqlNode, SqlCreateView.class);
+      SqlCreateView createView = unwrap(sqlNode, SqlCreateView.class);
 
       try {
-        AbstractSchema drillSchema = getDrillSchema(context.getNewDefaultSchema());
+        AbstractSchema drillSchema = getMutableDrillSchema(context.getNewDefaultSchema());
 
         String viewSql = createView.getQuery().toString();
 
@@ -128,10 +112,10 @@ public abstract class ViewHandler implements SqlHandler{
 
     @Override
     public PhysicalPlan getPlan(SqlNode sqlNode) throws ValidationException, RelConversionException, IOException {
-      SqlDropView createView = DefaultSqlHandler.unwrap(sqlNode, SqlDropView.class);
+      SqlDropView createView = unwrap(sqlNode, SqlDropView.class);
 
       try {
-        AbstractSchema drillSchema = getDrillSchema(context.getNewDefaultSchema());
+        AbstractSchema drillSchema = getMutableDrillSchema(context.getNewDefaultSchema());
         String schemaPath = Joiner.on(".").join(drillSchema.getSchemaPath());
         context.getSession().getViewStore().dropView(schemaPath, createView.getViewName());
 

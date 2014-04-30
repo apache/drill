@@ -4,7 +4,15 @@
       type: "file",
       connection: "file:///",
       workspaces: {
-        home: "/"
+        "home" : {
+          location: "/",
+          writable: false
+        },
+        "tmp" : {
+          location: "/tmp/drilltest",
+          writable: true,
+          storageformat: "csv"
+        }
       },
       formats: {
         "psv" : {

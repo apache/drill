@@ -30,6 +30,7 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
+import org.apache.drill.common.logical.WorkspaceConfig;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.rpc.user.DrillUser;
@@ -81,18 +82,19 @@ public class FileSystemPlugin extends AbstractStoragePlugin{
         formatPluginsByConfig.put(p.getConfig(), p);
       }
 
-      List<WorkspaceSchemaFactory> factories = null;
+      List<WorkspaceSchemaFactory> factories;
       if(config.workspaces == null || config.workspaces.isEmpty()){
-        factories = Collections.singletonList(new WorkspaceSchemaFactory(this, "default", name, fs, "/", matchers, true/*TODO*/));
+        factories = Collections.singletonList(
+            new WorkspaceSchemaFactory(this, "default", name, fs, WorkspaceConfig.DEFAULT, matchers));
       }else{
         factories = Lists.newArrayList();
-        for(Map.Entry<String, String> space : config.workspaces.entrySet()){
-          factories.add(new WorkspaceSchemaFactory(this, space.getKey(), name, fs, space.getValue(), matchers, true/*TODO*/));
+        for(Map.Entry<String, WorkspaceConfig> space : config.workspaces.entrySet()){
+          factories.add(new WorkspaceSchemaFactory(this, space.getKey(), name, fs, space.getValue(), matchers));
         }
 
         // if the "default" workspace is not given add one.
         if (!config.workspaces.containsKey("default")) {
-          factories.add(new WorkspaceSchemaFactory(this, "default", name, fs, "/", matchers, true/*TODO*/));
+          factories.add(new WorkspaceSchemaFactory(this, "default", name, fs, WorkspaceConfig.DEFAULT, matchers));
         }
       }
       this.schemaFactory = new FileSystemSchemaFactory(name, factories);
@@ -145,5 +147,4 @@ public class FileSystemPlugin extends AbstractStoragePlugin{
       return formatPluginsByConfig.get(config);
     }
   }
-
 }

@@ -153,6 +153,7 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
       }
       logger.debug("using plugin config: {}", cachedPlugins);
     }catch(IOException e){
+      logger.error("Failure while reading storage plugins data.", e);
       throw new IllegalStateException("Failure while reading storage plugins data.", e);
     }
 

@@ -15,26 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.drill.exec.planner.logical;
 
-import org.apache.drill.common.logical.StoragePluginConfig;
-import org.apache.drill.exec.planner.types.RelDataTypeDrillImpl;
-import org.apache.drill.exec.planner.types.RelDataTypeHolder;
-import org.apache.drill.exec.store.StoragePlugin;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import org.apache.drill.exec.store.RecordWriter;
 
-public class DynamicDrillTable extends DrillTable{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DynamicDrillTable.class);
+import java.io.IOException;
 
-  private RelDataTypeHolder holder = new RelDataTypeHolder();
-  
-  public DynamicDrillTable(StoragePlugin plugin, String storageEngineName, Object selection) {
-    super(storageEngineName, plugin, selection);
-  }
+/**
+ * Interface that provides the info needed to create a new table. A storage engine
+ * which supports creating new tables, should implement this interface.
+ */
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property="type")
+@JsonSubTypes({ // TODO: hack until we merge "common" and "java-exec" modules (DRILL-507).
+    @Type(name = "filesystem", value = FileSystemCreateTableEntry.class)
+})
+public interface CreateTableEntry {
 
-  @Override
-  public RelDataType getRowType(RelDataTypeFactory typeFactory) {
-    return new RelDataTypeDrillImpl(holder, typeFactory);
-  }
+  RecordWriter getRecordWriter(String fragmentUniqueId) throws IOException;
 }

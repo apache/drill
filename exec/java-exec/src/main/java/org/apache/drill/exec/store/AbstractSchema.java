@@ -31,6 +31,7 @@ import net.hydromatic.optiq.Schema;
 import net.hydromatic.optiq.SchemaPlus;
 
 import net.hydromatic.optiq.Table;
+import org.apache.drill.exec.planner.logical.CreateTableEntry;
 import org.apache.drill.exec.planner.logical.DrillTable;
 
 public abstract class AbstractSchema implements Schema{
@@ -53,6 +54,10 @@ public abstract class AbstractSchema implements Schema{
 
   public List<String> getSchemaPath() {
     return schemaPath;
+  }
+
+  public CreateTableEntry createNewTable(String tableName) {
+    throw new UnsupportedOperationException("New tables are not allowed in this schema");
   }
 
   @Override
@@ -94,7 +99,4 @@ public abstract class AbstractSchema implements Schema{
   public Expression getExpression(SchemaPlus parentSchema, String name) {
     return EXPRESSION;
   }
-  
-  
-  
 }

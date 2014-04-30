@@ -75,7 +75,7 @@ public class HBaseSchemaFactory implements SchemaFactory {
     @Override
     public Table getTable(String name) {
       Object selection = new HBaseScanSpec(name);
-      return new DynamicDrillTable(plugin, schemaName, selection, plugin.getConfig());
+      return new DynamicDrillTable(plugin, schemaName, selection);
     }
 
     @Override

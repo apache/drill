@@ -28,7 +28,7 @@ import org.apache.drill.exec.planner.sql.DirectPlan;
 import org.apache.drill.exec.planner.sql.parser.SqlUseSchema;
 import org.eigenbase.sql.SqlNode;
 
-public class UseSchemaHandler implements SqlHandler{
+public class UseSchemaHandler extends SqlHandler{
   QueryContext context;
 
   public UseSchemaHandler(QueryContext context) {
@@ -37,7 +37,7 @@ public class UseSchemaHandler implements SqlHandler{
 
   @Override
   public PhysicalPlan getPlan(SqlNode sqlNode) throws ValidationException, RelConversionException, IOException {
-    SqlUseSchema useSchema = DefaultSqlHandler.unwrap(sqlNode, SqlUseSchema.class);
+    SqlUseSchema useSchema = unwrap(sqlNode, SqlUseSchema.class);
 
     String defaultSchema = useSchema.getSchema();
     boolean status = context.getSession().setDefaultSchemaPath(defaultSchema, context.getRootSchema());

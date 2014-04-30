@@ -33,6 +33,7 @@ import org.apache.drill.common.logical.data.Store;
 import org.apache.drill.common.logical.data.Transform;
 import org.apache.drill.common.logical.data.Union;
 import org.apache.drill.common.logical.data.WindowFrame;
+import org.apache.drill.common.logical.data.Writer;
 
 /**
  * Visitor class designed to traversal of a operator tree.  Basis for a number of operator manipulations including fragmentation and materialization.
@@ -60,4 +61,5 @@ public interface LogicalVisitor<RETURN, EXTRA, EXCEP extends Throwable> {
     public RETURN visitTransform(Transform transform, EXTRA value) throws EXCEP;
     public RETURN visitUnion(Union union, EXTRA value) throws EXCEP;
     public RETURN visitWindowFrame(WindowFrame windowFrame, EXTRA value) throws EXCEP;
+    public RETURN visitWriter(Writer writer, EXTRA value) throws EXCEP;
 }

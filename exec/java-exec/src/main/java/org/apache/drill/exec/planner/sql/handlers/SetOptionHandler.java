@@ -29,7 +29,7 @@ import org.eigenbase.sql.SqlLiteral;
 import org.eigenbase.sql.SqlNode;
 import org.eigenbase.sql.SqlSetOption;
 
-public class SetOptionHandler implements SqlHandler{
+public class SetOptionHandler extends SqlHandler{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SetOptionHandler.class);
 
   QueryContext context;
@@ -43,7 +43,7 @@ public class SetOptionHandler implements SqlHandler{
 
   @Override
   public PhysicalPlan getPlan(SqlNode sqlNode) throws ValidationException, RelConversionException, IOException {
-    SqlSetOption option = DefaultSqlHandler.unwrap(sqlNode, SqlSetOption.class);
+    SqlSetOption option = unwrap(sqlNode, SqlSetOption.class);
     String scope = option.getScope();
     String name = option.getName();
     SqlNode value = option.getValue();

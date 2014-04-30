@@ -102,6 +102,9 @@ public abstract class AbstractLogicalVisitor<T, X, E extends Throwable> implemen
     public T visitConstant(Constant constant, X value) throws E {
        return visitOp(constant, value);
     }
-    
-    
+
+    @Override
+    public T visitWriter(Writer writer, X value) throws E {
+      return visitOp(writer, value);
+    }
 }

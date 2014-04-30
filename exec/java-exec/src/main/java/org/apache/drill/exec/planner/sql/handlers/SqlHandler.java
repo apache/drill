@@ -19,14 +19,45 @@ package org.apache.drill.exec.planner.sql.handlers;
 
 import java.io.IOException;
 
+import com.google.common.base.Joiner;
+import net.hydromatic.optiq.SchemaPlus;
 import net.hydromatic.optiq.tools.RelConversionException;
 import net.hydromatic.optiq.tools.ValidationException;
 
 import org.apache.drill.exec.physical.PhysicalPlan;
+import org.apache.drill.exec.store.AbstractSchema;
 import org.eigenbase.sql.SqlNode;
 
-public interface SqlHandler {
+public abstract class SqlHandler {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SqlHandler.class);
 
-  public PhysicalPlan getPlan(SqlNode sqlNode) throws ValidationException, RelConversionException, IOException;
+  public abstract PhysicalPlan getPlan(SqlNode sqlNode) throws ValidationException, RelConversionException, IOException;
+
+  public static <T> T unwrap(Object o, Class<T> clazz) throws RelConversionException{
+    if(clazz.isAssignableFrom(o.getClass())){
+      return (T) o;
+    }else{
+      throw new RelConversionException(String.format("Failure trying to treat %s as type %s.", o.getClass().getSimpleName(), clazz.getSimpleName()));
+    }
+  }
+
+  /**
+   * From a given SchemaPlus return a mutable Drill schema object AbstractSchema if exists.
+   * Otherwise throw errors.
+   */
+  public static AbstractSchema getMutableDrillSchema(SchemaPlus schemaPlus) throws Exception{
+    AbstractSchema drillSchema;
+    try {
+      drillSchema = schemaPlus.unwrap(AbstractSchema.class);
+    } catch(ClassCastException e) {
+      throw new Exception("Current schema is not a Drill schema. " +
+              "Can't create new relations (tables or views) in non-Drill schemas.", e);
+    }
+
+    if (!drillSchema.isMutable())
+      throw new Exception(String.format("Current schema '%s' is not a mutable schema. " +
+          "Can't create new relations.", Joiner.on(".").join(drillSchema.getSchemaPath())));
+
+    return drillSchema;
+  }
 }

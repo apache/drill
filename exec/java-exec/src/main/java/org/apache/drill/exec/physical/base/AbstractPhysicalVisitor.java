@@ -33,6 +33,11 @@ public abstract class AbstractPhysicalVisitor<T, X, E extends Throwable> impleme
   }
 
   @Override
+  public T visitWriter(Writer writer, X value) throws E {
+    return visitOp(writer, value);
+  }
+
+  @Override
   public T visitFilter(Filter filter, X value) throws E{
     return visitOp(filter, value);
   }
