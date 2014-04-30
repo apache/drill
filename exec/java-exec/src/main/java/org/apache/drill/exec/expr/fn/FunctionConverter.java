@@ -206,6 +206,9 @@ public class FunctionConverter {
       case POINT_AGGREGATE:
         return new DrillAggFuncHolder(template.scope(), template.nulls(), template.isBinaryCommutative(),
           template.isRandom(), registeredNames, ps, outputField, works, methods, imports);
+      case DECIMAL_AGGREGATE:
+        return new DrillDecimalAggFuncHolder(template.scope(), template.nulls(), template.isBinaryCommutative(),
+          template.isRandom(), registeredNames, ps, outputField, works, methods, imports);
       case SIMPLE:
         return new DrillSimpleFuncHolder(template.scope(), template.nulls(), template.isBinaryCommutative(),
           template.isRandom(), registeredNames, ps, outputField, works, methods, imports);
@@ -217,6 +220,15 @@ public class FunctionConverter {
                   template.isRandom(), registeredNames, ps, outputField, works, methods, imports);
       case DECIMAL_CAST:
           return new DrillDecimalCastFuncHolder(template.scope(), template.nulls(), template.isBinaryCommutative(),
+                  template.isRandom(), registeredNames, ps, outputField, works, methods, imports);
+      case DECIMAL_DIV_SCALE:
+          return new DrillDecimalDivScaleFuncHolder(template.scope(), template.nulls(), template.isBinaryCommutative(),
+                  template.isRandom(), registeredNames, ps, outputField, works, methods, imports);
+      case DECIMAL_SET_SCALE:
+          return new DrillDecimalSetScaleFuncHolder(template.scope(), template.nulls(), template.isBinaryCommutative(),
+                  template.isRandom(), registeredNames, ps, outputField, works, methods, imports);
+      case DECIMAL_ZERO_SCALE:
+          return new DrillDecimalZeroScaleFuncHolder(template.scope(), template.nulls(), template.isBinaryCommutative(),
                   template.isRandom(), registeredNames, ps, outputField, works, methods, imports);
       case HOLISTIC_AGGREGATE:
       case RANGE_AGGREGATE:

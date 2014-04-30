@@ -45,7 +45,6 @@ import org.apache.drill.exec.record.RecordBatch;
 @SuppressWarnings("unused")
 
 public class ${aggrtype.className}DateTypeFunctions {
-	static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(${aggrtype.className}Functions.class);
 
 <#list aggrtype.types as type>
 <#if type.major == "Date">
@@ -96,11 +95,12 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     value.value = Math.min(value.value, inMS);
 
     <#elseif type.outputType == "IntervalDay">
-    org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(org.apache.drill.exec.expr.fn.impl.MathFunctions.class);
     long inMS = (long) in.days * (org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis) +
                        in.milliSeconds;
 
     value.value = Math.min(value.value, inMS);
+
+
     <#else>
     value.value = Math.min(value.value, in.value);
     </#if>

@@ -126,7 +126,9 @@
     {from: "Decimal9", to: "Float4", major: "DecimalSimpleFloat", javatype: "float"},
     {from: "Decimal18", to: "Float4", major: "DecimalSimpleFloat", javatype: "float"},
     {from: "Decimal28Sparse", to: "Float4", major: "DecimalComplexFloat", javatype: "float"},
+    {from: "Decimal28Dense", to: "Float4", major: "DecimalComplexFloat", javatype: "float"},
     {from: "Decimal38Sparse", to: "Float4", major: "DecimalComplexFloat", javatype: "float"},
+    {from: "Decimal38Dense", to: "Float4", major: "DecimalComplexFloat", javatype: "float"},
 
     {from: "Float4", to: "Decimal9", major: "FloatDecimalSimple", javatype: "int"},
     {from: "Float4", to: "Decimal18", major: "FloatDecimalSimple", javatype: "long"},
@@ -141,7 +143,9 @@
     {from: "Decimal9", to: "Float8", major: "DecimalSimpleDouble", javatype: "double"},
     {from: "Decimal18", to: "Float8", major: "DecimalSimpleDouble", javatype: "double"},
     {from: "Decimal28Sparse", to: "Float8", major: "DecimalComplexDouble", javatype: "double"},
+    {from: "Decimal28Dense", to: "Float8", major: "DecimalComplexDouble", javatype: "double"},
     {from: "Decimal38Sparse", to: "Float8", major: "DecimalComplexDouble", javatype: "double"},
+    {from: "Decimal38Dense", to: "Float8", major: "DecimalComplexDouble", javatype: "double"},
 
     {from: "VarChar", to: "Decimal9", major: "VarCharDecimalSimple"},
     {from: "VarChar", to: "Decimal18", major: "VarCharDecimalSimple"},

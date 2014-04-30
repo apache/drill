@@ -87,7 +87,11 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
     public void eval() {
 
+        <#if type.from == "Decimal28Dense" || type.from == "Decimal38Dense">
+        java.math.BigDecimal bigDecimal = org.apache.drill.common.util.DecimalUtility.getBigDecimalFromDense(in.buffer, in.start, in.nDecimalDigits, in.scale, in.maxPrecision, in.WIDTH);
+        <#else>
         java.math.BigDecimal bigDecimal = org.apache.drill.common.util.DecimalUtility.getBigDecimalFromByteBuf(in.buffer, in.start, in.nDecimalDigits, in.scale, true);
+        </#if>
         out.value = bigDecimal.${type.javatype}Value();
     }
 }

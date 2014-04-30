@@ -20,198 +20,15 @@ import org.apache.drill.exec.expr.annotations.Workspace;
 
 <@pp.dropOutputFile />
 
-<#macro denseCompareBlock left right output>
-
-            int invert = 1;
-
-            outside: {
-
-                /* If signs are different then simply look at the
-                 * sign of the two inputs and determine which is greater
-                 */
-                if (left.sign != right.sign) {
-
-                    ${output} = (left.sign == true) ? -1 : 1;
-                    break outside;
-                } else if(left.sign == true) {
-                    /* Both inputs are negative, at the end we will
-                     * have to invert the comparison
-                     */
-                    invert = -1;
-                }
-
-                ${output} = 0;
-                for (int i = 0; i < left.WIDTH; i++) {
-                    byte leftByte  = left.buffer.getByte(left.start + i);
-                    byte rightByte = right.buffer.getByte(right.start + i);
-
-                    // Unsigned byte comparison
-                    if ((leftByte & 0xFF) > (rightByte & 0xFF)) {
-                        ${output} = 1;
-                        break;
-                    } else if ((leftByte & 0xFF) < (rightByte & 0xFF)) {
-                        ${output} = -1;
-                        break;
-                    }
-                }
-                ${output} *= invert; // invert the comparison if both were negative values
-            }
-</#macro>
-
 <#macro compareBlock holderType left right absCompare output>
 
         outside:{
+            ${output} = org.apache.drill.common.util.DecimalUtility.compareSparseBytes(left.buffer, left.start, left.sign,
+                            left.scale, left.precision, right.buffer,
+                            right.start, right.sign, right.precision,
+                            right.scale, left.WIDTH, left.nDecimalDigits, ${absCompare});
 
-            <#if absCompare == "false">
-            if (left.sign != right.sign) {
-                /* signs are different, we can simply look at the sign
-                 * and determine which decimal is greater
-                 */
-                ${output} = left.sign == true ? -1 : 1;
-                break outside;
-            } else if (left.sign == true) {
-                /* Because both decimals are negative, we swap them
-                 * and go ahead with the regular comparison
-                 */
-                left.swap(right);
-            }
-            </#if>
-            /* compute the number of integer digits in each decimal */
-            int leftInt  = left.precision - left.scale;
-            int rightInt = right.precision - right.scale;
-
-            /* compute the number of indexes required for storing integer digits */
-            int leftIntRoundedUp = org.apache.drill.common.util.DecimalUtility.roundUp(leftInt);
-            int rightIntRoundedUp = org.apache.drill.common.util.DecimalUtility.roundUp(rightInt);
-
-            /* compute number of indexes required for storing scale */
-            int leftScaleRoundedUp = org.apache.drill.common.util.DecimalUtility.roundUp(left.scale);
-            int rightScaleRoundedUp = org.apache.drill.common.util.DecimalUtility.roundUp(right.scale);
-
-            /* compute index of the most significant integer digits */
-            int leftIndex1 = left.nDecimalDigits - leftScaleRoundedUp - leftIntRoundedUp;
-            int rightIndex1 = right.nDecimalDigits - rightScaleRoundedUp - rightIntRoundedUp;
-
-            int leftStopIndex = left.nDecimalDigits - leftScaleRoundedUp;
-            int rightStopIndex = right.nDecimalDigits - rightScaleRoundedUp;
-
-            /* Discard the zeroes in the integer part */
-            while (leftIndex1 < leftStopIndex) {
-                if (left.getInteger(leftIndex1) != 0) {
-                     break;
-                }
-
-                /* Digit in this location is zero, decrement the actual number
-                 * of integer digits
-                 */
-                leftIntRoundedUp--;
-                leftIndex1++;
-            }
-
-            /* If we reached the stop index then the number of integers is zero */
-            if (leftIndex1 == leftStopIndex) {
-                leftIntRoundedUp = 0;
-            }
-
-            while (rightIndex1 < rightStopIndex) {
-                if (right.getInteger(rightIndex1) != 0) {
-                    break;
-                }
-
-                /* Digit in this location is zero, decrement the actual number
-                 * of integer digits
-                 */
-                rightIntRoundedUp--;
-                rightIndex1++;
-            }
-
-            if (rightIndex1 == rightStopIndex) {
-                rightIntRoundedUp = 0;
-            }
-
-            /* We have the accurate number of non-zero integer digits,
-             * if the number of integer digits are different then we can determine
-             * which decimal is larger and needn't go down to comparing individual values
-             */
-            if (leftIntRoundedUp > rightIntRoundedUp) {
-                ${output }= 1;
-                break outside;
-            }
-            else if (rightIntRoundedUp > leftIntRoundedUp) {
-                ${output} =  -1;
-                break outside;
-            }
-
-            /* The number of integer digits are the same, set the each index
-             * to the first non-zero integer and compare each digit
-             */
-            leftIndex1 = left.nDecimalDigits - leftScaleRoundedUp - leftIntRoundedUp;
-            rightIndex1 = right.nDecimalDigits - rightScaleRoundedUp - rightIntRoundedUp;
-
-            while (leftIndex1 < leftStopIndex && rightIndex1 < rightStopIndex) {
-                if (left.getInteger(leftIndex1) > right.getInteger(rightIndex1)) {
-                    ${output} = 1;
-                    break outside;
-                }
-                else if (right.getInteger(rightIndex1) > left.getInteger(leftIndex1)) {
-                    ${output} =  -1;
-                    break outside;
-                }
-
-                leftIndex1++;
-                rightIndex1++;
-            }
-
-            /* The integer part of both the decimal's are equal, now compare
-             * each individual fractional part. Set the index to be at the
-             * beginning of the fractional part
-             */
-            leftIndex1 = leftStopIndex;
-            rightIndex1 = rightStopIndex;
-
-            /* Stop indexes will be the end of the array */
-            leftStopIndex = left.nDecimalDigits;
-            rightStopIndex = right.nDecimalDigits;
-
-            /* compare the two fractional parts of the decimal */
-            while (leftIndex1 < leftStopIndex && rightIndex1 < rightStopIndex) {
-                if (left.getInteger(leftIndex1) > right.getInteger(rightIndex1)) {
-                    ${output} = 1;
-                    break outside;
-                }
-                else if (right.getInteger(rightIndex1) > left.getInteger(leftIndex1)) {
-                    ${output} = -1;
-                    break outside;
-                }
-
-                leftIndex1++;
-                rightIndex1++;
-            }
-
-            /* Till now the fractional part of the decimals are equal, check
-             * if one of the decimal has fractional part that is remaining
-             * and is non-zero
-             */
-            while (leftIndex1 < leftStopIndex) {
-                if (left.getInteger(leftIndex1) != 0) {
-                    ${output} = 1;
-                    break outside;
-                }
-                leftIndex1++;
-            }
-
-            while(rightIndex1 < rightStopIndex) {
-                if (right.getInteger(rightIndex1) != 0) {
-                    ${output} = -1;
-                    break outside;
-                }
-                rightIndex1++;
-            }
-
-            /* Both decimal values are equal */
-            ${output} = 0;
-
-        }
+    }
 </#macro>
 
 <#macro subtractBlock holderType left right result>
@@ -369,7 +186,7 @@ import org.apache.drill.exec.expr.annotations.Workspace;
             leftIndex--;
             rightIndex--;
 
-            if (sum > org.apache.drill.common.util.DecimalUtility.DIGITS_BASE) {
+            if (sum >= org.apache.drill.common.util.DecimalUtility.DIGITS_BASE) {
                 result.setInteger(resultIndex, (sum - org.apache.drill.common.util.DecimalUtility.DIGITS_BASE));
                 sum = 1;
             } else {
@@ -383,7 +200,7 @@ import org.apache.drill.exec.expr.annotations.Workspace;
             sum += left.getInteger(leftIndex);
             leftIndex--;
 
-            if (sum > org.apache.drill.common.util.DecimalUtility.DIGITS_BASE) {
+            if (sum >= org.apache.drill.common.util.DecimalUtility.DIGITS_BASE) {
                 result.setInteger(resultIndex, (sum - org.apache.drill.common.util.DecimalUtility.DIGITS_BASE));
                 sum = 1;
             } else {
@@ -396,7 +213,7 @@ import org.apache.drill.exec.expr.annotations.Workspace;
             sum += right.getInteger(rightIndex);
             rightIndex--;
 
-            if (sum > org.apache.drill.common.util.DecimalUtility.DIGITS_BASE) {
+            if (sum >= org.apache.drill.common.util.DecimalUtility.DIGITS_BASE) {
                 result.setInteger(resultIndex, (sum - org.apache.drill.common.util.DecimalUtility.DIGITS_BASE));
                 sum = 1;
             } else {
@@ -521,7 +338,6 @@ public class ${type.name}Functions {
         }
 
         public void eval() {
-
             result.buffer = buffer;
             result.start = 0;
 
@@ -564,12 +380,14 @@ public class ${type.name}Functions {
         @Param ${type.name}Holder left;
         @Param ${type.name}Holder right;
         @Workspace ByteBuf buffer;
+        @Workspace int[] tempResult;
         @Output ${type.name}Holder result;
 
         public void setup(RecordBatch incoming) {
             int size = (${type.storage} * (org.apache.drill.common.util.DecimalUtility.integerSize));
             buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte[size]);
             buffer = new io.netty.buffer.SwappedByteBuf(buffer);
+            tempResult = new int[${type.storage} * ${type.storage}];
         }
 
         public void eval() {
@@ -577,12 +395,12 @@ public class ${type.name}Functions {
             result.buffer = buffer;
             result.start = 0;
 
-            // Re initialize the buffer everytime
-            for (int i = 0; i < ${type.storage}; i++) {
-                result.setInteger(i, 0);
+            // Re initialize the temporary array
+            for (int i = 0; i < ${type.storage} * ${type.storage}; i++) {
+                tempResult[i] = 0;
             }
 
-            /* Remove the leading zeroes from the integer part of the input */
+            // Remove the leading zeroes from the integer part of the input
             int leftIndex = 0;
             int leftStopIndex = left.nDecimalDigits - org.apache.drill.common.util.DecimalUtility.roundUp(left.scale);
 
@@ -616,26 +434,25 @@ public class ${type.name}Functions {
             int leftSize  = left.nDecimalDigits - 1;
             int rightSize = right.nDecimalDigits - 1;
 
-            //int resultIndex = resultSize - 1;
-            int resultIndex = result.nDecimalDigits - 1;
+            int resultIndex = tempResult.length - 1;
+            int currentIndex = 0;
 
             for (int i = leftSize; i >= leftIndex; i--) {
 
-                int currentIndex = resultIndex;
+                currentIndex = resultIndex;
                 int carry = 0;
 
                 for (int j = rightSize; j >= rightIndex; j--) {
 
                     long mulResult = (long) right.getInteger(j) * (long) left.getInteger(i);
 
-                    //long tempSum = mulResultDigits[currentIndex] + mulResult + carry;
-                    long tempSum = result.getInteger(currentIndex) + mulResult + carry;
+                    long tempSum = tempResult[currentIndex] + mulResult + carry;
 
                     if (tempSum >= org.apache.drill.common.util.DecimalUtility.DIGITS_BASE) {
-                        result.setInteger(currentIndex, (int) (tempSum % org.apache.drill.common.util.DecimalUtility.DIGITS_BASE));
+                        tempResult[currentIndex] = (int) (tempSum % org.apache.drill.common.util.DecimalUtility.DIGITS_BASE);
                         carry = (int) (tempSum / org.apache.drill.common.util.DecimalUtility.DIGITS_BASE);
                     } else {
-                        result.setInteger(currentIndex, (int) tempSum);
+                        tempResult[currentIndex] = (int) tempSum;
                         carry = 0;
                     }
 
@@ -643,11 +460,21 @@ public class ${type.name}Functions {
                 }
                 /* propogate the carry */
                 if (carry > 0)
-                    result.setInteger(currentIndex,  (result.getInteger(currentIndex) + carry));
+                    tempResult[currentIndex] += carry;
 
                 resultIndex--;
             }
 
+            int outputIndex = result.nDecimalDigits - 1;
+
+            for (int i = (currentIndex + resultIntegerSize + resultScaleSize - 1); i >= currentIndex; i--) {
+                result.setInteger(outputIndex--, tempResult[i]);
+            }
+
+            // Set the remaining digits to be zero
+            while(outputIndex >= 0) {
+              result.setInteger(outputIndex--, 0);
+            }
 
             // Set the scale and precision
             result.scale = left.scale + right.scale;
@@ -657,6 +484,536 @@ public class ${type.name}Functions {
         }
     }
 
+    @FunctionTemplate(name = "divide", scope = FunctionTemplate.FunctionScope.DECIMAL_DIV_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    public static class ${type.name}DivideFunction implements DrillSimpleFunc {
+
+        @Param ${type.name}Holder left;
+        @Param ${type.name}Holder right;
+        @Output ${type.name}Holder result;
+        @Workspace ByteBuf buffer;
+
+        public void setup(RecordBatch incoming) {
+            int size = (${type.storage} * (org.apache.drill.common.util.DecimalUtility.integerSize));
+            buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte[size]);
+            buffer = new io.netty.buffer.SwappedByteBuf(buffer);
+        }
+
+        public void eval() {
+
+            result.scale = left.scale;
+            result.precision = left.precision;
+            result.buffer = buffer;
+            result.start = 0;
+
+            java.math.BigDecimal numerator = org.apache.drill.common.util.DecimalUtility.getBigDecimalFromByteBuf(left.buffer, left.start, left.nDecimalDigits, left.scale, true);
+            java.math.BigDecimal denominator = org.apache.drill.common.util.DecimalUtility.getBigDecimalFromByteBuf(right.buffer, right.start, right.nDecimalDigits, right.scale, true);
+
+            java.math.BigDecimal output = numerator.divide(denominator, (int) result.scale, java.math.BigDecimal.ROUND_DOWN);
+
+            // Initialize the result buffer
+            for (int i = 0; i < ${type.storage}; i++) {
+                result.setInteger(i, 0);
+            }
+
+            org.apache.drill.common.util.DecimalUtility.getSparseFromBigDecimal(output, result.buffer, result.start, result.scale, result.precision, result.nDecimalDigits);
+        }
+    }
+
+    @FunctionTemplate(name = "mod", scope = FunctionTemplate.FunctionScope.DECIMAL_DIV_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    public static class ${type.name}ModFunction implements DrillSimpleFunc {
+
+        @Param ${type.name}Holder left;
+        @Param ${type.name}Holder right;
+        @Output ${type.name}Holder result;
+        @Workspace ByteBuf buffer;
+
+        public void setup(RecordBatch incoming) {
+            int size = (${type.storage} * (org.apache.drill.common.util.DecimalUtility.integerSize));
+            buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte[size]);
+            buffer = new io.netty.buffer.SwappedByteBuf(buffer);
+        }
+
+        public void eval() {
+
+            result.scale = left.scale;
+            result.precision = left.precision;
+            result.buffer = buffer;
+            result.start = 0;
+
+            java.math.BigDecimal numerator = org.apache.drill.common.util.DecimalUtility.getBigDecimalFromByteBuf(left.buffer, left.start, left.nDecimalDigits, left.scale, true);
+            java.math.BigDecimal denominator = org.apache.drill.common.util.DecimalUtility.getBigDecimalFromByteBuf(right.buffer, right.start, right.nDecimalDigits, right.scale, true);
+
+            java.math.BigDecimal output = numerator.remainder(denominator);
+            output.setScale(left.scale, java.math.BigDecimal.ROUND_DOWN);
+
+            // Initialize the result buffer
+            for (int i = 0; i < ${type.storage}; i++) {
+                result.setInteger(i, 0);
+            }
+
+            org.apache.drill.common.util.DecimalUtility.getSparseFromBigDecimal(output, result.buffer, result.start, result.scale, result.precision, result.nDecimalDigits);
+        }
+    }
+
+    @FunctionTemplate(name = "abs", scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    public static class ${type.name}AbsFunction implements DrillSimpleFunc {
+
+        @Param  ${type.name}Holder in;
+        @Output ${type.name}Holder out;
+        public void setup(RecordBatch incoming) {
+
+        }
+
+        public void eval() {
+          out.scale = in.scale;
+          out.precision = in.precision;
+          out.buffer = in.buffer;
+          out.start = in.start;
+
+          // set the output buffer with the positive sign
+          out.buffer.setInt(out.start, (out.buffer.getInt(out.start) & 0x7fffffff));
+        }
+    }
+
+    @FunctionTemplate(name = "sign", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+    public static class ${type.name}SignFunction implements DrillSimpleFunc {
+
+        @Param ${type.name}Holder in;
+        @Output IntHolder out;
+
+        public void setup(RecordBatch incoming) {}
+
+        public void eval() {
+
+          boolean zeroValue = true;
+
+          if (in.sign == true) {
+            out.value = -1;
+          } else {
+            for (int i = 0; i < ${type.storage}; i++) {
+              if (in.getInteger(i) != 0) {
+                zeroValue = false;
+                break;
+              }
+            }
+            out.value = (zeroValue == true) ? 0 : 1;
+          }
+        }
+    }
+
+    @FunctionTemplate(names = {"ceil", "ceiling"}, scope = FunctionTemplate.FunctionScope.DECIMAL_ZERO_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    public static class ${type.name}CeilFunction implements DrillSimpleFunc {
+
+        @Param  ${type.name}Holder in;
+        @Output ${type.name}Holder out;
+        public void setup(RecordBatch incoming) {
+
+        }
+
+        public void eval() {
+          out.scale = 0;
+          out.precision = in.precision;
+          out.buffer = in.buffer;
+          out.start = in.start;
+          out.sign = in.sign;
+
+          // Indicates whether we need to add 1 to the integer part, while performing ceil
+          int carry = 0;
+
+          int scaleStartIndex = ${type.storage} - org.apache.drill.common.util.DecimalUtility.roundUp(in.scale);
+          int srcIntIndex = scaleStartIndex - 1;
+
+          if (out.sign == false) {
+            // For negative values ceil we don't need to increment the integer part
+            while (scaleStartIndex < ${type.storage}) {
+              if (out.getInteger(scaleStartIndex) != 0) {
+                carry = 1;
+                break;
+              }
+              scaleStartIndex++;
+            }
+          }
+
+          // Truncate the fractional part, move the integer part
+          int destIndex = ${type.storage} - 1;
+          while (srcIntIndex >= 0) {
+            out.setInteger(destIndex--, out.getInteger(srcIntIndex--));
+          }
+
+          // Set the remaining portion of the decimal to be zeroes
+          while (destIndex >= 0) {
+            out.setInteger(destIndex--, 0);
+          }
+
+          // Add the carry
+          if (carry != 0) {
+            destIndex = ${type.storage} - 1;
+
+            while (destIndex >= 0) {
+              int intValue = out.getInteger(destIndex);
+              intValue += carry;
+
+              if (intValue >= org.apache.drill.common.util.DecimalUtility.DIGITS_BASE) {
+                out.setInteger(destIndex--, intValue % org.apache.drill.common.util.DecimalUtility.DIGITS_BASE);
+                carry = intValue / org.apache.drill.common.util.DecimalUtility.DIGITS_BASE;
+              } else {
+                out.setInteger(destIndex--, intValue);
+                break;
+              }
+            }
+          }
+        }
+    }
+
+    @FunctionTemplate(name = "floor", scope = FunctionTemplate.FunctionScope.DECIMAL_ZERO_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    public static class ${type.name}FloorFunction implements DrillSimpleFunc {
+
+        @Param  ${type.name}Holder in;
+        @Output ${type.name}Holder out;
+        public void setup(RecordBatch incoming) {
+
+        }
+
+        public void eval() {
+          out.scale = 0;
+          out.precision = in.precision;
+          out.buffer = in.buffer;
+          out.start = in.start;
+          out.sign = in.sign;
+
+          // Indicates whether we need to decrement 1 from the integer part, while performing floor, done for -ve values
+          int carry = 0;
+
+          int scaleStartIndex = ${type.storage} - org.apache.drill.common.util.DecimalUtility.roundUp(in.scale);
+          int srcIntIndex = scaleStartIndex - 1;
+
+          if (out.sign == true) {
+            // For negative values ceil we don't need to increment the integer part
+            while (scaleStartIndex < ${type.storage}) {
+              if (out.getInteger(scaleStartIndex) != 0) {
+                carry = 1;
+                break;
+              }
+              scaleStartIndex++;
+            }
+          }
+
+          // Truncate the fractional part, move the integer part
+          int destIndex = ${type.storage} - 1;
+          while (srcIntIndex >= 0) {
+            out.setInteger(destIndex--, out.getInteger(srcIntIndex--));
+          }
+
+          // Set the remaining portion of the decimal to be zeroes
+          while (destIndex >= 0) {
+            out.setInteger(destIndex--, 0);
+          }
+
+          // Add the carry
+          if (carry != 0) {
+            destIndex = ${type.storage} - 1;
+
+            while (destIndex >= 0) {
+              int intValue = out.getInteger(destIndex);
+              intValue += carry;
+
+              if (intValue >= org.apache.drill.common.util.DecimalUtility.DIGITS_BASE) {
+                out.setInteger(destIndex--, intValue % org.apache.drill.common.util.DecimalUtility.DIGITS_BASE);
+                carry = intValue / org.apache.drill.common.util.DecimalUtility.DIGITS_BASE;
+              } else {
+                out.setInteger(destIndex--, intValue);
+                break;
+              }
+            }
+          }
+        }
+    }
+
+    @FunctionTemplate(names = {"trunc", "truncate"}, scope = FunctionTemplate.FunctionScope.DECIMAL_ZERO_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    public static class ${type.name}TruncateFunction implements DrillSimpleFunc {
+
+        @Param  ${type.name}Holder in;
+        @Output ${type.name}Holder out;
+        public void setup(RecordBatch incoming) {
+
+        }
+
+        public void eval() {
+          out.scale = 0;
+          out.precision = in.precision;
+          out.buffer = in.buffer;
+          out.start = in.start;
+          out.sign = in.sign;
+
+          // Integer part's src index
+          int srcIntIndex = ${type.storage} - org.apache.drill.common.util.DecimalUtility.roundUp(in.scale) - 1;
+
+          // Truncate the fractional part, move the integer part
+          int destIndex = ${type.storage} - 1;
+          while (srcIntIndex >= 0) {
+            out.setInteger(destIndex--, out.getInteger(srcIntIndex--));
+          }
+
+          // Set the remaining portion of the decimal to be zeroes
+          while (destIndex >= 0) {
+            out.setInteger(destIndex--, 0);
+          }
+        }
+    }
+
+    @FunctionTemplate(names = {"trunc", "truncate"}, scope = FunctionTemplate.FunctionScope.DECIMAL_SET_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    public static class ${type.name}TruncateScaleFunction implements DrillSimpleFunc {
+
+        @Param  ${type.name}Holder left;
+        @Param  IntHolder right;
+        @Output ${type.name}Holder result;
+        public void setup(RecordBatch incoming) {
+
+        }
+
+        public void eval() {
+          result.scale = right.value;
+          result.precision = left.precision;
+          result.buffer = left.buffer;
+          result.start = left.start;
+          result.sign = left.sign;
+
+          int newScaleRoundedUp  = org.apache.drill.common.util.DecimalUtility.roundUp(right.value);
+          int origScaleRoundedUp = org.apache.drill.common.util.DecimalUtility.roundUp(left.scale);
+
+          if (right.value < left.scale) {
+            // Get the source index beyond which we will truncate
+            int srcIntIndex = ${type.storage} - origScaleRoundedUp - 1;
+            int srcIndex = srcIntIndex + newScaleRoundedUp;
+
+            // Truncate the remaining fractional part, move the integer part
+            int destIndex = ${type.storage} - 1;
+            if (srcIndex != destIndex) {
+              while (srcIndex >= 0) {
+                result.setInteger(destIndex--, result.getInteger(srcIndex--));
+              }
+
+              // Set the remaining portion of the decimal to be zeroes
+              while (destIndex >= 0) {
+                result.setInteger(destIndex--, 0);
+              }
+            }
+
+            // We truncated the decimal digit. Now we need to truncate within the base 1 billion fractional digit
+            int truncateFactor = org.apache.drill.common.util.DecimalUtility.MAX_DIGITS - (right.value % org.apache.drill.common.util.DecimalUtility.MAX_DIGITS);
+            if (truncateFactor != org.apache.drill.common.util.DecimalUtility.MAX_DIGITS) {
+              truncateFactor = (int) Math.pow(10, truncateFactor);
+              int fractionalDigits = result.getInteger(${type.storage} - 1);
+              fractionalDigits /= truncateFactor;
+              result.setInteger(${type.storage} - 1, fractionalDigits * truncateFactor);
+            }
+          } else if (right.value > left.scale) {
+            // Add fractional digits to the decimal
+
+            // Check if we need to shift the decimal digits to the left
+            if (newScaleRoundedUp > origScaleRoundedUp) {
+              int srcIndex  = 0;
+              int destIndex = newScaleRoundedUp - origScaleRoundedUp;
+
+              // Check while extending scale, we are not overwriting integer part
+              while (srcIndex < destIndex) {
+                if (result.getInteger(srcIndex++) != 0) {
+                  throw new org.apache.drill.common.exceptions.DrillRuntimeException("Truncate resulting in loss of integer part, reduce scale specified");
+                }
+              }
+
+              srcIndex = 0;
+              while (destIndex < ${type.storage}) {
+                result.setInteger(srcIndex++, result.getInteger(destIndex++));
+              }
+
+              // Clear the remaining part
+              while (srcIndex < ${type.storage}) {
+                result.setInteger(srcIndex++, 0);
+              }
+            }
+          }
+        }
+    }
+
+    @FunctionTemplate(name = "round", scope = FunctionTemplate.FunctionScope.DECIMAL_ZERO_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    public static class ${type.name}RoundFunction implements DrillSimpleFunc {
+
+        @Param  ${type.name}Holder in;
+        @Output ${type.name}Holder out;
+        public void setup(RecordBatch incoming) {
+
+        }
+
+        public void eval() {
+          out.scale = 0;
+          out.precision = in.precision;
+          out.buffer = in.buffer;
+          out.start = in.start;
+          out.sign = in.sign;
+
+          boolean roundUp = false;
+
+          // Get the first fractional digit to see if want to round up or not
+          int scaleIndex = ${type.storage} - org.apache.drill.common.util.DecimalUtility.roundUp(in.scale);
+          if (scaleIndex < ${type.storage}) {
+            int fractionalPart = out.getInteger(scaleIndex);
+            int digit = fractionalPart / (org.apache.drill.common.util.DecimalUtility.DIGITS_BASE / 10);
+
+            if (digit > 4) {
+              roundUp = true;
+            }
+          }
+
+          // Integer part's src index
+          int srcIntIndex = scaleIndex - 1;
+
+          // Truncate the fractional part, move the integer part
+          int destIndex = ${type.storage} - 1;
+          while (srcIntIndex >= 0) {
+            out.setInteger(destIndex--, out.getInteger(srcIntIndex--));
+          }
+
+          // Set the remaining portion of the decimal to be zeroes
+          while (destIndex >= 0) {
+            out.setInteger(destIndex--, 0);
+          }
+
+          // Perform the roundup
+          srcIntIndex = ${type.storage} - 1;
+          if (roundUp == true) {
+            while (srcIntIndex >= 0) {
+              int value = out.getInteger(srcIntIndex) + 1;
+              if (value >= org.apache.drill.common.util.DecimalUtility.DIGITS_BASE) {
+                out.setInteger(srcIntIndex--, value % org.apache.drill.common.util.DecimalUtility.DIGITS_BASE);
+                value = value / org.apache.drill.common.util.DecimalUtility.DIGITS_BASE;
+              } else {
+                out.setInteger(srcIntIndex--, value);
+                break;
+              }
+            }
+          }
+        }
+    }
+
+    @FunctionTemplate(name = "round", scope = FunctionTemplate.FunctionScope.DECIMAL_SET_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    public static class ${type.name}RoundScaleFunction implements DrillSimpleFunc {
+
+        @Param  ${type.name}Holder left;
+        @Param  IntHolder right;
+        @Output ${type.name}Holder result;
+        public void setup(RecordBatch incoming) {
+
+        }
+
+        public void eval() {
+          result.scale = right.value;
+          result.precision = left.precision;
+          result.buffer = left.buffer;
+          result.start = left.start;
+          result.sign = left.sign;
+
+          int newScaleRoundedUp  = org.apache.drill.common.util.DecimalUtility.roundUp(right.value);
+          int origScaleRoundedUp = org.apache.drill.common.util.DecimalUtility.roundUp(left.scale);
+
+          if (right.value < left.scale) {
+
+            boolean roundUp = false;
+
+            //Extract the first digit to be truncated to check if we need to round up
+            int truncatedScaleIndex = right.value + 1;
+            if (truncatedScaleIndex <= left.scale) {
+              int extractDigitIndex = ${type.storage} - origScaleRoundedUp -1;
+              extractDigitIndex += org.apache.drill.common.util.DecimalUtility.roundUp(truncatedScaleIndex);
+              int extractDigit = result.getInteger(extractDigitIndex);
+              int temp = org.apache.drill.common.util.DecimalUtility.MAX_DIGITS - (truncatedScaleIndex % org.apache.drill.common.util.DecimalUtility.MAX_DIGITS);
+              if (temp != 0) {
+                extractDigit = extractDigit / (int) (Math.pow(10, temp));
+              }
+              if ((extractDigit % 10)  > 4) {
+                roundUp = true;
+              }
+            }
+
+            // Get the source index beyond which we will truncate
+            int srcIntIndex = ${type.storage} - origScaleRoundedUp - 1;
+            int srcIndex = srcIntIndex + newScaleRoundedUp;
+
+            // Truncate the remaining fractional part, move the integer part
+            int destIndex = ${type.storage} - 1;
+            if (srcIndex != destIndex) {
+              while (srcIndex >= 0) {
+                result.setInteger(destIndex--, result.getInteger(srcIndex--));
+              }
+
+              // Set the remaining portion of the decimal to be zeroes
+              while (destIndex >= 0) {
+                result.setInteger(destIndex--, 0);
+              }
+              srcIndex = ${type.storage} - 1;
+            }
+
+            // We truncated the decimal digit. Now we need to truncate within the base 1 billion fractional digit
+            int truncateFactor = org.apache.drill.common.util.DecimalUtility.MAX_DIGITS - (right.value % org.apache.drill.common.util.DecimalUtility.MAX_DIGITS);
+            if (truncateFactor != org.apache.drill.common.util.DecimalUtility.MAX_DIGITS) {
+              truncateFactor = (int) Math.pow(10, truncateFactor);
+              int fractionalDigits = result.getInteger(${type.storage} - 1);
+              fractionalDigits /= truncateFactor;
+              result.setInteger(${type.storage} - 1, fractionalDigits * truncateFactor);
+            }
+
+            // Finally round up the digit if needed
+            if (roundUp == true) {
+              srcIndex = ${type.storage} - 1;
+              int carry;
+              if (truncateFactor != org.apache.drill.common.util.DecimalUtility.MAX_DIGITS) {
+                carry = truncateFactor;
+              } else {
+                carry = 1;
+              }
+
+              while (srcIndex >= 0) {
+                int value = result.getInteger(srcIndex);
+                value += carry;
+
+                if (value >= org.apache.drill.common.util.DecimalUtility.DIGITS_BASE) {
+                  result.setInteger(srcIndex--, value % org.apache.drill.common.util.DecimalUtility.DIGITS_BASE);
+                  carry = value / org.apache.drill.common.util.DecimalUtility.DIGITS_BASE;
+                } else {
+                  result.setInteger(srcIndex--, value);
+                  carry = 0;
+                  break;
+                }
+              }
+            }
+          } else if (right.value > left.scale) {
+            // Add fractional digits to the decimal
+
+            // Check if we need to shift the decimal digits to the left
+            if (newScaleRoundedUp > origScaleRoundedUp) {
+              int srcIndex  = 0;
+              int destIndex = newScaleRoundedUp - origScaleRoundedUp;
+
+              // Check while extending scale, we are not overwriting integer part
+              while (srcIndex < destIndex) {
+                if (result.getInteger(srcIndex++) != 0) {
+                  throw new org.apache.drill.common.exceptions.DrillRuntimeException("Truncate resulting in loss of integer part, reduce scale specified");
+                }
+              }
+
+              srcIndex = 0;
+              while (destIndex < ${type.storage}) {
+                result.setInteger(srcIndex++, result.getInteger(destIndex++));
+              }
+
+              // Clear the remaining part
+              while (srcIndex < ${type.storage}) {
+                result.setInteger(srcIndex++, 0);
+              }
+            }
+          }
+        }
+    }
 
     @FunctionTemplate(name = "compare_to", scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE, nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}CompareTo implements DrillSimpleFunc {
@@ -793,9 +1150,7 @@ public class ${type.name}Functions {
         public void setup(RecordBatch incoming) {}
 
         public void eval() {
-            int cmp;
-            <@denseCompareBlock left="left" right="right" output="cmp"/>
-            out.value = cmp;
+            out.value = org.apache.drill.common.util.DecimalUtility.compareDenseBytes(left.buffer, left.start, left.sign, right.buffer, right.start, right.sign, left.WIDTH);
         }
     }
 
@@ -808,8 +1163,7 @@ public class ${type.name}Functions {
         public void setup(RecordBatch incoming) {}
 
         public void eval() {
-            int cmp;
-            <@denseCompareBlock left="left" right="right" output="cmp"/>
+            int cmp  = org.apache.drill.common.util.DecimalUtility.compareDenseBytes(left.buffer, left.start, left.sign, right.buffer, right.start, right.sign, left.WIDTH);
             out.value = cmp == -1 ? 1 : 0;
         }
     }
@@ -823,8 +1177,7 @@ public class ${type.name}Functions {
         public void setup(RecordBatch incoming) {}
 
         public void eval() {
-            int cmp;
-            <@denseCompareBlock left="left" right="right" output="cmp"/>
+            int cmp = org.apache.drill.common.util.DecimalUtility.compareDenseBytes(left.buffer, left.start, left.sign, right.buffer, right.start, right.sign, left.WIDTH);
             out.value = cmp < 1 ? 1 : 0;
         }
     }
@@ -838,8 +1191,7 @@ public class ${type.name}Functions {
         public void setup(RecordBatch incoming) {}
 
         public void eval() {
-            int cmp;
-            <@denseCompareBlock left="left" right="right" output="cmp"/>
+            int cmp = org.apache.drill.common.util.DecimalUtility.compareDenseBytes(left.buffer, left.start, left.sign, right.buffer, right.start, right.sign, left.WIDTH);
             out.value = cmp == 1 ? 1 : 0;
         }
     }
@@ -853,8 +1205,7 @@ public class ${type.name}Functions {
         public void setup(RecordBatch incoming) {}
 
         public void eval() {
-            int cmp;
-            <@denseCompareBlock left="left" right="right" output="cmp"/>
+            int cmp = org.apache.drill.common.util.DecimalUtility.compareDenseBytes(left.buffer, left.start, left.sign, right.buffer, right.start, right.sign, left.WIDTH);
             out.value = cmp > -1 ? 1 : 0;
         }
     }
@@ -868,8 +1219,7 @@ public class ${type.name}Functions {
         public void setup(RecordBatch incoming) {}
 
         public void eval() {
-            int cmp;
-            <@denseCompareBlock left="left" right="right" output="cmp"/>
+            int cmp = org.apache.drill.common.util.DecimalUtility.compareDenseBytes(left.buffer, left.start, left.sign, right.buffer, right.start, right.sign, left.WIDTH);
             out.value = cmp == 0 ? 1 : 0;
         }
     }
@@ -885,8 +1235,7 @@ public class ${type.name}Functions {
 
         public void eval() {
 
-            int cmp;
-            <@denseCompareBlock left="left" right="right" output="cmp"/>
+            int cmp = org.apache.drill.common.util.DecimalUtility.compareDenseBytes(left.buffer, left.start, left.sign, right.buffer, right.start, right.sign, left.WIDTH);
             out.value = cmp != 0 ? 1 : 0;
         }
     }
@@ -904,6 +1253,7 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
+import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
 import io.netty.buffer.ByteBuf;
@@ -966,6 +1316,252 @@ public class ${type.name}Functions {
         }
     }
 
+    @FunctionTemplate(name = "abs", scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    public static class ${type.name}AbsFunction implements DrillSimpleFunc {
+
+        @Param ${type.name}Holder in;
+        @Output ${type.name}Holder out;
+
+        public void setup(RecordBatch incoming) {}
+
+        public void eval() {
+            out.precision = out.maxPrecision;
+            out.scale = in.scale;
+
+            out.value = in.value;
+
+            if (out.value < 0){
+                out.value *= -1;
+            }
+        }
+    }
+
+    @FunctionTemplate(name = "divide", scope = FunctionTemplate.FunctionScope.DECIMAL_DIV_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    public static class ${type.name}DivideFunction implements DrillSimpleFunc {
+
+        @Param ${type.name}Holder left;
+        @Param ${type.name}Holder right;
+        @Output ${type.name}Holder result;
+
+        public void setup(RecordBatch incoming) {}
+
+        public void eval() {
+
+            result.scale = left.scale;
+
+            java.math.BigDecimal numerator = new java.math.BigDecimal(java.math.BigInteger.valueOf(left.value), left.scale);
+            java.math.BigDecimal denominator = new java.math.BigDecimal(java.math.BigInteger.valueOf(right.value), right.scale);
+
+            java.math.BigDecimal output = numerator.divide(denominator, (int) result.scale, java.math.BigDecimal.ROUND_DOWN);
+
+            result.value = output.unscaledValue().${type.storage}Value();
+        }
+    }
+
+    @FunctionTemplate(name = "mod", scope = FunctionTemplate.FunctionScope.DECIMAL_DIV_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    public static class ${type.name}ModFunction implements DrillSimpleFunc {
+
+        @Param ${type.name}Holder left;
+        @Param ${type.name}Holder right;
+        @Output ${type.name}Holder result;
+
+        public void setup(RecordBatch incoming) {}
+
+        public void eval() {
+
+            java.math.BigDecimal numerator = new java.math.BigDecimal(java.math.BigInteger.valueOf(left.value), left.scale);
+            java.math.BigDecimal denominator = new java.math.BigDecimal(java.math.BigInteger.valueOf(right.value), right.scale);
+
+            java.math.BigDecimal output = numerator.remainder(denominator);
+            output.setScale(left.scale, java.math.BigDecimal.ROUND_DOWN);
+
+            result.value = output.unscaledValue().${type.storage}Value();
+            result.precision = result.maxPrecision;
+            result.scale = left.scale;
+        }
+    }
+
+    @FunctionTemplate(name = "sign", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+    public static class ${type.name}SignFunction implements DrillSimpleFunc {
+
+        @Param ${type.name}Holder in;
+        @Output IntHolder out;
+
+        public void setup(RecordBatch incoming) {}
+
+        public void eval() {
+
+            out.value = (in.value < 0) ? -1 : ((in.value > 0) ? 1 : 0);
+        }
+    }
+
+    @FunctionTemplate(names = {"trunc", "truncate"}, scope = FunctionTemplate.FunctionScope.DECIMAL_ZERO_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    public static class ${type.name}TruncFunction implements DrillSimpleFunc {
+
+        @Param ${type.name}Holder in;
+        @Output ${type.name}Holder out;
+
+        public void setup(RecordBatch incoming) {}
+
+        public void eval() {
+
+            out.value =(${type.storage}) (in.value / (Math.pow(10, in.scale)));
+            out.precision = out.maxPrecision;
+            out.scale = 0;
+        }
+    }
+
+    @FunctionTemplate(names = {"trunc", "truncate"}, scope = FunctionTemplate.FunctionScope.DECIMAL_SET_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    public static class ${type.name}TruncateScaleFunction implements DrillSimpleFunc {
+
+        @Param ${type.name}Holder left;
+        @Param IntHolder right;
+        @Output ${type.name}Holder out;
+
+        public void setup(RecordBatch incoming) {}
+
+        public void eval() {
+
+            out.value = (${type.storage}) (left.value / ( Math.pow(10, (left.scale - right.value))));
+            out.precision = out.maxPrecision;
+            out.scale = right.value;
+        }
+    }
+
+    @FunctionTemplate(names = {"ceil", "ceiling"}, scope = FunctionTemplate.FunctionScope.DECIMAL_ZERO_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    public static class ${type.name}CeilFunction implements DrillSimpleFunc {
+
+        @Param ${type.name}Holder in;
+        @Output ${type.name}Holder out;
+
+        public void setup(RecordBatch incoming) {
+
+        }
+
+        public void eval() {
+          ${type.storage} scaleFactor = (${type.storage}) (Math.pow(10, in.scale));
+
+          // Get the integer part
+          ${type.storage} integerPart = in.value / scaleFactor;
+
+          // Get the fractional part, if its non-zero increment the integer part
+          ${type.storage} fractionalPart = (${type.storage}) (in.value % scaleFactor);
+          if (fractionalPart != 0 && in.value >= 0) {
+            integerPart++;
+          }
+
+          out.scale = 0;
+          out.value = integerPart;
+        }
+    }
+
+    @FunctionTemplate(name = "floor", scope = FunctionTemplate.FunctionScope.DECIMAL_ZERO_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    public static class ${type.name}FloorFunction implements DrillSimpleFunc {
+
+        @Param ${type.name}Holder in;
+        @Output ${type.name}Holder out;
+
+        public void setup(RecordBatch incoming) {
+        }
+
+        public void eval() {
+
+          ${type.storage} scaleFactor = (${type.storage}) (Math.pow(10, in.scale));
+          out.scale = 0;
+          out.value = (in.value / scaleFactor);
+
+          // For negative values we have to decrement by 1
+          if (in.value < 0) {
+            ${type.storage} fractionalPart = (${type.storage}) (in.value % scaleFactor);
+            if (fractionalPart != 0) {
+              out.value--;
+            }
+          }
+        }
+    }
+
+    @FunctionTemplate(name = "round", scope = FunctionTemplate.FunctionScope.DECIMAL_ZERO_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    public static class ${type.name}RoundFunction implements DrillSimpleFunc {
+
+        @Param ${type.name}Holder in;
+        @Output ${type.name}Holder out;
+
+        public void setup(RecordBatch incoming) {
+        }
+
+        public void eval() {
+
+          ${type.storage} scaleFactor = (${type.storage}) (Math.pow(10, in.scale));
+          ${type.storage} extractDigit = scaleFactor / 10;
+
+          out.scale = 0;
+          // Assign the integer part to the output
+          out.value = in.value / scaleFactor;
+
+          // Get the fractional part
+          ${type.storage} fractionalPart = in.value % scaleFactor;
+          // Get the first digit to check for rounding
+          int digit = Math.abs((int) (fractionalPart / extractDigit));
+
+          if (digit > 4) {
+            if (in.value > 0) {
+              out.value++;
+            } else if (in.value < 0) {
+              out.value--;
+            }
+          }
+        }
+    }
+
+    @FunctionTemplate(name = "round", scope = FunctionTemplate.FunctionScope.DECIMAL_SET_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    public static class ${type.name}RoundScaleFunction implements DrillSimpleFunc {
+
+        @Param ${type.name}Holder left;
+        @Param IntHolder right;
+        @Output ${type.name}Holder out;
+
+
+        public void setup(RecordBatch incoming) {
+        }
+
+        public void eval() {
+
+          ${type.storage} scaleFactor = (${type.storage}) (Math.pow(10, left.scale));
+          ${type.storage} newScaleFactor = (${type.storage}) (Math.pow(10, right.value));
+          ${type.storage} truncScaleFactor = (${type.storage}) (Math.pow(10, left.scale - right.value));
+
+          // If rounding scale is >= current scale
+          if (right.value >= left.scale) {
+            out.value = (${type.storage}) (left.value * (int) Math.pow(10, (right.value - left.scale)));
+          }
+          else {
+            out.scale = right.value;
+            // Assign the integer part to the output
+            out.value = left.value / scaleFactor;
+
+            // Get the fractional part
+            ${type.storage} fractionalPart = left.value % scaleFactor;
+
+            // From the entire fractional part extract the digits upto which rounding is needed
+            ${type.storage} newFractionalPart = fractionalPart / truncScaleFactor;
+            ${type.storage} truncatedFraction = fractionalPart % truncScaleFactor;
+
+
+            // Get the truncated fractional part and extract the first digit to see if we need to add 1
+            int digit = Math.abs((int) (truncatedFraction / (truncScaleFactor / 10)));
+
+            if (digit > 4) {
+              if (left.value > 0) {
+                newFractionalPart++;
+              } else if (left.value < 0) {
+                newFractionalPart--;
+              }
+            }
+
+            out.value = (out.value * newScaleFactor) + newFractionalPart;
+          }
+        }
+    }
 
     @FunctionTemplate(name = "compare_to", scope = FunctionTemplate.FunctionScope.DECIMAL_MAX_SCALE, nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}CompareTo implements DrillSimpleFunc {

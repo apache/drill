@@ -257,13 +257,14 @@ public class DrillOptiq {
 
     }
 
-    private LogicalExpression getDrillFunctionFromOptiqCall(RexCall call){
+    private LogicalExpression getDrillFunctionFromOptiqCall(RexCall call) {
       List<LogicalExpression> args = Lists.newArrayList();
       for(RexNode n : call.getOperands()){
         args.add(n.accept(this));
       }
       String functionName = call.getOperator().getName().toLowerCase();
 
+      // TODO: once we have more function rewrites and a patter emerges from different rewrites, factor this out in a better fashion
       /* Rewrite extract functions in the following manner
        * extract(year, date '2008-2-23') ---> extractYear(date '2008-2-23')
        */
@@ -288,11 +289,8 @@ public class DrillOptiq {
           default:
             throw new UnsupportedOperationException("extract function supports the following time units: YEAR, MONTH, DAY, HOUR, MINUTE, SECOND");
         }
-      }
-
-      // Rewrite DATE_PART functions as extract functions
-      if (call.getOperator().getName().equalsIgnoreCase("DATE_PART")) {
-
+      } else if (functionName.equals("date_part")) {
+        // Rewrite DATE_PART functions as extract functions
         // assert that the function has exactly two arguments
         assert args.size() == 2;
 
@@ -305,9 +303,39 @@ public class DrillOptiq {
         QuotedString extractString = (QuotedString) args.get(0);
         String functionPostfix = extractString.value.substring(0, 1).toUpperCase() + extractString.value.substring(1).toLowerCase();
         return FunctionCallFactory.createExpression("extract" + functionPostfix, args.subList(1, 2));
+      } else if (functionName.equals("concat")) {
+
+        // Cast arguments to VARCHAR
+        List<LogicalExpression> concatArgs = Lists.newArrayList();
+        MajorType castType = Types.required(MinorType.VARCHAR).toBuilder().setWidth(64000).build();
+        concatArgs.add(FunctionCallFactory.createCast(castType, ExpressionPosition.UNKNOWN, args.get(0)));
+        concatArgs.add(FunctionCallFactory.createCast(castType, ExpressionPosition.UNKNOWN, args.get(1)));
+
+        LogicalExpression first = FunctionCallFactory.createExpression(functionName, concatArgs);
+
+        for (int i = 2; i < args.size(); i++) {
+          concatArgs = Lists.newArrayList();
+          concatArgs.add(first);
+          concatArgs.add(FunctionCallFactory.createCast(castType, ExpressionPosition.UNKNOWN, args.get(i)));
+          first = FunctionCallFactory.createExpression(functionName, concatArgs);
+        }
+
+        return first;
+      } else if (functionName.equals("length")) {
+
+          if (args.size() == 2) {
+
+              // Second argument should always be a literal specifying the encoding format
+              assert args.get(1) instanceof ValueExpressions.QuotedString;
+
+              String encodingType = ((ValueExpressions.QuotedString) args.get(1)).value;
+              functionName += encodingType.substring(0, 1).toUpperCase() + encodingType.substring(1).toLowerCase();
+
+              return FunctionCallFactory.createExpression(functionName, args.subList(0, 1));
+          }
       }
 
-      return FunctionCallFactory.createExpression(call.getOperator().getName().toLowerCase(), args);
+      return FunctionCallFactory.createExpression(functionName, args);
     }
 
     @Override

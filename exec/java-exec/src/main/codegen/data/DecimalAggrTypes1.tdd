@@ -1,0 +1,65 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+# http:# www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+{
+  aggrtypes: [
+   {className: "Max", funcName: "max", types: [
+      {inputType: "Decimal9", outputType: "Decimal9", runningType: "Decimal9", initValue: "Integer.MIN_VALUE"},
+      {inputType: "NullableDecimal9", outputType: "Decimal9", runningType: "Decimal9", initValue: "Integer.MIN_VALUE"},
+      {inputType: "Decimal18", outputType: "Decimal18", runningType: "Decimal18", initValue: "Long.MIN_VALUE"},
+      {inputType: "NullableDecimal18", outputType: "Decimal18", runningType: "Decimal18", initValue: "Long.MIN_VALUE"},
+      {inputType: "Decimal28Dense", outputType: "Decimal28Dense", runningType: "Decimal28Dense"},
+      {inputType: "NullableDecimal28Dense", outputType: "Decimal28Dense", runningType: "Decimal28Dense"},
+      {inputType: "Decimal38Dense", outputType: "Decimal38Dense", runningType: "Decimal38Dense"},
+      {inputType: "NullableDecimal38Dense", outputType: "Decimal38Dense", runningType: "Decimal38Dense"},
+      {inputType: "Decimal28Sparse", outputType: "Decimal28Sparse", runningType: "Decimal28Sparse"},
+      {inputType: "NullableDecimal28Sparse", outputType: "Decimal28Sparse", runningType: "Decimal28Sparse"},
+      {inputType: "Decimal38Sparse", outputType: "Decimal38Sparse", runningType: "Decimal38Sparse"},
+      {inputType: "NullableDecimal38Sparse", outputType: "Decimal38Sparse", runningType: "Decimal38Sparse"}
+     ]
+   },
+   {className: "Min", funcName: "min", types: [
+      {inputType: "Decimal9", outputType: "Decimal9", runningType: "Decimal9", initValue: "Integer.MAX_VALUE"},
+      {inputType: "NullableDecimal9", outputType: "Decimal9", runningType: "Decimal9", initValue: "Integer.MAX_VALUE"},
+      {inputType: "Decimal18", outputType: "Decimal18", runningType: "Decimal18", initValue: "Integer.MAX_VALUE"},
+      {inputType: "NullableDecimal18", outputType: "Decimal18", runningType: "Decimal18", initValue: "Integer.MAX_VALUE"},
+      {inputType: "Decimal28Dense", outputType: "Decimal28Dense", runningType: "Decimal28Dense"},
+      {inputType: "NullableDecimal28Dense", outputType: "Decimal28Dense", runningType: "Decimal28Dense"},
+      {inputType: "Decimal38Dense", outputType: "Decimal38Dense", runningType: "Decimal38Dense"},
+      {inputType: "NullableDecimal38Dense", outputType: "Decimal38Dense", runningType: "Decimal38Dense"},
+      {inputType: "Decimal28Sparse", outputType: "Decimal28Sparse", runningType: "Decimal28Sparse"},
+      {inputType: "NullableDecimal28Sparse", outputType: "Decimal28Sparse", runningType: "Decimal28Sparse"},
+      {inputType: "Decimal38Sparse", outputType: "Decimal38Sparse", runningType: "Decimal38Sparse"},
+      {inputType: "NullableDecimal38Sparse", outputType: "Decimal38Sparse", runningType: "Decimal38Sparse"}
+     ]
+   },
+      {className: "Count", funcName: "count", types: [
+         {inputType: "Decimal9", outputType: "BigInt", runningType: "BigInt", major: "Numeric"},
+         {inputType: "NullableDecimal9", outputType: "BigInt", runningType: "BigInt", major: "Numeric"},
+         {inputType: "Decimal18", outputType: "BigInt", runningType: "BigInt", major: "Numeric"},
+         {inputType: "NullableDecimal18", outputType: "BigInt", runningType: "BigInt", major: "Numeric"},
+         {inputType: "Decimal28Sparse", outputType: "BigInt", runningType: "BigInt", major: "Numeric"},
+         {inputType: "NullableDecimal28Sparse", outputType: "BigInt", runningType: "BigInt", major: "Numeric"},
+         {inputType: "Decimal38Sparse", outputType: "BigInt", runningType: "BigInt", major: "Numeric"},
+         {inputType: "NullableDecimal38Sparse", outputType: "BigInt", runningType: "BigInt", major: "Numeric"},
+         {inputType: "Decimal28Dense", outputType: "BigInt", runningType: "BigInt", major: "Numeric"},
+         {inputType: "NullableDecimal28Dense", outputType: "BigInt", runningType: "BigInt", major: "Numeric"},
+         {inputType: "Decimal38Dense", outputType: "BigInt", runningType: "BigInt", major: "Numeric"},
+         {inputType: "NullableDecimal38Dense", outputType: "BigInt", runningType: "BigInt", major: "Numeric"}
+        ]
+      }
+  ]
+}

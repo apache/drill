@@ -39,7 +39,7 @@ import org.junit.rules.TestRule;
 import com.google.common.base.Function;
 import com.google.common.base.Stopwatch;
 
-public class TestDateAggregateFunction {
+public class TestAggregateFunctionsQuery {
 
   public static final String WORKING_PATH;
   static{
@@ -55,7 +55,7 @@ public class TestDateAggregateFunction {
     JdbcAssert.withFull("cp")
         .sql(query)
         .returns(
-                "MAX_DATE=1998-01-01; " +
+            "MAX_DATE=1998-01-01; " +
                 "MIN_DATE=1993-05-01\n"
         );
   }
@@ -70,6 +70,29 @@ public class TestDateAggregateFunction {
         .returns(
             "MAX_DAYS=7671 days 0:0:0.0; " +
                 "MIN_DAYS=5965 days 0:0:0.0\n"
+        );
+  }
+
+  @Test
+  public void testDecimalAggFunction() throws Exception{
+    String query = new String("SELECT " +
+        "max(cast(EMPLOYEE_ID as decimal(9, 2))) as MAX_DEC9, min(cast(EMPLOYEE_ID as decimal(9, 2))) as MIN_DEC9," +
+        "max(cast(EMPLOYEE_ID as decimal(18, 4))) as MAX_DEC18, min(cast(EMPLOYEE_ID as decimal(18, 4))) as MIN_DEC18," +
+        "max(cast(EMPLOYEE_ID as decimal(28, 9))) as MAX_DEC28, min(cast(EMPLOYEE_ID as decimal(28, 9))) as MIN_DEC28," +
+        "max(cast(EMPLOYEE_ID as decimal(38, 11))) as MAX_DEC38, min(cast(EMPLOYEE_ID as decimal(38, 11))) as MIN_DEC38" +
+        " FROM `employee.json`");
+
+    JdbcAssert.withFull("cp")
+        .sql(query)
+        .returns(
+            "MAX_DEC9=1156.00; " +
+                "MIN_DEC9=1.00; " +
+                "MAX_DEC18=1156.0000; " +
+                "MIN_DEC18=1.0000; " +
+                "MAX_DEC28=1156.000000000; " +
+                "MIN_DEC28=1.000000000; " +
+                "MAX_DEC38=1156.00000000000; " +
+                "MIN_DEC38=1.00000000000\n "
         );
   }
 }

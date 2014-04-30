@@ -662,7 +662,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
    public void set(int index, <#if (type.width >= 4)>${minor.javaType!type.javaType}<#else>int</#if> value) {
      data.set${(minor.javaType!type.javaType)?cap_first}(index * ${type.width}, value);
    }
-   
+
    public boolean setSafe(int index, <#if (type.width >= 4)>${minor.javaType!type.javaType}<#else>int</#if> value) {
      if(index >= getValueCapacity()) {
        allocationMonitor--;

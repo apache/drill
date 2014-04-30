@@ -31,6 +31,7 @@ public class DecimalUtility {
 
     public final static int MAX_DIGITS = 9;
     public final static int DIGITS_BASE = 1000000000;
+    public final static int DIGITS_MAX = 999999999;
     public final static int integerSize = (Integer.SIZE/8);
 
     public final static String[] decimalToString = {"",
@@ -287,5 +288,203 @@ public class DecimalUtility {
 
         return (input.unscaledValue().longValue());
     }
+
+    public static int compareDenseBytes(ByteBuf left, int leftStart, boolean leftSign, ByteBuf right, int rightStart, boolean rightSign, int width) {
+
+      int invert = 1;
+
+      /* If signs are different then simply look at the
+       * sign of the two inputs and determine which is greater
+       */
+      if (leftSign != rightSign) {
+
+        return((leftSign == true) ? -1 : 1);
+      } else if(leftSign == true) {
+        /* Both inputs are negative, at the end we will
+         * have to invert the comparison
+         */
+        invert = -1;
+      }
+
+      int cmp = 0;
+
+      for (int i = 0; i < width; i++) {
+        byte leftByte  = left.getByte(leftStart + i);
+        byte rightByte = right.getByte(rightStart + i);
+        // Unsigned byte comparison
+        if ((leftByte & 0xFF) > (rightByte & 0xFF)) {
+          cmp = 1;
+          break;
+        } else if ((leftByte & 0xFF) < (rightByte & 0xFF)) {
+          cmp = -1;
+          break;
+        }
+      }
+      cmp *= invert; // invert the comparison if both were negative values
+
+      return cmp;
+    }
+
+    public static int getIntegerFromSparseBuffer(ByteBuf buffer, int start, int index) {
+      int value = buffer.getInt(start + (index * 4));
+
+      if (index == 0) {
+        /* the first byte contains sign bit, return value without it */
+        value = (value & 0x7FFFFFFF);
+      }
+      return value;
+    }
+
+    public static void setInteger(ByteBuf buffer, int start, int index, int value) {
+      buffer.setInt(start + (index * 4), value);
+    }
+
+    public static int compareSparseBytes(ByteBuf left, int leftStart, boolean leftSign, int leftScale, int leftPrecision, ByteBuf right, int rightStart, boolean rightSign, int rightPrecision, int rightScale, int width, int nDecimalDigits, boolean absCompare) {
+
+      int invert = 1;
+
+      if (absCompare == false) {
+        if (leftSign != rightSign) {
+          return (leftSign == true) ? -1 : 1;
+        }
+
+        // Both values are negative invert the outcome of the comparison
+        if (leftSign == true) {
+          invert = -1;
+        }
+      }
+
+      int cmp = compareSparseBytesInner(left, leftStart, leftSign, leftScale, leftPrecision, right, rightStart, rightSign, rightPrecision, rightScale, width, nDecimalDigits);
+      return cmp * invert;
+    }
+    public static int compareSparseBytesInner(ByteBuf left, int leftStart, boolean leftSign, int leftScale, int leftPrecision, ByteBuf right, int rightStart, boolean rightSign, int rightPrecision, int rightScale, int width, int nDecimalDigits) {
+      /* compute the number of integer digits in each decimal */
+      int leftInt  = leftPrecision - leftScale;
+      int rightInt = rightPrecision - rightScale;
+
+      /* compute the number of indexes required for storing integer digits */
+      int leftIntRoundedUp = org.apache.drill.common.util.DecimalUtility.roundUp(leftInt);
+      int rightIntRoundedUp = org.apache.drill.common.util.DecimalUtility.roundUp(rightInt);
+
+      /* compute number of indexes required for storing scale */
+      int leftScaleRoundedUp = org.apache.drill.common.util.DecimalUtility.roundUp(leftScale);
+      int rightScaleRoundedUp = org.apache.drill.common.util.DecimalUtility.roundUp(rightScale);
+
+      /* compute index of the most significant integer digits */
+      int leftIndex1 = nDecimalDigits - leftScaleRoundedUp - leftIntRoundedUp;
+      int rightIndex1 = nDecimalDigits - rightScaleRoundedUp - rightIntRoundedUp;
+
+      int leftStopIndex = nDecimalDigits - leftScaleRoundedUp;
+      int rightStopIndex = nDecimalDigits - rightScaleRoundedUp;
+
+      /* Discard the zeroes in the integer part */
+      while (leftIndex1 < leftStopIndex) {
+        if (getIntegerFromSparseBuffer(left, leftStart, leftIndex1) != 0) {
+          break;
+        }
+
+        /* Digit in this location is zero, decrement the actual number
+         * of integer digits
+         */
+        leftIntRoundedUp--;
+        leftIndex1++;
+      }
+
+      /* If we reached the stop index then the number of integers is zero */
+      if (leftIndex1 == leftStopIndex) {
+        leftIntRoundedUp = 0;
+      }
+
+      while (rightIndex1 < rightStopIndex) {
+        if (getIntegerFromSparseBuffer(right, rightStart, rightIndex1) != 0) {
+          break;
+        }
+
+        /* Digit in this location is zero, decrement the actual number
+         * of integer digits
+         */
+        rightIntRoundedUp--;
+        rightIndex1++;
+      }
+
+      if (rightIndex1 == rightStopIndex) {
+        rightIntRoundedUp = 0;
+      }
+
+      /* We have the accurate number of non-zero integer digits,
+       * if the number of integer digits are different then we can determine
+       * which decimal is larger and needn't go down to comparing individual values
+       */
+      if (leftIntRoundedUp > rightIntRoundedUp) {
+        return 1;
+      }
+      else if (rightIntRoundedUp > leftIntRoundedUp) {
+        return -1;
+      }
+
+      /* The number of integer digits are the same, set the each index
+       * to the first non-zero integer and compare each digit
+       */
+      leftIndex1 = nDecimalDigits - leftScaleRoundedUp - leftIntRoundedUp;
+      rightIndex1 = nDecimalDigits - rightScaleRoundedUp - rightIntRoundedUp;
+
+      while (leftIndex1 < leftStopIndex && rightIndex1 < rightStopIndex) {
+        if (getIntegerFromSparseBuffer(left, leftStart, leftIndex1) > getIntegerFromSparseBuffer(right, rightStart, rightIndex1)) {
+          return 1;
+        }
+        else if (getIntegerFromSparseBuffer(right, rightStart, rightIndex1) > getIntegerFromSparseBuffer(left, leftStart, leftIndex1)) {
+          return -1;
+        }
+
+        leftIndex1++;
+        rightIndex1++;
+      }
+
+      /* The integer part of both the decimal's are equal, now compare
+       * each individual fractional part. Set the index to be at the
+       * beginning of the fractional part
+       */
+      leftIndex1 = leftStopIndex;
+      rightIndex1 = rightStopIndex;
+
+      /* Stop indexes will be the end of the array */
+      leftStopIndex = nDecimalDigits;
+      rightStopIndex = nDecimalDigits;
+
+      /* compare the two fractional parts of the decimal */
+      while (leftIndex1 < leftStopIndex && rightIndex1 < rightStopIndex) {
+        if (getIntegerFromSparseBuffer(left, leftStart, leftIndex1) > getIntegerFromSparseBuffer(right, rightStart, rightIndex1)) {
+          return 1;
+        }
+        else if (getIntegerFromSparseBuffer(right, rightStart, rightIndex1) > getIntegerFromSparseBuffer(left, leftStart, leftIndex1)) {
+          return -1;
+        }
+
+        leftIndex1++;
+        rightIndex1++;
+      }
+
+      /* Till now the fractional part of the decimals are equal, check
+       * if one of the decimal has fractional part that is remaining
+       * and is non-zero
+       */
+      while (leftIndex1 < leftStopIndex) {
+        if (getIntegerFromSparseBuffer(left, leftStart, leftIndex1) != 0) {
+          return 1;
+        }
+        leftIndex1++;
+      }
+
+      while(rightIndex1 < rightStopIndex) {
+        if (getIntegerFromSparseBuffer(right, rightStart, rightIndex1) != 0) {
+          return -1;
+        }
+        rightIndex1++;
+      }
+
+      /* Both decimal values are equal */
+      return 0;
+    }
+
 }
 

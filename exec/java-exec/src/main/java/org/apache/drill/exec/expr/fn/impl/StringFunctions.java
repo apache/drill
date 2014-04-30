@@ -31,6 +31,7 @@ import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.BitHolder;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
+import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
 import org.apache.drill.exec.record.RecordBatch;
 
 public class StringFunctions{
@@ -115,7 +116,19 @@ public class StringFunctions{
     public void eval(){
       out.value = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.getUTF8CharLength(input.buffer, input.start, input.end);          
     } 
-    
+  }
+
+  @FunctionTemplate(name = "lengthUtf8", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  public static class ByteLength implements DrillSimpleFunc{
+
+    @Param  VarBinaryHolder input;
+    @Output BigIntHolder out;
+
+    public void setup(RecordBatch incoming){}
+
+    public void eval(){
+      out.value = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.getUTF8CharLength(input.buffer, input.start, input.end);
+    }
   }
 
   @FunctionTemplate(name = "octet_length", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
@@ -779,6 +792,92 @@ public class StringFunctions{
         out.buffer.setByte(out.end++, right.buffer.getByte(id));
     } 
     
+  }
+
+  @FunctionTemplate(name = "concat", scope = FunctionScope.SIMPLE, nulls = NullHandling.INTERNAL)
+  public static class ConcatRightNullInput implements DrillSimpleFunc{
+
+    @Param  VarCharHolder left;
+    @Param  NullableVarCharHolder right;
+    @Output VarCharHolder out;
+    @Workspace ByteBuf buffer;
+
+
+    public void setup(RecordBatch incoming){
+      buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte [8000]);
+    }
+
+    public void eval(){
+      out.buffer = buffer;
+      out.start = out.end = 0;
+
+      int id = 0;
+      for (id = left.start; id < left.end; id++)
+        out.buffer.setByte(out.end++, left.buffer.getByte(id));
+
+      if (right.isSet == 1) {
+       for (id = right.start; id < right.end; id++)
+         out.buffer.setByte(out.end++, right.buffer.getByte(id));
+      }
+    }
+  }
+
+  @FunctionTemplate(name = "concat", scope = FunctionScope.SIMPLE, nulls = NullHandling.INTERNAL)
+  public static class ConcatLeftNullInput implements DrillSimpleFunc{
+
+    @Param  NullableVarCharHolder left;
+    @Param  VarCharHolder right;
+    @Output VarCharHolder out;
+    @Workspace ByteBuf buffer;
+
+
+    public void setup(RecordBatch incoming){
+      buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte [8000]);
+    }
+
+    public void eval(){
+      out.buffer = buffer;
+      out.start = out.end = 0;
+
+      int id = 0;
+      if (left.isSet == 1) {
+        for (id = left.start; id < left.end; id++)
+          out.buffer.setByte(out.end++, left.buffer.getByte(id));
+      }
+
+       for (id = right.start; id < right.end; id++)
+         out.buffer.setByte(out.end++, right.buffer.getByte(id));
+    }
+  }
+
+  @FunctionTemplate(name = "concat", scope = FunctionScope.SIMPLE, nulls = NullHandling.INTERNAL)
+  public static class ConcatBothNullInput implements DrillSimpleFunc{
+
+    @Param  NullableVarCharHolder left;
+    @Param  NullableVarCharHolder right;
+    @Output VarCharHolder out;
+    @Workspace ByteBuf buffer;
+
+
+    public void setup(RecordBatch incoming){
+      buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte [8000]);
+    }
+
+    public void eval(){
+      out.buffer = buffer;
+      out.start = out.end = 0;
+
+      int id = 0;
+      if (left.isSet == 1) {
+        for (id = left.start; id < left.end; id++)
+          out.buffer.setByte(out.end++, left.buffer.getByte(id));
+      }
+
+      if (right.isSet == 1) {
+       for (id = right.start; id < right.end; id++)
+         out.buffer.setByte(out.end++, right.buffer.getByte(id));
+      }
+    }
   }
 
   // Converts a hex encoded string into a varbinary type.
