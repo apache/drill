@@ -36,6 +36,9 @@ import org.apache.drill.exec.work.QueryWorkUnit;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import org.apache.drill.exec.expr.fn.impl.DateUtility;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 /**
  * The simple parallelizer determines the level of parallelization of a plan based on the cost of the underlying
@@ -79,6 +82,7 @@ public class SimpleParallelizer {
     FragmentRoot rootOperator = null;
 
     long queryStartTime = System.currentTimeMillis();
+    int timeZone = DateUtility.getIndex(System.getProperty("user.timezone"));
 
     // now we generate all the individual plan fragments and associated assignments. Note, we need all endpoints
     // assigned before we can materialize, so we start a new loop here rather than utilizing the previous one.
@@ -128,6 +132,7 @@ public class SimpleParallelizer {
             .setAssignment(wrapper.getAssignedEndpoint(minorFragmentId)) //
             .setLeafFragment(isLeafFragment) //
             .setQueryStartTime(queryStartTime)
+            .setTimeZone(timeZone)
             .build();
 
         if (isRootNode) {

@@ -18,6 +18,7 @@
 
 package org.apache.drill.exec.expr.fn.impl;
 
+import io.netty.buffer.ByteBuf;
 import org.apache.drill.common.expression.*;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
@@ -27,8 +28,17 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
-import org.apache.drill.exec.expr.holders.*;
+import org.apache.drill.exec.expr.holders.BigIntHolder;
+import org.apache.drill.exec.expr.holders.TimeHolder;
+import org.apache.drill.exec.expr.holders.VarCharHolder;
+import org.apache.drill.exec.expr.holders.TimeStampHolder;
+import org.apache.drill.exec.expr.holders.TimeStampTZHolder;
+import org.apache.drill.exec.expr.holders.DateHolder;
+import org.apache.drill.exec.expr.holders.IntervalHolder;
+import org.apache.drill.exec.expr.holders.IntervalDayHolder;
+import org.apache.drill.exec.expr.holders.IntervalYearHolder;
 import org.apache.drill.exec.record.RecordBatch;
+import org.joda.time.DateTimeZone;
 
 public class DateTypeFunctions {
 
@@ -201,87 +211,6 @@ public class DateTypeFunctions {
         }
     }
 
-    @FunctionTemplate(names = {"date_add", "add"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
-    public static class DateIntervalAdd implements DrillSimpleFunc{
-
-        @Param DateHolder dateType;
-        @Param IntervalHolder intervalType;
-        @Output DateHolder out;
-
-        public void setup(RecordBatch b){}
-
-        public void eval(){
-
-            org.joda.time.MutableDateTime temp = new org.joda.time.MutableDateTime(dateType.value, org.joda.time.DateTimeZone.UTC);
-            temp.addMonths(intervalType.months);
-            temp.addDays(intervalType.days);
-            temp.add(intervalType.milliSeconds);
-
-            out.value = temp.getMillis();
-        }
-    }
-
-    @FunctionTemplate(names = {"date_add", "add"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
-    public static class IntervalDateAdd implements DrillSimpleFunc{
-
-        @Param IntervalHolder intervalType;
-        @Param DateHolder dateType;
-        @Output DateHolder out;
-
-        public void setup(RecordBatch b){}
-
-        public void eval(){
-
-            org.joda.time.MutableDateTime temp = new org.joda.time.MutableDateTime(dateType.value, org.joda.time.DateTimeZone.UTC);
-            temp.addMonths(intervalType.months);
-            temp.addDays(intervalType.days);
-            temp.add(intervalType.milliSeconds);
-
-            out.value = temp.getMillis();
-        }
-    }
-
-
-    @FunctionTemplate(names = {"date_sub", "subtract"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
-    public static class DateIntervalSub implements DrillSimpleFunc{
-
-        @Param DateHolder dateType;
-        @Param IntervalHolder intervalType;
-        @Output DateHolder out;
-
-        public void setup(RecordBatch b){}
-
-        public void eval(){
-
-            org.joda.time.MutableDateTime temp = new org.joda.time.MutableDateTime(dateType.value, org.joda.time.DateTimeZone.UTC);
-            temp.addMonths(intervalType.months * -1);
-            temp.addDays(intervalType.days * -1);
-            temp.add(intervalType.milliSeconds * -1);
-
-            out.value = temp.getMillis();
-        }
-    }
-
-    @FunctionTemplate(names = {"date_sub", "subtract"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
-    public static class IntervalDateSub implements DrillSimpleFunc{
-
-        @Param IntervalHolder intervalType;
-        @Param DateHolder dateType;
-        @Output DateHolder out;
-
-        public void setup(RecordBatch b){}
-
-        public void eval(){
-
-            org.joda.time.MutableDateTime temp = new org.joda.time.MutableDateTime(dateType.value, org.joda.time.DateTimeZone.UTC);
-            temp.addMonths(intervalType.months * -1);
-            temp.addDays(intervalType.days * -1);
-            temp.add(intervalType.milliSeconds * -1);
-
-            out.value = temp.getMillis();
-        }
-    }
-
     @FunctionTemplate(name = "current_date", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
     public static class CurrentDate implements DrillSimpleFunc {
         @Workspace long queryStartDate;
@@ -289,8 +218,10 @@ public class DateTypeFunctions {
 
         public void setup(RecordBatch incoming) {
 
-            org.joda.time.DateTime now = new org.joda.time.DateTime(incoming.getContext().getQueryStartTime());
-            queryStartDate = (new org.joda.time.DateMidnight(now.getYear(), now.getMonthOfYear(), now.getDayOfMonth(), org.joda.time.DateTimeZone.UTC)).getMillis();
+            int timeZoneIndex = incoming.getContext().getRootFragmentTimeZone();
+            org.joda.time.DateTimeZone timeZone = org.joda.time.DateTimeZone.forID(org.apache.drill.exec.expr.fn.impl.DateUtility.getTimeZone(timeZoneIndex));
+            org.joda.time.DateTime now = new org.joda.time.DateTime(incoming.getContext().getQueryStartTime(), timeZone);
+            queryStartDate = (new org.joda.time.DateMidnight(now.getYear(), now.getMonthOfYear(), now.getDayOfMonth(), timeZone)).getMillis();
         }
 
         public void eval() {
@@ -299,15 +230,17 @@ public class DateTypeFunctions {
 
     }
 
-    @FunctionTemplate(name = "current_timestamptz", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
-    public static class CurrentTimeStampTZ implements DrillSimpleFunc {
+    @FunctionTemplate(names = {"current_timestamp", "now"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+    public static class CurrentTimeStamp implements DrillSimpleFunc {
         @Workspace long queryStartDate;
         @Workspace int timezoneIndex;
         @Output TimeStampTZHolder out;
 
         public void setup(RecordBatch incoming) {
 
-            org.joda.time.DateTime now = new org.joda.time.DateTime(incoming.getContext().getQueryStartTime());
+            int timeZoneIndex = incoming.getContext().getRootFragmentTimeZone();
+            org.joda.time.DateTimeZone timeZone = org.joda.time.DateTimeZone.forID(org.apache.drill.exec.expr.fn.impl.DateUtility.getTimeZone(timeZoneIndex));
+            org.joda.time.DateTime now = new org.joda.time.DateTime(incoming.getContext().getQueryStartTime(), timeZone);
             queryStartDate = now.getMillis();
             timezoneIndex = org.apache.drill.exec.expr.fn.impl.DateUtility.getIndex(now.getZone().toString());
         }
@@ -319,14 +252,68 @@ public class DateTypeFunctions {
 
     }
 
-    @FunctionTemplate(name = "current_time", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+    @FunctionTemplate(name = "clock_timestamp", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL, isRandom = true)
+    public static class ClockTimeStamp implements DrillSimpleFunc {
+        @Workspace int timezoneIndex;
+        @Output TimeStampTZHolder out;
+
+        public void setup(RecordBatch incoming) {
+            org.joda.time.DateTime now = new org.joda.time.DateTime();
+            timezoneIndex = org.apache.drill.exec.expr.fn.impl.DateUtility.getIndex(now.getZone().toString());
+        }
+
+        public void eval() {
+            org.joda.time.DateTime now = new org.joda.time.DateTime();
+            out.value = now.getMillis();
+            out.index = timezoneIndex;
+        }
+    }
+
+    @FunctionTemplate(name = "timeofday", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL, isRandom = true)
+    public static class TimeOfDay implements DrillSimpleFunc {
+        @Workspace ByteBuf buffer;
+        @Output VarCharHolder out;
+
+        public void setup(RecordBatch incoming) {
+            buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte[100]);
+        }
+
+        public void eval() {
+            org.joda.time.DateTime temp = new org.joda.time.DateTime();
+            String str = org.apache.drill.exec.expr.fn.impl.DateUtility.formatTimeStampTZ.print(temp);
+            out.buffer = buffer;
+            out.start = 0;
+            out.end = Math.min(100,  str.length()); // truncate if target type has length smaller than that of input's string
+            out.buffer.setBytes(0, str.substring(0,out.end).getBytes());
+        }
+    }
+
+    @FunctionTemplate(name = "localtimestamp", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+    public static class LocalTimeStamp implements DrillSimpleFunc {
+        @Workspace long queryStartDate;
+        @Output TimeStampHolder out;
+
+        public void setup(RecordBatch incoming) {
+
+            org.joda.time.DateTime now = (new org.joda.time.DateTime(incoming.getContext().getQueryStartTime())).withZoneRetainFields(org.joda.time.DateTimeZone.UTC);
+            queryStartDate = now.getMillis();
+        }
+
+        public void eval() {
+            out.value = queryStartDate;
+        }
+    }
+
+    @FunctionTemplate(names = {"current_time", "localtime"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
     public static class CurrentTime implements DrillSimpleFunc {
         @Workspace int queryStartTime;
         @Output TimeHolder out;
 
         public void setup(RecordBatch incoming) {
 
-            org.joda.time.DateTime now = new org.joda.time.DateTime(incoming.getContext().getQueryStartTime());
+            int timeZoneIndex = incoming.getContext().getRootFragmentTimeZone();
+            org.joda.time.DateTimeZone timeZone = org.joda.time.DateTimeZone.forID(org.apache.drill.exec.expr.fn.impl.DateUtility.getTimeZone(timeZoneIndex));
+            org.joda.time.DateTime now = new org.joda.time.DateTime(incoming.getContext().getQueryStartTime(), timeZone);
             queryStartTime= (int) ((now.getHourOfDay() * org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis) +
                                    (now.getMinuteOfHour() * org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis) +
                                    (now.getSecondOfMinute() * org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis) +
@@ -336,6 +323,56 @@ public class DateTypeFunctions {
         public void eval() {
             out.value = queryStartTime;
         }
+    }
 
+    @SuppressWarnings("unused")
+    @FunctionTemplate(names = {"date_add", "add"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.NULL_IF_NULL)
+    public static class DateTimeAddFunction implements DrillSimpleFunc {
+    @Param DateHolder left;
+    @Param TimeHolder right;
+    @Output TimeStampHolder out;
+
+        public void setup(RecordBatch incoming) {
+        }
+
+        public void eval() {
+            out.value = left.value + right.value;
+        }
+    }
+
+    @SuppressWarnings("unused")
+    @FunctionTemplate(names = {"date_add", "add"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.NULL_IF_NULL)
+    public static class TimeDateAddFunction implements DrillSimpleFunc {
+        @Param TimeHolder right;
+        @Param DateHolder left;
+        @Output TimeStampHolder out;
+
+        public void setup(RecordBatch incoming) {
+        }
+
+        public void eval() {
+            out.value = left.value + right.value;
+        }
+    }
+
+    /* Dummy function template to allow Optiq to validate this function call.
+     * At DrillOptiq time we rewrite all date_part() functions to extract functions,
+     * since they are essentially the same
+     */
+    @SuppressWarnings("unused")
+    @FunctionTemplate(names = "date_part", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.NULL_IF_NULL)
+    public static class DatePartFunction implements DrillSimpleFunc {
+        @Param VarCharHolder left;
+        @Param DateHolder right;
+        @Output BigIntHolder out;
+
+        public void setup(RecordBatch incoming) {
+        }
+
+        public void eval() {
+            if (1 == 1) {
+                throw new UnsupportedOperationException("date_part function should be rewritten as extract() functions");
+            }
+        }
     }
 }

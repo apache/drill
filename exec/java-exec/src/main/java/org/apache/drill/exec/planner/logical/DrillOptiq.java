@@ -29,6 +29,7 @@ import org.apache.drill.common.expression.IfExpression.IfCondition;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.ValueExpressions;
+import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -106,6 +107,7 @@ public class DrillOptiq {
 
         return lastArg;
       case FUNCTION:
+      case FUNCTION_ID:
         logger.debug("Function");
         return getDrillFunctionFromOptiqCall(call);
       case POSTFIX:
@@ -259,6 +261,23 @@ public class DrillOptiq {
       List<LogicalExpression> args = Lists.newArrayList();
       for(RexNode n : call.getOperands()){
         args.add(n.accept(this));
+      }
+
+      // Rewrite DATE_PART functions as extract functions
+      if (call.getOperator().getName().equalsIgnoreCase("DATE_PART")) {
+
+        // assert that the function has exactly two arguments
+        assert args.size() == 2;
+
+        /* Based on the first input to the date_part function we rewrite the function as the
+         * appropriate extract function. For example
+         * date_part('year', date '2008-2-23') ------> extractYear(date '2008-2-23')
+         */
+        assert args.get(0) instanceof QuotedString;
+
+        QuotedString extractString = (QuotedString) args.get(0);
+        String functionPostfix = extractString.value.substring(0, 1).toUpperCase() + extractString.value.substring(1).toLowerCase();
+        return FunctionCallFactory.createExpression("extract" + functionPostfix, args.subList(1, 2));
       }
 
       return FunctionCallFactory.createExpression(call.getOperator().getName().toLowerCase(), args);

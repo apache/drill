@@ -66,6 +66,7 @@ public class FragmentContext implements Closeable {
   private List<Thread> daemonThreads = Lists.newLinkedList();
   private IncomingBuffers buffers;
   private final long queryStartTime;
+  private final int rootFragmentTimeZone;
 
   private volatile Throwable failureCause;
   private volatile boolean failed = false;
@@ -80,6 +81,7 @@ public class FragmentContext implements Closeable {
     this.fragment = fragment;
     this.funcRegistry = funcRegistry;
     this.queryStartTime = fragment.getQueryStartTime();
+    this.rootFragmentTimeZone = fragment.getTimeZone();
     logger.debug("Getting initial memory allocation of {}", fragment.getMemInitial());
     this.allocator = context.getAllocator().getChildAllocator(fragment.getHandle(), fragment.getMemInitial(), fragment.getMemMax());
   }
@@ -117,7 +119,11 @@ public class FragmentContext implements Closeable {
   }
 
   public long getQueryStartTime() {
-      return this.queryStartTime;
+    return this.queryStartTime;
+  }
+
+  public int getRootFragmentTimeZone() {
+    return this.rootFragmentTimeZone;
   }
 
   /**

@@ -72,7 +72,7 @@ public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
 
       <#elseif type.to == "Time">
       org.joda.time.format.DateTimeFormatter f = org.apache.drill.exec.expr.fn.impl.DateUtility.getTimeFormatter();
-      out.value = (int) (org.joda.time.DateMidnight.parse(input, f).withZoneRetainFields(org.joda.time.DateTimeZone.UTC)).getMillis();
+      out.value = (int) ((f.parseDateTime(input)).withZoneRetainFields(org.joda.time.DateTimeZone.UTC).getMillis());
       </#if>
 
   }

@@ -22,25 +22,25 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.holders.BigIntHolder;
-import org.apache.drill.exec.expr.holders.DateHolder;
+import org.apache.drill.exec.expr.holders.IntHolder;
+import org.apache.drill.exec.expr.holders.TimeHolder;
 import org.apache.drill.exec.record.RecordBatch;
 
 @SuppressWarnings("unused")
-@FunctionTemplate(names = {"castDATE", "to_date"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls= NullHandling.NULL_IF_NULL)
-public class CastBigIntDate implements DrillSimpleFunc {
+@FunctionTemplate(names = {"castTIME", "to_time"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls= NullHandling.NULL_IF_NULL)
+public class CastIntTime implements DrillSimpleFunc {
 
-  @Param
-  BigIntHolder in;
-  @Output
-  DateHolder out;
+    @Param
+    IntHolder in;
+    @Output
+    TimeHolder out;
 
-  @Override
-  public void setup(RecordBatch incoming) {
-  }
+    @Override
+    public void setup(RecordBatch incoming) {
+    }
 
-  @Override
-  public void eval() {
-    out.value = in.value;
-  }
+    @Override
+    public void eval() {
+        out.value = in.value;
+    }
 }

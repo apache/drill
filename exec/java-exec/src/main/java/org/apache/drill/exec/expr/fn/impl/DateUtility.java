@@ -1199,6 +1199,8 @@ public class DateUtility {
     public static final int hoursToMillis = 60 * 60 * 1000;
     public static final int minutesToMillis = 60 * 1000;
     public static final int secondsToMillis = 1000;
+    public static final int monthToStandardDays = 30;
+    public static final int daysToStandardMillis = 24 * 60 * 60 * 1000;
 
     public static int getIndex(String timezone) {
         return timezoneMap.get(timezone);

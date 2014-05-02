@@ -392,7 +392,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
         org.joda.time.DateTime date = new org.joda.time.DateTime(get(index), org.joda.time.DateTimeZone.UTC);
         date = date.withZoneRetainFields(org.joda.time.DateTimeZone.getDefault());
 
-        return new Date(date.getMillis());
+        return new Timestamp(date.getMillis());
     }
     <#elseif minor.class == "IntervalYear">
     public Object getObject(int index) {
