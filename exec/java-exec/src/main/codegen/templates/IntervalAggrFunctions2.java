@@ -20,14 +20,14 @@
 
 
 <#list aggrtypes2.aggrtypes as aggrtype>
-<@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/gaggr/${aggrtype.className}Functions.java" />
+<@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/gaggr/${aggrtype.className}IntervalTypeFunctions.java" />
 
 <#include "/@includes/license.ftl" />
 
-<#-- A utility class that is used to generate java code for aggr functions that maintain a sum -->
+<#-- A utility class that is used to generate java code for aggr functions for the interval data types. It maintains a running sum  -->
 <#-- and a running count.  For now, this includes: AVG. -->
 
-/* 
+/*
  * This class is automatically generated from AggrTypeFunctions2.tdd using FreeMarker.
  */
 
@@ -45,11 +45,11 @@ import org.apache.drill.exec.record.RecordBatch;
 
 @SuppressWarnings("unused")
 
-public class ${aggrtype.className}Functions {
+public class ${aggrtype.className}IntervalTypeFunctions {
 	static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(${aggrtype.className}Functions.class);
- 
+
 <#list aggrtype.types as type>
-<#if type.major == "Numeric">
+<#if type.major == "Date">
 
 @FunctionTemplate(name = "${aggrtype.funcName}", scope = FunctionTemplate.FunctionScope.POINT_AGGREGATE)
 
@@ -61,12 +61,12 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
   @Output ${type.outputType}Holder out;
 
   public void setup(RecordBatch b) {
-  	sum = new ${type.sumRunningType}Holder();  
-    count = new ${type.countRunningType}Holder();  
+  	sum = new ${type.sumRunningType}Holder();
+    count = new ${type.countRunningType}Holder();
     sum.value = 0;
     count.value = 0;
   }
-  
+
   @Override
   public void add() {
 	  <#if type.inputType?starts_with("Nullable")>
@@ -74,13 +74,23 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 	    if (in.isSet == 0) {
 		    // processing nullable input and the value is null, so don't do anything...
 		    break sout;
-	    }  
+	    }
 	  </#if>
 	  <#if aggrtype.funcName == "avg">
- 	    sum.value += in.value;
- 	    count.value++;
+    <#if type.inputType.endsWith("Interval")>
+    sum.value += (long) in.months * org.apache.drill.exec.expr.fn.impl.DateUtility.monthToStandardDays +
+                          in.days * (org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis) +
+                          in.milliSeconds;
+    <#elseif type.inputType.endsWith("IntervalDay")>
+    sum.value += (long) in.days * (org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis) +
+                        in.milliSeconds;
+    <#else>
+    sum.value += in.value;
+    </#if>
+    count.value++;
+
 	  <#else>
-	  // TODO: throw an error ? 
+	  // TODO: throw an error ?
 	  </#if>
 	<#if type.inputType?starts_with("Nullable")>
     } // end of sout block
@@ -89,7 +99,17 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 
   @Override
   public void output() {
-    out.value = sum.value / ((double) count.value);
+    double millis = sum.value / ((double) count.value);
+    <#if type.inputType.endsWith("Interval") || type.inputType.endsWith("IntervalYear")>
+    out.months = (int) (millis / org.apache.drill.exec.expr.fn.impl.DateUtility.monthsToMillis);
+    millis = millis % org.apache.drill.exec.expr.fn.impl.DateUtility.monthsToMillis;
+    out.days =(int) (millis / org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
+    out.milliSeconds = (int) (millis % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
+    <#elseif type.inputType.endsWith("IntervalDay")>
+    out.months = 0;
+    out.days = (int) (millis / org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
+    out.milliSeconds = (int) (millis % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
+    </#if>
   }
 
   @Override
@@ -97,7 +117,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     sum.value = 0;
     count.value = 0;
   }
- 
+
  }
 
 </#if>
