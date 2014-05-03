@@ -43,5 +43,10 @@ public class NamedExpression {
   public FieldReference getRef() {
     return ref;
   }
-  
+
+  @Override
+  public String toString() {
+    return "NamedExpression [expr=" + expr + ", ref=" + ref + "]";
+  }
+
 }

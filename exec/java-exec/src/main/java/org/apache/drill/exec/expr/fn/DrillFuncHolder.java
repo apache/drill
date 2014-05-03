@@ -21,29 +21,22 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.ClassGenerator.BlockType;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
-import org.apache.drill.exec.record.NullExpression;
-import org.apache.drill.exec.resolver.ResolverTypePrecedence;
-import org.apache.drill.exec.resolver.TypeCastRules;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.sun.codemodel.JBlock;
-import com.sun.codemodel.JExpr;
-import com.sun.codemodel.JMod;
 import com.sun.codemodel.JVar;
 
 public abstract class DrillFuncHolder {
@@ -213,6 +206,16 @@ public abstract class DrillFuncHolder {
     return registeredNames;
   }
 
+  @Override
+  public String toString() {
+    final int maxLen = 10;
+    return this.getClass().getSimpleName()
+        + " [functionNames=" + Arrays.toString(registeredNames)
+        + ", returnType=" + Types.toString(returnValue.type)
+        + ", nullHandling=" + nullHandling
+        + ", parameters=" + (parameters != null ? Arrays.asList(parameters).subList(0, Math.min(parameters.length, maxLen)) : null) + "]";
+  }
+
   public static class ValueReference {
     MajorType type;
     String name;
@@ -233,7 +236,7 @@ public abstract class DrillFuncHolder {
 
     @Override
     public String toString() {
-      return "ValueReference [type=" + type + ", name=" + name + "]";
+      return "ValueReference [type=" + Types.toString(type) + ", name=" + name + "]";
     }
 
   }

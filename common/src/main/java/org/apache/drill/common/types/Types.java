@@ -21,6 +21,8 @@ import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 
+import com.google.protobuf.TextFormat;
+
 import static org.apache.drill.common.types.TypeProtos.DataMode.REPEATED;
 
 public class Types {
@@ -331,6 +333,10 @@ public class Types {
     default:
       throw new UnsupportedOperationException("Could not determine type: " + typeName);
     }
+  }
+
+  public static String toString(MajorType type) {
+    return type != null ? "MajorType[" + TextFormat.shortDebugString(type) + "]" : "null";
   }
 
 }

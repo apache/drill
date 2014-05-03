@@ -20,7 +20,6 @@ package org.apache.drill.exec.expr.fn;
 import java.util.Set;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.util.PathScanner;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.DrillFunc;
@@ -44,6 +43,13 @@ public class DrillFunctionImplementationRegistry {
       }else{
         logger.warn("Unable to initialize function for class {}", clazz.getName());
       }
+    }
+    if (logger.isTraceEnabled()) {
+      StringBuilder allFunctions = new StringBuilder();
+      for (DrillFuncHolder method: methods.values()) {
+        allFunctions.append(method.toString()).append("\n");
+      }
+      logger.trace("Registered functions: [\n{}]", allFunctions);
     }
   }
 

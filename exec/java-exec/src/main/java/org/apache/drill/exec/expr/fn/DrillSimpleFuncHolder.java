@@ -29,10 +29,8 @@ import org.apache.drill.exec.expr.ClassGenerator.BlockType;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
-import org.apache.drill.exec.expr.fn.DrillFuncHolder.ValueReference;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 import com.sun.codemodel.JBlock;
 import com.sun.codemodel.JConditional;
 import com.sun.codemodel.JExpr;
@@ -80,7 +78,7 @@ class DrillSimpleFuncHolder extends DrillFuncHolder{
     return c;
   }
  
- protected HoldingContainer generateEvalBody(ClassGenerator<?> g, HoldingContainer[] inputVariables, String body, JVar[] workspaceJVars){
+  protected HoldingContainer generateEvalBody(ClassGenerator<?> g, HoldingContainer[] inputVariables, String body, JVar[] workspaceJVars) {
     
     //g.getBlock().directStatement(String.format("//---- start of eval portion of %s function. ----//", functionName));
     
@@ -127,11 +125,4 @@ class DrillSimpleFuncHolder extends DrillFuncHolder{
     return out;
   }
 
-@Override
-public String toString() {
-  final int maxLen = 10;
-  return "DrillSimpleFuncHolder [, functionName=" + Arrays.toString(registeredNames) + ", nullHandling=" + nullHandling + "parameters="
-      + (parameters != null ? Arrays.asList(parameters).subList(0, Math.min(parameters.length, maxLen)) : null) + "]";
-}
-  
 }
