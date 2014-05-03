@@ -47,17 +47,13 @@ public interface GroupScan extends Scan, HasAffinity{
   public abstract String getDigest();
 
   /**
-   * Returns a clone of Groupscan instance, except that the new GroupScan will use the provided list of columns .
-   *
+   * Returns a clone of GroupScan instance, except that the new GroupScan will use the provided list of columns .
    */
-  @JsonIgnore
   public GroupScan clone(List<SchemaPath> columns);
 
   /**
    * GroupScan should check the list of columns, and see if it could support all the columns in the list.
-   * If it can not support any of them, return null. Null indicates that this groupscan will not support
-   * project pushdown for this list of columns.
    */
-  public List<SchemaPath> checkProjPush(List<SchemaPath> columns);
+  public boolean canPushdownProjects(List<SchemaPath> columns);
 
 }

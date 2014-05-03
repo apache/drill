@@ -342,7 +342,9 @@ public class ParquetGroupScan extends AbstractGroupScan {
   @Override
   public Size getSize() {
     // TODO - this is wrong, need to populate correctly
-    return new Size(10, 10);
+    int avgColumnSize = 10;
+    int numColumns = (columns == null || columns.isEmpty()) ? 100 : columns.size();
+    return new Size(10, numColumns*avgColumnSize);
   }
 
   @Override
@@ -372,8 +374,9 @@ public class ParquetGroupScan extends AbstractGroupScan {
     return newScan;
   }
 
-  @Override
-  public List<SchemaPath> checkProjPush(List<SchemaPath> columns) {
-    return columns;
+  @JsonIgnore
+  public boolean canPushdownProjects(List<SchemaPath> columns) {
+    return true;
   }
+
 }

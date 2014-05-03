@@ -21,36 +21,15 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 @Ignore // Need to find a way to pass zookeeper port to HBase storage plugin configuration before enabling this test
-public class TestHBaseFilterPushDown extends BaseHBaseTest {
+public class TestHBaseProjectPushDown extends BaseHBaseTest {
 
   @Test
-  public void testFilterPushDownRowKeyEqual() throws Exception{
+  public void testRowKeyPushDown() throws Exception{
     verify("SELECT\n"
-        + "  tableName.*\n"
+        + "row_key, substring(row_key, 2, 1)*12\n"
         + "FROM\n"
-        + "  hbase.`[TABLE_NAME]` tableName\n"
-        + "  WHERE tableName.row_key = 'b4'"
-        , 1);
-  }
-
-  @Test
-  public void testFilterPushDownRowKeyGreaterThan() throws Exception{
-    verify("SELECT\n"
-        + "  tableName.*\n"
-        + "FROM\n"
-        + "  hbase.`[TABLE_NAME]` tableName\n"
-        + "  WHERE tableName.row_key > 'b4'"
-        , 2);
-  }
-
-  @Test
-  public void testFilterPushDownRowKeyLessThanOrEqualTo() throws Exception{
-    verify("SELECT\n"
-        + "  tableName.*\n"
-        + "FROM\n"
-        + "  hbase.`[TABLE_NAME]` tableName\n"
-        + "  WHERE 'b4' >= tableName.row_key"
-        , 4);
+        + "  hbase.`[TABLE_NAME]` tableName"
+        , 6);
   }
 
 }

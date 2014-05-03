@@ -19,33 +19,17 @@
 package org.apache.drill.exec.planner.logical;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
 
 import net.hydromatic.optiq.rules.java.JavaRules.EnumerableTableAccessRel;
 
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.eigenbase.rel.ProjectRel;
-import org.eigenbase.rel.ProjectRelBase;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.rules.PushProjector;
 import org.eigenbase.rel.rules.RemoveTrivialProjectRule;
 import org.eigenbase.relopt.RelOptRule;
 import org.eigenbase.relopt.RelOptRuleCall;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.reltype.RelDataTypeField;
-import org.eigenbase.rex.RexInputRef;
-import org.eigenbase.rex.RexNode;
-import org.eigenbase.rex.RexShuttle;
-
-import com.google.common.base.Objects;
-import com.google.hive12.common.collect.Lists;
 
 public class DrillPushProjIntoScan extends RelOptRule {
   public static final RelOptRule INSTANCE = new DrillPushProjIntoScan();
@@ -59,101 +43,35 @@ public class DrillPushProjIntoScan extends RelOptRule {
     final ProjectRel proj = (ProjectRel) call.rel(0);
     final EnumerableTableAccessRel scan = (EnumerableTableAccessRel) call.rel(1);
 
-    List<Integer> columnsIds = getRefColumnIds(proj);
-
-    RelDataType newScanRowType = createStructType(scan.getCluster().getTypeFactory(), getProjectedFields(scan.getRowType(),columnsIds));
-
-    DrillTable drillTable = scan.getTable().unwrap(DrillTable.class);
     try {
-      List<SchemaPath> columns = PrelUtil.getColumns(newScanRowType);
+      List<SchemaPath> columns = PrelUtil.getColumns(scan.getRowType(), proj.getProjects());
 
-      GroupScan groupScan = drillTable.getGroupScan();
-
-      //Check if the group scan can support the list of columns. If not support, return without doing any further transformation.
-      List<SchemaPath> pushedColumns = groupScan.checkProjPush(columns);
-
-      if (pushedColumns == null || pushedColumns.isEmpty())
+      if (columns.isEmpty() || !scan.getTable().unwrap(DrillTable.class)
+          .getGroupScan().canPushdownProjects(columns)) {
         return;
+      }
 
-      final DrillScanRel newScan = new DrillScanRel(scan.getCluster(), scan.getTraitSet().plus(DrillRel.DRILL_LOGICAL),
-          scan.getTable(), newScanRowType, columns);
+      final DrillScanRel newScan =
+          new DrillScanRel(scan.getCluster(),
+              scan.getTraitSet().plus(DrillRel.DRILL_LOGICAL),
+              scan.getTable(),
+              scan.getRowType(),
+              columns);
 
-      List<RexNode> convertedExprs = getConvertedProjExp(proj, scan, columnsIds);
-
-      final DrillProjectRel newProj = new DrillProjectRel(proj.getCluster(), proj.getTraitSet().plus(DrillRel.DRILL_LOGICAL),
-          newScan, convertedExprs, proj.getRowType());
+      final DrillProjectRel newProj =
+          new DrillProjectRel(proj.getCluster(),
+              proj.getTraitSet().plus(DrillRel.DRILL_LOGICAL),
+              newScan,
+              proj.getChildExps(),
+              proj.getRowType());
 
       if (RemoveTrivialProjectRule.isTrivial(newProj)) {
         call.transformTo(newScan);
       } else {
         call.transformTo(newProj);
       }
-
     } catch (IOException e) {
-      e.printStackTrace();
-      return;
-    }
-
-  }
-
-  private List<RexNode> getConvertedProjExp(ProjectRel proj, RelNode child, List<Integer> columnsIds) {
-    PushProjector pushProjector =
-        new PushProjector(
-            proj, null, child, PushProjector.ExprCondition.FALSE);
-    ProjectRel topProject = pushProjector.convertProject(null);
-
-    if (topProject !=null)
-      return topProject.getProjects();
-    else
-      return proj.getProjects();
-  }
-
-  private  RelDataType createStructType(
-      RelDataTypeFactory typeFactory,
-      final List<RelDataTypeField> fields
-      ) {
-    final RelDataTypeFactory.FieldInfoBuilder builder =
-        typeFactory.builder();
-    for (RelDataTypeField field : fields) {
-      builder.add(field.getName(), field.getType());
-    }
-    return builder.build();
-  }
-
-
-  private List<Integer> getRefColumnIds(ProjectRelBase proj) {
-    RefFieldsVisitor v = new RefFieldsVisitor();
-
-    for (RexNode exp : proj.getProjects()) {
-      v.apply(exp);
-    }
-    return new ArrayList<Integer>(v.getReferencedFieldIndex());
-  }
-
-  private List<RelDataTypeField> getProjectedFields(RelDataType rowType, List<Integer> columnIds) {
-    List<RelDataTypeField> oldFields = rowType.getFieldList();
-    List<RelDataTypeField> newFields = Lists.newArrayList();
-
-    for (Integer id : columnIds) {
-      newFields.add(oldFields.get(id));
-    }
-
-    return newFields;
-  }
-
-  /** Visitor that finds the set of inputs that are used. */
-  public static class RefFieldsVisitor extends RexShuttle {
-    public final SortedSet<Integer> inputPosReferenced =
-        new TreeSet<Integer>();
-
-    @Override
-    public RexNode visitInputRef(RexInputRef inputRef) {
-      inputPosReferenced.add(inputRef.getIndex());
-      return inputRef;
-    }
-
-    public Set<Integer> getReferencedFieldIndex() {
-      return this.inputPosReferenced;
+      throw new DrillRuntimeException(e);
     }
   }
 

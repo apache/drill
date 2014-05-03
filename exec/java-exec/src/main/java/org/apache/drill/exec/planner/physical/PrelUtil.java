@@ -18,11 +18,15 @@
 package org.apache.drill.exec.planner.physical;
 
 import java.util.List;
+import java.util.Set;
 
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.expression.PathSegment;
+import org.apache.drill.common.expression.PathSegment.ArraySegment;
+import org.apache.drill.common.expression.PathSegment.NameSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.data.Order.Ordering;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
@@ -33,9 +37,16 @@ import org.eigenbase.rel.RelCollation;
 import org.eigenbase.rel.RelFieldCollation;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.rex.RexCall;
+import org.eigenbase.rex.RexInputRef;
+import org.eigenbase.rex.RexLiteral;
+import org.eigenbase.rex.RexNode;
+import org.eigenbase.rex.RexOver;
+import org.eigenbase.rex.RexVisitorImpl;
 
 import com.beust.jcommander.internal.Lists;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
 
 public class PrelUtil {
 
@@ -85,25 +96,75 @@ public class PrelUtil {
     return new SelectionVectorRemover(child);
   }
 
-  public static List<SchemaPath> getColumns(RelDataType rowType) {
-    final List<String> fields = rowType.getFieldNames();
+  public static List<SchemaPath> getColumns(RelDataType rowType, List<RexNode> projects) {
+    final List<String> fieldNames = rowType.getFieldNames();
+    if (fieldNames.isEmpty()) return ImmutableList.of();
 
-    if (fields.isEmpty()) return null;
-
-    List<SchemaPath> columns = Lists.newArrayList();
-
-    for (String field : fields) {
-      //If star column is required, no project pushdown. Just return null, to indicate SCAN should get ALL the columns.
-      if (field.startsWith("*"))
-        return null;
-
-      columns.add(SchemaPath.getSimplePath(field));
-
+    RefFieldsVisitor v = new RefFieldsVisitor(fieldNames);
+    for (RexNode exp : projects) {
+      PathSegment segment = exp.accept(v);
+      v.addColumn(segment);
     }
 
-    if (columns.isEmpty())
-      return null;
-    else
-      return columns;
+    List<SchemaPath> columns = v.getColumns();
+    for (SchemaPath column : columns) {
+      if (column.getRootSegment().getPath().startsWith("*")) {
+        return ImmutableList.of();
+      }
+    }
+
+    return columns;
   }
+
+  /** Visitor that finds the set of inputs that are used. */
+  private static class RefFieldsVisitor extends RexVisitorImpl<PathSegment> {
+    final Set<SchemaPath> columns = Sets.newLinkedHashSet();
+    final private List<String> fieldNames;
+
+    public RefFieldsVisitor(List<String> fieldNames) {
+      super(true);
+      this.fieldNames = fieldNames;
+    }
+
+    public void addColumn(PathSegment segment) {
+      if (segment != null && segment instanceof NameSegment) {
+        columns.add(new SchemaPath((NameSegment)segment));
+      }
+    }
+
+    public List<SchemaPath> getColumns() {
+      return ImmutableList.copyOf(columns);
+    }
+
+    @Override
+    public PathSegment visitInputRef(RexInputRef inputRef) {
+      return new NameSegment(fieldNames.get(inputRef.getIndex()));
+    }
+
+    @Override
+    public PathSegment visitCall(RexCall call) {
+      if ("ITEM".equals(call.getOperator().getName())) {
+        return call.operands.get(0).accept(this)
+            .cloneWithNewChild(convertLiteral((RexLiteral) call.operands.get(1)));
+      }
+      // else
+      for (RexNode operand : call.operands) {
+        addColumn(operand.accept(this));
+      }
+      return null;
+    }
+
+    private PathSegment convertLiteral(RexLiteral literal) {
+      switch (literal.getType().getSqlTypeName()) {
+      case CHAR:
+        return new NameSegment(RexLiteral.stringValue(literal));
+      case INTEGER:
+        return new ArraySegment(RexLiteral.intValue(literal));
+      default:
+        return null;
+      }
+    }
+
+  }
+
 }

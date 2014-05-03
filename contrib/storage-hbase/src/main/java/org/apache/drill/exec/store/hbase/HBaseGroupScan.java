@@ -38,8 +38,8 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.Size;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.apache.drill.exec.store.dfs.easy.EasyGroupScan;
 import org.apache.hadoop.hbase.HRegionInfo;
+import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.ServerName;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.util.Bytes;
@@ -61,44 +61,25 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBaseGroupScan.class);
 
   private HBaseStoragePluginConfig storagePluginConfig;
-  @JsonProperty("storage")
-  public HBaseStoragePluginConfig getStorageConfig() {
-    return this.storagePluginConfig;
-  }
 
   private List<SchemaPath> columns;
-  @JsonProperty
-  public List<SchemaPath> getColumns() {
-    return columns;
-  }
 
   private HBaseScanSpec hbaseScanSpec;
-  @JsonProperty
-  public HBaseScanSpec getHBaseScanSpec() {
-    return hbaseScanSpec;
-  }
 
-  @JsonIgnore
-  public HBaseStoragePlugin getStoragePlugin() {
-    return storagePlugin;
-  }
+  private HBaseStoragePlugin storagePlugin;
 
   private Stopwatch watch = new Stopwatch();
   private ArrayListMultimap<Integer, HBaseSubScan.HBaseSubScanSpec> mappings;
-  private HBaseStoragePlugin storagePlugin;
   private List<EndpointAffinity> endpointAffinities;
   private NavigableMap<HRegionInfo,ServerName> regionsToScan;
+  private HTableDescriptor hTableDesc;
 
   @JsonCreator
   public HBaseGroupScan(@JsonProperty("hbaseScanSpec") HBaseScanSpec hbaseScanSpec,
                         @JsonProperty("storage") HBaseStoragePluginConfig storagePluginConfig,
                         @JsonProperty("columns") List<SchemaPath> columns,
                         @JacksonInject StoragePluginRegistry pluginRegistry) throws IOException, ExecutionSetupException {
-    this.storagePlugin = (HBaseStoragePlugin) pluginRegistry.getPlugin(storagePluginConfig);
-    this.storagePluginConfig = storagePluginConfig;
-    this.hbaseScanSpec = hbaseScanSpec;
-    this.columns = columns;
-    getRegionInfos();
+    this ((HBaseStoragePlugin) pluginRegistry.getPlugin(storagePluginConfig), hbaseScanSpec, columns);
   }
 
   public HBaseGroupScan(HBaseStoragePlugin storageEngine, HBaseScanSpec scanSpec, List<SchemaPath> columns) {
@@ -106,9 +87,13 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
     this.storagePluginConfig = storageEngine.getConfig();
     this.hbaseScanSpec = scanSpec;
     this.columns = columns;
-    getRegionInfos();
+    init();
   }
 
+  /**
+   * Private constructor, used for cloning.
+   * @param that The
+   */
   private HBaseGroupScan(HBaseGroupScan that) {
     this.columns = that.columns;
     this.endpointAffinities = that.endpointAffinities;
@@ -117,12 +102,22 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
     this.regionsToScan = that.regionsToScan;
     this.storagePlugin = that.storagePlugin;
     this.storagePluginConfig = that.storagePluginConfig;
+    this.hTableDesc = that.hTableDesc;
   }
 
-  private void getRegionInfos() {
+  @Override
+  public GroupScan clone(List<SchemaPath> columns) {
+    HBaseGroupScan newScan = new HBaseGroupScan(this);
+    newScan.columns = columns;
+    newScan.verifyColumns();
+    return newScan;
+  }
+
+  private void init() {
     logger.debug("Getting region locations");
     try {
       HTable table = new HTable(storagePluginConfig.getHBaseConf(), hbaseScanSpec.getTableName());
+      this.hTableDesc = table.getTableDescriptor();
       NavigableMap<HRegionInfo, ServerName> regionsMap = table.getRegionLocations();
       table.close();
 
@@ -141,6 +136,18 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
       }
     } catch (IOException e) {
       throw new DrillRuntimeException("Error getting region info for table: " + hbaseScanSpec.getTableName(), e);
+    }
+    verifyColumns();
+  }
+
+  private void verifyColumns() {
+    if (columns != null) {
+      for (SchemaPath column : columns) {
+        if (!(column.equals(ROW_KEY_PATH) || hTableDesc.hasFamily(HBaseUtils.getBytes(column.getRootSegment().getPath())))) {
+          DrillRuntimeException.format("The column family '%s' does not exist in HBase table: %s .",
+              column.getRootSegment().getPath(), hTableDesc.getNameAsString());
+        }
+      }
     }
   }
 
@@ -232,8 +239,10 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
   @Override
   public Size getSize() {
     // TODO - this is wrong, need to populate correctly
-    int size = (hbaseScanSpec.getFilter() != null ? 5 : 10) * regionsToScan.size();
-    return new Size(size, size);
+    int rowCount = (hbaseScanSpec.getFilter() != null ? 5 : 10) * regionsToScan.size();
+    int avgColumnSize = 10;
+    int numColumns = (columns == null || columns.isEmpty()) ? 100 : columns.size();
+    return new Size(rowCount, numColumns*avgColumnSize);
   }
 
   @Override
@@ -242,6 +251,11 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
     Preconditions.checkArgument(children.isEmpty());
     //TODO return copy of self
     return this;
+  }
+
+  @JsonIgnore
+  public HBaseStoragePlugin getStoragePlugin() {
+    return storagePlugin;
   }
 
   @Override
@@ -256,16 +270,24 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
         + columns + "]";
   }
 
-  @Override
-  public GroupScan clone(List<SchemaPath> columns) {
-    HBaseGroupScan newScan = new HBaseGroupScan(this);
-    newScan.columns = columns;
-    return newScan;
+  @JsonProperty("storage")
+  public HBaseStoragePluginConfig getStorageConfig() {
+    return this.storagePluginConfig;
   }
 
-  @Override
-  public List<SchemaPath> checkProjPush(List<SchemaPath> columns) {
+  @JsonProperty
+  public List<SchemaPath> getColumns() {
     return columns;
+  }
+
+  @JsonProperty
+  public HBaseScanSpec getHBaseScanSpec() {
+    return hbaseScanSpec;
+  }
+
+  @JsonIgnore
+  public boolean canPushdownProjects(List<SchemaPath> columns) {
+    return true;
   }
 
 }

@@ -261,7 +261,9 @@ public class HiveScan extends AbstractGroupScan {
   @Override
   public Size getSize() {
     // TODO - this is wrong, need to populate correctly
-    return new Size(10,10);
+    int avgColumnSize = 10;
+    int numColumns = (columns == null || columns.isEmpty()) ? 100 : columns.size();
+    return new Size(10, avgColumnSize*numColumns);
   }
 
   @Override

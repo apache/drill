@@ -20,9 +20,9 @@ package org.apache.drill.exec.physical.base;
 import java.util.Iterator;
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.drill.common.expression.SchemaPath;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.Iterators;
 
 public abstract class AbstractGroupScan extends AbstractBase implements GroupScan {
@@ -61,14 +61,9 @@ public abstract class AbstractGroupScan extends AbstractBase implements GroupSca
     return 0;
   }
 
-  /**
-   * Check if groupscan can support projects-push-down into scan.
-   * The default implementation assumes groupscan could not support project pushdown, by returning null.
-   * If one particular group scan can support, it should override this method.
-   */
-  @Override
-  public List<SchemaPath> checkProjPush(List<SchemaPath> columns) {
-    return null;
+  @JsonIgnore
+  public boolean canPushdownProjects(List<SchemaPath> columns) {
+    return false;
   }
 
 }

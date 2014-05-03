@@ -85,7 +85,9 @@ public class InfoSchemaGroupScan extends AbstractGroupScan{
 
   @Override
   public Size getSize() {
-    return new Size(1000, 1000);
+    int avgColumnSize = 10;
+    int numColumns = (columns == null || columns.isEmpty()) ? 100 : columns.size();
+    return new Size(1000, numColumns*avgColumnSize);
   }
 
   @Override

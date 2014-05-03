@@ -32,6 +32,7 @@ import org.apache.drill.exec.physical.base.Size;
 import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.hadoop.hbase.filter.Filter;
+import org.apache.hadoop.hbase.util.Bytes;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -195,6 +196,15 @@ public class HBaseSubScan extends AbstractBase implements SubScan {
       this.serializedFilter = serializedFilter;
       this.scanFilter = null;
       return this;
+    }
+
+    @Override
+    public String toString() {
+      return "HBaseScanSpec [tableName=" + tableName
+          + ", startRow=" + (startRow == null ? null : Bytes.toStringBinary(startRow))
+          + ", stopRow=" + (stopRow == null ? null : Bytes.toStringBinary(stopRow))
+          + ", filter=" + (getScanFilter() == null ? null : getScanFilter().toString())
+          + "]";
     }
 
   }

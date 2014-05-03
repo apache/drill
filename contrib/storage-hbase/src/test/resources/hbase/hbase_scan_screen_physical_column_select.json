@@ -19,7 +19,7 @@
       "zookeeperPort" : 2181
     },
     columns: [
-      "`f2`.c1", "`f2`.c2", "row_key"
+      "`f2`.c1", "`f2`.c2"
     ]
   },
   {

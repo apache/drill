@@ -137,7 +137,9 @@ public class EasyGroupScan extends AbstractGroupScan{
 
   @Override
   public Size getSize() {
-    return new Size(1024,1024);
+    int numColumns = (columns == null || columns.isEmpty()) ? 100 : columns.size();
+    int avgColumnSize = 10;
+    return new Size(1024, numColumns*avgColumnSize);
   }
 
   @JsonProperty("files")
@@ -227,9 +229,9 @@ public class EasyGroupScan extends AbstractGroupScan{
     return newScan;
   }
 
-  @Override
-  public List<SchemaPath> checkProjPush(List<SchemaPath> columns) {
-    return columns;
+  @JsonIgnore
+  public boolean canPushdownProjects(List<SchemaPath> columns) {
+    return true;
   }
 
 }
