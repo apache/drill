@@ -17,14 +17,17 @@
  */
 package org.apache.drill;
 
+import org.apache.drill.common.util.TestTools;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestRule;
 
 
 public class TestTpchPlanning extends PlanningBase{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestTpchPlanning.class);
 
-
+  @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(50000);
 
   @Test
   public void tpch01() throws Exception{
