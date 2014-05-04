@@ -18,12 +18,14 @@
 package org.apache.drill.exec.cache;
 
 import org.apache.drill.exec.planner.logical.StoragePlugins;
+import org.apache.drill.exec.proto.BitControl.FragmentStatus;
 import org.apache.drill.exec.server.options.OptionValue;
 
 public enum SerializationDefinition {
 
   OPTION(3002, OptionValue.class),
-  STORAGE_PLUGINS(3003, StoragePlugins.class)
+  STORAGE_PLUGINS(3003, StoragePlugins.class),
+  FRAGMENT_STATUS(3004, FragmentStatus.class)
   ;
   public final int id;
   public final Class<?> clazz;

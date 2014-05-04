@@ -65,19 +65,24 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
 
   public final IterOutcome next(int inputIndex, RecordBatch b){
     stats.stopProcessing();
-    IterOutcome next = b.next();
+    try{
+      IterOutcome next = b.next();
 
-    switch(next){
-    case OK_NEW_SCHEMA:
-      stats.batchReceived(inputIndex, b.getRecordCount(), true);
-      break;
-    case OK:
-      stats.batchReceived(inputIndex, b.getRecordCount(), false);
-      break;
+      switch(next){
+      case OK_NEW_SCHEMA:
+        stats.batchReceived(inputIndex, b.getRecordCount(), true);
+        break;
+      case OK:
+        stats.batchReceived(inputIndex, b.getRecordCount(), false);
+        break;
+      }
+
+      return next;
+
+    }finally{
+      stats.startProcessing();
     }
 
-    stats.startProcessing();
-    return next;
   }
 
   @Override

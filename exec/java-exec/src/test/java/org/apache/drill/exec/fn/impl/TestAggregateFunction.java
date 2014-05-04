@@ -25,13 +25,12 @@ import java.util.List;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.pop.PopUnitTestBase;
-import org.apache.drill.exec.proto.UserProtos;
+import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.rpc.user.QueryResultBatch;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
-import org.apache.drill.exec.vector.NullableBigIntVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.junit.Test;
 
@@ -48,7 +47,7 @@ public class TestAggregateFunction extends PopUnitTestBase {
             // run query.
             bit.run();
             client.connect();
-            List<QueryResultBatch> results = client.runQuery(UserProtos.QueryType.PHYSICAL,
+            List<QueryResultBatch> results = client.runQuery(QueryType.PHYSICAL,
                     Files.toString(FileUtils.getResourceAsFile("/functions/test_stddev_variance.json"), Charsets.UTF_8)
                             .replace("#{TEST_FILE}", "/simple_stddev_variance_input.json"));
 

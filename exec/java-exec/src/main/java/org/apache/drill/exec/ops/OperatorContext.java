@@ -30,16 +30,14 @@ public class OperatorContext implements Closeable {
   private final BufferAllocator allocator;
   private boolean closed = false;
   private PhysicalOperator popConfig;
-  private int operatorId;
   private OperatorStats stats;
 
   public OperatorContext(PhysicalOperator popConfig, FragmentContext context) throws OutOfMemoryException {
     this.allocator = context.getNewChildAllocator(popConfig.getInitialAllocation(), popConfig.getMaxAllocation());
     this.popConfig = popConfig;
-    this.operatorId = popConfig.getOperatorId();
 
     OpProfileDef def = new OpProfileDef();
-    def.operatorId = operatorId;
+    def.operatorId = popConfig.getOperatorId();
     def.incomingCount = getChildCount(popConfig);
     def.operatorType = popConfig.getOperatorType();
     this.stats = context.getStats().getOperatorStats(def);
@@ -52,6 +50,8 @@ public class OperatorContext implements Closeable {
       iter.next();
       i++;
     }
+
+    if(i == 0) i = 1;
     return i;
   }
 

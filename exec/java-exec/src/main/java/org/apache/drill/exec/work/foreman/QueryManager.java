@@ -34,6 +34,7 @@ import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserProtos.QueryResult;
 import org.apache.drill.exec.proto.UserProtos.QueryResult.QueryState;
+import org.apache.drill.exec.proto.UserProtos.RunQuery;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
 import org.apache.drill.exec.rpc.control.Controller;
@@ -58,21 +59,32 @@ public class QueryManager implements FragmentStatusListener{
   private ForemanManagerListener foreman;
   private AtomicInteger remainingFragmentCount;
   private WorkEventBus workBus;
+  private QueryId queryId;
   private FragmentExecutor rootRunner;
-  private volatile QueryId queryId;
+  private RunQuery query;
 
-  public QueryManager(DistributedCache cache, ForemanManagerListener foreman, Controller controller) {
+  public QueryManager(QueryId id, RunQuery query, DistributedCache cache, ForemanManagerListener foreman, Controller controller) {
     super();
     this.foreman = foreman;
+    this.query = query;
+    this.queryId =  id;
     this.controller = controller;
     this.remainingFragmentCount = new AtomicInteger(0);
-    this.status = new QueryStatus(cache);
+    this.status = new QueryStatus(query, id, cache);
+  }
+
+  public QueryStatus getStatus(){
+    return status;
+  }
+
+  public void addTextPlan(String textPlan){
+
   }
 
   public void runFragments(WorkerBee bee, PlanFragment rootFragment, FragmentRoot rootOperator, UserClientConnection rootClient, List<PlanFragment> leafFragments, List<PlanFragment> intermediateFragments) throws ExecutionSetupException{
     logger.debug("Setting up fragment runs.");
     remainingFragmentCount.set(leafFragments.size()+1);
-    queryId = rootFragment.getHandle().getQueryId();
+    assert queryId == rootFragment.getHandle().getQueryId();
     workBus = bee.getContext().getWorkBus();
 
     // set up the root fragment first so we'll have incoming buffers available.
@@ -84,7 +96,7 @@ public class QueryManager implements FragmentStatusListener{
       logger.debug("Setting buffers on root context.");
       rootContext.setBuffers(buffers);
       // add fragment to local node.
-      status.add(rootFragment.getHandle(), new FragmentData(rootFragment.getHandle(), null, true));
+      status.add(new FragmentData(rootFragment.getHandle(), null, true));
       logger.debug("Fragment added to local node.");
       rootRunner = new FragmentExecutor(rootContext, rootOperator, new RootStatusHandler(rootContext, rootFragment));
       RootFragmentManager fragmentManager = new RootFragmentManager(rootFragment.getHandle(), buffers, rootRunner);
@@ -103,7 +115,7 @@ public class QueryManager implements FragmentStatusListener{
     // keep track of intermediate fragments (not root or leaf)
     for (PlanFragment f : intermediateFragments) {
       logger.debug("Tracking intermediate remote node {} with data {}", f.getAssignment(), f.getFragmentJson());
-      status.add(f.getHandle(), new FragmentData(f.getHandle(), f.getAssignment(), false));
+      status.add(new FragmentData(f.getHandle(), f.getAssignment(), false));
     }
 
     // send remote (leaf) fragments.
@@ -116,7 +128,7 @@ public class QueryManager implements FragmentStatusListener{
 
   private void sendRemoteFragment(PlanFragment fragment){
     logger.debug("Sending remote fragment to node {} with data {}", fragment.getAssignment(), fragment.getFragmentJson());
-    status.add(fragment.getHandle(), new FragmentData(fragment.getHandle(), fragment.getAssignment(), false));
+    status.add(new FragmentData(fragment.getHandle(), fragment.getAssignment(), false));
     FragmentSubmitListener listener = new FragmentSubmitListener(fragment.getAssignment(), fragment);
     controller.getTunnel(fragment.getAssignment()).sendFragment(listener, fragment);
   }
@@ -125,7 +137,7 @@ public class QueryManager implements FragmentStatusListener{
   @Override
   public void statusUpdate(FragmentStatus status) {
     logger.debug("New fragment status was provided to Foreman of {}", status);
-    switch(status.getState()){
+    switch(status.getProfile().getState()){
     case AWAITING_ALLOCATION:
       updateStatus(status);
       break;
@@ -142,7 +154,7 @@ public class QueryManager implements FragmentStatusListener{
       updateStatus(status);
       break;
     default:
-      throw new UnsupportedOperationException();
+      throw new UnsupportedOperationException(String.format("Received status of %s", status));
     }
   }
 
@@ -154,6 +166,7 @@ public class QueryManager implements FragmentStatusListener{
     updateStatus(status);
     int remaining = remainingFragmentCount.decrementAndGet();
     if(remaining == 0){
+      logger.info("Outcome status: {}", this.status);
       QueryResult result = QueryResult.newBuilder() //
               .setQueryState(QueryState.COMPLETED) //
               .setQueryId(queryId) //
@@ -165,7 +178,7 @@ public class QueryManager implements FragmentStatusListener{
   private void fail(FragmentStatus status){
     updateStatus(status);
     stopQuery();
-    QueryResult result = QueryResult.newBuilder().setQueryId(queryId).setQueryState(QueryState.FAILED).addError(status.getError()).build();
+    QueryResult result = QueryResult.newBuilder().setQueryId(queryId).setQueryState(QueryState.FAILED).addError(status.getProfile().getError()).build();
     foreman.cleanupAndSendResult(result);
   }
 

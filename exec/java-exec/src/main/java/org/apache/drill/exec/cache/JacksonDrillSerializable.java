@@ -17,44 +17,36 @@
  */
 package org.apache.drill.exec.cache;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hazelcast.nio.ObjectDataInput;
-import com.hazelcast.nio.ObjectDataOutput;
-import com.hazelcast.nio.serialization.DataSerializable;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.util.DataInputInputStream;
-import org.apache.drill.common.util.DataOutputOutputStream;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.planner.logical.StoragePlugins;
 import org.apache.drill.exec.server.DrillbitContext;
 
-import java.io.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-public abstract class JacksonDrillSerializable<T> implements DrillSerializable, DataSerializable{
+public abstract class JacksonDrillSerializable<T> extends LoopedAbstractDrillSerializable implements DrillSerializable{
   private ObjectMapper mapper;
   private T obj;
+  private Class<T> clazz;
 
-  public JacksonDrillSerializable(DrillbitContext context, T obj) {
+  public JacksonDrillSerializable(DrillbitContext context, T obj, Class<T> clazz) {
+    this(clazz);
     this.mapper = context.getConfig().getMapper();
     this.obj = obj;
   }
 
-  public JacksonDrillSerializable() {
+  public JacksonDrillSerializable(Class<T> clazz) {
+    this.clazz = clazz;
   }
 
   @Override
-  public void readData(ObjectDataInput input) throws IOException {
-    readFromStream(DataInputInputStream.constructInputStream(input));
-  }
-
-  public void readFromStream(InputStream input, Class clazz) throws IOException {
+  public void readFromStream(InputStream input) throws IOException {
     mapper = DrillConfig.create().getMapper();
     obj = (T) mapper.readValue(input, clazz);
-  }
-
-  @Override
-  public void writeData(ObjectDataOutput output) throws IOException {
-    writeToStream(DataOutputOutputStream.constructOutputStream(output));
   }
 
   @Override
@@ -66,4 +58,20 @@ public abstract class JacksonDrillSerializable<T> implements DrillSerializable, 
     return obj;
   }
 
+  public static class StoragePluginsSerializable extends JacksonDrillSerializable<StoragePlugins> {
+
+    public StoragePluginsSerializable(DrillbitContext context, StoragePlugins obj) {
+      super(context, obj, StoragePlugins.class);
+    }
+
+    public StoragePluginsSerializable(BufferAllocator allocator) {
+      super(StoragePlugins.class);
+    }
+
+    public StoragePluginsSerializable() {
+      super(StoragePlugins.class);
+    }
+
+
+  }
 }

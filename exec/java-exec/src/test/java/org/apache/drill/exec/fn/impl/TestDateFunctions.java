@@ -48,7 +48,7 @@ public class TestDateFunctions extends PopUnitTestBase {
             // run query.
             bit.run();
             client.connect();
-            List<QueryResultBatch> results = client.runQuery(UserProtos.QueryType.PHYSICAL,
+            List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
                     Files.toString(FileUtils.getResourceAsFile(physicalPlan), Charsets.UTF_8)
                             .replace("#{TEST_FILE}", resourceFile));
 

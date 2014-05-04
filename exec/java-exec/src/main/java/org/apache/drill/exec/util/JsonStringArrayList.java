@@ -24,7 +24,7 @@ import org.apache.hadoop.io.Text;
 
 import java.util.ArrayList;
 
-public class JsonStringArrayList extends ArrayList {
+public class JsonStringArrayList<E> extends ArrayList<E> {
 
   private static ObjectMapper mapper;
 

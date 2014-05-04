@@ -17,8 +17,8 @@
  */
 package org.apache.drill.exec.work.fragment;
 
-import org.apache.drill.exec.proto.BitControl.FragmentStatus.FragmentState;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
+import org.apache.drill.exec.proto.UserBitShared.FragmentState;
 
 /**
  * The status handler is responsible for receiving changes in fragment status and propagating them back to the foreman.

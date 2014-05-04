@@ -25,13 +25,13 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
-import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.data.Order.Ordering;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.cache.CachedVectorContainer;
 import org.apache.drill.exec.cache.Counter;
 import org.apache.drill.exec.cache.DistributedCache;
 import org.apache.drill.exec.cache.DistributedMap;
@@ -115,9 +115,9 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
   private int recordCount;
 
   private final IntVector partitionKeyVector;
-  private final DistributedMap<VectorAccessibleSerializable> tableMap;
+  private final DistributedMap<CachedVectorContainer> tableMap;
   private final Counter minorFragmentSampleCount;
-  private final DistributedMultiMap<VectorAccessibleSerializable> mmap;
+  private final DistributedMultiMap<CachedVectorContainer> mmap;
   private final String mapKey;
   private List<VectorContainer> sampledIncomingBatches;
 
@@ -131,8 +131,8 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
     this.completionFactor = pop.getCompletionFactor();
 
     DistributedCache cache = context.getDrillbitContext().getCache();
-    this.mmap = cache.getMultiMap(VectorAccessibleSerializable.class);
-    this.tableMap = cache.getMap(VectorAccessibleSerializable.class);
+    this.mmap = cache.getMultiMap(CachedVectorContainer.class);
+    this.tableMap = cache.getMap(CachedVectorContainer.class);
     Preconditions.checkNotNull(tableMap);
 
     this.mapKey = String.format("%s_%d", context.getHandle().getQueryId(), context.getHandle().getMajorFragmentId());
@@ -220,7 +220,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
     // into a serializable wrapper object, and then add to distributed map
 
     WritableBatch batch = WritableBatch.getBatchNoHVWrap(containerToCache.getRecordCount(), containerToCache, false);
-    VectorAccessibleSerializable sampleToSave = new VectorAccessibleSerializable(batch, oContext.getAllocator());
+    CachedVectorContainer sampleToSave = new CachedVectorContainer(batch, context.getAllocator());
 
     mmap.put(mapKey, sampleToSave);
     this.sampledIncomingBatches = builder.getHeldRecordBatches();
@@ -251,7 +251,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
         return false;
       }
 
-      VectorAccessibleSerializable finalTable = null;
+      CachedVectorContainer finalTable = null;
 
       long val = minorFragmentSampleCount.incrementAndGet();
       logger.debug("Incremented mfsc, got {}", val);
@@ -301,8 +301,8 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
 
     // Get all samples from distributed map
 
-    SortRecordBatchBuilder containerBuilder = new SortRecordBatchBuilder(oContext.getAllocator(), MAX_SORT_BYTES);
-    for (VectorAccessibleSerializable w : mmap.get(mapKey)) {
+    SortRecordBatchBuilder containerBuilder = new SortRecordBatchBuilder(context.getAllocator(), MAX_SORT_BYTES);
+    for (CachedVectorContainer w : mmap.get(mapKey)) {
       containerBuilder.add(w.get());
     }
     VectorContainer allSamplesContainer = new VectorContainer();
@@ -346,7 +346,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
     }
     candidatePartitionTable.setRecordCount(copier.getOutputRecords());
     WritableBatch batch = WritableBatch.getBatchNoHVWrap(candidatePartitionTable.getRecordCount(), candidatePartitionTable, false);
-    VectorAccessibleSerializable wrap = new VectorAccessibleSerializable(batch, context.getDrillbitContext().getAllocator());
+    CachedVectorContainer wrap = new CachedVectorContainer(batch, context.getDrillbitContext().getAllocator());
     tableMap.putIfAbsent(mapKey + "final", wrap, 1, TimeUnit.MINUTES);
 
     candidatePartitionTable.clear();

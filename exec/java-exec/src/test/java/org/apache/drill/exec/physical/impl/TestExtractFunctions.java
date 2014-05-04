@@ -112,7 +112,7 @@ public class TestExtractFunctions extends PopUnitTestBase {
       // run query.
       bit.run();
       client.connect();
-      List<QueryResultBatch> results = client.runQuery(UserProtos.QueryType.PHYSICAL,
+      List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
         Files.toString(FileUtils.getResourceAsFile("/functions/extractFrom.json"), Charsets.UTF_8)
         .replace("#{TEST_TYPE}", fromType)
         .replace("#{TEST_FILE}", testDataFile)

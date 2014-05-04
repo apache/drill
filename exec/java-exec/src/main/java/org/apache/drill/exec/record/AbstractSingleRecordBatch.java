@@ -58,13 +58,13 @@ public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> exte
         try{
           stats.startSetup();
           setupNewSchema();
-          stats.stopSetup();
         }catch(SchemaChangeException ex){
-          stats.stopSetup();
           kill();
           logger.error("Failure during query", ex);
           context.fail(ex);
           return IterOutcome.STOP;
+        }finally{
+          stats.stopSetup();
         }
         // fall through.
       case OK:

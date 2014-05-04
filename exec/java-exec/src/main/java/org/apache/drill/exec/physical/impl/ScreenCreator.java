@@ -40,28 +40,28 @@ import com.google.common.base.Preconditions;
 
 public class ScreenCreator implements RootCreator<Screen>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScreenCreator.class);
-  
-  
-  
+
+
+
   @Override
   public RootExec getRoot(FragmentContext context, Screen config, List<RecordBatch> children) {
     Preconditions.checkNotNull(children);
     Preconditions.checkArgument(children.size() == 1);
     return new ScreenRoot(context, children.iterator().next());
   }
-  
-  
+
+
   static class ScreenRoot implements RootExec{
     static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScreenRoot.class);
     volatile boolean ok = true;
-    
+
     private final SendingAccountor sendCount = new SendingAccountor();
-    
+
     final RecordBatch incoming;
     final FragmentContext context;
     final UserClientConnection connection;
     private RecordMaterializer materializer;
-    
+
     public ScreenRoot(FragmentContext context, RecordBatch incoming){
       assert context.getConnection() != null : "A screen root should only be run on the driving node which is connected directly to the client.  As such, this should always be true.";
 
@@ -69,7 +69,7 @@ public class ScreenCreator implements RootCreator<Screen>{
       this.incoming = incoming;
       this.connection = context.getConnection();
     }
-    
+
     @Override
     public boolean next() {
       if(!ok){
@@ -97,7 +97,7 @@ public class ScreenCreator implements RootCreator<Screen>{
       }
       case NONE: {
         sendCount.waitForSendComplete();
-        context.getStats().batchesCompleted.inc(1);
+//        context.getStats().batchesCompleted.inc(1);
         QueryResult header = QueryResult.newBuilder() //
             .setQueryId(context.getHandle().getQueryId()) //
             .setRowCount(0) //
@@ -107,19 +107,19 @@ public class ScreenCreator implements RootCreator<Screen>{
         QueryWritableBatch batch = new QueryWritableBatch(header);
         connection.sendResult(listener, batch);
         sendCount.increment();
-        
+
         return false;
       }
       case OK_NEW_SCHEMA:
         materializer = new VectorRecordMaterializer(context, incoming);
         // fall through.
       case OK:
-        context.getStats().batchesCompleted.inc(1);
-        context.getStats().recordsCompleted.inc(incoming.getRecordCount());
+//        context.getStats().batchesCompleted.inc(1);
+//        context.getStats().recordsCompleted.inc(incoming.getRecordCount());
         QueryWritableBatch batch = materializer.convertNext(false);
         connection.sendResult(listener, batch);
         sendCount.increment();
-        
+
         return true;
       default:
         throw new UnsupportedOperationException();
@@ -133,7 +133,7 @@ public class ScreenCreator implements RootCreator<Screen>{
     }
 
     private SendListener listener = new SendListener();
-    
+
     private class SendListener extends BaseRpcOutcomeListener<Ack>{
 
 
@@ -151,15 +151,15 @@ public class ScreenCreator implements RootCreator<Screen>{
         ErrorHelper.logAndConvertError(context.getIdentity(), "Failure while sending fragment to client.", ex, logger);
         ok = false;
       }
-      
+
     }
 
     RecordBatch getIncoming() {
       return incoming;
     }
-    
-    
+
+
   }
-  
+
 
 }

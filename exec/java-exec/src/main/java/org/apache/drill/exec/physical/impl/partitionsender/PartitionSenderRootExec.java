@@ -29,17 +29,16 @@ import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.TypeHelper;
-import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
+import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.config.HashPartitionSender;
 import org.apache.drill.exec.physical.impl.RootExec;
 import org.apache.drill.exec.physical.impl.SendingAccountor;
 import org.apache.drill.exec.physical.impl.filter.ReturnValueExpression;
 import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
-import org.apache.drill.exec.record.AbstractRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorWrapper;
@@ -63,8 +62,8 @@ public class PartitionSenderRootExec implements RootExec {
   private FragmentContext context;
   private OperatorContext oContext;
   private boolean ok = true;
-  private AtomicLong batchesSent = new AtomicLong(0);
   private final SendingAccountor sendCount = new SendingAccountor();
+  private final OperatorStats stats;
 
 
   public PartitionSenderRootExec(FragmentContext context,
@@ -75,11 +74,12 @@ public class PartitionSenderRootExec implements RootExec {
     this.operator = operator;
     this.context = context;
     this.oContext = new OperatorContext(operator, context);
+    this.stats = oContext.getStats();
     this.outgoing = new OutgoingRecordBatch[operator.getDestinations().size()];
     int fieldId = 0;
     for (CoordinationProtos.DrillbitEndpoint endpoint : operator.getDestinations()) {
       FragmentHandle opposite = context.getHandle().toBuilder().setMajorFragmentId(operator.getOppositeMajorFragmentId()).setMinorFragmentId(fieldId).build();
-      outgoing[fieldId] = new OutgoingRecordBatch(sendCount, operator,
+      outgoing[fieldId] = new OutgoingRecordBatch(stats, sendCount, operator,
                                                     context.getDataTunnel(endpoint, opposite),
                                                     incoming,
                                                     context,
@@ -91,6 +91,7 @@ public class PartitionSenderRootExec implements RootExec {
 
   @Override
   public boolean next() {
+    boolean newSchema = false;
 
     if (!ok) {
       stop();
@@ -122,6 +123,7 @@ public class PartitionSenderRootExec implements RootExec {
         return false;
 
       case OK_NEW_SCHEMA:
+        newSchema = true;
         try {
           // send all existing batches
           if (partitioner != null) {
@@ -139,12 +141,11 @@ public class PartitionSenderRootExec implements RootExec {
           return false;
         }
       case OK:
+        stats.batchReceived(0, incoming.getRecordCount(), newSchema);
         partitioner.partitionBatch(incoming);
         for (VectorWrapper v : incoming) {
           v.clear();
         }
-        context.getStats().batchesCompleted.inc(1);
-        context.getStats().recordsCompleted.inc(incoming.getRecordCount());
         return true;
       case NOT_YET:
       default:

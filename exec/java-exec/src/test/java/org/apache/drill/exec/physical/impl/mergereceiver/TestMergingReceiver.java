@@ -54,7 +54,7 @@ public class TestMergingReceiver extends PopUnitTestBase {
       bit1.run();
       bit2.run();
       client.connect();
-      List<QueryResultBatch> results = client.runQuery(UserProtos.QueryType.PHYSICAL,
+      List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
         Files.toString(FileUtils.getResourceAsFile("/mergerecv/merging_receiver.json"),
           Charsets.UTF_8));
       int count = 0;
@@ -97,7 +97,7 @@ public class TestMergingReceiver extends PopUnitTestBase {
       bit1.run();
       bit2.run();
       client.connect();
-      List<QueryResultBatch> results = client.runQuery(UserProtos.QueryType.PHYSICAL,
+      List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
                                                         Files.toString(FileUtils.getResourceAsFile("/mergerecv/multiple_providers.json"),
                                                                         Charsets.UTF_8));
       int count = 0;
@@ -145,7 +145,7 @@ public class TestMergingReceiver extends PopUnitTestBase {
       bit1.run();
       bit2.run();
       client.connect();
-      List<QueryResultBatch> results = client.runQuery(UserProtos.QueryType.PHYSICAL,
+      List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
                                                         Files.toString(FileUtils.getResourceAsFile("/mergerecv/empty_batch.json"),
                                                                         Charsets.UTF_8));
       int count = 0;

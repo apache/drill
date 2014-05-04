@@ -35,16 +35,16 @@ public class IteratorValidatorInjector extends
   public static FragmentRoot rewritePlanWithIteratorValidator(FragmentContext context, FragmentRoot root) throws ExecutionSetupException {
     IteratorValidatorInjector inject = new IteratorValidatorInjector();
     PhysicalOperator newOp = root.accept(inject, context);
-    
+
     if( !(newOp instanceof FragmentRoot) ) throw new IllegalStateException("This shouldn't happen.");
 
     return (FragmentRoot) newOp;
-    
+
   }
 
   /**
    * Traverse the physical plan and inject the IteratorValidator operator after every operator.
-   * 
+   *
    * @param op
    *          Physical operator under which the IteratorValidator operator will be injected
    * @param context
@@ -61,12 +61,17 @@ public class IteratorValidatorInjector extends
 
     /* Get the list of child operators */
     for (PhysicalOperator child : op) {
-      newChildren.add(new IteratorValidator(child.accept(this, context)));
+      PhysicalOperator validator = new IteratorValidator(child.accept(this, context));
+      validator.setOperatorId(op.getOperatorId() + 1000);
+      newChildren.add(validator);
     }
 
     /* Inject trace operator */
-    if (newChildren.size() > 0)
+    if (newChildren.size() > 0){
       newOp = op.getNewWithChildren(newChildren);
+      newOp.setOperatorId(op.getOperatorId());
+    }
+
 
     return newOp;
   }

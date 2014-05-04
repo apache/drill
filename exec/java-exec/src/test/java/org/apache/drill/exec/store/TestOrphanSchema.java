@@ -23,7 +23,7 @@ import net.hydromatic.optiq.tools.Frameworks;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecTest;
-import org.apache.drill.exec.cache.LocalCache;
+import org.apache.drill.exec.cache.local.LocalCache;
 import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;

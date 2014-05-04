@@ -42,7 +42,7 @@ import org.apache.drill.exec.work.batch.IncomingBuffers;
  */
 public class NonRootFragmentManager implements FragmentManager {
   private final PlanFragment fragment;
-  private FragmentLeaf root;
+  private FragmentRoot root;
   private final IncomingBuffers buffers;
   private final StatusReporter runnerListener;
   private volatile FragmentExecutor runner;
@@ -50,7 +50,7 @@ public class NonRootFragmentManager implements FragmentManager {
   private final FragmentContext context;
   private final PhysicalPlanReader reader;
   private List<RemoteConnection> connections = new CopyOnWriteArrayList<>();
-  
+
   public NonRootFragmentManager(PlanFragment fragment, DrillbitContext context) throws FragmentSetupException{
     try{
       this.fragment = fragment;
@@ -82,14 +82,7 @@ public class NonRootFragmentManager implements FragmentManager {
     synchronized(this){
       if(runner != null) throw new IllegalStateException("Get Runnable can only be run once.");
       if(cancel) return null;
-      FragmentRoot fragRoot = null;
-      try {
-        fragRoot = reader.readFragmentOperator(fragment.getFragmentJson());
-      } catch (IOException e) {
-        runnerListener.fail(fragment.getHandle(), "Failure while setting up remote fragment.", e);
-        return null;
-      }
-      runner = new FragmentExecutor(context, fragRoot, runnerListener);
+      runner = new FragmentExecutor(context, root, runnerListener);
       return this.runner;
     }
 

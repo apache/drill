@@ -18,12 +18,13 @@
 package org.apache.drill.exec.store.ischema;
 
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import net.hydromatic.optiq.SchemaPlus;
 import net.hydromatic.optiq.tools.Frameworks;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.exec.cache.LocalCache;
+import org.apache.drill.exec.cache.local.LocalCache;
 import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
@@ -40,7 +41,7 @@ public class OrphanSchema {
    * @return root node of the created schema.
    */
   public static SchemaPlus create() throws Exception {
-    
+
     final DrillConfig c = DrillConfig.create();
 
     // Mock up a context which will allow us to create a schema.
@@ -51,7 +52,7 @@ public class OrphanSchema {
     when(bitContext.getCache()).thenReturn(new LocalCache());
 
     bitContext.getCache().run();
-    
+
     // Using the mock context, get the orphan schema.
     StoragePluginRegistry r = new StoragePluginRegistry(bitContext);
     r.init();

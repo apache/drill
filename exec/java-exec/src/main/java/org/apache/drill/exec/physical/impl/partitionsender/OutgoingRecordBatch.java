@@ -26,6 +26,7 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.config.HashPartitionSender;
 import org.apache.drill.exec.physical.impl.SendingAccountor;
 import org.apache.drill.exec.proto.ExecProtos;
@@ -43,7 +44,6 @@ import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.rpc.BaseRpcOutcomeListener;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.data.DataTunnel;
-import org.apache.drill.exec.util.VectorUtil;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.allocator.VectorAllocator;
 import org.apache.drill.exec.work.ErrorHelper;
@@ -74,8 +74,9 @@ public class OutgoingRecordBatch implements VectorAccessible {
   private int recordCapacity;
   private static int DEFAULT_ALLOC_SIZE = 20000;
   private static int DEFAULT_VARIABLE_WIDTH_SIZE = 2048;
+  private OperatorStats stats;
 
-  public OutgoingRecordBatch(SendingAccountor sendCount, HashPartitionSender operator, DataTunnel tunnel, RecordBatch incoming,
+  public OutgoingRecordBatch(OperatorStats stats, SendingAccountor sendCount, HashPartitionSender operator, DataTunnel tunnel, RecordBatch incoming,
                              FragmentContext context, BufferAllocator allocator, int oppositeMinorFragmentId) {
     this.incoming = incoming;
     this.context = context;
@@ -83,13 +84,18 @@ public class OutgoingRecordBatch implements VectorAccessible {
     this.operator = operator;
     this.tunnel = tunnel;
     this.sendCount = sendCount;
+    this.stats = stats;
     this.oppositeMinorFragmentId = oppositeMinorFragmentId;
   }
 
   public void flushIfNecessary() {
     if (recordCount == recordCapacity) logger.debug("Flush is necesary:  Count is " + recordCount + ", capacity is " + recordCapacity);
     try {
-      if (recordCount == recordCapacity) flush();
+      if (recordCount == recordCapacity){
+        flush();
+        stats.addLongStat(PartitionSenderStats.BATCHES_SENT, 1l);
+        stats.addLongStat(PartitionSenderStats.RECORDS_SENT, recordCount);
+      }
     } catch (SchemaChangeException e) {
       incoming.kill();
       logger.error("Error flushing outgoing batches", e);

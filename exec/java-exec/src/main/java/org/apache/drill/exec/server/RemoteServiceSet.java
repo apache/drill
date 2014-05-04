@@ -21,17 +21,17 @@ import java.io.Closeable;
 import java.io.IOException;
 
 import org.apache.drill.exec.cache.DistributedCache;
-import org.apache.drill.exec.cache.LocalCache;
+import org.apache.drill.exec.cache.local.LocalCache;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.coord.LocalClusterCoordinator;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 
 public class RemoteServiceSet implements Closeable{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RemoteServiceSet.class);
-  
+
   private final DistributedCache cache;
   private final ClusterCoordinator coordinator;
-  
+
   public RemoteServiceSet(DistributedCache cache, ClusterCoordinator coordinator) {
     super();
     this.cache = cache;
@@ -46,16 +46,21 @@ public class RemoteServiceSet implements Closeable{
   public ClusterCoordinator getCoordinator() {
     return coordinator;
   }
-  
-  
+
+
   @Override
   public void close() throws IOException {
+    try{
     cache.close();
+    }catch(Exception e){
+      if(e instanceof IOException) throw (IOException) e;
+      throw new IOException("Failure while closing cache", e);
+    }
     coordinator.close();
   }
 
   public static RemoteServiceSet getLocalServiceSet(){
     return new RemoteServiceSet(new LocalCache(), new LocalClusterCoordinator());
   }
-  
+
 }

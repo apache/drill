@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.cache;
+package org.apache.drill.exec.cache.hazel;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -26,8 +26,16 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.cache.ProtoBufImpl.HWorkQueueStatus;
-import org.apache.drill.exec.cache.ProtoBufImpl.HandlePlan;
+import org.apache.drill.exec.cache.Counter;
+import org.apache.drill.exec.cache.DistributedCache;
+import org.apache.drill.exec.cache.DistributedMap;
+import org.apache.drill.exec.cache.DistributedMultiMap;
+import org.apache.drill.exec.cache.DrillSerializable;
+import org.apache.drill.exec.cache.JacksonAdvancedSerializer;
+import org.apache.drill.exec.cache.SerializationDefinition;
+import org.apache.drill.exec.cache.VectorAccessibleSerializable;
+import org.apache.drill.exec.cache.hazel.ProtoBufImpl.HWorkQueueStatus;
+import org.apache.drill.exec.cache.hazel.ProtoBufImpl.HandlePlan;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.BitControl.WorkQueueStatus;

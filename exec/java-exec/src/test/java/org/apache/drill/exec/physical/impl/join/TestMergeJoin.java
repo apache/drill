@@ -312,7 +312,7 @@ public class TestMergeJoin extends PopUnitTestBase {
 
       bit1.run();
       client.connect();
-      List<QueryResultBatch> results = client.runQuery(UserProtos.QueryType.PHYSICAL,
+      List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
               Files.toString(FileUtils.getResourceAsFile("/join/merge_join_empty_batch.json"),
                       Charsets.UTF_8)
                       .replace("${JOIN_TYPE}", "INNER"));
@@ -335,7 +335,7 @@ public class TestMergeJoin extends PopUnitTestBase {
 
       bit1.run();
       client.connect();
-      List<QueryResultBatch> results = client.runQuery(UserProtos.QueryType.PHYSICAL,
+      List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
           Files.toString(FileUtils.getResourceAsFile("/join/merge_join_empty_batch.json"),
               Charsets.UTF_8)
               .replace("${JOIN_TYPE}", "LEFT"));
@@ -358,7 +358,7 @@ public class TestMergeJoin extends PopUnitTestBase {
 
       bit1.run();
       client.connect();
-      List<QueryResultBatch> results = client.runQuery(UserProtos.QueryType.PHYSICAL,
+      List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
               Files.toString(FileUtils.getResourceAsFile("/join/merge_join_empty_batch.json"),
                       Charsets.UTF_8)
                       .replace("${JOIN_TYPE}", "RIGHT"));

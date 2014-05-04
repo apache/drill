@@ -22,9 +22,12 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
-import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.cache.DistributedCache;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
@@ -41,6 +44,7 @@ import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.work.batch.ControlHandlerImpl;
 import org.apache.drill.exec.work.batch.ControlMessageHandler;
 import org.apache.drill.exec.work.foreman.Foreman;
+import org.apache.drill.exec.work.foreman.QueryStatus;
 import org.apache.drill.exec.work.fragment.FragmentExecutor;
 import org.apache.drill.exec.work.fragment.FragmentManager;
 import org.apache.drill.exec.work.user.UserWorker;
@@ -50,14 +54,16 @@ import com.google.common.collect.Queues;
 
 public class WorkManager implements Closeable{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WorkManager.class);
-  
+
   private Set<FragmentManager> incomingFragments = Collections.newSetFromMap(Maps.<FragmentManager, Boolean> newConcurrentMap());
 
   private PriorityBlockingQueue<Runnable> pendingTasks = Queues.newPriorityBlockingQueue();
-  
+
   private Map<FragmentHandle, FragmentExecutor> runningFragments = Maps.newConcurrentMap();
-  
+
   private ConcurrentMap<QueryId, Foreman> queries = Maps.newConcurrentMap();
+
+  private ConcurrentMap<QueryId, QueryStatus> status = Maps.newConcurrentMap();
 
   private BootStrapContext bContext;
   private DrillbitContext dContext;
@@ -69,7 +75,7 @@ public class WorkManager implements Closeable{
   private final WorkEventBus workBus;
   private ExecutorService executor;
   private final EventThread eventThread;
-  
+
   public WorkManager(BootStrapContext context){
     this.bee = new WorkerBee();
     this.workBus = new WorkEventBus(bee);
@@ -79,22 +85,22 @@ public class WorkManager implements Closeable{
     this.eventThread = new EventThread();
     this.dataHandler = new DataResponseHandlerImpl(bee);
   }
-  
+
   public void start(DrillbitEndpoint endpoint, DistributedCache cache, Controller controller, DataConnectionCreator data, ClusterCoordinator coord){
     this.dContext = new DrillbitContext(endpoint, bContext, coord, controller, data, cache, workBus);
  //   executor = Executors.newFixedThreadPool(dContext.getConfig().getInt(ExecConstants.EXECUTOR_THREADS)
     executor = Executors.newCachedThreadPool(new NamedThreadFactory("WorkManager-"));
     eventThread.start();
   }
-  
+
   public WorkEventBus getWorkBus(){
     return workBus;
   }
-  
+
   public DataResponseHandler getDataHandler() {
     return dataHandler;
   }
-  
+
   public ControlMessageHandler getControlMessageHandler(){
     return controlMessageWorker;
   }
@@ -102,7 +108,7 @@ public class WorkManager implements Closeable{
   public UserWorker getUserWorker(){
     return userWorker;
   }
-  
+
   @Override
   public void close() throws IOException {
     try {
@@ -111,7 +117,7 @@ public class WorkManager implements Closeable{
       logger.warn("Executor interrupted while awaiting termination");
     }
   }
-  
+
 
   public DrillbitContext getContext() {
     return dContext;
@@ -124,7 +130,7 @@ public class WorkManager implements Closeable{
       logger.debug("Adding pending task {}", runner);
       pendingTasks.add(runner);
     }
-    
+
     public void addNewForeman(Foreman foreman){
       pendingTasks.add(foreman);
     }
@@ -133,20 +139,20 @@ public class WorkManager implements Closeable{
     public void addFragmentPendingRemote(FragmentManager handler){
       incomingFragments.add(handler);
     }
-    
+
     public void startFragmentPendingRemote(FragmentManager handler){
       incomingFragments.remove(handler);
       pendingTasks.add(handler.getRunnable());
     }
-    
+
     public FragmentExecutor getFragmentRunner(FragmentHandle handle){
       return runningFragments.get(handle);
     }
-    
+
     public Foreman getForemanForQueryId(QueryId queryId){
       return queries.get(queryId);
     }
-    
+
     public void retireForeman(Foreman foreman){
       queries.remove(foreman.getQueryId(), foreman);
     }
@@ -173,18 +179,18 @@ public class WorkManager implements Closeable{
       Runnable r = pendingTasks.take();
       if(r != null){
         logger.debug("Starting pending task {}", r);
-        executor.execute(r);  
+        executor.execute(r);
       }
-      
+
     }
     } catch (InterruptedException e) {
       logger.info("Work Manager stopping as it was interrupted.");
     }
   }
-   
-   
+
+
  }
 
-  
-  
+
+
 }

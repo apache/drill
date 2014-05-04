@@ -44,6 +44,7 @@ import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.SelectionVectorPrelVisitor;
 import org.apache.drill.exec.planner.physical.explain.PrelSequencer;
 import org.apache.drill.exec.planner.sql.DrillSqlWorker;
+import org.apache.drill.exec.util.Pointer;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptUtil;
 import org.eigenbase.relopt.RelTraitSet;
@@ -59,11 +60,17 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
 
   protected final Planner planner;
   protected final QueryContext context;
+  private Pointer<String> textPlan;
 
   public DefaultSqlHandler(Planner planner, QueryContext context) {
+    this(planner, context, null);
+  }
+
+  public DefaultSqlHandler(Planner planner, QueryContext context, Pointer<String> textPlan) {
     super();
     this.planner = planner;
     this.context = context;
+    this.textPlan = textPlan;
   }
 
   protected void log(String name, RelNode node) {
@@ -73,8 +80,9 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
   }
 
   protected void log(String name, Prel node) {
+    if(textPlan != null) textPlan.value = PrelSequencer.printWithIds(node, SqlExplainLevel.ALL_ATTRIBUTES);
     if (logger.isDebugEnabled()) {
-      logger.debug(name + " : \n" + PrelSequencer.printWithIds(node, SqlExplainLevel.ALL_ATTRIBUTES));
+      logger.debug(name + " : \n" + textPlan.value);
     }
   }
 

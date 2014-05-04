@@ -28,7 +28,7 @@ import java.util.HashMap;
  * Simple class that extends the regular java.util.HashMap but overrides the
  * toString() method of the HashMap class to produce a JSON string instead
  */
-public class JsonStringHashMap extends HashMap {
+public class JsonStringHashMap<K, V> extends HashMap<K, V> {
 
   private static ObjectMapper mapper;
 

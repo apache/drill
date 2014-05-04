@@ -33,7 +33,7 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.eigenbase.sql.SqlExplain.Depth;
 import org.eigenbase.sql.SqlExplainLevel;
 
-import com.google.monitoring.runtime.instrumentation.common.com.google.common.base.Strings;
+import com.google.common.base.Strings;
 
 public class PlanTestBase extends BaseTestQuery {
 

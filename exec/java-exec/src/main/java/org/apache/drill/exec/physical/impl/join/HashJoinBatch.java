@@ -221,11 +221,13 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
             return IterOutcome.NONE;
 
         } catch (ClassTransformationException | SchemaChangeException | IOException e) {
-            stats.stopProcessing();
             context.fail(e);
             killIncoming();
             return IterOutcome.STOP;
+        } finally{
+          stats.stopProcessing();
         }
+
     }
 
     public void setupHashTable() throws IOException, SchemaChangeException, ClassTransformationException {

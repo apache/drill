@@ -24,8 +24,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
 
-import org.apache.drill.common.util.DataInputInputStream;
-import org.apache.drill.common.util.DataOutputOutputStream;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.metrics.DrillMetrics;
@@ -33,7 +31,6 @@ import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
@@ -43,19 +40,17 @@ import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import com.hazelcast.nio.ObjectDataInput;
-import com.hazelcast.nio.ObjectDataOutput;
 
 /**
  * A wrapper around a VectorAccessible. Will serialize a VectorAccessible and write to an OutputStream, or can read
  * from an InputStream and construct a new VectorContainer.
  */
-public class VectorAccessibleSerializable implements DrillSerializable {
+public class VectorAccessibleSerializable extends AbstractStreamSerializable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(VectorAccessibleSerializable.class);
   static final MetricRegistry metrics = DrillMetrics.getInstance();
   static final String WRITER_TIMER = MetricRegistry.name(VectorAccessibleSerializable.class, "writerTime");
 
-  private VectorAccessible va;
+  private VectorContainer va;
   private WritableBatch batch;
   private BufferAllocator allocator;
   private int recordCount = -1;
@@ -91,10 +86,6 @@ public class VectorAccessibleSerializable implements DrillSerializable {
     }
   }
 
-  @Override
-  public void readData(ObjectDataInput input) throws IOException {
-    readFromStream(DataInputInputStream.constructInputStream(input));
-  }
 
   /**
    * Reads from an InputStream and parses a RecordBatchDef. From this, we construct a SelectionVector2 if it exits
@@ -134,10 +125,6 @@ public class VectorAccessibleSerializable implements DrillSerializable {
     va = container;
   }
 
-  @Override
-  public void writeData(ObjectDataOutput output) throws IOException {
-    writeToStream(DataOutputOutputStream.constructOutputStream(output));
-  }
 
   public void writeToStreamAndRetain(OutputStream output) throws IOException {
     retain = true;
@@ -208,7 +195,7 @@ public class VectorAccessibleSerializable implements DrillSerializable {
     }
   }
 
-  public VectorAccessible get() {
+  public VectorContainer get() {
     return va;
   }
 

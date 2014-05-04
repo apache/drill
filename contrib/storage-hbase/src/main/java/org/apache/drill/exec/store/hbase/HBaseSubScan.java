@@ -209,4 +209,9 @@ public class HBaseSubScan extends AbstractBase implements SubScan {
 
   }
 
+  @Override
+  public int getOperatorType() {
+    return 1001;
+  }
+
 }

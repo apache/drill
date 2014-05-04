@@ -17,19 +17,20 @@
  */
 package org.apache.drill.exec.cache;
 
-import com.hazelcast.nio.ObjectDataInput;
-import com.hazelcast.nio.ObjectDataOutput;
-import com.hazelcast.nio.serialization.DataSerializable;
-
-import java.io.*;
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
  * Classes that can be put in the Distributed Cache must implement this interface.
  */
-public interface DrillSerializable {
+public interface DrillSerializable extends Externalizable{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillSerializable.class);
-  public void readData(ObjectDataInput input) throws IOException;
+  public void read(DataInput input) throws IOException;
   public void readFromStream(InputStream input) throws IOException;
-  public void writeData(ObjectDataOutput output) throws IOException;
+  public void write(DataOutput output) throws IOException;
   public void writeToStream(OutputStream output) throws IOException;
 }

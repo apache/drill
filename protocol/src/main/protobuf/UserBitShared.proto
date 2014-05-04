@@ -82,7 +82,8 @@ message QueryProfile {
   optional int64 start = 3;
   optional int64 end = 4;
   optional string query = 5;
-  repeated MajorFragmentProfile fragment_profile = 6;
+  optional string plan = 6;
+  repeated MajorFragmentProfile fragment_profile = 7;
 }
 
 message MajorFragmentProfile {
@@ -91,15 +92,19 @@ message MajorFragmentProfile {
 } 
 
 message MinorFragmentProfile {
-  optional int32 minor_fragment_id = 1;
-  repeated OperatorProfile operator_profile = 2; 
-  optional int64 start_time = 3;
-  optional int64 end_time = 4;  
+  optional FragmentState state = 1;
+  optional DrillPBError error = 2; 
+  optional int32 minor_fragment_id = 3;
+  repeated OperatorProfile operator_profile = 4; 
+  optional int64 start_time = 5;
+  optional int64 end_time = 6;
+  optional int64 memory_used = 7;
+  optional int64 max_memory_used = 8;
+  optional DrillbitEndpoint endpoint = 9;
 }
 
 message OperatorProfile {
   repeated StreamProfile input_profile = 1;
-  optional StreamProfile output_profile = 2;
   optional int32 operator_id = 3;
   optional int32 operator_type = 4;
   optional int64 setup_nanos = 5;
@@ -120,6 +125,14 @@ message MetricValue {
   optional double double_value = 3;
 }
 
+enum FragmentState {
+  SENDING = 0;
+  AWAITING_ALLOCATION = 1;
+  RUNNING = 2;
+  FINISHED = 3;
+  CANCELLED = 4;
+  FAILED = 5;
+}
 
 enum CoreOperatorType {
   SINGLE_SENDER = 0;

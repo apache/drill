@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.work.fragment;
 
-import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -26,8 +25,7 @@ import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.impl.ImplCreator;
 import org.apache.drill.exec.physical.impl.RootExec;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
-import org.apache.drill.exec.proto.BitControl.FragmentStatus.FragmentState;
-import org.apache.drill.exec.proto.BitControl.PlanFragment;
+import org.apache.drill.exec.proto.UserBitShared.FragmentState;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
 import org.apache.drill.exec.work.CancelableQuery;
@@ -47,7 +45,7 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
   private RootExec root;
   private final FragmentContext context;
   private final StatusReporter listener;
-  
+
   public FragmentExecutor(FragmentContext context, FragmentRoot rootOperator, StatusReporter listener){
     this.context = context;
     this.rootOperator = rootOperator;
@@ -56,11 +54,7 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
 
   @Override
   public FragmentStatus getStatus() {
-    return FragmentStatus.newBuilder() //
-        .setBatchesCompleted(context.getStats().batchesCompleted.get()) //
-        .setDataProcessed(context.getStats().dataProcessed.get()) //
-        .setMemoryUse(context.getAllocator().getAllocatedMemory()) //
-        .build();
+    throw new UnsupportedOperationException();
   }
 
   @Override
@@ -71,7 +65,7 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
   public UserClientConnection getClient(){
     return context.getConnection();
   }
-  
+
   @Override
   public void run() {
     final String originalThread = Thread.currentThread().getName();
@@ -81,7 +75,7 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
         context.getHandle().getMinorFragmentId()
         );
     Thread.currentThread().setName(newThreadName);
-    
+
     boolean closed = false;
     try {
       root = ImplCreator.getExec(context, rootOperator);
@@ -95,33 +89,32 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
       internalFail(new RuntimeException(String.format("Run was called when fragment was in %s state.  FragmentRunnables should only be started when they are currently in awaiting allocation state.", FragmentState.valueOf(state.get()))));
       return;
     }
-    
-    Timer.Context t = context.getStats().fragmentTime.time();
-    
+
+
+
     // run the query until root.next returns false.
     try{
       while(state.get() == FragmentState.RUNNING_VALUE){
         if(!root.next()){
           if(context.isFailed()){
-            updateState(FragmentState.RUNNING, FragmentState.FAILED, false);  
+            updateState(FragmentState.RUNNING, FragmentState.FAILED, false);
           }else{
             updateState(FragmentState.RUNNING, FragmentState.FINISHED, false);
           }
 
         }
       }
-      
+
       root.stop();
-      
+
       closed = true;
-      
+
       context.close();
     }catch(Exception ex){
       logger.debug("Caught exception while running fragment", ex);
       internalFail(ex);
     }finally{
       Thread.currentThread().setName(originalThread);
-      t.stop();
       if(!closed) try{
         context.close();
       }catch(RuntimeException e){
@@ -130,17 +123,17 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
     }
     logger.debug("Fragment runner complete. {}:{}", context.getHandle().getMajorFragmentId(), context.getHandle().getMinorFragmentId());
   }
-  
+
   private void internalFail(Throwable excep){
     state.set(FragmentState.FAILED_VALUE);
     listener.fail(context.getHandle(), "Failure while running fragment.", excep);
   }
-  
+
   private void updateState(FragmentState update){
     state.set(update.getNumber());
     listener.stateChanged(context.getHandle(), update);
   }
-  
+
   private boolean updateState(FragmentState current, FragmentState update, boolean exceptionOnFailure) {
     boolean success = state.compareAndSet(current.getNumber(), update.getNumber());
     if (!success && exceptionOnFailure) {
@@ -161,5 +154,5 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
   public FragmentContext getContext(){
     return context;
   }
-  
+
 }

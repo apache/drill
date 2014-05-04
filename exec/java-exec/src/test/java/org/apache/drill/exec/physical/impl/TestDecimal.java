@@ -55,7 +55,7 @@ public class TestDecimal extends PopUnitTestBase{
             // run query.
             bit.run();
             client.connect();
-            List<QueryResultBatch> results = client.runQuery(UserProtos.QueryType.PHYSICAL,
+            List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
                     Files.toString(FileUtils.getResourceAsFile("/decimal/cast_simple_decimal.json"), Charsets.UTF_8)
                             .replace("#{TEST_FILE}", "/input_simple_decimal.json")
             );
@@ -100,7 +100,7 @@ public class TestDecimal extends PopUnitTestBase{
             // run query.
             bit.run();
             client.connect();
-            List<QueryResultBatch> results = client.runQuery(UserProtos.QueryType.PHYSICAL,
+            List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
                     Files.toString(FileUtils.getResourceAsFile("/decimal/cast_float_decimal.json"), Charsets.UTF_8)
                             .replace("#{TEST_FILE}", "/input_simple_decimal.json")
             );
@@ -145,7 +145,7 @@ public class TestDecimal extends PopUnitTestBase{
             // run query.
             bit.run();
             client.connect();
-            List<QueryResultBatch> results = client.runQuery(UserProtos.QueryType.PHYSICAL,
+            List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
                     Files.toString(FileUtils.getResourceAsFile("/decimal/simple_decimal_arithmetic.json"), Charsets.UTF_8)
                             .replace("#{TEST_FILE}", "/input_simple_decimal.json")
             );
@@ -196,7 +196,7 @@ public class TestDecimal extends PopUnitTestBase{
             // run query.
             bit.run();
             client.connect();
-            List<QueryResultBatch> results = client.runQuery(UserProtos.QueryType.PHYSICAL,
+            List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
                     Files.toString(FileUtils.getResourceAsFile("/decimal/test_decimal_complex.json"), Charsets.UTF_8)
                             .replace("#{TEST_FILE}", "/input_complex_decimal.json")
             );
@@ -243,7 +243,7 @@ public class TestDecimal extends PopUnitTestBase{
             // run query.
             bit.run();
             client.connect();
-            List<QueryResultBatch> results = client.runQuery(UserProtos.QueryType.PHYSICAL,
+            List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
                     Files.toString(FileUtils.getResourceAsFile("/decimal/test_decimal_sort_complex.json"), Charsets.UTF_8)
                             .replace("#{TEST_FILE}", "/input_sort_complex_decimal.json")
             );
@@ -295,7 +295,7 @@ public class TestDecimal extends PopUnitTestBase{
             // run query.
             bit.run();
             client.connect();
-            List<QueryResultBatch> results = client.runQuery(UserProtos.QueryType.PHYSICAL,
+            List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
                     Files.toString(FileUtils.getResourceAsFile("/decimal/test_decimal_dense_sparse.json"), Charsets.UTF_8)
                             .replace("#{TEST_FILE}", "/input_complex_decimal.json")
             );
@@ -343,7 +343,7 @@ public class TestDecimal extends PopUnitTestBase{
             // run query.
             bit.run();
             client.connect();
-            List<QueryResultBatch> results = client.runQuery(UserProtos.QueryType.PHYSICAL,
+            List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
                     Files.toString(FileUtils.getResourceAsFile("/decimal/test_decimal_sparse_dense_dense.json"), Charsets.UTF_8)
                             .replace("#{TEST_FILE}", "/input_simple_decimal.json")
             );

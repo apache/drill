@@ -22,16 +22,20 @@ import java.io.Closeable;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.cache.DistributedCache;
-import org.apache.drill.exec.cache.HazelCache;
+import org.apache.drill.exec.cache.infinispan.ICache;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.coord.ClusterCoordinator.RegistrationHandle;
 import org.apache.drill.exec.coord.ZKClusterCoordinator;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.server.rest.DrillRestServer;
 import org.apache.drill.exec.service.ServiceEngine;
 import org.apache.drill.exec.work.WorkManager;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.servlet.ServletHandler;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
+import org.glassfish.jersey.server.ServerProperties;
+import org.glassfish.jersey.servlet.ServletContainer;
 
 import com.google.common.io.Closeables;
 
@@ -77,27 +81,32 @@ public class Drillbit implements Closeable{
   private volatile RegistrationHandle handle;
 
   public Drillbit(DrillConfig config, RemoteServiceSet serviceSet) throws Exception {
+
+    this.context = new BootStrapContext(config);
+    this.manager = new WorkManager(context);
+    this.engine = new ServiceEngine(manager.getControlMessageHandler(), manager.getUserWorker(), context, manager.getWorkBus(), manager.getDataHandler());
+    this.embeddedJetty = new Server(8047);
+
     if(serviceSet != null){
-      this.context = new BootStrapContext(config);
-      this.manager = new WorkManager(context);
       this.coord = serviceSet.getCoordinator();
-      this.engine = new ServiceEngine(manager.getControlMessageHandler(), manager.getUserWorker(), context, manager.getWorkBus(), manager.getDataHandler());
       this.cache = serviceSet.getCache();
     }else{
       Runtime.getRuntime().addShutdownHook(new ShutdownThread(config));
-      this.context = new BootStrapContext(config);
-      this.manager = new WorkManager(context);
       this.coord = new ZKClusterCoordinator(config);
-      this.engine = new ServiceEngine(manager.getControlMessageHandler(), manager.getUserWorker(), context, manager.getWorkBus(), manager.getDataHandler());
-      this.cache = new HazelCache(config, context.getAllocator());
+      this.cache = new ICache(config, context.getAllocator());
+//      this.cache = new HazelCache(config, context.getAllocator());
     }
-    this.embeddedJetty = new Server(474747);
   }
 
-  private void setupJetty(){
-    ServletHandler handler = new ServletHandler();
-    embeddedJetty.setHandler(handler);
-
+  private void startJetty() throws Exception{
+    ServletContextHandler context = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
+    context.setContextPath("/");
+    embeddedJetty.setHandler(context);
+    ServletHolder h = new ServletHolder(new ServletContainer(new DrillRestServer(manager)));
+//    h.setInitParameter(ServerProperties.PROVIDER_PACKAGES, "org.apache.drill.exec.server");
+    h.setInitOrder(1);
+    context.addServlet(h, "/*");
+    embeddedJetty.start();
   }
 
 
@@ -110,7 +119,7 @@ public class Drillbit implements Closeable{
     manager.getContext().getStorage().init();
     manager.getContext().getOptionManager().init();
     handle = coord.register(md);
-    embeddedJetty.start();
+    startJetty();
   }
 
   public void close() {

@@ -17,8 +17,12 @@
  */
 package org.apache.drill.exec.cache;
 
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.io.OutputStream;
 
 import com.hazelcast.nio.ObjectDataInput;
@@ -33,17 +37,27 @@ public abstract class JacksonSerializable implements DrillSerializable{
   }
 
   @Override
-  public void readData(ObjectDataInput input) throws IOException {
+  public void writeExternal(ObjectOutput out) throws IOException {
+    fail();
+  }
+
+  @Override
+  public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+    fail();
+  }
+
+  @Override
+  public void read(DataInput input) throws IOException {
+    fail();
+  }
+
+  @Override
+  public void write(DataOutput output) throws IOException {
     fail();
   }
 
   @Override
   public void readFromStream(InputStream input) throws IOException {
-    fail();
-  }
-
-  @Override
-  public void writeData(ObjectDataOutput output) throws IOException {
     fail();
   }
 

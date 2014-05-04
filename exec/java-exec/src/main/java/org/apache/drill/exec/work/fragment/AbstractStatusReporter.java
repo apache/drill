@@ -19,31 +19,39 @@ package org.apache.drill.exec.work.fragment;
 
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
-import org.apache.drill.exec.proto.BitControl.FragmentStatus.FragmentState;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
+import org.apache.drill.exec.proto.UserBitShared.FragmentState;
+import org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile;
 import org.apache.drill.exec.work.ErrorHelper;
 
 public abstract class AbstractStatusReporter implements StatusReporter{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractStatusReporter.class);
-  
+
   private FragmentContext context;
   private volatile long startNanos;
-  
+
   public AbstractStatusReporter(FragmentContext context) {
     super();
     this.context = context;
   }
-  
+
   private  FragmentStatus.Builder getBuilder(FragmentState state){
+    return getBuilder(state, null, null);
+  }
+  private  FragmentStatus.Builder getBuilder(FragmentState state, String message, Throwable t){
     FragmentStatus.Builder status = FragmentStatus.newBuilder();
-    context.getStats().addMetricsToStatus(status);
-    status.setState(state);
-    status.setRunningTime(System.nanoTime() - startNanos);
+    MinorFragmentProfile.Builder b = MinorFragmentProfile.newBuilder();
+    context.getStats().addMetricsToStatus(b);
+    b.setState(state);
+    if(t != null){
+      b.setError(ErrorHelper.logAndConvertError(context.getIdentity(), message, t, logger));
+    }
     status.setHandle(context.getHandle());
-    status.setMemoryUse(context.getAllocator().getAllocatedMemory());
+    b.setMemoryUsed(context.getAllocator().getAllocatedMemory());
+    status.setProfile(b);
     return status;
   }
-  
+
   @Override
   public void stateChanged(FragmentHandle handle, FragmentState newState) {
     FragmentStatus.Builder status = getBuilder(newState);
@@ -70,14 +78,14 @@ public abstract class AbstractStatusReporter implements StatusReporter{
       break;
     default:
       break;
-    
+
     }
   }
-  
+
   protected void awaitingAllocation(FragmentHandle handle, FragmentStatus.Builder statusBuilder){
     statusChange(handle, statusBuilder.build());
   }
-  
+
   protected void running(FragmentHandle handle, FragmentStatus.Builder statusBuilder){
     statusChange(handle, statusBuilder.build());
   }
@@ -89,13 +97,12 @@ public abstract class AbstractStatusReporter implements StatusReporter{
   protected void finished(FragmentHandle handle, FragmentStatus.Builder statusBuilder){
     statusChange(handle, statusBuilder.build());
   }
-  
+
   protected abstract void statusChange(FragmentHandle handle, FragmentStatus status);
 
   @Override
   public final void fail(FragmentHandle handle, String message, Throwable excep) {
-    FragmentStatus.Builder status = getBuilder(FragmentState.FAILED);
-    status.setError(ErrorHelper.logAndConvertError(context.getIdentity(), message, excep, logger));
+    FragmentStatus.Builder status = getBuilder(FragmentState.FAILED, message, excep);
     fail(handle, status);
   }
 

@@ -17,14 +17,12 @@
  */
 package org.apache.drill.exec.cache;
 
-import java.io.Closeable;
-
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 
 
-public interface DistributedCache extends Closeable{
+public interface DistributedCache extends AutoCloseable{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DistributedCache.class);
 
   public void run() throws DrillbitStartupException;

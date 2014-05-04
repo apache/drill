@@ -65,7 +65,7 @@ public abstract class BasicServer<T extends EnumLite, C extends RemoteConnection
         .option(ChannelOption.SO_SNDBUF, 1 << 17) //
         .group(eventLoopGroup) //
         .childOption(ChannelOption.ALLOCATOR, alloc) //
-        .handler(new LoggingHandler(LogLevel.INFO)) //
+//        .handler(new LoggingHandler(LogLevel.INFO)) //
         .childHandler(new ChannelInitializer<SocketChannel>() {
           @Override
           protected void initChannel(SocketChannel ch) throws Exception {
@@ -91,7 +91,7 @@ public abstract class BasicServer<T extends EnumLite, C extends RemoteConnection
   }
 
   public abstract ProtobufLengthDecoder getDecoder(BufferAllocator allocator, OutOfMemoryHandler outOfMemoryHandler);
-  
+
   @Override
   public boolean isClient() {
     return false;

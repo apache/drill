@@ -18,6 +18,7 @@
 package org.apache.drill.exec.ops;
 
 import org.apache.commons.collections.Buffer;
+import org.apache.drill.exec.proto.UserBitShared.MetricValue;
 import org.apache.drill.exec.proto.UserBitShared.OperatorProfile;
 import org.apache.drill.exec.proto.UserBitShared.StreamProfile;
 
@@ -37,8 +38,6 @@ public class OperatorStats {
   public long[] batchesReceivedByInput;
   private long[] schemaCountByInput;
 
-  private long batchesOutput;
-  private long recordsOutput;
 
   private boolean inProcessing = false;
   private boolean inSetup = false;
@@ -61,6 +60,7 @@ public class OperatorStats {
     this.operatorType = operatorType;
     this.recordsReceivedByInput = new long[inputCount];
     this.batchesReceivedByInput = new long[inputCount];
+    this.schemaCountByInput = new long[inputCount];
   }
 
   public void startSetup() {
@@ -86,6 +86,7 @@ public class OperatorStats {
   public void stopProcessing() {
     assert inProcessing;
     processingNanos += System.nanoTime() - processingMark;
+    inProcessing = false;
   }
 
   public void batchReceived(int inputIndex, long records, boolean newSchema) {
@@ -97,11 +98,10 @@ public class OperatorStats {
   }
 
   public OperatorProfile getProfile() {
-    OperatorProfile.Builder b = OperatorProfile //
+    final OperatorProfile.Builder b = OperatorProfile //
         .newBuilder() //
         .setOperatorType(operatorType) //
         .setOperatorId(operatorId) //
-        .setOutputProfile(StreamProfile.newBuilder().setBatches(batchesOutput).setRecords(recordsOutput)) //
         .setSetupNanos(setupNanos) //
         .setProcessNanos(processingNanos);
 
@@ -111,13 +111,13 @@ public class OperatorStats {
 
     for(int i =0; i < longMetrics.allocated.length; i++){
       if(longMetrics.allocated[i]){
-        b.addMetricBuilder().setMetricId(longMetrics.keys[i]).setLongValue(longMetrics.values[i]);
+        b.addMetric(MetricValue.newBuilder().setMetricId(longMetrics.keys[i]).setLongValue(longMetrics.values[i]));
       }
     }
 
     for(int i =0; i < doubleMetrics.allocated.length; i++){
       if(doubleMetrics.allocated[i]){
-        b.addMetricBuilder().setMetricId(doubleMetrics.keys[i]).setDoubleValue(doubleMetrics.values[i]);
+        b.addMetric(MetricValue.newBuilder().setMetricId(doubleMetrics.keys[i]).setDoubleValue(doubleMetrics.values[i]));
       }
     }
 
