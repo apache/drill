@@ -13,8 +13,8 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <artifactId>drill-root</artifactId>
-    <groupId>org.apache.drill</groupId>
+    <groupId>org.apache.drill.exec</groupId>
+    <artifactId>exec-parent</artifactId>
     <version>1.0.0-m2-incubating-SNAPSHOT</version>
   </parent>
   <artifactId>drill-jdbc-all</artifactId>
@@ -106,8 +106,8 @@
             <configuration>
               <artifactItems>
                 <artifactItem>
-                  <groupId>org.apache.drill</groupId>
-                  <artifactId>drill-sqlparser</artifactId>
+                  <groupId>org.apache.drill.exec</groupId>
+                  <artifactId>drill-jdbc</artifactId>
                   <version>${baseDrillVersion}</version>
                   <type>jar</type>
                   <outputDirectory>${project.build.directory}</outputDirectory>
@@ -145,7 +145,7 @@
           <proguardVersion>4.11</proguardVersion>
           <obfuscate>false</obfuscate>
           <includeDependencyInjar>true</includeDependencyInjar>
-          <injar>drill-sqlparser-${baseDrillVersion}.jar</injar>
+          <injar>drill-jdbc-${baseDrillVersion}.jar</injar>
           <outjar>${project.build.finalName}-dirty.jar</outjar>
           <outputDirectory>${project.build.directory}</outputDirectory>
           <maxMemory>6g</maxMemory>

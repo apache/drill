@@ -262,7 +262,7 @@
             <forkCount>8</forkCount>
             <reuseForks>true</reuseForks>
             <additionalClasspathElements>
-              <additionalClasspathElement>./sqlparser/src/test/resources/storage-plugins.json</additionalClasspathElement>
+              <additionalClasspathElement>./exec/jdbc/src/test/resources/storage-plugins.json</additionalClasspathElement>
             </additionalClasspathElements>
           </configuration>
         </plugin>
@@ -831,7 +831,6 @@
     <module>common</module>
     <module>contrib</module>
     <module>exec</module>
-    <module>sqlparser</module>
     <module>distribution</module>
   </modules>
 </project>

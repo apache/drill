@@ -29,11 +29,19 @@
 
   </moduleSets>
   <dependencySets>
-    <dependencySet>
+<!--    <dependencySet>
 
+      <includes>
+        <include>org.apache.drill.exec:drill-jdbc-all:jar</include>
+      </includes>
+      <outputDirectory>jdbc-driver</outputDirectory>
+      <useProjectArtifact>false</useProjectArtifact>
+    </dependencySet>
+-->
+    <dependencySet>
 <!--       Now, select which projects to include in this module-set. -->
       <includes>
-        <include>org.apache.drill:drill-sqlparser:jar</include>
+        <include>org.apache.drill.exec:drill-jdbc:jar</include>
         <include>org.apache.drill.exec:drill-buffers</include>
         <include>org.apache.drill:drill-protocol:jar:rebuffed</include>
         <include>org.apache.drill:drill-common:jar:rebuffed</include>

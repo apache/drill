@@ -13,12 +13,12 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <artifactId>drill-root</artifactId>
-    <groupId>org.apache.drill</groupId>
+    <groupId>org.apache.drill.exec</groupId>
+    <artifactId>exec-parent</artifactId>
     <version>1.0.0-m2-incubating-SNAPSHOT</version>
   </parent>
-  <artifactId>drill-sqlparser</artifactId>
-  <name>SQL Parser</name>
+  <artifactId>drill-jdbc</artifactId>
+  <name>exec/JDBC Driver using dependencies</name>
 
   <dependencies>
     <dependency>

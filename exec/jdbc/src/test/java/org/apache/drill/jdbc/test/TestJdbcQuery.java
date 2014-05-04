@@ -87,19 +87,19 @@ public class TestJdbcQuery extends JdbcTest{
 
   @Test
   public void testCast() throws Exception{
-    testQuery(String.format("select R_REGIONKEY, cast(R_NAME as varchar(15)) as region, cast(R_COMMENT as varchar(255)) as comment from dfs.`%s/../sample-data/region.parquet`", WORKING_PATH));
+    testQuery(String.format("select R_REGIONKEY, cast(R_NAME as varchar(15)) as region, cast(R_COMMENT as varchar(255)) as comment from dfs.`%s/../../sample-data/region.parquet`", WORKING_PATH));
   }
 
   @Test
   @Ignore
   public void testWorkspace() throws Exception{
-    testQuery(String.format("select * from dfs.home.`%s/../sample-data/region.parquet`", WORKING_PATH));
+    testQuery(String.format("select * from dfs.home.`%s/../../sample-data/region.parquet`", WORKING_PATH));
   }
 
   @Test
   @Ignore
   public void testWildcard() throws Exception{
-    testQuery(String.format("select * from dfs.`%s/../sample-data/region.parquet`", WORKING_PATH));
+    testQuery(String.format("select * from dfs.`%s/../../sample-data/region.parquet`", WORKING_PATH));
   }
 
   @Test
@@ -115,19 +115,19 @@ public class TestJdbcQuery extends JdbcTest{
   @Test
   @Ignore
   public void testLogicalExplain() throws Exception{
-    testQuery(String.format("EXPLAIN PLAN WITHOUT IMPLEMENTATION FOR select * from dfs.`%s/../sample-data/region.parquet`", WORKING_PATH));
+    testQuery(String.format("EXPLAIN PLAN WITHOUT IMPLEMENTATION FOR select * from dfs.`%s/../../sample-data/region.parquet`", WORKING_PATH));
   }
 
   @Test
   @Ignore
   public void testPhysicalExplain() throws Exception{
-    testQuery(String.format("EXPLAIN PLAN FOR select * from dfs.`%s/../sample-data/region.parquet`", WORKING_PATH));
+    testQuery(String.format("EXPLAIN PLAN FOR select * from dfs.`%s/../../sample-data/region.parquet`", WORKING_PATH));
   }
 
   @Test
   @Ignore
   public void checkUnknownColumn() throws Exception{
-    testQuery(String.format("SELECT unknownColumn FROM dfs.`%s/../sample-data/region.parquet`", WORKING_PATH));
+    testQuery(String.format("SELECT unknownColumn FROM dfs.`%s/../../sample-data/region.parquet`", WORKING_PATH));
   }
 
   private void testQuery(String sql) throws Exception{
@@ -409,7 +409,7 @@ public class TestJdbcQuery extends JdbcTest{
   @Test
   public void testDefaultSchemaDfs() throws Exception{
     JdbcAssert.withFull("dfs")
-      .sql(String.format("SELECT R_REGIONKEY FROM `%s/../sample-data/region.parquet` LIMIT 2", WORKING_PATH))
+      .sql(String.format("SELECT R_REGIONKEY FROM `%s/../../sample-data/region.parquet` LIMIT 2", WORKING_PATH))
       .returns(
         "R_REGIONKEY=0\n" +
         "R_REGIONKEY=1\n"
