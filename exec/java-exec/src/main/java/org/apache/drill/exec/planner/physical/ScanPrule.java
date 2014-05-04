@@ -39,6 +39,7 @@ public class ScanPrule extends RelOptRule{
     final DrillScanRel scan = (DrillScanRel) call.rel(0);
 
     List<SchemaPath> columns = PrelUtil.getColumns(scan.getRowType());
+    columns = columns == null || columns.isEmpty() ? null : columns;
 
     GroupScan groupScan = scan.getGroupScan().clone(columns);
 

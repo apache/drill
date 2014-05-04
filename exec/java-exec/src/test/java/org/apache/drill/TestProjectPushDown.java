@@ -18,6 +18,7 @@
 
 package org.apache.drill;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 // Test the optimizer plan in terms of project pushdown.
@@ -78,6 +79,7 @@ public class TestProjectPushDown extends PlanTestBase {
   }
 
   @Test
+  @Ignore
   public void testFromInfoSchema() throws Exception {
     String expectedColNames = " \"columns\" : [ \"`CATALOG_DESCRIPTION`\" ]";
     testPhysicalPlan(

@@ -80,7 +80,7 @@ public class HiveTextRecordReader extends HiveRecordReader {
         for (int i = start; (b = bytes[i]) != delimiter; i++) {
           value = (value * 10) + b - 48;
         }
-        ((IntVector) vv).getMutator().set(index, value); // No need to use setSafe for fixed length vectors
+        ((NullableIntVector) vv).getMutator().set(index, value); // No need to use setSafe for fixed length vectors
         return true;
       }
       case LONG: {
@@ -89,7 +89,7 @@ public class HiveTextRecordReader extends HiveRecordReader {
         for (int i = start; (b = bytes[i]) != delimiter; i++) {
           value = (value * 10) + b - 48;
         }
-        ((BigIntVector) vv).getMutator().set(index, value); // No need to use setSafe for fixed length vectors
+        ((NullableBigIntVector) vv).getMutator().set(index, value); // No need to use setSafe for fixed length vectors
         return true;
       }
       case SHORT:
@@ -103,7 +103,7 @@ public class HiveTextRecordReader extends HiveRecordReader {
           }
           end = bytes.length;
         }
-        return ((VarCharVector) vv).getMutator().setSafe(index, bytes, start, end - start);
+        return ((NullableVarCharVector) vv).getMutator().setSafe(index, bytes, start, end - start);
       }
       case TIMESTAMP:
         throw new UnsupportedOperationException();
