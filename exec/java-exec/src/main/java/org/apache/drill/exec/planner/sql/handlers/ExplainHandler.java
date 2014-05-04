@@ -55,6 +55,8 @@ public class ExplainHandler extends DefaultSqlHandler{
     SqlNode validated = validateNode(sqlNode);
     RelNode rel = convertToRel(validated);
     DrillRel drel = convertToDrel(rel);
+    log("Optiq Logical", rel);
+    log("Drill Logical", drel);
 
     if(mode == ResultMode.LOGICAL){
       LogicalExplain logicalResult = new LogicalExplain(drel);
@@ -62,8 +64,10 @@ public class ExplainHandler extends DefaultSqlHandler{
     }
 
     Prel prel = convertToPrel(drel);
+    log("Drill Physical", prel);
     PhysicalOperator pop = convertToPop(prel);
     PhysicalPlan plan = convertToPlan(pop);
+    log("Drill Plan", plan);
     PhysicalExplain physicalResult = new PhysicalExplain(prel, plan);
     return DirectPlan.createDirectPlan(context, physicalResult);
   }

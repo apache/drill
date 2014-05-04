@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.PhysicalOperatorSetupException;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
@@ -82,5 +83,4 @@ public class DirectGroupScan extends AbstractGroupScan{
   public String getDigest() {
     return String.valueOf(reader);
   }
-
 }

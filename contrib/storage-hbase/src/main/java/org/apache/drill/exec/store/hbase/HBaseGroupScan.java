@@ -118,7 +118,7 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
     this.storagePlugin = that.storagePlugin;
     this.storagePluginConfig = that.storagePluginConfig;
   }
-  
+
   private void getRegionInfos() {
     logger.debug("Getting region locations");
     try {
@@ -262,4 +262,10 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
     newScan.columns = columns;
     return newScan;
   }
+
+  @Override
+  public List<SchemaPath> checkProjPush(List<SchemaPath> columns) {
+    return columns;
+  }
+
 }

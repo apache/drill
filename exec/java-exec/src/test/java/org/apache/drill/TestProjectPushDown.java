@@ -79,7 +79,7 @@ public class TestProjectPushDown extends PlanTestBase {
   }
 
   @Test
-  @Ignore
+  @Ignore  // InfoSchema do not support project pushdown currently.
   public void testFromInfoSchema() throws Exception {
     String expectedColNames = " \"columns\" : [ \"`CATALOG_DESCRIPTION`\" ]";
     testPhysicalPlan(

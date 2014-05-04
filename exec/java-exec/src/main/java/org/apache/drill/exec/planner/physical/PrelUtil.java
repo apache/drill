@@ -84,21 +84,26 @@ public class PrelUtil {
     }
     return new SelectionVectorRemover(child);
   }
-  
-  public static List<SchemaPath> getColumns(RelDataType rowType) {   
+
+  public static List<SchemaPath> getColumns(RelDataType rowType) {
     final List<String> fields = rowType.getFieldNames();
-    
+
     if (fields.isEmpty()) return null;
-        
+
     List<SchemaPath> columns = Lists.newArrayList();
-    
+
     for (String field : fields) {
+      //If star column is required, no project pushdown. Just return null, to indicate SCAN should get ALL the columns.
       if (field.startsWith("*"))
-        continue;
-      
+        return null;
+
       columns.add(SchemaPath.getSimplePath(field));
 
-    }          
-    return columns;
-  }  
+    }
+
+    if (columns.isEmpty())
+      return null;
+    else
+      return columns;
+  }
 }

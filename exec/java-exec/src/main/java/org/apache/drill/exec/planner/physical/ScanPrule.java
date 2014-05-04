@@ -38,10 +38,7 @@ public class ScanPrule extends RelOptRule{
   public void onMatch(RelOptRuleCall call) {
     final DrillScanRel scan = (DrillScanRel) call.rel(0);
 
-    List<SchemaPath> columns = PrelUtil.getColumns(scan.getRowType());
-    columns = columns == null || columns.isEmpty() ? null : columns;
-
-    GroupScan groupScan = scan.getGroupScan().clone(columns);
+    GroupScan groupScan = scan.getGroupScan();
 
     DrillDistributionTrait partition = groupScan.getMaxParallelizationWidth() > 1 ? DrillDistributionTrait.RANDOM_DISTRIBUTED : DrillDistributionTrait.SINGLETON;
 

@@ -28,7 +28,7 @@ import com.google.common.collect.Iterators;
 public abstract class AbstractGroupScan extends AbstractBase implements GroupScan {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractGroupScan.class);
 
-  
+
   @Override
   public Iterator<PhysicalOperator> iterator() {
     return Iterators.emptyIterator();
@@ -60,4 +60,15 @@ public abstract class AbstractGroupScan extends AbstractBase implements GroupSca
   public long getMaxAllocation() {
     return 0;
   }
+
+  /**
+   * Check if groupscan can support projects-push-down into scan.
+   * The default implementation assumes groupscan could not support project pushdown, by returning null.
+   * If one particular group scan can support, it should override this method.
+   */
+  @Override
+  public List<SchemaPath> checkProjPush(List<SchemaPath> columns) {
+    return null;
+  }
+
 }

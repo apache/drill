@@ -57,7 +57,7 @@ public class EasyGroupScan extends AbstractGroupScan{
   private final EasyFormatPlugin<?> formatPlugin;
   private final int maxWidth;
   private List<SchemaPath> columns;
-  
+
   private ListMultimap<Integer, CompleteFileWork> mappings;
   private List<CompleteFileWork> chunks;
   private List<EndpointAffinity> endpointAffinities;
@@ -68,7 +68,7 @@ public class EasyGroupScan extends AbstractGroupScan{
       @JsonProperty("files") List<String> files, //
       @JsonProperty("storage") StoragePluginConfig storageConfig, //
       @JsonProperty("format") FormatPluginConfig formatConfig, //
-      @JacksonInject StoragePluginRegistry engineRegistry, // 
+      @JacksonInject StoragePluginRegistry engineRegistry, //
       @JsonProperty("columns") List<SchemaPath> columns,
       @JsonProperty("selectionRoot") String selectionRoot
       ) throws IOException, ExecutionSetupException {
@@ -88,10 +88,10 @@ public class EasyGroupScan extends AbstractGroupScan{
     this.columns = columns;
     this.selectionRoot = selectionRoot;
   }
-  
+
   public EasyGroupScan(
       FileSelection selection, //
-      EasyFormatPlugin<?> formatPlugin, // 
+      EasyFormatPlugin<?> formatPlugin, //
       List<SchemaPath> columns,
       String selectionRoot
       ) throws IOException{
@@ -120,7 +120,7 @@ public class EasyGroupScan extends AbstractGroupScan{
     this.selection = that.selection;
     this.selectionRoot = that.selectionRoot;
   }
-  
+
   public String getSelectionRoot() {
     return selectionRoot;
   }
@@ -144,23 +144,25 @@ public class EasyGroupScan extends AbstractGroupScan{
   public List<String> getFiles() {
     return selection.getAsFiles();
   }
-  
+
+  @JsonProperty("columns")
+  public List<SchemaPath> getColumns(){
+    return columns;
+  }
+
+
   @JsonIgnore
   public FileSelection getFileSelection(){
     return selection;
   }
-  
+
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException {
     assert children == null || children.isEmpty();
     return this;
   }
 
-  @JsonProperty("columns")
-  public List<SchemaPath> getColumns(){
-    return columns;
-  }
-  
+
   @Override
   public List<EndpointAffinity> getOperatorAffinity() {
     assert chunks != null && chunks.size() > 0;
@@ -189,7 +191,7 @@ public class EasyGroupScan extends AbstractGroupScan{
 
     return new EasySubScan(convert(filesForMinor), formatPlugin, columns, selectionRoot);
   }
-  
+
   private List<FileWorkImpl> convert(List<CompleteFileWork> list){
     List<FileWorkImpl> newList = Lists.newArrayList();
     for(CompleteFileWork f : list){
@@ -197,7 +199,7 @@ public class EasyGroupScan extends AbstractGroupScan{
     }
     return newList;
   }
-  
+
   @JsonProperty("storage")
   public StoragePluginConfig getStorageConfig(){
     return formatPlugin.getStorageConfig();
@@ -210,7 +212,7 @@ public class EasyGroupScan extends AbstractGroupScan{
 
   @Override
   public String toString() {
-    return "EasyGroupScan [selectionRoot=" + selectionRoot + "]";
+    return "EasyGroupScan [selectionRoot=" + selectionRoot + ", columns = " + columns + "]";
   }
 
   @Override
@@ -224,5 +226,10 @@ public class EasyGroupScan extends AbstractGroupScan{
     newScan.columns = columns;
     return newScan;
   }
-  
+
+  @Override
+  public List<SchemaPath> checkProjPush(List<SchemaPath> columns) {
+    return columns;
+  }
+
 }

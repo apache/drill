@@ -43,25 +43,25 @@ public class InfoSchemaGroupScan extends AbstractGroupScan{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(InfoSchemaGroupScan.class);
 
   private final SelectedTable table;
-  
+
   private List<SchemaPath> columns;
-  
+
   @JsonCreator
   public InfoSchemaGroupScan(@JsonProperty("table") SelectedTable table,
       @JsonProperty("columns") List<SchemaPath> columns) {
     this.table = table;
     this.columns = columns;
   }
-  
+
   private InfoSchemaGroupScan(InfoSchemaGroupScan that) {
     this.table = that.table;
     this.columns = that.columns;
   }
-  
+
   public List<SchemaPath> getColumns() {
     return columns;
-  }  
-  
+  }
+
   @Override
   public void applyAssignments(List<DrillbitEndpoint> endpoints) throws PhysicalOperatorSetupException {
     Preconditions.checkArgument(endpoints.size() == 1);
@@ -108,5 +108,6 @@ public class InfoSchemaGroupScan extends AbstractGroupScan{
     InfoSchemaGroupScan  newScan = new InfoSchemaGroupScan (this);
     newScan.columns = columns;
     return newScan;
-  }  
+  }
+
 }

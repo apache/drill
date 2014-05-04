@@ -18,6 +18,7 @@
 
 package org.apache.drill.exec.planner.logical;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -26,6 +27,9 @@ import java.util.TreeSet;
 
 import net.hydromatic.optiq.rules.java.JavaRules.EnumerableTableAccessRel;
 
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.physical.base.GroupScan;
+import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.eigenbase.rel.ProjectRel;
 import org.eigenbase.rel.ProjectRelBase;
 import org.eigenbase.rel.RelNode;
@@ -40,6 +44,7 @@ import org.eigenbase.rex.RexInputRef;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.rex.RexShuttle;
 
+import com.google.common.base.Objects;
 import com.google.hive12.common.collect.Lists;
 
 public class DrillPushProjIntoScan extends RelOptRule {
@@ -58,18 +63,35 @@ public class DrillPushProjIntoScan extends RelOptRule {
 
     RelDataType newScanRowType = createStructType(scan.getCluster().getTypeFactory(), getProjectedFields(scan.getRowType(),columnsIds));
 
-    final DrillScanRel newScan = new DrillScanRel(scan.getCluster(), scan.getTraitSet().plus(DrillRel.DRILL_LOGICAL),
-        scan.getTable(), newScanRowType);
+    DrillTable drillTable = scan.getTable().unwrap(DrillTable.class);
+    try {
+      List<SchemaPath> columns = PrelUtil.getColumns(newScanRowType);
 
-    List<RexNode> convertedExprs = getConvertedProjExp(proj, scan, columnsIds);
+      GroupScan groupScan = drillTable.getGroupScan();
 
-    final DrillProjectRel newProj = new DrillProjectRel(proj.getCluster(), proj.getTraitSet().plus(DrillRel.DRILL_LOGICAL),
-        newScan, convertedExprs, proj.getRowType());
+      //Check if the group scan can support the list of columns. If not support, return without doing any further transformation.
+      List<SchemaPath> pushedColumns = groupScan.checkProjPush(columns);
 
-    if (RemoveTrivialProjectRule.isTrivial(newProj)) {
-      call.transformTo(newScan);
-    } else {
-      call.transformTo(newProj);
+      if (pushedColumns == null || pushedColumns.isEmpty())
+        return;
+
+      final DrillScanRel newScan = new DrillScanRel(scan.getCluster(), scan.getTraitSet().plus(DrillRel.DRILL_LOGICAL),
+          scan.getTable(), newScanRowType, columns);
+
+      List<RexNode> convertedExprs = getConvertedProjExp(proj, scan, columnsIds);
+
+      final DrillProjectRel newProj = new DrillProjectRel(proj.getCluster(), proj.getTraitSet().plus(DrillRel.DRILL_LOGICAL),
+          newScan, convertedExprs, proj.getRowType());
+
+      if (RemoveTrivialProjectRule.isTrivial(newProj)) {
+        call.transformTo(newScan);
+      } else {
+        call.transformTo(newProj);
+      }
+
+    } catch (IOException e) {
+      e.printStackTrace();
+      return;
     }
 
   }

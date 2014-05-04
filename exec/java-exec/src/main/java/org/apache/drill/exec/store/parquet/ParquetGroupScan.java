@@ -77,7 +77,7 @@ public class ParquetGroupScan extends AbstractGroupScan {
   static final String ENDPOINT_BYTES_TIMER = MetricRegistry.name(ParquetGroupScan.class, "endpointBytes");
   static final String ASSIGNMENT_TIMER = MetricRegistry.name(ParquetGroupScan.class, "applyAssignments");
   static final String ASSIGNMENT_AFFINITY_HIST = MetricRegistry.name(ParquetGroupScan.class, "assignmentAffinity");
-  
+
   final Histogram assignmentAffinityStats = metrics.histogram(ASSIGNMENT_AFFINITY_HIST);
 
   private ListMultimap<Integer, RowGroupInfo> mappings;
@@ -111,7 +111,7 @@ public class ParquetGroupScan extends AbstractGroupScan {
       @JsonProperty("entries") List<ReadEntryWithPath> entries, //
       @JsonProperty("storage") StoragePluginConfig storageConfig, //
       @JsonProperty("format") FormatPluginConfig formatConfig, //
-      @JacksonInject StoragePluginRegistry engineRegistry, // 
+      @JacksonInject StoragePluginRegistry engineRegistry, //
       @JsonProperty("columns") List<SchemaPath> columns, //
       @JsonProperty("selectionRoot") String selectionRoot //
       ) throws IOException, ExecutionSetupException {
@@ -142,19 +142,19 @@ public class ParquetGroupScan extends AbstractGroupScan {
     this.columns = columns;
     this.formatConfig = formatPlugin.getConfig();
     this.fs = formatPlugin.getFileSystem().getUnderlying();
-    
+
     this.entries = Lists.newArrayList();
     for(FileStatus file : files){
       entries.add(new ReadEntryWithPath(file.getPath().toString()));
     }
-    
+
     this.selectionRoot = selectionRoot;
 
     readFooter(files);
   }
-  
+
   /*
-   * This is used to clone another copy of the group scan. 
+   * This is used to clone another copy of the group scan.
    */
   private ParquetGroupScan(ParquetGroupScan that){
     this.columns = that.columns;
@@ -175,13 +175,13 @@ public class ParquetGroupScan extends AbstractGroupScan {
     }
     readFooter(files);
   }
-  
+
   private void readFooter(List<FileStatus> statuses) throws IOException {
     watch.reset();
     watch.start();
     Timer.Context tContext = metrics.timer(READ_FOOTER_TIMER).time();
-    
-    
+
+
     rowGroupInfos = Lists.newArrayList();
     long start = 0, length = 0;
     ColumnChunkMetaData columnChunkMetaData;
@@ -267,12 +267,12 @@ public class ParquetGroupScan extends AbstractGroupScan {
   /**
    * Calculates the affinity each endpoint has for this scan, by adding up the affinity each endpoint has for each
    * rowGroup
-   * 
+   *
    * @return a list of EndpointAffinity objects
    */
   @Override
   public List<EndpointAffinity> getOperatorAffinity() {
-    
+
     if (this.endpointAffinities == null) {
       BlockMapBuilder bmb = new BlockMapBuilder(fs, formatPlugin.getContext().getBits());
       try{
@@ -311,8 +311,8 @@ public class ParquetGroupScan extends AbstractGroupScan {
     return new ParquetRowGroupScan(formatPlugin, convertToReadEntries(rowGroupsForMinor), columns, selectionRoot);
   }
 
-  
-  
+
+
   private List<RowGroupReadEntry> convertToReadEntries(List<RowGroupInfo> rowGroups){
     List<RowGroupReadEntry> entries = Lists.newArrayList();
     for (RowGroupInfo rgi : rowGroups) {
@@ -370,5 +370,10 @@ public class ParquetGroupScan extends AbstractGroupScan {
     ParquetGroupScan newScan = new ParquetGroupScan(this);
     newScan.columns = columns;
     return newScan;
+  }
+
+  @Override
+  public List<SchemaPath> checkProjPush(List<SchemaPath> columns) {
+    return columns;
   }
 }

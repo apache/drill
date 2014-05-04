@@ -30,7 +30,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
  * A GroupScan operator represents all data which will be scanned by a given physical
  * plan.  It is the superset of all SubScans for the plan.
  */
-public interface GroupScan extends Scan, HasAffinity{ 
+public interface GroupScan extends Scan, HasAffinity{
 
   public abstract void applyAssignments(List<DrillbitEndpoint> endpoints) throws PhysicalOperatorSetupException;
 
@@ -45,10 +45,19 @@ public interface GroupScan extends Scan, HasAffinity{
    */
   @JsonIgnore
   public abstract String getDigest();
-  
+
   /**
-   * Returns a clone of Groupscan instance, except that the new GroupScan will use the provided list of columns
+   * Returns a clone of Groupscan instance, except that the new GroupScan will use the provided list of columns .
+   *
    */
   @JsonIgnore
   public GroupScan clone(List<SchemaPath> columns);
+
+  /**
+   * GroupScan should check the list of columns, and see if it could support all the columns in the list.
+   * If it can not support any of them, return null. Null indicates that this groupscan will not support
+   * project pushdown for this list of columns.
+   */
+  public List<SchemaPath> checkProjPush(List<SchemaPath> columns);
+
 }

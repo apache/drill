@@ -18,8 +18,10 @@
 package org.apache.drill.exec.planner.logical;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.drill.common.JSONOptions;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.common.logical.data.Scan;
 import org.apache.drill.exec.physical.OperatorCost;
@@ -45,21 +47,28 @@ public class DrillScanRel extends DrillScanRelBase implements DrillRel {
   /** Creates a DrillScan. */
   public DrillScanRel(RelOptCluster cluster, RelTraitSet traits,
       RelOptTable table) {
-    this(cluster, traits, table, table.getRowType());
+    // By default, scan does not support project pushdown.
+    // Decision whether push projects into scan will be made solely in DrillPushProjIntoScanRule.
+    this(cluster, traits, table, table.getRowType(), null);
   }
 
   /** Creates a DrillScan. */
   public DrillScanRel(RelOptCluster cluster, RelTraitSet traits,
-      RelOptTable table, RelDataType rowType) {
+      RelOptTable table, RelDataType rowType, List<SchemaPath> columns) {
     super(DRILL_LOGICAL, cluster, traits, table);
     this.rowType = rowType;
+
     try {
-      this.groupScan = this.drillTable.getGroupScan().clone(
-          PrelUtil.getColumns(rowType));
+      if (columns == null || columns.isEmpty()) {
+        this.groupScan = this.drillTable.getGroupScan();
+      } else {
+        this.groupScan = this.drillTable.getGroupScan().clone(columns);
+      }
     } catch (IOException e) {
       this.groupScan = null;
       e.printStackTrace();
     }
+
   }
 
   @Override

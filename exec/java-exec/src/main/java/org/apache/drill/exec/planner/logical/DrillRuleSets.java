@@ -57,7 +57,7 @@ public class DrillRuleSets {
 //      SwapJoinRule.INSTANCE,
       RemoveDistinctRule.INSTANCE,
 //      UnionToDistinctRule.INSTANCE,
-//      RemoveTrivialProjectRule.INSTANCE,
+      RemoveTrivialProjectRule.INSTANCE,
 //      RemoveTrivialCalcRule.INSTANCE,
       RemoveSortRule.INSTANCE,
 
@@ -66,14 +66,14 @@ public class DrillRuleSets {
       new MergeProjectRule(true, RelFactories.DEFAULT_PROJECT_FACTORY),
       RemoveDistinctAggregateRule.INSTANCE, //
       ReduceAggregatesRule.INSTANCE, //
-//      PushProjectPastJoinRule.INSTANCE,
-//      PushProjectPastFilterRule.INSTANCE,
+      PushProjectPastJoinRule.INSTANCE,
+      PushProjectPastFilterRule.INSTANCE,
 //      SwapJoinRule.INSTANCE, //
 //      PushJoinThroughJoinRule.RIGHT, //
 //      PushJoinThroughJoinRule.LEFT, //
 //      PushSortPastProjectRule.INSTANCE, //
 
-//      DrillPushProjIntoScan.INSTANCE,
+      DrillPushProjIntoScan.INSTANCE,
 
       ////////////////////////////////
       DrillScanRule.INSTANCE,
