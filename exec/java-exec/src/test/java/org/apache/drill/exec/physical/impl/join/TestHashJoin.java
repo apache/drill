@@ -119,7 +119,7 @@ public class TestHashJoin extends PopUnitTestBase{
     @Test
     public void simpleEqualityJoin() throws Throwable {
 
-        // Function checks for casting from Float, Double to Decimal data types
+        // Function checks hash join with single equality condition
         try (RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
              Drillbit bit = new Drillbit(CONFIG, serviceSet);
              DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
@@ -157,7 +157,7 @@ public class TestHashJoin extends PopUnitTestBase{
     public void hjWithExchange(@Injectable final DrillbitContext bitContext,
                                @Injectable UserServer.UserClientConnection connection) throws Throwable {
 
-        // Function checks for casting from Float, Double to Decimal data types
+        // Function tests with hash join with exchanges
         try (RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
              Drillbit bit = new Drillbit(CONFIG, serviceSet);
              DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
@@ -183,7 +183,7 @@ public class TestHashJoin extends PopUnitTestBase{
     public void multipleConditionJoin(@Injectable final DrillbitContext bitContext,
                                       @Injectable UserServer.UserClientConnection connection) throws Throwable {
 
-        // Function checks for casting from Float, Double to Decimal data types
+        // Function tests hash join with multiple join conditions
         try (RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
              Drillbit bit = new Drillbit(CONFIG, serviceSet);
              DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
@@ -219,4 +219,31 @@ public class TestHashJoin extends PopUnitTestBase{
             assertEquals(3, intAccessor1.getValueCount());
         }
     }
+
+
+  @Test
+  public void hjWithExchange1(@Injectable final DrillbitContext bitContext,
+                              @Injectable UserServer.UserClientConnection connection) throws Throwable {
+
+    // Another test for hash join with exchanges
+    try (RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
+         Drillbit bit = new Drillbit(CONFIG, serviceSet);
+         DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
+
+      // run query.
+      bit.run();
+      client.connect();
+      List<QueryResultBatch> results = client.runQuery(UserProtos.QueryType.PHYSICAL,
+          Files.toString(FileUtils.getResourceAsFile("/join/hj_exchanges1.json"), Charsets.UTF_8));
+
+      int count = 0;
+      for(QueryResultBatch b : results) {
+        if (b.getHeader().getRowCount() != 0)
+          count += b.getHeader().getRowCount();
+      }
+
+      System.out.println("Total records: " + count);
+      assertEquals(272, count);
+    }
+  }
 }

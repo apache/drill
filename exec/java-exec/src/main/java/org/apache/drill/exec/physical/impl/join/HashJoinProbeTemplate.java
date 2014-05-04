@@ -22,19 +22,13 @@ import javax.inject.Named;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.physical.impl.common.ChainedHashTable;
 import org.apache.drill.exec.physical.impl.common.HashTable;
-import org.apache.drill.exec.physical.impl.common.HashTableConfig;
-import org.apache.drill.exec.physical.impl.sort.RecordBatchData;
-import org.apache.drill.exec.record.BatchSchema;
-import org.apache.drill.exec.record.ExpandableHyperContainer;
+import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 import org.apache.drill.exec.record.VectorContainer;
-import org.apache.drill.exec.vector.allocator.VectorAllocator;
-import org.apache.drill.exec.expr.holders.IntHolder;
+
 import org.eigenbase.rel.JoinRelType;
-import org.eigenbase.sql2rel.StandardConvertletTable;
 
 import java.io.IOException;
 import java.util.List;
@@ -104,6 +98,12 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
 
             // Check if we have processed all records in this batch we need to invoke next
             if (recordsProcessed == recordsToProcess) {
+
+                // Done processing all records in the previous batch, clean up!
+                for (VectorWrapper<?> wrapper : probeBatch) {
+                    wrapper.getValueVector().clear();
+                }
+
                 IterOutcome leftUpstream = probeBatch.next();
 
                 switch (leftUpstream) {

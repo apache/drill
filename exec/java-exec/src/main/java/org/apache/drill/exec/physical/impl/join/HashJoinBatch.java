@@ -159,35 +159,52 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
                 hashJoinProbe = setupHashJoinProbe();
             }
 
-            // Allocate the memory for the vectors in the output container
-            allocateVectors();
-
             // Store the number of records projected
-            outputRecords = hashJoinProbe.probeAndProject();
+            if (hashTable != null) {
 
-            /* We are here because of one the following
-             * 1. Completed processing of all the records and we are done
-             * 2. We've filled up the outgoing batch to the maximum and we need to return upstream
-             * Either case build the output container's schema and return
-             */
-            if (outputRecords > 0) {
+                // Allocate the memory for the vectors in the output container
+                allocateVectors();
 
-                // Build the container schema and set the counts
-                container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
-                container.setRecordCount(outputRecords);
+                outputRecords = hashJoinProbe.probeAndProject();
 
-                for (VectorWrapper<?> v : container) {
+                /* We are here because of one the following
+                 * 1. Completed processing of all the records and we are done
+                 * 2. We've filled up the outgoing batch to the maximum and we need to return upstream
+                 * Either case build the output container's schema and return
+                 */
+                if (outputRecords > 0) {
+
+                  // Build the container schema and set the counts
+                  container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
+                  container.setRecordCount(outputRecords);
+
+                  for (VectorWrapper<?> v : container) {
                     v.getValueVector().getMutator().setValueCount(outputRecords);
-                }
+                  }
 
-                // First output batch, return OK_NEW_SCHEMA
-                if (firstOutputBatch == true) {
+                  // First output batch, return OK_NEW_SCHEMA
+                  if (firstOutputBatch == true) {
                     firstOutputBatch = false;
                     return IterOutcome.OK_NEW_SCHEMA;
-                }
+                  }
 
-                // Not the first output batch
-                return IterOutcome.OK;
+                  // Not the first output batch
+                  return IterOutcome.OK;
+                }
+            } else {
+                // Our build side is empty, we won't have any matches, clear the probe side
+                if (leftUpstream == IterOutcome.OK_NEW_SCHEMA || leftUpstream == IterOutcome.OK) {
+                    for (VectorWrapper<?> wrapper : left) {
+                      wrapper.getValueVector().clear();
+                    }
+                    leftUpstream = left.next();
+                    while (leftUpstream == IterOutcome.OK_NEW_SCHEMA || leftUpstream == IterOutcome.OK) {
+                      for (VectorWrapper<?> wrapper : left) {
+                        wrapper.getValueVector().clear();
+                      }
+                      leftUpstream = left.next();
+                    }
+                }
             }
 
             // No more output records, clean up and return
@@ -220,10 +237,13 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
         // Set the left named expression to be null if the probe batch is empty.
         if (leftUpstream != IterOutcome.OK_NEW_SCHEMA && leftUpstream != IterOutcome.OK) {
             leftExpr = null;
+        } else {
+          if (left.getSchema().getSelectionVectorMode() != BatchSchema.SelectionVectorMode.NONE) {
+            throw new SchemaChangeException("Hash join does not support probe batch with selection vectors");
+          }
         }
 
         HashTableConfig htConfig = new HashTableConfig(HashTable.DEFAULT_INITIAL_CAPACITY, HashTable.DEFAULT_LOAD_FACTOR, rightExpr, leftExpr);
-
 
         // Create the chained hash table
         ChainedHashTable ht  = new ChainedHashTable(htConfig, context, oContext.getAllocator(), this.right, this.left, null);
@@ -250,6 +270,10 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
                 case OK_NEW_SCHEMA:
                     if (rightSchema == null) {
                         rightSchema = right.getSchema();
+
+                        if (rightSchema.getSelectionVectorMode() != BatchSchema.SelectionVectorMode.NONE) {
+                          throw new SchemaChangeException("Hash join does not support build batch with selection vectors");
+                        }
                         setupHashTable();
                     } else {
                         throw new SchemaChangeException("Hash join does not support schema changes");
@@ -395,13 +419,14 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
 
     @Override
     public void cleanup() {
-        hyperContainer.clear();
         hjHelper.clear();
-        container.clear();
 
         // If we didn't receive any data, hyperContainer may be null, check before clearing
         if (hyperContainer != null) {
             hyperContainer.clear();
+        }
+
+        if (hashTable != null) {
             hashTable.clear();
         }
         super.cleanup();

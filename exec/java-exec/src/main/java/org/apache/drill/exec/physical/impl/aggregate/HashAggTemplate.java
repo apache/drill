@@ -229,6 +229,10 @@ public abstract class HashAggTemplate implements HashAggregator {
         try{
 
           while(true){
+            // Cleanup the previous batch since we are done processing it.
+            for (VectorWrapper<?> v : incoming) {
+              v.getValueVector().clear();
+            }
             IterOutcome out = incoming.next();
             if(EXTRA_DEBUG_1) logger.debug("Received IterOutcome of {}", out);
             switch(out){
