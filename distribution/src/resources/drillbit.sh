@@ -33,7 +33,7 @@
 # Modelled after $HADOOP_HOME/bin/hadoop-daemon.sh
 
 usage="Usage: drillbit.sh [--config <conf-dir>]\
- (start|stop|restart|autorestart)"
+ (start|stop|status|restart|autorestart)"
 
 # if no args specified, show usage
 if [ $# -lt 1 ]; then
@@ -47,7 +47,7 @@ bin=`cd "$bin">/dev/null; pwd`
 . "$bin"/drill-config.sh
 
 # get arguments
-startStop=$1
+startStopStatus=$1
 shift
 
 command=drillbit
@@ -169,7 +169,7 @@ fi
 thiscmd=$0
 args=$@
 
-case $startStop in
+case $startStopStatus in
 
 (start)
     check_before_start
@@ -222,6 +222,23 @@ case $startStop in
     $thiscmd --config "${DRILL_CONF_DIR}" start $command $args &
     wait_until_done $!
   ;;
+
+(status)
+
+    if [ -f $pid ]; then
+      TARGET_PID=`cat $pid`
+      if kill -0 $TARGET_PID > /dev/null 2>&1; then
+        echo $command is running.
+        exit 0
+      else
+        echo $pid file is present but $command not running.
+        exit 1
+      fi
+    else
+      echo $command not running.
+      exit 2
+    fi
+    ;;
 
 (*)
   echo $usage
