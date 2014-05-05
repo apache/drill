@@ -81,6 +81,18 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
   public IterOutcome next() {
     if(!noEndLimit && recordsLeft <= 0) {
       // don't kill incoming batches or call cleanup yet, as this could close allocators before the buffers have been cleared
+      // Drain the incoming record batch and clear the memory
+      IterOutcome upStream = incoming.next();
+
+      while (upStream == IterOutcome.OK || upStream == IterOutcome.OK_NEW_SCHEMA) {
+
+        // Clear the memory for the incoming batch
+        for (VectorWrapper<?> wrapper : incoming) {
+          wrapper.getValueVector().clear();
+        }
+        upStream = incoming.next();
+      }
+
       return IterOutcome.NONE;
     }
 
