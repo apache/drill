@@ -136,7 +136,15 @@ public final class ${className} implements ValueHolder{
       </#if>
         byte[] buf = new byte[end-start];
         buffer.getBytes(start, buf, 0, end-start);
-        return new String(buf);
+
+        <#switch minor.class>
+        <#case "Var16Char">
+        return new String(buf, com.google.common.base.Charsets.UTF_16);
+        <#break>
+        <#case "VarChar">
+        <#default>
+        return new String(buf, com.google.common.base.Charsets.UTF_8);
+        </#switch>
       }
 
       </#if>

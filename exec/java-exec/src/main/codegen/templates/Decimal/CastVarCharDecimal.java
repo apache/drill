@@ -107,7 +107,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
                 // not a valid digit
                 byte[] buf = new byte[in.end - in.start];
                 in.buffer.getBytes(in.start, buf, 0, in.end - in.start);
-                throw new org.apache.drill.common.exceptions.DrillRuntimeException(new String(buf));
+                throw new org.apache.drill.common.exceptions.DrillRuntimeException(new String(buf, com.google.common.base.Charsets.UTF_8));
             }
             out.value *= radix;
             out.value += next;
@@ -117,7 +117,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
         if (((integerEndIndex - integerStartIndex) + out.scale) > out.precision) {
             byte[] buf = new byte[in.end - in.start];
             in.buffer.getBytes(in.start, buf, 0, in.end - in.start);
-            throw new org.apache.drill.common.exceptions.DrillRuntimeException("Precision is insufficient for the provided input: " + new String(buf) + " Precision: " + out.precision +
+            throw new org.apache.drill.common.exceptions.DrillRuntimeException("Precision is insufficient for the provided input: " + new String(buf, com.google.common.base.Charsets.UTF_8) + " Precision: " + out.precision +
                                                                                " Total Digits: " + (out.scale + (integerEndIndex - integerStartIndex)));
         }
 
@@ -240,7 +240,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
                     // not a valid digit
                     byte[] buf = new byte[in.end - in.start];
                     in.buffer.getBytes(in.start, buf, 0, in.end - in.start);
-                    throw new NumberFormatException(new String(buf));
+                    throw new NumberFormatException(new String(buf, com.google.common.base.Charsets.UTF_8));
                 }
 
                 integerDigits++;
@@ -253,7 +253,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
         if (integerDigits + out.scale > out.precision) {
             byte[] buf = new byte[in.end - in.start];
             in.buffer.getBytes(in.start, buf, 0, in.end - in.start);
-            throw new org.apache.drill.common.exceptions.DrillRuntimeException("Precision is insufficient for the provided input: " + new String(buf) + " Precision: " + out.precision + " Total Digits: " + (out.scale + integerDigits));
+            throw new org.apache.drill.common.exceptions.DrillRuntimeException("Precision is insufficient for the provided input: " + new String(buf, com.google.common.base.Charsets.UTF_8) + " Precision: " + out.precision + " Total Digits: " + (out.scale + integerDigits));
         }
 
 
@@ -313,7 +313,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
                     // not a valid digit
                     byte[] buf = new byte[in.end - in.start];
                     in.buffer.getBytes(in.start, buf, 0, in.end - in.start);
-                    throw new NumberFormatException(new String(buf));
+                    throw new NumberFormatException(new String(buf, com.google.common.base.Charsets.UTF_8));
                 }
                 int value = (out.getInteger(decimalBufferIndex) * radix) + next;
                 out.setInteger(decimalBufferIndex, value);

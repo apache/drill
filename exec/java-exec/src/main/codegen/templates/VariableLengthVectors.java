@@ -463,11 +463,19 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     @Override
     public void generateTestData(int size){
       boolean even = true;
+      <#switch minor.class>
+      <#case "Var16Char">
+      java.nio.charset.Charset charset = Charsets.UTF_16;
+      <#break>
+      <#case "VarChar">
+      <#default>
+      java.nio.charset.Charset charset = Charsets.UTF_8;
+      </#switch>
       for(int i =0; i < size; i++, even = !even){
         if(even){
-          set(i, new String("aaaaa").getBytes(Charsets.UTF_8));
+          set(i, new String("aaaaa").getBytes(charset));
         }else{
-          set(i, new String("bbbbbbbbbb").getBytes(Charsets.UTF_8));
+          set(i, new String("bbbbbbbbbb").getBytes(charset));
         }
       }
       setValueCount(size);

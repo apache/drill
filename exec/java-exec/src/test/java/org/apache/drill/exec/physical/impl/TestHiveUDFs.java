@@ -109,28 +109,28 @@ public class TestHiveUDFs extends ExecTest {
       for(int i=0; i<exec.getRecordCount(); i++) {
 
 
-        String in = new String(str1V.getAccessor().get(i));
-        String upper = new String(upperStr1V.getAccessor().get(i));
+        String in = new String(str1V.getAccessor().get(i), Charsets.UTF_16);
+        String upper = new String(upperStr1V.getAccessor().get(i), Charsets.UTF_16);
         assertTrue(in.toUpperCase().equals(upper));
 
         long unix_timestamp = unix_timestampV.getAccessor().get(i);
 
-        String concat = new String(concatV.getAccessor().get(i));
+        String concat = new String(concatV.getAccessor().get(i), Charsets.UTF_16);
         assertTrue(concat.equals(in+"-"+in));
 
         float flt1 = flt1V.getAccessor().get(i);
-        String format_number = new String(format_numberV.getAccessor().get(i));
+        String format_number = new String(format_numberV.getAccessor().get(i), Charsets.UTF_16);
 
 
         String nullableStr1 = null;
         /* DRILL-425
         if (!nullableStr1V.getAccessor().isNull(i))
-          nullableStr1 = new String(nullableStr1V.getAccessor().get(i));*/
+          nullableStr1 = new String(nullableStr1V.getAccessor().get(i), Charsets.UTF_16);*/
 
         String upperNullableStr1 = null;
         /* DRILL-425
         if (!upperNullableStr1V.getAccessor().isNull(i))
-          upperNullableStr1 = new String(upperNullableStr1V.getAccessor().get(i)); */
+          upperNullableStr1 = new String(upperNullableStr1V.getAccessor().get(i), Charsets.UTF_16); */
 
         assertEquals(nullableStr1 != null, upperNullableStr1 != null);
         if (nullableStr1 != null)
@@ -184,7 +184,7 @@ public class TestHiveUDFs extends ExecTest {
 
       for(int i=0; i<exec.getRecordCount(); i++) {
 
-        String str1 = new String(str1V.getAccessor().get(i));
+        String str1 = new String(str1V.getAccessor().get(i), Charsets.UTF_16);
         int str1Length = str1LengthV.getAccessor().get(i);
         assertTrue(str1.length() == str1Length);
 

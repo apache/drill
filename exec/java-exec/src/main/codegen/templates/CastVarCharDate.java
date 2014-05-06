@@ -54,7 +54,7 @@ public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
 
       byte[] buf = new byte[in.end - in.start];
       in.buffer.getBytes(in.start, buf, 0, in.end - in.start);
-      String input = new String(buf);
+      String input = new String(buf, com.google.common.base.Charsets.UTF_8);
 
       <#if type.to == "Date">
       org.joda.time.format.DateTimeFormatter f = org.apache.drill.exec.expr.fn.impl.DateUtility.getDateTimeFormatter();

@@ -21,7 +21,7 @@
   { 
     byte[] buf = new byte[in.end - in.start];
     in.buffer.getBytes(in.start, buf, 0, in.end - in.start);  
-    throw new NumberFormatException(new String(buf));
+    throw new NumberFormatException(new String(buf, com.google.common.base.Charsets.UTF_8));
   }  
 </#macro>
 
@@ -58,7 +58,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
       in.buffer.getBytes(in.start, buf, 0, in.end - in.start);
     
       //TODO: need capture format exception, and issue SQLERR code.
-      out.value = ${type.javaType}.parse${type.parse}(new String(buf));
+      out.value = ${type.javaType}.parse${type.parse}(new String(buf, com.google.common.base.Charsets.UTF_8));
       
     <#elseif type.to=="Int" || type.to == "BigInt">
 
@@ -66,7 +66,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
         //empty, not a valid number
         byte[] buf = new byte[in.end - in.start];
         in.buffer.getBytes(in.start, buf, 0, in.end - in.start);  
-        throw new NumberFormatException(new String(buf));  
+        throw new NumberFormatException(new String(buf, com.google.common.base.Charsets.UTF_8));  
       }
 
       int readIndex = in.start;
@@ -77,7 +77,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
         //only one single '-'
         byte[] buf = new byte[in.end - in.start];
         in.buffer.getBytes(in.start, buf, 0, in.end - in.start);  
-        throw new NumberFormatException(new String(buf));  
+        throw new NumberFormatException(new String(buf, com.google.common.base.Charsets.UTF_8));  
       }
    
       int radix = 10;
@@ -91,13 +91,13 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
         if (digit == -1) {
           byte[] buf = new byte[in.end - in.start];
           in.buffer.getBytes(in.start, buf, 0, in.end - in.start);  
-          throw new NumberFormatException(new String(buf));  
+          throw new NumberFormatException(new String(buf, com.google.common.base.Charsets.UTF_8));  
         }
         //overflow
         if (max > result) {
           byte[] buf = new byte[in.end - in.start];
           in.buffer.getBytes(in.start, buf, 0, in.end - in.start);  
-          throw new NumberFormatException(new String(buf));  
+          throw new NumberFormatException(new String(buf, com.google.common.base.Charsets.UTF_8));  
         }
         
         ${type.primeType} next = result * radix - digit;
@@ -106,7 +106,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
         if (next > result) {
           byte[] buf = new byte[in.end - in.start];
           in.buffer.getBytes(in.start, buf, 0, in.end - in.start);  
-          throw new NumberFormatException(new String(buf));  
+          throw new NumberFormatException(new String(buf, com.google.common.base.Charsets.UTF_8));  
         }
         result = next;
       }
@@ -116,7 +116,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
         if (result < 0) {
           byte[] buf = new byte[in.end - in.start];
           in.buffer.getBytes(in.start, buf, 0, in.end - in.start);  
-          throw new NumberFormatException(new String(buf));  
+          throw new NumberFormatException(new String(buf, com.google.common.base.Charsets.UTF_8));  
         }
       }
    

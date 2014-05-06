@@ -23,8 +23,10 @@
 package org.apache.drill.exec.expr.fn.impl.hive;
 
 import com.sun.codemodel.*;
+
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.expr.DirectExpression;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.holders.*;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
@@ -153,7 +155,7 @@ public class ObjectInspectorHelper {
           <#elseif entry.hiveType == "STRING">
             JVar data = jc._else().decl(m.directClass(byte[].class.getCanonicalName()), "data",
               castedOI.invoke("getPrimitiveJavaObject").arg(returnValue)
-                      .invoke("getBytes"));
+                      .invoke("getBytes").arg(DirectExpression.direct("com.google.common.base.Charsets.UTF_16")));
             jc._else().add(returnValueHolder.ref("buffer")
               .invoke("setBytes").arg(JExpr.lit(0)).arg(data));
             jc._else().assign(returnValueHolder.ref("start"), JExpr.lit(0));
