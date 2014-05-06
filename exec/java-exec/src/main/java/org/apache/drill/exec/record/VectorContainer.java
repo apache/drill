@@ -147,10 +147,9 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
       return (VectorWrapper<?>) va;
     }
     if (va != null && va.getVectorClass() != clazz) {
-      logger.warn(String.format(
+      throw new IllegalStateException(String.format(
           "Failure while reading vector.  Expected vector class of %s but was holding vector class %s.",
           clazz.getCanonicalName(), va.getVectorClass().getCanonicalName()));
-      return null;
     }
     return (VectorWrapper<?>) va;
   }

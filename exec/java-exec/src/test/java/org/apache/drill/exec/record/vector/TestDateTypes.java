@@ -89,8 +89,6 @@ public class TestDateTypes extends PopUnitTestBase {
             QueryResultBatch batch = results.get(0);
             assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
 
-            batchLoader.getValueAccessorById(0, BigIntVector.class);
-
             for (VectorWrapper<?> v : batchLoader) {
 
                 ValueVector.Accessor accessor = v.getValueVector().getAccessor();
@@ -125,8 +123,6 @@ public class TestDateTypes extends PopUnitTestBase {
             QueryResultBatch batch = results.get(0);
             assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
 
-            batchLoader.getValueAccessorById(0, BigIntVector.class);
-
             for (VectorWrapper<?> v : batchLoader) {
 
                 ValueVector.Accessor accessor = v.getValueVector().getAccessor();
@@ -160,8 +156,6 @@ public class TestDateTypes extends PopUnitTestBase {
 
             QueryResultBatch batch = results.get(0);
             assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
-
-            batchLoader.getValueAccessorById(0, BigIntVector.class);
 
             for (VectorWrapper<?> v : batchLoader) {
 
@@ -254,8 +248,6 @@ public class TestDateTypes extends PopUnitTestBase {
             QueryResultBatch batch = results.get(0);
             assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
 
-            batchLoader.getValueAccessorById(0, BigIntVector.class);
-
             String result[] = {"2008-02-27",
                                "2008-02-27 01:02:03.000",
                                "2008-02-27 01:02:03.000 UTC",
@@ -295,8 +287,6 @@ public class TestDateTypes extends PopUnitTestBase {
 
             QueryResultBatch batch = results.get(0);
             assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
-
-            batchLoader.getValueAccessorById(0, BigIntVector.class);
 
             for (VectorWrapper<?> v : batchLoader) {
 
