@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.expr.fn.impl;
 
+import org.apache.drill.common.exceptions.DrillRuntimeException;
+
 import io.netty.buffer.ByteBuf;
 
 public class StringFunctionUtil {
@@ -26,15 +28,9 @@ public class StringFunctionUtil {
   public static int getUTF8CharLength(ByteBuf buffer, int start, int end) {
     int charCount = 0;
 
-    for (int id = start; id < end; id++) {
-      byte  currentByte = buffer.getByte(id);
-
-      if (currentByte < 0x128  ||           // 1-byte char. First byte is 0xxxxxxx.
-          (currentByte & 0xE0) == 0xC0 ||   // 2-byte char. First byte is 110xxxxx
-          (currentByte & 0xF0) == 0xE0 ||   // 3-byte char. First byte is 1110xxxx
-          (currentByte & 0xF8) == 0xF0) {   //4-byte char. First byte is 11110xxx
-        charCount ++;  //Advance the counter, since we find one char.
-      }
+    for (int idx = start, charLen = 0; idx < end; idx += charLen) {
+      charLen = utf8CharLen(buffer, idx);
+      ++charCount;  //Advance the counter, since we find one char.
     }
     return charCount;
   }
@@ -46,21 +42,14 @@ public class StringFunctionUtil {
   public static int getUTF8CharPosition(ByteBuf buffer, int start, int end, int charLength) {
     int charCount = 0;
 
-    if (start >=end)
+    if (start >= end)
       return -1;  //wrong input here.
 
-    for (int id = start; id < end; id++) {
-
-      byte  currentByte = buffer.getByte(id);
-
-      if (currentByte < 0x128  ||           // 1-byte char. First byte is 0xxxxxxx.
-          (currentByte & 0xE0) == 0xC0 ||   // 2-byte char. First byte is 110xxxxx
-          (currentByte & 0xF0) == 0xE0 ||   // 3-byte char. First byte is 1110xxxx
-          (currentByte & 0xF8) == 0xF0) {   //4-byte char. First byte is 11110xxx
-        charCount ++;  //Advance the counter, since we find one char.
-        if (charCount == charLength + 1) {
-          return id;
-        }
+    for (int idx = start, charLen = 0; idx < end; idx += charLen) {
+      charLen = utf8CharLen(buffer, idx);
+      ++charCount;  //Advance the counter, since we find one char.
+      if (charCount == charLength + 1) {
+        return idx;
       }
     }
     return end;
@@ -152,6 +141,21 @@ public class StringFunctionUtil {
 
   private static boolean isHexDigit(byte c) {
     return (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F') || (c >= '0' && c <= '9');
+  }
+
+  private static int utf8CharLen(ByteBuf buffer, int idx) {
+    byte firstByte = buffer.getByte(idx);
+    if (firstByte >= 0) { // 1-byte char. First byte is 0xxxxxxx.
+      return 1;
+    } else if ((firstByte & 0xE0) == 0xC0) { // 2-byte char. First byte is 110xxxxx
+      return 2;
+    } else if ((firstByte & 0xF0) == 0xE0) { // 3-byte char. First byte is 1110xxxx
+      return 3;
+    } else if ((firstByte & 0xF8) == 0xF0) { //4-byte char. First byte is 11110xxx
+      return 4;
+    }
+    throw new DrillRuntimeException("Unexpected byte 0x" + Integer.toString((int)firstByte & 0xff, 16)
+        + " at position " + idx + " encountered while decoding UTF8 string.");
   }
 
 }

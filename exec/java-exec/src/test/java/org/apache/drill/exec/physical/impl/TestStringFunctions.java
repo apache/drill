@@ -17,45 +17,36 @@
  */
 package org.apache.drill.exec.physical.impl;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Resources;
-import com.codahale.metrics.MetricRegistry;
-
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import mockit.Injectable;
 import mockit.NonStrictExpectations;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.expression.ExpressionPosition;
-import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.expr.holders.BigIntHolder;
-import org.apache.drill.exec.expr.holders.VarCharHolder;
-import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
-import org.apache.drill.exec.proto.CoordinationProtos;
-import org.apache.drill.exec.proto.ExecProtos;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
+import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.rpc.user.UserServer;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.vector.BigIntVector;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.VarBinaryVector;
 import org.apache.drill.exec.vector.VarCharVector;
-import org.junit.AfterClass;
-import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.Assert;
+import org.junit.rules.TestRule;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import com.codahale.metrics.MetricRegistry;
+import com.google.common.base.Charsets;
+import com.google.common.io.Resources;
 
 public class TestStringFunctions extends ExecTest {
-    static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestStringFunctions.class);
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestStringFunctions.class);
 
   DrillConfig c = DrillConfig.create();
   PhysicalPlanReader reader;
@@ -72,7 +63,7 @@ public class TestStringFunctions extends ExecTest {
     int i = 0;
     for (ValueVector v : exec) {
       if  (v instanceof VarCharVector) {
-        res[i++] = new String( ((VarCharVector) v).getAccessor().get(0));
+        res[i++] = new String( ((VarCharVector) v).getAccessor().get(0), Charsets.UTF_8);
       } else
         res[i++] =  v.getAccessor().getObject(0);
     }
@@ -98,10 +89,10 @@ public class TestStringFunctions extends ExecTest {
 
     while(exec.next()){
       Object [] res = getRunResult(exec);
-      assertEquals("return count does not match", res.length, expectedResults.length);
+      assertEquals("return count does not match", expectedResults.length, res.length);
 
       for (int i = 0; i<res.length; i++) {
-        assertEquals(String.format("column %s does not match", i),  res[i], expectedResults[i]);
+        assertEquals(String.format("column %s does not match", i), expectedResults[i],  res[i]);
       }
     }
 
@@ -199,7 +190,7 @@ public class TestStringFunctions extends ExecTest {
   @Test
   public void testSubstr(@Injectable final DrillbitContext bitContext,
                            @Injectable UserServer.UserClientConnection connection) throws Throwable{
-    Object [] expected = new Object[] {"abc", "bcd", "bcdef", "bcdef", "", "", "", ""};
+    Object [] expected = new Object[] {"abc", "bcd", "bcdef", "bcdef", "", "", "", "", "भारत", "वर्ष", "वर्ष"};
 
     runTest(bitContext, connection, expected, "functions/string/testSubstr.json");
   }
