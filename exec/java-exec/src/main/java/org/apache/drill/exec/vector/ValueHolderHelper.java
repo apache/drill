@@ -17,35 +17,34 @@
  */
 package org.apache.drill.exec.vector;
 
-import java.nio.ByteOrder;
-import io.netty.buffer.ByteBuf;
 import io.netty.buffer.SwappedByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.buffer.UnpooledByteBufAllocator;
 
+import java.math.BigDecimal;
+import java.nio.ByteOrder;
+
 import org.apache.drill.common.util.DecimalUtility;
-import org.apache.drill.exec.expr.holders.VarCharHolder;
-import org.apache.drill.exec.expr.holders.IntervalDayHolder;
-import org.apache.drill.exec.expr.holders.Decimal9Holder;
 import org.apache.drill.exec.expr.holders.Decimal18Holder;
 import org.apache.drill.exec.expr.holders.Decimal28SparseHolder;
 import org.apache.drill.exec.expr.holders.Decimal38SparseHolder;
+import org.apache.drill.exec.expr.holders.Decimal9Holder;
+import org.apache.drill.exec.expr.holders.IntervalDayHolder;
+import org.apache.drill.exec.expr.holders.VarCharHolder;
 
 import com.google.common.base.Charsets;
-
-import java.math.BigDecimal;
 
 
 public class ValueHolderHelper {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ValueHolderHelper.class);
-  
+
   public static VarCharHolder getVarCharHolder(String s){
     VarCharHolder vch = new VarCharHolder();
-    
+
     byte[] b = s.getBytes(Charsets.UTF_8);
     vch.start = 0;
     vch.end = b.length;
-    vch.buffer = UnpooledByteBufAllocator.DEFAULT.buffer(s.length()).order(ByteOrder.LITTLE_ENDIAN); // use the length of input string to allocate buffer. 
+    vch.buffer = UnpooledByteBufAllocator.DEFAULT.buffer(b.length).order(ByteOrder.LITTLE_ENDIAN); // use the length of input string to allocate buffer. 
     vch.buffer.setBytes(0, b);
     return vch;
   }
