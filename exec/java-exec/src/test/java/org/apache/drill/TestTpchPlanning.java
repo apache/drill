@@ -94,6 +94,7 @@ public class TestTpchPlanning extends PlanningBase{
   }
 
   @Test
+  @Ignore // sporadic failures when part of the full build.
   public void tpch13() throws Exception{
     testSqlPlanFromFile("queries/tpch/13.sql");
   }
