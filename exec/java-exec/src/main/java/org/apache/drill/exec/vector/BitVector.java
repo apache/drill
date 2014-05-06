@@ -72,11 +72,12 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
     } else if (allocationMonitor < -5) {
       allocationValueCount = (int) (allocationValueCount * 1.1);
     }
+    allocateNew(allocationValueCount);
   }
 
   /**
    * Allocate a new memory space for this vector. Must be called prior to using the ValueVector.
-   * 
+   *
    * @param valueCount
    *          The number of values which can be contained within this vector.
    */
@@ -103,7 +104,7 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
   public void copyFrom(int inIndex, int outIndex, BitVector from) {
     this.mutator.set(outIndex, from.accessor.get(inIndex));
   }
-  
+
   public boolean copyFromSafe(int inIndex, int outIndex, BitVector from){
     if(outIndex >= this.getValueCapacity()) return false;
     copyFrom(inIndex, outIndex, from);
@@ -213,7 +214,7 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
 
     /**
      * Get the byte holding the desired bit, then mask all other bits. Iff the result is 0, the bit was not set.
-     * 
+     *
      * @param index
      *          position of the bit in the vector
      * @return 1 if set, otherwise 0
@@ -230,7 +231,7 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
     public boolean isNull(int index){
       return false;
     }
-    
+
     @Override
     public final Object getObject(int index) {
       return new Boolean(get(index) != 0);
@@ -252,7 +253,7 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
   /**
    * MutableBit implements a vector of bit-width values. Elements in the vector are accessed by position from the
    * logical start of the vector. Values should be pushed onto the vector sequentially, but may be randomly accessed.
-   * 
+   *
    * NB: this class is automatically generated from ValueVectorTypes.tdd using FreeMarker.
    */
   public class Mutator extends BaseMutator {
@@ -262,7 +263,7 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
 
     /**
      * Set the bit at the given index to the specified value.
-     * 
+     *
      * @param index
      *          position of the bit to set
      * @param value
@@ -287,7 +288,7 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
     final void set(int index, NullableBitHolder holder) {
       set(index, holder.value);
     }
-    
+
     public boolean setSafe(int index, int value) {
       if(index >= getValueCapacity()) {
         allocationMonitor--;

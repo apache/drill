@@ -100,6 +100,7 @@ public class HBaseRecordReaderTest extends PopUnitTestBase {
         batchLoader.load(b.getHeader().getDef(), b.getData());
         VectorUtil.showVectorAccessibleContent(batchLoader);
         recordCount += batchLoader.getRecordCount();
+        if(b.getData() != null) b.getData().release();
       }
 
       Assert.assertEquals(records, recordCount);

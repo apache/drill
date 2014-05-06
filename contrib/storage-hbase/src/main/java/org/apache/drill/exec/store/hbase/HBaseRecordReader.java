@@ -67,7 +67,6 @@ public class HBaseRecordReader implements RecordReader, DrillHBaseConstants {
   private Scan scan;
   private ResultScanner resultScanner;
   private FragmentContext context;
-  private BufferAllocator allocator;
   Map<FamilyQualifierWrapper, NullableVarBinaryVector> vvMap;
   private Result leftOver;
   private VarBinaryVector rowKeyVector;
@@ -79,7 +78,6 @@ public class HBaseRecordReader implements RecordReader, DrillHBaseConstants {
     this.scan = new Scan(e.getStartRow(), e.getStopRow());
     this.scan.setFilter(e.getScanFilter());
     this.context = context;
-    this.allocator = context.getNewChildAllocator(ALLOCATOR_INITIAL_RESERVATION, ALLOCATOR_MAX_RESERVATION);
     if (columns != null && columns.size() != 0) {
       for (SchemaPath column : columns) {
         if (column.getRootSegment().getPath().toString().equalsIgnoreCase(ROW_KEY)) {
@@ -129,12 +127,11 @@ public class HBaseRecordReader implements RecordReader, DrillHBaseConstants {
       try {
         if (column.equals(rowKeySchemaPath)) {
           MaterializedField field = MaterializedField.create(column, Types.required(TypeProtos.MinorType.VARBINARY));
-          rowKeyVector = new VarBinaryVector(field, allocator);
-          output.addField(rowKeyVector);
+
+          rowKeyVector = output.addField(field, VarBinaryVector.class);
         } else if (column.getRootSegment().getChild() != null){
           MaterializedField field = MaterializedField.create(column, Types.optional(TypeProtos.MinorType.VARBINARY));
-          NullableVarBinaryVector v = new NullableVarBinaryVector(field, allocator);
-          output.addField(v);
+          NullableVarBinaryVector v = output.addField(field, NullableVarBinaryVector.class);
           String fullyQualified = column.getRootSegment().getPath() + "." + column.getRootSegment().getChild().getNameSegment().getPath();
           vvMap.put(new FamilyQualifierWrapper(fullyQualified), v);
         }
@@ -156,11 +153,11 @@ public class HBaseRecordReader implements RecordReader, DrillHBaseConstants {
     watch.start();
     if (rowKeyVector != null) {
       rowKeyVector.clear();
-      VectorAllocator.getAllocator(rowKeyVector, 100).alloc(TARGET_RECORD_COUNT);
+      rowKeyVector.allocateNew();
     }
     for (ValueVector v : vvMap.values()) {
       v.clear();
-      VectorAllocator.getAllocator(v, 100).alloc(TARGET_RECORD_COUNT);
+      v.allocateNew();
     }
     for (int count = 0; count < TARGET_RECORD_COUNT; count++) {
       Result result = null;
@@ -214,19 +211,17 @@ public class HBaseRecordReader implements RecordReader, DrillHBaseConstants {
     return TARGET_RECORD_COUNT;
   }
 
-  @SuppressWarnings("deprecation")
   private NullableVarBinaryVector addNewVector(String column) {
-    MaterializedField field = MaterializedField.create(SchemaPath.getCompoundPath(column.split("\\.")), Types.optional(TypeProtos.MinorType.VARBINARY));
-    NullableVarBinaryVector v = new NullableVarBinaryVector(field, allocator);
-    VectorAllocator.getAllocator(v, 100).alloc(TARGET_RECORD_COUNT);
-    vvMap.put(new FamilyQualifierWrapper(column), v);
     try {
-      outputMutator.addField(v);
+      MaterializedField field = MaterializedField.create(SchemaPath.getCompoundPath(column.split("\\.")), Types.optional(TypeProtos.MinorType.VARBINARY));
+      NullableVarBinaryVector v = outputMutator.addField(field, NullableVarBinaryVector.class);
+      v.allocateNew();
+      vvMap.put(new FamilyQualifierWrapper(column), v);
       outputMutator.setNewSchema();
+      return v;
     } catch (SchemaChangeException e) {
       throw new DrillRuntimeException(e);
     }
-    return v;
   }
 
   @Override
