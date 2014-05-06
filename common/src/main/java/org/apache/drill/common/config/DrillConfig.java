@@ -56,23 +56,27 @@ public final class DrillConfig extends NestedConfig{
 
   @SuppressWarnings("restriction")
   @VisibleForTesting
-  public DrillConfig(Config config) {
+  public DrillConfig(Config config, boolean enableServer) {
     super(config);
 
     mapper = new ObjectMapper();
-    SimpleModule deserModule = new SimpleModule("LogicalExpressionDeserializationModule")
-      .addDeserializer(LogicalExpression.class, new LogicalExpression.De(this))
-      .addDeserializer(SchemaPath.class, new SchemaPath.De(this));
+
+    if(enableServer){
+      SimpleModule deserModule = new SimpleModule("LogicalExpressionDeserializationModule")
+        .addDeserializer(LogicalExpression.class, new LogicalExpression.De(this))
+        .addDeserializer(SchemaPath.class, new SchemaPath.De(this));
 
 
-    mapper.registerModule(deserModule);
-    mapper.enable(SerializationFeature.INDENT_OUTPUT);
-    mapper.configure(Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
-    mapper.configure(JsonGenerator.Feature.QUOTE_FIELD_NAMES, true);
-    mapper.configure(Feature.ALLOW_COMMENTS, true);
-    mapper.registerSubtypes(LogicalOperatorBase.getSubTypes(this));
-    mapper.registerSubtypes(StoragePluginConfigBase.getSubTypes(this));
-    mapper.registerSubtypes(FormatPluginConfigBase.getSubTypes(this));
+      mapper.registerModule(deserModule);
+      mapper.enable(SerializationFeature.INDENT_OUTPUT);
+      mapper.configure(Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
+      mapper.configure(JsonGenerator.Feature.QUOTE_FIELD_NAMES, true);
+      mapper.configure(Feature.ALLOW_COMMENTS, true);
+      mapper.registerSubtypes(LogicalOperatorBase.getSubTypes(this));
+      mapper.registerSubtypes(StoragePluginConfigBase.getSubTypes(this));
+      mapper.registerSubtypes(FormatPluginConfigBase.getSubTypes(this));
+    }
+
 
     RuntimeMXBean bean = ManagementFactory.getRuntimeMXBean();
     this.startupArguments = ImmutableList.copyOf(bean.getInputArguments());
@@ -90,7 +94,11 @@ public final class DrillConfig extends NestedConfig{
    * @return The new DrillConfig object.
    */
   public static DrillConfig create() {
-    return create(null);
+    return create(null, true);
+  }
+
+  public static DrillConfig createClient(){
+    return create(null, false);
   }
 
   /**
@@ -114,6 +122,11 @@ public final class DrillConfig extends NestedConfig{
    *  @return A merged Config object.
    */
   public static DrillConfig create(String overrideFileName) {
+    return create(overrideFileName, true);
+  }
+
+
+  public static DrillConfig create(String overrideFileName, boolean enableServerConfigs) {
 
     overrideFileName = overrideFileName == null ? CommonConstants.CONFIG_OVERRIDE : overrideFileName;
 
@@ -126,7 +139,7 @@ public final class DrillConfig extends NestedConfig{
     }
 
     Config c = ConfigFactory.load(overrideFileName).withFallback(fallback).resolve();
-    return new DrillConfig(c);
+    return new DrillConfig(c, enableServerConfigs);
   }
 
   public <T> Class<T> getClassAt(String location, Class<T> clazz) throws DrillConfigurationException{

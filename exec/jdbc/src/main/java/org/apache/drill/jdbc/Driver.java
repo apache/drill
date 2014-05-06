@@ -32,18 +32,15 @@ public class Driver extends UnregisteredDriver {
 
 
 
-  final DrillConfig config;
-  
   public Driver() {
     super();
-    config = DrillConfig.create();
   }
 
 
   public static boolean load(){
     return true;
   }
-  
+
   @Override
   protected String getConnectStringPrefix() {
     return CONNECT_STRING_PREFIX;
@@ -72,10 +69,7 @@ public class Driver extends UnregisteredDriver {
         "unknown version");
   }
 
-  DrillConfig getConfig(){
-    return config;
-  }
-  
+
   @Override
   protected Handler createHandler() {
     return new HandlerImpl();

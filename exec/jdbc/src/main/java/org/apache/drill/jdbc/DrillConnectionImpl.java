@@ -29,6 +29,7 @@ import net.hydromatic.avatica.Helper;
 import net.hydromatic.avatica.Meta;
 import net.hydromatic.avatica.UnregisteredDriver;
 
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.TopLevelAllocator;
@@ -38,7 +39,7 @@ import org.apache.drill.exec.server.RemoteServiceSet;
 
 /**
  * Implementation of JDBC connection in Drill.
- * 
+ *
  * <p>
  * Abstract to allow newer versions of JDBC to add methods.
  * </p>
@@ -46,30 +47,31 @@ import org.apache.drill.exec.server.RemoteServiceSet;
 abstract class DrillConnectionImpl extends AvaticaConnection implements org.apache.drill.jdbc.DrillConnection {
   public final DrillStatementRegistry registry = new DrillStatementRegistry();
   final DrillConnectionConfig config;
-  
-  
+
+
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillConnection.class);
 
   private final DrillClient client;
   private final BufferAllocator allocator;
   private Drillbit bit;
   private RemoteServiceSet serviceSet;
-  
+
   protected DrillConnectionImpl(Driver driver, AvaticaFactory factory, String url, Properties info)  throws SQLException{
     super(driver, factory, url, info);
     this.config = new DrillConnectionConfig(info);
-  
+
   this.allocator = new TopLevelAllocator();
-    
+
     try{
       if(config.isLocal()){
+        DrillConfig dConfig = DrillConfig.create();
         RemoteServiceSet set = GlobalServiceSetReference.SETS.get();
         if(set == null){
           // we're embedded, start a local drill bit.
           serviceSet = RemoteServiceSet.getLocalServiceSet();
           set = serviceSet;
           try{
-          bit = new Drillbit(driver.getConfig(), serviceSet);
+          bit = new Drillbit(dConfig, serviceSet);
           bit.run();
           }catch(Exception e){
             throw new SQLException("Failure while attempting to start Drillbit in embedded mode.", e);
@@ -78,18 +80,18 @@ abstract class DrillConnectionImpl extends AvaticaConnection implements org.apac
           serviceSet = null;
           bit = null;
         }
-        this.client = new DrillClient(driver.getConfig(), set.getCoordinator());
+        this.client = new DrillClient(dConfig, set.getCoordinator());
         this.client.connect(null, info);
       }else{
-        this.client = new DrillClient();
+        this.client = new DrillClient(DrillConfig.createClient());
         this.client.connect(config.getZookeeperConnectionString(), info);
       }
     }catch(RpcException e){
       throw new SQLException("Failure while attempting to connect to Drill.", e);
     }
   }
-  
-  
+
+
   public DrillConnectionConfig config(){
     return config;
   }
@@ -106,11 +108,11 @@ abstract class DrillConnectionImpl extends AvaticaConnection implements org.apac
   BufferAllocator getAllocator(){
     return allocator;
   }
-  
+
   public DrillClient getClient(){
     return client;
   }
-  
+
   @Override
   public DrillStatement createStatement(int resultSetType, int resultSetConcurrency, int resultSetHoldability)
       throws SQLException {
@@ -154,7 +156,7 @@ abstract class DrillConnectionImpl extends AvaticaConnection implements org.apac
     client.close();
     allocator.close();
     if(bit != null) bit.close();
-    
+
     if(serviceSet != null){
       try{
         serviceSet.close();
