@@ -23,6 +23,7 @@ import org.apache.drill.common.exceptions.ExpressionParsingException;
 import org.apache.drill.exec.server.options.OptionValue.Kind;
 import org.apache.drill.exec.server.options.OptionValue.OptionType;
 import org.eigenbase.sql.SqlLiteral;
+import org.eigenbase.util.NlsString;
 
 public class TypeValidators {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TypeValidators.class);
@@ -51,7 +52,7 @@ public class TypeValidators {
   }
   public static class StringValidator extends TypeValidator{
     public StringValidator(String name, String def){
-      super(name, Kind.LONG, OptionValue.createString(OptionType.SYSTEM, name, def));
+      super(name, Kind.STRING, OptionValue.createString(OptionType.SYSTEM, name, def));
     }
 
   }
@@ -106,6 +107,11 @@ public class TypeValidators {
   public static OptionValue getPartialValue(String name, OptionType type, SqlLiteral literal) {
     switch (literal.getTypeName()) {
     case DECIMAL:
+      if (((BigDecimal) literal.getValue()).scale() == 0) {
+        return OptionValue.createLong(type, name, ((BigDecimal) literal.getValue()).longValue());
+      } else {
+        return OptionValue.createDouble(type, name, ((BigDecimal) literal.getValue()).doubleValue());
+      }
     case DOUBLE:
     case FLOAT:
       return OptionValue.createDouble(type, name, ((BigDecimal) literal.getValue()).doubleValue());
@@ -119,7 +125,7 @@ public class TypeValidators {
     case VARBINARY:
     case VARCHAR:
     case CHAR:
-      return OptionValue.createString(type, name, (String) literal.getValue());
+      return OptionValue.createString(type, name, ((NlsString) literal.getValue()).getValue());
 
     case BOOLEAN:
       return OptionValue.createBoolean(type, name, (Boolean) literal.getValue());

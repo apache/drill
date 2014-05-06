@@ -60,7 +60,7 @@ public class OptionValue extends JacksonSerializable {
 
   private OptionValue(Kind kind, OptionType type, String name, Long num_val, String string_val, Boolean bool_val, Double float_val) {
     super();
-    Preconditions.checkArgument(num_val != null || string_val != null || bool_val != null);
+    Preconditions.checkArgument(num_val != null || string_val != null || bool_val != null || float_val != null);
     this.name = name;
     this.kind = kind;
     this.float_val = float_val;
