@@ -29,8 +29,8 @@
 
   <dependencies>
     <dependency>
-      <groupId>org.apache.drill</groupId>
-      <artifactId>drill-sqlparser</artifactId>
+      <groupId>org.apache.drill.exec</groupId>
+      <artifactId>drill-jdbc</artifactId>
       <version>${project.version}</version>
     </dependency>
 
