@@ -17,6 +17,8 @@
  */
 package io.netty.buffer;
 
+import io.netty.util.internal.StringUtil;
+
 import java.nio.ByteBuffer;
 
 import org.junit.Assert;
@@ -201,7 +203,7 @@ public class TestPoolChunkTrim {
     		String s = toString();
 
     		// Do for each line in the string
-    		for (int f=0, l=s.indexOf('\n',f); l != -1; f=l+1, l=s.indexOf('\n',f)) {
+    		for (int f=0, l=s.indexOf(StringUtil.NEWLINE, f); l != -1; f=l+StringUtil.NEWLINE.length(), l=s.indexOf(StringUtil.NEWLINE, f)) {
 
     			// if the line contains pattern, then success.
     			if (s.substring(f,l).matches(".*"+pattern+".*")) return this;
