@@ -778,6 +778,8 @@ public class TypeCastRules {
            (rules.get(to.getMinorType()) == null ? false : rules.get(to.getMinorType()).contains(from.getMinorType()));
   }
 
+  private static final int DATAMODE_CAST_COST = 1;
+
   /*
    * code decide whether it's legal to do implicit cast. -1 : not allowed for
    * implicit cast > 0: cost associated with implicit cast. ==0: parms are
@@ -789,7 +791,13 @@ public class TypeCastRules {
     if (call.args.size() != holder.getParamCount()) {
       return -1;
     }
-      
+
+    // Indicates whether we used secondary cast rules
+    boolean secondaryCast = false;
+
+    // number of arguments that could implicitly casts using precedence map or didn't require casting at all
+    int nCasts = 0;
+
     for (int i = 0; i < holder.getParamCount(); i++) {
       MajorType argType = call.args.get(i).getMajorType();
       MajorType parmType = holder.getParmMajorType(i);
@@ -816,9 +824,18 @@ public class TypeCastRules {
       }
 
       if (parmVal - argVal < 0) {
-        return -1;
+
+        /* Precedence rules does not allow to implicitly cast, however check
+         * if the seconday rules allow us to cast
+         */
+        Set<MinorType> rules;
+        if ((rules = (ResolverTypePrecedence.secondaryImplicitCastRules.get(parmType.getMinorType()))) != null &&
+            rules.contains(argType.getMinorType()) != false) {
+          secondaryCast = true;
+        } else {
+          return -1;
+        }
       }
-      
       // Check null vs non-null, using same logic as that in Types.softEqual()
       // Only when the function uses NULL_IF_NULL, nullable and non-nullable are inter-changable.
       // Otherwise, the function implementation is not a match. 
@@ -839,12 +856,30 @@ public class TypeCastRules {
             return -1;
           }
           else if (parmType.getMode() == DataMode.OPTIONAL && argType.getMode() == DataMode.REQUIRED) {
-            cost++;
+            cost+= DATAMODE_CAST_COST;
           }
         }
       }
 
-      cost += (parmVal - argVal); 
+      int castCost;
+
+      if ((castCost = (parmVal - argVal)) >= 0) {
+        nCasts++;
+        cost += castCost;
+      }
+    }
+
+    if (secondaryCast) {
+      // We have a secondary cast for one or more of the arguments, determine the cost associated
+      int secondaryCastCost =  Integer.MAX_VALUE - 1;
+
+      // Subtract maximum possible implicit costs from the secondary cast cost
+      secondaryCastCost -= (nCasts * (ResolverTypePrecedence.MAX_IMPLICIT_CAST_COST + DATAMODE_CAST_COST));
+
+      // Add cost of implicitly casting the rest of the arguments that didn't use secondary casting
+      secondaryCastCost += cost;
+
+      return secondaryCastCost;
     }
 
     return cost;

@@ -156,7 +156,15 @@ public class ExpressionTreeMaterializer {
             List<LogicalExpression> castArgs = Lists.newArrayList();
             castArgs.add(call.args.get(i));  //input_expr
 
-            if (parmType.getMinorType().name().startsWith("DECIMAL")) {
+            if (!Types.isFixedWidthType(parmType)) {
+
+              /* We are implicitly casting to VARCHAR so we don't have a max length,
+               * using an arbitrary value. We trim down the size of the stored bytes
+               * to the actual size so this size doesn't really matter.
+               */
+              castArgs.add(new ValueExpressions.LongExpression(65536, null));
+            }
+            else if (parmType.getMinorType().name().startsWith("DECIMAL")) {
               // Add the scale and precision to the arguments of the implicit cast
               castArgs.add(new ValueExpressions.LongExpression(currentArg.getMajorType().getPrecision(), null));
               castArgs.add(new ValueExpressions.LongExpression(currentArg.getMajorType().getScale(), null));

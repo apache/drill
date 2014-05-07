@@ -19,7 +19,9 @@
 package org.apache.drill.exec.resolver;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -27,7 +29,9 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 public class ResolverTypePrecedence {
 	
 
-public static final Map<MinorType, Integer> precedenceMap;
+  public static final Map<MinorType, Integer> precedenceMap;
+  public static final Map<MinorType, Set<MinorType>> secondaryImplicitCastRules;
+  public static int MAX_IMPLICIT_CAST_COST;
 
   static {    
     /* The precedenceMap is used to decide whether it's allowed to implicitly "promote" 
@@ -74,6 +78,55 @@ public static final Map<MinorType, Integer> precedenceMap;
     precedenceMap.put(MinorType.INTERVALDAY, i+= 2);
     precedenceMap.put(MinorType.INTERVALYEAR, i+= 2);
     precedenceMap.put(MinorType.INTERVAL, i+= 2);
+
+    MAX_IMPLICIT_CAST_COST = i;
+
+    /* Currently implicit cast follows the precedence rules.
+     * It may be useful to perform an implicit cast in
+     * the opposite direction as specified by the precedence rules.
+     *
+     * For example: As per the precedence rules we can implicitly cast
+     * from VARCHAR ---> BIGINT , but based upon some functions (eg: substr, concat)
+     * it may be useful to implicitly cast from BIGINT ---> VARCHAR.
+     *
+     * To allow for such cases we have a secondary set of rules which will allow the reverse
+     * implicit casts. Currently we only allow the reverse implicit cast to VARCHAR so we don't
+     * need any cost associated with it, if we add more of these that may collide we can add costs.
+     */
+    secondaryImplicitCastRules = new HashMap<>();
+    HashSet<MinorType> rule = new HashSet<>();
+
+    // Following cast functions should exist
+    rule.add(MinorType.TINYINT);
+    rule.add(MinorType.SMALLINT);
+    rule.add(MinorType.INT);
+    rule.add(MinorType.BIGINT);
+    rule.add(MinorType.UINT1);
+    rule.add(MinorType.UINT2);
+    rule.add(MinorType.UINT4);
+    rule.add(MinorType.UINT8);
+    rule.add(MinorType.DECIMAL9);
+    rule.add(MinorType.DECIMAL18);
+    rule.add(MinorType.DECIMAL28SPARSE);
+    rule.add(MinorType.DECIMAL28DENSE);
+    rule.add(MinorType.DECIMAL38SPARSE);
+    rule.add(MinorType.DECIMAL38DENSE);
+    rule.add(MinorType.MONEY);
+    rule.add(MinorType.FLOAT4);
+    rule.add(MinorType.FLOAT8);
+    rule.add(MinorType.BIT);
+    rule.add(MinorType.FIXEDCHAR);
+    rule.add(MinorType.FIXED16CHAR);
+    rule.add(MinorType.VARCHAR);
+    rule.add(MinorType.DATE);
+    rule.add(MinorType.TIME);
+    rule.add(MinorType.TIMESTAMP);
+    rule.add(MinorType.TIMESTAMPTZ);
+    rule.add(MinorType.INTERVAL);
+    rule.add(MinorType.INTERVALYEAR);
+    rule.add(MinorType.INTERVALDAY);
+
+    secondaryImplicitCastRules.put(MinorType.VARCHAR, rule);
   }
 
 }
