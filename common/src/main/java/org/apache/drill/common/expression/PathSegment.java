@@ -17,17 +17,16 @@
  */
 package org.apache.drill.common.expression;
 
-
-
-
 public abstract class PathSegment{
 
-  protected PathSegment child;
+  PathSegment child;
+
+  int hash;
 
   public abstract PathSegment cloneWithNewChild(PathSegment segment);
   public abstract PathSegment clone();
 
-  public static class ArraySegment extends PathSegment{
+  public static final class ArraySegment extends PathSegment {
     private final int index;
 
     public ArraySegment(String numberAsText, PathSegment child){
@@ -68,6 +67,22 @@ public abstract class PathSegment{
     }
 
     @Override
+    public int segmentHashCode() {
+      return index;
+    }
+
+    @Override
+    public boolean segmentEquals(PathSegment obj) {
+      if (this == obj)
+        return true;
+      else if (obj == null)
+        return false;
+      else if (obj instanceof ArraySegment)
+        return index == ((ArraySegment)obj).getIndex();
+      return false;
+    }
+
+    @Override
     public PathSegment clone() {
       PathSegment seg = new ArraySegment(index);
       if(child != null) seg.setChild(child.clone());
@@ -86,8 +101,7 @@ public abstract class PathSegment{
   }
 
 
-
-  public static class NameSegment extends PathSegment{
+  public static final class NameSegment extends PathSegment {
     private final String path;
 
     public NameSegment(CharSequence n, PathSegment child){
@@ -122,28 +136,24 @@ public abstract class PathSegment{
     }
 
     @Override
-    public int hashCode() {
-      final int prime = 31;
-      int result = 1;
-      result = prime * result + ((path == null) ? 0 : path.toLowerCase().hashCode());
-      return result;
+    public int segmentHashCode() {
+      return ((path == null) ? 0 : path.toLowerCase().hashCode());
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean segmentEquals(PathSegment obj) {
       if (this == obj)
         return true;
-      if (obj == null)
+      else if (obj == null)
         return false;
-      if (getClass() != obj.getClass())
+      else if (getClass() != obj.getClass())
         return false;
+
       NameSegment other = (NameSegment) obj;
       if (path == null) {
-        if (other.path != null)
-          return false;
-      } else if (!path.equalsIgnoreCase(other.path))
-        return false;
-      return true;
+        return other.path == null;
+      }
+      return path.equalsIgnoreCase(other.path);
     }
 
     @Override
@@ -152,7 +162,6 @@ public abstract class PathSegment{
       if(child != null) s.setChild(child.clone());
       return s;
     }
-
 
     @Override
     public NameSegment cloneWithNewChild(PathSegment newChild) {
@@ -165,18 +174,18 @@ public abstract class PathSegment{
       return s;
     }
 
-
   }
 
   public NameSegment getNameSegment(){
     throw new UnsupportedOperationException();
   }
+
   public ArraySegment getArraySegment(){
     throw new UnsupportedOperationException();
   }
+
   public abstract boolean isArray();
   public abstract boolean isNamed();
-
 
   public boolean isLastPath(){
     return child == null;
@@ -186,10 +195,39 @@ public abstract class PathSegment{
     return child;
   }
 
-  public void setChild(PathSegment child) {
+  void setChild(PathSegment child) {
     this.child = child;
   }
 
+  protected abstract int segmentHashCode();
+  protected abstract boolean segmentEquals(PathSegment other);
 
+  @Override
+  public int hashCode() {
+    int h = hash;
+    if (h == 0) {
+      h = segmentHashCode();
+      h = 31*h + ((child == null) ? 0 : child.hashCode());
+      hash = h;
+    }
+    return h;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj)
+      return true;
+    if (obj == null)
+      return false;
+    if (getClass() != obj.getClass())
+      return false;
+
+    PathSegment other = (PathSegment) obj;
+    if (!segmentEquals(other)) {
+      return false;
+    } else if (child == null) {
+      return (other.child == null);
+    } else return child.equals(other.child);
+  }
 
 }

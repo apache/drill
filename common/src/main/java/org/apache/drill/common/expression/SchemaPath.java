@@ -46,7 +46,6 @@ public class SchemaPath extends LogicalExpressionBase {
 
   private final NameSegment rootSegment;
 
-
   public static SchemaPath getSimplePath(String name){
     return getCompoundPath(name);
   }
@@ -60,8 +59,6 @@ public class SchemaPath extends LogicalExpressionBase {
     }
     return new SchemaPath(s);
   }
-
-
 
   /**
    *
@@ -115,10 +112,7 @@ public class SchemaPath extends LogicalExpressionBase {
 
   @Override
   public int hashCode() {
-    final int prime = 31;
-    int result = 1;
-    result = prime * result + ((rootSegment == null) ? 0 : rootSegment.hashCode());
-    return result;
+    return ((rootSegment == null) ? 0 : rootSegment.hashCode());
   }
 
   @Override
@@ -127,15 +121,14 @@ public class SchemaPath extends LogicalExpressionBase {
       return true;
     if (obj == null)
       return false;
-    if ( !(obj instanceof SchemaPath))
+    if (!(obj instanceof SchemaPath))
       return false;
+
     SchemaPath other = (SchemaPath) obj;
     if (rootSegment == null) {
-      if (other.rootSegment != null)
-        return false;
-    } else if (!rootSegment.equals(other.rootSegment))
-      return false;
-    return true;
+      return (other.rootSegment == null);
+    }
+    return rootSegment.equals(other.rootSegment);
   }
 
   @Override
