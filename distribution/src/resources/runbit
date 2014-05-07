@@ -20,4 +20,4 @@ bin=`cd "$bin">/dev/null; pwd`
 
 . "$bin"/drill-config.sh
 
-exec $JAVA $DRILLBIT_JAVA_OPTS $DRILL_JAVA_OPTS -cp $CP org.apache.drill.exec.server.Drillbit
+exec $JAVA -Dlog.path=$DRILLBIT_LOG_PATH $DRILLBIT_JAVA_OPTS $DRILL_JAVA_OPTS -cp $CP org.apache.drill.exec.server.Drillbit

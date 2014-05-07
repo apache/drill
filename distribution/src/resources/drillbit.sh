@@ -152,7 +152,7 @@ loglog="${DRILL_LOG_DIR}/${DRILL_LOGFILE}"
 logout="${DRILL_LOG_DIR}/${DRILL_OUTFILE}"
 pid=$DRILL_PID_DIR/drillbit.pid
 
-DRILL_JAVA_OPTS="$DRILL_JAVA_OPTS -Dlog.path=$loglog"
+export DRILLBIT_LOG_PATH=$loglog
 
 if [ -n "$SERVER_GC_OPTS" ]; then
   export SERVER_GC_OPTS=${SERVER_GC_OPTS/"-Xloggc:<FILE-PATH>"/"-Xloggc:${loggc}"}
