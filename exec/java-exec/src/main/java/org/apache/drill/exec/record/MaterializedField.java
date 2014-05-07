@@ -83,8 +83,8 @@ public class MaterializedField{
   }
 
   public SchemaPath getAsSchemaPath(){
-    List<NamePart> nameList = def.getNameList();
-    Collections.reverse(Lists.newArrayList(nameList));
+    List<NamePart> nameList = Lists.newArrayList(def.getNameList());
+    Collections.reverse(nameList);
     PathSegment seg = null;
     for(NamePart p : nameList){
       if(p.getType() == NamePart.Type.ARRAY){
