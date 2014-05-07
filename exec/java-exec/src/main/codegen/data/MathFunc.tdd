@@ -136,5 +136,125 @@
      ] 
     }
     
-  ]  
+  ],
+
+trigoMathFunctions : [
+ {className: "Sin", funcName: "sin", javaFunc : "java.lang.Math.sin", outputType: "Float8", types: [
+      {input: "Int"},
+      {input: "BigInt"},
+      {input: "Float4"},
+      {input: "Float8"},
+      {input: "SmallInt"},
+      {input: "TinyInt"},
+      {input: "UInt1"},
+      {input: "UInt2"},
+      {input: "UInt4"},
+      {input: "UInt8"}
+     ]
+ },
+ {className: "Cos", funcName: "cos", javaFunc : "java.lang.Math.cos", outputType: "Float8", types: [
+     {input: "Int"},
+      {input: "BigInt"},
+      {input: "Float4"},
+      {input: "Float8"},
+      {input: "SmallInt"},
+      {input: "TinyInt"},
+      {input: "UInt1"},
+      {input: "UInt2"},
+      {input: "UInt4"},
+      {input: "UInt8"}
+     ]
+ },
+ {className: "Tan", funcName: "tan", javaFunc : "java.lang.Math.tan", outputType: "Float8", types: [
+     {input: "Int"},
+      {input: "BigInt"},
+      {input: "Float4"},
+      {input: "Float8"},
+      {input: "SmallInt"},
+      {input: "TinyInt"},
+      {input: "UInt1"},
+      {input: "UInt2"},
+      {input: "UInt4"},
+      {input: "UInt8"}
+     ]
+ },
+ {className: "ASin", funcName: "asin", javaFunc : "java.lang.Math.asin", outputType: "Float8", types: [
+      {input: "Int"},
+      {input: "BigInt"},
+      {input: "Float4"},
+      {input: "Float8"},
+      {input: "SmallInt"},
+      {input: "TinyInt"},
+      {input: "UInt1"},
+      {input: "UInt2"},
+      {input: "UInt4"},
+      {input: "UInt8"}
+     ]
+ },
+ {className: "ACos", funcName: "acos", javaFunc : "java.lang.Math.acos", outputType: "Float8", types: [
+     {input: "Int"},
+      {input: "BigInt"},
+      {input: "Float4"},
+      {input: "Float8"},
+      {input: "SmallInt"},
+      {input: "TinyInt"},
+      {input: "UInt1"},
+      {input: "UInt2"},
+      {input: "UInt4"},
+      {input: "UInt8"}
+     ]
+ },
+ {className: "ATan", funcName: "atan", javaFunc : "java.lang.Math.atan", outputType: "Float8", types: [
+     {input: "Int"},
+      {input: "BigInt"},
+      {input: "Float4"},
+      {input: "Float8"},
+      {input: "SmallInt"},
+      {input: "TinyInt"},
+      {input: "UInt1"},
+      {input: "UInt2"},
+      {input: "UInt4"},
+      {input: "UInt8"}
+     ]
+ },
+ {className: "Sinh", funcName: "sinh", javaFunc : "java.lang.Math.sinh", outputType: "Float8", types: [
+      {input: "Int"},
+      {input: "BigInt"},
+      {input: "Float4"},
+      {input: "Float8"},
+      {input: "SmallInt"},
+      {input: "TinyInt"},
+      {input: "UInt1"},
+      {input: "UInt2"},
+      {input: "UInt4"},
+      {input: "UInt8"}
+     ]
+ },
+ {className: "Cosh", funcName: "cosh", javaFunc : "java.lang.Math.cosh", outputType: "Float8", types: [
+      {input: "Int"},
+      {input: "BigInt"},
+      {input: "Float4"},
+      {input: "Float8"},
+      {input: "SmallInt"},
+      {input: "TinyInt"},
+      {input: "UInt1"},
+      {input: "UInt2"},
+      {input: "UInt4"},
+      {input: "UInt8"}
+     ]
+ },
+ {className: "Tanh", funcName: "tanh", javaFunc : "java.lang.Math.tanh", outputType: "Float8", types: [
+      {input: "Int"},
+      {input: "BigInt"},
+      {input: "Float4"},
+      {input: "Float8"},
+      {input: "SmallInt"},
+      {input: "TinyInt"},
+      {input: "UInt1"},
+      {input: "UInt2"},
+      {input: "UInt4"},
+      {input: "UInt8"}
+    ]
+ }
+]
 }

@@ -97,3 +97,64 @@ public class GMathFunctions{
   </#list>
   </#list>
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+//End of GMath Functions
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
+<@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/TrigoMathFunctions.java" />
+<#include "/@includes/license.ftl" />
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+//Functions for Trigo Math Functions
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+package org.apache.drill.exec.expr.fn.impl;
+
+import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.Types;
+import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.expr.DrillSimpleFunc;
+import org.apache.drill.exec.expr.annotations.FunctionTemplate;
+import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
+import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
+import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
+import org.apache.drill.exec.expr.annotations.Output;
+import org.apache.drill.exec.expr.annotations.Param;
+import org.apache.drill.exec.expr.annotations.Workspace;
+import org.apache.drill.exec.expr.fn.impl.StringFunctions;
+import org.apache.drill.exec.expr.holders.*;
+import org.apache.drill.exec.record.RecordBatch;
+
+/*
+ * This class is automatically generated from MathFunc.tdd using FreeMarker.
+ */
+
+@SuppressWarnings("unused")
+
+public class TrigoMathFunctions{
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TrigoMathFunctions.class);
+
+  private TrigoMathFunctions(){}
+
+  <#list mathFunc.trigoMathFunctions as func>
+
+  <#list func.types as type>
+
+  @FunctionTemplate(name = "${func.funcName}", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  public static class ${func.className}${type.input} implements DrillSimpleFunc {
+
+    @Param ${type.input}Holder in;
+    @Output ${func.outputType}Holder out;
+
+    public void setup(RecordBatch b) {
+    }
+
+    public void eval() {
+      out.value = ${func.javaFunc}(in.value);
+    }
+  }
+ </#list>
+ </#list>
+}
