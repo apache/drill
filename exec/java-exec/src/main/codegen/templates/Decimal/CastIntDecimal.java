@@ -59,7 +59,6 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
     }
 
     public void eval() {
-
         out.scale = (int) scale.value;
         out.precision = (int) precision.value;
 
@@ -81,20 +80,14 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
         // check if input is a negative number and store the sign
         if (in.value < 0) {
             out.sign = true;
-            /* we are going to split the input into base 1 billion numbers
-             * by dividing, if we leave the input to be negative all the splits
-             * will be negative. We store the sign in the output at the end in the
-             * most significant bit
-             */
-            in.value = in.value * -1;
         }
 
         // Figure out how many array positions to be left for the scale part
         int scaleSize = org.apache.drill.common.util.DecimalUtility.roundUp((int) scale.value);
         int integerIndex = (${type.arraySize} - scaleSize - 1);
 
-        while (in.value > 0 && integerIndex >= 0) {
-            out.setInteger(integerIndex, (int) (in.value % org.apache.drill.common.util.DecimalUtility.DIGITS_BASE));
+        while (in.value != 0 && integerIndex >= 0) {
+            out.setInteger(integerIndex--, (int) Math.abs((in.value % org.apache.drill.common.util.DecimalUtility.DIGITS_BASE)));
             in.value = in.value / org.apache.drill.common.util.DecimalUtility.DIGITS_BASE;
         }
 

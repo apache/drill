@@ -17,6 +17,7 @@
  */
 package org.apache.drill.jdbc.test;
 
+import java.lang.Exception;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -416,4 +417,17 @@ public class TestFunctionsQuery {
         );
   }
 
+  @Test
+  public void testIntMinToDecimal() throws Exception {
+    String query = "select cast((employee_id - employee_id + -2147483648) as decimal(28, 2)) as DEC_28," +
+                   "cast((employee_id - employee_id + -2147483648) as decimal(18, 2)) as DEC_18 from " +
+                   "cp.`employee.json` limit 1";
+
+    JdbcAssert.withNoDefaultSchema()
+        .sql(query)
+        .returns(
+            "DEC_28=-2147483648.00; " +
+            "DEC_18=-2147483648.00\n"
+        );
+  }
 }
