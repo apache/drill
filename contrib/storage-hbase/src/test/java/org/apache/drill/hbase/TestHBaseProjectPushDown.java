@@ -17,16 +17,42 @@
  */
 package org.apache.drill.hbase;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
-@Ignore // Need to find a way to pass zookeeper port to HBase storage plugin configuration before enabling this test
 public class TestHBaseProjectPushDown extends BaseHBaseTest {
 
   @Test
   public void testRowKeyPushDown() throws Exception{
-    verify("SELECT\n"
-        + "row_key, substring(row_key, 2, 1)*12\n"
+    runSQLVerifyCount("SELECT\n"
+        + "row_key\n"
+        + "FROM\n"
+        + "  hbase.`[TABLE_NAME]` tableName"
+        , 6);
+  }
+
+  @Test
+  public void testColumnWith1RowPushDown() throws Exception{
+    runSQLVerifyCount("SELECT\n"
+        + "f2['c7']\n"
+        + "FROM\n"
+        + "  hbase.`[TABLE_NAME]` tableName"
+        , 1);
+  }
+
+  @Test
+  public void testRowKeyAndColumnPushDown() throws Exception{
+    setColumnWidth(9);
+    runSQLVerifyCount("SELECT\n"
+        + "row_key, f['c1']*31 as `f[c1]*31`, f['c2'] as `f['c2']`, 5 as `5`, 'abc' as `'abc'`\n"
+        + "FROM\n"
+        + "  hbase.`[TABLE_NAME]` tableName"
+        , 6);
+  }
+
+  @Test
+  public void testColumnFamilyPushDown() throws Exception{
+    runSQLVerifyCount("SELECT\n"
+        + "f\n"
         + "FROM\n"
         + "  hbase.`[TABLE_NAME]` tableName"
         , 6);

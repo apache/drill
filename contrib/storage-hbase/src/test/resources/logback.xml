@@ -16,6 +16,8 @@
  limitations under the License.
 -->
 <configuration>
+  <timestamp key="bySecond" datePattern="yyyyMMdd'T'HHmmss"/>
+
   <appender name="SOCKET"
     class="de.huxhorn.lilith.logback.appender.ClassicMultiplexSocketAppender">
     <Compressing>true</Compressing>
@@ -24,10 +26,18 @@
     <RemoteHosts>localhost</RemoteHosts>
   </appender>
 
+  <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+    <!-- The property 'logback.log.dir' is defined in pom.xml --> 
+    <file>${logback.log.dir:-./target/surefire-reports}/hbase-tests-${bySecond}.log</file>
+    <append>false</append>
+    <encoder>
+      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+    </encoder>
+   </appender>
+
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
-      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n
-      </pattern>
+      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
     </encoder>
   </appender>
 
@@ -41,14 +51,14 @@
     <appender-ref ref="SOCKET" />
   </logger>
 
-  <logger name="org.apache.hadoop.hbase" additivity="false">
+  <logger name="org.apache.hadoop" additivity="false">
     <level value="info" />
-    <appender-ref ref="STDOUT" />
+    <appender-ref ref="FILE" />
   </logger>
 
   <root>
     <level value="error" />
     <appender-ref ref="STDOUT" />
-  </root>  
+  </root>
 
 </configuration>

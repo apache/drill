@@ -26,6 +26,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.google.common.annotations.VisibleForTesting;
 
 @JsonTypeName("hbase")
 public class HBaseStoragePluginConfig extends StoragePluginConfigBase {
@@ -73,4 +74,12 @@ public class HBaseStoragePluginConfig extends StoragePluginConfigBase {
   public Configuration getHBaseConf() {
     return hbaseConf;
   }
+
+  @JsonIgnore
+  @VisibleForTesting
+  public void setZookeeperPort(int zookeeperPort) {
+    this.zookeeperPort = zookeeperPort;
+    hbaseConf.setInt("hbase.zookeeper.property.clientPort", zookeeperPort);
+  }
+
 }

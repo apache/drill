@@ -58,11 +58,11 @@ public class BaseTestQuery extends ExecTest{
     }
   };
 
-  static DrillClient client;
-  static Drillbit bit;
-  static RemoteServiceSet serviceSet;
-  static DrillConfig config;
-  static QuerySubmitter submitter = new QuerySubmitter();
+  protected static DrillClient client;
+  protected static Drillbit bit;
+  protected static RemoteServiceSet serviceSet;
+  protected static DrillConfig config;
+  protected static QuerySubmitter submitter = new QuerySubmitter();
 
   static void resetClientAndBit() throws Exception{
     closeClient();

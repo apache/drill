@@ -32,21 +32,20 @@ public class TestTableGenerator {
     {'j'}, {'k'}, {'l'}, {'m'}, {'n'}, {'o'}, {'p'}, {'q'},
     {'r'}, {'s'}, {'t'}, {'u'}, {'v'}, {'w'}, {'x'}, {'y'}, {'z'}
   };
-  
-  public static void generateHBaseTable(HBaseAdmin admin, String tableName, int numberRegions,
-      int recordsPerRegion) throws Exception {
+
+  public static void generateHBaseDataset1(HBaseAdmin admin, String tableName, int numberRegions) throws Exception {
     if (admin.tableExists(tableName)) {
       admin.disableTable(tableName);
       admin.deleteTable(tableName);
     }
-      
-    byte[][] splitKeys = Arrays.copyOfRange(SPLIT_KEYS, 0, numberRegions-1);
-    
+
     HTableDescriptor desc = new HTableDescriptor(tableName);
     desc.addFamily(new HColumnDescriptor("f"));
     desc.addFamily(new HColumnDescriptor("f2"));
-    admin.createTable(desc, splitKeys);
+    admin.createTable(desc, Arrays.copyOfRange(SPLIT_KEYS, 0, numberRegions-1));
+
     HTable table = new HTable(admin.getConfiguration(), tableName);
+
     Put p = new Put("a1".getBytes());
     p.add("f".getBytes(), "c1".getBytes(), "1".getBytes());
     p.add("f".getBytes(), "c2".getBytes(), "2".getBytes());
@@ -55,6 +54,7 @@ public class TestTableGenerator {
     p.add("f".getBytes(), "c5".getBytes(), "5".getBytes());
     p.add("f".getBytes(), "c6".getBytes(), "6".getBytes());
     table.put(p);
+
     p = new Put("a2".getBytes());
     p.add("f".getBytes(), "c1".getBytes(), "1".getBytes());
     p.add("f".getBytes(), "c2".getBytes(), "2".getBytes());
@@ -63,6 +63,7 @@ public class TestTableGenerator {
     p.add("f".getBytes(), "c5".getBytes(), "5".getBytes());
     p.add("f".getBytes(), "c6".getBytes(), "6".getBytes());
     table.put(p);
+
     p = new Put("a3".getBytes());
     p.add("f".getBytes(), "c1".getBytes(), "1".getBytes());
     p.add("f".getBytes(), "c3".getBytes(), "2".getBytes());
@@ -71,6 +72,7 @@ public class TestTableGenerator {
     p.add("f".getBytes(), "c8".getBytes(), "5".getBytes());
     p.add("f".getBytes(), "c9".getBytes(), "6".getBytes());
     table.put(p);
+
     p = new Put("b4".getBytes());
     p.add("f".getBytes(), "c1".getBytes(), "1".getBytes());
     p.add("f2".getBytes(), "c2".getBytes(), "2".getBytes());
@@ -79,6 +81,7 @@ public class TestTableGenerator {
     p.add("f".getBytes(), "c5".getBytes(), "5".getBytes());
     p.add("f2".getBytes(), "c6".getBytes(), "6".getBytes());
     table.put(p);
+
     p = new Put("b5".getBytes());
     p.add("f2".getBytes(), "c1".getBytes(), "1".getBytes());
     p.add("f".getBytes(), "c2".getBytes(), "2".getBytes());
@@ -87,6 +90,7 @@ public class TestTableGenerator {
     p.add("f2".getBytes(), "c5".getBytes(), "5".getBytes());
     p.add("f".getBytes(), "c6".getBytes(), "6".getBytes());
     table.put(p);
+
     p = new Put("b6".getBytes());
     p.add("f".getBytes(), "c1".getBytes(), "1".getBytes());
     p.add("f2".getBytes(), "c3".getBytes(), "2".getBytes());

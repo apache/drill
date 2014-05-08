@@ -10,7 +10,7 @@
     pop : "hbase-scan",
     @id : 1,
     hbaseScanSpec : {
-      tableName : "testTable"
+      tableName : "[TABLE_NAME]"
     },
     storage:
     {

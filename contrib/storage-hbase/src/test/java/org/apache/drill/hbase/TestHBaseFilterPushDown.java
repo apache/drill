@@ -17,15 +17,13 @@
  */
 package org.apache.drill.hbase;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
-@Ignore // Need to find a way to pass zookeeper port to HBase storage plugin configuration before enabling this test
 public class TestHBaseFilterPushDown extends BaseHBaseTest {
 
   @Test
   public void testFilterPushDownRowKeyEqual() throws Exception{
-    verify("SELECT\n"
+    runSQLVerifyCount("SELECT\n"
         + "  tableName.*\n"
         + "FROM\n"
         + "  hbase.`[TABLE_NAME]` tableName\n"
@@ -35,7 +33,7 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
 
   @Test
   public void testFilterPushDownRowKeyGreaterThan() throws Exception{
-    verify("SELECT\n"
+    runSQLVerifyCount("SELECT\n"
         + "  tableName.*\n"
         + "FROM\n"
         + "  hbase.`[TABLE_NAME]` tableName\n"
@@ -45,7 +43,7 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
 
   @Test
   public void testFilterPushDownRowKeyLessThanOrEqualTo() throws Exception{
-    verify("SELECT\n"
+    runSQLVerifyCount("SELECT\n"
         + "  tableName.*\n"
         + "FROM\n"
         + "  hbase.`[TABLE_NAME]` tableName\n"

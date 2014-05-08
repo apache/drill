@@ -19,69 +19,127 @@ package org.apache.drill.hbase;
 
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.drill.common.util.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HBaseTestingUtility;
 import org.apache.hadoop.hbase.HConstants;
-import org.apache.hadoop.hbase.mapred.TestTableInputFormat;
+import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
-
 @RunWith(Suite.class)
-@SuiteClasses({HBaseRecordReaderTest.class})
+@SuiteClasses({
+  HBaseRecordReaderTest.class,
+  TestHBaseFilterPushDown.class,
+  TestHBaseProjectPushDown.class})
 public class HBaseTestsSuite {
-  private static final Log LOG = LogFactory.getLog(TestTableInputFormat.class);
+  private static final Log LOG = LogFactory.getLog(HBaseTestsSuite.class);
   private static final boolean IS_DEBUG = ManagementFactory.getRuntimeMXBean().getInputArguments().toString().indexOf("-agentlib:jdwp") > 0;
+
+  protected static final String TEST_TABLE_1 = "TestTable1";
 
   private static Configuration conf;
 
+  private static HBaseAdmin admin;
+
   private static HBaseTestingUtility UTIL;
 
+  private static volatile AtomicInteger initCount = new AtomicInteger(0);
+
+  private static boolean manageHBaseCluster = System.getProperty("drill.hbase.tests.manageHBaseCluster", "true").equalsIgnoreCase("true");
+  private static boolean hbaseClusterCreated = false;
+
+  private static boolean createTables = System.getProperty("drill.hbase.tests.createTables", "true").equalsIgnoreCase("true");
+  private static boolean tablesCreated = false;
+
   @BeforeClass
-  public static void setUp() throws Exception {
-    if (conf == null) {
-      conf = HBaseConfiguration.create();
+  public static void initCluster() throws Exception {
+    if (initCount.get() == 0) {
+      synchronized (HBaseTestsSuite.class) {
+        if (initCount.get() == 0) {
+          conf = HBaseConfiguration.create();
+          if (IS_DEBUG) {
+            conf.set("hbase.regionserver.lease.period","10000000");
+          }
+
+          if (manageHBaseCluster) {
+            LOG.info("Starting HBase mini cluster.");
+            UTIL = new HBaseTestingUtility(conf);
+            UTIL.startMiniCluster();
+            hbaseClusterCreated = true;
+            LOG.info("HBase mini cluster started.");
+          }
+
+          admin = new HBaseAdmin(conf);
+
+          if (createTables || !tablesExist()) {
+            createTestTables();
+            tablesCreated = true;
+          }
+          initCount.incrementAndGet();
+          return;
+        }
+      }
     }
-    conf.set("hbase.zookeeper.property.clientPort", "2181");
-    if (IS_DEBUG) {
-      conf.set("hbase.regionserver.lease.period","1000000");
-    }
-    LOG.info("Starting HBase mini cluster.");
-    if (UTIL == null) {
-      UTIL = new HBaseTestingUtility(conf);
-    }
-    UTIL.startMiniCluster();
-    LOG.info("HBase mini cluster started.");
+    initCount.incrementAndGet();
   }
 
   @AfterClass
-  public static void tearDown() throws Exception {
-    LOG.info("Shutting down HBase mini cluster.");
-    UTIL.shutdownMiniCluster();
-    LOG.info("HBase mini cluster stopped.");
+  public static void tearDownCluster() throws Exception {
+    synchronized (HBaseTestsSuite.class) {
+      if (initCount.decrementAndGet() == 0) {
+        if (createTables && tablesCreated) {
+          cleanupTestTables();
+        }
+
+        if (admin != null) {
+          admin.close();
+        }
+
+        if (hbaseClusterCreated) {
+          LOG.info("Shutting down HBase mini cluster.");
+          UTIL.shutdownMiniCluster();
+          LOG.info("HBase mini cluster stopped.");
+        }
+      }
+    }
   }
 
   public static Configuration getConf() {
     return conf;
   }
 
-  public static String getPlanText(String planFile) throws IOException {
-    String text = Files.toString(FileUtils.getResourceAsFile(planFile), Charsets.UTF_8);
-    return text.replaceFirst("\"zookeeperPort\".*:.*\\d+", "\"zookeeperPort\" : " 
-        + conf.get(HConstants.ZOOKEEPER_CLIENT_PORT));
-  }
-
   public static HBaseTestingUtility getHBaseTestingUtility() {
     return UTIL;
   }
+
+  private static boolean tablesExist() throws IOException {
+    return admin.tableExists(TEST_TABLE_1);
+  }
+
+  private static void createTestTables() throws Exception {
+    TestTableGenerator.generateHBaseDataset1(admin, TEST_TABLE_1, 2);
+  }
+
+  private static void cleanupTestTables() throws IOException {
+    admin.disableTable(TEST_TABLE_1);
+    admin.deleteTable(TEST_TABLE_1);
+  }
+
+  public static int getZookeeperPort() {
+    return getConf().getInt(HConstants.ZOOKEEPER_CLIENT_PORT, 2181);
+  }
+
+  public static void configure(boolean manageHBaseCluster, boolean createTables) {
+    HBaseTestsSuite.manageHBaseCluster = manageHBaseCluster;
+    HBaseTestsSuite.createTables = createTables;
+  }
+
 }
