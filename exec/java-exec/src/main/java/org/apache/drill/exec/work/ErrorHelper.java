@@ -19,8 +19,10 @@ package org.apache.drill.exec.work;
 
 import java.util.UUID;
 
+import org.apache.drill.exec.planner.sql.parser.impl.ParseException;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
+import org.eigenbase.sql.parser.SqlParseException;
 import org.slf4j.Logger;
 
 
@@ -44,7 +46,8 @@ public class ErrorHelper {
         sb.append(t.getMessage());
         sb.append(" ]");
       }
-      if (t.getCause() == null || t.getCause() == t) break;
+      if (t.getCause() == null || t.getCause() == t
+          || (t instanceof SqlParseException && t.getCause() instanceof ParseException)) break;
       t = t.getCause();
     }
     

@@ -19,6 +19,7 @@ package org.apache.drill.exec.rpc;
 
 import java.util.concurrent.ExecutionException;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.drill.common.exceptions.DrillIOException;
 
 /**
@@ -32,11 +33,15 @@ public class RpcException extends DrillIOException{
   }
 
   public RpcException(String message, Throwable cause) {
-    super(message, cause);
+    super(format(message), cause);
+  }
+
+  private static String format(String message) {
+    return StringEscapeUtils.unescapeJava(message);
   }
 
   public RpcException(String message) {
-    super(message);
+    super(format(message));
   }
 
   public RpcException(Throwable cause) {
