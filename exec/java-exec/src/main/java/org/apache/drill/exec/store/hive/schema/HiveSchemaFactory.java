@@ -265,6 +265,10 @@ public class HiveSchemaFactory implements SchemaFactory {
       }
     }
 
+    @Override
+    public AbstractSchema getDefaultSchema() {
+      return defaultSchema;
+    }
   }
 
 

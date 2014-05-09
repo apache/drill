@@ -715,7 +715,7 @@ public class TestJdbcQuery extends JdbcTest{
           Statement statement = connection.createStatement();
 
           // change default schema
-          statement.executeQuery("USE dfs.`default`");
+          statement.executeQuery("USE dfs.tmp");
 
           // create view
           statement.executeQuery(
@@ -724,14 +724,12 @@ public class TestJdbcQuery extends JdbcTest{
           // show tables on view
           ResultSet resultSet = statement.executeQuery("SHOW TABLES like 'testview3'");
           String result = JdbcAssert.toString(resultSet).trim();
-          String expected =
-              "TABLE_SCHEMA=dfs.default; TABLE_NAME=testview3\n" +
-              "TABLE_SCHEMA=dfs; TABLE_NAME=testview3";
+          String expected = "TABLE_SCHEMA=dfs.tmp; TABLE_NAME=testview3";
           assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected),
               expected.equals(result));
 
           // describe a view
-          resultSet = statement.executeQuery("DESCRIBE dfs.`default`.testview3");
+          resultSet = statement.executeQuery("DESCRIBE dfs.tmp.testview3");
           result = JdbcAssert.toString(resultSet).trim();
           expected =
               "COLUMN_NAME=key; DATA_TYPE=INTEGER; IS_NULLABLE=NO\n" +

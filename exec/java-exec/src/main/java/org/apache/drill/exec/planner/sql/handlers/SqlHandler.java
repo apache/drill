@@ -49,6 +49,7 @@ public abstract class SqlHandler {
     AbstractSchema drillSchema;
     try {
       drillSchema = schemaPlus.unwrap(AbstractSchema.class);
+      drillSchema = drillSchema.getDefaultSchema();
     } catch(ClassCastException e) {
       throw new Exception("Current schema is not a Drill schema. " +
               "Can't create new relations (tables or views) in non-Drill schemas.", e);

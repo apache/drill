@@ -122,5 +122,10 @@ public class FileSystemSchemaFactory implements SchemaFactory{
     public DrillFileSystem getFS() {
         return defaultSchema.getFS();
     }
+
+    @Override
+    public AbstractSchema getDefaultSchema() {
+      return defaultSchema;
+    }
   }
 }

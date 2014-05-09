@@ -56,6 +56,21 @@ public abstract class AbstractSchema implements Schema{
     return schemaPath;
   }
 
+  /**
+   * The schema can be a top level schema which doesn't have its own tables, but refers
+   * to one of the default sub schemas for table look up.
+   *
+   * Default implementation returns itself.
+   *
+   * Ex. "dfs" schema refers to the tables in "default" workspace when querying for
+   * tables in "dfs" schema.
+   *
+   * @return Return the default schema where tables are created or retrieved from.
+   */
+  public AbstractSchema getDefaultSchema() {
+    return this;
+  }
+
   public CreateTableEntry createNewTable(String tableName) {
     throw new UnsupportedOperationException("New tables are not allowed in this schema");
   }
