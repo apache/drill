@@ -17,6 +17,8 @@
  */
 package org.apache.drill.jdbc.test;
 
+import java.lang.Exception;
+import java.lang.RuntimeException;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -744,4 +746,37 @@ public class TestJdbcQuery extends JdbcTest{
       }
     });
   }
+
+  @Test
+  public void testShowFiles() throws Exception {
+    testQuery("show files from dfs.`/tmp`");
+
+  }
+
+
+  @Test
+  public void testShowFilesWithDefaultSchema() throws Exception{
+    JdbcAssert.withNoDefaultSchema().withConnection(new Function<Connection, Void>() {
+      public Void apply(Connection connection) {
+        try {
+          Statement statement = connection.createStatement();
+
+          // change default schema
+          statement.executeQuery("USE dfs.`default`");
+
+          // show files
+          ResultSet resultSet = statement.executeQuery("show files from `/tmp`");
+
+          System.out.println(JdbcAssert.toString(resultSet));
+
+          statement.close();
+          return null;
+        } catch (Exception e) {
+          throw new RuntimeException(e);
+        }
+      }
+    });
+  }
+
+
 }

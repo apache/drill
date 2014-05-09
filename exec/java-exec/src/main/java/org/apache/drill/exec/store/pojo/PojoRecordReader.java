@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.pojo;
 
 import java.lang.reflect.Field;
+import java.sql.Timestamp;
 import java.util.Iterator;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -34,6 +35,7 @@ import org.apache.drill.exec.store.pojo.Writers.NBooleanWriter;
 import org.apache.drill.exec.store.pojo.Writers.NDoubleWriter;
 import org.apache.drill.exec.store.pojo.Writers.NIntWriter;
 import org.apache.drill.exec.store.pojo.Writers.StringWriter;
+import org.apache.drill.exec.store.pojo.Writers.NTimeStampWriter;
 
 public class PojoRecordReader<T> implements RecordReader{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PojoRecordReader.class);
@@ -80,6 +82,8 @@ public class PojoRecordReader<T> implements RecordReader{
           writers[i] = new LongWriter(f);
         }else if(type == String.class){
           writers[i] = new StringWriter(f);
+        }else if (type == Timestamp.class) {
+          writers[i] = new NTimeStampWriter(f);
         }else{
           throw new ExecutionSetupException(String.format("PojoRecord reader doesn't yet support conversions from type [%s].", type));
         }

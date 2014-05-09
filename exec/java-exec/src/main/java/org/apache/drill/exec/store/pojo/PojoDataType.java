@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.pojo;
 
 import java.lang.reflect.Field;
+import java.sql.Timestamp;
 import java.util.List;
 
 import org.eigenbase.reltype.RelDataType;
@@ -53,6 +54,8 @@ public class PojoDataType {
         types.add(SqlTypeName.VARCHAR);
       }else if(type.isEnum()){
         types.add(SqlTypeName.VARCHAR);
+      }else if (type == Timestamp.class) {
+        types.add(SqlTypeName.TIMESTAMP);
       }else{
         throw new RuntimeException(String.format("PojoRecord reader doesn't yet support conversions from type [%s].", type));
       }

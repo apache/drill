@@ -23,6 +23,7 @@ import java.util.Set;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Sets;
+import net.hydromatic.optiq.SchemaPlus;
 import net.hydromatic.optiq.Table;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.planner.logical.DrillTable;
@@ -108,7 +109,7 @@ public class WorkspaceSchemaFactory implements ExpandingConcurrentMap.MapValueFa
   public void destroy(DrillTable value) {
   }
 
-  public class WorkspaceSchema extends AbstractSchema {
+  public class WorkspaceSchema extends AbstractSchema implements HasFileSystemSchema {
 
     private ExpandingConcurrentMap<String, DrillTable> tables = new ExpandingConcurrentMap<String, DrillTable>(WorkspaceSchemaFactory.this);
     private boolean isMutable;
@@ -136,6 +137,11 @@ public class WorkspaceSchemaFactory implements ExpandingConcurrentMap.MapValueFa
     @Override
     public boolean isMutable() {
       return isMutable;
+    }
+
+    @Override
+    public DrillFileSystem getFS() {
+      return fs;
     }
   }
 

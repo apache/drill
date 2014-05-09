@@ -36,6 +36,7 @@ import org.apache.drill.exec.store.SchemaFactory;
 import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory.WorkspaceSchema;
 
 import com.google.common.collect.Maps;
+import org.apache.drill.exec.store.dfs.shim.DrillFileSystem;
 
 
 /**
@@ -46,6 +47,7 @@ public class FileSystemSchemaFactory implements SchemaFactory{
 
   private List<WorkspaceSchemaFactory> factories;
   private String schemaName;
+  private final String defaultSchemaName = "default";
 
 
   public FileSystemSchemaFactory(String schemaName, List<WorkspaceSchemaFactory> factories) {
@@ -61,7 +63,7 @@ public class FileSystemSchemaFactory implements SchemaFactory{
     schema.setPlus(plusOfThis);
   }
 
-  public class FileSystemSchema extends AbstractSchema{
+  public class FileSystemSchema extends AbstractSchema implements HasFileSystemSchema {
 
     private final WorkspaceSchema defaultSchema;
     private final Map<String, WorkspaceSchema> schemaMap = Maps.newHashMap();
@@ -73,7 +75,7 @@ public class FileSystemSchemaFactory implements SchemaFactory{
         schemaMap.put(s.getName(), s);
       }
 
-      defaultSchema = schemaMap.get("default");
+      defaultSchema = schemaMap.get(defaultSchemaName);
     }
 
     void setPlus(SchemaPlus plusOfThis){
@@ -116,6 +118,9 @@ public class FileSystemSchemaFactory implements SchemaFactory{
     public boolean isMutable() {
       return defaultSchema.isMutable();
     }
-  }
 
+    public DrillFileSystem getFS() {
+        return defaultSchema.getFS();
+    }
+  }
 }

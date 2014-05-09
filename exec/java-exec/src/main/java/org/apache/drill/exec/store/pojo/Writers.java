@@ -21,6 +21,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.UnpooledByteBufAllocator;
 
 import java.lang.reflect.Field;
+import java.sql.Timestamp;
 
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
@@ -34,6 +35,7 @@ import org.apache.drill.exec.vector.NullableBitVector;
 import org.apache.drill.exec.vector.NullableFloat8Vector;
 import org.apache.drill.exec.vector.NullableIntVector;
 import org.apache.drill.exec.vector.NullableVarCharVector;
+import org.apache.drill.exec.vector.NullableTimeStampVector;
 
 import com.google.common.base.Charsets;
 
@@ -238,5 +240,22 @@ public class Writers {
       return true;
     }
 
+  }
+
+  public static class NTimeStampWriter extends AbstractWriter<NullableTimeStampVector>{
+
+    public NTimeStampWriter(Field field) {
+      super(field, Types.optional(MinorType.TIMESTAMP));
+      if(field.getType() != Timestamp.class) throw new IllegalStateException();
+    }
+
+    @Override
+    public boolean writeField(Object pojo, int outboundIndex) throws IllegalArgumentException, IllegalAccessException {
+      Timestamp o = (Timestamp) field.get(pojo);
+      if(o != null){
+        return vector.getMutator().setSafe(outboundIndex, o.getTime());
+      }
+      return true;
+    }
   }
 }

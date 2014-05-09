@@ -33,7 +33,8 @@
     "SCHEMAS",
     "SHOW",
     "TABLES",
-    "USE"
+    "USE",
+    "FILES"
   ]
 
   # List of methods for parsing custom SQL statements.
@@ -43,7 +44,8 @@
     "SqlDescribeTable()",
     "SqlUseSchema()",
     "SqlCreateOrReplaceView()",
-    "SqlDropView()"
+    "SqlDropView()",
+    "SqlShowFiles()"
   ]
 
   # List of methods for parsing custom literals.

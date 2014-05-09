@@ -54,6 +54,25 @@ SqlNode SqlShowTables() :
 }
 
 /**
+ * Parses statement
+ * SHOW FILES [{FROM | IN} schema]
+ */
+SqlNode SqlShowFiles() :
+{
+    SqlParserPos pos = null;
+    SqlIdentifier db = null;
+}
+{
+    <SHOW> { pos = getPos(); }
+    <FILES>
+    (<FROM> | <IN>) { db = CompoundIdentifier(); }
+    {
+        return new SqlShowFiles(pos, db);
+    }
+}
+
+
+/**
  * Parses statement SHOW {DATABASES | SCHEMAS} [LIKE 'pattern' | WHERE expr]
  */
 SqlNode SqlShowSchemas() :
