@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.easy.json;
 
+import java.io.IOException;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -29,7 +30,9 @@ import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.RecordReader;
+import org.apache.drill.exec.store.RecordWriter;
 import org.apache.drill.exec.store.dfs.easy.EasyFormatPlugin;
+import org.apache.drill.exec.store.dfs.easy.EasyWriter;
 import org.apache.drill.exec.store.dfs.easy.FileWork;
 import org.apache.drill.exec.store.dfs.shim.DrillFileSystem;
 import org.apache.drill.exec.store.easy.json.JSONFormatPlugin.JSONFormatConfig;
@@ -50,6 +53,11 @@ public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
   public RecordReader getRecordReader(FragmentContext context, FileWork fileWork, 
       List<SchemaPath> columns) throws ExecutionSetupException {
     return new JSONRecordReader(context, fileWork.getPath(), this.getFileSystem().getUnderlying(), columns);
+  }
+
+  @Override
+  public RecordWriter getRecordWriter(FragmentContext context, EasyWriter writer) throws IOException {
+    throw new UnsupportedOperationException("Json Writer is not supported currently.");
   }
 
   @JsonTypeName("json")

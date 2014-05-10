@@ -29,6 +29,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.List;
@@ -38,13 +39,19 @@ import static org.junit.Assert.assertTrue;
 
 public class TestWriter extends BaseTestQuery {
 
-  @Test
-  public void testSimpleCsv() throws Exception {
-    // before executing the test deleting the existing CSV files in /tmp/csvtest
+  static FileSystem fs;
+
+  @BeforeClass
+  public static void initFs() throws Exception {
     Configuration conf = new Configuration();
     conf.set("fs.name.default", "local");
 
-    FileSystem fs = FileSystem.get(conf);
+    fs = FileSystem.get(conf);
+  }
+
+  @Test
+  public void simpleCsv() throws Exception {
+    // before executing the test deleting the existing CSV files in /tmp/csvtest
     Path path = new Path("/tmp/csvtest");
     if (fs.exists(path)) {
       fs.delete(path, true);
@@ -80,4 +87,43 @@ public class TestWriter extends BaseTestQuery {
     }
     batchLoader.clear();
   }
+
+  @Test
+  public void simpleCTAS() throws Exception {
+    String testQuery = "USE dfs.tmp;" +
+        "CREATE TABLE simplectas AS SELECT * FROM cp.`employee.json`;";
+
+    ctasHelper("/tmp/drilltest/simplectas", testQuery, 1);
+  }
+
+  @Test
+  public void complex1CTAS() throws Exception {
+    String testQuery = "USE dfs.tmp;" +
+        "CREATE TABLE complex1ctas AS SELECT first_name, last_name, position_id FROM cp.`employee.json`;";
+
+    ctasHelper("/tmp/drilltest/complex1ctas", testQuery, 1);
+  }
+
+  @Test
+  public void complex2CTAS() throws Exception {
+    String testQuery = "USE dfs.tmp;" +
+        "CREATE TABLE complex2ctas AS SELECT CAST(`birth_date` as Timestamp) FROM cp.`employee.json` GROUP BY birth_date;";
+
+    ctasHelper("/tmp/drilltest/complex2ctas", testQuery, 3);
+  }
+
+
+  private void ctasHelper(String tableDir, String testQuery, int numExpectedFiles) throws Exception {
+    Path tableLocation = new Path(tableDir);
+    if (fs.exists(tableLocation)){
+      fs.delete(tableLocation, true);
+    }
+
+    test(testQuery);
+
+    assertTrue(fs.exists(tableLocation));
+    FileStatus[] fileStatuses = fs.globStatus(new Path(tableLocation.toString(), "*.csv"));
+    assertEquals(numExpectedFiles, fileStatuses.length);
+  }
+
 }

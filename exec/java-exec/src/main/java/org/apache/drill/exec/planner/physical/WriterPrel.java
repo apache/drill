@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.util.List;
 
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.physical.config.Writer;
 import org.apache.drill.exec.planner.common.DrillWriterRelBase;
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
 import org.eigenbase.rel.RelNode;
@@ -42,7 +41,7 @@ public class WriterPrel extends DrillWriterRelBase implements Prel {
   @Override
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
     Prel child = (Prel) this.getChild();
-    return  new Writer(child.getPhysicalOperator(creator), getCreateTableEntry());
+    return getCreateTableEntry().getWriter(child.getPhysicalOperator(creator));
   }
 
 }

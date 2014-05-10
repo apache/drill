@@ -24,15 +24,13 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.record.RecordBatch;
 
-public class EasyBatchCreator implements BatchCreator<EasySubScan>{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(EasyBatchCreator.class);
+public class EasyWriterBatchCreator implements BatchCreator<EasyWriter>{
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(EasyWriterBatchCreator.class);
 
   @Override
-  public RecordBatch getBatch(FragmentContext context, EasySubScan config, List<RecordBatch> children)
+  public RecordBatch getBatch(FragmentContext context, EasyWriter config, List<RecordBatch> children)
       throws ExecutionSetupException {
-    assert children == null || children.isEmpty();
-    return config.getFormatPlugin().getBatch(context, config);
+    assert children != null && children.size() == 1;
+    return config.getFormatPlugin().getWriterBatch(context, children.iterator().next(), config);
   }
-  
-  
 }

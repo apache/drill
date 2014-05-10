@@ -14,52 +14,67 @@
        entries:[
          {records: 66000, types: [
            {name: "red", type: "INT", mode: "REQUIRED"},
-           {name: "green", type: "INT", mode: "REQUIRED"},
-           {name: "blue", type: "INT", mode: "REQUIRED"}
+           {name: "green", type: "BIGINT", mode: "OPTIONAL"},
+           {name: "blue", type: "VARCHAR", mode: "REQUIRED"}
          ]},
          {records: 66000, types: [
-           {name: "blue", type: "INT", mode: "REQUIRED"},
-           {name: "green", type: "INT", mode: "REQUIRED"},
-           {name: "red", type: "INT", mode: "REQUIRED"}
+           {name: "blue", type: "BIT", mode: "REQUIRED"},
+           {name: "green", type: "DECIMAL18", mode: "REQUIRED"},
+           {name: "red", type: "FLOAT8", mode: "OPTIONAL"}
          ]}
        ]
     }, {
-      @id:2,
+      @id: 2,
       child: 1,
-      pop:"project",
-      exprs: [
-        { ref: "col1", expr:"red" },
-        { ref: "col2", expr:"green" },
-        { ref: "col3", expr:"blue" }
-      ]
+      pop: "fs-writer",
+      "location" : "/tmp/csvtest",
+      "storage" : {
+        "type" : "file",
+        "connection" : "file:///",
+        "workspaces" : {
+          "root" : {
+            "location" : "/",
+            "writable" : false,
+            "storageformat" : null
+          },
+          "tmp" : {
+            "location" : "/tmp",
+            "writable" : true,
+            "storageformat" : "csv"
+          }
+        },
+        "formats" : {
+          "psv" : {
+            "type" : "text",
+            "extensions" : [ "tbl" ],
+            "delimiter" : "|"
+          },
+          "csv" : {
+            "type" : "text",
+            "extensions" : [ "csv" ],
+            "delimiter" : ","
+          },
+          "tsv" : {
+            "type" : "text",
+            "extensions" : [ "tsv" ],
+            "delimiter" : "\t"
+          },
+          "parquet" : {
+            "type" : "parquet"
+          },
+          "json" : {
+            "type" : "json"
+          }
+        }
+      },
+      "format" : {
+        "type" : "text",
+        "extensions" : [ "csv" ],
+        "delimiter" : ","
+      }
     }, {
       @id: 3,
       child: 2,
-      pop: "writer",
-      createTableEntry: {
-        "type" : "filesystem",
-        "config" : {
-          "type" : "file",
-          "connection" : "file:///",
-          "workspaces" : {
-            "root" : {
-              "location" : "/",
-              "writable" : false,
-              "storageformat" : null
-            },
-            "tmp" : {
-              "location" : "/tmp",
-              "writable" : true,
-              "storageformat" : "csv"
-            }
-          }
-        },
-        "format" : "csv",
-        "location" : "/tmp/csvtest"
-      }
-    }, {
-      @id: 4,
-      child: 3,
       pop: "screen"
     }
   ]

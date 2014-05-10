@@ -15,25 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.planner.sql.parser;
 
-import net.hydromatic.optiq.tools.Planner;
-import org.apache.drill.exec.ops.QueryContext;
-import org.apache.drill.exec.planner.sql.handlers.DefaultSqlHandler;
-import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
-import org.eigenbase.sql.SqlCall;
-import org.eigenbase.sql.parser.SqlParserPos;
+package org.apache.drill.exec.physical.base;
 
-/**
- * SqlCall interface with addition of method to get the handler.
- */
-public abstract class DrillSqlCall extends SqlCall {
+/** Writer physical operator */
+public interface Writer extends PhysicalOperator{
 
-  public DrillSqlCall(SqlParserPos pos) {
-    super(pos);
-  }
-
-  public AbstractSqlHandler getSqlHandler(Planner planner, QueryContext context) {
-    return new DefaultSqlHandler(planner, context);
-  }
 }

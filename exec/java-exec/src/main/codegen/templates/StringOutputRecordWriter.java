@@ -114,7 +114,10 @@ public abstract class StringOutputRecordWriter implements RecordWriter {
 
   <#elseif minor.class == "VarChar" || minor.class == "Var16Char" || minor.class == "VarBinary">
     addField(fieldId, valueHolder.toString());
-  </#if>
+  <#else>
+    throw new UnsupportedOperationException(String.format("Unsupported field type: %s"),
+      valueHolder.getCanonicalClass());
+   </#if>
   }
     </#list>
   </#list>

@@ -20,9 +20,9 @@ package org.apache.drill.exec.planner.sql.parser;
 import com.google.common.collect.Lists;
 import net.hydromatic.optiq.tools.Planner;
 import org.apache.drill.exec.ops.QueryContext;
+import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.ShowFileHandler;
 import org.apache.drill.exec.planner.sql.handlers.ShowTablesHandler;
-import org.apache.drill.exec.planner.sql.handlers.SqlHandler;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.SqlParserPos;
 
@@ -64,7 +64,7 @@ public class SqlShowFiles extends DrillSqlCall {
   }
 
   @Override
-  public SqlHandler getSqlHandler(Planner planner, QueryContext context) {
+  public AbstractSqlHandler getSqlHandler(Planner planner, QueryContext context) {
     return new ShowFileHandler(planner, context);
   }
   public SqlIdentifier getDb() { return db; }

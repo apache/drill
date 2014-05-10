@@ -21,7 +21,7 @@ import com.google.common.collect.Lists;
 import net.hydromatic.optiq.tools.Planner;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.planner.sql.handlers.DescribeTableHandler;
-import org.apache.drill.exec.planner.sql.handlers.SqlHandler;
+import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.SqlParserPos;
 
@@ -71,7 +71,7 @@ public class SqlDescribeTable extends DrillSqlCall {
   }
 
   @Override
-  public SqlHandler getSqlHandler(Planner planner, QueryContext context) {
+  public AbstractSqlHandler getSqlHandler(Planner planner, QueryContext context) {
     return new DescribeTableHandler(planner, context);
   }
 

@@ -17,16 +17,19 @@
  */
 package org.apache.drill.exec.planner.logical;
 
+import com.fasterxml.jackson.annotation.JacksonInject;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.google.common.collect.ImmutableMap;
-import org.apache.drill.exec.store.RecordWriter;
-import org.apache.drill.exec.store.RecordWriterRegistry;
+import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.logical.FormatPluginConfig;
+import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.physical.base.Writer;
+import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.dfs.FileSystemConfig;
-import org.apache.hadoop.fs.FileSystem;
+import org.apache.drill.exec.store.dfs.FormatPlugin;
 
 import java.io.IOException;
-import java.util.Map;
 
 /**
  * Implements <code>CreateTableEntry</code> interface to create new tables in FileSystem storage.
@@ -34,39 +37,41 @@ import java.util.Map;
 @JsonTypeName("filesystem")
 public class FileSystemCreateTableEntry implements CreateTableEntry {
 
-  public FileSystemConfig config;
-  public String format;
-  public String location;
+  private FileSystemConfig storageConfig;
+  private FormatPlugin formatPlugin;
+  private String location;
 
-  /**
-   * Create an entry.
-   * @param config Storage configuration.
-   * @param format Output format such as "csv", "parquet" etc.
-   * @param location Directory where the data files for the new table are created.
-   */
-  public FileSystemCreateTableEntry(@JsonProperty("config") FileSystemConfig config,
-                                    @JsonProperty("format") String format,
-                                    @JsonProperty("location") String location) {
-    this.config = config;
-    this.format = format;
+  @JsonCreator
+  public FileSystemCreateTableEntry(@JsonProperty("storageConfig") FileSystemConfig storageConfig,
+                                    @JsonProperty("formatConfig") FormatPluginConfig formatConfig,
+                                    @JsonProperty("location") String location,
+                                    @JacksonInject StoragePluginRegistry engineRegistry)
+      throws ExecutionSetupException {
+    this.storageConfig = storageConfig;
+    this.formatPlugin = engineRegistry.getFormatPlugin(storageConfig, formatConfig);
     this.location = location;
   }
 
-  /**
-   * Returns an implementation of the RecordWriter which is used to write data to new table.
-   * @param prefix Fragment unique identifier to prefix to files created by RecordWriter.
-   *               This is needed to avoid fragments overwriting file in parallel overwriting others.
-   * @return A RecordWriter object.
-   * @throws IOException
-   */
-  @Override
-  public RecordWriter getRecordWriter(String prefix) throws IOException {
-    Map<String, String> options = ImmutableMap.of(
-        "location", location,
-        FileSystem.FS_DEFAULT_NAME_KEY, config.connection,
-        "prefix", prefix
-    );
+  public FileSystemCreateTableEntry(FileSystemConfig storageConfig,
+                                    FormatPlugin formatPlugin,
+                                    String location) {
+    this.storageConfig = storageConfig;
+    this.formatPlugin = formatPlugin;
+    this.location = location;
+  }
 
-    return RecordWriterRegistry.get(format, options);
+  @JsonProperty("storageConfig")
+  public FileSystemConfig getStorageConfig() {
+    return storageConfig;
+  }
+
+  @JsonProperty("formatConfig")
+  public FormatPluginConfig getFormatConfig() {
+    return formatPlugin.getConfig();
+  }
+
+  @Override
+  public Writer getWriter(PhysicalOperator child) throws IOException {
+    return formatPlugin.getWriter(child, location);
   }
 }

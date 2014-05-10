@@ -38,7 +38,7 @@ import org.eigenbase.rel.RelNode;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.sql.SqlNode;
 
-public abstract class ViewHandler extends SqlHandler{
+public abstract class ViewHandler extends AbstractSqlHandler{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ViewHandler.class);
 
   protected Planner planner;

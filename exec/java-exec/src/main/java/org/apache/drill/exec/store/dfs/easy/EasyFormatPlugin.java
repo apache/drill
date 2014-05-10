@@ -31,10 +31,14 @@ import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
+import org.apache.drill.exec.physical.base.AbstractWriter;
+import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.impl.ScanBatch;
+import org.apache.drill.exec.physical.impl.WriterRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.RecordReader;
+import org.apache.drill.exec.store.RecordWriter;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 import org.apache.drill.exec.store.dfs.BasicFormatMatcher;
 import org.apache.drill.exec.store.dfs.FileSelection;
@@ -108,8 +112,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
 
   public abstract RecordReader getRecordReader(FragmentContext context, FileWork fileWork, List<SchemaPath> columns) throws ExecutionSetupException;
 
-  
-  RecordBatch getBatch(FragmentContext context, EasySubScan scan) throws ExecutionSetupException {
+  RecordBatch getReaderBatch(FragmentContext context, EasySubScan scan) throws ExecutionSetupException {
     String partitionDesignator = context.getConfig().getString(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL);
     List<SchemaPath> columns = scan.getColumns();
     List<RecordReader> readers = Lists.newArrayList();
@@ -155,7 +158,23 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
 
     return new ScanBatch(scan, context, readers.iterator(), partitionColumns, selectedPartitionColumns);
   }
-  
+
+  public abstract RecordWriter getRecordWriter(FragmentContext context, EasyWriter writer) throws IOException;
+
+  public RecordBatch getWriterBatch(FragmentContext context, RecordBatch incoming, EasyWriter writer)
+      throws ExecutionSetupException {
+    try {
+      return new WriterRecordBatch(writer, incoming, context, getRecordWriter(context, writer));
+    } catch(IOException e) {
+      throw new ExecutionSetupException(String.format("Failed to create the WriterRecordBatch. %s", e.getMessage()), e);
+    }
+  }
+
+  @Override
+  public AbstractWriter getWriter(PhysicalOperator child, String location) throws IOException {
+    return new EasyWriter(child, location, this);
+  }
+
   @Override
   public AbstractGroupScan getGroupScan(FileSelection selection) throws IOException {
     return new EasyGroupScan(selection, this, null, selection.selectionRoot);

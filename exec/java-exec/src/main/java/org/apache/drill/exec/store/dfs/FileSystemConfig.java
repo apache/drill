@@ -23,7 +23,6 @@ import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import org.apache.drill.common.logical.WorkspaceConfig;
 
 @JsonTypeName("file")
 public class FileSystemConfig implements StoragePluginConfig{

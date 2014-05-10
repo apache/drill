@@ -28,8 +28,8 @@ import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.eigenbase.sql.SqlNode;
 
-public abstract class SqlHandler {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SqlHandler.class);
+public abstract class AbstractSqlHandler {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractSqlHandler.class);
 
   public abstract PhysicalPlan getPlan(SqlNode sqlNode) throws ValidationException, RelConversionException, IOException;
 

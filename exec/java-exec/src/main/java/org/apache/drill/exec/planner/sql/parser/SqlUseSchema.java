@@ -20,7 +20,7 @@ package org.apache.drill.exec.planner.sql.parser;
 import com.google.common.collect.ImmutableList;
 import net.hydromatic.optiq.tools.Planner;
 import org.apache.drill.exec.ops.QueryContext;
-import org.apache.drill.exec.planner.sql.handlers.SqlHandler;
+import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.UseSchemaHandler;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.SqlParserPos;
@@ -59,7 +59,7 @@ public class SqlUseSchema extends DrillSqlCall {
   }
 
   @Override
-  public SqlHandler getSqlHandler(Planner planner, QueryContext context) {
+  public AbstractSqlHandler getSqlHandler(Planner planner, QueryContext context) {
     return new UseSchemaHandler(context);
   }
 

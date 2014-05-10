@@ -24,6 +24,8 @@ import java.util.regex.Pattern;
 
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
+import org.apache.drill.exec.physical.base.AbstractWriter;
+import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 import org.apache.drill.exec.store.dfs.BasicFormatMatcher;
@@ -98,6 +100,11 @@ public class ParquetFormatPlugin implements FormatPlugin{
   @Override
   public Set<StoragePluginOptimizerRule> getOptimizerRules() {
     return ImmutableSet.of();
+  }
+
+  @Override
+  public AbstractWriter getWriter(PhysicalOperator child, String location) throws IOException {
+    throw new UnsupportedOperationException("Parquet Writer is not supported currently.");
   }
 
   @Override

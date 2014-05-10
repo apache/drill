@@ -3,7 +3,18 @@
     dfs: {
       type: "file",
       connection: "file:///",
-    formats: {
+      workspaces: {
+        "home" : {
+          location: "/",
+          writable: false
+        },
+        "tmp" : {
+          location: "/tmp/drilltest",
+          writable: true,
+          storageformat: "csv"
+        }
+      },
+      formats: {
             "psv" : {
               type: "text",
               extensions: [ "tbl" ],

@@ -15,21 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.writer;
+package org.apache.drill.exec.physical.base;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+public abstract class AbstractWriter extends AbstractSingle implements Writer{
 
+  public AbstractWriter(PhysicalOperator child) {
+    super(child);
+  }
 
-@Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE})
-public @interface RecordWriterTemplate {
-
-  /**
-   * Output format identifier used to identify the RecordWriter implementation.
-   * @return
-   */
-  String format();
+  @Override
+  public <T, X, E extends Throwable> T accept(PhysicalVisitor<T, X, E> physicalVisitor, X value) throws E {
+    return physicalVisitor.visitWriter(this, value);
+  }
 }

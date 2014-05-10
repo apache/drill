@@ -16,16 +16,15 @@
  * limitations under the License.
  */
 
-package org.apache.drill.exec.physical.impl.writer;
+package org.apache.drill.exec.physical.impl;
 
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.physical.config.Writer;
+import org.apache.drill.exec.physical.base.Writer;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.record.*;
 import org.apache.drill.exec.record.RecordValueAccessor;
@@ -37,7 +36,7 @@ import org.apache.drill.exec.vector.VarCharVector;
 
 import java.io.IOException;
 
-/* Write the given RecordBatch to the given file in specified format. */
+/* Write the RecordBatch to the given RecordWriter. */
 public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(WriterRecordBatch.class);
 
@@ -49,17 +48,13 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
   private boolean processed = false;
   private String fragmentUniqueId;
 
-  public WriterRecordBatch(Writer pop, RecordBatch incoming, FragmentContext context) throws OutOfMemoryException {
-    super(pop, context);
+  public WriterRecordBatch(Writer writer, RecordBatch incoming, FragmentContext context, RecordWriter recordWriter) throws OutOfMemoryException {
+    super(writer, context);
     this.incoming = incoming;
 
     FragmentHandle handle = context.getHandle();
     fragmentUniqueId = String.format("%d_%d", handle.getMajorFragmentId(), handle.getMinorFragmentId());
-    try {
-      recordWriter = pop.getCreateTableEntry().getRecordWriter(fragmentUniqueId);
-    } catch(IOException ex) {
-      throw new RuntimeException("Failed to create RecordWriter", ex);
-    }
+    this.recordWriter = recordWriter;
   }
 
   @Override
@@ -75,7 +70,7 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
   @Override
   public IterOutcome next() {
     if(processed) {
-      // if the upstream record batch is already processed and next() called by
+      // if the upstream record batch is already processed and next() is called by
       // downstream then return NONE to indicate completion
       return IterOutcome.NONE;
     }
@@ -89,46 +84,46 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
       first = false;
 
       switch(upstream) {
-      case NOT_YET:
-      case NONE:
-      case STOP:
-        cleanup();
-        if (upstream == IterOutcome.STOP)
-          return upstream;
-        break;
+        case NOT_YET:
+        case NONE:
+        case STOP:
+          cleanup();
+          if (upstream == IterOutcome.STOP)
+            return upstream;
+          break;
 
-      case OK_NEW_SCHEMA:
-        try{
-          setupNewSchema();
-        }catch(Exception ex){
-          kill();
-          logger.error("Failure during query", ex);
-          context.fail(ex);
-          return IterOutcome.STOP;
-        }
-        // fall through.
-      case OK:
-        try {
-          counter += eventBasedRecordWriter.write();
-          logger.debug("Total records written so far: {}", counter);
-        } catch(IOException ex) {
-          throw new RuntimeException(ex);
-        }
+        case OK_NEW_SCHEMA:
+          try{
+            setupNewSchema();
+          }catch(Exception ex){
+            kill();
+            logger.error("Failure during query", ex);
+            context.fail(ex);
+            return IterOutcome.STOP;
+          }
+          // fall through.
+        case OK:
+          try {
+            counter += eventBasedRecordWriter.write();
+            logger.debug("Total records written so far: {}", counter);
+          } catch(IOException ex) {
+            throw new RuntimeException(ex);
+          }
 
-        for(VectorWrapper v : incoming)
-          v.getValueVector().clear();
+          for(VectorWrapper v : incoming)
+            v.getValueVector().clear();
 
-        break;
+          break;
 
-      default:
-        throw new UnsupportedOperationException();
+        default:
+          throw new UnsupportedOperationException();
       }
     } while(upstream != IterOutcome.NONE);
 
     // Create two vectors for:
     //   1. Fragment unique id.
     //   2. Summary: currently contains number of records written.
-    MaterializedField fragmentIdField = MaterializedField.create(SchemaPath.getSimplePath("fragment"), Types.required(MinorType.VARCHAR));
+    MaterializedField fragmentIdField = MaterializedField.create(SchemaPath.getSimplePath("Fragment"), Types.required(MinorType.VARCHAR));
     MaterializedField summaryField = MaterializedField.create(SchemaPath.getSimplePath("Number of records written"), Types.required(MinorType.BIGINT));
 
     VarCharVector fragmentIdVector = (VarCharVector) TypeHelper.getNewVector(fragmentIdField, context.getAllocator());

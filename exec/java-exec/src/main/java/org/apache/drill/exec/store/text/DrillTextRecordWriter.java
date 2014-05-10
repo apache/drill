@@ -15,7 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.writer.csv;
+package org.apache.drill.exec.store.text;
+
+import com.google.common.base.Joiner;
+import org.apache.drill.exec.store.StringOutputRecordWriter;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -23,41 +29,37 @@ import java.io.PrintStream;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.base.Joiner;
-import org.apache.drill.exec.store.StringOutputRecordWriter;
-import org.apache.drill.exec.store.writer.RecordWriterTemplate;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
+public class DrillTextRecordWriter extends StringOutputRecordWriter {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillTextRecordWriter.class);
 
-@RecordWriterTemplate(format = "csv")
-public class CSVRecordWriter extends StringOutputRecordWriter {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CSVRecordWriter.class);
+  private String location;
+  private String prefix;
 
-  private String location;      // directory where to write the CSV files
-  private String prefix;        // prefix to output file names.
+  private String fieldDelimiter;
+  private String extension;
+
+  private static String eol = System.getProperty("line.separator");
   private int index;
-
   private PrintStream stream = null;
   private FileSystem fs = null;
 
   // Record write status
   private boolean fRecordStarted = false; // true once the startRecord() is called until endRecord() is called
-  private StringBuilder currentRecord;    // contains the current record separated by commas
-
-  private static String eol = System.getProperty("line.separator");
+  private StringBuilder currentRecord; // contains the current record separated by field delimiter
 
   @Override
   public void init(Map<String, String> writerOptions) throws IOException {
     this.location = writerOptions.get("location");
     this.prefix = writerOptions.get("prefix");
-    this.index = 0;
+    this.fieldDelimiter = writerOptions.get("separator");
+    this.extension = writerOptions.get("extension");
 
     Configuration conf = new Configuration();
     conf.set(FileSystem.FS_DEFAULT_NAME_KEY, writerOptions.get(FileSystem.FS_DEFAULT_NAME_KEY));
     this.fs = FileSystem.get(conf);
 
-    currentRecord = new StringBuilder();
+    this.currentRecord = new StringBuilder();
+    this.index = 0;
   }
 
   @Override
@@ -66,23 +68,23 @@ public class CSVRecordWriter extends StringOutputRecordWriter {
     cleanup();
 
     // open a new file for writing data with new schema
-    Path fileName = new Path(location, prefix + "_" + index + ".csv");
+    Path fileName = new Path(location, prefix + "_" + index + "." + extension);
     try {
       DataOutputStream fos = fs.create(fileName);
       stream = new PrintStream(fos);
-      logger.debug("CSVWriter: created file: {}", fileName);
+      logger.debug("Created file: {}", fileName);
     } catch (IOException ex) {
       logger.error("Unable to create file: " + fileName, ex);
       throw ex;
     }
     index++;
 
-    stream.println(Joiner.on(",").join(columnNames));
+    stream.println(Joiner.on(fieldDelimiter).join(columnNames));
   }
 
   @Override
   public void addField(int fieldId, String value) throws IOException {
-    currentRecord.append(value + ",");
+    currentRecord.append(value + fieldDelimiter);
   }
 
   @Override
@@ -98,8 +100,8 @@ public class CSVRecordWriter extends StringOutputRecordWriter {
     if (!fRecordStarted)
       throw new IOException("No record is in writing");
 
-    // remove the extra "," at the end
-    currentRecord.deleteCharAt(currentRecord.length()-1);
+    // remove the extra delimiter at the end
+    currentRecord.deleteCharAt(currentRecord.length()-fieldDelimiter.length());
 
     stream.println(currentRecord.toString());
 
@@ -114,7 +116,7 @@ public class CSVRecordWriter extends StringOutputRecordWriter {
     if (stream != null) {
       stream.close();
       stream = null;
-      logger.debug("CSVWriter: closing file");
+      logger.debug("closing file");
     }
   }
 

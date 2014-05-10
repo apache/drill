@@ -28,7 +28,7 @@ import org.apache.drill.exec.planner.sql.DirectPlan;
 import org.apache.drill.exec.planner.sql.parser.SqlUseSchema;
 import org.eigenbase.sql.SqlNode;
 
-public class UseSchemaHandler extends SqlHandler{
+public class UseSchemaHandler extends AbstractSqlHandler{
   QueryContext context;
 
   public UseSchemaHandler(QueryContext context) {

@@ -25,6 +25,8 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
+import org.apache.drill.exec.physical.base.AbstractWriter;
+import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
 import org.apache.drill.exec.store.dfs.shim.DrillFileSystem;
@@ -39,6 +41,8 @@ public interface FormatPlugin {
   public boolean supportsWrite();
   
   public FormatMatcher getMatcher();
+
+  public AbstractWriter getWriter(PhysicalOperator child, String location) throws IOException;
 
   public AbstractGroupScan getGroupScan(FileSelection selection) throws IOException;
 

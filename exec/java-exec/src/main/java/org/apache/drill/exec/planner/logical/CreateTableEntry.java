@@ -21,7 +21,8 @@ package org.apache.drill.exec.planner.logical;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import org.apache.drill.exec.store.RecordWriter;
+import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.physical.base.Writer;
 
 import java.io.IOException;
 
@@ -35,5 +36,5 @@ import java.io.IOException;
 })
 public interface CreateTableEntry {
 
-  RecordWriter getRecordWriter(String fragmentUniqueId) throws IOException;
+  Writer getWriter(PhysicalOperator child) throws IOException;
 }

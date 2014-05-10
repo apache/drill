@@ -29,7 +29,7 @@ import org.eigenbase.sql.SqlLiteral;
 import org.eigenbase.sql.SqlNode;
 import org.eigenbase.sql.SqlSetOption;
 
-public class SetOptionHandler extends SqlHandler{
+public class SetOptionHandler extends AbstractSqlHandler{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SetOptionHandler.class);
 
   QueryContext context;

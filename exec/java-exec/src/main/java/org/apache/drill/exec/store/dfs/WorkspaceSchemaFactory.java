@@ -24,10 +24,8 @@ import java.util.Set;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import net.hydromatic.optiq.SchemaPlus;
 import net.hydromatic.optiq.Table;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.common.logical.WorkspaceConfig;
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.logical.DynamicDrillTable;
@@ -36,7 +34,6 @@ import org.apache.drill.exec.planner.sql.ExpandingConcurrentMap;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.dfs.shim.DrillFileSystem;
-
 import org.apache.hadoop.fs.Path;
 
 public class WorkspaceSchemaFactory implements ExpandingConcurrentMap.MapValueFactory<String, DrillTable> {
@@ -114,7 +111,7 @@ public class WorkspaceSchemaFactory implements ExpandingConcurrentMap.MapValueFa
   public class WorkspaceSchema extends AbstractSchema implements HasFileSystemSchema {
 
     private ExpandingConcurrentMap<String, DrillTable> tables = new ExpandingConcurrentMap<String, DrillTable>(WorkspaceSchemaFactory.this);
-    private final UserSession session;
+    private UserSession session;
 
     public WorkspaceSchema(List<String> parentSchemaPath, String name, UserSession session) {
       super(parentSchemaPath, name);
@@ -140,14 +137,22 @@ public class WorkspaceSchemaFactory implements ExpandingConcurrentMap.MapValueFa
     }
 
     @Override
-    public CreateTableEntry createNewTable(String tableName) {
-      return new FileSystemCreateTableEntry((FileSystemConfig)plugin.getConfig(), config.getStorageFormat(),
-          config.getLocation() + Path.SEPARATOR + tableName);
+    public DrillFileSystem getFS() {
+      return fs;
     }
 
     @Override
-    public DrillFileSystem getFS() {
-      return fs;
+    public CreateTableEntry createNewTable(String tableName) {
+      FormatPlugin formatPlugin = plugin.getFormatPlugin(config.getStorageFormat());
+      if (formatPlugin == null)
+        throw new UnsupportedOperationException(
+          String.format("Unsupported format '%s' in workspace '%s'", config.getStorageFormat(),
+              Joiner.on(".").join(getSchemaPath())));
+
+      return new FileSystemCreateTableEntry(
+          (FileSystemConfig) plugin.getConfig(),
+          plugin.getFormatPlugin(config.getStorageFormat()),
+          config.getLocation() + Path.SEPARATOR + tableName);
     }
   }
 

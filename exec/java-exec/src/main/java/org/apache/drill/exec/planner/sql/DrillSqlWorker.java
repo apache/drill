@@ -35,10 +35,10 @@ import org.apache.drill.exec.planner.cost.DrillCostBase;
 import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
 import org.apache.drill.exec.planner.logical.DrillRuleSets;
 import org.apache.drill.exec.planner.physical.DrillDistributionTraitDef;
+import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.DefaultSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.ExplainHandler;
 import org.apache.drill.exec.planner.sql.handlers.SetOptionHandler;
-import org.apache.drill.exec.planner.sql.handlers.SqlHandler;
 import org.apache.drill.exec.planner.sql.parser.DrillSqlCall;
 import org.apache.drill.exec.planner.sql.handlers.UseSchemaHandler;
 import org.apache.drill.exec.planner.sql.parser.SqlDescribeTable;
@@ -109,7 +109,7 @@ public class DrillSqlWorker {
   public PhysicalPlan getPlan(String sql) throws SqlParseException, ValidationException, RelConversionException, IOException{
     SqlNode sqlNode = planner.parse(sql);
 
-    SqlHandler handler;
+    AbstractSqlHandler handler;
 
     // TODO: make this use path scanning or something similar.
     switch(sqlNode.getKind()){
