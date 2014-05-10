@@ -50,12 +50,6 @@ public class TestJdbcDistQuery extends JdbcTest{
 
   }
 
-  @BeforeClass
-  public static void generateHive() throws Exception{
-    new HiveTestDataGenerator().generateTestData();
-  }
-
-
   @Test
   public void testSimpleQuerySingleFile() throws Exception{
     testQuery(String.format("select R_REGIONKEY, R_NAME "

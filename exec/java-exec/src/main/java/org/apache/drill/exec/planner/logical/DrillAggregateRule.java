@@ -46,9 +46,9 @@ public class DrillAggregateRule extends RelOptRule {
       // currently, don't use this rule if any of the aggregates contains DISTINCT
       return;
     }
-    
+
     final RelTraitSet traits = aggregate.getTraitSet().plus(DrillRel.DRILL_LOGICAL);
-    final RelNode convertedInput = convert(input, traits);
+    final RelNode convertedInput = convert(input, input.getTraitSet().plus(DrillRel.DRILL_LOGICAL));
     try {
       call.transformTo(new DrillAggregateRel(aggregate.getCluster(), traits, convertedInput, aggregate.getGroupSet(),
           aggregate.getAggCallList()));
