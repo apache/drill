@@ -102,7 +102,7 @@ public class HashFunctions {
       if (in.isSet == 0)
         out.value = 0;
       else
-        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash(in.buffer.nioBuffer(), 0);
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash(in.buffer.nioBuffer(in.start, in.end - in.start), 0);
     }
   }
 
@@ -119,7 +119,24 @@ public class HashFunctions {
       if (in.isSet == 0)
         out.value = 0;
       else
-        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash(in.buffer.nioBuffer(), 0);
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash(in.buffer.nioBuffer(in.start, in.end - in.start), 0);
+    }
+  }
+
+  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL )
+  public static class NullableVar16CharHash implements DrillSimpleFunc {
+
+    @Param NullableVar16CharHolder in;
+    @Output IntHolder out;
+
+    public void setup(RecordBatch incoming) {
+    }
+
+    public void eval() {
+      if (in.isSet == 0)
+        out.value = 0;
+      else
+        out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash(in.buffer.nioBuffer(in.start, in.end - in.start), 0);
     }
   }
 
@@ -185,7 +202,21 @@ public class HashFunctions {
       out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash(in.buffer.nioBuffer(in.start, in.end - in.start), 0);
     }
   }
-  
+
+  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  public static class Var16CharHash implements DrillSimpleFunc {
+
+    @Param Var16CharHolder in;
+    @Output IntHolder out;
+
+    public void setup(RecordBatch incoming) {
+    }
+
+    public void eval() {
+      out.value = org.apache.drill.exec.expr.fn.impl.HashHelper.hash(in.buffer.nioBuffer(in.start, in.end - in.start), 0);
+    }
+  }
+
   @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
   public static class HashBigInt implements DrillSimpleFunc {
 

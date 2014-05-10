@@ -90,46 +90,65 @@ public class TestWriter extends BaseTestQuery {
 
   @Test
   public void simpleCTAS() throws Exception {
-    String testQuery = "USE dfs.tmp;" +
-        "CREATE TABLE simplectas AS SELECT * FROM cp.`employee.json`;";
+    testSqlWithResults("Use dfs.tmp");
 
-    ctasHelper("/tmp/drilltest/simplectas", testQuery, 1);
+    String testQuery = "CREATE TABLE simplectas AS SELECT * FROM cp.`employee.json`";
+
+    ctasHelper("/tmp/drilltest/simplectas", testQuery, 1155);
   }
 
   @Test
   public void complex1CTAS() throws Exception {
-    String testQuery = "USE dfs.tmp;" +
-        "CREATE TABLE complex1ctas AS SELECT first_name, last_name, position_id FROM cp.`employee.json`;";
+    testSqlWithResults("Use dfs.tmp");
+    String testQuery = "CREATE TABLE complex1ctas AS SELECT first_name, last_name, position_id FROM cp.`employee.json`";
 
-    ctasHelper("/tmp/drilltest/complex1ctas", testQuery, 1);
+    ctasHelper("/tmp/drilltest/complex1ctas", testQuery, 1155);
   }
 
   @Test
   public void complex2CTAS() throws Exception {
-    String testQuery = "USE dfs.tmp;" +
-        "CREATE TABLE complex2ctas AS SELECT CAST(`birth_date` as Timestamp) FROM cp.`employee.json` GROUP BY birth_date;";
+    testSqlWithResults("Use dfs.tmp");
+    String testQuery = "CREATE TABLE complex2ctas AS SELECT CAST(`birth_date` as Timestamp) FROM cp.`employee.json` GROUP BY birth_date";
 
-    ctasHelper("/tmp/drilltest/complex2ctas", testQuery, 3);
+    ctasHelper("/tmp/drilltest/complex2ctas", testQuery, 52);
   }
 
   @Test
   public void simpleCTASWithSchemaInTableName() throws Exception {
-    String testQuery = "CREATE TABLE dfs.tmp.`/test/simplectas2` AS SELECT * FROM cp.`employee.json`;";
+    String testQuery = "CREATE TABLE dfs.tmp.`/test/simplectas2` AS SELECT * FROM cp.`employee.json`";
 
-    ctasHelper("/tmp/drilltest/test/simplectas2", testQuery, 1);
+    ctasHelper("/tmp/drilltest/test/simplectas2", testQuery, 1155);
   }
 
-  private void ctasHelper(String tableDir, String testQuery, int numExpectedFiles) throws Exception {
+  private void ctasHelper(String tableDir, String testQuery, int expectedOutputCount) throws Exception {
     Path tableLocation = new Path(tableDir);
     if (fs.exists(tableLocation)){
       fs.delete(tableLocation, true);
     }
 
-    test(testQuery);
+    List<QueryResultBatch> results = testSqlWithResults(testQuery);
+
+    RecordBatchLoader batchLoader = new RecordBatchLoader(getAllocator());
+
+    int recordsWritten = 0;
+    for(QueryResultBatch batch : results) {
+      batchLoader.load(batch.getHeader().getDef(), batch.getData());
+
+      if (batchLoader.getRecordCount() <= 0)
+        continue;
+
+      BigIntVector recordWrittenV = (BigIntVector) batchLoader.getValueAccessorById(1, BigIntVector.class).getValueVector();
+
+      for (int i = 0; i < batchLoader.getRecordCount(); i++) {
+        recordsWritten += recordWrittenV.getAccessor().get(i);
+      }
+
+      batch.release();
+    }
+    batchLoader.clear();
 
     assertTrue(fs.exists(tableLocation));
-    FileStatus[] fileStatuses = fs.globStatus(new Path(tableLocation.toString(), "*.csv"));
-    assertEquals(numExpectedFiles, fileStatuses.length);
+    assertEquals(expectedOutputCount, recordsWritten);
   }
 
 }
