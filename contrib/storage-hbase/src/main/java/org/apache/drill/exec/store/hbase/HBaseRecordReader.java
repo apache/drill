@@ -22,8 +22,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.NavigableSet;
-import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
@@ -43,6 +41,7 @@ import org.apache.drill.exec.vector.NullableVarBinaryVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarBinaryVector;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Result;
@@ -52,7 +51,6 @@ import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.FilterList;
 import org.apache.hadoop.hbase.filter.FilterList.Operator;
 import org.apache.hadoop.hbase.filter.FirstKeyOnlyFilter;
-import org.apache.hadoop.hbase.util.Bytes;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
@@ -70,7 +68,6 @@ public class HBaseRecordReader implements RecordReader, DrillHBaseConstants {
   private Result leftOver;
   private VarBinaryVector rowKeyVector;
   private SchemaPath rowKeySchemaPath;
-  private HTable table;
 
   public HBaseRecordReader(Configuration conf, HBaseSubScan.HBaseSubScanSpec subScanSpec,
       List<SchemaPath> projectedColumns, FragmentContext context) throws OutOfMemoryException {
@@ -110,15 +107,6 @@ public class HBaseRecordReader implements RecordReader, DrillHBaseConstants {
     }
 
     try {
-      if (rowKeySchemaPath != null) {
-        /* if ROW_KEY was requested, we can not qualify the scan with columns,
-         * otherwise HBase will omit the entire row of all of the specified columns do
-         * not exist for that row. Eventually we may want to use Family and/or Qualifier
-         * Filters in such case but that would mean additional processing at server.
-         */
-        scan.setFamilyMap(new TreeMap<byte [], NavigableSet<byte []>>(Bytes.BYTES_COMPARATOR));
-      }
-
       Filter scanFilter = subScanSpec.getScanFilter();
       if (rowKeyOnly) {
         /* if only the row key was requested, add a FirstKeyOnlyFilter to the scan
@@ -134,12 +122,15 @@ public class HBaseRecordReader implements RecordReader, DrillHBaseConstants {
       scan.setFilter(scanFilter);
       scan.setCaching(TARGET_RECORD_COUNT);
 
-      table = new HTable(conf, subScanSpec.getTableName());
+      logger.debug("Opening scanner for HBase table '{}', Zookeeper quorum '{}', port '{}', znode '{}'.",
+                   subScanSpec.getTableName(), conf.get(HConstants.ZOOKEEPER_QUORUM),
+                   conf.get(HBASE_ZOOKEEPER_PORT), conf.get(HConstants.ZOOKEEPER_ZNODE_PARENT));
+      HTable table = new HTable(conf, subScanSpec.getTableName());
       resultScanner = table.getScanner(scan);
       try {
         table.close();
       } catch (IOException e) {
-        logger.warn("Failure while closing HBase table", e);
+        logger.warn("Failure while closing HBase table: " + subScanSpec.getTableName(), e);
       }
     } catch (IOException e1) {
       throw new DrillRuntimeException(e1);

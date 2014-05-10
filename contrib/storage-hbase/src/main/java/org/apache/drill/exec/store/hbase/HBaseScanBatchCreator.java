@@ -25,7 +25,6 @@ import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.physical.impl.ScanBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.store.RecordReader;
-import org.apache.hadoop.conf.Configuration;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -37,11 +36,10 @@ public class HBaseScanBatchCreator implements BatchCreator<HBaseSubScan>{
   public RecordBatch getBatch(FragmentContext context, HBaseSubScan subScan, List<RecordBatch> children) throws ExecutionSetupException {
     Preconditions.checkArgument(children.isEmpty());
     List<RecordReader> readers = Lists.newArrayList();
-    Configuration config = ((HBaseStoragePluginConfig) subScan.getStorageConfig()).getHBaseConf();
-    for(HBaseSubScan.HBaseSubScanSpec e : subScan.getRegionScanSpecList()){
+    for(HBaseSubScan.HBaseSubScanSpec scanSpec : subScan.getRegionScanSpecList()){
       try {
         readers.add(
-            new HBaseRecordReader(config, e, subScan.getColumns(), context)
+            new HBaseRecordReader(subScan.getStorageConfig().getHBaseConf(), scanSpec, subScan.getColumns(), context)
         );
       } catch (Exception e1) {
         throw new ExecutionSetupException(e1);
@@ -49,4 +47,5 @@ public class HBaseScanBatchCreator implements BatchCreator<HBaseSubScan>{
     }
     return new ScanBatch(subScan, context, readers.iterator());
   }
+
 }

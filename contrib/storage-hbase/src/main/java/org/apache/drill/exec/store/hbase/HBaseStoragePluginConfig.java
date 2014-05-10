@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.hbase;
 import org.apache.drill.common.logical.StoragePluginConfigBase;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.client.HConnectionManager.HConnectionKey;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -29,7 +30,8 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.annotations.VisibleForTesting;
 
 @JsonTypeName("hbase")
-public class HBaseStoragePluginConfig extends StoragePluginConfigBase {
+public class HBaseStoragePluginConfig extends StoragePluginConfigBase implements DrillHBaseConstants {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBaseStoragePluginConfig.class);
 
   @JsonProperty
   public String zookeeperQuorum;
@@ -47,9 +49,11 @@ public class HBaseStoragePluginConfig extends StoragePluginConfigBase {
     this.zookeeperPort = zookeeperPort;
 
     this.hbaseConf = HBaseConfiguration.create();
+    logger.debug("Configuring HBase StoragePlugin with zookeeper quorum '{}', port '{}' node '{}'.",
+        zookeeperQuorum, zookeeperPort, hbaseConf.get(HConstants.ZOOKEEPER_ZNODE_PARENT));
     if (zookeeperQuorum != null && zookeeperQuorum.length() != 0) {
-      hbaseConf.set("hbase.zookeeper.quorum", zookeeperQuorum);
-      hbaseConf.setInt("hbase.zookeeper.property.clientPort", zookeeperPort);
+      hbaseConf.set(HConstants.ZOOKEEPER_QUORUM, zookeeperQuorum);
+      hbaseConf.setInt(HBASE_ZOOKEEPER_PORT, zookeeperPort);
     }
     this.hbaseConfKey = new HConnectionKey(hbaseConf);
   }
@@ -79,7 +83,7 @@ public class HBaseStoragePluginConfig extends StoragePluginConfigBase {
   @VisibleForTesting
   public void setZookeeperPort(int zookeeperPort) {
     this.zookeeperPort = zookeeperPort;
-    hbaseConf.setInt("hbase.zookeeper.property.clientPort", zookeeperPort);
+    hbaseConf.setInt(HBASE_ZOOKEEPER_PORT, zookeeperPort);
   }
 
 }
