@@ -70,7 +70,7 @@ public class ObjectInspectorHelper {
             JType holderClass = TypeHelper.getHolderType(m, returnType, TypeProtos.DataMode.OPTIONAL);
             block.assign(returnValueHolder, JExpr._new(holderClass));
 
-          <#if entry.hiveType == "VARCHAR" || entry.hiveType == "STRING">
+          <#if entry.hiveType == "VARCHAR" || entry.hiveType == "STRING" || entry.hiveType == "BINARY">
             block.assign(returnValueHolder.ref("buffer"),
               m.directClass(io.netty.buffer.Unpooled.class.getCanonicalName())
                 .staticInvoke("wrappedBuffer")
@@ -158,6 +158,14 @@ public class ObjectInspectorHelper {
                       .invoke("getBytes").arg(DirectExpression.direct("com.google.common.base.Charsets.UTF_16")));
             jc._else().add(returnValueHolder.ref("buffer")
               .invoke("setBytes").arg(JExpr.lit(0)).arg(data));
+            jc._else().assign(returnValueHolder.ref("start"), JExpr.lit(0));
+            jc._else().assign(returnValueHolder.ref("end"), data.ref("length"));
+          <#elseif entry.hiveType == "BINARY">
+
+            JVar data = jc._else().decl(m.directClass(byte[].class.getCanonicalName()), "data",
+              castedOI.invoke("getPrimitiveJavaObject").arg(returnValue));
+            jc._else().add(returnValueHolder.ref("buffer")
+                .invoke("setBytes").arg(JExpr.lit(0)).arg(data));
             jc._else().assign(returnValueHolder.ref("start"), JExpr.lit(0));
             jc._else().assign(returnValueHolder.ref("end"), data.ref("length"));
 

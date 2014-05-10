@@ -76,7 +76,20 @@ public class HiveFunctionImplementationRegistry {
 
     for(int i=0; i<names.length;i++){
       methods.put(names[i], clazz);
+      if (!names[i].toLowerCase().equals(names[i])) {
+        // After the Optiq-Drill conversion of function calls, function names are in lowercase
+        // and we fail to find them in the map. Add a lowercase name entry.
+        methods.put(names[i].toLowerCase(), clazz);
+      }
     }
+  }
+
+  public ArrayListMultimap<String, Class<? extends GenericUDF>> getGenericUDFs() {
+    return methodsGenericUDF;
+  }
+
+  public ArrayListMultimap<String, Class<? extends UDF>> getUDFs() {
+    return methodsUDF;
   }
 
   /**
@@ -127,7 +140,7 @@ public class HiveFunctionImplementationRegistry {
         nonDeterministicUDFs.contains(udfClazz));
     } catch(IllegalAccessException | InstantiationException e) {
       logger.debug("Failed to instantiate class", e);
-    } catch(UDFArgumentException e) { /*ignore this*/ }
+    } catch(Exception e) { /*ignore this*/ }
 
     return null;
   }
@@ -147,7 +160,7 @@ public class HiveFunctionImplementationRegistry {
         returnOI,
         Types.optional(ObjectInspectorHelper.getDrillType(returnOI)),
         nonDeterministicUDFs.contains(udfClazz));
-    } catch(UDFArgumentException e) { /*ignore this*/ }
+    } catch(Exception e) { /*ignore this*/ }
 
     return null;
   }

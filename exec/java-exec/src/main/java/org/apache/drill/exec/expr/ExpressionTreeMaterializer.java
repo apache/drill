@@ -192,7 +192,7 @@ public class ExpressionTreeMaterializer {
         return new HiveFuncHolderExpr(call.getName(), matchedHiveHolder, call.args, call.getPosition());
 
       logFunctionResolutionError(errorCollector, call);
-      return null;
+      return NullExpression.INSTANCE;
     }
 
     private void logFunctionResolutionError(ErrorCollector errorCollector, FunctionCall call) {

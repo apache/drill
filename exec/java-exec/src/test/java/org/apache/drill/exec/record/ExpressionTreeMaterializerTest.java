@@ -32,6 +32,7 @@ import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.IfExpression;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.expression.TypedNullConstant;
 import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
@@ -204,7 +205,7 @@ public class ExpressionTreeMaterializerTest extends ExecTest {
       ImmutableList.of((LogicalExpression) new FieldReference("test", ExpressionPosition.UNKNOWN) ),
       ExpressionPosition.UNKNOWN);
     LogicalExpression newExpr = ExpressionTreeMaterializer.materialize(functionCallExpr, batch, ec, registry);
-    assertEquals(newExpr, null);
+    assertTrue(newExpr instanceof TypedNullConstant);
     assertEquals(1, ec.getErrorCount());
     System.out.println(ec.toErrorString());
   }

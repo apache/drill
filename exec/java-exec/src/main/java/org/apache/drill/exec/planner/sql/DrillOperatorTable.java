@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Sets;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.eigenbase.sql.SqlFunctionCategory;
@@ -33,7 +34,6 @@ import org.eigenbase.sql.fun.SqlStdOperatorTable;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
-import com.google.hive12.common.collect.Sets;
 
 public class DrillOperatorTable extends SqlStdOperatorTable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillOperatorTable.class);
@@ -63,10 +63,15 @@ public class DrillOperatorTable extends SqlStdOperatorTable {
       }
     }
 
-    // TODO: add hive functions.
+    for (String name : Sets.union(
+        registry.getHiveRegistry().getGenericUDFs().asMap().keySet(),
+        registry.getHiveRegistry().getUDFs().asMap().keySet())) {
+
+      SqlOperator op = new HiveUDFOperator(name.toUpperCase());
+      operators.add(op);
+      opMap.put(name, op);
+    }
   }
-
-
 
   @Override
   public void lookupOperatorOverloads(SqlIdentifier opName, SqlFunctionCategory category, SqlSyntax syntax, List<SqlOperator> operatorList) {

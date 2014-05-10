@@ -101,10 +101,8 @@ public class TestHiveUDFs extends ExecTest {
       NullableVar16CharVector concatV = (NullableVar16CharVector) vv.next();
       Float4Vector flt1V = (Float4Vector) vv.next();
       NullableVar16CharVector format_numberV = (NullableVar16CharVector) vv.next();
-
-      /* DRILL-425
       NullableVar16CharVector nullableStr1V = ((NullableVar16CharVector) vv.next());
-      NullableVar16CharVector upperNullableStr1V = ((NullableVar16CharVector) vv.next()); */
+      NullableVar16CharVector upperNullableStr1V = ((NullableVar16CharVector) vv.next());
 
       for(int i=0; i<exec.getRecordCount(); i++) {
 
@@ -123,14 +121,12 @@ public class TestHiveUDFs extends ExecTest {
 
 
         String nullableStr1 = null;
-        /* DRILL-425
         if (!nullableStr1V.getAccessor().isNull(i))
-          nullableStr1 = new String(nullableStr1V.getAccessor().get(i), Charsets.UTF_16);*/
+          nullableStr1 = new String(nullableStr1V.getAccessor().get(i), Charsets.UTF_16);
 
         String upperNullableStr1 = null;
-        /* DRILL-425
         if (!upperNullableStr1V.getAccessor().isNull(i))
-          upperNullableStr1 = new String(upperNullableStr1V.getAccessor().get(i), Charsets.UTF_16); */
+          upperNullableStr1 = new String(upperNullableStr1V.getAccessor().get(i), Charsets.UTF_16);
 
         assertEquals(nullableStr1 != null, upperNullableStr1 != null);
         if (nullableStr1 != null)
