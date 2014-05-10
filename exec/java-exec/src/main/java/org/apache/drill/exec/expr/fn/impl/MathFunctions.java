@@ -82,6 +82,47 @@ public class MathFunctions{
 
   }
 
+  @FunctionTemplate(name = "pi", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  public static class Pi implements DrillSimpleFunc{
+    
+    @Output  Float8Holder out;
+
+    public void setup(RecordBatch b){}
+    
+    public void eval(){
+      out.value = java.lang.Math.PI;
+    }
+
+  }  
+  
+  @FunctionTemplate(name = "radians", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  public static class Radians implements DrillSimpleFunc{
+    
+    @Param Float8Holder input;
+    @Output  Float8Holder out;
+
+    public void setup(RecordBatch b){}
+    
+    public void eval(){
+      out.value = java.lang.Math.toRadians(input.value);
+    }
+
+  }  
+  
+  @FunctionTemplate(name = "degrees", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  public static class Degrees implements DrillSimpleFunc{
+    
+    @Param Float8Holder input;
+    @Output  Float8Holder out;
+
+    public void setup(RecordBatch b){}
+    
+    public void eval(){
+      out.value = java.lang.Math.toDegrees(input.value);
+    }
+
+  }  
+
   @FunctionTemplate(name = "to_number", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
   public static class ToNumber implements DrillSimpleFunc {
     @Param  VarCharHolder left;
