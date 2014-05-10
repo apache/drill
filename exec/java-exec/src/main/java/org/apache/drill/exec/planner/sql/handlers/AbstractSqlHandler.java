@@ -18,6 +18,7 @@
 package org.apache.drill.exec.planner.sql.handlers;
 
 import java.io.IOException;
+import java.util.List;
 
 import com.google.common.base.Joiner;
 import net.hydromatic.optiq.SchemaPlus;
@@ -42,10 +43,10 @@ public abstract class AbstractSqlHandler {
   }
 
   /**
-   * From a given SchemaPlus return a mutable Drill schema object AbstractSchema if exists.
+   * From a given SchemaPlus return a Drill schema object of type AbstractSchema if exists.
    * Otherwise throw errors.
    */
-  public static AbstractSchema getMutableDrillSchema(SchemaPlus schemaPlus) throws Exception{
+  public static AbstractSchema getDrillSchema(SchemaPlus schemaPlus) throws Exception{
     AbstractSchema drillSchema;
     try {
       drillSchema = schemaPlus.unwrap(AbstractSchema.class);
@@ -55,10 +56,36 @@ public abstract class AbstractSqlHandler {
               "Can't create new relations (tables or views) in non-Drill schemas.", e);
     }
 
-    if (!drillSchema.isMutable())
-      throw new Exception(String.format("Current schema '%s' is not a mutable schema. " +
-          "Can't create new relations.", Joiner.on(".").join(drillSchema.getSchemaPath())));
-
     return drillSchema;
+  }
+
+  /**
+   * Search for a schema with given schemaPath. First search in schema tree rooted at defaultSchema,
+   * if not found search in rootSchema. If no schema found throw errors.
+   */
+  public static SchemaPlus findSchema(SchemaPlus rootSchema, SchemaPlus defaultSchema, List<String> schemaPath)
+      throws Exception {
+    if (schemaPath.size() == 0)
+      return defaultSchema;
+
+    SchemaPlus schema;
+
+    if ((schema = searchSchemaTree(defaultSchema, schemaPath)) != null)
+      return schema;
+
+    if ((schema = searchSchemaTree(rootSchema, schemaPath)) != null)
+      return schema;
+
+    throw new Exception(String.format("Invalid schema path '%s'.", Joiner.on(".").join(schemaPath)));
+  }
+
+  private static SchemaPlus searchSchemaTree(SchemaPlus schema, List<String> schemaPath) {
+    for (String schemaName : schemaPath) {
+      schema = schema.getSubSchema(schemaName);
+      if (schema == null) {
+        return null;
+      }
+    }
+    return schema;
   }
 }

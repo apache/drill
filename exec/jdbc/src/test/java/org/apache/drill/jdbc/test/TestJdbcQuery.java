@@ -767,6 +767,38 @@ public class TestJdbcQuery extends JdbcTest{
           ResultSet resultSet = statement.executeQuery("show files from `/tmp`");
 
           System.out.println(JdbcAssert.toString(resultSet));
+          statement.close();
+          return null;
+        } catch (Exception e) {
+          throw new RuntimeException(e);
+        }
+      }
+    });
+  }
+
+  @Test
+  public void testViewWithFullSchemaIdentifier() throws Exception{
+    JdbcAssert.withNoDefaultSchema().withConnection(new Function<Connection, Void>() {
+      public Void apply(Connection connection) {
+        try {
+          Statement statement = connection.createStatement();
+
+          // change default schema
+          statement.executeQuery("USE cp");
+
+          // create a view with full schema identifier
+          ResultSet resultSet =  statement.executeQuery("CREATE VIEW dfs.tmp.testview AS SELECT * FROM hive.kv");
+          String result = JdbcAssert.toString(resultSet).trim();
+          String expected = "ok=true; summary=View 'testview' created successfully in 'dfs.tmp' schema";
+          assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected),
+              expected.equals(result));
+
+          // query from view
+          resultSet = statement.executeQuery("SELECT key FROM dfs.tmp.testview LIMIT 1");
+          result = JdbcAssert.toString(resultSet).trim();
+          expected = "key=1";
+          assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected),
+              expected.equals(result));
 
           statement.close();
           return null;
@@ -777,5 +809,43 @@ public class TestJdbcQuery extends JdbcTest{
     });
   }
 
+  @Test
+  public void testViewWithPartialSchemaIdentifier() throws Exception{
+    JdbcAssert.withNoDefaultSchema().withConnection(new Function<Connection, Void>() {
+      public Void apply(Connection connection) {
+        try {
+          Statement statement = connection.createStatement();
 
+          // change default schema
+          statement.executeQuery("USE dfs");
+
+          // create a view with partial schema identifier
+          ResultSet resultSet =  statement.executeQuery("CREATE VIEW tmp.testview AS SELECT * FROM hive.kv");
+          String result = JdbcAssert.toString(resultSet).trim();
+          String expected = "ok=true; summary=View 'testview' created successfully in 'dfs.tmp' schema";
+          assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected),
+              expected.equals(result));
+
+          // query from view
+          resultSet = statement.executeQuery("SELECT key FROM tmp.testview LIMIT 1");
+          result = JdbcAssert.toString(resultSet).trim();
+          expected = "key=1";
+          assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected),
+              expected.equals(result));
+
+          // change the default schema and query
+          statement.executeQuery("USE dfs.tmp");
+          resultSet = statement.executeQuery("SELECT key FROM testview LIMIT 1");
+          result = JdbcAssert.toString(resultSet).trim();
+          assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected),
+              expected.equals(result));
+
+          statement.close();
+          return null;
+        } catch (Exception e) {
+          throw new RuntimeException(e);
+        }
+      }
+    });
+  }
 }

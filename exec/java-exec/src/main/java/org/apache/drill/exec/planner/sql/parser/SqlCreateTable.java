@@ -76,7 +76,20 @@ public class SqlCreateTable extends DrillSqlCall {
     return new CreateTableHandler(planner, context);
   }
 
-  public String getTableName() { return tblName.toString(); }
+  public List<String> getSchemaPath() {
+    if (tblName.isSimple()) {
+      return ImmutableList.of();
+    }
+
+    return tblName.names.subList(0, tblName.names.size() - 1);
+  }
+
+  public String getName() {
+    if (tblName.isSimple())
+      return tblName.getSimple();
+
+    return tblName.names.get(tblName.names.size() - 1);
+  }
 
   public List<String> getFieldNames() {
     if (fieldList == null) return ImmutableList.of();

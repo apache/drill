@@ -59,7 +59,18 @@ public class SqlDropView extends DrillSqlCall {
     return new DropView(context);
   }
 
-  public String getViewName() {
-    return viewName.toString();
+  public List<String> getSchemaPath() {
+    if (viewName.isSimple()) {
+      return ImmutableList.of();
+    }
+
+    return viewName.names.subList(0, viewName.names.size()-1);
+  }
+
+  public String getName() {
+    if (viewName.isSimple())
+      return viewName.getSimple();
+
+    return viewName.names.get(viewName.names.size() - 1);
   }
 }

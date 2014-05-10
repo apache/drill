@@ -83,7 +83,20 @@ public class SqlCreateView extends DrillSqlCall {
     return new ViewHandler.CreateView(planner, context);
   }
 
-  public String getViewName() { return viewName.getSimple(); }
+  public List<String> getSchemaPath() {
+    if (viewName.isSimple()) {
+      return ImmutableList.of();
+    }
+
+    return viewName.names.subList(0, viewName.names.size()-1);
+  }
+
+  public String getName() {
+    if (viewName.isSimple())
+      return viewName.getSimple();
+
+    return viewName.names.get(viewName.names.size() - 1);
+  }
 
   public List<String> getFieldNames() {
     if (fieldList == null) return ImmutableList.of();

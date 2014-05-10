@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.sql.handlers;
 
+import net.hydromatic.optiq.SchemaPlus;
 import net.hydromatic.optiq.tools.Planner;
 import net.hydromatic.optiq.tools.RelConversionException;
 import net.hydromatic.optiq.tools.ValidationException;
@@ -83,8 +84,16 @@ public class CreateTableHandler extends DefaultSqlHandler {
         relQuery = RelOptUtil.createCastRel(relQuery, rowType, true);
       }
 
-      String newTblName = sqlCreateTable.getTableName();
-      AbstractSchema schema = getMutableDrillSchema(context.getNewDefaultSchema());
+      SchemaPlus schema = findSchema(context.getRootSchema(), context.getNewDefaultSchema(),
+          sqlCreateTable.getSchemaPath());
+
+      AbstractSchema drillSchema = getDrillSchema(schema);
+
+      if (!drillSchema.isMutable())
+        return DirectPlan.createDirectPlan(context, false, String.format("Current schema '%s' is not a mutable schema. " +
+            "Can't create tables in this schema.", drillSchema.getFullSchemaName()));
+
+      String newTblName = sqlCreateTable.getName();
       if (schema.getTable(newTblName) != null) {
         return DirectPlan.createDirectPlan(context, false, String.format("Table '%s' already exists.", newTblName));
       }
@@ -92,7 +101,7 @@ public class CreateTableHandler extends DefaultSqlHandler {
       log("Optiq Logical", relQuery);
 
       // Convert the query to Drill Logical plan and insert a writer operator on top.
-      DrillRel drel = convertToDrel(relQuery, schema, sqlCreateTable.getTableName());
+      DrillRel drel = convertToDrel(relQuery, drillSchema, newTblName);
       log("Drill Logical", drel);
       Prel prel = convertToPrel(drel);
       log("Drill Physical", prel);
@@ -102,7 +111,7 @@ public class CreateTableHandler extends DefaultSqlHandler {
 
       return plan;
     } catch(Exception e) {
-      logger.error("Failed to create table '{}'", sqlCreateTable.getTableName(), e);
+      logger.error("Failed to create table '{}'", sqlCreateTable.getName(), e);
       return DirectPlan.createDirectPlan(context, false, String.format("Error: %s", e.getMessage()));
     }
   }

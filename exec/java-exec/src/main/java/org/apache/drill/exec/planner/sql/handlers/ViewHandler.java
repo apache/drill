@@ -20,7 +20,7 @@ package org.apache.drill.exec.planner.sql.handlers;
 import java.io.IOException;
 import java.util.List;
 
-import com.google.common.base.Joiner;
+import net.hydromatic.optiq.SchemaPlus;
 import net.hydromatic.optiq.impl.ViewTable;
 import net.hydromatic.optiq.tools.Planner;
 import net.hydromatic.optiq.tools.RelConversionException;
@@ -61,7 +61,13 @@ public abstract class ViewHandler extends AbstractSqlHandler{
       SqlCreateView createView = unwrap(sqlNode, SqlCreateView.class);
 
       try {
-        AbstractSchema drillSchema = getMutableDrillSchema(context.getNewDefaultSchema());
+        SchemaPlus schema = findSchema(context.getRootSchema(), context.getNewDefaultSchema(), createView.getSchemaPath());
+        AbstractSchema drillSchema = getDrillSchema(schema);
+
+        String schemaPath = drillSchema.getFullSchemaName();
+        if (!drillSchema.isMutable())
+          return DirectPlan.createDirectPlan(context, false, String.format("Current schema '%s' is not a mutable schema. " +
+              "Can't create views in this schema.", schemaPath));
 
         String viewSql = createView.getQuery().toString();
 
@@ -75,12 +81,14 @@ public abstract class ViewHandler extends AbstractSqlHandler{
         if (viewFieldNames.size() > 0) {
           // number of fields match.
           if (viewFieldNames.size() != queryRowType.getFieldCount())
-            throw new Exception("View's field list and View's query field list have different counts.");
+            return DirectPlan.createDirectPlan(context, false,
+                "View's field list and View's query field list have different counts.");
 
           // make sure View's query field list has no "*"
           for(String field : queryRowType.getFieldNames()) {
             if (field.equals("*"))
-              throw new Exception("View's query field list has a '*', which is invalid when View's field list is specified.");
+              return DirectPlan.createDirectPlan(context, false,
+                  "View's query field list has a '*', which is invalid when View's field list is specified.");
           }
 
           queryRowType = new DrillFixedRelDataTypeImpl(planner.getTypeFactory(), viewFieldNames);
@@ -88,17 +96,15 @@ public abstract class ViewHandler extends AbstractSqlHandler{
 
         ViewTable viewTable = new DrillViewTable(viewSql, drillSchema.getSchemaPath(), queryRowType);
 
-        String schemaPath = Joiner.on(".").join(drillSchema.getSchemaPath());
-
         boolean replaced = context.getSession().getViewStore().addView(
-            schemaPath, createView.getViewName(), viewTable, createView.getReplace());
+            schemaPath, createView.getName(), viewTable, createView.getReplace());
 
         String summary = String.format("View '%s' %s successfully in '%s' schema",
-            createView.getViewName(), replaced ? "replaced" : "created", schemaPath);
+            createView.getName(), replaced ? "replaced" : "created", schemaPath);
 
         return DirectPlan.createDirectPlan(context, true, summary);
       } catch(Exception e) {
-        logger.error("Failed to create view '{}'", createView.getViewName(), e);
+        logger.error("Failed to create view '{}'", createView.getName(), e);
         return DirectPlan.createDirectPlan(context, false, String.format("Error: %s", e.getMessage()));
       }
     }
@@ -112,17 +118,23 @@ public abstract class ViewHandler extends AbstractSqlHandler{
 
     @Override
     public PhysicalPlan getPlan(SqlNode sqlNode) throws ValidationException, RelConversionException, IOException {
-      SqlDropView createView = unwrap(sqlNode, SqlDropView.class);
+      SqlDropView dropView = unwrap(sqlNode, SqlDropView.class);
 
       try {
-        AbstractSchema drillSchema = getMutableDrillSchema(context.getNewDefaultSchema());
-        String schemaPath = Joiner.on(".").join(drillSchema.getSchemaPath());
-        context.getSession().getViewStore().dropView(schemaPath, createView.getViewName());
+        SchemaPlus schema = findSchema(context.getRootSchema(), context.getNewDefaultSchema(), dropView.getSchemaPath());
+        AbstractSchema drillSchema = getDrillSchema(schema);
+
+        String schemaPath = drillSchema.getFullSchemaName();
+        if (!drillSchema.isMutable())
+          return DirectPlan.createDirectPlan(context, false, String.format("Schema '%s' is not a mutable schema. " +
+              "Views don't exist in this schema", schemaPath));
+
+        context.getSession().getViewStore().dropView(schemaPath, dropView.getName());
 
         return DirectPlan.createDirectPlan(context, true,
-            String.format("View '%s' deleted successfully from '%s' schema", createView.getViewName(), schemaPath));
+            String.format("View '%s' deleted successfully from '%s' schema", dropView.getName(), schemaPath));
       } catch(Exception e) {
-        logger.debug("Failed to delete view {}", createView.getViewName(), e);
+        logger.debug("Failed to delete view {}", dropView.getName(), e);
         return DirectPlan.createDirectPlan(context, false, String.format("Error: %s", e.getMessage()));
       }
     }

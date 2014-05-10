@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import net.hydromatic.linq4j.expressions.DefaultExpression;
@@ -54,6 +55,10 @@ public abstract class AbstractSchema implements Schema{
 
   public List<String> getSchemaPath() {
     return schemaPath;
+  }
+
+  public String getFullSchemaName() {
+    return Joiner.on(".").join(schemaPath);
   }
 
   /**

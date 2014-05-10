@@ -112,6 +112,12 @@ public class TestWriter extends BaseTestQuery {
     ctasHelper("/tmp/drilltest/complex2ctas", testQuery, 3);
   }
 
+  @Test
+  public void simpleCTASWithSchemaInTableName() throws Exception {
+    String testQuery = "CREATE TABLE dfs.tmp.`/test/simplectas2` AS SELECT * FROM cp.`employee.json`;";
+
+    ctasHelper("/tmp/drilltest/test/simplectas2", testQuery, 1);
+  }
 
   private void ctasHelper(String tableDir, String testQuery, int numExpectedFiles) throws Exception {
     Path tableLocation = new Path(tableDir);
