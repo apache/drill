@@ -373,12 +373,16 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
       ValueVector[] vectors = new ValueVector[batchGroupList.size() * 2];
       int i = 0;
       for (BatchGroup group : batchGroupList) {
-        vectors[i++] = group.getValueAccessorById(group.getValueVectorId(field.getAsSchemaPath()).getFieldId(),
-                field.getValueClass()).getValueVector();
+        vectors[i++] = group.getValueAccessorById(
+            field.getValueClass(),
+            group.getValueVectorId(field.getPath()).getFieldIds()
+                ).getValueVector();
         if (group.hasSecond()) {
           VectorContainer c = group.getSecondContainer();
-          vectors[i++] = c.getValueAccessorById(c.getValueVectorId(field.getAsSchemaPath()).getFieldId(),
-                  field.getValueClass()).getValueVector();
+          vectors[i++] = c.getValueAccessorById(
+              field.getValueClass(),
+              c.getValueVectorId(field.getPath()).getFieldIds()
+                  ).getValueVector();
         } else {
           vectors[i] = vectors[i - 1].getTransferPair().getTo(); //this vector should never be used. Just want to avoid having null elements in the hyper vector
           i++;

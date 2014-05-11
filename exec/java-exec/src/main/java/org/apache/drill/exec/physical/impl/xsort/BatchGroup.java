@@ -242,8 +242,8 @@ public class BatchGroup implements VectorAccessible {
   }
 
   @Override
-  public VectorWrapper<?> getValueAccessorById(int fieldId, Class<?> clazz) {
-    return currentContainer.getValueAccessorById(fieldId, clazz);
+  public VectorWrapper<?> getValueAccessorById(Class<?> clazz, int... ids) {
+    return currentContainer.getValueAccessorById(clazz, ids);
   }
 
   @Override

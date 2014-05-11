@@ -94,7 +94,7 @@ public class PartitionSenderRootExec implements RootExec {
 
     if (!ok) {
       stop();
-      
+
       return false;
     }
 
@@ -153,7 +153,7 @@ public class PartitionSenderRootExec implements RootExec {
   }
 
 
-  
+
   private void generatePartitionFunction() throws SchemaChangeException {
 
     LogicalExpression filterExpression = operator.getExpr();
@@ -166,7 +166,7 @@ public class PartitionSenderRootExec implements RootExec {
     }
 
     cg.addExpr(new ReturnValueExpression(expr));
-    
+
     try {
       Partitioner p = context.getImplementationClass(cg);
       p.setup(context, incoming, outgoing);
@@ -214,7 +214,7 @@ public class PartitionSenderRootExec implements RootExec {
                                           "outgoingVectors");
 
     // create 2d array and build initialization list.  For example:
-    //     outgoingVectors = new ValueVector[][] { 
+    //     outgoingVectors = new ValueVector[][] {
     //                              new ValueVector[] {vv1, vv2},
     //                              new ValueVector[] {vv3, vv4}
     //                       });
@@ -229,8 +229,8 @@ public class PartitionSenderRootExec implements RootExec {
         // declare outgoing value vector and assign it to the array
         JVar outVV = cg.declareVectorValueSetupAndMember("outgoing[" + batchId + "]",
                                                          new TypedFieldId(vv.getField().getType(),
-                                                                          fieldId,
-                                                                          false));
+                                                                          false,
+                                                                          fieldId));
         // add vv to initialization list (e.g. { vv1, vv2, vv3 } )
         outgoingVectorInitBatch.add(outVV);
         ++fieldId;
@@ -248,8 +248,8 @@ public class PartitionSenderRootExec implements RootExec {
     for (VectorWrapper<?> vvIn : incoming) {
       // declare incoming value vectors
       JVar incomingVV = cg.declareVectorValueSetupAndMember("incoming", new TypedFieldId(vvIn.getField().getType(),
-                                                                                         fieldId,
-                                                                                         vvIn.isHyper()));
+          vvIn.isHyper(),
+          fieldId));
 
       // generate the copyFrom() invocation with explicit cast to the appropriate type
       Class<?> vvType = TypeHelper.getValueVectorClass(vvIn.getField().getType().getMinorType(),
@@ -307,7 +307,7 @@ public class PartitionSenderRootExec implements RootExec {
       }
     }
   }
-  
+
   public void stop() {
     logger.debug("Partition sender stopping.");
     ok = false;

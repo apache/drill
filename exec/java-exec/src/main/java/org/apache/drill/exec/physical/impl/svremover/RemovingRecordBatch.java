@@ -86,7 +86,7 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
     default:
       throw new UnsupportedOperationException();
     }
-    
+
     container.buildSchema(SelectionVectorMode.NONE);
 
   }
@@ -156,12 +156,12 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
   public void cleanup(){
     super.cleanup();
   }
-  
+
   private class StraightCopier implements Copier{
 
     private List<TransferPair> pairs = Lists.newArrayList();
     private List<ValueVector> out = Lists.newArrayList();
-    
+
     @Override
     public void setupRemover(FragmentContext context, RecordBatch incoming, RecordBatch outgoing, VectorAllocator[] allocators){
       for(VectorWrapper<?> vv : incoming){
@@ -183,7 +183,7 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
     public List<ValueVector> getOut() {
       return out;
     }
-    
+
   }
 
   private Copier getStraightCopier(){
@@ -192,10 +192,10 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
     container.addCollection(copier.getOut());
     return copier;
   }
-  
+
   private Copier getGenerated2Copier() throws SchemaChangeException{
     Preconditions.checkArgument(incoming.getSchema().getSelectionVectorMode() == SelectionVectorMode.TWO_BYTE);
-    
+
     List<VectorAllocator> allocators = Lists.newArrayList();
     for(VectorWrapper<?> i : incoming){
       ValueVector v = TypeHelper.getNewVector(i.getField(), oContext.getAllocator());
@@ -218,12 +218,12 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
     Preconditions.checkArgument(incoming.getSchema().getSelectionVectorMode() == SelectionVectorMode.FOUR_BYTE);
     return getGenerated4Copier(incoming, context, oContext.getAllocator(), container, this);
   }
-  
+
   public static Copier getGenerated4Copier(RecordBatch batch, FragmentContext context, BufferAllocator allocator, VectorContainer container, RecordBatch outgoing) throws SchemaChangeException{
 
     List<VectorAllocator> allocators = Lists.newArrayList();
     for(VectorWrapper<?> i : batch){
-      
+
       ValueVector v = TypeHelper.getNewVector(i.getField(), allocator);
       container.add(v);
       allocators.add(getAllocator4(v));
@@ -239,20 +239,20 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
       throw new SchemaChangeException("Failure while attempting to load generated class", e);
     }
   }
-  
+
   public static void generateCopies(ClassGenerator g, VectorAccessible batch, boolean hyper){
     // we have parallel ids for each value vector so we don't actually have to deal with managing the ids at all.
     int fieldId = 0;
-    
+
     JExpression inIndex = JExpr.direct("inIndex");
     JExpression outIndex = JExpr.direct("outIndex");
     g.rotateBlock();
     for(VectorWrapper<?> vv : batch){
-      JVar inVV = g.declareVectorValueSetupAndMember("incoming", new TypedFieldId(vv.getField().getType(), fieldId, vv.isHyper()));
-      JVar outVV = g.declareVectorValueSetupAndMember("outgoing", new TypedFieldId(vv.getField().getType(), fieldId, false));
+      JVar inVV = g.declareVectorValueSetupAndMember("incoming", new TypedFieldId(vv.getField().getType(), vv.isHyper(), fieldId));
+      JVar outVV = g.declareVectorValueSetupAndMember("outgoing", new TypedFieldId(vv.getField().getType(), false, fieldId));
 
       if(hyper){
-        
+
         g.getEvalBlock()._if(
             outVV
             .invoke("copyFromSafe")
@@ -268,20 +268,20 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
       }else{
         g.getEvalBlock()._if(outVV.invoke("copyFromSafe").arg(inIndex).arg(outIndex).arg(inVV).not())._then()._return(JExpr.FALSE);
       }
-      
-      
+
+
       fieldId++;
     }
     g.rotateBlock();
     g.getEvalBlock()._return(JExpr.TRUE);
   }
-  
+
 
   @Override
   public WritableBatch getWritableBatch() {
     return WritableBatch.get(this);
   }
-  
+
   public static VectorAllocator getAllocator4(ValueVector outgoing){
     if(outgoing instanceof FixedWidthVector){
       return new FixedVectorAllocator((FixedWidthVector) outgoing);
@@ -291,6 +291,6 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
       throw new UnsupportedOperationException();
     }
   }
-  
-  
+
+
 }

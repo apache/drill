@@ -22,24 +22,34 @@ import io.netty.buffer.ByteBuf;
 import java.io.Closeable;
 
 import org.apache.drill.common.expression.FieldReference;
-import org.apache.drill.exec.proto.UserBitShared.FieldMetadata;
+import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
+import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
+import org.apache.drill.exec.vector.complex.reader.FieldReader;
 
 /**
  * ValueVectorTypes defines a set of template-generated classes which implement type-specific value vectors. The
  * template approach was chosen due to the lack of multiple inheritence. It is also important that all related logic be
  * as efficient as possible.
  */
-public interface ValueVector extends Closeable {
+public interface ValueVector extends Closeable, Iterable<ValueVector> {
+
 
   /**
    * Allocate new buffers. ValueVector implements logic to determine how much to allocate.
+   * @throws OutOfMemoryRuntimeException Thrown if no memory can be allocated.
    */
-  public void allocateNew();
+  public void allocateNew() throws OutOfMemoryRuntimeException;
+
+  /**
+   * Allocates new buffers. ValueVector implements logic to determine how much to allocate.
+   * @return Returns true if allocation was succesful.
+   */
+  public boolean allocateNewSafe();
 
   public int getBufferSize();
-  
+
   /**
    * Alternative to clear(). Allows use as closeable in try-with-resources.
    */
@@ -52,27 +62,26 @@ public interface ValueVector extends Closeable {
 
   /**
    * Get information about how this field is materialized.
-   * 
+   *
    * @return
    */
   public MaterializedField getField();
 
   /**
-   * Get a transfer pair to allow transferring this vectors data between this vector and a destination vector of the same
-   * type. Will also generate a second instance of this vector class that is connected through the TransferPair.
-   * 
-   * @return 
+   * Get a transfer pair to allow transferring this vectors data between this vector and a destination vector of the
+   * same type. Will also generate a second instance of this vector class that is connected through the TransferPair.
+   *
+   * @return
    */
   public TransferPair getTransferPair();
 
   public TransferPair makeTransferPair(ValueVector to);
-  
-  
+
   public TransferPair getTransferPair(FieldReference ref);
 
   /**
    * Given the current buffer allocation, return the maximum number of values that this buffer can contain.
-   * 
+   *
    * @return Maximum values buffer can contain. In the case of a Repeated field, this is the number of atoms, not
    *         repeated groups.
    */
@@ -80,37 +89,40 @@ public interface ValueVector extends Closeable {
 
   /**
    * Get Accessor to read value vector data.
-   * 
+   *
    * @return
    */
   public abstract Accessor getAccessor();
 
   /**
-   * Return the underlying buffers associated with this vector. Note that this doesn't impact the
-   * reference counts for this buffer so it only should be used for in-context access. Also note
-   * that this buffer changes regularly thus external classes shouldn't hold a reference to
-   * it (unless they change it).
+   * Return the underlying buffers associated with this vector. Note that this doesn't impact the reference counts for
+   * this buffer so it only should be used for in-context access. Also note that this buffer changes regularly thus
+   * external classes shouldn't hold a reference to it (unless they change it).
    *
    * @return The underlying ByteBuf.
    */
   public abstract ByteBuf[] getBuffers();
-  
+
   /**
-   * Load the data provided in the buffer.  Typically used when deserializing from the wire.
-   * @param metadata Metadata used to decode the incoming buffer.
-   * @param buffer The buffer that contains the ValueVector.
+   * Load the data provided in the buffer. Typically used when deserializing from the wire.
+   *
+   * @param metadata
+   *          Metadata used to decode the incoming buffer.
+   * @param buffer
+   *          The buffer that contains the ValueVector.
    */
-  public void load(FieldMetadata metadata, ByteBuf buffer);
-  
+  public void load(SerializedField metadata, ByteBuf buffer);
+
   /**
-   * Get the metadata for this field.  Used in serialization
+   * Get the metadata for this field. Used in serialization
+   *
    * @return FieldMetadata for this field.
    */
-  public FieldMetadata getMetadata();
-  
+  public SerializedField getMetadata();
+
   /**
    * Get a Mutator to update this vectors data.
-   * 
+   *
    * @return
    */
   public abstract Mutator getMutator();
@@ -125,23 +137,25 @@ public interface ValueVector extends Closeable {
 
     /**
      * Get the Java Object representation of the element at the specified position. Useful for testing.
-     * 
+     *
      * @param index
      *          Index of the value to get
      */
     public abstract Object getObject(int index);
 
     public int getValueCount();
-    
+
     public boolean isNull(int index);
 
     public void reset();
+
+    public FieldReader getReader();
   }
 
   public interface Mutator {
     /**
      * Set the top number values (optional/required) or number of value groupings (repeated) in this vector.
-     * 
+     *
      * @param valueCount
      */
     public void setValueCount(int valueCount);
@@ -150,4 +164,5 @@ public interface ValueVector extends Closeable {
 
     public void generateTestData(int values);
   }
+
 }

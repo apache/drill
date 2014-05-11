@@ -451,7 +451,7 @@ public class TestCastFunctions extends PopUnitTestBase{
 
       for (int i = 0; i<result.length; i++ ) {
         for (int j = 0; j<result[0].length; j++) {
-          assertEquals(String.format("Column %s at row %s have wrong result",  j, i), result[i][j], expected[i][j]);
+          assertEquals(String.format("Column %s at row %s have wrong result",  j, i), result[i][j].toString(), expected[i][j]);
         }
       }
       batchLoader.clear();

@@ -28,12 +28,12 @@ import org.apache.drill.exec.record.selection.SelectionVector4;
 
 public class InternalBatch implements Iterable<VectorWrapper<?>>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(InternalBatch.class);
-  
+
   private final VectorContainer container;
   private final BatchSchema schema;
   private final SelectionVector2 sv2;
   private final SelectionVector4 sv4;
-  
+
   public InternalBatch(RecordBatch incoming){
     switch(incoming.getSchema().getSelectionVectorMode()){
     case FOUR_BYTE:
@@ -42,7 +42,7 @@ public class InternalBatch implements Iterable<VectorWrapper<?>>{
       break;
     case TWO_BYTE:
       this.sv4 = null;
-      this.sv2 = incoming.getSelectionVector2().clone(); 
+      this.sv2 = incoming.getSelectionVector2().clone();
       break;
     default:
       this.sv4 = null;
@@ -74,9 +74,9 @@ public class InternalBatch implements Iterable<VectorWrapper<?>>{
     if(sv4 != null) sv4.clear();
     container.clear();
   }
-  
-  public VectorWrapper<?> getValueAccessorById(int fieldId, Class<?> clazz){
-    return container.getValueAccessorById(fieldId, clazz);
+
+  public VectorWrapper<?> getValueAccessorById(Class<?> clazz, int[] fieldIds){
+    return container.getValueAccessorById(clazz, fieldIds);
   }
-  
+
 }

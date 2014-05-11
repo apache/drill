@@ -15,9 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+<@pp.dropOutputFile />
+
 <#list drillOI.map as entry>
-
-
 <@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/hive/Drill${entry.holder}ObjectInspector.java" />
 
 <#include "/@includes/license.ftl" />

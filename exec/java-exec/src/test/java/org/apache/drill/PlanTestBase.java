@@ -210,9 +210,10 @@ public class PlanTestBase extends BaseTestQuery {
 
       loader.load(b.getHeader().getDef(), b.getData());
 
-      VectorWrapper<?> vw = loader.getValueAccessorById(loader
-          .getValueVectorId(SchemaPath.getSimplePath(columnName)).getFieldId(),
-          NullableVarCharVector.class);
+      VectorWrapper<?> vw = loader.getValueAccessorById(
+          NullableVarCharVector.class, //
+          loader.getValueVectorId(SchemaPath.getSimplePath(columnName)).getFieldIds() //
+          );
 
       System.out.println(vw.getValueVector().getField().toExpr());
       ValueVector vv = vw.getValueVector();

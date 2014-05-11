@@ -74,7 +74,7 @@ public class TestSimpleExternalSort extends PopUnitTestBase {
         batchCount++;
         RecordBatchLoader loader = new RecordBatchLoader(bit1.getContext().getAllocator());
         loader.load(b.getHeader().getDef(),b.getData());
-        BigIntVector c1 = (BigIntVector) loader.getValueAccessorById(loader.getValueVectorId(new SchemaPath("blue", ExpressionPosition.UNKNOWN)).getFieldId(), BigIntVector.class).getValueVector();
+        BigIntVector c1 = (BigIntVector) loader.getValueAccessorById(BigIntVector.class, loader.getValueVectorId(new SchemaPath("blue", ExpressionPosition.UNKNOWN)).getFieldIds()).getValueVector();
 
 
         BigIntVector.Accessor a1 = c1.getAccessor();
@@ -127,7 +127,7 @@ public class TestSimpleExternalSort extends PopUnitTestBase {
         batchCount++;
         RecordBatchLoader loader = new RecordBatchLoader(bit1.getContext().getAllocator());
         loader.load(b.getHeader().getDef(),b.getData());
-        BigIntVector c1 = (BigIntVector) loader.getValueAccessorById(loader.getValueVectorId(new SchemaPath("blue", ExpressionPosition.UNKNOWN)).getFieldId(), BigIntVector.class).getValueVector();
+        BigIntVector c1 = (BigIntVector) loader.getValueAccessorById(BigIntVector.class, loader.getValueVectorId(new SchemaPath("blue", ExpressionPosition.UNKNOWN)).getFieldIds()).getValueVector();
 
 
         BigIntVector.Accessor a1 = c1.getAccessor();
@@ -177,7 +177,7 @@ public class TestSimpleExternalSort extends PopUnitTestBase {
         batchCount++;
         RecordBatchLoader loader = new RecordBatchLoader(bit1.getContext().getAllocator());
         loader.load(b.getHeader().getDef(),b.getData());
-        BigIntVector c1 = (BigIntVector) loader.getValueAccessorById(loader.getValueVectorId(new SchemaPath("blue", ExpressionPosition.UNKNOWN)).getFieldId(), BigIntVector.class).getValueVector();
+        BigIntVector c1 = (BigIntVector) loader.getValueAccessorById(BigIntVector.class, loader.getValueVectorId(new SchemaPath("blue", ExpressionPosition.UNKNOWN)).getFieldIds()).getValueVector();
 
 
         BigIntVector.Accessor a1 = c1.getAccessor();

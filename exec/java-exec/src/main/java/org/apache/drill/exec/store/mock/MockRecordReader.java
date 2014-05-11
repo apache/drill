@@ -76,7 +76,7 @@ public class MockRecordReader implements RecordReader {
 
       for (int i = 0; i < config.getTypes().length; i++) {
         MajorType type = config.getTypes()[i].getMajorType();
-        valueVectors[i] = output.addField(getVector(config.getTypes()[i].getName(), type, batchRecordCount), TypeHelper.getValueVectorClass(type.getMinorType(), type.getMode()));
+        valueVectors[i] = output.addField(getVector(config.getTypes()[i].getName(), type, batchRecordCount), (Class<? extends ValueVector>) TypeHelper.getValueVectorClass(type.getMinorType(), type.getMode()));
       }
       output.setNewSchema();
     } catch (SchemaChangeException e) {

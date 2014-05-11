@@ -41,8 +41,6 @@ import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.proto.SchemaDefProtos.FieldDef;
-import org.apache.drill.exec.proto.SchemaDefProtos.NamePart;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -60,8 +58,7 @@ public class ExpressionTreeMaterializerTest extends ExecTest {
   FunctionImplementationRegistry registry = new FunctionImplementationRegistry(c);
 
   private MaterializedField getField(int fieldId, String name, MajorType type) {
-    return new MaterializedField(FieldDef.newBuilder().setMajorType(type).addName(NamePart.newBuilder().setName(name))
-        .build());
+    return MaterializedField.create(SchemaPath.getSimplePath(name), type);
   }
 
   @Test

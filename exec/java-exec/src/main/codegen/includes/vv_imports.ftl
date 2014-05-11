@@ -25,13 +25,21 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.drill.exec.memory.AccountingByteBuf;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.SchemaDefProtos;
-import org.apache.drill.exec.proto.UserBitShared.FieldMetadata;
+import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.*;
 import org.apache.drill.exec.vector.*;
 import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.types.TypeProtos.*;
 import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.vector.complex.*;
+import org.apache.drill.exec.vector.complex.reader.*;
+import org.apache.drill.exec.vector.complex.impl.*;
+import org.apache.drill.exec.vector.complex.writer.*;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
+
+import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
 
 import com.sun.codemodel.JType;
 import com.sun.codemodel.JCodeModel;
@@ -49,6 +57,11 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+
+import org.joda.time.DateTime;
+import org.joda.time.Period;
+
+import org.apache.hadoop.io.Text;
 
 
 

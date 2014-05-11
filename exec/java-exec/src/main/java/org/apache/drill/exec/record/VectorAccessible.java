@@ -28,7 +28,7 @@ import org.apache.drill.exec.vector.ValueVector;
  * To change this template use File | Settings | File Templates.
  */
 public interface VectorAccessible extends Iterable<VectorWrapper<?>> {
-  public VectorWrapper<?> getValueAccessorById(int fieldId, Class<?> clazz);
+  public VectorWrapper<?> getValueAccessorById(Class<?> clazz, int... fieldIds);
   public TypedFieldId getValueVectorId(SchemaPath path);
   public BatchSchema getSchema();
   public int getRecordCount();

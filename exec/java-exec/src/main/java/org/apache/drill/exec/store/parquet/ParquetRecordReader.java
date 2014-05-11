@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import com.google.common.base.Preconditions;
+
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.ExpressionPosition;
@@ -41,10 +42,6 @@ import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.vector.*;
-import org.apache.drill.exec.vector.NullableVarBinaryVector;
-import org.apache.drill.exec.vector.NullableVarCharVector;
-import org.apache.drill.exec.vector.VarBinaryVector;
-import org.apache.drill.exec.vector.VarCharVector;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
@@ -263,7 +260,7 @@ public class ParquetRecordReader implements RecordReader {
 
         //convertedTypes.put()
         fieldFixedLength = column.getType() != PrimitiveType.PrimitiveTypeName.BINARY;
-        v = output.addField(field, TypeHelper.getValueVectorClass(type.getMinorType(), type.getMode()));
+        v = output.addField(field, (Class<? extends ValueVector>) TypeHelper.getValueVectorClass(type.getMinorType(), type.getMode()));
         if (column.getType() != PrimitiveType.PrimitiveTypeName.BINARY) {
           createFixedColumnReader(fieldFixedLength, column, columnChunkMetaData, recordsPerBatch, v,
             convertedType);

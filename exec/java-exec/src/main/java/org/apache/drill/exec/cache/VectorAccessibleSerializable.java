@@ -17,26 +17,34 @@
  */
 package org.apache.drill.exec.cache;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.codahale.metrics.MetricRegistry;
-import com.codahale.metrics.Timer;
-import com.hazelcast.nio.ObjectDataInput;
-import com.hazelcast.nio.ObjectDataOutput;
 import io.netty.buffer.ByteBuf;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.List;
+
 import org.apache.drill.common.util.DataInputInputStream;
 import org.apache.drill.common.util.DataOutputOutputStream;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.metrics.DrillMetrics;
 import org.apache.drill.exec.proto.UserBitShared;
-import org.apache.drill.exec.record.*;
+import org.apache.drill.exec.proto.UserBitShared.SerializedField;
+import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.VectorAccessible;
+import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.proto.UserBitShared.FieldMetadata;
 
-import java.io.*;
-import java.util.List;
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Timer;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.hazelcast.nio.ObjectDataInput;
+import com.hazelcast.nio.ObjectDataOutput;
 
 /**
  * A wrapper around a VectorAccessible. Will serialize a VectorAccessible and write to an OutputStream, or can read
@@ -109,10 +117,10 @@ public class VectorAccessibleSerializable implements DrillSerializable {
       svMode = BatchSchema.SelectionVectorMode.TWO_BYTE;
     }
     List<ValueVector> vectorList = Lists.newArrayList();
-    List<FieldMetadata> fieldList = batchDef.getFieldList();
-    for (FieldMetadata metaData : fieldList) {
+    List<SerializedField> fieldList = batchDef.getFieldList();
+    for (SerializedField metaData : fieldList) {
       int dataLength = metaData.getBufferLength();
-      MaterializedField field = MaterializedField.create(metaData.getDef());
+      MaterializedField field = MaterializedField.create(metaData);
       ByteBuf buf = allocator.buffer(dataLength);
       buf.writeBytes(input, dataLength);
       ValueVector vector = TypeHelper.getNewVector(field, allocator);
@@ -135,7 +143,7 @@ public class VectorAccessibleSerializable implements DrillSerializable {
     retain = true;
     writeToStream(output);
   }
-  
+
 
   /**
    * Serializes the VectorAccessible va and writes it to an output stream
@@ -203,7 +211,7 @@ public class VectorAccessibleSerializable implements DrillSerializable {
   public VectorAccessible get() {
     return va;
   }
-  
+
   public SelectionVector2 getSv2() {
     return sv2;
   }

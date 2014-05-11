@@ -23,13 +23,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import javax.jdo.metadata.FieldMetadata;
+
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.proto.SchemaDefProtos.FieldDef;
-import org.apache.drill.exec.proto.UserBitShared.FieldMetadata;
 import org.apache.drill.exec.proto.UserBitShared.RecordBatchDef;
+import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.vector.ValueVector;
 
 import com.google.common.collect.Maps;
@@ -63,25 +64,24 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
     boolean schemaChanged = schema == null;
 //    logger.info("Load, ThreadID: {}", Thread.currentThread().getId(), new RuntimeException("For Stack Trace Only"));
 //    System.out.println("Load, ThreadId: " + Thread.currentThread().getId());
-    Map<FieldDef, ValueVector> oldFields = Maps.newHashMap();
+    Map<MaterializedField, ValueVector> oldFields = Maps.newHashMap();
     for(VectorWrapper<?> w : container){
       ValueVector v = w.getValueVector();
-      oldFields.put(v.getField().getDef(), v);
+      oldFields.put(v.getField(), v);
     }
 
     VectorContainer newVectors = new VectorContainer();
 
-    List<FieldMetadata> fields = def.getFieldList();
+    List<SerializedField> fields = def.getFieldList();
 
     int bufOffset = 0;
-    for (FieldMetadata fmd : fields) {
-      FieldDef fieldDef = fmd.getDef();
+    for (SerializedField fmd : fields) {
+      MaterializedField fieldDef = MaterializedField.create(fmd);
       ValueVector v = oldFields.remove(fieldDef);
       if(v == null) {
         // if we arrive here, we didn't have a matching vector.
         schemaChanged = true;
-        MaterializedField m = new MaterializedField(fieldDef);
-        v = TypeHelper.getNewVector(m, allocator);
+        v = TypeHelper.getNewVector(fieldDef, allocator);
       }
       if (fmd.getValueCount() == 0){
         v.clear();
@@ -136,8 +136,8 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
     return valueCount;
   }
 
-  public VectorWrapper<?> getValueAccessorById(int fieldId, Class<?> clazz){
-    return container.getValueAccessorById(fieldId, clazz);
+  public VectorWrapper<?> getValueAccessorById(Class<?> clazz, int... ids){
+    return container.getValueAccessorById(clazz, ids);
   }
 
   public WritableBatch getWritableBatch(){

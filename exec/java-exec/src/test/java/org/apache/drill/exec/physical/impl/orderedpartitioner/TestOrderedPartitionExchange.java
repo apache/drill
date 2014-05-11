@@ -81,12 +81,12 @@ public class TestOrderedPartitionExchange extends PopUnitTestBase {
           count += rows;
           RecordBatchLoader loader = new RecordBatchLoader(new BootStrapContext(DrillConfig.create()).getAllocator());
           loader.load(b.getHeader().getDef(), b.getData());
-          BigIntVector vv1 = (BigIntVector)loader.getValueAccessorById(loader.getValueVectorId(
-                  new SchemaPath("col1", ExpressionPosition.UNKNOWN)).getFieldId(), BigIntVector.class).getValueVector();
-          Float8Vector vv2 = (Float8Vector)loader.getValueAccessorById(loader.getValueVectorId(
-                  new SchemaPath("col2", ExpressionPosition.UNKNOWN)).getFieldId(), Float8Vector.class).getValueVector();
-          IntVector pVector = (IntVector)loader.getValueAccessorById(loader.getValueVectorId(
-                  new SchemaPath("partition", ExpressionPosition.UNKNOWN)).getFieldId(), IntVector.class).getValueVector();
+          BigIntVector vv1 = (BigIntVector)loader.getValueAccessorById(BigIntVector.class, loader.getValueVectorId(
+                  new SchemaPath("col1", ExpressionPosition.UNKNOWN)).getFieldIds()).getValueVector();
+          Float8Vector vv2 = (Float8Vector)loader.getValueAccessorById(Float8Vector.class, loader.getValueVectorId(
+                  new SchemaPath("col2", ExpressionPosition.UNKNOWN)).getFieldIds()).getValueVector();
+          IntVector pVector = (IntVector)loader.getValueAccessorById(IntVector.class, loader.getValueVectorId(
+                  new SchemaPath("partition", ExpressionPosition.UNKNOWN)).getFieldIds()).getValueVector();
           long previous1 = Long.MIN_VALUE;
           double previous2 = Double.MIN_VALUE;
           int partPrevious = -1;

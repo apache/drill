@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+<@pp.dropOutputFile />
 <@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/hive/ObjectInspectorHelper.java" />
 
 <#include "/@includes/license.ftl" />

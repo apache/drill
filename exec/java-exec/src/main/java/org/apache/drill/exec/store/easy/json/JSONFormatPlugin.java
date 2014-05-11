@@ -44,15 +44,15 @@ public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
   public JSONFormatPlugin(String name, DrillbitContext context, DrillFileSystem fs, StoragePluginConfig storageConfig) {
     this(name, context, fs, storageConfig, new JSONFormatConfig());
   }
-  
+
   public JSONFormatPlugin(String name, DrillbitContext context, DrillFileSystem fs, StoragePluginConfig config, JSONFormatConfig formatPluginConfig) {
     super(name, context, fs, config, formatPluginConfig, true, false, false, false, Lists.newArrayList("json"), "json");
   }
-  
+
   @Override
-  public RecordReader getRecordReader(FragmentContext context, FileWork fileWork, 
+  public RecordReader getRecordReader(FragmentContext context, FileWork fileWork,
       List<SchemaPath> columns) throws ExecutionSetupException {
-    return new JSONRecordReader(context, fileWork.getPath(), this.getFileSystem().getUnderlying(), columns);
+    return new JSONRecordReader2(context, fileWork.getPath(), this.getFileSystem().getUnderlying(), columns);
   }
 
   @Override
@@ -78,6 +78,6 @@ public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
         return true;
       return false;
     }
-    
+
   }
 }

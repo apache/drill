@@ -26,6 +26,8 @@ import java.lang.UnsupportedOperationException;
 
 <#assign className = "Nullable${minor.class}Vector" />
 <#assign valuesName = "${minor.class}Vector" />
+<#assign friendlyType = (minor.friendlyType!minor.boxedType!type.boxedType) />
+
 <@pp.changeOutputFile name="/org/apache/drill/exec/vector/${className}.java" />
 
 <#include "/@includes/license.ftl" />
@@ -53,7 +55,7 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
   public ${className}(MaterializedField field, BufferAllocator allocator) {
     super(field, allocator);
     this.bits = new BitVector(null, allocator);
-    this.values = new ${minor.class}Vector(null, allocator);
+    this.values = new ${minor.class}Vector(field, allocator);
   }
   
   public int getValueCapacity(){
@@ -84,21 +86,27 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
 
   <#if type.major == "VarLen">
   @Override
-  public FieldMetadata getMetadata() {
-    return FieldMetadata.newBuilder()
-             .setDef(getField().getDef())
+  public SerializedField getMetadata() {
+    return getMetadataBuilder()
              .setValueCount(valueCount)
              .setVarByteLength(values.getVarByteLength())
              .setBufferLength(getBufferSize())
              .build();
   }
 
-  @Override
   public void allocateNew() {
-    values.allocateNew();
-    bits.allocateNew();
+    if(!allocateNewSafe()){
+      throw new OutOfMemoryRuntimeException("Failure while allocating buffer.");
+    }
+  }
+  
+  @Override
+  public boolean allocateNewSafe() {
+    if(!values.allocateNewSafe()) return false;
+    if(!bits.allocateNewSafe()) return false;
     mutator.reset();
     accessor.reset();
+    return true;
   }
 
   @Override
@@ -123,8 +131,8 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
   }
   
   @Override
-  public void load(FieldMetadata metadata, ByteBuf buffer) {
-    assert this.field.getDef().equals(metadata.getDef());
+  public void load(SerializedField metadata, ByteBuf buffer) {
+    assert this.field.matches(metadata);
     int loaded = load(metadata.getBufferLength(), metadata.getValueCount(), buffer);
     assert metadata.getBufferLength() == loaded;
   }
@@ -136,9 +144,8 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
 
   <#else>
   @Override
-  public FieldMetadata getMetadata() {
-    return FieldMetadata.newBuilder()
-             .setDef(getField().getDef())
+  public SerializedField getMetadata() {
+    return getMetadataBuilder()
              .setValueCount(valueCount)
              .setBufferLength(getBufferSize())
              .build();
@@ -150,6 +157,16 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
     bits.allocateNew();
     mutator.reset();
     accessor.reset();
+  }
+  
+
+  @Override
+  public boolean allocateNewSafe() {
+    if(!values.allocateNewSafe()) return false;
+    if(!bits.allocateNewSafe()) return false;
+    mutator.reset();
+    accessor.reset();
+    return true;
   }
 
   @Override
@@ -173,8 +190,8 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
   }
   
   @Override
-  public void load(FieldMetadata metadata, ByteBuf buffer) {
-    assert this.field.getDef().equals(metadata.getDef());
+  public void load(SerializedField metadata, ByteBuf buffer) {
+    assert this.field.matches(metadata);
     int loaded = load(metadata.getValueCount(), buffer);
     assert metadata.getBufferLength() == loaded;
   }
@@ -235,8 +252,8 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
     }
 
     @Override
-    public void copyValue(int fromIndex, int toIndex) {
-      to.copyFrom(fromIndex, toIndex, Nullable${minor.class}Vector.this);
+    public boolean copyValueSafe(int fromIndex, int toIndex) {
+      return to.copyFromSafe(fromIndex, toIndex, Nullable${minor.class}Vector.this);
     }
   }
   
@@ -261,7 +278,19 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
   protected void copyFrom(int fromIndex, int thisIndex, Nullable${minor.class}Vector from){
     if (!from.getAccessor().isNull(fromIndex)) {
     mutator.set(thisIndex, from.getAccessor().get(fromIndex));
-}
+    }
+  }
+
+  public boolean copyFromSafe(int fromIndex, int thisIndex, ${minor.class}Vector from){
+    boolean success = values.copyFromSafe(fromIndex, thisIndex, from);
+    bits.getMutator().set(thisIndex, 1);
+    
+    <#if type.major == "VarLen">
+    if (success) {
+      mutator.lastSet = thisIndex;
+    }
+    </#if>
+    return success;    
   }
   
   public boolean copyFromSafe(int fromIndex, int thisIndex, Nullable${minor.class}Vector from){
@@ -277,6 +306,11 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
   
   public final class Accessor implements ValueVector.Accessor{
 
+    final FieldReader reader = new Nullable${minor.class}ReaderImpl(Nullable${minor.class}Vector.this);
+    
+    public FieldReader getReader(){
+      return reader;
+    }
     /**
      * Get the element at the specified position.
      *
@@ -308,22 +342,12 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
     }
 
     @Override
-    public Object getObject(int index) {
-
+    public ${friendlyType} getObject(int index) {
       if (isNull(index)) {
           return null;
+      }else{
+        return values.getAccessor().getObject(index);
       }
-      <#if minor.class == "Decimal9" || minor.class == "Decimal18">
-      // Get the value and construct a BigDecimal Object
-      BigInteger value = BigInteger.valueOf(((${type.boxedType})values.getAccessor().get(index)).${type.javaType}Value());
-      return new BigDecimal(value, getField().getScale());
-      <#elseif minor.class == "Decimal38Sparse" || minor.class == "Decimal28Sparse">
-      return org.apache.drill.common.util.DecimalUtility.getBigDecimalFromSparse(values.getData(), index * ${type.width}, ${minor.nDecimalDigits}, getField().getScale());
-      <#elseif minor.class == "Decimal38Dense" || minor.class == "Decimal28Dense">
-      return org.apache.drill.common.util.DecimalUtility.getBigDecimalFromDense(values.getData(), index * ${type.width}, ${minor.nDecimalDigits}, getField().getScale(), ${minor.maxPrecisionDigits}, ${type.width});
-      <#else>
-      return values.getAccessor().getObject(index);
-      </#if>
     }
 
     public int getValueCount(){
@@ -372,7 +396,7 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
       throw new UnsupportedOperationException();
       <#else>
       for (int i = lastSet + 1; i < index; i++) {
-        values.getMutator().set(i, new byte[]{});
+        if(!values.getMutator().setSafe(i, new byte[]{})) return false;
       }
       boolean b1 = bits.getMutator().setSafe(index, 1);
       boolean b2 = values.getMutator().setSafe(index, value, start, length);
@@ -422,7 +446,7 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
 
       <#if type.major == "VarLen">
       for (int i = lastSet + 1; i < index; i++) {
-        values.getMutator().set(i, new byte[]{});
+        if(!values.getMutator().setSafe(i, new byte[]{})) return false;
       }
       </#if>
       boolean b1 = bits.getMutator().setSafe(index, 1);
@@ -437,6 +461,25 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
 
     }
 
+    public boolean setSafe(int index, ${minor.class}Holder value) {
+
+      <#if type.major == "VarLen">
+      for (int i = lastSet + 1; i < index; i++) {
+        if(!values.getMutator().setSafe(i, new byte[]{})) return false;
+      }
+      </#if>
+      boolean b1 = bits.getMutator().setSafe(index, 1);
+      boolean b2 = values.getMutator().setSafe(index, value);
+      if(b1 && b2){
+        setCount++;
+        <#if type.major == "VarLen">lastSet = index;</#if>
+        return true;
+      }else{
+        return false;
+      }
+
+    }
+    
     <#if !(type.major == "VarLen" || minor.class == "Decimal28Sparse" || minor.class == "Decimal38Sparse" || minor.class == "Decimal28Dense" || minor.class == "Decimal38Dense" || minor.class == "TimeStampTZ" || minor.class == "Interval" || minor.class == "IntervalDay")>
       public boolean setSafe(int index, ${minor.javaType!type.javaType} value) {
         <#if type.major == "VarLen">

@@ -19,6 +19,9 @@
 <#list vv.types as type>
 <#list type.minor as minor>
 
+<#assign friendlyType = (minor.friendlyType!minor.boxedType!type.boxedType) />
+
+
 <#if type.major == "VarLen">
 <@pp.changeOutputFile name="/org/apache/drill/exec/vector/${minor.class}Vector.java" />
 
@@ -81,12 +84,11 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
   }
   
   @Override
-  public FieldMetadata getMetadata() {
-    return FieldMetadata.newBuilder()
-             .setDef(getField().getDef())
-             .setValueCount(valueCount)
-             .setVarByteLength(getVarByteLength())
-             .setBufferLength(getBufferSize())
+  public SerializedField getMetadata() {
+    return getMetadataBuilder() //
+             .setValueCount(valueCount) //
+             .setVarByteLength(getVarByteLength()) //
+             .setBufferLength(getBufferSize()) //
              .build();
   }
 
@@ -103,8 +105,8 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
   }
   
   @Override
-  public void load(FieldMetadata metadata, ByteBuf buffer) {
-    assert this.field.getDef().equals(metadata.getDef());
+  public void load(SerializedField metadata, ByteBuf buffer) {
+    assert this.field.matches(metadata);
     int loaded = load(metadata.getBufferLength(), metadata.getValueCount(), buffer);
     assert metadata.getBufferLength() == loaded;
   }
@@ -206,13 +208,19 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     }
     
     @Override
-    public void copyValue(int fromIndex, int toIndex) {
-      to.copyFrom(fromIndex, toIndex, ${minor.class}Vector.this);
+    public boolean copyValueSafe(int fromIndex, int toIndex) {
+      return to.copyFromSafe(fromIndex, toIndex, ${minor.class}Vector.this);
     }
   }
 
-  @Override
   public void allocateNew() {
+    if(!allocateNewSafe()){
+      throw new OutOfMemoryRuntimeException("Failure while allocating buffer.");
+    }
+  }
+  
+  @Override
+  public boolean allocateNewSafe() {
     clear();
     if (allocationMonitor > 5) {
       allocationTotalByteCount = Math.max(1, (int) (allocationTotalByteCount * 0.9));
@@ -222,9 +230,16 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       allocationMonitor = 0;
     }
     data = allocator.buffer(allocationTotalByteCount);
+    if(data == null){
+      return false;
+    }
+    
     data.readerIndex(0);
-    offsetVector.allocateNew();
+    if(!offsetVector.allocateNewSafe()){
+      return false;
+    }
     offsetVector.getMutator().set(0,0);
+    return true;
   }
   
   public void allocateNew(int totalBytes, int valueCount) {
@@ -245,6 +260,11 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
   }
   
   public final class Accessor extends BaseValueVector.BaseAccessor{
+    final FieldReader reader = new ${minor.class}ReaderImpl(${minor.class}Vector.this);
+    
+    public FieldReader getReader(){
+      return reader;
+    }
     
     public byte[] get(int index) {
       assert index >= 0;
@@ -262,7 +282,8 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       holder.buffer = data;
     }
     
-    void get(int index, Nullable${minor.class}Holder holder){
+    public void get(int index, Nullable${minor.class}Holder holder){
+      holder.isSet = 1;
       holder.start = offsetVector.getAccessor().get(index);
       holder.end = offsetVector.getAccessor().get(index + 1);
       holder.buffer = data;
@@ -271,17 +292,19 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
 
     <#switch minor.class>
     <#case "VarChar">
-    public Object getObject(int index) {
-      return new String(get(index), Charsets.UTF_8);
+    public ${friendlyType} getObject(int index) {
+      Text text = new Text();
+      text.set(get(index));
+      return text;
     }
     <#break>
     <#case "Var16Char">
-    public Object getObject(int index) {
+    public ${friendlyType} getObject(int index) {
       return new String(get(index), Charsets.UTF_16);
     }
     <#break>
     <#default>
-    public Object getObject(int index) {
+    public ${friendlyType} getObject(int index) {
       return get(index);
     }
 

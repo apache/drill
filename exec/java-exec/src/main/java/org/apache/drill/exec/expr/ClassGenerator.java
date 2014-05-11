@@ -20,7 +20,6 @@ package org.apache.drill.exec.expr;
 import static org.apache.drill.exec.compile.sig.GeneratorMapping.GM;
 
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +40,7 @@ import org.apache.drill.exec.record.TypedFieldId;
 import com.beust.jcommander.internal.Lists;
 import com.beust.jcommander.internal.Maps;
 import com.google.common.base.Preconditions;
+import com.sun.codemodel.JArray;
 import com.sun.codemodel.JBlock;
 import com.sun.codemodel.JClass;
 import com.sun.codemodel.JClassAlreadyExistsException;
@@ -49,20 +49,21 @@ import com.sun.codemodel.JDefinedClass;
 import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JExpression;
 import com.sun.codemodel.JFieldRef;
+import com.sun.codemodel.JInvocation;
 import com.sun.codemodel.JMethod;
 import com.sun.codemodel.JMod;
 import com.sun.codemodel.JType;
 import com.sun.codemodel.JVar;
 
 public class ClassGenerator<T>{
-  
+
   public static final GeneratorMapping DEFAULT_SCALAR_MAP = GM("doSetup", "doEval", null, null);
   public static final GeneratorMapping DEFAULT_CONSTANT_MAP = GM("doSetup", "doSetup", null, null);
-  
-  
+
+
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ClassGenerator.class);
   public static enum BlockType {SETUP, EVAL, RESET, CLEANUP};
-  
+
   private final SignatureHolder sig;
   private final EvaluationVisitor evaluationVisitor;
   private final Map<ValueVectorSetup, JVar> vvDeclaration = Maps.newHashMap();
@@ -74,7 +75,7 @@ public class ClassGenerator<T>{
   public final JDefinedClass clazz;
   private final LinkedList<JBlock>[] blocks;
   private final JCodeModel model;
-  
+
   private int index = 0;
   private MappingSet mappings;
 
@@ -82,7 +83,7 @@ public class ClassGenerator<T>{
     return new MappingSet("inIndex", "outIndex", DEFAULT_CONSTANT_MAP, DEFAULT_SCALAR_MAP);
   }
 
-  
+
   @SuppressWarnings("unchecked")
   ClassGenerator(CodeGenerator<T> codeGenerator, MappingSet mappingSet, SignatureHolder signature, EvaluationVisitor eval, JDefinedClass clazz, JCodeModel model) throws JClassAlreadyExistsException {
     this.codeGenerator = codeGenerator;
@@ -96,7 +97,7 @@ public class ClassGenerator<T>{
       blocks[i] = Lists.newLinkedList();
     }
     rotateBlock();
-    
+
     for(SignatureHolder child : signature.getChildHolders()){
       String innerClassName = child.getSignatureClass().getSimpleName();
       JDefinedClass innerClazz = clazz._class(Modifier.FINAL + Modifier.PRIVATE, innerClassName);
@@ -109,15 +110,15 @@ public class ClassGenerator<T>{
     Preconditions.checkNotNull(inner);
     return inner;
   }
-  
+
   public MappingSet getMappingSet(){
     return mappings;
   }
-  
+
   public void setMappingSet(MappingSet mappings){
     this.mappings = mappings;
   }
-  
+
   public CodeGenerator<T> getCodeGenerator() {
     return codeGenerator;
   }
@@ -125,17 +126,17 @@ public class ClassGenerator<T>{
   private GeneratorMapping getCurrentMapping(){
     return mappings.getCurrentMapping();
   }
-  
+
   public JBlock getBlock(String methodName){
     JBlock blk = this.blocks[sig.get(methodName)].getLast();
     Preconditions.checkNotNull(blk, "Requested method name of %s was not available for signature %s.",  methodName, this.sig);
     return blk;
   }
-  
+
   public JBlock getBlock(BlockType type){
-    return getBlock(getCurrentMapping().getMethodName(type)); 
+    return getBlock(getCurrentMapping().getMethodName(type));
   }
-  
+
   public JBlock getSetupBlock(){
     return getBlock(getCurrentMapping().getMethodName(BlockType.SETUP));
   }
@@ -148,17 +149,17 @@ public class ClassGenerator<T>{
   public JBlock getCleanupBlock(){
     return getBlock(getCurrentMapping().getMethodName(BlockType.CLEANUP));
   }
-    
+
   public JVar declareVectorValueSetupAndMember(String batchName, TypedFieldId fieldId){
     return declareVectorValueSetupAndMember( DirectExpression.direct(batchName), fieldId);
   }
 
   public JVar declareVectorValueSetupAndMember(DirectExpression batchName, TypedFieldId fieldId){
     final ValueVectorSetup setup = new ValueVectorSetup(batchName, fieldId);
-    JVar var = this.vvDeclaration.get(setup);
-    if(var != null) return var;
-    
-    Class<?> valueVectorClass = TypeHelper.getValueVectorClass(fieldId.getType().getMinorType(), fieldId.getType().getMode());
+//    JVar var = this.vvDeclaration.get(setup);
+//    if(var != null) return var;
+
+    Class<?> valueVectorClass = fieldId.getIntermediateClass();
     JClass vvClass = model.ref(valueVectorClass);
     JClass retClass = vvClass;
     String vectorAccess = "getValueVector";
@@ -166,48 +167,56 @@ public class ClassGenerator<T>{
       retClass = retClass.array();
       vectorAccess = "getValueVectors";
     }
-    
+
     JVar vv = declareClassField("vv", retClass);
     JClass t = model.ref(SchemaChangeException.class);
     JType objClass = model.ref(Object.class);
     JBlock b = getSetupBlock();
+    //JExpr.newArray(model.INT).
+
+    JVar fieldArr = b.decl(model.INT.array(), "fieldIds" + index++, JExpr.newArray(model.INT, fieldId.getFieldIds().length));
+    int[] fieldIndices = fieldId.getFieldIds();
+    for(int i = 0; i < fieldIndices.length; i++){
+       b.assign(fieldArr.component(JExpr.lit(i)), JExpr.lit(fieldIndices[i]));
+    }
+
+    JInvocation invoke = batchName
+        .invoke("getValueAccessorById") //
+        .arg( vvClass.dotclass())
+        .arg(fieldArr);
+
     JVar obj = b.decl( //
         objClass, //
-        getNextVar("tmp"), // 
-        batchName
-          .invoke("getValueAccessorById") //
-          .arg(JExpr.lit(fieldId.getFieldId())) //
-          .arg( vvClass.dotclass())
-          .invoke(vectorAccess)//
-          );
-        
-        
+        getNextVar("tmp"), //
+        invoke.invoke(vectorAccess));
+
+
     b._if(obj.eq(JExpr._null()))._then()._throw(JExpr._new(t).arg(JExpr.lit(String.format("Failure while loading vector %s with id: %s.", vv.name(), fieldId.toString()))));
     //b.assign(vv, JExpr.cast(retClass, ((JExpression) JExpr.cast(wrapperClass, obj) ).invoke(vectorAccess)));
     b.assign(vv, JExpr.cast(retClass, obj ));
     vvDeclaration.put(setup, vv);
-        
+
     return vv;
   }
 
   public HoldingContainer addExpr(LogicalExpression ex){
     return addExpr(ex, true);
   }
-  
+
   public HoldingContainer addExpr(LogicalExpression ex, boolean rotate){
 //    logger.debug("Adding next write {}", ex);
     if(rotate) rotateBlock();
     return evaluationVisitor.addExpr(ex, this);
   }
-  
+
   public void rotateBlock(){
     for(LinkedList<JBlock> b : blocks){
       b.add(new JBlock(true, true));
     }
   }
-  
 
-    
+
+
   void flushCode(){
     int i =0;
     for(CodeGeneratorMethod method : sig){
@@ -219,19 +228,19 @@ public class ClassGenerator<T>{
         m._throws(model.ref(c));
       }
       m._throws(SchemaChangeException.class);
-      
+
       for(JBlock b : blocks[i++]){
         if(!b.isEmpty()) m.body().add(b);
       }
-      
+
     }
-    
+
     for(ClassGenerator<T> child : innerClasses.values()){
       child.flushCode();
     }
   }
-  
-  
+
+
   public JCodeModel getModel() {
     return model;
   }
@@ -239,11 +248,11 @@ public class ClassGenerator<T>{
   public String getNextVar() {
     return "v" + index++;
   }
-  
+
   public String getNextVar(String prefix){
     return prefix + index++;
   }
-  
+
   public JVar declareClassField(String prefix, JType t){
     return clazz.field(JMod.NONE, t, prefix + index++);
   }
@@ -251,11 +260,11 @@ public class ClassGenerator<T>{
   public JVar declareClassField(String prefix, JType t, JExpression init){
     return clazz.field(JMod.NONE, t, prefix + index++, init);
   }
-  
+
   public HoldingContainer declare(MajorType t){
     return declare(t, true);
   }
-  
+
   public HoldingContainer declare(MajorType t, boolean includeNewInstance){
     JType holderType = getHolderType(t);
     JVar var;
@@ -266,12 +275,12 @@ public class ClassGenerator<T>{
     }
     JFieldRef outputSet = null;
     if(t.getMode() == DataMode.OPTIONAL){
-      outputSet = var.ref("isSet");  
+      outputSet = var.ref("isSet");
     }
     index++;
     return new HoldingContainer(t, var, var.ref("value"), outputSet);
   }
-  
+
   public List<TypedFieldId> getWorkspaceTypes() {
     return this.workspaceTypes;
   }
@@ -283,7 +292,7 @@ public class ClassGenerator<T>{
   private static class ValueVectorSetup{
     final DirectExpression batch;
     final TypedFieldId fieldId;
-    
+
     public ValueVectorSetup(DirectExpression batch, TypedFieldId fieldId) {
       super();
       this.batch = batch;
@@ -321,35 +330,45 @@ public class ClassGenerator<T>{
       return true;
     }
 
-    
+
   }
-  
-  
+
+
   public static class HoldingContainer{
     private final JVar holder;
     private final JFieldRef value;
     private final JFieldRef isSet;
     private final MajorType type;
     private boolean isConstant;
-    
+    private final boolean singularRepeated;
+
     public HoldingContainer(MajorType t, JVar holder, JFieldRef value, JFieldRef isSet) {
+      this(t, holder, value, isSet, false);
+    }
+
+    public HoldingContainer(MajorType t, JVar holder, JFieldRef value, JFieldRef isSet, boolean singularRepeated) {
       super();
       this.holder = holder;
       this.value = value;
       this.isSet = isSet;
       this.type = t;
       this.isConstant = false;
+      this.singularRepeated = singularRepeated;
     }
-    
+
+    public boolean isSingularRepeated(){
+      return singularRepeated;
+    }
+
     public HoldingContainer setConstant(boolean isConstant) {
       this.isConstant = isConstant;
       return this;
     }
-    
+
     public boolean isConstant() {
       return this.isConstant;
     }
-    
+
     public JVar getHolder() {
       return holder;
     }
@@ -357,7 +376,7 @@ public class ClassGenerator<T>{
     public JFieldRef getValue() {
       return value;
     }
-    
+
     public MajorType getMajorType(){
       return type;
     }
@@ -366,11 +385,11 @@ public class ClassGenerator<T>{
       Preconditions.checkNotNull(isSet, "You cannot access the isSet variable when operating on a non-nullable output value.");
       return isSet;
     }
-    
+
     public boolean isOptional(){
       return type.getMode() == DataMode.OPTIONAL;
     }
-    
+
     public boolean isRepeated(){
       return type.getMode() == DataMode.REPEATED;
     }
@@ -379,7 +398,7 @@ public class ClassGenerator<T>{
       return type.getMinorType();
     }
   }
-  
+
   public JType getHolderType(MajorType t){
     return TypeHelper.getHolderType(model, t.getMinorType(), t.getMode());
   }

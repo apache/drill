@@ -350,10 +350,10 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
   public TypedFieldId getValueVectorId(SchemaPath path) {
     return outgoingContainer.getValueVectorId(path);
   }
-  
+
   @Override
-  public VectorWrapper<?> getValueAccessorById(int fieldId, Class<?> clazz) {
-    return outgoingContainer.getValueAccessorById(fieldId, clazz);
+  public VectorWrapper<?> getValueAccessorById(Class<?> clazz, int... ids) {
+    return outgoingContainer.getValueAccessorById(clazz, ids);
   }
 
   @Override
@@ -373,7 +373,7 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
 
   /**
    * Creates a generate class which implements the copy and compare methods.
-   * 
+   *
    * @return instance of a new merger based on generated code
    * @throws SchemaChangeException
    */
@@ -443,8 +443,8 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
         // declare incoming value vector and assign it to the array
         JVar inVV = cg.declareVectorValueSetupAndMember("incomingBatches[" + batchIdx + "]",
           new TypedFieldId(vv.getField().getType(),
-            fieldIdx,
-            false));
+            false,
+            fieldIdx));
 
         // add vv to initialization list (e.g. { vv1, vv2, vv3 } )
         incomingVectorInitBatch.add(inVV);
@@ -501,11 +501,12 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
         TypeProtos.MinorType minor = vvRead.getMajorType().getMinorType();
         Class cmpVectorClass = TypeHelper.getValueVectorClass(minor, mode);
 
+        JExpression arr = JExpr.newArray(cg.getModel().INT).add(JExpr.lit(vvRead.getFieldId().getFieldIds()[0]));
         comparisonVectorInitBatch.add(
             ((JExpression) incomingBatchesVar.component(JExpr.lit(b)))
                .invoke("getValueAccessorById")
-                 .arg(JExpr.lit(vvRead.getFieldId().getFieldId()))
                  .arg(cg.getModel()._ref(cmpVectorClass).boxify().dotclass())
+                 .arg(arr)
                    .invoke("getValueVector"));
 
       }
@@ -583,8 +584,7 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
       // declare outgoing value vectors
       JVar outgoingVV = cg.declareVectorValueSetupAndMember("outgoingBatch",
                                                             new TypedFieldId(vvOut.getField().getType(),
-                                                                             fieldIdx,
-                                                                             vvOut.isHyper()));
+                                                                             vvOut.isHyper(), fieldIdx));
 
       // assign to the appropriate slot in the outgoingVector array (in order of iteration)
       cg.getSetupBlock().assign(outgoingVectors.component(JExpr.lit(fieldIdx)), outgoingVV);

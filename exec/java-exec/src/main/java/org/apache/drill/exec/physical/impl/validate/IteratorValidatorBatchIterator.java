@@ -100,9 +100,9 @@ public class IteratorValidatorBatchIterator implements RecordBatch {
   }
 
   @Override
-  public VectorWrapper<?> getValueAccessorById(int fieldId, Class<?> clazz) {
+  public VectorWrapper<?> getValueAccessorById(Class<?> clazz, int... ids) {
     validateReadState();
-    return incoming.getValueAccessorById(fieldId, clazz);
+    return incoming.getValueAccessorById(clazz, ids);
   }
 
   @Override

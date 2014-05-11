@@ -24,9 +24,12 @@ import org.apache.drill.exec.expr.holders.BitHolder;
 import org.apache.drill.exec.expr.holders.NullableBitHolder;
 import org.apache.drill.exec.memory.AccountingByteBuf;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.proto.UserBitShared.FieldMetadata;
+import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
+import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
+import org.apache.drill.exec.vector.complex.impl.BitReaderImpl;
+import org.apache.drill.exec.vector.complex.reader.FieldReader;
 
 /**
  * Bit implements a vector of bit-width values. Elements in the vector are accessed by position from the logical start
@@ -49,11 +52,10 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
   }
 
   @Override
-  public FieldMetadata getMetadata() {
-    return FieldMetadata.newBuilder()
-        .setDef(getField().getDef())
-        .setValueCount(valueCount)
-        .setBufferLength( (int) Math.ceil(valueCount / 8.0))
+  public SerializedField getMetadata() {
+    return field.getAsBuilder() //
+        .setValueCount(valueCount) //
+        .setBufferLength( (int) Math.ceil(valueCount / 8.0)) //
         .build();
   }
 
@@ -66,13 +68,26 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
   }
 
   public void allocateNew() {
+    if(!allocateNewSafe()) throw new OutOfMemoryRuntimeException();
+  }
+
+  public boolean allocateNewSafe() {
     clear();
     if (allocationMonitor > 5) {
       allocationValueCount = Math.min(1, (int)(allocationValueCount * 0.9));
     } else if (allocationMonitor < -5) {
       allocationValueCount = (int) (allocationValueCount * 1.1);
     }
-    allocateNew(allocationValueCount);
+
+    clear();
+    valueCapacity = allocationValueCount;
+    int valueSize = getSizeFromCount(allocationValueCount);
+    data = allocator.buffer(valueSize);
+    if(data == null) return false;
+    for (int i = 0; i < valueSize; i++) {
+      data.setByte(i, 0);
+    }
+    return true;
   }
 
   /**
@@ -112,8 +127,8 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
   }
 
   @Override
-  public void load(FieldMetadata metadata, ByteBuf buffer) {
-    assert this.field.getDef().equals(metadata.getDef());
+  public void load(SerializedField metadata, ByteBuf buffer) {
+    assert this.field.matches(metadata);
     int loaded = load(metadata.getValueCount(), buffer);
     assert metadata.getBufferLength() == loaded;
   }
@@ -177,9 +192,6 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
     }
   }
 
-  private void copyTo(int startIndex, int length, BitVector target) {
-
-  }
 
   private class TransferImpl implements TransferPair {
     BitVector to;
@@ -205,8 +217,8 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
     }
 
     @Override
-    public void copyValue(int fromIndex, int toIndex) {
-      to.copyFrom(fromIndex, toIndex, BitVector.this);
+    public boolean copyValueSafe(int fromIndex, int toIndex) {
+      return to.copyFromSafe(fromIndex, toIndex, BitVector.this);
     }
   }
 
@@ -233,7 +245,7 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
     }
 
     @Override
-    public final Object getObject(int index) {
+    public final Boolean getObject(int index) {
       return new Boolean(get(index) != 0);
     }
 
@@ -245,8 +257,14 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
       holder.value = get(index);
     }
 
-    final void get(int index, NullableBitHolder holder) {
+    public final void get(int index, NullableBitHolder holder) {
+      holder.isSet = 1;
       holder.value = get(index);
+    }
+
+    @Override
+    public FieldReader getReader() {
+      return new BitReaderImpl(BitVector.this);
     }
   }
 

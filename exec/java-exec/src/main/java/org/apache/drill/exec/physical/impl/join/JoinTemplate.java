@@ -97,8 +97,8 @@ public abstract class JoinTemplate implements JoinWorker {
           while (status.isLeftPositionAllowed()) {
             if (!doCopyLeft(status.getLeftPosition(), status.getOutPosition()))
               return false;
-            
-            status.incOutputPos();  
+
+            status.incOutputPos();
             status.advanceLeft();
           }
         }
@@ -113,7 +113,7 @@ public abstract class JoinTemplate implements JoinWorker {
       case -1:
         // left key < right key
         if (((MergeJoinPOP)status.outputBatch.getPopConfig()).getJoinType() == JoinRelType.LEFT) {
-          if (!doCopyLeft(status.getLeftPosition(), status.getOutPosition())) 
+          if (!doCopyLeft(status.getLeftPosition(), status.getOutPosition()))
             return false;
           status.incOutputPos();
         }
@@ -135,7 +135,7 @@ public abstract class JoinTemplate implements JoinWorker {
                  doCompareNextLeftKey(status.getLeftPosition()) != 0)
           // this record marks the end of repeated keys
           status.notifyLeftStoppedRepeating();
-        
+
         boolean crossedBatchBoundaries = false;
         int initialRightPosition = status.getRightPosition();
         do {
@@ -143,11 +143,11 @@ public abstract class JoinTemplate implements JoinWorker {
           if (!doCopyLeft(status.getLeftPosition(), status.getOutPosition()))
             return false;
 
-          if (!doCopyRight(status.getRightPosition(), status.getOutPosition())) 
+          if (!doCopyRight(status.getRightPosition(), status.getOutPosition()))
             return false;
-          
+
           status.incOutputPos();
-          
+
           // If the left key has duplicates and we're about to cross a boundary in the right batch, add the
           // right table's record batch to the sv4 builder before calling next.  These records will need to be
           // copied again for each duplicate left key.
@@ -170,7 +170,7 @@ public abstract class JoinTemplate implements JoinWorker {
           status.notifyLeftStoppedRepeating();
         } else if (status.isLeftRepeating() && crossedBatchBoundaries) {
           try {
-            // build the right batches and 
+            // build the right batches and
             status.outputBatch.batchBuilder.build();
             status.setSV4AdvanceMode();
           } catch (SchemaChangeException e) {

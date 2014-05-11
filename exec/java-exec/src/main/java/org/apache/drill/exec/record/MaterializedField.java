@@ -17,39 +17,58 @@
  */
 package org.apache.drill.exec.record;
 
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.drill.common.expression.FieldReference;
-import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.PathSegment;
-import org.apache.drill.common.expression.PathSegment.NameSegment;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.logical.data.NamedExpression;
-import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.expr.TypeHelper;
-import org.apache.drill.exec.proto.SchemaDefProtos.FieldDef;
-import org.apache.drill.exec.proto.SchemaDefProtos.NamePart;
-import org.apache.drill.exec.proto.SchemaDefProtos.NamePart.Type;
+import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 
-import com.beust.jcommander.internal.Lists;
+import com.google.hive12.common.collect.Lists;
 
 public class MaterializedField{
-  private final FieldDef def;
+  private SchemaPath path;
+  private MajorType type;
+  private List<MaterializedField> children = Lists.newArrayList();
 
-  public MaterializedField(FieldDef def) {
-    this.def = def;
+  private MaterializedField(SchemaPath path, MajorType type) {
+    super();
+    this.path = path;
+    this.type = type;
   }
 
-  public static MaterializedField create(FieldDef def){
-    return new MaterializedField(def);
+  public static MaterializedField create(SerializedField serField){
+    return new MaterializedField(SchemaPath.create(serField.getNamePart()), serField.getMajorType());
+  }
+
+  public SerializedField.Builder getAsBuilder(){
+    return SerializedField.newBuilder() //
+        .setMajorType(type) //
+        .setNamePart(path.getAsNamePart());
+  }
+
+  public void addChild(MaterializedField field){
+    children.add(field);
   }
 
   public MaterializedField clone(FieldReference ref){
-    return create(ref, def.getMajorType());
+    return create(ref, type);
+  }
+
+  public String getLastName(){
+    PathSegment seg = path.getRootSegment();
+    while(seg.getChild() != null) seg = seg.getChild();
+    return seg.getNameSegment().getPath();
+  }
+
+
+  // TODO: rewrite without as direct match rather than conversion then match.
+  public boolean matches(SerializedField field){
+    MaterializedField f = create(field);
+    return f.equals(this);
   }
 
   public static MaterializedField create(String path, MajorType type){
@@ -58,43 +77,20 @@ public class MaterializedField{
   }
 
   public static MaterializedField create(SchemaPath path, MajorType type) {
-    FieldDef.Builder b = FieldDef.newBuilder();
-    b.setMajorType(type);
-    addSchemaPathToFieldDef(path, b);
-    return create(b.build());
+    return new MaterializedField(path, type);
   }
 
-  private static void addSchemaPathToFieldDef(SchemaPath path, FieldDef.Builder builder) {
-    for (PathSegment p = path.getRootSegment();; p = p.getChild()) {
-      NamePart.Builder b = NamePart.newBuilder();
-      if (p.isArray()) {
-        b.setType(Type.ARRAY);
-      } else {
-        b.setName(p.getNameSegment().getPath().toString());
-        b.setType(Type.NAME);
-      }
-      builder.addName(b.build());
-      if(p.isLastPath()) break;
-    }
+  public SchemaPath getPath(){
+    return path;
   }
 
-  public FieldDef getDef() {
-    return def;
-  }
-
+  /**
+   * Get the schema path.  Deprecated, use getPath() instead.
+   * @return the SchemaPath of this field.
+   */
+  @Deprecated
   public SchemaPath getAsSchemaPath(){
-    List<NamePart> nameList = Lists.newArrayList(def.getNameList());
-    Collections.reverse(nameList);
-    PathSegment seg = null;
-    for(NamePart p : nameList){
-      if(p.getType() == NamePart.Type.ARRAY){
-        throw new UnsupportedOperationException();
-      }else{
-        seg = new NameSegment(p.getName(), seg);
-      }
-    }
-    if( !(seg instanceof NameSegment) ) throw new UnsupportedOperationException();
-    return new SchemaPath( (NameSegment) seg);
+    return path;
   }
 
 //  public String getName(){
@@ -119,29 +115,29 @@ public class MaterializedField{
 //  }
 
   public int getWidth() {
-    return def.getMajorType().getWidth();
+    return type.getWidth();
   }
 
   public MajorType getType() {
-    return def.getMajorType();
+    return type;
   }
 
   public int getScale() {
-      return def.getMajorType().getScale();
+      return type.getScale();
   }
   public int getPrecision() {
-      return def.getMajorType().getPrecision();
+      return type.getPrecision();
   }
   public boolean isNullable() {
-    return def.getMajorType().getMode() == DataMode.OPTIONAL;
+    return type.getMode() == DataMode.OPTIONAL;
   }
 
   public DataMode getDataMode() {
-    return def.getMajorType().getMode();
+    return type.getMode();
   }
 
   public MaterializedField getOtherNullableVersion(){
-    MajorType mt = def.getMajorType();
+    MajorType mt = type;
     DataMode newDataMode = null;
     switch(mt.getMode()){
     case OPTIONAL:
@@ -153,7 +149,7 @@ public class MaterializedField{
     default:
       throw new UnsupportedOperationException();
     }
-    return new MaterializedField(def.toBuilder().setMajorType(mt.toBuilder().setMode(newDataMode).build()).build());
+    return new MaterializedField(path, mt.toBuilder().setMode(newDataMode).build());
   }
 
   public Class<?> getValueClass() {
@@ -161,33 +157,19 @@ public class MaterializedField{
   }
 
   public boolean matches(SchemaPath path) {
-    Iterator<NamePart> iter = def.getNameList().iterator();
+    if(!path.isSimplePath()) return false;
 
-    for (PathSegment p = path.getRootSegment();; p = p.getChild()) {
-      if(p == null) break;
-      if (!iter.hasNext()) return false;
-      NamePart n = iter.next();
-
-      if (p.isArray()) {
-        if (n.getType() == Type.ARRAY) continue;
-        return false;
-      } else {
-        if (p.getNameSegment().getPath().equalsIgnoreCase(n.getName())) continue;
-        return false;
-      }
-
-    }
-    // we've reviewed all path segments. confirm that we don't have any extra name parts.
-    return !iter.hasNext();
+    return this.path.equals(path);
   }
-
 
 
   @Override
   public int hashCode() {
     final int prime = 31;
     int result = 1;
-    result = prime * result + ((def == null) ? 0 : def.hashCode());
+    result = prime * result + ((children == null) ? 0 : children.hashCode());
+    result = prime * result + ((path == null) ? 0 : path.hashCode());
+    result = prime * result + ((type == null) ? 0 : type.hashCode());
     return result;
   }
 
@@ -200,20 +182,30 @@ public class MaterializedField{
     if (getClass() != obj.getClass())
       return false;
     MaterializedField other = (MaterializedField) obj;
-    if (def == null) {
-      if (other.def != null)
+    if (children == null) {
+      if (other.children != null)
         return false;
-    } else if (!def.equals(other.def))
+    } else if (!children.equals(other.children))
+      return false;
+    if (path == null) {
+      if (other.path != null)
+        return false;
+    } else if (!path.equals(other.path))
+      return false;
+    if (type == null) {
+      if (other.type != null)
+        return false;
+    } else if (!type.equals(other.type))
       return false;
     return true;
   }
 
   @Override
   public String toString() {
-    return "MaterializedField [" + def.toString() + "]";
+    return "MaterializedField [path=" + path + ", type=" + type + "]";
   }
 
   public String toExpr(){
-    return this.getAsSchemaPath().toExpr();
+    return path.toExpr();
   }
 }

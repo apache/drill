@@ -41,13 +41,13 @@ import com.google.common.collect.Sets;
 
 public class PathScanner {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PathScanner.class);
-  
+
   private static final SubTypesScanner subTypeScanner = new SubTypesScanner();
   private static final TypeAnnotationsScanner annotationsScanner = new TypeAnnotationsScanner();
   private static final ResourcesScanner resourcesScanner = new ResourcesScanner();
   private static final Object SYNC = new Object();
   static volatile Reflections REFLECTIONS = null;
-  
+
   public static <A extends Annotation, T> Map<A, Class<? extends T>> scanForAnnotatedImplementations(Class<A> annotationClass, Class<T> baseClass, final List<String> scanPackages){
     Collection<Class<? extends T>> providerClasses = scanForImplementations(baseClass, scanPackages);
 
@@ -58,7 +58,7 @@ public class PathScanner {
       if(annotation == null) continue;
       map.put(annotation, c);
     }
-    
+
     return map;
   }
 
@@ -68,12 +68,12 @@ public class PathScanner {
     }
     return REFLECTIONS;
   }
-  
+
   public static <T> Class<?>[] scanForImplementationsArr(Class<T> baseClass, final List<String> scanPackages){
     Collection<Class<? extends T>> imps = scanForImplementations(baseClass, scanPackages);
     return imps.toArray(new Class<?>[imps.size()]);
   }
-  
+
   public static <T> Set<Class<? extends T>> scanForImplementations(Class<T> baseClass, final List<String> scanPackages){
     synchronized(SYNC){
       Set<Class<? extends T>> classes = getReflections().getSubTypesOf(baseClass);
@@ -85,15 +85,16 @@ public class PathScanner {
       return classes;
     }
   }
-  
+
   private static Collection<URL> getMarkedPaths(){
-    return forResource(CommonConstants.DRILL_JAR_MARKER_FILE, true);
+    Collection<URL> urls = forResource(CommonConstants.DRILL_JAR_MARKER_FILE, true);
+    return urls;
   }
 
   public static Collection<URL> getConfigURLs(){
     return forResource(CommonConstants.DRILL_JAR_MARKER_FILE, false);
   }
-  
+
   public static Set<URL> forResource(String name, boolean stripName, ClassLoader... classLoaders) {
     final Set<URL> result = Sets.newHashSet();
 
@@ -105,12 +106,12 @@ public class PathScanner {
             final Enumeration<URL> urls = classLoader.getResources(resourceName);
             while (urls.hasMoreElements()) {
                 final URL url = urls.nextElement();
-                
+
                 int index = url.toExternalForm().lastIndexOf(resourceName);
                 if (index != -1 && stripName) {
                     result.add(new URL(url.toExternalForm().substring(0, index)));
                 } else {
-                    result.add(url); 
+                    result.add(url);
                 }
             }
         } catch (IOException e) {
@@ -122,6 +123,6 @@ public class PathScanner {
 
     return result;
 }
-  
+
 
 }

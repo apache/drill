@@ -17,10 +17,13 @@
  */
 package org.apache.drill.exec.record;
 
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.vector.ValueVector;
 
 
 public interface VectorWrapper<T extends ValueVector> {
+
+
 
   public Class<T> getVectorClass();
   public MaterializedField getField();
@@ -29,4 +32,11 @@ public interface VectorWrapper<T extends ValueVector> {
   public boolean isHyper();
   public void clear();
   public VectorWrapper<T> cloneAndTransfer();
+  public VectorWrapper<?> getChildWrapper(int[] ids);
+
+  /**
+   * Traverse the object graph and determine whether the provided SchemaPath matches data within the Wrapper.  If so, return a TypedFieldId associated with this path.
+   * @return TypedFieldId
+   */
+  public TypedFieldId getFieldIdIfMatches(int id, SchemaPath expectedPath);
 }

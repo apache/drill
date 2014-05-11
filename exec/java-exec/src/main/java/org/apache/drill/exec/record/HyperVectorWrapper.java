@@ -20,21 +20,25 @@ package org.apache.drill.exec.record;
 import java.lang.reflect.Array;
 
 import com.google.common.base.Preconditions;
+
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.complex.AbstractContainerVector;
+import org.apache.drill.exec.vector.complex.MapVector;
 
 
 public class HyperVectorWrapper<T extends ValueVector> implements VectorWrapper<T>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HyperVectorWrapper.class);
-  
+
   private T[] vectors;
   private MaterializedField f;
   private final boolean releasable;
-  
+
   public HyperVectorWrapper(MaterializedField f, T[] v){
     this(f, v, true);
   }
-  
+
   public HyperVectorWrapper(MaterializedField f, T[] v, boolean releasable){
     assert(v.length > 0);
     this.f = f;
@@ -72,9 +76,51 @@ public class HyperVectorWrapper<T extends ValueVector> implements VectorWrapper<
   public void clear() {
     if(!releasable) return;
     for(T x : vectors){
-      x.clear();  
+      x.clear();
     }
-    
+  }
+
+  @Override
+  public VectorWrapper<?> getChildWrapper(int[] ids) {
+    if(ids.length == 1) return this;
+
+    ValueVector[] vectors = new ValueVector[this.vectors.length];
+    int index = 0;
+
+    for(ValueVector v : this.vectors){
+      ValueVector vector = v;
+      for(int i = 1; i < ids.length; i++){
+        MapVector map = (MapVector) vector;
+        vector = map.getVectorById(ids[i]);
+      }
+      vectors[index] = vector;
+      index++;
+    }
+    return new HyperVectorWrapper<ValueVector>(vectors[0].getField(), vectors);
+  }
+
+  @Override
+  public TypedFieldId getFieldIdIfMatches(int id, SchemaPath expectedPath) {
+    ValueVector v = vectors[0];
+    if(!expectedPath.getRootSegment().segmentEquals(v.getField().getPath().getRootSegment())) return null;
+
+    if(v instanceof AbstractContainerVector){
+      // we're looking for a multi path.
+      AbstractContainerVector c = (AbstractContainerVector) v;
+      TypedFieldId.Builder builder = TypedFieldId.newBuilder();
+      builder.intermediateType(v.getField().getType());
+      builder.hyper();
+      builder.addId(id);
+      return c.getFieldIdIfMatches(builder, true, expectedPath.getRootSegment().getChild());
+
+    }else{
+      return TypedFieldId.newBuilder() //
+          .intermediateType(v.getField().getType()) //
+          .finalType(v.getField().getType()) //
+          .addId(id) //
+          .hyper() //
+          .build();
+    }
   }
 
   @Override

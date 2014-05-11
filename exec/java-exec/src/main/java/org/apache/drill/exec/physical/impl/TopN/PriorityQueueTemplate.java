@@ -60,8 +60,8 @@ public abstract class PriorityQueueTemplate implements PriorityQueue {
     BatchSchema schema = container.getSchema();
     VectorContainer newContainer = new VectorContainer();
     for (MaterializedField field : schema) {
-      int id = container.getValueVectorId(field.getAsSchemaPath()).getFieldId();
-      newContainer.add(container.getValueAccessorById(id, field.getValueClass()).getValueVectors());
+      int[] ids = container.getValueVectorId(field.getPath()).getFieldIds();
+      newContainer.add(container.getValueAccessorById(field.getValueClass(), ids).getValueVectors());
     }
     newContainer.buildSchema(BatchSchema.SelectionVectorMode.FOUR_BYTE);
     this.hyperBatch = new ExpandableHyperContainer(newContainer);

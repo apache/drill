@@ -63,7 +63,7 @@ public class SimpleRootExec implements RootExec, Iterable<ValueVector>{
   @SuppressWarnings("unchecked")
   public <T extends ValueVector> T getValueVectorById(SchemaPath path, Class<?> vvClass){
     TypedFieldId tfid = incoming.getValueVectorId(path);
-    return (T) incoming.getValueAccessorById(tfid.getFieldId(), vvClass).getValueVector();
+    return (T) incoming.getValueAccessorById(vvClass, tfid.getFieldIds()).getValueVector();
   }
 
   @Override

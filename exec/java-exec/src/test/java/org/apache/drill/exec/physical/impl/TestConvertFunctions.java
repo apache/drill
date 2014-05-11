@@ -25,9 +25,7 @@ import static org.junit.Assert.fail;
 import io.netty.buffer.ByteBuf;
 
 import java.text.DateFormat;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 
 import mockit.Injectable;
@@ -36,6 +34,7 @@ import mockit.NonStrictExpectations;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
+import org.apache.drill.exec.expr.fn.impl.DateUtility;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -58,6 +57,7 @@ import org.apache.drill.exec.util.VectorUtil;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarCharVector;
 import org.junit.Test;
+import org.joda.time.DateTime;
 
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Charsets;
@@ -71,24 +71,12 @@ public class TestConvertFunctions extends PopUnitTestBase {
 
   private static final float DELTA = (float) 0.0001;
 
-  private static final DateFormat DATE_FORMAT;
-  private static final DateFormat DATE_TIME_FORMAT;
-
   // "1980-01-01 01:23:45.678"
   private static final String DATE_TIME_BE = "\\x00\\x00\\x00\\x49\\x77\\x85\\x1f\\x8e";
   private static final String DATE_TIME_LE = "\\x8e\\x1f\\x85\\x77\\x49\\x00\\x00\\x00";
 
-  private static Date time = null;
-  private static Date date = null;
-
-  static {
-    DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
-    DATE_TIME_FORMAT = new SimpleDateFormat("HH:mm:ss.SSS");
-    try {
-      time = DATE_TIME_FORMAT.parse("01:23:45.678"); // 5025678
-      date = DATE_FORMAT.parse("1980-01-01"); // 0x4977387000
-    } catch (ParseException e) { }
-  }
+  private static DateTime time = DateTime.parse("01:23:45.678", DateUtility.getTimeFormatter());
+  private static DateTime date = DateTime.parse("1980-01-01", DateUtility.getDateTimeFormatter());
 
   DrillConfig c = DrillConfig.create();
   PhysicalPlanReader reader;
@@ -99,7 +87,7 @@ public class TestConvertFunctions extends PopUnitTestBase {
   @Test
   public void testDateTime1(@Injectable final DrillbitContext bitContext,
       @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    runTest(bitContext, connection, "convert_from(binary_string('" + DATE_TIME_BE + "'), 'TIME_EPOCH_BE')", time);
+    runTest(bitContext, connection, "(convert_from(binary_string('" + DATE_TIME_BE + "'), 'TIME_EPOCH_BE'))", time);
   }
 
   @Test

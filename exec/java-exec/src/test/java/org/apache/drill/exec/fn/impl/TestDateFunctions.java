@@ -34,7 +34,7 @@ import org.junit.Test;
 
 import java.util.List;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class TestDateFunctions extends PopUnitTestBase {
     static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestDateFunctions.class);
@@ -62,7 +62,7 @@ public class TestDateFunctions extends PopUnitTestBase {
 
                 ValueVector.Accessor accessor = v.getValueVector().getAccessor();
                 System.out.println(accessor.getObject(0));
-                assertTrue((accessor.getObject(0)).toString().equals(expectedResults[i++]));
+                assertEquals( expectedResults[i++], accessor.getObject(0).toString());
             }
 
             batchLoader.clear();
@@ -74,49 +74,49 @@ public class TestDateFunctions extends PopUnitTestBase {
 
     @Test
     public void testDateIntervalArithmetic() throws Exception {
-        String expectedResults[] = {"2009-02-23",
-                                    "2008-02-24",
-                                    "13:20:33",
-                                    "2008-02-24 12:00:00.0",
-                                    "2009-04-23 12:00:00.0",
-                                    "2008-02-24 12:00:00.0",
-                                    "2009-04-23 12:00:00.0",
-                                    "2009-02-23",
-                                    "2008-02-24",
-                                    "13:20:33",
-                                    "2008-02-24 12:00:00.0",
-                                    "2009-04-23 12:00:00.0",
-                                    "2008-02-24 12:00:00.0",
-                                    "2009-04-23 12:00:00.0"};
-
+        String expectedResults[] = {"2009-02-23T00:00:00.000-08:00",
+                                    "2008-02-24T00:00:00.000-08:00",
+                                    "1970-01-01T13:20:33.000-08:00",
+                                    "2008-02-24T12:00:00.000-08:00",
+                                    "2009-04-23T12:00:00.000-07:00",
+                                    "2008-02-24T12:00:00.000-08:00",
+                                    "2009-04-23T12:00:00.000-07:00",
+                                    "2009-02-23T00:00:00.000-08:00",
+                                    "2008-02-24T00:00:00.000-08:00",
+                                    "1970-01-01T13:20:33.000-08:00",
+                                    "2008-02-24T12:00:00.000-08:00",
+                                    "2009-04-23T12:00:00.000-07:00",
+                                    "2008-02-24T12:00:00.000-08:00",
+                                    "2009-04-23T12:00:00.000-07:00"};
         testCommon(expectedResults, "/functions/date/date_interval_arithmetic.json", "/test_simple_date.json");
     }
 
     @Test
     public void testDateDifferenceArithmetic() throws Exception {
 
-        String[] expectedResults = {"365 days 0:0:0.0",
-                                   "-366 days 0:-1:0.0",
-                                    "0 days 3:0:0.0",
-                                    "0 days 11:0:0.0"};
+        String[] expectedResults = {"P365D",
+                                    "P-366DT-60S",
+                                    "PT10800S",
+                                    "PT39600S"};
         testCommon(expectedResults, "/functions/date/date_difference_arithmetic.json", "/test_simple_date.json");
     }
 
     @Test
     public void testIntervalArithmetic() throws Exception {
 
-        String[] expectedResults = {"2 years 2 months ",
-                                    "2 days 1:2:3.0",
-                                    "0 years 2 months ",
-                                    "0 days 1:2:3.0",
-                                    "2 years 4 months 0 days 0:0:0.0",
-                                    "0 years 0 months 0 days 2:0:6.0",
-                                    "0 years 7 months 0 days 0:0:0.0",
-                                    "0 years 0 months 0 days 0:30:1.500",
-                                    "2 years 9 months 18 days 0:0:0.0",
-                                    "0 years 0 months 0 days 2:24:7.200",
-                                    "0 years 6 months 19 days 23:59:59.999",
-                                    "0 years 0 months 0 days 0:28:35.714"};
+      String expectedResults[] = {"P2Y2M",
+          "P2DT3723S",
+          "P2M",
+          "PT3723S",
+          "P28M",
+          "PT7206S",
+          "P7M",
+          "PT1801.500S",
+          "P33M18D",
+          "PT8647.200S",
+          "P6M19DT86399.999S",
+          "PT1715.714S"};
+
         testCommon(expectedResults, "/functions/date/interval_arithmetic.json", "/test_simple_date.json");
     }
 
@@ -132,10 +132,10 @@ public class TestDateFunctions extends PopUnitTestBase {
 
     @Test
     public void testToDateType() throws Exception {
-        String expectedResults[] = {"2008-02-23",
-                                    "12:20:30",
-                                    "2008-02-23 12:00:00.0",
-                                    "2008-02-23 12:00:00.0"};
+        String expectedResults[] = {"2008-02-23T00:00:00.000-08:00",
+                                    "1970-01-01T12:20:30.000-08:00",
+                                    "2008-02-23T12:00:00.000-08:00",
+                                    "2008-02-23T12:00:00.000-08:00"};
 
         testCommon(expectedResults, "/functions/date/to_date_type.json", "/test_simple_date.json");
     }

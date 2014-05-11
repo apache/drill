@@ -82,7 +82,7 @@ public abstract class OrderedPartitionProjectorTemplate implements OrderedPartit
     this.svMode = incoming.getSchema().getSelectionVectorMode();
     this.outBatch = outgoing;
     this.outputField = outputField;
-    partitionValues = (IntVector) outBatch.getValueAccessorById(outBatch.getValueVectorId(outputField).getFieldId(), IntVector.class).getValueVector();
+    partitionValues = (IntVector) outBatch.getValueAccessorById(IntVector.class, outBatch.getValueVectorId(outputField).getFieldIds()).getValueVector();
     switch(svMode){
     case FOUR_BYTE:
     case TWO_BYTE:
@@ -98,7 +98,7 @@ public abstract class OrderedPartitionProjectorTemplate implements OrderedPartit
   public abstract int doEval(@Named("inIndex") int inIndex, @Named("partitionIndex") int partitionIndex);
 
 
-  
+
 
 
 }

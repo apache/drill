@@ -53,7 +53,7 @@ public class RecordValueAccessor {
     int fieldId = 0;
     for (MaterializedField field : schema) {
       Class<?> vectorClass = TypeHelper.getValueVectorClass(field.getType().getMinorType(), field.getType().getMode());
-      vectors[fieldId] = batch.getValueAccessorById(fieldId, vectorClass).getValueVector();
+      vectors[fieldId] = batch.getValueAccessorById(vectorClass, fieldId).getValueVector();
       fieldId++;
     }
   }

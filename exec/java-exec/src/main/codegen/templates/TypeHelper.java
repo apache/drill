@@ -23,7 +23,11 @@
 package org.apache.drill.exec.expr;
 
 <#include "/@includes/vv_imports.ftl" />
+import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.accessor.*;
+import org.apache.drill.exec.vector.complex.RepeatedMapVector;
 
 public class TypeHelper {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TypeHelper.class);
@@ -66,8 +70,29 @@ public class TypeHelper {
     throw new UnsupportedOperationException();
   }
   
-  public static Class<? extends ValueVector> getValueVectorClass(MinorType type, DataMode mode){
+  public static ValueVector getNewVector(SchemaPath parentPath, String name, BufferAllocator allocator, MajorType type){
+    SchemaPath child = parentPath.getChild(name);
+    MaterializedField field = MaterializedField.create(child, type);
+    return getNewVector(field, allocator);
+  }
+  
+  
+  public static Class<?> getValueVectorClass(MinorType type, DataMode mode){
     switch (type) {
+    case MAP:
+      switch (mode) {
+      case REQUIRED:
+        return MapVector.class;
+      case REPEATED:
+        return RepeatedMapVector.class;
+      }
+      
+    case LIST:
+      switch (mode) {
+      case REPEATED:
+        return RepeatedListVector.class;
+      }
+    
 <#list vv.types as type>
   <#list type.minor as minor>
       case ${minor.class?upper_case}:
@@ -86,9 +111,99 @@ public class TypeHelper {
     }
     throw new UnsupportedOperationException();
   }
-
+  public static Class<?> getReaderClassName( MinorType type, DataMode mode){
+    switch (type) {
+    case MAP:
+      switch (mode) {
+      case REQUIRED:
+        return SingleMapReaderImpl.class;
+      case REPEATED:
+        return RepeatedMapReaderImpl.class;
+      }
+    case LIST:
+      switch (mode) {
+      case REQUIRED:
+        return SingleListReaderImpl.class;
+      case REPEATED:
+        return RepeatedListReaderImpl.class;
+      }
+      
+<#list vv.types as type>
+  <#list type.minor as minor>
+      case ${minor.class?upper_case}:
+        switch (mode) {
+          case REQUIRED:
+            return ${minor.class}ReaderImpl.class;
+          case OPTIONAL:
+            return Nullable${minor.class}ReaderImpl.class;
+          case REPEATED:
+            return Repeated${minor.class}ReaderImpl.class;
+        }
+  </#list>
+</#list>
+      default:
+        break;
+      }
+      throw new UnsupportedOperationException();    
+  }
+  
+  public static Class<?> getWriterInterface( MinorType type, DataMode mode){
+    switch (type) {
+    case MAP: return MapWriter.class;
+    case LIST: return ListWriter.class;
+<#list vv.types as type>
+  <#list type.minor as minor>
+      case ${minor.class?upper_case}: return ${minor.class}Writer.class;
+  </#list>
+</#list>
+      default:
+        break;
+      }
+      throw new UnsupportedOperationException();    
+  }
+  
+  public static Class<?> getWriterImpl( MinorType type, DataMode mode){
+    switch (type) {
+    case MAP:
+      switch (mode) {
+      case REQUIRED:
+        return SingleMapWriter.class;
+      case REPEATED:
+        return RepeatedMapWriter.class;
+      }
+    case LIST:
+      switch (mode) {
+      case REQUIRED:
+        return SingleListWriter.class;
+      case REPEATED:
+        return RepeatedListWriter.class;
+      }
+      
+<#list vv.types as type>
+  <#list type.minor as minor>
+      case ${minor.class?upper_case}:
+        switch (mode) {
+          case REQUIRED:
+            return ${minor.class}WriterImpl.class;
+          case OPTIONAL:
+            return Nullable${minor.class}WriterImpl.class;
+          case REPEATED:
+            return Repeated${minor.class}WriterImpl.class;
+        }
+  </#list>
+</#list>
+      default:
+        break;
+      }
+      throw new UnsupportedOperationException();    
+  }
+  
   public static JType getHolderType(JCodeModel model, MinorType type, DataMode mode){
     switch (type) {
+    case MAP:
+    case LIST:
+      return model._ref(ComplexHolder.class);
+      
 <#list vv.types as type>
   <#list type.minor as minor>
       case ${minor.class?upper_case}:
@@ -112,6 +227,20 @@ public class TypeHelper {
     MajorType type = field.getType();
 
     switch (type.getMinorType()) {
+    
+    
+    case MAP:
+      switch (type.getMode()) {
+      case REQUIRED:
+        return new MapVector(field, allocator);
+      case REPEATED:
+        return new RepeatedMapVector(field, allocator);
+      }
+    case LIST:
+      switch (type.getMode()) {
+      case REPEATED:
+        return new RepeatedListVector(field, allocator);
+      }    
 <#list vv.  types as type>
   <#list type.minor as minor>
     case ${minor.class?upper_case}:

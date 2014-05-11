@@ -23,9 +23,12 @@ import java.sql.Timestamp;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
+import org.joda.time.Period;
+
 <@pp.dropOutputFile />
 <#list vv.types as type>
 <#list type.minor as minor>
+<#assign friendlyType = (minor.friendlyType!minor.boxedType!type.boxedType) />
 
 <#if type.major == "Fixed">
 <@pp.changeOutputFile name="/org/apache/drill/exec/vector/${minor.class}Vector.java" />
@@ -71,6 +74,12 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
 
 
   public void allocateNew() {
+    if(!allocateNewSafe()){
+      throw new OutOfMemoryRuntimeException("Failure while allocating buffer.");
+    }
+  }
+  
+  public boolean allocateNewSafe() {
     clear();
     if (allocationMonitor > 5) {
       allocationValueCount = Math.max(2, (int) (allocationValueCount * 0.9));
@@ -80,7 +89,9 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
       allocationMonitor = 0;
     }
     this.data = allocator.buffer(allocationValueCount * ${type.width});
+    if(data == null) return false;
     this.data.readerIndex(0);
+    return true;
   }
 
     /**
@@ -94,9 +105,8 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
   }
   
   @Override
-  public FieldMetadata getMetadata() {
-    return FieldMetadata.newBuilder()
-             .setDef(getField().getDef())
+  public SerializedField getMetadata() {
+    return getMetadataBuilder()
              .setValueCount(valueCount)
              .setBufferLength(valueCount * ${type.width})
              .build();
@@ -113,8 +123,8 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
   }
   
   @Override
-  public void load(FieldMetadata metadata, ByteBuf buffer) {
-    assert this.field.getDef().equals(metadata.getDef());
+  public void load(SerializedField metadata, ByteBuf buffer) {
+    assert this.field.matches(metadata);
     int loaded = load(metadata.getValueCount(), buffer);
     assert metadata.getBufferLength() == loaded;
   }
@@ -169,8 +179,8 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     }
     
     @Override
-    public void copyValue(int fromIndex, int toIndex) {
-      to.copyFrom(fromIndex, toIndex, ${minor.class}Vector.this);
+    public boolean copyValueSafe(int fromIndex, int toIndex) {
+      return to.copyFromSafe(fromIndex, toIndex, ${minor.class}Vector.this);
     }
   }
   
@@ -192,6 +202,12 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
 
   public final class Accessor extends BaseValueVector.BaseAccessor{
 
+    final FieldReader reader = new ${minor.class}ReaderImpl(${minor.class}Vector.this);
+    
+    public FieldReader getReader(){
+      return reader;
+    }
+    
     public int getValueCount() {
       return valueCount;
     }
@@ -216,15 +232,17 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
       holder.index = data.getInt((index * ${type.width})+ ${minor.milliSecondsSize});
     }
 
-    void get(int index, Nullable${minor.class}Holder holder){
+    public void get(int index, Nullable${minor.class}Holder holder){
+      holder.isSet = 1;
       holder.value = data.getLong(index * ${type.width});
       holder.index = data.getInt((index * ${type.width})+ ${minor.milliSecondsSize});
     }
 
     @Override
-    public Object getObject(int index) {
-
-        return new Timestamp(data.getLong(index * ${type.width}));
+    public ${friendlyType} getObject(int index) {
+      long l = data.getLong(index * ${type.width});
+      DateTime t = new DateTime(l);
+      return t;
     }
 
     <#elseif (minor.class == "Interval")>
@@ -236,15 +254,25 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
       holder.milliSeconds = data.getInt(offsetIndex + ${minor.milliSecondsOffset});
     }
 
-    void get(int index, Nullable${minor.class}Holder holder){
+    public void get(int index, Nullable${minor.class}Holder holder){
       int offsetIndex = index * ${type.width};
+      holder.isSet = 1;
       holder.months = data.getInt(offsetIndex);
       holder.days = data.getInt(offsetIndex + ${minor.daysOffset});
       holder.milliSeconds = data.getInt(offsetIndex + ${minor.milliSecondsOffset});
     }
 
     @Override
-    public Object getObject(int index) {
+    public ${friendlyType} getObject(int index) {
+      int offsetIndex = index * ${type.width};
+      int months  = data.getInt(offsetIndex);
+      int days    = data.getInt(offsetIndex + ${minor.daysOffset});
+      int millis = data.getInt(offsetIndex + ${minor.milliSecondsOffset});
+      Period p = new Period();
+      return p.plusMonths(months).plusDays(days).plusMillis(millis);
+    }
+    
+    public StringBuilder getAsString(int index) {
 
       int offsetIndex = index * ${type.width};
 
@@ -287,14 +315,24 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
       holder.milliSeconds = data.getInt(offsetIndex + ${minor.milliSecondsOffset});
     }
 
-    void get(int index, Nullable${minor.class}Holder holder){
+    public void get(int index, Nullable${minor.class}Holder holder){
       int offsetIndex = index * ${type.width};
+      holder.isSet = 1;
       holder.days = data.getInt(offsetIndex);
       holder.milliSeconds = data.getInt(offsetIndex + ${minor.milliSecondsOffset});
     }
 
     @Override
-    public Object getObject(int index) {
+    public ${friendlyType} getObject(int index) {
+      int offsetIndex = index * ${type.width};
+      int millis = data.getInt(offsetIndex + ${minor.milliSecondsOffset});
+      int  days   = data.getInt(offsetIndex);
+      Period p = new Period();
+      return p.plusDays(days).plusMillis(millis);
+    }
+
+    
+    public StringBuilder getAsStringBuilder(int index) {
       int offsetIndex = index * ${type.width};
 
       int millis = data.getInt(offsetIndex + ${minor.milliSecondsOffset});
@@ -349,8 +387,8 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
 
     }
 
-    void get(int index, Nullable${minor.class}Holder holder) {
-
+    public void get(int index, Nullable${minor.class}Holder holder) {
+        holder.isSet = 1;
         holder.start = index * ${type.width};
 
         holder.buffer = data;
@@ -366,7 +404,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     }
 
       @Override
-      public Object getObject(int index) {
+      public ${friendlyType} getObject(int index) {
       <#if (minor.class == "Decimal28Sparse") || (minor.class == "Decimal38Sparse")>
       // Get the BigDecimal object
       return org.apache.drill.common.util.DecimalUtility.getBigDecimalFromSparse(data, index * ${type.width}, ${minor.nDecimalDigits}, getField().getScale());
@@ -381,13 +419,14 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
       holder.start = index * ${type.width};
     }
 
-    void get(int index, Nullable${minor.class}Holder holder){
+    public void get(int index, Nullable${minor.class}Holder holder){
+      holder.isSet = 1;
       holder.buffer = data;
       holder.start = index * ${type.width};
     }
 
     @Override
-    public Object getObject(int index) {
+    public ${friendlyType} getObject(int index) {
 
       ByteBuf dst = io.netty.buffer.Unpooled.wrappedBuffer(new byte[${type.width}]);
       //dst = new io.netty.buffer.SwappedByteBuf(dst);
@@ -407,58 +446,54 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     }
 
     <#if minor.class == "Date">
-    public Object getObject(int index) {
+    public ${friendlyType} getObject(int index) {
         org.joda.time.DateTime date = new org.joda.time.DateTime(get(index), org.joda.time.DateTimeZone.UTC);
         date = date.withZoneRetainFields(org.joda.time.DateTimeZone.getDefault());
-
-        return new Date(date.getMillis());
-
+        return date;
     }
+    
     <#elseif minor.class == "TimeStamp">
-    public Object getObject(int index) {
+    public ${friendlyType} getObject(int index) {
         org.joda.time.DateTime date = new org.joda.time.DateTime(get(index), org.joda.time.DateTimeZone.UTC);
         date = date.withZoneRetainFields(org.joda.time.DateTimeZone.getDefault());
-
-        return new Timestamp(date.getMillis());
+        return date;
     }
+    
     <#elseif minor.class == "IntervalYear">
-    public Object getObject(int index) {
+    public ${friendlyType} getObject(int index) {
 
       int value = get(index);
 
       int years  = (value / org.apache.drill.exec.expr.fn.impl.DateUtility.yearsToMonths);
       int months = (value % org.apache.drill.exec.expr.fn.impl.DateUtility.yearsToMonths);
-
-      String yearString = (Math.abs(years) == 1) ? " year " : " years ";
-      String monthString = (Math.abs(months) == 1) ? " month " : " months ";
-
-
-      return(new StringBuilder().append(years).append(yearString).append(months).append(monthString));
-
-
+      Period p = new Period();
+      return p.plusYears(years).plusMonths(months);
     }
+    
     <#elseif minor.class == "Time">
     @Override
-    public Object getObject(int index) {
+    public DateTime getObject(int index) {
 
         org.joda.time.DateTime time = new org.joda.time.DateTime(get(index), org.joda.time.DateTimeZone.UTC);
         time = time.withZoneRetainFields(org.joda.time.DateTimeZone.getDefault());
-
-        return new Time(time.getMillis());
+        return time;
     }
 
 
 
     <#elseif minor.class == "Decimal9" || minor.class == "Decimal18">
     @Override
-    public Object getObject(int index) {
+    public ${friendlyType} getObject(int index) {
 
         BigInteger value = BigInteger.valueOf(((${type.boxedType})get(index)).${type.javaType}Value());
         return new BigDecimal(value, getField().getScale());
     }
 
     <#else>
-    public Object getObject(int index) {
+    public ${friendlyType} getObject(int index) {
+      return get(index);
+    }
+    public ${minor.javaType!type.javaType} getPrimitiveObject(int index) {
       return get(index);
     }
     </#if>
@@ -471,8 +506,8 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
       holder.value = data.get${(minor.javaType!type.javaType)?cap_first}(index * ${type.width});
     }
 
-    void get(int index, Nullable${minor.class}Holder holder){
-
+    public void get(int index, Nullable${minor.class}Holder holder){
+      holder.isSet = 1;
       holder.value = data.get${(minor.javaType!type.javaType)?cap_first}(index * ${type.width});
     }
 
@@ -641,7 +676,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
      return true;
    }
 
-   protected void set(int index, Nullable${minor.class}Holder holder){
+   public void set(int index, Nullable${minor.class}Holder holder){
      data.setBytes(index * ${type.width}, holder.buffer, holder.start, ${type.width});
    }
    </#if>

@@ -62,14 +62,14 @@ public class ExpressionTest extends ExecTest {
 
   @Test
   public void testSpecial(final @Injectable RecordBatch batch, @Injectable ValueVector vector) throws Exception {
-    final TypedFieldId tfid = new TypedFieldId(Types.optional(MinorType.INT),0, false);
+    final TypedFieldId tfid = new TypedFieldId(Types.optional(MinorType.INT), false, 0);
 
     new NonStrictExpectations() {
       @NonStrict VectorWrapper<?> wrapper;
       {
         batch.getValueVectorId(new SchemaPath("alpha", ExpressionPosition.UNKNOWN));
         result = tfid;
-        batch.getValueAccessorById(tfid.getFieldId(), IntVector.class);
+        batch.getValueAccessorById(IntVector.class, tfid.getFieldIds());
         result = wrapper;
         wrapper.getValueVector();
         result = new IntVector(null, null);
@@ -81,7 +81,7 @@ public class ExpressionTest extends ExecTest {
 
   @Test
   public void testSchemaExpression(final @Injectable RecordBatch batch) throws Exception {
-    final TypedFieldId tfid = new TypedFieldId(Types.optional(MinorType.BIGINT), 0, false);
+    final TypedFieldId tfid = new TypedFieldId(Types.optional(MinorType.BIGINT), false, 0);
 
     new Expectations() {
       {

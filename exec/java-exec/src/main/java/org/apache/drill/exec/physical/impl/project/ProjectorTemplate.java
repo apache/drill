@@ -33,12 +33,12 @@ import com.google.common.collect.ImmutableList;
 
 public abstract class ProjectorTemplate implements Projector {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProjectorTemplate.class);
-  
+
   private ImmutableList<TransferPair> transfers;
   private SelectionVector2 vector2;
   private SelectionVector4 vector4;
   private SelectionVectorMode svMode;
-  
+
   public ProjectorTemplate() throws SchemaChangeException{
   }
 
@@ -47,18 +47,18 @@ public abstract class ProjectorTemplate implements Projector {
     switch(svMode){
     case FOUR_BYTE:
       throw new UnsupportedOperationException();
-      
-      
+
+
     case TWO_BYTE:
       final int count = recordCount;
       for(int i = 0; i < count; i++, firstOutputIndex++){
         doEval(vector2.getIndex(i), firstOutputIndex);
       }
       return recordCount;
-      
-      
+
+
     case NONE:
-      
+
       final int countN = recordCount;
       int i;
       for (i = startIndex; i < startIndex + countN; i++, firstOutputIndex++) {
@@ -76,8 +76,9 @@ public abstract class ProjectorTemplate implements Projector {
           t.transfer();
       }
       return recordCount;
-      
-      
+
+
+
     default:
       throw new UnsupportedOperationException();
     }
@@ -86,7 +87,7 @@ public abstract class ProjectorTemplate implements Projector {
   @Override
   public final void setup(FragmentContext context, RecordBatch incoming, RecordBatch outgoing, List<TransferPair> transfers)  throws SchemaChangeException{
 
-    this.svMode = incoming.getSchema().getSelectionVectorMode(); 
+    this.svMode = incoming.getSchema().getSelectionVectorMode();
     switch(svMode){
     case FOUR_BYTE:
       this.vector4 = incoming.getSelectionVector4();
@@ -103,7 +104,7 @@ public abstract class ProjectorTemplate implements Projector {
   public abstract boolean doEval(@Named("inIndex") int inIndex, @Named("outIndex") int outIndex);
 
 
-  
+
 
 
 }

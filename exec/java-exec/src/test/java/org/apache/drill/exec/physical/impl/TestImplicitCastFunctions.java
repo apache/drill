@@ -135,8 +135,8 @@ public class TestImplicitCastFunctions extends ExecTest {
     Object [] expected = new Object[5];
     expected [0] = new Integer (0);
     expected [1] = new Integer (0);
-    expected [2] = new Float (-4.2949673E9);
-    expected [3] = new Float (-4.2949673E9);
+    expected [2] = new Float (-2.14748365E9);
+    expected [3] = new Float (-2.14748365E9);
     expected [4] = new Double (-9.223372036854776E18);
 
     runTest(bitContext, connection, expected, "functions/cast/testICastMockCol.json");

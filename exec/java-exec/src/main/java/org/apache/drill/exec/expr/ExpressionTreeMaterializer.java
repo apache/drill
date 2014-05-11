@@ -69,7 +69,7 @@ import com.google.common.collect.Lists;
 public class ExpressionTreeMaterializer {
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExpressionTreeMaterializer.class);
-  
+
   private ExpressionTreeMaterializer() {
   };
 
@@ -239,36 +239,12 @@ public class ExpressionTreeMaterializer {
     @Override
     public LogicalExpression visitSchemaPath(SchemaPath path, FunctionImplementationRegistry value) {
 //      logger.debug("Visiting schema path {}", path);
-      PathSegment seg = path.getRootSegment();
-      List<String> segments = Lists.newArrayList();
-      segments.add(seg.getNameSegment().getPath().toString());
-      boolean isArrayElement = false;
-      int index = -1;
-      while((seg = seg.getChild()) != null) {
-        if (seg.isNamed()) {
-          segments.add(seg.getNameSegment().getPath().toString());
-          if (seg.isLastPath()) {
-            break;
-          }
-        } else {
-          if (!seg.isLastPath()) {
-            throw new UnsupportedOperationException("Repeated map type not supported");
-          }
-          index = seg.getArraySegment().getIndex();
-          isArrayElement = true;
-          break;
-        }
-      }
-      SchemaPath newPath = SchemaPath.getCompoundPath((String[]) segments.toArray(new String[0]));
-      TypedFieldId tfId = batch.getValueVectorId(newPath);
+      TypedFieldId tfId = batch.getValueVectorId(path);
       if (tfId == null) {
         logger.warn("Unable to find value vector of path {}, returning null instance.", path);
         return NullExpression.INSTANCE;
       } else {
-        ValueVectorReadExpression e = new ValueVectorReadExpression(tfId, index, isArrayElement);
-        if (isArrayElement) {
-          e.required();
-        }
+        ValueVectorReadExpression e = new ValueVectorReadExpression(tfId);
         return e;
       }
     }
@@ -361,15 +337,15 @@ public class ExpressionTreeMaterializer {
 
     @Override
     public LogicalExpression visitCastExpression(CastExpression e, FunctionImplementationRegistry value){
-      
+
       // if the cast is pointless, remove it.
       LogicalExpression input = e.getInput().accept(this,  value);
 
       MajorType newMajor = e.getMajorType();
       MinorType newMinor = input.getMajorType().getMinorType();
-      
+
       if(castEqual(e.getPosition(), newMajor, input.getMajorType())) return input; // don't do pointless cast.
-      
+
       if(newMinor == MinorType.LATE || newMinor == MinorType.NULL){
         // if the type still isn't fully bound, leave as cast expression.
         return new CastExpression(input, e.getMajorType(), e.getPosition());
@@ -391,10 +367,10 @@ public class ExpressionTreeMaterializer {
             newArgs.add(new ValueExpressions.LongExpression(type.getScale(), null));
         }
         FunctionCall fc = new FunctionCall(castFuncWithType, newArgs, e.getPosition());
-        return fc.accept(this, value);   
+        return fc.accept(this, value);
       }
     }
-  
+
     private boolean castEqual(ExpressionPosition pos, MajorType from, MajorType to){
       if(!from.getMinorType().equals(to.getMinorType())) return false;
       switch(from.getMinorType()){

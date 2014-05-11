@@ -71,7 +71,7 @@ public class TestReverseImplicitCast extends PopUnitTestBase {
         System.out.println(intAccessor1.getObject(i));
         assertEquals(intAccessor1.getObject(i), 10);
         System.out.println(varcharAccessor1.getObject(i));
-        assertEquals(varcharAccessor1.getObject(i), "101");
+        assertEquals(varcharAccessor1.getObject(i).toString(), "101");
       }
     }
   }

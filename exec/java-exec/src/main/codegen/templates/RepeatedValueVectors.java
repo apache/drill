@@ -18,9 +18,14 @@
 
 import java.lang.Override;
 
+import org.apache.drill.exec.vector.UInt4Vector;
+import org.mortbay.jetty.servlet.Holder;
+
 <@pp.dropOutputFile />
 <#list vv.types as type>
 <#list type.minor as minor>
+<#assign friendlyType = (minor.friendlyType!minor.boxedType!type.boxedType) />
+
 <@pp.changeOutputFile name="/org/apache/drill/exec/vector/Repeated${minor.class}Vector.java" />
 <#include "/@includes/license.ftl" />
 
@@ -120,11 +125,13 @@ package org.apache.drill.exec.vector;
     }
     
     @Override
-    public void copyValue(int fromIndex, int toIndex) {
-      to.copyFrom(fromIndex, toIndex, Repeated${minor.class}Vector.this);
+    public boolean copyValueSafe(int fromIndex, int toIndex) {
+      return to.copyFromSafe(fromIndex, toIndex, Repeated${minor.class}Vector.this);
     }
   }
 
+
+    
 <#if type.major == "VarLen">
     public void copyFrom(int inIndex, int outIndex, Repeated${minor.class}Vector v){
       int count = v.getAccessor().getCount(inIndex);
@@ -136,7 +143,7 @@ package org.apache.drill.exec.vector;
 
     public boolean copyFromSafe(int inIndex, int outIndex, Repeated${minor.class}Vector v){
       int count = v.getAccessor().getCount(inIndex);
-      getMutator().startNewGroup(outIndex);
+      if(!getMutator().startNewGroup(outIndex)) return false;
       for (int i = 0; i < count; i++) {
         if (!getMutator().addSafe(outIndex, v.getAccessor().get(inIndex, i))) {
           return false;
@@ -155,24 +162,32 @@ package org.apache.drill.exec.vector;
     }
 </#if>
 
-  <#if type.major == "VarLen">
-  @Override
-  public FieldMetadata getMetadata() {
-    return FieldMetadata.newBuilder()
-             .setDef(getField().getDef())
-             .setGroupCount(this.parentValueCount)
-             .setValueCount(this.childValueCount)
-             .setVarByteLength(values.getVarByteLength())
-             .setBufferLength(getBufferSize())
-             .build();
+  public boolean allocateNewSafe(){
+    if(!offsets.allocateNewSafe()) return false;
+    if(!values.allocateNewSafe()) return false;
+    mutator.reset();
+    accessor.reset();
+    sliceOffset = 0;
+    return true;
   }
-
+  
   public void allocateNew() {
     offsets.allocateNew();
     values.allocateNew();
     mutator.reset();
     accessor.reset();
     sliceOffset = 0;
+  }
+
+  <#if type.major == "VarLen">
+  @Override
+  public SerializedField getMetadata() {
+    return getMetadataBuilder() //
+             .setGroupCount(this.parentValueCount) //
+             .setValueCount(this.childValueCount) //
+             .setVarByteLength(values.getVarByteLength()) //
+             .setBufferLength(getBufferSize()) //
+             .build();
   }
   
   public void allocateNew(int totalBytes, int parentValueCount, int childValueCount) {
@@ -196,8 +211,8 @@ package org.apache.drill.exec.vector;
   }
   
   @Override
-  public void load(FieldMetadata metadata, ByteBuf buffer) {
-    assert this.field.getDef().equals(metadata.getDef());
+  public void load(SerializedField metadata, ByteBuf buffer) {
+    assert this.field.matches(metadata);
     int loaded = load(metadata.getVarByteLength(), metadata.getGroupCount(), metadata.getValueCount(), buffer);
     assert metadata.getBufferLength() == loaded;
   }
@@ -209,22 +224,12 @@ package org.apache.drill.exec.vector;
   <#else>
   
   @Override
-  public FieldMetadata getMetadata() {
-    return FieldMetadata.newBuilder()
-             .setDef(getField().getDef())
+  public SerializedField getMetadata() {
+    return getMetadataBuilder()
              .setGroupCount(this.parentValueCount)
              .setValueCount(this.childValueCount)
              .setBufferLength(getBufferSize())
              .build();
-  }
-
-  @Override
-  public void allocateNew() {
-    clear();
-    offsets.allocateNew();
-    values.allocateNew();
-    mutator.reset();
-    accessor.reset();
   }
   
   public void allocateNew(int parentValueCount, int childValueCount) {
@@ -246,8 +251,8 @@ package org.apache.drill.exec.vector;
   }
   
   @Override
-  public void load(FieldMetadata metadata, ByteBuf buffer) {
-    assert this.field.getDef().equals(metadata.getDef());
+  public void load(SerializedField metadata, ByteBuf buffer) {
+    assert this.field.matches(metadata);
     int loaded = load(metadata.getGroupCount(), metadata.getValueCount(), buffer);
     assert metadata.getBufferLength() == loaded;
   }
@@ -276,6 +281,13 @@ package org.apache.drill.exec.vector;
   }
   
   public final class Accessor implements ValueVector.Accessor{
+    
+    final FieldReader reader = new Repeated${minor.class}ReaderImpl(Repeated${minor.class}Vector.this);
+    
+    public FieldReader getReader(){
+      return reader;
+    }
+    
     /**
      * Get the elements at the given index.
      */
@@ -283,14 +295,19 @@ package org.apache.drill.exec.vector;
       return offsets.getAccessor().get(index+1) - offsets.getAccessor().get(index);
     }
     
-    public Object getObject(int index) {
-      List<Object> vals = Lists.newArrayList();
+    public List<${friendlyType}> getObject(int index) {
+      List<${friendlyType}> vals = Lists.newArrayList();
       int start = offsets.getAccessor().get(index) - sliceOffset;
       int end = offsets.getAccessor().get(index+1) - sliceOffset;
       for(int i = start; i < end; i++){
         vals.add(values.getAccessor().getObject(i));
       }
       return vals;
+    }
+    
+    public ${friendlyType} getSingleObject(int index, int arrayIndex){
+      int start = offsets.getAccessor().get(index);
+      return values.getAccessor().getObject(start + arrayIndex);
     }
 
     /**
@@ -323,6 +340,12 @@ package org.apache.drill.exec.vector;
       assert offset >= 0;
       values.getAccessor().get(offset + positionIndex, holder);
     }
+    
+    public void get(int index, int positionIndex, Nullable${minor.class}Holder holder) {
+      int offset = offsets.getAccessor().get(index);
+      assert offset >= 0;
+      values.getAccessor().get(offset + positionIndex, holder);
+    }
 
     public MaterializedField getField() {
       return field;
@@ -347,8 +370,12 @@ package org.apache.drill.exec.vector;
     private Mutator(){
     }
 
-    public void startNewGroup(int index) {
+    public boolean startNewGroup(int index) {
+      if(getValueCapacity() <= index){
+        return false;
+      }
       offsets.getMutator().set(index+1, offsets.getAccessor().get(index));
+      return true;
     }
 
     /**
@@ -370,14 +397,43 @@ package org.apache.drill.exec.vector;
     }
 
     public boolean addSafe(int index, byte[] bytes, int start, int length) {
+      if(offsets.getValueCapacity() <= index+1) return false;
       int nextOffset = offsets.getAccessor().get(index+1);
       boolean b1 = values.getMutator().setSafe(nextOffset, bytes, start, length);
       boolean b2 = offsets.getMutator().setSafe(index+1, nextOffset+1);
       return (b1 && b2);
     }
+
+    
     </#if>
 
-    public void add(int index, ${minor.class}Holder holder){
+    public boolean setSafe(int index, Repeated${minor.class}Holder h){
+      ${minor.class}Holder ih = new ${minor.class}Holder();
+      getMutator().startNewGroup(index);
+      for(int i = h.start; i < h.end; i++){
+        h.vector.getAccessor().get(i, ih);
+        if(!getMutator().addSafe(index, ih) ) return false;
+      }
+      return true;
+    }
+    
+    public boolean addSafe(int index, ${minor.class}Holder holder){
+      if(offsets.getValueCapacity() <= index+1) return false;
+      int nextOffset = offsets.getAccessor().get(index+1);
+      boolean b1 = values.getMutator().setSafe(nextOffset, holder);
+      boolean b2 = offsets.getMutator().setSafe(index+1, nextOffset+1);
+      return (b1 && b2);
+    }
+    
+    public boolean addSafe(int index, Nullable${minor.class}Holder holder){
+      if(offsets.getValueCapacity() <= index+1) return false;
+      int nextOffset = offsets.getAccessor().get(index+1);
+      boolean b1 = values.getMutator().setSafe(nextOffset, holder);
+      boolean b2 = offsets.getMutator().setSafe(index+1, nextOffset+1);
+      return (b1 && b2);
+    }
+    
+    protected void add(int index, ${minor.class}Holder holder){
       int nextOffset = offsets.getAccessor().get(index+1);
       values.getMutator().set(nextOffset, holder);
       offsets.getMutator().set(index+1, nextOffset+1);

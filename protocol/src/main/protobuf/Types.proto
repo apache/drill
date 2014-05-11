@@ -24,7 +24,7 @@ option optimize_for = SPEED;
 enum MinorType {
     LATE = 0;   //  late binding type
     MAP = 1;   //  an empty map column.  Useful for conceptual setup.  Children listed within here
-    REPEATMAP = 2;   //  a repeated map column (means that multiple children sit below this)
+    
     TINYINT = 3;   //  single byte signed integer
     SMALLINT = 4;   //  two byte signed integer
     INT = 5;   //  four byte signed integer
@@ -62,6 +62,7 @@ enum MinorType {
     NULL = 37; // a value of unknown type (e.g. a missing reference).
     INTERVALYEAR = 38; // Interval type specifying YEAR to MONTH
     INTERVALDAY = 39; // Interval type specifying DAY to SECONDS
+    LIST = 40;
 }
 
 message MajorType {

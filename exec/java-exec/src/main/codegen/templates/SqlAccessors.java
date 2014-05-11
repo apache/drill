@@ -100,7 +100,7 @@ public class ${name}Accessor extends AbstractSqlAccessor{
   <#if minor.class == "TimeStampTZ">
   @Override
   public Timestamp getTimestamp(int index) {
-      return (Timestamp) (ac.getObject(index));
+    return new Timestamp(ac.getObject(index).getMillis());
   }
   <#elseif minor.class == "Interval" || minor.class == "IntervalDay">
   @Override
@@ -110,7 +110,7 @@ public class ${name}Accessor extends AbstractSqlAccessor{
   <#elseif minor.class.startsWith("Decimal")>
   @Override
   public BigDecimal getBigDecimal(int index) {
-      return (BigDecimal) ac.getObject(index);
+      return ac.getObject(index);
   }
   <#else>
   @Override

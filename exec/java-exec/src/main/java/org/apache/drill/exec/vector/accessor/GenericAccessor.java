@@ -40,6 +40,6 @@ public class GenericAccessor extends AbstractSqlAccessor {
 
   @Override
   TypeProtos.MajorType getType() {
-    return v.getMetadata().getDef().getMajorType();
+    return v.getMetadata().getMajorType();
   }
 }

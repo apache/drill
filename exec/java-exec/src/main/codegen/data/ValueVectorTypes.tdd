@@ -56,10 +56,10 @@
       minor: [
         { class: "Int", valueHolder: "IntHolder" },
         { class: "UInt4", valueHolder: "UInt4Holder" },
-        { class: "Float4", javaType: "float" },
-        { class: "Time", javaType: "int"},
-        { class: "IntervalYear", javaType: "int"}
-        { class: "Decimal9", maxPrecisionDigits: 9},
+        { class: "Float4", javaType: "float" , boxedType: "Float" },
+        { class: "Time", javaType: "int", friendlyType: "DateTime" },
+        { class: "IntervalYear", javaType: "int", friendlyType: "Period" }
+        { class: "Decimal9", maxPrecisionDigits: 9, friendlyType: "BigDecimal" },
       ]
     },
     {
@@ -70,10 +70,10 @@
       minor: [
         { class: "BigInt" },
         { class: "UInt8" },
-        { class: "Float8", javaType: "double" , boxedType: "Double"},
-        { class: "Date", javaType: "long"},
-        { class: "TimeStamp", javaType: "long"}
-        { class: "Decimal18", maxPrecisionDigits: 18},
+        { class: "Float8", javaType: "double" , boxedType: "Double" },
+        { class: "Date", javaType: "long", friendlyType: "DateTime" },
+        { class: "TimeStamp", javaType: "long", friendlyType: "DateTime" }
+        { class: "Decimal18", maxPrecisionDigits: 18, friendlyType: "BigDecimal" },
         <#--
         { class: "Money", maxPrecisionDigits: 2, scale: 1, },
         -->
@@ -82,72 +82,81 @@
     {
       major: "Fixed",
       width: 12,
-      javaType: "ByteBuf"
+      javaType: "ByteBuf",
+      boxedType: "ByteBuf",
       minor: [
-        { class: "TimeStampTZ", milliSecondsSize: 8 },
-        { class: "IntervalDay", milliSecondsOffset: 4 }
+        { class: "TimeStampTZ", milliSecondsSize: 8, friendlyType: "DateTime" },
+        { class: "IntervalDay", milliSecondsOffset: 4, friendlyType: "Period" }
       ]
     },
     {
       major: "Fixed",
       width: 16,
       javaType: "ByteBuf"
+      boxedType: "ByteBuf",      
       minor: [
-        { class: "Interval", daysOffset: 4, milliSecondsOffset: 8}
+        { class: "Interval", daysOffset: 4, milliSecondsOffset: 8, friendlyType: "Period" }
       ]
     },
     {
       major: "Fixed",
       width: 12,
       javaType: "ByteBuf",
+      boxedType: "ByteBuf",
       minor: [
         <#--
         { class: "TimeTZ" },
         { class: "Interval" }
         -->
-        { class: "Decimal28Dense", maxPrecisionDigits: 28, nDecimalDigits: 3}
+        { class: "Decimal28Dense", maxPrecisionDigits: 28, nDecimalDigits: 3, friendlyType: "BigDecimal" }
       ]
     },
     {
       major: "Fixed",
       width: 16,
       javaType: "ByteBuf",
+      boxedType: "ByteBuf",
+      
       minor: [
-        { class: "Decimal38Dense", maxPrecisionDigits: 38, nDecimalDigits: 4}
+        { class: "Decimal38Dense", maxPrecisionDigits: 38, nDecimalDigits: 4, friendlyType: "BigDecimal" }
       ]
     },
     {
       major: "Fixed",
       width: 24,
       javaType: "ByteBuf",
+      boxedType: "ByteBuf",
       minor: [
-        { class: "Decimal38Sparse", maxPrecisionDigits: 38, nDecimalDigits: 6}
+        { class: "Decimal38Sparse", maxPrecisionDigits: 38, nDecimalDigits: 6, friendlyType: "BigDecimal" }
       ]
     },
     {
       major: "Fixed",
       width: 20,
       javaType: "ByteBuf",
+      boxedType: "ByteBuf",
       minor: [
-        { class: "Decimal28Sparse", maxPrecisionDigits: 28, nDecimalDigits: 5}
+        { class: "Decimal28Sparse", maxPrecisionDigits: 28, nDecimalDigits: 5, friendlyType: "BigDecimal" }
       ]
     },
     {
       major: "VarLen",
       width: 4,
       javaType: "int",
+      boxedType: "ByteBuf",
       minor: [
-        { class: "VarBinary" },
-        { class: "VarChar" }
-        { class: "Var16Char" }
+        { class: "VarBinary" , friendlyType: "byte[]" },
+        { class: "VarChar" , friendlyType: "Text" }
+        { class: "Var16Char" , friendlyType: "String" }
       ]
     },
     {
       major: "Bit",
       width: 1,
       javaType: "int",
+      boxedType: "ByteBuf",
       minor: [
-        { class: "Bit" }
+        { class: "Bit" , friendlyType: "Boolean" }
       ]
     }
   ]

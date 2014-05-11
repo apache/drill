@@ -81,8 +81,8 @@ public class TestAgg extends ExecTest {
       int[] keyArr = {Integer.MIN_VALUE, Integer.MAX_VALUE};
 
       for(int i =0; i < exec.getRecordCount(); i++){
-        assertEquals(cntArr[i], cnt.getAccessor().getObject(i));
-        assertEquals(keyArr[i], key.getAccessor().getObject(i));
+        assertEquals((Long) cntArr[i], cnt.getAccessor().getObject(i));
+        assertEquals((Integer) keyArr[i], key.getAccessor().getObject(i));
       }
     }
 
@@ -102,7 +102,7 @@ public class TestAgg extends ExecTest {
       BigIntVector key2 = exec.getValueVectorById(SchemaPath.getSimplePath("key2"), BigIntVector.class);
       BigIntVector cnt = exec.getValueVectorById(SchemaPath.getSimplePath("cnt"), BigIntVector.class);
       BigIntVector total = exec.getValueVectorById(SchemaPath.getSimplePath("total"), BigIntVector.class);
-      int[] keyArr1 = {Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE};
+      Integer[] keyArr1 = {Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE};
       long[] keyArr2 = {0,1,2,0,1,2};
       long[] cntArr = {34,34,34,34,34,34};
       long[] totalArr = {0,34,68,0,34,68};
@@ -116,10 +116,10 @@ public class TestAgg extends ExecTest {
 //        System.out.print("\t");
 //        System.out.print(total.getAccessor().getObject(i));
 //        System.out.println();
-        assertEquals(cntArr[i], cnt.getAccessor().getObject(i));
+        assertEquals((Long) cntArr[i], cnt.getAccessor().getObject(i));
         assertEquals(keyArr1[i], key1.getAccessor().getObject(i));
-        assertEquals(keyArr2[i], key2.getAccessor().getObject(i));
-        assertEquals(totalArr[i], total.getAccessor().getObject(i));
+        assertEquals((Long) keyArr2[i], key2.getAccessor().getObject(i));
+        assertEquals((Long) totalArr[i], total.getAccessor().getObject(i));
       }
     }
 

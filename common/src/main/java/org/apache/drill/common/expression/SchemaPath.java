@@ -35,12 +35,16 @@ import org.apache.drill.common.expression.parser.ExprParser.parse_return;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.proto.UserBitShared.NamePart;
+import org.apache.drill.exec.proto.UserBitShared.NamePart.Type;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
 
 public class SchemaPath extends LogicalExpressionBase {
 
@@ -60,6 +64,14 @@ public class SchemaPath extends LogicalExpressionBase {
     return new SchemaPath(s);
   }
 
+  public PathSegment getLastSegment(){
+    PathSegment s= rootSegment;
+    while(s.getChild() != null){
+      s = s.getChild();
+    }
+    return s;
+  }
+
   /**
    *
    * @param simpleName
@@ -70,6 +82,57 @@ public class SchemaPath extends LogicalExpressionBase {
     this.rootSegment = new NameSegment(simpleName);
     if(simpleName.contains(".")) throw new IllegalStateException("This is deprecated and only supports simpe paths.");
   }
+
+
+  public NamePart getAsNamePart(){
+    return getNamePart(rootSegment);
+  }
+
+  private static NamePart getNamePart(PathSegment s){
+    if(s == null) return null;
+    NamePart.Builder b = NamePart.newBuilder();
+    if(s.getChild() != null){
+      b.setChild(getNamePart(s.getChild()));
+    }
+
+    if(s.isArray()){
+      if(s.getArraySegment().hasIndex()) throw new IllegalStateException("You cannot convert a indexed schema path to a NamePart.  NameParts can only reference Vectors, not individual records or values.");
+      b.setType(Type.ARRAY);
+    }else{
+      b.setType(Type.NAME);
+      b.setName(s.getNameSegment().getPath());
+    }
+    return b.build();
+  }
+
+  private static PathSegment getPathSegment(NamePart n){
+    PathSegment child = n.hasChild() ? getPathSegment(n.getChild()) : null;
+    if(n.getType() == Type.ARRAY){
+      return new ArraySegment(child);
+    }else{
+      return new NameSegment(n.getName(), child);
+    }
+  }
+
+  public static SchemaPath create(NamePart namePart){
+    Preconditions.checkArgument(namePart.getType() == NamePart.Type.NAME);
+    return new SchemaPath((NameSegment) getPathSegment(namePart));
+  }
+
+
+  /**
+   * A simple is a path where there are no repeated elements outside the lowest level of the path.
+   * @return Whether this path is a simple path.
+   */
+  public boolean isSimplePath(){
+    PathSegment seg = rootSegment;
+    while(seg != null){
+      if(seg.isArray() && !seg.isLastPath()) return false;
+      seg = seg.getChild();
+    }
+    return true;
+  }
+
 
   public SchemaPath(SchemaPath path){
     super(path.getPosition());
@@ -93,6 +156,11 @@ public class SchemaPath extends LogicalExpressionBase {
 
   public SchemaPath getChild(String childPath){
     NameSegment newRoot = rootSegment.cloneWithNewChild(new NameSegment(childPath));
+    return new SchemaPath(newRoot);
+  }
+
+  public SchemaPath getUnindexedArrayChild(){
+    NameSegment newRoot = rootSegment.cloneWithNewChild(new ArraySegment(null));
     return new SchemaPath(newRoot);
   }
 

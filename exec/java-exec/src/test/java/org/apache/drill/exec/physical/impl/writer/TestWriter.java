@@ -66,8 +66,8 @@ public class TestWriter extends BaseTestQuery {
     QueryResultBatch batch = results.get(0);
     assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
 
-    VarCharVector fragmentIdV = (VarCharVector) batchLoader.getValueAccessorById(0, VarCharVector.class).getValueVector();
-    BigIntVector recordWrittenV = (BigIntVector) batchLoader.getValueAccessorById(1, BigIntVector.class).getValueVector();
+    VarCharVector fragmentIdV = (VarCharVector) batchLoader.getValueAccessorById(VarCharVector.class, 0).getValueVector();
+    BigIntVector recordWrittenV = (BigIntVector) batchLoader.getValueAccessorById(BigIntVector.class, 1).getValueVector();
 
     // expected only one row in output
     assertEquals(1, batchLoader.getRecordCount());
@@ -137,7 +137,7 @@ public class TestWriter extends BaseTestQuery {
       if (batchLoader.getRecordCount() <= 0)
         continue;
 
-      BigIntVector recordWrittenV = (BigIntVector) batchLoader.getValueAccessorById(1, BigIntVector.class).getValueVector();
+      BigIntVector recordWrittenV = (BigIntVector) batchLoader.getValueAccessorById(BigIntVector.class, 1).getValueVector();
 
       for (int i = 0; i < batchLoader.getRecordCount(); i++) {
         recordsWritten += recordWrittenV.getAccessor().get(i);

@@ -21,56 +21,43 @@ import java.util.Iterator;
 
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
-import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.record.TypedFieldId;
 
 import com.google.common.collect.Iterators;
 
-import javax.sound.sampled.FloatControl;
-
 public class ValueVectorReadExpression implements LogicalExpression{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ValueVectorReadExpression.class);
 
-  private MajorType type;
   private final TypedFieldId fieldId;
-  private final boolean superReader;
-  private final int index;
-  private final boolean isArrayElement;
-  
-  
-  public ValueVectorReadExpression(TypedFieldId tfId, int index, boolean isArrayElement){
-    this.type = tfId.getType();
+
+
+  public ValueVectorReadExpression(TypedFieldId tfId){
     this.fieldId = tfId;
-    this.superReader = tfId.isHyperReader();
-    this.index = index;
-    this.isArrayElement = isArrayElement;
   }
 
-  public void required() {
-    type = Types.required(type.getMinorType());
+  public boolean hasReadPath(){
+    return fieldId.hasRemainder();
   }
 
-  public boolean isArrayElement() {
-    return isArrayElement;
+  public PathSegment getReadPath(){
+    return fieldId.getRemainder();
   }
 
-  public ValueVectorReadExpression(TypedFieldId tfId) {
-    this(tfId, -1, false);
-  }
-  
   public TypedFieldId getTypedFieldId(){
     return fieldId;
   }
-  
+
   public boolean isSuperReader(){
-    return superReader;
+    return fieldId.isHyperReader();
   }
   @Override
   public MajorType getMajorType() {
-    return type;
+    return fieldId.getFinalType();
   }
 
   @Override
@@ -82,10 +69,6 @@ public class ValueVectorReadExpression implements LogicalExpression{
     return fieldId;
   }
 
-  public int getIndex() {
-    return index;
-  }
-
   @Override
   public ExpressionPosition getPosition() {
     return ExpressionPosition.UNKNOWN;
@@ -95,6 +78,6 @@ public class ValueVectorReadExpression implements LogicalExpression{
   public Iterator<LogicalExpression> iterator() {
     return Iterators.emptyIterator();
   }
-  
-  
+
+
 }

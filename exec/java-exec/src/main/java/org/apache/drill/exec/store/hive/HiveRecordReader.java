@@ -224,7 +224,7 @@ public class HiveRecordReader implements RecordReader {
         PrimitiveCategory pCat = primitiveCategories.get(i);
         MajorType type = getMajorType(pCat);
         MaterializedField field = MaterializedField.create(SchemaPath.getSimplePath(columnNames.get(i)), type);
-        ValueVector vv = output.addField(field, TypeHelper.getValueVectorClass(type.getMinorType(), type.getMode()));
+        ValueVector vv = output.addField(field, (Class<? extends ValueVector>) TypeHelper.getValueVectorClass(type.getMinorType(), type.getMode()));
         vectors.add(vv);
       }
       for (int i = 0; i < selectedPartitionNames.size(); i++) {

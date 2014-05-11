@@ -104,8 +104,8 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
     return sv4;
   }
 
-  
-  
+
+
   @Override
   public void cleanup() {
     if (sv4 != null) {
@@ -127,8 +127,8 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
         return IterOutcome.NONE;
       }
     }
-    
-    
+
+
     try{
       outer: while (true) {
         Stopwatch watch = new Stopwatch();
@@ -166,7 +166,7 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
           throw new UnsupportedOperationException();
         }
       }
-      
+
       if (schema == null){
         // builder may be null at this point if the first incoming batch is empty
         return IterOutcome.NONE;
@@ -181,7 +181,7 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
       container.buildSchema(BatchSchema.SelectionVectorMode.FOUR_BYTE);
 
       return IterOutcome.OK_NEW_SCHEMA;
-      
+
     }catch(SchemaChangeException | ClassTransformationException | IOException ex){
       kill();
       logger.error("Failure during query", ex);
@@ -239,10 +239,10 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
     CodeGenerator<PriorityQueue> cg = CodeGenerator.get(PriorityQueue.TEMPLATE_DEFINITION, context.getFunctionRegistry());
     ClassGenerator<PriorityQueue> g = cg.getRoot();
     g.setMappingSet(mainMapping);
-    
+
     for(Ordering od : orderings){
       // first, we rewrite the evaluation stack for each side of the comparison.
-      ErrorCollector collector = new ErrorCollectorImpl(); 
+      ErrorCollector collector = new ErrorCollectorImpl();
       final LogicalExpression expr = ExpressionTreeMaterializer.materialize(od.getExpr(), batch, collector, context.getFunctionRegistry());
       if(collector.hasErrors()) throw new SchemaChangeException("Failure while materializing expression. " + collector.toErrorString());
       g.setMappingSet(leftMapping);
@@ -250,26 +250,26 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
       g.setMappingSet(rightMapping);
       HoldingContainer right = g.addExpr(expr, false);
       g.setMappingSet(mainMapping);
-      
+
       // next we wrap the two comparison sides and add the expression block for the comparison.
       LogicalExpression fh = FunctionGenerationHelper.getComparator(left, right, context.getFunctionRegistry());
       HoldingContainer out = g.addExpr(fh, false);
       JConditional jc = g.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)));
-      
+
       if(od.getDirection() == Direction.ASCENDING){
         jc._then()._return(out.getValue());
       }else{
         jc._then()._return(out.getValue().minus());
       }
     }
-    
+
     g.getEvalBlock()._return(JExpr.lit(0));
 
     PriorityQueue q = context.getImplementationClass(cg);
     q.init(config.getLimit(), context, oContext.getAllocator(), schema.getSelectionVectorMode() == BatchSchema.SelectionVectorMode.TWO_BYTE);
     return q;
   }
-  
+
   @Override
   public WritableBatch getWritableBatch() {
     throw new UnsupportedOperationException("A sort batch is not writable.");
@@ -332,8 +332,8 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
     }
 
     @Override
-    public VectorWrapper<?> getValueAccessorById(int fieldId, Class<?> clazz) {
-      return container.getValueAccessorById(fieldId, clazz);
+    public VectorWrapper<?> getValueAccessorById(Class<?> clazz, int... ids) {
+      return container.getValueAccessorById(clazz, ids);
     }
 
     @Override
@@ -355,6 +355,6 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
       return container.iterator();
     }
   }
-  
+
 
 }

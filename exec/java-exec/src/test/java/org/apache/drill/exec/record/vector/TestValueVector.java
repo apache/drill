@@ -21,13 +21,14 @@ import static org.junit.Assert.assertEquals;
 
 import java.nio.charset.Charset;
 
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.TopLevelAllocator;
-import org.apache.drill.exec.proto.SchemaDefProtos.FieldDef;
+import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.BitVector;
 import org.apache.drill.exec.vector.NullableFloat4Vector;
@@ -44,14 +45,11 @@ public class TestValueVector extends ExecTest {
   public void testFixedType() {
     // Build a required uint field definition
     MajorType.Builder typeBuilder = MajorType.newBuilder();
-    FieldDef.Builder defBuilder = FieldDef.newBuilder();
     typeBuilder
         .setMinorType(MinorType.UINT4)
         .setMode(DataMode.REQUIRED)
         .setWidth(4);
-    defBuilder
-        .setMajorType(typeBuilder.build());
-        MaterializedField field = MaterializedField.create(defBuilder.build());
+        MaterializedField field = MaterializedField.create(SchemaPath.getSimplePath(""), typeBuilder.build());
 
     // Create a new value vector for 1024 integers
     UInt4Vector v = new UInt4Vector(field, allocator);
@@ -78,7 +76,7 @@ public class TestValueVector extends ExecTest {
   public void testNullableVarLen2() {
     // Build an optional varchar field definition
     MajorType.Builder typeBuilder = MajorType.newBuilder();
-    FieldDef.Builder defBuilder = FieldDef.newBuilder();
+    SerializedField.Builder defBuilder = SerializedField.newBuilder();
     typeBuilder
         .setMinorType(MinorType.VARCHAR)
         .setMode(DataMode.OPTIONAL)
@@ -124,7 +122,7 @@ public class TestValueVector extends ExecTest {
   public void testNullableFixedType() {
     // Build an optional uint field definition
     MajorType.Builder typeBuilder = MajorType.newBuilder();
-    FieldDef.Builder defBuilder = FieldDef.newBuilder();
+    SerializedField.Builder defBuilder = SerializedField.newBuilder();
     typeBuilder
         .setMinorType(MinorType.UINT4)
         .setMode(DataMode.OPTIONAL)
@@ -211,7 +209,7 @@ public class TestValueVector extends ExecTest {
   public void testNullableFloat() {
     // Build an optional float field definition
     MajorType.Builder typeBuilder = MajorType.newBuilder();
-    FieldDef.Builder defBuilder = FieldDef.newBuilder();
+    SerializedField.Builder defBuilder = SerializedField.newBuilder();
     typeBuilder
         .setMinorType(MinorType.FLOAT4)
         .setMode(DataMode.OPTIONAL)
@@ -270,7 +268,7 @@ public class TestValueVector extends ExecTest {
   public void testBitVector() {
     // Build a required boolean field definition
     MajorType.Builder typeBuilder = MajorType.newBuilder();
-    FieldDef.Builder defBuilder = FieldDef.newBuilder();
+    SerializedField.Builder defBuilder = SerializedField.newBuilder();
     typeBuilder
         .setMinorType(MinorType.BIT)
         .setMode(DataMode.REQUIRED)

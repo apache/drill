@@ -22,13 +22,15 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.complex.AbstractMapVector;
 
 import com.beust.jcommander.internal.Lists;
 import com.google.common.base.Preconditions;
 
-public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccessible {
+public class VectorContainer extends AbstractMapVector implements Iterable<VectorWrapper<?>>, VectorAccessible {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(VectorContainer.class);
 
   protected final List<VectorWrapper<?>> wrappers = Lists.newArrayList();
@@ -59,6 +61,10 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
       vv[i] = vectors.get(i);
     }
     add(vv, releasable);
+  }
+
+  public <T extends ValueVector> T addOrGet(String name, MajorType type, Class<T> clazz){
+    return null;
   }
 
   /**
@@ -94,7 +100,7 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
     schema = null;
     int i = wrappers.size();
     wrappers.add(SimpleVectorWrapper.create(vv));
-    return new TypedFieldId(vv.getField().getType(), i, false);
+    return new TypedFieldId(vv.getField().getType(), i);
   }
 
   public void add(ValueVector[] hyperVector) {
@@ -129,29 +135,33 @@ public class VectorContainer implements Iterable<VectorWrapper<?>>, VectorAccess
   public TypedFieldId getValueVectorId(SchemaPath path) {
     for (int i = 0; i < wrappers.size(); i++) {
       VectorWrapper<?> va = wrappers.get(i);
-      SchemaPath w = va.getField().getAsSchemaPath();
-      if (w.equals(path)){
-        return new TypedFieldId(va.getField().getType(), i, va.isHyper());
+      TypedFieldId id = va.getFieldIdIfMatches(i, path);
+      if(id != null){
+        return id;
       }
     }
 
-    if(path.getRootSegment().isNamed() && path.getRootSegment().getNameSegment().getPath().equals("_MAP") && path.getRootSegment().isLastPath()) throw new UnsupportedOperationException("Drill does not yet support map references.");
     return null;
   }
 
 
+
+
   @Override
-  public VectorWrapper<?> getValueAccessorById(int fieldId, Class<?> clazz) {
-    VectorWrapper<?> va = wrappers.get(fieldId);
-    if(va!= null && clazz == null){
-      return (VectorWrapper<?>) va;
-    }
-    if (va != null && va.getVectorClass() != clazz) {
+  public VectorWrapper<?> getValueAccessorById(Class<?> clazz, int... fieldIds) {
+    Preconditions.checkArgument(fieldIds.length >= 1);
+    VectorWrapper<?> va = wrappers.get(fieldIds[0]);
+
+    if(va == null) return null;
+
+    if (fieldIds.length == 1 && clazz != null && !clazz.isAssignableFrom(va.getVectorClass())) {
       throw new IllegalStateException(String.format(
           "Failure while reading vector.  Expected vector class of %s but was holding vector class %s.",
           clazz.getCanonicalName(), va.getVectorClass().getCanonicalName()));
     }
-    return (VectorWrapper<?>) va;
+
+    return (VectorWrapper<?>) va.getChildWrapper(fieldIds);
+
   }
 
   public BatchSchema getSchema() {

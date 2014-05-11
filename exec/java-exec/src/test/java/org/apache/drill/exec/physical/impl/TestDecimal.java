@@ -80,8 +80,8 @@ public class TestDecimal extends PopUnitTestBase{
 
 
             for (int i = 0; i < dec9Accessor.getValueCount(); i++) {
-                assertEquals(dec9Accessor.getObject(i), decimal9Output[i]);
-                assertEquals(dec18Accessor.getObject(i), decimal18Output[i]);
+                assertEquals(dec9Accessor.getObject(i).toString(), decimal9Output[i]);
+                assertEquals(dec18Accessor.getObject(i).toString(), decimal18Output[i]);
             }
             assertEquals(6, dec9Accessor.getValueCount());
             assertEquals(6, dec18Accessor.getValueCount());
@@ -161,9 +161,9 @@ public class TestDecimal extends PopUnitTestBase{
             ValueVector.Accessor mulAccessor = itr.next().getValueVector().getAccessor();
 
             for (int i = 0; i < addAccessor.getValueCount(); i++) {
-                assertEquals(addAccessor.getObject(i), addOutput[i]);
-                assertEquals(subAccessor.getObject(i), subtractOutput[i]);
-                assertEquals(mulAccessor.getObject(i), multiplyOutput[i]);
+                assertEquals(addAccessor.getObject(i).toString(), addOutput[i]);
+                assertEquals(subAccessor.getObject(i).toString(), subtractOutput[i]);
+                assertEquals(mulAccessor.getObject(i).toString(), multiplyOutput[i]);
 
             }
             assertEquals(6, addAccessor.getValueCount());
@@ -206,9 +206,9 @@ public class TestDecimal extends PopUnitTestBase{
             ValueVector.Accessor mulAccessor = itr.next().getValueVector().getAccessor();
 
             for (int i = 0; i < addAccessor.getValueCount(); i++) {
-                assertEquals(addAccessor.getObject(i), addOutput[i]);
-                assertEquals(subAccessor.getObject(i), subtractOutput[i]);
-                assertEquals(mulAccessor.getObject(i), multiplyOutput[i]);
+                assertEquals(addAccessor.getObject(i).toString(), addOutput[i]);
+                assertEquals(subAccessor.getObject(i).toString(), subtractOutput[i]);
+                assertEquals(mulAccessor.getObject(i).toString(), multiplyOutput[i]);
             }
             assertEquals(7, addAccessor.getValueCount());
             assertEquals(7, subAccessor.getValueCount());
@@ -255,7 +255,7 @@ public class TestDecimal extends PopUnitTestBase{
             ValueVector.Accessor accessor = v.getValueVector().getAccessor();
 
             for (int i = 0; i < accessor.getValueCount(); i++) {
-                assertEquals(sortOutput[i], accessor.getObject(i));
+                assertEquals(sortOutput[i], accessor.getObject(i).toString());
             }
             assertEquals(10, accessor.getValueCount());
         }
@@ -293,7 +293,7 @@ public class TestDecimal extends PopUnitTestBase{
             ValueVector.Accessor accessor = v.getValueVector().getAccessor();
 
             for (int i = 0; i < accessor.getValueCount(); i++) {
-                assertEquals(accessor.getObject(i), sortOutput[i]);
+                assertEquals(accessor.getObject(i).toString(), sortOutput[i]);
             }
             assertEquals(7, accessor.getValueCount());
         }

@@ -3128,40 +3128,40 @@ public final class UserBitShared {
   public interface RecordBatchDefOrBuilder
       extends com.google.protobuf.MessageOrBuilder {
 
-    // repeated .exec.shared.FieldMetadata field = 1;
+    // optional int32 record_count = 1;
     /**
-     * <code>repeated .exec.shared.FieldMetadata field = 1;</code>
-     */
-    java.util.List<org.apache.drill.exec.proto.UserBitShared.FieldMetadata> 
-        getFieldList();
-    /**
-     * <code>repeated .exec.shared.FieldMetadata field = 1;</code>
-     */
-    org.apache.drill.exec.proto.UserBitShared.FieldMetadata getField(int index);
-    /**
-     * <code>repeated .exec.shared.FieldMetadata field = 1;</code>
-     */
-    int getFieldCount();
-    /**
-     * <code>repeated .exec.shared.FieldMetadata field = 1;</code>
-     */
-    java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.FieldMetadataOrBuilder> 
-        getFieldOrBuilderList();
-    /**
-     * <code>repeated .exec.shared.FieldMetadata field = 1;</code>
-     */
-    org.apache.drill.exec.proto.UserBitShared.FieldMetadataOrBuilder getFieldOrBuilder(
-        int index);
-
-    // optional int32 record_count = 2;
-    /**
-     * <code>optional int32 record_count = 2;</code>
+     * <code>optional int32 record_count = 1;</code>
      */
     boolean hasRecordCount();
     /**
-     * <code>optional int32 record_count = 2;</code>
+     * <code>optional int32 record_count = 1;</code>
      */
     int getRecordCount();
+
+    // repeated .exec.shared.SerializedField field = 2;
+    /**
+     * <code>repeated .exec.shared.SerializedField field = 2;</code>
+     */
+    java.util.List<org.apache.drill.exec.proto.UserBitShared.SerializedField> 
+        getFieldList();
+    /**
+     * <code>repeated .exec.shared.SerializedField field = 2;</code>
+     */
+    org.apache.drill.exec.proto.UserBitShared.SerializedField getField(int index);
+    /**
+     * <code>repeated .exec.shared.SerializedField field = 2;</code>
+     */
+    int getFieldCount();
+    /**
+     * <code>repeated .exec.shared.SerializedField field = 2;</code>
+     */
+    java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.SerializedFieldOrBuilder> 
+        getFieldOrBuilderList();
+    /**
+     * <code>repeated .exec.shared.SerializedField field = 2;</code>
+     */
+    org.apache.drill.exec.proto.UserBitShared.SerializedFieldOrBuilder getFieldOrBuilder(
+        int index);
 
     // optional bool is_selection_vector_2 = 3;
     /**
@@ -3224,17 +3224,17 @@ public final class UserBitShared {
               }
               break;
             }
-            case 10: {
-              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
-                field_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserBitShared.FieldMetadata>();
-                mutable_bitField0_ |= 0x00000001;
-              }
-              field_.add(input.readMessage(org.apache.drill.exec.proto.UserBitShared.FieldMetadata.PARSER, extensionRegistry));
-              break;
-            }
-            case 16: {
+            case 8: {
               bitField0_ |= 0x00000001;
               recordCount_ = input.readInt32();
+              break;
+            }
+            case 18: {
+              if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+                field_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserBitShared.SerializedField>();
+                mutable_bitField0_ |= 0x00000002;
+              }
+              field_.add(input.readMessage(org.apache.drill.exec.proto.UserBitShared.SerializedField.PARSER, extensionRegistry));
               break;
             }
             case 24: {
@@ -3250,7 +3250,7 @@ public final class UserBitShared {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e.getMessage()).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+        if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
           field_ = java.util.Collections.unmodifiableList(field_);
         }
         this.unknownFields = unknownFields.build();
@@ -3285,56 +3285,56 @@ public final class UserBitShared {
     }
 
     private int bitField0_;
-    // repeated .exec.shared.FieldMetadata field = 1;
-    public static final int FIELD_FIELD_NUMBER = 1;
-    private java.util.List<org.apache.drill.exec.proto.UserBitShared.FieldMetadata> field_;
-    /**
-     * <code>repeated .exec.shared.FieldMetadata field = 1;</code>
-     */
-    public java.util.List<org.apache.drill.exec.proto.UserBitShared.FieldMetadata> getFieldList() {
-      return field_;
-    }
-    /**
-     * <code>repeated .exec.shared.FieldMetadata field = 1;</code>
-     */
-    public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.FieldMetadataOrBuilder> 
-        getFieldOrBuilderList() {
-      return field_;
-    }
-    /**
-     * <code>repeated .exec.shared.FieldMetadata field = 1;</code>
-     */
-    public int getFieldCount() {
-      return field_.size();
-    }
-    /**
-     * <code>repeated .exec.shared.FieldMetadata field = 1;</code>
-     */
-    public org.apache.drill.exec.proto.UserBitShared.FieldMetadata getField(int index) {
-      return field_.get(index);
-    }
-    /**
-     * <code>repeated .exec.shared.FieldMetadata field = 1;</code>
-     */
-    public org.apache.drill.exec.proto.UserBitShared.FieldMetadataOrBuilder getFieldOrBuilder(
-        int index) {
-      return field_.get(index);
-    }
-
-    // optional int32 record_count = 2;
-    public static final int RECORD_COUNT_FIELD_NUMBER = 2;
+    // optional int32 record_count = 1;
+    public static final int RECORD_COUNT_FIELD_NUMBER = 1;
     private int recordCount_;
     /**
-     * <code>optional int32 record_count = 2;</code>
+     * <code>optional int32 record_count = 1;</code>
      */
     public boolean hasRecordCount() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     /**
-     * <code>optional int32 record_count = 2;</code>
+     * <code>optional int32 record_count = 1;</code>
      */
     public int getRecordCount() {
       return recordCount_;
+    }
+
+    // repeated .exec.shared.SerializedField field = 2;
+    public static final int FIELD_FIELD_NUMBER = 2;
+    private java.util.List<org.apache.drill.exec.proto.UserBitShared.SerializedField> field_;
+    /**
+     * <code>repeated .exec.shared.SerializedField field = 2;</code>
+     */
+    public java.util.List<org.apache.drill.exec.proto.UserBitShared.SerializedField> getFieldList() {
+      return field_;
+    }
+    /**
+     * <code>repeated .exec.shared.SerializedField field = 2;</code>
+     */
+    public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.SerializedFieldOrBuilder> 
+        getFieldOrBuilderList() {
+      return field_;
+    }
+    /**
+     * <code>repeated .exec.shared.SerializedField field = 2;</code>
+     */
+    public int getFieldCount() {
+      return field_.size();
+    }
+    /**
+     * <code>repeated .exec.shared.SerializedField field = 2;</code>
+     */
+    public org.apache.drill.exec.proto.UserBitShared.SerializedField getField(int index) {
+      return field_.get(index);
+    }
+    /**
+     * <code>repeated .exec.shared.SerializedField field = 2;</code>
+     */
+    public org.apache.drill.exec.proto.UserBitShared.SerializedFieldOrBuilder getFieldOrBuilder(
+        int index) {
+      return field_.get(index);
     }
 
     // optional bool is_selection_vector_2 = 3;
@@ -3354,8 +3354,8 @@ public final class UserBitShared {
     }
 
     private void initFields() {
-      field_ = java.util.Collections.emptyList();
       recordCount_ = 0;
+      field_ = java.util.Collections.emptyList();
       isSelectionVector2_ = false;
     }
     private byte memoizedIsInitialized = -1;
@@ -3370,11 +3370,11 @@ public final class UserBitShared {
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       getSerializedSize();
-      for (int i = 0; i < field_.size(); i++) {
-        output.writeMessage(1, field_.get(i));
-      }
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeInt32(2, recordCount_);
+        output.writeInt32(1, recordCount_);
+      }
+      for (int i = 0; i < field_.size(); i++) {
+        output.writeMessage(2, field_.get(i));
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         output.writeBool(3, isSelectionVector2_);
@@ -3388,13 +3388,13 @@ public final class UserBitShared {
       if (size != -1) return size;
 
       size = 0;
-      for (int i = 0; i < field_.size(); i++) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(1, field_.get(i));
-      }
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(2, recordCount_);
+          .computeInt32Size(1, recordCount_);
+      }
+      for (int i = 0; i < field_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(2, field_.get(i));
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
@@ -3517,14 +3517,14 @@ public final class UserBitShared {
 
       public Builder clear() {
         super.clear();
+        recordCount_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000001);
         if (fieldBuilder_ == null) {
           field_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000001);
+          bitField0_ = (bitField0_ & ~0x00000002);
         } else {
           fieldBuilder_.clear();
         }
-        recordCount_ = 0;
-        bitField0_ = (bitField0_ & ~0x00000002);
         isSelectionVector2_ = false;
         bitField0_ = (bitField0_ & ~0x00000004);
         return this;
@@ -3555,19 +3555,19 @@ public final class UserBitShared {
         org.apache.drill.exec.proto.UserBitShared.RecordBatchDef result = new org.apache.drill.exec.proto.UserBitShared.RecordBatchDef(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.recordCount_ = recordCount_;
         if (fieldBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          if (((bitField0_ & 0x00000002) == 0x00000002)) {
             field_ = java.util.Collections.unmodifiableList(field_);
-            bitField0_ = (bitField0_ & ~0x00000001);
+            bitField0_ = (bitField0_ & ~0x00000002);
           }
           result.field_ = field_;
         } else {
           result.field_ = fieldBuilder_.build();
         }
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
-          to_bitField0_ |= 0x00000001;
-        }
-        result.recordCount_ = recordCount_;
         if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
           to_bitField0_ |= 0x00000002;
         }
@@ -3588,11 +3588,14 @@ public final class UserBitShared {
 
       public Builder mergeFrom(org.apache.drill.exec.proto.UserBitShared.RecordBatchDef other) {
         if (other == org.apache.drill.exec.proto.UserBitShared.RecordBatchDef.getDefaultInstance()) return this;
+        if (other.hasRecordCount()) {
+          setRecordCount(other.getRecordCount());
+        }
         if (fieldBuilder_ == null) {
           if (!other.field_.isEmpty()) {
             if (field_.isEmpty()) {
               field_ = other.field_;
-              bitField0_ = (bitField0_ & ~0x00000001);
+              bitField0_ = (bitField0_ & ~0x00000002);
             } else {
               ensureFieldIsMutable();
               field_.addAll(other.field_);
@@ -3605,7 +3608,7 @@ public final class UserBitShared {
               fieldBuilder_.dispose();
               fieldBuilder_ = null;
               field_ = other.field_;
-              bitField0_ = (bitField0_ & ~0x00000001);
+              bitField0_ = (bitField0_ & ~0x00000002);
               fieldBuilder_ = 
                 com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
                    getFieldFieldBuilder() : null;
@@ -3613,9 +3616,6 @@ public final class UserBitShared {
               fieldBuilder_.addAllMessages(other.field_);
             }
           }
-        }
-        if (other.hasRecordCount()) {
-          setRecordCount(other.getRecordCount());
         }
         if (other.hasIsSelectionVector2()) {
           setIsSelectionVector2(other.getIsSelectionVector2());
@@ -3647,23 +3647,56 @@ public final class UserBitShared {
       }
       private int bitField0_;
 
-      // repeated .exec.shared.FieldMetadata field = 1;
-      private java.util.List<org.apache.drill.exec.proto.UserBitShared.FieldMetadata> field_ =
+      // optional int32 record_count = 1;
+      private int recordCount_ ;
+      /**
+       * <code>optional int32 record_count = 1;</code>
+       */
+      public boolean hasRecordCount() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional int32 record_count = 1;</code>
+       */
+      public int getRecordCount() {
+        return recordCount_;
+      }
+      /**
+       * <code>optional int32 record_count = 1;</code>
+       */
+      public Builder setRecordCount(int value) {
+        bitField0_ |= 0x00000001;
+        recordCount_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 record_count = 1;</code>
+       */
+      public Builder clearRecordCount() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        recordCount_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // repeated .exec.shared.SerializedField field = 2;
+      private java.util.List<org.apache.drill.exec.proto.UserBitShared.SerializedField> field_ =
         java.util.Collections.emptyList();
       private void ensureFieldIsMutable() {
-        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
-          field_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserBitShared.FieldMetadata>(field_);
-          bitField0_ |= 0x00000001;
+        if (!((bitField0_ & 0x00000002) == 0x00000002)) {
+          field_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserBitShared.SerializedField>(field_);
+          bitField0_ |= 0x00000002;
          }
       }
 
       private com.google.protobuf.RepeatedFieldBuilder<
-          org.apache.drill.exec.proto.UserBitShared.FieldMetadata, org.apache.drill.exec.proto.UserBitShared.FieldMetadata.Builder, org.apache.drill.exec.proto.UserBitShared.FieldMetadataOrBuilder> fieldBuilder_;
+          org.apache.drill.exec.proto.UserBitShared.SerializedField, org.apache.drill.exec.proto.UserBitShared.SerializedField.Builder, org.apache.drill.exec.proto.UserBitShared.SerializedFieldOrBuilder> fieldBuilder_;
 
       /**
-       * <code>repeated .exec.shared.FieldMetadata field = 1;</code>
+       * <code>repeated .exec.shared.SerializedField field = 2;</code>
        */
-      public java.util.List<org.apache.drill.exec.proto.UserBitShared.FieldMetadata> getFieldList() {
+      public java.util.List<org.apache.drill.exec.proto.UserBitShared.SerializedField> getFieldList() {
         if (fieldBuilder_ == null) {
           return java.util.Collections.unmodifiableList(field_);
         } else {
@@ -3671,7 +3704,7 @@ public final class UserBitShared {
         }
       }
       /**
-       * <code>repeated .exec.shared.FieldMetadata field = 1;</code>
+       * <code>repeated .exec.shared.SerializedField field = 2;</code>
        */
       public int getFieldCount() {
         if (fieldBuilder_ == null) {
@@ -3681,9 +3714,9 @@ public final class UserBitShared {
         }
       }
       /**
-       * <code>repeated .exec.shared.FieldMetadata field = 1;</code>
+       * <code>repeated .exec.shared.SerializedField field = 2;</code>
        */
-      public org.apache.drill.exec.proto.UserBitShared.FieldMetadata getField(int index) {
+      public org.apache.drill.exec.proto.UserBitShared.SerializedField getField(int index) {
         if (fieldBuilder_ == null) {
           return field_.get(index);
         } else {
@@ -3691,10 +3724,10 @@ public final class UserBitShared {
         }
       }
       /**
-       * <code>repeated .exec.shared.FieldMetadata field = 1;</code>
+       * <code>repeated .exec.shared.SerializedField field = 2;</code>
        */
       public Builder setField(
-          int index, org.apache.drill.exec.proto.UserBitShared.FieldMetadata value) {
+          int index, org.apache.drill.exec.proto.UserBitShared.SerializedField value) {
         if (fieldBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -3708,10 +3741,10 @@ public final class UserBitShared {
         return this;
       }
       /**
-       * <code>repeated .exec.shared.FieldMetadata field = 1;</code>
+       * <code>repeated .exec.shared.SerializedField field = 2;</code>
        */
       public Builder setField(
-          int index, org.apache.drill.exec.proto.UserBitShared.FieldMetadata.Builder builderForValue) {
+          int index, org.apache.drill.exec.proto.UserBitShared.SerializedField.Builder builderForValue) {
         if (fieldBuilder_ == null) {
           ensureFieldIsMutable();
           field_.set(index, builderForValue.build());
@@ -3722,9 +3755,9 @@ public final class UserBitShared {
         return this;
       }
       /**
-       * <code>repeated .exec.shared.FieldMetadata field = 1;</code>
+       * <code>repeated .exec.shared.SerializedField field = 2;</code>
        */
-      public Builder addField(org.apache.drill.exec.proto.UserBitShared.FieldMetadata value) {
+      public Builder addField(org.apache.drill.exec.proto.UserBitShared.SerializedField value) {
         if (fieldBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -3738,10 +3771,10 @@ public final class UserBitShared {
         return this;
       }
       /**
-       * <code>repeated .exec.shared.FieldMetadata field = 1;</code>
+       * <code>repeated .exec.shared.SerializedField field = 2;</code>
        */
       public Builder addField(
-          int index, org.apache.drill.exec.proto.UserBitShared.FieldMetadata value) {
+          int index, org.apache.drill.exec.proto.UserBitShared.SerializedField value) {
         if (fieldBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -3755,10 +3788,10 @@ public final class UserBitShared {
         return this;
       }
       /**
-       * <code>repeated .exec.shared.FieldMetadata field = 1;</code>
+       * <code>repeated .exec.shared.SerializedField field = 2;</code>
        */
       public Builder addField(
-          org.apache.drill.exec.proto.UserBitShared.FieldMetadata.Builder builderForValue) {
+          org.apache.drill.exec.proto.UserBitShared.SerializedField.Builder builderForValue) {
         if (fieldBuilder_ == null) {
           ensureFieldIsMutable();
           field_.add(builderForValue.build());
@@ -3769,10 +3802,10 @@ public final class UserBitShared {
         return this;
       }
       /**
-       * <code>repeated .exec.shared.FieldMetadata field = 1;</code>
+       * <code>repeated .exec.shared.SerializedField field = 2;</code>
        */
       public Builder addField(
-          int index, org.apache.drill.exec.proto.UserBitShared.FieldMetadata.Builder builderForValue) {
+          int index, org.apache.drill.exec.proto.UserBitShared.SerializedField.Builder builderForValue) {
         if (fieldBuilder_ == null) {
           ensureFieldIsMutable();
           field_.add(index, builderForValue.build());
@@ -3783,10 +3816,10 @@ public final class UserBitShared {
         return this;
       }
       /**
-       * <code>repeated .exec.shared.FieldMetadata field = 1;</code>
+       * <code>repeated .exec.shared.SerializedField field = 2;</code>
        */
       public Builder addAllField(
-          java.lang.Iterable<? extends org.apache.drill.exec.proto.UserBitShared.FieldMetadata> values) {
+          java.lang.Iterable<? extends org.apache.drill.exec.proto.UserBitShared.SerializedField> values) {
         if (fieldBuilder_ == null) {
           ensureFieldIsMutable();
           super.addAll(values, field_);
@@ -3797,12 +3830,12 @@ public final class UserBitShared {
         return this;
       }
       /**
-       * <code>repeated .exec.shared.FieldMetadata field = 1;</code>
+       * <code>repeated .exec.shared.SerializedField field = 2;</code>
        */
       public Builder clearField() {
         if (fieldBuilder_ == null) {
           field_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000001);
+          bitField0_ = (bitField0_ & ~0x00000002);
           onChanged();
         } else {
           fieldBuilder_.clear();
@@ -3810,7 +3843,7 @@ public final class UserBitShared {
         return this;
       }
       /**
-       * <code>repeated .exec.shared.FieldMetadata field = 1;</code>
+       * <code>repeated .exec.shared.SerializedField field = 2;</code>
        */
       public Builder removeField(int index) {
         if (fieldBuilder_ == null) {
@@ -3823,16 +3856,16 @@ public final class UserBitShared {
         return this;
       }
       /**
-       * <code>repeated .exec.shared.FieldMetadata field = 1;</code>
+       * <code>repeated .exec.shared.SerializedField field = 2;</code>
        */
-      public org.apache.drill.exec.proto.UserBitShared.FieldMetadata.Builder getFieldBuilder(
+      public org.apache.drill.exec.proto.UserBitShared.SerializedField.Builder getFieldBuilder(
           int index) {
         return getFieldFieldBuilder().getBuilder(index);
       }
       /**
-       * <code>repeated .exec.shared.FieldMetadata field = 1;</code>
+       * <code>repeated .exec.shared.SerializedField field = 2;</code>
        */
-      public org.apache.drill.exec.proto.UserBitShared.FieldMetadataOrBuilder getFieldOrBuilder(
+      public org.apache.drill.exec.proto.UserBitShared.SerializedFieldOrBuilder getFieldOrBuilder(
           int index) {
         if (fieldBuilder_ == null) {
           return field_.get(index);  } else {
@@ -3840,9 +3873,9 @@ public final class UserBitShared {
         }
       }
       /**
-       * <code>repeated .exec.shared.FieldMetadata field = 1;</code>
+       * <code>repeated .exec.shared.SerializedField field = 2;</code>
        */
-      public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.FieldMetadataOrBuilder> 
+      public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.SerializedFieldOrBuilder> 
            getFieldOrBuilderList() {
         if (fieldBuilder_ != null) {
           return fieldBuilder_.getMessageOrBuilderList();
@@ -3851,73 +3884,40 @@ public final class UserBitShared {
         }
       }
       /**
-       * <code>repeated .exec.shared.FieldMetadata field = 1;</code>
+       * <code>repeated .exec.shared.SerializedField field = 2;</code>
        */
-      public org.apache.drill.exec.proto.UserBitShared.FieldMetadata.Builder addFieldBuilder() {
+      public org.apache.drill.exec.proto.UserBitShared.SerializedField.Builder addFieldBuilder() {
         return getFieldFieldBuilder().addBuilder(
-            org.apache.drill.exec.proto.UserBitShared.FieldMetadata.getDefaultInstance());
+            org.apache.drill.exec.proto.UserBitShared.SerializedField.getDefaultInstance());
       }
       /**
-       * <code>repeated .exec.shared.FieldMetadata field = 1;</code>
+       * <code>repeated .exec.shared.SerializedField field = 2;</code>
        */
-      public org.apache.drill.exec.proto.UserBitShared.FieldMetadata.Builder addFieldBuilder(
+      public org.apache.drill.exec.proto.UserBitShared.SerializedField.Builder addFieldBuilder(
           int index) {
         return getFieldFieldBuilder().addBuilder(
-            index, org.apache.drill.exec.proto.UserBitShared.FieldMetadata.getDefaultInstance());
+            index, org.apache.drill.exec.proto.UserBitShared.SerializedField.getDefaultInstance());
       }
       /**
-       * <code>repeated .exec.shared.FieldMetadata field = 1;</code>
+       * <code>repeated .exec.shared.SerializedField field = 2;</code>
        */
-      public java.util.List<org.apache.drill.exec.proto.UserBitShared.FieldMetadata.Builder> 
+      public java.util.List<org.apache.drill.exec.proto.UserBitShared.SerializedField.Builder> 
            getFieldBuilderList() {
         return getFieldFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilder<
-          org.apache.drill.exec.proto.UserBitShared.FieldMetadata, org.apache.drill.exec.proto.UserBitShared.FieldMetadata.Builder, org.apache.drill.exec.proto.UserBitShared.FieldMetadataOrBuilder> 
+          org.apache.drill.exec.proto.UserBitShared.SerializedField, org.apache.drill.exec.proto.UserBitShared.SerializedField.Builder, org.apache.drill.exec.proto.UserBitShared.SerializedFieldOrBuilder> 
           getFieldFieldBuilder() {
         if (fieldBuilder_ == null) {
           fieldBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
-              org.apache.drill.exec.proto.UserBitShared.FieldMetadata, org.apache.drill.exec.proto.UserBitShared.FieldMetadata.Builder, org.apache.drill.exec.proto.UserBitShared.FieldMetadataOrBuilder>(
+              org.apache.drill.exec.proto.UserBitShared.SerializedField, org.apache.drill.exec.proto.UserBitShared.SerializedField.Builder, org.apache.drill.exec.proto.UserBitShared.SerializedFieldOrBuilder>(
                   field_,
-                  ((bitField0_ & 0x00000001) == 0x00000001),
+                  ((bitField0_ & 0x00000002) == 0x00000002),
                   getParentForChildren(),
                   isClean());
           field_ = null;
         }
         return fieldBuilder_;
-      }
-
-      // optional int32 record_count = 2;
-      private int recordCount_ ;
-      /**
-       * <code>optional int32 record_count = 2;</code>
-       */
-      public boolean hasRecordCount() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
-      }
-      /**
-       * <code>optional int32 record_count = 2;</code>
-       */
-      public int getRecordCount() {
-        return recordCount_;
-      }
-      /**
-       * <code>optional int32 record_count = 2;</code>
-       */
-      public Builder setRecordCount(int value) {
-        bitField0_ |= 0x00000002;
-        recordCount_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>optional int32 record_count = 2;</code>
-       */
-      public Builder clearRecordCount() {
-        bitField0_ = (bitField0_ & ~0x00000002);
-        recordCount_ = 0;
-        onChanged();
-        return this;
       }
 
       // optional bool is_selection_vector_2 = 3;
@@ -3964,115 +3964,67 @@ public final class UserBitShared {
     // @@protoc_insertion_point(class_scope:exec.shared.RecordBatchDef)
   }
 
-  public interface FieldMetadataOrBuilder
+  public interface NamePartOrBuilder
       extends com.google.protobuf.MessageOrBuilder {
 
-    // optional .exec.FieldDef def = 1;
+    // optional .exec.shared.NamePart.Type type = 1;
     /**
-     * <code>optional .exec.FieldDef def = 1;</code>
+     * <code>optional .exec.shared.NamePart.Type type = 1;</code>
      */
-    boolean hasDef();
+    boolean hasType();
     /**
-     * <code>optional .exec.FieldDef def = 1;</code>
+     * <code>optional .exec.shared.NamePart.Type type = 1;</code>
      */
-    org.apache.drill.exec.proto.SchemaDefProtos.FieldDef getDef();
-    /**
-     * <code>optional .exec.FieldDef def = 1;</code>
-     */
-    org.apache.drill.exec.proto.SchemaDefProtos.FieldDefOrBuilder getDefOrBuilder();
+    org.apache.drill.exec.proto.UserBitShared.NamePart.Type getType();
 
-    // optional int32 value_count = 2;
+    // optional string name = 2;
     /**
-     * <code>optional int32 value_count = 2;</code>
+     * <code>optional string name = 2;</code>
      */
-    boolean hasValueCount();
+    boolean hasName();
     /**
-     * <code>optional int32 value_count = 2;</code>
+     * <code>optional string name = 2;</code>
      */
-    int getValueCount();
+    java.lang.String getName();
+    /**
+     * <code>optional string name = 2;</code>
+     */
+    com.google.protobuf.ByteString
+        getNameBytes();
 
-    // optional int32 var_byte_length = 3;
+    // optional .exec.shared.NamePart child = 3;
     /**
-     * <code>optional int32 var_byte_length = 3;</code>
+     * <code>optional .exec.shared.NamePart child = 3;</code>
      */
-    boolean hasVarByteLength();
+    boolean hasChild();
     /**
-     * <code>optional int32 var_byte_length = 3;</code>
+     * <code>optional .exec.shared.NamePart child = 3;</code>
      */
-    int getVarByteLength();
-
-    // optional int32 group_count = 4;
+    org.apache.drill.exec.proto.UserBitShared.NamePart getChild();
     /**
-     * <code>optional int32 group_count = 4;</code>
-     *
-     * <pre>
-     * number of groups.  (number of repeated records)
-     * </pre>
+     * <code>optional .exec.shared.NamePart child = 3;</code>
      */
-    boolean hasGroupCount();
-    /**
-     * <code>optional int32 group_count = 4;</code>
-     *
-     * <pre>
-     * number of groups.  (number of repeated records)
-     * </pre>
-     */
-    int getGroupCount();
-
-    // optional int32 buffer_length = 5;
-    /**
-     * <code>optional int32 buffer_length = 5;</code>
-     */
-    boolean hasBufferLength();
-    /**
-     * <code>optional int32 buffer_length = 5;</code>
-     */
-    int getBufferLength();
-
-    // repeated .exec.shared.FieldMetadata child = 6;
-    /**
-     * <code>repeated .exec.shared.FieldMetadata child = 6;</code>
-     */
-    java.util.List<org.apache.drill.exec.proto.UserBitShared.FieldMetadata> 
-        getChildList();
-    /**
-     * <code>repeated .exec.shared.FieldMetadata child = 6;</code>
-     */
-    org.apache.drill.exec.proto.UserBitShared.FieldMetadata getChild(int index);
-    /**
-     * <code>repeated .exec.shared.FieldMetadata child = 6;</code>
-     */
-    int getChildCount();
-    /**
-     * <code>repeated .exec.shared.FieldMetadata child = 6;</code>
-     */
-    java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.FieldMetadataOrBuilder> 
-        getChildOrBuilderList();
-    /**
-     * <code>repeated .exec.shared.FieldMetadata child = 6;</code>
-     */
-    org.apache.drill.exec.proto.UserBitShared.FieldMetadataOrBuilder getChildOrBuilder(
-        int index);
+    org.apache.drill.exec.proto.UserBitShared.NamePartOrBuilder getChildOrBuilder();
   }
   /**
-   * Protobuf type {@code exec.shared.FieldMetadata}
+   * Protobuf type {@code exec.shared.NamePart}
    */
-  public static final class FieldMetadata extends
+  public static final class NamePart extends
       com.google.protobuf.GeneratedMessage
-      implements FieldMetadataOrBuilder {
-    // Use FieldMetadata.newBuilder() to construct.
-    private FieldMetadata(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      implements NamePartOrBuilder {
+    // Use NamePart.newBuilder() to construct.
+    private NamePart(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
       this.unknownFields = builder.getUnknownFields();
     }
-    private FieldMetadata(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+    private NamePart(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
 
-    private static final FieldMetadata defaultInstance;
-    public static FieldMetadata getDefaultInstance() {
+    private static final NamePart defaultInstance;
+    public static NamePart getDefaultInstance() {
       return defaultInstance;
     }
 
-    public FieldMetadata getDefaultInstanceForType() {
+    public NamePart getDefaultInstanceForType() {
       return defaultInstance;
     }
 
@@ -4082,7 +4034,936 @@ public final class UserBitShared {
         getUnknownFields() {
       return this.unknownFields;
     }
-    private FieldMetadata(
+    private NamePart(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 8: {
+              int rawValue = input.readEnum();
+              org.apache.drill.exec.proto.UserBitShared.NamePart.Type value = org.apache.drill.exec.proto.UserBitShared.NamePart.Type.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(1, rawValue);
+              } else {
+                bitField0_ |= 0x00000001;
+                type_ = value;
+              }
+              break;
+            }
+            case 18: {
+              bitField0_ |= 0x00000002;
+              name_ = input.readBytes();
+              break;
+            }
+            case 26: {
+              org.apache.drill.exec.proto.UserBitShared.NamePart.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000004) == 0x00000004)) {
+                subBuilder = child_.toBuilder();
+              }
+              child_ = input.readMessage(org.apache.drill.exec.proto.UserBitShared.NamePart.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(child_);
+                child_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000004;
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_NamePart_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_NamePart_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.apache.drill.exec.proto.UserBitShared.NamePart.class, org.apache.drill.exec.proto.UserBitShared.NamePart.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<NamePart> PARSER =
+        new com.google.protobuf.AbstractParser<NamePart>() {
+      public NamePart parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new NamePart(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<NamePart> getParserForType() {
+      return PARSER;
+    }
+
+    /**
+     * Protobuf enum {@code exec.shared.NamePart.Type}
+     */
+    public enum Type
+        implements com.google.protobuf.ProtocolMessageEnum {
+      /**
+       * <code>NAME = 0;</code>
+       */
+      NAME(0, 0),
+      /**
+       * <code>ARRAY = 1;</code>
+       */
+      ARRAY(1, 1),
+      ;
+
+      /**
+       * <code>NAME = 0;</code>
+       */
+      public static final int NAME_VALUE = 0;
+      /**
+       * <code>ARRAY = 1;</code>
+       */
+      public static final int ARRAY_VALUE = 1;
+
+
+      public final int getNumber() { return value; }
+
+      public static Type valueOf(int value) {
+        switch (value) {
+          case 0: return NAME;
+          case 1: return ARRAY;
+          default: return null;
+        }
+      }
+
+      public static com.google.protobuf.Internal.EnumLiteMap<Type>
+          internalGetValueMap() {
+        return internalValueMap;
+      }
+      private static com.google.protobuf.Internal.EnumLiteMap<Type>
+          internalValueMap =
+            new com.google.protobuf.Internal.EnumLiteMap<Type>() {
+              public Type findValueByNumber(int number) {
+                return Type.valueOf(number);
+              }
+            };
+
+      public final com.google.protobuf.Descriptors.EnumValueDescriptor
+          getValueDescriptor() {
+        return getDescriptor().getValues().get(index);
+      }
+      public final com.google.protobuf.Descriptors.EnumDescriptor
+          getDescriptorForType() {
+        return getDescriptor();
+      }
+      public static final com.google.protobuf.Descriptors.EnumDescriptor
+          getDescriptor() {
+        return org.apache.drill.exec.proto.UserBitShared.NamePart.getDescriptor().getEnumTypes().get(0);
+      }
+
+      private static final Type[] VALUES = values();
+
+      public static Type valueOf(
+          com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+        if (desc.getType() != getDescriptor()) {
+          throw new java.lang.IllegalArgumentException(
+            "EnumValueDescriptor is not for this type.");
+        }
+        return VALUES[desc.getIndex()];
+      }
+
+      private final int index;
+      private final int value;
+
+      private Type(int index, int value) {
+        this.index = index;
+        this.value = value;
+      }
+
+      // @@protoc_insertion_point(enum_scope:exec.shared.NamePart.Type)
+    }
+
+    private int bitField0_;
+    // optional .exec.shared.NamePart.Type type = 1;
+    public static final int TYPE_FIELD_NUMBER = 1;
+    private org.apache.drill.exec.proto.UserBitShared.NamePart.Type type_;
+    /**
+     * <code>optional .exec.shared.NamePart.Type type = 1;</code>
+     */
+    public boolean hasType() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional .exec.shared.NamePart.Type type = 1;</code>
+     */
+    public org.apache.drill.exec.proto.UserBitShared.NamePart.Type getType() {
+      return type_;
+    }
+
+    // optional string name = 2;
+    public static final int NAME_FIELD_NUMBER = 2;
+    private java.lang.Object name_;
+    /**
+     * <code>optional string name = 2;</code>
+     */
+    public boolean hasName() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional string name = 2;</code>
+     */
+    public java.lang.String getName() {
+      java.lang.Object ref = name_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          name_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string name = 2;</code>
+     */
+    public com.google.protobuf.ByteString
+        getNameBytes() {
+      java.lang.Object ref = name_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        name_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional .exec.shared.NamePart child = 3;
+    public static final int CHILD_FIELD_NUMBER = 3;
+    private org.apache.drill.exec.proto.UserBitShared.NamePart child_;
+    /**
+     * <code>optional .exec.shared.NamePart child = 3;</code>
+     */
+    public boolean hasChild() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>optional .exec.shared.NamePart child = 3;</code>
+     */
+    public org.apache.drill.exec.proto.UserBitShared.NamePart getChild() {
+      return child_;
+    }
+    /**
+     * <code>optional .exec.shared.NamePart child = 3;</code>
+     */
+    public org.apache.drill.exec.proto.UserBitShared.NamePartOrBuilder getChildOrBuilder() {
+      return child_;
+    }
+
+    private void initFields() {
+      type_ = org.apache.drill.exec.proto.UserBitShared.NamePart.Type.NAME;
+      name_ = "";
+      child_ = org.apache.drill.exec.proto.UserBitShared.NamePart.getDefaultInstance();
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeEnum(1, type_.getNumber());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBytes(2, getNameBytes());
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeMessage(3, child_);
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(1, type_.getNumber());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, getNameBytes());
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(3, child_);
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static org.apache.drill.exec.proto.UserBitShared.NamePart parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.NamePart parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.NamePart parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.NamePart parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.NamePart parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.NamePart parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.NamePart parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.NamePart parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.NamePart parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static org.apache.drill.exec.proto.UserBitShared.NamePart parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(org.apache.drill.exec.proto.UserBitShared.NamePart prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code exec.shared.NamePart}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements org.apache.drill.exec.proto.UserBitShared.NamePartOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_NamePart_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_NamePart_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.apache.drill.exec.proto.UserBitShared.NamePart.class, org.apache.drill.exec.proto.UserBitShared.NamePart.Builder.class);
+      }
+
+      // Construct using org.apache.drill.exec.proto.UserBitShared.NamePart.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          getChildFieldBuilder();
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        type_ = org.apache.drill.exec.proto.UserBitShared.NamePart.Type.NAME;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        name_ = "";
+        bitField0_ = (bitField0_ & ~0x00000002);
+        if (childBuilder_ == null) {
+          child_ = org.apache.drill.exec.proto.UserBitShared.NamePart.getDefaultInstance();
+        } else {
+          childBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_NamePart_descriptor;
+      }
+
+      public org.apache.drill.exec.proto.UserBitShared.NamePart getDefaultInstanceForType() {
+        return org.apache.drill.exec.proto.UserBitShared.NamePart.getDefaultInstance();
+      }
+
+      public org.apache.drill.exec.proto.UserBitShared.NamePart build() {
+        org.apache.drill.exec.proto.UserBitShared.NamePart result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public org.apache.drill.exec.proto.UserBitShared.NamePart buildPartial() {
+        org.apache.drill.exec.proto.UserBitShared.NamePart result = new org.apache.drill.exec.proto.UserBitShared.NamePart(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.type_ = type_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.name_ = name_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        if (childBuilder_ == null) {
+          result.child_ = child_;
+        } else {
+          result.child_ = childBuilder_.build();
+        }
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.apache.drill.exec.proto.UserBitShared.NamePart) {
+          return mergeFrom((org.apache.drill.exec.proto.UserBitShared.NamePart)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.apache.drill.exec.proto.UserBitShared.NamePart other) {
+        if (other == org.apache.drill.exec.proto.UserBitShared.NamePart.getDefaultInstance()) return this;
+        if (other.hasType()) {
+          setType(other.getType());
+        }
+        if (other.hasName()) {
+          bitField0_ |= 0x00000002;
+          name_ = other.name_;
+          onChanged();
+        }
+        if (other.hasChild()) {
+          mergeChild(other.getChild());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        org.apache.drill.exec.proto.UserBitShared.NamePart parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (org.apache.drill.exec.proto.UserBitShared.NamePart) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      // optional .exec.shared.NamePart.Type type = 1;
+      private org.apache.drill.exec.proto.UserBitShared.NamePart.Type type_ = org.apache.drill.exec.proto.UserBitShared.NamePart.Type.NAME;
+      /**
+       * <code>optional .exec.shared.NamePart.Type type = 1;</code>
+       */
+      public boolean hasType() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional .exec.shared.NamePart.Type type = 1;</code>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.NamePart.Type getType() {
+        return type_;
+      }
+      /**
+       * <code>optional .exec.shared.NamePart.Type type = 1;</code>
+       */
+      public Builder setType(org.apache.drill.exec.proto.UserBitShared.NamePart.Type value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000001;
+        type_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.NamePart.Type type = 1;</code>
+       */
+      public Builder clearType() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        type_ = org.apache.drill.exec.proto.UserBitShared.NamePart.Type.NAME;
+        onChanged();
+        return this;
+      }
+
+      // optional string name = 2;
+      private java.lang.Object name_ = "";
+      /**
+       * <code>optional string name = 2;</code>
+       */
+      public boolean hasName() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional string name = 2;</code>
+       */
+      public java.lang.String getName() {
+        java.lang.Object ref = name_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          name_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string name = 2;</code>
+       */
+      public com.google.protobuf.ByteString
+          getNameBytes() {
+        java.lang.Object ref = name_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          name_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string name = 2;</code>
+       */
+      public Builder setName(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        name_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string name = 2;</code>
+       */
+      public Builder clearName() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        name_ = getDefaultInstance().getName();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string name = 2;</code>
+       */
+      public Builder setNameBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        name_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional .exec.shared.NamePart child = 3;
+      private org.apache.drill.exec.proto.UserBitShared.NamePart child_ = org.apache.drill.exec.proto.UserBitShared.NamePart.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserBitShared.NamePart, org.apache.drill.exec.proto.UserBitShared.NamePart.Builder, org.apache.drill.exec.proto.UserBitShared.NamePartOrBuilder> childBuilder_;
+      /**
+       * <code>optional .exec.shared.NamePart child = 3;</code>
+       */
+      public boolean hasChild() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional .exec.shared.NamePart child = 3;</code>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.NamePart getChild() {
+        if (childBuilder_ == null) {
+          return child_;
+        } else {
+          return childBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .exec.shared.NamePart child = 3;</code>
+       */
+      public Builder setChild(org.apache.drill.exec.proto.UserBitShared.NamePart value) {
+        if (childBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          child_ = value;
+          onChanged();
+        } else {
+          childBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.NamePart child = 3;</code>
+       */
+      public Builder setChild(
+          org.apache.drill.exec.proto.UserBitShared.NamePart.Builder builderForValue) {
+        if (childBuilder_ == null) {
+          child_ = builderForValue.build();
+          onChanged();
+        } else {
+          childBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.NamePart child = 3;</code>
+       */
+      public Builder mergeChild(org.apache.drill.exec.proto.UserBitShared.NamePart value) {
+        if (childBuilder_ == null) {
+          if (((bitField0_ & 0x00000004) == 0x00000004) &&
+              child_ != org.apache.drill.exec.proto.UserBitShared.NamePart.getDefaultInstance()) {
+            child_ =
+              org.apache.drill.exec.proto.UserBitShared.NamePart.newBuilder(child_).mergeFrom(value).buildPartial();
+          } else {
+            child_ = value;
+          }
+          onChanged();
+        } else {
+          childBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000004;
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.NamePart child = 3;</code>
+       */
+      public Builder clearChild() {
+        if (childBuilder_ == null) {
+          child_ = org.apache.drill.exec.proto.UserBitShared.NamePart.getDefaultInstance();
+          onChanged();
+        } else {
+          childBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.NamePart child = 3;</code>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.NamePart.Builder getChildBuilder() {
+        bitField0_ |= 0x00000004;
+        onChanged();
+        return getChildFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .exec.shared.NamePart child = 3;</code>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.NamePartOrBuilder getChildOrBuilder() {
+        if (childBuilder_ != null) {
+          return childBuilder_.getMessageOrBuilder();
+        } else {
+          return child_;
+        }
+      }
+      /**
+       * <code>optional .exec.shared.NamePart child = 3;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserBitShared.NamePart, org.apache.drill.exec.proto.UserBitShared.NamePart.Builder, org.apache.drill.exec.proto.UserBitShared.NamePartOrBuilder> 
+          getChildFieldBuilder() {
+        if (childBuilder_ == null) {
+          childBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              org.apache.drill.exec.proto.UserBitShared.NamePart, org.apache.drill.exec.proto.UserBitShared.NamePart.Builder, org.apache.drill.exec.proto.UserBitShared.NamePartOrBuilder>(
+                  child_,
+                  getParentForChildren(),
+                  isClean());
+          child_ = null;
+        }
+        return childBuilder_;
+      }
+
+      // @@protoc_insertion_point(builder_scope:exec.shared.NamePart)
+    }
+
+    static {
+      defaultInstance = new NamePart(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:exec.shared.NamePart)
+  }
+
+  public interface SerializedFieldOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // optional .common.MajorType major_type = 1;
+    /**
+     * <code>optional .common.MajorType major_type = 1;</code>
+     *
+     * <pre>
+     * the type associated with this field.
+     * </pre>
+     */
+    boolean hasMajorType();
+    /**
+     * <code>optional .common.MajorType major_type = 1;</code>
+     *
+     * <pre>
+     * the type associated with this field.
+     * </pre>
+     */
+    org.apache.drill.common.types.TypeProtos.MajorType getMajorType();
+    /**
+     * <code>optional .common.MajorType major_type = 1;</code>
+     *
+     * <pre>
+     * the type associated with this field.
+     * </pre>
+     */
+    org.apache.drill.common.types.TypeProtos.MajorTypeOrBuilder getMajorTypeOrBuilder();
+
+    // optional .exec.shared.NamePart name_part = 2;
+    /**
+     * <code>optional .exec.shared.NamePart name_part = 2;</code>
+     */
+    boolean hasNamePart();
+    /**
+     * <code>optional .exec.shared.NamePart name_part = 2;</code>
+     */
+    org.apache.drill.exec.proto.UserBitShared.NamePart getNamePart();
+    /**
+     * <code>optional .exec.shared.NamePart name_part = 2;</code>
+     */
+    org.apache.drill.exec.proto.UserBitShared.NamePartOrBuilder getNamePartOrBuilder();
+
+    // repeated .exec.shared.SerializedField child = 3;
+    /**
+     * <code>repeated .exec.shared.SerializedField child = 3;</code>
+     *
+     * <pre>
+     * only in the cases of type == MAP or REPEAT_MAP or REPEATED_LIST
+     * </pre>
+     */
+    java.util.List<org.apache.drill.exec.proto.UserBitShared.SerializedField> 
+        getChildList();
+    /**
+     * <code>repeated .exec.shared.SerializedField child = 3;</code>
+     *
+     * <pre>
+     * only in the cases of type == MAP or REPEAT_MAP or REPEATED_LIST
+     * </pre>
+     */
+    org.apache.drill.exec.proto.UserBitShared.SerializedField getChild(int index);
+    /**
+     * <code>repeated .exec.shared.SerializedField child = 3;</code>
+     *
+     * <pre>
+     * only in the cases of type == MAP or REPEAT_MAP or REPEATED_LIST
+     * </pre>
+     */
+    int getChildCount();
+    /**
+     * <code>repeated .exec.shared.SerializedField child = 3;</code>
+     *
+     * <pre>
+     * only in the cases of type == MAP or REPEAT_MAP or REPEATED_LIST
+     * </pre>
+     */
+    java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.SerializedFieldOrBuilder> 
+        getChildOrBuilderList();
+    /**
+     * <code>repeated .exec.shared.SerializedField child = 3;</code>
+     *
+     * <pre>
+     * only in the cases of type == MAP or REPEAT_MAP or REPEATED_LIST
+     * </pre>
+     */
+    org.apache.drill.exec.proto.UserBitShared.SerializedFieldOrBuilder getChildOrBuilder(
+        int index);
+
+    // optional int32 value_count = 4;
+    /**
+     * <code>optional int32 value_count = 4;</code>
+     */
+    boolean hasValueCount();
+    /**
+     * <code>optional int32 value_count = 4;</code>
+     */
+    int getValueCount();
+
+    // optional int32 var_byte_length = 5;
+    /**
+     * <code>optional int32 var_byte_length = 5;</code>
+     */
+    boolean hasVarByteLength();
+    /**
+     * <code>optional int32 var_byte_length = 5;</code>
+     */
+    int getVarByteLength();
+
+    // optional int32 group_count = 6;
+    /**
+     * <code>optional int32 group_count = 6;</code>
+     *
+     * <pre>
+     * number of groups.  (number of repeated records)
+     * </pre>
+     */
+    boolean hasGroupCount();
+    /**
+     * <code>optional int32 group_count = 6;</code>
+     *
+     * <pre>
+     * number of groups.  (number of repeated records)
+     * </pre>
+     */
+    int getGroupCount();
+
+    // optional int32 buffer_length = 7;
+    /**
+     * <code>optional int32 buffer_length = 7;</code>
+     */
+    boolean hasBufferLength();
+    /**
+     * <code>optional int32 buffer_length = 7;</code>
+     */
+    int getBufferLength();
+  }
+  /**
+   * Protobuf type {@code exec.shared.SerializedField}
+   */
+  public static final class SerializedField extends
+      com.google.protobuf.GeneratedMessage
+      implements SerializedFieldOrBuilder {
+    // Use SerializedField.newBuilder() to construct.
+    private SerializedField(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private SerializedField(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final SerializedField defaultInstance;
+    public static SerializedField getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public SerializedField getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private SerializedField(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
@@ -4106,44 +4987,57 @@ public final class UserBitShared {
               break;
             }
             case 10: {
-              org.apache.drill.exec.proto.SchemaDefProtos.FieldDef.Builder subBuilder = null;
+              org.apache.drill.common.types.TypeProtos.MajorType.Builder subBuilder = null;
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
-                subBuilder = def_.toBuilder();
+                subBuilder = majorType_.toBuilder();
               }
-              def_ = input.readMessage(org.apache.drill.exec.proto.SchemaDefProtos.FieldDef.PARSER, extensionRegistry);
+              majorType_ = input.readMessage(org.apache.drill.common.types.TypeProtos.MajorType.PARSER, extensionRegistry);
               if (subBuilder != null) {
-                subBuilder.mergeFrom(def_);
-                def_ = subBuilder.buildPartial();
+                subBuilder.mergeFrom(majorType_);
+                majorType_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000001;
               break;
             }
-            case 16: {
+            case 18: {
+              org.apache.drill.exec.proto.UserBitShared.NamePart.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+                subBuilder = namePart_.toBuilder();
+              }
+              namePart_ = input.readMessage(org.apache.drill.exec.proto.UserBitShared.NamePart.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(namePart_);
+                namePart_ = subBuilder.buildPartial();
+              }
               bitField0_ |= 0x00000002;
-              valueCount_ = input.readInt32();
               break;
             }
-            case 24: {
-              bitField0_ |= 0x00000004;
-              varByteLength_ = input.readInt32();
+            case 26: {
+              if (!((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+                child_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserBitShared.SerializedField>();
+                mutable_bitField0_ |= 0x00000004;
+              }
+              child_.add(input.readMessage(org.apache.drill.exec.proto.UserBitShared.SerializedField.PARSER, extensionRegistry));
               break;
             }
             case 32: {
-              bitField0_ |= 0x00000008;
-              groupCount_ = input.readInt32();
+              bitField0_ |= 0x00000004;
+              valueCount_ = input.readInt32();
               break;
             }
             case 40: {
-              bitField0_ |= 0x00000010;
-              bufferLength_ = input.readInt32();
+              bitField0_ |= 0x00000008;
+              varByteLength_ = input.readInt32();
               break;
             }
-            case 50: {
-              if (!((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
-                child_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserBitShared.FieldMetadata>();
-                mutable_bitField0_ |= 0x00000020;
-              }
-              child_.add(input.readMessage(org.apache.drill.exec.proto.UserBitShared.FieldMetadata.PARSER, extensionRegistry));
+            case 48: {
+              bitField0_ |= 0x00000010;
+              groupCount_ = input.readInt32();
+              break;
+            }
+            case 56: {
+              bitField0_ |= 0x00000020;
+              bufferLength_ = input.readInt32();
               break;
             }
           }
@@ -4154,7 +5048,7 @@ public final class UserBitShared {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e.getMessage()).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
+        if (((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
           child_ = java.util.Collections.unmodifiableList(child_);
         }
         this.unknownFields = unknownFields.build();
@@ -4163,101 +5057,191 @@ public final class UserBitShared {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_FieldMetadata_descriptor;
+      return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_SerializedField_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_FieldMetadata_fieldAccessorTable
+      return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_SerializedField_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              org.apache.drill.exec.proto.UserBitShared.FieldMetadata.class, org.apache.drill.exec.proto.UserBitShared.FieldMetadata.Builder.class);
+              org.apache.drill.exec.proto.UserBitShared.SerializedField.class, org.apache.drill.exec.proto.UserBitShared.SerializedField.Builder.class);
     }
 
-    public static com.google.protobuf.Parser<FieldMetadata> PARSER =
-        new com.google.protobuf.AbstractParser<FieldMetadata>() {
-      public FieldMetadata parsePartialFrom(
+    public static com.google.protobuf.Parser<SerializedField> PARSER =
+        new com.google.protobuf.AbstractParser<SerializedField>() {
+      public SerializedField parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new FieldMetadata(input, extensionRegistry);
+        return new SerializedField(input, extensionRegistry);
       }
     };
 
     @java.lang.Override
-    public com.google.protobuf.Parser<FieldMetadata> getParserForType() {
+    public com.google.protobuf.Parser<SerializedField> getParserForType() {
       return PARSER;
     }
 
     private int bitField0_;
-    // optional .exec.FieldDef def = 1;
-    public static final int DEF_FIELD_NUMBER = 1;
-    private org.apache.drill.exec.proto.SchemaDefProtos.FieldDef def_;
+    // optional .common.MajorType major_type = 1;
+    public static final int MAJOR_TYPE_FIELD_NUMBER = 1;
+    private org.apache.drill.common.types.TypeProtos.MajorType majorType_;
     /**
-     * <code>optional .exec.FieldDef def = 1;</code>
+     * <code>optional .common.MajorType major_type = 1;</code>
+     *
+     * <pre>
+     * the type associated with this field.
+     * </pre>
      */
-    public boolean hasDef() {
+    public boolean hasMajorType() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     /**
-     * <code>optional .exec.FieldDef def = 1;</code>
+     * <code>optional .common.MajorType major_type = 1;</code>
+     *
+     * <pre>
+     * the type associated with this field.
+     * </pre>
      */
-    public org.apache.drill.exec.proto.SchemaDefProtos.FieldDef getDef() {
-      return def_;
+    public org.apache.drill.common.types.TypeProtos.MajorType getMajorType() {
+      return majorType_;
     }
     /**
-     * <code>optional .exec.FieldDef def = 1;</code>
+     * <code>optional .common.MajorType major_type = 1;</code>
+     *
+     * <pre>
+     * the type associated with this field.
+     * </pre>
      */
-    public org.apache.drill.exec.proto.SchemaDefProtos.FieldDefOrBuilder getDefOrBuilder() {
-      return def_;
+    public org.apache.drill.common.types.TypeProtos.MajorTypeOrBuilder getMajorTypeOrBuilder() {
+      return majorType_;
     }
 
-    // optional int32 value_count = 2;
-    public static final int VALUE_COUNT_FIELD_NUMBER = 2;
-    private int valueCount_;
+    // optional .exec.shared.NamePart name_part = 2;
+    public static final int NAME_PART_FIELD_NUMBER = 2;
+    private org.apache.drill.exec.proto.UserBitShared.NamePart namePart_;
     /**
-     * <code>optional int32 value_count = 2;</code>
+     * <code>optional .exec.shared.NamePart name_part = 2;</code>
      */
-    public boolean hasValueCount() {
+    public boolean hasNamePart() {
       return ((bitField0_ & 0x00000002) == 0x00000002);
     }
     /**
-     * <code>optional int32 value_count = 2;</code>
+     * <code>optional .exec.shared.NamePart name_part = 2;</code>
+     */
+    public org.apache.drill.exec.proto.UserBitShared.NamePart getNamePart() {
+      return namePart_;
+    }
+    /**
+     * <code>optional .exec.shared.NamePart name_part = 2;</code>
+     */
+    public org.apache.drill.exec.proto.UserBitShared.NamePartOrBuilder getNamePartOrBuilder() {
+      return namePart_;
+    }
+
+    // repeated .exec.shared.SerializedField child = 3;
+    public static final int CHILD_FIELD_NUMBER = 3;
+    private java.util.List<org.apache.drill.exec.proto.UserBitShared.SerializedField> child_;
+    /**
+     * <code>repeated .exec.shared.SerializedField child = 3;</code>
+     *
+     * <pre>
+     * only in the cases of type == MAP or REPEAT_MAP or REPEATED_LIST
+     * </pre>
+     */
+    public java.util.List<org.apache.drill.exec.proto.UserBitShared.SerializedField> getChildList() {
+      return child_;
+    }
+    /**
+     * <code>repeated .exec.shared.SerializedField child = 3;</code>
+     *
+     * <pre>
+     * only in the cases of type == MAP or REPEAT_MAP or REPEATED_LIST
+     * </pre>
+     */
+    public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.SerializedFieldOrBuilder> 
+        getChildOrBuilderList() {
+      return child_;
+    }
+    /**
+     * <code>repeated .exec.shared.SerializedField child = 3;</code>
+     *
+     * <pre>
+     * only in the cases of type == MAP or REPEAT_MAP or REPEATED_LIST
+     * </pre>
+     */
+    public int getChildCount() {
+      return child_.size();
+    }
+    /**
+     * <code>repeated .exec.shared.SerializedField child = 3;</code>
+     *
+     * <pre>
+     * only in the cases of type == MAP or REPEAT_MAP or REPEATED_LIST
+     * </pre>
+     */
+    public org.apache.drill.exec.proto.UserBitShared.SerializedField getChild(int index) {
+      return child_.get(index);
+    }
+    /**
+     * <code>repeated .exec.shared.SerializedField child = 3;</code>
+     *
+     * <pre>
+     * only in the cases of type == MAP or REPEAT_MAP or REPEATED_LIST
+     * </pre>
+     */
+    public org.apache.drill.exec.proto.UserBitShared.SerializedFieldOrBuilder getChildOrBuilder(
+        int index) {
+      return child_.get(index);
+    }
+
+    // optional int32 value_count = 4;
+    public static final int VALUE_COUNT_FIELD_NUMBER = 4;
+    private int valueCount_;
+    /**
+     * <code>optional int32 value_count = 4;</code>
+     */
+    public boolean hasValueCount() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>optional int32 value_count = 4;</code>
      */
     public int getValueCount() {
       return valueCount_;
     }
 
-    // optional int32 var_byte_length = 3;
-    public static final int VAR_BYTE_LENGTH_FIELD_NUMBER = 3;
+    // optional int32 var_byte_length = 5;
+    public static final int VAR_BYTE_LENGTH_FIELD_NUMBER = 5;
     private int varByteLength_;
     /**
-     * <code>optional int32 var_byte_length = 3;</code>
+     * <code>optional int32 var_byte_length = 5;</code>
      */
     public boolean hasVarByteLength() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000008) == 0x00000008);
     }
     /**
-     * <code>optional int32 var_byte_length = 3;</code>
+     * <code>optional int32 var_byte_length = 5;</code>
      */
     public int getVarByteLength() {
       return varByteLength_;
     }
 
-    // optional int32 group_count = 4;
-    public static final int GROUP_COUNT_FIELD_NUMBER = 4;
+    // optional int32 group_count = 6;
+    public static final int GROUP_COUNT_FIELD_NUMBER = 6;
     private int groupCount_;
     /**
-     * <code>optional int32 group_count = 4;</code>
+     * <code>optional int32 group_count = 6;</code>
      *
      * <pre>
      * number of groups.  (number of repeated records)
      * </pre>
      */
     public boolean hasGroupCount() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000010) == 0x00000010);
     }
     /**
-     * <code>optional int32 group_count = 4;</code>
+     * <code>optional int32 group_count = 6;</code>
      *
      * <pre>
      * number of groups.  (number of repeated records)
@@ -4267,65 +5251,30 @@ public final class UserBitShared {
       return groupCount_;
     }
 
-    // optional int32 buffer_length = 5;
-    public static final int BUFFER_LENGTH_FIELD_NUMBER = 5;
+    // optional int32 buffer_length = 7;
+    public static final int BUFFER_LENGTH_FIELD_NUMBER = 7;
     private int bufferLength_;
     /**
-     * <code>optional int32 buffer_length = 5;</code>
+     * <code>optional int32 buffer_length = 7;</code>
      */
     public boolean hasBufferLength() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
+      return ((bitField0_ & 0x00000020) == 0x00000020);
     }
     /**
-     * <code>optional int32 buffer_length = 5;</code>
+     * <code>optional int32 buffer_length = 7;</code>
      */
     public int getBufferLength() {
       return bufferLength_;
     }
 
-    // repeated .exec.shared.FieldMetadata child = 6;
-    public static final int CHILD_FIELD_NUMBER = 6;
-    private java.util.List<org.apache.drill.exec.proto.UserBitShared.FieldMetadata> child_;
-    /**
-     * <code>repeated .exec.shared.FieldMetadata child = 6;</code>
-     */
-    public java.util.List<org.apache.drill.exec.proto.UserBitShared.FieldMetadata> getChildList() {
-      return child_;
-    }
-    /**
-     * <code>repeated .exec.shared.FieldMetadata child = 6;</code>
-     */
-    public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.FieldMetadataOrBuilder> 
-        getChildOrBuilderList() {
-      return child_;
-    }
-    /**
-     * <code>repeated .exec.shared.FieldMetadata child = 6;</code>
-     */
-    public int getChildCount() {
-      return child_.size();
-    }
-    /**
-     * <code>repeated .exec.shared.FieldMetadata child = 6;</code>
-     */
-    public org.apache.drill.exec.proto.UserBitShared.FieldMetadata getChild(int index) {
-      return child_.get(index);
-    }
-    /**
-     * <code>repeated .exec.shared.FieldMetadata child = 6;</code>
-     */
-    public org.apache.drill.exec.proto.UserBitShared.FieldMetadataOrBuilder getChildOrBuilder(
-        int index) {
-      return child_.get(index);
-    }
-
     private void initFields() {
-      def_ = org.apache.drill.exec.proto.SchemaDefProtos.FieldDef.getDefaultInstance();
+      majorType_ = org.apache.drill.common.types.TypeProtos.MajorType.getDefaultInstance();
+      namePart_ = org.apache.drill.exec.proto.UserBitShared.NamePart.getDefaultInstance();
+      child_ = java.util.Collections.emptyList();
       valueCount_ = 0;
       varByteLength_ = 0;
       groupCount_ = 0;
       bufferLength_ = 0;
-      child_ = java.util.Collections.emptyList();
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -4340,22 +5289,25 @@ public final class UserBitShared {
                         throws java.io.IOException {
       getSerializedSize();
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeMessage(1, def_);
+        output.writeMessage(1, majorType_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        output.writeInt32(2, valueCount_);
-      }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
-        output.writeInt32(3, varByteLength_);
-      }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
-        output.writeInt32(4, groupCount_);
-      }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
-        output.writeInt32(5, bufferLength_);
+        output.writeMessage(2, namePart_);
       }
       for (int i = 0; i < child_.size(); i++) {
-        output.writeMessage(6, child_.get(i));
+        output.writeMessage(3, child_.get(i));
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeInt32(4, valueCount_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeInt32(5, varByteLength_);
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        output.writeInt32(6, groupCount_);
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        output.writeInt32(7, bufferLength_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -4368,27 +5320,31 @@ public final class UserBitShared {
       size = 0;
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(1, def_);
+          .computeMessageSize(1, majorType_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(2, valueCount_);
-      }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(3, varByteLength_);
-      }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(4, groupCount_);
-      }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(5, bufferLength_);
+          .computeMessageSize(2, namePart_);
       }
       for (int i = 0; i < child_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(6, child_.get(i));
+          .computeMessageSize(3, child_.get(i));
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(4, valueCount_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(5, varByteLength_);
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(6, groupCount_);
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(7, bufferLength_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -4402,53 +5358,53 @@ public final class UserBitShared {
       return super.writeReplace();
     }
 
-    public static org.apache.drill.exec.proto.UserBitShared.FieldMetadata parseFrom(
+    public static org.apache.drill.exec.proto.UserBitShared.SerializedField parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static org.apache.drill.exec.proto.UserBitShared.FieldMetadata parseFrom(
+    public static org.apache.drill.exec.proto.UserBitShared.SerializedField parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static org.apache.drill.exec.proto.UserBitShared.FieldMetadata parseFrom(byte[] data)
+    public static org.apache.drill.exec.proto.UserBitShared.SerializedField parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static org.apache.drill.exec.proto.UserBitShared.FieldMetadata parseFrom(
+    public static org.apache.drill.exec.proto.UserBitShared.SerializedField parseFrom(
         byte[] data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static org.apache.drill.exec.proto.UserBitShared.FieldMetadata parseFrom(java.io.InputStream input)
+    public static org.apache.drill.exec.proto.UserBitShared.SerializedField parseFrom(java.io.InputStream input)
         throws java.io.IOException {
       return PARSER.parseFrom(input);
     }
-    public static org.apache.drill.exec.proto.UserBitShared.FieldMetadata parseFrom(
+    public static org.apache.drill.exec.proto.UserBitShared.SerializedField parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return PARSER.parseFrom(input, extensionRegistry);
     }
-    public static org.apache.drill.exec.proto.UserBitShared.FieldMetadata parseDelimitedFrom(java.io.InputStream input)
+    public static org.apache.drill.exec.proto.UserBitShared.SerializedField parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
       return PARSER.parseDelimitedFrom(input);
     }
-    public static org.apache.drill.exec.proto.UserBitShared.FieldMetadata parseDelimitedFrom(
+    public static org.apache.drill.exec.proto.UserBitShared.SerializedField parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return PARSER.parseDelimitedFrom(input, extensionRegistry);
     }
-    public static org.apache.drill.exec.proto.UserBitShared.FieldMetadata parseFrom(
+    public static org.apache.drill.exec.proto.UserBitShared.SerializedField parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
       return PARSER.parseFrom(input);
     }
-    public static org.apache.drill.exec.proto.UserBitShared.FieldMetadata parseFrom(
+    public static org.apache.drill.exec.proto.UserBitShared.SerializedField parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
@@ -4457,7 +5413,7 @@ public final class UserBitShared {
 
     public static Builder newBuilder() { return Builder.create(); }
     public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder(org.apache.drill.exec.proto.UserBitShared.FieldMetadata prototype) {
+    public static Builder newBuilder(org.apache.drill.exec.proto.UserBitShared.SerializedField prototype) {
       return newBuilder().mergeFrom(prototype);
     }
     public Builder toBuilder() { return newBuilder(this); }
@@ -4469,24 +5425,24 @@ public final class UserBitShared {
       return builder;
     }
     /**
-     * Protobuf type {@code exec.shared.FieldMetadata}
+     * Protobuf type {@code exec.shared.SerializedField}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessage.Builder<Builder>
-       implements org.apache.drill.exec.proto.UserBitShared.FieldMetadataOrBuilder {
+       implements org.apache.drill.exec.proto.UserBitShared.SerializedFieldOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_FieldMetadata_descriptor;
+        return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_SerializedField_descriptor;
       }
 
       protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_FieldMetadata_fieldAccessorTable
+        return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_SerializedField_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.apache.drill.exec.proto.UserBitShared.FieldMetadata.class, org.apache.drill.exec.proto.UserBitShared.FieldMetadata.Builder.class);
+                org.apache.drill.exec.proto.UserBitShared.SerializedField.class, org.apache.drill.exec.proto.UserBitShared.SerializedField.Builder.class);
       }
 
-      // Construct using org.apache.drill.exec.proto.UserBitShared.FieldMetadata.newBuilder()
+      // Construct using org.apache.drill.exec.proto.UserBitShared.SerializedField.newBuilder()
       private Builder() {
         maybeForceBuilderInitialization();
       }
@@ -4498,7 +5454,8 @@ public final class UserBitShared {
       }
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
-          getDefFieldBuilder();
+          getMajorTypeFieldBuilder();
+          getNamePartFieldBuilder();
           getChildFieldBuilder();
         }
       }
@@ -4508,26 +5465,32 @@ public final class UserBitShared {
 
       public Builder clear() {
         super.clear();
-        if (defBuilder_ == null) {
-          def_ = org.apache.drill.exec.proto.SchemaDefProtos.FieldDef.getDefaultInstance();
+        if (majorTypeBuilder_ == null) {
+          majorType_ = org.apache.drill.common.types.TypeProtos.MajorType.getDefaultInstance();
         } else {
-          defBuilder_.clear();
+          majorTypeBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000001);
-        valueCount_ = 0;
+        if (namePartBuilder_ == null) {
+          namePart_ = org.apache.drill.exec.proto.UserBitShared.NamePart.getDefaultInstance();
+        } else {
+          namePartBuilder_.clear();
+        }
         bitField0_ = (bitField0_ & ~0x00000002);
-        varByteLength_ = 0;
-        bitField0_ = (bitField0_ & ~0x00000004);
-        groupCount_ = 0;
-        bitField0_ = (bitField0_ & ~0x00000008);
-        bufferLength_ = 0;
-        bitField0_ = (bitField0_ & ~0x00000010);
         if (childBuilder_ == null) {
           child_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000020);
+          bitField0_ = (bitField0_ & ~0x00000004);
         } else {
           childBuilder_.clear();
         }
+        valueCount_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000008);
+        varByteLength_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000010);
+        groupCount_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000020);
+        bufferLength_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000040);
         return this;
       }
 
@@ -4537,76 +5500,113 @@ public final class UserBitShared {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_FieldMetadata_descriptor;
+        return org.apache.drill.exec.proto.UserBitShared.internal_static_exec_shared_SerializedField_descriptor;
       }
 
-      public org.apache.drill.exec.proto.UserBitShared.FieldMetadata getDefaultInstanceForType() {
-        return org.apache.drill.exec.proto.UserBitShared.FieldMetadata.getDefaultInstance();
+      public org.apache.drill.exec.proto.UserBitShared.SerializedField getDefaultInstanceForType() {
+        return org.apache.drill.exec.proto.UserBitShared.SerializedField.getDefaultInstance();
       }
 
-      public org.apache.drill.exec.proto.UserBitShared.FieldMetadata build() {
-        org.apache.drill.exec.proto.UserBitShared.FieldMetadata result = buildPartial();
+      public org.apache.drill.exec.proto.UserBitShared.SerializedField build() {
+        org.apache.drill.exec.proto.UserBitShared.SerializedField result = buildPartial();
         if (!result.isInitialized()) {
           throw newUninitializedMessageException(result);
         }
         return result;
       }
 
-      public org.apache.drill.exec.proto.UserBitShared.FieldMetadata buildPartial() {
-        org.apache.drill.exec.proto.UserBitShared.FieldMetadata result = new org.apache.drill.exec.proto.UserBitShared.FieldMetadata(this);
+      public org.apache.drill.exec.proto.UserBitShared.SerializedField buildPartial() {
+        org.apache.drill.exec.proto.UserBitShared.SerializedField result = new org.apache.drill.exec.proto.UserBitShared.SerializedField(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
         if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
           to_bitField0_ |= 0x00000001;
         }
-        if (defBuilder_ == null) {
-          result.def_ = def_;
+        if (majorTypeBuilder_ == null) {
+          result.majorType_ = majorType_;
         } else {
-          result.def_ = defBuilder_.build();
+          result.majorType_ = majorTypeBuilder_.build();
         }
         if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
           to_bitField0_ |= 0x00000002;
         }
-        result.valueCount_ = valueCount_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
-          to_bitField0_ |= 0x00000004;
+        if (namePartBuilder_ == null) {
+          result.namePart_ = namePart_;
+        } else {
+          result.namePart_ = namePartBuilder_.build();
         }
-        result.varByteLength_ = varByteLength_;
-        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
-          to_bitField0_ |= 0x00000008;
-        }
-        result.groupCount_ = groupCount_;
-        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
-          to_bitField0_ |= 0x00000010;
-        }
-        result.bufferLength_ = bufferLength_;
         if (childBuilder_ == null) {
-          if (((bitField0_ & 0x00000020) == 0x00000020)) {
+          if (((bitField0_ & 0x00000004) == 0x00000004)) {
             child_ = java.util.Collections.unmodifiableList(child_);
-            bitField0_ = (bitField0_ & ~0x00000020);
+            bitField0_ = (bitField0_ & ~0x00000004);
           }
           result.child_ = child_;
         } else {
           result.child_ = childBuilder_.build();
         }
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.valueCount_ = valueCount_;
+        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.varByteLength_ = varByteLength_;
+        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+          to_bitField0_ |= 0x00000010;
+        }
+        result.groupCount_ = groupCount_;
+        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+          to_bitField0_ |= 0x00000020;
+        }
+        result.bufferLength_ = bufferLength_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
       }
 
       public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof org.apache.drill.exec.proto.UserBitShared.FieldMetadata) {
-          return mergeFrom((org.apache.drill.exec.proto.UserBitShared.FieldMetadata)other);
+        if (other instanceof org.apache.drill.exec.proto.UserBitShared.SerializedField) {
+          return mergeFrom((org.apache.drill.exec.proto.UserBitShared.SerializedField)other);
         } else {
           super.mergeFrom(other);
           return this;
         }
       }
 
-      public Builder mergeFrom(org.apache.drill.exec.proto.UserBitShared.FieldMetadata other) {
-        if (other == org.apache.drill.exec.proto.UserBitShared.FieldMetadata.getDefaultInstance()) return this;
-        if (other.hasDef()) {
-          mergeDef(other.getDef());
+      public Builder mergeFrom(org.apache.drill.exec.proto.UserBitShared.SerializedField other) {
+        if (other == org.apache.drill.exec.proto.UserBitShared.SerializedField.getDefaultInstance()) return this;
+        if (other.hasMajorType()) {
+          mergeMajorType(other.getMajorType());
+        }
+        if (other.hasNamePart()) {
+          mergeNamePart(other.getNamePart());
+        }
+        if (childBuilder_ == null) {
+          if (!other.child_.isEmpty()) {
+            if (child_.isEmpty()) {
+              child_ = other.child_;
+              bitField0_ = (bitField0_ & ~0x00000004);
+            } else {
+              ensureChildIsMutable();
+              child_.addAll(other.child_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.child_.isEmpty()) {
+            if (childBuilder_.isEmpty()) {
+              childBuilder_.dispose();
+              childBuilder_ = null;
+              child_ = other.child_;
+              bitField0_ = (bitField0_ & ~0x00000004);
+              childBuilder_ = 
+                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+                   getChildFieldBuilder() : null;
+            } else {
+              childBuilder_.addAllMessages(other.child_);
+            }
+          }
         }
         if (other.hasValueCount()) {
           setValueCount(other.getValueCount());
@@ -4620,32 +5620,6 @@ public final class UserBitShared {
         if (other.hasBufferLength()) {
           setBufferLength(other.getBufferLength());
         }
-        if (childBuilder_ == null) {
-          if (!other.child_.isEmpty()) {
-            if (child_.isEmpty()) {
-              child_ = other.child_;
-              bitField0_ = (bitField0_ & ~0x00000020);
-            } else {
-              ensureChildIsMutable();
-              child_.addAll(other.child_);
-            }
-            onChanged();
-          }
-        } else {
-          if (!other.child_.isEmpty()) {
-            if (childBuilder_.isEmpty()) {
-              childBuilder_.dispose();
-              childBuilder_ = null;
-              child_ = other.child_;
-              bitField0_ = (bitField0_ & ~0x00000020);
-              childBuilder_ = 
-                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
-                   getChildFieldBuilder() : null;
-            } else {
-              childBuilder_.addAllMessages(other.child_);
-            }
-          }
-        }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
       }
@@ -4658,11 +5632,11 @@ public final class UserBitShared {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        org.apache.drill.exec.proto.UserBitShared.FieldMetadata parsedMessage = null;
+        org.apache.drill.exec.proto.UserBitShared.SerializedField parsedMessage = null;
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (org.apache.drill.exec.proto.UserBitShared.FieldMetadata) e.getUnfinishedMessage();
+          parsedMessage = (org.apache.drill.exec.proto.UserBitShared.SerializedField) e.getUnfinishedMessage();
           throw e;
         } finally {
           if (parsedMessage != null) {
@@ -4673,288 +5647,297 @@ public final class UserBitShared {
       }
       private int bitField0_;
 
-      // optional .exec.FieldDef def = 1;
-      private org.apache.drill.exec.proto.SchemaDefProtos.FieldDef def_ = org.apache.drill.exec.proto.SchemaDefProtos.FieldDef.getDefaultInstance();
+      // optional .common.MajorType major_type = 1;
+      private org.apache.drill.common.types.TypeProtos.MajorType majorType_ = org.apache.drill.common.types.TypeProtos.MajorType.getDefaultInstance();
       private com.google.protobuf.SingleFieldBuilder<
-          org.apache.drill.exec.proto.SchemaDefProtos.FieldDef, org.apache.drill.exec.proto.SchemaDefProtos.FieldDef.Builder, org.apache.drill.exec.proto.SchemaDefProtos.FieldDefOrBuilder> defBuilder_;
+          org.apache.drill.common.types.TypeProtos.MajorType, org.apache.drill.common.types.TypeProtos.MajorType.Builder, org.apache.drill.common.types.TypeProtos.MajorTypeOrBuilder> majorTypeBuilder_;
       /**
-       * <code>optional .exec.FieldDef def = 1;</code>
+       * <code>optional .common.MajorType major_type = 1;</code>
+       *
+       * <pre>
+       * the type associated with this field.
+       * </pre>
        */
-      public boolean hasDef() {
+      public boolean hasMajorType() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       /**
-       * <code>optional .exec.FieldDef def = 1;</code>
+       * <code>optional .common.MajorType major_type = 1;</code>
+       *
+       * <pre>
+       * the type associated with this field.
+       * </pre>
        */
-      public org.apache.drill.exec.proto.SchemaDefProtos.FieldDef getDef() {
-        if (defBuilder_ == null) {
-          return def_;
+      public org.apache.drill.common.types.TypeProtos.MajorType getMajorType() {
+        if (majorTypeBuilder_ == null) {
+          return majorType_;
         } else {
-          return defBuilder_.getMessage();
+          return majorTypeBuilder_.getMessage();
         }
       }
       /**
-       * <code>optional .exec.FieldDef def = 1;</code>
+       * <code>optional .common.MajorType major_type = 1;</code>
+       *
+       * <pre>
+       * the type associated with this field.
+       * </pre>
        */
-      public Builder setDef(org.apache.drill.exec.proto.SchemaDefProtos.FieldDef value) {
-        if (defBuilder_ == null) {
+      public Builder setMajorType(org.apache.drill.common.types.TypeProtos.MajorType value) {
+        if (majorTypeBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
           }
-          def_ = value;
+          majorType_ = value;
           onChanged();
         } else {
-          defBuilder_.setMessage(value);
+          majorTypeBuilder_.setMessage(value);
         }
         bitField0_ |= 0x00000001;
         return this;
       }
       /**
-       * <code>optional .exec.FieldDef def = 1;</code>
+       * <code>optional .common.MajorType major_type = 1;</code>
+       *
+       * <pre>
+       * the type associated with this field.
+       * </pre>
        */
-      public Builder setDef(
-          org.apache.drill.exec.proto.SchemaDefProtos.FieldDef.Builder builderForValue) {
-        if (defBuilder_ == null) {
-          def_ = builderForValue.build();
+      public Builder setMajorType(
+          org.apache.drill.common.types.TypeProtos.MajorType.Builder builderForValue) {
+        if (majorTypeBuilder_ == null) {
+          majorType_ = builderForValue.build();
           onChanged();
         } else {
-          defBuilder_.setMessage(builderForValue.build());
+          majorTypeBuilder_.setMessage(builderForValue.build());
         }
         bitField0_ |= 0x00000001;
         return this;
       }
       /**
-       * <code>optional .exec.FieldDef def = 1;</code>
+       * <code>optional .common.MajorType major_type = 1;</code>
+       *
+       * <pre>
+       * the type associated with this field.
+       * </pre>
        */
-      public Builder mergeDef(org.apache.drill.exec.proto.SchemaDefProtos.FieldDef value) {
-        if (defBuilder_ == null) {
+      public Builder mergeMajorType(org.apache.drill.common.types.TypeProtos.MajorType value) {
+        if (majorTypeBuilder_ == null) {
           if (((bitField0_ & 0x00000001) == 0x00000001) &&
-              def_ != org.apache.drill.exec.proto.SchemaDefProtos.FieldDef.getDefaultInstance()) {
-            def_ =
-              org.apache.drill.exec.proto.SchemaDefProtos.FieldDef.newBuilder(def_).mergeFrom(value).buildPartial();
+              majorType_ != org.apache.drill.common.types.TypeProtos.MajorType.getDefaultInstance()) {
+            majorType_ =
+              org.apache.drill.common.types.TypeProtos.MajorType.newBuilder(majorType_).mergeFrom(value).buildPartial();
           } else {
-            def_ = value;
+            majorType_ = value;
           }
           onChanged();
         } else {
-          defBuilder_.mergeFrom(value);
+          majorTypeBuilder_.mergeFrom(value);
         }
         bitField0_ |= 0x00000001;
         return this;
       }
       /**
-       * <code>optional .exec.FieldDef def = 1;</code>
+       * <code>optional .common.MajorType major_type = 1;</code>
+       *
+       * <pre>
+       * the type associated with this field.
+       * </pre>
        */
-      public Builder clearDef() {
-        if (defBuilder_ == null) {
-          def_ = org.apache.drill.exec.proto.SchemaDefProtos.FieldDef.getDefaultInstance();
+      public Builder clearMajorType() {
+        if (majorTypeBuilder_ == null) {
+          majorType_ = org.apache.drill.common.types.TypeProtos.MajorType.getDefaultInstance();
           onChanged();
         } else {
-          defBuilder_.clear();
+          majorTypeBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000001);
         return this;
       }
       /**
-       * <code>optional .exec.FieldDef def = 1;</code>
+       * <code>optional .common.MajorType major_type = 1;</code>
+       *
+       * <pre>
+       * the type associated with this field.
+       * </pre>
        */
-      public org.apache.drill.exec.proto.SchemaDefProtos.FieldDef.Builder getDefBuilder() {
+      public org.apache.drill.common.types.TypeProtos.MajorType.Builder getMajorTypeBuilder() {
         bitField0_ |= 0x00000001;
         onChanged();
-        return getDefFieldBuilder().getBuilder();
+        return getMajorTypeFieldBuilder().getBuilder();
       }
       /**
-       * <code>optional .exec.FieldDef def = 1;</code>
+       * <code>optional .common.MajorType major_type = 1;</code>
+       *
+       * <pre>
+       * the type associated with this field.
+       * </pre>
        */
-      public org.apache.drill.exec.proto.SchemaDefProtos.FieldDefOrBuilder getDefOrBuilder() {
-        if (defBuilder_ != null) {
-          return defBuilder_.getMessageOrBuilder();
+      public org.apache.drill.common.types.TypeProtos.MajorTypeOrBuilder getMajorTypeOrBuilder() {
+        if (majorTypeBuilder_ != null) {
+          return majorTypeBuilder_.getMessageOrBuilder();
         } else {
-          return def_;
+          return majorType_;
         }
       }
       /**
-       * <code>optional .exec.FieldDef def = 1;</code>
+       * <code>optional .common.MajorType major_type = 1;</code>
+       *
+       * <pre>
+       * the type associated with this field.
+       * </pre>
        */
       private com.google.protobuf.SingleFieldBuilder<
-          org.apache.drill.exec.proto.SchemaDefProtos.FieldDef, org.apache.drill.exec.proto.SchemaDefProtos.FieldDef.Builder, org.apache.drill.exec.proto.SchemaDefProtos.FieldDefOrBuilder> 
-          getDefFieldBuilder() {
-        if (defBuilder_ == null) {
-          defBuilder_ = new com.google.protobuf.SingleFieldBuilder<
-              org.apache.drill.exec.proto.SchemaDefProtos.FieldDef, org.apache.drill.exec.proto.SchemaDefProtos.FieldDef.Builder, org.apache.drill.exec.proto.SchemaDefProtos.FieldDefOrBuilder>(
-                  def_,
+          org.apache.drill.common.types.TypeProtos.MajorType, org.apache.drill.common.types.TypeProtos.MajorType.Builder, org.apache.drill.common.types.TypeProtos.MajorTypeOrBuilder> 
+          getMajorTypeFieldBuilder() {
+        if (majorTypeBuilder_ == null) {
+          majorTypeBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              org.apache.drill.common.types.TypeProtos.MajorType, org.apache.drill.common.types.TypeProtos.MajorType.Builder, org.apache.drill.common.types.TypeProtos.MajorTypeOrBuilder>(
+                  majorType_,
                   getParentForChildren(),
                   isClean());
-          def_ = null;
+          majorType_ = null;
         }
-        return defBuilder_;
+        return majorTypeBuilder_;
       }
 
-      // optional int32 value_count = 2;
-      private int valueCount_ ;
+      // optional .exec.shared.NamePart name_part = 2;
+      private org.apache.drill.exec.proto.UserBitShared.NamePart namePart_ = org.apache.drill.exec.proto.UserBitShared.NamePart.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserBitShared.NamePart, org.apache.drill.exec.proto.UserBitShared.NamePart.Builder, org.apache.drill.exec.proto.UserBitShared.NamePartOrBuilder> namePartBuilder_;
       /**
-       * <code>optional int32 value_count = 2;</code>
+       * <code>optional .exec.shared.NamePart name_part = 2;</code>
        */
-      public boolean hasValueCount() {
+      public boolean hasNamePart() {
         return ((bitField0_ & 0x00000002) == 0x00000002);
       }
       /**
-       * <code>optional int32 value_count = 2;</code>
+       * <code>optional .exec.shared.NamePart name_part = 2;</code>
        */
-      public int getValueCount() {
-        return valueCount_;
+      public org.apache.drill.exec.proto.UserBitShared.NamePart getNamePart() {
+        if (namePartBuilder_ == null) {
+          return namePart_;
+        } else {
+          return namePartBuilder_.getMessage();
+        }
       }
       /**
-       * <code>optional int32 value_count = 2;</code>
+       * <code>optional .exec.shared.NamePart name_part = 2;</code>
        */
-      public Builder setValueCount(int value) {
+      public Builder setNamePart(org.apache.drill.exec.proto.UserBitShared.NamePart value) {
+        if (namePartBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          namePart_ = value;
+          onChanged();
+        } else {
+          namePartBuilder_.setMessage(value);
+        }
         bitField0_ |= 0x00000002;
-        valueCount_ = value;
-        onChanged();
         return this;
       }
       /**
-       * <code>optional int32 value_count = 2;</code>
+       * <code>optional .exec.shared.NamePart name_part = 2;</code>
        */
-      public Builder clearValueCount() {
+      public Builder setNamePart(
+          org.apache.drill.exec.proto.UserBitShared.NamePart.Builder builderForValue) {
+        if (namePartBuilder_ == null) {
+          namePart_ = builderForValue.build();
+          onChanged();
+        } else {
+          namePartBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.NamePart name_part = 2;</code>
+       */
+      public Builder mergeNamePart(org.apache.drill.exec.proto.UserBitShared.NamePart value) {
+        if (namePartBuilder_ == null) {
+          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+              namePart_ != org.apache.drill.exec.proto.UserBitShared.NamePart.getDefaultInstance()) {
+            namePart_ =
+              org.apache.drill.exec.proto.UserBitShared.NamePart.newBuilder(namePart_).mergeFrom(value).buildPartial();
+          } else {
+            namePart_ = value;
+          }
+          onChanged();
+        } else {
+          namePartBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.NamePart name_part = 2;</code>
+       */
+      public Builder clearNamePart() {
+        if (namePartBuilder_ == null) {
+          namePart_ = org.apache.drill.exec.proto.UserBitShared.NamePart.getDefaultInstance();
+          onChanged();
+        } else {
+          namePartBuilder_.clear();
+        }
         bitField0_ = (bitField0_ & ~0x00000002);
-        valueCount_ = 0;
-        onChanged();
         return this;
+      }
+      /**
+       * <code>optional .exec.shared.NamePart name_part = 2;</code>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.NamePart.Builder getNamePartBuilder() {
+        bitField0_ |= 0x00000002;
+        onChanged();
+        return getNamePartFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .exec.shared.NamePart name_part = 2;</code>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.NamePartOrBuilder getNamePartOrBuilder() {
+        if (namePartBuilder_ != null) {
+          return namePartBuilder_.getMessageOrBuilder();
+        } else {
+          return namePart_;
+        }
+      }
+      /**
+       * <code>optional .exec.shared.NamePart name_part = 2;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserBitShared.NamePart, org.apache.drill.exec.proto.UserBitShared.NamePart.Builder, org.apache.drill.exec.proto.UserBitShared.NamePartOrBuilder> 
+          getNamePartFieldBuilder() {
+        if (namePartBuilder_ == null) {
+          namePartBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              org.apache.drill.exec.proto.UserBitShared.NamePart, org.apache.drill.exec.proto.UserBitShared.NamePart.Builder, org.apache.drill.exec.proto.UserBitShared.NamePartOrBuilder>(
+                  namePart_,
+                  getParentForChildren(),
+                  isClean());
+          namePart_ = null;
+        }
+        return namePartBuilder_;
       }
 
-      // optional int32 var_byte_length = 3;
-      private int varByteLength_ ;
-      /**
-       * <code>optional int32 var_byte_length = 3;</code>
-       */
-      public boolean hasVarByteLength() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
-      }
-      /**
-       * <code>optional int32 var_byte_length = 3;</code>
-       */
-      public int getVarByteLength() {
-        return varByteLength_;
-      }
-      /**
-       * <code>optional int32 var_byte_length = 3;</code>
-       */
-      public Builder setVarByteLength(int value) {
-        bitField0_ |= 0x00000004;
-        varByteLength_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>optional int32 var_byte_length = 3;</code>
-       */
-      public Builder clearVarByteLength() {
-        bitField0_ = (bitField0_ & ~0x00000004);
-        varByteLength_ = 0;
-        onChanged();
-        return this;
-      }
-
-      // optional int32 group_count = 4;
-      private int groupCount_ ;
-      /**
-       * <code>optional int32 group_count = 4;</code>
-       *
-       * <pre>
-       * number of groups.  (number of repeated records)
-       * </pre>
-       */
-      public boolean hasGroupCount() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
-      }
-      /**
-       * <code>optional int32 group_count = 4;</code>
-       *
-       * <pre>
-       * number of groups.  (number of repeated records)
-       * </pre>
-       */
-      public int getGroupCount() {
-        return groupCount_;
-      }
-      /**
-       * <code>optional int32 group_count = 4;</code>
-       *
-       * <pre>
-       * number of groups.  (number of repeated records)
-       * </pre>
-       */
-      public Builder setGroupCount(int value) {
-        bitField0_ |= 0x00000008;
-        groupCount_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>optional int32 group_count = 4;</code>
-       *
-       * <pre>
-       * number of groups.  (number of repeated records)
-       * </pre>
-       */
-      public Builder clearGroupCount() {
-        bitField0_ = (bitField0_ & ~0x00000008);
-        groupCount_ = 0;
-        onChanged();
-        return this;
-      }
-
-      // optional int32 buffer_length = 5;
-      private int bufferLength_ ;
-      /**
-       * <code>optional int32 buffer_length = 5;</code>
-       */
-      public boolean hasBufferLength() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
-      }
-      /**
-       * <code>optional int32 buffer_length = 5;</code>
-       */
-      public int getBufferLength() {
-        return bufferLength_;
-      }
-      /**
-       * <code>optional int32 buffer_length = 5;</code>
-       */
-      public Builder setBufferLength(int value) {
-        bitField0_ |= 0x00000010;
-        bufferLength_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>optional int32 buffer_length = 5;</code>
-       */
-      public Builder clearBufferLength() {
-        bitField0_ = (bitField0_ & ~0x00000010);
-        bufferLength_ = 0;
-        onChanged();
-        return this;
-      }
-
-      // repeated .exec.shared.FieldMetadata child = 6;
-      private java.util.List<org.apache.drill.exec.proto.UserBitShared.FieldMetadata> child_ =
+      // repeated .exec.shared.SerializedField child = 3;
+      private java.util.List<org.apache.drill.exec.proto.UserBitShared.SerializedField> child_ =
         java.util.Collections.emptyList();
       private void ensureChildIsMutable() {
-        if (!((bitField0_ & 0x00000020) == 0x00000020)) {
-          child_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserBitShared.FieldMetadata>(child_);
-          bitField0_ |= 0x00000020;
+        if (!((bitField0_ & 0x00000004) == 0x00000004)) {
+          child_ = new java.util.ArrayList<org.apache.drill.exec.proto.UserBitShared.SerializedField>(child_);
+          bitField0_ |= 0x00000004;
          }
       }
 
       private com.google.protobuf.RepeatedFieldBuilder<
-          org.apache.drill.exec.proto.UserBitShared.FieldMetadata, org.apache.drill.exec.proto.UserBitShared.FieldMetadata.Builder, org.apache.drill.exec.proto.UserBitShared.FieldMetadataOrBuilder> childBuilder_;
+          org.apache.drill.exec.proto.UserBitShared.SerializedField, org.apache.drill.exec.proto.UserBitShared.SerializedField.Builder, org.apache.drill.exec.proto.UserBitShared.SerializedFieldOrBuilder> childBuilder_;
 
       /**
-       * <code>repeated .exec.shared.FieldMetadata child = 6;</code>
+       * <code>repeated .exec.shared.SerializedField child = 3;</code>
+       *
+       * <pre>
+       * only in the cases of type == MAP or REPEAT_MAP or REPEATED_LIST
+       * </pre>
        */
-      public java.util.List<org.apache.drill.exec.proto.UserBitShared.FieldMetadata> getChildList() {
+      public java.util.List<org.apache.drill.exec.proto.UserBitShared.SerializedField> getChildList() {
         if (childBuilder_ == null) {
           return java.util.Collections.unmodifiableList(child_);
         } else {
@@ -4962,7 +5945,11 @@ public final class UserBitShared {
         }
       }
       /**
-       * <code>repeated .exec.shared.FieldMetadata child = 6;</code>
+       * <code>repeated .exec.shared.SerializedField child = 3;</code>
+       *
+       * <pre>
+       * only in the cases of type == MAP or REPEAT_MAP or REPEATED_LIST
+       * </pre>
        */
       public int getChildCount() {
         if (childBuilder_ == null) {
@@ -4972,9 +5959,13 @@ public final class UserBitShared {
         }
       }
       /**
-       * <code>repeated .exec.shared.FieldMetadata child = 6;</code>
+       * <code>repeated .exec.shared.SerializedField child = 3;</code>
+       *
+       * <pre>
+       * only in the cases of type == MAP or REPEAT_MAP or REPEATED_LIST
+       * </pre>
        */
-      public org.apache.drill.exec.proto.UserBitShared.FieldMetadata getChild(int index) {
+      public org.apache.drill.exec.proto.UserBitShared.SerializedField getChild(int index) {
         if (childBuilder_ == null) {
           return child_.get(index);
         } else {
@@ -4982,10 +5973,14 @@ public final class UserBitShared {
         }
       }
       /**
-       * <code>repeated .exec.shared.FieldMetadata child = 6;</code>
+       * <code>repeated .exec.shared.SerializedField child = 3;</code>
+       *
+       * <pre>
+       * only in the cases of type == MAP or REPEAT_MAP or REPEATED_LIST
+       * </pre>
        */
       public Builder setChild(
-          int index, org.apache.drill.exec.proto.UserBitShared.FieldMetadata value) {
+          int index, org.apache.drill.exec.proto.UserBitShared.SerializedField value) {
         if (childBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -4999,10 +5994,14 @@ public final class UserBitShared {
         return this;
       }
       /**
-       * <code>repeated .exec.shared.FieldMetadata child = 6;</code>
+       * <code>repeated .exec.shared.SerializedField child = 3;</code>
+       *
+       * <pre>
+       * only in the cases of type == MAP or REPEAT_MAP or REPEATED_LIST
+       * </pre>
        */
       public Builder setChild(
-          int index, org.apache.drill.exec.proto.UserBitShared.FieldMetadata.Builder builderForValue) {
+          int index, org.apache.drill.exec.proto.UserBitShared.SerializedField.Builder builderForValue) {
         if (childBuilder_ == null) {
           ensureChildIsMutable();
           child_.set(index, builderForValue.build());
@@ -5013,9 +6012,13 @@ public final class UserBitShared {
         return this;
       }
       /**
-       * <code>repeated .exec.shared.FieldMetadata child = 6;</code>
+       * <code>repeated .exec.shared.SerializedField child = 3;</code>
+       *
+       * <pre>
+       * only in the cases of type == MAP or REPEAT_MAP or REPEATED_LIST
+       * </pre>
        */
-      public Builder addChild(org.apache.drill.exec.proto.UserBitShared.FieldMetadata value) {
+      public Builder addChild(org.apache.drill.exec.proto.UserBitShared.SerializedField value) {
         if (childBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -5029,10 +6032,14 @@ public final class UserBitShared {
         return this;
       }
       /**
-       * <code>repeated .exec.shared.FieldMetadata child = 6;</code>
+       * <code>repeated .exec.shared.SerializedField child = 3;</code>
+       *
+       * <pre>
+       * only in the cases of type == MAP or REPEAT_MAP or REPEATED_LIST
+       * </pre>
        */
       public Builder addChild(
-          int index, org.apache.drill.exec.proto.UserBitShared.FieldMetadata value) {
+          int index, org.apache.drill.exec.proto.UserBitShared.SerializedField value) {
         if (childBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -5046,10 +6053,14 @@ public final class UserBitShared {
         return this;
       }
       /**
-       * <code>repeated .exec.shared.FieldMetadata child = 6;</code>
+       * <code>repeated .exec.shared.SerializedField child = 3;</code>
+       *
+       * <pre>
+       * only in the cases of type == MAP or REPEAT_MAP or REPEATED_LIST
+       * </pre>
        */
       public Builder addChild(
-          org.apache.drill.exec.proto.UserBitShared.FieldMetadata.Builder builderForValue) {
+          org.apache.drill.exec.proto.UserBitShared.SerializedField.Builder builderForValue) {
         if (childBuilder_ == null) {
           ensureChildIsMutable();
           child_.add(builderForValue.build());
@@ -5060,10 +6071,14 @@ public final class UserBitShared {
         return this;
       }
       /**
-       * <code>repeated .exec.shared.FieldMetadata child = 6;</code>
+       * <code>repeated .exec.shared.SerializedField child = 3;</code>
+       *
+       * <pre>
+       * only in the cases of type == MAP or REPEAT_MAP or REPEATED_LIST
+       * </pre>
        */
       public Builder addChild(
-          int index, org.apache.drill.exec.proto.UserBitShared.FieldMetadata.Builder builderForValue) {
+          int index, org.apache.drill.exec.proto.UserBitShared.SerializedField.Builder builderForValue) {
         if (childBuilder_ == null) {
           ensureChildIsMutable();
           child_.add(index, builderForValue.build());
@@ -5074,10 +6089,14 @@ public final class UserBitShared {
         return this;
       }
       /**
-       * <code>repeated .exec.shared.FieldMetadata child = 6;</code>
+       * <code>repeated .exec.shared.SerializedField child = 3;</code>
+       *
+       * <pre>
+       * only in the cases of type == MAP or REPEAT_MAP or REPEATED_LIST
+       * </pre>
        */
       public Builder addAllChild(
-          java.lang.Iterable<? extends org.apache.drill.exec.proto.UserBitShared.FieldMetadata> values) {
+          java.lang.Iterable<? extends org.apache.drill.exec.proto.UserBitShared.SerializedField> values) {
         if (childBuilder_ == null) {
           ensureChildIsMutable();
           super.addAll(values, child_);
@@ -5088,12 +6107,16 @@ public final class UserBitShared {
         return this;
       }
       /**
-       * <code>repeated .exec.shared.FieldMetadata child = 6;</code>
+       * <code>repeated .exec.shared.SerializedField child = 3;</code>
+       *
+       * <pre>
+       * only in the cases of type == MAP or REPEAT_MAP or REPEATED_LIST
+       * </pre>
        */
       public Builder clearChild() {
         if (childBuilder_ == null) {
           child_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000020);
+          bitField0_ = (bitField0_ & ~0x00000004);
           onChanged();
         } else {
           childBuilder_.clear();
@@ -5101,7 +6124,11 @@ public final class UserBitShared {
         return this;
       }
       /**
-       * <code>repeated .exec.shared.FieldMetadata child = 6;</code>
+       * <code>repeated .exec.shared.SerializedField child = 3;</code>
+       *
+       * <pre>
+       * only in the cases of type == MAP or REPEAT_MAP or REPEATED_LIST
+       * </pre>
        */
       public Builder removeChild(int index) {
         if (childBuilder_ == null) {
@@ -5114,16 +6141,24 @@ public final class UserBitShared {
         return this;
       }
       /**
-       * <code>repeated .exec.shared.FieldMetadata child = 6;</code>
+       * <code>repeated .exec.shared.SerializedField child = 3;</code>
+       *
+       * <pre>
+       * only in the cases of type == MAP or REPEAT_MAP or REPEATED_LIST
+       * </pre>
        */
-      public org.apache.drill.exec.proto.UserBitShared.FieldMetadata.Builder getChildBuilder(
+      public org.apache.drill.exec.proto.UserBitShared.SerializedField.Builder getChildBuilder(
           int index) {
         return getChildFieldBuilder().getBuilder(index);
       }
       /**
-       * <code>repeated .exec.shared.FieldMetadata child = 6;</code>
+       * <code>repeated .exec.shared.SerializedField child = 3;</code>
+       *
+       * <pre>
+       * only in the cases of type == MAP or REPEAT_MAP or REPEATED_LIST
+       * </pre>
        */
-      public org.apache.drill.exec.proto.UserBitShared.FieldMetadataOrBuilder getChildOrBuilder(
+      public org.apache.drill.exec.proto.UserBitShared.SerializedFieldOrBuilder getChildOrBuilder(
           int index) {
         if (childBuilder_ == null) {
           return child_.get(index);  } else {
@@ -5131,9 +6166,13 @@ public final class UserBitShared {
         }
       }
       /**
-       * <code>repeated .exec.shared.FieldMetadata child = 6;</code>
+       * <code>repeated .exec.shared.SerializedField child = 3;</code>
+       *
+       * <pre>
+       * only in the cases of type == MAP or REPEAT_MAP or REPEATED_LIST
+       * </pre>
        */
-      public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.FieldMetadataOrBuilder> 
+      public java.util.List<? extends org.apache.drill.exec.proto.UserBitShared.SerializedFieldOrBuilder> 
            getChildOrBuilderList() {
         if (childBuilder_ != null) {
           return childBuilder_.getMessageOrBuilderList();
@@ -5142,35 +6181,47 @@ public final class UserBitShared {
         }
       }
       /**
-       * <code>repeated .exec.shared.FieldMetadata child = 6;</code>
+       * <code>repeated .exec.shared.SerializedField child = 3;</code>
+       *
+       * <pre>
+       * only in the cases of type == MAP or REPEAT_MAP or REPEATED_LIST
+       * </pre>
        */
-      public org.apache.drill.exec.proto.UserBitShared.FieldMetadata.Builder addChildBuilder() {
+      public org.apache.drill.exec.proto.UserBitShared.SerializedField.Builder addChildBuilder() {
         return getChildFieldBuilder().addBuilder(
-            org.apache.drill.exec.proto.UserBitShared.FieldMetadata.getDefaultInstance());
+            org.apache.drill.exec.proto.UserBitShared.SerializedField.getDefaultInstance());
       }
       /**
-       * <code>repeated .exec.shared.FieldMetadata child = 6;</code>
+       * <code>repeated .exec.shared.SerializedField child = 3;</code>
+       *
+       * <pre>
+       * only in the cases of type == MAP or REPEAT_MAP or REPEATED_LIST
+       * </pre>
        */
-      public org.apache.drill.exec.proto.UserBitShared.FieldMetadata.Builder addChildBuilder(
+      public org.apache.drill.exec.proto.UserBitShared.SerializedField.Builder addChildBuilder(
           int index) {
         return getChildFieldBuilder().addBuilder(
-            index, org.apache.drill.exec.proto.UserBitShared.FieldMetadata.getDefaultInstance());
+            index, org.apache.drill.exec.proto.UserBitShared.SerializedField.getDefaultInstance());
       }
       /**
-       * <code>repeated .exec.shared.FieldMetadata child = 6;</code>
+       * <code>repeated .exec.shared.SerializedField child = 3;</code>
+       *
+       * <pre>
+       * only in the cases of type == MAP or REPEAT_MAP or REPEATED_LIST
+       * </pre>
        */
-      public java.util.List<org.apache.drill.exec.proto.UserBitShared.FieldMetadata.Builder> 
+      public java.util.List<org.apache.drill.exec.proto.UserBitShared.SerializedField.Builder> 
            getChildBuilderList() {
         return getChildFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilder<
-          org.apache.drill.exec.proto.UserBitShared.FieldMetadata, org.apache.drill.exec.proto.UserBitShared.FieldMetadata.Builder, org.apache.drill.exec.proto.UserBitShared.FieldMetadataOrBuilder> 
+          org.apache.drill.exec.proto.UserBitShared.SerializedField, org.apache.drill.exec.proto.UserBitShared.SerializedField.Builder, org.apache.drill.exec.proto.UserBitShared.SerializedFieldOrBuilder> 
           getChildFieldBuilder() {
         if (childBuilder_ == null) {
           childBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
-              org.apache.drill.exec.proto.UserBitShared.FieldMetadata, org.apache.drill.exec.proto.UserBitShared.FieldMetadata.Builder, org.apache.drill.exec.proto.UserBitShared.FieldMetadataOrBuilder>(
+              org.apache.drill.exec.proto.UserBitShared.SerializedField, org.apache.drill.exec.proto.UserBitShared.SerializedField.Builder, org.apache.drill.exec.proto.UserBitShared.SerializedFieldOrBuilder>(
                   child_,
-                  ((bitField0_ & 0x00000020) == 0x00000020),
+                  ((bitField0_ & 0x00000004) == 0x00000004),
                   getParentForChildren(),
                   isClean());
           child_ = null;
@@ -5178,15 +6229,163 @@ public final class UserBitShared {
         return childBuilder_;
       }
 
-      // @@protoc_insertion_point(builder_scope:exec.shared.FieldMetadata)
+      // optional int32 value_count = 4;
+      private int valueCount_ ;
+      /**
+       * <code>optional int32 value_count = 4;</code>
+       */
+      public boolean hasValueCount() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>optional int32 value_count = 4;</code>
+       */
+      public int getValueCount() {
+        return valueCount_;
+      }
+      /**
+       * <code>optional int32 value_count = 4;</code>
+       */
+      public Builder setValueCount(int value) {
+        bitField0_ |= 0x00000008;
+        valueCount_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 value_count = 4;</code>
+       */
+      public Builder clearValueCount() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        valueCount_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional int32 var_byte_length = 5;
+      private int varByteLength_ ;
+      /**
+       * <code>optional int32 var_byte_length = 5;</code>
+       */
+      public boolean hasVarByteLength() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      /**
+       * <code>optional int32 var_byte_length = 5;</code>
+       */
+      public int getVarByteLength() {
+        return varByteLength_;
+      }
+      /**
+       * <code>optional int32 var_byte_length = 5;</code>
+       */
+      public Builder setVarByteLength(int value) {
+        bitField0_ |= 0x00000010;
+        varByteLength_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 var_byte_length = 5;</code>
+       */
+      public Builder clearVarByteLength() {
+        bitField0_ = (bitField0_ & ~0x00000010);
+        varByteLength_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional int32 group_count = 6;
+      private int groupCount_ ;
+      /**
+       * <code>optional int32 group_count = 6;</code>
+       *
+       * <pre>
+       * number of groups.  (number of repeated records)
+       * </pre>
+       */
+      public boolean hasGroupCount() {
+        return ((bitField0_ & 0x00000020) == 0x00000020);
+      }
+      /**
+       * <code>optional int32 group_count = 6;</code>
+       *
+       * <pre>
+       * number of groups.  (number of repeated records)
+       * </pre>
+       */
+      public int getGroupCount() {
+        return groupCount_;
+      }
+      /**
+       * <code>optional int32 group_count = 6;</code>
+       *
+       * <pre>
+       * number of groups.  (number of repeated records)
+       * </pre>
+       */
+      public Builder setGroupCount(int value) {
+        bitField0_ |= 0x00000020;
+        groupCount_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 group_count = 6;</code>
+       *
+       * <pre>
+       * number of groups.  (number of repeated records)
+       * </pre>
+       */
+      public Builder clearGroupCount() {
+        bitField0_ = (bitField0_ & ~0x00000020);
+        groupCount_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional int32 buffer_length = 7;
+      private int bufferLength_ ;
+      /**
+       * <code>optional int32 buffer_length = 7;</code>
+       */
+      public boolean hasBufferLength() {
+        return ((bitField0_ & 0x00000040) == 0x00000040);
+      }
+      /**
+       * <code>optional int32 buffer_length = 7;</code>
+       */
+      public int getBufferLength() {
+        return bufferLength_;
+      }
+      /**
+       * <code>optional int32 buffer_length = 7;</code>
+       */
+      public Builder setBufferLength(int value) {
+        bitField0_ |= 0x00000040;
+        bufferLength_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 buffer_length = 7;</code>
+       */
+      public Builder clearBufferLength() {
+        bitField0_ = (bitField0_ & ~0x00000040);
+        bufferLength_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:exec.shared.SerializedField)
     }
 
     static {
-      defaultInstance = new FieldMetadata(true);
+      defaultInstance = new SerializedField(true);
       defaultInstance.initFields();
     }
 
-    // @@protoc_insertion_point(class_scope:exec.shared.FieldMetadata)
+    // @@protoc_insertion_point(class_scope:exec.shared.SerializedField)
   }
 
   private static com.google.protobuf.Descriptors.Descriptor
@@ -5215,10 +6414,15 @@ public final class UserBitShared {
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_exec_shared_RecordBatchDef_fieldAccessorTable;
   private static com.google.protobuf.Descriptors.Descriptor
-    internal_static_exec_shared_FieldMetadata_descriptor;
+    internal_static_exec_shared_NamePart_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
-      internal_static_exec_shared_FieldMetadata_fieldAccessorTable;
+      internal_static_exec_shared_NamePart_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_exec_shared_SerializedField_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_exec_shared_SerializedField_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -5228,27 +6432,32 @@ public final class UserBitShared {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\023UserBitShared.proto\022\013exec.shared\032\022Coor" +
-      "dination.proto\032\017SchemaDef.proto\"$\n\017UserC" +
-      "redentials\022\021\n\tuser_name\030\001 \001(\t\"\'\n\007QueryId" +
-      "\022\r\n\005part1\030\001 \001(\020\022\r\n\005part2\030\002 \001(\020\"\241\001\n\014Drill" +
-      "PBError\022\020\n\010error_id\030\001 \001(\t\022(\n\010endpoint\030\002 " +
-      "\001(\0132\026.exec.DrillbitEndpoint\022\022\n\nerror_typ" +
-      "e\030\003 \001(\005\022\017\n\007message\030\004 \001(\t\0220\n\rparsing_erro" +
-      "r\030\005 \003(\0132\031.exec.shared.ParsingError\"\\\n\014Pa" +
-      "rsingError\022\024\n\014start_column\030\002 \001(\005\022\021\n\tstar" +
-      "t_row\030\003 \001(\005\022\022\n\nend_column\030\004 \001(\005\022\017\n\007end_r",
-      "ow\030\005 \001(\005\"p\n\016RecordBatchDef\022)\n\005field\030\001 \003(" +
-      "\0132\032.exec.shared.FieldMetadata\022\024\n\014record_" +
-      "count\030\002 \001(\005\022\035\n\025is_selection_vector_2\030\003 \001" +
-      "(\010\"\261\001\n\rFieldMetadata\022\033\n\003def\030\001 \001(\0132\016.exec" +
-      ".FieldDef\022\023\n\013value_count\030\002 \001(\005\022\027\n\017var_by" +
-      "te_length\030\003 \001(\005\022\023\n\013group_count\030\004 \001(\005\022\025\n\r" +
-      "buffer_length\030\005 \001(\005\022)\n\005child\030\006 \003(\0132\032.exe" +
-      "c.shared.FieldMetadata*5\n\nRpcChannel\022\017\n\013" +
-      "BIT_CONTROL\020\000\022\014\n\010BIT_DATA\020\001\022\010\n\004USER\020\002B.\n" +
-      "\033org.apache.drill.exec.protoB\rUserBitSha",
-      "redH\001"
+      "\n\023UserBitShared.proto\022\013exec.shared\032\013Type" +
+      "s.proto\032\022Coordination.proto\032\017SchemaDef.p" +
+      "roto\"$\n\017UserCredentials\022\021\n\tuser_name\030\001 \001" +
+      "(\t\"\'\n\007QueryId\022\r\n\005part1\030\001 \001(\020\022\r\n\005part2\030\002 " +
+      "\001(\020\"\241\001\n\014DrillPBError\022\020\n\010error_id\030\001 \001(\t\022(" +
+      "\n\010endpoint\030\002 \001(\0132\026.exec.DrillbitEndpoint" +
+      "\022\022\n\nerror_type\030\003 \001(\005\022\017\n\007message\030\004 \001(\t\0220\n" +
+      "\rparsing_error\030\005 \003(\0132\031.exec.shared.Parsi" +
+      "ngError\"\\\n\014ParsingError\022\024\n\014start_column\030" +
+      "\002 \001(\005\022\021\n\tstart_row\030\003 \001(\005\022\022\n\nend_column\030\004",
+      " \001(\005\022\017\n\007end_row\030\005 \001(\005\"r\n\016RecordBatchDef\022" +
+      "\024\n\014record_count\030\001 \001(\005\022+\n\005field\030\002 \003(\0132\034.e" +
+      "xec.shared.SerializedField\022\035\n\025is_selecti" +
+      "on_vector_2\030\003 \001(\010\"\205\001\n\010NamePart\022(\n\004type\030\001" +
+      " \001(\0162\032.exec.shared.NamePart.Type\022\014\n\004name" +
+      "\030\002 \001(\t\022$\n\005child\030\003 \001(\0132\025.exec.shared.Name" +
+      "Part\"\033\n\004Type\022\010\n\004NAME\020\000\022\t\n\005ARRAY\020\001\"\351\001\n\017Se" +
+      "rializedField\022%\n\nmajor_type\030\001 \001(\0132\021.comm" +
+      "on.MajorType\022(\n\tname_part\030\002 \001(\0132\025.exec.s" +
+      "hared.NamePart\022+\n\005child\030\003 \003(\0132\034.exec.sha",
+      "red.SerializedField\022\023\n\013value_count\030\004 \001(\005" +
+      "\022\027\n\017var_byte_length\030\005 \001(\005\022\023\n\013group_count" +
+      "\030\006 \001(\005\022\025\n\rbuffer_length\030\007 \001(\005*5\n\nRpcChan" +
+      "nel\022\017\n\013BIT_CONTROL\020\000\022\014\n\010BIT_DATA\020\001\022\010\n\004US" +
+      "ER\020\002B.\n\033org.apache.drill.exec.protoB\rUse" +
+      "rBitSharedH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -5284,19 +6493,26 @@ public final class UserBitShared {
           internal_static_exec_shared_RecordBatchDef_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_shared_RecordBatchDef_descriptor,
-              new java.lang.String[] { "Field", "RecordCount", "IsSelectionVector2", });
-          internal_static_exec_shared_FieldMetadata_descriptor =
+              new java.lang.String[] { "RecordCount", "Field", "IsSelectionVector2", });
+          internal_static_exec_shared_NamePart_descriptor =
             getDescriptor().getMessageTypes().get(5);
-          internal_static_exec_shared_FieldMetadata_fieldAccessorTable = new
+          internal_static_exec_shared_NamePart_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-              internal_static_exec_shared_FieldMetadata_descriptor,
-              new java.lang.String[] { "Def", "ValueCount", "VarByteLength", "GroupCount", "BufferLength", "Child", });
+              internal_static_exec_shared_NamePart_descriptor,
+              new java.lang.String[] { "Type", "Name", "Child", });
+          internal_static_exec_shared_SerializedField_descriptor =
+            getDescriptor().getMessageTypes().get(6);
+          internal_static_exec_shared_SerializedField_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_exec_shared_SerializedField_descriptor,
+              new java.lang.String[] { "MajorType", "NamePart", "Child", "ValueCount", "VarByteLength", "GroupCount", "BufferLength", });
           return null;
         }
       };
     com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
+          org.apache.drill.common.types.TypeProtos.getDescriptor(),
           org.apache.drill.exec.proto.CoordinationProtos.getDescriptor(),
           org.apache.drill.exec.proto.SchemaDefProtos.getDescriptor(),
         }, assigner);

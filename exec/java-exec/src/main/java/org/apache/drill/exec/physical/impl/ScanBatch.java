@@ -204,8 +204,8 @@ public class ScanBatch implements RecordBatch {
   }
 
   @Override
-  public VectorWrapper<?> getValueAccessorById(int fieldId, Class<?> clazz) {
-    return container.getValueAccessorById(fieldId, clazz);
+  public VectorWrapper<?> getValueAccessorById(Class<?> clazz, int... ids) {
+    return container.getValueAccessorById(clazz, ids);
   }
 
 

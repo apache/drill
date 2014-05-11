@@ -403,6 +403,7 @@ public class TestFunctionsQuery {
   }
 
   @Test
+  @Ignore
   public void testTimeStampConstant() throws Exception {
     String query = String.format("SELECT " +
         "timestamp '2008-2-23 12:23:23' as TS " +

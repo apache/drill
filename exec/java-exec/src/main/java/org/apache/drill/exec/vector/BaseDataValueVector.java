@@ -17,21 +17,25 @@
  */
 package org.apache.drill.exec.vector;
 
+import java.util.Iterator;
+
 import io.netty.buffer.ByteBuf;
 
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.proto.UserBitShared.FieldMetadata;
+import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.DeadBuf;
 import org.apache.drill.exec.record.MaterializedField;
+
+import com.google.hive12.common.collect.Iterators;
 
 public abstract class BaseDataValueVector extends BaseValueVector{
 
   protected ByteBuf data = DeadBuf.DEAD_BUFFER;
   protected int valueCount;
-  
+
   public BaseDataValueVector(MaterializedField field, BufferAllocator allocator) {
     super(field, allocator);
-    
+
   }
 
   /**
@@ -46,7 +50,7 @@ public abstract class BaseDataValueVector extends BaseValueVector{
     }
   }
 
-  
+
   @Override
   public ByteBuf[] getBuffers(){
     ByteBuf[] out;
@@ -60,18 +64,24 @@ public abstract class BaseDataValueVector extends BaseValueVector{
     clear();
     return out;
   }
-  
+
   public int getBufferSize() {
     if(valueCount == 0) return 0;
     return data.writerIndex();
   }
 
   @Override
-  public abstract FieldMetadata getMetadata();
+  public abstract SerializedField getMetadata();
 
   public ByteBuf getData(){
     return data;
   }
-  
-  
+
+  @Override
+  public Iterator<ValueVector> iterator() {
+    return Iterators.emptyIterator();
+  }
+
+
+
 }

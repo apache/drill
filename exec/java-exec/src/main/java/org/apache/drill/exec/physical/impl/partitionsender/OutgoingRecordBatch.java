@@ -219,8 +219,8 @@ public class OutgoingRecordBatch implements VectorAccessible {
   }
 
   @Override
-  public VectorWrapper<?> getValueAccessorById(int fieldId, Class<?> clazz) {
-    return vectorContainer.getValueAccessorById(fieldId, clazz);
+  public VectorWrapper<?> getValueAccessorById(Class<?> clazz, int... fieldIds) {
+    return vectorContainer.getValueAccessorById(clazz, fieldIds);
   }
 
   @Override

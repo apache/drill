@@ -37,7 +37,7 @@ public class WireRecordBatch implements RecordBatch {
   private FragmentContext context;
   private BatchSchema schema;
 
-  
+
   public WireRecordBatch(FragmentContext context, RawFragmentBatchProvider fragProvider) throws OutOfMemoryException {
     this.fragProvider = fragProvider;
     this.context = context;
@@ -83,17 +83,17 @@ public class WireRecordBatch implements RecordBatch {
   public TypedFieldId getValueVectorId(SchemaPath path) {
     return batchLoader.getValueVectorId(path);
   }
-  
+
   @Override
-  public VectorWrapper<?> getValueAccessorById(int fieldId, Class<?> clazz) {
-    return batchLoader.getValueAccessorById(fieldId, clazz);
+  public VectorWrapper<?> getValueAccessorById(Class<?> clazz, int... ids) {
+    return batchLoader.getValueAccessorById(clazz, ids);
   }
 
   @Override
   public IterOutcome next() {
     try{
       RawFragmentBatch batch = fragProvider.getNext();
-    
+
       // skip over empty batches. we do this since these are basically control messages.
       while(batch != null && !batch.getHeader().getIsOutOfMemory() && batch.getHeader().getDef().getRecordCount() == 0){
         batch = fragProvider.getNext();
@@ -107,7 +107,7 @@ public class WireRecordBatch implements RecordBatch {
       if (batch.getHeader().getIsOutOfMemory()) {
         return IterOutcome.OUT_OF_MEMORY;
       }
-    
+
 
 //      logger.debug("Next received batch {}", batch);
 

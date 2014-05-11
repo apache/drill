@@ -20,9 +20,7 @@ package org.apache.drill.exec.physical.impl.project;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
-import com.sun.codemodel.JExpr;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.FieldReference;
@@ -31,7 +29,6 @@ import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.PathSegment.NameSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.data.NamedExpression;
-import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ClassGenerator;
@@ -44,7 +41,6 @@ import org.apache.drill.exec.expr.ValueVectorWriteExpression;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.Project;
-import org.apache.drill.exec.physical.impl.filter.ReturnValueExpression;
 import org.apache.drill.exec.record.AbstractSingleRecordBatch;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.MaterializedField;
@@ -52,12 +48,13 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorWrapper;
-import org.apache.drill.exec.util.VectorUtil;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.ValueVector;
 
+import com.carrotsearch.hppc.IntOpenHashSet;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.sun.codemodel.JExpr;
 
 public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProjectRecordBatch.class);
@@ -92,6 +89,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
     int incomingRecordCount = incoming.getRecordCount();
     for(ValueVector v : this.allocationVectors){
       AllocationHelper.allocate(v, incomingRecordCount, 250);
+//      v.allocateNew();
     }
     int outputRecords = projector.projectRecords(0, incomingRecordCount, 0);
     if (outputRecords < incomingRecordCount) {
@@ -177,14 +175,15 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
 
     final ClassGenerator<Projector> cg = CodeGenerator.getRoot(Projector.TEMPLATE_DEFINITION, context.getFunctionRegistry());
 
-    Set<Integer> transferFieldIds = new HashSet();
+    IntOpenHashSet transferFieldIds = new IntOpenHashSet();
 
     boolean isAnyWildcard = isAnyWildcard(exprs);
 
     if(isAnyWildcard){
       for(VectorWrapper<?> wrapper : incoming){
         ValueVector vvIn = wrapper.getValueVector();
-        String name = vvIn.getField().getDef().getName(vvIn.getField().getDef().getNameCount() - 1).getName();
+
+        String name = vvIn.getField().getPath().getLastSegment().getNameSegment().getPath();
         FieldReference ref = new FieldReference(name);
         TransferPair tp = wrapper.getValueVector().getTransferPair(ref);
         transfers.add(tp);
@@ -202,17 +201,19 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
 
         // add value vector to transfer if direct reference and this is allowed, otherwise, add to evaluation stack.
         if(expr instanceof ValueVectorReadExpression && incoming.getSchema().getSelectionVectorMode() == SelectionVectorMode.NONE
+                && !((ValueVectorReadExpression) expr).hasReadPath()
                 && !isAnyWildcard
-                &&!transferFieldIds.contains(((ValueVectorReadExpression) expr).getFieldId().getFieldId())
-                && !((ValueVectorReadExpression) expr).isArrayElement()) {
+                && !transferFieldIds.contains(((ValueVectorReadExpression) expr).getFieldId().getFieldIds()[0])
+                && !((ValueVectorReadExpression) expr).hasReadPath()) {
           ValueVectorReadExpression vectorRead = (ValueVectorReadExpression) expr;
-          ValueVector vvIn = incoming.getValueAccessorById(vectorRead.getFieldId().getFieldId(), TypeHelper.getValueVectorClass(vectorRead.getMajorType().getMinorType(), vectorRead.getMajorType().getMode())).getValueVector();
+          TypedFieldId id = vectorRead.getFieldId();
+          ValueVector vvIn = incoming.getValueAccessorById(id.getIntermediateClass(), id.getFieldIds()).getValueVector();
           Preconditions.checkNotNull(incoming);
 
           TransferPair tp = vvIn.getTransferPair(getRef(namedExpression));
           transfers.add(tp);
           container.add(tp.getTo());
-          transferFieldIds.add(vectorRead.getFieldId().getFieldId());
+          transferFieldIds.add(vectorRead.getFieldId().getFieldIds()[0]);
 //          logger.debug("Added transfer.");
         }else{
           // need to do evaluation.
@@ -221,6 +222,8 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
           TypedFieldId fid = container.add(vector);
           ValueVectorWriteExpression write = new ValueVectorWriteExpression(fid, expr, true);
           HoldingContainer hc = cg.addExpr(write);
+
+
           cg.getEvalBlock()._if(hc.getValue().eq(JExpr.lit(0)))._then()._return(JExpr.FALSE);
           logger.debug("Added eval.");
         }

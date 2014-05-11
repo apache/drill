@@ -30,22 +30,22 @@ public class DrillAccessorList extends BasicList<Accessor>{
 
   private Accessor[] accessors = new Accessor[0];
   private int lastColumn = 1;
-  
+
   public void generateAccessors(DrillCursor cursor, RecordBatchLoader currentBatch){
     int cnt = currentBatch.getSchema().getFieldCount();
     accessors = new Accessor[cnt];
     for(int i =0; i < cnt; i++){
-      SqlAccessor acc = TypeHelper.getSqlAccessor(currentBatch.getValueAccessorById(i, null).getValueVector());
+      SqlAccessor acc = TypeHelper.getSqlAccessor(currentBatch.getValueAccessorById(null, i).getValueVector());
       accessors[i] = new AvaticaDrillSqlAccessor(acc, cursor);
     }
   }
-  
+
   @Override
   public Accessor get(int index) {
     lastColumn = index;
     return accessors[index];
   }
-  
+
   public boolean wasNull() throws SQLException{
     return accessors[lastColumn].wasNull();
   }
@@ -54,5 +54,5 @@ public class DrillAccessorList extends BasicList<Accessor>{
   public int size() {
     return accessors.length;
   }
-  
+
 }

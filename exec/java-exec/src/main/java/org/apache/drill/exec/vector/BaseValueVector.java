@@ -17,14 +17,21 @@
  */
 package org.apache.drill.exec.vector;
 
+import java.util.Iterator;
+
 import org.apache.drill.common.expression.FieldReference;
+
 import io.netty.buffer.ByteBuf;
+
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.MaterializedField;
+
+import com.google.hive12.common.collect.Iterators;
 
 public abstract class BaseValueVector implements ValueVector{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseValueVector.class);
-  
+
   protected final BufferAllocator allocator;
   protected final MaterializedField field;
 
@@ -32,21 +39,24 @@ public abstract class BaseValueVector implements ValueVector{
     this.allocator = allocator;
     this.field = field;
   }
-  
+
   @Override
   public void close() {
     clear();
   }
-  
+
   @Override
   public MaterializedField getField() {
     return field;
   }
-  
+
   public MaterializedField getField(FieldReference ref){
     return getField().clone(ref);
   }
-  
+
+  protected SerializedField.Builder getMetadataBuilder(){
+    return getField().getAsBuilder();
+  }
 
   abstract public ByteBuf getData();
 
@@ -54,12 +64,15 @@ public abstract class BaseValueVector implements ValueVector{
     public abstract int getValueCount();
     public void reset(){}
   }
-  
+
   abstract class BaseMutator implements Mutator{
     public void reset(){}
   }
-  
-  
-  
+
+  @Override
+  public Iterator<ValueVector> iterator() {
+    return Iterators.emptyIterator();
+  }
+
 }
 

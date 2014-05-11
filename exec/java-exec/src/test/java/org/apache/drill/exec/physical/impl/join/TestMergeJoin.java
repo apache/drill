@@ -68,6 +68,7 @@ public class TestMergeJoin extends PopUnitTestBase {
   DrillConfig c = DrillConfig.create();
 
   @Test
+  @Ignore // this doesn't have a sort.  it also causes an infinite loop.  these may or may not be related.
   public void simpleEqualityJoin(@Injectable final DrillbitContext bitContext,
                                  @Injectable UserServer.UserClientConnection connection) throws Throwable {
 

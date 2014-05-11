@@ -43,7 +43,7 @@ public final class JoinStatus {
   private int rightPosition;
   private int svRightPosition;
   private IterOutcome lastRight;
-  
+
   private int outputPosition;
   public RightSourceMode rightSourceMode = RightSourceMode.INCOMING;
   public MergeJoinBatch outputBatch;
@@ -54,7 +54,7 @@ public final class JoinStatus {
   public boolean ok = true;
   private boolean initialSet = false;
   private boolean leftRepeating = false;
-  
+
   public JoinStatus(RecordBatch left, RecordBatch right, MergeJoinBatch output) {
     super();
     this.left = left;
@@ -70,7 +70,7 @@ public final class JoinStatus {
       initialSet = true;
     }
   }
-  
+
   public final void advanceLeft(){
     leftPosition++;
   }
@@ -88,6 +88,10 @@ public final class JoinStatus {
 
   public final int getRightPosition() {
     return (rightSourceMode == RightSourceMode.INCOMING) ? rightPosition : svRightPosition;
+  }
+
+  public final int getRightCount(){
+    return right.getRecordCount();
   }
 
   public final void setRightPosition(int pos) {
@@ -176,7 +180,7 @@ public final class JoinStatus {
     }
     if(b.getSchema().getSelectionVectorMode() == SelectionVectorMode.TWO_BYTE) b.getSelectionVector2().clear();
   }
-  
+
   /**
    * Check if the left record position can advance by one in the current batch.
    */
@@ -230,5 +234,5 @@ public final class JoinStatus {
   private boolean eitherMatches(IterOutcome outcome){
     return lastLeft == outcome || lastRight == outcome;
   }
-  
+
 }

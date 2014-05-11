@@ -31,7 +31,7 @@ import org.apache.drill.exec.record.selection.SelectionVector4;
 
 public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements RecordBatch{
   final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(this.getClass());
-  
+
   protected final VectorContainer container = new VectorContainer();
   protected final T popConfig;
   protected final FragmentContext context;
@@ -43,7 +43,7 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
     this.popConfig = popConfig;
     this.oContext = new OperatorContext(popConfig, context);
   }
-  
+
   @Override
   public Iterator<VectorWrapper<?>> iterator() {
     return container.iterator();
@@ -67,14 +67,14 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
   public void kill() {
     killIncoming();
   }
-  
+
   protected abstract void killIncoming();
-  
+
   public void cleanup(){
     container.clear();
     oContext.close();
   }
- 
+
   @Override
   public SelectionVector2 getSelectionVector2() {
     throw new UnsupportedOperationException();
@@ -91,16 +91,16 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
   }
 
   @Override
-  public VectorWrapper<?> getValueAccessorById(int fieldId, Class<?> clazz) {
-    return container.getValueAccessorById(fieldId, clazz);
+  public VectorWrapper<?> getValueAccessorById(Class<?> clazz, int... ids) {
+    return container.getValueAccessorById(clazz, ids);
   }
 
-  
+
   @Override
   public WritableBatch getWritableBatch() {
 //    logger.debug("Getting writable batch.");
     WritableBatch batch = WritableBatch.get(this);
     return batch;
-    
+
   }
 }

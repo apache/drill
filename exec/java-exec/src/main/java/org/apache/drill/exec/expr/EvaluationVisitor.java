@@ -20,8 +20,6 @@ package org.apache.drill.exec.expr;
 import java.util.List;
 import java.util.Set;
 
-import io.netty.buffer.ByteBuf;
-import com.google.common.collect.Lists;
 import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.ConvertExpression;
 import org.apache.drill.common.expression.FunctionCall;
@@ -29,25 +27,24 @@ import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.IfExpression;
 import org.apache.drill.common.expression.IfExpression.IfCondition;
 import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.TypedNullConstant;
-import org.apache.drill.common.expression.ValueExpressions;
 import org.apache.drill.common.expression.ValueExpressions.BooleanExpression;
-import org.apache.drill.common.expression.ValueExpressions.DoubleExpression;
-import org.apache.drill.common.expression.ValueExpressions.LongExpression;
-import org.apache.drill.common.expression.ValueExpressions.IntExpression;
 import org.apache.drill.common.expression.ValueExpressions.DateExpression;
-import org.apache.drill.common.expression.ValueExpressions.IntervalYearExpression;
-import org.apache.drill.common.expression.ValueExpressions.IntervalDayExpression;
-import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
-import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
-import org.apache.drill.common.expression.ValueExpressions.Decimal9Expression;
 import org.apache.drill.common.expression.ValueExpressions.Decimal18Expression;
 import org.apache.drill.common.expression.ValueExpressions.Decimal28Expression;
 import org.apache.drill.common.expression.ValueExpressions.Decimal38Expression;
+import org.apache.drill.common.expression.ValueExpressions.Decimal9Expression;
+import org.apache.drill.common.expression.ValueExpressions.DoubleExpression;
+import org.apache.drill.common.expression.ValueExpressions.IntExpression;
+import org.apache.drill.common.expression.ValueExpressions.IntervalDayExpression;
+import org.apache.drill.common.expression.ValueExpressions.IntervalYearExpression;
+import org.apache.drill.common.expression.ValueExpressions.LongExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
+import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
+import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
-import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
@@ -60,6 +57,8 @@ import org.apache.drill.exec.expr.fn.HiveFuncHolder;
 import org.apache.drill.exec.physical.impl.filter.ReturnValueExpression;
 import org.apache.drill.exec.record.NullExpression;
 import org.apache.drill.exec.vector.ValueHolderHelper;
+import org.apache.drill.exec.vector.complex.reader.FieldReader;
+import org.apache.drill.exec.vector.complex.writer.FieldWriter;
 
 import com.google.common.collect.Lists;
 import com.sun.codemodel.JBlock;
@@ -68,6 +67,7 @@ import com.sun.codemodel.JConditional;
 import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JExpression;
 import com.sun.codemodel.JInvocation;
+import com.sun.codemodel.JLabel;
 import com.sun.codemodel.JType;
 import com.sun.codemodel.JVar;
 
@@ -88,7 +88,7 @@ public class EvaluationVisitor {
 
   private class EvalVisitor extends AbstractExprVisitor<HoldingContainer, ClassGenerator<?>, RuntimeException> {
 
-    
+
     @Override
     public HoldingContainer visitFunctionCall(FunctionCall call, ClassGenerator<?> generator) throws RuntimeException {
       throw new UnsupportedOperationException("FunctionCall is not expected here. "+
@@ -143,18 +143,18 @@ public class EvaluationVisitor {
       JConditional jc = null;
       JBlock conditionalBlock = new JBlock(false, false);
       for (IfCondition c : ifExpr.conditions) {
-        HoldingContainer HoldingContainer = c.condition.accept(this, generator);
+        HoldingContainer holdingContainer = c.condition.accept(this, generator);
         if (jc == null) {
-          if (HoldingContainer.isOptional()) {
-            jc = conditionalBlock._if(HoldingContainer.getIsSet().cand(HoldingContainer.getValue()));
+          if (holdingContainer.isOptional()) {
+            jc = conditionalBlock._if(holdingContainer.getIsSet().cand(holdingContainer.getValue()));
           } else {
-            jc = conditionalBlock._if(HoldingContainer.getValue().eq(JExpr.lit(1)));
+            jc = conditionalBlock._if(holdingContainer.getValue().eq(JExpr.lit(1)));
           }
         } else {
-          if (HoldingContainer.isOptional()) {
-            jc = jc._else()._if(HoldingContainer.getIsSet().cand(HoldingContainer.getValue()));
+          if (holdingContainer.isOptional()) {
+            jc = jc._else()._if(holdingContainer.getIsSet().cand(holdingContainer.getValue()));
           } else {
-            jc = jc._else()._if(HoldingContainer.getValue());
+            jc = jc._else()._if(holdingContainer.getValue());
           }
         }
 
@@ -184,14 +184,14 @@ public class EvaluationVisitor {
       return output;
     }
 
-    
+
     @Override
     public HoldingContainer visitSchemaPath(SchemaPath path, ClassGenerator<?> generator) throws RuntimeException {
       throw new UnsupportedOperationException("All schema paths should have been replaced with ValueVectorExpressions.");
     }
 
     @Override
-    public HoldingContainer visitLongConstant(LongExpression e, ClassGenerator<?> generator) throws RuntimeException {     
+    public HoldingContainer visitLongConstant(LongExpression e, ClassGenerator<?> generator) throws RuntimeException {
       HoldingContainer out = generator.declare(e.getMajorType());
       generator.getEvalBlock().assign(out.getValue(), JExpr.lit(e.getLong()));
       return out;
@@ -269,81 +269,180 @@ public class EvaluationVisitor {
 
     private HoldingContainer visitValueVectorWriteExpression(ValueVectorWriteExpression e, ClassGenerator<?> generator) {
 
-      LogicalExpression child = e.getChild();
-      HoldingContainer inputContainer = child.accept(this, generator);
+      final LogicalExpression child = e.getChild();
+      final HoldingContainer inputContainer = child.accept(this, generator);
+      final boolean complex = Types.isComplex(inputContainer.getMajorType());
+
       JBlock block = generator.getEvalBlock();
       JExpression outIndex = generator.getMappingSet().getValueWriteIndex();
       JVar vv = generator.declareVectorValueSetupAndMember(generator.getMappingSet().getOutgoing(), e.getFieldId());
-      String setMethod = e.isSafe() ? "setSafe" : "set";
-      
-      JInvocation setMeth;
-      if (Types.usesHolderForGet(inputContainer.getMajorType())) {
-        setMeth = vv.invoke("getMutator").invoke(setMethod).arg(outIndex).arg(inputContainer.getHolder());
-      }else{
-        setMeth = vv.invoke("getMutator").invoke(setMethod).arg(outIndex).arg(inputContainer.getValue());
-      }
-      
-      if(e.isSafe()){
-        HoldingContainer outputContainer = generator.declare(Types.REQUIRED_BIT);
-        block.assign(outputContainer.getValue(), JExpr.lit(1));
-        if(inputContainer.isOptional()){
-//          block._if(vv.invoke("getMutator").invoke(setMethod).arg(outIndex).not())._then().assign(outputContainer.getValue(), JExpr.lit(0));
-          JConditional jc = block._if(inputContainer.getIsSet().eq(JExpr.lit(0)).not());
-          block = jc._then();
+
+      if(complex){
+        JType writerImpl = generator.getModel()._ref(TypeHelper.getWriterImpl(inputContainer.getMinorType(), inputContainer.getMajorType().getMode()));
+        JType writerIFace = generator.getModel()._ref(TypeHelper.getWriterInterface(inputContainer.getMinorType(), inputContainer.getMajorType().getMode()));
+        JVar writer = generator.declareClassField("writer", writerIFace);
+        generator.getSetupBlock().assign(writer, JExpr._new(writerImpl).arg(vv).arg(JExpr._null()));
+        generator.getEvalBlock().add(writer.invoke("setPosition").arg(outIndex));
+        String copyMethod = inputContainer.isSingularRepeated() ? "copyAsValueSingle" : "copyAsValue";
+        generator.getEvalBlock().add(inputContainer.getHolder().invoke(copyMethod).arg(writer));
+        if(e.isSafe()){
+          HoldingContainer outputContainer = generator.declare(Types.REQUIRED_BIT);
+          JConditional ifOut = generator.getEvalBlock()._if(writer.invoke("ok"));
+          ifOut._then().assign(outputContainer.getValue(), JExpr.lit(1));
+          ifOut._else().assign(outputContainer.getValue(), JExpr.lit(0));
+          return outputContainer;
         }
-        block._if(setMeth.not())._then().assign(outputContainer.getValue(), JExpr.lit(0));
-        return outputContainer;
       }else{
-        if (inputContainer.isOptional()) {
-//          block.add(vv.invoke("getMutator").invoke(setMethod).arg(outIndex));
-          JConditional jc = block._if(inputContainer.getIsSet().eq(JExpr.lit(0)).not());
-          block = jc._then();
+        String setMethod = e.isSafe() ? "setSafe" : "set";
+
+        JInvocation setMeth;
+        if (Types.usesHolderForGet(inputContainer.getMajorType())) {
+          setMeth = vv.invoke("getMutator").invoke(setMethod).arg(outIndex).arg(inputContainer.getHolder());
+        }else{
+          setMeth = vv.invoke("getMutator").invoke(setMethod).arg(outIndex).arg(inputContainer.getValue());
         }
-        block.add(setMeth);
+
+        if(e.isSafe()){
+          HoldingContainer outputContainer = generator.declare(Types.REQUIRED_BIT);
+          block.assign(outputContainer.getValue(), JExpr.lit(1));
+          if(inputContainer.isOptional()){
+//            block._if(vv.invoke("getMutator").invoke(setMethod).arg(outIndex).not())._then().assign(outputContainer.getValue(), JExpr.lit(0));
+            JConditional jc = block._if(inputContainer.getIsSet().eq(JExpr.lit(0)).not());
+            block = jc._then();
+          }
+          block._if(setMeth.not())._then().assign(outputContainer.getValue(), JExpr.lit(0));
+          return outputContainer;
+        }else{
+          if (inputContainer.isOptional()) {
+//            block.add(vv.invoke("getMutator").invoke(setMethod).arg(outIndex));
+            JConditional jc = block._if(inputContainer.getIsSet().eq(JExpr.lit(0)).not());
+            block = jc._then();
+          }
+          block.add(setMeth);
+        }
+
       }
-      
+
+
       return null;
     }
 
     private HoldingContainer visitValueVectorReadExpression(ValueVectorReadExpression e, ClassGenerator<?> generator)
         throws RuntimeException {
       // declare value vector
-      
-      JVar vv1 = generator.declareVectorValueSetupAndMember(generator.getMappingSet().getIncoming(), e.getFieldId());
+
+      JExpression vv1 = generator.declareVectorValueSetupAndMember(generator.getMappingSet().getIncoming(), e.getFieldId());
       JExpression indexVariable = generator.getMappingSet().getValueReadIndex();
 
-      JInvocation getValueAccessor = vv1.invoke("getAccessor").invoke("get");
-      JInvocation getValueAccessor2 = vv1.invoke("getAccessor");
+      JExpression componentVariable = indexVariable.shrz(JExpr.lit(16));
       if (e.isSuperReader()) {
-
-        getValueAccessor = ((JExpression) vv1.component(indexVariable.shrz(JExpr.lit(16)))).invoke("getAccessor").invoke("get");
-        getValueAccessor2 = ((JExpression) vv1.component(indexVariable.shrz(JExpr.lit(16)))).invoke("getAccessor");
+        vv1 =  ((JExpression) vv1.component(componentVariable));
         indexVariable = indexVariable.band(JExpr.lit((int) Character.MAX_VALUE));
       }
 
       // evaluation work.
       HoldingContainer out = generator.declare(e.getMajorType());
+      final boolean primitive = !Types.usesHolderForGet(e.getMajorType());
+      final boolean hasReadPath = e.hasReadPath();
+      final boolean complex = Types.isComplex(e.getMajorType());
 
-      if (out.isOptional()) {
-        JBlock blk = generator.getEvalBlock();
-        blk.assign(out.getIsSet(), getValueAccessor2.invoke("isSet").arg(indexVariable));
-        JConditional jc = blk._if(out.getIsSet().eq(JExpr.lit(1)));
-        if (Types.usesHolderForGet(e.getMajorType())) {
-          jc._then().add(getValueAccessor.arg(indexVariable).arg(out.getHolder()));
-        } else {
-          jc._then().assign(out.getValue(), getValueAccessor.arg(indexVariable));
-        }
-      } else {
-        if (Types.usesHolderForGet(e.getMajorType())) {
-          if (e.isArrayElement()) {
-            generator.getEvalBlock().add(getValueAccessor.arg(indexVariable).arg(JExpr.lit(e.getIndex())).arg(out.getHolder()));
-          } else {
-            generator.getEvalBlock().add(getValueAccessor.arg(indexVariable).arg(out.getHolder()));
-          }
-        } else {
-          generator.getEvalBlock().assign(out.getValue(), getValueAccessor.arg(indexVariable));
-        }
+      int[] fieldIds = e.getFieldId().getFieldIds();
+      for(int i = 1; i < fieldIds.length; i++){
+
       }
+
+      if(!hasReadPath && !complex){
+
+        JInvocation getValueAccessor = vv1.invoke("getAccessor").invoke("get");
+        JInvocation getValueAccessor2 = vv1.invoke("getAccessor");
+        JBlock eval = new JBlock();
+
+        if(primitive){
+          eval.assign(out.getValue(), getValueAccessor.arg(indexVariable));
+        }else{
+          eval.add(getValueAccessor.arg(indexVariable).arg(out.getHolder()));
+        }
+
+        if (out.isOptional()) {
+          JBlock blk = generator.getEvalBlock();
+          blk.assign(out.getIsSet(), getValueAccessor2.invoke("isSet").arg(indexVariable));
+          JConditional jc = blk._if(out.getIsSet().eq(JExpr.lit(1)));
+          jc._then().add(eval);
+        }else{
+          generator.getEvalBlock().add(eval);
+        }
+
+      }else{
+        JExpression vector = e.isSuperReader() ? vv1.component(componentVariable) : vv1;
+        JExpression expr = vector.invoke("getAccessor").invoke("getReader");
+
+        JLabel label = generator.getEvalBlock().label("complex");
+        JBlock eval = generator.getEvalBlock().block();
+
+        // position to the correct value.
+        eval.add(expr.invoke("setPosition").arg(indexVariable));
+        PathSegment seg = e.getReadPath();
+        int listNum = 0;
+        boolean lastWasArray = false;
+        while(true){
+          if(seg.isArray()){
+            lastWasArray = true;
+
+            if(seg.isLastPath() && !complex) break;
+
+            JVar list = generator.declareClassField("list", generator.getModel()._ref(FieldReader.class));
+            generator.getSetupBlock().assign(list, expr);
+            expr = list;
+
+            // if this is an array, set a single position for the expression to allow us to read the right data lower down.
+            JVar desiredIndex = eval.decl(generator.getModel().INT, "desiredIndex" + listNum, JExpr.lit(seg.getArraySegment().getIndex()));
+            // start with negative one so that we are at zero after first call to next.
+            JVar currentIndex = eval.decl(generator.getModel().INT, "currentIndex" + listNum, JExpr.lit(-1));
+
+            eval._while( //
+                currentIndex.lt(desiredIndex) //
+                .cand(expr.invoke("next")) ).body().assign(currentIndex, currentIndex.plus(JExpr.lit(1)));
+
+            JBlock ifNoVal = eval._if(desiredIndex.ne(currentIndex))._then().block();
+            if(!complex) ifNoVal.assign(out.getIsSet(), JExpr.lit(0));
+            ifNoVal._break(label);
+
+            listNum++;
+
+          }else{
+            lastWasArray = false;
+            JExpression fieldName = JExpr.lit(seg.getNameSegment().getPath());
+            expr = expr.invoke("reader").arg(fieldName);
+          }
+          seg = seg.getChild();
+
+          // stop once we get to last column or when the segment is an array at the end of the reference.
+          if(seg == null || seg.isLastPath() && seg.isArray()) break;
+        }
+        MajorType secondaryType = e.getFieldId().getSecondaryFinal();
+        JType readerImpl = generator.getModel()._ref(TypeHelper.getReaderClassName(secondaryType.getMinorType(), secondaryType.getMode()));
+        JVar complexReader = generator.declareClassField("reader", readerImpl);
+        generator.getSetupBlock().assign(complexReader, JExpr.cast(readerImpl, expr));
+        expr = complexReader;
+
+        if(complex){
+          HoldingContainer hc = new HoldingContainer(e.getMajorType(), (JVar) expr, null, null, lastWasArray);
+          return hc;
+          //eval.assign(out.getHolder().ref("reader"), expr);
+        }else{
+          if(seg != null){
+            eval.add(expr.invoke("read").arg(JExpr.lit(seg.getArraySegment().getIndex())).arg(out.getHolder()));
+          }else{
+
+            eval.add(expr.invoke("read").arg(out.getHolder()));
+          }
+        }
+
+      }
+
+
+
+
       return out;
     }
 
@@ -352,11 +451,11 @@ public class EvaluationVisitor {
       // Preconditions.checkArgument(child.getMajorType().equals(Types.REQUIRED_BOOLEAN));
       HoldingContainer hc = child.accept(this, generator);
       if(e.isReturnTrueOnOne()){
-        generator.getEvalBlock()._return(hc.getValue().eq(JExpr.lit(1)));  
+        generator.getEvalBlock()._return(hc.getValue().eq(JExpr.lit(1)));
       }else{
         generator.getEvalBlock()._return(hc.getValue());
       }
-      
+
       return null;
     }
 
@@ -452,6 +551,7 @@ public class EvaluationVisitor {
       return fc.accept(this, value);
     }
   }
+
 
   private class ConstantFilter extends EvalVisitor {
 

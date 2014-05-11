@@ -30,13 +30,22 @@ public abstract class PathSegment{
     private final int index;
 
     public ArraySegment(String numberAsText, PathSegment child){
-      this.child = child;
-      this.index = Integer.parseInt(numberAsText);
+      this(Integer.parseInt(numberAsText), child);
     }
 
     public ArraySegment(int index, PathSegment child){
       this.child = child;
       this.index = index;
+      assert index >=0;
+    }
+
+    public ArraySegment(PathSegment child){
+      this.child = child;
+      this.index = -1;
+    }
+
+    public boolean hasIndex(){
+      return index != -1;
     }
 
     public ArraySegment(int index){

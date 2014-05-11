@@ -18,12 +18,14 @@
 package org.apache.drill.exec.record;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.CompositeByteBuf;
 
 import java.util.List;
 
-import io.netty.buffer.CompositeByteBuf;
-import org.apache.drill.exec.proto.UserBitShared.FieldMetadata;
+import javax.jdo.metadata.FieldMetadata;
+
 import org.apache.drill.exec.proto.UserBitShared.RecordBatchDef;
+import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.vector.ValueVector;
 
@@ -63,7 +65,7 @@ public class WritableBatch {
     Preconditions.checkState(!cleared,
         "Attempted to reconstruct a container from a WritableBatch after it had been cleared");
     if (buffers.length > 0) { /* If we have ByteBuf's associated with value vectors */
-      
+
       CompositeByteBuf cbb = new CompositeByteBuf(buffers[0].alloc(), true, buffers.length);
 
       /* Copy data from each buffer into the compound buffer */
@@ -71,8 +73,7 @@ public class WritableBatch {
         cbb.addComponent(buf);
       }
 
-
-      List<FieldMetadata> fields = def.getFieldList();
+      List<SerializedField> fields = def.getFieldList();
 
       int bufferOffset = 0;
 
@@ -82,7 +83,7 @@ public class WritableBatch {
       int vectorIndex = 0;
 
       for (VectorWrapper<?> vv : container) {
-        FieldMetadata fmd = fields.get(vectorIndex);
+        SerializedField fmd = fields.get(vectorIndex);
         ValueVector v = vv.getValueVector();
         ByteBuf bb = cbb.slice(bufferOffset, fmd.getBufferLength());
 //        v.load(fmd, cbb.slice(bufferOffset, fmd.getBufferLength()));
@@ -127,7 +128,7 @@ public class WritableBatch {
 
   public static WritableBatch getBatchNoHV(int recordCount, Iterable<ValueVector> vectors, boolean isSV2) {
     List<ByteBuf> buffers = Lists.newArrayList();
-    List<FieldMetadata> metadata = Lists.newArrayList();
+    List<SerializedField> metadata = Lists.newArrayList();
 
     for (ValueVector vv : vectors) {
       metadata.add(vv.getMetadata());

@@ -317,6 +317,10 @@ public final class TypeProtos {
      * </pre>
      */
     INTERVALDAY(35, 39),
+    /**
+     * <code>LIST = 40;</code>
+     */
+    LIST(36, 40),
     ;
 
     /**
@@ -606,6 +610,10 @@ public final class TypeProtos {
      * </pre>
      */
     public static final int INTERVALDAY_VALUE = 39;
+    /**
+     * <code>LIST = 40;</code>
+     */
+    public static final int LIST_VALUE = 40;
 
 
     public final int getNumber() { return value; }
@@ -648,6 +656,7 @@ public final class TypeProtos {
         case 37: return NULL;
         case 38: return INTERVALYEAR;
         case 39: return INTERVALDAY;
+        case 40: return LIST;
         default: return null;
       }
     }
@@ -1779,7 +1788,7 @@ public final class TypeProtos {
       "inor_type\030\001 \001(\0162\021.common.MinorType\022\036\n\004mo" +
       "de\030\002 \001(\0162\020.common.DataMode\022\r\n\005width\030\003 \001(" +
       "\005\022\021\n\tprecision\030\004 \001(\005\022\r\n\005scale\030\005 \001(\005\022\020\n\010t" +
-      "imeZone\030\006 \001(\005*\373\003\n\tMinorType\022\010\n\004LATE\020\000\022\007\n" +
+      "imeZone\030\006 \001(\005*\205\004\n\tMinorType\022\010\n\004LATE\020\000\022\007\n" +
       "\003MAP\020\001\022\r\n\tREPEATMAP\020\002\022\013\n\007TINYINT\020\003\022\014\n\010SM" +
       "ALLINT\020\004\022\007\n\003INT\020\005\022\n\n\006BIGINT\020\006\022\014\n\010DECIMAL" +
       "9\020\007\022\r\n\tDECIMAL18\020\010\022\023\n\017DECIMAL28SPARSE\020\t\022" +
@@ -1792,9 +1801,9 @@ public final class TypeProtos {
       "NT1\020\035\022\t\n\005UINT2\020\036\022\t\n\005UINT4\020\037\022\t\n\005UINT8\020 \022\022" +
       "\n\016DECIMAL28DENSE\020!\022\022\n\016DECIMAL38DENSE\020\"\022\010" +
       "\n\004NULL\020%\022\020\n\014INTERVALYEAR\020&\022\017\n\013INTERVALDA" +
-      "Y\020\'*4\n\010DataMode\022\014\n\010OPTIONAL\020\000\022\014\n\010REQUIRE" +
-      "D\020\001\022\014\n\010REPEATED\020\002B-\n\035org.apache.drill.co" +
-      "mmon.typesB\nTypeProtosH\001"
+      "Y\020\'\022\010\n\004LIST\020(*4\n\010DataMode\022\014\n\010OPTIONAL\020\000\022" +
+      "\014\n\010REQUIRED\020\001\022\014\n\010REPEATED\020\002B-\n\035org.apach" +
+      "e.drill.common.typesB\nTypeProtosH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
