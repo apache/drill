@@ -41,7 +41,6 @@ import org.eigenbase.rex.RexCall;
 import org.eigenbase.rex.RexInputRef;
 import org.eigenbase.rex.RexLiteral;
 import org.eigenbase.rex.RexNode;
-import org.eigenbase.rex.RexOver;
 import org.eigenbase.rex.RexVisitorImpl;
 
 import com.beust.jcommander.internal.Lists;
@@ -144,12 +143,17 @@ public class PrelUtil {
     @Override
     public PathSegment visitCall(RexCall call) {
       if ("ITEM".equals(call.getOperator().getName())) {
-        return call.operands.get(0).accept(this)
-            .cloneWithNewChild(convertLiteral((RexLiteral) call.operands.get(1)));
-      }
-      // else
-      for (RexNode operand : call.operands) {
-        addColumn(operand.accept(this));
+        PathSegment mapOrArray = call.operands.get(0).accept(this);
+        if (mapOrArray != null) {
+          if (call.operands.get(1) instanceof RexLiteral) {
+            return mapOrArray.cloneWithNewChild(convertLiteral((RexLiteral) call.operands.get(1)));
+          }
+          return mapOrArray;
+        }
+      } else {
+        for (RexNode operand : call.operands) {
+          addColumn(operand.accept(this));
+        }
       }
       return null;
     }
