@@ -87,7 +87,8 @@ public class BaseHBaseTest extends BaseTestQuery {
   }
 
   protected void runSQLVerifyCount(String sql, int expectedRowCount) throws Exception{
-    sql = sql.replace("[TABLE_NAME]", HBaseTestsSuite.TEST_TABLE_1);
+    sql = canonizeSQL(sql);
+    System.out.println("Running query:\n" + sql);
     List<QueryResultBatch> results = testSqlWithResults(sql);
     printResultAndVerifyRowCount(results, expectedRowCount);
   }
@@ -106,7 +107,13 @@ public class BaseHBaseTest extends BaseTestQuery {
       result.release();
     }
     System.out.println("Total record count: " + rowCount);
-    Assert.assertEquals(expectedRowCount, rowCount);
+    if (expectedRowCount != -1) {
+      Assert.assertEquals(expectedRowCount, rowCount);
+    }
+  }
+
+  protected String canonizeSQL(String sql) {
+    return sql.replace("[TABLE_NAME]", HBaseTestsSuite.TEST_TABLE_1);
   }
 
 }

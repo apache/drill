@@ -19,15 +19,17 @@
 package org.apache.drill.exec.store.hbase;
 
 import org.apache.drill.common.expression.LogicalExpression;
-import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.planner.logical.DrillOptiq;
 import org.apache.drill.exec.planner.logical.DrillParseContext;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.apache.drill.exec.planner.physical.FilterPrel;
 import org.apache.drill.exec.planner.physical.ScanPrel;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
+import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptRuleCall;
 import org.eigenbase.rex.RexNode;
+
+import com.google.common.collect.ImmutableList;
 
 public class HBasePushFilterIntoScan extends StoragePluginOptimizerRule {
   public static final StoragePluginOptimizerRule INSTANCE = new HBasePushFilterIntoScan();
@@ -43,14 +45,36 @@ public class HBasePushFilterIntoScan extends StoragePluginOptimizerRule {
     final RexNode condition = filter.getCondition();
 
     HBaseGroupScan groupScan = (HBaseGroupScan)scan.getGroupScan();
-    LogicalExpression conditionExp = DrillOptiq.toDrill(new DrillParseContext(), scan, condition);
-    HBaseScanSpec newScanSpec = HBaseFilterBuilder.getHBaseScanSpec(groupScan.getHBaseScanSpec(), conditionExp);
-    if (newScanSpec == null) {
-      return; //no filter pushdown ==> No transformation. 
+    if (groupScan.isFilterPushedDown()) {
+      /*
+       * The rule can get triggered again due to the transformed "scan => filter" sequence
+       * created by the earlier execution of this rule when we could not do a complete
+       * conversion of Optiq Filter's condition to HBase Filter. In such cases, we rely upon
+       * this flag to not do a re-processing of the rule on the already transformed call.
+       */
+      return;
     }
-    final GroupScan newGroupsScan = new HBaseGroupScan(groupScan.getStoragePlugin(), newScanSpec, groupScan.getColumns());
+
+    LogicalExpression conditionExp = DrillOptiq.toDrill(new DrillParseContext(), scan, condition);
+    HBaseFilterBuilder hbaseFilterBuilder = new HBaseFilterBuilder(groupScan, conditionExp);
+    HBaseScanSpec newScanSpec = hbaseFilterBuilder.parseTree();
+    if (newScanSpec == null) {
+      return; //no filter pushdown ==> No transformation.
+    }
+
+    final HBaseGroupScan newGroupsScan = new HBaseGroupScan(groupScan.getStoragePlugin(), newScanSpec, groupScan.getColumns());
+    newGroupsScan.setFilterPushedDown(true);
+
     final ScanPrel newScanPrel = ScanPrel.create(scan, filter.getTraitSet(), newGroupsScan, scan.getRowType());
-    call.transformTo(newScanPrel);
+    if (hbaseFilterBuilder.isAllExpressionsConverted()) {
+      /*
+       * Since we could convert the entire filter condition expression into an HBase filter,
+       * we can eliminate the filter operator altogether.
+       */
+      call.transformTo(newScanPrel);
+    } else {
+      call.transformTo(filter.copy(filter.getTraitSet(), ImmutableList.of((RelNode)newScanPrel)));
+    }
   }
 
   @Override

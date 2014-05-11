@@ -38,6 +38,7 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.Size;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HRegionInfo;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.ServerName;
@@ -73,6 +74,8 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
   private List<EndpointAffinity> endpointAffinities;
   private NavigableMap<HRegionInfo,ServerName> regionsToScan;
   private HTableDescriptor hTableDesc;
+
+  private boolean filterPushedDown = false;
 
   @JsonCreator
   public HBaseGroupScan(@JsonProperty("hbaseScanSpec") HBaseScanSpec hbaseScanSpec,
@@ -258,6 +261,16 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
     return storagePlugin;
   }
 
+  @JsonIgnore
+  public Configuration getHBaseConf() {
+    return getStorageConfig().getHBaseConf();
+  }
+
+  @JsonIgnore
+  public String getTableName() {
+    return getHBaseScanSpec().getTableName();
+  }
+
   @Override
   public String getDigest() {
     return toString();
@@ -288,6 +301,16 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
   @JsonIgnore
   public boolean canPushdownProjects(List<SchemaPath> columns) {
     return true;
+  }
+
+  @JsonIgnore
+  public void setFilterPushedDown(boolean b) {
+    this.filterPushedDown = true;
+  }
+
+  @JsonIgnore
+  public boolean isFilterPushedDown() {
+    return filterPushedDown;
   }
 
 }

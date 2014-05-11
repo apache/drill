@@ -17,37 +17,64 @@
  */
 package org.apache.drill.hbase;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class TestHBaseFilterPushDown extends BaseHBaseTest {
 
   @Test
-  public void testFilterPushDownRowKeyEqual() throws Exception{
+  public void testFilterPushDownRowKeyEqual() throws Exception {
     runSQLVerifyCount("SELECT\n"
-        + "  tableName.*\n"
+        + "  *\n"
         + "FROM\n"
         + "  hbase.`[TABLE_NAME]` tableName\n"
-        + "  WHERE tableName.row_key = 'b4'"
+        + "WHERE\n"
+        + "  row_key = 'b4'"
         , 1);
   }
 
   @Test
-  public void testFilterPushDownRowKeyGreaterThan() throws Exception{
+  public void testFilterPushDownRowKeyGreaterThan() throws Exception {
     runSQLVerifyCount("SELECT\n"
-        + "  tableName.*\n"
+        + "  *\n"
         + "FROM\n"
         + "  hbase.`[TABLE_NAME]` tableName\n"
-        + "  WHERE tableName.row_key > 'b4'"
+        + "WHERE\n"
+        + "  row_key > 'b4'"
         , 2);
   }
 
   @Test
-  public void testFilterPushDownRowKeyLessThanOrEqualTo() throws Exception{
+  public void testFilterPushDownMultiColumns() throws Exception {
     runSQLVerifyCount("SELECT\n"
-        + "  tableName.*\n"
+        + "  *\n"
         + "FROM\n"
         + "  hbase.`[TABLE_NAME]` tableName\n"
-        + "  WHERE 'b4' >= tableName.row_key"
+        + "WHERE\n"
+        + "  (row_key >= 'b5' OR row_key <= 'a2') AND (f['c1'] >= '1' OR f['c1'] is null)"
+        , 4);
+  }
+
+  @Test
+  @Ignore("Until convert_from() functions are working.")
+  public void testFilterPushDownConvertExpression() throws Exception {
+    runSQLVerifyCount("SELECT\n"
+        + "  *\n"
+        + "FROM\n"
+        + "  hbase.`[TABLE_NAME]` tableName\n"
+        + "WHERE\n"
+        + "  convert_from(row_key, 'INT_BE') > 12"
+        , -1);
+  }
+
+  @Test
+  public void testFilterPushDownRowKeyLessThanOrEqualTo() throws Exception {
+    runSQLVerifyCount("SELECT\n"
+        + "  *\n"
+        + "FROM\n"
+        + "  hbase.`[TABLE_NAME]` tableName\n"
+        + "WHERE\n"
+        + "  'b4' >= row_key"
         , 4);
   }
 

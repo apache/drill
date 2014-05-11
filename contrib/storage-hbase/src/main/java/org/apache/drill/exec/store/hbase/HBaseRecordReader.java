@@ -47,9 +47,6 @@ import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
-import org.apache.hadoop.hbase.filter.Filter;
-import org.apache.hadoop.hbase.filter.FilterList;
-import org.apache.hadoop.hbase.filter.FilterList.Operator;
 import org.apache.hadoop.hbase.filter.FirstKeyOnlyFilter;
 
 import com.google.common.base.Stopwatch;
@@ -107,19 +104,17 @@ public class HBaseRecordReader implements RecordReader, DrillHBaseConstants {
     }
 
     try {
-      Filter scanFilter = subScanSpec.getScanFilter();
+      scan.setFilter(subScanSpec.getScanFilter());
       if (rowKeyOnly) {
         /* if only the row key was requested, add a FirstKeyOnlyFilter to the scan
          * to fetch only one KV from each row. If a filter is already part of this
-         * scan, add the FirstKeyOnlyFilter as the SECOND filter of a MUST_PASS_ALL
+         * scan, add the FirstKeyOnlyFilter as the LAST filter of a MUST_PASS_ALL
          * FilterList.
          */
-        Filter firstKeyFilter = new FirstKeyOnlyFilter();
-        scanFilter = (scanFilter == null)
-            ? firstKeyFilter
-            : new FilterList(Operator.MUST_PASS_ALL, scanFilter, firstKeyFilter);
+        scan.setFilter(
+            HBaseUtils.andFilterAtIndex(scan.getFilter(), HBaseUtils.LAST_FILTER, new FirstKeyOnlyFilter())
+        );
       }
-      scan.setFilter(scanFilter);
       scan.setCaching(TARGET_RECORD_COUNT);
 
       logger.debug("Opening scanner for HBase table '{}', Zookeeper quorum '{}', port '{}', znode '{}'.",

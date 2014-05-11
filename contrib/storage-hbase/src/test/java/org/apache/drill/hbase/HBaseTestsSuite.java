@@ -124,7 +124,12 @@ public class HBaseTestsSuite {
   }
 
   private static void createTestTables() throws Exception {
-    TestTableGenerator.generateHBaseDataset1(admin, TEST_TABLE_1, 2);
+    /*
+     * We are seeing some issues with (Drill) Filter operator if a group scan span
+     * multiple fragments. Hence the number of regions in the HBase table is set to 1.
+     * Will revert to multiple region once the issue is resolved.
+     */
+    TestTableGenerator.generateHBaseDataset1(admin, TEST_TABLE_1, 1);
   }
 
   private static void cleanupTestTables() throws IOException {

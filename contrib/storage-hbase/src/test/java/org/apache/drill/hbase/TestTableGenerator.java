@@ -42,7 +42,11 @@ public class TestTableGenerator {
     HTableDescriptor desc = new HTableDescriptor(tableName);
     desc.addFamily(new HColumnDescriptor("f"));
     desc.addFamily(new HColumnDescriptor("f2"));
-    admin.createTable(desc, Arrays.copyOfRange(SPLIT_KEYS, 0, numberRegions-1));
+    if (numberRegions > 1) {
+      admin.createTable(desc, Arrays.copyOfRange(SPLIT_KEYS, 0, numberRegions-1));
+    } else {
+      admin.createTable(desc);
+    }
 
     HTable table = new HTable(admin.getConfiguration(), tableName);
 
