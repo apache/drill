@@ -68,14 +68,18 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     buffer = new io.netty.buffer.SwappedByteBuf(buffer);
     value.buffer = buffer;
     value.start  = 0;
+    <#if aggrtype.funcName == "max">
     for (int i = 0; i < value.nDecimalDigits; i++) {
       value.setInteger(i, 0xFFFFFFFF);
     }
-    <#if aggrtype.funcName == "min">
+    value.sign = true;
+    <#elseif aggrtype.funcName == "min">
+    for (int i = 0; i < value.nDecimalDigits; i++) {
+      value.setInteger(i, 0x7FFFFFFF);
+    }
     // Set sign to be positive so initial value is maximum
     value.sign = false;
-    <#elseif aggrtype.funcName == "max">
-    value.sign = true;
+    value.precision = ${type.runningType}Holder.maxPrecision;
     </#if>
     <#elseif type.outputType == "Decimal9" || type.outputType == "Decimal18">
     value.value = ${type.initValue};

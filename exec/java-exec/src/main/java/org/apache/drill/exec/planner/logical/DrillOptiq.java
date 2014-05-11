@@ -230,20 +230,16 @@ public class DrillOptiq {
           int scale = call.getType().getScale();
 
           if (precision <= 9) {
-              castType = TypeProtos.MajorType.newBuilder().setMinorType(MinorType.DECIMAL9).setPrecision(precision).setScale(scale).build();
+            castType = TypeProtos.MajorType.newBuilder().setMinorType(MinorType.DECIMAL9).setPrecision(precision).setScale(scale).build();
           } else if (precision <= 18) {
-              castType = TypeProtos.MajorType.newBuilder().setMinorType(MinorType.DECIMAL18).setPrecision(precision).setScale(scale).build();
+            castType = TypeProtos.MajorType.newBuilder().setMinorType(MinorType.DECIMAL18).setPrecision(precision).setScale(scale).build();
           } else if (precision <= 28) {
-              // Inject a cast to SPARSE before casting to the dense type.
-              castType = TypeProtos.MajorType.newBuilder().setMinorType(MinorType.DECIMAL28SPARSE).setPrecision(precision).setScale(scale).build();
-              arg = FunctionCallFactory.createCast(castType, ExpressionPosition.UNKNOWN, arg);
-              castType = TypeProtos.MajorType.newBuilder().setMinorType(MinorType.DECIMAL28DENSE).setPrecision(precision).setScale(scale).build();
+            // Inject a cast to SPARSE before casting to the dense type.
+            castType = TypeProtos.MajorType.newBuilder().setMinorType(MinorType.DECIMAL28SPARSE).setPrecision(precision).setScale(scale).build();
           } else if (precision <= 38) {
-              castType = TypeProtos.MajorType.newBuilder().setMinorType(MinorType.DECIMAL38SPARSE).setPrecision(precision).setScale(scale).build();
-              arg = FunctionCallFactory.createCast(castType, ExpressionPosition.UNKNOWN, arg);
-              castType = TypeProtos.MajorType.newBuilder().setMinorType(MinorType.DECIMAL38DENSE).setPrecision(precision).setScale(scale).build();
+            castType = TypeProtos.MajorType.newBuilder().setMinorType(MinorType.DECIMAL38SPARSE).setPrecision(precision).setScale(scale).build();
           } else {
-              throw new UnsupportedOperationException("Only Decimal types with precision range 0 - 38 is supported");
+            throw new UnsupportedOperationException("Only Decimal types with precision range 0 - 38 is supported");
           }
           break;
 
@@ -252,9 +248,7 @@ public class DrillOptiq {
         case "ANY": return arg; // Type will be same as argument.
         default: castType = Types.required(MinorType.valueOf(call.getType().getSqlTypeName().getName()));
       }
-
       return FunctionCallFactory.createCast(castType, ExpressionPosition.UNKNOWN, arg);
-
     }
 
     private LogicalExpression getDrillFunctionFromOptiqCall(RexCall call) {
