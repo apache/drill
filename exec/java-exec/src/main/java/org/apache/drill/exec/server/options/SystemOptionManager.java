@@ -40,6 +40,7 @@ public class SystemOptionManager implements OptionManager{
       PlannerSettings.HASHJOIN,
       PlannerSettings.MERGEJOIN, 
       PlannerSettings.MULTIPHASE,
+      PlannerSettings.BROADCAST,
       ExecConstants.OUTPUT_FORMAT_VALIDATOR,
       ExecConstants.PARQUET_BLOCK_SIZE_VALIDATOR
   };

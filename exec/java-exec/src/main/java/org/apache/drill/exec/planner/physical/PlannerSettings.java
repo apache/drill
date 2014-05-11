@@ -28,6 +28,7 @@ public class PlannerSettings implements FrameworkContext{
 
   private int numEndPoints = 0;
   private boolean useDefaultCosting = false; // True: use default Optiq costing, False: use Drill costing
+  private int broadcastThreshold = 10000; // Consider broadcast inner plans if estimated rows is less than this threshold
 
   public static final OptionValidator EXCHANGE = new BooleanValidator("planner.disable_exchanges", false);
   public static final OptionValidator HASHAGG = new BooleanValidator("planner.enable_hashagg", true);
@@ -35,7 +36,8 @@ public class PlannerSettings implements FrameworkContext{
   public static final OptionValidator HASHJOIN = new BooleanValidator("planner.enable_hashjoin", true);  
   public static final OptionValidator MERGEJOIN = new BooleanValidator("planner.enable_mergejoin", true);  
   public static final OptionValidator MULTIPHASE = new BooleanValidator("planner.enable_multiphase_agg", false);  
-  
+  public static final OptionValidator BROADCAST = new BooleanValidator("planner.enable_broadcast_join", false);
+
   public OptionManager options = null;
 
   public PlannerSettings(OptionManager options){
@@ -80,6 +82,14 @@ public class PlannerSettings implements FrameworkContext{
   
   public boolean isMultiPhaseAggEnabled() {
     return options.getOption(MULTIPHASE.getOptionName()).bool_val;
+  }
+  
+  public boolean isBroadcastJoinEnabled() {
+    return options.getOption(BROADCAST.getOptionName()).bool_val;  
+  }
+
+  public int getBroadcastThreshold() {
+    return broadcastThreshold;  
   }
   
   @Override

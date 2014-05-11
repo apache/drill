@@ -22,10 +22,13 @@ import java.util.logging.Logger;
 import org.apache.drill.exec.planner.logical.DrillJoinRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.eigenbase.rel.InvalidRelException;
+import org.eigenbase.rel.RelCollation;
 import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.metadata.RelMetadataQuery;
 import org.eigenbase.relopt.RelOptRule;
 import org.eigenbase.relopt.RelOptRuleCall;
 import org.eigenbase.relopt.RelTraitSet;
+import org.eigenbase.relopt.volcano.RelSubset;
 import org.eigenbase.trace.EigenbaseTrace;
 
 import com.google.common.collect.ImmutableList;
@@ -36,8 +39,7 @@ public class HashJoinPrule extends JoinPruleBase {
 
   private HashJoinPrule() {
     super(
-        RelOptHelper.some(DrillJoinRel.class, RelOptHelper.any(RelNode.class), RelOptHelper.any(RelNode.class)),
-        "Prel.HashJoinPrule");
+        RelOptHelper.any(DrillJoinRel.class), "Prel.HashJoinPrule");
   }
 
   @Override
@@ -48,50 +50,26 @@ public class HashJoinPrule extends JoinPruleBase {
   @Override
   public void onMatch(RelOptRuleCall call) {
     final DrillJoinRel join = (DrillJoinRel) call.rel(0);
-    final RelNode left = call.rel(1);
-    final RelNode right = call.rel(2);
+    final RelNode left = join.getLeft();
+    final RelNode right = join.getRight();
     
     if (!checkPreconditions(join, left, right)) {
       return;
     }
     
     try {
-      // Create transform request for HashJoin plan with both children HASH distributed
-      DrillDistributionTrait hashLeftPartition = new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED, ImmutableList.copyOf(getDistributionField(join.getLeftKeys())));
-      DrillDistributionTrait hashRightPartition = new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED, ImmutableList.copyOf(getDistributionField(join.getRightKeys())));
 
-      RelTraitSet traitsLeft = left.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(hashLeftPartition);   
-      RelTraitSet traitsRight = right.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(hashRightPartition);
+      createDistBothPlan(call, join, PhysicalJoinType.HASH_JOIN, left, right, null /* left collation */, null /* right collation */);
+      
+      if (checkBroadcastConditions(call.getPlanner(), join, left, right)) {
+        createBroadcastPlan(call, join, PhysicalJoinType.HASH_JOIN, left, right, null /* left collation */, null /* right collation */);
 
-      createTransformRequest(call, join, left, right, traitsLeft, traitsRight);
-
-      // Create transform request for HashJoin plan with left child ANY distributed and right child BROADCAST distributed
-      /// TODO: ANY distribution seems to create some problems..need to revisit
-      // DrillDistributionTrait distAnyLeft = new DrillDistributionTrait(DrillDistributionTrait.DistributionType.ANY);
-      DrillDistributionTrait distBroadcastRight = new DrillDistributionTrait(DrillDistributionTrait.DistributionType.BROADCAST_DISTRIBUTED);
-      // traitsLeft = left.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(distAnyLeft);
-      traitsRight = right.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(distBroadcastRight);
-
-      //temporarily not generate this plan
-      //createTransformRequest(call, join, left, right, traitsLeft, traitsRight);
-
+        // createBroadcastPlan1(call, join, PhysicalJoinType.HASH_JOIN, left, right, null, null);
+      }
+      
     } catch (InvalidRelException e) {
       tracer.warning(e.toString());
     }
-  }
-
-  private void createTransformRequest(RelOptRuleCall call, DrillJoinRel join, 
-                                      RelNode left, RelNode right, 
-                                      RelTraitSet traitsLeft, RelTraitSet traitsRight)
-    throws InvalidRelException { 
-
-    final RelNode convertedLeft = convert(left, traitsLeft);
-    final RelNode convertedRight = convert(right, traitsRight);
-      
-    HashJoinPrel newJoin = new HashJoinPrel(join.getCluster(), traitsLeft, 
-                                              convertedLeft, convertedRight, join.getCondition(),
-                                              join.getJoinType());
-    call.transformTo(newJoin) ;
   }
 
 }
