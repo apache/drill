@@ -15,8 +15,10 @@
     storage:
     {
       "type":"hbase",
-      "zookeeperQuorum" : "localhost",
-      "zookeeperPort" : 2181
+      config : {
+        "hbase.zookeeper.quorum" : "localhost",
+        "hbase.zookeeper.property.clientPort" : 2181
+      }
     },
     columns: [
       "`f2`.c1", "`f2`.c2", "row_key"

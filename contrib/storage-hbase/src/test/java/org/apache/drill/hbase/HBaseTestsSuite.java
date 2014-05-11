@@ -21,8 +21,6 @@ import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HBaseTestingUtility;
@@ -40,7 +38,8 @@ import org.junit.runners.Suite.SuiteClasses;
   TestHBaseFilterPushDown.class,
   TestHBaseProjectPushDown.class})
 public class HBaseTestsSuite {
-  private static final Log LOG = LogFactory.getLog(HBaseTestsSuite.class);
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBaseTestsSuite.class);
+
   private static final boolean IS_DEBUG = ManagementFactory.getRuntimeMXBean().getInputArguments().toString().indexOf("-agentlib:jdwp") > 0;
 
   protected static final String TEST_TABLE_1 = "TestTable1";
@@ -70,11 +69,11 @@ public class HBaseTestsSuite {
           }
 
           if (manageHBaseCluster) {
-            LOG.info("Starting HBase mini cluster.");
+            logger.info("Starting HBase mini cluster.");
             UTIL = new HBaseTestingUtility(conf);
             UTIL.startMiniCluster();
             hbaseClusterCreated = true;
-            LOG.info("HBase mini cluster started.");
+            logger.info("HBase mini cluster started. Zookeeper port: '{}'", getZookeeperPort());
           }
 
           admin = new HBaseAdmin(conf);
@@ -104,9 +103,9 @@ public class HBaseTestsSuite {
         }
 
         if (hbaseClusterCreated) {
-          LOG.info("Shutting down HBase mini cluster.");
+          logger.info("Shutting down HBase mini cluster.");
           UTIL.shutdownMiniCluster();
-          LOG.info("HBase mini cluster stopped.");
+          logger.info("HBase mini cluster stopped.");
         }
       }
     }

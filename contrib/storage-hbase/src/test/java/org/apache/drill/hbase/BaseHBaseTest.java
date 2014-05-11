@@ -76,7 +76,7 @@ public class BaseHBaseTest extends BaseTestQuery {
 
   protected String getPlanText(String planFile, String tableName) throws IOException {
     return Files.toString(FileUtils.getResourceAsFile(planFile), Charsets.UTF_8)
-        .replaceFirst("\"zookeeperPort\".*:.*\\d+", "\"zookeeperPort\" : " + HBaseTestsSuite.getZookeeperPort())
+        .replaceFirst("\"hbase\\.zookeeper\\.property\\.clientPort\".*:.*\\d+", "\"hbase.zookeeper.property.clientPort\" : " + HBaseTestsSuite.getZookeeperPort())
         .replace("[TABLE_NAME]", tableName);
   }
 

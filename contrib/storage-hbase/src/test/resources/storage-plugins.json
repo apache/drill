@@ -1,40 +1,11 @@
 {
   "storage":{
-    dfs: {
-      type: "file",
-      connection: "file:///",
-      formats: {
-        "psv" : {
-          type: "text",
-          extensions: [ "tbl" ],
-          delimiter: "|"
-        },
-        "csv" : {
-          type: "text",
-          extensions: [ "csv" ],
-          delimiter: ","
-        },
-        "tsv" : {
-          type: "text",
-          extensions: [ "tsv" ],
-          delimiter: "\t"
-        },
-        "parquet" : {
-          type: "parquet"
-        },
-        "json" : {
-          type: "json"
-        }
-      }
-    },
-    cp: {
-      type: "file",
-      connection: "classpath:///"
-    },
     hbase : {
       type:"hbase",
-      zookeeperQuorum : "localhost",
-      zookeeperPort : 2181
+      config : {
+        "hbase.zookeeper.quorum" : "localhost",
+        "hbase.zookeeper.property.clientPort" : 2181
+      }
     }
   }
 }

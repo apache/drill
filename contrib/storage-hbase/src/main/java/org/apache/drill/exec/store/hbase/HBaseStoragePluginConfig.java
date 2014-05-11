@@ -17,45 +17,43 @@
  */
 package org.apache.drill.exec.store.hbase;
 
+import java.util.Map;
+
 import org.apache.drill.common.logical.StoragePluginConfigBase;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HConstants;
-import org.apache.hadoop.hbase.client.HConnectionManager.HConnectionKey;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 
 @JsonTypeName("hbase")
 public class HBaseStoragePluginConfig extends StoragePluginConfigBase implements DrillHBaseConstants {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBaseStoragePluginConfig.class);
 
-  @JsonProperty
-  public String zookeeperQuorum;
+  private Map<String, String> config;
 
-  @JsonProperty
-  public int zookeeperPort;
-
+  @JsonIgnore
   private Configuration hbaseConf;
-  private HConnectionKey hbaseConfKey;
 
   @JsonCreator
-  public HBaseStoragePluginConfig(@JsonProperty("zookeeperQuorum") String zookeeperQuorum,
-                                  @JsonProperty("zookeeperPort") int zookeeperPort) {
-    this.zookeeperQuorum = zookeeperQuorum;
-    this.zookeeperPort = zookeeperPort;
-
-    this.hbaseConf = HBaseConfiguration.create();
-    logger.debug("Configuring HBase StoragePlugin with zookeeper quorum '{}', port '{}' node '{}'.",
-        zookeeperQuorum, zookeeperPort, hbaseConf.get(HConstants.ZOOKEEPER_ZNODE_PARENT));
-    if (zookeeperQuorum != null && zookeeperQuorum.length() != 0) {
-      hbaseConf.set(HConstants.ZOOKEEPER_QUORUM, zookeeperQuorum);
-      hbaseConf.setInt(HBASE_ZOOKEEPER_PORT, zookeeperPort);
+  public HBaseStoragePluginConfig(@JsonProperty("config") Map<String, String> props) {
+    this.config = props;
+    if (config == null) {
+      config = Maps.newHashMap();
     }
-    this.hbaseConfKey = new HConnectionKey(hbaseConf);
+    logger.debug("Configuring HBase StoragePlugin with zookeeper quorum '{}', port '{}'.",
+        config.get(HConstants.ZOOKEEPER_QUORUM), config.get(HBASE_ZOOKEEPER_PORT));
+  }
+
+  @JsonProperty
+  public Map<String, String> getConfig() {
+    return ImmutableMap.copyOf(config);
   }
 
   @Override
@@ -66,24 +64,32 @@ public class HBaseStoragePluginConfig extends StoragePluginConfigBase implements
       return false;
     }
     HBaseStoragePluginConfig that = (HBaseStoragePluginConfig) o;
-    return this.hbaseConfKey.equals(that.hbaseConfKey);
+    return config.equals(that.config);
   }
 
   @Override
   public int hashCode() {
-    return this.hbaseConfKey != null ? this.hbaseConfKey.hashCode() : 0;
+    return this.config != null ? this.config.hashCode() : 0;
   }
 
   @JsonIgnore
   public Configuration getHBaseConf() {
+    if (hbaseConf == null) {
+      hbaseConf = HBaseConfiguration.create();
+      if (config != null) {
+        for (Map.Entry<String, String> entry : config.entrySet()) {
+          hbaseConf.set(entry.getKey(), entry.getValue());
+        }
+      }
+    }
     return hbaseConf;
   }
 
   @JsonIgnore
   @VisibleForTesting
   public void setZookeeperPort(int zookeeperPort) {
-    this.zookeeperPort = zookeeperPort;
-    hbaseConf.setInt(HBASE_ZOOKEEPER_PORT, zookeeperPort);
+    this.config.put(HBASE_ZOOKEEPER_PORT, String.valueOf(zookeeperPort));
+    getHBaseConf().setInt(HBASE_ZOOKEEPER_PORT, zookeeperPort);
   }
 
 }
