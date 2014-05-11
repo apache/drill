@@ -401,4 +401,18 @@ public class TestFunctionsQuery {
             "STR_1=1234 COL_VALUE 0 - STRING\n"
         );
   }
+
+  @Test
+  public void testTimeStampConstant() throws Exception {
+    String query = String.format("SELECT " +
+        "timestamp '2008-2-23 12:23:23' as TS " +
+        "FROM dfs.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
+
+    JdbcAssert.withNoDefaultSchema()
+        .sql(query)
+        .returns(
+            "TS=2008-02-23 12:23:23.0\n"
+        );
+  }
+
 }

@@ -151,26 +151,11 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
     return null;
   }
 
-  static final DateTimeFormatter TIMESTAMP_FORMAT;
-  static {
-    DateTimeFormatter dateFormatter = DateTimeFormat.forPattern("yyyy-MM-dd");
-    DateTimeParser optionalTime = DateTimeFormat.forPattern(" HH:mm:ss").getParser();
-    DateTimeParser optionalSec = DateTimeFormat.forPattern(".SSS").getParser();
-
-    TIMESTAMP_FORMAT = new DateTimeFormatterBuilder().append(dateFormatter).appendOptional(optionalTime).appendOptional(optionalSec).toFormatter();
-
-  }
-
   @Override
   public Void visitTimeStampConstant(TimeStampExpression lExpr, StringBuilder sb) throws RuntimeException {
-    sb.append("cast( '");
-    try {
-      TIMESTAMP_FORMAT.printTo(sb, lExpr.getTimeStamp());
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+    sb.append("cast( ");
     sb.append(lExpr.getTimeStamp());
-    sb.append(" ' as TIMESTAMP)");
+    sb.append(" as TIMESTAMP)");
     return null;
   }
 
