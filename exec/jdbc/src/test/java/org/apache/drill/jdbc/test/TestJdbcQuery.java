@@ -75,6 +75,13 @@ public class TestJdbcQuery extends JdbcTest{
     testQuery("select * from hive.`default`.kv");
   }
 
+
+  @Test
+  public void testHiveWithDate() throws Exception {
+    testQuery("select * from hive.`default`.foodate");
+    testQuery("select date_add(a, time '12:23:33'), b from hive.`default`.foodate");
+  }
+
   @Test
   @Ignore
   public void testJsonQuery() throws Exception{
@@ -276,8 +283,10 @@ public class TestJdbcQuery extends JdbcTest{
       .sql("SHOW TABLES")
       .returns(
         "TABLE_SCHEMA=hive.default; TABLE_NAME=kv\n" +
+        "TABLE_SCHEMA=hive.default; TABLE_NAME=foodate\n" +
         "TABLE_SCHEMA=hive.db1; TABLE_NAME=kv_db1\n" +
         "TABLE_SCHEMA=hive; TABLE_NAME=kv\n" +
+        "TABLE_SCHEMA=hive; TABLE_NAME=foodate\n" +
         "TABLE_SCHEMA=sys; TABLE_NAME=drillbits\n" +
         "TABLE_SCHEMA=sys; TABLE_NAME=options\n" +
         "TABLE_SCHEMA=INFORMATION_SCHEMA; TABLE_NAME=VIEWS\n" +
@@ -302,7 +311,9 @@ public class TestJdbcQuery extends JdbcTest{
 
     JdbcAssert.withNoDefaultSchema()
       .sql("SHOW TABLES IN hive")
-      .returns("TABLE_SCHEMA=hive; TABLE_NAME=kv\n");
+      .returns(
+      "TABLE_SCHEMA=hive; TABLE_NAME=kv\n" +
+      "TABLE_SCHEMA=hive; TABLE_NAME=foodate\n");
   }
 
   @Test

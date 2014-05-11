@@ -18,6 +18,8 @@
 package org.apache.drill.exec.store.hive;
 
 import java.io.IOException;
+import java.sql.Timestamp;
+import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 
@@ -49,11 +51,16 @@ import org.apache.drill.exec.vector.NullableSmallIntVector;
 import org.apache.drill.exec.vector.NullableTinyIntVector;
 import org.apache.drill.exec.vector.NullableVarBinaryVector;
 import org.apache.drill.exec.vector.NullableVarCharVector;
+import org.apache.drill.exec.vector.NullableTimeStampVector;
+import org.apache.drill.exec.vector.TimeStampVector;
+import org.apache.drill.exec.vector.NullableDateVector;
+import org.apache.drill.exec.vector.DateVector;
 import org.apache.drill.exec.vector.SmallIntVector;
 import org.apache.drill.exec.vector.TinyIntVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarCharVector;
 import org.apache.drill.exec.vector.allocator.VectorAllocator;
+import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Partition;
@@ -73,6 +80,9 @@ import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.Reporter;
+
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 import com.google.common.collect.Lists;
 
@@ -304,6 +314,32 @@ public class HiveRecordReader implements RecordReader {
           }
           break;
         }
+        case "timestamp": {
+          TimeStampVector v = (TimeStampVector) vector;
+          DateTime ts = new DateTime(((Timestamp) val).getTime()).withZoneRetainFields(DateTimeZone.UTC);
+          long value = ts.getMillis();
+          for (int j = 0; j < recordCount; j++) {
+            v.getMutator().setSafe(j, value);
+          }
+          break;
+        }
+        case "date": {
+          DateVector v = (DateVector) vector;
+          DateTime date = new DateTime(((Date)val).getTime()).withZoneRetainFields(DateTimeZone.UTC);
+          long value = date.getMillis();
+          for (int j = 0; j < recordCount; j++) {
+            v.getMutator().setSafe(j, value);
+          }
+          break;
+        }
+        case "decimal": {
+          VarCharVector v = (VarCharVector) vector;
+          byte[] value = ((HiveDecimal) val).toString().getBytes();
+          for (int j = 0; j < recordCount; j++) {
+            v.getMutator().setSafe(j, value);
+          }
+          break;
+        }
         default:
           throw new UnsupportedOperationException("Could not determine type: " + selectedPartitionTypes.get(i));
       }
@@ -343,7 +379,7 @@ public class HiveRecordReader implements RecordReader {
       case BYTE:
         return Types.optional(TypeProtos.MinorType.TINYINT);
       case DECIMAL:
-        return Types.optional(TypeProtos.MinorType.DECIMAL38SPARSE);
+        return Types.optional(TypeProtos.MinorType.VARCHAR);
       case DOUBLE:
         return Types.optional(TypeProtos.MinorType.FLOAT8);
       case FLOAT:
@@ -357,7 +393,9 @@ public class HiveRecordReader implements RecordReader {
       case STRING:
         return Types.optional(TypeProtos.MinorType.VARCHAR);
       case TIMESTAMP:
-
+        return Types.optional(TypeProtos.MinorType.TIMESTAMP);
+      case DATE:
+        return Types.optional(TypeProtos.MinorType.DATE);
       default:
         throw new UnsupportedOperationException("Could not determine type: " + pCat);
     }
@@ -373,7 +411,10 @@ public class HiveRecordReader implements RecordReader {
       case BYTE:
     	  return ((NullableTinyIntVector) vv).getMutator().setSafe(index, (byte) fieldValue);
       case DECIMAL:
-        throw new UnsupportedOperationException();
+        String value = ((HiveDecimal) fieldValue).toString();
+        int strLen   = value.length();
+        byte[] strBytes = value.getBytes();
+        return ((NullableVarCharVector) vv).getMutator().setSafe(index, strBytes, 0, strLen);
       case DOUBLE:
     	  return ((NullableFloat8Vector) vv).getMutator().setSafe(index, (double) fieldValue);
       case FLOAT:
@@ -389,8 +430,11 @@ public class HiveRecordReader implements RecordReader {
         byte[] bytes = ((Text) fieldValue).getBytes();
         return ((NullableVarCharVector) vv).getMutator().setSafe(index, bytes, 0, len);
       case TIMESTAMP:
-        throw new UnsupportedOperationException();
-
+        DateTime ts = new DateTime(((Timestamp) fieldValue).getTime()).withZoneRetainFields(DateTimeZone.UTC);
+        return ((NullableTimeStampVector)vv).getMutator().setSafe(index, ts.getMillis());
+      case DATE:
+        DateTime date = new DateTime(((Date) fieldValue).getTime()).withZoneRetainFields(DateTimeZone.UTC);
+        return ((NullableDateVector)vv).getMutator().setSafe(index, date.getMillis());
       default:
         throw new UnsupportedOperationException("Could not determine type");
     }

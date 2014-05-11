@@ -21,6 +21,8 @@ package org.apache.drill.exec.store.hive;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.sql.Date;
+import java.sql.Timestamp;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.fs.FileSystem;
@@ -74,6 +76,16 @@ public class HiveTestDataGenerator {
     executeQuery("CREATE DATABASE IF NOT EXISTS db1");
     createTableAndLoadData("db1", "kv_db1", testDataFile);
 
+    // Generate data with date and timestamp data type
+    String testDateDataFile = generateTestDataFileWithDate();
+
+    // create table with date and timestamp data type
+    executeQuery("USE default");
+    executeQuery("CREATE TABLE IF NOT EXISTS default.foodate(a DATE, b TIMESTAMP) "+
+        "ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE");
+    executeQuery(String.format("LOAD DATA LOCAL INPATH '%s' OVERWRITE INTO TABLE default.foodate", testDateDataFile));
+
+
     ss.close();
   }
 
@@ -100,6 +112,30 @@ public class HiveTestDataGenerator {
     PrintWriter printWriter = new PrintWriter(file);
     for (int i=1; i<=5; i++)
       printWriter.println (String.format("%d, key_%d", i, i));
+    printWriter.close();
+
+    return file.getPath();
+  }
+
+  private String generateTestDataFileWithDate() throws Exception {
+    File file = null;
+    while (true) {
+      file = File.createTempFile("drill-hive-test-date", ".txt");
+      if (file.exists()) {
+        boolean success = file.delete();
+        if (success) {
+          break;
+        }
+      }
+      logger.debug("retry creating tmp file");
+    }
+
+    PrintWriter printWriter = new PrintWriter(file);
+    for (int i=1; i<=5; i++) {
+      Date date = new Date(System.currentTimeMillis());
+      Timestamp ts = new Timestamp(System.currentTimeMillis());
+      printWriter.println (String.format("%s,%s", date.toString(), ts.toString()));
+    }
     printWriter.close();
 
     return file.getPath();
