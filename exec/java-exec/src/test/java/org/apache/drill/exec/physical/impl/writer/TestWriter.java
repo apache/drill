@@ -20,8 +20,11 @@ package org.apache.drill.exec.physical.impl.writer;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import org.apache.drill.BaseTestQuery;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.record.RecordBatchLoader;
+import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.rpc.user.QueryResultBatch;
 import org.apache.drill.exec.vector.BigIntVector;
 import org.apache.drill.exec.vector.VarCharVector;
@@ -40,6 +43,7 @@ import static org.junit.Assert.assertTrue;
 public class TestWriter extends BaseTestQuery {
 
   static FileSystem fs;
+  static String ALTER_SESSION = String.format("ALTER SESSION SET `%s` = 'csv'", ExecConstants.OUTPUT_FORMAT_OPTION);
 
   @BeforeClass
   public static void initFs() throws Exception {
@@ -91,6 +95,7 @@ public class TestWriter extends BaseTestQuery {
   @Test
   public void simpleCTAS() throws Exception {
     testSqlWithResults("Use dfs.tmp");
+    testSqlWithResults(ALTER_SESSION);
 
     String testQuery = "CREATE TABLE simplectas AS SELECT * FROM cp.`employee.json`";
 
@@ -100,6 +105,7 @@ public class TestWriter extends BaseTestQuery {
   @Test
   public void complex1CTAS() throws Exception {
     testSqlWithResults("Use dfs.tmp");
+    testSqlWithResults(ALTER_SESSION);
     String testQuery = "CREATE TABLE complex1ctas AS SELECT first_name, last_name, position_id FROM cp.`employee.json`";
 
     ctasHelper("/tmp/drilltest/complex1ctas", testQuery, 1155);
@@ -108,6 +114,7 @@ public class TestWriter extends BaseTestQuery {
   @Test
   public void complex2CTAS() throws Exception {
     testSqlWithResults("Use dfs.tmp");
+    testSqlWithResults(ALTER_SESSION);
     String testQuery = "CREATE TABLE complex2ctas AS SELECT CAST(`birth_date` as Timestamp) FROM cp.`employee.json` GROUP BY birth_date";
 
     ctasHelper("/tmp/drilltest/complex2ctas", testQuery, 52);
@@ -115,9 +122,18 @@ public class TestWriter extends BaseTestQuery {
 
   @Test
   public void simpleCTASWithSchemaInTableName() throws Exception {
+    testSqlWithResults(ALTER_SESSION);
     String testQuery = "CREATE TABLE dfs.tmp.`/test/simplectas2` AS SELECT * FROM cp.`employee.json`";
 
     ctasHelper("/tmp/drilltest/test/simplectas2", testQuery, 1155);
+  }
+
+  @Test
+  public void simpleParquetDecimal() throws Exception {
+//    String testQuery = "CREATE TABLE dfs.tmp.`simpleparquetdecimal` AS SELECT full_name FROM cp.`employee.json`";
+    String testQuery = "CREATE TABLE dfs.tmp.`simpleparquetdecimal` AS SELECT cast(salary as decimal(30,2)) * -1 as salary FROM cp.`employee.json`";
+//    String testQuery = "select * from dfs.tmp.`simpleparquetdecimal`";
+    ctasHelper("/tmp/drilltest/simpleparquetdecimal", testQuery, 1155);
   }
 
   private void ctasHelper(String tableDir, String testQuery, int expectedOutputCount) throws Exception {
@@ -147,8 +163,9 @@ public class TestWriter extends BaseTestQuery {
     }
     batchLoader.clear();
 
-    assertTrue(fs.exists(tableLocation));
+//    assertTrue(fs.exists(tableLocation));
     assertEquals(expectedOutputCount, recordsWritten);
+    Thread.sleep(1000);
   }
 
 }

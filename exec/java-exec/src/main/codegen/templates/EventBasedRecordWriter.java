@@ -91,8 +91,10 @@ public class EventBasedRecordWriter {
     fieldWriters = Lists.newArrayList();
     try {
       for (int i = 0; i < schema.getFieldCount(); i++) {
-        fieldWriters.add(i, typeClassMap.get(schema.getColumn(i).getType())
-            .getConstructor(EventBasedRecordWriter.class, int.class).newInstance(this, i));
+        MajorType mt = schema.getColumn(i).getType();
+        MajorType newMt = MajorType.newBuilder().setMinorType(mt.getMinorType()).setMode(mt.getMode()).build();
+        fieldWriters.add(i, typeClassMap.get(newMt)
+                .getConstructor(EventBasedRecordWriter.class, int.class).newInstance(this, i));
       }
     } catch(Exception e) {
       logger.error("Failed to create FieldWriter.", e);

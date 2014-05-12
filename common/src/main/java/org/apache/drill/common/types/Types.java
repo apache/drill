@@ -271,6 +271,10 @@ public class Types {
     return MajorType.newBuilder().setMode(mode).setMinorType(type).build();
   }
 
+  public static MajorType withScaleAndPrecision(MinorType type, DataMode mode, int scale, int precision) {
+    return MajorType.newBuilder().setMinorType(type).setMode(mode).setScale(scale).setPrecision(precision).build();
+  }
+  
   public static MajorType required(MinorType type){
     return MajorType.newBuilder().setMode(DataMode.REQUIRED).setMinorType(type).build();
   }

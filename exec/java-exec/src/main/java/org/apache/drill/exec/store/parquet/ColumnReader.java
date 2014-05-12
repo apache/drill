@@ -25,8 +25,10 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.hadoop.fs.FSDataInputStream;
 import parquet.column.ColumnDescriptor;
 import parquet.format.ConvertedType;
+import parquet.format.SchemaElement;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
 import parquet.schema.PrimitiveType;
+import parquet.schema.PrimitiveType.PrimitiveTypeName;
 
 import java.io.IOException;
 
@@ -48,7 +50,7 @@ abstract class ColumnReader<V extends ValueVector> {
   // status information on the current page
   final PageReadStatus pageReadStatus;
 
-  final ConvertedType convertedType;
+  final SchemaElement schemaElement;
 
   // quick reference to see if the field is fixed length (as this requires an instanceof)
   final boolean isFixedLength;
@@ -70,12 +72,12 @@ abstract class ColumnReader<V extends ValueVector> {
   long readStartInBytes = 0, readLength = 0, readLengthInBits = 0, recordsReadInThisIteration = 0;
 
   protected ColumnReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
-      ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, V v, ConvertedType convertedType) throws ExecutionSetupException {
+      ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, V v, SchemaElement schemaElement) throws ExecutionSetupException {
     this.parentReader = parentReader;
     this.columnDescriptor = descriptor;
     this.columnChunkMetaData = columnChunkMetaData;
     this.isFixedLength = fixedLength;
-    this.convertedType = convertedType;
+    this.schemaElement = schemaElement;
 
     if (allocateSize > 1) {
       valueVec =  v;
@@ -87,7 +89,11 @@ abstract class ColumnReader<V extends ValueVector> {
     this.pageReadStatus = new PageReadStatus(this, parentReader.fileSystem, parentReader.hadoopPath, columnChunkMetaData);
 
     if (columnDescriptor.getType() != PrimitiveType.PrimitiveTypeName.BINARY) {
-      dataTypeLengthInBits = ParquetRecordReader.getTypeLengthInBits(columnDescriptor.getType());
+      if (columnDescriptor.getType() == PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY) {
+        dataTypeLengthInBits = columnDescriptor.getTypeLength() * 8;
+      } else {
+        dataTypeLengthInBits = ParquetRecordReader.getTypeLengthInBits(columnDescriptor.getType());
+      }
     }
 
   }

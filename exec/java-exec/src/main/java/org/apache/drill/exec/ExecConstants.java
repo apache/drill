@@ -17,6 +17,10 @@
  */
 package org.apache.drill.exec;
 
+import org.apache.drill.exec.server.options.OptionValidator;
+import org.apache.drill.exec.server.options.TypeValidators.LongValidator;
+import org.apache.drill.exec.server.options.TypeValidators.StringValidator;
+
 public interface ExecConstants {
   public static final String ZK_RETRY_TIMES = "drill.exec.zk.retry.count";
   public static final String ZK_RETRY_DELAY = "drill.exec.zk.retry.delay";
@@ -63,5 +67,9 @@ public interface ExecConstants {
   public static final String FILESYSTEM_PARTITION_COLUMN_LABEL = "drill.exec.storage.file.partition.column.label";
   public static final String HAZELCAST_SUBNETS = "drill.exec.cache.hazel.subnets";
   public static final String TOP_LEVEL_MAX_ALLOC = "drill.exec.memory.top.max";
+  public static final String OUTPUT_FORMAT_OPTION = "store.format";
+  public static final OptionValidator OUTPUT_FORMAT_VALIDATOR = new StringValidator(OUTPUT_FORMAT_OPTION, "parquet");
+  public static final String PARQUET_BLOCK_SIZE = "parquet.block.size";
+  public static final OptionValidator PARQUET_BLOCK_SIZE_VALIDATOR = new LongValidator(PARQUET_BLOCK_SIZE, 512*1024*1024);
 
 }

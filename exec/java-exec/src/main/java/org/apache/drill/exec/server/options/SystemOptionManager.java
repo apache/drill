@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentMap;
 
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.cache.DistributedCache;
 import org.apache.drill.exec.cache.DistributedMap;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
@@ -38,7 +39,9 @@ public class SystemOptionManager implements OptionManager{
       PlannerSettings.STREAMAGG,
       PlannerSettings.HASHJOIN,
       PlannerSettings.MERGEJOIN, 
-      PlannerSettings.MULTIPHASE
+      PlannerSettings.MULTIPHASE,
+      ExecConstants.OUTPUT_FORMAT_VALIDATOR,
+      ExecConstants.PARQUET_BLOCK_SIZE_VALIDATOR
   };
 
   private DistributedMap<OptionValue> options;

@@ -18,8 +18,10 @@
 package org.apache.drill.exec.store.parquet;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.store.parquet.ColumnReader;
-import org.apache.drill.exec.store.parquet.ParquetRecordReader;
+import org.apache.drill.common.util.DecimalUtility;
+import org.apache.drill.exec.expr.holders.Decimal28SparseHolder;
+import org.apache.drill.exec.expr.holders.Decimal38SparseHolder;
+import org.apache.drill.exec.expr.holders.NullableDecimal28SparseHolder;
 import org.apache.drill.exec.vector.*;
 import org.apache.drill.exec.vector.NullableVarBinaryVector;
 import org.apache.drill.exec.vector.NullableVarCharVector;
@@ -28,8 +30,11 @@ import org.apache.drill.exec.vector.VarCharVector;
 import parquet.column.ColumnDescriptor;
 import parquet.format.ConvertedType;
 import parquet.column.Encoding;
+import parquet.format.SchemaElement;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
 import parquet.io.api.Binary;
+
+import java.math.BigDecimal;
 
 public class VarLengthColumnReaders {
 
@@ -40,8 +45,14 @@ public class VarLengthColumnReaders {
 
     VarLengthColumn(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
                     ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, V v,
-                    ConvertedType convertedType) throws ExecutionSetupException {
-      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, convertedType);
+                    SchemaElement schemaElement) throws ExecutionSetupException {
+      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+      if (columnChunkMetaData.getEncodings().contains(Encoding.PLAIN_DICTIONARY)) {
+        usingDictionary = true;
+      }
+      else {
+        usingDictionary = false;
+      }
     }
 
     @Override
@@ -64,8 +75,8 @@ public class VarLengthColumnReaders {
 
     NullableVarLengthColumn(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
                             ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, V v,
-                            ConvertedType convertedType ) throws ExecutionSetupException {
-      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, convertedType);
+                            SchemaElement schemaElement) throws ExecutionSetupException {
+      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
     }
 
     public abstract boolean setSafe(int index, byte[] value, int start, int length);
@@ -78,6 +89,125 @@ public class VarLengthColumnReaders {
     }
   }
 
+  public static class Decimal28Column extends VarLengthColumn<Decimal28SparseVector> {
+
+    protected Decimal28SparseVector decimal28Vector;
+
+    Decimal28Column(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
+                   ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, Decimal28SparseVector v,
+                   SchemaElement schemaElement) throws ExecutionSetupException {
+      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+      this.decimal28Vector = v;
+    }
+
+    @Override
+    public boolean setSafe(int index, byte[] bytes, int start, int length) {
+      int width = Decimal28SparseHolder.WIDTH;
+      BigDecimal intermediate = DecimalUtility.getBigDecimalFromByteArray(bytes, start, length, schemaElement.getScale());
+      if (index >= decimal28Vector.getValueCapacity()) {
+        return false;
+      }
+      DecimalUtility.getSparseFromBigDecimal(intermediate, decimal28Vector.getData(), index * width, schemaElement.getScale(),
+              schemaElement.getPrecision(), Decimal28SparseHolder.nDecimalDigits);
+      return true;
+    }
+
+    @Override
+    public int capacity() {
+      return decimal28Vector.getData().capacity();
+    }
+  }
+
+  public static class NullableDecimal28Column extends NullableVarLengthColumn<NullableDecimal28SparseVector> {
+
+    protected NullableDecimal28SparseVector nullableDecimal28Vector;
+
+    NullableDecimal28Column(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
+                    ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, NullableDecimal28SparseVector v,
+                    SchemaElement schemaElement) throws ExecutionSetupException {
+      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+      nullableDecimal28Vector = v;
+    }
+
+    @Override
+    public boolean setSafe(int index, byte[] bytes, int start, int length) {
+      int width = Decimal28SparseHolder.WIDTH;
+      BigDecimal intermediate = DecimalUtility.getBigDecimalFromByteArray(bytes, start, length, schemaElement.getScale());
+      if (index >= nullableDecimal28Vector.getValueCapacity()) {
+        return false;
+      }
+      DecimalUtility.getSparseFromBigDecimal(intermediate, nullableDecimal28Vector.getData(), index * width, schemaElement.getScale(),
+              schemaElement.getPrecision(), Decimal28SparseHolder.nDecimalDigits);
+      nullableDecimal28Vector.getMutator().setIndexDefined(index);
+      return true;
+    }
+
+    @Override
+    public int capacity() {
+      return nullableDecimal28Vector.getData().capacity();
+    }
+  }
+
+  public static class Decimal38Column extends VarLengthColumn<Decimal38SparseVector> {
+
+    protected Decimal38SparseVector decimal28Vector;
+
+    Decimal38Column(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
+                    ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, Decimal38SparseVector v,
+                    SchemaElement schemaElement) throws ExecutionSetupException {
+      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+      decimal28Vector = v;
+    }
+
+    @Override
+    public boolean setSafe(int index, byte[] bytes, int start, int length) {
+      int width = Decimal38SparseHolder.WIDTH;
+      BigDecimal intermediate = DecimalUtility.getBigDecimalFromByteArray(bytes, start, length, schemaElement.getScale());
+      if (index >= decimal28Vector.getValueCapacity()) {
+        return false;
+      }
+      DecimalUtility.getSparseFromBigDecimal(intermediate, decimal28Vector.getData(), index * width, schemaElement.getScale(),
+              schemaElement.getPrecision(), Decimal38SparseHolder.nDecimalDigits);
+      return true;
+    }
+
+    @Override
+    public int capacity() {
+      return decimal28Vector.getData().capacity();
+    }
+  }
+
+  public static class NullableDecimal38Column extends NullableVarLengthColumn<NullableDecimal38SparseVector> {
+
+    protected NullableDecimal38SparseVector nullableDecimal38Vector;
+
+    NullableDecimal38Column(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
+                            ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, NullableDecimal38SparseVector v,
+                            SchemaElement schemaElement) throws ExecutionSetupException {
+      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+      nullableDecimal38Vector = v;
+    }
+
+    @Override
+    public boolean setSafe(int index, byte[] bytes, int start, int length) {
+      int width = Decimal38SparseHolder.WIDTH;
+      BigDecimal intermediate = DecimalUtility.getBigDecimalFromByteArray(bytes, start, length, schemaElement.getScale());
+      if (index >= nullableDecimal38Vector.getValueCapacity()) {
+        return false;
+      }
+      DecimalUtility.getSparseFromBigDecimal(intermediate, nullableDecimal38Vector.getData(), index * width, schemaElement.getScale(),
+              schemaElement.getPrecision(), Decimal38SparseHolder.nDecimalDigits);
+      nullableDecimal38Vector.getMutator().setIndexDefined(index);
+      return true;
+    }
+
+    @Override
+    public int capacity() {
+      return nullableDecimal38Vector.getData().capacity();
+    }
+  }
+
+
   public static class VarCharColumn extends VarLengthColumn <VarCharVector> {
 
     // store a hard reference to the vector (which is also stored in the superclass) to prevent repetitive casting
@@ -85,14 +215,8 @@ public class VarLengthColumnReaders {
 
     VarCharColumn(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
                   ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, VarCharVector v,
-                  ConvertedType convertedType) throws ExecutionSetupException {
-      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, convertedType);
-      if (columnChunkMetaData.getEncodings().contains(Encoding.PLAIN_DICTIONARY)) {
-        usingDictionary = true;
-      }
-      else {
-        usingDictionary = false;
-      }
+                  SchemaElement schemaElement) throws ExecutionSetupException {
+      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
       varCharVector = v;
     }
 
@@ -129,15 +253,9 @@ public class VarLengthColumnReaders {
 
     NullableVarCharColumn(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
                           ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, NullableVarCharVector v,
-                          ConvertedType convertedType ) throws ExecutionSetupException {
-      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, convertedType);
+                          SchemaElement schemaElement) throws ExecutionSetupException {
+      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
       nullableVarCharVector = v;
-      if (columnChunkMetaData.getEncodings().contains(Encoding.PLAIN_DICTIONARY)) {
-          usingDictionary = true;
-      }
-      else {
-        usingDictionary = false;
-      }
     }
 
     public boolean setSafe(int index, byte[] value, int start, int length) {
@@ -170,14 +288,8 @@ public class VarLengthColumnReaders {
 
     VarBinaryColumn(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
                     ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, VarBinaryVector v,
-                    ConvertedType convertedType) throws ExecutionSetupException {
-      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, convertedType);
-      if (columnChunkMetaData.getEncodings().contains(Encoding.PLAIN_DICTIONARY)) {
-        usingDictionary = true;
-      }
-      else {
-        usingDictionary = false;
-      }
+                    SchemaElement schemaElement) throws ExecutionSetupException {
+      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
       varBinaryVector = v;
     }
 
@@ -214,15 +326,9 @@ public class VarLengthColumnReaders {
 
     NullableVarBinaryColumn(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
                             ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, NullableVarBinaryVector v,
-                            ConvertedType convertedType ) throws ExecutionSetupException {
-      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, convertedType);
+                            SchemaElement schemaElement) throws ExecutionSetupException {
+      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
       nullableVarBinaryVector = v;
-      if (columnChunkMetaData.getEncodings().contains(Encoding.PLAIN_DICTIONARY)) {
-        usingDictionary = true;
-      }
-      else {
-        usingDictionary = false;
-      }
     }
 
     public boolean setSafe(int index, byte[] value, int start, int length) {

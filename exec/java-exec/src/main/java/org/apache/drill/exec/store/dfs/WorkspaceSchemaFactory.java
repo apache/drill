@@ -26,12 +26,15 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import net.hydromatic.optiq.Table;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.planner.logical.DynamicDrillTable;
 import org.apache.drill.exec.planner.logical.FileSystemCreateTableEntry;
 import org.apache.drill.exec.planner.sql.ExpandingConcurrentMap;
 import org.apache.drill.exec.rpc.user.UserSession;
+import org.apache.drill.exec.server.options.OptionValidator;
+import org.apache.drill.exec.server.options.TypeValidators.StringValidator;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.dfs.shim.DrillFileSystem;
 import org.apache.hadoop.fs.Path;
@@ -141,9 +144,11 @@ public class WorkspaceSchemaFactory implements ExpandingConcurrentMap.MapValueFa
       return fs;
     }
 
+
     @Override
     public CreateTableEntry createNewTable(String tableName) {
-      FormatPlugin formatPlugin = plugin.getFormatPlugin(config.getStorageFormat());
+      String storage = session.getOptions().getOption(ExecConstants.OUTPUT_FORMAT_OPTION).string_val;
+      FormatPlugin formatPlugin = plugin.getFormatPlugin(storage);
       if (formatPlugin == null)
         throw new UnsupportedOperationException(
           String.format("Unsupported format '%s' in workspace '%s'", config.getStorageFormat(),
@@ -151,7 +156,7 @@ public class WorkspaceSchemaFactory implements ExpandingConcurrentMap.MapValueFa
 
       return new FileSystemCreateTableEntry(
           (FileSystemConfig) plugin.getConfig(),
-          plugin.getFormatPlugin(config.getStorageFormat()),
+          formatPlugin,
           config.getLocation() + Path.SEPARATOR + tableName);
     }
   }

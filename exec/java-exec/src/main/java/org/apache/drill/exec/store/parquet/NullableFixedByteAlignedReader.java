@@ -18,19 +18,27 @@
 package org.apache.drill.exec.store.parquet;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.util.DecimalUtility;
+import org.apache.drill.exec.expr.holders.NullableDecimal28SparseHolder;
+import org.apache.drill.exec.expr.holders.NullableDecimal38SparseHolder;
+import org.apache.drill.exec.vector.NullableDecimal28SparseVector;
+import org.apache.drill.exec.vector.NullableDecimal38SparseVector;
 import org.apache.drill.exec.vector.ValueVector;
 
 import parquet.column.ColumnDescriptor;
 import parquet.format.ConvertedType;
+import parquet.format.SchemaElement;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
+
+import java.math.BigDecimal;
 
 class NullableFixedByteAlignedReader extends NullableColumnReader {
 
-  private byte[] bytes;
+  protected byte[] bytes;
 
   NullableFixedByteAlignedReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
-      ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, ValueVector v, ConvertedType convertedType) throws ExecutionSetupException {
-    super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, convertedType);
+      ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, ValueVector v, SchemaElement schemaElement) throws ExecutionSetupException {
+    super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
   }
 
   // this method is called by its superclass during a read loop
@@ -47,5 +55,72 @@ class NullableFixedByteAlignedReader extends NullableColumnReader {
     
     // fill in data.
     vectorData.writeBytes(bytes, (int) readStartInBytes, (int) readLength);
+  }
+
+  public static abstract class NullableConvertedReader extends NullableFixedByteAlignedReader {
+
+    protected int dataTypeLengthInBytes;
+
+    NullableConvertedReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
+                                   ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, ValueVector v, SchemaElement schemaElement) throws ExecutionSetupException {
+      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+    }
+
+    @Override
+    protected void readField(long recordsToReadInThisPass, ColumnReader firstColumnStatus) {
+
+      this.recordsReadInThisIteration = recordsToReadInThisPass;
+
+      // set up metadata
+      this.readStartInBytes = pageReadStatus.readPosInBytes;
+      this.readLengthInBits = recordsReadInThisIteration * dataTypeLengthInBits;
+      this.readLength = (int) Math.ceil(readLengthInBits / 8.0);
+      this.bytes = pageReadStatus.pageDataByteArray;
+
+      dataTypeLengthInBytes = (int) Math.ceil(dataTypeLengthInBits / 8.0);
+      for (int i = 0; i < recordsReadInThisIteration; i++) {
+        addNext((int) readStartInBytes + i * dataTypeLengthInBytes, i + valuesReadInCurrentPass);
+      }
+    }
+
+    abstract void addNext(int start, int index);
+  }
+
+  public static class NullableDecimal28Reader extends NullableConvertedReader {
+
+    NullableDecimal28SparseVector decimal28Vector;
+
+    NullableDecimal28Reader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
+                            boolean fixedLength, ValueVector v, SchemaElement schemaElement) throws ExecutionSetupException {
+      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+      decimal28Vector = (NullableDecimal28SparseVector) v;
+    }
+
+    @Override
+    void addNext(int start, int index) {
+      int width = NullableDecimal28SparseHolder.WIDTH;
+      BigDecimal intermediate = DecimalUtility.getBigDecimalFromByteArray(bytes, start, dataTypeLengthInBytes, schemaElement.getScale());
+      DecimalUtility.getSparseFromBigDecimal(intermediate, decimal28Vector.getData(), index * width, schemaElement.getScale(),
+              schemaElement.getPrecision(), NullableDecimal28SparseHolder.nDecimalDigits);
+    }
+  }
+
+  public static class NullableDecimal38Reader extends NullableConvertedReader {
+
+    NullableDecimal38SparseVector decimal38Vector;
+
+    NullableDecimal38Reader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
+                            boolean fixedLength, ValueVector v, SchemaElement schemaElement) throws ExecutionSetupException {
+      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+      decimal38Vector = (NullableDecimal38SparseVector) v;
+    }
+
+    @Override
+    void addNext(int start, int index) {
+      int width = NullableDecimal38SparseHolder.WIDTH;
+      BigDecimal intermediate = DecimalUtility.getBigDecimalFromByteArray(bytes, start, dataTypeLengthInBytes, schemaElement.getScale());
+      DecimalUtility.getSparseFromBigDecimal(intermediate, decimal38Vector.getData(), index * width, schemaElement.getScale(),
+              schemaElement.getPrecision(), NullableDecimal38SparseHolder.nDecimalDigits);
+    }
   }
 }

@@ -19,26 +19,30 @@ package org.apache.drill.exec.store.parquet;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import com.google.common.collect.Maps;
+import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
+import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.AbstractWriter;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.physical.impl.WriterRecordBatch;
+import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
+import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.exec.store.RecordWriter;
 import org.apache.drill.exec.store.StoragePluginOptimizerRule;
-import org.apache.drill.exec.store.dfs.BasicFormatMatcher;
-import org.apache.drill.exec.store.dfs.DrillPathFilter;
-import org.apache.drill.exec.store.dfs.FileSelection;
-import org.apache.drill.exec.store.dfs.FormatMatcher;
-import org.apache.drill.exec.store.dfs.FormatPlugin;
-import org.apache.drill.exec.store.dfs.FormatSelection;
-import org.apache.drill.exec.store.dfs.MagicString;
+import org.apache.drill.exec.store.dfs.*;
 import org.apache.drill.exec.store.dfs.shim.DrillFileSystem;
 import org.apache.drill.exec.store.mock.MockStorageEngine;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 
@@ -104,7 +108,35 @@ public class ParquetFormatPlugin implements FormatPlugin{
 
   @Override
   public AbstractWriter getWriter(PhysicalOperator child, String location) throws IOException {
-    throw new UnsupportedOperationException("Parquet Writer is not supported currently.");
+    return new ParquetWriter(child, location, this);
+  }
+
+  public RecordWriter getRecordWriter(FragmentContext context, ParquetWriter writer) throws IOException {
+    Map<String, String> options = Maps.newHashMap();
+
+    options.put("location", writer.getLocation());
+
+    FragmentHandle handle = context.getHandle();
+    String fragmentId = String.format("%d_%d", handle.getMajorFragmentId(), handle.getMinorFragmentId());
+    options.put("prefix", fragmentId);
+
+    options.put(FileSystem.FS_DEFAULT_NAME_KEY, ((FileSystemConfig)writer.getStorageConfig()).connection);
+
+    options.put(ExecConstants.PARQUET_BLOCK_SIZE, context.getOptions().getOption(ExecConstants.PARQUET_BLOCK_SIZE).num_val.toString());
+
+    RecordWriter recordWriter = new ParquetRecordWriter();
+    recordWriter.init(options);
+
+    return recordWriter;
+  }
+
+  public RecordBatch getWriterBatch(FragmentContext context, RecordBatch incoming, ParquetWriter writer)
+          throws ExecutionSetupException {
+    try {
+      return new WriterRecordBatch(writer, incoming, context, getRecordWriter(context, writer));
+    } catch(IOException e) {
+      throw new ExecutionSetupException(String.format("Failed to create the WriterRecordBatch. %s", e.getMessage()), e);
+    }
   }
 
   @Override

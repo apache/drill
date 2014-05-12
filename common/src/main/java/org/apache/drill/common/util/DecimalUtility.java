@@ -17,8 +17,7 @@
  */
 package org.apache.drill.common.util;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
+import java.math.*;
 
 
 import io.netty.buffer.Unpooled;
@@ -26,6 +25,7 @@ import io.netty.buffer.ByteBuf;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Arrays;
 
 public class DecimalUtility {
 
@@ -484,6 +484,13 @@ public class DecimalUtility {
 
       /* Both decimal values are equal */
       return 0;
+    }
+
+
+    public static BigDecimal getBigDecimalFromByteArray(byte[] bytes, int start, int length, int scale) {
+      byte[] value = Arrays.copyOfRange(bytes, start, start + length);
+      BigInteger unscaledValue = new BigInteger(value);
+      return new BigDecimal(unscaledValue, scale);
     }
 
 }
