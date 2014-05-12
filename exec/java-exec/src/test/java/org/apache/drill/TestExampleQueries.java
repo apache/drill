@@ -39,6 +39,16 @@ public class TestExampleQueries extends BaseTestQuery{
   }
 
   @Test
+  public void testCaseReturnValueVarChar() throws Exception{
+    test("select case when employee_id < 1000 then 'ABC' else 'DEF' end from cp.`employee.json` limit 5");
+  }
+
+  @Test
+  public void testCaseReturnValueBigInt() throws Exception{
+    test("select case when employee_id < 1000 then 1000 else 2000 end from cp.`employee.json` limit 5" );
+  }
+
+  @Test
   public void testSelectWithLimit() throws Exception{
     test("select employee_id,  first_name, last_name from cp.`employee.json` order by employee_id limit 5 offset 10");
   }

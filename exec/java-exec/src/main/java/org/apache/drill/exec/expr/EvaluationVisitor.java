@@ -162,10 +162,10 @@ public class EvaluationVisitor {
         if (thenExpr.isOptional()) {
           JConditional newCond = jc._then()._if(thenExpr.getIsSet());
           JBlock b = newCond._then();
-          b.assign(output.getValue(), thenExpr.getValue());
+          b.assign(output.getHolder(), thenExpr.getHolder());
           b.assign(output.getIsSet(), thenExpr.getIsSet());
         } else {
-          jc._then().assign(output.getValue(), thenExpr.getValue());
+          jc._then().assign(output.getHolder(), thenExpr.getHolder());
         }
 
       }
@@ -174,11 +174,10 @@ public class EvaluationVisitor {
       if (elseExpr.isOptional()) {
         JConditional newCond = jc._else()._if(elseExpr.getIsSet());
         JBlock b = newCond._then();
-        b.assign(output.getValue(), elseExpr.getValue());
+        b.assign(output.getHolder(), elseExpr.getHolder());
         b.assign(output.getIsSet(), elseExpr.getIsSet());
       } else {
-        jc._else().assign(output.getValue(), elseExpr.getValue());
-
+        jc._else().assign(output.getHolder(), elseExpr.getHolder());
       }
       local.add(conditionalBlock);
       return output;
@@ -336,7 +335,7 @@ public class EvaluationVisitor {
 
       JExpression componentVariable = indexVariable.shrz(JExpr.lit(16));
       if (e.isSuperReader()) {
-        vv1 =  ((JExpression) vv1.component(componentVariable));
+        vv1 =  (vv1.component(componentVariable));
         indexVariable = indexVariable.band(JExpr.lit((int) Character.MAX_VALUE));
       }
 
@@ -467,7 +466,7 @@ public class EvaluationVisitor {
       JType holderType = generator.getHolderType(majorType);
       JVar var = generator.declareClassField("string", holderType);
       JExpression stringLiteral = JExpr.lit(e.value);
-      setup.assign(var, ((JClass)generator.getModel().ref(ValueHolderHelper.class)).staticInvoke("getVarCharHolder").arg(stringLiteral));
+      setup.assign(var, generator.getModel().ref(ValueHolderHelper.class).staticInvoke("getVarCharHolder").arg(stringLiteral));
       return new HoldingContainer(majorType, var, null, null);
     }
 
@@ -480,7 +479,7 @@ public class EvaluationVisitor {
       JVar var = generator.declareClassField("intervalday", holderType);
       JExpression dayLiteral = JExpr.lit(e.getIntervalDay());
       JExpression millisLiteral = JExpr.lit(e.getIntervalMillis());
-      setup.assign(var, ((JClass)generator.getModel().ref(ValueHolderHelper.class)).staticInvoke("getIntervalDayHolder").arg(dayLiteral).arg(millisLiteral));
+      setup.assign(var, generator.getModel().ref(ValueHolderHelper.class).staticInvoke("getIntervalDayHolder").arg(dayLiteral).arg(millisLiteral));
       return new HoldingContainer(majorType, var, null, null);
     }
 
@@ -493,7 +492,7 @@ public class EvaluationVisitor {
       JExpression valueLiteral = JExpr.lit(e.getIntFromDecimal());
       JExpression scaleLiteral = JExpr.lit(e.getScale());
       JExpression precisionLiteral = JExpr.lit(e.getPrecision());
-      setup.assign(var, ((JClass)generator.getModel().ref(ValueHolderHelper.class)).staticInvoke("getDecimal9Holder").arg(valueLiteral).arg(scaleLiteral).arg(precisionLiteral));
+      setup.assign(var, generator.getModel().ref(ValueHolderHelper.class).staticInvoke("getDecimal9Holder").arg(valueLiteral).arg(scaleLiteral).arg(precisionLiteral));
       return new HoldingContainer(majorType, var, null, null);
     }
 
@@ -506,7 +505,7 @@ public class EvaluationVisitor {
       JExpression valueLiteral = JExpr.lit(e.getLongFromDecimal());
       JExpression scaleLiteral = JExpr.lit(e.getScale());
       JExpression precisionLiteral = JExpr.lit(e.getPrecision());
-      setup.assign(var, ((JClass)generator.getModel().ref(ValueHolderHelper.class)).staticInvoke("getDecimal18Holder").arg(valueLiteral).arg(scaleLiteral).arg(precisionLiteral));
+      setup.assign(var, generator.getModel().ref(ValueHolderHelper.class).staticInvoke("getDecimal18Holder").arg(valueLiteral).arg(scaleLiteral).arg(precisionLiteral));
       return new HoldingContainer(majorType, var, null, null);
     }
 
@@ -518,7 +517,7 @@ public class EvaluationVisitor {
       JType holderType = generator.getHolderType(majorType);
       JVar var = generator.declareClassField("dec28", holderType);
       JExpression stringLiteral = JExpr.lit(e.getBigDecimal().toString());
-      setup.assign(var, ((JClass)generator.getModel().ref(ValueHolderHelper.class)).staticInvoke("getDecimal28Holder").arg(stringLiteral));
+      setup.assign(var, generator.getModel().ref(ValueHolderHelper.class).staticInvoke("getDecimal28Holder").arg(stringLiteral));
       return new HoldingContainer(majorType, var, null, null);
     }
 
@@ -530,7 +529,7 @@ public class EvaluationVisitor {
       JType holderType = generator.getHolderType(majorType);
       JVar var = generator.declareClassField("dec38", holderType);
       JExpression stringLiteral = JExpr.lit(e.getBigDecimal().toString());
-      setup.assign(var, ((JClass)generator.getModel().ref(ValueHolderHelper.class)).staticInvoke("getVarCharHolder").arg(stringLiteral));
+      setup.assign(var, generator.getModel().ref(ValueHolderHelper.class).staticInvoke("getVarCharHolder").arg(stringLiteral));
       return new HoldingContainer(majorType, var, null, null);
     }
 
