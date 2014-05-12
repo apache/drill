@@ -17,22 +17,14 @@
  */
 package org.apache.drill.exec.planner.logical;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import net.hydromatic.optiq.tools.RuleSet;
 
+import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.planner.physical.*;
-import org.apache.drill.exec.planner.physical.FilterPrule;
-import org.apache.drill.exec.planner.physical.HashAggPrule;
-import org.apache.drill.exec.planner.physical.HashJoinPrule;
-import org.apache.drill.exec.planner.physical.LimitPrule;
-import org.apache.drill.exec.planner.physical.MergeJoinPrule;
-import org.apache.drill.exec.planner.physical.ProjectPrule;
-import org.apache.drill.exec.planner.physical.ScanPrule;
-import org.apache.drill.exec.planner.physical.ScreenPrule;
-import org.apache.drill.exec.planner.physical.SortConvertPrule;
-import org.apache.drill.exec.planner.physical.SortPrule;
-import org.apache.drill.exec.planner.physical.StreamAggPrule;
 import org.eigenbase.rel.RelFactories;
 import org.eigenbase.rel.rules.MergeProjectRule;
 import org.eigenbase.rel.rules.PushFilterPastJoinRule;
@@ -102,6 +94,7 @@ public class DrillRuleSets {
       MergeProjectRule.INSTANCE
       ));
 
+  /* 
   public static final RuleSet DRILL_PHYSICAL_MEM = new DrillRuleSet(ImmutableSet.of( //
 //      DrillScanRule.INSTANCE,
 //      DrillFilterRule.INSTANCE,
@@ -150,11 +143,49 @@ public class DrillRuleSets {
 //    PushJoinThroughJoinRule.LEFT, //
 //    PushSortPastProjectRule.INSTANCE, //
     ));
-
+*/
   public static final RuleSet DRILL_PHYSICAL_DISK = new DrillRuleSet(ImmutableSet.of( //
       ProjectPrule.INSTANCE
 
     ));
+
+  public static final RuleSet getPhysicalRules(QueryContext qcontext) {
+    List<RelOptRule> ruleList = new ArrayList<RelOptRule>(); 
+
+    
+    ruleList.add(ConvertCountToDirectScan.AGG_ON_PROJ_ON_SCAN);
+    ruleList.add(ConvertCountToDirectScan.AGG_ON_SCAN);
+    ruleList.add(SortConvertPrule.INSTANCE);
+    ruleList.add(SortPrule.INSTANCE);
+    ruleList.add(ProjectPrule.INSTANCE);
+    ruleList.add(ScanPrule.INSTANCE);
+    ruleList.add(ScreenPrule.INSTANCE);
+    ruleList.add(ExpandConversionRule.INSTANCE);
+    ruleList.add(FilterPrule.INSTANCE);
+    ruleList.add(LimitPrule.INSTANCE);
+    ruleList.add(WriterPrule.INSTANCE);
+    ruleList.add(PushLimitToTopN.INSTANCE);
+    
+    PlannerSettings ps = qcontext.getPlannerSettings();
+    
+    if (ps.isHashAggEnabled()) {
+      ruleList.add(HashAggPrule.INSTANCE);        
+    }
+    
+    if (ps.isStreamAggEnabled()) {
+      ruleList.add(StreamAggPrule.INSTANCE);        
+    }
+    
+    if (ps.isHashJoinEnabled()) {
+      ruleList.add(HashJoinPrule.INSTANCE);        
+    }
+    
+    if (ps.isMergeJoinEnabled()) {
+      ruleList.add(MergeJoinPrule.INSTANCE);        
+    }
+  
+    return new DrillRuleSet(ImmutableSet.copyOf(ruleList)); 
+  }
 
   public static RuleSet create(ImmutableSet<RelOptRule> rules) {
     return new DrillRuleSet(rules);

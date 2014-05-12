@@ -24,7 +24,9 @@ import net.hydromatic.optiq.util.BitSets;
 
 import org.apache.drill.exec.planner.logical.DrillAggregateRel;
 import org.apache.drill.exec.planner.physical.DrillDistributionTrait.DistributionField;
+import org.eigenbase.rel.AggregateCall;
 import org.eigenbase.relopt.RelOptRule;
+import org.eigenbase.relopt.RelOptRuleCall;
 import org.eigenbase.relopt.RelOptRuleOperand;
 
 import com.google.common.collect.Lists;
@@ -54,4 +56,20 @@ public abstract class AggPruleBase extends RelOptRule {
     return groupByFields;
   }
   
+  // Create 2 phase aggr plan for aggregates such as SUM, MIN, MAX
+  // If any of the aggregate functions are not one of these, then we 
+  // currently won't generate a 2 phase plan. 
+  protected boolean create2PhasePlan(RelOptRuleCall call, DrillAggregateRel aggregate) {
+    if (! PrelUtil.getPlannerSettings(call.getPlanner()).isMultiPhaseAggEnabled()) {
+      return false;
+    }
+    
+    for (AggregateCall aggCall : aggregate.getAggCallList()) {
+      String name = aggCall.getAggregation().getName();
+      if ( ! (name.equals("SUM") || name.equals("MIN") || name.equals("MAX"))) {
+        return false;
+      }
+    }
+    return true;
+  }
 }

@@ -27,6 +27,7 @@ import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptRule;
 import org.eigenbase.relopt.RelOptRuleCall;
 import org.eigenbase.relopt.RelTraitSet;
+import org.eigenbase.relopt.volcano.RelSubset;
 import org.eigenbase.trace.EigenbaseTrace;
 
 import com.google.common.collect.ImmutableList;
@@ -40,6 +41,11 @@ public class HashAggPrule extends AggPruleBase {
   }
 
   @Override
+  public boolean matches(RelOptRuleCall call) {
+    return PrelUtil.getPlannerSettings(call.getPlanner()).isHashAggEnabled();
+  }
+  
+  @Override
   public void onMatch(RelOptRuleCall call) {
     final DrillAggregateRel aggregate = (DrillAggregateRel) call.rel(0);
     final RelNode input = call.rel(1);
@@ -50,30 +56,60 @@ public class HashAggPrule extends AggPruleBase {
       return;
     }
     
-    DrillDistributionTrait toDist = null;
     RelTraitSet traits = null;
 
     try {
       if (aggregate.getGroupSet().isEmpty()) {
-        toDist = DrillDistributionTrait.SINGLETON;
-        traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(toDist);
+        DrillDistributionTrait singleDist = DrillDistributionTrait.SINGLETON;
+        traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(singleDist);
         createTransformRequest(call, aggregate, input, traits);
       } else {
         // hash distribute on all grouping keys
-        toDist = new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED, 
-                                            ImmutableList.copyOf(getDistributionField(aggregate, true /* get all grouping keys */)));
+        DrillDistributionTrait distOnAllKeys = 
+            new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED, 
+                                       ImmutableList.copyOf(getDistributionField(aggregate, true /* get all grouping keys */)));
     
-        traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(toDist);
+        traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(distOnAllKeys);
         createTransformRequest(call, aggregate, input, traits);
 
         // hash distribute on single grouping key
-        toDist = new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED, 
-                                            ImmutableList.copyOf(getDistributionField(aggregate, false /* get single grouping key */)));
+        DrillDistributionTrait distOnOneKey = 
+            new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED, 
+                                       ImmutableList.copyOf(getDistributionField(aggregate, false /* get single grouping key */)));
     
-        traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(toDist);
+        traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(distOnOneKey);
         createTransformRequest(call, aggregate, input, traits);
         
-        ///TODO: 2 phase hash aggregate plan 
+        if (create2PhasePlan(call, aggregate)) {
+          traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL) ;
+
+          RelNode convertedInput = convert(input, traits);  
+
+          if (convertedInput instanceof RelSubset) {
+            RelSubset subset = (RelSubset) convertedInput;
+            for (RelNode rel : subset.getRelList()) {
+              if (!rel.getTraitSet().getTrait(DrillDistributionTraitDef.INSTANCE).equals(DrillDistributionTrait.DEFAULT)) {
+                DrillDistributionTrait toDist = rel.getTraitSet().getTrait(DrillDistributionTraitDef.INSTANCE);
+                traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(toDist);
+                RelNode newInput = convert(input, traits);
+
+                HashAggPrel phase1Agg = new HashAggPrel(aggregate.getCluster(), traits, newInput,
+                    aggregate.getGroupSet(),
+                    aggregate.getAggCallList());
+
+                HashToRandomExchangePrel exch =
+                    new HashToRandomExchangePrel(phase1Agg.getCluster(), phase1Agg.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(distOnAllKeys),
+                        phase1Agg, ImmutableList.copyOf(getDistributionField(aggregate, true)));
+
+                HashAggPrel phase2Agg =  new HashAggPrel(aggregate.getCluster(), traits, exch,
+                                                         aggregate.getGroupSet(),
+                                                         aggregate.getAggCallList());
+
+                call.transformTo(phase2Agg);                   
+              }
+            }
+          }    
+        }
       } 
     } catch (InvalidRelException e) {
       tracer.warning(e.toString());

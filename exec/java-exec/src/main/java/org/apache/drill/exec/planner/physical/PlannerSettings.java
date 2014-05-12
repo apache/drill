@@ -30,8 +30,13 @@ public class PlannerSettings implements FrameworkContext{
   private boolean useDefaultCosting = false; // True: use default Optiq costing, False: use Drill costing
 
   public static final OptionValidator EXCHANGE = new BooleanValidator("planner.disable_exchanges", false);
-
-  public OptionManager options;
+  public static final OptionValidator HASHAGG = new BooleanValidator("planner.enable_hashagg", true);
+  public static final OptionValidator STREAMAGG = new BooleanValidator("planner.enable_streamagg", true);  
+  public static final OptionValidator HASHJOIN = new BooleanValidator("planner.enable_hashjoin", true);  
+  public static final OptionValidator MERGEJOIN = new BooleanValidator("planner.enable_mergejoin", true);  
+  public static final OptionValidator MULTIPHASE = new BooleanValidator("planner.enable_multiphase_agg", true);  
+  
+  public OptionManager options = null;
 
   public PlannerSettings(OptionManager options){
     this.options = options;
@@ -55,6 +60,26 @@ public class PlannerSettings implements FrameworkContext{
 
   public void setUseDefaultCosting(boolean defcost) {
     this.useDefaultCosting = defcost;
+  }
+  
+  public boolean isHashAggEnabled() {
+    return options.getOption(HASHAGG.getOptionName()).bool_val;  
+  }
+  
+  public boolean isStreamAggEnabled() {
+    return options.getOption(STREAMAGG.getOptionName()).bool_val;  
+  }
+  
+  public boolean isHashJoinEnabled() {
+    return options.getOption(HASHJOIN.getOptionName()).bool_val;
+  }
+  
+  public boolean isMergeJoinEnabled() {
+    return options.getOption(MERGEJOIN.getOptionName()).bool_val;  
+  }
+  
+  public boolean isMultiPhaseAggEnabled() {
+    return options.getOption(MULTIPHASE.getOptionName()).bool_val;
   }
   
   @Override

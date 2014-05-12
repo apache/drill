@@ -86,20 +86,22 @@ public class DrillSqlWorker {
         .traitDefs(traitDefs) //
         .convertletTable(new DrillConvertletTable()) //
         .context(context.getPlannerSettings()) //
-        .ruleSets(getRules(context.getStorage())) //
+        .ruleSets(getRules(context)) //
         .costFactory(costFactory) //
         .build();
     this.planner = Frameworks.getPlanner(config);
 
   }
 
-  private static RuleSet[] getRules(StoragePluginRegistry storagePluginRegistry) {
+  private static RuleSet[] getRules(QueryContext context) {
+    StoragePluginRegistry storagePluginRegistry = context.getStorage();
     if (allRules == null) {
       synchronized (DrillSqlWorker.class) {
         if (allRules == null) {
-          RuleSet dirllPhysicalMem = DrillRuleSets.mergedRuleSets(
-              DrillRuleSets.DRILL_PHYSICAL_MEM, storagePluginRegistry.getStoragePluginRuleSet());
-          allRules = new RuleSet[] {DrillRuleSets.DRILL_BASIC_RULES, dirllPhysicalMem};
+          RuleSet drillPhysicalMem = DrillRuleSets.mergedRuleSets(
+              DrillRuleSets.getPhysicalRules(context),
+              storagePluginRegistry.getStoragePluginRuleSet());
+          allRules = new RuleSet[] {DrillRuleSets.DRILL_BASIC_RULES, drillPhysicalMem};
         }
       }
     }

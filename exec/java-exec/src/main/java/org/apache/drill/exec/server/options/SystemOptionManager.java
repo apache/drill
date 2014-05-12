@@ -33,7 +33,12 @@ import com.google.common.collect.Maps;
 public class SystemOptionManager implements OptionManager{
 
   private final OptionValidator[] VALIDATORS = {
-      PlannerSettings.EXCHANGE
+      PlannerSettings.EXCHANGE, 
+      PlannerSettings.HASHAGG,
+      PlannerSettings.STREAMAGG,
+      PlannerSettings.HASHJOIN,
+      PlannerSettings.MERGEJOIN, 
+      PlannerSettings.MULTIPHASE
   };
 
   private DistributedMap<OptionValue> options;

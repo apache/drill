@@ -46,6 +46,11 @@ public class MergeJoinPrule extends JoinPruleBase {
   }
 
   @Override
+  public boolean matches(RelOptRuleCall call) {
+    return PrelUtil.getPlannerSettings(call.getPlanner()).isMergeJoinEnabled();
+  }
+  
+  @Override
   public void onMatch(RelOptRuleCall call) {
     final DrillJoinRel join = (DrillJoinRel) call.rel(0);
     final RelNode left = join.getLeft();

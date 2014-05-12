@@ -36,6 +36,7 @@ import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.eigenbase.rel.RelCollation;
 import org.eigenbase.rel.RelFieldCollation;
 import org.eigenbase.relopt.RelOptCluster;
+import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.rex.RexCall;
 import org.eigenbase.rex.RexInputRef;
@@ -85,6 +86,10 @@ public class PrelUtil {
 
   public static PlannerSettings getSettings(RelOptCluster cluster){
     return cluster.getPlanner().getFrameworkContext().unwrap(PlannerSettings.class);
+  }
+  
+  public static PlannerSettings getPlannerSettings(RelOptPlanner planner) {
+    return planner.getFrameworkContext().unwrap(PlannerSettings.class);
   }
 
   public static PhysicalOperator removeSvIfRequired(PhysicalOperator child, SelectionVectorMode... allowed){
