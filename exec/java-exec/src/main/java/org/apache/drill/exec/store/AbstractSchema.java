@@ -61,6 +61,8 @@ public abstract class AbstractSchema implements Schema{
     return Joiner.on(".").join(schemaPath);
   }
 
+  public abstract String getTypeName();
+
   /**
    * The schema can be a top level schema which doesn't have its own tables, but refers
    * to one of the default sub schemas for table look up.

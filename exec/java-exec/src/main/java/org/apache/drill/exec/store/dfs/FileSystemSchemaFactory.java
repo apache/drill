@@ -23,11 +23,12 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.ImmutableList;
+
 import net.hydromatic.optiq.Function;
 import net.hydromatic.optiq.Schema;
 import net.hydromatic.optiq.SchemaPlus;
-
 import net.hydromatic.optiq.Table;
+
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.rpc.user.DrillUser;
@@ -37,6 +38,7 @@ import org.apache.drill.exec.store.SchemaFactory;
 import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory.WorkspaceSchema;
 
 import com.google.common.collect.Maps;
+
 import org.apache.drill.exec.store.dfs.shim.DrillFileSystem;
 
 
@@ -88,6 +90,11 @@ public class FileSystemSchemaFactory implements SchemaFactory{
     @Override
     public boolean showInInformationSchema() {
       return false;
+    }
+
+    @Override
+    public String getTypeName() {
+      return FileSystemConfig.NAME;
     }
 
     @Override

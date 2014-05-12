@@ -84,4 +84,9 @@ public class SubSchemaWrapper extends AbstractSchema {
   public Set<String> getTableNames() {
     return innerSchema.getTableNames();
   }
+
+  @Override
+  public String getTypeName() {
+    return innerSchema.getTypeName();
+  }
 }

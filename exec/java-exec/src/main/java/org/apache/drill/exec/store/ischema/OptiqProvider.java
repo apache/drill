@@ -61,7 +61,8 @@ public class OptiqProvider  {
     @Override
     public boolean visitSchema(String schemaName, SchemaPlus schema) {
       if (shouldVisitSchema(schema) && schemaName != null && schemaName != "") {
-          writeRow("DRILL", schemaName, "<owner>");
+        AbstractSchema as = schema.unwrap(AbstractSchema.class);
+        writeRow("DRILL", schemaName, "<owner>", as.getTypeName());
       }
       return false;
     }

@@ -32,7 +32,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
-@JsonTypeName("hbase")
+@JsonTypeName(HBaseStoragePluginConfig.NAME)
 public class HBaseStoragePluginConfig extends StoragePluginConfigBase implements DrillHBaseConstants {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBaseStoragePluginConfig.class);
 
@@ -40,6 +40,8 @@ public class HBaseStoragePluginConfig extends StoragePluginConfigBase implements
 
   @JsonIgnore
   private Configuration hbaseConf;
+
+  public static final String NAME = "hbase";
 
   @JsonCreator
   public HBaseStoragePluginConfig(@JsonProperty("config") Map<String, String> props) {

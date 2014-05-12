@@ -24,10 +24,10 @@ import org.apache.drill.common.logical.StoragePluginConfig;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
-@JsonTypeName("file")
+@JsonTypeName(FileSystemConfig.NAME)
 public class FileSystemConfig implements StoragePluginConfig{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FileSystemConfig.class);
-  
+  public static final String NAME = "file";
   public String connection;
   public Map<String, WorkspaceConfig> workspaces;
   public Map<String, FormatPluginConfig> formats;

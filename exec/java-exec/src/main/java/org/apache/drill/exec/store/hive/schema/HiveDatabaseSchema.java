@@ -21,8 +21,11 @@ import java.util.List;
 import java.util.Set;
 
 import net.hydromatic.optiq.Table;
+
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.store.AbstractSchema;
+import org.apache.drill.exec.store.dfs.FileSystemConfig;
+import org.apache.drill.exec.store.hive.HiveStoragePluginConfig;
 import org.apache.drill.exec.store.hive.schema.HiveSchemaFactory.HiveSchema;
 
 import com.google.common.collect.Sets;
@@ -32,7 +35,7 @@ public class HiveDatabaseSchema extends AbstractSchema{
 
   private final HiveSchema hiveSchema;
   private final Set<String> tables;
-  
+
   public HiveDatabaseSchema( //
       List<String> tableList, //
       HiveSchema hiveSchema, //
@@ -50,6 +53,11 @@ public class HiveDatabaseSchema extends AbstractSchema{
   @Override
   public Set<String> getTableNames() {
     return tables;
+  }
+
+  @Override
+  public String getTypeName() {
+    return HiveStoragePluginConfig.NAME;
   }
 
 }

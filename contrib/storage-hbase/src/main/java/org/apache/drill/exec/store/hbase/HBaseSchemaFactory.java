@@ -29,6 +29,7 @@ import org.apache.drill.exec.planner.logical.DynamicDrillTable;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.SchemaFactory;
+import org.apache.drill.exec.store.dfs.FileSystemConfig;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 
@@ -92,5 +93,11 @@ public class HBaseSchemaFactory implements SchemaFactory {
         return Collections.emptySet();
       }
     }
+
+    @Override
+    public String getTypeName() {
+      return HBaseStoragePluginConfig.NAME;
+    }
+
   }
 }

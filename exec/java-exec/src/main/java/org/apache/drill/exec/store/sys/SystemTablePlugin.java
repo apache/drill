@@ -115,5 +115,10 @@ public class SystemTablePlugin extends AbstractStoragePlugin{
 
     }
 
+    @Override
+    public String getTypeName() {
+      return SystemTablePluginConfig.NAME;
+    }
+
   }
 }

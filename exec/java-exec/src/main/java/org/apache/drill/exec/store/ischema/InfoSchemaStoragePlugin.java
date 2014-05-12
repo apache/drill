@@ -23,9 +23,10 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.ImmutableList;
-import net.hydromatic.optiq.SchemaPlus;
 
+import net.hydromatic.optiq.SchemaPlus;
 import net.hydromatic.optiq.Table;
+
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
@@ -35,6 +36,7 @@ import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
+import org.apache.drill.exec.store.dfs.FileSystemConfig;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -60,7 +62,7 @@ public class InfoSchemaStoragePlugin extends AbstractStoragePlugin{
   @Override
   public InfoSchemaGroupScan getPhysicalScan(JSONOptions selection, List<SchemaPath> columns) throws IOException {
     SelectedTable table = selection.getWith(context.getConfig(),  SelectedTable.class);
-    return new InfoSchemaGroupScan(table, columns);  
+    return new InfoSchemaGroupScan(table, columns);
   }
 
   @Override
@@ -95,5 +97,9 @@ public class InfoSchemaStoragePlugin extends AbstractStoragePlugin{
       return tables.keySet();
     }
 
+    @Override
+    public String getTypeName() {
+      return InfoSchemaConfig.NAME;
+    }
   }
 }

@@ -24,6 +24,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.collect.ImmutableList;
+
 import net.hydromatic.optiq.Schema;
 import net.hydromatic.optiq.SchemaPlus;
 
@@ -35,6 +36,7 @@ import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.SchemaFactory;
 import org.apache.drill.exec.store.hive.HiveReadEntry;
 import org.apache.drill.exec.store.hive.HiveStoragePlugin;
+import org.apache.drill.exec.store.hive.HiveStoragePluginConfig;
 import org.apache.drill.exec.store.hive.HiveTable;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
@@ -273,6 +275,12 @@ public class HiveSchemaFactory implements SchemaFactory {
     public AbstractSchema getDefaultSchema() {
       return defaultSchema;
     }
+
+    @Override
+    public String getTypeName() {
+      return HiveStoragePluginConfig.NAME;
+    }
+
   }
 
 

@@ -22,7 +22,7 @@ import org.apache.drill.common.logical.StoragePluginConfig;
 public class SystemTablePluginConfig implements StoragePluginConfig{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SystemTablePluginConfig.class);
 
-  String name = "system-tables";
+  public static String NAME = "system-tables";
 
   public static SystemTablePluginConfig INSTANCE = new SystemTablePluginConfig();
 

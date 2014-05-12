@@ -23,13 +23,15 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
-@JsonTypeName("mock")
+@JsonTypeName(MockStorageEngineConfig.NAME)
 public class MockStorageEngineConfig extends StoragePluginConfigBase{
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MockStorageEngineConfig.class);
 
   private String url;
-  
+
+  public static final String NAME = "mock";
+
   @JsonCreator
   public MockStorageEngineConfig(@JsonProperty("url") String url) {
     this.url = url;

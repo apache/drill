@@ -21,17 +21,20 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+
 import org.apache.drill.common.logical.StoragePluginConfigBase;
 import org.apache.hadoop.hive.conf.HiveConf;
 
 import java.util.Map;
 
-@JsonTypeName("hive")
+@JsonTypeName(HiveStoragePluginConfig.NAME)
 public class HiveStoragePluginConfig extends StoragePluginConfigBase {
   @JsonProperty
   public Map<String, String> configProps;
   @JsonIgnore
   private HiveConf hiveConf;
+
+  public static final String NAME = "hive";
 
   @JsonIgnore
   public HiveConf getHiveConf() {

@@ -24,7 +24,9 @@ import java.util.Set;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+
 import net.hydromatic.optiq.Table;
+
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
@@ -79,7 +81,7 @@ public class WorkspaceSchemaFactory implements ExpandingConcurrentMap.MapValueFa
 
       FileSelection fileSelection = FileSelection.create(fs, config.getLocation(), key);
       if(fileSelection == null) return null;
-      
+
       if (fileSelection.containsDirectories(fs)) {
         for (FormatMatcher m : dirMatchers) {
           try {
@@ -158,6 +160,11 @@ public class WorkspaceSchemaFactory implements ExpandingConcurrentMap.MapValueFa
           (FileSystemConfig) plugin.getConfig(),
           formatPlugin,
           config.getLocation() + Path.SEPARATOR + tableName);
+    }
+
+    @Override
+    public String getTypeName() {
+      return FileSystemConfig.NAME;
     }
   }
 
