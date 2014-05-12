@@ -57,10 +57,10 @@
     {from: "TimeStampTZ", to: "Date", major: "Date"},
     {from: "TimeStampTZ", to: "TimeStamp", major: "Date"},
 
-    {from: "VarChar", to: "Date", major: "VarCharDate"},
-    {from: "VarChar", to: "TimeStamp", major: "VarCharDate"},
-    {from: "VarChar", to: "TimeStampTZ", major: "VarCharDate"},
-    {from: "VarChar", to: "Time", major: "VarCharDate"},
+    {from: "VarChar", to: "Date", major: "VarCharDate", alias: "datetype"},
+    {from: "VarChar", to: "TimeStamp", major: "VarCharDate", alias: "timestamptype"},
+    {from: "VarChar", to: "TimeStampTZ", major: "VarCharDate", alias: "timestamptztype"},
+    {from: "VarChar", to: "Time", major: "VarCharDate", alias: "timetype"},
 
     {from: "Date", to: "VarChar", major: "DateVarChar", bufferLength: "10"}
     {from: "TimeStamp", to: "VarChar", major: "DateVarChar", bufferLength: "23"},
