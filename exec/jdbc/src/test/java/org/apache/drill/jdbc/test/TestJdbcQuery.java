@@ -20,6 +20,7 @@ package org.apache.drill.jdbc.test;
 import java.lang.Exception;
 import java.lang.RuntimeException;
 import java.nio.file.Paths;
+import java.sql.*;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -741,6 +742,37 @@ public class TestJdbcQuery extends JdbcTest{
               "COLUMN_NAME=value; DATA_TYPE=VARCHAR; IS_NULLABLE=NO";
           assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected),
               expected.equals(result));
+
+          statement.close();
+          return null;
+        } catch (Exception e) {
+          throw new RuntimeException(e);
+        }
+      }
+    });
+  }
+
+
+  @Test
+  public void testDateTimeAccessors() throws Exception{
+    JdbcAssert.withNoDefaultSchema().withConnection(new Function<Connection, Void>() {
+      public Void apply(Connection connection) {
+        try {
+          Statement statement = connection.createStatement();
+
+          // show tables on view
+          ResultSet resultSet = statement.executeQuery("select date '2008-2-23', time '12:23:34', timestamp '2008-2-23 12:23:34.456', " +
+                                                       "interval '1' year, interval '2' day " +
+                                                       "from cp.`employee.json` limit 1");
+
+          java.sql.Date date = resultSet.getDate(1);
+          java.sql.Time time = resultSet.getTime(2);
+          java.sql.Timestamp ts = resultSet.getTimestamp(3);
+          String intervalYear = resultSet.getString(4);
+          String intervalDay  = resultSet.getString(5);
+
+          System.out.println("Date: " + date.toString() + " time: " + time.toString() + " timestamp: " + ts.toString() +
+                             "\ninterval year: " + intervalYear + " intervalDay: " + intervalDay);
 
           statement.close();
           return null;

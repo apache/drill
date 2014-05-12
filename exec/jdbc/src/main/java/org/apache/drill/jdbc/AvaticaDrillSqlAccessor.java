@@ -168,17 +168,17 @@ public class AvaticaDrillSqlAccessor implements Accessor{
 
   @Override
   public Date getDate(Calendar calendar) throws SQLException {
-    throw new SQLFeatureNotSupportedException();
+    return a.getDate(row());
   }
 
   @Override
   public Time getTime(Calendar calendar) throws SQLException {
-    throw new SQLFeatureNotSupportedException();
+    return a.getTime(row());
   }
 
   @Override
   public Timestamp getTimestamp(Calendar calendar) throws SQLException {
-    throw new SQLFeatureNotSupportedException();
+    return a.getTimestamp(row());
   }
 
   @Override

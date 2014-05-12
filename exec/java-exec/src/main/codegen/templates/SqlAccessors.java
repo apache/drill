@@ -102,15 +102,36 @@ public class ${name}Accessor extends AbstractSqlAccessor{
   public Timestamp getTimestamp(int index) {
     return new Timestamp(ac.getObject(index).getMillis());
   }
-  <#elseif minor.class == "Interval" || minor.class == "IntervalDay">
+  <#elseif minor.class == "Interval" || minor.class == "IntervalDay" || minor.class == "IntervalYear">
   @Override
-  public byte[] getBytes(int index) {
-      return null;
+  public String getString(int index) {
+      return String.valueOf(ac.getAsStringBuilder(index));
   }
   <#elseif minor.class.startsWith("Decimal")>
   @Override
   public BigDecimal getBigDecimal(int index) {
       return ac.getObject(index);
+  }
+  <#elseif minor.class == "Date">
+  @Override
+  public Date getDate(int index) {
+    org.joda.time.DateTime date = new org.joda.time.DateTime(ac.get(index), org.joda.time.DateTimeZone.UTC);
+    date = date.withZoneRetainFields(org.joda.time.DateTimeZone.getDefault());
+    return new Date(date.getMillis());
+  }
+  <#elseif minor.class == "TimeStamp">
+  @Override
+  public Timestamp getTimestamp(int index) {
+    org.joda.time.DateTime date = new org.joda.time.DateTime(ac.get(index), org.joda.time.DateTimeZone.UTC);
+    date = date.withZoneRetainFields(org.joda.time.DateTimeZone.getDefault());
+    return new Timestamp(date.getMillis());
+  }
+  <#elseif minor.class == "Time">
+  @Override
+  public Time getTime(int index) {
+    org.joda.time.DateTime time = new org.joda.time.DateTime(ac.get(index), org.joda.time.DateTimeZone.UTC);
+    time = time.withZoneRetainFields(org.joda.time.DateTimeZone.getDefault());
+    return new Time(time.getMillis());
   }
   <#else>
   @Override

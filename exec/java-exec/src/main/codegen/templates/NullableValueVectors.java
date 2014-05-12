@@ -350,6 +350,16 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
       }
     }
 
+    <#if minor.class == "Interval" || minor.class == "IntervalDay" || minor.class == "IntervalYear">
+    public StringBuilder getAsStringBuilder(int index) {
+      if (isNull(index)) {
+          return null;
+      }else{
+        return values.getAccessor().getAsStringBuilder(index);
+      }
+    }
+    </#if>
+
     public int getValueCount(){
       return valueCount;
     }

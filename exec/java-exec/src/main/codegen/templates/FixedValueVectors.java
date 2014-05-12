@@ -272,7 +272,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
       return p.plusMonths(months).plusDays(days).plusMillis(millis);
     }
     
-    public StringBuilder getAsString(int index) {
+    public StringBuilder getAsStringBuilder(int index) {
 
       int offsetIndex = index * ${type.width};
 
@@ -468,6 +468,21 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
       int months = (value % org.apache.drill.exec.expr.fn.impl.DateUtility.yearsToMonths);
       Period p = new Period();
       return p.plusYears(years).plusMonths(months);
+    }
+
+    public StringBuilder getAsStringBuilder(int index) {
+
+      int months  = data.getInt(index);
+
+      int years  = (months / org.apache.drill.exec.expr.fn.impl.DateUtility.yearsToMonths);
+      months = (months % org.apache.drill.exec.expr.fn.impl.DateUtility.yearsToMonths);
+
+      String yearString = (Math.abs(years) == 1) ? " year " : " years ";
+      String monthString = (Math.abs(months) == 1) ? " month " : " months ";
+
+      return(new StringBuilder().
+             append(years).append(yearString).
+             append(months).append(monthString));
     }
     
     <#elseif minor.class == "Time">
