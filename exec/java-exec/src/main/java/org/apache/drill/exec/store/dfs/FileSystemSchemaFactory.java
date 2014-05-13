@@ -86,6 +86,11 @@ public class FileSystemSchemaFactory implements SchemaFactory{
     }
 
     @Override
+    public boolean showInInformationSchema() {
+      return false;
+    }
+
+    @Override
     public Table getTable(String name) {
       return defaultSchema.getTable(name);
     }

@@ -24,10 +24,12 @@ import java.net.URL;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import com.google.common.collect.Lists;
 import net.hydromatic.linq4j.expressions.DefaultExpression;
 import net.hydromatic.linq4j.expressions.Expression;
 import net.hydromatic.optiq.SchemaPlus;
@@ -43,7 +45,6 @@ import org.apache.drill.exec.cache.DistributedMap;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.planner.logical.DrillRuleSets;
 import org.apache.drill.exec.planner.logical.StoragePlugins;
-import org.apache.drill.exec.rpc.user.DrillUser;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.dfs.FileSystemPlugin;
@@ -228,6 +229,51 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
     public void registerSchemas(UserSession session, SchemaPlus parent) {
       for(Map.Entry<String, StoragePlugin> e : plugins.entrySet()){
         e.getValue().registerSchemas(session, parent);
+      }
+
+      // Add second level schema as top level schema with name qualified with parent schema name
+      // Ex: "dfs" schema has "default" and "tmp" as sub schemas. Add following extra schemas "dfs.default" and
+      // "dfs.tmp" under root schema.
+      //
+      // Before change, schema tree looks like below:
+      // "root"
+      //    -- "dfs"
+      //          -- "default"
+      //          -- "tmp"
+      //    -- "hive"
+      //          -- "default"
+      //          -- "hivedb1"
+      //
+      // After the change, the schema tree looks like below:
+      // "root"
+      //    -- "dfs"
+      //          -- "default"
+      //          -- "tmp"
+      //    -- "dfs.default"
+      //    -- "dfs.tmp"
+      //    -- "hive"
+      //          -- "default"
+      //          -- "hivedb1"
+      //    -- "hive.default"
+      //    -- "hive.hivedb1"
+      List<SchemaPlus> secondLevelSchemas = Lists.newArrayList();
+      for(String firstLevelSchemaName : parent.getSubSchemaNames()) {
+        SchemaPlus firstLevelSchema = parent.getSubSchema(firstLevelSchemaName);
+        for(String secondLevelSchemaName : firstLevelSchema.getSubSchemaNames()) {
+          secondLevelSchemas.add(firstLevelSchema.getSubSchema(secondLevelSchemaName));
+        }
+      }
+
+      for(SchemaPlus schema : secondLevelSchemas) {
+        AbstractSchema drillSchema;
+        try {
+          drillSchema = schema.unwrap(AbstractSchema.class);
+        } catch(ClassCastException e) {
+          throw new RuntimeException(String.format("Schema '%s' is not expected under root schema", schema.getName()));
+        }
+
+        SubSchemaWrapper wrapper = new SubSchemaWrapper(drillSchema);
+        parent.add(wrapper.getName(), wrapper);
       }
     }
 

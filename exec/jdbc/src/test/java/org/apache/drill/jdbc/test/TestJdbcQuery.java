@@ -285,8 +285,6 @@ public class TestJdbcQuery extends JdbcTest{
         "TABLE_SCHEMA=hive.default; TABLE_NAME=kv\n" +
         "TABLE_SCHEMA=hive.default; TABLE_NAME=foodate\n" +
         "TABLE_SCHEMA=hive.db1; TABLE_NAME=kv_db1\n" +
-        "TABLE_SCHEMA=hive; TABLE_NAME=kv\n" +
-        "TABLE_SCHEMA=hive; TABLE_NAME=foodate\n" +
         "TABLE_SCHEMA=sys; TABLE_NAME=drillbits\n" +
         "TABLE_SCHEMA=sys; TABLE_NAME=options\n" +
         "TABLE_SCHEMA=INFORMATION_SCHEMA; TABLE_NAME=VIEWS\n" +
@@ -310,10 +308,10 @@ public class TestJdbcQuery extends JdbcTest{
       );
 
     JdbcAssert.withNoDefaultSchema()
-      .sql("SHOW TABLES IN hive")
+      .sql("SHOW TABLES IN hive.`default`")
       .returns(
-      "TABLE_SCHEMA=hive; TABLE_NAME=kv\n" +
-      "TABLE_SCHEMA=hive; TABLE_NAME=foodate\n");
+      "TABLE_SCHEMA=hive.default; TABLE_NAME=kv\n" +
+      "TABLE_SCHEMA=hive.default; TABLE_NAME=foodate\n");
   }
 
   @Test
@@ -335,13 +333,10 @@ public class TestJdbcQuery extends JdbcTest{
     String expected =
         "SCHEMA_NAME=hive.default\n" +
         "SCHEMA_NAME=hive.db1\n" +
-        "SCHEMA_NAME=hive\n" +
         "SCHEMA_NAME=dfs.home\n" +
         "SCHEMA_NAME=dfs.default\n" +
         "SCHEMA_NAME=dfs.tmp\n" +
-        "SCHEMA_NAME=dfs\n" +
         "SCHEMA_NAME=cp.default\n" +
-        "SCHEMA_NAME=cp\n" +
         "SCHEMA_NAME=sys\n" +
         "SCHEMA_NAME=INFORMATION_SCHEMA\n";
 
@@ -352,8 +347,8 @@ public class TestJdbcQuery extends JdbcTest{
   @Test
   public void testShowDatabasesWhere() throws Exception{
     JdbcAssert.withNoDefaultSchema()
-      .sql("SHOW DATABASES WHERE SCHEMA_NAME='dfs'")
-      .returns("SCHEMA_NAME=dfs\n");
+      .sql("SHOW DATABASES WHERE SCHEMA_NAME='dfs.tmp'")
+      .returns("SCHEMA_NAME=dfs.tmp\n");
   }
 
   @Test
@@ -362,8 +357,7 @@ public class TestJdbcQuery extends JdbcTest{
       .sql("SHOW DATABASES LIKE '%i%'")
       .returns(
         "SCHEMA_NAME=hive.default\n"+
-        "SCHEMA_NAME=hive.db1\n"+
-        "SCHEMA_NAME=hive\n"
+        "SCHEMA_NAME=hive.db1"
       );
   }
 
@@ -852,6 +846,41 @@ public class TestJdbcQuery extends JdbcTest{
               expected.equals(result));
 
           statement.close();
+          return null;
+        } catch (Exception e) {
+          throw new RuntimeException(e);
+        }
+      }
+    });
+  }
+
+  // Tests using backticks around the complete schema path
+  // select * from `dfs.tmp`.`/tmp/nation.parquet`;
+  @Test
+  public void testCompleteSchemaRef1() throws Exception {
+    testQuery("select * from `cp.default`.`employee.json` limit 2");
+  }
+
+  @Test
+  public void testCompleteSchemaRef2() throws Exception {
+    JdbcAssert.withNoDefaultSchema().withConnection(new Function<Connection, Void>() {
+      public Void apply(Connection connection) {
+        try {
+          Statement statement = connection.createStatement();
+
+          // change default schema
+          ResultSet resultSet = statement.executeQuery("USE `dfs.default`");
+          String result = JdbcAssert.toString(resultSet).trim();
+          String expected = "ok=true; summary=Default schema changed to 'dfs.default'";
+          assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected), expected.equals(result));
+
+          resultSet =  statement.executeQuery(
+              String.format("select R_REGIONKEY from `%s/../../sample-data/region.parquet` LIMIT 1", WORKING_PATH));
+          result = JdbcAssert.toString(resultSet).trim();
+          expected = "R_REGIONKEY=0";
+          assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected),
+              expected.equals(result));
+
           return null;
         } catch (Exception e) {
           throw new RuntimeException(e);

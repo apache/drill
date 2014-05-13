@@ -80,6 +80,10 @@ public abstract class AbstractSchema implements Schema{
     throw new UnsupportedOperationException("New tables are not allowed in this schema");
   }
 
+  public boolean showInInformationSchema() {
+    return true;
+  }
+
   @Override
   public Collection<Function> getFunctions(String name) {
     return Collections.emptyList();

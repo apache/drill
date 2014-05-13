@@ -212,6 +212,10 @@ public class HiveSchemaFactory implements SchemaFactory {
       }
     }
 
+    @Override
+    public boolean showInInformationSchema() {
+      return false;
+    }
 
     @Override
     public Set<String> getSubSchemaNames() {

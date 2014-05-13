@@ -22,6 +22,7 @@ import net.hydromatic.optiq.SchemaPlus;
 import net.hydromatic.optiq.Table;
 import net.hydromatic.optiq.jdbc.JavaTypeFactoryImpl;
 
+import org.apache.drill.exec.store.AbstractSchema;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.sql.type.SqlTypeName;
@@ -58,8 +59,8 @@ public class OptiqProvider  {
    */
   static public class Schemata extends Abstract {
     @Override
-    public boolean visitSchema(String schemaName, Schema schema) {
-      if (schemaName != null && schemaName != "") {
+    public boolean visitSchema(String schemaName, SchemaPlus schema) {
+      if (shouldVisitSchema(schema) && schemaName != null && schemaName != "") {
           writeRow("DRILL", schemaName, "<owner>");
       }
       return false;
@@ -173,12 +174,22 @@ public class OptiqProvider  {
      *    If the schema visitor returns true, then visit the tables.
      *    If the table visitor returns true, then visit the fields (columns).
      */
-    public boolean visitSchema(String schemaName, Schema schema){return true;}
+    public boolean visitSchema(String schemaName, SchemaPlus schema) {
+      return shouldVisitSchema(schema);
+    }
     public boolean visitTableName(String schemaName, String tableName){return true;}
     public boolean visitTable(String schemaName, String tableName, Table table){return true;}
     public boolean visitField(String schemaName, String tableName, RelDataTypeField field){return true;}
 
-
+    protected boolean shouldVisitSchema(SchemaPlus schema) {
+      try {
+        AbstractSchema drillSchema = schema.unwrap(AbstractSchema.class);
+        return drillSchema.showInInformationSchema();
+      } catch(ClassCastException e) {
+        // ignore and return true as this is not a drill schema
+      }
+      return true;
+    }
 
     /**
      * Start scanning an Optiq Schema.
@@ -194,7 +205,7 @@ public class OptiqProvider  {
      * @param schema - the current schema.
      * @param visitor - the methods to invoke at each entity in the schema.
      */
-    private void scanSchema(String schemaPath, Schema schema) {
+    private void scanSchema(String schemaPath, SchemaPlus schema) {
 
       // If we have an empty schema path, then don't insert a leading dot.
       String separator;
