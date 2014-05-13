@@ -66,7 +66,12 @@ public class TypeHelper {
       }
     </#list>
     </#list>
+    case MAP:
+    case REPEATMAP:
+    case LIST:
+      return new GenericAccessor(vector);
     }
+
     throw new UnsupportedOperationException();
   }
   

@@ -36,6 +36,7 @@ import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
+import org.apache.drill.exec.util.JsonStringHashMap;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.RepeatedMapVector.MapSingleCopier;
 import org.apache.drill.exec.vector.complex.impl.SingleMapReaderImpl;
@@ -316,7 +317,7 @@ public class MapVector extends AbstractContainerVector {
 
     @Override
     public Object getObject(int index) {
-      Map<String, Object> vv = Maps.newHashMap();
+      Map<String, Object> vv = new JsonStringHashMap();
       for(Map.Entry<String, ValueVector> e : vectors.entrySet()){
         ValueVector v = e.getValue();
         String k = e.getKey();

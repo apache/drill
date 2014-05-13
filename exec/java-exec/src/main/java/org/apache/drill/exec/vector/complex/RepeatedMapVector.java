@@ -36,6 +36,7 @@ import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
+import org.apache.drill.exec.util.JsonStringArrayList;
 import org.apache.drill.exec.vector.RepeatedFixedWidthVector;
 import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.ValueVector;
@@ -348,7 +349,7 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
 
     @Override
     public Object getObject(int index) {
-      List<Object> l = Lists.newArrayList();
+      List<Object> l = new JsonStringArrayList();
       int end = offsets.getAccessor().get(index+1);
       for(int i =  offsets.getAccessor().get(index); i < end; i++){
         Map<String, Object> vv = Maps.newHashMap();

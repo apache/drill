@@ -221,7 +221,7 @@ public class JsonReader {
         vh.start = 0;
         vh.end = b.length;
         list.varChar().write(vh);
-
+        break;
       default:
         throw new IllegalStateException("Unexpected token " + parser.getCurrentToken());
       }

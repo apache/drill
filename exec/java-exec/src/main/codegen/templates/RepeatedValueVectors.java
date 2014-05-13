@@ -296,7 +296,7 @@ package org.apache.drill.exec.vector;
     }
     
     public List<${friendlyType}> getObject(int index) {
-      List<${friendlyType}> vals = Lists.newArrayList();
+      List<${friendlyType}> vals = new JsonStringArrayList();
       int start = offsets.getAccessor().get(index) - sliceOffset;
       int end = offsets.getAccessor().get(index+1) - sliceOffset;
       for(int i = start; i < end; i++){
