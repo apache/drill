@@ -74,6 +74,11 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
         for (; inputIdx >= 0; inputIdx--, outputIdx--) {
             out.setInteger(outputIdx, in.getInteger(inputIdx));
         }
+
+        // round up or down the scale
+        if (in.scale != out.scale) {
+          org.apache.drill.common.util.DecimalUtility.roundDecimal(out.buffer, out.start, out.nDecimalDigits, out.scale, in.scale);
+        }
     }
 }
 </#if> <#-- type.major -->

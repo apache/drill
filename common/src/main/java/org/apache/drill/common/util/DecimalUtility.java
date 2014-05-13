@@ -493,5 +493,107 @@ public class DecimalUtility {
       return new BigDecimal(unscaledValue, scale);
     }
 
+  public static void roundDecimal(ByteBuf result, int start, int nDecimalDigits, int desiredScale, int currentScale) {
+    int newScaleRoundedUp  = org.apache.drill.common.util.DecimalUtility.roundUp(desiredScale);
+    int origScaleRoundedUp = org.apache.drill.common.util.DecimalUtility.roundUp(currentScale);
+
+    if (desiredScale < currentScale) {
+
+      boolean roundUp = false;
+
+      //Extract the first digit to be truncated to check if we need to round up
+      int truncatedScaleIndex = desiredScale + 1;
+      if (truncatedScaleIndex <= currentScale) {
+        int extractDigitIndex = nDecimalDigits - origScaleRoundedUp -1;
+        extractDigitIndex += org.apache.drill.common.util.DecimalUtility.roundUp(truncatedScaleIndex);
+        int extractDigit = getIntegerFromSparseBuffer(result, start, extractDigitIndex);
+        int temp = org.apache.drill.common.util.DecimalUtility.MAX_DIGITS - (truncatedScaleIndex % org.apache.drill.common.util.DecimalUtility.MAX_DIGITS);
+        if (temp != 0) {
+          extractDigit = extractDigit / (int) (Math.pow(10, temp));
+        }
+        if ((extractDigit % 10)  > 4) {
+          roundUp = true;
+        }
+      }
+
+      // Get the source index beyond which we will truncate
+      int srcIntIndex = nDecimalDigits - origScaleRoundedUp - 1;
+      int srcIndex = srcIntIndex + newScaleRoundedUp;
+
+      // Truncate the remaining fractional part, move the integer part
+      int destIndex = nDecimalDigits - 1;
+      if (srcIndex != destIndex) {
+        while (srcIndex >= 0) {
+          setInteger(result, start, destIndex--, getIntegerFromSparseBuffer(result, start, srcIndex--));
+        }
+
+        // Set the remaining portion of the decimal to be zeroes
+        while (destIndex >= 0) {
+          setInteger(result, start, destIndex--, 0);
+        }
+        srcIndex = nDecimalDigits - 1;
+      }
+
+      // We truncated the decimal digit. Now we need to truncate within the base 1 billion fractional digit
+      int truncateFactor = org.apache.drill.common.util.DecimalUtility.MAX_DIGITS - (desiredScale % org.apache.drill.common.util.DecimalUtility.MAX_DIGITS);
+      if (truncateFactor != org.apache.drill.common.util.DecimalUtility.MAX_DIGITS) {
+        truncateFactor = (int) Math.pow(10, truncateFactor);
+        int fractionalDigits = getIntegerFromSparseBuffer(result, start, nDecimalDigits - 1);
+        fractionalDigits /= truncateFactor;
+        setInteger(result, start, nDecimalDigits - 1, fractionalDigits * truncateFactor);
+      }
+
+      // Finally round up the digit if needed
+      if (roundUp == true) {
+        srcIndex = nDecimalDigits - 1;
+        int carry;
+        if (truncateFactor != org.apache.drill.common.util.DecimalUtility.MAX_DIGITS) {
+          carry = truncateFactor;
+        } else {
+          carry = 1;
+        }
+
+        while (srcIndex >= 0) {
+          int value = getIntegerFromSparseBuffer(result, start, srcIndex);
+          value += carry;
+
+          if (value >= org.apache.drill.common.util.DecimalUtility.DIGITS_BASE) {
+            setInteger(result, start, srcIndex--, value % org.apache.drill.common.util.DecimalUtility.DIGITS_BASE);
+            carry = value / org.apache.drill.common.util.DecimalUtility.DIGITS_BASE;
+          } else {
+            setInteger(result, start, srcIndex--, value);
+            carry = 0;
+            break;
+          }
+        }
+      }
+    } else if (desiredScale > currentScale) {
+      // Add fractional digits to the decimal
+
+      // Check if we need to shift the decimal digits to the left
+      if (newScaleRoundedUp > origScaleRoundedUp) {
+        int srcIndex  = 0;
+        int destIndex = newScaleRoundedUp - origScaleRoundedUp;
+
+        // Check while extending scale, we are not overwriting integer part
+        while (srcIndex < destIndex) {
+          if (getIntegerFromSparseBuffer(result, start, srcIndex++) != 0) {
+            throw new org.apache.drill.common.exceptions.DrillRuntimeException("Truncate resulting in loss of integer part, reduce scale specified");
+          }
+        }
+
+        srcIndex = 0;
+        while (destIndex < nDecimalDigits) {
+          setInteger(result, start, srcIndex++, getIntegerFromSparseBuffer(result, start, destIndex++));
+        }
+
+        // Clear the remaining part
+        while (srcIndex < nDecimalDigits) {
+          setInteger(result, start, srcIndex++, 0);
+        }
+      }
+    }
+  }
+
 }
 
