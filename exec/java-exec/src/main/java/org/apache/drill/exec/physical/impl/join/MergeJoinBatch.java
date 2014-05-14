@@ -27,6 +27,8 @@ import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.TypedNullConstant;
 import org.apache.drill.common.logical.data.JoinCondition;
+import org.apache.drill.common.types.TypeProtos.DataMode;
+import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.compile.sig.MappingSet;
@@ -43,12 +45,7 @@ import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.MergeJoinPOP;
 import org.apache.drill.exec.physical.impl.join.JoinWorker.JoinOutcome;
-import org.apache.drill.exec.record.AbstractRecordBatch;
-import org.apache.drill.exec.record.BatchSchema;
-import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.record.TypedFieldId;
-import org.apache.drill.exec.record.VectorContainer;
-import org.apache.drill.exec.record.VectorWrapper;
+import org.apache.drill.exec.record.*;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.allocator.VectorAllocator;
 import org.eigenbase.rel.JoinRelType;
@@ -336,10 +333,17 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
     int vectorId = 0;
     if (status.isLeftPositionAllowed()) {
       for (VectorWrapper<?> vw : left) {
+        MajorType inputType = vw.getField().getType();
+        MajorType outputType;
+        if (joinType == JoinRelType.RIGHT && inputType.getMode() == DataMode.REQUIRED) {
+          outputType = Types.overrideMode(inputType, DataMode.OPTIONAL);
+        } else {
+          outputType = inputType;
+        }
         JVar vvIn = cg.declareVectorValueSetupAndMember("incomingLeft",
-                                                        new TypedFieldId(vw.getField().getType(), vectorId));
+                                                        new TypedFieldId(inputType, vectorId));
         JVar vvOut = cg.declareVectorValueSetupAndMember("outgoing",
-                                                         new TypedFieldId(vw.getField().getType(),vectorId));
+                                                         new TypedFieldId(outputType,vectorId));
         // todo: check result of copyFromSafe and grow allocation
         cg.getEvalBlock()._if(vvOut.invoke("copyFromSafe")
                                      .arg(copyLeftMapping.getValueReadIndex())
@@ -359,10 +363,17 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
     int rightVectorBase = vectorId;
     if (status.isRightPositionAllowed()) {
       for (VectorWrapper<?> vw : right) {
+        MajorType inputType = vw.getField().getType();
+        MajorType outputType;
+        if (joinType == JoinRelType.LEFT && inputType.getMode() == DataMode.REQUIRED) {
+          outputType = Types.overrideMode(inputType, DataMode.OPTIONAL);
+        } else {
+          outputType = inputType;
+        }
         JVar vvIn = cg.declareVectorValueSetupAndMember("incomingRight",
-                                                        new TypedFieldId(vw.getField().getType(), vectorId - rightVectorBase));
+                                                        new TypedFieldId(inputType, vectorId - rightVectorBase));
         JVar vvOut = cg.declareVectorValueSetupAndMember("outgoing",
-                                                         new TypedFieldId(vw.getField().getType(),vectorId));
+                                                         new TypedFieldId(outputType,vectorId));
         // todo: check result of copyFromSafe and grow allocation
         cg.getEvalBlock()._if(vvOut.invoke("copyFromSafe")
                                    .arg(copyRightMappping.getValueReadIndex())
@@ -391,8 +402,16 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
     
     // add fields from both batches
     if (leftCount > 0) {
+
       for (VectorWrapper<?> w : left) {
-        ValueVector outgoingVector = TypeHelper.getNewVector(w.getField(), oContext.getAllocator());
+        MajorType inputType = w.getField().getType();
+        MajorType outputType;
+        if (joinType == JoinRelType.RIGHT && inputType.getMode() == DataMode.REQUIRED) {
+          outputType = Types.overrideMode(inputType, DataMode.OPTIONAL);
+        } else {
+          outputType = inputType;
+        }
+        ValueVector outgoingVector = TypeHelper.getNewVector(MaterializedField.create(w.getField().getPath(), outputType), oContext.getAllocator());
         VectorAllocator.getAllocator(outgoingVector, (int) Math.ceil(w.getValueVector().getBufferSize() / left.getRecordCount())).alloc(joinBatchSize);
         container.add(outgoingVector);
       }
@@ -400,7 +419,14 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
 
     if (rightCount > 0) {
       for (VectorWrapper<?> w : right) {
-        ValueVector outgoingVector = TypeHelper.getNewVector(w.getField(), oContext.getAllocator());
+        MajorType inputType = w.getField().getType();
+        MajorType outputType;
+        if (joinType == JoinRelType.LEFT && inputType.getMode() == DataMode.REQUIRED) {
+          outputType = Types.overrideMode(inputType, DataMode.OPTIONAL);
+        } else {
+          outputType = inputType;
+        }
+        ValueVector outgoingVector = TypeHelper.getNewVector(MaterializedField.create(w.getField().getPath(), outputType), oContext.getAllocator());
         VectorAllocator.getAllocator(outgoingVector, (int) Math.ceil(w.getValueVector().getBufferSize() / right.getRecordCount())).alloc(joinBatchSize);
         container.add(outgoingVector);
       }

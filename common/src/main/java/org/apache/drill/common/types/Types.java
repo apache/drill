@@ -300,6 +300,10 @@ public class Types {
     }
   }
 
+  public static MajorType overrideMode(MajorType originalMajorType, DataMode overrideMode) {
+    return withScaleAndPrecision(originalMajorType.getMinorType(), overrideMode, originalMajorType.getScale(), originalMajorType.getPrecision());
+  }
+
   public static MajorType getMajorTypeFromName(String typeName) {
     return getMajorTypeFromName(typeName, DataMode.REQUIRED);
   }

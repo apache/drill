@@ -20,6 +20,9 @@ package org.apache.drill.exec.physical.impl.join;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.logical.data.JoinCondition;
 import org.apache.drill.common.logical.data.NamedExpression;
+import org.apache.drill.common.types.TypeProtos.DataMode;
+import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.record.*;
@@ -343,13 +346,21 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
         if (hyperContainer != null) {
             for(VectorWrapper<?> vv : hyperContainer) {
 
+                MajorType inputType = vv.getField().getType();
+                MajorType outputType;
+                if (joinType == JoinRelType.LEFT && inputType.getMode() == DataMode.REQUIRED) {
+                  outputType = Types.overrideMode(inputType, DataMode.OPTIONAL);
+                } else {
+                  outputType = inputType;
+                }
+
                 // Add the vector to our output container
-                ValueVector v = TypeHelper.getNewVector(vv.getField(), context.getAllocator());
+                ValueVector v = TypeHelper.getNewVector(MaterializedField.create(vv.getField().getPath(), outputType), context.getAllocator());
                 container.add(v);
                 allocators.add(RemovingRecordBatch.getAllocator4(v));
 
                 JVar inVV = g.declareVectorValueSetupAndMember("buildBatch", new TypedFieldId(vv.getField().getType(), true, fieldId));
-                JVar outVV = g.declareVectorValueSetupAndMember("outgoing", new TypedFieldId(vv.getField().getType(), false, fieldId));
+                JVar outVV = g.declareVectorValueSetupAndMember("outgoing", new TypedFieldId(outputType, false, fieldId));
                 g.getEvalBlock()._if(outVV.invoke("copyFromSafe")
                   .arg(buildIndex.band(JExpr.lit((int) Character.MAX_VALUE)))
                   .arg(outIndex)
@@ -372,12 +383,20 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
         if (leftUpstream == IterOutcome.OK || leftUpstream == IterOutcome.OK_NEW_SCHEMA) {
             for (VectorWrapper<?> vv : left) {
 
-                ValueVector v = TypeHelper.getNewVector(vv.getField(), context.getAllocator());
+                MajorType inputType = vv.getField().getType();
+                MajorType outputType;
+                if (joinType == JoinRelType.RIGHT && inputType.getMode() == DataMode.REQUIRED) {
+                  outputType = Types.overrideMode(inputType, DataMode.OPTIONAL);
+                } else {
+                  outputType = inputType;
+                }
+
+                ValueVector v = TypeHelper.getNewVector(MaterializedField.create(vv.getField().getPath(), outputType), oContext.getAllocator());
                 container.add(v);
                 allocators.add(RemovingRecordBatch.getAllocator4(v));
 
-                JVar inVV = g.declareVectorValueSetupAndMember("probeBatch", new TypedFieldId(vv.getField().getType(), false, fieldId));
-                JVar outVV = g.declareVectorValueSetupAndMember("outgoing", new TypedFieldId(vv.getField().getType(), false, outputFieldId));
+                JVar inVV = g.declareVectorValueSetupAndMember("probeBatch", new TypedFieldId(inputType, false, fieldId));
+                JVar outVV = g.declareVectorValueSetupAndMember("outgoing", new TypedFieldId(outputType, false, outputFieldId));
 
                 g.getEvalBlock()._if(outVV.invoke("copyFromSafe").arg(probeIndex).arg(outIndex).arg(inVV).not())._then()._return(JExpr.FALSE);
 
