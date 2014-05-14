@@ -142,12 +142,6 @@ public class TestImplicitCastFunctions extends ExecTest {
     runTest(bitContext, connection, expected, "functions/cast/testICastMockCol.json");
   }
 
-    @AfterClass
-    public static void tearDown() throws Exception{
-        // pause to get logger to catch up.
-        Thread.sleep(1000);
-    }
-
     @Test
     public void testImplicitCastWithNullExpression(@Injectable final DrillbitContext bitContext,
                              @Injectable UserServer.UserClientConnection connection) throws Throwable{

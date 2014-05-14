@@ -265,9 +265,4 @@ public class TestSimpleFunctions extends ExecTest {
 
   }
 
-  @After
-  public void tearDown() throws Exception{
-    // pause to get logger to catch up.
-    Thread.sleep(1000);
-  }
 }

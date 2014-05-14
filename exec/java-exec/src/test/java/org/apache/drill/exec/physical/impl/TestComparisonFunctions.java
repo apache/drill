@@ -38,6 +38,7 @@ import org.apache.drill.exec.proto.ExecProtos;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.rpc.user.UserServer;
 import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.exec.vector.ValueVector;
 import org.junit.AfterClass;
 import org.junit.Test;
 
@@ -71,6 +72,9 @@ public class TestComparisonFunctions extends ExecTest {
 
     while(exec.next()){
       assertEquals(String.format("Expression: %s;", expression), expectedResults, exec.getSelectionVector2().getCount());
+//      for (ValueVector vv: exec) {
+//        vv.close();
+//      }
     }
 
     exec.stop();
@@ -150,9 +154,4 @@ public class TestComparisonFunctions extends ExecTest {
     runTest(bitContext, connection, "bigIntNullableColumn <= bigIntNullableColumn", 50);
   }
 
-    @AfterClass
-    public static void tearDown() throws Exception{
-        // pause to get logger to catch up.
-        Thread.sleep(1000);
-    }
 }

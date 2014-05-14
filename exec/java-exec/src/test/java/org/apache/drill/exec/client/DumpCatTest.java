@@ -125,9 +125,4 @@ public class DumpCatTest  extends ExecTest{
       input.close();
   }
 
-  @AfterClass
-  public static void tearDown() throws Exception{
-      // pause to get logger to catch up.
-      Thread.sleep(1000);
-  }
 }

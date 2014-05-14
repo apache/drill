@@ -80,6 +80,8 @@ public class TextRecordReaderTest extends PopUnitTestBase {
         }
         loader.load(b.getHeader().getDef(), b.getData());
         VectorUtil.showVectorAccessibleContent(loader);
+        loader.clear();
+        b.release();
       }
       assertEquals(5, count);
     }

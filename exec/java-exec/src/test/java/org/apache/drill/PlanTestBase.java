@@ -222,6 +222,8 @@ public class PlanTestBase extends BaseTestQuery {
         builder.append(o);
         System.out.println(vv.getAccessor().getObject(i));
       }
+      loader.clear();
+      b.release();
     }
 
     return builder.toString();

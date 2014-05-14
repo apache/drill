@@ -134,6 +134,7 @@ public class WireRecordBatch implements RecordBatch {
 
   @Override
   public void cleanup() {
+    batchLoader.clear();
     fragProvider.cleanup();
   }
 

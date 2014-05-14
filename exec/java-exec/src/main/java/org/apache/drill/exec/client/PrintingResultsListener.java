@@ -75,7 +75,7 @@ public class PrintingResultsListener implements UserResultsListener {
           VectorUtil.showVectorAccessibleContent(loader, ",");
           break;
       }
-
+      loader.clear();
     }
 
     boolean isLastChunk = result.getHeader().getIsLastChunk();

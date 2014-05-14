@@ -114,9 +114,4 @@ public class TestSimpleFilter extends ExecTest {
 
   }
 
-  @AfterClass
-  public static void tearDown() throws Exception{
-    // pause to get logger to catch up.
-    Thread.sleep(1000);
-  }
 }

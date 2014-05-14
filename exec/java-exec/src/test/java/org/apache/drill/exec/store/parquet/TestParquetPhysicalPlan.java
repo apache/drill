@@ -79,6 +79,8 @@ public class TestParquetPhysicalPlan extends ExecTest {
           }
           System.out.println();
         }
+        loader.clear();
+        b.release();
       }
       client.close();
       System.out.println(String.format("Got %d total results", count));
@@ -126,12 +128,6 @@ public class TestParquetPhysicalPlan extends ExecTest {
       System.out.println(String.format("Got %d total records in %d seconds", listener.await(), watch.elapsed(TimeUnit.SECONDS)));
       client.close();
     }
-  }
-
-  @AfterClass
-  public static void tearDown() throws Exception{
-    // pause to get logger to catch up.
-    Thread.sleep(1000);
   }
 
 }

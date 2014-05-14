@@ -68,8 +68,6 @@ public class TestValueVector extends ExecTest {
     assertEquals(103, v.getAccessor().get(1022));
     assertEquals(104, v.getAccessor().get(1023));
 
-    // Ensure unallocated space returns 0
-    assertEquals(0, v.getAccessor().get(3));
   }
 
   @Test

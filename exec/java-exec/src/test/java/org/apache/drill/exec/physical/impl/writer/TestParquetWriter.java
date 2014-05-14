@@ -102,6 +102,12 @@ public class TestParquetWriter extends BaseTestQuery {
     List<QueryResultBatch> results = testSqlWithResults(query);
     List<QueryResultBatch> expected = testSqlWithResults(validateQuery);
     compareResults(expected, results);
+    for (QueryResultBatch result : results) {
+      result.release();
+    }
+    for (QueryResultBatch result : expected) {
+      result.release();
+    }
   }
 
   public void compareResults(List<QueryResultBatch> expected, List<QueryResultBatch> result) throws Exception {

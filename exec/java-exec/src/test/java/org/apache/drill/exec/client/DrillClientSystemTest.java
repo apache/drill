@@ -56,8 +56,11 @@ public class DrillClientSystemTest extends DrillSystemTestBase {
     startCluster(1);
     DrillClient client = new DrillClient();
     client.connect();
-    List<QueryResultBatch> result = client.runQuery(QueryType.LOGICAL, plan);
-    System.out.println(result);
+    List<QueryResultBatch> results = client.runQuery(QueryType.LOGICAL, plan);
+    for (QueryResultBatch result : results) {
+      System.out.println(result);
+      result.release();
+    }
     client.close();
   }
 
@@ -67,8 +70,11 @@ public class DrillClientSystemTest extends DrillSystemTestBase {
     startCluster(2);
     DrillClient client = new DrillClient();
     client.connect();
-    List<QueryResultBatch> result = client.runQuery(QueryType.LOGICAL, plan);
-    System.out.println(result);
+    List<QueryResultBatch> results = client.runQuery(QueryType.LOGICAL, plan);
+    for (QueryResultBatch result : results) {
+      System.out.println(result);
+      result.release();
+    }
     client.close();
   }
 }

@@ -115,6 +115,8 @@ public class TestLoad extends ExecTest {
       if (!first) System.out.println();
     }
     assertEquals(100, recordCount);
+    batchLoader.clear();
+    writableBatch.clear();
   }
 
 }

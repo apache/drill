@@ -347,9 +347,7 @@ public class TestConvertFunctions extends BaseTestQuery {
     if (textFileContent == null) textFileContent = Resources.toString(Resources.getResource(CONVERSION_TEST_PHYSICAL_PLAN), Charsets.UTF_8);
     String planString = textFileContent.replace("__CONVERT_EXPRESSION__", expression);
 
-    List<QueryResultBatch> resultList = testPhysicalWithResults(planString);
-
-    Object[] results = getRunResult(resultList);
+    Object[] results = getRunResult(planString);
     assertEquals(testName, 1, results.length);
     assertNotNull(testName, results[0]);
     if (expectedResults.getClass().isArray()) {
@@ -359,10 +357,11 @@ public class TestConvertFunctions extends BaseTestQuery {
     }
   }
 
-  protected Object[] getRunResult(List<QueryResultBatch> resultList) throws SchemaChangeException {
+  protected Object[] getRunResult(String planString) throws Exception {
     List<Object> res = new ArrayList<Object>();
-
     RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
+
+    List<QueryResultBatch> resultList = testPhysicalWithResults(planString);
     for(QueryResultBatch result : resultList) {
       loader.load(result.getHeader().getDef(), result.getData());
       if (loader.getRecordCount() > 0) {

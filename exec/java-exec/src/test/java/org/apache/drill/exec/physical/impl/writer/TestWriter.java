@@ -94,8 +94,8 @@ public class TestWriter extends BaseTestQuery {
 
   @Test
   public void simpleCTAS() throws Exception {
-    testSqlWithResults("Use dfs.tmp");
-    testSqlWithResults(ALTER_SESSION);
+    runSQL("Use dfs.tmp");
+    runSQL(ALTER_SESSION);
 
     String testQuery = "CREATE TABLE simplectas AS SELECT * FROM cp.`employee.json`";
 
@@ -104,8 +104,8 @@ public class TestWriter extends BaseTestQuery {
 
   @Test
   public void complex1CTAS() throws Exception {
-    testSqlWithResults("Use dfs.tmp");
-    testSqlWithResults(ALTER_SESSION);
+    runSQL("Use dfs.tmp");
+    runSQL(ALTER_SESSION);
     String testQuery = "CREATE TABLE complex1ctas AS SELECT first_name, last_name, position_id FROM cp.`employee.json`";
 
     ctasHelper("/tmp/drilltest/complex1ctas", testQuery, 1155);
@@ -113,8 +113,8 @@ public class TestWriter extends BaseTestQuery {
 
   @Test
   public void complex2CTAS() throws Exception {
-    testSqlWithResults("Use dfs.tmp");
-    testSqlWithResults(ALTER_SESSION);
+    runSQL("Use dfs.tmp");
+    runSQL(ALTER_SESSION);
     String testQuery = "CREATE TABLE complex2ctas AS SELECT CAST(`birth_date` as Timestamp) FROM cp.`employee.json` GROUP BY birth_date";
 
     ctasHelper("/tmp/drilltest/complex2ctas", testQuery, 52);
@@ -122,7 +122,7 @@ public class TestWriter extends BaseTestQuery {
 
   @Test
   public void simpleCTASWithSchemaInTableName() throws Exception {
-    testSqlWithResults(ALTER_SESSION);
+    runSQL(ALTER_SESSION);
     String testQuery = "CREATE TABLE dfs.tmp.`/test/simplectas2` AS SELECT * FROM cp.`employee.json`";
 
     ctasHelper("/tmp/drilltest/test/simplectas2", testQuery, 1155);
@@ -159,13 +159,12 @@ public class TestWriter extends BaseTestQuery {
         recordsWritten += recordWrittenV.getAccessor().get(i);
       }
 
+      batchLoader.clear();
       batch.release();
     }
-    batchLoader.clear();
 
 //    assertTrue(fs.exists(tableLocation));
     assertEquals(expectedOutputCount, recordsWritten);
-    Thread.sleep(1000);
   }
 
 }

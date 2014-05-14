@@ -129,9 +129,4 @@ public class ExpressionTest extends ExecTest {
     return cg.getCodeGenerator().generate();
   }
 
-  @AfterClass
-  public static void tearDown() throws Exception{
-    // pause to get logger to catch up.
-    Thread.sleep(1000);
-  }
 }

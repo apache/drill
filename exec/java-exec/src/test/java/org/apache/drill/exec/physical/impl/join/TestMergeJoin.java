@@ -320,6 +320,7 @@ public class TestMergeJoin extends PopUnitTestBase {
       for(QueryResultBatch b : results) {
         if (b.getHeader().getRowCount() != 0)
           count += b.getHeader().getRowCount();
+        b.release();
       }
       assertEquals(0, count);
     }
@@ -342,6 +343,7 @@ public class TestMergeJoin extends PopUnitTestBase {
       for(QueryResultBatch b : results) {
         if (b.getHeader().getRowCount() != 0)
           count += b.getHeader().getRowCount();
+        b.release();
       }
       assertEquals(50, count);
     }
@@ -364,19 +366,10 @@ public class TestMergeJoin extends PopUnitTestBase {
       for(QueryResultBatch b : results) {
         if (b.getHeader().getRowCount() != 0)
           count += b.getHeader().getRowCount();
+        b.release();
       }
       assertEquals(0, count);
     }
   }
 
-  @AfterClass
-  public static void tearDown() throws Exception{
-    // pause to get logger to catch up.
-    Thread.sleep(1000);
-  }
-
-
 }
-
-
-

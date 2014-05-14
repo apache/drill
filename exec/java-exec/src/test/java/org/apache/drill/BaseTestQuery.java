@@ -20,6 +20,8 @@ package org.apache.drill;
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.TestTools;
@@ -29,7 +31,10 @@ import org.apache.drill.exec.client.PrintingResultsListener;
 import org.apache.drill.exec.client.QuerySubmitter;
 import org.apache.drill.exec.client.QuerySubmitter.Format;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserProtos.QueryType;
+import org.apache.drill.exec.rpc.RpcException;
+import org.apache.drill.exec.rpc.user.ConnectionThrottle;
 import org.apache.drill.exec.rpc.user.QueryResultBatch;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
 import org.apache.drill.exec.server.Drillbit;
@@ -90,6 +95,11 @@ public class BaseTestQuery extends ExecTest{
     if(serviceSet != null) serviceSet.close();
   }
 
+  protected void runSQL(String sql) throws Exception {
+    SilentListener listener = new SilentListener();
+    testWithListener(QueryType.SQL, sql, listener);
+    listener.waitForCompletion();
+  }
 
   protected List<QueryResultBatch> testSqlWithResults(String sql) throws Exception{
     return testRunAndReturn(QueryType.SQL, sql);
@@ -146,7 +156,6 @@ public class BaseTestQuery extends ExecTest{
     test(getFile(file));
   }
 
-
   protected String getFile(String resource) throws IOException{
     URL url = Resources.getResource(resource);
     if(url == null){
@@ -154,4 +163,40 @@ public class BaseTestQuery extends ExecTest{
     }
     return Resources.toString(url, Charsets.UTF_8);
   }
+
+  private static class SilentListener implements UserResultsListener {
+    private volatile Exception exception;
+    private AtomicInteger count = new AtomicInteger();
+    private CountDownLatch latch = new CountDownLatch(1);
+
+    @Override
+    public void submissionFailed(RpcException ex) {
+      exception = ex;
+      System.out.println("Query failed: " + ex.getMessage());
+      latch.countDown();
+    }
+
+    @Override
+    public void resultArrived(QueryResultBatch result, ConnectionThrottle throttle) {
+      int rows = result.getHeader().getRowCount();
+      if (result.getData() != null) {
+        count.addAndGet(rows);
+      }
+      result.release();
+      if (result.getHeader().getIsLastChunk()) {
+        System.out.println("Query completed successfully with row count: " + count.get());
+        latch.countDown();
+      }
+    }
+
+    @Override
+    public void queryIdArrived(QueryId queryId) {}
+
+    public int waitForCompletion() throws Exception {
+      latch.await();
+      if(exception != null) throw exception;
+      return count.get();
+    }
+  }
+
 }

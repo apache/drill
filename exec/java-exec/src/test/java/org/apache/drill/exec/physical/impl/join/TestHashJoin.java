@@ -150,6 +150,11 @@ public class TestHashJoin extends PopUnitTestBase{
                 assertEquals(intAccessor1.getObject(i), colA[i]);
             }
             assertEquals(6, intAccessor1.getValueCount());
+
+            batchLoader.clear();
+            for (QueryResultBatch result : results) {
+              result.release();
+            }
         }
     }
 
@@ -172,6 +177,7 @@ public class TestHashJoin extends PopUnitTestBase{
             for(QueryResultBatch b : results) {
                 if (b.getHeader().getRowCount() != 0)
                     count += b.getHeader().getRowCount();
+                b.release();
             }
 
             System.out.println("Total records: " + count);
@@ -217,6 +223,11 @@ public class TestHashJoin extends PopUnitTestBase{
                 assertEquals(intAccessor2.getObject(i), colC[i]);
             }
             assertEquals(3, intAccessor1.getValueCount());
+
+            batchLoader.clear();
+            for (QueryResultBatch result : results) {
+              result.release();
+            }
         }
     }
 
@@ -240,6 +251,7 @@ public class TestHashJoin extends PopUnitTestBase{
       for(QueryResultBatch b : results) {
         if (b.getHeader().getRowCount() != 0)
           count += b.getHeader().getRowCount();
+        b.release();
       }
 
       System.out.println("Total records: " + count);

@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.apache.drill.common.util.TestTools;
 import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.rules.TestRule;
 import org.junit.rules.TestWatcher;
@@ -31,78 +32,106 @@ import org.junit.runner.Description;
 import org.slf4j.Logger;
 
 public class DrillTest {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillTest.class);
+  static final Logger logger = org.slf4j.LoggerFactory.getLogger(DrillTest.class);
 
   static final SystemManager manager = new SystemManager();
-  static final TestLogReporter LOG_OUTCOME = new TestLogReporter(org.slf4j.LoggerFactory.getLogger("org.apache.drill.TestReporter"));
+  
+  static final Logger testReporter = org.slf4j.LoggerFactory.getLogger("org.apache.drill.TestReporter");
+  static final TestLogReporter LOG_OUTCOME = new TestLogReporter();
+
+  static MemWatcher memWatcher;
+  static String className;
 
   @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(50000);
   @Rule public final TestLogReporter logOutcome = LOG_OUTCOME;
 
+  @BeforeClass
+  public static void initDrillTest() throws Exception {
+    memWatcher = new MemWatcher();
+  }
+
   @AfterClass
-  public static void letLogsCatchUp() throws InterruptedException{
+  public static void finiDrillTest() throws InterruptedException{
+    testReporter.info(String.format("Test Class done (%s): %s.", memWatcher.getMemString(true), className));
     LOG_OUTCOME.sleepIfFailure();
   }
 
-  private static class TestLogReporter extends TestWatcher{
-
-
-    private int failureCount = 0;
-
-    final Logger logger;
+  protected static class MemWatcher {
     private long startDirect;
     private long startHeap;
     private long startNonHeap;
 
-    public TestLogReporter(Logger logger) {
-      this.logger = logger;
-    }
-
-
-    @Override
-    protected void starting(Description description) {
+    public MemWatcher() {
       startDirect = manager.getMemDirect();
       startHeap = manager.getMemHeap();
       startNonHeap = manager.getMemNonHeap();
+    }
+
+    public Object getMemString() {
+      return getMemString(false);
+    }
+
+    public String getMemString(boolean runGC) {
+      if (runGC) {
+        Runtime.getRuntime().gc();
+      }
+      long endDirect = manager.getMemDirect();
+      long endHeap = manager.getMemHeap();
+      long endNonHeap = manager.getMemNonHeap();
+      return String.format("d: %s(%s), h: %s(%s), nh: %s(%s)", //
+          readable(endDirect - startDirect), readable(endDirect), //
+          readable(endHeap - startHeap), readable(endHeap), //
+          readable(endNonHeap - startNonHeap), readable(endNonHeap) //
+       );
+    }
+
+  }
+
+  private static class TestLogReporter extends TestWatcher {
+
+    private MemWatcher memWatcher;
+    private int failureCount = 0;
+
+    @Override
+    protected void starting(Description description) {
       super.starting(description);
+      className = description.getClassName();
+      memWatcher = new MemWatcher();
     }
 
-
-    public String getMemString(){
-      return String.format("d: %s, h: %s, nh: %s", //
-          readable(manager.getMemDirect() - startDirect), //
-          readable(manager.getMemHeap() - startHeap), //
-          readable(manager.getMemNonHeap() - startNonHeap) //
-          );
-    }
     @Override
     protected void failed(Throwable e, Description description) {
-      logger.error(String.format("Test Failed (%s): %s", getMemString(), description.getDisplayName()), e);
+      testReporter.error(String.format("Test Failed (%s): %s", memWatcher.getMemString(), description.getDisplayName()), e);
       failureCount++;
     }
 
     @Override
     public void succeeded(Description description) {
-      logger.info(String.format("Test Succeeded (%s): %s", getMemString(), description.getDisplayName()));
+      testReporter.info(String.format("Test Succeeded (%s): %s", memWatcher.getMemString(), description.getDisplayName()));
     }
 
-    public void sleepIfFailure() throws InterruptedException{
+    public void sleepIfFailure() throws InterruptedException {
       if(failureCount > 0){
         Thread.sleep(2000);
         failureCount = 0;
+      } else {
+        // pause to get logger to catch up.
+        Thread.sleep(250);
       }
     }
+
   }
 
   public static String readable(long bytes) {
     int unit = 1024;
-    if (bytes < unit) return bytes + " B";
-    int exp = (int) (Math.log(bytes) / Math.log(unit));
-    String pre = ("KMGTPE").charAt(exp-1) + ("i");
-    return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
-}
+    long absBytes = Math.abs(bytes);
+    if (absBytes < unit) return bytes + " B";
+    int exp = (int) (Math.log(absBytes) / Math.log(unit));
+    char pre = ("KMGTPE").charAt(exp-1);
+    return String.format("%s%.1f %ciB", (bytes == absBytes ? "" : "-"), absBytes / Math.pow(unit, exp), pre);
+  }
 
-  private static class SystemManager{
+  private static class SystemManager {
 
     final BufferPoolMXBean directBean;
     final MemoryMXBean memoryBean;
@@ -120,15 +149,18 @@ public class DrillTest {
       directBean = localBean;
     }
 
-    public long getMemDirect(){
+    public long getMemDirect() {
       return directBean.getMemoryUsed();
     }
 
-    public long getMemHeap(){
+    public long getMemHeap() {
       return memoryBean.getHeapMemoryUsage().getUsed();
     }
 
-    public long getMemNonHeap(){
+    public long getMemNonHeap() {
       return memoryBean.getNonHeapMemoryUsage().getUsed();
     }
-  }}
+
+  }
+
+}

@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.physical.impl;
 
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -34,10 +33,7 @@ import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.rpc.user.QueryResultBatch;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
-import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.VarCharVector;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
@@ -85,6 +81,11 @@ public class TestDecimal extends PopUnitTestBase{
             }
             assertEquals(6, dec9Accessor.getValueCount());
             assertEquals(6, dec18Accessor.getValueCount());
+
+            batchLoader.clear();
+            for (QueryResultBatch result : results) {
+              result.release();
+            }
         }
     }
 
@@ -125,6 +126,11 @@ public class TestDecimal extends PopUnitTestBase{
             }
             assertEquals(6, dec9Accessor.getValueCount());
             assertEquals(6, dec38Accessor.getValueCount());
+
+            batchLoader.clear();
+            for (QueryResultBatch result : results) {
+              result.release();
+            }
         }
     }
 
@@ -169,6 +175,11 @@ public class TestDecimal extends PopUnitTestBase{
             assertEquals(6, addAccessor.getValueCount());
             assertEquals(6, subAccessor.getValueCount());
             assertEquals(6, mulAccessor.getValueCount());
+
+            batchLoader.clear();
+            for (QueryResultBatch result : results) {
+              result.release();
+            }
         }
     }
 
@@ -213,6 +224,11 @@ public class TestDecimal extends PopUnitTestBase{
             assertEquals(7, addAccessor.getValueCount());
             assertEquals(7, subAccessor.getValueCount());
             assertEquals(7, mulAccessor.getValueCount());
+
+            batchLoader.clear();
+            for (QueryResultBatch result : results) {
+              result.release();
+            }
         }
     }
 
@@ -258,6 +274,11 @@ public class TestDecimal extends PopUnitTestBase{
                 assertEquals(sortOutput[i], accessor.getObject(i).toString());
             }
             assertEquals(10, accessor.getValueCount());
+
+            batchLoader.clear();
+            for (QueryResultBatch result : results) {
+              result.release();
+            }
         }
     }
 
@@ -296,6 +317,11 @@ public class TestDecimal extends PopUnitTestBase{
                 assertEquals(accessor.getObject(i).toString(), sortOutput[i]);
             }
             assertEquals(7, accessor.getValueCount());
+
+            batchLoader.clear();
+            for (QueryResultBatch result : results) {
+              result.release();
+            }
         }
     }
 
@@ -339,6 +365,11 @@ public class TestDecimal extends PopUnitTestBase{
                 assertEquals(accessor.getObject(i).toString(), output[i]);
             }
             assertEquals(6, accessor.getValueCount());
+
+            batchLoader.clear();
+            for (QueryResultBatch result : results) {
+              result.release();
+            }
         }
     }
 }

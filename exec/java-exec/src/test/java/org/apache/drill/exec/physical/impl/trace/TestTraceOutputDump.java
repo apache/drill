@@ -139,9 +139,4 @@ public class TestTraceOutputDump extends ExecTest {
         assertTrue(value == Integer.MIN_VALUE);
     }
 
-    @AfterClass
-    public static void tearDown() throws Exception{
-        // pause to get logger to catch up.
-        Thread.sleep(1000);
-    }
 }

@@ -146,6 +146,8 @@ public class TestOptiqPlans extends ExecTest {
             System.out.println(vv.getAccessor().getObject(i));
           }
         }
+        loader.clear();
+        b.release();
       }
       client.close();
     }
@@ -174,6 +176,8 @@ public class TestOptiqPlans extends ExecTest {
             System.out.println(vv.getAccessor().getObject(i));
           }
         }
+        loader.clear();
+        b.release();
       }
       client.close();
     }
@@ -212,6 +216,8 @@ public class TestOptiqPlans extends ExecTest {
 
           }
         }
+        loader.clear();
+        b.release();
       }
       client.close();
     }
@@ -250,6 +256,8 @@ public class TestOptiqPlans extends ExecTest {
 
           }
         }
+        loader.clear();
+        b.release();
       }
       client.close();
     }
@@ -288,6 +296,8 @@ public class TestOptiqPlans extends ExecTest {
 
           }
         }
+        loader.clear();
+        b.release();
       }
       client.close();
     }
@@ -318,9 +328,4 @@ public class TestOptiqPlans extends ExecTest {
     return exec;
   }
 
-  @AfterClass
-  public static void tearDown() throws Exception {
-    // pause to get logger to catch up.
-    Thread.sleep(1000);
-  }
 }

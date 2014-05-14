@@ -102,6 +102,7 @@ public class TestSimpleFragmentRun extends PopUnitTestBase {
         }
         if(!first) System.out.println();
       }
+      batchLoader.clear();
       batch.release();
     }
     logger.debug("Received results {}", results);
