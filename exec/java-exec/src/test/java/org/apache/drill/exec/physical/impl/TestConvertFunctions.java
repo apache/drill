@@ -24,46 +24,30 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import io.netty.buffer.ByteBuf;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.List;
 
 import mockit.Injectable;
-import mockit.NonStrictExpectations;
 
-import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.exec.client.DrillClient;
-import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
+import org.apache.drill.BaseTestQuery;
+import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
-import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.memory.TopLevelAllocator;
-import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.physical.PhysicalPlan;
-import org.apache.drill.exec.physical.base.FragmentRoot;
-import org.apache.drill.exec.planner.PhysicalPlanReader;
-import org.apache.drill.exec.pop.PopUnitTestBase;
-import org.apache.drill.exec.proto.BitControl.PlanFragment;
-import org.apache.drill.exec.proto.CoordinationProtos;
-import org.apache.drill.exec.proto.UserProtos.QueryType;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.rpc.user.QueryResultBatch;
 import org.apache.drill.exec.rpc.user.UserServer;
-import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.util.ConvertUtil;
 import org.apache.drill.exec.util.ConvertUtil.HadoopWritables;
 import org.apache.drill.exec.util.VectorUtil;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarCharVector;
-import org.junit.Test;
 import org.joda.time.DateTime;
+import org.junit.Test;
 
-import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
-public class TestConvertFunctions extends PopUnitTestBase {
+public class TestConvertFunctions extends BaseTestQuery {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestConvertFunctions.class);
 
   private static final String CONVERSION_TEST_LOGICAL_PLAN = "functions/conv/conversionTestWithLogicalPlan.json";
@@ -78,292 +62,243 @@ public class TestConvertFunctions extends PopUnitTestBase {
   private static DateTime time = DateTime.parse("01:23:45.678", DateUtility.getTimeFormatter());
   private static DateTime date = DateTime.parse("1980-01-01", DateUtility.getDateTimeFormatter());
 
-  DrillConfig c = DrillConfig.create();
-  PhysicalPlanReader reader;
-  FunctionImplementationRegistry registry;
-  FragmentContext context;
   String textFileContent;
 
   @Test
-  public void testDateTime1(@Injectable final DrillbitContext bitContext,
-      @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    runTest(bitContext, connection, "(convert_from(binary_string('" + DATE_TIME_BE + "'), 'TIME_EPOCH_BE'))", time);
+  public void testDateTime1() throws Throwable {
+    runTest("(convert_from(binary_string('" + DATE_TIME_BE + "'), 'TIME_EPOCH_BE'))", time);
   }
 
   @Test
-  public void testDateTime2(@Injectable final DrillbitContext bitContext,
-      @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    runTest(bitContext, connection, "convert_from(binary_string('" + DATE_TIME_LE + "'), 'TIME_EPOCH')", time);
+  public void testDateTime2() throws Throwable {
+    runTest("convert_from(binary_string('" + DATE_TIME_LE + "'), 'TIME_EPOCH')", time);
   }
 
   @Test
-  public void testDateTime3(@Injectable final DrillbitContext bitContext,
-      @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    runTest(bitContext, connection, "convert_from(binary_string('" + DATE_TIME_BE + "'), 'DATE_EPOCH_BE')", date );
+  public void testDateTime3() throws Throwable {
+    runTest("convert_from(binary_string('" + DATE_TIME_BE + "'), 'DATE_EPOCH_BE')", date );
   }
 
   @Test
-  public void testDateTime4(@Injectable final DrillbitContext bitContext,
-      @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    runTest(bitContext, connection, "convert_from(binary_string('" + DATE_TIME_LE + "'), 'DATE_EPOCH')", date);
+  public void testDateTime4() throws Throwable {
+    runTest("convert_from(binary_string('" + DATE_TIME_LE + "'), 'DATE_EPOCH')", date);
   }
 
   @Test
-  public void testFixedInts1(@Injectable final DrillbitContext bitContext,
-      @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    runTest(bitContext, connection, "convert_from(binary_string('\\xAD'), 'TINYINT')", (byte) 0xAD);
+  public void testFixedInts1() throws Throwable {
+    runTest("convert_from(binary_string('\\xAD'), 'TINYINT')", (byte) 0xAD);
   }
 
   @Test
-  public void testFixedInts2(@Injectable final DrillbitContext bitContext,
-      @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    runTest(bitContext, connection, "convert_from(binary_string('\\xFE\\xCA'), 'SMALLINT')", (short) 0xCAFE);
+  public void testFixedInts2() throws Throwable {
+    runTest("convert_from(binary_string('\\xFE\\xCA'), 'SMALLINT')", (short) 0xCAFE);
   }
 
   @Test
-  public void testFixedInts3(@Injectable final DrillbitContext bitContext,
-      @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    runTest(bitContext, connection, "convert_from(binary_string('\\xCA\\xFE'), 'SMALLINT_BE')", (short) 0xCAFE);
+  public void testFixedInts3() throws Throwable {
+    runTest("convert_from(binary_string('\\xCA\\xFE'), 'SMALLINT_BE')", (short) 0xCAFE);
   }
 
   @Test
-  public void testFixedInts4(@Injectable final DrillbitContext bitContext,
-      @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    runTest(bitContext, connection, "convert_from(binary_string('\\xBE\\xBA\\xFE\\xCA'), 'INT')", 0xCAFEBABE);
+  public void testFixedInts4() throws Throwable {
+    runTest("convert_from(binary_string('\\xBE\\xBA\\xFE\\xCA'), 'INT')", 0xCAFEBABE);
   }
 
   @Test
-  public void testFixedInts5(@Injectable final DrillbitContext bitContext,
-      @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    runTest(bitContext, connection, "convert_from(binary_string('\\xCA\\xFE\\xBA\\xBE'), 'INT_BE')", 0xCAFEBABE);
+  public void testFixedInts5() throws Throwable {
+    runTest("convert_from(binary_string('\\xCA\\xFE\\xBA\\xBE'), 'INT_BE')", 0xCAFEBABE);
   }
 
   @Test
-  public void testFixedInts6(@Injectable final DrillbitContext bitContext,
-      @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    runTest(bitContext, connection, "convert_from(binary_string('\\xEF\\xBE\\xAD\\xDE\\xBE\\xBA\\xFE\\xCA'), 'BIGINT')", 0xCAFEBABEDEADBEEFL);
+  public void testFixedInts6() throws Throwable {
+    runTest("convert_from(binary_string('\\xEF\\xBE\\xAD\\xDE\\xBE\\xBA\\xFE\\xCA'), 'BIGINT')", 0xCAFEBABEDEADBEEFL);
   }
 
   @Test
-  public void testFixedInts7(@Injectable final DrillbitContext bitContext,
-      @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    runTest(bitContext, connection, "convert_from(binary_string('\\xCA\\xFE\\xBA\\xBE\\xDE\\xAD\\xBE\\xEF'), 'BIGINT_BE')", 0xCAFEBABEDEADBEEFL);
+  public void testFixedInts7() throws Throwable {
+    runTest("convert_from(binary_string('\\xCA\\xFE\\xBA\\xBE\\xDE\\xAD\\xBE\\xEF'), 'BIGINT_BE')", 0xCAFEBABEDEADBEEFL);
   }
 
   @Test
-  public void testFixedInts8(@Injectable final DrillbitContext bitContext,
-      @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    runTest(bitContext, connection, "convert_from(convert_to(cast(77 as varchar(2)), 'INT_BE'), 'INT_BE')", 77);
+  public void testFixedInts8() throws Throwable {
+    runTest("convert_from(convert_to(cast(77 as varchar(2)), 'INT_BE'), 'INT_BE')", 77);
   }
 
   @Test
-  public void testFixedInts9(@Injectable final DrillbitContext bitContext,
-      @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    runTest(bitContext, connection, "convert_to(cast(77 as varchar(2)), 'INT_BE')", new byte[] {0, 0, 0, 77});
+  public void testFixedInts9() throws Throwable {
+    runTest("convert_to(cast(77 as varchar(2)), 'INT_BE')", new byte[] {0, 0, 0, 77});
   }
 
   @Test
-  public void testFixedInts10(@Injectable final DrillbitContext bitContext,
-      @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    runTest(bitContext, connection, "convert_to(cast(77 as varchar(2)), 'INT')", new byte[] {77, 0, 0, 0});
+  public void testFixedInts10() throws Throwable {
+    runTest("convert_to(cast(77 as varchar(2)), 'INT')", new byte[] {77, 0, 0, 0});
   }
 
   @Test
-  public void testFixedInts11(@Injectable final DrillbitContext bitContext,
-      @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    runTest(bitContext, connection, "convert_to(77, 'BIGINT_BE')", new byte[] {0, 0, 0, 0, 0, 0, 0, 77});
+  public void testFixedInts11() throws Throwable {
+    runTest("convert_to(77, 'BIGINT_BE')", new byte[] {0, 0, 0, 0, 0, 0, 0, 77});
   }
 
   @Test
-  public void testFixedInts12(@Injectable final DrillbitContext bitContext,
-      @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    runTest(bitContext, connection, "convert_to(9223372036854775807, 'BIGINT')", new byte[] {-1, -1, -1, -1, -1, -1, -1, 0x7f});
+  public void testFixedInts12() throws Throwable {
+    runTest("convert_to(9223372036854775807, 'BIGINT')", new byte[] {-1, -1, -1, -1, -1, -1, -1, 0x7f});
   }
 
   @Test
-  public void testFixedInts13(@Injectable final DrillbitContext bitContext,
-      @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    runTest(bitContext, connection, "convert_to(-9223372036854775808, 'BIGINT')", new byte[] {0, 0, 0, 0, 0, 0, 0, (byte)0x80});
+  public void testFixedInts13() throws Throwable {
+    runTest("convert_to(-9223372036854775808, 'BIGINT')", new byte[] {0, 0, 0, 0, 0, 0, 0, (byte)0x80});
   }
 
   @Test
-  public void testVInts1(@Injectable final DrillbitContext bitContext,
-      @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    runTest(bitContext, connection, "convert_to(cast(0 as int), 'INT_HADOOPV')", new byte[] {0});
+  public void testVInts1() throws Throwable {
+    runTest("convert_to(cast(0 as int), 'INT_HADOOPV')", new byte[] {0});
   }
 
   @Test
-  public void testVInts2(@Injectable final DrillbitContext bitContext,
-      @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    runTest(bitContext, connection, "convert_to(cast(128 as int), 'INT_HADOOPV')", new byte[] {-113, -128});
+  public void testVInts2() throws Throwable {
+    runTest("convert_to(cast(128 as int), 'INT_HADOOPV')", new byte[] {-113, -128});
   }
 
   @Test
-  public void testVInts3(@Injectable final DrillbitContext bitContext,
-      @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    runTest(bitContext, connection, "convert_to(cast(256 as int), 'INT_HADOOPV')", new byte[] {-114, 1, 0});
+  public void testVInts3() throws Throwable {
+    runTest("convert_to(cast(256 as int), 'INT_HADOOPV')", new byte[] {-114, 1, 0});
   }
 
   @Test
-  public void testVInts4(@Injectable final DrillbitContext bitContext,
-      @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    runTest(bitContext, connection, "convert_to(cast(65536 as int), 'INT_HADOOPV')", new byte[] {-115, 1, 0, 0});
+  public void testVInts4() throws Throwable {
+    runTest("convert_to(cast(65536 as int), 'INT_HADOOPV')", new byte[] {-115, 1, 0, 0});
   }
 
   @Test
-  public void testVInts5(@Injectable final DrillbitContext bitContext,
-      @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    runTest(bitContext, connection, "convert_to(cast(16777216 as int), 'INT_HADOOPV')", new byte[] {-116, 1, 0, 0, 0});
+  public void testVInts5() throws Throwable {
+    runTest("convert_to(cast(16777216 as int), 'INT_HADOOPV')", new byte[] {-116, 1, 0, 0, 0});
   }
 
   @Test
-  public void testVInts6(@Injectable final DrillbitContext bitContext,
-      @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    runTest(bitContext, connection, "convert_to(4294967296, 'BIGINT_HADOOPV')", new byte[] {-117, 1, 0, 0, 0, 0});
+  public void testVInts6() throws Throwable {
+    runTest("convert_to(4294967296, 'BIGINT_HADOOPV')", new byte[] {-117, 1, 0, 0, 0, 0});
   }
 
   @Test
-  public void testVInts7(@Injectable final DrillbitContext bitContext,
-      @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    runTest(bitContext, connection, "convert_to(1099511627776, 'BIGINT_HADOOPV')", new byte[] {-118, 1, 0, 0, 0, 0, 0});
+  public void testVInts7() throws Throwable {
+    runTest("convert_to(1099511627776, 'BIGINT_HADOOPV')", new byte[] {-118, 1, 0, 0, 0, 0, 0});
   }
 
   @Test
-  public void testVInts8(@Injectable final DrillbitContext bitContext,
-      @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    runTest(bitContext, connection, "convert_to(281474976710656, 'BIGINT_HADOOPV')", new byte[] {-119, 1, 0, 0, 0, 0, 0, 0});
+  public void testVInts8() throws Throwable {
+    runTest("convert_to(281474976710656, 'BIGINT_HADOOPV')", new byte[] {-119, 1, 0, 0, 0, 0, 0, 0});
   }
 
   @Test
-  public void testVInts9(@Injectable final DrillbitContext bitContext,
-      @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    runTest(bitContext, connection, "convert_to(72057594037927936, 'BIGINT_HADOOPV')", new byte[] {-120, 1, 0, 0, 0, 0, 0, 0, 0});
+  public void testVInts9() throws Throwable {
+    runTest("convert_to(72057594037927936, 'BIGINT_HADOOPV')", new byte[] {-120, 1, 0, 0, 0, 0, 0, 0, 0});
   }
 
   @Test
-  public void testVInts10(@Injectable final DrillbitContext bitContext,
-      @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    runTest(bitContext, connection, "convert_to(9223372036854775807, 'BIGINT_HADOOPV')", new byte[] {-120, 127, -1, -1, -1, -1, -1, -1, -1});
+  public void testVInts10() throws Throwable {
+    runTest("convert_to(9223372036854775807, 'BIGINT_HADOOPV')", new byte[] {-120, 127, -1, -1, -1, -1, -1, -1, -1});
   }
 
   @Test
-  public void testVInts11(@Injectable final DrillbitContext bitContext,
-      @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    runTest(bitContext, connection, "convert_from(binary_string('\\x88\\x7f\\xFF\\xFF\\xFF\\xFF\\xFF\\xFF\\xFF'), 'BIGINT_HADOOPV')", 9223372036854775807L);
+  public void testVInts11() throws Throwable {
+    runTest("convert_from(binary_string('\\x88\\x7f\\xFF\\xFF\\xFF\\xFF\\xFF\\xFF\\xFF'), 'BIGINT_HADOOPV')", 9223372036854775807L);
   }
 
   @Test
-  public void testVInts12(@Injectable final DrillbitContext bitContext,
-      @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    runTest(bitContext, connection, "convert_to(-9223372036854775808, 'BIGINT_HADOOPV')", new byte[] {-128, 127, -1, -1, -1, -1, -1, -1, -1});
+  public void testVInts12() throws Throwable {
+    runTest("convert_to(-9223372036854775808, 'BIGINT_HADOOPV')", new byte[] {-128, 127, -1, -1, -1, -1, -1, -1, -1});
   }
 
   @Test
-  public void testVInts13(@Injectable final DrillbitContext bitContext,
-      @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    runTest(bitContext, connection, "convert_from(binary_string('\\x80\\x7f\\xFF\\xFF\\xFF\\xFF\\xFF\\xFF\\xFF'), 'BIGINT_HADOOPV')", -9223372036854775808L);
+  public void testVInts13() throws Throwable {
+    runTest("convert_from(binary_string('\\x80\\x7f\\xFF\\xFF\\xFF\\xFF\\xFF\\xFF\\xFF'), 'BIGINT_HADOOPV')", -9223372036854775808L);
   }
 
   @Test
-  public void testBool1(@Injectable final DrillbitContext bitContext,
-      @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    runTest(bitContext, connection, "convert_from(binary_string('\\x01'), 'BOOLEAN_BYTE')", true);
+  public void testBool1() throws Throwable {
+    runTest("convert_from(binary_string('\\x01'), 'BOOLEAN_BYTE')", true);
   }
 
   @Test
-  public void testBool2(@Injectable final DrillbitContext bitContext,
-      @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    runTest(bitContext, connection, "convert_from(binary_string('\\x00'), 'BOOLEAN_BYTE')", false);
+  public void testBool2() throws Throwable {
+    runTest("convert_from(binary_string('\\x00'), 'BOOLEAN_BYTE')", false);
   }
 
   @Test
-  public void testBool3(@Injectable final DrillbitContext bitContext,
-      @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    runTest(bitContext, connection, "convert_to(true, 'BOOLEAN_BYTE')", new byte[] {1});
+  public void testBool3() throws Throwable {
+    runTest("convert_to(true, 'BOOLEAN_BYTE')", new byte[] {1});
   }
 
   @Test
-  public void testBool4(@Injectable final DrillbitContext bitContext,
-      @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    runTest(bitContext, connection, "convert_to(false, 'BOOLEAN_BYTE')", new byte[] {0});
+  public void testBool4() throws Throwable {
+    runTest("convert_to(false, 'BOOLEAN_BYTE')", new byte[] {0});
   }
 
   @Test
-  public void testFloats1(@Injectable final DrillbitContext bitContext,
-      @Injectable UserServer.UserClientConnection connection) throws Throwable {
+  public void testFloats1() throws Throwable {
   }
 
   @Test
-  public void testFloats2(@Injectable final DrillbitContext bitContext,
-      @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    runTest(bitContext, connection, "convert_from(convert_to(cast(77 as float4), 'FLOAT'), 'FLOAT')", new Float(77.0));
+  public void testFloats2() throws Throwable {
+    runTest("convert_from(convert_to(cast(77 as float4), 'FLOAT'), 'FLOAT')", new Float(77.0));
   }
 
   @Test
-  public void testFloats3(@Injectable final DrillbitContext bitContext,
-      @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    runTest(bitContext, connection, "convert_to(cast(1.4e-45 as float4), 'FLOAT')", new byte[] {1, 0, 0, 0});
+  public void testFloats3() throws Throwable {
+    runTest("convert_to(cast(1.4e-45 as float4), 'FLOAT')", new byte[] {1, 0, 0, 0});
   }
 
   @Test
-  public void testFloats4(@Injectable final DrillbitContext bitContext,
-      @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    runTest(bitContext, connection, "convert_to(cast(3.4028235e+38 as float4), 'FLOAT')", new byte[] {-1, -1, 127, 127});
+  public void testFloats4() throws Throwable {
+    runTest("convert_to(cast(3.4028235e+38 as float4), 'FLOAT')", new byte[] {-1, -1, 127, 127});
   }
 
   @Test
   public void testFloats5(@Injectable final DrillbitContext bitContext,
                            @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    runTest(bitContext, connection, "convert_from(convert_to(cast(77 as float8), 'DOUBLE'), 'DOUBLE')", 77.0);
+    runTest("convert_from(convert_to(cast(77 as float8), 'DOUBLE'), 'DOUBLE')", 77.0);
   }
 
   @Test
   public void testFloats6(@Injectable final DrillbitContext bitContext,
                            @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    runTest(bitContext, connection, "convert_to(cast(77 as float8), 'DOUBLE')", new byte[] {0, 0, 0, 0, 0, 64, 83, 64});
+    runTest("convert_to(cast(77 as float8), 'DOUBLE')", new byte[] {0, 0, 0, 0, 0, 64, 83, 64});
   }
 
   @Test
   public void testFloats7(@Injectable final DrillbitContext bitContext,
                            @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    runTest(bitContext, connection, "convert_to(4.9e-324, 'DOUBLE')", new byte[] {1, 0, 0, 0, 0, 0, 0, 0});
+    runTest("convert_to(4.9e-324, 'DOUBLE')", new byte[] {1, 0, 0, 0, 0, 0, 0, 0});
   }
 
   @Test
   public void testFloats8(@Injectable final DrillbitContext bitContext,
                            @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    runTest(bitContext, connection, "convert_to(1.7976931348623157e+308, 'DOUBLE')", new byte[] {-1, -1, -1, -1, -1, -1, -17, 127});
+    runTest("convert_to(1.7976931348623157e+308, 'DOUBLE')", new byte[] {-1, -1, -1, -1, -1, -1, -17, 127});
   }
 
   @Test
-  public void testUTF8(@Injectable final DrillbitContext bitContext,
-      @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    runTest(bitContext, connection, "convert_from(binary_string('apache_drill'), 'UTF8')", "apache_drill");
-    runTest(bitContext, connection, "convert_to('apache_drill', 'UTF8')", new byte[] {'a', 'p', 'a', 'c', 'h', 'e', '_', 'd', 'r', 'i', 'l', 'l'});
+  public void testUTF8() throws Throwable {
+    runTest("convert_from(binary_string('apache_drill'), 'UTF8')", "apache_drill");
+    runTest("convert_to('apache_drill', 'UTF8')", new byte[] {'a', 'p', 'a', 'c', 'h', 'e', '_', 'd', 'r', 'i', 'l', 'l'});
   }
 
   @Test
   public void testBigIntVarCharReturnTripConvertLogical() throws Exception {
-    RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
-
-    try(Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
-        DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
-      bit1.run();
-      client.connect();
-      String logicalPlan = Resources.toString(Resources.getResource(CONVERSION_TEST_LOGICAL_PLAN), Charsets.UTF_8);
-      List<QueryResultBatch> results = client.runQuery(QueryType.LOGICAL, logicalPlan);
-      int count = 0;
-      RecordBatchLoader loader = new RecordBatchLoader(bit1.getContext().getAllocator());
-      for(QueryResultBatch b : results){
-        count += b.getHeader().getRowCount();
-        loader.load(b.getHeader().getDef(), b.getData());
-        if (loader.getRecordCount() <= 0) {
-          break;
-        }
+    String logicalPlan = Resources.toString(Resources.getResource(CONVERSION_TEST_LOGICAL_PLAN), Charsets.UTF_8);
+    List<QueryResultBatch> results =  testLogicalWithResults(logicalPlan);
+    int count = 0;
+    RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
+    for(QueryResultBatch result : results){
+      count += result.getHeader().getRowCount();
+      loader.load(result.getHeader().getDef(), result.getData());
+      if (loader.getRecordCount() > 0) {
         VectorUtil.showVectorAccessibleContent(loader);
       }
-      assertTrue(count == 10);
+      loader.clear();
+      result.release();
     }
+    assertTrue(count == 10);
   }
 
   @Test
@@ -405,32 +340,16 @@ public class TestConvertFunctions extends PopUnitTestBase {
     assertEquals(intVal, Integer.MIN_VALUE);
   }
 
-  @SuppressWarnings("deprecation")
-  protected <T> void runTest(@Injectable final DrillbitContext bitContext,
-      @Injectable UserServer.UserClientConnection connection, String expression, T expectedResults) throws Throwable {
-
-    final BufferAllocator allocator = new TopLevelAllocator();
-    new NonStrictExpectations(){{
-      bitContext.getMetrics(); result = new MetricRegistry();
-      bitContext.getAllocator(); result = allocator;
-      bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
-    }};
-
+  protected <T> void runTest(String expression, T expectedResults) throws Throwable {
     String testName = String.format("Expression: %s.", expression);
     expression = expression.replace("\\", "\\\\\\\\"); // "\\\\\\\\" => Java => "\\\\" => JsonParser => "\\" => AntlrParser "\"
 
     if (textFileContent == null) textFileContent = Resources.toString(Resources.getResource(CONVERSION_TEST_PHYSICAL_PLAN), Charsets.UTF_8);
-    if(reader == null) reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
-    if(registry == null) registry = new FunctionImplementationRegistry(c);
-    if(context == null) context = new FragmentContext(bitContext, PlanFragment.getDefaultInstance(), connection, registry);
-
     String planString = textFileContent.replace("__CONVERT_EXPRESSION__", expression);
-    PhysicalPlan plan = reader.readPhysicalPlan(planString);
-    SimpleRootExec exec = new SimpleRootExec(
-        ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
 
-    exec.next();
-    Object[] results = getRunResult(exec);
+    List<QueryResultBatch> resultList = testPhysicalWithResults(planString);
+
+    Object[] results = getRunResult(resultList);
     assertEquals(testName, 1, results.length);
     assertNotNull(testName, results[0]);
     if (expectedResults.getClass().isArray()) {
@@ -438,34 +357,29 @@ public class TestConvertFunctions extends PopUnitTestBase {
     } else {
       assertEquals(testName, expectedResults, results[0]);
     }
-
-    exec.stop();
-
-    context.close();
-
-    allocator.close();
-
-    if(context.getFailureCause() != null){
-      throw context.getFailureCause();
-    }
-
-    assertTrue(!context.isFailed());
   }
 
-  protected Object[] getRunResult(SimpleRootExec exec) {
-    Object[] res = new Object [exec.getRecordCount()];
-    int i = 0;
-    for (ValueVector v : exec) {
-      for (int j = 0; j < v.getAccessor().getValueCount(); j++) {
-        if  (v instanceof VarCharVector) {
-          res[i++] = new String(((VarCharVector) v).getAccessor().get(j));
-        } else {
-          res[i++] = v.getAccessor().getObject(j);
+  protected Object[] getRunResult(List<QueryResultBatch> resultList) throws SchemaChangeException {
+    List<Object> res = new ArrayList<Object>();
+
+    RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
+    for(QueryResultBatch result : resultList) {
+      loader.load(result.getHeader().getDef(), result.getData());
+      if (loader.getRecordCount() > 0) {
+        ValueVector v = loader.iterator().next().getValueVector();
+        for (int j = 0; j < v.getAccessor().getValueCount(); j++) {
+          if  (v instanceof VarCharVector) {
+            res.add(new String(((VarCharVector) v).getAccessor().get(j)));
+          } else {
+            res.add(v.getAccessor().getObject(j));
+          }
         }
       }
-      break;
+      loader.clear();
+      result.release();
     }
-    return res;
+
+    return res.toArray();
   }
 
   protected void assertArraysEquals(Object expected, Object actual) {

@@ -10,7 +10,7 @@
   },
   graph: [{
     @id: 1,
-    pop:"mock-sub-scan",
+    pop:"mock-scan",
     url: "http://apache.org",
     entries: [{
       records: 1,
