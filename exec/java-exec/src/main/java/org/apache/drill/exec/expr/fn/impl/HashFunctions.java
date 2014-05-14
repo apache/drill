@@ -245,5 +245,255 @@ public class HashFunctions {
       out.value = com.google.common.hash.Hashing.murmur3_128().hashInt(in.value).asInt();
     }
   }
+  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  public static class DateHash implements DrillSimpleFunc {
+    @Param  DateHolder in;
+    @Output IntHolder out;
 
+    public void setup(RecordBatch incoming) {
+    }
+
+    public void eval() {
+      out.value = com.google.common.hash.Hashing.murmur3_128().hashLong(in.value).asInt();
+    }
+  }
+
+  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  public static class NullableDateHash implements DrillSimpleFunc {
+    @Param  NullableDateHolder in;
+    @Output IntHolder out;
+
+    public void setup(RecordBatch incoming) {
+    }
+
+    public void eval() {
+      if (in.isSet == 0)
+        out.value = 0;
+      else
+        out.value = com.google.common.hash.Hashing.murmur3_128().hashLong(in.value).asInt();
+    }
+  }
+
+  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  public static class TimeStampHash implements DrillSimpleFunc {
+    @Param  TimeStampHolder in;
+    @Output IntHolder out;
+
+    public void setup(RecordBatch incoming) {
+    }
+
+    public void eval() {
+      out.value = com.google.common.hash.Hashing.murmur3_128().hashLong(in.value).asInt();
+    }
+  }
+
+  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  public static class NullableTimeStampHash implements DrillSimpleFunc {
+    @Param  NullableTimeStampHolder in;
+    @Output IntHolder out;
+
+    public void setup(RecordBatch incoming) {
+    }
+
+    public void eval() {
+      if (in.isSet == 0)
+        out.value = 0;
+      else
+        out.value = com.google.common.hash.Hashing.murmur3_128().hashLong(in.value).asInt();
+    }
+  }
+
+  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  public static class TimeHash implements DrillSimpleFunc {
+    @Param  TimeHolder in;
+    @Output IntHolder out;
+
+    public void setup(RecordBatch incoming) {
+    }
+
+    public void eval() {
+      out.value = com.google.common.hash.Hashing.murmur3_128().hashInt(in.value).asInt();
+    }
+  }
+
+  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  public static class NullableTimeHash implements DrillSimpleFunc {
+    @Param  NullableTimeHolder in;
+    @Output IntHolder out;
+
+    public void setup(RecordBatch incoming) {
+    }
+
+    public void eval() {
+      if (in.isSet == 0)
+        out.value = 0;
+      else
+        out.value = com.google.common.hash.Hashing.murmur3_128().hashInt(in.value).asInt();
+    }
+  }
+
+  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  public static class TimeStampTZHash implements DrillSimpleFunc {
+    @Param  TimeStampTZHolder in;
+    @Output IntHolder out;
+
+    public void setup(RecordBatch incoming) {
+    }
+
+    public void eval() {
+      out.value = com.google.common.hash.Hashing.murmur3_128().hashLong(in.value ^ in.index).asInt();
+    }
+  }
+
+  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  public static class NullableTimeStampTZHash implements DrillSimpleFunc {
+    @Param  NullableTimeStampTZHolder in;
+    @Output IntHolder out;
+
+    public void setup(RecordBatch incoming) {
+    }
+
+    public void eval() {
+      if (in.isSet == 0)
+        out.value = 0;
+      else
+        out.value = com.google.common.hash.Hashing.murmur3_128().hashLong(in.value ^ in.index).asInt();
+    }
+  }
+
+  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  public static class Decimal9Hash implements DrillSimpleFunc {
+    @Param  Decimal9Holder in;
+    @Output IntHolder out;
+
+    public void setup(RecordBatch incoming) {
+    }
+
+    public void eval() {
+      out.value = com.google.common.hash.Hashing.murmur3_128().hashInt(in.value).asInt();
+    }
+  }
+
+  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  public static class NullableDecimal9Hash implements DrillSimpleFunc {
+    @Param  NullableDecimal9Holder in;
+    @Output IntHolder out;
+
+    public void setup(RecordBatch incoming) {
+    }
+
+    public void eval() {
+      if (in.isSet == 0)
+        out.value = 0;
+      else
+        out.value = com.google.common.hash.Hashing.murmur3_128().hashInt(in.value).asInt();
+    }
+  }
+
+  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  public static class Decimal18Hash implements DrillSimpleFunc {
+    @Param  Decimal18Holder in;
+    @Output IntHolder out;
+
+    public void setup(RecordBatch incoming) {
+    }
+
+    public void eval() {
+      out.value = com.google.common.hash.Hashing.murmur3_128().hashLong(in.value).asInt();
+    }
+  }
+
+  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  public static class NullableDecimal18Hash implements DrillSimpleFunc {
+    @Param  NullableDecimal18Holder in;
+    @Output IntHolder out;
+
+    public void setup(RecordBatch incoming) {
+    }
+
+    public void eval() {
+      if (in.isSet == 0)
+        out.value = 0;
+      else
+        out.value = com.google.common.hash.Hashing.murmur3_128().hashLong(in.value).asInt();
+    }
+  }
+
+  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  public static class Decimal28Hash implements DrillSimpleFunc {
+    @Param  Decimal28SparseHolder in;
+    @Output IntHolder out;
+
+    public void setup(RecordBatch incoming) {
+    }
+
+    public void eval() {
+
+      int xor = 0;
+      for (int i = 0; i < in.nDecimalDigits; i++) {
+        xor = xor ^ in.getInteger(i);
+      }
+      out.value = com.google.common.hash.Hashing.murmur3_128().hashInt(xor).asInt();
+    }
+  }
+
+  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  public static class NullableDecimal28Hash implements DrillSimpleFunc {
+    @Param  NullableDecimal28SparseHolder in;
+    @Output IntHolder out;
+
+    public void setup(RecordBatch incoming) {
+    }
+
+    public void eval() {
+      if (in.isSet == 0)
+        out.value = 0;
+      else {
+        int xor = 0;
+        for (int i = 0; i < in.nDecimalDigits; i++) {
+          xor = xor ^ in.getInteger(i);
+        }
+        out.value = com.google.common.hash.Hashing.murmur3_128().hashInt(xor).asInt();
+      }
+    }
+  }
+
+  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  public static class Decimal38Hash implements DrillSimpleFunc {
+    @Param  Decimal38SparseHolder in;
+    @Output IntHolder out;
+
+    public void setup(RecordBatch incoming) {
+    }
+
+    public void eval() {
+
+      int xor = 0;
+      for (int i = 0; i < in.nDecimalDigits; i++) {
+        xor = xor ^ in.getInteger(i);
+      }
+      out.value = com.google.common.hash.Hashing.murmur3_128().hashInt(xor).asInt();
+    }
+  }
+
+  @FunctionTemplate(name = "hash", scope = FunctionScope.SIMPLE, nulls = FunctionTemplate.NullHandling.INTERNAL)
+  public static class NullableDecimal38Hash implements DrillSimpleFunc {
+    @Param  NullableDecimal38SparseHolder in;
+    @Output IntHolder out;
+
+    public void setup(RecordBatch incoming) {
+    }
+
+    public void eval() {
+      if (in.isSet == 0)
+        out.value = 0;
+      else {
+        int xor = 0;
+        for (int i = 0; i < in.nDecimalDigits; i++) {
+          xor = xor ^ in.getInteger(i);
+        }
+        out.value = com.google.common.hash.Hashing.murmur3_128().hashInt(xor).asInt();
+      }
+    }
+  }
 }

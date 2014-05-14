@@ -430,4 +430,13 @@ public class TestFunctionsQuery {
             "DEC_18=-2147483648.00\n"
         );
   }
+
+  @Test
+  public void testHashFunctions() throws Exception {
+    String query = "select hash(cast(hire_date as date)), hash(cast(employee_id as decimal(9, 2))), hash(cast(employee_id as decimal(38, 11)))" +
+                   "from cp.`employee.json` limit 1";
+
+    JdbcAssert.withNoDefaultSchema()
+        .sql(query);
+  }
 }
