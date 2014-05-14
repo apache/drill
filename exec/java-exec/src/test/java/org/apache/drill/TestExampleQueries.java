@@ -50,7 +50,28 @@ public class TestExampleQueries extends BaseTestQuery{
 
   @Test
   public void testSelectWithLimit() throws Exception{
-    test("select employee_id,  first_name, last_name from cp.`employee.json` order by employee_id limit 5 offset 10");
+    test("select employee_id,  first_name, last_name from cp.`employee.json` limit 5 ");
+  }
+
+  @Test
+  public void testSelectWithLimit2() throws Exception{
+    test("select l_comment, l_orderkey from cp.`tpch/lineitem.parquet` limit 10000 ");
+  }
+
+  @Test
+  public void testSVRV4() throws Exception{
+    test("select employee_id,  first_name from cp.`employee.json` order by employee_id ");
+  }
+
+  @Test
+  public void testSVRV4MultBatch() throws Exception{
+    test("select l_orderkey from cp.`tpch/lineitem.parquet` order by l_orderkey limit 10000 ");
+  }
+
+  @Test
+  public void testSVRV4Join() throws Exception{
+    test("select count(*) from cp.`tpch/lineitem.parquet` l, cp.`tpch/partsupp.parquet` ps \n" +
+        " where l.l_partkey = ps.ps_partkey and l.l_suppkey = ps.ps_suppkey ;");
   }
 
   @Test

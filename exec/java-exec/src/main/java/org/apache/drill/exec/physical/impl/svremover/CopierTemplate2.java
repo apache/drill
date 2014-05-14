@@ -20,38 +20,38 @@ package org.apache.drill.exec.physical.impl.svremover;
 import javax.inject.Named;
 
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector2;
+import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.allocator.VectorAllocator;
+
 
 public abstract class CopierTemplate2 implements Copier{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CopierTemplate2.class);
-  
+
   private SelectionVector2 sv2;
-  private VectorAllocator[] allocators;
   private RecordBatch incoming;
-  
+  private RecordBatch outgoing;
+
   @Override
   public void setupRemover(FragmentContext context, RecordBatch incoming, RecordBatch outgoing, VectorAllocator[] allocators) throws SchemaChangeException{
-    this.allocators = allocators;
     this.sv2 = incoming.getSelectionVector2();
     this.incoming = incoming;
+    this.outgoing = outgoing;
     doSetup(context, incoming, outgoing);
   }
-  
-  private void allocateVectors(int recordCount){
-    for(VectorAllocator a : allocators){
-      a.alloc(recordCount);
-    }
-  }
-  
+
   @Override
   public int copyRecords(int index, int recordCount){
-    allocateVectors(recordCount);
+    for(VectorWrapper<?> out : outgoing){
+      out.getValueVector().allocateNewSafe();
+    }
+
     int outgoingPosition = 0;
-    
+
     for(int svIndex = index; svIndex < index + recordCount; svIndex++, outgoingPosition++){
       if (!doEval(sv2.getIndex(svIndex), outgoingPosition)) {
         break;
@@ -59,10 +59,10 @@ public abstract class CopierTemplate2 implements Copier{
     }
     return outgoingPosition;
   }
-  
+
   public abstract void doSetup(@Named("context") FragmentContext context, @Named("incoming") RecordBatch incoming, @Named("outgoing") RecordBatch outgoing);
   public abstract boolean doEval(@Named("inIndex") int inIndex, @Named("outIndex") int outIndex);
 
-        
+
 
 }

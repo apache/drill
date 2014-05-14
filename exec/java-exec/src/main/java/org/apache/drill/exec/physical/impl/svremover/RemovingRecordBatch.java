@@ -30,13 +30,7 @@ import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.SelectionVectorRemover;
 import org.apache.drill.exec.record.*;
-import org.apache.drill.exec.record.AbstractSingleRecordBatch;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
-import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.record.TransferPair;
-import org.apache.drill.exec.record.TypedFieldId;
-import org.apache.drill.exec.record.VectorWrapper;
-import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.FixedWidthVector;
 import org.apache.drill.exec.vector.ValueVector;
@@ -126,11 +120,18 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
         }
       }
     }
+
+    logger.debug(String.format("doWork(): %s records copied for out of %s, remaining: %s, incoming schema %s ",
+        copiedRecords,
+        incoming.getRecordCount(),
+        incoming.getRecordCount() - remainderIndex,
+        incoming.getSchema()));
   }
 
   private void handleRemainder() {
     int remainingRecordCount = incoming.getRecordCount() - remainderIndex;
-    int copiedRecords = copier.copyRecords(0, recordCount);
+    int copiedRecords = copier.copyRecords(0, remainingRecordCount);
+
     if (copiedRecords < remainingRecordCount) {
       for(VectorWrapper<?> v : container){
         ValueVector.Mutator m = v.getValueVector().getMutator();
@@ -142,6 +143,7 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
       for(VectorWrapper<?> v : container){
         ValueVector.Mutator m = v.getValueVector().getMutator();
         m.setValueCount(remainingRecordCount);
+        this.recordCount = remainingRecordCount;
       }
       if (incoming.getSchema().getSelectionVectorMode() != SelectionVectorMode.FOUR_BYTE) {
         for(VectorWrapper<?> v: incoming) {
@@ -151,6 +153,11 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
       remainderIndex = 0;
       hasRemainder = false;
     }
+    logger.debug(String.format("handleRemainder(): %s records copied for out of %s, remaining: %s, incoming schema ",
+        copiedRecords,
+        incoming.getRecordCount(),
+        incoming.getRecordCount() - remainderIndex,
+        incoming.getSchema()));
   }
 
   public void cleanup(){
@@ -196,18 +203,17 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
   private Copier getGenerated2Copier() throws SchemaChangeException{
     Preconditions.checkArgument(incoming.getSchema().getSelectionVectorMode() == SelectionVectorMode.TWO_BYTE);
 
-    List<VectorAllocator> allocators = Lists.newArrayList();
     for(VectorWrapper<?> i : incoming){
       ValueVector v = TypeHelper.getNewVector(i.getField(), oContext.getAllocator());
       container.add(v);
-      allocators.add(VectorAllocator.getAllocator(i.getValueVector(), v));
     }
 
     try {
       final CodeGenerator<Copier> cg = CodeGenerator.get(Copier.TEMPLATE_DEFINITION2, context.getFunctionRegistry());
       generateCopies(cg.getRoot(), incoming, false);
       Copier copier = context.getImplementationClass(cg);
-      copier.setupRemover(context, incoming, this, allocators.toArray(new VectorAllocator[allocators.size()]));
+      copier.setupRemover(context, incoming, this, null);
+
       return copier;
     } catch (ClassTransformationException | IOException e) {
       throw new SchemaChangeException("Failure while attempting to load generated class", e);
@@ -221,19 +227,18 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
 
   public static Copier getGenerated4Copier(RecordBatch batch, FragmentContext context, BufferAllocator allocator, VectorContainer container, RecordBatch outgoing) throws SchemaChangeException{
 
-    List<VectorAllocator> allocators = Lists.newArrayList();
     for(VectorWrapper<?> i : batch){
 
       ValueVector v = TypeHelper.getNewVector(i.getField(), allocator);
       container.add(v);
-      allocators.add(getAllocator4(v));
     }
 
     try {
       final CodeGenerator<Copier> cg = CodeGenerator.get(Copier.TEMPLATE_DEFINITION4, context.getFunctionRegistry());
       generateCopies(cg.getRoot(), batch, true);
       Copier copier = context.getImplementationClass(cg);
-      copier.setupRemover(context, batch, outgoing, allocators.toArray(new VectorAllocator[allocators.size()]));
+      copier.setupRemover(context, batch, outgoing, null);
+
       return copier;
     } catch (ClassTransformationException | IOException e) {
       throw new SchemaChangeException("Failure while attempting to load generated class", e);

@@ -29,30 +29,28 @@ import org.apache.drill.exec.vector.allocator.VectorAllocator;
 
 public abstract class CopierTemplate4 implements Copier{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CopierTemplate4.class);
-  
+
   private SelectionVector4 sv4;
-  private VectorAllocator[] allocators;
   private RecordBatch incoming;
-  
-  private void allocateVectors(int recordCount){
-    for(VectorAllocator a : allocators){
-      a.alloc(recordCount);
-    }
-  }
-  
+  private RecordBatch outgoing;
+
+
   @Override
   public void setupRemover(FragmentContext context, RecordBatch incoming, RecordBatch outgoing, VectorAllocator[] allocators) throws SchemaChangeException{
-    this.allocators = allocators;
     this.incoming = incoming;
+    this.outgoing = outgoing;
     this.sv4 = incoming.getSelectionVector4();
     doSetup(context, incoming, outgoing);
   }
-  
+
 
   @Override
   public int copyRecords(int index, int recordCount){
 //    logger.debug("Copying records.");
-    allocateVectors(recordCount);
+    for(VectorWrapper<?> out : outgoing){
+      out.getValueVector().allocateNewSafe();
+    }
+
     int outgoingPosition = 0;
     for(int svIndex = index; svIndex < index + recordCount; svIndex++, outgoingPosition++){
       int deRefIndex = sv4.get(svIndex);
@@ -62,10 +60,10 @@ public abstract class CopierTemplate4 implements Copier{
     }
     return outgoingPosition;
   }
-  
+
   public abstract void doSetup(@Named("context") FragmentContext context, @Named("incoming") RecordBatch incoming, @Named("outgoing") RecordBatch outgoing);
   public abstract boolean doEval(@Named("inIndex") int inIndex, @Named("outIndex") int outIndex);
 
-        
+
 
 }

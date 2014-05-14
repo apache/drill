@@ -28,7 +28,7 @@ public class JsonRecordReader2Test extends BaseTestQuery{
   @Test
   public void testComplexJsonInput() throws Exception{
 //  test("select z[0]['orange']  from cp.`jsoninput/input2.json` limit 10");
-    test("select `integer`, x['y'] as x1, x['y'] as x2, z[0], z[0]['orange'], z[1]['pink']  from cp.`jsoninput/input2.json` limit 10");
+    test("select `integer`, x['y'] as x1, x['y'] as x2, z[0], z[0]['orange'], z[1]['pink']  from cp.`jsoninput/input2.json` ");
     test("select x from cp.`jsoninput/input2.json`");
 
 //    test("select z[0]  from cp.`jsoninput/input2.json` limit 10");
