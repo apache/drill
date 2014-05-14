@@ -38,7 +38,7 @@ import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.RelTraitSet;
 
-public class SingleMergeExchangePrel extends SingleRel implements Prel {
+public class SingleMergeExchangePrel extends SinglePrel {
 
   private final RelCollation collation ;
 
@@ -48,32 +48,32 @@ public class SingleMergeExchangePrel extends SingleRel implements Prel {
     assert input.getConvention() == Prel.DRILL_PHYSICAL;
   }
 
-  /**    
-   * A SingleMergeExchange processes a total of M rows coming from N 
-   * sorted input streams (from N senders) and merges them into a single 
+  /**
+   * A SingleMergeExchange processes a total of M rows coming from N
+   * sorted input streams (from N senders) and merges them into a single
    * output sorted stream. For costing purposes we can assume each sender
-   * is sending M/N rows to a single receiver.   
+   * is sending M/N rows to a single receiver.
    * (See DrillCostBase for symbol notations)
-   * C =  CPU cost of SV remover for M/N rows 
-   *     + Network cost of sending M/N rows to 1 destination. 
-   * So, C = (s * M/N) + (w * M/N) 
+   * C =  CPU cost of SV remover for M/N rows
+   *     + Network cost of sending M/N rows to 1 destination.
+   * So, C = (s * M/N) + (w * M/N)
    * Cost of merging M rows coming from N senders = (M log2 N) * c
-   * Total cost = N * C + (M log2 N) * c 
-   */  
+   * Total cost = N * C + (M log2 N) * c
+   */
   @Override
   public RelOptCost computeSelfCost(RelOptPlanner planner) {
     if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
-      return super.computeSelfCost(planner).multiplyBy(.1); 
+      return super.computeSelfCost(planner).multiplyBy(.1);
     }
     RelNode child = this.getChild();
     double inputRows = RelMetadataQuery.getRowCount(child);
-    int  rowWidth = child.getRowType().getFieldCount() * DrillCostBase.AVG_FIELD_WIDTH;    
+    int  rowWidth = child.getRowType().getFieldCount() * DrillCostBase.AVG_FIELD_WIDTH;
     double svrCpuCost = DrillCostBase.SVR_CPU_COST * inputRows;
     double networkCost = DrillCostBase.BYTE_NETWORK_COST * inputRows * rowWidth;
-    int numEndPoints = PrelUtil.getSettings(getCluster()).numEndPoints(); 
+    int numEndPoints = PrelUtil.getSettings(getCluster()).numEndPoints();
     double mergeCpuCost = DrillCostBase.COMPARE_CPU_COST * inputRows * (Math.log(numEndPoints)/Math.log(2));
     DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
-    return costFactory.makeCost(inputRows, svrCpuCost + mergeCpuCost, 0, networkCost);   
+    return costFactory.makeCost(inputRows, svrCpuCost + mergeCpuCost, 0, networkCost);
   }
 
   @Override
@@ -87,9 +87,6 @@ public class SingleMergeExchangePrel extends SingleRel implements Prel {
     PhysicalOperator childPOP = child.getPhysicalOperator(creator);
 
     if(PrelUtil.getSettings(getCluster()).isSingleMode()) return childPOP;
-
-    //Currently, only accepts "NONE". For other, requires SelectionVectorRemover
-    childPOP = PrelUtil.removeSvIfRequired(childPOP, SelectionVectorMode.NONE);
 
     SingleMergeExchange g = new SingleMergeExchange(childPOP, PrelUtil.getOrdering(this.collation, getChild().getRowType()));
     return g;
@@ -107,5 +104,13 @@ public class SingleMergeExchangePrel extends SingleRel implements Prel {
     }
     return pw;
   }
+
+  @Override
+  public SelectionVectorMode getEncoding() {
+    return SelectionVectorMode.NONE;
+  }
+
+
+
 
 }

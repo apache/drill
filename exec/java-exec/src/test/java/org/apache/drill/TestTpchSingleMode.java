@@ -20,7 +20,6 @@ package org.apache.drill;
 import org.junit.Ignore;
 import org.junit.Test;
 
-@Ignore // DRILL-648
 public class TestTpchSingleMode extends BaseTestQuery{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestTpchSingleMode.class);
 

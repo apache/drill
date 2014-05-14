@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.planner.physical;
 
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -35,8 +37,11 @@ import org.apache.drill.exec.planner.physical.DrillDistributionTrait.Distributio
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.eigenbase.rel.RelCollation;
 import org.eigenbase.rel.RelFieldCollation;
+import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptPlanner;
+import org.eigenbase.relopt.RelOptRuleCall;
+import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.rex.RexCall;
 import org.eigenbase.rex.RexInputRef;
@@ -84,20 +89,24 @@ public class PrelUtil {
     return func;
   }
 
+  public static Iterator<Prel> iter(RelNode... nodes){
+    return (Iterator<Prel>) (Object) Arrays.asList(nodes).iterator();
+  }
+
   public static PlannerSettings getSettings(RelOptCluster cluster){
     return cluster.getPlanner().getFrameworkContext().unwrap(PlannerSettings.class);
   }
-  
+
   public static PlannerSettings getPlannerSettings(RelOptPlanner planner) {
     return planner.getFrameworkContext().unwrap(PlannerSettings.class);
   }
 
-  public static PhysicalOperator removeSvIfRequired(PhysicalOperator child, SelectionVectorMode... allowed){
-    SelectionVectorMode current = child.getSVMode();
+  public static Prel removeSvIfRequired(Prel prel, SelectionVectorMode... allowed){
+    SelectionVectorMode current = prel.getEncoding();
     for(SelectionVectorMode m : allowed){
-      if(current == m) return child;
+      if(current == m) return prel;
     }
-    return new SelectionVectorRemover(child);
+    return new SelectionVectorRemoverPrel(prel);
   }
 
   public static List<SchemaPath> getColumns(RelDataType rowType, List<RexNode> projects) {
@@ -176,4 +185,15 @@ public class PrelUtil {
 
   }
 
+  public static RelTraitSet fixTraits(RelOptRuleCall call, RelTraitSet set){
+    return fixTraits(call.getPlanner(), set);
+  }
+
+  public static RelTraitSet fixTraits(RelOptPlanner cluster, RelTraitSet set){
+    if(getPlannerSettings(cluster).isSingleMode()){
+      return set.replace(DrillDistributionTrait.ANY);
+    }else{
+      return set;
+    }
+  }
 }

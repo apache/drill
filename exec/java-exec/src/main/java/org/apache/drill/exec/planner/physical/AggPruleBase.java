@@ -31,11 +31,11 @@ import org.eigenbase.relopt.RelOptRuleOperand;
 
 import com.google.common.collect.Lists;
 
-// abstract base class for the aggregation physical rules  
-public abstract class AggPruleBase extends RelOptRule {
+// abstract base class for the aggregation physical rules
+public abstract class AggPruleBase extends Prule {
 
   protected AggPruleBase(RelOptRuleOperand operand, String description) {
-    super(operand, description);   
+    super(operand, description);
   }
 
   protected List<DistributionField> getDistributionField(DrillAggregateRel rel, boolean allFields) {
@@ -48,22 +48,23 @@ public abstract class AggPruleBase extends RelOptRule {
       if (!allFields && groupByFields.size() == 1) {
         // if we are only interested in 1 grouping field, pick the first one for now..
         // but once we have num distinct values (NDV) statistics, we should pick the one
-        // with highest NDV. 
+        // with highest NDV.
         break;
       }
-    }    
-    
+    }
+
     return groupByFields;
   }
-  
+
   // Create 2 phase aggr plan for aggregates such as SUM, MIN, MAX
-  // If any of the aggregate functions are not one of these, then we 
-  // currently won't generate a 2 phase plan. 
+  // If any of the aggregate functions are not one of these, then we
+  // currently won't generate a 2 phase plan.
   protected boolean create2PhasePlan(RelOptRuleCall call, DrillAggregateRel aggregate) {
-    if (! PrelUtil.getPlannerSettings(call.getPlanner()).isMultiPhaseAggEnabled()) {
+    PlannerSettings settings = PrelUtil.getPlannerSettings(call.getPlanner());
+    if (! settings.isMultiPhaseAggEnabled() || settings.isSingleMode()) {
       return false;
     }
-    
+
     for (AggregateCall aggCall : aggregate.getAggCallList()) {
       String name = aggCall.getAggregation().getName();
       if ( ! (name.equals("SUM") || name.equals("MIN") || name.equals("MAX"))) {

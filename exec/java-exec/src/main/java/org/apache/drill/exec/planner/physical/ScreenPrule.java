@@ -26,19 +26,19 @@ import org.eigenbase.relopt.RelOptRule;
 import org.eigenbase.relopt.RelOptRuleCall;
 import org.eigenbase.relopt.RelTraitSet;
 
-public class ScreenPrule extends RelOptRule{
+public class ScreenPrule extends Prule{
   public static final RelOptRule INSTANCE = new ScreenPrule();
 
-  
+
   public ScreenPrule() {
-    super(RelOptHelper.some(DrillScreenRel.class, DrillRel.DRILL_LOGICAL, RelOptHelper.any(RelNode.class)), "Prel.ScreenPrule");    
+    super(RelOptHelper.some(DrillScreenRel.class, DrillRel.DRILL_LOGICAL, RelOptHelper.any(RelNode.class)), "Prel.ScreenPrule");
   }
-  
+
   @Override
   public void onMatch(RelOptRuleCall call) {
     final DrillScreenRelBase screen = (DrillScreenRelBase) call.rel(0);
     final RelNode input = call.rel(1);
-    
+
     final RelTraitSet traits = input.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(DrillDistributionTrait.SINGLETON);
     final RelNode convertedInput = convert(input, traits);
     DrillScreenRelBase newScreen = new ScreenPrel(screen.getCluster(), screen.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(DrillDistributionTrait.SINGLETON), convertedInput);

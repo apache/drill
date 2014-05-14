@@ -70,7 +70,7 @@ import com.google.common.collect.Lists;
  * scan the whole parquet files.
  */
 
-public class ConvertCountToDirectScan extends RelOptRule {
+public class ConvertCountToDirectScan extends Prule {
 
   public static final RelOptRule AGG_ON_PROJ_ON_SCAN = new ConvertCountToDirectScan(
       RelOptHelper.some(DrillAggregateRel.class,

@@ -23,8 +23,8 @@ import org.eigenbase.relopt.RelOptRule;
 import org.eigenbase.relopt.RelOptRuleCall;
 import org.eigenbase.rex.RexLiteral;
 
-public class PushLimitToTopN  extends RelOptRule{
-  
+public class PushLimitToTopN  extends Prule{
+
   public static final RelOptRule INSTANCE = new PushLimitToTopN();
 
   private PushLimitToTopN() {
@@ -36,16 +36,16 @@ public class PushLimitToTopN  extends RelOptRule{
     final LimitPrel limit = (LimitPrel) call.rel(0);
     final SingleMergeExchangePrel smex = (SingleMergeExchangePrel) call.rel(1);
     final SortPrel sort = (SortPrel) call.rel(2);
-    
+
     // First offset to include into results (inclusive). Null implies it is starting from offset 0
     int offset = limit.getOffset() != null ? Math.max(0, RexLiteral.intValue(limit.getOffset())) : 0;
     int fetch = limit.getFetch() != null?  Math.max(0, RexLiteral.intValue(limit.getFetch())) : 0;
-        
-    final TopNPrel topN = new TopNPrel(limit.getCluster(), sort.getTraitSet(), sort.getChild(), offset + fetch, sort.getCollation()); 
-    final LimitPrel newLimit = new LimitPrel(limit.getCluster(), limit.getTraitSet(), 
-        new SingleMergeExchangePrel(smex.getCluster(), smex.getTraitSet(), topN, sort.getCollation()), 
+
+    final TopNPrel topN = new TopNPrel(limit.getCluster(), sort.getTraitSet(), sort.getChild(), offset + fetch, sort.getCollation());
+    final LimitPrel newLimit = new LimitPrel(limit.getCluster(), limit.getTraitSet(),
+        new SingleMergeExchangePrel(smex.getCluster(), smex.getTraitSet(), topN, sort.getCollation()),
         limit.getOffset(), limit.getFetch());
-    
+
     call.transformTo(newLimit);
   }
 

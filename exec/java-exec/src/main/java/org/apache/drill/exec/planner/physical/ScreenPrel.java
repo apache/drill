@@ -18,6 +18,7 @@
 package org.apache.drill.exec.planner.physical;
 
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.drill.exec.physical.base.PhysicalOperator;
@@ -49,11 +50,28 @@ public class ScreenPrel extends DrillScreenRelBase implements Prel {
 
     PhysicalOperator childPOP = child.getPhysicalOperator(creator);
 
-    //Currently, Screen only accepts "NONE". For other, requires SelectionVectorRemover
-    childPOP = PrelUtil.removeSvIfRequired(childPOP, SelectionVectorMode.NONE);
-
     Screen s = new Screen(childPOP, creator.getContext().getCurrentEndpoint());
     return s;
+  }
+
+  @Override
+  public Iterator<Prel> iterator() {
+    return PrelUtil.iter(getChild());
+  }
+
+  @Override
+  public <T, X, E extends Throwable> T accept(PrelVisitor<T, X, E> logicalVisitor, X value) throws E {
+    return logicalVisitor.visitPrel(this, value);
+  }
+
+  @Override
+  public SelectionVectorMode[] getSupportedEncodings() {
+    return SelectionVectorMode.DEFAULT;
+  }
+
+  @Override
+  public SelectionVectorMode getEncoding() {
+    return SelectionVectorMode.NONE;
   }
 
 }

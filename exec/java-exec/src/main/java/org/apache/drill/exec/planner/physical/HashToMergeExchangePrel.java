@@ -18,6 +18,7 @@
 package org.apache.drill.exec.planner.physical;
 
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.drill.exec.physical.base.PhysicalOperator;
@@ -38,13 +39,13 @@ import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.reltype.RelDataTypeField;
 
 
-public class HashToMergeExchangePrel extends SingleRel implements Prel {
+public class HashToMergeExchangePrel extends SinglePrel {
 
   private final List<DistributionField> distFields;
   private int numEndPoints = 0;
   private final RelCollation collation ;
-  
-  public HashToMergeExchangePrel(RelOptCluster cluster, RelTraitSet traitSet, RelNode input, 
+
+  public HashToMergeExchangePrel(RelOptCluster cluster, RelTraitSet traitSet, RelNode input,
                                  List<DistributionField> fields,
                                  RelCollation collation,
                                  int numEndPoints) {
@@ -59,48 +60,49 @@ public class HashToMergeExchangePrel extends SingleRel implements Prel {
   @Override
   public RelOptCost computeSelfCost(RelOptPlanner planner) {
     if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
-      return super.computeSelfCost(planner).multiplyBy(.1); 
-    }    
+      return super.computeSelfCost(planner).multiplyBy(.1);
+    }
     RelNode child = this.getChild();
     double inputRows = RelMetadataQuery.getRowCount(child);
 
     int  rowWidth = child.getRowType().getFieldCount() * DrillCostBase.AVG_FIELD_WIDTH;
     double hashCpuCost = DrillCostBase.HASH_CPU_COST * inputRows * distFields.size();
     double svrCpuCost = DrillCostBase.SVR_CPU_COST * inputRows;
-    double mergeCpuCost = DrillCostBase.COMPARE_CPU_COST * inputRows * (Math.log(numEndPoints)/Math.log(2));    
+    double mergeCpuCost = DrillCostBase.COMPARE_CPU_COST * inputRows * (Math.log(numEndPoints)/Math.log(2));
     double networkCost = DrillCostBase.BYTE_NETWORK_COST * inputRows * rowWidth;
     DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
-    return costFactory.makeCost(inputRows, hashCpuCost + svrCpuCost + mergeCpuCost, 0, networkCost);    
+    return costFactory.makeCost(inputRows, hashCpuCost + svrCpuCost + mergeCpuCost, 0, networkCost);
   }
 
   @Override
   public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
-    return new HashToMergeExchangePrel(getCluster(), traitSet, sole(inputs), distFields, 
+    return new HashToMergeExchangePrel(getCluster(), traitSet, sole(inputs), distFields,
         this.collation, numEndPoints);
   }
-  
+
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
     Prel child = (Prel) this.getChild();
-    
+
     PhysicalOperator childPOP = child.getPhysicalOperator(creator);
-    
+
     if(PrelUtil.getSettings(getCluster()).isSingleMode()) return childPOP;
 
-    //Currently, only accepts "NONE". For other, requires SelectionVectorRemover
-    childPOP = PrelUtil.removeSvIfRequired(childPOP, SelectionVectorMode.NONE);
-    
-    HashToMergeExchange g = new HashToMergeExchange(childPOP, 
+    HashToMergeExchange g = new HashToMergeExchange(childPOP,
         PrelUtil.getHashExpression(this.distFields, getChild().getRowType()),
         PrelUtil.getOrdering(this.collation, getChild().getRowType()));
-    return g;    
+    return g;
   }
-  
+
   public List<DistributionField> getDistFields() {
     return this.distFields;
   }
-  
+
   public RelCollation getCollation() {
     return this.collation;
   }
-  
+
+  @Override
+  public SelectionVectorMode getEncoding() {
+    return SelectionVectorMode.NONE;
+  }
 }

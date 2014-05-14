@@ -39,13 +39,13 @@ import org.eigenbase.rex.RexNode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
-// abstract base class for the join physical rules  
-public abstract class JoinPruleBase extends RelOptRule {
+// abstract base class for the join physical rules
+public abstract class JoinPruleBase extends Prule {
 
   protected static enum PhysicalJoinType {HASH_JOIN, MERGE_JOIN};
-  
+
   protected JoinPruleBase(RelOptRuleOperand operand, String description) {
-    super(operand, description);   
+    super(operand, description);
   }
 
   protected boolean checkPreconditions(DrillJoinRel join, RelNode left, RelNode right) {
@@ -53,7 +53,7 @@ public abstract class JoinPruleBase extends RelOptRule {
       // this indicates a cartesian join which is not supported by existing rules
       return false;
     }
-    
+
     List<Integer> leftKeys = Lists.newArrayList();
     List<Integer> rightKeys = Lists.newArrayList() ;
     RexNode remaining = RelOptUtil.splitJoinCondition(left, right, join.getCondition(), leftKeys, rightKeys);
@@ -63,45 +63,45 @@ public abstract class JoinPruleBase extends RelOptRule {
     }
     return true;
   }
-  
+
   protected List<DistributionField> getDistributionField(List<Integer> keys) {
     List<DistributionField> distFields = Lists.newArrayList();
 
     for (int key : keys) {
       distFields.add(new DistributionField(key));
     }
-     
+
     return distFields;
-  }  
-  
+  }
+
   protected boolean checkBroadcastConditions(RelOptPlanner planner, DrillJoinRel join, RelNode left, RelNode right) {
     if (! PrelUtil.getPlannerSettings(planner).isBroadcastJoinEnabled()) {
       return false;
     }
 
     double estimatedRightRowCount = RelMetadataQuery.getRowCount(right);
-    if (estimatedRightRowCount < PrelUtil.getSettings(join.getCluster()).getBroadcastThreshold() 
+    if (estimatedRightRowCount < PrelUtil.getSettings(join.getCluster()).getBroadcastThreshold()
         && ! left.getTraitSet().getTrait(DrillDistributionTraitDef.INSTANCE).equals(DrillDistributionTrait.SINGLETON)
         ) {
       return true;
     }
     return false;
   }
-  
-  // Create join plan with both left and right children hash distributed. If the physical join type 
-  // is MergeJoin, a collation must be provided for both left and right child and the plan will contain 
-  // sort converter if necessary to provide the collation. 
+
+  // Create join plan with both left and right children hash distributed. If the physical join type
+  // is MergeJoin, a collation must be provided for both left and right child and the plan will contain
+  // sort converter if necessary to provide the collation.
   protected void createDistBothPlan(RelOptRuleCall call, DrillJoinRel join,
-      PhysicalJoinType physicalJoinType, 
-      RelNode left, RelNode right, 
+      PhysicalJoinType physicalJoinType,
+      RelNode left, RelNode right,
       RelCollation collationLeft, RelCollation collationRight) throws InvalidRelException {
- 
+
     DrillDistributionTrait hashLeftPartition = new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED, ImmutableList.copyOf(getDistributionField(join.getLeftKeys())));
     DrillDistributionTrait hashRightPartition = new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED, ImmutableList.copyOf(getDistributionField(join.getRightKeys())));
     RelTraitSet traitsLeft = null;
     RelTraitSet traitsRight = null;
-    
-    if (physicalJoinType == PhysicalJoinType.MERGE_JOIN) { 
+
+    if (physicalJoinType == PhysicalJoinType.MERGE_JOIN) {
       assert collationLeft != null && collationRight != null;
       traitsLeft = left.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(collationLeft).plus(hashLeftPartition);
       traitsRight = right.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(collationRight).plus(hashRightPartition);
@@ -112,28 +112,28 @@ public abstract class JoinPruleBase extends RelOptRule {
 
     final RelNode convertedLeft = convert(left, traitsLeft);
     final RelNode convertedRight = convert(right, traitsRight);
-    
+
     DrillJoinRelBase newJoin = null;
-    
-    if (physicalJoinType == PhysicalJoinType.HASH_JOIN) { 
-      newJoin = new HashJoinPrel(join.getCluster(), traitsLeft, 
+
+    if (physicalJoinType == PhysicalJoinType.HASH_JOIN) {
+      newJoin = new HashJoinPrel(join.getCluster(), traitsLeft,
                                  convertedLeft, convertedRight, join.getCondition(),
                                  join.getJoinType());
-      
-    } else if (physicalJoinType == PhysicalJoinType.MERGE_JOIN) { 
-      newJoin = new MergeJoinPrel(join.getCluster(), traitsLeft, 
+
+    } else if (physicalJoinType == PhysicalJoinType.MERGE_JOIN) {
+      newJoin = new MergeJoinPrel(join.getCluster(), traitsLeft,
                                   convertedLeft, convertedRight, join.getCondition(),
                                   join.getJoinType());
     }
-    call.transformTo(newJoin);    
+    call.transformTo(newJoin);
   }
-  
-  // Create join plan with left child ANY distributed and right child BROADCAST distributed. If the physical join type 
+
+  // Create join plan with left child ANY distributed and right child BROADCAST distributed. If the physical join type
   // is MergeJoin, a collation must be provided for both left and right child and the plan will contain sort converter
-  // if necessary to provide the collation. 
+  // if necessary to provide the collation.
   protected void createBroadcastPlan(RelOptRuleCall call, DrillJoinRel join,
-      PhysicalJoinType physicalJoinType, 
-      RelNode left, RelNode right, 
+      PhysicalJoinType physicalJoinType,
+      RelNode left, RelNode right,
       RelCollation collationLeft, RelCollation collationRight) throws InvalidRelException {
 
     DrillDistributionTrait distBroadcastRight = new DrillDistributionTrait(DrillDistributionTrait.DistributionType.BROADCAST_DISTRIBUTED);
@@ -144,15 +144,15 @@ public abstract class JoinPruleBase extends RelOptRule {
     } else {
       traitsRight = right.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(distBroadcastRight);
     }
-    
+
     RelTraitSet traitsLeft = left.getTraitSet().plus(Prel.DRILL_PHYSICAL);
-    RelNode convertedLeft = convert(left, traitsLeft);  
+    RelNode convertedLeft = convert(left, traitsLeft);
     RelNode convertedRight = convert(right, traitsRight);
 
     traitsLeft = left.getTraitSet().plus(Prel.DRILL_PHYSICAL);
 
     DrillJoinRelBase newJoin = null;
-    
+
     if (convertedLeft instanceof RelSubset) {
       RelSubset subset = (RelSubset) convertedLeft;
       for (RelNode rel : subset.getRelList()) {
@@ -163,7 +163,7 @@ public abstract class JoinPruleBase extends RelOptRule {
           } else {
             traitsLeft = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(toDist);
           }
-          
+
           RelNode newLeft = convert(left, traitsLeft);
           if (physicalJoinType == PhysicalJoinType.HASH_JOIN) {
             newJoin = new HashJoinPrel(join.getCluster(), traitsLeft, newLeft, convertedRight, join.getCondition(),
@@ -177,5 +177,5 @@ public abstract class JoinPruleBase extends RelOptRule {
       }
     }
   }
-  
+
 }

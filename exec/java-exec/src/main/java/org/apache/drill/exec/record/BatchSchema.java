@@ -39,12 +39,12 @@ public class BatchSchema implements Iterable<MaterializedField> {
   public int getFieldCount(){
     return fields.size();
   }
-  
+
   public MaterializedField getColumn(int index){
     if(index < 0 || index >= fields.size()) return null;
     return fields.get(index);
   }
-  
+
   @Override
   public Iterator<MaterializedField> iterator() {
     return fields.iterator();
@@ -67,6 +67,11 @@ public class BatchSchema implements Iterable<MaterializedField> {
     SelectionVectorMode(int size, boolean hasSelectionVector) {
       this.size = size;
     }
+
+    public static SelectionVectorMode[] DEFAULT = {NONE};
+    public static SelectionVectorMode[] NONE_AND_TWO = {NONE, TWO_BYTE};
+    public static SelectionVectorMode[] NONE_AND_FOUR = {NONE, FOUR_BYTE};
+    public static SelectionVectorMode[] ALL = {NONE, TWO_BYTE, FOUR_BYTE};
   }
 
   @Override
@@ -96,7 +101,7 @@ public class BatchSchema implements Iterable<MaterializedField> {
       return false;
     return true;
   }
-  
+
 
 
 }

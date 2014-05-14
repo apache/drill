@@ -29,7 +29,7 @@ import org.eigenbase.relopt.RelOptRuleCall;
 import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.relopt.volcano.RelSubset;
 
-public class WriterPrule extends RelOptRule{
+public class WriterPrule extends Prule{
   public static final RelOptRule INSTANCE = new WriterPrule();
 
   public WriterPrule() {

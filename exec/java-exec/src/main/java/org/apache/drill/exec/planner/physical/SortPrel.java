@@ -18,6 +18,7 @@
 package org.apache.drill.exec.planner.physical;
 
 import java.io.IOException;
+import java.util.Iterator;
 
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.ExternalSort;
@@ -52,17 +53,17 @@ public class SortPrel extends SortRel implements Prel {
   public RelOptCost computeSelfCost(RelOptPlanner planner) {
     if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
       //We use multiplier 0.05 for TopN operator, and 0.1 for Sort, to make TopN a preferred choice.
-      return super.computeSelfCost(planner).multiplyBy(.1); 
+      return super.computeSelfCost(planner).multiplyBy(.1);
     }
-    
+
     RelNode child = this.getChild();
     double inputRows = RelMetadataQuery.getRowCount(child);
     // int  rowWidth = child.getRowType().getPrecision();
     int numSortFields = this.collation.getFieldCollations().size();
-    double cpuCost = DrillCostBase.COMPARE_CPU_COST * numSortFields * inputRows * (Math.log(inputRows)/Math.log(2)); 
+    double cpuCost = DrillCostBase.COMPARE_CPU_COST * numSortFields * inputRows * (Math.log(inputRows)/Math.log(2));
     double diskIOCost = 0; // assume in-memory for now until we enforce operator-level memory constraints
     DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
-    return costFactory.makeCost(inputRows, cpuCost, diskIOCost, 0);    
+    return costFactory.makeCost(inputRows, cpuCost, diskIOCost, 0);
   }
 
   @Override
@@ -71,10 +72,6 @@ public class SortPrel extends SortRel implements Prel {
 
     PhysicalOperator childPOP = child.getPhysicalOperator(creator);
 
-//    childPOP = PrelUtil.removeSvIfRequired(childPOP, SelectionVectorMode.NONE);
-//    Sort g = new Sort(childPOP, PrelUtil.getOrdering(this.collation, getChild().getRowType()), false);
-
-    childPOP = PrelUtil.removeSvIfRequired(childPOP, SelectionVectorMode.NONE, SelectionVectorMode.TWO_BYTE);
     Sort g = new ExternalSort(childPOP, PrelUtil.getOrdering(this.collation, getChild().getRowType()), false);
 
     return g;
@@ -87,5 +84,25 @@ public class SortPrel extends SortRel implements Prel {
       RexNode offset,
       RexNode fetch) {
     return new SortPrel(getCluster(), traitSet, newInput, newCollation);
+  }
+
+  @Override
+  public Iterator<Prel> iterator() {
+    return PrelUtil.iter(getChild());
+  }
+
+  @Override
+  public <T, X, E extends Throwable> T accept(PrelVisitor<T, X, E> logicalVisitor, X value) throws E {
+    return logicalVisitor.visitPrel(this, value);
+  }
+
+  @Override
+  public SelectionVectorMode[] getSupportedEncodings() {
+    return SelectionVectorMode.DEFAULT; // should support SV2 but there is a bug, DRILL-648
+  }
+
+  @Override
+  public SelectionVectorMode getEncoding() {
+    return SelectionVectorMode.FOUR_BYTE;
   }
 }

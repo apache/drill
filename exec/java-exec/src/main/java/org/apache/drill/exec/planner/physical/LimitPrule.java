@@ -27,19 +27,19 @@ import org.eigenbase.relopt.RelOptRule;
 import org.eigenbase.relopt.RelOptRuleCall;
 import org.eigenbase.relopt.RelTraitSet;
 
-public class LimitPrule extends RelOptRule{
+public class LimitPrule extends Prule{
   public static final RelOptRule INSTANCE = new LimitPrule();
 
-  
+
   public LimitPrule() {
-    super(RelOptHelper.any(DrillLimitRel.class, DrillRel.DRILL_LOGICAL), "Prel.LimitPrule");    
+    super(RelOptHelper.any(DrillLimitRel.class, DrillRel.DRILL_LOGICAL), "Prel.LimitPrule");
   }
-  
+
   @Override
   public void onMatch(RelOptRuleCall call) {
     final DrillLimitRel limit = (DrillLimitRel) call.rel(0);
     final RelNode input = limit.getChild();
-    
+
     final RelTraitSet traits = input.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(DrillDistributionTrait.SINGLETON);
     final RelNode convertedInput = convert(input, traits);
     LimitPrel newLimit = new LimitPrel(limit.getCluster(), limit.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(DrillDistributionTrait.SINGLETON), convertedInput, limit.getOffset(), limit.getFetch());

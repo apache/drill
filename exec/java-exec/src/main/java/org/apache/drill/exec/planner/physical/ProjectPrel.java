@@ -19,6 +19,8 @@ package org.apache.drill.exec.planner.physical;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.drill.exec.physical.base.PhysicalOperator;
@@ -54,12 +56,29 @@ public class ProjectPrel extends DrillProjectRelBase implements Prel{
 
     PhysicalOperator childPOP = child.getPhysicalOperator(creator);
 
-    //Currently, Project only accepts "NONE". For other, requires SelectionVectorRemover
-    childPOP = PrelUtil.removeSvIfRequired(childPOP, SelectionVectorMode.NONE);
-
     Project p = new Project(this.getProjectExpressions(new DrillParseContext()),  childPOP);
 
     return p;
+  }
+
+  @Override
+  public Iterator<Prel> iterator() {
+    return PrelUtil.iter(getChild());
+  }
+
+  @Override
+  public <T, X, E extends Throwable> T accept(PrelVisitor<T, X, E> logicalVisitor, X value) throws E {
+    return logicalVisitor.visitPrel(this, value);
+  }
+
+  @Override
+  public SelectionVectorMode[] getSupportedEncodings() {
+    return SelectionVectorMode.DEFAULT;
+  }
+
+  @Override
+  public SelectionVectorMode getEncoding() {
+    return SelectionVectorMode.NONE;
   }
 
 

@@ -17,38 +17,19 @@
  */
 package org.apache.drill.exec.planner.physical;
 
-import java.io.IOException;
+import java.util.Collections;
 import java.util.Iterator;
-import java.util.List;
 
-import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.planner.common.DrillWriterRelBase;
-import org.apache.drill.exec.planner.logical.CreateTableEntry;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.SingleRel;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelTraitSet;
 
-public class WriterPrel extends DrillWriterRelBase implements Prel {
+public abstract class SinglePrel extends SingleRel implements Prel{
 
-  public WriterPrel(RelOptCluster cluster, RelTraitSet traits, RelNode child, CreateTableEntry createTableEntry) {
-    super(Prel.DRILL_PHYSICAL, cluster, traits, child, createTableEntry);
-  }
-
-  @Override
-  public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
-    return new WriterPrel(getCluster(), traitSet, sole(inputs), getCreateTableEntry());
-  }
-
-  @Override
-  public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
-    Prel child = (Prel) this.getChild();
-    return getCreateTableEntry().getWriter(child.getPhysicalOperator(creator));
-  }
-
-  @Override
-  public Iterator<Prel> iterator() {
-    return PrelUtil.iter(getChild());
+  public SinglePrel(RelOptCluster cluster, RelTraitSet traits, RelNode child) {
+    super(cluster, traits, child);
   }
 
   @Override
@@ -57,13 +38,13 @@ public class WriterPrel extends DrillWriterRelBase implements Prel {
   }
 
   @Override
-  public SelectionVectorMode[] getSupportedEncodings() {
-    return SelectionVectorMode.DEFAULT;
+  public Iterator<Prel> iterator() {
+    return PrelUtil.iter(getChild());
   }
 
   @Override
-  public SelectionVectorMode getEncoding() {
-    return SelectionVectorMode.NONE;
+  public SelectionVectorMode[] getSupportedEncodings() {
+    return SelectionVectorMode.DEFAULT;
   }
 
 }

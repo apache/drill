@@ -17,36 +17,34 @@
  */
 package org.apache.drill.exec.planner.physical;
 
-import java.util.List;
-
-import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.physical.base.GroupScan;
-import org.apache.drill.exec.planner.logical.DrillScanRel;
-import org.apache.drill.exec.planner.logical.RelOptHelper;
+import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptRule;
 import org.eigenbase.relopt.RelOptRuleCall;
+import org.eigenbase.relopt.RelOptRuleOperand;
 import org.eigenbase.relopt.RelTraitSet;
 
-public class ScanPrule extends Prule{
-  public static final RelOptRule INSTANCE = new ScanPrule();
-
-  public ScanPrule() {
-    super(RelOptHelper.any(DrillScanRel.class), "Prel.ScanPrule");
-
+public abstract class Prule extends RelOptRule{
+  public Prule(RelOptRuleOperand operand, String description) {
+    super(operand, description);
   }
-  @Override
-  public void onMatch(RelOptRuleCall call) {
-    final DrillScanRel scan = (DrillScanRel) call.rel(0);
 
-    GroupScan groupScan = scan.getGroupScan();
+  public Prule(RelOptRuleOperand operand) {
+    super(operand);
+  }
 
-    DrillDistributionTrait partition = groupScan.getMaxParallelizationWidth() > 1 ? DrillDistributionTrait.RANDOM_DISTRIBUTED : DrillDistributionTrait.SINGLETON;
 
-    final RelTraitSet traits = scan.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(partition);
+  public static RelNode convert(RelNode rel, RelTraitSet toTraits){
 
-    final DrillScanPrel newScan = ScanPrel.create(scan, traits, groupScan, scan.getRowType());
+    PlannerSettings settings = PrelUtil.getSettings(rel.getCluster());
+    if(settings.isSingleMode()){
+      toTraits = toTraits.replace(DrillDistributionTrait.ANY);
+    }
 
-    call.transformTo(newScan);
+    return RelOptRule.convert(rel, toTraits);
+  }
+
+  public static boolean isSingleMode(RelOptRuleCall call){
+    return PrelUtil.getPlannerSettings(call.getPlanner()).isSingleMode();
   }
 
 }

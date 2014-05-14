@@ -44,18 +44,18 @@ public class HashAggPrule extends AggPruleBase {
   public boolean matches(RelOptRuleCall call) {
     return PrelUtil.getPlannerSettings(call.getPlanner()).isHashAggEnabled();
   }
-  
+
   @Override
   public void onMatch(RelOptRuleCall call) {
     final DrillAggregateRel aggregate = (DrillAggregateRel) call.rel(0);
     final RelNode input = call.rel(1);
 
     if (aggregate.containsDistinctCall() || aggregate.getGroupCount() == 0) {
-      // currently, don't use HashAggregate if any of the logical aggrs contains DISTINCT or 
-      // if there are no grouping keys 
+      // currently, don't use HashAggregate if any of the logical aggrs contains DISTINCT or
+      // if there are no grouping keys
       return;
     }
-    
+
     RelTraitSet traits = null;
 
     try {
@@ -65,25 +65,25 @@ public class HashAggPrule extends AggPruleBase {
         createTransformRequest(call, aggregate, input, traits);
       } else {
         // hash distribute on all grouping keys
-        DrillDistributionTrait distOnAllKeys = 
-            new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED, 
+        DrillDistributionTrait distOnAllKeys =
+            new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED,
                                        ImmutableList.copyOf(getDistributionField(aggregate, true /* get all grouping keys */)));
-    
+
         traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(distOnAllKeys);
         createTransformRequest(call, aggregate, input, traits);
 
         // hash distribute on single grouping key
-        DrillDistributionTrait distOnOneKey = 
-            new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED, 
+        DrillDistributionTrait distOnOneKey =
+            new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED,
                                        ImmutableList.copyOf(getDistributionField(aggregate, false /* get single grouping key */)));
-    
+
         traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(distOnOneKey);
         createTransformRequest(call, aggregate, input, traits);
-        
+
         if (create2PhasePlan(call, aggregate)) {
           traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL) ;
 
-          RelNode convertedInput = convert(input, traits);  
+          RelNode convertedInput = convert(input, traits);
 
           if (convertedInput instanceof RelSubset) {
             RelSubset subset = (RelSubset) convertedInput;
@@ -105,25 +105,25 @@ public class HashAggPrule extends AggPruleBase {
                                                          aggregate.getGroupSet(),
                                                          aggregate.getAggCallList());
 
-                call.transformTo(phase2Agg);                   
+                call.transformTo(phase2Agg);
               }
             }
-          }    
+          }
         }
-      } 
+      }
     } catch (InvalidRelException e) {
       tracer.warning(e.toString());
     }
   }
 
-  private void createTransformRequest(RelOptRuleCall call, DrillAggregateRel aggregate, 
+  private void createTransformRequest(RelOptRuleCall call, DrillAggregateRel aggregate,
                                       RelNode input, RelTraitSet traits) throws InvalidRelException {
 
-    final RelNode convertedInput = convert(input, traits);
-    
+    final RelNode convertedInput = convert(input, PrelUtil.fixTraits(call, traits));
+
     HashAggPrel newAgg = new HashAggPrel(aggregate.getCluster(), traits, convertedInput, aggregate.getGroupSet(),
                                          aggregate.getAggCallList());
-      
+
     call.transformTo(newAgg);
   }
 }

@@ -18,6 +18,8 @@
 package org.apache.drill.exec.planner.physical;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.drill.exec.physical.OperatorCost;
@@ -98,29 +100,49 @@ public class ScanPrel extends AbstractRelNode implements DrillScanPrel {
   public double getRows() {
     return this.groupScan.getSize().getRecordCount();
   }
-  
+
   @Override
   public RelOptCost computeSelfCost(RelOptPlanner planner) {
     Size scanSize = this.groupScan.getSize();
-    int columnCount = this.getRowType().getFieldCount();   
-    
+    int columnCount = this.getRowType().getFieldCount();
+
     if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
       OperatorCost scanCost = this.groupScan.getCost();
       return planner.getCostFactory().makeCost(scanSize.getRecordCount() * columnCount, scanCost.getCpu(), scanCost.getDisk());
     }
-    
+
     // double rowCount = RelMetadataQuery.getRowCount(this);
     double rowCount = scanSize.getRecordCount();
-    
-    double cpuCost = rowCount * columnCount; // for now, assume cpu cost is proportional to row count. 
+
+    double cpuCost = rowCount * columnCount; // for now, assume cpu cost is proportional to row count.
     // Even though scan is reading from disk, in the currently generated plans all plans will
-    // need to read the same amount of data, so keeping the disk io cost 0 is ok for now.  
-    // In the future we might consider alternative scans that go against projections or 
+    // need to read the same amount of data, so keeping the disk io cost 0 is ok for now.
+    // In the future we might consider alternative scans that go against projections or
     // different compression schemes etc that affect the amount of data read. Such alternatives
-    // would affect both cpu and io cost. 
+    // would affect both cpu and io cost.
     double ioCost = 0;
     DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
-    return costFactory.makeCost(rowCount, cpuCost, ioCost, 0);   
+    return costFactory.makeCost(rowCount, cpuCost, ioCost, 0);
   }
-  
+
+  @Override
+  public Iterator<Prel> iterator() {
+    return Collections.emptyIterator();
+  }
+
+  @Override
+  public <T, X, E extends Throwable> T accept(PrelVisitor<T, X, E> logicalVisitor, X value) throws E {
+    return logicalVisitor.visitPrel(this, value);
+  }
+
+  @Override
+  public SelectionVectorMode[] getSupportedEncodings() {
+    return SelectionVectorMode.DEFAULT;
+  }
+
+  @Override
+  public SelectionVectorMode getEncoding() {
+    return SelectionVectorMode.NONE;
+  }
+
 }

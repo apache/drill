@@ -35,37 +35,37 @@ import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.RelTraitSet;
 
-public class UnionExchangePrel extends SingleRel implements Prel {
+public class UnionExchangePrel extends SinglePrel {
 
   public UnionExchangePrel(RelOptCluster cluster, RelTraitSet traitSet, RelNode input) {
     super(cluster, traitSet, input);
     assert input.getConvention() == Prel.DRILL_PHYSICAL;
   }
 
-  /**    
-   * A UnionExchange processes a total of M rows coming from N senders and 
-   * combines them into a single output stream.  Note that there is 
+  /**
+   * A UnionExchange processes a total of M rows coming from N senders and
+   * combines them into a single output stream.  Note that there is
    * no sort or merge operation going on. For costing purposes, we can
-   * assume each sender is sending M/N rows to a single receiver. 
+   * assume each sender is sending M/N rows to a single receiver.
    * (See DrillCostBase for symbol notations)
-   * C =  CPU cost of SV remover for M/N rows 
-   *      + Network cost of sending M/N rows to 1 destination. 
-   * So, C = (s * M/N) + (w * M/N) 
+   * C =  CPU cost of SV remover for M/N rows
+   *      + Network cost of sending M/N rows to 1 destination.
+   * So, C = (s * M/N) + (w * M/N)
    * Total cost = N * C
-   */    
+   */
   @Override
   public RelOptCost computeSelfCost(RelOptPlanner planner) {
     if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
-      return super.computeSelfCost(planner).multiplyBy(.1); 
+      return super.computeSelfCost(planner).multiplyBy(.1);
     }
-    
+
     RelNode child = this.getChild();
     double inputRows = RelMetadataQuery.getRowCount(child);
-    int  rowWidth = child.getRowType().getFieldCount() * DrillCostBase.AVG_FIELD_WIDTH;    
+    int  rowWidth = child.getRowType().getFieldCount() * DrillCostBase.AVG_FIELD_WIDTH;
     double svrCpuCost = DrillCostBase.SVR_CPU_COST * inputRows;
     double networkCost = DrillCostBase.BYTE_NETWORK_COST * inputRows * rowWidth;
     DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
-    return costFactory.makeCost(inputRows, svrCpuCost, 0, networkCost);   
+    return costFactory.makeCost(inputRows, svrCpuCost, 0, networkCost);
   }
 
   @Override
@@ -80,11 +80,14 @@ public class UnionExchangePrel extends SingleRel implements Prel {
 
     if(PrelUtil.getSettings(getCluster()).isSingleMode()) return childPOP;
 
-    //Currently, only accepts "NONE". For other, requires SelectionVectorRemover
-    childPOP = PrelUtil.removeSvIfRequired(childPOP, SelectionVectorMode.NONE, SelectionVectorMode.TWO_BYTE);
-
     UnionExchange g = new UnionExchange(childPOP);
     return g;
   }
+
+  @Override
+  public SelectionVectorMode getEncoding() {
+    return SelectionVectorMode.NONE;
+  }
+
 
 }

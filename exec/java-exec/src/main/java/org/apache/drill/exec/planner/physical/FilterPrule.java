@@ -29,7 +29,7 @@ import org.eigenbase.relopt.RelOptRuleCall;
 import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.relopt.volcano.RelSubset;
 
-public class FilterPrule extends RelOptRule {
+public class FilterPrule extends Prule {
   public static final RelOptRule INSTANCE = new FilterPrule();
 
   private FilterPrule() {
@@ -43,16 +43,16 @@ public class FilterPrule extends RelOptRule {
 
     RelTraitSet traits = input.getTraitSet().plus(Prel.DRILL_PHYSICAL);
     RelNode convertedInput = convert(input, traits);
-    
+
     if (convertedInput instanceof RelSubset) {
       RelSubset subset = (RelSubset) convertedInput;
       for (RelNode rel : subset.getRelList()) {
         if (!rel.getTraitSet().getTrait(DrillDistributionTraitDef.INSTANCE).equals(DrillDistributionTrait.DEFAULT)) {
           call.transformTo(new FilterPrel(filter.getCluster(), rel.getTraitSet(), convertedInput, filter.getCondition()));
         }
-      }      
+      }
     } else{
-      call.transformTo(new FilterPrel(filter.getCluster(), convertedInput.getTraitSet(), convertedInput, filter.getCondition()));        
+      call.transformTo(new FilterPrel(filter.getCluster(), convertedInput.getTraitSet(), convertedInput, filter.getCondition()));
     }
   }
 }

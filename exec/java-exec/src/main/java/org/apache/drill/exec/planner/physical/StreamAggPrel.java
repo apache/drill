@@ -19,6 +19,7 @@ package org.apache.drill.exec.planner.physical;
 
 import java.io.IOException;
 import java.util.BitSet;
+import java.util.Iterator;
 import java.util.List;
 
 import net.hydromatic.linq4j.Ord;
@@ -74,8 +75,8 @@ public class StreamAggPrel extends AggregateRelBase implements Prel{
   @Override
   public RelOptCost computeSelfCost(RelOptPlanner planner) {
     if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
-      return super.computeSelfCost(planner).multiplyBy(.1); 
-    }    
+      return super.computeSelfCost(planner).multiplyBy(.1);
+    }
     RelNode child = this.getChild();
     double inputRows = RelMetadataQuery.getRowCount(child);
 
@@ -85,9 +86,9 @@ public class StreamAggPrel extends AggregateRelBase implements Prel{
     // add cpu cost for computing the aggregate functions
     cpuCost += DrillCostBase.FUNC_CPU_COST * numAggrFields * inputRows;
     DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
-    return costFactory.makeCost(inputRows, cpuCost, 0 /* disk i/o cost */, 0 /* network cost */);    
+    return costFactory.makeCost(inputRows, cpuCost, 0 /* disk i/o cost */, 0 /* network cost */);
   }
-   
+
   @Override
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
     final List<String> childFields = getChild().getRowType().getFieldNames();
@@ -125,4 +126,23 @@ public class StreamAggPrel extends AggregateRelBase implements Prel{
     return expr;
   }
 
+  @Override
+  public Iterator<Prel> iterator() {
+    return PrelUtil.iter(getChild());
+  }
+
+  @Override
+  public <T, X, E extends Throwable> T accept(PrelVisitor<T, X, E> logicalVisitor, X value) throws E {
+    return logicalVisitor.visitPrel(this, value);
+  }
+
+  @Override
+  public SelectionVectorMode[] getSupportedEncodings() {
+    return SelectionVectorMode.ALL;
+  }
+
+  @Override
+  public SelectionVectorMode getEncoding() {
+    return SelectionVectorMode.NONE;
+  }
 }

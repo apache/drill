@@ -18,52 +18,27 @@
 package org.apache.drill.exec.planner.physical;
 
 import java.io.IOException;
-import java.util.Iterator;
-import java.util.List;
 
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.planner.common.DrillWriterRelBase;
-import org.apache.drill.exec.planner.logical.CreateTableEntry;
+import org.apache.drill.exec.physical.config.SelectionVectorRemover;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelTraitSet;
 
-public class WriterPrel extends DrillWriterRelBase implements Prel {
+public class SelectionVectorRemoverPrel extends SinglePrel{
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SelectionVectorRemoverPrel.class);
 
-  public WriterPrel(RelOptCluster cluster, RelTraitSet traits, RelNode child, CreateTableEntry createTableEntry) {
-    super(Prel.DRILL_PHYSICAL, cluster, traits, child, createTableEntry);
-  }
-
-  @Override
-  public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
-    return new WriterPrel(getCluster(), traitSet, sole(inputs), getCreateTableEntry());
+  public SelectionVectorRemoverPrel(Prel child){
+    super(child.getCluster(), child.getTraitSet(), child);
   }
 
   @Override
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
-    Prel child = (Prel) this.getChild();
-    return getCreateTableEntry().getWriter(child.getPhysicalOperator(creator));
-  }
-
-  @Override
-  public Iterator<Prel> iterator() {
-    return PrelUtil.iter(getChild());
-  }
-
-  @Override
-  public <T, X, E extends Throwable> T accept(PrelVisitor<T, X, E> logicalVisitor, X value) throws E {
-    return logicalVisitor.visitPrel(this, value);
-  }
-
-  @Override
-  public SelectionVectorMode[] getSupportedEncodings() {
-    return SelectionVectorMode.DEFAULT;
+    return new SelectionVectorRemover( ((Prel)getChild()).getPhysicalOperator(creator));
   }
 
   @Override
   public SelectionVectorMode getEncoding() {
     return SelectionVectorMode.NONE;
   }
+
 
 }

@@ -18,6 +18,7 @@
 package org.apache.drill.exec.planner.physical;
 
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.drill.common.expression.FieldReference;
@@ -78,7 +79,7 @@ public class MergeJoinPrel  extends DrillJoinRelBase implements Prel {
   @Override
   public RelOptCost computeSelfCost(RelOptPlanner planner) {
     if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
-      return super.computeSelfCost(planner).multiplyBy(.1); 
+      return super.computeSelfCost(planner).multiplyBy(.1);
     }
     double leftRowCount = RelMetadataQuery.getRowCount(this.getLeft());
     double rightRowCount = RelMetadataQuery.getRowCount(this.getRight());
@@ -86,11 +87,11 @@ public class MergeJoinPrel  extends DrillJoinRelBase implements Prel {
     double joinConditionCost = DrillCostBase.COMPARE_CPU_COST * this.getLeftKeys().size();
     double cpuCost = joinConditionCost * (leftRowCount + rightRowCount);
     DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
-    return costFactory.makeCost(leftRowCount + rightRowCount, cpuCost, 0, 0);    
+    return costFactory.makeCost(leftRowCount + rightRowCount, cpuCost, 0, 0);
   }
 
-  @Override  
-  public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {    
+  @Override
+  public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
     final List<String> fields = getRowType().getFieldNames();
     assert isUnique(fields);
     final int leftCount = left.getRowType().getFieldCount();
@@ -99,12 +100,6 @@ public class MergeJoinPrel  extends DrillJoinRelBase implements Prel {
 
     PhysicalOperator leftPop = implementInput(creator, 0, left);
     PhysicalOperator rightPop = implementInput(creator, leftCount, right);
-
-    //Currently, only accepts "NONE" or "SV2". For other, requires SelectionVectorRemover
-    leftPop = PrelUtil.removeSvIfRequired(leftPop, SelectionVectorMode.NONE, SelectionVectorMode.TWO_BYTE);
-
-    //Currently, only accepts "NONE" or "SV2". For other, requires SelectionVectorRemover
-    rightPop = PrelUtil.removeSvIfRequired(rightPop, SelectionVectorMode.NONE, SelectionVectorMode.TWO_BYTE);
 
     JoinRelType jtype = this.getJoinType();
 
@@ -154,9 +149,6 @@ public class MergeJoinPrel  extends DrillJoinRelBase implements Prel {
   private PhysicalOperator rename(PhysicalPlanCreator creator, PhysicalOperator inputOp, List<String> inputFields, List<String> outputFields) {
     List<NamedExpression> exprs = Lists.newArrayList();
 
-    //Currently, Project only accepts "NONE". For other, requires SelectionVectorRemover
-    inputOp = PrelUtil.removeSvIfRequired(inputOp, SelectionVectorMode.NONE);
-
     for (Pair<String, String> pair : Pair.zip(inputFields, outputFields)) {
       exprs.add(new NamedExpression(new FieldReference(pair.left), new FieldReference(pair.right)));
     }
@@ -166,5 +158,24 @@ public class MergeJoinPrel  extends DrillJoinRelBase implements Prel {
     return proj;
   }
 
+  @Override
+  public Iterator<Prel> iterator() {
+    return PrelUtil.iter(getLeft(), getRight());
+  }
+
+  @Override
+  public <T, X, E extends Throwable> T accept(PrelVisitor<T, X, E> logicalVisitor, X value) throws E {
+    return logicalVisitor.visitPrel(this, value);
+  }
+
+  @Override
+  public SelectionVectorMode[] getSupportedEncodings() {
+    return SelectionVectorMode.NONE_AND_TWO;
+  }
+
+  @Override
+  public SelectionVectorMode getEncoding() {
+    return SelectionVectorMode.NONE;
+  }
 
 }

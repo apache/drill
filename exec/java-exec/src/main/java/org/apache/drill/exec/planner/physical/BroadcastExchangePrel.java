@@ -19,6 +19,8 @@
 package org.apache.drill.exec.planner.physical;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.drill.exec.physical.base.PhysicalOperator;
@@ -34,8 +36,8 @@ import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.RelTraitSet;
 
-public class BroadcastExchangePrel extends SingleRel implements Prel {
-  
+public class BroadcastExchangePrel extends SinglePrel{
+
   public BroadcastExchangePrel(RelOptCluster cluster, RelTraitSet traitSet, RelNode input) {
     super(cluster, traitSet, input);
     assert input.getConvention() == Prel.DRILL_PHYSICAL;
@@ -43,16 +45,16 @@ public class BroadcastExchangePrel extends SingleRel implements Prel {
 
   /**
    * In a BroadcastExchange, each sender is sending data to N receivers (for costing
-   * purposes we assume it is also sending to itself). 
+   * purposes we assume it is also sending to itself).
    */
   @Override
   public RelOptCost computeSelfCost(RelOptPlanner planner) {
     if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
-      return super.computeSelfCost(planner).multiplyBy(.1); 
+      return super.computeSelfCost(planner).multiplyBy(.1);
     }
 
     RelNode child = this.getChild();
-   
+
     double inputRows = RelMetadataQuery.getRowCount(child);
     int  rowWidth = child.getRowType().getFieldCount() * DrillCostBase.AVG_FIELD_WIDTH;
     double cpuCost = DrillCostBase.SVR_CPU_COST * inputRows ;
@@ -62,22 +64,32 @@ public class BroadcastExchangePrel extends SingleRel implements Prel {
   }
 
   @Override
+  public SelectionVectorMode getEncoding() {
+    return SelectionVectorMode.NONE;
+  }
+
+  @Override
+  public SelectionVectorMode[] getSupportedEncodings() {
+    return SelectionVectorMode.DEFAULT;
+  }
+
+  @Override
   public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
     return new BroadcastExchangePrel(getCluster(), traitSet, sole(inputs));
   }
-  
+
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
     Prel child = (Prel) this.getChild();
-    
+
     PhysicalOperator childPOP = child.getPhysicalOperator(creator);
-    
+
     //Currently, only accepts "NONE". For other, requires SelectionVectorRemover
     if (!childPOP.getSVMode().equals(SelectionVectorMode.NONE)) {
       childPOP = new SelectionVectorRemover(childPOP);
     }
 
     BroadcastExchange g = new BroadcastExchange(childPOP);
-    return g;    
+    return g;
   }
-  
+
 }

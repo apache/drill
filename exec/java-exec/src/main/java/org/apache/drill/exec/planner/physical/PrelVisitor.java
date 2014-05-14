@@ -17,24 +17,10 @@
  */
 package org.apache.drill.exec.planner.physical;
 
-import java.io.IOException;
 
-import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.planner.common.DrillRelNode;
-import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
-import org.eigenbase.relopt.Convention;
+public interface PrelVisitor<RETURN, EXTRA, EXCEP extends Throwable> {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PrelVisitor.class);
 
-public interface Prel extends DrillRelNode, Iterable<Prel>{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Prel.class);
-
-  final static Convention DRILL_PHYSICAL = new Convention.Impl("PHYSICAL", Prel.class);
-
-  public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException;
-
-  public <T, X, E extends Throwable> T accept(PrelVisitor<T, X, E> logicalVisitor, X value) throws E;
-
-  public SelectionVectorMode[] getSupportedEncodings();
-  public SelectionVectorMode getEncoding();
-
+  public RETURN visitPrel(Prel prel, EXTRA value) throws EXCEP;
 
 }

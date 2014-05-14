@@ -48,7 +48,7 @@ import org.eigenbase.sql.SqlKind;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
-public class ProjectPrule extends RelOptRule {
+public class ProjectPrule extends Prule {
   public static final RelOptRule INSTANCE = new ProjectPrule();
 
   private ProjectPrule() {

@@ -19,6 +19,7 @@ package org.apache.drill.exec.planner.physical;
 
 import java.io.IOException;
 import java.util.BitSet;
+import java.util.Iterator;
 import java.util.List;
 
 import net.hydromatic.linq4j.Ord;
@@ -35,6 +36,7 @@ import org.apache.drill.exec.physical.config.HashAggregate;
 import org.apache.drill.exec.planner.cost.DrillCostBase;
 import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
 import org.apache.drill.exec.planner.logical.DrillParseContext;
+import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.eigenbase.rel.AggregateCall;
 import org.eigenbase.rel.AggregateRelBase;
 import org.eigenbase.rel.InvalidRelException;
@@ -67,7 +69,7 @@ public class HashAggPrel extends AggregateRelBase implements Prel{
   @Override
   public RelOptCost computeSelfCost(RelOptPlanner planner) {
     if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
-      return super.computeSelfCost(planner).multiplyBy(.1); 
+      return super.computeSelfCost(planner).multiplyBy(.1);
     }
     RelNode child = this.getChild();
     double inputRows = RelMetadataQuery.getRowCount(child);
@@ -80,22 +82,22 @@ public class HashAggPrel extends AggregateRelBase implements Prel{
     cpuCost += DrillCostBase.FUNC_CPU_COST * numAggrFields * inputRows;
     double diskIOCost = 0; // assume in-memory for now until we enforce operator-level memory constraints
     DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
-    return costFactory.makeCost(inputRows, cpuCost, diskIOCost, 0 /* network cost */);    
+    return costFactory.makeCost(inputRows, cpuCost, diskIOCost, 0 /* network cost */);
   }
 
   @Override
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
-    
+
     final List<String> childFields = getChild().getRowType().getFieldNames();
     final List<String> fields = getRowType().getFieldNames();
     List<NamedExpression> keys = Lists.newArrayList();
     List<NamedExpression> exprs = Lists.newArrayList();
-    
+
     for (int group : BitSets.toIter(groupSet)) {
       FieldReference fr = new FieldReference(childFields.get(group), ExpressionPosition.UNKNOWN);
       keys.add(new NamedExpression(fr, fr));
     }
-    
+
     for (Ord<AggregateCall> aggCall : Ord.zip(aggCalls)) {
       FieldReference ref = new FieldReference(fields.get(groupSet.cardinality() + aggCall.i));
       LogicalExpression expr = toDrill(aggCall.e, childFields, new DrillParseContext());
@@ -103,25 +105,46 @@ public class HashAggPrel extends AggregateRelBase implements Prel{
     }
 
     Prel child = (Prel) this.getChild();
-    HashAggregate g = new HashAggregate(child.getPhysicalOperator(creator), 
-        keys.toArray(new NamedExpression[keys.size()]), 
-        exprs.toArray(new NamedExpression[exprs.size()]), 
+    HashAggregate g = new HashAggregate(child.getPhysicalOperator(creator),
+        keys.toArray(new NamedExpression[keys.size()]),
+        exprs.toArray(new NamedExpression[exprs.size()]),
         1.0f);
-    
-    return g;    
+
+    return g;
 
   }
-  
+
   private LogicalExpression toDrill(AggregateCall call, List<String> fn, DrillParseContext pContext) {
     List<LogicalExpression> args = Lists.newArrayList();
     for(Integer i : call.getArgList()){
       args.add(new FieldReference(fn.get(i)));
     }
-    
+
     // for count(1).
     if(args.isEmpty()) args.add(new ValueExpressions.LongExpression(1l));
     LogicalExpression expr = new FunctionCall(call.getAggregation().getName().toLowerCase(), args, ExpressionPosition.UNKNOWN );
     return expr;
   }
- 
+
+  @Override
+  public Iterator<Prel> iterator() {
+    return PrelUtil.iter(getChild());
+  }
+
+  @Override
+  public <T, X, E extends Throwable> T accept(PrelVisitor<T, X, E> logicalVisitor, X value) throws E {
+    return logicalVisitor.visitPrel(this, value);
+  }
+
+  @Override
+  public SelectionVectorMode[] getSupportedEncodings() {
+    return SelectionVectorMode.DEFAULT;
+  }
+
+  @Override
+  public SelectionVectorMode getEncoding() {
+    return SelectionVectorMode.NONE;
+  }
+
+
 }

@@ -41,10 +41,10 @@ import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.rex.RexNode;
 
 
-public class HashToRandomExchangePrel extends SingleRel implements Prel {
+public class HashToRandomExchangePrel extends SinglePrel {
 
   private final List<DistributionField> fields;
-  
+
   public HashToRandomExchangePrel(RelOptCluster cluster, RelTraitSet traitSet, RelNode input, List<DistributionField> fields) {
     super(cluster, traitSet, input);
     this.fields = fields;
@@ -52,33 +52,33 @@ public class HashToRandomExchangePrel extends SingleRel implements Prel {
   }
 
   /**
-   * HashToRandomExchange processes M input rows and hash partitions them 
-   * based on computing a hash value on the distribution fields. 
-   * If there are N nodes (endpoints), we can assume for costing purposes 
-   * on average each sender will send M/N rows to 1 destination endpoint.  
+   * HashToRandomExchange processes M input rows and hash partitions them
+   * based on computing a hash value on the distribution fields.
+   * If there are N nodes (endpoints), we can assume for costing purposes
+   * on average each sender will send M/N rows to 1 destination endpoint.
    * (See DrillCostBase for symbol notations)
-   * C =  CPU cost of hashing k fields of M/N rows 
-   *      + CPU cost of SV remover for M/N rows 
-   *      + Network cost of sending M/N rows to 1 destination. 
-   * So, C = (h * k * M/N) + (s * M/N) + (w * M/N) 
+   * C =  CPU cost of hashing k fields of M/N rows
+   *      + CPU cost of SV remover for M/N rows
+   *      + Network cost of sending M/N rows to 1 destination.
+   * So, C = (h * k * M/N) + (s * M/N) + (w * M/N)
    * Total cost = N * C
    */
   @Override
   public RelOptCost computeSelfCost(RelOptPlanner planner) {
     if (PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
-      return super.computeSelfCost(planner).multiplyBy(.1); 
+      return super.computeSelfCost(planner).multiplyBy(.1);
     }
-    
+
     RelNode child = this.getChild();
     double inputRows = RelMetadataQuery.getRowCount(child);
 
     int  rowWidth = child.getRowType().getFieldCount() * DrillCostBase.AVG_FIELD_WIDTH;
-    
+
     double hashCpuCost = DrillCostBase.HASH_CPU_COST * inputRows * fields.size();
     double svrCpuCost = DrillCostBase.SVR_CPU_COST * inputRows;
     double networkCost = DrillCostBase.BYTE_NETWORK_COST * inputRows * rowWidth;
     DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
-    return costFactory.makeCost(inputRows, hashCpuCost + svrCpuCost, 0, networkCost);   
+    return costFactory.makeCost(inputRows, hashCpuCost + svrCpuCost, 0, networkCost);
   }
 
   @Override
@@ -92,9 +92,6 @@ public class HashToRandomExchangePrel extends SingleRel implements Prel {
     PhysicalOperator childPOP = child.getPhysicalOperator(creator);
 
     if(PrelUtil.getSettings(getCluster()).isSingleMode()) return childPOP;
-
-    //Currently, only accepts "NONE". For other, requires SelectionVectorRemover
-    childPOP = PrelUtil.removeSvIfRequired(childPOP, SelectionVectorMode.NONE);
 
     HashToRandomExchange g = new HashToRandomExchange(childPOP, PrelUtil.getHashExpression(this.fields, getChild().getRowType()));
     return g;
@@ -112,5 +109,11 @@ public class HashToRandomExchangePrel extends SingleRel implements Prel {
       }
     return pw;
   }
+
+  @Override
+  public SelectionVectorMode getEncoding() {
+    return SelectionVectorMode.NONE;
+  }
+
 
 }
