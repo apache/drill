@@ -259,7 +259,7 @@
           <artifactId>maven-surefire-plugin</artifactId>
           <version>2.17</version>
           <configuration>
-            <argLine>-Xms1g -Xmx2g -XX:MaxDirectMemorySize=2096M -XX:+CMSClassUnloadingEnabled</argLine>
+            <argLine>-Xms512m -Xmx1g -XX:MaxDirectMemorySize=2096M -XX:+CMSClassUnloadingEnabled</argLine>
             <forkCount>4</forkCount>
             <reuseForks>true</reuseForks>
             <additionalClasspathElements>
