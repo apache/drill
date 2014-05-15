@@ -21,22 +21,24 @@ import org.apache.drill.BaseTestQuery;
 import org.junit.Ignore;
 import org.junit.Test;
 
-@Ignore("Test case fails intermittently, need to be fixed.")
+
 public class JsonRecordReader2Test extends BaseTestQuery{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JsonRecordReader2Test.class);
 
   @Test
   public void testComplexJsonInput() throws Exception{
 //  test("select z[0]['orange']  from cp.`jsoninput/input2.json` limit 10");
-    test("select `integer`, x['y'] as x1, x['y'] as x2, z[0], z[0]['orange'], z[1]['pink']  from cp.`jsoninput/input2.json` ");
-    test("select x from cp.`jsoninput/input2.json`");
+    test("select `integer`, x['y'] as x1, x['y'] as x2, z[0], z[0]['orange'], z[1]['pink']  from cp.`jsoninput/input2.json` limit 10 ");
+//    test("select x from cp.`jsoninput/input2.json`");
 
 //    test("select z[0]  from cp.`jsoninput/input2.json` limit 10");
   }
 
   @Test
   public void z() throws Exception{
+    for(int i =0 ; i < 5; i++){
     test("select * from cp.`join/merge_join.json`");
+    }
   }
 
   @Test

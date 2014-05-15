@@ -284,30 +284,25 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
   
   protected void copyFrom(int fromIndex, int thisIndex, Nullable${minor.class}Vector from){
     if (!from.getAccessor().isNull(fromIndex)) {
-    mutator.set(thisIndex, from.getAccessor().get(fromIndex));
+      mutator.set(thisIndex, from.getAccessor().get(fromIndex));
     }
   }
 
+  
   public boolean copyFromSafe(int fromIndex, int thisIndex, ${minor.class}Vector from){
-    boolean success = values.copyFromSafe(fromIndex, thisIndex, from);
-    bits.getMutator().set(thisIndex, 1);
-    
     <#if type.major == "VarLen">
-    if (success) {
-      mutator.lastSet = thisIndex;
-    }
+    if(!mutator.fillEmpties(thisIndex)) return false;
     </#if>
+    boolean success = values.copyFromSafe(fromIndex, thisIndex, from);
+    success = success && bits.getMutator().setSafe(thisIndex, 1);
     return success;    
   }
   
   public boolean copyFromSafe(int fromIndex, int thisIndex, Nullable${minor.class}Vector from){
-    boolean success = bits.copyFromSafe(fromIndex, thisIndex, from.bits) && values.copyFromSafe(fromIndex, thisIndex, from.values);
-<#if type.major == "VarLen">
-    if (success) {
-      mutator.lastSet = thisIndex;
-    }
-</#if>
-    return success;
+    <#if type.major == "VarLen">
+    if(!mutator.fillEmpties(thisIndex)) return false;
+    </#if>
+    return bits.copyFromSafe(fromIndex, thisIndex, from.bits) && values.copyFromSafe(fromIndex, thisIndex, from.values);
   }
 
   
@@ -408,13 +403,22 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
       <#if type.major == "VarLen">lastSet = index;</#if>
     }
 
+    <#if type.major == "VarLen">
+    private boolean fillEmpties(int index){
+      for (int i = lastSet + 1; i < index; i++) {
+        if(!values.getMutator().setSafe(i, new byte[]{})) return false;
+      }
+      lastSet = index;
+      
+      return true;
+    }
+    </#if>
+    
     public boolean setSafe(int index, byte[] value, int start, int length) {
       <#if type.major != "VarLen">
       throw new UnsupportedOperationException();
       <#else>
-      for (int i = lastSet + 1; i < index; i++) {
-        if(!values.getMutator().setSafe(i, new byte[]{})) return false;
-      }
+
       boolean b1 = bits.getMutator().setSafe(index, 1);
       boolean b2 = values.getMutator().setSafe(index, value, start, length);
       if(b1 && b2){
@@ -462,9 +466,7 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
     public boolean setSafe(int index, Nullable${minor.class}Holder value) {
 
       <#if type.major == "VarLen">
-      for (int i = lastSet + 1; i < index; i++) {
-        if(!values.getMutator().setSafe(i, new byte[]{})) return false;
-      }
+      if(!fillEmpties(index)) return false;
       </#if>
       boolean b1 = bits.getMutator().setSafe(index, 1);
       boolean b2 = values.getMutator().setSafe(index, value);
@@ -481,9 +483,7 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
     public boolean setSafe(int index, ${minor.class}Holder value) {
 
       <#if type.major == "VarLen">
-      for (int i = lastSet + 1; i < index; i++) {
-        if(!values.getMutator().setSafe(i, new byte[]{})) return false;
-      }
+      if(!fillEmpties(index)) return false;
       </#if>
       boolean b1 = bits.getMutator().setSafe(index, 1);
       boolean b2 = values.getMutator().setSafe(index, value);
@@ -500,15 +500,12 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
     <#if !(type.major == "VarLen" || minor.class == "Decimal28Sparse" || minor.class == "Decimal38Sparse" || minor.class == "Decimal28Dense" || minor.class == "Decimal38Dense" || minor.class == "TimeStampTZ" || minor.class == "Interval" || minor.class == "IntervalDay")>
       public boolean setSafe(int index, ${minor.javaType!type.javaType} value) {
         <#if type.major == "VarLen">
-        for (int i = lastSet + 1; i < index; i++) {
-          values.getMutator().set(i, new byte[]{});
-        }
+        if(!fillEmpties(index)) return false;
         </#if>
         boolean b1 = bits.getMutator().setSafe(index, 1);
         boolean b2 = values.getMutator().setSafe(index, value);
         if(b1 && b2){
           setCount++;
-          <#if type.major == "VarLen">lastSet = index;</#if>
           return true;
         }else{
           return false;
@@ -520,9 +517,7 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
     public void setValueCount(int valueCount) {
       assert valueCount >= 0;
       <#if type.major == "VarLen">
-      for (int i = lastSet + 1; i < valueCount; i++) {
-        values.getMutator().set(i, new byte[]{});
-      }
+      fillEmpties(valueCount);
       </#if>
       Nullable${minor.class}Vector.this.valueCount = valueCount;
       values.getMutator().setValueCount(valueCount);

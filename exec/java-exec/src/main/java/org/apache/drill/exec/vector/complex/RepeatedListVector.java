@@ -102,6 +102,7 @@ public class RepeatedListVector extends AbstractContainerVector implements Repea
   @Override
   public boolean allocateNewSafe() {
     if(!offsets.allocateNewSafe()) return false;
+    offsets.zeroVector();
 
     if(vector != null){
       return vector.allocateNewSafe();

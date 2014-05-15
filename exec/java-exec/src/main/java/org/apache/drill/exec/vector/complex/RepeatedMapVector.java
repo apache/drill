@@ -76,6 +76,7 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
   public void allocateNew(int parentValueCount, int childValueCount) {
     clear();
     offsets.allocateNew(parentValueCount+1);
+    offsets.zeroVector();
     mutator.reset();
     accessor.reset();
   }
@@ -187,6 +188,7 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
   @Override
   public boolean allocateNewSafe() {
     if(!offsets.allocateNewSafe()) return false;
+    offsets.zeroVector();
     for(ValueVector v : vectors.values()){
       if(!v.allocateNewSafe()) return false;
     }
@@ -216,7 +218,9 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
       pairs = new TransferPair[vectors.size()];
       int i =0;
       for(Map.Entry<String, ValueVector> e : vectors.entrySet()){
+        int preSize = to.vectors.size();
         ValueVector v = to.addOrGet(e.getKey(), e.getValue().getField().getType(), e.getValue().getClass());
+        if(preSize != to.vectors.size()) v.allocateNew();
         pairs[i++] = e.getValue().makeTransferPair(v);
       }
     }
