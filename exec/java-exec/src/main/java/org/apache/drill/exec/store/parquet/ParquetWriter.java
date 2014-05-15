@@ -68,7 +68,7 @@ public class ParquetWriter extends AbstractWriter {
     return formatPlugin.getStorageConfig();
   }
 
-  @JsonProperty("format")
+  @JsonIgnore
   public FormatPluginConfig getFormatConfig(){
     return formatPlugin.getConfig();
   }
