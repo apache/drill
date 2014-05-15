@@ -52,13 +52,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
-public class DefaultSqlHandler extends AbstractSqlHandler{
+public class DefaultSqlHandler extends AbstractSqlHandler {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DefaultSqlHandler.class);
-
 
   protected final Planner planner;
   protected final QueryContext context;
-
 
   public DefaultSqlHandler(Planner planner, QueryContext context) {
     super();
@@ -66,14 +64,14 @@ public class DefaultSqlHandler extends AbstractSqlHandler{
     this.context = context;
   }
 
-  protected void log(String name, RelNode node){
-    if(logger.isDebugEnabled()){
+  protected void log(String name, RelNode node) {
+    if (logger.isDebugEnabled()) {
       logger.debug(name + " : \n" + RelOptUtil.toString(node, SqlExplainLevel.ALL_ATTRIBUTES));
     }
   }
 
-  protected void log(String name, PhysicalPlan plan) throws JsonProcessingException{
-    if(logger.isDebugEnabled()){
+  protected void log(String name, PhysicalPlan plan) throws JsonProcessingException {
+    if (logger.isDebugEnabled()) {
       String planText = plan.unparse(context.getConfig().getMapper().writer());
       logger.debug(name + " : \n" + planText);
     }
@@ -97,38 +95,43 @@ public class DefaultSqlHandler extends AbstractSqlHandler{
     return plan;
   }
 
-  protected SqlNode validateNode(SqlNode sqlNode) throws ValidationException, RelConversionException{
+  protected SqlNode validateNode(SqlNode sqlNode) throws ValidationException, RelConversionException {
     return planner.validate(sqlNode);
   }
 
-  protected RelNode convertToRel(SqlNode node) throws RelConversionException{
+  protected RelNode convertToRel(SqlNode node) throws RelConversionException {
     return planner.convert(node);
   }
 
-  protected DrillRel convertToDrel(RelNode relNode) throws RelConversionException{
-    RelNode convertedRelNode = planner.transform(DrillSqlWorker.LOGICAL_RULES, relNode.getTraitSet().plus(DrillRel.DRILL_LOGICAL), relNode);
-    if(convertedRelNode instanceof DrillStoreRel){
+  protected DrillRel convertToDrel(RelNode relNode) throws RelConversionException {
+    RelNode convertedRelNode = planner.transform(DrillSqlWorker.LOGICAL_RULES,
+        relNode.getTraitSet().plus(DrillRel.DRILL_LOGICAL), relNode);
+    if (convertedRelNode instanceof DrillStoreRel) {
       throw new UnsupportedOperationException();
-    }else{
+    } else {
       return new DrillScreenRel(convertedRelNode.getCluster(), convertedRelNode.getTraitSet(), convertedRelNode);
     }
   }
 
-  protected Prel convertToPrel(RelNode drel) throws RelConversionException{
+  protected Prel convertToPrel(RelNode drel) throws RelConversionException {
     Preconditions.checkArgument(drel.getConvention() == DrillRel.DRILL_LOGICAL);
     RelTraitSet traits = drel.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(DrillDistributionTrait.SINGLETON);
     Prel phyRelNode = (Prel) planner.transform(DrillSqlWorker.PHYSICAL_MEM_RULES, traits, drel);
+
+    // the last thing we do is add any required selection vector removers given the supported encodings of each
+    // operator. This will ultimately move to a new trait but we're managing here for now to avoid introducing new
+    // issues in planning before the next release
     return SelectionVectorPrelVisitor.addSelectionRemoversWhereNecessary(phyRelNode);
   }
 
-  protected PhysicalOperator convertToPop(Prel prel) throws IOException{
+  protected PhysicalOperator convertToPop(Prel prel) throws IOException {
 
     PhysicalPlanCreator creator = new PhysicalPlanCreator(context);
-    PhysicalOperator op =  prel.getPhysicalOperator(creator);
+    PhysicalOperator op = prel.getPhysicalOperator(creator);
     return op;
   }
 
-  protected PhysicalPlan convertToPlan(PhysicalOperator op){
+  protected PhysicalPlan convertToPlan(PhysicalOperator op) {
     PlanPropertiesBuilder propsBuilder = PlanProperties.builder();
     propsBuilder.type(PlanType.APACHE_DRILL_PHYSICAL);
     propsBuilder.version(1);
@@ -138,20 +141,20 @@ public class DefaultSqlHandler extends AbstractSqlHandler{
     return new PhysicalPlan(propsBuilder.build(), getPops(op));
   }
 
-
-  public static List<PhysicalOperator> getPops(PhysicalOperator root){
+  public static List<PhysicalOperator> getPops(PhysicalOperator root) {
     List<PhysicalOperator> ops = Lists.newArrayList();
     PopCollector c = new PopCollector();
     root.accept(c, ops);
     return ops;
   }
 
-  private static class PopCollector extends AbstractPhysicalVisitor<Void, Collection<PhysicalOperator>, RuntimeException>{
+  private static class PopCollector extends
+      AbstractPhysicalVisitor<Void, Collection<PhysicalOperator>, RuntimeException> {
 
     @Override
     public Void visitOp(PhysicalOperator op, Collection<PhysicalOperator> collection) throws RuntimeException {
       collection.add(op);
-      for(PhysicalOperator o : op){
+      for (PhysicalOperator o : op) {
         o.accept(this, collection);
       }
       return null;
@@ -160,14 +163,14 @@ public class DefaultSqlHandler extends AbstractSqlHandler{
   }
 
   /**
-   * Rewrite the parse tree. Used before validating the parse tree.
-   * Useful if a particular statement needs to converted into another statement.
+   * Rewrite the parse tree. Used before validating the parse tree. Useful if a particular statement needs to converted
+   * into another statement.
    *
    * @param node
    * @return Rewritten sql parse tree
    * @throws RelConversionException
    */
-  public SqlNode rewrite(SqlNode node) throws RelConversionException{
+  public SqlNode rewrite(SqlNode node) throws RelConversionException {
     return node;
   }
 }
