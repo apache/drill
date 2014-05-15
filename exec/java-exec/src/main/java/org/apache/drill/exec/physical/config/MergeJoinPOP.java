@@ -40,7 +40,7 @@ import com.google.common.collect.Iterators;
 public class MergeJoinPOP extends AbstractBase{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MergeJoinPOP.class);
 
-  
+
   private final PhysicalOperator left;
   private final PhysicalOperator right;
   private final List<JoinCondition> conditions;
@@ -53,7 +53,7 @@ public class MergeJoinPOP extends AbstractBase{
 
   @JsonCreator
   public MergeJoinPOP(
-      @JsonProperty("left") PhysicalOperator left, 
+      @JsonProperty("left") PhysicalOperator left,
       @JsonProperty("right") PhysicalOperator right,
       @JsonProperty("conditions") List<JoinCondition> conditions,
       @JsonProperty("joinType") JoinRelType joinType
@@ -61,10 +61,11 @@ public class MergeJoinPOP extends AbstractBase{
     this.left = left;
     this.right = right;
     this.conditions = conditions;
+    Preconditions.checkArgument(joinType != null, "Join type is missing!");
     this.joinType = joinType;
     Preconditions.checkArgument(joinType != JoinRelType.FULL, "Full outer join not currently supported");
   }
-  
+
   @Override
   public Size getSize() {
     return left.getSize().add(right.getSize());
@@ -101,7 +102,7 @@ public class MergeJoinPOP extends AbstractBase{
   public List<JoinCondition> getConditions() {
     return conditions;
   }
-  
+
   public MergeJoinPOP flipIfRight(){
     if(joinType == JoinRelType.RIGHT){
       List<JoinCondition> flippedConditions = Lists.newArrayList(conditions.size());

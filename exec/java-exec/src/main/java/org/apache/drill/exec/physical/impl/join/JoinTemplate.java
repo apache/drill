@@ -159,7 +159,8 @@ public abstract class JoinTemplate implements JoinWorker {
 
         } while (status.isRightPositionInCurrentBatch() && doCompare(status.getLeftPosition(), status.getRightPosition()) == 0);
 
-        if (status.getRightPosition() > initialRightPosition && status.isLeftRepeating())
+        if (status.getRightPosition() > initialRightPosition &&
+            (status.isLeftRepeating() || ! status.isNextLeftPositionInCurrentBatch()))
           // more than one matching result from right table; reset position in case of subsequent left match
           status.setRightPosition(initialRightPosition);
         status.advanceLeft();

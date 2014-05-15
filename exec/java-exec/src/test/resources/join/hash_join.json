@@ -52,7 +52,8 @@
         right: 3,
         left: 4,
         pop: "hash-join",
-        conditions: [ {relationship: "==", left: "B", right: "A"} ]
+        conditions: [ {relationship: "==", left: "B", right: "A"} ],
+        joinType : "INNER"        
       },
       {
         @id: 6,

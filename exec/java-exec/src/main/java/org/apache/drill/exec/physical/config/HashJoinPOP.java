@@ -67,6 +67,7 @@ public class HashJoinPOP extends AbstractBase {
         this.left = left;
         this.right = right;
         this.conditions = conditions;
+        Preconditions.checkArgument(joinType != null, "Join type is missing!");
         this.joinType = joinType;
     }
 

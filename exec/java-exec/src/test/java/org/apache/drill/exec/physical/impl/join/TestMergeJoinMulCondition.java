@@ -37,7 +37,7 @@ import org.junit.rules.TestRule;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
-@Ignore("Currently returns wrong result.  Stopped working when incoming became more than one result set.")
+//@Ignore("Currently returns wrong result.  Stopped working when incoming became more than one result set.")
 public class TestMergeJoinMulCondition extends PopUnitTestBase {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestMergeJoinMulCondition.class);
 
