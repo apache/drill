@@ -157,6 +157,12 @@ public abstract class HashTableTemplate implements HashTable {
       int currentIdxWithinBatch = currentIdxHolder.value & BATCH_MASK;
       boolean match = false;
 
+      if (currentIdxWithinBatch >= HashTable.BATCH_SIZE) {
+        logger.debug("Batch size = {}, incomingRowIdx = {}, currentIdxWithinBatch = {}.", HashTable.BATCH_SIZE, incomingRowIdx, currentIdxWithinBatch);
+      }
+      assert (currentIdxWithinBatch < HashTable.BATCH_SIZE);
+      assert (incomingRowIdx < HashTable.BATCH_SIZE);
+      
       if (isProbe)
         match = isKeyMatchInternalProbe(incomingRowIdx, currentIdxWithinBatch);
       else
@@ -599,6 +605,7 @@ public abstract class HashTableTemplate implements HashTable {
     }
   }
 
+  /* 
   public boolean outputKeys() {
     for (BatchHolder bh : batchHolders) {
       if ( ! bh.outputKeys()) {
@@ -607,7 +614,16 @@ public abstract class HashTableTemplate implements HashTable {
     }
     return true;
   }
+  */
 
+  public boolean outputKeys(int batchIdx) {
+    assert batchIdx < batchHolders.size();
+    if (! batchHolders.get(batchIdx).outputKeys()) {
+      return false;
+    }
+    return true;
+  }
+  
   private IntVector allocMetadataVector(int size, int initialValue) {
     IntVector vector = (IntVector) TypeHelper.getNewVector(dummyIntField, allocator);
     vector.allocateNew(size);

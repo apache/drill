@@ -58,7 +58,7 @@ public interface HashTable {
 
   public void clear();
 
-  public boolean outputKeys();
+  public boolean outputKeys(int batchIdx);
 }
 
 

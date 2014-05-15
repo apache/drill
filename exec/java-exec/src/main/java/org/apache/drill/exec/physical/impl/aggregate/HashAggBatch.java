@@ -18,18 +18,13 @@
 package org.apache.drill.exec.physical.impl.aggregate;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
-import org.apache.drill.common.expression.ExpressionPosition;
-import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.logical.data.NamedExpression;
-import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.compile.sig.GeneratorMapping;
 import org.apache.drill.exec.compile.sig.MappingSet;
 import org.apache.drill.exec.exception.ClassTransformationException;
@@ -39,11 +34,8 @@ import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.ClassGenerator.BlockType;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
-import org.apache.drill.exec.expr.HoldingContainerExpression;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.ValueVectorWriteExpression;
-import org.apache.drill.exec.expr.holders.IntHolder;
-import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.HashAggregate;
 import org.apache.drill.exec.record.AbstractRecordBatch;
@@ -51,17 +43,12 @@ import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TypedFieldId;
-import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.allocator.VectorAllocator;
 import org.apache.drill.exec.physical.impl.aggregate.HashAggregator.AggOutcome;
-import org.apache.drill.exec.physical.impl.common.ChainedHashTable;
-import org.apache.drill.exec.physical.impl.common.HashTable;
-import org.apache.drill.exec.record.VectorWrapper;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JVar;
@@ -124,12 +111,16 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
         }
       }
 
-
       if (aggregator.allFlushed()) {
         return IterOutcome.NONE;
       }
 
-      logger.debug("Starting aggregator doWork; incoming record count = {} ", incoming.getRecordCount());
+    if (aggregator.buildComplete() && ! aggregator.allFlushed()) {
+      // aggregation is complete and not all records have been output yet
+      return aggregator.outputCurrentBatch();    
+    }
+
+    logger.debug("Starting aggregator doWork; incoming record count = {} ", incoming.getRecordCount());   
 
       while(true){
         AggOutcome out = aggregator.doWork();
@@ -284,6 +275,9 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
 
   @Override
   public void cleanup() {
+    if (aggregator != null) {
+      aggregator.cleanup();
+    }
     super.cleanup();
     incoming.cleanup();
   }

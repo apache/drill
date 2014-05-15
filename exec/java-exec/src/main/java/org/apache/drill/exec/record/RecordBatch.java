@@ -33,8 +33,8 @@ import org.apache.drill.exec.vector.ValueVector;
  */
 public interface RecordBatch extends VectorAccessible {
 
-  /* max batch size, limited by 2-byte-lentgh in SV2 : 65535 = 2^16 -1 */
-  public static final int MAX_BATCH_SIZE = 65535;
+  /* max batch size, limited by 2-byte-lentgh in SV2 : 65536 = 2^16 */
+  public static final int MAX_BATCH_SIZE = 65536;
 
   /**
    * Describes the outcome of a RecordBatch being incremented forward.

@@ -57,4 +57,9 @@ public interface HashAggregator {
   public abstract void cleanup();
 
   public abstract boolean allFlushed();
+  
+  public abstract boolean buildComplete();
+  
+  public abstract IterOutcome outputCurrentBatch();
+  
 }
