@@ -96,6 +96,9 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
   @Override
   protected void setupNewSchema() throws SchemaChangeException {
     container.clear();
+    if (sv2 != null) {
+      sv2.clear();
+    }
 
     switch(incoming.getSchema().getSelectionVectorMode()){
       case NONE:
