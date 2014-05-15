@@ -37,7 +37,7 @@ public class TopLevelAllocator implements BufferAllocator {
 
   private static final boolean ENABLE_ACCOUNTING = AssertionUtil.isAssertionsEnabled();
   private final Set<ChildAllocator> children;
-  private final PooledByteBufAllocatorL innerAllocator = new PooledByteBufAllocatorL(true);
+  private final PooledByteBufAllocatorL innerAllocator = PooledByteBufAllocatorL.DEFAULT;
   private final Accountor acct;
 
   public TopLevelAllocator() {
