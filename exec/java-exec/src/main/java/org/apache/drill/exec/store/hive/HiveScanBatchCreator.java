@@ -37,9 +37,9 @@ public class HiveScanBatchCreator implements BatchCreator<HiveSubScan> {
   @Override
   public RecordBatch getBatch(FragmentContext context, HiveSubScan config, List<RecordBatch> children) throws ExecutionSetupException {
     List<RecordReader> readers = Lists.newArrayList();
-    Table table = config.table;
+    Table table = config.getTable();
     List<InputSplit> splits = config.getInputSplits();
-    List<Partition> partitions = config.partitions;
+    List<Partition> partitions = config.getPartitions();
     if (partitions == null || partitions.size() == 0) {
       if (table.getSd().getInputFormat().equals(TextInputFormat.class.getCanonicalName()) &&
               table.getSd().getSerdeInfo().getSerializationLib().equals(LazySimpleSerDe.class.getCanonicalName()) &&
@@ -62,7 +62,7 @@ public class HiveScanBatchCreator implements BatchCreator<HiveSubScan> {
         }
       } else {
         for (InputSplit split : splits) {
-          readers.add(new HiveRecordReader(config.table, partitions.get(i++), split, config.getColumns(), context));
+          readers.add(new HiveRecordReader(config.getTable(), partitions.get(i++), split, config.getColumns(), context));
         }
       }
     }

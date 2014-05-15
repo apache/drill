@@ -203,7 +203,7 @@ public class HiveScan extends AbstractGroupScan {
         splitTypes.add(split.getClass().getCanonicalName());
       }
       if (parts.contains(null)) parts = null;
-      return new HiveSubScan(table, parts, encodedInputSplits, splitTypes, columns);
+      return new HiveSubScan(encodedInputSplits, hiveReadEntry, splitTypes, columns);
     } catch (IOException | ReflectiveOperationException e) {
       throw new ExecutionSetupException(e);
     }

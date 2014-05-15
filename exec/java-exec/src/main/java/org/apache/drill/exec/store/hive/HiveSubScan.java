@@ -17,11 +17,12 @@
  */
 package org.apache.drill.exec.store.hive;
 
-import com.beust.jcommander.internal.Lists;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
 import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteStreams;
 import org.apache.commons.codec.binary.Base64;
@@ -39,37 +40,67 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
+@JsonTypeName("hive-sub-scan")
 public class HiveSubScan extends AbstractBase implements SubScan {
 
-  @JsonProperty("splits")
-  public List<String> encodedSplits;
-  @JsonProperty("hive-table")
-  public Table table;
-  @JsonProperty("partitions")
-  public List<Partition> partitions;
+  private List<String> splits;
+
+  private HiveReadEntry hiveReadEntry;
+
+  private List<String> splitClasses;
+
+  private List<SchemaPath> columns;
+
   @JsonIgnore
   private List<InputSplit> inputSplits = Lists.newArrayList();
-  @JsonProperty("splitClass")
-  public List<String> splitClasses;
-
-  @JsonProperty("columns")
-  public List<SchemaPath> columns;
+  @JsonIgnore
+  private Table table;
+  @JsonIgnore
+  private List<Partition> partitions;
 
   @JsonCreator
-  public HiveSubScan(@JsonProperty("hive-table") Table table,
-                     @JsonProperty("partition") List<Partition> partitions,
-                     @JsonProperty("splits") List<String> encodedSplits,
+  public HiveSubScan(@JsonProperty("splits") List<String> splits,
+                     @JsonProperty("hiveReadEntry") HiveReadEntry hiveReadEntry,
                      @JsonProperty("splitClasses") List<String> splitClasses,
                      @JsonProperty("columns") List<SchemaPath> columns) throws IOException, ReflectiveOperationException {
-    this.table = table;
-    this.partitions = partitions;
-    this.encodedSplits = encodedSplits;
+    this.hiveReadEntry = hiveReadEntry;
+    this.table = hiveReadEntry.getTable();
+    this.partitions = hiveReadEntry.getPartitions();
+    this.splits = splits;
     this.splitClasses = splitClasses;
     this.columns = columns;
 
-    for (int i = 0; i < encodedSplits.size(); i++) {
-      inputSplits.add(deserializeInputSplit(encodedSplits.get(i), splitClasses.get(i)));
+    for (int i = 0; i < splits.size(); i++) {
+      inputSplits.add(deserializeInputSplit(splits.get(i), splitClasses.get(i)));
     }
+  }
+
+  public List<String> getSplits() {
+    return splits;
+  }
+
+  public Table getTable() {
+    return table;
+  }
+
+  public List<Partition> getPartitions() {
+    return partitions;
+  }
+
+  public List<String> getSplitClasses() {
+    return splitClasses;
+  }
+
+  public List<SchemaPath> getColumns() {
+    return columns;
+  }
+
+  public List<InputSplit> getInputSplits() {
+    return inputSplits;
+  }
+
+  public HiveReadEntry getHiveReadEntry() {
+    return hiveReadEntry;
   }
 
   public static InputSplit deserializeInputSplit(String base64, String className) throws IOException, ReflectiveOperationException{
@@ -82,14 +113,6 @@ public class HiveSubScan extends AbstractBase implements SubScan {
     ByteArrayDataInput byteArrayDataInput = ByteStreams.newDataInput(Base64.decodeBase64(base64));
     split.readFields(byteArrayDataInput);
     return split;
-  }
-
-  public List<SchemaPath> getColumns() {
-    return columns;
-  }
-
-  public List<InputSplit> getInputSplits() {
-    return inputSplits;
   }
 
   @Override
@@ -111,7 +134,7 @@ public class HiveSubScan extends AbstractBase implements SubScan {
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException {
     try {
-      return new HiveSubScan(table, partitions, encodedSplits, splitClasses, columns);
+      return new HiveSubScan(splits, hiveReadEntry, splitClasses, columns);
     } catch (IOException | ReflectiveOperationException e) {
       throw new ExecutionSetupException(e);
     }
