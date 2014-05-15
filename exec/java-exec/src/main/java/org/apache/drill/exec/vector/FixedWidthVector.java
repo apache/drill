@@ -38,4 +38,9 @@ public interface FixedWidthVector extends ValueVector{
   
   
   public abstract Mutator getMutator();
+
+  /**
+   * Zero out the underlying buffer backing this vector.
+   */
+  public void zeroVector();
 }

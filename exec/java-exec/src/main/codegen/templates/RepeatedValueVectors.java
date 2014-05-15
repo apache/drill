@@ -164,6 +164,7 @@ package org.apache.drill.exec.vector;
 
   public boolean allocateNewSafe(){
     if(!offsets.allocateNewSafe()) return false;
+    offsets.zeroVector();
     if(!values.allocateNewSafe()) return false;
     mutator.reset();
     accessor.reset();
@@ -173,6 +174,7 @@ package org.apache.drill.exec.vector;
   
   public void allocateNew() {
     offsets.allocateNew();
+    offsets.zeroVector();
     values.allocateNew();
     mutator.reset();
     accessor.reset();
@@ -192,7 +194,7 @@ package org.apache.drill.exec.vector;
   
   public void allocateNew(int totalBytes, int parentValueCount, int childValueCount) {
     offsets.allocateNew(parentValueCount+1);
-    offsets.getMutator().set(0,0);
+    offsets.zeroVector();
     values.allocateNew(totalBytes, childValueCount);
     mutator.reset();
     accessor.reset();
@@ -235,6 +237,7 @@ package org.apache.drill.exec.vector;
   public void allocateNew(int parentValueCount, int childValueCount) {
     clear();
     offsets.allocateNew(parentValueCount+1);
+    offsets.zeroVector();
     values.allocateNew(childValueCount);
     mutator.reset();
     accessor.reset();

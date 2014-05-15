@@ -94,16 +94,23 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     return true;
   }
 
-    /**
-     * Allocate a new buffer that supports setting at least the provided number of values.  May actually be sized bigger depending on underlying buffer rounding size. Must be called prior to using the ValueVector.
-     * @param valueCount
+  /**
+   * Allocate a new buffer that supports setting at least the provided number of values.  May actually be sized bigger depending on underlying buffer rounding size. Must be called prior to using the ValueVector.
+   * @param valueCount
    */
   public void allocateNew(int valueCount) {
     clear();
     this.data = allocator.buffer(valueCount * ${type.width});
     this.data.readerIndex(0);
   }
-  
+
+  /**
+   * {@inheritDoc}
+   */
+  public void zeroVector() {
+    data.setZero(0, data.capacity());
+  }
+
   @Override
   public SerializedField getMetadata() {
     return getMetadataBuilder()

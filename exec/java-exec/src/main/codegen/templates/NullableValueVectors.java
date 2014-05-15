@@ -176,7 +176,14 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
     mutator.reset();
     accessor.reset();
   }
-  
+
+  /**
+   * {@inheritDoc}
+   */
+  public void zeroVector() {
+    this.values.zeroVector();
+  }
+
   @Override
   public int load(int valueCount, ByteBuf buf){
     clear();

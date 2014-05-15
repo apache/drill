@@ -238,7 +238,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     if(!offsetVector.allocateNewSafe()){
       return false;
     }
-    offsetVector.getMutator().set(0,0);
+    offsetVector.zeroVector();
     return true;
   }
   
@@ -248,7 +248,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     data = allocator.buffer(totalBytes);
     data.readerIndex(0);
     offsetVector.allocateNew(valueCount+1);
-    offsetVector.getMutator().set(0,0);
+    offsetVector.zeroVector();
   }
 
   public Accessor getAccessor(){

@@ -84,9 +84,7 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
     int valueSize = getSizeFromCount(allocationValueCount);
     data = allocator.buffer(valueSize);
     if(data == null) return false;
-    for (int i = 0; i < valueSize; i++) {
-      data.setByte(i, 0);
-    }
+    zeroVector();
     return true;
   }
 
@@ -101,9 +99,15 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
     valueCapacity = valueCount;
     int valueSize = getSizeFromCount(valueCount);
     data = allocator.buffer(valueSize);
-    for (int i = 0; i < valueSize; i++) {
-      data.setByte(i, 0);
-    }
+    zeroVector();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void zeroVector() {
+    data.setZero(0, data.capacity());
   }
 
   @Override
