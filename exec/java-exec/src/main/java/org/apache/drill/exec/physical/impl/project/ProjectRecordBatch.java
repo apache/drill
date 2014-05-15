@@ -234,7 +234,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
     cg.rotateBlock();
     cg.getEvalBlock()._return(JExpr.TRUE);
 
-    container.buildSchema(incoming.getSchema().getSelectionVectorMode());
+    container.buildSchema(SelectionVectorMode.NONE);
 
     try {
       this.projector = context.getImplementationClass(cg.getCodeGenerator());

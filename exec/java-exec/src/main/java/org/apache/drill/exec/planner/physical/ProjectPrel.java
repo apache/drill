@@ -73,7 +73,7 @@ public class ProjectPrel extends DrillProjectRelBase implements Prel{
 
   @Override
   public SelectionVectorMode[] getSupportedEncodings() {
-    return SelectionVectorMode.DEFAULT;
+    return SelectionVectorMode.NONE_AND_TWO;
   }
 
   @Override
