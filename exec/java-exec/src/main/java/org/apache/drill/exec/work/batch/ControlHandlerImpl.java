@@ -99,20 +99,14 @@ public class ControlHandlerImpl implements ControlMessageHandler {
   @Override
   public void startNewRemoteFragment(PlanFragment fragment) throws ExecutionSetupException{
     logger.debug("Received remote fragment start instruction", fragment);
-    FragmentContext context = new FragmentContext(bee.getContext(), fragment, null, new FunctionImplementationRegistry(bee.getContext().getConfig()));
+    FragmentContext context = new FragmentContext(bee.getContext(), fragment, null, bee.getContext().getFunctionImplementationRegistry());
     ControlTunnel tunnel = bee.getContext().getController().getTunnel(fragment.getForeman());
 
     NonRootStatusReporter listener = new NonRootStatusReporter(context, tunnel);
     try{
       FragmentRoot rootOperator = bee.getContext().getPlanReader().readFragmentOperator(fragment.getFragmentJson());
-      RootExec exec = ImplCreator.getExec(context, rootOperator);
-      FragmentExecutor fr = new FragmentExecutor(context, exec, listener);
+      FragmentExecutor fr = new FragmentExecutor(context, rootOperator, listener);
       bee.addFragmentRunner(fr);
-
-    }catch(IOException e){
-      listener.fail(fragment.getHandle(), "Failure while parsing fragment execution plan.", e);
-    }catch(ExecutionSetupException e){
-      listener.fail(fragment.getHandle(), "Failure while setting up execution plan.", e);
     } catch (Exception e) {
       listener.fail(fragment.getHandle(), "Failure due to uncaught exception", e);
     } catch (OutOfMemoryError t) {

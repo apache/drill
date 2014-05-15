@@ -17,12 +17,17 @@
  */
 package org.apache.drill.exec.work.fragment;
 
+import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.physical.base.FragmentRoot;
+import org.apache.drill.exec.physical.impl.ImplCreator;
 import org.apache.drill.exec.physical.impl.RootExec;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus.FragmentState;
+import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
 import org.apache.drill.exec.work.CancelableQuery;
@@ -38,13 +43,14 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FragmentExecutor.class);
 
   private final AtomicInteger state = new AtomicInteger(FragmentState.AWAITING_ALLOCATION_VALUE);
-  private final RootExec root;
+  private final FragmentRoot rootOperator;
+  private RootExec root;
   private final FragmentContext context;
   private final StatusReporter listener;
   
-  public FragmentExecutor(FragmentContext context, RootExec root, StatusReporter listener){
+  public FragmentExecutor(FragmentContext context, FragmentRoot rootOperator, StatusReporter listener){
     this.context = context;
-    this.root = root;
+    this.rootOperator = rootOperator;
     this.listener = listener;
   }
 
@@ -77,6 +83,13 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
     Thread.currentThread().setName(newThreadName);
     
     boolean closed = false;
+    try {
+      root = ImplCreator.getExec(context, rootOperator);
+    } catch (ExecutionSetupException e) {
+      context.fail(e);
+      return;
+    }
+
     logger.debug("Starting fragment runner. {}:{}", context.getHandle().getMajorFragmentId(), context.getHandle().getMinorFragmentId());
     if(!updateState(FragmentState.AWAITING_ALLOCATION, FragmentState.RUNNING, false)){
       internalFail(new RuntimeException(String.format("Run was called when fragment was in %s state.  FragmentRunnables should only be started when they are currently in awaiting allocation state.", FragmentState.valueOf(state.get()))));

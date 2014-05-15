@@ -55,7 +55,7 @@ public class NonRootFragmentManager implements FragmentManager {
     try{
       this.fragment = fragment;
       this.root = context.getPlanReader().readFragmentOperator(fragment.getFragmentJson());
-      this.context = new FragmentContext(context, fragment, null, new FunctionImplementationRegistry(context.getConfig()));
+      this.context = new FragmentContext(context, fragment, null, context.getFunctionImplementationRegistry());
       this.buffers = new IncomingBuffers(root, this.context);
       this.context.setBuffers(buffers);
       this.runnerListener = new NonRootStatusReporter(this.context, context.getController().getTunnel(fragment.getForeman()));
@@ -82,15 +82,15 @@ public class NonRootFragmentManager implements FragmentManager {
     synchronized(this){
       if(runner != null) throw new IllegalStateException("Get Runnable can only be run once.");
       if(cancel) return null;
+      FragmentRoot fragRoot = null;
       try {
-        FragmentRoot fragRoot = reader.readFragmentOperator(fragment.getFragmentJson());
-        RootExec exec = ImplCreator.getExec(context, fragRoot);
-        runner = new FragmentExecutor(context, exec, runnerListener);
-        return this.runner;
-      } catch (IOException | ExecutionSetupException e) {
+        fragRoot = reader.readFragmentOperator(fragment.getFragmentJson());
+      } catch (IOException e) {
         runnerListener.fail(fragment.getHandle(), "Failure while setting up remote fragment.", e);
         return null;
       }
+      runner = new FragmentExecutor(context, fragRoot, runnerListener);
+      return this.runner;
     }
 
   }

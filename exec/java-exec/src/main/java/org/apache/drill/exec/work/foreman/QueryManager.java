@@ -89,13 +89,10 @@ public class QueryManager implements FragmentStatusListener{
       IncomingBuffers buffers = new IncomingBuffers(rootOperator, rootContext);
       logger.debug("Setting buffers on root context.");
       rootContext.setBuffers(buffers);
-      logger.debug("Generating Exec tree");
-      RootExec rootExec = ImplCreator.getExec(rootContext, rootOperator);
-      logger.debug("Exec tree generated.");
       // add fragment to local node.
       map.put(rootFragment.getHandle(), new FragmentData(rootFragment.getHandle(), null, true));
       logger.debug("Fragment added to local node.");
-      rootRunner = new FragmentExecutor(rootContext, rootExec, new RootStatusHandler(rootContext, rootFragment));
+      rootRunner = new FragmentExecutor(rootContext, rootOperator, new RootStatusHandler(rootContext, rootFragment));
       RootFragmentManager fragmentManager = new RootFragmentManager(rootFragment.getHandle(), buffers, rootRunner);
       
       if(buffers.isDone()){
