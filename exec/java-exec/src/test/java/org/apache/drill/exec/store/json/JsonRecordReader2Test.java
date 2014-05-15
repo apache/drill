@@ -18,8 +18,10 @@
 package org.apache.drill.exec.store.json;
 
 import org.apache.drill.BaseTestQuery;
+import org.junit.Ignore;
 import org.junit.Test;
 
+@Ignore("Test case fails intermittently, need to be fixed.")
 public class JsonRecordReader2Test extends BaseTestQuery{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JsonRecordReader2Test.class);
 
