@@ -130,7 +130,7 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
 
   private void handleRemainder() {
     int remainingRecordCount = incoming.getRecordCount() - remainderIndex;
-    int copiedRecords = copier.copyRecords(0, remainingRecordCount);
+    int copiedRecords = copier.copyRecords(remainderIndex, remainingRecordCount);
 
     if (copiedRecords < remainingRecordCount) {
       for(VectorWrapper<?> v : container){
@@ -153,7 +153,7 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
       remainderIndex = 0;
       hasRemainder = false;
     }
-    logger.debug(String.format("handleRemainder(): %s records copied for out of %s, remaining: %s, incoming schema ",
+    logger.debug(String.format("handleRemainder(): %s records copied for out of %s, remaining: %s, incoming schema %s ",
         copiedRecords,
         incoming.getRecordCount(),
         incoming.getRecordCount() - remainderIndex,
