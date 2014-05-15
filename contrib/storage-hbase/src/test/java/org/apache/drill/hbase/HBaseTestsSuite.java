@@ -66,6 +66,7 @@ public class HBaseTestsSuite {
       synchronized (HBaseTestsSuite.class) {
         if (initCount.get() == 0) {
           conf = HBaseConfiguration.create();
+          conf.set(HConstants.HBASE_CLIENT_INSTANCE_ID, "drill-hbase-unit-tests-client");
           if (IS_DEBUG) {
             conf.set("hbase.regionserver.lease.period","10000000");
           }

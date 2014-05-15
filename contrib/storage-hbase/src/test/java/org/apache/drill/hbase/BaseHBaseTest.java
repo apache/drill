@@ -55,10 +55,10 @@ public class BaseHBaseTest extends BaseTestQuery {
   @BeforeClass
   public static void setUpBeforeClass() throws Exception {
     /*
-     * Change the following to HBaseTestsSuite.configure(true, true) if you want
-     * to test against a mini HBase cluster running within unit test environment
+     * Change the following to HBaseTestsSuite.configure(false, false)
+     * if you want to test against an externally running HBase cluster.
      */
-    HBaseTestsSuite.configure(false, false);
+    HBaseTestsSuite.configure(true, true);
 
     HBaseTestsSuite.initCluster();
     HBaseStoragePlugin plugin = (HBaseStoragePlugin) bit.getContext().getStorage().getPlugin("hbase");

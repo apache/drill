@@ -137,6 +137,7 @@
             <exclude>**/*.tdd</exclude>
             <exclude>**/*.project</exclude>
             <exclude>.*/**</exclude>
+            <exclude>*.patch</exclude>
           </excludes>
         </configuration>
       </plugin>
