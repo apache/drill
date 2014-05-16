@@ -418,6 +418,7 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
       <#if type.major != "VarLen">
       throw new UnsupportedOperationException();
       <#else>
+      if(!fillEmpties(index)) return false;
 
       boolean b1 = bits.getMutator().setSafe(index, 1);
       boolean b2 = values.getMutator().setSafe(index, value, start, length);
