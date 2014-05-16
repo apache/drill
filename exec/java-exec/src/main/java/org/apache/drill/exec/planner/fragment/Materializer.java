@@ -30,21 +30,23 @@ import com.google.common.collect.Lists;
 public class Materializer extends AbstractPhysicalVisitor<PhysicalOperator, Materializer.IndexedFragmentNode, ExecutionSetupException>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Materializer.class);
 
-  
+
   @Override
   public PhysicalOperator visitExchange(Exchange exchange, IndexedFragmentNode iNode) throws ExecutionSetupException {
     iNode.addAllocation(exchange);
     if(exchange == iNode.getNode().getSendingExchange()){
-      
+
       // this is a sending exchange.
       PhysicalOperator child = exchange.getChild().accept(this, iNode);
       PhysicalOperator materializedSender = exchange.getSender(iNode.getMinorFragmentId(), child);
+      materializedSender.setOperatorId(0);
 //      logger.debug("Visit sending exchange, materialized {} with child {}.", materializedSender, child);
       return materializedSender;
-      
+
     }else{
       // receiving exchange.
       PhysicalOperator materializedReceiver = exchange.getReceiver(iNode.getMinorFragmentId());
+      materializedReceiver.setOperatorId(Short.MAX_VALUE & exchange.getOperatorId());
 //      logger.debug("Visit receiving exchange, materialized receiver: {}.", materializedReceiver);
       return materializedReceiver;
     }
@@ -52,7 +54,9 @@ public class Materializer extends AbstractPhysicalVisitor<PhysicalOperator, Mate
 
   @Override
   public PhysicalOperator visitGroupScan(GroupScan groupScan, IndexedFragmentNode iNode) throws ExecutionSetupException {
-    return groupScan.getSpecificScan(iNode.getMinorFragmentId());
+    PhysicalOperator child = groupScan.getSpecificScan(iNode.getMinorFragmentId());
+    child.setOperatorId(Short.MAX_VALUE & groupScan.getOperatorId());
+    return child;
   }
 
   @Override
@@ -67,9 +71,10 @@ public class Materializer extends AbstractPhysicalVisitor<PhysicalOperator, Mate
     PhysicalOperator child = store.getChild().accept(this, iNode);
 
     iNode.addAllocation(store);
-    
+
     try {
       PhysicalOperator o = store.getSpecificStore(child, iNode.getMinorFragmentId());
+      o.setOperatorId(Short.MAX_VALUE & store.getOperatorId());
 //      logger.debug("New materialized store node {} with child {}", o, child);
       return o;
     } catch (PhysicalOperatorSetupException e) {
@@ -85,13 +90,15 @@ public class Materializer extends AbstractPhysicalVisitor<PhysicalOperator, Mate
     for(PhysicalOperator child : op){
       children.add(child.accept(this, iNode));
     }
-    return op.getNewWithChildren(children);
+    PhysicalOperator newOp = op.getNewWithChildren(children);
+    newOp.setOperatorId(Short.MAX_VALUE & op.getOperatorId());
+    return newOp;
   }
-  
+
   public static class IndexedFragmentNode{
     final Wrapper info;
     final int minorFragmentId;
-    
+
     public IndexedFragmentNode(int minorFragmentId, Wrapper info) {
       super();
       this.info = info;
@@ -113,7 +120,7 @@ public class Materializer extends AbstractPhysicalVisitor<PhysicalOperator, Mate
     public void addAllocation(PhysicalOperator pop) {
       info.addAllocation(pop);
     }
-    
+
   }
-  
+
 }

@@ -132,8 +132,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
   }
 
   protected PhysicalOperator convertToPop(Prel prel) throws IOException {
-
-    PhysicalPlanCreator creator = new PhysicalPlanCreator(context);
+    PhysicalPlanCreator creator = new PhysicalPlanCreator(context, PrelSequencer.getIdMap(prel));
     PhysicalOperator op = prel.getPhysicalOperator(creator);
     return op;
   }

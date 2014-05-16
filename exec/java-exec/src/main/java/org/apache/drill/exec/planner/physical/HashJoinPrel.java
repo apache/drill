@@ -106,6 +106,7 @@ public class HashJoinPrel  extends DrillJoinRelBase implements Prel {
     }
 
     HashJoinPOP hjoin = new HashJoinPOP(leftPop, rightPop, conditions, jtype);
+    hjoin.setOperatorId(creator.getOperatorId(this));
 
     return hjoin;
   }

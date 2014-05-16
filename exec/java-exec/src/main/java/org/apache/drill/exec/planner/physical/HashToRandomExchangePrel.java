@@ -94,6 +94,8 @@ public class HashToRandomExchangePrel extends ExchangePrel {
     if(PrelUtil.getSettings(getCluster()).isSingleMode()) return childPOP;
 
     HashToRandomExchange g = new HashToRandomExchange(childPOP, PrelUtil.getHashExpression(this.fields, getChild().getRowType()));
+    g.setOperatorId(creator.getOperatorId(this));
+
     return g;
   }
 

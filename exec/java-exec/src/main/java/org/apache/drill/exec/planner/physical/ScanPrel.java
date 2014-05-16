@@ -73,6 +73,7 @@ public class ScanPrel extends AbstractRelNode implements DrillScanPrel {
   @Override
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator)
       throws IOException {
+    groupScan.setOperatorId(creator.getOperatorId(this));
     return groupScan;
   }
 

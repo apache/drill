@@ -65,6 +65,7 @@ public class LimitPrel extends DrillLimitRelBase implements Prel {
     Integer last = fetch != null ? Math.max(0, RexLiteral.intValue(fetch)) + first : null;
 
     Limit limit = new Limit(childPOP, first, last);
+    limit.setOperatorId(creator.getOperatorId(this));
 
     return limit;
   }

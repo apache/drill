@@ -22,42 +22,44 @@ import java.util.List;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.graph.GraphValue;
 import org.apache.drill.exec.physical.OperatorCost;
+import org.apache.drill.exec.planner.physical.PhysicalPlanCreator;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
 @JsonInclude(Include.NON_NULL)
 @JsonPropertyOrder({ "@id" })
-@JsonIdentityInfo(generator = ObjectIdGenerators.IntSequenceGenerator.class, property = "@id")
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "@id")
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "pop")
 public interface  PhysicalOperator extends GraphValue<PhysicalOperator> {
 
   /**
    * Get the cost of execution of this particular operator.
-   * 
+   *
    * @return
    */
   @JsonIgnore
   public OperatorCost getCost();
-  
+
   /**
    * Get the estimated size of this particular operator.
    * @return
    */
   @JsonIgnore
   public Size getSize();
-  
+
   /**
    * Describes whether or not a particular physical operator can actually be executed. Most physical operators can be
    * executed. However, Exchange nodes cannot be executed. In order to be executed, they must be converted into their
    * Exec sub components.
-   * 
+   *
    * @return
    */
   @JsonIgnore
@@ -70,10 +72,10 @@ public interface  PhysicalOperator extends GraphValue<PhysicalOperator> {
    */
   @JsonIgnore
   public SelectionVectorMode getSVMode();
-  
+
   /**
    * Provides capability to build a set of output based on traversing a query graph tree.
-   * 
+   *
    * @param physicalVisitor
    * @return
    */
@@ -97,4 +99,9 @@ public interface  PhysicalOperator extends GraphValue<PhysicalOperator> {
    */
   public long getMaxAllocation();
 
+  @JsonProperty("@id")
+  public int getOperatorId();
+
+  @JsonProperty("@id")
+  public void setOperatorId(int id);
 }

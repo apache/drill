@@ -89,6 +89,8 @@ public class SingleMergeExchangePrel extends ExchangePrel {
     if(PrelUtil.getSettings(getCluster()).isSingleMode()) return childPOP;
 
     SingleMergeExchange g = new SingleMergeExchange(childPOP, PrelUtil.getOrdering(this.collation, getChild().getRowType()));
+    g.setOperatorId(creator.getOperatorId(this));
+
     return g;
   }
 

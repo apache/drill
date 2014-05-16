@@ -73,6 +73,7 @@ public class SortPrel extends SortRel implements Prel {
     PhysicalOperator childPOP = child.getPhysicalOperator(creator);
 
     Sort g = new ExternalSort(childPOP, PrelUtil.getOrdering(this.collation, getChild().getRowType()), false);
+    g.setOperatorId(creator.getOperatorId(this));
 
     return g;
   }

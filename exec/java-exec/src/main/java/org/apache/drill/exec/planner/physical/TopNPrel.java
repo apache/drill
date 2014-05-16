@@ -61,6 +61,7 @@ public class TopNPrel extends SinglePrel {
     PhysicalOperator childPOP = child.getPhysicalOperator(creator);
 
     TopN topN = new TopN(childPOP, PrelUtil.getOrdering(this.collation, getChild().getRowType()), false, this.limit);
+    topN.setOperatorId(creator.getOperatorId(this));
 
     return topN;
   }

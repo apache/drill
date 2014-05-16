@@ -42,14 +42,17 @@ public class PrelSequencer implements PrelVisitor<Void, PrelSequencer.Frag, Runt
       if (rel == null) {
         return null;
       }
-      PrelSequencer s = new PrelSequencer();
       final StringWriter sw = new StringWriter();
-      final RelWriter planWriter = new NumberingRelWriter(s.go(rel), new PrintWriter(sw), explainlevel);
+      final RelWriter planWriter = new NumberingRelWriter(getIdMap(rel), new PrintWriter(sw), explainlevel);
       rel.explain(planWriter);
       return sw.toString();
 
   }
 
+  public static Map<Prel, OpId> getIdMap(Prel rel){
+    PrelSequencer s = new PrelSequencer();
+    return s.go(rel);
+  }
 
 
   static class Frag implements Iterable<Frag>{
@@ -110,7 +113,7 @@ public class PrelSequencer implements PrelVisitor<Void, PrelSequencer.Frag, Runt
 
   }
 
-  static class OpId{
+  public static class OpId{
     int fragmentId;
     int opId;
     public OpId(int fragmentId, int opId) {
@@ -118,6 +121,21 @@ public class PrelSequencer implements PrelVisitor<Void, PrelSequencer.Frag, Runt
       this.fragmentId = fragmentId;
       this.opId = opId;
     }
+
+
+    public int getFragmentId() {
+      return fragmentId;
+    }
+
+
+    public int getOpId() {
+      return opId;
+    }
+
+    public int getAsSingleInt(){
+      return (fragmentId << 16) + opId;
+    }
+
     @Override
     public int hashCode() {
       final int prime = 31;
@@ -172,19 +190,27 @@ public class PrelSequencer implements PrelVisitor<Void, PrelSequencer.Frag, Runt
     }
 
     // for each fragment, do a dfs of operators to assign operator ids.
-    Map<Prel, OpId> ids = Maps.newHashMap();
+    Map<Prel, OpId> ids = Maps.newIdentityHashMap();
+
+    ids.put(rootFrag.root, new OpId(0, 0));
     for(Frag f : frags){
-      int id = 0;
+      int id = 1;
       Queue<Prel> ops = Lists.newLinkedList();
       ops.add(f.root);
       while(!ops.isEmpty()){
         Prel p = ops.remove();
-        if(p instanceof ExchangePrel && p != f.root) continue;
-        ids.put(p, new OpId(f.majorFragmentId, id++) );
+        boolean isExchange = p instanceof ExchangePrel;
 
-        List<Prel> children = Lists.reverse(Lists.newArrayList(p.iterator()));
-        for(Prel child : children){
-          ops.add(child);
+        if(p != f.root){      // we account for exchanges as receviers to guarantee unique identifiers.
+          ids.put(p, new OpId(f.majorFragmentId, id++) );
+        }
+
+
+        if(!isExchange || p == f.root){
+          List<Prel> children = Lists.reverse(Lists.newArrayList(p.iterator()));
+          for(Prel child : children){
+            ops.add(child);
+          }
         }
       }
     }

@@ -19,6 +19,7 @@ package org.apache.drill.exec.planner.physical;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.drill.common.logical.PlanProperties;
 import org.apache.drill.common.logical.PlanProperties.Generator.ResultMode;
@@ -27,25 +28,34 @@ import org.apache.drill.common.logical.PlanProperties.PlanType;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.planner.logical.DrillParseContext;
+import org.apache.drill.exec.planner.physical.explain.PrelSequencer.OpId;
 
 import com.google.common.collect.Lists;
+import com.google.hive12.common.collect.Maps;
 
 
 public class PhysicalPlanCreator {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PhysicalPlanCreator.class);
 
+  private final Map<Prel, OpId> opIdMap;
+
   private List<PhysicalOperator> popList;
   private final QueryContext context;
   PhysicalPlan plan = null;
 
-  public PhysicalPlanCreator(QueryContext context) {
+  public PhysicalPlanCreator(QueryContext context, Map<Prel, OpId> opIdMap) {
     this.context = context;
+    this.opIdMap = opIdMap;
     popList = Lists.newArrayList();
   }
 
   public QueryContext getContext() {
     return context;
+  }
+
+  public int getOperatorId(Prel prel){
+    OpId id = opIdMap.get(prel);
+    return id.getAsSingleInt();
   }
 
   public PhysicalPlan build(Prel rootPrel, boolean forceRebuild) {

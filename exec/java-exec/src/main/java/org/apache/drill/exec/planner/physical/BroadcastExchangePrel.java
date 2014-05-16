@@ -89,6 +89,8 @@ public class BroadcastExchangePrel extends ExchangePrel{
     }
 
     BroadcastExchange g = new BroadcastExchange(childPOP);
+    g.setOperatorId(creator.getOperatorId(this));
+
     return g;
   }
 

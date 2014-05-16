@@ -43,7 +43,10 @@ public class WriterPrel extends DrillWriterRelBase implements Prel {
   @Override
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
     Prel child = (Prel) this.getChild();
-    return getCreateTableEntry().getWriter(child.getPhysicalOperator(creator));
+    PhysicalOperator g = getCreateTableEntry().getWriter(child.getPhysicalOperator(creator));
+    g.setOperatorId(creator.getOperatorId(this));
+
+    return g;
   }
 
   @Override

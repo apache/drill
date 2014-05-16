@@ -18,9 +18,9 @@
 package org.apache.drill.exec.physical.base;
 
 import org.apache.drill.common.graph.GraphVisitor;
-import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
 
 public abstract class AbstractBase implements PhysicalOperator{
@@ -28,7 +28,7 @@ public abstract class AbstractBase implements PhysicalOperator{
 
   protected long initialAllocation = 1000000L;
   protected long maxAllocation = 10000000000L;
-
+  private int id;
 
   @Override
   public void accept(GraphVisitor<PhysicalOperator> visitor) {
@@ -36,16 +36,25 @@ public abstract class AbstractBase implements PhysicalOperator{
     if(this.iterator() == null) throw new IllegalArgumentException("Null iterator for pop." + this);
     for(PhysicalOperator o : this){
       Preconditions.checkNotNull(o, String.format("Null in iterator for pop %s.", this));
-      o.accept(visitor);  
+      o.accept(visitor);
     }
     visitor.leave(this);
   }
-  
+
   @Override
   public boolean isExecutable() {
     return true;
   }
-  
+
+  public final void setOperatorId(int id){
+    this.id = id;
+  }
+
+  @Override
+  public int getOperatorId() {
+    return id;
+  }
+
   @Override
   public SelectionVectorMode getSVMode() {
     return SelectionVectorMode.NONE;
@@ -60,5 +69,5 @@ public abstract class AbstractBase implements PhysicalOperator{
   public long getMaxAllocation() {
     return maxAllocation;
   }
-  
+
 }

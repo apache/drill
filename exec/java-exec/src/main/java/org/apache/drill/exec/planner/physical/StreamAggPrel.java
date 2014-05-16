@@ -42,7 +42,7 @@ public class StreamAggPrel extends AggPrelBase implements Prel{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StreamAggPrel.class);
 
 
-  
+
   public StreamAggPrel(RelOptCluster cluster, RelTraitSet traits, RelNode child, BitSet groupSet,
       List<AggregateCall> aggCalls, OperatorPhase phase) throws InvalidRelException {
     super(cluster, traits, child, groupSet, aggCalls, phase);
@@ -50,7 +50,7 @@ public class StreamAggPrel extends AggPrelBase implements Prel{
 
   public AggregateRelBase copy(RelTraitSet traitSet, RelNode input, BitSet groupSet, List<AggregateCall> aggCalls) {
     try {
-      return new StreamAggPrel(getCluster(), traitSet, input, getGroupSet(), aggCalls, 
+      return new StreamAggPrel(getCluster(), traitSet, input, getGroupSet(), aggCalls,
           this.getOperatorPhase());
     } catch (InvalidRelException e) {
       throw new AssertionError(e);
@@ -79,13 +79,14 @@ public class StreamAggPrel extends AggPrelBase implements Prel{
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
 
     Prel child = (Prel) this.getChild();
-    StreamingAggregate g = new StreamingAggregate(child.getPhysicalOperator(creator), keys.toArray(new NamedExpression[keys.size()]), 
+    StreamingAggregate g = new StreamingAggregate(child.getPhysicalOperator(creator), keys.toArray(new NamedExpression[keys.size()]),
         aggExprs.toArray(new NamedExpression[aggExprs.size()]), 1.0f);
 
+    g.setOperatorId(creator.getOperatorId(this));
     return g;
 
   }
-  
+
   @Override
   public SelectionVectorMode[] getSupportedEncodings() {
     return SelectionVectorMode.ALL;

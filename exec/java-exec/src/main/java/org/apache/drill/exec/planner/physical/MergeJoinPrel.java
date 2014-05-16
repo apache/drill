@@ -110,6 +110,7 @@ public class MergeJoinPrel  extends DrillJoinRelBase implements Prel {
     }
 
     MergeJoinPOP mjoin = new MergeJoinPOP(leftPop, rightPop, conditions, jtype);
+    mjoin.setOperatorId(creator.getOperatorId(this));
 
     return mjoin;
   }

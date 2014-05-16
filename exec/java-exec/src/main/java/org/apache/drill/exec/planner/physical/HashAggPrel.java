@@ -96,6 +96,8 @@ public class HashAggPrel extends AggPrelBase implements Prel{
         aggExprs.toArray(new NamedExpression[aggExprs.size()]),
         1.0f);
 
+    g.setOperatorId(creator.getOperatorId(this));
+
     return g;
 
   }
