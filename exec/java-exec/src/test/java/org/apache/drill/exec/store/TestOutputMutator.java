@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.drill.exec.exception.SchemaChangeException;
@@ -56,18 +57,8 @@ public class TestOutputMutator implements OutputMutator, Iterable<VectorWrapper<
     fieldVectorMap.put(vector.getField(), vector);
   }
 
-  @Override
-  public void removeAllFields() {
-    for (VectorWrapper<?> vw : container) {
-      vw.clear();
-    }
-    container.clear();
-    fieldVectorMap.clear();
-  }
-
-  @Override
-  public void setNewSchema() throws SchemaChangeException {
-    container.buildSchema(SelectionVectorMode.NONE);
+  public void addFields(List<ValueVector> v) {
+    return;
   }
 
   public Iterator<VectorWrapper<?>> iterator() {
@@ -75,7 +66,17 @@ public class TestOutputMutator implements OutputMutator, Iterable<VectorWrapper<
   }
 
   public void clear(){
-    removeAllFields();
+
+  }
+
+  @Override
+  public boolean isNewSchema() {
+    return false;
+  }
+
+  @Override
+  public void allocate(int recordCount) {
+    return;
   }
 
   @Override
@@ -85,5 +86,4 @@ public class TestOutputMutator implements OutputMutator, Iterable<VectorWrapper<
     addField(v);
     return (T) v;
   }
-
 }

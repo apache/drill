@@ -196,24 +196,6 @@ public class ParquetRecordReaderTest extends BaseTestQuery{
     List<MaterializedField> removedFields = Lists.newArrayList();
     List<ValueVector> addFields = Lists.newArrayList();
 
-    @Override
-    public void removeField(MaterializedField field) throws SchemaChangeException {
-      removedFields.add(field);
-    }
-
-    @Override
-    public void addField(ValueVector vector) throws SchemaChangeException {
-      addFields.add(vector);
-    }
-
-    @Override
-    public void removeAllFields() {
-      addFields.clear();
-    }
-
-    @Override
-    public void setNewSchema() throws SchemaChangeException {
-    }
 
     List<MaterializedField> getRemovedFields() {
       return removedFields;
@@ -224,8 +206,23 @@ public class ParquetRecordReaderTest extends BaseTestQuery{
     }
 
     @Override
+    public void addFields(List<ValueVector> vv) {
+      return;
+    }
+
+    @Override
     public <T extends ValueVector> T addField(MaterializedField field, Class<T> clazz) throws SchemaChangeException {
       return null;
+    }
+
+    @Override
+    public void allocate(int recordCount) {
+
+    }
+
+    @Override
+    public boolean isNewSchema() {
+      return false;
     }
   }
 

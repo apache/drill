@@ -143,21 +143,27 @@ public class TestTableProvider extends ExecTest {
   static class TestOutput implements OutputMutator {
     List<ValueVector> vectors = new ArrayList<ValueVector>();
 
-    public void addField(ValueVector vector) throws SchemaChangeException {
-      vectors.add(vector);
-    }
-
     public Object get(int column, int row) {
       return vectors.get(column).getAccessor().getObject(row);
     }
 
-    public void removeField(MaterializedField field) {}
-    public void removeAllFields() {}
-    public void setNewSchema() {}
-
     @Override
     public <T extends ValueVector> T addField(MaterializedField field, Class<T> clazz) throws SchemaChangeException {
       return null;
+    }
+
+    @Override
+    public void addFields(List<ValueVector> vv) {
+      return;
+    }
+
+    @Override
+    public void allocate(int recordCount) {
+      
+    }
+    @Override
+    public boolean isNewSchema() {
+      return false;
     }
   }
 

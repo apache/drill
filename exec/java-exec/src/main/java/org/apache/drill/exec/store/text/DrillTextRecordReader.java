@@ -28,6 +28,7 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
@@ -95,12 +96,9 @@ public class DrillTextRecordReader implements RecordReader {
 
   @Override
   public void setup(OutputMutator output) throws ExecutionSetupException {
-    output.removeAllFields();
     MaterializedField field = MaterializedField.create(ref, Types.repeated(TypeProtos.MinorType.VARCHAR));
-    vector = new RepeatedVarCharVector(field, context.getAllocator());
     try {
-      output.addField(vector);
-      output.setNewSchema();
+      vector = output.addField(field, RepeatedVarCharVector.class);
     } catch (SchemaChangeException e) {
       throw new ExecutionSetupException(e);
     }

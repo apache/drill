@@ -274,14 +274,6 @@ public class ParquetRecordReader implements RecordReader {
     } catch (SchemaChangeException e) {
       throw new ExecutionSetupException(e);
     }
-
-//    output.removeAllFields();
-    try {
-      output.setNewSchema();
-    }catch(SchemaChangeException e) {
-      throw new ExecutionSetupException("Error setting up output mutator.", e);
-    }
-
   }
 
   private SchemaPath toFieldName(String[] paths) {
@@ -298,15 +290,12 @@ public class ParquetRecordReader implements RecordReader {
 
   private void resetBatch() {
     for (ColumnReader column : columnStatuses) {
-      AllocationHelper.allocate(column.valueVec, recordsPerBatch, 10, 5);
       column.valuesReadInCurrentPass = 0;
     }
     for (VarLengthColumn r : varLengthReader.columns){
-      AllocationHelper.allocate(r.valueVec, recordsPerBatch, 10, 5);
       r.valuesReadInCurrentPass = 0;
     }
     for (NullableVarLengthColumn r : varLengthReader.nullableColumns){
-      AllocationHelper.allocate(r.valueVec, recordsPerBatch, 10, 5);
       r.valuesReadInCurrentPass = 0;
     }
   }

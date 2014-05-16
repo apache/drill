@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.mock;
 
+import com.google.common.collect.Lists;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.SchemaPath;
@@ -33,6 +34,8 @@ import org.apache.drill.exec.store.mock.MockGroupScanPOP.MockColumn;
 import org.apache.drill.exec.store.mock.MockGroupScanPOP.MockScanEntry;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.ValueVector;
+
+import java.util.List;
 
 public class MockRecordReader implements RecordReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MockRecordReader.class);
@@ -76,9 +79,10 @@ public class MockRecordReader implements RecordReader {
 
       for (int i = 0; i < config.getTypes().length; i++) {
         MajorType type = config.getTypes()[i].getMajorType();
-        valueVectors[i] = output.addField(getVector(config.getTypes()[i].getName(), type, batchRecordCount), (Class<? extends ValueVector>) TypeHelper.getValueVectorClass(type.getMinorType(), type.getMode()));
+        MaterializedField field = getVector(config.getTypes()[i].getName(), type, batchRecordCount);
+        Class vvClass = TypeHelper.getValueVectorClass(field.getType().getMinorType(), field.getDataMode());
+        valueVectors[i] = output.addField(field, vvClass);
       }
-      output.setNewSchema();
     } catch (SchemaChangeException e) {
       throw new ExecutionSetupException("Failure while setting up fields", e);
     }
@@ -93,7 +97,6 @@ public class MockRecordReader implements RecordReader {
 
     recordsRead += recordSetSize;
     for(ValueVector v : valueVectors){
-      AllocationHelper.allocate(v, recordSetSize, 50, 10);
 
 //      logger.debug(String.format("MockRecordReader:  Generating %d records of random data for VV of type %s.", recordSetSize, v.getClass().getName()));
       ValueVector.Mutator m = v.getMutator();
@@ -105,14 +108,5 @@ public class MockRecordReader implements RecordReader {
 
   @Override
   public void cleanup() {
-    for (int i = 0; i < valueVectors.length; i++) {
-      try {
-        output.removeField(valueVectors[i].getField());
-      } catch (SchemaChangeException e) {
-        logger.warn("Failure while trying to remove field.", e);
-      }
-      valueVectors[i].close();
-    }
   }
-
 }

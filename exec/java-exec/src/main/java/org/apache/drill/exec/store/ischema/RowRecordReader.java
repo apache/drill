@@ -29,8 +29,7 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.vector.ValueVector;
-
-
+import org.apache.drill.exec.vector.complex.reader.FieldReader;
 
 
 /**
@@ -80,15 +79,8 @@ public class RowRecordReader implements RecordReader {
     
     // Inform drill of the output columns. They were set up when the vector handler was created.
     //  Note we are currently working with fixed tables.
-    try {
-      for (ValueVector v: batch.getValueVectors()) {
-        output.addField(v);;
-      }
-      output.setNewSchema();
-    } catch (SchemaChangeException e) {
-      throw new ExecutionSetupException("Failure while setting up fields", e);
-    }
-    
+    output.addFields(batch.getValueVectors());
+
     // Estimate the number of records we can hold in a RecordBatch
     maxRowCount = batch.getEstimatedRowCount(bufSize);
   }
@@ -100,9 +92,6 @@ public class RowRecordReader implements RecordReader {
    */
   @Override
   public int next() {
-    
-    // Make note are are starting a new batch of records
-    batch.beginBatch(maxRowCount);
     
     // Repeat until out of data or vectors are full
     int actualCount;

@@ -27,6 +27,7 @@ import net.hydromatic.optiq.SchemaPlus;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ExecTest;
+import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.memory.TopLevelAllocator;
@@ -138,17 +139,27 @@ public class TestOrphanSchema extends ExecTest {
       vectors.add(vector);
     }
 
+    public void addFields(List<ValueVector> v) {
+      return;
+    }
+
     public Object get(int column, int row) {
       return vectors.get(column).getAccessor().getObject(row);
     }
 
-    public void removeField(MaterializedField field) {}
-    public void removeAllFields() {}
-    public void setNewSchema() {}
-
     @Override
     public <T extends ValueVector> T addField(MaterializedField field, Class<T> clazz) throws SchemaChangeException {
       return null;
+    }
+
+    @Override
+    public void allocate(int recordCount) {
+      return;
+    }
+
+    @Override
+    public boolean isNewSchema() {
+      return false;
     }
   }
 

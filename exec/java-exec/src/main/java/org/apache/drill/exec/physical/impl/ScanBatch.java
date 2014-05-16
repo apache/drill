@@ -61,10 +61,11 @@ public class ScanBatch implements RecordBatch {
   private static final long ALLOCATOR_MAX_RESERVATION = 20L*1000*1000*1000;
 
   final Map<MaterializedField, ValueVector> fieldVectorMap = Maps.newHashMap();
+  final Map<MaterializedField, Class<?>> fieldVectorClassMap = Maps.newHashMap();
+  private static final int MAX_RECORD_CNT = Character.MAX_VALUE;
 
   private final VectorContainer container = new VectorContainer();
   private int recordCount;
-  private boolean schemaChanged = true;
   private final FragmentContext context;
   private final OperatorContext oContext;
   private Iterator<RecordReader> readers;
@@ -123,6 +124,7 @@ public class ScanBatch implements RecordBatch {
 
   @Override
   public IterOutcome next() {
+    mutator.allocate(MAX_RECORD_CNT);
     while ((recordCount = currentReader.next()) == 0) {
       try {
         if (!readers.hasNext()) {
@@ -133,8 +135,8 @@ public class ScanBatch implements RecordBatch {
         currentReader.cleanup();
         currentReader = readers.next();
         partitionValues = partitionColumns.hasNext() ? partitionColumns.next() : null;
-        mutator.removeAllFields();
         currentReader.setup(mutator);
+        mutator.allocate(MAX_RECORD_CNT);
         addPartitionVectors();
       } catch (ExecutionSetupException e) {
         this.context.fail(e);
@@ -144,28 +146,32 @@ public class ScanBatch implements RecordBatch {
     }
 
     populatePartitionVectors();
-    if (schemaChanged) {
-      schemaChanged = false;
+    if (mutator.isNewSchema()) {
+      container.buildSchema(SelectionVectorMode.NONE);
+      schema = container.getSchema();
       return IterOutcome.OK_NEW_SCHEMA;
     } else {
       return IterOutcome.OK;
     }
   }
 
-  private void addPartitionVectors() {
-    partitionVectors = Lists.newArrayList();
-    for (int i : selectedPartitionColumns) {
-      MaterializedField field;
-      ValueVector v;
-      if (partitionValues.length > i) {
-        field = MaterializedField.create(SchemaPath.getSimplePath(partitionColumnDesignator + i), Types.required(MinorType.VARCHAR));
-        v = new VarCharVector(field, context.getAllocator());
-      } else {
-        field = MaterializedField.create(SchemaPath.getSimplePath(partitionColumnDesignator + i), Types.optional(MinorType.VARCHAR));
-        v = new NullableVarCharVector(field, context.getAllocator());
+  private void addPartitionVectors() throws ExecutionSetupException{
+    try {
+      partitionVectors = Lists.newArrayList();
+      for (int i : selectedPartitionColumns) {
+        MaterializedField field;
+        ValueVector v;
+        if (partitionValues.length > i) {
+          field = MaterializedField.create(SchemaPath.getSimplePath(partitionColumnDesignator + i), Types.required(MinorType.VARCHAR));
+          v = mutator.addField(field, VarCharVector.class);
+        } else {
+          field = MaterializedField.create(SchemaPath.getSimplePath(partitionColumnDesignator + i), Types.optional(MinorType.VARCHAR));
+          v = mutator.addField(field, NullableVarCharVector.class);
+        }
+        partitionVectors.add(v);
       }
-      mutator.addField(v);
-      partitionVectors.add(v);
+    } catch(SchemaChangeException e) {
+      throw new ExecutionSetupException(e);
     }
   }
 
@@ -212,43 +218,52 @@ public class ScanBatch implements RecordBatch {
 
   private class Mutator implements OutputMutator {
 
-    public void removeField(MaterializedField field) throws SchemaChangeException {
-      ValueVector vector = fieldVectorMap.remove(field);
-      if (vector == null) throw new SchemaChangeException("Failure attempting to remove an unknown field.");
-      container.remove(vector);
-      vector.close();
-    }
-
-    public void addField(ValueVector vector) {
-      container.add(vector);
-      fieldVectorMap.put(vector.getField(), vector);
-    }
-
-    @Override
-    public void removeAllFields() {
-      for(VectorWrapper<?> vw : container){
-        vw.clear();
-      }
-      container.clear();
-      fieldVectorMap.clear();
-    }
-
-    @Override
-    public void setNewSchema() throws SchemaChangeException {
-      container.buildSchema(SelectionVectorMode.NONE);
-      schema = container.getSchema();
-      ScanBatch.this.schemaChanged = true;
-    }
+    boolean schemaChange = true;
 
     @SuppressWarnings("unchecked")
     @Override
     public <T extends ValueVector> T addField(MaterializedField field, Class<T> clazz) throws SchemaChangeException {
-      ValueVector v = TypeHelper.getNewVector(field, oContext.getAllocator());
-      if(!clazz.isAssignableFrom(v.getClass())) throw new SchemaChangeException(String.format("The class that was provided %s does not correspond to the expected vector type of %s.", clazz.getSimpleName(), v.getClass().getSimpleName()));
-      addField(v);
+      // Check if the field exists
+      ValueVector v = fieldVectorMap.get(field);
+
+      if (v == null || v.getClass() != clazz) {
+        // Field does not exist add it to the map and the output container
+        v = TypeHelper.getNewVector(field, oContext.getAllocator());
+        if(!clazz.isAssignableFrom(v.getClass())) throw new SchemaChangeException(String.format("The class that was provided %s does not correspond to the expected vector type of %s.", clazz.getSimpleName(), v.getClass().getSimpleName()));
+        container.add(v);
+        fieldVectorMap.put(field, v);
+
+        // Adding new vectors to the container mark that the schema has changed
+        schemaChange = true;
+      }
+
       return (T) v;
     }
 
+    @Override
+    public void addFields(List<ValueVector> vvList) {
+      for (ValueVector v : vvList) {
+        fieldVectorMap.put(v.getField(), v);
+        container.add(v);
+      }
+      schemaChange = true;
+    }
+
+    @Override
+    public void allocate(int recordCount) {
+      for (ValueVector v : fieldVectorMap.values()) {
+        AllocationHelper.allocate(v, recordCount, 50, 10);
+      }
+    }
+
+    @Override
+    public boolean isNewSchema() {
+      if (schemaChange == true) {
+        schemaChange = false;
+        return true;
+      }
+      return false;
+    }
   }
 
   @Override

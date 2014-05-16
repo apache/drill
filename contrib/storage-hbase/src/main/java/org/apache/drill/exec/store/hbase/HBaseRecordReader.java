@@ -128,7 +128,6 @@ public class HBaseRecordReader implements RecordReader, DrillHBaseConstants {
   @Override
   public void setup(OutputMutator output) throws ExecutionSetupException {
     this.outputMutator = output;
-    output.removeAllFields();
     vvMap = new HashMap<FamilyQualifierWrapper, NullableVarBinaryVector>();
 
     try {
@@ -141,8 +140,6 @@ public class HBaseRecordReader implements RecordReader, DrillHBaseConstants {
           getOrCreateColumnVector(new FamilyQualifierWrapper(column), false);
         }
       }
-      output.setNewSchema();
-
       logger.debug("Opening scanner for HBase table '{}', Zookeeper quorum '{}', port '{}', znode '{}'.",
           hbaseTable, hbaseConf.get(HConstants.ZOOKEEPER_QUORUM),
           hbaseConf.get(HBASE_ZOOKEEPER_PORT), hbaseConf.get(HConstants.ZOOKEEPER_ZNODE_PARENT));
@@ -227,7 +224,6 @@ public class HBaseRecordReader implements RecordReader, DrillHBaseConstants {
           v.allocateNew();
         }
         vvMap.put(column, v);
-        outputMutator.setNewSchema();
       }
       return v;
     } catch (SchemaChangeException e) {

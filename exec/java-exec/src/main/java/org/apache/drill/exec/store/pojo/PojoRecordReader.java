@@ -89,8 +89,6 @@ public class PojoRecordReader<T> implements RecordReader{
         }
         writers[i].init(output);
       }
-
-      output.setNewSchema();
     }catch(SchemaChangeException e){
       throw new ExecutionSetupException("Failure while setting up schema for PojoRecordReader.", e);
     }

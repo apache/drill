@@ -95,10 +95,9 @@ public class JSONRecordReader2 implements RecordReader{
 
 
       writer.setValueCount(i);
-      mutator.setNewSchema();
       return i;
 
-    }catch(IOException | SchemaChangeException e){
+    }catch(IOException e){
       throw new DrillRuntimeException("Failure while reading JSON file.", e);
     }
 

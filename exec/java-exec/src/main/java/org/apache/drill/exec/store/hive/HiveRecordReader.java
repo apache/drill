@@ -218,7 +218,6 @@ public class HiveRecordReader implements RecordReader {
 
   @Override
   public void setup(OutputMutator output) throws ExecutionSetupException {
-    output.removeAllFields();
     try {
       for (int i = 0; i < columnNames.size(); i++) {
         PrimitiveCategory pCat = primitiveCategories.get(i);
@@ -230,11 +229,9 @@ public class HiveRecordReader implements RecordReader {
       for (int i = 0; i < selectedPartitionNames.size(); i++) {
         String type = selectedPartitionTypes.get(i);
         MaterializedField field = MaterializedField.create(SchemaPath.getSimplePath(columnNames.get(i)), Types.getMajorTypeFromName(type));
-        ValueVector vv = TypeHelper.getNewVector(field, context.getAllocator());
-        pVectors.add(vv);
-        output.addField(vv);
+        Class vvClass = TypeHelper.getValueVectorClass(field.getType().getMinorType(), field.getDataMode());
+        pVectors.add(output.addField(field, vvClass));
       }
-      output.setNewSchema();
     } catch(SchemaChangeException e) {
       throw new ExecutionSetupException(e);
     }

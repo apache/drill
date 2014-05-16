@@ -22,12 +22,16 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.vector.ValueVector;
 
-public interface OutputMutator {
-  public void removeField(MaterializedField field) throws SchemaChangeException;
-  public <T extends ValueVector> T addField(MaterializedField field, Class<T> clazz) throws SchemaChangeException ;
+import java.util.List;
 
-  @Deprecated
-  public void addField(ValueVector vector) throws SchemaChangeException ;
-  public void removeAllFields();
-  public void setNewSchema() throws SchemaChangeException;
+public interface OutputMutator {
+  public <T extends ValueVector> T addField(MaterializedField field, Class<T> clazz) throws SchemaChangeException ;
+  public void allocate(int recordCount);
+  public boolean isNewSchema();
+
+  /* TODO: This interface is added to support information schema tables,
+   * FixedTables, the way they exist currently.
+   * One to many layers to rip out, address it as a separate JIRA.
+   */
+  public void addFields(List<ValueVector> vvList);
 }
