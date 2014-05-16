@@ -65,10 +65,40 @@ public class StreamAggPrule extends AggPruleBase {
     try {
       if (aggregate.getGroupSet().isEmpty()) {
         DrillDistributionTrait singleDist = DrillDistributionTrait.SINGLETON;
-        traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(collation).plus(singleDist);
-        createTransformRequest(call, aggregate, input, traits);
-      } else {
+        RelTraitSet singleDistTrait = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(singleDist);
+        
+        if (create2PhasePlan(call, aggregate)) {
+          traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL) ;
 
+          RelNode convertedInput = convert(input, traits);  
+
+          if (convertedInput instanceof RelSubset) {
+            RelSubset subset = (RelSubset) convertedInput;
+            for (RelNode rel : subset.getRelList()) {
+              if (!rel.getTraitSet().getTrait(DrillDistributionTraitDef.INSTANCE).equals(DrillDistributionTrait.DEFAULT)) {
+                DrillDistributionTrait toDist = rel.getTraitSet().getTrait(DrillDistributionTraitDef.INSTANCE);              
+                traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(toDist);
+                RelNode newInput = convert(input, traits);
+
+                StreamAggPrel phase1Agg = new StreamAggPrel(aggregate.getCluster(), traits, newInput,
+                    aggregate.getGroupSet(),
+                    aggregate.getAggCallList());
+
+                UnionExchangePrel exch = 
+                    new UnionExchangePrel(phase1Agg.getCluster(), singleDistTrait, phase1Agg);
+        
+                StreamAggPrel phase2Agg =  new StreamAggPrel(aggregate.getCluster(), singleDistTrait, exch,
+                    aggregate.getGroupSet(),
+                    aggregate.getAggCallList());
+
+                call.transformTo(phase2Agg);  
+              }
+            }
+          }
+        } else {        
+          createTransformRequest(call, aggregate, input, singleDistTrait);
+        }
+      } else {
         // hash distribute on all grouping keys
         DrillDistributionTrait distOnAllKeys = 
             new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED, 
