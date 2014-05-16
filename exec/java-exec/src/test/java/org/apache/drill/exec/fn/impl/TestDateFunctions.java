@@ -31,6 +31,7 @@ import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.BigIntVector;
 import org.junit.Test;
+import org.junit.Ignore;
 
 import java.util.List;
 
@@ -73,6 +74,7 @@ public class TestDateFunctions extends PopUnitTestBase {
     }
 
     @Test
+    @Ignore("relies on particular timezone")
     public void testDateIntervalArithmetic() throws Exception {
         String expectedResults[] = {"2009-02-23T00:00:00.000-08:00",
                                     "2008-02-24T00:00:00.000-08:00",
@@ -131,6 +133,7 @@ public class TestDateFunctions extends PopUnitTestBase {
     }
 
     @Test
+    @Ignore("relies on particular time zone")
     public void testToDateType() throws Exception {
         String expectedResults[] = {"2008-02-23T00:00:00.000-08:00",
                                     "1970-01-01T12:20:30.000-08:00",

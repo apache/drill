@@ -24,7 +24,7 @@ import org.apache.hadoop.hive.ql.exec.UDF;
 import org.apache.hadoop.hive.ql.udf.generic.GenericUDF;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
+import org.junit.Ignore;
 
 public class TestHiveScalarUDFs {
 
@@ -35,6 +35,7 @@ public class TestHiveScalarUDFs {
 
   /** Test a hive function that implements the interface {@link org.apache.hadoop.hive.ql.exec.UDF}. */
   @Test
+  @Ignore("relies on particular timezone")
   public void simpleUDF() throws Exception {
     JdbcAssert.withNoDefaultSchema()
         .sql("SELECT " +
