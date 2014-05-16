@@ -18,16 +18,12 @@
 package org.apache.drill.exec.planner.physical;
 
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.logical.data.JoinCondition;
-import org.apache.drill.common.logical.data.NamedExpression;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.HashJoinPOP;
-import org.apache.drill.exec.physical.config.Project;
-import org.apache.drill.exec.planner.common.DrillJoinRelBase;
 import org.apache.drill.exec.planner.cost.DrillCostBase;
 import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
@@ -46,7 +42,7 @@ import org.eigenbase.util.Pair;
 
 import com.beust.jcommander.internal.Lists;
 
-public class HashJoinPrel  extends DrillJoinRelBase implements Prel {
+public class HashJoinPrel  extends JoinPrel {
 
   public HashJoinPrel(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, RexNode condition,
       JoinRelType joinType) throws InvalidRelException {
@@ -94,8 +90,8 @@ public class HashJoinPrel  extends DrillJoinRelBase implements Prel {
     final List<String> leftFields = fields.subList(0, leftCount);
     final List<String> rightFields = fields.subList(leftCount, fields.size());
 
-    PhysicalOperator leftPop = implementInput(creator, 0, left);
-    PhysicalOperator rightPop = implementInput(creator, leftCount, right);
+    PhysicalOperator leftPop = ((Prel)left).getPhysicalOperator(creator);
+    PhysicalOperator rightPop = ((Prel)right).getPhysicalOperator(creator);
 
     JoinRelType jtype = this.getJoinType();
 
@@ -109,60 +105,6 @@ public class HashJoinPrel  extends DrillJoinRelBase implements Prel {
     hjoin.setOperatorId(creator.getOperatorId(this));
 
     return hjoin;
-  }
-
-  public List<Integer> getLeftKeys() {
-    return this.leftKeys;
-  }
-
-  public List<Integer> getRightKeys() {
-    return this.rightKeys;
-  }
-
-  /**
-   * Check to make sure that the fields of the inputs are the same as the output field names.  If not, insert a project renaming them.
-   * @param implementor
-   * @param i
-   * @param offset
-   * @param input
-   * @return
-   */
-  private PhysicalOperator implementInput(PhysicalPlanCreator creator, int offset, RelNode input) throws IOException {
-    final PhysicalOperator inputOp = ((Prel) input).getPhysicalOperator(creator);
-    assert uniqueFieldNames(input.getRowType());
-    final List<String> fields = getRowType().getFieldNames();
-    final List<String> inputFields = input.getRowType().getFieldNames();
-    final List<String> outputFields = fields.subList(offset, offset + inputFields.size());
-    if (!outputFields.equals(inputFields)) {
-      // Ensure that input field names are the same as output field names.
-      // If there are duplicate field names on left and right, fields will get
-      // lost.
-      return rename(creator, inputOp, inputFields, outputFields);
-    } else {
-      return inputOp;
-    }
-  }
-
-  private PhysicalOperator rename(PhysicalPlanCreator creator, PhysicalOperator inputOp, List<String> inputFields, List<String> outputFields) {
-    List<NamedExpression> exprs = Lists.newArrayList();
-
-    for (Pair<String, String> pair : Pair.zip(inputFields, outputFields)) {
-      exprs.add(new NamedExpression(new FieldReference(pair.left), new FieldReference(pair.right)));
-    }
-
-    Project proj = new Project(exprs, inputOp);
-
-    return proj;
-  }
-
-  @Override
-  public Iterator<Prel> iterator() {
-    return PrelUtil.iter(getLeft(), getRight());
-  }
-
-  @Override
-  public <T, X, E extends Throwable> T accept(PrelVisitor<T, X, E> logicalVisitor, X value) throws E {
-    return logicalVisitor.visitPrel(this, value);
   }
 
   @Override

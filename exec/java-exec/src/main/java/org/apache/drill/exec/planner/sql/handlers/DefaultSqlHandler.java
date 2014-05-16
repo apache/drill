@@ -38,6 +38,7 @@ import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillScreenRel;
 import org.apache.drill.exec.planner.logical.DrillStoreRel;
 import org.apache.drill.exec.planner.physical.DrillDistributionTrait;
+import org.apache.drill.exec.planner.physical.JoinPrelRenameVisitor;
 import org.apache.drill.exec.planner.physical.PhysicalPlanCreator;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.SelectionVectorPrelVisitor;
@@ -124,6 +125,10 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     Preconditions.checkArgument(drel.getConvention() == DrillRel.DRILL_LOGICAL);
     RelTraitSet traits = drel.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(DrillDistributionTrait.SINGLETON);
     Prel phyRelNode = (Prel) planner.transform(DrillSqlWorker.PHYSICAL_MEM_RULES, traits, drel);
+
+    // Join might cause naming conflicts from its left and right child.
+    // In such case, we have to insert Project to rename the conflicting names.
+    phyRelNode = JoinPrelRenameVisitor.insertRenameProject(phyRelNode);
 
     // the last thing we do is add any required selection vector removers given the supported encodings of each
     // operator. This will ultimately move to a new trait but we're managing here for now to avoid introducing new

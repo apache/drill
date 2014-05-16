@@ -22,6 +22,9 @@ public interface PrelVisitor<RETURN, EXTRA, EXCEP extends Throwable> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PrelVisitor.class);
 
   public RETURN visitExchange(ExchangePrel prel, EXTRA value) throws EXCEP;
+
+  public RETURN visitJoin(JoinPrel prel, EXTRA value) throws EXCEP;
+
   public RETURN visitPrel(Prel prel, EXTRA value) throws EXCEP;
 
 }

@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Queue;
 
 import org.apache.drill.exec.planner.physical.ExchangePrel;
+import org.apache.drill.exec.planner.physical.JoinPrel;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.PrelVisitor;
 import org.eigenbase.rel.RelWriter;
@@ -231,6 +232,11 @@ public class PrelSequencer implements PrelVisitor<Void, PrelSequencer.Frag, Runt
     }
 
     return null;
+  }
+
+  @Override
+  public Void visitJoin(JoinPrel prel, Frag value) throws RuntimeException {
+    return visitPrel(prel, value);
   }
 
   @Override
