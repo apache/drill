@@ -35,7 +35,7 @@ import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.RelTraitSet;
 
-public class UnionExchangePrel extends SinglePrel {
+public class UnionExchangePrel extends ExchangePrel {
 
   public UnionExchangePrel(RelOptCluster cluster, RelTraitSet traitSet, RelNode input) {
     super(cluster, traitSet, input);

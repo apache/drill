@@ -41,7 +41,7 @@ import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.rex.RexNode;
 
 
-public class HashToRandomExchangePrel extends SinglePrel {
+public class HashToRandomExchangePrel extends ExchangePrel {
 
   private final List<DistributionField> fields;
 

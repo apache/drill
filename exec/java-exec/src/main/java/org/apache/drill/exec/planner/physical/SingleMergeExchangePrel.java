@@ -38,7 +38,7 @@ import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.RelTraitSet;
 
-public class SingleMergeExchangePrel extends SinglePrel {
+public class SingleMergeExchangePrel extends ExchangePrel {
 
   private final RelCollation collation ;
 

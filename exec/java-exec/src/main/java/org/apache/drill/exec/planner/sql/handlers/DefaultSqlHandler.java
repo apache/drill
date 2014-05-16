@@ -41,6 +41,7 @@ import org.apache.drill.exec.planner.physical.DrillDistributionTrait;
 import org.apache.drill.exec.planner.physical.PhysicalPlanCreator;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.SelectionVectorPrelVisitor;
+import org.apache.drill.exec.planner.physical.explain.PrelSequencer;
 import org.apache.drill.exec.planner.sql.DrillSqlWorker;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptUtil;
@@ -67,6 +68,12 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
   protected void log(String name, RelNode node) {
     if (logger.isDebugEnabled()) {
       logger.debug(name + " : \n" + RelOptUtil.toString(node, SqlExplainLevel.ALL_ATTRIBUTES));
+    }
+  }
+
+  protected void log(String name, Prel node) {
+    if (logger.isDebugEnabled()) {
+      logger.debug(name + " : \n" + PrelSequencer.printWithIds(node, SqlExplainLevel.ALL_ATTRIBUTES));
     }
   }
 

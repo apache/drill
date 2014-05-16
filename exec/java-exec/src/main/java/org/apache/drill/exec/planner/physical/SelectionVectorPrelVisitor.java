@@ -34,6 +34,11 @@ public class SelectionVectorPrelVisitor implements PrelVisitor<Prel, Void, Runti
   }
 
   @Override
+  public Prel visitExchange(ExchangePrel prel, Void value) throws RuntimeException {
+    return visitPrel(prel, value);
+  }
+
+  @Override
   public Prel visitPrel(Prel prel, Void value) throws RuntimeException {
     SelectionVectorMode[] encodings = prel.getSupportedEncodings();
     List<RelNode> children = Lists.newArrayList();

@@ -39,7 +39,7 @@ import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.reltype.RelDataTypeField;
 
 
-public class HashToMergeExchangePrel extends SinglePrel {
+public class HashToMergeExchangePrel extends ExchangePrel {
 
   private final List<DistributionField> distFields;
   private int numEndPoints = 0;

@@ -36,7 +36,7 @@ import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.RelTraitSet;
 
-public class BroadcastExchangePrel extends SinglePrel{
+public class BroadcastExchangePrel extends ExchangePrel{
 
   public BroadcastExchangePrel(RelOptCluster cluster, RelTraitSet traitSet, RelNode input) {
     super(cluster, traitSet, input);

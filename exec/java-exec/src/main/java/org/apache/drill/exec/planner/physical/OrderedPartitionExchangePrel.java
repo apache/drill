@@ -33,7 +33,7 @@ import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.RelTraitSet;
 
-public class OrderedPartitionExchangePrel extends SinglePrel {
+public class OrderedPartitionExchangePrel extends ExchangePrel {
 
   public OrderedPartitionExchangePrel(RelOptCluster cluster, RelTraitSet traitSet, RelNode input) {
     super(cluster, traitSet, input);
