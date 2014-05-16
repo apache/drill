@@ -22,6 +22,7 @@ import java.util.logging.Logger;
 import org.apache.drill.exec.planner.logical.DrillAggregateRel;
 import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
+import org.apache.drill.exec.planner.physical.AggPrelBase.OperatorPhase;
 import org.eigenbase.rel.InvalidRelException;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptRule;
@@ -95,7 +96,8 @@ public class HashAggPrule extends AggPruleBase {
 
                 HashAggPrel phase1Agg = new HashAggPrel(aggregate.getCluster(), traits, newInput,
                     aggregate.getGroupSet(),
-                    aggregate.getAggCallList());
+                    aggregate.getAggCallList(), 
+                    OperatorPhase.PHASE_1of2);
 
                 HashToRandomExchangePrel exch =
                     new HashToRandomExchangePrel(phase1Agg.getCluster(), phase1Agg.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(distOnAllKeys),
@@ -103,7 +105,9 @@ public class HashAggPrule extends AggPruleBase {
 
                 HashAggPrel phase2Agg =  new HashAggPrel(aggregate.getCluster(), traits, exch,
                                                          aggregate.getGroupSet(),
-                                                         aggregate.getAggCallList());
+                                                         phase1Agg.getPhase2AggCalls(), 
+                                                         OperatorPhase.PHASE_2of2); 
+                                                    
 
                 call.transformTo(phase2Agg);
               }
@@ -122,7 +126,7 @@ public class HashAggPrule extends AggPruleBase {
     final RelNode convertedInput = convert(input, PrelUtil.fixTraits(call, traits));
 
     HashAggPrel newAgg = new HashAggPrel(aggregate.getCluster(), traits, convertedInput, aggregate.getGroupSet(),
-                                         aggregate.getAggCallList());
+                                         aggregate.getAggCallList(), OperatorPhase.PHASE_1of1);
 
     call.transformTo(newAgg);
   }
