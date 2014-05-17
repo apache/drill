@@ -28,7 +28,7 @@ import parquet.hadoop.metadata.ColumnChunkMetaData;
 
 import java.io.IOException;
 
-abstract class NullableColumnReader extends ColumnReader{
+abstract class NullableColumnReader<V extends ValueVector> extends ColumnReader<V>{
 
   int nullsFound;
   // used to skip nulls found
@@ -37,7 +37,7 @@ abstract class NullableColumnReader extends ColumnReader{
   int bitsUsed;
 
   NullableColumnReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
-               boolean fixedLength, ValueVector v, SchemaElement schemaElement) throws ExecutionSetupException {
+               boolean fixedLength, V v, SchemaElement schemaElement) throws ExecutionSetupException {
     super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
   }
 
@@ -118,7 +118,8 @@ abstract class NullableColumnReader extends ColumnReader{
         valuesReadInCurrentPass += recordsReadInThisIteration;
         totalValuesRead += recordsReadInThisIteration;
         pageReadStatus.valuesRead += recordsReadInThisIteration;
-        if (readStartInBytes + readLength >= pageReadStatus.byteLength && bitsUsed == 0) {
+        if ( (readStartInBytes + readLength >= pageReadStatus.byteLength && bitsUsed == 0)
+            || pageReadStatus.valuesRead == pageReadStatus.currentPage.getValueCount()) {
           if (!pageReadStatus.next()) {
             break;
           }

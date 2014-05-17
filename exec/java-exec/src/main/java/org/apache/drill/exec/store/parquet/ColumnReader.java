@@ -51,6 +51,7 @@ abstract class ColumnReader<V extends ValueVector> {
   final PageReadStatus pageReadStatus;
 
   final SchemaElement schemaElement;
+  boolean usingDictionary;
 
   // quick reference to see if the field is fixed length (as this requires an instanceof)
   final boolean isFixedLength;

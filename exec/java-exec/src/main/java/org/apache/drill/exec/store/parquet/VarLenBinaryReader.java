@@ -97,7 +97,6 @@ public class VarLenBinaryReader {
         }
         if (columnReader.pageReadStatus.currentPage == null
             || columnReader.pageReadStatus.valuesRead == columnReader.pageReadStatus.currentPage.getValueCount()) {
-          columnReader.totalValuesRead += columnReader.pageReadStatus.valuesRead;
           if (!columnReader.pageReadStatus.next()) {
             rowGroupFinished = true;
             break;
@@ -159,6 +158,7 @@ public class VarLenBinaryReader {
         columnReader.pageReadStatus.valuesRead++;
         columnReader.valuesReadInCurrentPass++;
         if ( columnReader.pageReadStatus.valuesRead == columnReader.pageReadStatus.currentPage.getValueCount()) {
+          columnReader.totalValuesRead += columnReader.pageReadStatus.valuesRead;
           columnReader.pageReadStatus.next();
         }
       }
