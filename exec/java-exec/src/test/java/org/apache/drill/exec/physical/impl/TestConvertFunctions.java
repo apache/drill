@@ -30,8 +30,8 @@ import java.util.List;
 import mockit.Injectable;
 
 import org.apache.drill.BaseTestQuery;
-import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
+import org.apache.drill.exec.proto.UserProtos.QueryType;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.rpc.user.QueryResultBatch;
 import org.apache.drill.exec.rpc.user.UserServer;
@@ -66,172 +66,190 @@ public class TestConvertFunctions extends BaseTestQuery {
 
   @Test
   public void testDateTime1() throws Throwable {
-    runTest("(convert_from(binary_string('" + DATE_TIME_BE + "'), 'TIME_EPOCH_BE'))", time);
+    verifyPhysicalPlan("(convert_from(binary_string('" + DATE_TIME_BE + "'), 'TIME_EPOCH_BE'))", time);
   }
 
   @Test
   public void testDateTime2() throws Throwable {
-    runTest("convert_from(binary_string('" + DATE_TIME_LE + "'), 'TIME_EPOCH')", time);
+    verifyPhysicalPlan("convert_from(binary_string('" + DATE_TIME_LE + "'), 'TIME_EPOCH')", time);
   }
 
   @Test
   public void testDateTime3() throws Throwable {
-    runTest("convert_from(binary_string('" + DATE_TIME_BE + "'), 'DATE_EPOCH_BE')", date );
+    verifyPhysicalPlan("convert_from(binary_string('" + DATE_TIME_BE + "'), 'DATE_EPOCH_BE')", date );
   }
 
   @Test
   public void testDateTime4() throws Throwable {
-    runTest("convert_from(binary_string('" + DATE_TIME_LE + "'), 'DATE_EPOCH')", date);
+    verifyPhysicalPlan("convert_from(binary_string('" + DATE_TIME_LE + "'), 'DATE_EPOCH')", date);
   }
 
   @Test
   public void testFixedInts1() throws Throwable {
-    runTest("convert_from(binary_string('\\xAD'), 'TINYINT')", (byte) 0xAD);
+    verifyPhysicalPlan("convert_from(binary_string('\\xAD'), 'TINYINT')", (byte) 0xAD);
   }
 
   @Test
   public void testFixedInts2() throws Throwable {
-    runTest("convert_from(binary_string('\\xFE\\xCA'), 'SMALLINT')", (short) 0xCAFE);
+    verifyPhysicalPlan("convert_from(binary_string('\\xFE\\xCA'), 'SMALLINT')", (short) 0xCAFE);
   }
 
   @Test
   public void testFixedInts3() throws Throwable {
-    runTest("convert_from(binary_string('\\xCA\\xFE'), 'SMALLINT_BE')", (short) 0xCAFE);
+    verifyPhysicalPlan("convert_from(binary_string('\\xCA\\xFE'), 'SMALLINT_BE')", (short) 0xCAFE);
   }
 
   @Test
   public void testFixedInts4() throws Throwable {
-    runTest("convert_from(binary_string('\\xBE\\xBA\\xFE\\xCA'), 'INT')", 0xCAFEBABE);
+    verifyPhysicalPlan("convert_from(binary_string('\\xBE\\xBA\\xFE\\xCA'), 'INT')", 0xCAFEBABE);
+  }
+
+  @Test
+  public void testFixedInts4SQL_from() throws Throwable {
+    verifySQL("select"
+           + "   convert_from(binary_string('\\xBE\\xBA\\xFE\\xCA'), 'INT')"
+           + " from"
+           + "   cp.`employee.json` LIMIT 1",
+            0xCAFEBABE);
+  }
+
+  @Test
+  public void testFixedInts4SQL_to() throws Throwable {
+    verifySQL("select"
+           + "   convert_to(-889275714, 'INT')"
+           + " from"
+           + "   cp.`employee.json` LIMIT 1",
+           new byte[] {(byte) 0xBE, (byte) 0xBA, (byte) 0xFE, (byte) 0xCA});
   }
 
   @Test
   public void testFixedInts5() throws Throwable {
-    runTest("convert_from(binary_string('\\xCA\\xFE\\xBA\\xBE'), 'INT_BE')", 0xCAFEBABE);
+    verifyPhysicalPlan("convert_from(binary_string('\\xCA\\xFE\\xBA\\xBE'), 'INT_BE')", 0xCAFEBABE);
   }
 
   @Test
   public void testFixedInts6() throws Throwable {
-    runTest("convert_from(binary_string('\\xEF\\xBE\\xAD\\xDE\\xBE\\xBA\\xFE\\xCA'), 'BIGINT')", 0xCAFEBABEDEADBEEFL);
+    verifyPhysicalPlan("convert_from(binary_string('\\xEF\\xBE\\xAD\\xDE\\xBE\\xBA\\xFE\\xCA'), 'BIGINT')", 0xCAFEBABEDEADBEEFL);
   }
 
   @Test
   public void testFixedInts7() throws Throwable {
-    runTest("convert_from(binary_string('\\xCA\\xFE\\xBA\\xBE\\xDE\\xAD\\xBE\\xEF'), 'BIGINT_BE')", 0xCAFEBABEDEADBEEFL);
+    verifyPhysicalPlan("convert_from(binary_string('\\xCA\\xFE\\xBA\\xBE\\xDE\\xAD\\xBE\\xEF'), 'BIGINT_BE')", 0xCAFEBABEDEADBEEFL);
   }
 
   @Test
   public void testFixedInts8() throws Throwable {
-    runTest("convert_from(convert_to(cast(77 as varchar(2)), 'INT_BE'), 'INT_BE')", 77);
+    verifyPhysicalPlan("convert_from(convert_to(cast(77 as varchar(2)), 'INT_BE'), 'INT_BE')", 77);
   }
 
   @Test
   public void testFixedInts9() throws Throwable {
-    runTest("convert_to(cast(77 as varchar(2)), 'INT_BE')", new byte[] {0, 0, 0, 77});
+    verifyPhysicalPlan("convert_to(cast(77 as varchar(2)), 'INT_BE')", new byte[] {0, 0, 0, 77});
   }
 
   @Test
   public void testFixedInts10() throws Throwable {
-    runTest("convert_to(cast(77 as varchar(2)), 'INT')", new byte[] {77, 0, 0, 0});
+    verifyPhysicalPlan("convert_to(cast(77 as varchar(2)), 'INT')", new byte[] {77, 0, 0, 0});
   }
 
   @Test
   public void testFixedInts11() throws Throwable {
-    runTest("convert_to(77, 'BIGINT_BE')", new byte[] {0, 0, 0, 0, 0, 0, 0, 77});
+    verifyPhysicalPlan("convert_to(77, 'BIGINT_BE')", new byte[] {0, 0, 0, 0, 0, 0, 0, 77});
   }
 
   @Test
   public void testFixedInts12() throws Throwable {
-    runTest("convert_to(9223372036854775807, 'BIGINT')", new byte[] {-1, -1, -1, -1, -1, -1, -1, 0x7f});
+    verifyPhysicalPlan("convert_to(9223372036854775807, 'BIGINT')", new byte[] {-1, -1, -1, -1, -1, -1, -1, 0x7f});
   }
 
   @Test
   public void testFixedInts13() throws Throwable {
-    runTest("convert_to(-9223372036854775808, 'BIGINT')", new byte[] {0, 0, 0, 0, 0, 0, 0, (byte)0x80});
+    verifyPhysicalPlan("convert_to(-9223372036854775808, 'BIGINT')", new byte[] {0, 0, 0, 0, 0, 0, 0, (byte)0x80});
   }
 
   @Test
   public void testVInts1() throws Throwable {
-    runTest("convert_to(cast(0 as int), 'INT_HADOOPV')", new byte[] {0});
+    verifyPhysicalPlan("convert_to(cast(0 as int), 'INT_HADOOPV')", new byte[] {0});
   }
 
   @Test
   public void testVInts2() throws Throwable {
-    runTest("convert_to(cast(128 as int), 'INT_HADOOPV')", new byte[] {-113, -128});
+    verifyPhysicalPlan("convert_to(cast(128 as int), 'INT_HADOOPV')", new byte[] {-113, -128});
   }
 
   @Test
   public void testVInts3() throws Throwable {
-    runTest("convert_to(cast(256 as int), 'INT_HADOOPV')", new byte[] {-114, 1, 0});
+    verifyPhysicalPlan("convert_to(cast(256 as int), 'INT_HADOOPV')", new byte[] {-114, 1, 0});
   }
 
   @Test
   public void testVInts4() throws Throwable {
-    runTest("convert_to(cast(65536 as int), 'INT_HADOOPV')", new byte[] {-115, 1, 0, 0});
+    verifyPhysicalPlan("convert_to(cast(65536 as int), 'INT_HADOOPV')", new byte[] {-115, 1, 0, 0});
   }
 
   @Test
   public void testVInts5() throws Throwable {
-    runTest("convert_to(cast(16777216 as int), 'INT_HADOOPV')", new byte[] {-116, 1, 0, 0, 0});
+    verifyPhysicalPlan("convert_to(cast(16777216 as int), 'INT_HADOOPV')", new byte[] {-116, 1, 0, 0, 0});
   }
 
   @Test
   public void testVInts6() throws Throwable {
-    runTest("convert_to(4294967296, 'BIGINT_HADOOPV')", new byte[] {-117, 1, 0, 0, 0, 0});
+    verifyPhysicalPlan("convert_to(4294967296, 'BIGINT_HADOOPV')", new byte[] {-117, 1, 0, 0, 0, 0});
   }
 
   @Test
   public void testVInts7() throws Throwable {
-    runTest("convert_to(1099511627776, 'BIGINT_HADOOPV')", new byte[] {-118, 1, 0, 0, 0, 0, 0});
+    verifyPhysicalPlan("convert_to(1099511627776, 'BIGINT_HADOOPV')", new byte[] {-118, 1, 0, 0, 0, 0, 0});
   }
 
   @Test
   public void testVInts8() throws Throwable {
-    runTest("convert_to(281474976710656, 'BIGINT_HADOOPV')", new byte[] {-119, 1, 0, 0, 0, 0, 0, 0});
+    verifyPhysicalPlan("convert_to(281474976710656, 'BIGINT_HADOOPV')", new byte[] {-119, 1, 0, 0, 0, 0, 0, 0});
   }
 
   @Test
   public void testVInts9() throws Throwable {
-    runTest("convert_to(72057594037927936, 'BIGINT_HADOOPV')", new byte[] {-120, 1, 0, 0, 0, 0, 0, 0, 0});
+    verifyPhysicalPlan("convert_to(72057594037927936, 'BIGINT_HADOOPV')", new byte[] {-120, 1, 0, 0, 0, 0, 0, 0, 0});
   }
 
   @Test
   public void testVInts10() throws Throwable {
-    runTest("convert_to(9223372036854775807, 'BIGINT_HADOOPV')", new byte[] {-120, 127, -1, -1, -1, -1, -1, -1, -1});
+    verifyPhysicalPlan("convert_to(9223372036854775807, 'BIGINT_HADOOPV')", new byte[] {-120, 127, -1, -1, -1, -1, -1, -1, -1});
   }
 
   @Test
   public void testVInts11() throws Throwable {
-    runTest("convert_from(binary_string('\\x88\\x7f\\xFF\\xFF\\xFF\\xFF\\xFF\\xFF\\xFF'), 'BIGINT_HADOOPV')", 9223372036854775807L);
+    verifyPhysicalPlan("convert_from(binary_string('\\x88\\x7f\\xFF\\xFF\\xFF\\xFF\\xFF\\xFF\\xFF'), 'BIGINT_HADOOPV')", 9223372036854775807L);
   }
 
   @Test
   public void testVInts12() throws Throwable {
-    runTest("convert_to(-9223372036854775808, 'BIGINT_HADOOPV')", new byte[] {-128, 127, -1, -1, -1, -1, -1, -1, -1});
+    verifyPhysicalPlan("convert_to(-9223372036854775808, 'BIGINT_HADOOPV')", new byte[] {-128, 127, -1, -1, -1, -1, -1, -1, -1});
   }
 
   @Test
   public void testVInts13() throws Throwable {
-    runTest("convert_from(binary_string('\\x80\\x7f\\xFF\\xFF\\xFF\\xFF\\xFF\\xFF\\xFF'), 'BIGINT_HADOOPV')", -9223372036854775808L);
+    verifyPhysicalPlan("convert_from(binary_string('\\x80\\x7f\\xFF\\xFF\\xFF\\xFF\\xFF\\xFF\\xFF'), 'BIGINT_HADOOPV')", -9223372036854775808L);
   }
 
   @Test
   public void testBool1() throws Throwable {
-    runTest("convert_from(binary_string('\\x01'), 'BOOLEAN_BYTE')", true);
+    verifyPhysicalPlan("convert_from(binary_string('\\x01'), 'BOOLEAN_BYTE')", true);
   }
 
   @Test
   public void testBool2() throws Throwable {
-    runTest("convert_from(binary_string('\\x00'), 'BOOLEAN_BYTE')", false);
+    verifyPhysicalPlan("convert_from(binary_string('\\x00'), 'BOOLEAN_BYTE')", false);
   }
 
   @Test
   public void testBool3() throws Throwable {
-    runTest("convert_to(true, 'BOOLEAN_BYTE')", new byte[] {1});
+    verifyPhysicalPlan("convert_to(true, 'BOOLEAN_BYTE')", new byte[] {1});
   }
 
   @Test
   public void testBool4() throws Throwable {
-    runTest("convert_to(false, 'BOOLEAN_BYTE')", new byte[] {0});
+    verifyPhysicalPlan("convert_to(false, 'BOOLEAN_BYTE')", new byte[] {0});
   }
 
   @Test
@@ -240,47 +258,47 @@ public class TestConvertFunctions extends BaseTestQuery {
 
   @Test
   public void testFloats2() throws Throwable {
-    runTest("convert_from(convert_to(cast(77 as float4), 'FLOAT'), 'FLOAT')", new Float(77.0));
+    verifyPhysicalPlan("convert_from(convert_to(cast(77 as float4), 'FLOAT'), 'FLOAT')", new Float(77.0));
   }
 
   @Test
   public void testFloats3() throws Throwable {
-    runTest("convert_to(cast(1.4e-45 as float4), 'FLOAT')", new byte[] {1, 0, 0, 0});
+    verifyPhysicalPlan("convert_to(cast(1.4e-45 as float4), 'FLOAT')", new byte[] {1, 0, 0, 0});
   }
 
   @Test
   public void testFloats4() throws Throwable {
-    runTest("convert_to(cast(3.4028235e+38 as float4), 'FLOAT')", new byte[] {-1, -1, 127, 127});
+    verifyPhysicalPlan("convert_to(cast(3.4028235e+38 as float4), 'FLOAT')", new byte[] {-1, -1, 127, 127});
   }
 
   @Test
   public void testFloats5(@Injectable final DrillbitContext bitContext,
                            @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    runTest("convert_from(convert_to(cast(77 as float8), 'DOUBLE'), 'DOUBLE')", 77.0);
+    verifyPhysicalPlan("convert_from(convert_to(cast(77 as float8), 'DOUBLE'), 'DOUBLE')", 77.0);
   }
 
   @Test
   public void testFloats6(@Injectable final DrillbitContext bitContext,
                            @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    runTest("convert_to(cast(77 as float8), 'DOUBLE')", new byte[] {0, 0, 0, 0, 0, 64, 83, 64});
+    verifyPhysicalPlan("convert_to(cast(77 as float8), 'DOUBLE')", new byte[] {0, 0, 0, 0, 0, 64, 83, 64});
   }
 
   @Test
   public void testFloats7(@Injectable final DrillbitContext bitContext,
                            @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    runTest("convert_to(4.9e-324, 'DOUBLE')", new byte[] {1, 0, 0, 0, 0, 0, 0, 0});
+    verifyPhysicalPlan("convert_to(4.9e-324, 'DOUBLE')", new byte[] {1, 0, 0, 0, 0, 0, 0, 0});
   }
 
   @Test
   public void testFloats8(@Injectable final DrillbitContext bitContext,
                            @Injectable UserServer.UserClientConnection connection) throws Throwable {
-    runTest("convert_to(1.7976931348623157e+308, 'DOUBLE')", new byte[] {-1, -1, -1, -1, -1, -1, -17, 127});
+    verifyPhysicalPlan("convert_to(1.7976931348623157e+308, 'DOUBLE')", new byte[] {-1, -1, -1, -1, -1, -1, -17, 127});
   }
 
   @Test
   public void testUTF8() throws Throwable {
-    runTest("convert_from(binary_string('apache_drill'), 'UTF8')", "apache_drill");
-    runTest("convert_to('apache_drill', 'UTF8')", new byte[] {'a', 'p', 'a', 'c', 'h', 'e', '_', 'd', 'r', 'i', 'l', 'l'});
+    verifyPhysicalPlan("convert_from(binary_string('apache_drill'), 'UTF8')", "apache_drill");
+    verifyPhysicalPlan("convert_to('apache_drill', 'UTF8')", new byte[] {'a', 'p', 'a', 'c', 'h', 'e', '_', 'd', 'r', 'i', 'l', 'l'});
   }
 
   @Test
@@ -340,31 +358,27 @@ public class TestConvertFunctions extends BaseTestQuery {
     assertEquals(intVal, Integer.MIN_VALUE);
   }
 
-  protected <T> void runTest(String expression, T expectedResults) throws Throwable {
-    String testName = String.format("Expression: %s.", expression);
+  protected <T> void verifySQL(String sql, T expectedResults) throws Throwable {
+    verifyResults(sql, expectedResults, getRunResult(QueryType.SQL, sql));
+  }
+
+  protected <T> void verifyPhysicalPlan(String expression, T expectedResults) throws Throwable {
     expression = expression.replace("\\", "\\\\\\\\"); // "\\\\\\\\" => Java => "\\\\" => JsonParser => "\\" => AntlrParser "\"
 
     if (textFileContent == null) textFileContent = Resources.toString(Resources.getResource(CONVERSION_TEST_PHYSICAL_PLAN), Charsets.UTF_8);
     String planString = textFileContent.replace("__CONVERT_EXPRESSION__", expression);
 
-    Object[] results = getRunResult(planString);
-    assertEquals(testName, 1, results.length);
-    assertNotNull(testName, results[0]);
-    if (expectedResults.getClass().isArray()) {
-      assertArraysEquals(testName, expectedResults, results[0]);
-    } else {
-      assertEquals(testName, expectedResults, results[0]);
-    }
+    verifyResults(expression, expectedResults, getRunResult(QueryType.PHYSICAL, planString));
   }
 
-  protected Object[] getRunResult(String planString) throws Exception {
+  protected Object[] getRunResult(QueryType queryType, String planString) throws Exception {
+    List<QueryResultBatch> resultList = testRunAndReturn(queryType, planString);
+
     List<Object> res = new ArrayList<Object>();
     RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
-
-    List<QueryResultBatch> resultList = testPhysicalWithResults(planString);
     for(QueryResultBatch result : resultList) {
-      loader.load(result.getHeader().getDef(), result.getData());
-      if (loader.getRecordCount() > 0) {
+      if (result.getData() != null) {
+        loader.load(result.getHeader().getDef(), result.getData());
         ValueVector v = loader.iterator().next().getValueVector();
         for (int j = 0; j < v.getAccessor().getValueCount(); j++) {
           if  (v instanceof VarCharVector) {
@@ -373,12 +387,23 @@ public class TestConvertFunctions extends BaseTestQuery {
             res.add(v.getAccessor().getObject(j));
           }
         }
+        loader.clear();
+        result.release();
       }
-      loader.clear();
-      result.release();
     }
 
     return res.toArray();
+  }
+
+  protected <T> void verifyResults(String expression, T expectedResults, Object[] actualResults) throws Throwable {
+    String testName = String.format("Expression: %s.", expression);
+    assertEquals(testName, 1, actualResults.length);
+    assertNotNull(testName, actualResults[0]);
+    if (expectedResults.getClass().isArray()) {
+      assertArraysEquals(testName, expectedResults, actualResults[0]);
+    } else {
+      assertEquals(testName, expectedResults, actualResults[0]);
+    }
   }
 
   protected void assertArraysEquals(Object expected, Object actual) {

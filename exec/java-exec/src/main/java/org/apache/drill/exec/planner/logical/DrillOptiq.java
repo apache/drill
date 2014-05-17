@@ -326,6 +326,9 @@ public class DrillOptiq {
 
               return FunctionCallFactory.createExpression(functionName, args.subList(0, 1));
           }
+      } else if ((functionName.equals("convert_from") || functionName.equals("convert_to"))
+                    && args.get(1) instanceof QuotedString) {
+        return FunctionCallFactory.createConvert(functionName, ((QuotedString)args.get(1)).value, args.get(0), ExpressionPosition.UNKNOWN);
       }
 
       return FunctionCallFactory.createExpression(functionName, args);

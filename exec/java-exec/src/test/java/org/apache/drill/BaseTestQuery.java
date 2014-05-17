@@ -113,7 +113,7 @@ public class BaseTestQuery extends ExecTest{
     return testRunAndReturn(QueryType.PHYSICAL, physical);
   }
 
-  private List<QueryResultBatch>  testRunAndReturn(QueryType type, String query) throws Exception{
+  protected List<QueryResultBatch>  testRunAndReturn(QueryType type, String query) throws Exception{
     query = query.replace("[WORKING_PATH]", TestTools.getWorkingPath());
     return client.runQuery(type, query);
   }
