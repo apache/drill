@@ -53,7 +53,8 @@ public class HBaseFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void,
   }
 
   public HBaseScanSpec parseTree() {
-    return mergeScanSpecs("booleanAnd", this.groupScan.getHBaseScanSpec(), le.accept(this, null));
+    HBaseScanSpec parsedSpec = le.accept(this, null);
+    return parsedSpec != null ? mergeScanSpecs("booleanAnd", this.groupScan.getHBaseScanSpec(), parsedSpec ) : null;
   }
 
   public boolean isAllExpressionsConverted() {

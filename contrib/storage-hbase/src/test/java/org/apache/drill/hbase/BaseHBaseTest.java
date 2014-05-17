@@ -55,7 +55,7 @@ public class BaseHBaseTest extends BaseTestQuery {
   @BeforeClass
   public static void setUpBeforeClass() throws Exception {
     /*
-     * Change the following to HBaseTestsSuite.configure(false, false)
+     * Change the following to HBaseTestsSuite.configure(false, true)
      * if you want to test against an externally running HBase cluster.
      */
     HBaseTestsSuite.configure(true, true);
