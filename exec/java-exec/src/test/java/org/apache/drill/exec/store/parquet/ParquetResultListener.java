@@ -113,7 +113,7 @@ public class ParquetResultListener implements UserResultsListener {
       ValueVector vv = vw.getValueVector();
       currentField = props.fields.get(vv.getField().getAsSchemaPath().getRootSegment().getPath());
       if (ParquetRecordReaderTest.VERBOSE_DEBUG){
-        System.out.println("\n" + (String) currentField.name);
+        System.out.println("\n" + vv.getField().getAsSchemaPath().getRootSegment().getPath());
       }
       if ( ! valuesChecked.containsKey(vv.getField().getAsSchemaPath().getRootSegment().getPath())){
         valuesChecked.put(vv.getField().getAsSchemaPath().getRootSegment().getPath(), 0);
