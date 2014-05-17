@@ -17,6 +17,10 @@
  */
 package org.apache.drill.hbase;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.util.Arrays;
+
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -56,15 +60,14 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
   }
 
   @Test
-  @Ignore("Until convert_from() functions are working.")
   public void testFilterPushDownConvertExpression() throws Exception {
     runSQLVerifyCount("SELECT\n"
         + "  *\n"
         + "FROM\n"
         + "  hbase.`[TABLE_NAME]` tableName\n"
         + "WHERE\n"
-        + "  convert_from(row_key, 'INT_BE') > 12"
-        , -1);
+        + "  convert_from(row_key, 'UTF8') > 'b4'"
+        , 2);
   }
 
   @Test

@@ -19,13 +19,10 @@ package org.apache.drill.exec.store.hbase;
 
 import java.util.Arrays;
 
-import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
-import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.filter.BinaryComparator;
 import org.apache.hadoop.hbase.filter.CompareFilter.CompareOp;
@@ -36,8 +33,6 @@ import org.apache.hadoop.hbase.filter.SingleColumnValueFilter;
 import org.apache.hadoop.hbase.filter.WritableByteArrayComparable;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMap.Builder;
 
 public class HBaseFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void, RuntimeException> implements DrillHBaseConstants {
 
@@ -54,7 +49,17 @@ public class HBaseFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void,
 
   public HBaseScanSpec parseTree() {
     HBaseScanSpec parsedSpec = le.accept(this, null);
-    return parsedSpec != null ? mergeScanSpecs("booleanAnd", this.groupScan.getHBaseScanSpec(), parsedSpec ) : null;
+    if (parsedSpec != null) {
+      parsedSpec = mergeScanSpecs("booleanAnd", this.groupScan.getHBaseScanSpec(), parsedSpec);
+      /*
+       * If RowFilter is THE filter attached to the scan specification,
+       * remove it since its effect is also achieved through startRow and stopRow.
+       */
+      if (parsedSpec.filter instanceof RowFilter) {
+        parsedSpec.filter = null;
+      }
+    }
+    return parsedSpec;
   }
 
   public boolean isAllExpressionsConverted() {
@@ -72,22 +77,18 @@ public class HBaseFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void,
     HBaseScanSpec nodeScanSpec = null;
     String functionName = call.getName();
     ImmutableList<LogicalExpression> args = call.args;
-    if (COMPARE_FUNCTIONS_TRANSPOSE_MAP.containsKey(functionName)) {
-      LogicalExpression nameArg = args.get(0);
-      LogicalExpression valueArg = args.get(1);
-      if (nameArg instanceof QuotedString) {
-        valueArg = nameArg;
-        nameArg = args.get(1);
-        functionName = COMPARE_FUNCTIONS_TRANSPOSE_MAP.get(functionName);
-      }
 
-      while (nameArg instanceof CastExpression
-          && nameArg.getMajorType().getMinorType() == MinorType.VARCHAR) {
-        nameArg = ((CastExpression) nameArg).getInput();
-      }
+    if (CompareFunctionsProcessor.isCompareFunction(functionName)) {
+      /*
+       * HBASE-10848: Bug in HBase versions (0.94.[0-18], 0.96.[0-2], 0.98.[0-1])
+       * causes a filter with NullComparator to fail. Enable only if specified in
+       * the configuration (after ensuring that the HBase cluster has the fix).
+       */
+      boolean nullComparatorSupported = groupScan.getHBaseConf().getBoolean("drill.hbase.supports.null.comparator", false);
 
-      if (nameArg instanceof SchemaPath && valueArg instanceof QuotedString) {
-        nodeScanSpec = createHBaseScanSpec(functionName, (SchemaPath) nameArg, ((QuotedString) valueArg).value.getBytes());
+      CompareFunctionsProcessor processor = CompareFunctionsProcessor.process(call, nullComparatorSupported);
+      if (processor.isSuccess()) {
+        nodeScanSpec = createHBaseScanSpec(processor.getFunctionName(), processor.getPath(), processor.getValue());
       }
     } else {
       switch (functionName) {
@@ -104,28 +105,13 @@ public class HBaseFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void,
           }
         }
         break;
-      case "isnotnull":
-      case "isNotNull":
-      case "is not null":
-      case "isnull":
-      case "isNull":
-      case "is null":
-        /*
-         * HBASE-10848: Bug in HBase versions (0.94.[0-18], 0.96.[0-2], 0.98.[0-1])
-         * causes a filter with NullComparator to fail. Enable only if specified in
-         * the configuration (after ensuring that the HBase cluster has the fix).
-         */
-        if (groupScan.getHBaseConf().getBoolean("drill.hbase.supports.null.comparator", false)) {
-          if (args.get(0) instanceof SchemaPath) {
-            nodeScanSpec = createHBaseScanSpec(functionName, ((SchemaPath) args.get(0)), null);
-          }
-        }
       }
     }
 
     if (nodeScanSpec == null) {
       allExpressionsConverted = false;
     }
+
     return nodeScanSpec;
   }
 
@@ -182,7 +168,8 @@ public class HBaseFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void,
     case "greater_than":
       compareOp = CompareOp.GREATER;
       if (isRowKey) {
-        startRow = fieldValue;
+        // startRow should be just greater than 'value'
+        startRow = Arrays.copyOf(fieldValue, fieldValue.length+1);
       }
       break;
     case "less_than_or_equal_to":
@@ -238,19 +225,6 @@ public class HBaseFilterBuilder extends AbstractExprVisitor<HBaseScanSpec, Void,
     }
     // else
     return null;
-  }
-
-  private static final ImmutableMap<String, String> COMPARE_FUNCTIONS_TRANSPOSE_MAP;
-  static {
-   Builder<String, String> builder = ImmutableMap.builder();
-   COMPARE_FUNCTIONS_TRANSPOSE_MAP = builder
-       .put("equal", "equal")
-       .put("not_equal", "not_equal")
-       .put("greater_than_or_equal_to", "less_than_or_equal_to")
-       .put("greater_than", "less_than")
-       .put("less_than_or_equal_to", "greater_than_or_equal_to")
-       .put("less_than", "greater_than")
-       .build();
   }
 
 }

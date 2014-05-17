@@ -28,23 +28,26 @@ public class ConvertExpression extends LogicalExpressionBase implements Iterable
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ConvertExpression.class);
 
+  public static final String CONVERT_FROM = "convert_from";
+  public static final String CONVERT_TO = "convert_to";
+  
   private final LogicalExpression input;
   private final MajorType type;
   private final String convertFunction;
-  private final String conversionType;
+  private final String encodingType;
 
   /**
-   * @param conversionType
+   * @param encodingType
    * @param convertFunction
    * @param input
    * @param pos
    */
-  public ConvertExpression(String convertFunction, String conversionType, LogicalExpression input, ExpressionPosition pos) {
+  public ConvertExpression(String convertFunction, String encodingType, LogicalExpression input, ExpressionPosition pos) {
     super(pos);
     this.input = input;
-    this.convertFunction = convertFunction.toLowerCase();
-    this.conversionType = conversionType.toUpperCase();
-    this.type = Types.getMajorTypeFromName(conversionType.split("_", 2)[0].toLowerCase());
+    this.convertFunction = CONVERT_FROM.equals(convertFunction.toLowerCase()) ? CONVERT_FROM : CONVERT_TO;
+    this.encodingType = encodingType.toUpperCase();
+    this.type = Types.getMajorTypeFromName(encodingType.split("_", 2)[0].toLowerCase());
   }
 
   @Override
@@ -70,13 +73,13 @@ public class ConvertExpression extends LogicalExpressionBase implements Iterable
     return type;
   }
 
-  public String getConversionType() {
-    return conversionType;
+  public String getEncodingType() {
+    return encodingType;
   }
 
   @Override
   public String toString() {
-    return "ConvertExpression [input=" + input + ", type=" + type + ", convertFunction="
-        + convertFunction + ", conversionType=" + conversionType + "]";
+    return "ConvertExpression [input=" + input + ", type=" + Types.toString(type) + ", convertFunction="
+        + convertFunction + ", conversionType=" + encodingType + "]";
   }
 }

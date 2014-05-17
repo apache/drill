@@ -541,7 +541,7 @@ public class EvaluationVisitor {
 
     @Override
     public HoldingContainer visitConvertExpression(ConvertExpression e, ClassGenerator<?> value) throws RuntimeException {
-      String convertFunctionName = e.getConvertFunction() + e.getConversionType();
+      String convertFunctionName = e.getConvertFunction() + e.getEncodingType();
 
       List<LogicalExpression> newArgs = Lists.newArrayList();
       newArgs.add(e.getInput());  //input_expr
