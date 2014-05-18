@@ -125,6 +125,15 @@ public class ObjectVector extends BaseValueVector{
   }
 
   @Override
+  public int getCurrentValueCount() {
+    return 0;
+  }
+
+  @Override
+  public void setCurrentValueCount(int count) {
+  }
+
+  @Override
   public ByteBuf getData() {
     throw new UnsupportedOperationException("ObjectVector does not support this");
   }

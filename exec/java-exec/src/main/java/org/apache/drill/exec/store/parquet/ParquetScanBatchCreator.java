@@ -38,14 +38,23 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 import org.apache.drill.exec.store.parquet.columnreaders.ParquetRecordReader;
+import org.apache.drill.exec.store.parquet2.DrillParquetReader;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
 import parquet.hadoop.ParquetFileReader;
 import parquet.hadoop.metadata.ParquetMetadata;
+import parquet.schema.MessageType;
+import parquet.schema.Type;
+
 
 public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ParquetScanBatchCreator.class);
+
+  private static final String ENABLE_BYTES_READ_COUNTER = "parquet.benchmark.bytes.read";
+  private static final String ENABLE_BYTES_TOTAL_COUNTER = "parquet.benchmark.bytes.total";
+  private static final String ENABLE_TIME_READ_COUNTER = "parquet.benchmark.time.read";
 
   @Override
   public RecordBatch getBatch(FragmentContext context, ParquetRowGroupScan rowGroupScan, List<RecordBatch> children) throws ExecutionSetupException {
@@ -74,7 +83,11 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
 
 
     FileSystem fs = rowGroupScan.getStorageEngine().getFileSystem().getUnderlying();
-    
+    Configuration conf = fs.getConf();
+    conf.setBoolean(ENABLE_BYTES_READ_COUNTER, false);
+    conf.setBoolean(ENABLE_BYTES_TOTAL_COUNTER, false);
+    conf.setBoolean(ENABLE_TIME_READ_COUNTER, false);
+
     // keep footers in a map to avoid re-reading them
     Map<String, ParquetMetadata> footers = new HashMap<String, ParquetMetadata>();
     int numParts = 0;
@@ -91,14 +104,19 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
           footers.put(e.getPath(),
               ParquetFileReader.readFooter( fs.getConf(), new Path(e.getPath())));
         }
-        readers.add(
-            new ParquetRecordReader(
-                context, e.getPath(), e.getRowGroupIndex(), fs,
-                rowGroupScan.getStorageEngine().getCodecFactoryExposer(),
-                footers.get(e.getPath()),
-                rowGroupScan.getColumns()
-            )
-        );
+        if (!context.getOptions().getOption(ExecConstants.PARQUET_NEW_RECORD_READER).bool_val && !isComplex(footers.get(e.getPath()))) {
+          readers.add(
+              new ParquetRecordReader(
+                  context, e.getPath(), e.getRowGroupIndex(), fs,
+                  rowGroupScan.getStorageEngine().getCodecFactoryExposer(),
+                  footers.get(e.getPath()),
+                  rowGroupScan.getColumns()
+              )
+          );
+        } else {
+          ParquetMetadata footer = footers.get(e.getPath());
+          readers.add(new DrillParquetReader(footer, e, columns, conf));
+        }
         if (rowGroupScan.getSelectionRoot() != null) {
           String[] r = rowGroupScan.getSelectionRoot().split("/");
           String[] p = e.getPath().split("/");
@@ -124,5 +142,15 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
     }
 
     return new ScanBatch(rowGroupScan, context, readers.iterator(), partitionColumns, selectedPartitionColumns);
+  }
+
+  private static boolean isComplex(ParquetMetadata footer) {
+    MessageType schema = footer.getFileMetaData().getSchema();
+    for (Type type : schema.getFields()) {
+      if (!type.isPrimitive()) {
+        return true;
+      }
+    }
+    return false;
   }
 }

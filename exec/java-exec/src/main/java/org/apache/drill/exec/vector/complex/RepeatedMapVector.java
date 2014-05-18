@@ -92,6 +92,23 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
   }
 
   @Override
+  public List<ValueVector> getPrimitiveVectors() {
+    List<ValueVector> primitiveVectors = Lists.newArrayList();
+    for (ValueVector v : this.vectors.values()) {
+      if (v instanceof AbstractContainerVector) {
+        AbstractContainerVector av = (AbstractContainerVector) v;
+        for (ValueVector vv : av.getPrimitiveVectors()) {
+          primitiveVectors.add(vv);
+        }
+      } else {
+        primitiveVectors.add(v);
+      }
+    }
+    primitiveVectors.add(offsets);
+    return primitiveVectors;
+  }
+
+  @Override
   public <T extends ValueVector> T addOrGet(String name, MajorType type, Class<T> clazz) {
     ValueVector v = vectors.get(name);
 

@@ -67,6 +67,14 @@ package org.apache.drill.exec.vector;
     return Math.min(values.getValueCapacity(), offsets.getValueCapacity() - 1);
   }
 
+  public int getCurrentValueCount() {
+    return values.getCurrentValueCount();
+  }
+
+  public void setCurrentValueCount(int count) {
+    values.setCurrentValueCount(count);
+  }
+  
   public int getBufferSize(){
     return offsets.getBufferSize() + values.getBufferSize();
   }

@@ -34,6 +34,8 @@ public interface VariableWidthVector extends ValueVector{
    * @return
    */
   public int getByteCapacity();
+
+  public int getCurrentSizeInBytes();
   
   /**
    * Load the records in the provided buffer based on the given number of values.

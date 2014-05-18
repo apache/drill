@@ -78,6 +78,20 @@ public class RepeatedListVector extends AbstractContainerVector implements Repea
     return vector != null ? 1 : 0;
   }
 
+  @Override
+  public List<ValueVector> getPrimitiveVectors() {
+    List<ValueVector> primitiveVectors = Lists.newArrayList();
+    if (vector instanceof AbstractContainerVector) {
+      for (ValueVector v : ((AbstractContainerVector) vector).getPrimitiveVectors()) {
+        primitiveVectors.add(v);
+      }
+    } else {
+      primitiveVectors.add(vector);
+    }
+    primitiveVectors.add(offsets);
+    return primitiveVectors;
+  }
+
   public RepeatedListVector(SchemaPath path, BufferAllocator allocator){
     this(MaterializedField.create(path, TYPE), allocator);
   }

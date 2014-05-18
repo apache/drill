@@ -76,6 +76,22 @@ public class MapVector extends AbstractContainerVector {
     return vectors.size();
   }
 
+  @Override
+  public List<ValueVector> getPrimitiveVectors() {
+    List<ValueVector> primitiveVectors = Lists.newArrayList();
+    for (ValueVector v : this.vectors.values()) {
+      if (v instanceof AbstractContainerVector) {
+        AbstractContainerVector av = (AbstractContainerVector) v;
+        for (ValueVector vv : av.getPrimitiveVectors()) {
+          primitiveVectors.add(vv);
+        }
+      } else {
+        primitiveVectors.add(v);
+      }
+    }
+    return primitiveVectors;
+  }
+
   transient private MapTransferPair ephPair;
   transient private MapSingleCopier ephPair2;
 

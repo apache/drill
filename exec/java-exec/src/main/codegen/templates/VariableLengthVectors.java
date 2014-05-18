@@ -78,6 +78,10 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
   public int getByteCapacity(){
     return data.capacity(); 
   }
+
+  public int getCurrentSizeInBytes() {
+    return offsetVector.getAccessor().get(currentValueCount);
+  }
   
   /**
    * Return the number of bytes contained in the current var len byte vector.

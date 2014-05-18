@@ -47,12 +47,17 @@ import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.store.RecordReader;
+import org.apache.drill.exec.util.BatchPrinter;
+import org.apache.drill.exec.util.VectorUtil;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.ValueVector;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import org.apache.drill.exec.vector.complex.MapVector;
+import org.apache.drill.exec.vector.complex.impl.ComplexWriterImpl;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 
 /**
  * Record batch used for a particular scan. Operators against one or more
@@ -136,6 +141,7 @@ public class ScanBatch implements RecordBatch {
     if (done) {
       return IterOutcome.NONE;
     }
+    long t1 = System.nanoTime();
     oContext.getStats().startProcessing();
     try {
       mutator.allocate(MAX_RECORD_CNT);
@@ -177,8 +183,14 @@ public class ScanBatch implements RecordBatch {
       if (mutator.isNewSchema()) {
         container.buildSchema(SelectionVectorMode.NONE);
         schema = container.getSchema();
+        long t2 = System.nanoTime();
+//        System.out.println((t2 - t1) / recordCount);
+//        BatchPrinter.printBatch(this, "\t");
         return IterOutcome.OK_NEW_SCHEMA;
       } else {
+        long t2 = System.nanoTime();
+//        System.out.println((t2 - t1) / recordCount);
+//        BatchPrinter.printBatch(this, "\t");
         return IterOutcome.OK;
       }
     } catch (Exception ex) {

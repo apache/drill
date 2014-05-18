@@ -22,6 +22,7 @@ import java.io.IOException;
 import org.apache.hadoop.conf.Configuration;
 
 import parquet.bytes.BytesInput;
+import parquet.hadoop.CodecFactory.BytesDecompressor;
 import parquet.hadoop.metadata.CompressionCodecName;
 
 public class CodecFactoryExposer{
@@ -38,5 +39,9 @@ public class CodecFactoryExposer{
 
   public BytesInput decompress(BytesInput bytes, int uncompressedSize, CompressionCodecName codecName) throws IOException {
     return codecFactory.getDecompressor(codecName).decompress(bytes, uncompressedSize);
+  }
+
+  public BytesDecompressor getDecompressor(CompressionCodecName codec) {
+    return codecFactory.getDecompressor(codec);
   }
 }

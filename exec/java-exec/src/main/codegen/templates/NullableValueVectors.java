@@ -61,7 +61,15 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
   public int getValueCapacity(){
     return Math.min(bits.getValueCapacity(), values.getValueCapacity());
   }
-  
+
+  public int getCurrentValueCount() {
+    return values.getCurrentValueCount();
+  }
+
+  public void setCurrentValueCount(int count) {
+    values.setCurrentValueCount(count);
+  }
+
   @Override
   public ByteBuf[] getBuffers() {
     ByteBuf[] buffers = ObjectArrays.concat(bits.getBuffers(), values.getBuffers(), ByteBuf.class);
@@ -141,6 +149,11 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
   @Override
   public int getByteCapacity(){
     return values.getByteCapacity();
+  }
+
+  @Override
+  public int getCurrentSizeInBytes(){
+    return values.getCurrentSizeInBytes();
   }
 
   <#else>

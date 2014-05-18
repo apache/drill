@@ -24,6 +24,8 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.vector.ValueVector;
 
+import java.util.List;
+
 public abstract class AbstractContainerVector implements ValueVector{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractContainerVector.class);
 
@@ -38,6 +40,8 @@ public abstract class AbstractContainerVector implements ValueVector{
       throw new IllegalStateException(String.format("Vector requested [%s] was different than type stored [%s].  Drill doesn't yet support hetergenous types.", clazz.getSimpleName(), v.getClass().getSimpleName()));
     }
   }
+
+  public abstract List<ValueVector> getPrimitiveVectors();
 
   public abstract VectorWithOrdinal getVectorWithOrdinal(String name);
 

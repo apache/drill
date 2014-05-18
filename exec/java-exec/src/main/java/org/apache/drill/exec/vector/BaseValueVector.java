@@ -58,6 +58,9 @@ public abstract class BaseValueVector implements ValueVector{
     return getField().getAsBuilder();
   }
 
+  public abstract int getCurrentValueCount();
+  public abstract void setCurrentValueCount(int count);
+
   abstract public ByteBuf getData();
 
   abstract class BaseAccessor implements ValueVector.Accessor{
