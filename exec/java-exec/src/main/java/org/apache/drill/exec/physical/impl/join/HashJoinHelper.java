@@ -51,183 +51,183 @@ import org.apache.drill.exec.physical.impl.common.HashTable;
  */
 public class HashJoinHelper {
 
-    /* List of start indexes. Stores the record and batch index of the first record
-     * with a give key.
+  /* List of start indexes. Stores the record and batch index of the first record
+   * with a give key.
+   */
+  List<SelectionVector4> startIndices = new ArrayList<>();
+
+  // List of BuildInfo structures. Used to maintain auxiliary information about the build batches
+  List<BuildInfo> buildInfoList = new ArrayList<>();
+
+  // Fragment context
+  FragmentContext context;
+  BufferAllocator allocator;
+
+  // Constant to indicate index is empty.
+  static final int INDEX_EMPTY = -1;
+
+  // bits to shift while obtaining batch index from SV4
+  static final int SHIFT_SIZE = 16;
+
+  public HashJoinHelper(FragmentContext context, BufferAllocator allocator) {
+    this.context = context;
+    this.allocator = allocator;
+}
+
+  public void addStartIndexBatch() throws SchemaChangeException {
+    startIndices.add(getNewSV4(HashTable.BATCH_SIZE));
+  }
+
+  public class BuildInfo {
+    // List of links. Logically it helps maintain a linked list of records with the same key value
+    private SelectionVector4 links;
+
+    // List of bitvectors. Keeps track of records on the build side that matched a record on the probe side
+    private BitSet keyMatchBitVector;
+
+    // number of records in this batch
+    private int recordCount;
+
+    public BuildInfo(SelectionVector4 links, BitSet keyMatchBitVector, int recordCount) {
+      this.links = links;
+      this.keyMatchBitVector = keyMatchBitVector;
+      this.recordCount = recordCount;
+    }
+
+    public SelectionVector4 getLinks() {
+      return links;
+    }
+
+    public BitSet getKeyMatchBitVector() {
+      return keyMatchBitVector;
+    }
+  }
+
+  public SelectionVector4 getNewSV4(int recordCount) throws SchemaChangeException {
+
+    ByteBuf vector = allocator.buffer((recordCount * 4));
+
+    SelectionVector4 sv4 = new SelectionVector4(vector, recordCount, recordCount);
+
+    // Initialize the vector
+    for (int i = 0; i < recordCount; i++) {
+      sv4.set(i, INDEX_EMPTY);
+    }
+
+    return sv4;
+  }
+
+  public void addNewBatch(int recordCount) throws SchemaChangeException {
+    // Add a node to the list of BuildInfo's
+    BuildInfo info = new BuildInfo(getNewSV4(recordCount), new BitSet(recordCount), recordCount);
+    buildInfoList.add(info);
+  }
+
+  public int getStartIndex(int keyIndex) {
+    int batchIdx  = keyIndex / HashTable.BATCH_SIZE;
+    int offsetIdx = keyIndex % HashTable.BATCH_SIZE;
+
+    assert batchIdx < startIndices.size();
+
+    SelectionVector4 sv4 = startIndices.get(batchIdx);
+
+    return sv4.get(offsetIdx);
+  }
+
+  public int getNextIndex(int currentIdx) {
+    // Get to the links field of the current index to get the next index
+    int batchIdx = currentIdx >>> SHIFT_SIZE;
+    int recordIdx = currentIdx & HashTable.BATCH_MASK;
+
+    assert batchIdx < buildInfoList.size();
+
+    // Get the corresponding BuildInfo node
+    BuildInfo info = buildInfoList.get(batchIdx);
+    return info.getLinks().get(recordIdx);
+  }
+
+  public List<Integer> getNextUnmatchedIndex() {
+    List<Integer> compositeIndexes = new ArrayList<>();
+
+    for (int i = 0; i < buildInfoList.size(); i++) {
+      BuildInfo info = buildInfoList.get(i);
+      int fromIndex = 0;
+
+      while (((fromIndex = info.getKeyMatchBitVector().nextClearBit(fromIndex)) != -1) && (fromIndex < info.recordCount)) {
+          compositeIndexes.add((i << SHIFT_SIZE) | (fromIndex & HashTable.BATCH_MASK));
+          fromIndex++;
+      }
+    }
+    return compositeIndexes;
+  }
+
+  public void setRecordMatched(int index) {
+    int batchIdx  = index >>> SHIFT_SIZE;
+    int recordIdx = index & HashTable.BATCH_MASK;
+
+    // Get the BitVector for the appropriate batch and set the bit to indicate the record matched
+    BuildInfo info = buildInfoList.get(batchIdx);
+    BitSet bitVector = info.getKeyMatchBitVector();
+
+    bitVector.set(recordIdx);
+  }
+
+  public void setCurrentIndex(int keyIndex, int batchIndex, int recordIndex) throws SchemaChangeException {
+
+    /* set the current record batch index and the index
+     * within the batch at the specified keyIndex. The keyIndex
+     * denotes the global index where the key for this record is
+     * stored in the hash table
      */
-    List<SelectionVector4> startIndices = new ArrayList<>();
+    int batchIdx  = keyIndex / HashTable.BATCH_SIZE;
+    int offsetIdx = keyIndex % HashTable.BATCH_SIZE;
 
-    // List of BuildInfo structures. Used to maintain auxiliary information about the build batches
-    List<BuildInfo> buildInfoList = new ArrayList<>();
-
-    // Fragment context
-    FragmentContext context;
-    BufferAllocator allocator;
-
-    // Constant to indicate index is empty.
-    static final int INDEX_EMPTY = -1;
-
-    // bits to shift while obtaining batch index from SV4
-    static final int SHIFT_SIZE = 16;
-
-    public HashJoinHelper(FragmentContext context, BufferAllocator allocator) {
-        this.context = context;
-        this.allocator = allocator;
+    if (keyIndex >= (HashTable.BATCH_SIZE * startIndices.size())) {
+        // allocate a new batch
+      addStartIndexBatch();
     }
 
-    public void addStartIndexBatch() throws SchemaChangeException {
-        startIndices.add(getNewSV4(HashTable.BATCH_SIZE));
-    }
+    SelectionVector4 startIndex = startIndices.get(batchIdx);
+    int linkIndex;
 
-    public class BuildInfo {
-        // List of links. Logically it helps maintain a linked list of records with the same key value
-        private SelectionVector4 links;
+    // If head of the list is empty, insert current index at this position
+    if ((linkIndex = (startIndex.get(offsetIdx))) == INDEX_EMPTY) {
+      startIndex.set(offsetIdx, batchIndex, recordIndex);
+    } else {
+      /* Head of this list is not empty, if the first link
+       * is empty insert there
+       */
+      batchIdx = linkIndex >>> SHIFT_SIZE;
+      offsetIdx = linkIndex & Character.MAX_VALUE;
 
-        // List of bitvectors. Keeps track of records on the build side that matched a record on the probe side
-        private BitSet keyMatchBitVector;
+      SelectionVector4 link = buildInfoList.get(batchIdx).getLinks();
+      int firstLink = link.get(offsetIdx);
 
-        // number of records in this batch
-        private int recordCount;
-
-        public BuildInfo(SelectionVector4 links, BitSet keyMatchBitVector, int recordCount) {
-            this.links = links;
-            this.keyMatchBitVector = keyMatchBitVector;
-            this.recordCount = recordCount;
-        }
-
-        public SelectionVector4 getLinks() {
-            return links;
-        }
-
-        public BitSet getKeyMatchBitVector() {
-            return keyMatchBitVector;
-        }
-    }
-
-    public SelectionVector4 getNewSV4(int recordCount) throws SchemaChangeException {
-
-        ByteBuf vector = allocator.buffer((recordCount * 4));
-
-        SelectionVector4 sv4 = new SelectionVector4(vector, recordCount, recordCount);
-
-        // Initialize the vector
-        for (int i = 0; i < recordCount; i++) {
-            sv4.set(i, INDEX_EMPTY);
-        }
-
-        return sv4;
-    }
-
-    public void addNewBatch(int recordCount) throws SchemaChangeException {
-        // Add a node to the list of BuildInfo's
-        BuildInfo info = new BuildInfo(getNewSV4(recordCount), new BitSet(recordCount), recordCount);
-        buildInfoList.add(info);
-    }
-
-    public int getStartIndex(int keyIndex) {
-        int batchIdx  = keyIndex / HashTable.BATCH_SIZE;
-        int offsetIdx = keyIndex % HashTable.BATCH_SIZE;
-
-        assert batchIdx < startIndices.size();
-
-        SelectionVector4 sv4 = startIndices.get(batchIdx);
-
-        return sv4.get(offsetIdx);
-    }
-
-    public int getNextIndex(int currentIdx) {
-        // Get to the links field of the current index to get the next index
-        int batchIdx = currentIdx >>> SHIFT_SIZE;
-        int recordIdx = currentIdx & HashTable.BATCH_MASK;
-
-        assert batchIdx < buildInfoList.size();
-
-        // Get the corresponding BuildInfo node
-        BuildInfo info = buildInfoList.get(batchIdx);
-        return info.getLinks().get(recordIdx);
-    }
-
-    public List<Integer> getNextUnmatchedIndex() {
-        List<Integer> compositeIndexes = new ArrayList<>();
-
-        for (int i = 0; i < buildInfoList.size(); i++) {
-            BuildInfo info = buildInfoList.get(i);
-            int fromIndex = 0;
-
-            while (((fromIndex = info.getKeyMatchBitVector().nextClearBit(fromIndex)) != -1) && (fromIndex < info.recordCount)) {
-                compositeIndexes.add((i << SHIFT_SIZE) | (fromIndex & HashTable.BATCH_MASK));
-                fromIndex++;
-            }
-        }
-        return compositeIndexes;
-    }
-
-    public void setRecordMatched(int index) {
-        int batchIdx  = index >>> SHIFT_SIZE;
-        int recordIdx = index & HashTable.BATCH_MASK;
-
-        // Get the BitVector for the appropriate batch and set the bit to indicate the record matched
-        BuildInfo info = buildInfoList.get(batchIdx);
-        BitSet bitVector = info.getKeyMatchBitVector();
-
-        bitVector.set(recordIdx);
-    }
-
-    public void setCurrentIndex(int keyIndex, int batchIndex, int recordIndex) throws SchemaChangeException {
-
-        /* set the current record batch index and the index
-         * within the batch at the specified keyIndex. The keyIndex
-         * denotes the global index where the key for this record is
-         * stored in the hash table
+      if (firstLink == INDEX_EMPTY) {
+        link.set(offsetIdx, batchIndex, recordIndex);
+      } else {
+        /* Insert the current value as the first link and
+         * make the current first link as its next
          */
-        int batchIdx  = keyIndex / HashTable.BATCH_SIZE;
-        int offsetIdx = keyIndex % HashTable.BATCH_SIZE;
+        int firstLinkBatchIdx  = firstLink >>> SHIFT_SIZE;
+        int firstLinkOffsetIDx = firstLink & Character.MAX_VALUE;
 
-        if (keyIndex >= (HashTable.BATCH_SIZE * startIndices.size())) {
-            // allocate a new batch
-            addStartIndexBatch();
-        }
+        SelectionVector4 nextLink = buildInfoList.get(batchIndex).getLinks();
+        nextLink.set(recordIndex, firstLinkBatchIdx, firstLinkOffsetIDx);
 
-        SelectionVector4 startIndex = startIndices.get(batchIdx);
-        int linkIndex;
+        link.set(offsetIdx, batchIndex, recordIndex);
+      }
+    }
+  }
 
-        // If head of the list is empty, insert current index at this position
-        if ((linkIndex = (startIndex.get(offsetIdx))) == INDEX_EMPTY) {
-            startIndex.set(offsetIdx, batchIndex, recordIndex);
-        } else {
-            /* Head of this list is not empty, if the first link
-             * is empty insert there
-             */
-            batchIdx = linkIndex >>> SHIFT_SIZE;
-            offsetIdx = linkIndex & Character.MAX_VALUE;
-
-            SelectionVector4 link = buildInfoList.get(batchIdx).getLinks();
-            int firstLink = link.get(offsetIdx);
-
-            if (firstLink == INDEX_EMPTY) {
-                link.set(offsetIdx, batchIndex, recordIndex);
-            } else {
-                /* Insert the current value as the first link and
-                 * make the current first link as its next
-                 */
-                int firstLinkBatchIdx  = firstLink >>> SHIFT_SIZE;
-                int firstLinkOffsetIDx = firstLink & Character.MAX_VALUE;
-
-                SelectionVector4 nextLink = buildInfoList.get(batchIndex).getLinks();
-                nextLink.set(recordIndex, firstLinkBatchIdx, firstLinkOffsetIDx);
-
-                link.set(offsetIdx, batchIndex, recordIndex);
-            }
-        }
+  public void clear() {
+    // Clear the SV4 used for start indices
+    for (SelectionVector4 sv4: startIndices) {
+      sv4.clear();
     }
 
-    public void clear() {
-        // Clear the SV4 used for start indices
-        for (SelectionVector4 sv4: startIndices) {
-            sv4.clear();
-        }
-
-        for (BuildInfo info : buildInfoList) {
-            info.getLinks().clear();
-        }
+    for (BuildInfo info : buildInfoList) {
+      info.getLinks().clear();
     }
+  }
 }
