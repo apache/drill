@@ -31,26 +31,26 @@ import org.apache.drill.exec.expr.annotations.Workspace;
     }
 </#macro>
 
-<#macro subtractBlock holderType left right result>
+<#macro subtractBlock holderType in1 in2 result>
 
             /* compute the result's size, integer part and fractional part */
-            result.scale   = Math.max(left.scale, right.scale);
+            result.scale   = Math.max(${in1}.scale, ${in2}.scale);
             result.precision = result.maxPrecision;
 
 
             int resultScaleRoundedUp = org.apache.drill.common.util.DecimalUtility.roundUp(result.scale);
             int resultIndex = result.nDecimalDigits- 1;
 
-            int leftScaleRoundedUp  = org.apache.drill.common.util.DecimalUtility.roundUp(left.scale);
-            int leftIntRoundedUp    = org.apache.drill.common.util.DecimalUtility.roundUp(left.precision - left.scale);
-            int rightScaleRoundedUp = org.apache.drill.common.util.DecimalUtility.roundUp(right.scale);
+            int leftScaleRoundedUp  = org.apache.drill.common.util.DecimalUtility.roundUp(${in1}.scale);
+            int leftIntRoundedUp    = org.apache.drill.common.util.DecimalUtility.roundUp(${in1}.precision - ${in1}.scale);
+            int rightScaleRoundedUp = org.apache.drill.common.util.DecimalUtility.roundUp(${in2}.scale);
 
-            int leftIndex  = left.nDecimalDigits - 1;
-            int rightIndex = right.nDecimalDigits - 1;
+            int leftIndex  = ${in1}.nDecimalDigits - 1;
+            int rightIndex = ${in2}.nDecimalDigits - 1;
 
             /* If the left scale is bigger, simply copy over the digits into result */
             while (leftScaleRoundedUp > rightScaleRoundedUp) {
-                result.setInteger(resultIndex, left.getInteger(leftIndex));
+                result.setInteger(resultIndex, ${in1}.getInteger(leftIndex));
                 leftIndex--;
                 resultIndex--;
                 leftScaleRoundedUp--;
@@ -60,7 +60,7 @@ import org.apache.drill.exec.expr.annotations.Workspace;
             int carry = 0;
             while(rightScaleRoundedUp > leftScaleRoundedUp) {
 
-                int difference = 0 - right.getInteger(rightIndex) - carry;
+                int difference = 0 - ${in2}.getInteger(rightIndex) - carry;
                 rightIndex--;
 
                 if (difference < 0) {
@@ -80,7 +80,7 @@ import org.apache.drill.exec.expr.annotations.Workspace;
              */
             while (leftScaleRoundedUp > 0) {
 
-                int difference = left.getInteger(leftIndex) - right.getInteger(rightIndex) - carry;
+                int difference = ${in1}.getInteger(leftIndex) - ${in2}.getInteger(rightIndex) - carry;
                 leftIndex--;
                 rightIndex--;
 
@@ -100,11 +100,11 @@ import org.apache.drill.exec.expr.annotations.Workspace;
              */
             while(leftIntRoundedUp > 0) {
 
-                int difference = left.getInteger(leftIndex);
+                int difference = ${in1}.getInteger(leftIndex);
                 leftIndex--;
 
                 if (rightIndex >= 0) {
-                    difference -= right.getInteger(rightIndex);
+                    difference -= ${in2}.getInteger(rightIndex);
                     rightIndex--;
                 }
 
@@ -123,20 +123,20 @@ import org.apache.drill.exec.expr.annotations.Workspace;
 
 </#macro>
 
-<#macro addBlock holderType left right result>
+<#macro addBlock holderType in1 in2 result>
 
         /* compute the result scale */
-        result.scale = Math.max(left.scale, right.scale);
+        result.scale = Math.max(${in1}.scale, ${in2}.scale);
         result.precision = result.maxPrecision;
 
         int resultScaleRoundedUp = org.apache.drill.common.util.DecimalUtility.roundUp(result.scale);
 
-        int leftScaleRoundedUp  = org.apache.drill.common.util.DecimalUtility.roundUp(left.scale);
-        int rightScaleRoundedUp = org.apache.drill.common.util.DecimalUtility.roundUp(right.scale);
+        int leftScaleRoundedUp  = org.apache.drill.common.util.DecimalUtility.roundUp(${in1}.scale);
+        int rightScaleRoundedUp = org.apache.drill.common.util.DecimalUtility.roundUp(${in2}.scale);
 
         /* starting index for each decimal */
-        int leftIndex  = left.nDecimalDigits - 1;
-        int rightIndex = right.nDecimalDigits - 1;
+        int leftIndex  = ${in1}.nDecimalDigits - 1;
+        int rightIndex = ${in2}.nDecimalDigits - 1;
         int resultIndex = result.nDecimalDigits - 1;
 
         /* If one of the scale is larger then simply copy it over
@@ -144,7 +144,7 @@ import org.apache.drill.exec.expr.annotations.Workspace;
          */
         while (leftScaleRoundedUp > rightScaleRoundedUp) {
 
-            result.setInteger(resultIndex, left.getInteger(leftIndex));
+            result.setInteger(resultIndex, ${in1}.getInteger(leftIndex));
             leftIndex--;
             resultIndex--;
             leftScaleRoundedUp--;
@@ -152,7 +152,7 @@ import org.apache.drill.exec.expr.annotations.Workspace;
         }
 
         while (rightScaleRoundedUp > leftScaleRoundedUp) {
-            result.setInteger((resultIndex), right.getInteger(rightIndex));
+            result.setInteger((resultIndex), ${in2}.getInteger(rightIndex));
             rightIndex--;
             resultIndex--;
             rightScaleRoundedUp--;
@@ -164,7 +164,7 @@ import org.apache.drill.exec.expr.annotations.Workspace;
         /* now the two scales are at the same level, we can add them */
         while (resultScaleRoundedUp > 0) {
 
-            sum += left.getInteger(leftIndex) + right.getInteger(rightIndex);
+            sum += ${in1}.getInteger(leftIndex) + ${in2}.getInteger(rightIndex);
             leftIndex--;
             rightIndex--;
 
@@ -182,7 +182,7 @@ import org.apache.drill.exec.expr.annotations.Workspace;
         /* add the integer part */
         while (leftIndex >= 0 && rightIndex >= 0) {
 
-            sum += left.getInteger(leftIndex) + right.getInteger(rightIndex);
+            sum += ${in1}.getInteger(leftIndex) + ${in2}.getInteger(rightIndex);
             leftIndex--;
             rightIndex--;
 
@@ -197,7 +197,7 @@ import org.apache.drill.exec.expr.annotations.Workspace;
         }
 
         while (resultIndex >= 0 && leftIndex >= 0) {
-            sum += left.getInteger(leftIndex);
+            sum += ${in1}.getInteger(leftIndex);
             leftIndex--;
 
             if (sum >= org.apache.drill.common.util.DecimalUtility.DIGITS_BASE) {
@@ -210,7 +210,7 @@ import org.apache.drill.exec.expr.annotations.Workspace;
         }
 
         while (resultIndex >= 0 && rightIndex >= 0) {
-            sum += right.getInteger(rightIndex);
+            sum += ${in2}.getInteger(rightIndex);
             rightIndex--;
 
             if (sum >= org.apache.drill.common.util.DecimalUtility.DIGITS_BASE) {
@@ -294,7 +294,7 @@ public class ${type.name}Functions {
              * becomes addition
              */
             if (left.sign != right.sign) {
-                <@addBlock holderType=type.name left="left" right="right" result="result"/>
+                <@addBlock holderType=type.name in1="left" in2="right" result="result"/>
                 result.sign = left.sign;
             } else {
                 /* Sign of the inputs are the same, meaning we have to perform subtraction
@@ -305,7 +305,9 @@ public class ${type.name}Functions {
                 <@compareBlock holderType=type.name left="left" right="right" absCompare="true" output="cmp"/>
 
                 if (cmp == -1) {
-                    left.swap(right);
+                  <@subtractBlock holderType=type.name in1="right" in2="left" result="result"/>
+                } else {
+                  <@subtractBlock holderType=type.name in1="left" in2="right" result="result"/>
                 }
 
                 //Determine the sign of the result
@@ -314,10 +316,6 @@ public class ${type.name}Functions {
                 } else {
                     result.sign = false;
                 }
-
-                // Perform the subtraction
-                <@subtractBlock holderType=type.name left="left" right="right" result="result"/>
-
             }
 
         }
@@ -356,21 +354,19 @@ public class ${type.name}Functions {
                 <@compareBlock holderType=type.name left="left" right="right" absCompare="true" output="cmp"/>
 
                 if (cmp == -1) {
-                    left.swap(right);
+                    <@subtractBlock holderType=type.name in1="right" in2="left" result="result"/>
+                    result.sign = right.sign;
+                } else {
+                    <@subtractBlock holderType=type.name in1="left" in2="right" result="result"/>
+                    result.sign = left.sign;
                 }
-                /* Perform the subtraction */
-                <@subtractBlock holderType=type.name left="left" right="right" result="result"/>
+
+
             } else {
                 /* Sign of the two input decimals is the same, use the add logic */
-                <@addBlock holderType=type.name left="left" right="right" result="result"/>
+                <@addBlock holderType=type.name in1="left" in2="right" result="result"/>
+                result.sign = left.sign;
             }
-
-            /* Assign the result to be the sign of the left input
-             * If the two input signs are the same, we can choose either to be the resulting sign
-             * If the two input signs are different, we assign left input to be the greater absolute value
-             * hence result will have the same sign as left
-             */
-            result.sign = left.sign;
         }
     }
 

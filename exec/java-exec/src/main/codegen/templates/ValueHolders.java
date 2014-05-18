@@ -82,33 +82,6 @@ public final class ${className} implements ValueHolder{
         buffer.setInt(start + (index * 4), value);
     }
 
-    // TODO: This is a temporary hack to swap holders. We need a generic solution for this issue
-    public void swap(${className} right) {
-        int tempScale = this.scale;
-        int tempPrec = this.precision;
-        boolean tempSign = this.sign;
-        ByteBuf tempBuf = this.buffer;
-        int start = this.start;
-
-        this.scale = right.scale;
-        this.precision = right.precision;
-        this.sign = right.sign;
-        this.buffer = right.buffer;
-        this.start = right.start;
-
-        right.scale = tempScale;
-        right.precision = tempPrec;
-        right.sign = tempSign;
-        right.buffer = tempBuf;
-        right.start = start;
-
-        <#if mode.prefix == "Nullable">
-        int isSet = this.isSet;
-        this.isSet = right.isSet;
-        right.isSet = isSet;
-        </#if>
-    }
-
     <#else>
     public ${minor.javaType!type.javaType} value;
     </#if>

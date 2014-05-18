@@ -439,4 +439,17 @@ public class TestFunctionsQuery {
     JdbcAssert.withNoDefaultSchema()
         .sql(query);
   }
+
+  @Test
+  public void testDecimalAddConstant() throws Exception {
+    String query = "select (cast('-1' as decimal(38, 3)) + cast (employee_id as decimal(38, 3))) as CNT " +
+        "from cp.`employee.json` where employee_id <= 4";
+
+    JdbcAssert.withNoDefaultSchema()
+        .sql(query)
+        .returns(
+            "CNT=0.000\n" +
+            "CNT=1.000\n" +
+            "CNT=3.000\n");
+  }
 }
