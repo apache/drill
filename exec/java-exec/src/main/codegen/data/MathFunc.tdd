@@ -14,8 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-{    
-  unaryMathFunctions : [
+{
+
+unaryMathFunctions : [
   	{className: "Abs", funcName: "abs", javaFunc : "java.lang.Math.abs", types: [
       {input: "Int",  outputType: "Int", castType: "int"},
       {input: "BigInt",  outputType: "BigInt", castType: "long"},
@@ -106,7 +107,7 @@
       {input: "UInt4", outputType: "Int", castType: "int"},
       {input: "UInt8", outputType: "Int", castType: "int"}
      ]
-   	}      	   
+	}
   ],  
   binaryMathFunctions : [
     {className: "Div", funcName: "div", javaFunc : " / ", types: [
@@ -133,10 +134,108 @@
       {input: "UInt2", outputType: "UInt2", castType: "char"},
       {input: "UInt4", outputType: "UInt4", castType: "int"},
       {input: "UInt8", outputType: "UInt8", castType: "long"}     
-     ] 
+     ]
     }
-    
   ],
+
+logBaseMathFunction : [
+ {className: "LogBase", funcName: "log", javaFunc : "java.lang.Math.log", outputType: "Float8", types: [
+      {input: "Int"},
+      {input: "BigInt"},
+      {input: "Float4"},
+      {input: "Float8"},
+      {input: "SmallInt"},
+      {input: "TinyInt"},
+      {input: "UInt1"},
+      {input: "UInt2"},
+      {input: "UInt4"},
+      {input: "UInt8"},
+      {input: "Decimal9"},
+      {input: "Decimal18"}
+    ]
+   }
+],
+extendedUnaryMathFunctions : [
+ {className: "Cbrt", funcName: "cbrt", javaFunc : "java.lang.Math.cbrt", outputType: "Float8", types: [
+      {input: "Int"},
+      {input: "BigInt"},
+      {input: "Float4"},
+      {input: "Float8"},
+      {input: "SmallInt"},
+      {input: "TinyInt"},
+      {input: "UInt1"},
+      {input: "UInt2"},
+      {input: "UInt4"},
+      {input: "UInt8"},
+      {input: "Decimal9"},
+      {input: "Decimal18"}
+    ]
+   },
+
+ {className: "Exp", funcName: "exp", javaFunc : "java.lang.Math.exp", outputType: "Float8", types: [
+      {input: "Int"},
+      {input: "BigInt"},
+      {input: "Float4"},
+      {input: "Float8"},
+      {input: "SmallInt"},
+      {input: "TinyInt"},
+      {input: "UInt1"},
+      {input: "UInt2"},
+      {input: "UInt4"},
+      {input: "UInt8"},
+      {input: "Decimal9"},
+      {input: "Decimal18"}
+    ]
+   },
+
+ {className: "Log", funcName: "log", javaFunc : "java.lang.Math.log", outputType: "Float8", types: [
+      {input: "Int"},
+      {input: "BigInt"},
+      {input: "Float4"},
+      {input: "Float8"},
+      {input: "SmallInt"},
+      {input: "TinyInt"},
+      {input: "UInt1"},
+      {input: "UInt2"},
+      {input: "UInt4"},
+      {input: "UInt8"},
+      {input: "Decimal9"},
+      {input: "Decimal18"}
+    ]
+   },
+
+{className: "Degrees", funcName: "degrees", javaFunc : "java.lang.Math.toDegrees", outputType: "Float8", types: [
+      {input: "Int"},
+      {input: "BigInt"},
+      {input: "Float4"},
+      {input: "Float8"},
+      {input: "SmallInt"},
+      {input: "TinyInt"},
+      {input: "UInt1"},
+      {input: "UInt2"},
+      {input: "UInt4"},
+      {input: "UInt8"},
+      {input: "Decimal9"},
+      {input: "Decimal18"}
+    ]
+   },
+
+{className: "Radians", funcName: "radians", javaFunc : "java.lang.Math.toRadians", outputType: "Float8", types: [
+      {input: "Int"},
+      {input: "BigInt"},
+      {input: "Float4"},
+      {input: "Float8"},
+      {input: "SmallInt"},
+      {input: "TinyInt"},
+      {input: "UInt1"},
+      {input: "UInt2"},
+      {input: "UInt4"},
+      {input: "UInt8"},
+      {input: "Decimal9"},
+      {input: "Decimal18"}
+    ]
+   }
+],
 
 trigoMathFunctions : [
  {className: "Sin", funcName: "sin", javaFunc : "java.lang.Math.sin", outputType: "Float8", types: [

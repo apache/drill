@@ -112,4 +112,18 @@ public class MathFunctions{
       out.value = (roundedValue.setScale(decimalDigits, java.math.BigDecimal.ROUND_HALF_UP)).doubleValue();
     }
   }
+
+  @FunctionTemplate(name = "pi", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  public static class Pi implements DrillSimpleFunc {
+
+    @Output Float8Holder out;
+
+    public void setup(RecordBatch b) {
+    }
+
+    public void eval() {
+        out.value = java.lang.Math.PI;
+    }
+  }
+
 }

@@ -20,6 +20,9 @@ package org.apache.drill.exec.fn.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+
+import java.math.BigDecimal;
+
 import mockit.Injectable;
 import mockit.NonStrictExpectations;
 
@@ -115,5 +118,15 @@ public class TestNewMathFunctions {
 	                           @Injectable UserServer.UserClientConnection connection) throws Throwable{
 	    Object [] expected = new Object[] {Math.sin(45), Math.cos(45), Math.tan(45),Math.asin(45), Math.acos(45), Math.atan(45),Math.sinh(45), Math.cosh(45), Math.tanh(45)};
 	    runTest(bitContext, connection, expected, "functions/testTrigoMathFunctions.json");
+	  }
+
+	  @Test
+	  public void testExtendedMathFunc(@Injectable final DrillbitContext bitContext,
+	                           @Injectable UserServer.UserClientConnection connection) throws Throwable{
+		BigDecimal d = new BigDecimal("100111111111111111111111111111111111.00000000000000000000000000000000000000000000000000001");
+
+	    Object [] expected = new Object[] {Math.cbrt(1000), Math.log(10), (Math.log(64.0)/Math.log(2.0)), Math.exp(10), Math.toDegrees(0.5), Math.toRadians(45.0), Math.PI, Math.cbrt(d.doubleValue()), Math.log(d.doubleValue()), (Math.log(d.doubleValue())/Math.log(2)), Math.exp(d.doubleValue()), Math.toDegrees(d.doubleValue()), Math.toRadians(d.doubleValue())};
+
+	    runTest(bitContext, connection, expected, "functions/testExtendedMathFunctions.json");
 	  }
 }

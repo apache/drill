@@ -29,6 +29,8 @@
 
 package org.apache.drill.exec.expr.fn.impl;
 
+import java.math.BigDecimal;
+
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -98,9 +100,117 @@ public class GMathFunctions{
   </#list>
 }
 
+
+
 //////////////////////////////////////////////////////////////////////////////////////////////////
 //End of GMath Functions
 //////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+<@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/ExtendedMathFunctions.java" />
+<#include "/@includes/license.ftl" />
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+//Functions for Extended Math Functions
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+package org.apache.drill.exec.expr.fn.impl;
+
+import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.Types;
+import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.exec.expr.DrillSimpleFunc;
+import org.apache.drill.exec.expr.annotations.FunctionTemplate;
+import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
+import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
+import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
+import org.apache.drill.exec.expr.annotations.Output;
+import org.apache.drill.exec.expr.annotations.Param;
+import org.apache.drill.exec.expr.annotations.Workspace;
+import org.apache.drill.exec.expr.fn.impl.StringFunctions;
+import org.apache.drill.exec.expr.holders.*;
+import org.apache.drill.exec.record.RecordBatch;
+import java.math.BigDecimal;
+/*
+ * This class is automatically generated from MathFunc.tdd using FreeMarker.
+ */
+
+@SuppressWarnings("unused")
+
+public class ExtendedMathFunctions{
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ExtendedMathFunctions.class);
+
+  private ExtendedMathFunctions(){}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+//Unary Math functions with 1 parameter.
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
+<#list mathFunc.extendedUnaryMathFunctions as func>
+
+<#list func.types as type>
+
+@FunctionTemplate(name = "${func.funcName}", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+public static class ${func.className}${type.input} implements DrillSimpleFunc {
+
+  @Param ${type.input}Holder in;
+  @Output ${func.outputType}Holder out;
+
+  public void setup(RecordBatch b) {
+  }
+
+  public void eval() {
+	  <#if type.input?matches("^Decimal[1-9]*")>
+	  double dblval = new BigDecimal(in.value).setScale(in.scale).doubleValue();
+	  out.value = ${func.javaFunc}(dblval);
+	  <#else>
+	  out.value = ${func.javaFunc}(in.value);
+	  </#if>
+  }
+}
+
+</#list>
+</#list>
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+//Function to handle Log with base.
+//////////////////////////////////////////////////////////////////////////////////////////////////
+<#list mathFunc.logBaseMathFunction as func>
+<#list func.types as type>
+
+@FunctionTemplate(name = "${func.funcName}", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+public static class ${func.className}${type.input} implements DrillSimpleFunc {
+
+  @Param ${type.input}Holder base;
+  @Param ${type.input}Holder val;
+  @Output ${func.outputType}Holder out;
+
+  public void setup(RecordBatch b) {
+  }
+
+  public void eval() {
+	  <#if type.input?matches("^Decimal[1-9]*")>
+	  double dblval = new BigDecimal(val.value).setScale(val.scale).doubleValue();
+	  out.value = ${func.javaFunc}(dblval)/ ${func.javaFunc}(base.value);
+	  <#else>
+	  out.value = ${func.javaFunc}(val.value)/ ${func.javaFunc}(base.value);
+	  </#if>
+  }
+}
+</#list>
+</#list>
+
+
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+//End of Extended Math Functions
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 <@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/TrigoMathFunctions.java" />
 <#include "/@includes/license.ftl" />
