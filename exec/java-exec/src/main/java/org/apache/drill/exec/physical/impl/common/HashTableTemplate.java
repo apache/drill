@@ -476,15 +476,20 @@ public abstract class HashTableTemplate implements HashTable {
 
   private boolean insertEntry(int incomingRowIdx, int currentIdx, int hashValue, BatchHolder lastEntryBatch, int lastEntryIdx) {
 
-    // resize hash table if needed and transfer the metadata
-    resizeAndRehashIfNeeded(currentIdx);
-
     addBatchIfNeeded(currentIdx);
 
     BatchHolder bh = batchHolders.get( (currentIdx >>> 16) & BATCH_MASK);
 
     if (bh.insertEntry(incomingRowIdx, currentIdx, hashValue, lastEntryBatch, lastEntryIdx)) {
       numEntries++ ;
+
+      /* Resize hash table if needed and transfer the metadata
+       * Resize only after inserting the current entry into the hash table
+       * Otherwise our calculated lastEntryBatch and lastEntryIdx
+       * becomes invalid after resize.
+       */
+      resizeAndRehashIfNeeded();
+
       return true;
     }
 
@@ -548,7 +553,7 @@ public abstract class HashTableTemplate implements HashTable {
   // For each entry in the old hash table, re-hash it to the new table and update the metadata
   // in the new table.. the metadata consists of the startIndices, links and hashValues.
   // Note that the keys stored in the BatchHolders are not moved around.
-  private void resizeAndRehashIfNeeded(int currentIdx) {
+  private void resizeAndRehashIfNeeded() {
     if (numEntries < threshold)
       return;
 
