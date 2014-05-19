@@ -49,6 +49,16 @@ public class TestExampleQueries extends BaseTestQuery{
   }
 
   @Test
+  public void testHashPartitionSV2 () throws Exception{
+    test("select count(n_nationkey) from cp.`tpch/nation.parquet` where n_nationkey > 8 group by n_regionkey");
+  }
+
+  @Test
+  public void testHashPartitionSV4 () throws Exception{
+    test("select count(n_nationkey) as cnt from cp.`tpch/nation.parquet` group by n_regionkey order by cnt");
+  }
+
+  @Test
   public void testSelectWithLimit() throws Exception{
     test("select employee_id,  first_name, last_name from cp.`employee.json` limit 5 ");
   }

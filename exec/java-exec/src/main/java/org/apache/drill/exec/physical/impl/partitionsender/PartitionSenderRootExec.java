@@ -182,8 +182,24 @@ public class PartitionSenderRootExec implements RootExec {
     // set up partitioning function
     final LogicalExpression expr = operator.getExpr();
     final ErrorCollector collector = new ErrorCollectorImpl();
-    final ClassGenerator<Partitioner> cg = CodeGenerator.getRoot(Partitioner.TEMPLATE_DEFINITION,
-                                                                         context.getFunctionRegistry());
+    final ClassGenerator<Partitioner> cg ;
+
+    boolean hyper = false;
+
+    switch(incoming.getSchema().getSelectionVectorMode()){
+    case NONE:
+      cg = CodeGenerator.getRoot(Partitioner.TEMPLATE_DEFINITION, context.getFunctionRegistry());
+      break;
+    case TWO_BYTE:
+      cg = CodeGenerator.getRoot(Partitioner.TEMPLATE_DEFINITION_SV2, context.getFunctionRegistry());
+      break;
+    case FOUR_BYTE:
+      cg = CodeGenerator.getRoot(Partitioner.TEMPLATE_DEFINITION_SV4, context.getFunctionRegistry());
+      hyper = true;
+      break;
+    default:
+      throw new UnsupportedOperationException();
+    }
 
     final LogicalExpression materializedExpr = ExpressionTreeMaterializer.materialize(expr, incoming, collector, context.getFunctionRegistry());
     if (collector.hasErrors()) {
@@ -255,22 +271,41 @@ public class PartitionSenderRootExec implements RootExec {
       Class<?> vvType = TypeHelper.getValueVectorClass(vvIn.getField().getType().getMinorType(),
                                                        vvIn.getField().getType().getMode());
       JClass vvClass = cg.getModel().ref(vvType);
-      // the following block generates calls to copyFrom(); e.g.:
-      // ((IntVector) outgoingVectors[bucket][0]).copyFrom(inIndex,
-      //                                                     outgoingBatches[bucket].getRecordCount(),
-      //                                                     vv1);
-      cg.getEvalBlock()._if(
-        ((JExpression) JExpr.cast(vvClass,
-              ((JExpression)
-                     outgoingVectors
-                       .component(bucket))
-                       .component(JExpr.lit(fieldId))))
-                       .invoke("copyFromSafe")
-                       .arg(inIndex)
-                       .arg(((JExpression) outgoingBatches.component(bucket)).invoke("getRecordCount"))
-                       .arg(incomingVV).not())._then().add(((JExpression) outgoingBatches.component(bucket)).invoke("flush"))
-                       ._return();
 
+      if (!hyper) {
+        // the following block generates calls to copyFrom(); e.g.:
+        // ((IntVector) outgoingVectors[bucket][0]).copyFrom(inIndex,
+        //                                                     outgoingBatches[bucket].getRecordCount(),
+        //                                                     vv1);
+        cg.getEvalBlock()._if(
+          ((JExpression) JExpr.cast(vvClass,
+                ((JExpression)
+                       outgoingVectors
+                         .component(bucket))
+                         .component(JExpr.lit(fieldId))))
+                         .invoke("copyFromSafe")
+                         .arg(inIndex)
+                         .arg(((JExpression) outgoingBatches.component(bucket)).invoke("getRecordCount"))
+                         .arg(incomingVV).not())._then().add(((JExpression) outgoingBatches.component(bucket)).invoke("flush"))
+                         ._return();
+      } else {
+        // the following block generates calls to copyFrom(); e.g.:
+        // ((IntVector) outgoingVectors[bucket][0]).copyFrom(inIndex,
+        //                                                     outgoingBatches[bucket].getRecordCount(),
+        //                                                     vv1[((inIndex)>>> 16)]);
+        cg.getEvalBlock()._if(
+          ((JExpression) JExpr.cast(vvClass,
+                ((JExpression)
+                       outgoingVectors
+                         .component(bucket))
+                         .component(JExpr.lit(fieldId))))
+                         .invoke("copyFromSafe")
+                         .arg(inIndex)
+                         .arg(((JExpression) outgoingBatches.component(bucket)).invoke("getRecordCount"))
+                         .arg(incomingVV.component(inIndex.shrz(JExpr.lit(16)))).not())._then().add(((JExpression) outgoingBatches.component(bucket)).invoke("flush"))
+                         ._return();
+
+      }
       ++fieldId;
     }
     // generate the OutgoingRecordBatch helper invocations

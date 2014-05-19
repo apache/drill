@@ -115,5 +115,10 @@ public class HashToRandomExchangePrel extends SinglePrel {
     return SelectionVectorMode.NONE;
   }
 
+  @Override
+  public SelectionVectorMode[] getSupportedEncodings() {
+    return SelectionVectorMode.ALL;
+  }
+
 
 }
