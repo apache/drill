@@ -83,6 +83,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
          */
         int integerStartIndex = readIndex;
         int integerEndIndex = endIndex;
+        boolean leadingDigitFound = false;
 
         int radix = 10;
 
@@ -108,6 +109,13 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
                 byte[] buf = new byte[in.end - in.start];
                 in.buffer.getBytes(in.start, buf, 0, in.end - in.start);
                 throw new org.apache.drill.common.exceptions.DrillRuntimeException(new String(buf, com.google.common.base.Charsets.UTF_8));
+            } else if (leadingDigitFound == false) {
+                if (next == 0) {
+                    // Ignore the leading zeroes while validating if input digits will fit within the given precision
+                    integerStartIndex++;
+                } else {
+                    leadingDigitFound = true;
+                }
             }
             out.value *= radix;
             out.value += next;
@@ -215,7 +223,8 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
         startIndex = readIndex;
 
         int radix = 10;
-
+        boolean leadingDigitFound = false;
+    
         /* This is the first pass, we get the number of integer digits and based on the provided scale
          * we compute which index into the ByteBuf we start storing the integer part of the Decimal
          */
@@ -243,7 +252,13 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
                     throw new NumberFormatException(new String(buf, com.google.common.base.Charsets.UTF_8));
                 }
 
-                integerDigits++;
+                if (leadingDigitFound == false && next != 0) {
+                    leadingDigitFound = true;
+                }
+
+                if (leadingDigitFound == true) {
+                    integerDigits++;
+                }
             }
         }
 
