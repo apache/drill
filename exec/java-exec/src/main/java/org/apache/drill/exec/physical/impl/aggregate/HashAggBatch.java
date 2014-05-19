@@ -76,14 +76,14 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
   private TypedFieldId[] groupByOutFieldIds ;
   private TypedFieldId[] aggrOutFieldIds ;      // field ids for the outgoing batch
 
-  private final GeneratorMapping UPDATE_AGGR_INSIDE = 
-    GeneratorMapping.create("setupInterior" /* setup method */, "updateAggrValuesInternal" /* eval method */, 
+  private final GeneratorMapping UPDATE_AGGR_INSIDE =
+    GeneratorMapping.create("setupInterior" /* setup method */, "updateAggrValuesInternal" /* eval method */,
                             "resetValues" /* reset */, "cleanup" /* cleanup */) ;
 
-  private final GeneratorMapping UPDATE_AGGR_OUTSIDE = 
-    GeneratorMapping.create("setupInterior" /* setup method */, "outputRecordValues" /* eval method */, 
+  private final GeneratorMapping UPDATE_AGGR_OUTSIDE =
+    GeneratorMapping.create("setupInterior" /* setup method */, "outputRecordValues" /* eval method */,
                             "resetValues" /* reset */, "cleanup" /* cleanup */) ;
-   
+
   private final MappingSet UpdateAggrValuesMapping = new MappingSet("incomingRowIdx" /* read index */, "outRowIdx" /* write index */, "htRowIdx" /* workspace index */, "incoming" /* read container */, "outgoing" /* write container */, "aggrValuesContainer" /* workspace container */, UPDATE_AGGR_INSIDE, UPDATE_AGGR_OUTSIDE, UPDATE_AGGR_INSIDE);
 
 
@@ -100,72 +100,78 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
 
   @Override
   public IterOutcome next() {
+    stats.startProcessing();
+    try{
+      // this is only called on the first batch. Beyond this, the aggregator manages batches.
+      if (aggregator == null) {
+        IterOutcome outcome = next(incoming);
+        logger.debug("Next outcome of {}", outcome);
+        switch (outcome) {
+        case NONE:
+        case NOT_YET:
+        case STOP:
+          return outcome;
+        case OK_NEW_SCHEMA:
+          if (!createAggregator()){
+            done = true;
+            return IterOutcome.STOP;
+          }
+          break;
+        case OK:
+          throw new IllegalStateException("You should never get a first batch without a new schema");
+        default:
+          throw new IllegalStateException(String.format("unknown outcome %s", outcome));
+        }
+      }
 
-    // this is only called on the first batch. Beyond this, the aggregator manages batches.
-    if (aggregator == null) {
-      IterOutcome outcome = incoming.next();
-      logger.debug("Next outcome of {}", outcome);
-      switch (outcome) {
-      case NONE:
-      case NOT_YET:
-      case STOP:
-        return outcome;
-      case OK_NEW_SCHEMA:
-        if (!createAggregator()){
+
+      if (aggregator.allFlushed()) {
+        return IterOutcome.NONE;
+      }
+
+      logger.debug("Starting aggregator doWork; incoming record count = {} ", incoming.getRecordCount());
+
+      while(true){
+        AggOutcome out = aggregator.doWork();
+        logger.debug("Aggregator response {}, records {}", out, aggregator.getOutputCount());
+        switch(out){
+        case CLEANUP_AND_RETURN:
+          container.clear();
+          aggregator.cleanup();
           done = true;
-          return IterOutcome.STOP;
+          return aggregator.getOutcome();
+        case RETURN_OUTCOME:
+          return aggregator.getOutcome();
+        case UPDATE_AGGREGATOR:
+          aggregator = null;
+          if(!createAggregator()){
+            return IterOutcome.STOP;
+          }
+          continue;
+        default:
+          throw new IllegalStateException(String.format("Unknown state %s.", out));
         }
-        break;
-      case OK:
-        throw new IllegalStateException("You should never get a first batch without a new schema");
-      default:
-        throw new IllegalStateException(String.format("unknown outcome %s", outcome));
       }
+      }finally{
+      stats.stopProcessing();
     }
-
-
-    if (aggregator.allFlushed()) {
-      return IterOutcome.NONE;
-    }
-
-    logger.debug("Starting aggregator doWork; incoming record count = {} ", incoming.getRecordCount());
-    
-    while(true){
-      AggOutcome out = aggregator.doWork();
-      logger.debug("Aggregator response {}, records {}", out, aggregator.getOutputCount());
-      switch(out){
-      case CLEANUP_AND_RETURN:
-        container.clear();
-        aggregator.cleanup();
-        done = true;
-        return aggregator.getOutcome();
-      case RETURN_OUTCOME:
-        return aggregator.getOutcome();
-      case UPDATE_AGGREGATOR:
-        aggregator = null;
-        if(!createAggregator()){
-          return IterOutcome.STOP;
-        }
-        continue;
-      default:
-        throw new IllegalStateException(String.format("Unknown state %s.", out));
-      }
-    }
-    
   }
 
   /**
    * Creates a new Aggregator based on the current schema. If setup fails, this method is responsible for cleaning up
    * and informing the context of the failure state, as well is informing the upstream operators.
-   * 
+   *
    * @return true if the aggregator was setup successfully. false if there was a failure.
    */
   private boolean createAggregator() {
     logger.debug("Creating new aggregator.");
     try{
+      stats.startSetup();
       this.aggregator = createAggregatorInternal();
+      stats.stopSetup();
       return true;
     }catch(SchemaChangeException | ClassTransformationException | IOException ex){
+      stats.stopSetup();
       context.fail(ex);
       container.clear();
       incoming.kill();
@@ -181,12 +187,12 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
     container.clear();
     List<VectorAllocator> keyAllocators = Lists.newArrayList();
     List<VectorAllocator> valueAllocators = Lists.newArrayList();
-    
+
     int numGroupByExprs = (popConfig.getGroupByExprs() != null) ? popConfig.getGroupByExprs().length : 0;
     int numAggrExprs = (popConfig.getAggrExprs() != null) ? popConfig.getAggrExprs().length : 0;
     aggrExprs = new LogicalExpression[numAggrExprs];
     groupByOutFieldIds = new TypedFieldId[numGroupByExprs];
-    aggrOutFieldIds = new TypedFieldId[numAggrExprs];    
+    aggrOutFieldIds = new TypedFieldId[numAggrExprs];
 
     ErrorCollector collector = new ErrorCollectorImpl();
 
@@ -201,18 +207,18 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
       ValueVector vv = TypeHelper.getNewVector(outputField, oContext.getAllocator());
       keyAllocators.add(VectorAllocator.getAllocator(vv, 200));
 
-      // add this group-by vector to the output container 
+      // add this group-by vector to the output container
       groupByOutFieldIds[i] = container.add(vv);
     }
 
     for(i = 0; i < numAggrExprs; i++){
       NamedExpression ne = popConfig.getAggrExprs()[i];
       final LogicalExpression expr = ExpressionTreeMaterializer.materialize(ne.getExpr(), incoming, collector, context.getFunctionRegistry() );
-  
+
       if(collector.hasErrors()) throw new SchemaChangeException("Failure while materializing expression. " + collector.toErrorString());
 
       if(expr == null) continue;
-      
+
       final MaterializedField outputField = MaterializedField.create(ne.getRef(), expr.getMajorType());
       ValueVector vv = TypeHelper.getNewVector(outputField, oContext.getAllocator());
       valueAllocators.add(VectorAllocator.getAllocator(vv, 200));
@@ -229,10 +235,10 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
     HashAggregator agg = context.getImplementationClass(top);
 
     agg.setup(popConfig, context, oContext.getAllocator(), incoming, this,
-              aggrExprs, 
+              aggrExprs,
               cgInner.getWorkspaceTypes(),
               groupByOutFieldIds,
-              keyAllocators.toArray(new VectorAllocator[keyAllocators.size()]), 
+              keyAllocators.toArray(new VectorAllocator[keyAllocators.size()]),
               valueAllocators.toArray(new VectorAllocator[valueAllocators.size()]));
 
     return agg;
@@ -268,12 +274,12 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
       cg.getBlock("getVectorIndex")._return(var.invoke("getIndex").arg(JExpr.direct("recordIndex")));;
       return;
     }
-     
+
     default:
       throw new IllegalStateException();
-      
+
     }
-   
+
   }
 
   @Override

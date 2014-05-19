@@ -35,6 +35,7 @@ import org.apache.drill.exec.physical.base.AbstractWriter;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.impl.ScanBatch;
 import org.apache.drill.exec.physical.impl.WriterRecordBatch;
+import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.RecordReader;
@@ -65,7 +66,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
   private final String name;
   protected final CompressionCodecFactory codecFactory;
   private final boolean compressible;
-  
+
   protected EasyFormatPlugin(String name, DrillbitContext context, DrillFileSystem fs, StoragePluginConfig storageConfig,
                              T formatConfig, boolean readable, boolean writable, boolean blockSplittable, boolean compressible, List<String> extensions, String defaultName){
     this.matcher = new BasicFormatMatcher(this, fs, extensions, compressible);
@@ -80,7 +81,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
     this.name = name == null ? defaultName : name;
     this.codecFactory = new CompressionCodecFactory(new Configuration(fs.getUnderlying().getConf()));
   }
-  
+
   @Override
   public DrillFileSystem getFileSystem() {
     return fs;
@@ -90,7 +91,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
   public DrillbitContext getContext() {
     return context;
   }
-  
+
   @Override
   public String getName() {
     return name;
@@ -99,7 +100,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
   /**
    * Whether or not you can split the format based on blocks within file boundaries. If not, the simple format engine will
    * only split on file boundaries.
-   * 
+   *
    * @return True if splittable.
    */
   public boolean isBlockSplittable() {
@@ -184,7 +185,7 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
   public AbstractGroupScan getGroupScan(FileSelection selection, List<SchemaPath> columns) throws IOException {
     return new EasyGroupScan(selection, this, columns, selection.selectionRoot);
   }
-  
+
   @Override
   public FormatPluginConfig getConfig() {
     return formatConfig;
@@ -214,5 +215,8 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
   public Set<StoragePluginOptimizerRule> getOptimizerRules() {
     return ImmutableSet.of();
   }
-  
+
+  public abstract int getReaderOperatorType();
+  public abstract int getWriterOperatorType();
+
 }

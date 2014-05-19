@@ -25,6 +25,7 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.Size;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -37,14 +38,14 @@ public class RandomReceiver extends AbstractReceiver{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RandomReceiver.class);
 
   private List<DrillbitEndpoint> senders;
-  
+
   @JsonCreator
   public RandomReceiver(@JsonProperty("sender-major-fragment") int oppositeMajorFragmentId,
                         @JsonProperty("senders") List<DrillbitEndpoint> senders) {
     super(oppositeMajorFragmentId);
     this.senders = senders;
   }
-  
+
   @Override
   @JsonProperty("senders")
   public List<DrillbitEndpoint> getProvidingEndpoints() {
@@ -62,7 +63,7 @@ public class RandomReceiver extends AbstractReceiver{
     return new OperatorCost(1,1,1,1);
   }
 
-  
+
   @Override
   public <T, X, E extends Throwable> T accept(PhysicalVisitor<T, X, E> physicalVisitor, X value) throws E {
     return physicalVisitor.visitRandomReceiver(this, value);
@@ -74,7 +75,8 @@ public class RandomReceiver extends AbstractReceiver{
     return new Size(1,1);
   }
 
-  
-
-  
+  @Override
+  public int getOperatorType() {
+    return CoreOperatorType.RANDOM_RECEIVER_VALUE;
+  }
 }

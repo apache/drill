@@ -26,6 +26,7 @@ import org.apache.drill.exec.physical.base.AbstractStore;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.Store;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -51,7 +52,7 @@ public class MockStorePOP extends AbstractStore {
 
   @Override
   public void applyAssignments(List<DrillbitEndpoint> endpoints) {
-    
+
   }
 
   @Override
@@ -69,7 +70,10 @@ public class MockStorePOP extends AbstractStore {
     return new MockStorePOP(child);
   }
 
+  @Override
+  public int getOperatorType() {
+    throw new UnsupportedOperationException();
+  }
 
-  
 
 }

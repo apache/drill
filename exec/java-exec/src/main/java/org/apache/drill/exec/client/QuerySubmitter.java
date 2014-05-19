@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.coord.ZKClusterCoordinator;
-import org.apache.drill.exec.proto.UserProtos;
+import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.util.VectorUtil;
@@ -149,19 +149,19 @@ public class QuerySubmitter {
     PrintingResultsListener listener;
 
     String[] queries;
-    UserProtos.QueryType queryType;
+    QueryType queryType;
     type = type.toLowerCase();
     switch(type) {
       case "sql":
-        queryType = UserProtos.QueryType.SQL;
+        queryType = QueryType.SQL;
         queries = plan.trim().split(";");
         break;
       case "logical":
-        queryType = UserProtos.QueryType.LOGICAL;
+        queryType = QueryType.LOGICAL;
         queries = new String[]{ plan };
         break;
       case "physical":
-        queryType = UserProtos.QueryType.PHYSICAL;
+        queryType = QueryType.PHYSICAL;
         queries = new String[]{ plan };
         break;
       default:

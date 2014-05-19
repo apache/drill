@@ -166,7 +166,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
     recordsSampled += incoming.getRecordCount();
 
     outer: while (recordsSampled < recordsToSample) {
-      upstream = incoming.next();
+      upstream = next(incoming);
       switch (upstream) {
       case NONE:
       case NOT_YET:
@@ -414,97 +414,102 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
 
   @Override
   public IterOutcome next() {
-    container.zeroVectors();
+    stats.startProcessing();
+    try{
+      container.zeroVectors();
 
-    // if we got IterOutcome.NONE while getting partition vectors, and there are no batches on the queue, then we are
-    // done
-    if (upstreamNone && (batchQueue == null || batchQueue.size() == 0))
-      return IterOutcome.NONE;
+      // if we got IterOutcome.NONE while getting partition vectors, and there are no batches on the queue, then we are
+      // done
+      if (upstreamNone && (batchQueue == null || batchQueue.size() == 0))
+        return IterOutcome.NONE;
 
-    // if there are batches on the queue, process them first, rather than calling incoming.next()
-    if (batchQueue != null && batchQueue.size() > 0) {
-      VectorContainer vc = batchQueue.poll();
-      recordCount = vc.getRecordCount();
-      try {
+      // if there are batches on the queue, process them first, rather than calling incoming.next()
+      if (batchQueue != null && batchQueue.size() > 0) {
+        VectorContainer vc = batchQueue.poll();
+        recordCount = vc.getRecordCount();
+        try {
 
-        // Must set up a new schema each time, because ValueVectors are not reused between containers in queue
-        setupNewSchema(vc);
-      } catch (SchemaChangeException ex) {
-        kill();
-        logger.error("Failure during query", ex);
-        context.fail(ex);
-        return IterOutcome.STOP;
+          // Must set up a new schema each time, because ValueVectors are not reused between containers in queue
+          setupNewSchema(vc);
+        } catch (SchemaChangeException ex) {
+          kill();
+          logger.error("Failure during query", ex);
+          context.fail(ex);
+          return IterOutcome.STOP;
+        }
+        doWork(vc);
+        vc.zeroVectors();
+        return IterOutcome.OK_NEW_SCHEMA;
       }
-      doWork(vc);
-      vc.zeroVectors();
-      return IterOutcome.OK_NEW_SCHEMA;
-    }
 
-    // Reaching this point, either this is the first iteration, or there are no batches left on the queue and there are
-    // more incoming
-    IterOutcome upstream = incoming.next();
+      // Reaching this point, either this is the first iteration, or there are no batches left on the queue and there are
+      // more incoming
+      IterOutcome upstream = next(incoming);
 
-    if (this.first && upstream == IterOutcome.OK) {
-      throw new RuntimeException("Invalid state: First batch should have OK_NEW_SCHEMA");
-    }
+      if (this.first && upstream == IterOutcome.OK) {
+        throw new RuntimeException("Invalid state: First batch should have OK_NEW_SCHEMA");
+      }
 
-    // If this is the first iteration, we need to generate the partition vectors before we can proceed
-    if (this.first && upstream == IterOutcome.OK_NEW_SCHEMA) {
-      if (!getPartitionVectors()){
+      // If this is the first iteration, we need to generate the partition vectors before we can proceed
+      if (this.first && upstream == IterOutcome.OK_NEW_SCHEMA) {
+        if (!getPartitionVectors()){
+          cleanup();
+          return IterOutcome.STOP;
+        }
+
+        batchQueue = new LinkedBlockingQueue<>(this.sampledIncomingBatches);
+        first = false;
+
+        // Now that we have the partition vectors, we immediately process the first batch on the queue
+        VectorContainer vc = batchQueue.poll();
+        try {
+          setupNewSchema(vc);
+        } catch (SchemaChangeException ex) {
+          kill();
+          logger.error("Failure during query", ex);
+          context.fail(ex);
+          return IterOutcome.STOP;
+        }
+        doWork(vc);
+        vc.zeroVectors();
+        recordCount = vc.getRecordCount();
+        return IterOutcome.OK_NEW_SCHEMA;
+      }
+
+      // if this now that all the batches on the queue are processed, we begin processing the incoming batches. For the
+      // first one
+      // we need to generate a new schema, even if the outcome is IterOutcome.OK After that we can reuse the schema.
+      if (this.startedUnsampledBatches == false) {
+        this.startedUnsampledBatches = true;
+        if (upstream == IterOutcome.OK)
+          upstream = IterOutcome.OK_NEW_SCHEMA;
+      }
+      switch (upstream) {
+      case NONE:
+      case NOT_YET:
+      case STOP:
         cleanup();
-        return IterOutcome.STOP;
+        recordCount = 0;
+        return upstream;
+      case OK_NEW_SCHEMA:
+        try {
+          setupNewSchema(incoming);
+        } catch (SchemaChangeException ex) {
+          kill();
+          logger.error("Failure during query", ex);
+          context.fail(ex);
+          return IterOutcome.STOP;
+        }
+        // fall through.
+      case OK:
+        doWork(incoming);
+        recordCount = incoming.getRecordCount();
+        return upstream; // change if upstream changed, otherwise normal.
+      default:
+        throw new UnsupportedOperationException();
       }
-
-      batchQueue = new LinkedBlockingQueue<>(this.sampledIncomingBatches);
-      first = false;
-
-      // Now that we have the partition vectors, we immediately process the first batch on the queue
-      VectorContainer vc = batchQueue.poll();
-      try {
-        setupNewSchema(vc);
-      } catch (SchemaChangeException ex) {
-        kill();
-        logger.error("Failure during query", ex);
-        context.fail(ex);
-        return IterOutcome.STOP;
-      }
-      doWork(vc);
-      vc.zeroVectors();
-      recordCount = vc.getRecordCount();
-      return IterOutcome.OK_NEW_SCHEMA;
-    }
-
-    // if this now that all the batches on the queue are processed, we begin processing the incoming batches. For the
-    // first one
-    // we need to generate a new schema, even if the outcome is IterOutcome.OK After that we can reuse the schema.
-    if (this.startedUnsampledBatches == false) {
-      this.startedUnsampledBatches = true;
-      if (upstream == IterOutcome.OK)
-        upstream = IterOutcome.OK_NEW_SCHEMA;
-    }
-    switch (upstream) {
-    case NONE:
-    case NOT_YET:
-    case STOP:
-      cleanup();
-      recordCount = 0;
-      return upstream;
-    case OK_NEW_SCHEMA:
-      try {
-        setupNewSchema(incoming);
-      } catch (SchemaChangeException ex) {
-        kill();
-        logger.error("Failure during query", ex);
-        context.fail(ex);
-        return IterOutcome.STOP;
-      }
-      // fall through.
-    case OK:
-      doWork(incoming);
-      recordCount = incoming.getRecordCount();
-      return upstream; // change if upstream changed, otherwise normal.
-    default:
-      throw new UnsupportedOperationException();
+    }finally{
+      stats.stopProcessing();
     }
   }
 

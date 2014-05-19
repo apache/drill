@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.ops;
 
+import java.util.Iterator;
+
 import org.apache.drill.common.util.Hook.Closeable;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.OutOfMemoryException;
@@ -28,10 +30,29 @@ public class OperatorContext implements Closeable {
   private final BufferAllocator allocator;
   private boolean closed = false;
   private PhysicalOperator popConfig;
+  private int operatorId;
+  private OperatorStats stats;
 
   public OperatorContext(PhysicalOperator popConfig, FragmentContext context) throws OutOfMemoryException {
     this.allocator = context.getNewChildAllocator(popConfig.getInitialAllocation(), popConfig.getMaxAllocation());
     this.popConfig = popConfig;
+    this.operatorId = popConfig.getOperatorId();
+
+    OpProfileDef def = new OpProfileDef();
+    def.operatorId = operatorId;
+    def.incomingCount = getChildCount(popConfig);
+    def.operatorType = popConfig.getOperatorType();
+    this.stats = context.getStats().getOperatorStats(def);
+  }
+
+  private static int getChildCount(PhysicalOperator popConfig){
+    Iterator<PhysicalOperator> iter = popConfig.iterator();
+    int i = 0;
+    while(iter.hasNext()){
+      iter.next();
+      i++;
+    }
+    return i;
   }
 
   public BufferAllocator getAllocator() {
@@ -56,5 +77,9 @@ public class OperatorContext implements Closeable {
       allocator.close();
     }
     closed = true;
+  }
+
+  public OperatorStats getStats(){
+    return stats;
   }
 }

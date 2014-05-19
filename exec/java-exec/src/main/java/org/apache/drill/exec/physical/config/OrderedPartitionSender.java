@@ -27,6 +27,7 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.Size;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
 import com.beust.jcommander.internal.Lists;
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -41,7 +42,7 @@ public class OrderedPartitionSender extends AbstractSender {
   private final FieldReference ref;
   private final List<DrillbitEndpoint> endpoints;
   private final int sendingWidth;
-  
+
   private int recordsToSample;
   private int samplingFactor;
   private float completionFactor;
@@ -90,7 +91,7 @@ public class OrderedPartitionSender extends AbstractSender {
   public OperatorCost getCost() {
     return new OperatorCost(0, 0, 1000, child.getSize().getRecordCount());
   }
-  
+
   @Override
   public Size getSize() {
     //TODO: This should really change the row width...
@@ -115,4 +116,8 @@ public class OrderedPartitionSender extends AbstractSender {
     return completionFactor;
   }
 
+  @Override
+  public int getOperatorType() {
+    return CoreOperatorType.ORDERED_PARTITION_SENDER_VALUE;
+  }
 }

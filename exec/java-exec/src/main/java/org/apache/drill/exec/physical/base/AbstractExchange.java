@@ -47,20 +47,20 @@ public abstract class AbstractExchange extends AbstractSingle implements Exchang
 
   protected abstract void setupSenders(List<DrillbitEndpoint> senderLocations) throws PhysicalOperatorSetupException ;
   protected abstract void setupReceivers(List<DrillbitEndpoint> senderLocations) throws PhysicalOperatorSetupException ;
-  
+
   @Override
   public final void setupSenders(int majorFragmentId, List<DrillbitEndpoint> senderLocations) throws PhysicalOperatorSetupException {
     this.senderMajorFragmentId = majorFragmentId;
     setupSenders(senderLocations);
   }
-  
+
 
   @Override
   public final void setupReceivers(int majorFragmentId, List<DrillbitEndpoint> receiverLocations) throws PhysicalOperatorSetupException {
     this.receiverMajorFragmentId = majorFragmentId;
     setupReceivers(receiverLocations);
   }
-  
+
   @Override
   public OperatorCost getAggregateSendCost() {
     return getExchangeCost().getSendCost();
@@ -86,5 +86,11 @@ public abstract class AbstractExchange extends AbstractSingle implements Exchang
   public OperatorCost getCost() {
     return getExchangeCost().getCombinedCost();
   }
+
+  @Override
+  public int getOperatorType() {
+    throw new UnsupportedOperationException();
+  }
+
 
 }

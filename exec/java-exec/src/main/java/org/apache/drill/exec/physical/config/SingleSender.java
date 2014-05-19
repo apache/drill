@@ -26,6 +26,7 @@ import org.apache.drill.exec.physical.base.AbstractSender;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -40,7 +41,7 @@ public class SingleSender extends AbstractSender {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SingleSender.class);
 
   private final DrillbitEndpoint destination;
-  
+
   @JsonCreator
   public SingleSender(@JsonProperty("receiver-major-fragment") int oppositeMajorFragmentId, @JsonProperty("child") PhysicalOperator child, @JsonProperty("destination") DrillbitEndpoint destination) {
     super(oppositeMajorFragmentId, child);
@@ -68,11 +69,15 @@ public class SingleSender extends AbstractSender {
   public <T, X, E extends Throwable> T accept(PhysicalVisitor<T, X, E> physicalVisitor, X value) throws E {
     return physicalVisitor.visitSingleSender(this, value);
   }
- 
+
 
   public DrillbitEndpoint getDestination() {
     return destination;
   }
- 
-  
+
+  @Override
+  public int getOperatorType() {
+    return CoreOperatorType.SINGLE_SENDER_VALUE;
+  }
+
 }

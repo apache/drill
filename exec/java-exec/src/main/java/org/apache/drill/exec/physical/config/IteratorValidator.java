@@ -21,13 +21,14 @@ import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.base.AbstractSingle;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
+import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
 public class IteratorValidator extends AbstractSingle{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(IteratorValidator.class);
 
   public IteratorValidator(PhysicalOperator child) {
     super(child);
-    
+
   }
 
   @Override
@@ -45,4 +46,8 @@ public class IteratorValidator extends AbstractSingle{
     return new IteratorValidator(child);
   }
 
+  @Override
+  public int getOperatorType() {
+    return -1;
+  }
 }

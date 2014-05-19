@@ -22,7 +22,6 @@ import java.io.Closeable;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.cache.DistributedCache;
-import org.apache.drill.exec.cache.DistributedMultiMap;
 import org.apache.drill.exec.cache.HazelCache;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.coord.ClusterCoordinator.RegistrationHandle;
@@ -31,6 +30,8 @@ import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.service.ServiceEngine;
 import org.apache.drill.exec.work.WorkManager;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.servlet.ServletHandler;
 
 import com.google.common.io.Closeables;
 
@@ -71,6 +72,7 @@ public class Drillbit implements Closeable{
   final DistributedCache cache;
   final WorkManager manager;
   final BootStrapContext context;
+  final Server embeddedJetty;
 
   private volatile RegistrationHandle handle;
 
@@ -89,7 +91,16 @@ public class Drillbit implements Closeable{
       this.engine = new ServiceEngine(manager.getControlMessageHandler(), manager.getUserWorker(), context, manager.getWorkBus(), manager.getDataHandler());
       this.cache = new HazelCache(config, context.getAllocator());
     }
+    this.embeddedJetty = new Server(474747);
   }
+
+  private void setupJetty(){
+    ServletHandler handler = new ServletHandler();
+    embeddedJetty.setHandler(handler);
+
+  }
+
+
 
   public void run() throws Exception {
     coord.start(10000);
@@ -99,6 +110,7 @@ public class Drillbit implements Closeable{
     manager.getContext().getStorage().init();
     manager.getContext().getOptionManager().init();
     handle = coord.register(md);
+    embeddedJetty.start();
   }
 
   public void close() {
@@ -109,7 +121,11 @@ public class Drillbit implements Closeable{
     } catch (InterruptedException e) {
       logger.warn("Interrupted while sleeping during coordination deregistration.");
     }
-
+    try {
+      embeddedJetty.stop();
+    } catch (Exception e) {
+      logger.warn("Failure while shutting down embedded jetty server.");
+    }
     Closeables.closeQuietly(engine);
     Closeables.closeQuietly(coord);
     Closeables.closeQuietly(manager);

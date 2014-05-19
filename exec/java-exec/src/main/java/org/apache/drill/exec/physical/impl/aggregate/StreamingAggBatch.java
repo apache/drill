@@ -79,64 +79,69 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
 
   @Override
   public IterOutcome next() {
+    stats.startProcessing();
+    try{
+      // this is only called on the first batch. Beyond this, the aggregator manages batches.
+      if (aggregator == null) {
+        IterOutcome outcome = next(incoming);
+        logger.debug("Next outcome of {}", outcome);
+        switch (outcome) {
+        case NONE:
+        case NOT_YET:
+        case STOP:
+          return outcome;
+        case OK_NEW_SCHEMA:
+          if (!createAggregator()){
+            done = true;
+            return IterOutcome.STOP;
+          }
+          break;
+        case OK:
+          throw new IllegalStateException("You should never get a first batch without a new schema");
+        default:
+          throw new IllegalStateException(String.format("unknown outcome %s", outcome));
+        }
+      }
 
-    // this is only called on the first batch. Beyond this, the aggregator manages batches.
-    if (aggregator == null) {
-      IterOutcome outcome = incoming.next();
-      logger.debug("Next outcome of {}", outcome);
-      switch (outcome) {
-      case NONE:
-      case NOT_YET:
-      case STOP:
-        return outcome;
-      case OK_NEW_SCHEMA:
-        if (!createAggregator()){
+      while(true){
+        AggOutcome out = aggregator.doWork();
+        logger.debug("Aggregator response {}, records {}", out, aggregator.getOutputCount());
+        switch(out){
+        case CLEANUP_AND_RETURN:
+          container.clear();
           done = true;
-          return IterOutcome.STOP;
+          return aggregator.getOutcome();
+        case RETURN_OUTCOME:
+          return aggregator.getOutcome();
+        case UPDATE_AGGREGATOR:
+          aggregator = null;
+          if(!createAggregator()){
+            return IterOutcome.STOP;
+          }
+          continue;
+        default:
+          throw new IllegalStateException(String.format("Unknown state %s.", out));
         }
-        break;
-      case OK:
-        throw new IllegalStateException("You should never get a first batch without a new schema");
-      default:
-        throw new IllegalStateException(String.format("unknown outcome %s", outcome));
       }
+    }finally{
+      stats.stopProcessing();
     }
-
-    while(true){
-      AggOutcome out = aggregator.doWork();
-      logger.debug("Aggregator response {}, records {}", out, aggregator.getOutputCount());
-      switch(out){
-      case CLEANUP_AND_RETURN:
-        container.clear();
-        done = true;
-        return aggregator.getOutcome();
-      case RETURN_OUTCOME:
-        return aggregator.getOutcome();
-      case UPDATE_AGGREGATOR:
-        aggregator = null;
-        if(!createAggregator()){
-          return IterOutcome.STOP;
-        }
-        continue;
-      default:
-        throw new IllegalStateException(String.format("Unknown state %s.", out));
-      }
-    }
-    
   }
 
-  
-  
+
+
   /**
    * Creates a new Aggregator based on the current schema. If setup fails, this method is responsible for cleaning up
    * and informing the context of the failure state, as well is informing the upstream operators.
-   * 
+   *
    * @return true if the aggregator was setup successfully. false if there was a failure.
    */
   private boolean createAggregator() {
     logger.debug("Creating new aggregator.");
     try{
+      stats.startSetup();
       this.aggregator = createAggregatorInternal();
+      stats.stopSetup();
       return true;
     }catch(SchemaChangeException | ClassTransformationException | IOException ex){
       context.fail(ex);
@@ -153,13 +158,13 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
     ClassGenerator<StreamingAggregator> cg = CodeGenerator.getRoot(StreamingAggTemplate.TEMPLATE_DEFINITION, context.getFunctionRegistry());
     container.clear();
     List<VectorAllocator> allocators = Lists.newArrayList();
-    
+
     LogicalExpression[] keyExprs = new LogicalExpression[popConfig.getKeys().length];
     LogicalExpression[] valueExprs = new LogicalExpression[popConfig.getExprs().length];
     TypedFieldId[] keyOutputIds = new TypedFieldId[popConfig.getKeys().length];
-    
+
     ErrorCollector collector = new ErrorCollectorImpl();
-    
+
     for(int i =0; i < keyExprs.length; i++){
       NamedExpression ne = popConfig.getKeys()[i];
       final LogicalExpression expr = ExpressionTreeMaterializer.materialize(ne.getExpr(), incoming, collector,context.getFunctionRegistry() );
@@ -170,38 +175,38 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
       allocators.add(VectorAllocator.getAllocator(vector, 50));
       keyOutputIds[i] = container.add(vector);
     }
-    
+
     for(int i =0; i < valueExprs.length; i++){
       NamedExpression ne = popConfig.getExprs()[i];
       final LogicalExpression expr = ExpressionTreeMaterializer.materialize(ne.getExpr(), incoming, collector, context.getFunctionRegistry());
       if(expr == null) continue;
-      
+
       final MaterializedField outputField = MaterializedField.create(ne.getRef(), expr.getMajorType());
       ValueVector vector = TypeHelper.getNewVector(outputField, oContext.getAllocator());
       allocators.add(VectorAllocator.getAllocator(vector, 50));
       TypedFieldId id = container.add(vector);
       valueExprs[i] = new ValueVectorWriteExpression(id, expr, true);
     }
-    
+
     if(collector.hasErrors()) throw new SchemaChangeException("Failure while materializing expression. " + collector.toErrorString());
-    
+
     setupIsSame(cg, keyExprs);
     setupIsSameApart(cg, keyExprs);
     addRecordValues(cg, valueExprs);
     outputRecordKeys(cg, keyOutputIds, keyExprs);
     outputRecordKeysPrev(cg, keyOutputIds, keyExprs);
-    
+
     cg.getBlock("resetValues")._return(JExpr.TRUE);
     getIndex(cg);
-    
+
     container.buildSchema(SelectionVectorMode.NONE);
     StreamingAggregator agg = context.getImplementationClass(cg);
     agg.setup(context, incoming, this, allocators.toArray(new VectorAllocator[allocators.size()]));
     return agg;
   }
-  
-  
-  
+
+
+
   private final GeneratorMapping IS_SAME = GeneratorMapping.create("setupInterior", "isSame", null, null);
   private final MappingSet IS_SAME_I1 = new MappingSet("index1", null, IS_SAME, IS_SAME);
   private final MappingSet IS_SAME_I2 = new MappingSet("index2", null, IS_SAME, IS_SAME);
@@ -214,19 +219,19 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
       HoldingContainer first = cg.addExpr(expr, false);
       cg.setMappingSet(IS_SAME_I2);
       HoldingContainer second = cg.addExpr(expr, false);
-      
+
       LogicalExpression fh = FunctionGenerationHelper.getComparator(first, second, context.getFunctionRegistry());
       HoldingContainer out = cg.addExpr(fh, false);
       cg.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)))._then()._return(JExpr.FALSE);
     }
     cg.getEvalBlock()._return(JExpr.TRUE);
   }
-  
+
   private final GeneratorMapping IS_SAME_PREV_INTERNAL_BATCH_READ = GeneratorMapping.create("isSamePrev", "isSamePrev", null, null); // the internal batch changes each time so we need to redo setup.
   private final GeneratorMapping IS_SAME_PREV = GeneratorMapping.create("setupInterior", "isSamePrev", null, null);
   private final MappingSet ISA_B1 = new MappingSet("b1Index", null, "b1", null, IS_SAME_PREV_INTERNAL_BATCH_READ, IS_SAME_PREV_INTERNAL_BATCH_READ);
   private final MappingSet ISA_B2 = new MappingSet("b2Index", null, "incoming", null, IS_SAME_PREV, IS_SAME_PREV);
-  
+
   private void setupIsSameApart(ClassGenerator<StreamingAggregator> cg, LogicalExpression[] keyExprs){
     cg.setMappingSet(ISA_B1);
     for(LogicalExpression expr : keyExprs){
@@ -242,11 +247,11 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
     }
     cg.getEvalBlock()._return(JExpr.TRUE);
   }
-  
+
   private final GeneratorMapping EVAL_INSIDE = GeneratorMapping.create("setupInterior", "addRecord", null, null);
   private final GeneratorMapping EVAL_OUTSIDE = GeneratorMapping.create("setupInterior", "outputRecordValues", "resetValues", "cleanup");
   private final MappingSet EVAL = new MappingSet("index", "outIndex", "incoming", "outgoing", EVAL_INSIDE, EVAL_OUTSIDE, EVAL_INSIDE);
-  
+
   private void addRecordValues(ClassGenerator<StreamingAggregator> cg, LogicalExpression[] valueExprs){
     cg.setMappingSet(EVAL);
     for(LogicalExpression ex : valueExprs){
@@ -255,9 +260,9 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
     }
     cg.getBlock(BlockType.EVAL)._return(JExpr.TRUE);
   }
-  
+
   private final MappingSet RECORD_KEYS = new MappingSet(GeneratorMapping.create("setupInterior", "outputRecordKeys", null, null));
-  
+
   private void outputRecordKeys(ClassGenerator<StreamingAggregator> cg, TypedFieldId[] keyOutputIds, LogicalExpression[] keyExprs){
     cg.setMappingSet(RECORD_KEYS);
     for(int i =0; i < keyExprs.length; i++){
@@ -266,13 +271,13 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
     }
     cg.getBlock(BlockType.EVAL)._return(JExpr.TRUE);
   }
-  
+
   private final GeneratorMapping PREVIOUS_KEYS_OUT = GeneratorMapping.create("setupInterior", "outputRecordKeysPrev", null, null);
   private final MappingSet RECORD_KEYS_PREV_OUT = new MappingSet("previousIndex", "outIndex", "previous", "outgoing", PREVIOUS_KEYS_OUT, PREVIOUS_KEYS_OUT);
 
   private final GeneratorMapping PREVIOUS_KEYS = GeneratorMapping.create("outputRecordKeysPrev", "outputRecordKeysPrev", null, null);
   private final MappingSet RECORD_KEYS_PREV = new MappingSet("previousIndex", "outIndex", "previous", null, PREVIOUS_KEYS, PREVIOUS_KEYS);
-  
+
   private void outputRecordKeysPrev(ClassGenerator<StreamingAggregator> cg, TypedFieldId[] keyOutputIds, LogicalExpression[] keyExprs){
     cg.setMappingSet(RECORD_KEYS_PREV);
 
@@ -285,11 +290,11 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
       cg.setMappingSet(RECORD_KEYS_PREV_OUT);
       HoldingContainer outerExpression = cg.addExpr(new ValueVectorWriteExpression(keyOutputIds[i], new HoldingContainerExpression(innerExpression), true), false);
       cg.getBlock(BlockType.EVAL)._if(outerExpression.getValue().eq(JExpr.lit(0)))._then()._return(JExpr.FALSE);
-      
+
     }
     cg.getBlock(BlockType.EVAL)._return(JExpr.TRUE);
   }
-  
+
   private void getIndex(ClassGenerator<StreamingAggregator> g){
     switch(incoming.getSchema().getSelectionVectorMode()){
     case FOUR_BYTE: {
@@ -308,12 +313,12 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
       g.getBlock("getVectorIndex")._return(var.invoke("getIndex").arg(JExpr.direct("recordIndex")));;
       return;
     }
-     
+
     default:
       throw new IllegalStateException();
-      
+
     }
-   
+
   }
 
   @Override
@@ -321,7 +326,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
     super.cleanup();
     incoming.cleanup();
   }
-  
+
   @Override
   protected void killIncoming() {
     incoming.kill();

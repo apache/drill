@@ -17,10 +17,119 @@
  */
 package org.apache.drill.exec.ops;
 
+import org.apache.commons.collections.Buffer;
+import org.apache.drill.exec.proto.UserBitShared.OperatorProfile;
+import org.apache.drill.exec.proto.UserBitShared.StreamProfile;
+
+import com.carrotsearch.hppc.IntDoubleOpenHashMap;
+import com.carrotsearch.hppc.IntLongOpenHashMap;
+
 public class OperatorStats {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OperatorStats.class);
-  
-  private long batchesCompleted;
-  private long dataCompleted;
-  
+
+  private final int operatorId;
+  private final int operatorType;
+
+  private IntLongOpenHashMap longMetrics = new IntLongOpenHashMap();
+  private IntDoubleOpenHashMap doubleMetrics = new IntDoubleOpenHashMap();
+
+  public long[] recordsReceivedByInput;
+  public long[] batchesReceivedByInput;
+  private long[] schemaCountByInput;
+
+  private long batchesOutput;
+  private long recordsOutput;
+
+  private boolean inProcessing = false;
+  private boolean inSetup = false;
+
+  private long processingNanos;
+  private long setupNanos;
+
+  private long processingMark;
+  private long setupMark;
+
+  private long schemas;
+
+  public OperatorStats(OpProfileDef def){
+    this(def.getOperatorId(), def.getOperatorType(), def.getIncomingCount());
+  }
+
+  private OperatorStats(int operatorId, int operatorType, int inputCount) {
+    super();
+    this.operatorId = operatorId;
+    this.operatorType = operatorType;
+    this.recordsReceivedByInput = new long[inputCount];
+    this.batchesReceivedByInput = new long[inputCount];
+  }
+
+  public void startSetup() {
+    assert !inSetup;
+    stopProcessing();
+    inSetup = true;
+    setupMark = System.nanoTime();
+  }
+
+  public void stopSetup() {
+    assert inSetup;
+    startProcessing();
+    setupNanos += System.nanoTime() - setupMark;
+    inSetup = false;
+  }
+
+  public void startProcessing() {
+    assert !inProcessing;
+    processingMark = System.nanoTime();
+    inProcessing = true;
+  }
+
+  public void stopProcessing() {
+    assert inProcessing;
+    processingNanos += System.nanoTime() - processingMark;
+  }
+
+  public void batchReceived(int inputIndex, long records, boolean newSchema) {
+    recordsReceivedByInput[inputIndex] += records;
+    batchesReceivedByInput[inputIndex]++;
+    if(newSchema){
+      schemaCountByInput[inputIndex]++;
+    }
+  }
+
+  public OperatorProfile getProfile() {
+    OperatorProfile.Builder b = OperatorProfile //
+        .newBuilder() //
+        .setOperatorType(operatorType) //
+        .setOperatorId(operatorId) //
+        .setOutputProfile(StreamProfile.newBuilder().setBatches(batchesOutput).setRecords(recordsOutput)) //
+        .setSetupNanos(setupNanos) //
+        .setProcessNanos(processingNanos);
+
+    for(int i = 0; i < recordsReceivedByInput.length; i++){
+      b.addInputProfile(StreamProfile.newBuilder().setBatches(batchesReceivedByInput[i]).setRecords(recordsReceivedByInput[i]).setSchemas(this.schemaCountByInput[i]));
+    }
+
+    for(int i =0; i < longMetrics.allocated.length; i++){
+      if(longMetrics.allocated[i]){
+        b.addMetricBuilder().setMetricId(longMetrics.keys[i]).setLongValue(longMetrics.values[i]);
+      }
+    }
+
+    for(int i =0; i < doubleMetrics.allocated.length; i++){
+      if(doubleMetrics.allocated[i]){
+        b.addMetricBuilder().setMetricId(doubleMetrics.keys[i]).setDoubleValue(doubleMetrics.values[i]);
+      }
+    }
+
+    return b.build();
+  }
+
+  public void addLongStat(MetricDef metric, long value){
+    longMetrics.putOrAdd(metric.metricId(), value, value);
+  }
+
+  public void addDoubleStat(MetricDef metric, double value){
+    doubleMetrics.putOrAdd(metric.metricId(), value, value);
+  }
+
 }

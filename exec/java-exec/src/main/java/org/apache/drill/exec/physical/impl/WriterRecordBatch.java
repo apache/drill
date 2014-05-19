@@ -69,88 +69,97 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
 
   @Override
   public IterOutcome next() {
-    if(processed) {
-      // if the upstream record batch is already processed and next() is called by
-      // downstream then return NONE to indicate completion
-      return IterOutcome.NONE;
+    stats.startProcessing();
+    try{
+
+      if(processed) {
+        // if the upstream record batch is already processed and next() is called by
+        // downstream then return NONE to indicate completion
+        return IterOutcome.NONE;
+      }
+
+      // process the complete upstream in one next() call
+      IterOutcome upstream;
+      do {
+        upstream = next(incoming);
+        if(first && upstream == IterOutcome.OK)
+          upstream = IterOutcome.OK_NEW_SCHEMA;
+        first = false;
+
+        switch(upstream) {
+          case NOT_YET:
+          case NONE:
+          case STOP:
+            cleanup();
+            if (upstream == IterOutcome.STOP)
+              return upstream;
+            break;
+
+          case OK_NEW_SCHEMA:
+            try{
+              setupNewSchema();
+            }catch(Exception ex){
+              kill();
+              logger.error("Failure during query", ex);
+              context.fail(ex);
+              return IterOutcome.STOP;
+            }
+            // fall through.
+          case OK:
+            try {
+              counter += eventBasedRecordWriter.write();
+              logger.debug("Total records written so far: {}", counter);
+            } catch(IOException ex) {
+              throw new RuntimeException(ex);
+            }
+
+            for(VectorWrapper v : incoming)
+              v.getValueVector().clear();
+
+            break;
+
+          default:
+            throw new UnsupportedOperationException();
+        }
+      } while(upstream != IterOutcome.NONE);
+
+      // Create two vectors for:
+      //   1. Fragment unique id.
+      //   2. Summary: currently contains number of records written.
+      MaterializedField fragmentIdField = MaterializedField.create(SchemaPath.getSimplePath("Fragment"), Types.required(MinorType.VARCHAR));
+      MaterializedField summaryField = MaterializedField.create(SchemaPath.getSimplePath("Number of records written"), Types.required(MinorType.BIGINT));
+
+      VarCharVector fragmentIdVector = (VarCharVector) TypeHelper.getNewVector(fragmentIdField, context.getAllocator());
+      AllocationHelper.allocate(fragmentIdVector, 1, TypeHelper.getSize(Types.required(MinorType.VARCHAR)));
+      BigIntVector summaryVector = (BigIntVector) TypeHelper.getNewVector(summaryField, context.getAllocator());
+      AllocationHelper.allocate(summaryVector, 1, TypeHelper.getSize(Types.required(MinorType.VARCHAR)));
+
+
+      container.add(fragmentIdVector);
+      container.add(summaryVector);
+      container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
+
+      fragmentIdVector.getMutator().setSafe(0, fragmentUniqueId.getBytes());
+      fragmentIdVector.getMutator().setValueCount(1);
+      summaryVector.getMutator().setSafe(0, counter);
+      summaryVector.getMutator().setValueCount(1);
+
+      container.setRecordCount(1);
+      processed = true;
+
+      return IterOutcome.OK_NEW_SCHEMA;
+    }finally{
+      stats.stopProcessing();
     }
 
-    // process the complete upstream in one next() call
-    IterOutcome upstream;
-    do {
-      upstream = incoming.next();
-      if(first && upstream == IterOutcome.OK)
-        upstream = IterOutcome.OK_NEW_SCHEMA;
-      first = false;
-
-      switch(upstream) {
-        case NOT_YET:
-        case NONE:
-        case STOP:
-          cleanup();
-          if (upstream == IterOutcome.STOP)
-            return upstream;
-          break;
-
-        case OK_NEW_SCHEMA:
-          try{
-            setupNewSchema();
-          }catch(Exception ex){
-            kill();
-            logger.error("Failure during query", ex);
-            context.fail(ex);
-            return IterOutcome.STOP;
-          }
-          // fall through.
-        case OK:
-          try {
-            counter += eventBasedRecordWriter.write();
-            logger.debug("Total records written so far: {}", counter);
-          } catch(IOException ex) {
-            throw new RuntimeException(ex);
-          }
-
-          for(VectorWrapper v : incoming)
-            v.getValueVector().clear();
-
-          break;
-
-        default:
-          throw new UnsupportedOperationException();
-      }
-    } while(upstream != IterOutcome.NONE);
-
-    // Create two vectors for:
-    //   1. Fragment unique id.
-    //   2. Summary: currently contains number of records written.
-    MaterializedField fragmentIdField = MaterializedField.create(SchemaPath.getSimplePath("Fragment"), Types.required(MinorType.VARCHAR));
-    MaterializedField summaryField = MaterializedField.create(SchemaPath.getSimplePath("Number of records written"), Types.required(MinorType.BIGINT));
-
-    VarCharVector fragmentIdVector = (VarCharVector) TypeHelper.getNewVector(fragmentIdField, context.getAllocator());
-    AllocationHelper.allocate(fragmentIdVector, 1, TypeHelper.getSize(Types.required(MinorType.VARCHAR)));
-    BigIntVector summaryVector = (BigIntVector) TypeHelper.getNewVector(summaryField, context.getAllocator());
-    AllocationHelper.allocate(summaryVector, 1, TypeHelper.getSize(Types.required(MinorType.VARCHAR)));
-
-
-    container.add(fragmentIdVector);
-    container.add(summaryVector);
-    container.buildSchema(BatchSchema.SelectionVectorMode.NONE);
-
-    fragmentIdVector.getMutator().setSafe(0, fragmentUniqueId.getBytes());
-    fragmentIdVector.getMutator().setValueCount(1);
-    summaryVector.getMutator().setSafe(0, counter);
-    summaryVector.getMutator().setValueCount(1);
-
-    container.setRecordCount(1);
-    processed = true;
-
-    return IterOutcome.OK_NEW_SCHEMA;
   }
 
   protected void setupNewSchema() throws Exception {
     try {
       // update the schema in RecordWriter
+      stats.startSetup();
       recordWriter.updateSchema(incoming.getSchema());
+      stats.stopSetup();
     } catch(IOException ex) {
       throw new RuntimeException("Failed to update schema in RecordWriter", ex);
     }

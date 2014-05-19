@@ -17,22 +17,21 @@
  */
 package org.apache.drill.exec.physical.impl;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
-import org.apache.drill.common.util.FileUtils;
-import org.apache.drill.exec.client.DrillClient;
-import org.apache.drill.exec.physical.PhysicalPlan;
-import org.apache.drill.exec.pop.PopUnitTestBase;
-import org.apache.drill.exec.proto.UserProtos;
-import org.apache.drill.exec.rpc.user.QueryResultBatch;
-import org.apache.drill.exec.server.Drillbit;
-import org.apache.drill.exec.server.RemoteServiceSet;
-import org.junit.Ignore;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import org.apache.drill.common.util.FileUtils;
+import org.apache.drill.exec.client.DrillClient;
+import org.apache.drill.exec.pop.PopUnitTestBase;
+import org.apache.drill.exec.proto.UserBitShared.QueryType;
+import org.apache.drill.exec.rpc.user.QueryResultBatch;
+import org.apache.drill.exec.server.Drillbit;
+import org.apache.drill.exec.server.RemoteServiceSet;
+import org.junit.Test;
+
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
 
 public class TestBroadcastExchange extends PopUnitTestBase {
   @Test
@@ -51,7 +50,7 @@ public class TestBroadcastExchange extends PopUnitTestBase {
               FileUtils.getResourceAsFile("/sender/broadcast_exchange.json"), Charsets.UTF_8)
               .replace("#{LEFT_FILE}", FileUtils.getResourceAsFile("/join/merge_single_batch.left.json").toURI().toString())
               .replace("#{RIGHT_FILE}", FileUtils.getResourceAsFile("/join/merge_single_batch.right.json").toURI().toString());
-      List<QueryResultBatch> results = client.runQuery(UserProtos.QueryType.PHYSICAL, physicalPlan);
+      List<QueryResultBatch> results = client.runQuery(QueryType.PHYSICAL, physicalPlan);
       int count = 0;
       for(QueryResultBatch b : results) {
         if (b.getHeader().getRowCount() != 0) count += b.getHeader().getRowCount();
@@ -75,7 +74,7 @@ public class TestBroadcastExchange extends PopUnitTestBase {
 
       String physicalPlan = Files.toString(
           FileUtils.getResourceAsFile("/sender/broadcast_exchange_long_run.json"), Charsets.UTF_8);
-      List<QueryResultBatch> results = client.runQuery(UserProtos.QueryType.PHYSICAL, physicalPlan);
+      List<QueryResultBatch> results = client.runQuery(QueryType.PHYSICAL, physicalPlan);
       int count = 0;
       for(QueryResultBatch b : results) {
         if (b.getHeader().getRowCount() != 0) count += b.getHeader().getRowCount();

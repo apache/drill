@@ -72,6 +72,26 @@
       <version>2.7.3</version>
     </dependency>
     <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-server</artifactId>
+      <version>9.1.5.v20140505</version>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-servlet</artifactId>
+      <version>9.1.5.v20140505</version>
+    </dependency>
+    <dependency>
+      <groupId>org.glassfish.jersey.containers</groupId>
+      <artifactId>jersey-container-jetty-servlet</artifactId>
+      <version>2.8</version>
+    </dependency>
+    <dependency>
+      <groupId>org.glassfish.jersey.media</groupId>
+      <artifactId>jersey-media-json-jackson</artifactId>
+      <version>2.8</version>
+    </dependency>
+    <dependency>
       <groupId>net.hydromatic</groupId>
       <artifactId>optiq-core</artifactId>
     </dependency>
@@ -81,17 +101,11 @@
       <version>2.3.19</version>
     </dependency>
     <dependency>
-      <groupId>com.google.caliper</groupId>
-      <artifactId>caliper</artifactId>
-      <version>1.0-beta-1</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>pentaho</groupId>
       <artifactId>mondrian-data-foodmart-json</artifactId>
       <version>0.3.2</version>
       <scope>test</scope>
-    </dependency>    
+    </dependency>
     <dependency>
       <groupId>com.twitter</groupId>
       <artifactId>parquet-column</artifactId>
@@ -220,9 +234,9 @@
       <version>6.1.26</version>
     </dependency>
     <dependency>
-        <groupId>joda-time</groupId>
-        <artifactId>joda-time</artifactId>
-        <version>2.3</version>
+      <groupId>joda-time</groupId>
+      <artifactId>joda-time</artifactId>
+      <version>2.3</version>
     </dependency>
   </dependencies>
 
@@ -238,7 +252,18 @@
         <dependency>
           <groupId>org.apache.hadoop</groupId>
           <artifactId>hadoop-core</artifactId>
+          <exclusions>
+            <exclusion>
+              <groupId>com.sun.jersey</groupId>
+              <artifactId>jersey-core</artifactId>
+            </exclusion>
+            <exclusion>
+              <groupId>com.sun.jersey</groupId>
+              <artifactId>jersey-json</artifactId>
+            </exclusion>
+          </exclusions>
         </dependency>
+
       </dependencies>
     </profile>
     <profile>
@@ -343,7 +368,7 @@
             <configuration>
               <tasks>
                 <copy todir="${project.build.directory}/codegen">
-                  <fileset dir="src/main/codegen"/>
+                  <fileset dir="src/main/codegen" />
                 </copy>
               </tasks>
             </configuration>
@@ -351,8 +376,8 @@
         </executions>
       </plugin>
       <plugin>
-        <!-- Extract parser grammar template from optiq-core.jar and put it under
-             ${project.build.directory} where all freemarker templates are. -->
+        <!-- Extract parser grammar template from optiq-core.jar and put 
+          it under ${project.build.directory} where all freemarker templates are. -->
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
         <version>2.8</version>
@@ -477,7 +502,8 @@
     </plugins>
     <pluginManagement>
       <plugins>
-        <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+        <!--This plugin's configuration is used to store Eclipse m2e settings 
+          only. It has no influence on the Maven build itself. -->
         <plugin>
           <groupId>org.eclipse.m2e</groupId>
           <artifactId>lifecycle-mapping</artifactId>
@@ -495,10 +521,10 @@
                     </goals>
                   </pluginExecutionFilter>
                   <action>
-                    <execute >
+                    <execute>
                       <runOnIncremental>false</runOnIncremental>
                       <runOnConfiguration>true</runOnConfiguration>
-                   </execute >
+                    </execute>
                   </action>
                 </pluginExecution>
               </pluginExecutions>

@@ -22,6 +22,7 @@ import java.util.List;
 import org.apache.drill.exec.physical.base.AbstractSender;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -33,7 +34,7 @@ public class RangeSender extends AbstractSender{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RangeSender.class);
 
   List<EndpointPartition> partitions;
-  
+
   @JsonCreator
   public RangeSender(@JsonProperty("receiver-major-fragment") int oppositeMajorFragmentId, @JsonProperty("child") PhysicalOperator child, @JsonProperty("partitions") List<EndpointPartition> partitions) {
     super(oppositeMajorFragmentId, child);
@@ -55,7 +56,7 @@ public class RangeSender extends AbstractSender{
   public static class EndpointPartition{
     private final PartitionRange range;
     private final DrillbitEndpoint endpoint;
-    
+
     @JsonCreator
     public EndpointPartition(@JsonProperty("range") PartitionRange range, @JsonProperty("endpoint") DrillbitEndpoint endpoint) {
       super();
@@ -68,5 +69,10 @@ public class RangeSender extends AbstractSender{
     public DrillbitEndpoint getEndpoint() {
       return endpoint;
     }
+  }
+
+  @Override
+  public int getOperatorType() {
+    return CoreOperatorType.RANGE_SENDER_VALUE;
   }
 }

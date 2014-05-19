@@ -104,4 +104,7 @@ public interface  PhysicalOperator extends GraphValue<PhysicalOperator> {
 
   @JsonProperty("@id")
   public void setOperatorId(int id);
+
+  @JsonIgnore
+  public int getOperatorType();
 }

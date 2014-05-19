@@ -1675,6 +1675,20 @@ public final class BitControl {
      * <code>optional int64 running_time = 9;</code>
      */
     long getRunningTime();
+
+    // optional .exec.shared.MinorFragmentProfile profile = 10;
+    /**
+     * <code>optional .exec.shared.MinorFragmentProfile profile = 10;</code>
+     */
+    boolean hasProfile();
+    /**
+     * <code>optional .exec.shared.MinorFragmentProfile profile = 10;</code>
+     */
+    org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile getProfile();
+    /**
+     * <code>optional .exec.shared.MinorFragmentProfile profile = 10;</code>
+     */
+    org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfileOrBuilder getProfileOrBuilder();
   }
   /**
    * Protobuf type {@code exec.bit.control.FragmentStatus}
@@ -1792,6 +1806,19 @@ public final class BitControl {
             case 72: {
               bitField0_ |= 0x00000100;
               runningTime_ = input.readInt64();
+              break;
+            }
+            case 82: {
+              org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000200) == 0x00000200)) {
+                subBuilder = profile_.toBuilder();
+              }
+              profile_ = input.readMessage(org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(profile_);
+                profile_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000200;
               break;
             }
           }
@@ -2108,6 +2135,28 @@ public final class BitControl {
       return runningTime_;
     }
 
+    // optional .exec.shared.MinorFragmentProfile profile = 10;
+    public static final int PROFILE_FIELD_NUMBER = 10;
+    private org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile profile_;
+    /**
+     * <code>optional .exec.shared.MinorFragmentProfile profile = 10;</code>
+     */
+    public boolean hasProfile() {
+      return ((bitField0_ & 0x00000200) == 0x00000200);
+    }
+    /**
+     * <code>optional .exec.shared.MinorFragmentProfile profile = 10;</code>
+     */
+    public org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile getProfile() {
+      return profile_;
+    }
+    /**
+     * <code>optional .exec.shared.MinorFragmentProfile profile = 10;</code>
+     */
+    public org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfileOrBuilder getProfileOrBuilder() {
+      return profile_;
+    }
+
     private void initFields() {
       memoryUse_ = 0L;
       batchesCompleted_ = 0L;
@@ -2118,6 +2167,7 @@ public final class BitControl {
       handle_ = org.apache.drill.exec.proto.ExecProtos.FragmentHandle.getDefaultInstance();
       error_ = org.apache.drill.exec.proto.UserBitShared.DrillPBError.getDefaultInstance();
       runningTime_ = 0L;
+      profile_ = org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile.getDefaultInstance();
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -2157,6 +2207,9 @@ public final class BitControl {
       }
       if (((bitField0_ & 0x00000100) == 0x00000100)) {
         output.writeInt64(9, runningTime_);
+      }
+      if (((bitField0_ & 0x00000200) == 0x00000200)) {
+        output.writeMessage(10, profile_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -2202,6 +2255,10 @@ public final class BitControl {
       if (((bitField0_ & 0x00000100) == 0x00000100)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt64Size(9, runningTime_);
+      }
+      if (((bitField0_ & 0x00000200) == 0x00000200)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(10, profile_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -2313,6 +2370,7 @@ public final class BitControl {
         if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
           getHandleFieldBuilder();
           getErrorFieldBuilder();
+          getProfileFieldBuilder();
         }
       }
       private static Builder create() {
@@ -2347,6 +2405,12 @@ public final class BitControl {
         bitField0_ = (bitField0_ & ~0x00000080);
         runningTime_ = 0L;
         bitField0_ = (bitField0_ & ~0x00000100);
+        if (profileBuilder_ == null) {
+          profile_ = org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile.getDefaultInstance();
+        } else {
+          profileBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000200);
         return this;
       }
 
@@ -2419,6 +2483,14 @@ public final class BitControl {
           to_bitField0_ |= 0x00000100;
         }
         result.runningTime_ = runningTime_;
+        if (((from_bitField0_ & 0x00000200) == 0x00000200)) {
+          to_bitField0_ |= 0x00000200;
+        }
+        if (profileBuilder_ == null) {
+          result.profile_ = profile_;
+        } else {
+          result.profile_ = profileBuilder_.build();
+        }
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -2461,6 +2533,9 @@ public final class BitControl {
         }
         if (other.hasRunningTime()) {
           setRunningTime(other.getRunningTime());
+        }
+        if (other.hasProfile()) {
+          mergeProfile(other.getProfile());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -2955,6 +3030,123 @@ public final class BitControl {
         runningTime_ = 0L;
         onChanged();
         return this;
+      }
+
+      // optional .exec.shared.MinorFragmentProfile profile = 10;
+      private org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile profile_ = org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile.getDefaultInstance();
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile, org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile.Builder, org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfileOrBuilder> profileBuilder_;
+      /**
+       * <code>optional .exec.shared.MinorFragmentProfile profile = 10;</code>
+       */
+      public boolean hasProfile() {
+        return ((bitField0_ & 0x00000200) == 0x00000200);
+      }
+      /**
+       * <code>optional .exec.shared.MinorFragmentProfile profile = 10;</code>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile getProfile() {
+        if (profileBuilder_ == null) {
+          return profile_;
+        } else {
+          return profileBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>optional .exec.shared.MinorFragmentProfile profile = 10;</code>
+       */
+      public Builder setProfile(org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile value) {
+        if (profileBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          profile_ = value;
+          onChanged();
+        } else {
+          profileBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000200;
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.MinorFragmentProfile profile = 10;</code>
+       */
+      public Builder setProfile(
+          org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile.Builder builderForValue) {
+        if (profileBuilder_ == null) {
+          profile_ = builderForValue.build();
+          onChanged();
+        } else {
+          profileBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000200;
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.MinorFragmentProfile profile = 10;</code>
+       */
+      public Builder mergeProfile(org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile value) {
+        if (profileBuilder_ == null) {
+          if (((bitField0_ & 0x00000200) == 0x00000200) &&
+              profile_ != org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile.getDefaultInstance()) {
+            profile_ =
+              org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile.newBuilder(profile_).mergeFrom(value).buildPartial();
+          } else {
+            profile_ = value;
+          }
+          onChanged();
+        } else {
+          profileBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000200;
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.MinorFragmentProfile profile = 10;</code>
+       */
+      public Builder clearProfile() {
+        if (profileBuilder_ == null) {
+          profile_ = org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile.getDefaultInstance();
+          onChanged();
+        } else {
+          profileBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000200);
+        return this;
+      }
+      /**
+       * <code>optional .exec.shared.MinorFragmentProfile profile = 10;</code>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile.Builder getProfileBuilder() {
+        bitField0_ |= 0x00000200;
+        onChanged();
+        return getProfileFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>optional .exec.shared.MinorFragmentProfile profile = 10;</code>
+       */
+      public org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfileOrBuilder getProfileOrBuilder() {
+        if (profileBuilder_ != null) {
+          return profileBuilder_.getMessageOrBuilder();
+        } else {
+          return profile_;
+        }
+      }
+      /**
+       * <code>optional .exec.shared.MinorFragmentProfile profile = 10;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilder<
+          org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile, org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile.Builder, org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfileOrBuilder> 
+          getProfileFieldBuilder() {
+        if (profileBuilder_ == null) {
+          profileBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+              org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile, org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile.Builder, org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfileOrBuilder>(
+                  profile_,
+                  getParentForChildren(),
+                  isClean());
+          profile_ = null;
+        }
+        return profileBuilder_;
       }
 
       // @@protoc_insertion_point(builder_scope:exec.bit.control.FragmentStatus)
@@ -5898,7 +6090,7 @@ public final class BitControl {
       "(\0162\027.exec.shared.RpcChannel:\013BIT_CONTROL" +
       "\022(\n\010endpoint\030\003 \001(\0132\026.exec.DrillbitEndpoi" +
       "nt\"F\n\tBitStatus\0229\n\017fragment_status\030\001 \003(\013" +
-      "2 .exec.bit.control.FragmentStatus\"\261\003\n\016F" +
+      "2 .exec.bit.control.FragmentStatus\"\345\003\n\016F" +
       "ragmentStatus\022\022\n\nmemory_use\030\001 \001(\003\022\031\n\021bat" +
       "ches_completed\030\002 \001(\003\022\031\n\021records_complete",
       "d\030\003 \001(\003\022\'\n\037estimated_completion_percenta" +
@@ -5907,30 +6099,31 @@ public final class BitControl {
       "processed\030\006 \001(\003\022(\n\006handle\030\007 \001(\0132\030.exec.b" +
       "it.FragmentHandle\022(\n\005error\030\010 \001(\0132\031.exec." +
       "shared.DrillPBError\022\024\n\014running_time\030\t \001(" +
-      "\003\"k\n\rFragmentState\022\013\n\007SENDING\020\000\022\027\n\023AWAIT" +
-      "ING_ALLOCATION\020\001\022\013\n\007RUNNING\020\002\022\014\n\010FINISHE" +
-      "D\020\003\022\r\n\tCANCELLED\020\004\022\n\n\006FAILED\020\005\"\276\003\n\014PlanF" +
-      "ragment\022(\n\006handle\030\001 \001(\0132\030.exec.bit.Fragm",
-      "entHandle\022\024\n\014network_cost\030\004 \001(\002\022\020\n\010cpu_c" +
-      "ost\030\005 \001(\002\022\021\n\tdisk_cost\030\006 \001(\002\022\023\n\013memory_c" +
-      "ost\030\007 \001(\002\022\025\n\rfragment_json\030\010 \001(\t\022*\n\nassi" +
-      "gnment\030\n \001(\0132\026.exec.DrillbitEndpoint\022\025\n\r" +
-      "leaf_fragment\030\t \001(\010\022\'\n\007foreman\030\013 \001(\0132\026.e" +
-      "xec.DrillbitEndpoint\022\035\n\013mem_initial\030\014 \001(" +
-      "\003:\01020000000\022\034\n\007mem_max\030\r \001(\003:\0132000000000" +
-      "0\022\030\n\020query_start_time\030\016 \001(\003\0221\n\013credentia" +
-      "ls\030\017 \001(\0132\034.exec.shared.UserCredentials\022\021" +
-      "\n\ttime_zone\030\020 \001(\005\022\024\n\014options_json\030\021 \001(\t\"",
-      "f\n\017WorkQueueStatus\022(\n\010endpoint\030\001 \001(\0132\026.e" +
-      "xec.DrillbitEndpoint\022\024\n\014queue_length\030\002 \001" +
-      "(\005\022\023\n\013report_time\030\003 \001(\003*\332\001\n\007RpcType\022\r\n\tH" +
-      "ANDSHAKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\033\n\027REQ_" +
-      "INIATILIZE_FRAGMENT\020\003\022\027\n\023REQ_CANCEL_FRAG" +
-      "MENT\020\006\022\027\n\023REQ_FRAGMENT_STATUS\020\007\022\022\n\016REQ_B" +
-      "IT_STATUS\020\010\022\030\n\024RESP_FRAGMENT_HANDLE\020\t\022\030\n" +
-      "\024RESP_FRAGMENT_STATUS\020\n\022\023\n\017RESP_BIT_STAT" +
-      "US\020\013B+\n\033org.apache.drill.exec.protoB\nBit" +
-      "ControlH\001"
+      "\003\0222\n\007profile\030\n \001(\0132!.exec.shared.MinorFr" +
+      "agmentProfile\"k\n\rFragmentState\022\013\n\007SENDIN" +
+      "G\020\000\022\027\n\023AWAITING_ALLOCATION\020\001\022\013\n\007RUNNING\020" +
+      "\002\022\014\n\010FINISHED\020\003\022\r\n\tCANCELLED\020\004\022\n\n\006FAILED",
+      "\020\005\"\276\003\n\014PlanFragment\022(\n\006handle\030\001 \001(\0132\030.ex" +
+      "ec.bit.FragmentHandle\022\024\n\014network_cost\030\004 " +
+      "\001(\002\022\020\n\010cpu_cost\030\005 \001(\002\022\021\n\tdisk_cost\030\006 \001(\002" +
+      "\022\023\n\013memory_cost\030\007 \001(\002\022\025\n\rfragment_json\030\010" +
+      " \001(\t\022*\n\nassignment\030\n \001(\0132\026.exec.Drillbit" +
+      "Endpoint\022\025\n\rleaf_fragment\030\t \001(\010\022\'\n\007forem" +
+      "an\030\013 \001(\0132\026.exec.DrillbitEndpoint\022\035\n\013mem_" +
+      "initial\030\014 \001(\003:\01020000000\022\034\n\007mem_max\030\r \001(\003" +
+      ":\01320000000000\022\030\n\020query_start_time\030\016 \001(\003\022" +
+      "1\n\013credentials\030\017 \001(\0132\034.exec.shared.UserC",
+      "redentials\022\021\n\ttime_zone\030\020 \001(\005\022\024\n\014options" +
+      "_json\030\021 \001(\t\"f\n\017WorkQueueStatus\022(\n\010endpoi" +
+      "nt\030\001 \001(\0132\026.exec.DrillbitEndpoint\022\024\n\014queu" +
+      "e_length\030\002 \001(\005\022\023\n\013report_time\030\003 \001(\003*\332\001\n\007" +
+      "RpcType\022\r\n\tHANDSHAKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODB" +
+      "YE\020\002\022\033\n\027REQ_INIATILIZE_FRAGMENT\020\003\022\027\n\023REQ" +
+      "_CANCEL_FRAGMENT\020\006\022\027\n\023REQ_FRAGMENT_STATU" +
+      "S\020\007\022\022\n\016REQ_BIT_STATUS\020\010\022\030\n\024RESP_FRAGMENT" +
+      "_HANDLE\020\t\022\030\n\024RESP_FRAGMENT_STATUS\020\n\022\023\n\017R" +
+      "ESP_BIT_STATUS\020\013B+\n\033org.apache.drill.exe",
+      "c.protoB\nBitControlH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -5954,7 +6147,7 @@ public final class BitControl {
           internal_static_exec_bit_control_FragmentStatus_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_bit_control_FragmentStatus_descriptor,
-              new java.lang.String[] { "MemoryUse", "BatchesCompleted", "RecordsCompleted", "EstimatedCompletionPercentage", "State", "DataProcessed", "Handle", "Error", "RunningTime", });
+              new java.lang.String[] { "MemoryUse", "BatchesCompleted", "RecordsCompleted", "EstimatedCompletionPercentage", "State", "DataProcessed", "Handle", "Error", "RunningTime", "Profile", });
           internal_static_exec_bit_control_PlanFragment_descriptor =
             getDescriptor().getMessageTypes().get(3);
           internal_static_exec_bit_control_PlanFragment_fieldAccessorTable = new

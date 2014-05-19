@@ -20,11 +20,13 @@ package org.apache.drill.exec.physical.config;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+
 import org.apache.drill.common.logical.data.Order.Ordering;
 import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.Size;
+import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
 import java.util.List;
 
@@ -56,14 +58,14 @@ public class ExternalSort extends Sort {
     long n = childSize.getRecordCount();
     long width = childSize.getRecordSize();
 
-    //TODO: Magic Number, let's assume 1/10 of data can fit in memory. 
+    //TODO: Magic Number, let's assume 1/10 of data can fit in memory.
     int k = 10;
     long n2 = n/k;
-    double cpuCost = 
-        k * n2 * (Math.log(n2)/Math.log(2)) + // 
+    double cpuCost =
+        k * n2 * (Math.log(n2)/Math.log(2)) + //
         n * (Math.log(k)/Math.log(2));
     double diskCost = n*width*2;
-    
+
     return new OperatorCost(0, (float) diskCost, (float) n2*width, (float) cpuCost);
   }
 
@@ -72,7 +74,10 @@ public class ExternalSort extends Sort {
     return new ExternalSort(child, orderings, reverse);
   }
 
-    
-  
-  
+  @Override
+  public int getOperatorType() {
+    return CoreOperatorType.EXTERNAL_SORT_VALUE;
+  }
+
+
 }

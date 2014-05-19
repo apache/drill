@@ -32,6 +32,7 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.Size;
 import org.apache.drill.exec.physical.base.SubScan;
+import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
@@ -138,6 +139,11 @@ public class ParquetRowGroupScan extends AbstractBase implements SubScan {
 
   public List<SchemaPath> getColumns() {
     return columns;
+  }
+
+  @Override
+  public int getOperatorType() {
+    return CoreOperatorType.PARQUET_ROW_GROUP_SCAN_VALUE;
   }
 
 }

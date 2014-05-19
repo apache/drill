@@ -82,4 +82,8 @@ public abstract class AbstractGroupScan extends AbstractBase implements GroupSca
     throw new UnsupportedOperationException(String.format("%s does not have exact column value count!", this.getClass().getCanonicalName()));
   }
 
+  @Override
+  public int getOperatorType() {
+    throw new UnsupportedOperationException();
+  }
 }

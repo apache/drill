@@ -25,11 +25,13 @@ import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteStreams;
+
 import org.apache.commons.codec.binary.Base64;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.base.*;
+import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.Table;
@@ -143,5 +145,10 @@ public class HiveSubScan extends AbstractBase implements SubScan {
   @Override
   public Iterator<PhysicalOperator> iterator() {
     return Iterators.emptyIterator();
+  }
+
+  @Override
+  public int getOperatorType() {
+    return CoreOperatorType.HIVE_SUB_SCAN_VALUE;
   }
 }

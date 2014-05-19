@@ -35,6 +35,9 @@ public final class JoinStatus {
     INCOMING, SV4;
   }
 
+  private static final int LEFT_INPUT = 0;
+  private static final int RIGHT_INPUT = 1;
+
   public final RecordBatch left;
   private int leftPosition;
   private IterOutcome lastLeft;
@@ -63,10 +66,18 @@ public final class JoinStatus {
     this.joinType = output.getJoinType();
   }
 
+  private final IterOutcome nextLeft(){
+    return outputBatch.next(LEFT_INPUT, left);
+  }
+
+  private final IterOutcome nextRight(){
+    return outputBatch.next(RIGHT_INPUT, right);
+  }
+
   public final void ensureInitial(){
     if(!initialSet){
-      this.lastLeft = left.next();
-      this.lastRight = right.next();
+      this.lastLeft = nextLeft();
+      this.lastRight = nextRight();
       initialSet = true;
     }
   }
@@ -148,7 +159,7 @@ public final class JoinStatus {
     if (!isLeftPositionInCurrentBatch()) {
       leftPosition = 0;
       releaseData(left);
-      lastLeft = left.next();
+      lastLeft = nextLeft();
       return lastLeft == IterOutcome.OK;
     }
     lastLeft = IterOutcome.OK;
@@ -167,7 +178,7 @@ public final class JoinStatus {
     if (!isRightPositionInCurrentBatch()) {
       rightPosition = 0;
       releaseData(right);
-      lastRight = right.next();
+      lastRight = nextRight();
       return lastRight == IterOutcome.OK;
     }
     lastRight = IterOutcome.OK;

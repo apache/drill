@@ -25,6 +25,7 @@ import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.Size;
 import org.apache.drill.exec.physical.impl.common.HashTable;
 import org.apache.drill.exec.physical.impl.common.HashTableConfig;
+import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -42,7 +43,7 @@ public class HashAggregate extends AbstractSingle {
 
   // configuration parameters for the hash table
   private final HashTableConfig htConfig;
-  
+
   @JsonCreator
   public HashAggregate(@JsonProperty("child") PhysicalOperator child, @JsonProperty("keys") NamedExpression[] groupByExprs, @JsonProperty("exprs") NamedExpression[] aggrExprs, @JsonProperty("cardinality") float cardinality) {
     super(child);
@@ -50,12 +51,12 @@ public class HashAggregate extends AbstractSingle {
     this.aggrExprs = aggrExprs;
     this.cardinality = cardinality;
 
-    int initial_capacity = cardinality > HashTable.DEFAULT_INITIAL_CAPACITY ? 
+    int initial_capacity = cardinality > HashTable.DEFAULT_INITIAL_CAPACITY ?
       (int) cardinality : HashTable.DEFAULT_INITIAL_CAPACITY;
 
-    this.htConfig = new HashTableConfig(initial_capacity,                                        
-                                        HashTable.DEFAULT_LOAD_FACTOR, 
-                                        groupByExprs, 
+    this.htConfig = new HashTableConfig(initial_capacity,
+                                        HashTable.DEFAULT_LOAD_FACTOR,
+                                        groupByExprs,
                                         null /* no probe exprs */) ;
   }
 
@@ -90,8 +91,8 @@ public class HashAggregate extends AbstractSingle {
     int numExprs = getGroupByExprs().length;
 
     double cpuCost = n * numExprs * hashCpuCost;
-    double diskCost = 0;      // for now assume hash table fits in memory 
-        
+    double diskCost = 0;      // for now assume hash table fits in memory
+
     return new OperatorCost(0, (float) diskCost, (float) n*width, (float) cpuCost);
   }
 
@@ -99,7 +100,7 @@ public class HashAggregate extends AbstractSingle {
 	  logger.debug("HashAggregate cost: cpu = {}, disk = {}, memory = {}, network = {}.", HACost.getCpu(), HACost.getDisk(), HACost.getMemory(), HACost.getNetwork());
 	  logger.debug("Streaming aggregate cost: cpu = {}, disk = {}, memory = {}, network = {}.", SACost.getCpu(), SACost.getDisk(), SACost.getMemory(), SACost.getNetwork());
   }
-  
+
   @Override
   protected PhysicalOperator getNewWithChild(PhysicalOperator child) {
     return new HashAggregate(child, groupByExprs, aggrExprs, cardinality);
@@ -110,10 +111,13 @@ public class HashAggregate extends AbstractSingle {
     // not a great hack...
     return new Size( (long) (child.getSize().getRecordCount()*cardinality), child.getSize().getRecordSize());
   }
-  
-  
 
-  
-  
-  
+
+
+  @Override
+  public int getOperatorType() {
+    return CoreOperatorType.HASH_AGGREGATE_VALUE;
+  }
+
+
 }

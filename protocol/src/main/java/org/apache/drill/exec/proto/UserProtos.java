@@ -200,97 +200,6 @@ public final class UserProtos {
   }
 
   /**
-   * Protobuf enum {@code exec.user.QueryType}
-   */
-  public enum QueryType
-      implements com.google.protobuf.ProtocolMessageEnum {
-    /**
-     * <code>SQL = 1;</code>
-     */
-    SQL(0, 1),
-    /**
-     * <code>LOGICAL = 2;</code>
-     */
-    LOGICAL(1, 2),
-    /**
-     * <code>PHYSICAL = 3;</code>
-     */
-    PHYSICAL(2, 3),
-    ;
-
-    /**
-     * <code>SQL = 1;</code>
-     */
-    public static final int SQL_VALUE = 1;
-    /**
-     * <code>LOGICAL = 2;</code>
-     */
-    public static final int LOGICAL_VALUE = 2;
-    /**
-     * <code>PHYSICAL = 3;</code>
-     */
-    public static final int PHYSICAL_VALUE = 3;
-
-
-    public final int getNumber() { return value; }
-
-    public static QueryType valueOf(int value) {
-      switch (value) {
-        case 1: return SQL;
-        case 2: return LOGICAL;
-        case 3: return PHYSICAL;
-        default: return null;
-      }
-    }
-
-    public static com.google.protobuf.Internal.EnumLiteMap<QueryType>
-        internalGetValueMap() {
-      return internalValueMap;
-    }
-    private static com.google.protobuf.Internal.EnumLiteMap<QueryType>
-        internalValueMap =
-          new com.google.protobuf.Internal.EnumLiteMap<QueryType>() {
-            public QueryType findValueByNumber(int number) {
-              return QueryType.valueOf(number);
-            }
-          };
-
-    public final com.google.protobuf.Descriptors.EnumValueDescriptor
-        getValueDescriptor() {
-      return getDescriptor().getValues().get(index);
-    }
-    public final com.google.protobuf.Descriptors.EnumDescriptor
-        getDescriptorForType() {
-      return getDescriptor();
-    }
-    public static final com.google.protobuf.Descriptors.EnumDescriptor
-        getDescriptor() {
-      return org.apache.drill.exec.proto.UserProtos.getDescriptor().getEnumTypes().get(1);
-    }
-
-    private static final QueryType[] VALUES = values();
-
-    public static QueryType valueOf(
-        com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
-      if (desc.getType() != getDescriptor()) {
-        throw new java.lang.IllegalArgumentException(
-          "EnumValueDescriptor is not for this type.");
-      }
-      return VALUES[desc.getIndex()];
-    }
-
-    private final int index;
-    private final int value;
-
-    private QueryType(int index, int value) {
-      this.index = index;
-      this.value = value;
-    }
-
-    // @@protoc_insertion_point(enum_scope:exec.user.QueryType)
-  }
-
-  /**
    * Protobuf enum {@code exec.user.QueryResultsMode}
    */
   public enum QueryResultsMode
@@ -346,7 +255,7 @@ public final class UserProtos {
     }
     public static final com.google.protobuf.Descriptors.EnumDescriptor
         getDescriptor() {
-      return org.apache.drill.exec.proto.UserProtos.getDescriptor().getEnumTypes().get(2);
+      return org.apache.drill.exec.proto.UserProtos.getDescriptor().getEnumTypes().get(1);
     }
 
     private static final QueryResultsMode[] VALUES = values();
@@ -3264,15 +3173,15 @@ public final class UserProtos {
      */
     org.apache.drill.exec.proto.UserProtos.QueryResultsMode getResultsMode();
 
-    // optional .exec.user.QueryType type = 2;
+    // optional .exec.shared.QueryType type = 2;
     /**
-     * <code>optional .exec.user.QueryType type = 2;</code>
+     * <code>optional .exec.shared.QueryType type = 2;</code>
      */
     boolean hasType();
     /**
-     * <code>optional .exec.user.QueryType type = 2;</code>
+     * <code>optional .exec.shared.QueryType type = 2;</code>
      */
-    org.apache.drill.exec.proto.UserProtos.QueryType getType();
+    org.apache.drill.exec.proto.UserBitShared.QueryType getType();
 
     // optional string plan = 3;
     /**
@@ -3353,7 +3262,7 @@ public final class UserProtos {
             }
             case 16: {
               int rawValue = input.readEnum();
-              org.apache.drill.exec.proto.UserProtos.QueryType value = org.apache.drill.exec.proto.UserProtos.QueryType.valueOf(rawValue);
+              org.apache.drill.exec.proto.UserBitShared.QueryType value = org.apache.drill.exec.proto.UserBitShared.QueryType.valueOf(rawValue);
               if (value == null) {
                 unknownFields.mergeVarintField(2, rawValue);
               } else {
@@ -3423,19 +3332,19 @@ public final class UserProtos {
       return resultsMode_;
     }
 
-    // optional .exec.user.QueryType type = 2;
+    // optional .exec.shared.QueryType type = 2;
     public static final int TYPE_FIELD_NUMBER = 2;
-    private org.apache.drill.exec.proto.UserProtos.QueryType type_;
+    private org.apache.drill.exec.proto.UserBitShared.QueryType type_;
     /**
-     * <code>optional .exec.user.QueryType type = 2;</code>
+     * <code>optional .exec.shared.QueryType type = 2;</code>
      */
     public boolean hasType() {
       return ((bitField0_ & 0x00000002) == 0x00000002);
     }
     /**
-     * <code>optional .exec.user.QueryType type = 2;</code>
+     * <code>optional .exec.shared.QueryType type = 2;</code>
      */
-    public org.apache.drill.exec.proto.UserProtos.QueryType getType() {
+    public org.apache.drill.exec.proto.UserBitShared.QueryType getType() {
       return type_;
     }
 
@@ -3484,7 +3393,7 @@ public final class UserProtos {
 
     private void initFields() {
       resultsMode_ = org.apache.drill.exec.proto.UserProtos.QueryResultsMode.STREAM_FULL;
-      type_ = org.apache.drill.exec.proto.UserProtos.QueryType.SQL;
+      type_ = org.apache.drill.exec.proto.UserBitShared.QueryType.SQL;
       plan_ = "";
     }
     private byte memoizedIsInitialized = -1;
@@ -3647,7 +3556,7 @@ public final class UserProtos {
         super.clear();
         resultsMode_ = org.apache.drill.exec.proto.UserProtos.QueryResultsMode.STREAM_FULL;
         bitField0_ = (bitField0_ & ~0x00000001);
-        type_ = org.apache.drill.exec.proto.UserProtos.QueryType.SQL;
+        type_ = org.apache.drill.exec.proto.UserBitShared.QueryType.SQL;
         bitField0_ = (bitField0_ & ~0x00000002);
         plan_ = "";
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -3781,24 +3690,24 @@ public final class UserProtos {
         return this;
       }
 
-      // optional .exec.user.QueryType type = 2;
-      private org.apache.drill.exec.proto.UserProtos.QueryType type_ = org.apache.drill.exec.proto.UserProtos.QueryType.SQL;
+      // optional .exec.shared.QueryType type = 2;
+      private org.apache.drill.exec.proto.UserBitShared.QueryType type_ = org.apache.drill.exec.proto.UserBitShared.QueryType.SQL;
       /**
-       * <code>optional .exec.user.QueryType type = 2;</code>
+       * <code>optional .exec.shared.QueryType type = 2;</code>
        */
       public boolean hasType() {
         return ((bitField0_ & 0x00000002) == 0x00000002);
       }
       /**
-       * <code>optional .exec.user.QueryType type = 2;</code>
+       * <code>optional .exec.shared.QueryType type = 2;</code>
        */
-      public org.apache.drill.exec.proto.UserProtos.QueryType getType() {
+      public org.apache.drill.exec.proto.UserBitShared.QueryType getType() {
         return type_;
       }
       /**
-       * <code>optional .exec.user.QueryType type = 2;</code>
+       * <code>optional .exec.shared.QueryType type = 2;</code>
        */
-      public Builder setType(org.apache.drill.exec.proto.UserProtos.QueryType value) {
+      public Builder setType(org.apache.drill.exec.proto.UserBitShared.QueryType value) {
         if (value == null) {
           throw new NullPointerException();
         }
@@ -3808,11 +3717,11 @@ public final class UserProtos {
         return this;
       }
       /**
-       * <code>optional .exec.user.QueryType type = 2;</code>
+       * <code>optional .exec.shared.QueryType type = 2;</code>
        */
       public Builder clearType() {
         bitField0_ = (bitField0_ & ~0x00000002);
-        type_ = org.apache.drill.exec.proto.UserProtos.QueryType.SQL;
+        type_ = org.apache.drill.exec.proto.UserBitShared.QueryType.SQL;
         onChanged();
         return this;
       }
@@ -6952,32 +6861,31 @@ public final class UserProtos {
       "redentials\022-\n\nproperties\030\005 \001(\0132\031.exec.us" +
       "er.UserProperties\"S\n\016RequestResults\022&\n\010q",
       "uery_id\030\001 \001(\0132\024.exec.shared.QueryId\022\031\n\021m" +
-      "aximum_responses\030\002 \001(\005\"o\n\010RunQuery\0221\n\014re" +
+      "aximum_responses\030\002 \001(\005\"q\n\010RunQuery\0221\n\014re" +
       "sults_mode\030\001 \001(\0162\033.exec.user.QueryResult" +
-      "sMode\022\"\n\004type\030\002 \001(\0162\024.exec.user.QueryTyp" +
-      "e\022\014\n\004plan\030\003 \001(\t\")\n\022BitToUserHandshake\022\023\n" +
-      "\013rpc_version\030\002 \001(\005\"7\n\nNodeStatus\022\017\n\007node" +
-      "_id\030\001 \001(\005\022\030\n\020memory_footprint\030\002 \001(\003\"\331\003\n\013" +
-      "QueryResult\0226\n\013query_state\030\001 \001(\0162!.exec." +
-      "user.QueryResult.QueryState\022&\n\010query_id\030" +
-      "\002 \001(\0132\024.exec.shared.QueryId\022\025\n\ris_last_c",
-      "hunk\030\003 \001(\010\022\021\n\trow_count\030\004 \001(\005\022\024\n\014records" +
-      "_scan\030\005 \001(\003\022\025\n\rrecords_error\030\006 \001(\003\022\027\n\017su" +
-      "bmission_time\030\007 \001(\003\022*\n\013node_status\030\010 \003(\013" +
-      "2\025.exec.user.NodeStatus\022(\n\005error\030\t \003(\0132\031" +
-      ".exec.shared.DrillPBError\022(\n\003def\030\n \001(\0132\033" +
-      ".exec.shared.RecordBatchDef\022\026\n\016schema_ch" +
-      "anged\030\013 \001(\010\"b\n\nQueryState\022\013\n\007PENDING\020\000\022\013" +
-      "\n\007RUNNING\020\001\022\r\n\tCOMPLETED\020\002\022\014\n\010CANCELED\020\003" +
-      "\022\n\n\006FAILED\020\004\022\021\n\rUNKNOWN_QUERY\020\005*\270\001\n\007RpcT" +
-      "ype\022\r\n\tHANDSHAKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002",
-      "\022\r\n\tRUN_QUERY\020\003\022\020\n\014CANCEL_QUERY\020\004\022\023\n\017REQ" +
-      "UEST_RESULTS\020\005\022\020\n\014QUERY_RESULT\020\006\022\020\n\014QUER" +
-      "Y_HANDLE\020\007\022\026\n\022REQ_META_FUNCTIONS\020\010\022\026\n\022RE" +
-      "SP_FUNCTION_LIST\020\t*/\n\tQueryType\022\007\n\003SQL\020\001" +
-      "\022\013\n\007LOGICAL\020\002\022\014\n\010PHYSICAL\020\003*#\n\020QueryResu" +
-      "ltsMode\022\017\n\013STREAM_FULL\020\001B+\n\033org.apache.d" +
-      "rill.exec.protoB\nUserProtosH\001"
+      "sMode\022$\n\004type\030\002 \001(\0162\026.exec.shared.QueryT" +
+      "ype\022\014\n\004plan\030\003 \001(\t\")\n\022BitToUserHandshake\022" +
+      "\023\n\013rpc_version\030\002 \001(\005\"7\n\nNodeStatus\022\017\n\007no" +
+      "de_id\030\001 \001(\005\022\030\n\020memory_footprint\030\002 \001(\003\"\331\003" +
+      "\n\013QueryResult\0226\n\013query_state\030\001 \001(\0162!.exe" +
+      "c.user.QueryResult.QueryState\022&\n\010query_i" +
+      "d\030\002 \001(\0132\024.exec.shared.QueryId\022\025\n\ris_last",
+      "_chunk\030\003 \001(\010\022\021\n\trow_count\030\004 \001(\005\022\024\n\014recor" +
+      "ds_scan\030\005 \001(\003\022\025\n\rrecords_error\030\006 \001(\003\022\027\n\017" +
+      "submission_time\030\007 \001(\003\022*\n\013node_status\030\010 \003" +
+      "(\0132\025.exec.user.NodeStatus\022(\n\005error\030\t \003(\013" +
+      "2\031.exec.shared.DrillPBError\022(\n\003def\030\n \001(\013" +
+      "2\033.exec.shared.RecordBatchDef\022\026\n\016schema_" +
+      "changed\030\013 \001(\010\"b\n\nQueryState\022\013\n\007PENDING\020\000" +
+      "\022\013\n\007RUNNING\020\001\022\r\n\tCOMPLETED\020\002\022\014\n\010CANCELED" +
+      "\020\003\022\n\n\006FAILED\020\004\022\021\n\rUNKNOWN_QUERY\020\005*\270\001\n\007Rp" +
+      "cType\022\r\n\tHANDSHAKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE",
+      "\020\002\022\r\n\tRUN_QUERY\020\003\022\020\n\014CANCEL_QUERY\020\004\022\023\n\017R" +
+      "EQUEST_RESULTS\020\005\022\020\n\014QUERY_RESULT\020\006\022\020\n\014QU" +
+      "ERY_HANDLE\020\007\022\026\n\022REQ_META_FUNCTIONS\020\010\022\026\n\022" +
+      "RESP_FUNCTION_LIST\020\t*#\n\020QueryResultsMode" +
+      "\022\017\n\013STREAM_FULL\020\001B+\n\033org.apache.drill.ex" +
+      "ec.protoB\nUserProtosH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {

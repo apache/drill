@@ -19,12 +19,14 @@ package org.apache.drill.exec.store.parquet;
 
 import com.fasterxml.jackson.annotation.*;
 import com.google.common.base.Preconditions;
+
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.base.AbstractWriter;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 
 import java.io.IOException;
@@ -88,4 +90,10 @@ public class ParquetWriter extends AbstractWriter {
     // TODO:
     return new OperatorCost(1,1,1,1);
   }
+
+  @Override
+  public int getOperatorType() {
+    return CoreOperatorType.PARQUET_WRITER_VALUE;
+  }
+
 }

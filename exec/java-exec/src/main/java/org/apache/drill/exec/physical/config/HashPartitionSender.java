@@ -24,6 +24,7 @@ import org.apache.drill.exec.physical.base.AbstractSender;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -59,11 +60,15 @@ public class HashPartitionSender extends AbstractSender {
   public LogicalExpression getExpr() {
     return expr;
   }
-  
+
   @Override
   public <T, X, E extends Throwable> T accept(PhysicalVisitor<T, X, E> physicalVisitor, X value) throws E {
     return physicalVisitor.visitHashPartitionSender(this, value);
   }
-  
+
+  @Override
+  public int getOperatorType() {
+    return CoreOperatorType.HASH_PARTITION_SENDER_VALUE;
+  }
 
 }

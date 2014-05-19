@@ -23,6 +23,7 @@ import org.apache.drill.exec.physical.base.AbstractSingle;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.Size;
+import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -66,5 +67,10 @@ public class Trace extends AbstractSingle {
     @Override
     protected PhysicalOperator getNewWithChild(PhysicalOperator child) {
         return new Trace(child, traceTag);
+    }
+
+    @Override
+    public int getOperatorType() {
+      return CoreOperatorType.TRACE_VALUE;
     }
 }

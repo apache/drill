@@ -111,8 +111,6 @@ public class Types {
     case INTERVALYEAR:
     case INTERVALDAY:
     case LATE:
-    case REPEATMAP:
-      return java.sql.Types.OTHER;
     case SMALLINT:
       return java.sql.Types.SMALLINT;
     case TIME:
@@ -225,7 +223,6 @@ public class Types {
     case LATE:
       return Comparability.UNKNOWN;
     case MAP:
-    case REPEATMAP:
       return Comparability.NONE;
     case BIT:
       return Comparability.EQUAL;
@@ -273,7 +270,7 @@ public class Types {
   public static MajorType withScaleAndPrecision(MinorType type, DataMode mode, int scale, int precision) {
     return MajorType.newBuilder().setMinorType(type).setMode(mode).setScale(scale).setPrecision(precision).build();
   }
-  
+
   public static MajorType required(MinorType type){
     return MajorType.newBuilder().setMode(DataMode.REQUIRED).setMinorType(type).build();
   }

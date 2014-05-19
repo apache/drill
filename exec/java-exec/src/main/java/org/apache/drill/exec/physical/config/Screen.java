@@ -30,6 +30,7 @@ import org.apache.drill.exec.physical.base.Root;
 import org.apache.drill.exec.physical.base.Size;
 import org.apache.drill.exec.physical.base.Store;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -103,5 +104,9 @@ public class Screen extends AbstractStore {
     return physicalVisitor.visitScreen(this, value);
   }
 
-  
+  @Override
+  public int getOperatorType() {
+    return CoreOperatorType.SCREEN_VALUE;
+  }
+
 }

@@ -60,6 +60,7 @@ message FragmentStatus {
   optional FragmentHandle handle = 7;
   optional exec.shared.DrillPBError error = 8;
   optional int64 running_time = 9;
+  optional exec.shared.MinorFragmentProfile profile = 10;
 }
 
 message PlanFragment {

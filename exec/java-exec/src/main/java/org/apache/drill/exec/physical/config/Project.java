@@ -25,6 +25,7 @@ import org.apache.drill.exec.physical.base.AbstractSingle;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.Size;
+import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -36,7 +37,7 @@ public class Project extends AbstractSingle{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Project.class);
 
   private final List<NamedExpression> exprs;
-  
+
   @JsonCreator
   public Project(@JsonProperty("exprs") List<NamedExpression> exprs, @JsonProperty("child") PhysicalOperator child) {
     super(child);
@@ -56,7 +57,7 @@ public class Project extends AbstractSingle{
   public OperatorCost getCost() {
     return new OperatorCost(0, 0, 1000, child.getSize().getRecordCount());
   }
-  
+
   @Override
   public Size getSize() {
     //TODO: This should really change the row width...
@@ -67,9 +68,14 @@ public class Project extends AbstractSingle{
   protected PhysicalOperator getNewWithChild(PhysicalOperator child) {
     return new Project(exprs, child);
   }
-  
+
   @Override
   public SelectionVectorMode getSVMode() {
     return child.getSVMode();
+  }
+
+  @Override
+  public int getOperatorType() {
+    return CoreOperatorType.PROJECT_VALUE;
   }
 }

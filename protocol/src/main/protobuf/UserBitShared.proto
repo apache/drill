@@ -14,6 +14,12 @@ enum RpcChannel {
   USER = 2;
 }
 
+enum QueryType {
+  SQL = 1;
+  LOGICAL = 2;
+  PHYSICAL = 3;
+}
+
 message UserCredentials {
   optional string user_name = 1;
 }
@@ -65,4 +71,86 @@ message SerializedField {
   optional int32 var_byte_length = 5;
   optional int32 group_count = 6; // number of groups.  (number of repeated records)
   optional int32 buffer_length = 7;
+}
+
+
+
+
+message QueryProfile {
+  optional QueryId id = 1;
+  optional QueryType type = 2;
+  optional int64 start = 3;
+  optional int64 end = 4;
+  optional string query = 5;
+  repeated MajorFragmentProfile fragment_profile = 6;
+}
+
+message MajorFragmentProfile {
+  optional int32 major_fragment_id = 1;
+  repeated MinorFragmentProfile minor_fragment_profile = 2;
+} 
+
+message MinorFragmentProfile {
+  optional int32 minor_fragment_id = 1;
+  repeated OperatorProfile operator_profile = 2; 
+  optional int64 start_time = 3;
+  optional int64 end_time = 4;  
+}
+
+message OperatorProfile {
+  repeated StreamProfile input_profile = 1;
+  optional StreamProfile output_profile = 2;
+  optional int32 operator_id = 3;
+  optional int32 operator_type = 4;
+  optional int64 setup_nanos = 5;
+  optional int64 process_nanos = 6;
+  optional int64 local_memory_allocated = 7;  
+  repeated MetricValue metric = 8;
+}
+
+message StreamProfile {
+  optional int64 records = 1;
+  optional int64 batches = 2;
+  optional int64 schemas = 3;
+}
+
+message MetricValue {
+  optional int32 metric_id = 1;
+  optional int64 long_value = 2;
+  optional double double_value = 3;
+}
+
+
+enum CoreOperatorType {
+  SINGLE_SENDER = 0;
+  BROADCAST_SENDER = 1;
+  FILTER = 2;
+  HASH_AGGREGATE = 3;
+  HASH_JOIN = 4;
+  MERGE_JOIN = 5;
+  HASH_PARTITION_SENDER = 6;
+  LIMIT = 7;
+  MERGING_RECEIVER = 8;
+  ORDERED_PARTITION_SENDER = 9;
+  PROJECT = 10;
+  RANDOM_RECEIVER = 11;
+  RANGE_SENDER = 12;
+  SCREEN = 13;
+  SELECTION_VECTOR_REMOVER = 14;
+  STREAMING_AGGREGATE = 15;
+  TOP_N_SORT = 16;
+  EXTERNAL_SORT = 17;
+  TRACE = 18;
+  UNION = 19;
+  OLD_SORT = 20;
+  PARQUET_ROW_GROUP_SCAN = 21;
+  HIVE_SUB_SCAN = 22;
+  SYSTEM_TABLE_SCAN = 23;
+  MOCK_SUB_SCAN = 24;
+  PARQUET_WRITER = 25;
+  DIRECT_SUB_SCAN = 26;
+  TEXT_WRITER = 27;
+  TEXT_SUB_SCAN = 28;
+  JSON_SUB_SCAN = 29;
+  INFO_SCHEMA_SUB_SCAN = 30;
 }

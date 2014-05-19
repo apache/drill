@@ -27,6 +27,7 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.Size;
 import org.apache.drill.exec.physical.base.SubScan;
+import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -86,7 +87,7 @@ public class MockSubScanPOP extends AbstractBase implements SubScan {
   // will want to replace these two methods with an interface above for AbstractSubScan
   @Override
   public boolean isExecutable() {
-    return true;  
+    return true;
   }
 
   @Override
@@ -101,6 +102,11 @@ public class MockSubScanPOP extends AbstractBase implements SubScan {
     Preconditions.checkArgument(children.isEmpty());
     return new MockSubScanPOP(url, readEntries);
 
+  }
+
+  @Override
+  public int getOperatorType() {
+    return CoreOperatorType.MOCK_SUB_SCAN_VALUE;
   }
 
 }

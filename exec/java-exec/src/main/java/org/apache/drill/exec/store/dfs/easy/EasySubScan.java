@@ -26,6 +26,7 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.base.AbstractSubScan;
+import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.dfs.NamedFormatPluginConfig;
 import org.apache.drill.exec.store.schedule.CompleteFileWork.FileWorkImpl;
@@ -45,13 +46,13 @@ public class EasySubScan extends AbstractSubScan{
   private final EasyFormatPlugin<?> formatPlugin;
   private final List<SchemaPath> columns;
   private String selectionRoot;
-  
+
   @JsonCreator
   public EasySubScan(
       @JsonProperty("files") List<FileWorkImpl> files, //
       @JsonProperty("storage") StoragePluginConfig storageConfig, //
       @JsonProperty("format") FormatPluginConfig formatConfig, //
-      @JacksonInject StoragePluginRegistry engineRegistry, // 
+      @JacksonInject StoragePluginRegistry engineRegistry, //
       @JsonProperty("columns") List<SchemaPath> columns, //
       @JsonProperty("selectionRoot") String selectionRoot
       ) throws IOException, ExecutionSetupException {
@@ -62,7 +63,7 @@ public class EasySubScan extends AbstractSubScan{
     this.columns = columns;
     this.selectionRoot = selectionRoot;
   }
-  
+
   public EasySubScan(List<FileWorkImpl> files, EasyFormatPlugin<?> plugin, List<SchemaPath> columns, String selectionRoot){
     this.formatPlugin = plugin;
     this.files = files;
@@ -74,7 +75,7 @@ public class EasySubScan extends AbstractSubScan{
   public String getSelectionRoot() {
     return selectionRoot;
   }
-  
+
   @JsonIgnore
   public EasyFormatPlugin<?> getFormatPlugin(){
     return formatPlugin;
@@ -100,11 +101,15 @@ public class EasySubScan extends AbstractSubScan{
       return formatPlugin.getConfig();
     }
   }
-  
+
   @JsonProperty("columns")
   public List<SchemaPath> getColumns(){
     return columns;
   }
 
-   
+  @Override
+  public int getOperatorType() {
+    return formatPlugin.getReaderOperatorType();
+  }
+
 }

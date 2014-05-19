@@ -27,6 +27,7 @@ import org.apache.drill.exec.physical.base.AbstractBase;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.Size;
+import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.eigenbase.rel.JoinRelType;
 
 import com.beust.jcommander.internal.Lists;
@@ -114,5 +115,10 @@ public class MergeJoinPOP extends AbstractBase{
       return this;
     }
 
+  }
+
+  @Override
+  public int getOperatorType() {
+    return CoreOperatorType.MERGE_JOIN_VALUE;
   }
 }

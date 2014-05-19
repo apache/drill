@@ -99,7 +99,7 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
     this.queryRequest = queryRequest;
     this.context = new QueryContext(connection.getSession(), queryId, dContext);
     this.initiatingClient = connection;
-    this.fragmentManager = new QueryManager(new ForemanManagerListener(), dContext.getController());
+    this.fragmentManager = new QueryManager(bee.getContext().getCache(), new ForemanManagerListener(), dContext.getController());
     this.bee = bee;
 
     this.state = new AtomicState<QueryState>(QueryState.PENDING) {
@@ -168,7 +168,7 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
    * Called by execution pool to do foreman setup. Actual query execution is a separate phase (and can be scheduled).
    */
   public void run() {
-    
+
     final String originalThread = Thread.currentThread().getName();
     Thread.currentThread().setName(QueryIdHelper.getQueryId(queryId) + ":foreman");
     // convert a run query request into action

@@ -25,6 +25,7 @@ import org.apache.drill.exec.physical.base.AbstractReceiver;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.Size;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -82,4 +83,8 @@ public class MergingReceiverPOP extends AbstractReceiver{
     return orderings;
   }
 
+  @Override
+  public int getOperatorType() {
+    return CoreOperatorType.MERGING_RECEIVER_VALUE;
+  }
 }

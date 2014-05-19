@@ -28,6 +28,7 @@ import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
+import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.RecordWriter;
@@ -71,7 +72,7 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
 
   @Override
   public AbstractGroupScan getGroupScan(FileSelection selection, List<SchemaPath> columns) throws IOException {
-    return new EasyGroupScan(selection, this, null, selection.selectionRoot); //TODO : textformat supports project? 
+    return new EasyGroupScan(selection, this, null, selection.selectionRoot); //TODO : textformat supports project?
   }
 
   @Override
@@ -127,6 +128,16 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
         return true;
       return false;
     }
-    
+
+  }
+
+  @Override
+  public int getReaderOperatorType() {
+    return CoreOperatorType.TEXT_SUB_SCAN_VALUE;
+  }
+
+  @Override
+  public int getWriterOperatorType() {
+    return CoreOperatorType.TEXT_WRITER_VALUE;
   }
 }

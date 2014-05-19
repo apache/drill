@@ -20,17 +20,13 @@ package org.apache.drill.exec.work.foreman;
 import io.netty.buffer.ByteBuf;
 
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
+import org.apache.drill.exec.cache.DistributedCache;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.FragmentRoot;
-import org.apache.drill.exec.physical.impl.ImplCreator;
-import org.apache.drill.exec.physical.impl.RootExec;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
-import org.apache.drill.exec.proto.BitControl.FragmentStatus.FragmentState;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
@@ -51,28 +47,26 @@ import org.apache.drill.exec.work.fragment.AbstractStatusReporter;
 import org.apache.drill.exec.work.fragment.FragmentExecutor;
 import org.apache.drill.exec.work.fragment.RootFragmentManager;
 
-import com.google.common.collect.Maps;
-
 /**
- * Each Foreman holds its own fragment manager.  This manages the events associated with execution of a particular query across all fragments.  
+ * Each Foreman holds its own fragment manager.  This manages the events associated with execution of a particular query across all fragments.
  */
 public class QueryManager implements FragmentStatusListener{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryManager.class);
-  
-  public Map<FragmentHandle, FragmentData> map = Maps.newHashMap(); // doesn't need to be thread safe as map is generated in a single thread and then accessed by multiple threads for reads only.
+
+  private final QueryStatus status;
   private final Controller controller;
   private ForemanManagerListener foreman;
   private AtomicInteger remainingFragmentCount;
   private WorkEventBus workBus;
   private FragmentExecutor rootRunner;
   private volatile QueryId queryId;
-  
-  public QueryManager(ForemanManagerListener foreman, Controller controller) {
+
+  public QueryManager(DistributedCache cache, ForemanManagerListener foreman, Controller controller) {
     super();
     this.foreman = foreman;
     this.controller = controller;
     this.remainingFragmentCount = new AtomicInteger(0);
-    
+    this.status = new QueryStatus(cache);
   }
 
   public void runFragments(WorkerBee bee, PlanFragment rootFragment, FragmentRoot rootOperator, UserClientConnection rootClient, List<PlanFragment> leafFragments, List<PlanFragment> intermediateFragments) throws ExecutionSetupException{
@@ -90,44 +84,44 @@ public class QueryManager implements FragmentStatusListener{
       logger.debug("Setting buffers on root context.");
       rootContext.setBuffers(buffers);
       // add fragment to local node.
-      map.put(rootFragment.getHandle(), new FragmentData(rootFragment.getHandle(), null, true));
+      status.add(rootFragment.getHandle(), new FragmentData(rootFragment.getHandle(), null, true));
       logger.debug("Fragment added to local node.");
       rootRunner = new FragmentExecutor(rootContext, rootOperator, new RootStatusHandler(rootContext, rootFragment));
       RootFragmentManager fragmentManager = new RootFragmentManager(rootFragment.getHandle(), buffers, rootRunner);
-      
+
       if(buffers.isDone()){
         // if we don't have to wait for any incoming data, start the fragment runner.
         bee.addFragmentRunner(fragmentManager.getRunnable());
       }else{
         // if we do, record the fragment manager in the workBus.
-        workBus.setRootFragmentManager(fragmentManager);  
+        workBus.setRootFragmentManager(fragmentManager);
       }
-      
-      
+
+
     }
 
     // keep track of intermediate fragments (not root or leaf)
     for (PlanFragment f : intermediateFragments) {
       logger.debug("Tracking intermediate remote node {} with data {}", f.getAssignment(), f.getFragmentJson());
-      map.put(f.getHandle(), new FragmentData(f.getHandle(), f.getAssignment(), false));
+      status.add(f.getHandle(), new FragmentData(f.getHandle(), f.getAssignment(), false));
     }
 
     // send remote (leaf) fragments.
     for (PlanFragment f : leafFragments) {
       sendRemoteFragment(f);
     }
-    
+
     logger.debug("Fragment runs setup is complete.");
   }
-    
+
   private void sendRemoteFragment(PlanFragment fragment){
     logger.debug("Sending remote fragment to node {} with data {}", fragment.getAssignment(), fragment.getFragmentJson());
-    map.put(fragment.getHandle(), new FragmentData(fragment.getHandle(), fragment.getAssignment(), false));
+    status.add(fragment.getHandle(), new FragmentData(fragment.getHandle(), fragment.getAssignment(), false));
     FragmentSubmitListener listener = new FragmentSubmitListener(fragment.getAssignment(), fragment);
     controller.getTunnel(fragment.getAssignment()).sendFragment(listener, fragment);
   }
-  
-  
+
+
   @Override
   public void statusUpdate(FragmentStatus status) {
     logger.debug("New fragment status was provided to Foreman of {}", status);
@@ -151,11 +145,11 @@ public class QueryManager implements FragmentStatusListener{
       throw new UnsupportedOperationException();
     }
   }
-  
+
   private void updateStatus(FragmentStatus status){
-    map.get(status.getHandle()).setStatus(status);
+    this.status.update(status);
   }
-  
+
   private void finished(FragmentStatus status){
     updateStatus(status);
     int remaining = remainingFragmentCount.decrementAndGet();
@@ -167,15 +161,15 @@ public class QueryManager implements FragmentStatusListener{
       foreman.cleanupAndSendResult(result);
     }
   }
-  
+
   private void fail(FragmentStatus status){
     updateStatus(status);
     stopQuery();
     QueryResult result = QueryResult.newBuilder().setQueryId(queryId).setQueryState(QueryState.FAILED).addError(status.getError()).build();
     foreman.cleanupAndSendResult(result);
   }
- 
-  
+
+
   private void stopQuery(){
     // Stop all queries with a currently active status.
 //    for(FragmentData data: map.values()){
@@ -195,13 +189,13 @@ public class QueryManager implements FragmentStatusListener{
 //      }
 //    }
   }
-  
+
   public void cancel(){
     stopQuery();
   }
 
   private class CancelListener extends EndpointListener<Ack, FragmentHandle>{
-    
+
     public CancelListener(DrillbitEndpoint endpoint, FragmentHandle handle) {
       super(endpoint, handle);
     }
@@ -220,15 +214,13 @@ public class QueryManager implements FragmentStatusListener{
     }
 
   };
-  
+
   public RpcOutcomeListener<Ack> getSubmitListener(DrillbitEndpoint endpoint, PlanFragment value){
     return new FragmentSubmitListener(endpoint, value);
   }
-  
-  
-  
+
   private class FragmentSubmitListener extends EndpointListener<Ack, PlanFragment>{
-    
+
     public FragmentSubmitListener(DrillbitEndpoint endpoint, PlanFragment value) {
       super(endpoint, value);
     }
@@ -239,44 +231,6 @@ public class QueryManager implements FragmentStatusListener{
       stopQuery();
     }
 
-  }
-  
-  
-  private class FragmentData{
-    private final boolean isLocal;
-    private volatile FragmentStatus status;
-    private volatile long lastStatusUpdate = 0;
-    private final DrillbitEndpoint endpoint;
-    
-    public FragmentData(FragmentHandle handle, DrillbitEndpoint endpoint, boolean isLocal) {
-      super();
-      this.status = FragmentStatus.newBuilder().setHandle(handle).setState(FragmentState.SENDING).build();
-      this.endpoint = endpoint;
-      this.isLocal = isLocal;
-    }
-    
-    public void setStatus(FragmentStatus status){
-      this.status = status;
-      lastStatusUpdate = System.currentTimeMillis();
-    }
-
-    public FragmentStatus getStatus() {
-      return status;
-    }
-
-    public boolean isLocal() {
-      return isLocal;
-    }
-
-    public long getLastStatusUpdate() {
-      return lastStatusUpdate;
-    }
-
-    public DrillbitEndpoint getEndpoint() {
-      return endpoint;
-    }
-    
-    
   }
 
   private class RootStatusHandler extends AbstractStatusReporter{
@@ -290,7 +244,7 @@ public class QueryManager implements FragmentStatusListener{
       QueryManager.this.statusUpdate(status);
     }
 
-    
+
   }
 
 }

@@ -23,6 +23,7 @@ import org.apache.drill.exec.physical.base.AbstractSingle;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.Size;
+import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -37,7 +38,7 @@ public class StreamingAggregate extends AbstractSingle {
   private final NamedExpression[] exprs;
 
   private final float cardinality;
-  
+
   @JsonCreator
   public StreamingAggregate(@JsonProperty("child") PhysicalOperator child, @JsonProperty("keys") NamedExpression[] keys, @JsonProperty("exprs") NamedExpression[] exprs, @JsonProperty("cardinality") float cardinality) {
     super(child);
@@ -74,10 +75,10 @@ public class StreamingAggregate extends AbstractSingle {
     // not a great hack...
     return new Size( (long) (child.getSize().getRecordCount()*cardinality), child.getSize().getRecordSize());
   }
-  
-  
 
-  
-  
-  
+  @Override
+  public int getOperatorType() {
+    return CoreOperatorType.STREAMING_AGGREGATE_VALUE;
+  }
+
 }

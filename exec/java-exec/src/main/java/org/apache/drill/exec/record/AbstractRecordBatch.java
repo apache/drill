@@ -20,11 +20,10 @@ package org.apache.drill.exec.record;
 import java.util.Iterator;
 
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
+import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
@@ -36,12 +35,14 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
   protected final T popConfig;
   protected final FragmentContext context;
   protected final OperatorContext oContext;
+  protected final OperatorStats stats;
 
   protected AbstractRecordBatch(T popConfig, FragmentContext context) throws OutOfMemoryException {
     super();
     this.context = context;
     this.popConfig = popConfig;
     this.oContext = new OperatorContext(popConfig, context);
+    this.stats = oContext.getStats();
   }
 
   @Override
@@ -56,6 +57,27 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
 
   public PhysicalOperator getPopConfig() {
     return popConfig;
+  }
+
+  public final IterOutcome next(RecordBatch b){
+    return next(0, b);
+  }
+
+  public final IterOutcome next(int inputIndex, RecordBatch b){
+    stats.stopProcessing();
+    IterOutcome next = b.next();
+
+    switch(next){
+    case OK_NEW_SCHEMA:
+      stats.batchReceived(inputIndex, b.getRecordCount(), true);
+      break;
+    case OK:
+      stats.batchReceived(inputIndex, b.getRecordCount(), false);
+      break;
+    }
+
+    stats.startProcessing();
+    return next;
   }
 
   @Override
@@ -74,6 +96,7 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
     container.clear();
     oContext.close();
   }
+
 
   @Override
   public SelectionVector2 getSelectionVector2() {

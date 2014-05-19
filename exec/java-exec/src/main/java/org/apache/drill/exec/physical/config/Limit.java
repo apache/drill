@@ -26,6 +26,7 @@ import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.base.AbstractSingle;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
+import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 
 @JsonTypeName("limit")
@@ -68,4 +69,8 @@ public class Limit extends AbstractSingle {
     return SelectionVectorMode.TWO_BYTE;
   }
 
+  @Override
+  public int getOperatorType() {
+    return CoreOperatorType.LIMIT_VALUE;
+  }
 }

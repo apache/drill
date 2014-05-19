@@ -25,6 +25,7 @@ import org.apache.drill.exec.physical.base.AbstractSingle;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.Size;
+import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -34,10 +35,10 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 @JsonTypeName("sort")
 public class Sort extends AbstractSingle{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Sort.class);
-  
+
   protected final List<Ordering> orderings;
   protected boolean reverse = false;
-  
+
   @JsonCreator
   public Sort(@JsonProperty("child") PhysicalOperator child, @JsonProperty("orderings") List<Ordering> orderings, @JsonProperty("reverse") boolean reverse) {
     super(child);
@@ -64,14 +65,14 @@ public class Sort extends AbstractSingle{
     long n = childSize.getRecordCount();
     long width = childSize.getRecordSize();
 
-    //TODO: Magic Number, let's assume 1/10 of data can fit in memory. 
+    //TODO: Magic Number, let's assume 1/10 of data can fit in memory.
     int k = 10;
     long n2 = n/k;
-    double cpuCost = 
-        k * n2 * (Math.log(n2)/Math.log(2)) + // 
+    double cpuCost =
+        k * n2 * (Math.log(n2)/Math.log(2)) + //
         n * (Math.log(k)/Math.log(2));
     double diskCost = n*width*2;
-    
+
     return new OperatorCost(0, (float) diskCost, (float) n2*width, (float) cpuCost);
   }
 
@@ -84,6 +85,9 @@ public class Sort extends AbstractSingle{
   public SelectionVectorMode getSVMode() {
     return SelectionVectorMode.FOUR_BYTE;
   }
-  
-  
+
+  @Override
+  public int getOperatorType() {
+    return CoreOperatorType.OLD_SORT_VALUE;
+  }
 }

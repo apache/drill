@@ -31,7 +31,7 @@ import net.hydromatic.avatica.AvaticaStatement;
 
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
-import org.apache.drill.exec.proto.UserProtos.QueryType;
+import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.user.ConnectionThrottle;
@@ -48,8 +48,8 @@ public class DrillResultSet extends AvaticaResultSet {
   private volatile QueryId queryId;
   private final DrillClient client;
   final RecordBatchLoader currentBatch;
-  final DrillCursor cursor; 
-  
+  final DrillCursor cursor;
+
   public DrillResultSet(AvaticaStatement statement, AvaticaPrepareResult prepareResult,
       ResultSetMetaData resultSetMetaData, TimeZone timeZone) {
     super(statement, prepareResult, resultSetMetaData, timeZone);
@@ -60,7 +60,7 @@ public class DrillResultSet extends AvaticaResultSet {
     this.client = client;
     cursor = new DrillCursor(this);
   }
-  
+
   @Override
   protected void cancel() {
     cleanup();
@@ -73,7 +73,7 @@ public class DrillResultSet extends AvaticaResultSet {
     }
     listener.close();
   }
-  
+
   @Override protected DrillResultSet execute() throws SQLException{
     // Call driver's callback. It is permitted to throw a RuntimeException.
     DrillConnectionImpl connection = (DrillConnectionImpl) statement.getConnection();
@@ -89,10 +89,10 @@ public class DrillResultSet extends AvaticaResultSet {
       cursor.next();
     } catch (InterruptedException e) {
     }
-    
+
     return this;
   }
-  
+
   class Listener implements UserResultsListener {
     private static final int MAX = 100;
     private volatile RpcException ex;
@@ -102,9 +102,9 @@ public class DrillResultSet extends AvaticaResultSet {
     private volatile boolean closed = false;
     private CountDownLatch latch = new CountDownLatch(1);
     private AtomicBoolean receivedMessage = new AtomicBoolean(false);
-    
-    
-    
+
+
+
     final LinkedBlockingDeque<QueryResultBatch> queue = Queues.newLinkedBlockingDeque();
 
     private boolean releaseIfFirst(){
@@ -112,10 +112,10 @@ public class DrillResultSet extends AvaticaResultSet {
         latch.countDown();
         return true;
       }
-      
+
       return false;
     }
-    
+
     @Override
     public void submissionFailed(RpcException ex) {
       releaseIfFirst();
@@ -151,7 +151,7 @@ public class DrillResultSet extends AvaticaResultSet {
       if (result.getHeader().getErrorCount() > 0) {
         submissionFailed(new RpcException(String.format("%s", result.getHeader().getErrorList())));
       }
-      
+
       releaseIfFirst();
 
     }

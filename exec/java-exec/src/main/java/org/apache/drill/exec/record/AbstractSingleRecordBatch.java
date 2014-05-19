@@ -29,7 +29,7 @@ public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> exte
   protected final RecordBatch incoming;
   private boolean first = true;
   protected boolean outOfMemory = false;
-  
+
   public AbstractSingleRecordBatch(T popConfig, FragmentContext context, RecordBatch incoming) throws OutOfMemoryException {
     super(popConfig, context);
     this.incoming = incoming;
@@ -42,36 +42,46 @@ public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> exte
 
   @Override
   public IterOutcome next() {
-    IterOutcome upstream = incoming.next();
-    if(first && upstream == IterOutcome.OK) upstream = IterOutcome.OK_NEW_SCHEMA;
-    first = false;
-    switch(upstream){
-    case NONE:
-    case NOT_YET:
-    case STOP:
-      return upstream;
-    case OUT_OF_MEMORY:
-      return upstream;
-    case OK_NEW_SCHEMA:
-      try{
-        setupNewSchema();
-      }catch(SchemaChangeException ex){
-        kill();
-        logger.error("Failure during query", ex);
-        context.fail(ex);
-        return IterOutcome.STOP;
+    try{
+      stats.startProcessing();
+      IterOutcome upstream = next(incoming);
+      if(first && upstream == IterOutcome.OK) upstream = IterOutcome.OK_NEW_SCHEMA;
+      first = false;
+      switch(upstream){
+      case NONE:
+      case NOT_YET:
+      case STOP:
+        return upstream;
+      case OUT_OF_MEMORY:
+        return upstream;
+      case OK_NEW_SCHEMA:
+        try{
+          stats.startSetup();
+          setupNewSchema();
+          stats.stopSetup();
+        }catch(SchemaChangeException ex){
+          stats.stopSetup();
+          kill();
+          logger.error("Failure during query", ex);
+          context.fail(ex);
+          return IterOutcome.STOP;
+        }
+        // fall through.
+      case OK:
+        doWork();
+        if (outOfMemory) {
+          outOfMemory = false;
+          return IterOutcome.OUT_OF_MEMORY;
+        }
+        return upstream; // change if upstream changed, otherwise normal.
+      default:
+        throw new UnsupportedOperationException();
       }
-      // fall through.
-    case OK:
-      doWork();
-      if (outOfMemory) {
-        outOfMemory = false;
-        return IterOutcome.OUT_OF_MEMORY;
-      }
-      return upstream; // change if upstream changed, otherwise normal.
-    default:
-      throw new UnsupportedOperationException();
+    }finally{
+      stats.stopProcessing();
     }
+
+
   }
 
   @Override

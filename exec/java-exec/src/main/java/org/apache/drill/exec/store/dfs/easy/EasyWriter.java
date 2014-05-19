@@ -94,4 +94,9 @@ public class EasyWriter extends AbstractWriter {
     // TODO:
     return new OperatorCost(1,1,1,1);
   }
+
+  @Override
+  public int getOperatorType() {
+    return formatPlugin.getReaderOperatorType();
+  }
 }

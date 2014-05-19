@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.direct;
 
 import org.apache.drill.exec.physical.base.AbstractSubScan;
+import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.store.RecordReader;
 
 public class DirectSubScan extends AbstractSubScan{
@@ -33,5 +34,11 @@ public class DirectSubScan extends AbstractSubScan{
   public RecordReader getReader() {
     return reader;
   }
+
+  @Override
+  public int getOperatorType() {
+    return CoreOperatorType.DIRECT_SUB_SCAN_VALUE;
+  }
+
 
 }

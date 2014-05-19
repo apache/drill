@@ -37,9 +37,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
+
 import org.apache.drill.exec.physical.impl.common.HashTable;
 import org.apache.drill.exec.physical.impl.common.HashTableConfig;
-
+import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.eigenbase.rel.JoinRelType;
 
 @JsonTypeName("hash-join")
@@ -118,5 +119,10 @@ public class HashJoinPOP extends AbstractBase {
         }else{
             return this;
         }
+    }
+
+    @Override
+    public int getOperatorType() {
+      return CoreOperatorType.HASH_JOIN_VALUE;
     }
 }

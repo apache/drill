@@ -55,14 +55,8 @@ message RequestResults {
 
 message RunQuery {
   optional QueryResultsMode results_mode = 1;
-  optional QueryType type = 2;
+  optional exec.shared.QueryType type = 2;
   optional string plan = 3;
-}
-
-enum QueryType {
-  SQL = 1;
-  LOGICAL = 2;
-  PHYSICAL = 3;
 }
 
 enum QueryResultsMode {

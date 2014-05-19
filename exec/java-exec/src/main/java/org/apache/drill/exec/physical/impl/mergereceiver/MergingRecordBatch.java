@@ -27,8 +27,6 @@ import java.util.PriorityQueue;
 
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
-import org.apache.drill.common.expression.ExpressionPosition;
-import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.data.Order.Ordering;
@@ -41,19 +39,28 @@ import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.ValueVectorReadExpression;
 import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
-import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.MetricDef;
 import org.apache.drill.exec.physical.config.MergingReceiverPOP;
 import org.apache.drill.exec.proto.UserBitShared;
-import org.apache.drill.exec.record.*;
+import org.apache.drill.exec.record.AbstractRecordBatch;
+import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.record.RawFragmentBatch;
+import org.apache.drill.exec.record.RawFragmentBatchProvider;
+import org.apache.drill.exec.record.RecordBatch;
+import org.apache.drill.exec.record.RecordBatchLoader;
+import org.apache.drill.exec.record.SchemaBuilder;
+import org.apache.drill.exec.record.TypedFieldId;
+import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.record.VectorWrapper;
+import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.allocator.VectorAllocator;
 import org.eigenbase.rel.RelFieldCollation.Direction;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.sun.codemodel.JArray;
 import com.sun.codemodel.JClass;
@@ -92,6 +99,15 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
   private List<VectorAllocator> allocators;
   private MergingReceiverPOP config;
 
+  public static enum Metric implements MetricDef{
+    NEXT_WAIT_NANOS;
+
+    @Override
+    public int metricId() {
+      return ordinal();
+    }
+  }
+
   public MergingRecordBatch(FragmentContext context,
                             MergingReceiverPOP config,
                             RawFragmentBatchProvider[] fragProviders) throws OutOfMemoryException {
@@ -104,8 +120,21 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
     this.outgoingContainer = new VectorContainer();
   }
 
+  private RawFragmentBatch getNext(RawFragmentBatchProvider provider) throws IOException{
+    long startNext = System.nanoTime();
+    RawFragmentBatch b = provider.getNext();
+    if(b != null){
+      stats.batchReceived(0, b.getHeader().getDef().getRecordCount(), false);
+    }
+    stats.addLongStat(Metric.NEXT_WAIT_NANOS, System.nanoTime() - startNext);
+    return b;
+  }
+
   @Override
   public IterOutcome next() {
+    stats.startProcessing();
+    try{
+
     if (fragProviders.length == 0) return IterOutcome.NONE;
     boolean schemaChanged = false;
 
@@ -131,7 +160,7 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
       for (RawFragmentBatchProvider provider : fragProviders) {
         RawFragmentBatch rawBatch = null;
         try {
-          rawBatch = provider.getNext();
+          rawBatch = getNext(provider);
         } catch (IOException e) {
           context.fail(e);
           return IterOutcome.STOP;
@@ -238,10 +267,10 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
         // reached the end of an incoming record batch
         RawFragmentBatch nextBatch = null;
         try {
-          nextBatch = fragProviders[node.batchId].getNext();
+          nextBatch = getNext(fragProviders[node.batchId]);
 
           while (nextBatch != null && nextBatch.getHeader().getDef().getRecordCount() == 0) {
-            nextBatch = fragProviders[node.batchId].getNext();
+            nextBatch = getNext(fragProviders[node.batchId]);
           }
         } catch (IOException e) {
           context.fail(e);
@@ -301,6 +330,11 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
       return IterOutcome.OK_NEW_SCHEMA;
     else
       return IterOutcome.OK;
+
+    }finally{
+      stats.stopProcessing();
+    }
+
   }
 
   @Override
