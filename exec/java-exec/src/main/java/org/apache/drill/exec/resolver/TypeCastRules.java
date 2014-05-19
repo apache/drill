@@ -420,12 +420,6 @@ public class TypeCastRules {
     rule.add(MinorType.UINT2);
     rule.add(MinorType.UINT4);
     rule.add(MinorType.UINT8);
-    rule.add(MinorType.DECIMAL9);
-    rule.add(MinorType.DECIMAL18);
-    rule.add(MinorType.DECIMAL28SPARSE);
-    rule.add(MinorType.DECIMAL28DENSE);
-    rule.add(MinorType.DECIMAL38SPARSE);
-    rule.add(MinorType.DECIMAL38DENSE);
     rule.add(MinorType.DATE);
     rule.add(MinorType.TIME);
     rule.add(MinorType.TIMESTAMPTZ);

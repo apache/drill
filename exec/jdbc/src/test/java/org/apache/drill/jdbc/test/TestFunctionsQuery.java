@@ -452,4 +452,19 @@ public class TestFunctionsQuery {
             "CNT=1.000\n" +
             "CNT=3.000\n");
   }
+
+  @Test
+  public void testDecimalAddIntConstant() throws Exception {
+    String query = "select 1 + cast(employee_id as decimal(9, 3)) as DEC_9 , 1 + cast(employee_id as decimal(38, 5)) as DEC_38 " +
+        "from cp.`employee.json` where employee_id <= 2";
+
+    JdbcAssert.withNoDefaultSchema()
+        .sql(query)
+        .returns(
+            "DEC_9=2.000; " +
+            "DEC_38=2.00000\n" +
+            "DEC_9=3.000; " +
+            "DEC_38=3.00000\n");
+  }
+
 }

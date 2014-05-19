@@ -237,8 +237,10 @@ import org.apache.drill.exec.expr.annotations.Workspace;
 
             if (left.scale < right.scale) {
                 left.value = (${javaType}) (left.value * Math.pow(10, (right.scale - left.scale)));
+                left.scale = right.scale;
             } else if (right.scale < left.scale) {
                 right.value = (${javaType}) (right.value * Math.pow(10, (left.scale - right.scale)));
+                right.scale = left.scale;
             }
 </#macro>
 
