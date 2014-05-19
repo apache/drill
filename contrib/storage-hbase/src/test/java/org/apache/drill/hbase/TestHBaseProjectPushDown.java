@@ -33,7 +33,7 @@ public class TestHBaseProjectPushDown extends BaseHBaseTest {
   @Test
   public void testColumnWith1RowPushDown() throws Exception{
     runSQLVerifyCount("SELECT\n"
-        + "f2['c7']\n"
+        + "f2['c7'] as `f[c7]`\n"
         + "FROM\n"
         + "  hbase.`[TABLE_NAME]` tableName"
         , 1);
@@ -43,7 +43,7 @@ public class TestHBaseProjectPushDown extends BaseHBaseTest {
   public void testRowKeyAndColumnPushDown() throws Exception{
     setColumnWidth(9);
     runSQLVerifyCount("SELECT\n"
-        + "row_key, f['c1']*31 as `f['c1']*31`, f['c2'] as `f['c2']`, 5 as `5`, 'abc' as `'abc'`\n"
+        + "row_key, f['c1']*31 as `f[c1]*31`, f['c2'] as `f[c2]`, 5 as `5`, 'abc' as `'abc'`\n"
         + "FROM\n"
         + "  hbase.`[TABLE_NAME]` tableName"
         , 6);
@@ -51,8 +51,9 @@ public class TestHBaseProjectPushDown extends BaseHBaseTest {
 
   @Test
   public void testColumnFamilyPushDown() throws Exception{
+    setColumnWidth(74);
     runSQLVerifyCount("SELECT\n"
-        + "f\n"
+        + "f, f2\n"
         + "FROM\n"
         + "  hbase.`[TABLE_NAME]` tableName"
         , 6);

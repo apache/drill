@@ -17,11 +17,6 @@
  */
 package org.apache.drill.hbase;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.util.Arrays;
-
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class TestHBaseFilterPushDown extends BaseHBaseTest {
@@ -46,6 +41,17 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
         + "WHERE\n"
         + "  row_key > 'b4'"
         , 2);
+  }
+
+  @Test
+  public void testFilterPushDownRowKeyBetween() throws Exception {
+    runSQLVerifyCount("SELECT\n"
+        + "  *\n"
+        + "FROM\n"
+        + "  hbase.`[TABLE_NAME]` tableName\n"
+        + "WHERE\n"
+        + "  row_key BETWEEN 'a2' AND 'b4'"
+        , 3);
   }
 
   @Test

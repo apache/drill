@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.hbase;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -40,6 +41,7 @@ import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.vector.NullableVarBinaryVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarBinaryVector;
+import org.apache.drill.exec.vector.complex.MapVector;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.KeyValue;
@@ -50,17 +52,17 @@ import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.filter.FirstKeyOnlyFilter;
 
 import com.google.common.base.Stopwatch;
-import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 public class HBaseRecordReader implements RecordReader, DrillHBaseConstants {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBaseRecordReader.class);
 
   private static final int TARGET_RECORD_COUNT = 4000;
 
-  private List<SchemaPath> columns;
+  private LinkedHashSet<SchemaPath> columns;
   private OutputMutator outputMutator;
 
-  private Map<FamilyQualifierWrapper, NullableVarBinaryVector> vvMap;
+  private Map<String, MapVector> familyVectorMap;
   private VarBinaryVector rowKeyVector;
   private SchemaPath rowKeySchemaPath;
 
@@ -78,34 +80,29 @@ public class HBaseRecordReader implements RecordReader, DrillHBaseConstants {
     hbaseTable = subScanSpec.getTableName();
     hbaseScan = new Scan(subScanSpec.getStartRow(), subScanSpec.getStopRow());
     boolean rowKeyOnly = true;
+    this.columns = Sets.newLinkedHashSet();
     if (projectedColumns != null && projectedColumns.size() != 0) {
-      /*
-       * This will change once the non-scaler value vectors are available.
-       * Then, each column family will have a single top level value vector
-       * and each column will be an item vector in its corresponding TLV.
-       */
-      this.columns = Lists.newArrayList(projectedColumns);
-      Iterator<SchemaPath> columnIterator = columns.iterator();
+      Iterator<SchemaPath> columnIterator = projectedColumns.iterator();
       while(columnIterator.hasNext()) {
         SchemaPath column = columnIterator.next();
-        if (column.getRootSegment().getPath().toString().equalsIgnoreCase(ROW_KEY)) {
+        if (column.getRootSegment().getPath().equalsIgnoreCase(ROW_KEY)) {
           rowKeySchemaPath = ROW_KEY_PATH;
+          this.columns.add(rowKeySchemaPath);
           continue;
         }
         rowKeyOnly = false;
         NameSegment root = column.getRootSegment();
-        byte[] family = root.getPath().toString().getBytes();
+        byte[] family = root.getPath().getBytes();
+        this.columns.add(SchemaPath.getSimplePath(root.getPath()));
         PathSegment child = root.getChild();
         if (child != null && child.isNamed()) {
-          byte[] qualifier = child.getNameSegment().getPath().toString().getBytes();
+          byte[] qualifier = child.getNameSegment().getPath().getBytes();
           hbaseScan.addColumn(family, qualifier);
         } else {
-          columnIterator.remove();
           hbaseScan.addFamily(family);
         }
       }
     } else {
-      this.columns = Lists.newArrayList();
       rowKeyOnly = false;
       rowKeySchemaPath = ROW_KEY_PATH;
       this.columns.add(rowKeySchemaPath);
@@ -128,16 +125,16 @@ public class HBaseRecordReader implements RecordReader, DrillHBaseConstants {
   @Override
   public void setup(OutputMutator output) throws ExecutionSetupException {
     this.outputMutator = output;
-    vvMap = new HashMap<FamilyQualifierWrapper, NullableVarBinaryVector>();
+    familyVectorMap = new HashMap<String, MapVector>();
 
     try {
       // Add Vectors to output in the order specified when creating reader
       for (SchemaPath column : columns) {
         if (column.equals(rowKeySchemaPath)) {
           MaterializedField field = MaterializedField.create(column, Types.required(TypeProtos.MinorType.VARBINARY));
-          rowKeyVector = output.addField(field, VarBinaryVector.class);
-        } else if (column.getRootSegment().getChild() != null) {
-          getOrCreateColumnVector(new FamilyQualifierWrapper(column), false);
+          rowKeyVector = outputMutator.addField(field, VarBinaryVector.class);
+        } else {
+          getOrCreateFamilyVector(column.getRootSegment().getPath(), false);
         }
       }
       logger.debug("Opening scanner for HBase table '{}', Zookeeper quorum '{}', port '{}', znode '{}'.",
@@ -158,12 +155,14 @@ public class HBaseRecordReader implements RecordReader, DrillHBaseConstants {
       rowKeyVector.clear();
       rowKeyVector.allocateNew();
     }
-    for (ValueVector v : vvMap.values()) {
+    for (ValueVector v : familyVectorMap.values()) {
       v.clear();
       v.allocateNew();
     }
 
-    for (int count = 0; count < TARGET_RECORD_COUNT; count++) {
+    int rowCount = 0;
+    done:
+    for (; rowCount < TARGET_RECORD_COUNT; rowCount++) {
       Result result = null;
       try {
         if (leftOver != null) {
@@ -176,59 +175,68 @@ public class HBaseRecordReader implements RecordReader, DrillHBaseConstants {
         throw new DrillRuntimeException(e);
       }
       if (result == null) {
-        setOutputValueCount(count);
-        logger.debug("Took {} ms to get {} records", watch.elapsed(TimeUnit.MILLISECONDS), count);
-        return count;
+        break done;
       }
 
       // parse the result and populate the value vectors
       KeyValue[] kvs = result.raw();
       byte[] bytes = result.getBytes().get();
       if (rowKeyVector != null) {
-        if (!rowKeyVector.getMutator().setSafe(count, bytes, kvs[0].getRowOffset(), kvs[0].getRowLength())) {
-          setOutputValueCount(count);
+        if (!rowKeyVector.getMutator().setSafe(rowCount, bytes, kvs[0].getRowOffset(), kvs[0].getRowLength())) {
           leftOver = result;
-          logger.debug("Took {} ms to get {} records", watch.elapsed(TimeUnit.MILLISECONDS), count);
-          return count;
+          break done;
         }
       }
+
       for (KeyValue kv : kvs) {
         int familyOffset = kv.getFamilyOffset();
         int familyLength = kv.getFamilyLength();
+        MapVector mv = getOrCreateFamilyVector(new String(bytes, familyOffset, familyLength), true);
+
         int qualifierOffset = kv.getQualifierOffset();
         int qualifierLength = kv.getQualifierLength();
+        NullableVarBinaryVector v = getOrCreateColumnVector(mv, new String(bytes, qualifierOffset, qualifierLength));
+
         int valueOffset = kv.getValueOffset();
         int valueLength = kv.getValueLength();
-        NullableVarBinaryVector v = getOrCreateColumnVector(
-            new FamilyQualifierWrapper(bytes, familyOffset, familyLength, qualifierOffset, qualifierLength), true);
-        if (!v.getMutator().setSafe(count, bytes, valueOffset, valueLength)) {
-          setOutputValueCount(count);
+        if (!v.getMutator().setSafe(rowCount, bytes, valueOffset, valueLength)) {
           leftOver = result;
-          logger.debug("Took {} ms to get {} records", watch.elapsed(TimeUnit.MILLISECONDS), count);
-          return count;
+          return rowCount;
         }
       }
     }
-    setOutputValueCount(TARGET_RECORD_COUNT);
-    logger.debug("Took {} ms to get {} records", watch.elapsed(TimeUnit.MILLISECONDS), TARGET_RECORD_COUNT);
-    return TARGET_RECORD_COUNT;
+
+    setOutputRowCount(rowCount);
+    logger.debug("Took {} ms to get {} records", watch.elapsed(TimeUnit.MILLISECONDS), rowCount);
+    return rowCount;
   }
 
-  private NullableVarBinaryVector getOrCreateColumnVector(FamilyQualifierWrapper column, boolean allocateOnCreate) {
+  private MapVector getOrCreateFamilyVector(String familyName, boolean allocateOnCreate) {
     try {
-      NullableVarBinaryVector v = vvMap.get(column);
+      MapVector v = familyVectorMap.get(familyName);
       if(v == null) {
-        MaterializedField field = MaterializedField.create(column.asSchemaPath(), Types.optional(TypeProtos.MinorType.VARBINARY));
-        v = outputMutator.addField(field, NullableVarBinaryVector.class);
+        SchemaPath column = SchemaPath.getSimplePath(familyName);
+        MaterializedField field = MaterializedField.create(column, Types.required(TypeProtos.MinorType.MAP));
+        v = outputMutator.addField(field, MapVector.class);
         if (allocateOnCreate) {
           v.allocateNew();
         }
-        vvMap.put(column, v);
+        columns.add(column);
+        familyVectorMap.put(familyName, v);
       }
       return v;
     } catch (SchemaChangeException e) {
       throw new DrillRuntimeException(e);
     }
+  }
+
+  private NullableVarBinaryVector getOrCreateColumnVector(MapVector mv, String qualifier) {
+    int oldSize = mv.size();
+    NullableVarBinaryVector v = mv.addOrGet(qualifier, Types.optional(TypeProtos.MinorType.VARBINARY), NullableVarBinaryVector.class);
+    if (oldSize != mv.size()) {
+      v.allocateNew();
+    }
+    return v;
   }
 
   @Override
@@ -245,77 +253,13 @@ public class HBaseRecordReader implements RecordReader, DrillHBaseConstants {
     }
   }
 
-  private void setOutputValueCount(int count) {
-    for (ValueVector vv : vvMap.values()) {
+  private void setOutputRowCount(int count) {
+    for (ValueVector vv : familyVectorMap.values()) {
       vv.getMutator().setValueCount(count);
     }
     if (rowKeyVector != null) {
       rowKeyVector.getMutator().setValueCount(count);
     }
-  }
-
-  private static class FamilyQualifierWrapper implements Comparable<FamilyQualifierWrapper> {
-    int hashCode;
-    protected String stringVal;
-    protected String family;
-    protected String qualifier;
-
-    public FamilyQualifierWrapper(SchemaPath column) {
-      this(column.getRootSegment().getPath(), column.getRootSegment().getChild().getNameSegment().getPath());
-    }
-
-    public FamilyQualifierWrapper(byte[] bytes, int familyOffset, int familyLength, int qualifierOffset, int qualifierLength) {
-      this(new String(bytes, familyOffset, familyLength), new String(bytes, qualifierOffset, qualifierLength));
-    }
-
-    public FamilyQualifierWrapper(String family, String qualifier) {
-      this.family = family;
-      this.qualifier = qualifier;
-      hashCode = 31*family.hashCode() + qualifier.hashCode();
-    }
-
-    @Override
-    public int hashCode() {
-      return this.hashCode;
-    }
-
-    @Override
-    public boolean equals(Object anObject) {
-      if (this == anObject) {
-        return true;
-      }
-      if (anObject instanceof FamilyQualifierWrapper) {
-        FamilyQualifierWrapper that = (FamilyQualifierWrapper) anObject;
-        // we compare qualifier first since many columns will have same family
-        if (!qualifier.equals(that.qualifier)) {
-          return false;
-        }
-        return family.equals(that.family);
-      }
-      return false;
-    }
-
-    @Override
-    public String toString() {
-      if (stringVal == null) {
-        stringVal = new StringBuilder().append(new String(family)).append(".").append(new String(qualifier)).toString();
-      }
-      return stringVal;
-    }
-
-    public SchemaPath asSchemaPath() {
-      return SchemaPath.getCompoundPath(family, qualifier);
-    }
-
-    @Override
-    public int compareTo(FamilyQualifierWrapper o) {
-      int val = family.compareTo(o.family);
-      if (val != 0) {
-        return val;
-      }
-      return qualifier.compareTo(o.qualifier);
-    }
-
   }
 
 }

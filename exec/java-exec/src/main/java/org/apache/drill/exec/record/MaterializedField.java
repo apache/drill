@@ -24,6 +24,7 @@ import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 
@@ -202,7 +203,7 @@ public class MaterializedField{
 
   @Override
   public String toString() {
-    return "MaterializedField [path=" + path + ", type=" + type + "]";
+    return "MaterializedField [path=" + path + ", type=" + Types.toString(type) + "]";
   }
 
   public String toExpr(){
