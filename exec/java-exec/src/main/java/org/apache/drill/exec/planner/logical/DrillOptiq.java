@@ -301,16 +301,15 @@ public class DrillOptiq {
 
         // Cast arguments to VARCHAR
         List<LogicalExpression> concatArgs = Lists.newArrayList();
-        MajorType castType = Types.required(MinorType.VARCHAR).toBuilder().setWidth(64000).build();
-        concatArgs.add(FunctionCallFactory.createCast(castType, ExpressionPosition.UNKNOWN, args.get(0)));
-        concatArgs.add(FunctionCallFactory.createCast(castType, ExpressionPosition.UNKNOWN, args.get(1)));
+        concatArgs.add(args.get(0));
+        concatArgs.add(args.get(1));
 
         LogicalExpression first = FunctionCallFactory.createExpression(functionName, concatArgs);
 
         for (int i = 2; i < args.size(); i++) {
           concatArgs = Lists.newArrayList();
           concatArgs.add(first);
-          concatArgs.add(FunctionCallFactory.createCast(castType, ExpressionPosition.UNKNOWN, args.get(i)));
+          concatArgs.add(args.get(i));
           first = FunctionCallFactory.createExpression(functionName, concatArgs);
         }
 
