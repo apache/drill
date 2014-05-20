@@ -17,17 +17,32 @@
  */
 package org.apache.drill.exec.planner.common;
 
+import java.util.List;
+
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.SingleRel;
 import org.eigenbase.relopt.Convention;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelTraitSet;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.sql.type.SqlTypeName;
+
+import com.google.common.collect.ImmutableList;
+import com.google.hive12.common.collect.Lists;
 
 /** Base class for logical and physical Writer implemented in Drill. */
 public abstract class DrillWriterRelBase extends SingleRel implements DrillRelNode {
 
+  private static final List<String> FIELD_NAMES = ImmutableList.of("Fragment", "Number of records written");
   private final CreateTableEntry createTableEntry;
+
+  protected void setRowType(){
+    List<RelDataType> fields = Lists.newArrayList();
+    fields.add(this.getCluster().getTypeFactory().createSqlType(SqlTypeName.VARCHAR, 255));
+    fields.add(this.getCluster().getTypeFactory().createSqlType(SqlTypeName.BIGINT));
+    this.rowType = this.getCluster().getTypeFactory().createStructType(fields, FIELD_NAMES);
+  }
 
   public DrillWriterRelBase(Convention convention, RelOptCluster cluster, RelTraitSet traitSet, RelNode input,
       CreateTableEntry createTableEntry) {

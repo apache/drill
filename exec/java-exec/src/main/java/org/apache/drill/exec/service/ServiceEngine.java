@@ -43,23 +43,25 @@ import com.google.common.io.Closeables;
 
 public class ServiceEngine implements Closeable{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ServiceEngine.class);
-  
+
   private final UserServer userServer;
   private final Controller controller;
   private final DataConnectionCreator dataPool;
   private final DrillConfig config;
   boolean useIP = false;
-  
-  public ServiceEngine(ControlMessageHandler controlMessageHandler, UserWorker userWorker, BootStrapContext context, WorkEventBus workBus, DataResponseHandler dataHandler){
+  private final boolean allowPortHunting;
+
+  public ServiceEngine(ControlMessageHandler controlMessageHandler, UserWorker userWorker, BootStrapContext context, WorkEventBus workBus, DataResponseHandler dataHandler, boolean allowPortHunting){
     this.userServer = new UserServer(context.getAllocator(), new NioEventLoopGroup(context.getConfig().getInt(ExecConstants.USER_SERVER_RPC_THREADS),
             new NamedThreadFactory("UserServer-")), userWorker);
-    this.controller = new ControllerImpl(context, controlMessageHandler);
-    this.dataPool = new DataConnectionCreator(context, workBus, dataHandler);
+    this.controller = new ControllerImpl(context, controlMessageHandler, allowPortHunting);
+    this.dataPool = new DataConnectionCreator(context, workBus, dataHandler, allowPortHunting);
     this.config = context.getConfig();
+    this.allowPortHunting = allowPortHunting;
   }
-  
+
   public DrillbitEndpoint start() throws DrillbitStartupException, InterruptedException, UnknownHostException{
-    int userPort = userServer.bind(config.getInt(ExecConstants.INITIAL_USER_PORT));
+    int userPort = userServer.bind(config.getInt(ExecConstants.INITIAL_USER_PORT), allowPortHunting);
     String address = useIP ?  InetAddress.getLocalHost().getHostAddress() : InetAddress.getLocalHost().getCanonicalHostName();
     DrillbitEndpoint partialEndpoint = DrillbitEndpoint.newBuilder()
         .setAddress(address)
@@ -74,7 +76,7 @@ public class ServiceEngine implements Closeable{
   public DataConnectionCreator getDataConnectionCreator(){
     return dataPool;
   }
-  
+
   public Controller getController() {
     return controller;
   }

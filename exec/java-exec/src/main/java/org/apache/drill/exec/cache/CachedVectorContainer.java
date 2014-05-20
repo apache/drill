@@ -18,6 +18,8 @@
 package org.apache.drill.exec.cache;
 
 import java.io.ByteArrayInputStream;
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.commons.io.output.ByteArrayOutputStream;
@@ -29,7 +31,7 @@ import org.apache.drill.exec.record.WritableBatch;
 public class CachedVectorContainer extends LoopedAbstractDrillSerializable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CachedVectorContainer.class);
 
-  private final byte[] data;
+  private byte[] data;
   private final BufferAllocator allocator;
   private VectorContainer container;
 
@@ -40,6 +42,10 @@ public class CachedVectorContainer extends LoopedAbstractDrillSerializable {
     this.allocator = allocator;
     this.data = baos.toByteArray();
     va.clear();
+  }
+
+  public CachedVectorContainer(BufferAllocator allocator) {
+    this.allocator = allocator;
   }
 
   public CachedVectorContainer(byte[] data, BufferAllocator allocator) {
@@ -58,6 +64,20 @@ public class CachedVectorContainer extends LoopedAbstractDrillSerializable {
 
   }
 
+
+  @Override
+  public void read(DataInput input) throws IOException {
+    int len = input.readInt();
+    this.data = new byte[len];
+    input.readFully(data);
+  }
+
+  @Override
+  public void write(DataOutput output) throws IOException {
+    output.writeInt(data.length);
+    output.write(data);
+  }
+
   public VectorAccessible get() {
     if (container == null) {
       construct();
@@ -66,7 +86,7 @@ public class CachedVectorContainer extends LoopedAbstractDrillSerializable {
   }
 
   public void clear() {
-    container.clear();
+    if(container != null) container.clear();
     container = null;
   }
 

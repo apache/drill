@@ -81,11 +81,18 @@ public class Drillbit implements Closeable{
   private volatile RegistrationHandle handle;
 
   public Drillbit(DrillConfig config, RemoteServiceSet serviceSet) throws Exception {
-
+    boolean allowPortHunting = serviceSet != null;
+    boolean enableHttp = config.getBoolean(ExecConstants.HTTP_ENABLE);
     this.context = new BootStrapContext(config);
     this.manager = new WorkManager(context);
-    this.engine = new ServiceEngine(manager.getControlMessageHandler(), manager.getUserWorker(), context, manager.getWorkBus(), manager.getDataHandler());
-    this.embeddedJetty = new Server(8047);
+    this.engine = new ServiceEngine(manager.getControlMessageHandler(), manager.getUserWorker(), context, manager.getWorkBus(), manager.getDataHandler(), allowPortHunting);
+
+    if(enableHttp){
+      this.embeddedJetty = new Server(config.getInt(ExecConstants.HTTP_PORT));
+    }else{
+      this.embeddedJetty = null;
+    }
+
 
     if(serviceSet != null){
       this.coord = serviceSet.getCoordinator();
@@ -99,6 +106,8 @@ public class Drillbit implements Closeable{
   }
 
   private void startJetty() throws Exception{
+    if(embeddedJetty == null) return;
+
     ServletContextHandler context = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
     context.setContextPath("/");
     embeddedJetty.setHandler(context);
@@ -131,7 +140,7 @@ public class Drillbit implements Closeable{
       logger.warn("Interrupted while sleeping during coordination deregistration.");
     }
     try {
-      embeddedJetty.stop();
+      if(embeddedJetty != null) embeddedJetty.stop();
     } catch (Exception e) {
       logger.warn("Failure while shutting down embedded jetty server.");
     }

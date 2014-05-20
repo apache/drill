@@ -25,6 +25,7 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.config.Screen;
 import org.apache.drill.exec.physical.config.SelectionVectorRemover;
 import org.apache.drill.exec.planner.common.DrillScreenRelBase;
+import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptCluster;
@@ -40,7 +41,7 @@ public class ScreenPrel extends DrillScreenRelBase implements Prel {
   }
 
   @Override
-  public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
+  public ScreenPrel copy(RelTraitSet traitSet, List<RelNode> inputs) {
     return new ScreenPrel(getCluster(), traitSet, sole(inputs));
   }
 
@@ -63,7 +64,7 @@ public class ScreenPrel extends DrillScreenRelBase implements Prel {
 
   @Override
   public <T, X, E extends Throwable> T accept(PrelVisitor<T, X, E> logicalVisitor, X value) throws E {
-    return logicalVisitor.visitPrel(this, value);
+    return logicalVisitor.visitScreen(this, value);
   }
 
   @Override

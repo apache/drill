@@ -37,17 +37,19 @@ public class DataConnectionCreator implements Closeable {
   private final BootStrapContext context;
   private final WorkEventBus workBus;
   private final DataResponseHandler dataHandler;
+  private final boolean allowPortHunting;
 
-  public DataConnectionCreator(BootStrapContext context, WorkEventBus workBus, DataResponseHandler dataHandler) {
+  public DataConnectionCreator(BootStrapContext context, WorkEventBus workBus, DataResponseHandler dataHandler, boolean allowPortHunting) {
     super();
     this.context = context;
     this.workBus = workBus;
     this.dataHandler = dataHandler;
+    this.allowPortHunting = allowPortHunting;
   }
 
   public DrillbitEndpoint start(DrillbitEndpoint partialEndpoint) throws InterruptedException, DrillbitStartupException {
     server = new DataServer(context, workBus, dataHandler);
-    int port = server.bind(partialEndpoint.getControlPort() + 1);
+    int port = server.bind(partialEndpoint.getControlPort() + 1, allowPortHunting);
     DrillbitEndpoint completeEndpoint = partialEndpoint.toBuilder().setDataPort(port).build();
     return completeEndpoint;
   }

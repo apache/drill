@@ -38,11 +38,12 @@ import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillScreenRel;
 import org.apache.drill.exec.planner.logical.DrillStoreRel;
 import org.apache.drill.exec.planner.physical.DrillDistributionTrait;
-import org.apache.drill.exec.planner.physical.JoinPrelRenameVisitor;
 import org.apache.drill.exec.planner.physical.PhysicalPlanCreator;
 import org.apache.drill.exec.planner.physical.Prel;
-import org.apache.drill.exec.planner.physical.SelectionVectorPrelVisitor;
 import org.apache.drill.exec.planner.physical.explain.PrelSequencer;
+import org.apache.drill.exec.planner.physical.visitor.FinalColumnReorderer;
+import org.apache.drill.exec.planner.physical.visitor.JoinPrelRenameVisitor;
+import org.apache.drill.exec.planner.physical.visitor.SelectionVectorPrelVisitor;
 import org.apache.drill.exec.planner.sql.DrillSqlWorker;
 import org.apache.drill.exec.util.Pointer;
 import org.eigenbase.rel.RelNode;
@@ -80,9 +81,13 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
   }
 
   protected void log(String name, Prel node) {
-    if(textPlan != null) textPlan.value = PrelSequencer.printWithIds(node, SqlExplainLevel.ALL_ATTRIBUTES);
+    String plan = PrelSequencer.printWithIds(node, SqlExplainLevel.ALL_ATTRIBUTES);;
+    if(textPlan != null){
+      textPlan.value = plan;
+    }
+
     if (logger.isDebugEnabled()) {
-      logger.debug(name + " : \n" + textPlan.value);
+      logger.debug(name + " : \n" + plan);
     }
   }
 
@@ -137,6 +142,11 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     // Join might cause naming conflicts from its left and right child.
     // In such case, we have to insert Project to rename the conflicting names.
     phyRelNode = JoinPrelRenameVisitor.insertRenameProject(phyRelNode);
+
+    // Since our operators work via names rather than indices, we have to make to reorder any output
+    // before we return data to the user as we may have accindentally shuffled things.  This adds
+    // a trivial project to reorder columns prior to output.
+    phyRelNode = FinalColumnReorderer.addFinalColumnOrdering(phyRelNode);
 
     // the last thing we do is add any required selection vector removers given the supported encodings of each
     // operator. This will ultimately move to a new trait but we're managing here for now to avoid introducing new

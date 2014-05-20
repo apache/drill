@@ -188,7 +188,7 @@ public class DrillClient implements Closeable, ConnectionThrottle{
    * Closes this client's connection to the server
    */
   public void close(){
-    this.client.close();
+    if(this.client != null) this.client.close();
     if(ownsZkConnection){
       try {
         this.clusterCoordinator.close();

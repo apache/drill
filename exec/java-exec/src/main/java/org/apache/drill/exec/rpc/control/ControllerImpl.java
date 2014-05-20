@@ -39,19 +39,21 @@ public class ControllerImpl implements Controller {
   private final ControlMessageHandler handler;
   private final BootStrapContext context;
   private final ConnectionManagerRegistry connectionRegistry;
+  private final boolean allowPortHunting;
 
-  public ControllerImpl(BootStrapContext context, ControlMessageHandler handler) {
+  public ControllerImpl(BootStrapContext context, ControlMessageHandler handler, boolean allowPortHunting) {
     super();
     this.handler = handler;
     this.context = context;
     this.connectionRegistry = new ConnectionManagerRegistry(handler, context);
+    this.allowPortHunting = allowPortHunting;
   }
 
   @Override
   public DrillbitEndpoint start(DrillbitEndpoint partialEndpoint) throws InterruptedException, DrillbitStartupException {
     server = new ControlServer(handler, context, connectionRegistry);
     int port = context.getConfig().getInt(ExecConstants.INITIAL_BIT_PORT);
-    port = server.bind(port);
+    port = server.bind(port, allowPortHunting);
     DrillbitEndpoint completeEndpoint = partialEndpoint.toBuilder().setControlPort(port).build();
     connectionRegistry.setEndpoint(completeEndpoint);
     return completeEndpoint;

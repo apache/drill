@@ -181,10 +181,15 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
     boolean isAnyWildcard = isAnyWildcard(exprs);
 
     if(isAnyWildcard){
+
+      // add this until we have sv2 project on wildcard working correctly.
+      if(incoming.getSchema().getSelectionVectorMode() != SelectionVectorMode.NONE){
+        throw new UnsupportedOperationException("Drill doesn't yet wildcard projects where there is a sv2, patch coming shortly.");
+      }
       for(VectorWrapper<?> wrapper : incoming){
         ValueVector vvIn = wrapper.getValueVector();
 
-        String name = vvIn.getField().getPath().getLastSegment().getNameSegment().getPath();
+        String name = vvIn.getField().getPath().getRootSegment().getPath();
         FieldReference ref = new FieldReference(name);
         TransferPair tp = wrapper.getValueVector().getTransferPair(ref);
         transfers.add(tp);

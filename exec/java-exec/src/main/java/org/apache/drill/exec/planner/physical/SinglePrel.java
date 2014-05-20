@@ -20,6 +20,7 @@ package org.apache.drill.exec.planner.physical;
 import java.util.Collections;
 import java.util.Iterator;
 
+import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.SingleRel;

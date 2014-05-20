@@ -100,7 +100,7 @@ public class DrillSqlWorker {
   }
 
   public PhysicalPlan getPlan(String sql) throws SqlParseException, ValidationException, RelConversionException, IOException{
-    return getPlan(null);
+    return getPlan(sql, null);
   }
 
   public PhysicalPlan getPlan(String sql, Pointer<String> textPlan) throws SqlParseException, ValidationException, RelConversionException, IOException{

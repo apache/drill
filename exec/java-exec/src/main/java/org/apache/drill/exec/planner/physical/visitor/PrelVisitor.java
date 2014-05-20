@@ -15,13 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.planner.physical;
+package org.apache.drill.exec.planner.physical.visitor;
+
+import org.apache.drill.exec.planner.physical.ExchangePrel;
+import org.apache.drill.exec.planner.physical.JoinPrel;
+import org.apache.drill.exec.planner.physical.Prel;
+import org.apache.drill.exec.planner.physical.ScreenPrel;
+import org.apache.drill.exec.planner.physical.WriterPrel;
 
 
 public interface PrelVisitor<RETURN, EXTRA, EXCEP extends Throwable> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PrelVisitor.class);
 
   public RETURN visitExchange(ExchangePrel prel, EXTRA value) throws EXCEP;
+  public RETURN visitScreen(ScreenPrel prel, EXTRA value) throws EXCEP;
+  public RETURN visitWriter(WriterPrel prel, EXTRA value) throws EXCEP;
 
   public RETURN visitJoin(JoinPrel prel, EXTRA value) throws EXCEP;
 

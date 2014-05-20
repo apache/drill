@@ -143,15 +143,16 @@ public abstract class BasicServer<T extends EnumLite, C extends RemoteConnection
     return null;
   }
 
-  public int bind(final int initialPort) throws InterruptedException, DrillbitStartupException {
+  public int bind(final int initialPort, boolean allowPortHunting) throws InterruptedException, DrillbitStartupException {
     int port = initialPort - 1;
     while (true) {
       try {
         b.bind(++port).sync();
         break;
       } catch (Exception e) {
-        if (e instanceof BindException)
+        if (e instanceof BindException && allowPortHunting){
           continue;
+        }
         throw new DrillbitStartupException("Could not bind Drillbit", e);
       }
     }

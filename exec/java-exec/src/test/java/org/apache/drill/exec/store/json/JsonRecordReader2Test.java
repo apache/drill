@@ -35,14 +35,14 @@ public class JsonRecordReader2Test extends BaseTestQuery{
   }
 
   @Test
-  public void z() throws Exception{
+  public void testComplexMultipleTimes() throws Exception{
     for(int i =0 ; i < 5; i++){
     test("select * from cp.`join/merge_join.json`");
     }
   }
 
   @Test
-  public void y() throws Exception{
+  public void trySimpleQueryWithLimit() throws Exception{
     test("select * from cp.`limit/test1.json` limit 10");
   }
 }

@@ -30,6 +30,7 @@ public class DrillWriterRel extends DrillWriterRelBase implements DrillRel {
 
   public DrillWriterRel(RelOptCluster cluster, RelTraitSet traitSet, RelNode input, CreateTableEntry createTableEntry) {
     super(DRILL_LOGICAL, cluster, traitSet, input, createTableEntry);
+    setRowType();
   }
 
   @Override

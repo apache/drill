@@ -27,14 +27,14 @@ import java.util.Queue;
 import org.apache.drill.exec.planner.physical.ExchangePrel;
 import org.apache.drill.exec.planner.physical.JoinPrel;
 import org.apache.drill.exec.planner.physical.Prel;
-import org.apache.drill.exec.planner.physical.PrelVisitor;
+import org.apache.drill.exec.planner.physical.visitor.BasePrelVisitor;
 import org.eigenbase.rel.RelWriter;
 import org.eigenbase.sql.SqlExplainLevel;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-public class PrelSequencer implements PrelVisitor<Void, PrelSequencer.Frag, RuntimeException>{
+public class PrelSequencer extends BasePrelVisitor<Void, PrelSequencer.Frag, RuntimeException>{
 
   private List<Frag> frags = Lists.newLinkedList();
 
@@ -232,11 +232,6 @@ public class PrelSequencer implements PrelVisitor<Void, PrelSequencer.Frag, Runt
     }
 
     return null;
-  }
-
-  @Override
-  public Void visitJoin(JoinPrel prel, Frag value) throws RuntimeException {
-    return visitPrel(prel, value);
   }
 
   @Override

@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.cache.local;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -31,7 +32,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.util.DataInputInputStream;
 import org.apache.drill.common.util.DataOutputOutputStream;
 import org.apache.drill.exec.cache.Counter;
 import org.apache.drill.exec.cache.DistributedCache;
@@ -171,8 +171,7 @@ public class LocalCache implements DistributedCache {
       }
     }
 
-    ByteArrayDataInput in = ByteStreams.newDataInput(bytes);
-    InputStream inputStream = DataInputInputStream.constructInputStream(in);
+    InputStream inputStream = new ByteArrayInputStream(bytes);
     try {
       V obj = clazz.getConstructor(BufferAllocator.class).newInstance(allocator);
       obj.readFromStream(inputStream);
@@ -220,7 +219,7 @@ public class LocalCache implements DistributedCache {
       if (m.get(key) == null) return null;
       ByteArrayDataOutput b = m.get(key);
       byte[] bytes = b.toByteArray();
-      return (V) deserialize(m.get(key).toByteArray(), this.clazz);
+      return (V) deserialize(bytes, this.clazz);
     }
 
     @Override

@@ -32,6 +32,7 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.Size;
 import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 
 import parquet.org.codehaus.jackson.annotate.JsonCreator;
@@ -110,6 +111,11 @@ public class SystemTableScan extends AbstractGroupScan implements SubScan{
     return Collections.emptyList();
   }
 
+
+  @Override
+  public int getOperatorType() {
+    return CoreOperatorType.SYSTEM_TABLE_SCAN_VALUE;
+  }
 
   @Override
   public GroupScan clone(List<SchemaPath> columns) {

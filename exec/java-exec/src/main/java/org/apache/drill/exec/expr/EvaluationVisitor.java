@@ -386,7 +386,8 @@ public class EvaluationVisitor {
         PathSegment seg = e.getReadPath();
         int listNum = 0;
         boolean lastWasArray = false;
-        while(true){
+
+        while(seg != null){
           if(seg.isArray()){
             lastWasArray = true;
 

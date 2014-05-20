@@ -24,19 +24,28 @@ import java.util.List;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.planner.common.DrillWriterRelBase;
 import org.apache.drill.exec.planner.logical.CreateTableEntry;
+import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelTraitSet;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.sql.type.SqlTypeName;
+
+import com.google.common.collect.ImmutableList;
+import com.google.hive12.common.collect.Lists;
 
 public class WriterPrel extends DrillWriterRelBase implements Prel {
 
+
+
   public WriterPrel(RelOptCluster cluster, RelTraitSet traits, RelNode child, CreateTableEntry createTableEntry) {
     super(Prel.DRILL_PHYSICAL, cluster, traits, child, createTableEntry);
+    setRowType();
   }
 
   @Override
-  public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
+  public WriterPrel copy(RelTraitSet traitSet, List<RelNode> inputs) {
     return new WriterPrel(getCluster(), traitSet, sole(inputs), getCreateTableEntry());
   }
 
@@ -49,6 +58,7 @@ public class WriterPrel extends DrillWriterRelBase implements Prel {
     return g;
   }
 
+
   @Override
   public Iterator<Prel> iterator() {
     return PrelUtil.iter(getChild());
@@ -56,13 +66,14 @@ public class WriterPrel extends DrillWriterRelBase implements Prel {
 
   @Override
   public <T, X, E extends Throwable> T accept(PrelVisitor<T, X, E> logicalVisitor, X value) throws E {
-    return logicalVisitor.visitPrel(this, value);
+    return logicalVisitor.visitWriter(this, value);
   }
 
   @Override
   public SelectionVectorMode[] getSupportedEncodings() {
     return SelectionVectorMode.DEFAULT;
   }
+
 
   @Override
   public SelectionVectorMode getEncoding() {

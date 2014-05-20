@@ -18,6 +18,7 @@
 
 package org.apache.drill.exec.planner.physical;
 
+import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelTraitSet;

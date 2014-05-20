@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.drill.exec.planner.common.DrillJoinRelBase;
+import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.eigenbase.rel.InvalidRelException;
 import org.eigenbase.rel.JoinRelType;
 import org.eigenbase.rel.RelNode;

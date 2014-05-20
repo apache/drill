@@ -15,61 +15,44 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package org.apache.drill.exec.planner.physical;
+package org.apache.drill.exec.planner.physical.visitor;
 
 import java.util.List;
 
+import org.apache.drill.exec.planner.physical.Prel;
+import org.apache.drill.exec.planner.physical.SelectionVectorRemoverPrel;
+import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.eigenbase.rel.RelNode;
 
 import com.google.common.collect.Lists;
 
-public class JoinPrelRenameVisitor implements PrelVisitor<Prel, Void, RuntimeException>{
 
-  private static JoinPrelRenameVisitor INSTANCE = new JoinPrelRenameVisitor();
+public class SelectionVectorPrelVisitor extends BasePrelVisitor<Prel, Void, RuntimeException>{
 
-  public static Prel insertRenameProject(Prel prel){
+  private static SelectionVectorPrelVisitor INSTANCE = new SelectionVectorPrelVisitor();
+
+  public static Prel addSelectionRemoversWhereNecessary(Prel prel){
     return prel.accept(INSTANCE, null);
   }
 
   @Override
-  public Prel visitExchange(ExchangePrel prel, Void value) throws RuntimeException {
-    return visitPrel(prel, value);
-  }
-
-  @Override
   public Prel visitPrel(Prel prel, Void value) throws RuntimeException {
+    SelectionVectorMode[] encodings = prel.getSupportedEncodings();
     List<RelNode> children = Lists.newArrayList();
     for(Prel child : prel){
       child = child.accept(this, null);
-      children.add(child);
+      children.add(convert(encodings, child));
     }
 
     return (Prel) prel.copy(prel.getTraitSet(), children);
-
   }
 
-  @Override
-  public Prel visitJoin(JoinPrel prel, Void value) throws RuntimeException {
-
-    List<RelNode> children = Lists.newArrayList();
-
-    for(Prel child : prel){
-      child = child.accept(this, null);
-      children.add(child);
+  private Prel convert(SelectionVectorMode[] encodings, Prel prel){
+    for(SelectionVectorMode m : encodings){
+      if(prel.getEncoding() == m) return prel;
     }
-
-    final int leftCount = children.get(0).getRowType().getFieldCount();
-
-    List<RelNode> reNamedChildren = Lists.newArrayList();
-
-    RelNode left = prel.getJoinInput(0, children.get(0));
-    RelNode right = prel.getJoinInput(leftCount, children.get(1));
-
-    reNamedChildren.add(left);
-    reNamedChildren.add(right);
-
-    return (Prel) prel.copy(prel.getTraitSet(), reNamedChildren);
+    return new SelectionVectorRemoverPrel(prel);
   }
+
 
 }

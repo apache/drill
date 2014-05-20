@@ -32,6 +32,7 @@ import org.apache.drill.exec.planner.logical.DrillImplementor;
 import org.apache.drill.exec.planner.logical.DrillParseContext;
 import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.physical.Prel;
+import org.apache.drill.exec.planner.physical.explain.PrelSequencer;
 import org.apache.drill.exec.planner.sql.DirectPlan;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptUtil;
@@ -111,7 +112,7 @@ public class ExplainHandler extends DefaultSqlHandler{
     public String json;
 
     public PhysicalExplain(RelNode node, PhysicalPlan plan, SqlExplainLevel level, QueryContext context){
-      this.text = RelOptUtil.toString(node, level);
+      this.text = PrelSequencer.printWithIds((Prel) node, level);
       this.json = plan.unparse(context.getConfig().getMapper().writer());
     }
   }
