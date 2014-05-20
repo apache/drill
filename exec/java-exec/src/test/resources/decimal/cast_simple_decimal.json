@@ -19,10 +19,10 @@
     "pop" : "project",
     "@id" : 2,
     "exprs" : [ {
-      "ref" : "DECIMAL9",
+      "ref" : "DECIMAL_9",
       "expr" : " (cast(DEC9 as decimal9(9, 4))) "
     },
-    { "ref" : "DECIMAL18", "expr": "(cast(DEC18 as decimal18(18, 9)))" }
+    { "ref" : "DECIMAL_18", "expr": "(cast(DEC18 as decimal18(18, 9)))" }
     ],
 
     "child" : 1
@@ -31,10 +31,10 @@
     "pop" : "project",
     "@id" : 4,
     "exprs" : [ {
-      "ref" : "DECIMAL9",
-      "expr" : " cast(DECIMAL9 as varchar(100))  "
+      "ref" : "DECIMAL_9",
+      "expr" : " cast(DECIMAL_9 as varchar(100))  "
     },
-    {"ref": "DECIMAL18", "expr" : "cast(DECIMAL18 as varchar(100))"}
+    {"ref": "DECIMAL_18", "expr" : "cast(DECIMAL_18 as varchar(100))"}
     ],
 
     "child" : 2

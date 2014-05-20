@@ -19,7 +19,7 @@
     "pop" : "project",
     "@id" : 2,
     "exprs" : [ {
-      "ref" : "DECIMAL28SPARSE",
+      "ref" : "DECIMAL28SPARSE_1",
       "expr" : " (cast(DEC9 as decimal28sparse(28, 4))) "
     }
     ],
@@ -30,8 +30,8 @@
     "pop" : "project",
     "@id" : 3,
     "exprs" : [ {
-      "ref" : "DECIMAL28DENSE",
-      "expr" : " cast(DECIMAL28SPARSE as decimal28dense(28, 4))  "
+      "ref" : "DECIMAL28DENSE_1",
+      "expr" : " cast(DECIMAL28SPARSE_1 as decimal28dense(28, 4))  "
     }
     ],
 
@@ -41,8 +41,8 @@
     "pop" : "project",
     "@id" : 4,
     "exprs" : [ {
-      "ref" : "DECIMAL38DENSE",
-      "expr" : " cast(DECIMAL28DENSE as decimal38dense(38, 4))  "
+      "ref" : "DECIMAL38DENSE_1",
+      "expr" : " cast(DECIMAL28DENSE_1 as decimal38dense(38, 4))  "
     }
     ],
 

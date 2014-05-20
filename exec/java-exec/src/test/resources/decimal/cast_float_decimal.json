@@ -31,7 +31,7 @@
     "pop" : "project",
     "@id" : 4,
     "exprs" : [ {
-      "ref" : "DECIMAL9",
+      "ref" : "DECIMAL_9",
       "expr" : " cast(F4 as decimal9(9, 4))  "
     },
     {"ref": "DECIMAL38", "expr" : "cast(F8 as decimal38sparse(38, 4))"}
