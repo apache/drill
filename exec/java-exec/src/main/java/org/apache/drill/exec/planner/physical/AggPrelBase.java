@@ -149,7 +149,15 @@ public abstract class AggPrelBase extends AggregateRelBase implements Prel{
 
           phase2AggCallList.add(newAggCall); 
         } else {
-          phase2AggCallList.add(aggCall.e);
+          AggregateCall newAggCall = 
+              new AggregateCall(
+                  aggCall.e.getAggregation(), 
+                  aggCall.e.isDistinct(), 
+                  Collections.singletonList(aggExprOrdinal), 
+                  aggCall.e.getType(),
+                  aggCall.e.getName());
+          
+          phase2AggCallList.add(newAggCall);
         }
       }
     }    
