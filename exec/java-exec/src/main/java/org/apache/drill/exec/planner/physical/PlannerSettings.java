@@ -32,10 +32,10 @@ public class PlannerSettings implements FrameworkContext{
 
   public static final OptionValidator EXCHANGE = new BooleanValidator("planner.disable_exchanges", false);
   public static final OptionValidator HASHAGG = new BooleanValidator("planner.enable_hashagg", true);
-  public static final OptionValidator STREAMAGG = new BooleanValidator("planner.enable_streamagg", true);  
-  public static final OptionValidator HASHJOIN = new BooleanValidator("planner.enable_hashjoin", true);  
-  public static final OptionValidator MERGEJOIN = new BooleanValidator("planner.enable_mergejoin", true);  
-  public static final OptionValidator MULTIPHASE = new BooleanValidator("planner.enable_multiphase_agg", false);  
+  public static final OptionValidator STREAMAGG = new BooleanValidator("planner.enable_streamagg", true);
+  public static final OptionValidator HASHJOIN = new BooleanValidator("planner.enable_hashjoin", true);
+  public static final OptionValidator MERGEJOIN = new BooleanValidator("planner.enable_mergejoin", true);
+  public static final OptionValidator MULTIPHASE = new BooleanValidator("planner.enable_multiphase_agg", true);
   public static final OptionValidator BROADCAST = new BooleanValidator("planner.enable_broadcast_join", false);
 
   public OptionManager options = null;
@@ -49,13 +49,13 @@ public class PlannerSettings implements FrameworkContext{
   }
 
   public int numEndPoints() {
-    return numEndPoints;  
+    return numEndPoints;
   }
-  
+
   public boolean useDefaultCosting() {
     return useDefaultCosting;
   }
-    
+
   public void setNumEndPoints(int numEndPoints) {
     this.numEndPoints = numEndPoints;
   }
@@ -63,35 +63,35 @@ public class PlannerSettings implements FrameworkContext{
   public void setUseDefaultCosting(boolean defcost) {
     this.useDefaultCosting = defcost;
   }
-  
+
   public boolean isHashAggEnabled() {
-    return options.getOption(HASHAGG.getOptionName()).bool_val;  
+    return options.getOption(HASHAGG.getOptionName()).bool_val;
   }
-  
+
   public boolean isStreamAggEnabled() {
-    return options.getOption(STREAMAGG.getOptionName()).bool_val;  
+    return options.getOption(STREAMAGG.getOptionName()).bool_val;
   }
-  
+
   public boolean isHashJoinEnabled() {
     return options.getOption(HASHJOIN.getOptionName()).bool_val;
   }
-  
+
   public boolean isMergeJoinEnabled() {
-    return options.getOption(MERGEJOIN.getOptionName()).bool_val;  
+    return options.getOption(MERGEJOIN.getOptionName()).bool_val;
   }
-  
+
   public boolean isMultiPhaseAggEnabled() {
     return options.getOption(MULTIPHASE.getOptionName()).bool_val;
   }
-  
+
   public boolean isBroadcastJoinEnabled() {
-    return options.getOption(BROADCAST.getOptionName()).bool_val;  
+    return options.getOption(BROADCAST.getOptionName()).bool_val;
   }
 
   public int getBroadcastThreshold() {
-    return broadcastThreshold;  
+    return broadcastThreshold;
   }
-  
+
   @Override
   public <T> T unwrap(Class<T> clazz) {
     if(clazz == PlannerSettings.class){
