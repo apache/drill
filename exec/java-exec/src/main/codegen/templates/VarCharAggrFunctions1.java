@@ -1,0 +1,158 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+<@pp.dropOutputFile />
+
+
+
+<#list aggrtypes1.aggrtypes as aggrtype>
+<@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/gaggr/${aggrtype.className}VarBytesFunctions.java" />
+
+<#include "/@includes/license.ftl" />
+
+<#-- A utility class that is used to generate java code for aggr functions that maintain a single -->
+<#-- running counter to hold the result.  This includes: MIN, MAX, COUNT. -->
+
+/*
+ * This class is automatically generated from VarCharAggrFunctions1.java using FreeMarker.
+ */
+
+package org.apache.drill.exec.expr.fn.impl.gaggr;
+
+import org.apache.drill.exec.expr.DrillAggFunc;
+import org.apache.drill.exec.expr.annotations.FunctionTemplate;
+import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
+import org.apache.drill.exec.expr.annotations.Output;
+import org.apache.drill.exec.expr.annotations.Param;
+import org.apache.drill.exec.expr.annotations.Workspace;
+import org.apache.drill.exec.expr.holders.*;
+import org.apache.drill.exec.record.RecordBatch;
+import io.netty.buffer.ByteBuf;
+
+@SuppressWarnings("unused")
+
+public class ${aggrtype.className}VarBytesFunctions {
+	static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(${aggrtype.className}Functions.class);
+
+<#list aggrtype.types as type>
+<#if type.major == "VarBytes">
+
+@FunctionTemplate(name = "${aggrtype.funcName}", scope = FunctionTemplate.FunctionScope.POINT_AGGREGATE)
+public static class ${type.inputType}${aggrtype.className} implements DrillAggFunc{
+
+  @Param ${type.inputType}Holder in;
+  @Workspace ${type.runningType}Holder value;
+  @Output ${type.outputType}Holder out;
+
+  public void setup(RecordBatch b) {
+    value = new ${type.runningType}Holder();
+    <#if aggrtype.funcName == "max" || aggrtype.funcName == "min">
+    value.start = 0;
+    value.end = ${type.bufferEnd};
+    io.netty.buffer.ByteBuf buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte [65536]);
+    for (int i = 0; i < 65536; i++) {
+      buffer.setByte(i, ${type.initialValue});
+    }
+    value.buffer = buffer;
+
+    <#else>
+    value.value = 0;
+    </#if>
+  }
+
+  @Override
+  public void add() {
+	  <#if type.inputType?starts_with("Nullable")>
+    sout: {
+    if (in.isSet == 0) {
+      // processing nullable input and the value is null, so don't do anything...
+      break sout;
+    }
+    </#if>
+    <#if aggrtype.funcName == "max" || aggrtype.funcName == "min">
+    int cmp = 0;
+    boolean swap = false;
+
+    // Compare the bytes
+    for (int l = in.start, r = value.start; l < in.end && r < value.end; l++, r++) {
+      byte leftByte = in.buffer.getByte(l);
+      byte rightByte = value.buffer.getByte(r);
+      if (leftByte != rightByte) {
+        cmp = ((leftByte & 0xFF) - (rightByte & 0xFF)) > 0 ? 1 : -1;
+        break;
+      }
+    }
+
+    if (cmp == 0) {
+      int l = (in.end - in.start) - (value.end - value.start);
+      if (l > 0) {
+        cmp = 1;
+      } else {
+        cmp = -1;
+      }
+    }
+
+    <#if aggrtype.className == "Min">
+    swap = (cmp == -1);
+    <#elseif aggrtype.className == "Max">
+    swap = (cmp == 1);
+    </#if>
+
+    if (swap) {
+      int length = in.end - in.start;
+      in.buffer.getBytes(in.start, value.buffer, 0, length);
+      value.end = length;
+    }
+    <#else>
+    value.value++;
+    </#if>
+    <#if type.inputType?starts_with("Nullable")>
+    } // end of sout block
+	  </#if>
+  }
+
+  @Override
+  public void output() {
+    <#if aggrtype.funcName == "max" || aggrtype.funcName == "min">
+    out.start  = value.start;
+    out.end    = value.end;
+    out.buffer = value.buffer;
+    <#else>
+    out.value = value.value;
+    </#if>
+  }
+
+  @Override
+  public void reset() {
+    value = new ${type.runningType}Holder();
+    <#if aggrtype.funcName == "max" || aggrtype.funcName == "min">
+    value.start = 0;
+    value.end = ${type.bufferEnd};
+    io.netty.buffer.ByteBuf buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte [65536]);
+    for (int i = 0; i < 65536; i++) {
+      buffer.setByte(i, ${type.initialValue});
+    }
+    value.buffer = buffer;
+    <#else>
+    value.value = 0;
+    </#if>
+  }
+}
+</#if>
+</#list>
+}
+</#list>

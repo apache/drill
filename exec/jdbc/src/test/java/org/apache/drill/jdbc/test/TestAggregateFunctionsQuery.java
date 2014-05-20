@@ -36,10 +36,11 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
 
+import org.joda.time.DateTime;
+
 import com.google.common.base.Function;
 import com.google.common.base.Stopwatch;
 
-@Ignore // until stream agg changing schema is fixed.
 public class TestAggregateFunctionsQuery {
 
   public static final String WORKING_PATH;
@@ -53,12 +54,15 @@ public class TestAggregateFunctionsQuery {
     String query = new String("SELECT max(cast(HIRE_DATE as date)) as MAX_DATE, min(cast(HIRE_DATE as date)) as MIN_DATE" +
         " FROM `employee.json`");
 
+
+    String t = new DateTime(1998, 1, 1, 0, 0, 0, 0).toString();
+    String t1 = new DateTime(1993, 5, 1, 0, 0, 0, 0).toString();
+
+    String result = String.format("MAX_DATE="+ t + "; " + "MIN_DATE=" + t1 + "\n");
+
     JdbcAssert.withFull("cp")
         .sql(query)
-        .returns(
-            "MAX_DATE=1998-01-01; " +
-                "MIN_DATE=1993-05-01\n"
-        );
+        .returns(result);
   }
 
   @Test
@@ -69,8 +73,8 @@ public class TestAggregateFunctionsQuery {
     JdbcAssert.withFull("cp")
         .sql(query)
         .returns(
-            "MAX_DAYS=7671 days 0:0:0.0; " +
-                "MIN_DAYS=5965 days 0:0:0.0\n"
+            "MAX_DAYS=P7671D; " +
+                "MIN_DAYS=P5965D\n"
         );
   }
 
@@ -94,6 +98,20 @@ public class TestAggregateFunctionsQuery {
                 "MIN_DEC28=1.000000000; " +
                 "MAX_DEC38=1156.00000000000; " +
                 "MIN_DEC38=1.00000000000\n "
+        );
+  }
+
+
+  @Test
+  public void testVarCharAggFunction() throws Exception{
+    String query = new String("select max(full_name) as MAX_NAME,  min(full_name) as MIN_NAME" +
+        " FROM `employee.json`");
+
+    JdbcAssert.withFull("cp")
+        .sql(query)
+        .returns(
+            "MAX_NAME=Zach Lovell; " +
+                "MIN_NAME=A. Joyce Jarvis\n"
         );
   }
 }

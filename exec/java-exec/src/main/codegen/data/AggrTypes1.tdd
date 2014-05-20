@@ -40,7 +40,11 @@
       {inputType: "IntervalYear", outputType: "IntervalYear", runningType: "IntervalYear", major: "Date", initialValue: "Integer.MAX_VALUE"},
       {inputType: "NullableIntervalYear", outputType: "IntervalYear", runningType: "IntervalYear", major: "Date", initialValue: "Integer.MAX_VALUE"},
       {inputType: "Interval", outputType: "Interval", runningType: "BigInt", major: "Date", initialValue: "Long.MAX_VALUE"},
-      {inputType: "NullableInterval", outputType: "Interval", runningType: "BigInt", major: "Date", initialValue: "Long.MAX_VALUE"}
+      {inputType: "NullableInterval", outputType: "Interval", runningType: "BigInt", major: "Date", initialValue: "Long.MAX_VALUE"},
+      {inputType: "VarChar", outputType: "VarChar", runningType: "VarChar", major: "VarBytes", initialValue: "0xFF", bufferEnd: "65536"},
+      {inputType: "NullableVarChar", outputType: "VarChar", runningType: "VarChar", major: "VarBytes", initialValue: "0xFF",bufferEnd: "65536"},
+      {inputType: "VarBinary", outputType: "VarBinary", runningType: "VarBinary", major: "VarBytes", initialValue: "0xFF", bufferEnd: "65536"},
+      {inputType: "NullableVarBinary", outputType: "VarBinary", runningType: "VarBinary", major: "VarBytes", initialValue: "0xFF", bufferEnd: "65536"}
      ]
    },
    {className: "Max", funcName: "max", types: [
@@ -67,7 +71,11 @@
       {inputType: "IntervalYear", outputType: "IntervalYear", runningType: "IntervalYear", major: "Date", initialValue: "Integer.MIN_VALUE"},
       {inputType: "NullableIntervalYear", outputType: "IntervalYear", runningType: "IntervalYear", major: "Date", initialValue: "Integer.MIN_VALUE"},
       {inputType: "Interval", outputType: "Interval", runningType: "BigInt", major: "Date", initialValue: "Long.MIN_VALUE"},
-      {inputType: "NullableInterval", outputType: "Interval", runningType: "BigInt", major: "Date", initialValue: "Long.MIN_VALUE"}
+      {inputType: "NullableInterval", outputType: "Interval", runningType: "BigInt", major: "Date", initialValue: "Long.MIN_VALUE"},
+      {inputType: "VarChar", outputType: "VarChar", runningType: "VarChar", major: "VarBytes", initialValue: "0x00", bufferEnd: "0"},
+      {inputType: "NullableVarChar", outputType: "VarChar", runningType: "VarChar", major: "VarBytes", initialValue: "0x00", bufferEnd: "0"},
+      {inputType: "VarBinary", outputType: "VarBinary", runningType: "VarBinary", major: "VarBytes", initialValue: "0x00", bufferEnd: "0"},
+      {inputType: "NullableVarBinary", outputType: "VarBinary", runningType: "VarBinary", major: "VarBytes", initialValue: "0x00", bufferEnd: "0"}
      ]
    },
    {className: "Sum", funcName: "sum", types: [   
@@ -113,7 +121,11 @@
       {inputType: "IntervalYear", outputType: "BigInt", runningType: "BigInt", major: "Date", initialValue: "0"},
       {inputType: "NullableIntervalYear", outputType: "BigInt", runningType: "BigInt", major: "Date", initialValue: "0"},
       {inputType: "Interval", outputType: "BigInt", runningType: "BigInt", major: "Date", initialValue: "0"},
-      {inputType: "NullableInterval", outputType: "BigInt", runningType: "BigInt", major: "Date", initialValue: "0"}
+      {inputType: "NullableInterval", outputType: "BigInt", runningType: "BigInt", major: "Date", initialValue: "0"},
+      {inputType: "VarChar", outputType: "BigInt", runningType: "BigInt", major: "VarBytes"},
+      {inputType: "NullableVarChar", outputType: "BigInt", runningType: "BigInt", major: "VarBytes"},
+      {inputType: "VarBinary", outputType: "BigInt", runningType: "BigInt", major: "VarBytes"},
+      {inputType: "NullableVarBinary", outputType: "BigInt", runningType: "BigInt", major: "VarBytes"}
      ]
    }
   ]
