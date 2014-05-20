@@ -20,6 +20,7 @@ package org.apache.drill.exec.planner.fragment;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.PhysicalOperatorSetupException;
 import org.apache.drill.exec.exception.FragmentSetupException;
@@ -38,9 +39,6 @@ import org.apache.drill.exec.work.QueryWorkUnit;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import org.apache.drill.exec.expr.fn.impl.DateUtility;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 
 /**
  * The simple parallelizer determines the level of parallelization of a plan based on the cost of the underlying
@@ -143,11 +141,11 @@ public class SimpleParallelizer {
             .build();
 
         if (isRootNode) {
-          logger.debug("Root fragment:\n {}", fragment);
+          logger.debug("Root fragment:\n {}", StringEscapeUtils.unescapeJava(fragment.toString()));
           rootFragment = fragment;
           rootOperator = root;
         } else {
-          logger.debug("Remote fragment:\n {}", fragment);
+          logger.debug("Remote fragment:\n {}", StringEscapeUtils.unescapeJava(fragment.toString()));
           fragments.add(fragment);
         }
       }

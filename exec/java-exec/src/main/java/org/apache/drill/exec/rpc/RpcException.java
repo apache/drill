@@ -19,13 +19,14 @@ package org.apache.drill.exec.rpc;
 
 import java.util.concurrent.ExecutionException;
 
-import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.drill.common.exceptions.DrillIOException;
 
 /**
  * Parent class for all rpc exceptions.
  */
 public class RpcException extends DrillIOException{
+  private static final long serialVersionUID = -5964230316010502319L;
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RpcException.class);
 
   public RpcException() {
@@ -47,17 +48,16 @@ public class RpcException extends DrillIOException{
   public RpcException(Throwable cause) {
     super(cause);
   }
-  
+
   public static RpcException mapException(Throwable t){
     while(t instanceof ExecutionException) t = ((ExecutionException)t).getCause();
     if(t instanceof RpcException) return ((RpcException) t);
     return new RpcException(t);
   }
-  
+
   public static RpcException mapException(String message, Throwable t){
     while(t instanceof ExecutionException) t = ((ExecutionException)t).getCause();
     return new RpcException(message, t);
   }
-  
-  
+
 }

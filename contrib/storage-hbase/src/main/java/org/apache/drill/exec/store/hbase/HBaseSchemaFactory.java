@@ -25,7 +25,6 @@ import net.hydromatic.optiq.Schema;
 import net.hydromatic.optiq.SchemaPlus;
 import net.hydromatic.optiq.Table;
 
-import org.apache.drill.exec.planner.logical.DynamicDrillTable;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.SchemaFactory;
@@ -74,8 +73,8 @@ public class HBaseSchemaFactory implements SchemaFactory {
 
     @Override
     public Table getTable(String name) {
-      Object selection = new HBaseScanSpec(name);
-      return new DynamicDrillTable(plugin, schemaName, selection);
+      HBaseScanSpec scanSpec = new HBaseScanSpec(name);
+      return new DrillHBaseTable(schemaName, plugin, scanSpec);
     }
 
     @Override
@@ -99,4 +98,5 @@ public class HBaseSchemaFactory implements SchemaFactory {
     }
 
   }
+
 }

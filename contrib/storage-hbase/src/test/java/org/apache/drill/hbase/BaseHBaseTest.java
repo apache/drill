@@ -45,7 +45,7 @@ public class BaseHBaseTest extends BaseTestQuery {
 
   @Rule public TestName TEST_NAME = new TestName();
 
-  private int columnWidth = 8;
+  private int[] columnWidths = new int[] { 8 };
 
   @Before
   public void printID() throws Exception {
@@ -58,7 +58,7 @@ public class BaseHBaseTest extends BaseTestQuery {
      * Change the following to HBaseTestsSuite.configure(false, true)
      * if you want to test against an externally running HBase cluster.
      */
-    HBaseTestsSuite.configure(true, true);
+    HBaseTestsSuite.configure(false, true);
 
     HBaseTestsSuite.initCluster();
     HBaseStoragePlugin plugin = (HBaseStoragePlugin) bit.getContext().getStorage().getPlugin("hbase");
@@ -71,9 +71,13 @@ public class BaseHBaseTest extends BaseTestQuery {
   }
 
   protected void setColumnWidth(int columnWidth) {
-    this.columnWidth = columnWidth;
+    this.columnWidths = new int[] { columnWidth };
   }
 
+  protected void setColumnWidths(int[] columnWidths) {
+    this.columnWidths = columnWidths;
+  }
+  
   protected String getPlanText(String planFile, String tableName) throws IOException {
     return Files.toString(FileUtils.getResourceAsFile(planFile), Charsets.UTF_8)
         .replaceFirst("\"hbase\\.zookeeper\\.property\\.clientPort\".*:.*\\d+", "\"hbase.zookeeper.property.clientPort\" : " + HBaseTestsSuite.getZookeeperPort())
@@ -102,7 +106,7 @@ public class BaseHBaseTest extends BaseTestQuery {
       if (loader.getRecordCount() <= 0) {
         break;
       }
-      VectorUtil.showVectorAccessibleContent(loader, columnWidth);
+      VectorUtil.showVectorAccessibleContent(loader, columnWidths);
       loader.clear();
       result.release();
     }

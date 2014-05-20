@@ -23,6 +23,7 @@ public class TestHBaseProjectPushDown extends BaseHBaseTest {
 
   @Test
   public void testRowKeyPushDown() throws Exception{
+    setColumnWidth(8);
     runSQLVerifyCount("SELECT\n"
         + "row_key\n"
         + "FROM\n"
@@ -32,6 +33,7 @@ public class TestHBaseProjectPushDown extends BaseHBaseTest {
 
   @Test
   public void testColumnWith1RowPushDown() throws Exception{
+    setColumnWidth(6);
     runSQLVerifyCount("SELECT\n"
         + "f2['c7'] as `f[c7]`\n"
         + "FROM\n"
@@ -41,7 +43,7 @@ public class TestHBaseProjectPushDown extends BaseHBaseTest {
 
   @Test
   public void testRowKeyAndColumnPushDown() throws Exception{
-    setColumnWidth(9);
+    setColumnWidths(new int[] {8, 9, 6, 2, 6});
     runSQLVerifyCount("SELECT\n"
         + "row_key, f['c1']*31 as `f[c1]*31`, f['c2'] as `f[c2]`, 5 as `5`, 'abc' as `'abc'`\n"
         + "FROM\n"
@@ -51,9 +53,9 @@ public class TestHBaseProjectPushDown extends BaseHBaseTest {
 
   @Test
   public void testColumnFamilyPushDown() throws Exception{
-    setColumnWidth(74);
+    setColumnWidths(new int[] {8, 74, 38});
     runSQLVerifyCount("SELECT\n"
-        + "f, f2\n"
+        + "row_key, f, f2\n"
         + "FROM\n"
         + "  hbase.`[TABLE_NAME]` tableName"
         , 6);

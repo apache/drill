@@ -17,14 +17,11 @@
  */
 package org.apache.drill.exec.util;
 
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorWrapper;
-import org.apache.drill.exec.rpc.RpcException;
 
 import com.beust.jcommander.internal.Lists;
 
@@ -37,7 +34,7 @@ public class VectorUtil {
     int rows = va.getRecordCount();
     List<String> columns = Lists.newArrayList();
     for (VectorWrapper<?> vw : va) {
-      columns.add(vw.getValueVector().getField().getAsSchemaPath().getAsUnescapedPath());
+      columns.add(vw.getValueVector().getField().getPath().getAsUnescapedPath());
     }
 
     int width = columns.size();
@@ -71,55 +68,74 @@ public class VectorUtil {
   }
 
   public static void showVectorAccessibleContent(VectorAccessible va) {
-      showVectorAccessibleContent(va, DEFAULT_COLUMN_WIDTH);
+    showVectorAccessibleContent(va, DEFAULT_COLUMN_WIDTH);
   }
-  public static void showVectorAccessibleContent(VectorAccessible va, int columnWidth) {
 
-    int rows = va.getRecordCount();
+  public static void showVectorAccessibleContent(VectorAccessible va, int columnWidth) {
+    showVectorAccessibleContent(va, new int[]{ columnWidth });
+  }
+
+  public static void showVectorAccessibleContent(VectorAccessible va, int[] columnWidths) {
+    int width = 0;
+    int columnIndex = 0;
     List<String> columns = Lists.newArrayList();
+    List<String> formats = Lists.newArrayList();
     for (VectorWrapper<?> vw : va) {
-      columns.add(vw.getValueVector().getField().getAsSchemaPath().getAsUnescapedPath());
+      int columnWidth = getColumnWidth(columnWidths, columnIndex);
+      width += columnWidth + 2;
+      formats.add("| %-" + columnWidth + "s");
+      columns.add(vw.getValueVector().getField().getPath().getAsUnescapedPath());
+      columnIndex++;
     }
 
-    int width = columns.size() * (columnWidth + 2);
-
-    String format = ("| %-" + columnWidth + "s");
-
+    int rows = va.getRecordCount();
     for (int row = 0; row < rows; row++) {
+      // header, every 50 rows.
       if (row%50 == 0) {
         System.out.println(StringUtils.repeat("-", width + 1));
+        columnIndex = 0;
         for (String column : columns) {
-          System.out.printf(format, column.length() <= columnWidth ? column : column.substring(0, columnWidth - 1));
+          int columnWidth = getColumnWidth(columnWidths, columnIndex);
+          System.out.printf(formats.get(columnIndex), column.length() <= columnWidth ? column : column.substring(0, columnWidth - 1));
+          columnIndex++;
         }
         System.out.printf("|\n");
         System.out.println(StringUtils.repeat("-", width + 1));
       }
+      // column values
+      columnIndex = 0;
       for (VectorWrapper<?> vw : va) {
+        int columnWidth = getColumnWidth(columnWidths, columnIndex);
         Object o = vw.getValueVector().getAccessor().getObject(row);
         if (o == null) {
           //null value
-          System.out.printf(format, "");
+          System.out.printf(formats.get(columnIndex), "");
         }
         else if (o instanceof byte[]) {
           String value = new String((byte[]) o);
-          System.out.printf(format, value.length() <= columnWidth ? value : value.substring(0, columnWidth - 1));
+          System.out.printf(formats.get(columnIndex), value.length() <= columnWidth ? value : value.substring(0, columnWidth - 1));
         } else if (o instanceof List) {
           System.out.printf("| %s", o);
         } else {
           String value = o.toString();
-          System.out.printf(format, value.length() <= columnWidth ? value : value.substring(0,columnWidth - 1));
+          System.out.printf(formats.get(columnIndex), value.length() <= columnWidth ? value : value.substring(0,columnWidth - 1));
         }
+        columnIndex++;
       }
       System.out.printf("|\n");
+    }
+    if (rows > 0) {
+      System.out.println(StringUtils.repeat("-", width + 1));
     }
 
     for (VectorWrapper<?> vw : va) {
       vw.clear();
     }
-
-    if (rows > 0 )
-      System.out.println(StringUtils.repeat("-", width + 1));
   }
 
+  private static int getColumnWidth(int[] columnWidths, int columnIndex) {
+    return (columnWidths == null) ? DEFAULT_COLUMN_WIDTH
+        : (columnWidths.length > columnIndex) ? columnWidths[columnIndex] : columnWidths[0];
+  }
 
 }
