@@ -1,0 +1,230 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+#ifndef DRILL_CLIENT_H
+#define DRILL_CLIENT_H
+
+#include <vector>
+#include <boost/log/core.hpp>
+#include <boost/log/trivial.hpp>
+#include <boost/thread.hpp>
+#include "drill/common.hpp"
+#include "drill/protobuf/User.pb.h"
+
+
+#if defined _WIN32 || defined __CYGWIN__
+  #ifdef DRILL_CLIENT_EXPORTS
+      #define DECLSPEC_DRILL_CLIENT __declspec(dllexport)
+  #else
+    #ifdef USE_STATIC_LIBDRILL
+      #define DECLSPEC_DRILL_CLIENT
+    #else
+      #define DECLSPEC_DRILL_CLIENT  __declspec(dllimport)
+    #endif
+  #endif
+#else
+  #if __GNUC__ >= 4
+    #define DECLSPEC_DRILL_CLIENT __attribute__ ((visibility ("default")))
+  #else
+    #define DECLSPEC_DRILL_CLIENT 
+  #endif
+#endif
+
+namespace Drill {
+
+//struct UserServerEndPoint;
+class  DrillClientImpl;
+class  DrillClientQueryResult;
+class  FieldMetadata;
+class  RecordBatch;
+class  SchemaDef;
+
+class DECLSPEC_DRILL_CLIENT DrillClientError{
+    public:
+        static const uint32_t CONN_ERROR_START = 100;
+        static const uint32_t QRY_ERROR_START =  200;
+
+        DrillClientError(uint32_t s, uint32_t e, char* m){status=s; errnum=e; msg=m;};
+        DrillClientError(uint32_t s, uint32_t e, std::string m){status=s; errnum=e; msg=m;};
+
+        static DrillClientError*  getErrorObject(const exec::shared::DrillPBError& e);
+
+        // To get the error number we add a error range start number to 
+        // the status code returned (either status_t or connectionStatus_t)
+        uint32_t status; // could be either status_t or connectionStatus_t
+        uint32_t errnum;
+        std::string msg;
+};
+
+// Only one instance of this class exists. A static member of DrillClientImpl;
+class DECLSPEC_DRILL_CLIENT DrillClientInitializer{
+    public:
+        DrillClientInitializer();
+        ~DrillClientInitializer();
+};
+
+// Only one instance of this class exists. A static member of DrillClientImpl;
+class DECLSPEC_DRILL_CLIENT DrillClientConfig{
+    public:
+        DrillClientConfig();
+        static void initLogging(const char* path);
+        static void setLogLevel(logLevel_t l);
+        static void setBufferLimit(uint64_t l);
+        static uint64_t getBufferLimit();
+        static logLevel_t getLogLevel();
+    private:
+        // The logging level
+        static logLevel_t s_logLevel;
+        // The total amount of memory to be allocated by an instance of DrillClient.
+        // For future use. Currently, not enforced.
+        static uint64_t s_bufferLimit;
+        static boost::mutex s_mutex; 
+};
+
+
+/*
+ * Handle to the Query submitted for execution.
+ * */
+typedef void* QueryHandle_t;
+
+/*
+ * Query Results listener callback. This function is called for every record batch after it has 
+ * been received and decoded. The listener function should return a status. 
+ * If the listener returns failure, the query will be canceled.
+ *
+ * DrillClientQueryResult will hold a listener & listener contxt for the call back function
+ */
+typedef status_t (*pfnQueryResultsListener)(QueryHandle_t ctx, RecordBatch* b, DrillClientError* err);
+
+/*
+ * The schema change listener callback. This function is called if the record batch detects a
+ * change in the schema. The client application can call getColDefs in the RecordIterator or 
+ * get the field information from the RecordBatch itself and handle the change appropriately.
+ */
+typedef uint32_t (*pfnSchemaListener)(void* ctx, SchemaDef* s, DrillClientError* err);
+
+/* 
+ * A Record Iterator instance is returned by the SubmitQuery class. Calls block until some data 
+ * is available, or until all data has been returned.
+ */
+
+class DECLSPEC_DRILL_CLIENT RecordIterator{
+    friend class DrillClient;
+    public:
+
+    ~RecordIterator();
+    /* 
+     * Returns a vector of column(i.e. field) definitions. The returned reference is guaranteed to be valid till the 
+     * end of the query or until a schema change event is received. If a schema change event is received by the 
+     * application, the application should discard the reference it currently holds and call this function again. 
+     */
+    std::vector<Drill::FieldMetadata*>& getColDefs();
+
+    /* Move the current pointer to the next record. */
+    status_t next();
+
+    /* Gets the ith column in the current record. */
+    status_t getCol(size_t i, void** b, size_t* sz);
+
+    /* true if ith column in the current record is NULL */
+    bool isNull(size_t i);
+
+    /* Cancels the query. */
+    status_t cancel();
+
+    void registerSchemaChangeListener(pfnSchemaListener* l);
+
+    /*
+     * Returns the last error message
+     */
+    std::string& getError();
+
+    private:
+    RecordIterator(DrillClientQueryResult* pResult){
+        this->m_currentRecord=-1;
+        this->m_pCurrentRecordBatch=NULL;
+        this->m_pQueryResult=pResult;
+        m_pColDefs=NULL;
+    }
+
+    DrillClientQueryResult* m_pQueryResult;
+    size_t m_currentRecord;
+    RecordBatch* m_pCurrentRecordBatch;
+    boost::mutex m_recordBatchMutex; 
+    std::vector<Drill::FieldMetadata*>* m_pColDefs; // Copy of the latest column defs made from the 
+    // first record batch with this definition
+};
+
+class DECLSPEC_DRILL_CLIENT DrillClient{
+    public:
+        DrillClient();
+        ~DrillClient();
+
+        // change the logging level
+        static void initLogging(const char* path, logLevel_t l);
+
+        /* connects the client to a Drillbit UserServer. */
+        connectionStatus_t connect(const char* connectStr);
+
+        /* test whether the client is active */
+        bool isActive();
+
+        /*  close the connection. cancel any pending requests. */
+        void close() ;
+
+        /*
+         * Submit a query asynchronously and wait for results to be returned thru a callback. A query context handle is passed 
+         * back. The listener callback will return the handle in the ctx parameter.
+         */
+        status_t submitQuery(exec::user::QueryType t, const std::string& plan, pfnQueryResultsListener listener, void* listenerCtx, QueryHandle_t* qHandle);
+
+        /*
+         * Submit a query asynchronously and wait for results to be returned thru an iterator that returns
+         * results synchronously. The client app needs to call delete on the iterator when done.
+         */
+        RecordIterator* submitQuery(exec::user::QueryType t, const std::string& plan, DrillClientError* err);
+
+        /* 
+         * The client application should call this function to wait for results if it has registered a 
+         * listener.
+         */
+        void waitForResults();
+
+        /*
+         * Returns the last error message
+         */
+        std::string& getError();
+
+        /*
+         * Applications using the async query submit method should call freeQueryResources to free up resources 
+         * once the query is no longer being processed.
+         * */
+        void freeQueryResources(QueryHandle_t* handle);
+        void freeQueryIterator(RecordIterator** pIter){ delete *pIter; *pIter=NULL;};
+
+    private:
+        static DrillClientInitializer s_init;
+        static DrillClientConfig s_config;
+
+        DrillClientImpl * m_pImpl;
+};
+
+} // namespace Drill
+
+#endif

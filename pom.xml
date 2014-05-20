@@ -138,6 +138,8 @@
             <exclude>**/*.project</exclude>
             <exclude>.*/**</exclude>
             <exclude>*.patch</exclude>
+            <exclude>**/*.pb.cc</exclude>
+            <exclude>**/*.pb.h</exclude>
           </excludes>
         </configuration>
       </plugin>

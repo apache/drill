@@ -11,3 +11,10 @@ target/
 *.patch
 *~
 git.properties
+contrib/native/client/build/
+contrib/native/client/build/*
+CMakeCache.txt
+CMakeFiles
+Makefile
+cmake_install.cmake
+install_manifest.txt
