@@ -28,8 +28,6 @@ import com.google.common.base.Preconditions;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.common.expression.ExpressionPosition;
-import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.DataMode;
@@ -59,8 +57,6 @@ import parquet.format.converter.ParquetMetadataConverter;
 import parquet.hadoop.CodecFactoryExposer;
 import parquet.hadoop.ParquetFileWriter;
 import parquet.column.Encoding;
-import parquet.hadoop.CodecFactoryExposer;
-import parquet.hadoop.metadata.BlockMetaData;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
 import parquet.hadoop.metadata.ParquetMetadata;
 import parquet.schema.PrimitiveType;
@@ -325,9 +321,15 @@ public class ParquetRecordReader implements RecordReader {
         } else if (length <= 16) {
           columnStatuses.add(new Decimal38Reader(this, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement));
         }
-      } else {
-        columnStatuses.add(new FixedByteAlignedReader(this, allocateSize, descriptor, columnChunkMetaData,
-            fixedLength, v, schemaElement));
+      }
+      else{
+        if (columnChunkMetaData.getEncodings().contains(Encoding.PLAIN_DICTIONARY)) {
+          columnStatuses.add(new ParquetFixedWidthDictionaryReader(this, allocateSize, descriptor, columnChunkMetaData,
+              fixedLength, v, schemaElement));
+        } else {
+          columnStatuses.add(new FixedByteAlignedReader(this, allocateSize, descriptor, columnChunkMetaData,
+              fixedLength, v, schemaElement));
+        }
       }
       return true;
     }
@@ -343,8 +345,8 @@ public class ParquetRecordReader implements RecordReader {
           columnStatuses.add(new NullableDecimal38Reader(this, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement));
         }
       } else {
-        columnStatuses.add(new NullableFixedByteAlignedReader(this, allocateSize, descriptor, columnChunkMetaData,
-            fixedLength, v, schemaElement));
+        columnStatuses.add(NullableFixedByteAlignedReaders.getNullableColumnReader(this, allocateSize, descriptor,
+            columnChunkMetaData, fixedLength, v, schemaElement));
       }
       return true;
     }

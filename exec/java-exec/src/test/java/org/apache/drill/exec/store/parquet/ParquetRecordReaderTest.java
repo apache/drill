@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.parquet;
 
+import static org.apache.drill.exec.store.parquet.TestFileGenerator.intVals;
 import static org.apache.drill.exec.store.parquet.TestFileGenerator.populateFieldInfoMap;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -291,7 +292,8 @@ public class ParquetRecordReaderTest extends BaseTestQuery{
     testParquetFullEngineEventBased(false, "/parquet/parquet_nullable_varlen.json", "/tmp/nullable_varlen.parquet", 1, props);
     fields.clear();
     // pass strings instead of byte arrays
-    Object[] boolVals2 = { "b", "b2", "b3"};
+    Object[] boolVals2 = { new org.apache.hadoop.io.Text("b"), new org.apache.hadoop.io.Text("b2"),
+        new org.apache.hadoop.io.Text("b3")};
     props.fields.put("a", new FieldInfo("boolean", "a", 1, boolVals2, TypeProtos.MinorType.BIT, props));
     testParquetFullEngineEventBased(false, "/parquet/parquet_scan_screen_read_entry_replace.json",
         "\"/tmp/varLen.parquet/a\"", "unused", 1, props);
@@ -301,12 +303,27 @@ public class ParquetRecordReaderTest extends BaseTestQuery{
   @Test
   public void testDictionaryEncoding() throws Exception {
     HashMap<String, FieldInfo> fields = new HashMap<>();
-    ParquetTestProperties props = new ParquetTestProperties(1, 300000, DEFAULT_BYTES_PER_PAGE, fields);
-    Object[] boolVals2 = { "b", "b2", "b3"};
-    props.fields.put("a", new FieldInfo("boolean", "a", 1, boolVals2, TypeProtos.MinorType.BIT, props));
-    // test dictionary encoding
-    testParquetFullEngineEventBased(false, "/parquet/parquet_scan_screen_read_entry_replace.json",
-        "\"/tmp/dictionary_pig.parquet/a\"", "unused", 1, props);
+    ParquetTestProperties props = new ParquetTestProperties(1, 25, DEFAULT_BYTES_PER_PAGE, fields);
+    Object[] boolVals = null;
+    props.fields.put("n_name", null);
+    props.fields.put("n_nationkey", null);
+    props.fields.put("n_regionkey", null);
+    props.fields.put("n_comment", null);
+    testParquetFullEngineEventBased(false, false, "/parquet/parquet_scan_screen_read_entry_replace.json",
+        "\"/tmp/nation_dictionary_fail.parquet\"", "unused", 1, props, true);
+
+    fields = new HashMap<>();
+    props = new ParquetTestProperties(1, 5, DEFAULT_BYTES_PER_PAGE, fields);
+    props.fields.put("employee_id", null);
+    props.fields.put("name", null);
+    props.fields.put("role", null);
+    props.fields.put("phone", null);
+    props.fields.put("password_hash", null);
+    props.fields.put("gender_male", null);
+    props.fields.put("height", null);
+    props.fields.put("hair_thickness", null);
+    testParquetFullEngineEventBased(false, false, "/parquet/parquet_scan_screen_read_entry_replace.json",
+        "\"/tmp/employees_5_16_14.parquet\"", "unused", 1, props, true);
   }
 
   @Test

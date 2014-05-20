@@ -41,6 +41,7 @@ import parquet.format.PageHeader;
 import parquet.format.PageType;
 import parquet.format.Util;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
+import parquet.schema.PrimitiveType;
 
 // class to keep track of the read position of variable length columns
 final class PageReadStatus {
@@ -65,26 +66,33 @@ final class PageReadStatus {
   ValuesReader definitionLevels;
   ValuesReader valueReader;
   Dictionary dictionary;
+  PageHeader pageHeader = null;
 
   PageReadStatus(ColumnReader parentStatus, FileSystem fs, Path path, ColumnChunkMetaData columnChunkMetaData) throws ExecutionSetupException{
     this.parentColumnReader = parentStatus;
 
-    long totalByteLength = columnChunkMetaData.getTotalSize();
+    long totalByteLength = columnChunkMetaData.getTotalUncompressedSize();
     long start = columnChunkMetaData.getFirstDataPageOffset();
     try {
       FSDataInputStream f = fs.open(path);
+      this.dataReader = new ColumnDataReader(f, start, totalByteLength);
       if (columnChunkMetaData.getDictionaryPageOffset() > 0) {
         f.seek(columnChunkMetaData.getDictionaryPageOffset());
         PageHeader pageHeader = Util.readPageHeader(f);
         assert pageHeader.type == PageType.DICTIONARY_PAGE;
-        DictionaryPage page = new DictionaryPage(BytesInput.copy(BytesInput.from(f, pageHeader.compressed_page_size)),
+        BytesInput bytesIn = parentColumnReader.parentReader.getCodecFactoryExposer()
+            .decompress( //
+                dataReader.getPageAsBytesInput(pageHeader.compressed_page_size), //
+                pageHeader.getUncompressed_page_size(), //
+                parentColumnReader.columnChunkMetaData.getCodec());
+        DictionaryPage page = new DictionaryPage(
+            bytesIn,
             pageHeader.uncompressed_page_size,
             pageHeader.dictionary_page_header.num_values,
             parquet.column.Encoding.valueOf(pageHeader.dictionary_page_header.encoding.name())
         );
         this.dictionary = page.getEncoding().initDictionary(parentStatus.columnDescriptor, page);
       }
-      this.dataReader = new ColumnDataReader(f, start, totalByteLength);
     } catch (IOException e) {
       throw new ExecutionSetupException("Error opening or reading metatdata for parquet file at location: " + path.getName(), e);
     }
@@ -102,21 +110,29 @@ final class PageReadStatus {
 
     currentPage = null;
 
-    if(!dataReader.hasRemainder()) {
+    // TODO - the metatdata for total size appears to be incorrect for impala generated files, need to find cause
+    // and submit a bug report
+    if(!dataReader.hasRemainder() || parentColumnReader.totalValuesRead == parentColumnReader.columnChunkMetaData.getValueCount()) {
       return false;
     }
 
     // next, we need to decompress the bytes
-    PageHeader pageHeader = null;
     // TODO - figure out if we need multiple dictionary pages, I believe it may be limited to one
     // I think we are clobbering parts of the dictionary if there can be multiple pages of dictionary
     do {
       pageHeader = dataReader.readPageHeader();
       if (pageHeader.getType() == PageType.DICTIONARY_PAGE) {
-        DictionaryPage page = new DictionaryPage(BytesInput.copy(BytesInput.from(dataReader.input, pageHeader.compressed_page_size)),
-                pageHeader.uncompressed_page_size,
-                pageHeader.dictionary_page_header.num_values,
-                parquet.column.Encoding.valueOf(pageHeader.dictionary_page_header.encoding.name())
+        System.out.println(pageHeader.dictionary_page_header.getEncoding());
+        BytesInput bytesIn = parentColumnReader.parentReader.getCodecFactoryExposer()
+            .decompress( //
+                dataReader.getPageAsBytesInput(pageHeader.compressed_page_size), //
+                pageHeader.getUncompressed_page_size(), //
+                parentColumnReader.columnChunkMetaData.getCodec());
+        DictionaryPage page = new DictionaryPage(
+            bytesIn,
+            pageHeader.uncompressed_page_size,
+            pageHeader.dictionary_page_header.num_values,
+            parquet.column.Encoding.valueOf(pageHeader.dictionary_page_header.encoding.name())
         );
         this.dictionary = page.getEncoding().initDictionary(parentColumnReader.columnDescriptor, page);
       }
@@ -157,13 +173,16 @@ final class PageReadStatus {
         valueReader = currentPage.getValueEncoding().getValuesReader(parentColumnReader.columnDescriptor, ValuesType.VALUES);
         definitionLevels.initFromPage(currentPage.getValueCount(), pageDataByteArray, 0);
         readPosInBytes = definitionLevels.getNextOffset();
-        valueReader.initFromPage(currentPage.getValueCount(), pageDataByteArray, (int) readPosInBytes);
+        if (parentColumnReader.columnDescriptor.getType() == PrimitiveType.PrimitiveTypeName.BOOLEAN) {
+          valueReader.initFromPage(currentPage.getValueCount(), pageDataByteArray, (int) readPosInBytes);
+        }
       } else {
         definitionLevels = currentPage.getDlEncoding().getValuesReader(parentColumnReader.columnDescriptor, ValuesType.DEFINITION_LEVEL);
         definitionLevels.initFromPage(currentPage.getValueCount(), pageDataByteArray, 0);
         readPosInBytes = definitionLevels.getNextOffset();
         valueReader = new DictionaryValuesReader(dictionary);
         valueReader.initFromPage(currentPage.getValueCount(), pageDataByteArray, (int) readPosInBytes);
+        this.parentColumnReader.usingDictionary = true;
       }
     }
     return true;
