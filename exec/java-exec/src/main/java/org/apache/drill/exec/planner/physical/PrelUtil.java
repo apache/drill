@@ -49,7 +49,7 @@ import org.eigenbase.rex.RexLiteral;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.rex.RexVisitorImpl;
 
-import com.beust.jcommander.internal.Lists;
+import com.google.common.collect.Lists;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 

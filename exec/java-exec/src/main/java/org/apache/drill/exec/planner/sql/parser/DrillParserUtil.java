@@ -18,7 +18,7 @@
 
 package org.apache.drill.exec.planner.sql.parser;
 
-import com.beust.jcommander.internal.Lists;
+import com.google.common.collect.Lists;
 import org.eigenbase.sql.SqlNode;
 import org.eigenbase.sql.SqlOperator;
 import org.eigenbase.sql.parser.SqlParserPos;

@@ -48,7 +48,7 @@ import org.apache.drill.exec.server.options.OptionList;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.work.batch.IncomingBuffers;
 
-import com.beust.jcommander.internal.Lists;
+import com.google.common.collect.Lists;
 import com.beust.jcommander.internal.Maps;
 
 /**

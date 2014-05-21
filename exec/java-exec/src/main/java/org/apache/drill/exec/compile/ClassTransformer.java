@@ -30,7 +30,7 @@ import org.codehaus.commons.compiler.CompileException;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.tree.ClassNode;
 
-import com.beust.jcommander.internal.Lists;
+import com.google.common.collect.Lists;
 import com.beust.jcommander.internal.Maps;
 import com.beust.jcommander.internal.Sets;
 import com.google.common.base.Preconditions;

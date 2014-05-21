@@ -40,7 +40,7 @@ import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.util.Pair;
 
-import com.beust.jcommander.internal.Lists;
+import com.google.common.collect.Lists;
 
 public class HashJoinPrel  extends JoinPrel {
 

@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.store.hive;
 
-import com.beust.jcommander.internal.Lists;
+import com.google.common.collect.Lists;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.BatchCreator;

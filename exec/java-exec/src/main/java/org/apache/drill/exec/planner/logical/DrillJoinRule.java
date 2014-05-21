@@ -28,7 +28,7 @@ import org.eigenbase.rex.RexUtil;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.trace.EigenbaseTrace;
 
-import com.beust.jcommander.internal.Lists;
+import com.google.common.collect.Lists;
 
 import java.util.ArrayList;
 import java.util.List;

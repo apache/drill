@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.store.hive;
 
-import com.beust.jcommander.internal.Lists;
+import com.google.common.collect.Lists;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;

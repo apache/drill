@@ -32,7 +32,7 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.Size;
 
-import com.beust.jcommander.internal.Lists;
+import com.google.common.collect.Lists;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
@@ -111,7 +111,7 @@ public class HashJoinPOP extends AbstractBase {
 
     public HashJoinPOP flipIfRight(){
         if(joinType == JoinRelType.RIGHT){
-            List<JoinCondition> flippedConditions = Lists.newArrayList(conditions.size());
+            List<JoinCondition> flippedConditions = Lists.newArrayList();
             for(JoinCondition c : conditions){
                 flippedConditions.add(c.flip());
             }

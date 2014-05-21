@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.limit;
 
-import com.beust.jcommander.internal.Lists;
+import com.google.common.collect.Lists;
 import com.google.common.base.Objects;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.OutOfMemoryException;

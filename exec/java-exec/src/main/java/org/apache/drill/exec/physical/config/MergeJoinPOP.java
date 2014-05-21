@@ -30,7 +30,7 @@ import org.apache.drill.exec.physical.base.Size;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.eigenbase.rel.JoinRelType;
 
-import com.beust.jcommander.internal.Lists;
+import com.google.common.collect.Lists;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -106,7 +106,7 @@ public class MergeJoinPOP extends AbstractBase{
 
   public MergeJoinPOP flipIfRight(){
     if(joinType == JoinRelType.RIGHT){
-      List<JoinCondition> flippedConditions = Lists.newArrayList(conditions.size());
+      List<JoinCondition> flippedConditions = Lists.newArrayList();
       for(JoinCondition c : conditions){
         flippedConditions.add(c.flip());
       }

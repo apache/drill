@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.cache;
 
-import com.beust.jcommander.internal.Lists;
+import com.google.common.collect.Lists;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.ExpressionPosition;

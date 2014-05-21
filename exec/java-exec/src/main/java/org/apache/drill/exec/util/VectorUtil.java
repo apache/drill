@@ -23,7 +23,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorWrapper;
 
-import com.beust.jcommander.internal.Lists;
+import com.google.common.collect.Lists;
 
 public class VectorUtil {
 

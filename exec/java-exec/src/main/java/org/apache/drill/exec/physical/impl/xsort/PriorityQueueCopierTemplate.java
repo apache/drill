@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl.xsort;
 
-import com.beust.jcommander.internal.Lists;
+import com.google.common.collect.Lists;
 import com.google.common.base.Stopwatch;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.SchemaPath;

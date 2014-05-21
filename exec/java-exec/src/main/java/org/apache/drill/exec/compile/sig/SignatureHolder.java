@@ -24,7 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import com.beust.jcommander.internal.Lists;
+import com.google.common.collect.Lists;
 import com.beust.jcommander.internal.Maps;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterators;

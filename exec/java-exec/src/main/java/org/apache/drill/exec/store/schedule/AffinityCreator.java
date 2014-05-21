@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
-import com.beust.jcommander.internal.Lists;
+import com.google.common.collect.Lists;
 import com.carrotsearch.hppc.ObjectFloatOpenHashMap;
 import com.carrotsearch.hppc.cursors.ObjectFloatCursor;
 import com.carrotsearch.hppc.cursors.ObjectLongCursor;
