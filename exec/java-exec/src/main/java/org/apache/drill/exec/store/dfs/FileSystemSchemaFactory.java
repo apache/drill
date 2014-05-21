@@ -66,7 +66,7 @@ public class FileSystemSchemaFactory implements SchemaFactory{
     schema.setPlus(plusOfThis);
   }
 
-  public class FileSystemSchema extends AbstractSchema implements HasFileSystemSchema {
+  public class FileSystemSchema extends AbstractSchema {
 
     private final WorkspaceSchema defaultSchema;
     private final Map<String, WorkspaceSchema> schemaMap = Maps.newHashMap();
@@ -130,10 +130,6 @@ public class FileSystemSchemaFactory implements SchemaFactory{
     @Override
     public boolean isMutable() {
       return defaultSchema.isMutable();
-    }
-
-    public DrillFileSystem getFS() {
-        return defaultSchema.getFS();
     }
 
     @Override

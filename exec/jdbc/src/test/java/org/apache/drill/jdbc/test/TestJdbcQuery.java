@@ -46,7 +46,7 @@ import com.google.common.base.Stopwatch;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-public class TestJdbcQuery extends JdbcTest{
+  public class TestJdbcQuery extends JdbcTest{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestJdbcQuery.class);
 
 
@@ -787,6 +787,7 @@ public class TestJdbcQuery extends JdbcTest{
   @Test
   public void testShowFiles() throws Exception {
     testQuery("show files from dfs.`/tmp`");
+    testQuery("show files from `dfs.default`.`/tmp`");
 
   }
 

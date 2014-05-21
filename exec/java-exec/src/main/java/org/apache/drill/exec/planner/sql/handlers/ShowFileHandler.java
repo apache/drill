@@ -26,6 +26,10 @@ import net.hydromatic.optiq.tools.Planner;
 import net.hydromatic.optiq.tools.RelConversionException;
 import net.hydromatic.optiq.tools.ValidationException;
 
+import org.apache.drill.exec.store.AbstractSchema;
+import org.apache.drill.exec.store.SubSchemaWrapper;
+import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory;
+import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory.WorkspaceSchema;
 import org.eigenbase.sql.SqlIdentifier;
 import org.eigenbase.sql.SqlNode;
 
@@ -33,11 +37,11 @@ import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.sql.DirectPlan;
 import org.apache.drill.exec.planner.sql.parser.SqlShowFiles;
-import org.apache.drill.exec.store.dfs.HasFileSystemSchema;
 import org.apache.drill.exec.store.dfs.shim.DrillFileSystem;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.FileStatus;
+
 
 public class ShowFileHandler extends DefaultSqlHandler {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SetOptionHandler.class);
@@ -50,40 +54,36 @@ public class ShowFileHandler extends DefaultSqlHandler {
   public PhysicalPlan getPlan(SqlNode sqlNode) throws ValidationException, RelConversionException, IOException {
 
     SqlIdentifier from = ((SqlShowFiles) sqlNode).getDb();
-    String fromDir = from.names.get((from.names.size() - 1));
 
-    // Get the correct subschema
-    SchemaPlus schema = context.getNewDefaultSchema().getParentSchema();
-    for (int i = 0; i < from.names.size() - 1 && schema != null; i++) {
-      schema = schema.getSubSchema(from.names.get(i));
-    }
+    DrillFileSystem fs = null;
+    String defaultLocation = null;
 
-    // Traverse from the root schema if current schema is null
-    if (schema == null) {
-      schema = context.getRootSchema();
-
-      for (int i = 0; i < from.names.size() - 1 && schema != null; i++) {
-        schema = schema.getSubSchema(from.names.get(i));
-      }
-
-      if (schema == null) {
-        throw new ValidationException("Invalid schema");
-      }
-    }
-
-    DrillFileSystem fs;
-
-    // Get the DrillFileSystem object
     try {
-      HasFileSystemSchema fsSchema = schema.unwrap(HasFileSystemSchema.class);
-      fs = fsSchema.getFS();
-    } catch (ClassCastException e) {
-      throw new ValidationException("Schema not an instance of file system schema");
+
+      // Traverse and find the schema
+      SchemaPlus drillSchema = findSchema(context.getRootSchema(), context.getNewDefaultSchema(), from.names.subList(0, from.names.size() - 1));
+      AbstractSchema tempSchema = getDrillSchema(drillSchema);
+      WorkspaceSchema schema = null;
+      if (tempSchema instanceof WorkspaceSchema) {
+        schema = ((WorkspaceSchema)tempSchema);
+      } else {
+        throw new ValidationException("Unsupported schema");
+      }
+
+      // Get the file system object
+      fs = schema.getFS();
+
+      // Get the default path
+      defaultLocation = schema.getDefaultLocation();
+    } catch (Exception e) {
+        return DirectPlan.createDirectPlan(context, false, String.format("Current schema '%s' is not a file system schema. " +
+                                           "Can't execute show files on this schema.", from.toString()));
     }
 
     List<ShowFilesCommandResult> rows = new ArrayList<>();
+    String fromDir = from.names.get((from.names.size() - 1));
 
-    for (FileStatus fileStatus : fs.list(false, new Path(fromDir))) {
+    for (FileStatus fileStatus : fs.list(false, new Path(defaultLocation, fromDir))) {
       ShowFilesCommandResult result = new ShowFilesCommandResult(fileStatus.getPath().getName(), fileStatus.isDir(),
                                                                  !fileStatus.isDir(), fileStatus.getLen(),
                                                                  fileStatus.getOwner(), fileStatus.getGroup(),

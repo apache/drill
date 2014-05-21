@@ -113,7 +113,7 @@ public class WorkspaceSchemaFactory implements ExpandingConcurrentMap.MapValueFa
   public void destroy(DrillTable value) {
   }
 
-  public class WorkspaceSchema extends AbstractSchema implements HasFileSystemSchema {
+  public class WorkspaceSchema extends AbstractSchema {
 
     private ExpandingConcurrentMap<String, DrillTable> tables = new ExpandingConcurrentMap<String, DrillTable>(WorkspaceSchemaFactory.this);
     private UserSession session;
@@ -141,9 +141,12 @@ public class WorkspaceSchemaFactory implements ExpandingConcurrentMap.MapValueFa
       return config.isWritable();
     }
 
-    @Override
     public DrillFileSystem getFS() {
       return fs;
+    }
+
+    public String getDefaultLocation() {
+      return config.getLocation();
     }
 
 
