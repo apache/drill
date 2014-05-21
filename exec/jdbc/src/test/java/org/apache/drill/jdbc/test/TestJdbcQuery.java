@@ -27,6 +27,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.util.TestTools;
@@ -804,6 +805,30 @@ import static org.junit.Assert.fail;
 
           // show files
           ResultSet resultSet = statement.executeQuery("show files from `/tmp`");
+
+          System.out.println(JdbcAssert.toString(resultSet));
+          statement.close();
+          return null;
+        } catch (Exception e) {
+          throw new RuntimeException(e);
+        }
+      }
+    });
+  }
+
+  @Test
+  public void testVerifyMetadata() throws Exception{
+    JdbcAssert.withNoDefaultSchema().withConnection(new Function<Connection, Void>() {
+      public Void apply(Connection connection) {
+        try {
+          Statement statement = connection.createStatement();
+
+          // show files
+          ResultSet resultSet = statement.executeQuery("select timestamp '2008-2-23 12:23:23', date '2001-01-01', timestamptztype('2008-2-23 1:20:23 US/Pacific') from cp.`employee.json` limit 1");
+
+          assert (resultSet.getMetaData().getColumnType(1) == Types.TIMESTAMP);
+          assert (resultSet.getMetaData().getColumnType(2) == Types.DATE);
+          assert (resultSet.getMetaData().getColumnType(3) == Types.TIMESTAMP);
 
           System.out.println(JdbcAssert.toString(resultSet));
           statement.close();

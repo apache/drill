@@ -83,8 +83,6 @@ public class Types {
       return java.sql.Types.BOOLEAN;
     case DATE:
       return java.sql.Types.DATE;
-    case TIMESTAMP:
-      return java.sql.Types.DATE;
     case DECIMAL9:
     case DECIMAL18:
     case DECIMAL28DENSE:
@@ -120,6 +118,7 @@ public class Types {
     case TIME:
       return java.sql.Types.TIME;
     case TIMESTAMPTZ:
+    case TIMESTAMP:
       return java.sql.Types.TIMESTAMP;
     case TIMETZ:
       return java.sql.Types.DATE;
