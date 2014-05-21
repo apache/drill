@@ -29,7 +29,7 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 
-import com.google.hive12.common.collect.Lists;
+import com.google.common.collect.Lists;
 
 public class MaterializedField {
   private Key key;

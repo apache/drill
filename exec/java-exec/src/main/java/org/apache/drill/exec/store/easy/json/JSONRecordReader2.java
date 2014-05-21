@@ -36,7 +36,7 @@ import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
-import com.google.hive12.common.collect.Lists;
+import com.google.common.collect.Lists;
 
 public class JSONRecordReader2 implements RecordReader{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JSONRecordReader2.class);

@@ -26,7 +26,7 @@ import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.DeadBuf;
 import org.apache.drill.exec.record.MaterializedField;
 
-import com.google.hive12.common.collect.Iterators;
+import com.google.common.collect.Iterators;
 
 public abstract class BaseDataValueVector extends BaseValueVector{
 

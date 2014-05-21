@@ -36,7 +36,7 @@ import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.store.mock.MockSubScanPOP;
 import org.junit.Test;
 
-import com.google.hive12.common.collect.Lists;
+import com.google.common.collect.Lists;
 
 public class TestOpSerialization {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestOpSerialization.class);

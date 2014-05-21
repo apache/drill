@@ -42,7 +42,7 @@ import org.eigenbase.rex.RexUtil;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.util.Pair;
 
-import com.google.hive12.common.collect.Lists;
+import com.google.common.collect.Lists;
 
 /**
  * Join implemented in Drill.

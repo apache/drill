@@ -29,7 +29,7 @@ import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.sql.type.SqlTypeName;
 
 import com.google.common.collect.ImmutableList;
-import com.google.hive12.common.collect.Lists;
+import com.google.common.collect.Lists;
 
 /** Base class for logical and physical Writer implemented in Drill. */
 public abstract class DrillWriterRelBase extends SingleRel implements DrillRelNode {

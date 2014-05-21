@@ -38,7 +38,7 @@ import org.infinispan.configuration.global.GlobalConfigurationBuilder;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
 
-import com.google.hive12.common.collect.Lists;
+import com.google.common.collect.Lists;
 
 public class ISpan {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ISpan.class);

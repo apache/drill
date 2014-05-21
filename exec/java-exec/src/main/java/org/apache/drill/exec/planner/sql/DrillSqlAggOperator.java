@@ -46,7 +46,7 @@ import org.eigenbase.sql.validate.SqlMonotonicity;
 import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.validate.SqlValidatorScope;
 
-import com.google.hive12.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList;
 
 public class DrillSqlAggOperator extends SqlAggFunction {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillSqlAggOperator.class);

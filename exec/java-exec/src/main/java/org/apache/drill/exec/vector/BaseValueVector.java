@@ -27,7 +27,7 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.MaterializedField;
 
-import com.google.hive12.common.collect.Iterators;
+import com.google.common.collect.Iterators;
 
 public abstract class BaseValueVector implements ValueVector{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseValueVector.class);

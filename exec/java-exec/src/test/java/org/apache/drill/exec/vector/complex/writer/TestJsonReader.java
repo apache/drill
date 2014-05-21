@@ -37,7 +37,7 @@ import org.junit.Test;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.base.Charsets;
-import com.google.hive12.common.collect.Lists;
+import com.google.common.collect.Lists;
 
 public class TestJsonReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestJsonReader.class);

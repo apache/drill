@@ -23,7 +23,7 @@ import org.apache.drill.exec.proto.BitControl.FragmentStatus;
 import org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile;
 
 import com.codahale.metrics.MetricRegistry;
-import com.google.hive12.common.collect.Lists;
+import com.google.common.collect.Lists;
 
 public class FragmentStats {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FragmentStats.class);

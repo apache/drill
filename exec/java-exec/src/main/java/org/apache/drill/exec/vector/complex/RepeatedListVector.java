@@ -46,7 +46,7 @@ import org.apache.drill.exec.vector.complex.impl.RepeatedListReaderImpl;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
 
 import com.google.common.collect.Lists;
-import com.google.hive12.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 
 
 public class RepeatedListVector extends AbstractContainerVector implements RepeatedFixedWidthVector{

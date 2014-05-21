@@ -46,7 +46,7 @@ import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
 import com.carrotsearch.hppc.IntObjectOpenHashMap;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
-import com.google.hive12.common.collect.Lists;
+import com.google.common.collect.Lists;
 
 public class MapVector extends AbstractContainerVector {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MapVector.class);

@@ -24,7 +24,7 @@ import org.apache.drill.exec.vector.complex.StateTool;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 
-import com.google.hive12.common.base.Preconditions;
+import com.google.common.base.Preconditions;
 
 public class ComplexWriterImpl extends AbstractFieldWriter implements ComplexWriter{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ComplexWriterImpl.class);
