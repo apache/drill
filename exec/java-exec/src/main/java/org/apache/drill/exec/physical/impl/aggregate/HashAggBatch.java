@@ -86,65 +86,60 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
   }
 
   @Override
-  public IterOutcome next() {
-    stats.startProcessing();
-    try{
-      // this is only called on the first batch. Beyond this, the aggregator manages batches.
-      if (aggregator == null) {
-        IterOutcome outcome = next(incoming);
-        logger.debug("Next outcome of {}", outcome);
-        switch (outcome) {
-        case NONE:
-        case NOT_YET:
-        case STOP:
-          return outcome;
-        case OK_NEW_SCHEMA:
-          if (!createAggregator()){
-            done = true;
-            return IterOutcome.STOP;
-          }
-          break;
-        case OK:
-          throw new IllegalStateException("You should never get a first batch without a new schema");
-        default:
-          throw new IllegalStateException(String.format("unknown outcome %s", outcome));
+  public IterOutcome innerNext() {
+    // this is only called on the first batch. Beyond this, the aggregator manages batches.
+    if (aggregator == null) {
+      IterOutcome outcome = next(incoming);
+      logger.debug("Next outcome of {}", outcome);
+      switch (outcome) {
+      case NONE:
+      case NOT_YET:
+      case STOP:
+        return outcome;
+      case OK_NEW_SCHEMA:
+        if (!createAggregator()){
+          done = true;
+          return IterOutcome.STOP;
         }
+        break;
+      case OK:
+        throw new IllegalStateException("You should never get a first batch without a new schema");
+      default:
+        throw new IllegalStateException(String.format("unknown outcome %s", outcome));
       }
-
-      if (aggregator.allFlushed()) {
-        return IterOutcome.NONE;
-      }
-
-    if (aggregator.buildComplete() && ! aggregator.allFlushed()) {
-      // aggregation is complete and not all records have been output yet
-      return aggregator.outputCurrentBatch();    
     }
 
-    logger.debug("Starting aggregator doWork; incoming record count = {} ", incoming.getRecordCount());   
+    if (aggregator.allFlushed()) {
+      return IterOutcome.NONE;
+    }
 
-      while(true){
-        AggOutcome out = aggregator.doWork();
-        logger.debug("Aggregator response {}, records {}", out, aggregator.getOutputCount());
-        switch(out){
-        case CLEANUP_AND_RETURN:
-          container.clear();
-          aggregator.cleanup();
-          done = true;
-          return aggregator.getOutcome();
-        case RETURN_OUTCOME:
-          return aggregator.getOutcome();
-        case UPDATE_AGGREGATOR:
-          aggregator = null;
-          if(!createAggregator()){
-            return IterOutcome.STOP;
-          }
-          continue;
-        default:
-          throw new IllegalStateException(String.format("Unknown state %s.", out));
+  if (aggregator.buildComplete() && ! aggregator.allFlushed()) {
+    // aggregation is complete and not all records have been output yet
+    return aggregator.outputCurrentBatch();
+  }
+
+  logger.debug("Starting aggregator doWork; incoming record count = {} ", incoming.getRecordCount());
+
+    while(true){
+      AggOutcome out = aggregator.doWork();
+      logger.debug("Aggregator response {}, records {}", out, aggregator.getOutputCount());
+      switch(out){
+      case CLEANUP_AND_RETURN:
+        container.clear();
+        aggregator.cleanup();
+        done = true;
+        return aggregator.getOutcome();
+      case RETURN_OUTCOME:
+        return aggregator.getOutcome();
+      case UPDATE_AGGREGATOR:
+        aggregator = null;
+        if(!createAggregator()){
+          return IterOutcome.STOP;
         }
+        continue;
+      default:
+        throw new IllegalStateException(String.format("Unknown state %s.", out));
       }
-      }finally{
-      stats.stopProcessing();
     }
   }
 

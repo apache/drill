@@ -98,7 +98,7 @@ public class SortBatch extends AbstractRecordBatch<Sort> {
   }
 
   @Override
-  public IterOutcome next() {
+  public IterOutcome innerNext() {
     if(schema != null){
       if(getSelectionVector4().next()){
         return IterOutcome.OK;

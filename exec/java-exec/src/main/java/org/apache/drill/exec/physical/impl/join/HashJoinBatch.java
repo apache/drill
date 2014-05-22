@@ -143,8 +143,7 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
 
 
     @Override
-    public IterOutcome next() {
-        stats.startProcessing();
+    public IterOutcome innerNext() {
         try {
             /* If we are here for the first time, execute the build phase of the
              * hash join and setup the run time generated class for the probe side
@@ -225,10 +224,7 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
             context.fail(e);
             killIncoming();
             return IterOutcome.STOP;
-        } finally{
-          stats.stopProcessing();
         }
-
     }
 
     public void setupHashTable() throws IOException, SchemaChangeException, ClassTransformationException {

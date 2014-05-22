@@ -83,12 +83,12 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
   }
 
   @Override
-  public IterOutcome next() {
+  public IterOutcome innerNext() {
     if (hasRemainder) {
       handleRemainder();
       return IterOutcome.OK;
     }
-    return super.next();
+    return super.innerNext();
   }
 
   @Override

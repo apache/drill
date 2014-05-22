@@ -119,7 +119,7 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
   }
 
   @Override
-  public IterOutcome next() {
+  public IterOutcome innerNext() {
     if(schema != null){
       if(getSelectionVector4().next()){
         return IterOutcome.OK;

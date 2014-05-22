@@ -159,7 +159,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
   }
 
   @Override
-  public IterOutcome next() {
+  public IterOutcome innerNext() {
     if(schema != null){
       if (spillCount == 0) {
         if(schema != null){

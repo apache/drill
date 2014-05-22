@@ -41,47 +41,40 @@ public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> exte
   }
 
   @Override
-  public IterOutcome next() {
-    try{
-      stats.startProcessing();
-      IterOutcome upstream = next(incoming);
-      if(first && upstream == IterOutcome.OK) upstream = IterOutcome.OK_NEW_SCHEMA;
-      first = false;
-      switch(upstream){
-      case NONE:
-      case NOT_YET:
-      case STOP:
-        return upstream;
-      case OUT_OF_MEMORY:
-        return upstream;
-      case OK_NEW_SCHEMA:
-        try{
-          stats.startSetup();
-          setupNewSchema();
-        }catch(SchemaChangeException ex){
-          kill();
-          logger.error("Failure during query", ex);
-          context.fail(ex);
-          return IterOutcome.STOP;
-        }finally{
-          stats.stopSetup();
-        }
-        // fall through.
-      case OK:
-        doWork();
-        if (outOfMemory) {
-          outOfMemory = false;
-          return IterOutcome.OUT_OF_MEMORY;
-        }
-        return upstream; // change if upstream changed, otherwise normal.
-      default:
-        throw new UnsupportedOperationException();
+  public IterOutcome innerNext() {
+    IterOutcome upstream = next(incoming);
+    if(first && upstream == IterOutcome.OK) upstream = IterOutcome.OK_NEW_SCHEMA;
+    first = false;
+    switch(upstream){
+    case NONE:
+    case NOT_YET:
+    case STOP:
+      return upstream;
+    case OUT_OF_MEMORY:
+      return upstream;
+    case OK_NEW_SCHEMA:
+      try{
+        stats.startSetup();
+        setupNewSchema();
+      }catch(SchemaChangeException ex){
+        kill();
+        logger.error("Failure during query", ex);
+        context.fail(ex);
+        return IterOutcome.STOP;
+      }finally{
+        stats.stopSetup();
       }
-    }finally{
-      stats.stopProcessing();
+      // fall through.
+    case OK:
+      doWork();
+      if (outOfMemory) {
+        outOfMemory = false;
+        return IterOutcome.OUT_OF_MEMORY;
+      }
+      return upstream; // change if upstream changed, otherwise normal.
+    default:
+      throw new UnsupportedOperationException();
     }
-
-
   }
 
   @Override

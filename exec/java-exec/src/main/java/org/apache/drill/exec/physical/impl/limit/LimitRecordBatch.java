@@ -78,7 +78,7 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
   }
 
   @Override
-  public IterOutcome next() {
+  public IterOutcome innerNext() {
     if(!noEndLimit && recordsLeft <= 0) {
       // don't kill incoming batches or call cleanup yet, as this could close allocators before the buffers have been cleared
       // Drain the incoming record batch and clear the memory
@@ -96,7 +96,7 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
       return IterOutcome.NONE;
     }
 
-    return super.next();
+    return super.innerNext();
   }
 
   @Override

@@ -80,7 +80,7 @@ public class UnionRecordBatch extends AbstractRecordBatch<Union> {
   }
 
   @Override
-  public IterOutcome next() {
+  public IterOutcome innerNext() {
     if (current == null) { // end of iteration
       return IterOutcome.NONE;
     }

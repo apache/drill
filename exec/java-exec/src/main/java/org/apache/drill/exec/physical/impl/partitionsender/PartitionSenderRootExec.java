@@ -33,6 +33,7 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.config.HashPartitionSender;
+import org.apache.drill.exec.physical.impl.BaseRootExec;
 import org.apache.drill.exec.physical.impl.RootExec;
 import org.apache.drill.exec.physical.impl.SendingAccountor;
 import org.apache.drill.exec.physical.impl.svremover.RemovingRecordBatch;
@@ -48,17 +49,15 @@ import com.sun.codemodel.JType;
 import org.apache.drill.exec.vector.CopyUtil;
 
 
-public class PartitionSenderRootExec implements RootExec {
+public class PartitionSenderRootExec extends BaseRootExec {
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PartitionSenderRootExec.class);
   private RecordBatch incoming;
   private HashPartitionSender operator;
   private Partitioner partitioner;
   private FragmentContext context;
-  private OperatorContext oContext;
   private boolean ok = true;
   private final SendingAccountor sendCount = new SendingAccountor();
-  private final OperatorStats stats;
   private final int outGoingBatchCount;
   private final HashPartitionSender popConfig;
   private final StatusHandler statusHandler;
@@ -68,18 +67,17 @@ public class PartitionSenderRootExec implements RootExec {
                                  RecordBatch incoming,
                                  HashPartitionSender operator) throws OutOfMemoryException {
 
+    super(context, operator);
     this.incoming = incoming;
     this.operator = operator;
     this.context = context;
-    this.oContext = new OperatorContext(operator, context);
-    this.stats = oContext.getStats();
     this.outGoingBatchCount = operator.getDestinations().size();
     this.popConfig = operator;
     this.statusHandler = new StatusHandler(sendCount, context);
   }
 
   @Override
-  public boolean next() {
+  public boolean innerNext() {
     boolean newSchema = false;
 
     if (!ok) {

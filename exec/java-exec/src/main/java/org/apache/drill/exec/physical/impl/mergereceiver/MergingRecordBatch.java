@@ -121,10 +121,7 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
   }
 
   @Override
-  public IterOutcome next() {
-    stats.startProcessing();
-    try{
-
+  public IterOutcome innerNext() {
     if (fragProviders.length == 0) return IterOutcome.NONE;
     boolean schemaChanged = false;
 
@@ -336,11 +333,6 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
       return IterOutcome.OK_NEW_SCHEMA;
     else
       return IterOutcome.OK;
-
-    }finally{
-      stats.stopProcessing();
-    }
-
   }
 
   @Override

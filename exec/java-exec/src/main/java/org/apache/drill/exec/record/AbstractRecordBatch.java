@@ -59,31 +59,35 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
     return popConfig;
   }
 
-  public final IterOutcome next(RecordBatch b){
+  public final IterOutcome next(RecordBatch b) {
+
     return next(0, b);
   }
 
   public final IterOutcome next(int inputIndex, RecordBatch b){
-    stats.stopProcessing();
-    try{
-      IterOutcome next = b.next();
+    IterOutcome next = b.next();
 
-      switch(next){
-      case OK_NEW_SCHEMA:
-        stats.batchReceived(inputIndex, b.getRecordCount(), true);
-        break;
-      case OK:
-        stats.batchReceived(inputIndex, b.getRecordCount(), false);
-        break;
-      }
-
-      return next;
-
-    }finally{
-      stats.startProcessing();
+    switch(next){
+    case OK_NEW_SCHEMA:
+      stats.batchReceived(inputIndex, b.getRecordCount(), true);
+      break;
+    case OK:
+      stats.batchReceived(inputIndex, b.getRecordCount(), false);
+      break;
     }
-
+    return next;
   }
+
+  public final IterOutcome next() {
+    try {
+      stats.startProcessing();
+      return innerNext();
+    } finally {
+      stats.stopProcessing();
+    }
+  }
+
+  public abstract IterOutcome innerNext();
 
   @Override
   public BatchSchema getSchema() {

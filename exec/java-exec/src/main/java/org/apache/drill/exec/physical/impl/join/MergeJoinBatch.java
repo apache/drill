@@ -130,87 +130,80 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
   }
 
   @Override
-  public IterOutcome next() {
-    stats.startProcessing();
+  public IterOutcome innerNext() {
+    // we do this in the here instead of the constructor because don't necessary want to start consuming on construction.
+    status.ensureInitial();
 
-    try{
-      // we do this in the here instead of the constructor because don't necessary want to start consuming on construction.
-      status.ensureInitial();
+    // loop so we can start over again if we find a new batch was created.
+    while(true){
 
-      // loop so we can start over again if we find a new batch was created.
-      while(true){
+      JoinOutcome outcome = status.getOutcome();
+      // if the previous outcome was a change in schema or we sent a batch, we have to set up a new batch.
+      if (outcome == JoinOutcome.BATCH_RETURNED ||
+          outcome == JoinOutcome.SCHEMA_CHANGED)
+        allocateBatch();
 
-        JoinOutcome outcome = status.getOutcome();
-        // if the previous outcome was a change in schema or we sent a batch, we have to set up a new batch.
-        if (outcome == JoinOutcome.BATCH_RETURNED ||
-            outcome == JoinOutcome.SCHEMA_CHANGED)
-          allocateBatch();
+      // reset the output position to zero after our parent iterates this RecordBatch
+      if (outcome == JoinOutcome.BATCH_RETURNED ||
+          outcome == JoinOutcome.SCHEMA_CHANGED ||
+          outcome == JoinOutcome.NO_MORE_DATA)
+        status.resetOutputPos();
 
-        // reset the output position to zero after our parent iterates this RecordBatch
-        if (outcome == JoinOutcome.BATCH_RETURNED ||
-            outcome == JoinOutcome.SCHEMA_CHANGED ||
-            outcome == JoinOutcome.NO_MORE_DATA)
-          status.resetOutputPos();
+      if (outcome == JoinOutcome.NO_MORE_DATA) {
+        logger.debug("NO MORE DATA; returning {}  NONE");
+        return IterOutcome.NONE;
+      }
 
-        if (outcome == JoinOutcome.NO_MORE_DATA) {
-          logger.debug("NO MORE DATA; returning {}  NONE");
-          return IterOutcome.NONE;
-        }
-
-        boolean first = false;
-        if(worker == null){
-          try {
-            logger.debug("Creating New Worker");
-            stats.startSetup();
-            this.worker = generateNewWorker();
-            first = true;
-            stats.stopSetup();
-          } catch (ClassTransformationException | IOException | SchemaChangeException e) {
-            stats.stopSetup();
-            context.fail(new SchemaChangeException(e));
-            kill();
-            return IterOutcome.STOP;
-          }
-        }
-
-        // join until we have a complete outgoing batch
-        if (!worker.doJoin(status))
-          worker = null;
-
-        // get the outcome of the join.
-        switch(status.getOutcome()){
-        case BATCH_RETURNED:
-          // only return new schema if new worker has been setup.
-          logger.debug("BATCH RETURNED; returning {}", (first ? "OK_NEW_SCHEMA" : "OK"));
-          setRecordCountInContainer();
-          return first ? IterOutcome.OK_NEW_SCHEMA : IterOutcome.OK;
-        case FAILURE:
+      boolean first = false;
+      if(worker == null){
+        try {
+          logger.debug("Creating New Worker");
+          stats.startSetup();
+          this.worker = generateNewWorker();
+          first = true;
+          stats.stopSetup();
+        } catch (ClassTransformationException | IOException | SchemaChangeException e) {
+          stats.stopSetup();
+          context.fail(new SchemaChangeException(e));
           kill();
           return IterOutcome.STOP;
-        case NO_MORE_DATA:
-          logger.debug("NO MORE DATA; returning {}", (status.getOutPosition() > 0 ? (first ? "OK_NEW_SCHEMA" : "OK") : "NONE"));
-          setRecordCountInContainer();
-          return status.getOutPosition() > 0 ? (first ? IterOutcome.OK_NEW_SCHEMA : IterOutcome.OK): IterOutcome.NONE;
-        case SCHEMA_CHANGED:
-          worker = null;
-          if(status.getOutPosition() > 0){
-            // if we have current data, let's return that.
-            logger.debug("SCHEMA CHANGED; returning {} ", (first ? "OK_NEW_SCHEMA" : "OK"));
-            setRecordCountInContainer();
-            return first ? IterOutcome.OK_NEW_SCHEMA : IterOutcome.OK;
-          }else{
-            // loop again to rebuild worker.
-            continue;
-          }
-        case WAITING:
-          return IterOutcome.NOT_YET;
-        default:
-          throw new IllegalStateException();
         }
       }
 
-    }finally{
-      stats.stopProcessing();
+      // join until we have a complete outgoing batch
+      if (!worker.doJoin(status))
+        worker = null;
+
+      // get the outcome of the join.
+      switch(status.getOutcome()){
+      case BATCH_RETURNED:
+        // only return new schema if new worker has been setup.
+        logger.debug("BATCH RETURNED; returning {}", (first ? "OK_NEW_SCHEMA" : "OK"));
+        setRecordCountInContainer();
+        return first ? IterOutcome.OK_NEW_SCHEMA : IterOutcome.OK;
+      case FAILURE:
+        kill();
+        return IterOutcome.STOP;
+      case NO_MORE_DATA:
+        logger.debug("NO MORE DATA; returning {}", (status.getOutPosition() > 0 ? (first ? "OK_NEW_SCHEMA" : "OK") : "NONE"));
+        setRecordCountInContainer();
+        return status.getOutPosition() > 0 ? (first ? IterOutcome.OK_NEW_SCHEMA : IterOutcome.OK): IterOutcome.NONE;
+      case SCHEMA_CHANGED:
+        worker = null;
+        if(status.getOutPosition() > 0){
+          // if we have current data, let's return that.
+          logger.debug("SCHEMA CHANGED; returning {} ", (first ? "OK_NEW_SCHEMA" : "OK"));
+          setRecordCountInContainer();
+          return first ? IterOutcome.OK_NEW_SCHEMA : IterOutcome.OK;
+        }else{
+          // loop again to rebuild worker.
+          continue;
+        }
+      case WAITING:
+        return IterOutcome.NOT_YET;
+      default:
+        throw new IllegalStateException();
+      }
     }
   }
 
