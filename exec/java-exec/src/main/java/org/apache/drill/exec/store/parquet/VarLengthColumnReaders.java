@@ -228,6 +228,8 @@ public class VarLengthColumnReaders {
     @Override
     public boolean setSafe(int index, byte[] bytes, int start, int length) {
       boolean success;
+      if(index >= varCharVector.getValueCapacity()) return false;
+
       if (usingDictionary) {
         success = varCharVector.getMutator().setSafe(valuesReadInCurrentPass, currDictVal.getBytes(),
             0, currDictVal.length());
@@ -260,6 +262,8 @@ public class VarLengthColumnReaders {
 
     public boolean setSafe(int index, byte[] value, int start, int length) {
       boolean success;
+      if(index >= nullableVarCharVector.getValueCapacity()) return false;
+
       if (usingDictionary) {
         success = nullableVarCharVector.getMutator().setSafe(valuesReadInCurrentPass, currDictVal.getBytes(),
             0, currDictVal.length());
@@ -301,6 +305,8 @@ public class VarLengthColumnReaders {
     @Override
     public boolean setSafe(int index, byte[] bytes, int start, int length) {
       boolean success;
+      if(index >= varBinaryVector.getValueCapacity()) return false;
+
       if (usingDictionary) {
         success = varBinaryVector.getMutator().setSafe(valuesReadInCurrentPass, currDictVal.getBytes(),
             0, currDictVal.length());
@@ -333,6 +339,8 @@ public class VarLengthColumnReaders {
 
     public boolean setSafe(int index, byte[] value, int start, int length) {
       boolean success;
+      if(index >= nullableVarBinaryVector.getValueCapacity()) return false;
+
       if (usingDictionary) {
         success = nullableVarBinaryVector.getMutator().setSafe(valuesReadInCurrentPass, currDictVal.getBytes(),
             0, currDictVal.length());

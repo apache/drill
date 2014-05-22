@@ -352,6 +352,8 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
 
     public boolean setSafe(int index, byte[] bytes) {
       assert index >= 0;
+      if(index >= getValueCapacity()) return false;
+
       int currentOffset = offsetVector.getAccessor().get(index);
       if (data.capacity() < currentOffset + bytes.length) {
         allocationMonitor--;
@@ -382,6 +384,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
 
     public boolean setSafe(int index, byte[] bytes, int start, int length) {
       assert index >= 0;
+      if(index >= getValueCapacity()) return false;
 
       int currentOffset = offsetVector.getAccessor().get(index);
 

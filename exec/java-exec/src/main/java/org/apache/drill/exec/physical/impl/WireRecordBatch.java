@@ -41,7 +41,9 @@ public class WireRecordBatch implements RecordBatch {
   public WireRecordBatch(FragmentContext context, RawFragmentBatchProvider fragProvider) throws OutOfMemoryException {
     this.fragProvider = fragProvider;
     this.context = context;
-    this.batchLoader = new RecordBatchLoader(null);
+    // In normal case, batchLoader does not require an allocator. However, in case of splitAndTransfer of a value vector,
+    // we may need an allocator for the new offset vector. Therefore, here we pass the context's allocator to batchLoader.
+    this.batchLoader = new RecordBatchLoader(context.getAllocator());
   }
 
   @Override
