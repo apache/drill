@@ -46,12 +46,16 @@ public class JacksonAdvancedExternalizer<T> implements AdvancedExternalizer<T>  
 
   @Override
   public T readObject(ObjectInput in) throws IOException, ClassNotFoundException {
-    return (T) mapper.readValue(DataInputInputStream.constructInputStream(in), clazz);
+    byte[] bytes = new byte[in.readInt()];
+    in.readFully(bytes);
+    return (T) mapper.readValue(bytes, clazz);
   }
 
   @Override
   public void writeObject(ObjectOutput out, T object) throws IOException {
-    out.write(mapper.writeValueAsBytes(object));
+    byte[] bytes = mapper.writeValueAsBytes(object);
+    out.writeInt(bytes.length);
+    out.write(bytes);
   }
 
   @Override

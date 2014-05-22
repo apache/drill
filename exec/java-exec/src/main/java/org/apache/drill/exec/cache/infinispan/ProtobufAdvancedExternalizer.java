@@ -46,7 +46,7 @@ public class ProtobufAdvancedExternalizer<T extends Message> implements Advanced
 
   @Override
   public T readObject(ObjectInput in) throws IOException, ClassNotFoundException {
-    return parser.parseDelimitedFrom(DataInputInputStream.constructInputStream(in));
+    return parser.parseFrom(DataInputInputStream.constructInputStream(in));
   }
 
   @Override

@@ -45,7 +45,7 @@ abstract class LoopedAbstractDrillSerializable implements DrillSerializable {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     writeToStream(baos);
     byte[] ba = baos.toByteArray();
-    out.write(ba.length);
+    out.writeInt(ba.length);
     out.write(ba);
   }
 

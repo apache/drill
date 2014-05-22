@@ -45,12 +45,37 @@ public abstract class ProtoSerializable<V extends Message> extends AbstractStrea
 
   @Override
   public void readFromStream(InputStream input) throws IOException {
-    obj = protoParser.parseFrom(input);
+    obj = protoParser.parseDelimitedFrom(input);
   }
 
   @Override
   public void writeToStream(OutputStream output) throws IOException {
-    obj.writeTo(output);
+    obj.writeDelimitedTo(output);
+  }
+
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + ((obj == null) ? 0 : obj.hashCode());
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj)
+      return true;
+    if (obj == null)
+      return false;
+    if (getClass() != obj.getClass())
+      return false;
+    ProtoSerializable other = (ProtoSerializable) obj;
+    if (this.obj == null) {
+      if (other.obj != null)
+        return false;
+    } else if (!this.obj.equals(other.obj))
+      return false;
+    return true;
   }
 
   public static class PlanFragmentSerializable extends ProtoSerializable<PlanFragment>{

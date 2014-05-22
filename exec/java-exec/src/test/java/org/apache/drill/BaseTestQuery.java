@@ -31,6 +31,7 @@ import org.apache.drill.exec.client.PrintingResultsListener;
 import org.apache.drill.exec.client.QuerySubmitter;
 import org.apache.drill.exec.client.QuerySubmitter.Format;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.rpc.RpcException;
@@ -52,6 +53,8 @@ import com.google.common.io.Resources;
 public class BaseTestQuery extends ExecTest{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseTestQuery.class);
 
+  private static final String ENABLE_FULL_CACHE = "drill.exec.test.use-full-cache";
+
   public final TestRule resetWatcher = new TestWatcher() {
     @Override
     protected void failed(Throwable e, Description description) {
@@ -68,6 +71,7 @@ public class BaseTestQuery extends ExecTest{
   protected static RemoteServiceSet serviceSet;
   protected static DrillConfig config;
   protected static QuerySubmitter submitter = new QuerySubmitter();
+  protected static BufferAllocator allocator;
 
   static void resetClientAndBit() throws Exception{
     closeClient();
@@ -77,7 +81,12 @@ public class BaseTestQuery extends ExecTest{
   @BeforeClass
   public static void openClient() throws Exception{
     config = DrillConfig.create();
-    serviceSet = RemoteServiceSet.getLocalServiceSet();
+    allocator = new TopLevelAllocator(config);
+    if(config.hasPath(ENABLE_FULL_CACHE) && config.getBoolean(ENABLE_FULL_CACHE)){
+      serviceSet = RemoteServiceSet.getServiceSetWithFullCache(config, allocator);
+    }else{
+      serviceSet = RemoteServiceSet.getLocalServiceSet();
+    }
     bit = new Drillbit(config, serviceSet);
     bit.run();
     client = new DrillClient(config, serviceSet.getCoordinator());
@@ -85,7 +94,7 @@ public class BaseTestQuery extends ExecTest{
   }
 
   protected BufferAllocator getAllocator(){
-    return client.getAllocator();
+    return allocator;
   }
 
   @AfterClass
@@ -93,6 +102,7 @@ public class BaseTestQuery extends ExecTest{
     if(client != null) client.close();
     if(bit != null) bit.close();
     if(serviceSet != null) serviceSet.close();
+    if(allocator != null) allocator.close();
   }
 
   protected void runSQL(String sql) throws Exception {

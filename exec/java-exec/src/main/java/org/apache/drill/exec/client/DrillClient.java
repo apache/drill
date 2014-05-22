@@ -34,6 +34,7 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.coord.ZKClusterCoordinator;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
@@ -68,10 +69,11 @@ public class DrillClient implements Closeable, ConnectionThrottle{
   private UserProperties props = null;
   private volatile ClusterCoordinator clusterCoordinator;
   private volatile boolean connected = false;
-  private final TopLevelAllocator allocator = new TopLevelAllocator(Long.MAX_VALUE);
+  private final BufferAllocator allocator;
   private int reconnectTimes;
   private int reconnectDelay;
   private final boolean ownsZkConnection;
+  private final boolean ownsAllocator;
 
   public DrillClient() {
     this(DrillConfig.create());
@@ -86,7 +88,13 @@ public class DrillClient implements Closeable, ConnectionThrottle{
   }
 
   public DrillClient(DrillConfig config, ClusterCoordinator coordinator){
+    this(config, coordinator, null);
+  }
+
+  public DrillClient(DrillConfig config, ClusterCoordinator coordinator, BufferAllocator allocator){
     this.ownsZkConnection = coordinator == null;
+    this.ownsAllocator = allocator == null;
+    this.allocator = allocator == null ? new TopLevelAllocator(Long.MAX_VALUE) : allocator;
     this.config = config;
     this.clusterCoordinator = coordinator;
     this.reconnectTimes = config.getInt(ExecConstants.BIT_RETRY_TIMES);
@@ -180,7 +188,7 @@ public class DrillClient implements Closeable, ConnectionThrottle{
     }
   }
 
-  public TopLevelAllocator getAllocator() {
+  public BufferAllocator getAllocator() {
     return allocator;
   }
 
@@ -189,6 +197,7 @@ public class DrillClient implements Closeable, ConnectionThrottle{
    */
   public void close(){
     if(this.client != null) this.client.close();
+    if(this.ownsAllocator && allocator != null) allocator.close();
     if(ownsZkConnection){
       try {
         this.clusterCoordinator.close();

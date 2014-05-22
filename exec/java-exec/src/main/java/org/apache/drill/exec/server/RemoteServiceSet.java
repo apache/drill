@@ -20,11 +20,13 @@ package org.apache.drill.exec.server;
 import java.io.Closeable;
 import java.io.IOException;
 
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.cache.DistributedCache;
+import org.apache.drill.exec.cache.infinispan.ICache;
 import org.apache.drill.exec.cache.local.LocalCache;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.coord.LocalClusterCoordinator;
-import org.apache.drill.exec.exception.DrillbitStartupException;
+import org.apache.drill.exec.memory.BufferAllocator;
 
 public class RemoteServiceSet implements Closeable{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RemoteServiceSet.class);
@@ -63,4 +65,8 @@ public class RemoteServiceSet implements Closeable{
     return new RemoteServiceSet(new LocalCache(), new LocalClusterCoordinator());
   }
 
+  public static RemoteServiceSet getServiceSetWithFullCache(DrillConfig config, BufferAllocator allocator) throws Exception{
+    ICache c = new ICache(config, allocator);
+    return new RemoteServiceSet(c, new LocalClusterCoordinator());
+  }
 }

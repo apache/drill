@@ -81,8 +81,9 @@ public class ICache implements DistributedCache{
 
     Configuration c = new ConfigurationBuilder() //
       .clustering() //
+
       .cacheMode(CacheMode.DIST_ASYNC) //
-      .storeAsBinary() //
+      .storeAsBinary().enable() //
       .build();
     this.manager = new DefaultCacheManager(gc, c);
     JGroupsTransport transport = (JGroupsTransport) manager.getCache("first").getAdvancedCache().getRpcManager().getTransport();
