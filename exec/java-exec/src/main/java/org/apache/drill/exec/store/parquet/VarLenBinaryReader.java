@@ -103,7 +103,14 @@ public class VarLenBinaryReader {
           }
         }
         bytes = columnReader.pageReadStatus.pageDataByteArray;
-        if ( columnReader.columnDescriptor.getMaxDefinitionLevel() > columnReader.pageReadStatus.definitionLevels.readInteger()){
+        // we need to read all of the lengths to determine if this value will fit in the current vector,
+        // as we can only read each definition level once, we have to store the last one as we will need it
+        // at the start of the next read if we decide after reading all of the varlength values in this record
+        // that it will not fit in this batch
+        if ( columnReader.currDefLevel == -1 ) {
+          columnReader.currDefLevel = columnReader.pageReadStatus.definitionLevels.readInteger();
+        }
+        if ( columnReader.columnDescriptor.getMaxDefinitionLevel() > columnReader.currDefLevel){
           columnReader.currentValNull = true;
           columnReader.dataTypeLengthInBits = 0;
           columnReader.nullsRead++;
@@ -151,6 +158,7 @@ public class VarLenBinaryReader {
           assert success;
         }
         columnReader.currentValNull = false;
+        columnReader.currDefLevel = -1;
         if (columnReader.dataTypeLengthInBits > 0){
           columnReader.pageReadStatus.readPosInBytes += columnReader.dataTypeLengthInBits + 4;
           columnReader.bytesReadInCurrentPass += columnReader.dataTypeLengthInBits + 4;

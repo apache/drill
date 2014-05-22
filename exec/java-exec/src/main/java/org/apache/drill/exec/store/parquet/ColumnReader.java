@@ -68,6 +68,10 @@ abstract class ColumnReader<V extends ValueVector> {
   int bytesReadInCurrentPass;
 
   protected ByteBuf vectorData;
+  // when reading definition levels for nullable columns, it is a one-way stream of integers
+  // when reading var length data, where we don't know if all of the records will fit until we've read all of them
+  // we must store the last definition level an use it in at the start of the next batch
+  int currDefLevel;
 
   // variables for a single read pass
   long readStartInBytes = 0, readLength = 0, readLengthInBits = 0, recordsReadInThisIteration = 0;

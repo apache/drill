@@ -45,6 +45,7 @@ import parquet.schema.PrimitiveType;
 
 // class to keep track of the read position of variable length columns
 final class PageReadStatus {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PageReadStatus.class);
 
   private final ColumnReader parentColumnReader;
   private final ColumnDataReader dataReader;
@@ -158,16 +159,12 @@ final class PageReadStatus {
       return false;
     }
 
-    // if the buffer holding each page's data is not large enough to hold the current page, re-allocate, with a little extra space
-//    if (pageHeader.getUncompressed_page_size() > pageDataByteArray.length) {
-//      pageDataByteArray = new byte[pageHeader.getUncompressed_page_size() + 100];
-//    }
-    // TODO - would like to get this into the mainline, hopefully before alpha
     pageDataByteArray = currentPage.getBytes().toByteArray();
 
     readPosInBytes = 0;
     valuesRead = 0;
     if (parentColumnReader.columnDescriptor.getMaxDefinitionLevel() != 0){
+      parentColumnReader.currDefLevel = -1;
       if (!currentPage.getValueEncoding().usesDictionary()) {
         definitionLevels = currentPage.getDlEncoding().getValuesReader(parentColumnReader.columnDescriptor, ValuesType.DEFINITION_LEVEL);
         valueReader = currentPage.getValueEncoding().getValuesReader(parentColumnReader.columnDescriptor, ValuesType.VALUES);

@@ -104,6 +104,9 @@ public class ParquetResultListener implements UserResultsListener {
       throw new RuntimeException(e);
     }
 
+    // used to make sure each vector in the batch has the same number of records
+    int valueCount = -1;
+
     int recordCount = 0;
     // print headers.
     if (schemaChanged) {
@@ -136,6 +139,12 @@ public class ParquetResultListener implements UserResultsListener {
         System.out.println("\n" + vv.getAccessor().getValueCount());
       }
       valuesChecked.remove(vv.getField().getAsSchemaPath().getRootSegment().getPath());
+      if (valueCount == -1) {
+        valueCount = columnValCounter;
+      }
+      else {
+        assertEquals("Mismatched value count for vectors in the same batch.", valueCount, columnValCounter);
+      }
       valuesChecked.put(vv.getField().getAsSchemaPath().getRootSegment().getPath(), columnValCounter);
     }
 
@@ -161,16 +170,24 @@ public class ParquetResultListener implements UserResultsListener {
       }
     }
     batchCounter++;
+    int recordsInBatch = -1;
     if(result.getHeader().getIsLastChunk()){
       // ensure the right number of columns was returned, especially important to ensure selective column read is working
-      assert valuesChecked.keySet().size() == props.fields.keySet().size() : "Unexpected number of output columns from parquet scan,";
+      //assert valuesChecked.keySet().size() == props.fields.keySet().size() : "Unexpected number of output columns from parquet scan,";
       for (String s : valuesChecked.keySet()) {
         try {
-          assertEquals("Record count incorrect for column: " + s, totalRecords, (long) valuesChecked.get(s));
+           if (recordsInBatch == -1 ){
+             recordsInBatch = valuesChecked.get(s);
+           } else {
+             assertEquals("Mismatched record counts in vectors.", recordsInBatch, valuesChecked.get(s).intValue());
+           }
+          //assertEquals("Record count incorrect for column: " + s, totalRecords, (long) valuesChecked.get(s));
         } catch (AssertionError e) { submissionFailed(new RpcException(e)); }
       }
 
       assert valuesChecked.keySet().size() > 0;
+      batchLoader.clear();
+      result.release();
       future.set(null);
     }
     

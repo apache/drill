@@ -73,12 +73,12 @@ abstract class NullableColumnReader<V extends ValueVector> extends ColumnReader<
         definitionLevelsRead = 0;
         lastValueWasNull = true;
         nullsFound = 0;
-        if (currentValueIndexInVector - totalValuesRead == recordsToReadInThisPass
+        if (currentValueIndexInVector == recordsToReadInThisPass
             || currentValueIndexInVector >= valueVec.getValueCapacity()
             || pageReadStatus.readPosInBytes >= pageReadStatus.byteLength){
           break;
         }
-        while(currentValueIndexInVector - totalValuesRead < recordsToReadInThisPass
+        while(currentValueIndexInVector < recordsToReadInThisPass
             && currentValueIndexInVector < valueVec.getValueCapacity()
             && pageReadStatus.valuesRead + definitionLevelsRead < pageReadStatus.currentPage.getValueCount()){
           currentDefinitionLevel = pageReadStatus.definitionLevels.readInteger();
@@ -127,8 +127,7 @@ abstract class NullableColumnReader<V extends ValueVector> extends ColumnReader<
           pageReadStatus.readPosInBytes = readStartInBytes + readLength;
         }
       }
-    }
-    while (valuesReadInCurrentPass < recordsToReadInThisPass && pageReadStatus.currentPage != null);
+    } while (valuesReadInCurrentPass < recordsToReadInThisPass && pageReadStatus.currentPage != null);
     valueVec.getMutator().setValueCount(
         valuesReadInCurrentPass);
   }
