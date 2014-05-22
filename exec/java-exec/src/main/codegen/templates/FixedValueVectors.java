@@ -126,6 +126,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     int len = valueCount * ${type.width};
     data = buf.slice(0, len);
     data.retain();
+    data.writerIndex(len);
     return len;
   }
   
@@ -150,6 +151,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
   public void transferTo(${minor.class}Vector target){
     target.data = data;
     target.data.retain();
+    target.data.writerIndex(data.writerIndex());
     target.valueCount = valueCount;
     clear();
   }
@@ -159,6 +161,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     int startPoint = startIndex * ${type.width};
     int sliceLength = length * ${type.width};
     target.data = this.data.slice(startPoint, sliceLength);
+    target.data.writerIndex(sliceLength);
     target.data.retain();
   }
   

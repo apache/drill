@@ -127,6 +127,7 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
     buf = buf.slice(loaded, buf.capacity() - loaded);
     dataBytes -= loaded;
     loaded += values.load(dataBytes, valueCount, buf);
+    this.mutator.lastSet = valueCount;
     return loaded;
   }
   

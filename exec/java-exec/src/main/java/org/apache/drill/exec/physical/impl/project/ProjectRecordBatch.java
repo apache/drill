@@ -93,16 +93,16 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
     }
     int outputRecords = projector.projectRecords(0, incomingRecordCount, 0);
     if (outputRecords < incomingRecordCount) {
-      for(VectorWrapper<?> v : container){
-        ValueVector.Mutator m = v.getValueVector().getMutator();
+      for(ValueVector v : allocationVectors){
+        ValueVector.Mutator m = v.getMutator();
         m.setValueCount(outputRecords);
       }
       hasRemainder = true;
       remainderIndex = outputRecords;
       this.recordCount = remainderIndex;
     } else {
-      for(VectorWrapper<?> v : container){
-        ValueVector.Mutator m = v.getValueVector().getMutator();
+      for(ValueVector v : allocationVectors){
+        ValueVector.Mutator m = v.getMutator();
         m.setValueCount(incomingRecordCount);
       }
       for(VectorWrapper<?> v: incoming) {
@@ -119,16 +119,16 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
     }
     int outputIndex = projector.projectRecords(remainderIndex, remainingRecordCount, 0);
     if (outputIndex < incoming.getRecordCount()) {
-      for(VectorWrapper<?> v : container){
-        ValueVector.Mutator m = v.getValueVector().getMutator();
+      for(ValueVector v : allocationVectors){
+        ValueVector.Mutator m = v.getMutator();
         m.setValueCount(outputIndex - remainderIndex);
       }
       hasRemainder = true;
       this.recordCount = outputIndex - remainderIndex;
       remainderIndex = outputIndex;
     } else {
-      for(VectorWrapper<?> v : container){
-        ValueVector.Mutator m = v.getValueVector().getMutator();
+      for(ValueVector v : allocationVectors){
+        ValueVector.Mutator m = v.getMutator();
         m.setValueCount(remainingRecordCount);
       }
       hasRemainder = false;
