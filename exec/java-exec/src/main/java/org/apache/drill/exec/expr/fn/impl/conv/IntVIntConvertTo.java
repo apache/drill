@@ -47,6 +47,7 @@ public class IntVIntConvertTo implements DrillSimpleFunc {
 
   @Override
   public void eval() {
+    buffer.clear();
     org.apache.drill.exec.util.ConvertUtil.HadoopWritables.writeVLong(buffer, 0, 9, in.value);
     out.buffer = buffer;
     out.start = 0;
