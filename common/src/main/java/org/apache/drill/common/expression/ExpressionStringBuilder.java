@@ -162,7 +162,7 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
   @Override
   public Void visitIntervalYearConstant(IntervalYearExpression lExpr, StringBuilder sb) throws RuntimeException {
     sb.append("cast( '");
-    sb.append(Period.years(lExpr.getIntervalYear()).toString());
+    sb.append(Period.months(lExpr.getIntervalYear()).toString());
     sb.append("' as INTERVALYEAR)");
     return null;
   }
