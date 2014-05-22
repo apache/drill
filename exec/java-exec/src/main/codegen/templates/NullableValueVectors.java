@@ -462,6 +462,10 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
       values.getMutator().set(index, holder);
       <#if type.major == "VarLen">lastSet = index;</#if>
     }
+    
+    public boolean isSafe(int outIndex) {
+      return outIndex < Nullable${minor.class}Vector.this.getValueCapacity();
+    }
 
     //public boolean setSafe(int index, <#if type.major == "VarLen" || minor.class == "TimeStampTZ" || minor.class == "Interval" || minor.class == "IntervalDay">Nullable${minor.class}Holder <#elseif (type.width < 4)>int<#else>${minor.javaType!type.javaType}</#if> value){
 

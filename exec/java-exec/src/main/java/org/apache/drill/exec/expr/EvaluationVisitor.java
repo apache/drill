@@ -294,6 +294,8 @@ public class EvaluationVisitor {
       }else{
         String setMethod = e.isSafe() ? "setSafe" : "set";
 
+        String isSafeMethod = "isSafe";
+
         JInvocation setMeth;
         if (Types.usesHolderForGet(inputContainer.getMajorType())) {
           setMeth = vv.invoke("getMutator").invoke(setMethod).arg(outIndex).arg(inputContainer.getHolder());
@@ -308,6 +310,7 @@ public class EvaluationVisitor {
 //            block._if(vv.invoke("getMutator").invoke(setMethod).arg(outIndex).not())._then().assign(outputContainer.getValue(), JExpr.lit(0));
             JConditional jc = block._if(inputContainer.getIsSet().eq(JExpr.lit(0)).not());
             block = jc._then();
+            jc._else()._if(vv.invoke("getMutator").invoke(isSafeMethod).arg(outIndex).not())._then().assign(outputContainer.getValue(), JExpr.lit(0));
           }
           block._if(setMeth.not())._then().assign(outputContainer.getValue(), JExpr.lit(0));
           return outputContainer;
