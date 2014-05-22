@@ -33,11 +33,16 @@ class ColumnDataReader {
   
   private final long endPosition;
   public final FSDataInputStream input;
+  // 1 mb, the page size can range from 8kb to 50Mb, the buffer is re-allocated only if it hits a larger page
+  private static final int DEFUALT_PAGE_BUFFER_SIZE = 1024 * 1024 * 5;
+  private static final float BUFFER_GROWTH_RATE = 1.25f;
+  private byte[] buffer;
   
   public ColumnDataReader(FSDataInputStream input, long start, long length) throws IOException{
     this.input = input;
     this.input.seek(start);
     this.endPosition = start + length;
+    this.buffer = new byte[DEFUALT_PAGE_BUFFER_SIZE];
   }
   
   public PageHeader readPageHeader() throws IOException{
@@ -47,11 +52,16 @@ class ColumnDataReader {
       throw e;
     }
   }
-  
-  public BytesInput getPageAsBytesInput(int pageLength) throws IOException{
-    byte[] b = new byte[pageLength];
-    input.read(b);
-    return new HadoopBytesInput(b);
+
+  static int allocCount = 0;
+  public BytesInput getPageAsBytesInput(int pageLength) throws IOException {
+    if (buffer.length < pageLength) {
+      buffer = new byte[(int) (BUFFER_GROWTH_RATE * pageLength)];
+      allocCount++;
+      System.out.println(allocCount);
+    }
+    input.read(buffer, 0, pageLength);
+    return new HadoopBytesInput(buffer, pageLength);
   }
   
   public void clear(){
@@ -69,9 +79,11 @@ class ColumnDataReader {
   public class HadoopBytesInput extends BytesInput{
 
     private final byte[] pageBytes;
+    private final int lengthUsed;
     
-    public HadoopBytesInput(byte[] pageBytes) {
+    public HadoopBytesInput(byte[] pageBytes, int lengthUsed) {
       super();
+      this.lengthUsed = lengthUsed;
       this.pageBytes = pageBytes;
     }
 
@@ -82,12 +94,12 @@ class ColumnDataReader {
 
     @Override
     public long size() {
-      return pageBytes.length;
+      return lengthUsed;
     }
 
     @Override
     public void writeAllTo(OutputStream out) throws IOException {
-      out.write(pageBytes);
+      out.write(pageBytes, 0, lengthUsed);
     }
     
   }
