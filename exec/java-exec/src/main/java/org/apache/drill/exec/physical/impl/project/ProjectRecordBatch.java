@@ -88,8 +88,9 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
 //    VectorUtil.showVectorAccessibleContent(incoming, ",");
     int incomingRecordCount = incoming.getRecordCount();
     for(ValueVector v : this.allocationVectors){
-      AllocationHelper.allocate(v, incomingRecordCount, 250);
+//      AllocationHelper.allocate(v, incomingRecordCount, 250);
 //      v.allocateNew();
+      v.allocateNewSafe();
     }
     int outputRecords = projector.projectRecords(0, incomingRecordCount, 0);
     if (outputRecords < incomingRecordCount) {
@@ -115,17 +116,17 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
   private void handleRemainder() {
     int remainingRecordCount = incoming.getRecordCount() - remainderIndex;
     for(ValueVector v : this.allocationVectors){
-      AllocationHelper.allocate(v, remainingRecordCount, 250);
+      //AllocationHelper.allocate(v, remainingRecordCount, 250);
+      v.allocateNewSafe();
     }
-    int outputIndex = projector.projectRecords(remainderIndex, remainingRecordCount, 0);
-    if (outputIndex < incoming.getRecordCount()) {
+    int projRecords = projector.projectRecords(remainderIndex, remainingRecordCount, 0);
+    if (projRecords < remainingRecordCount) {
       for(ValueVector v : allocationVectors){
         ValueVector.Mutator m = v.getMutator();
-        m.setValueCount(outputIndex - remainderIndex);
+        m.setValueCount(projRecords);
       }
-      hasRemainder = true;
-      this.recordCount = outputIndex - remainderIndex;
-      remainderIndex = outputIndex;
+      this.recordCount = projRecords;
+      remainderIndex += projRecords;
     } else {
       for(ValueVector v : allocationVectors){
         ValueVector.Mutator m = v.getMutator();

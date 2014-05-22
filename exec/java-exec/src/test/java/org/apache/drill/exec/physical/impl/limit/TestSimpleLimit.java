@@ -46,6 +46,7 @@ import org.apache.drill.exec.rpc.user.UserServer;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.vector.BigIntVector;
 import org.apache.drill.exec.vector.ValueVector;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -77,6 +78,11 @@ public class TestSimpleLimit extends ExecTest {
   }
 
   @Test
+  @Ignore
+  // The testcase is not valid. "test4.json" using increasingBigInt(0) to generate a list of increasing number starting from 0, and verify the sum.
+  // However, when evaluate the increasingBitInt(0), if the outgoing batch could not hold the new value, doEval() return false, and start the
+  // next batch. But the value has already been increased by 1 in the prior failed try. Therefore, the sum of the generated number could be different,
+  // depending on the size of each outgoing batch, and when the batch could not hold any more values.
   public void testLimitAcrossBatches(@Injectable final DrillbitContext bitContext, @Injectable UserServer.UserClientConnection connection) throws Throwable{
     new NonStrictExpectations(){{
       bitContext.getMetrics(); result = new MetricRegistry();

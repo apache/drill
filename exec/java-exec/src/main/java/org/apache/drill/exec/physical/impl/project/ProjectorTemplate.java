@@ -52,7 +52,8 @@ public abstract class ProjectorTemplate implements Projector {
     case TWO_BYTE:
       final int count = recordCount;
       for(int i = 0; i < count; i++, firstOutputIndex++){
-        doEval(vector2.getIndex(i), firstOutputIndex);
+        if (!doEval(vector2.getIndex(i), firstOutputIndex))
+          return i;
       }
       return recordCount;
 
@@ -66,11 +67,11 @@ public abstract class ProjectorTemplate implements Projector {
           break;
         }
       }
-      if (i < recordCount || startIndex > 0) {
+      if (i < startIndex + recordCount || startIndex > 0) {
         for(TransferPair t : transfers){
           t.splitAndTransfer(startIndex, i - startIndex);
         }
-        return i;
+        return i - startIndex;
       }
       for(TransferPair t : transfers){
           t.transfer();
