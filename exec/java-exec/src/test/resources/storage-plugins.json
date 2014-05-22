@@ -30,6 +30,9 @@
               extensions: [ "tsv" ],
               delimiter: "\t"
             },
+            "json" : {
+              type: "json"
+            },
             "parquet" : {
               type: "parquet"
             }

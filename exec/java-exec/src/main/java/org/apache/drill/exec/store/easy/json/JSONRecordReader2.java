@@ -84,11 +84,12 @@ public class JSONRecordReader2 implements RecordReader{
           break;
 
         case NO_MORE:
-//          System.out.println("no more records - main loop");
           break outside;
 
         case WRITE_FAILED:
-//          System.out.println("==== hit bounds at " + i);
+          if (i == 0) {
+            throw new DrillRuntimeException("Record is too big to fit into allocated ValueVector");
+          }
           break outside;
         };
       }

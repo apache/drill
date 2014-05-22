@@ -74,9 +74,11 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
   public boolean allocateNewSafe() {
     clear();
     if (allocationMonitor > 5) {
-      allocationValueCount = Math.min(1, (int)(allocationValueCount * 0.9));
+      allocationValueCount = Math.max(1, (int)(allocationValueCount * 0.9));
+      allocationMonitor = 0;
     } else if (allocationMonitor < -5) {
       allocationValueCount = (int) (allocationValueCount * 1.1);
+      allocationMonitor = 0;
     }
 
     clear();
