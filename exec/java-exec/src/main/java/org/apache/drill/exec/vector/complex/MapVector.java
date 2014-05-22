@@ -273,6 +273,7 @@ public class MapVector extends AbstractContainerVector {
   @Override
   public void load(SerializedField metadata, ByteBuf buf) {
     List<SerializedField> fields = metadata.getChildList();
+    valueCount = metadata.getValueCount();
 
     int bufOffset = 0;
     for (SerializedField fmd : fields) {
@@ -381,6 +382,7 @@ public class MapVector extends AbstractContainerVector {
 
   @Override
   public void clear() {
+    valueCount = 0;
     for(ValueVector v : vectors.values()){
       v.clear();;
     }
