@@ -248,7 +248,7 @@ public class ParquetRecordReader implements RecordReader {
       boolean fieldFixedLength = false;
       for (int i = 0; i < columns.size(); ++i) {
         column = columns.get(i);
-        columnChunkMetaData = footer.getBlocks().get(0).getColumns().get(i);
+        columnChunkMetaData = footer.getBlocks().get(rowGroupIndex).getColumns().get(i);
         schemaElement = schemaElements.get(column.getPath()[0]);
         convertedType = schemaElement.getConverted_type();
         MajorType type = toMajorType(column.getType(), schemaElement.getType_length(), getDataMode(column), schemaElement);

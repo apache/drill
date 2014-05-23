@@ -100,6 +100,8 @@ public class VarLenBinaryReader {
           if (!columnReader.pageReadStatus.next()) {
             rowGroupFinished = true;
             break;
+          } else {
+            columnReader.currDictVal = null;
           }
         }
         bytes = columnReader.pageReadStatus.pageDataByteArray;
@@ -118,7 +120,9 @@ public class VarLenBinaryReader {
         }
 
         if (columnReader.usingDictionary) {
-          columnReader.currDictVal = columnReader.pageReadStatus.valueReader.readBytes();
+          if (columnReader.currDictVal == null) {
+            columnReader.currDictVal = columnReader.pageReadStatus.valueReader.readBytes();
+          }
           // re-purposing  this field here for length in BYTES to prevent repetitive multiplication/division
           columnReader.dataTypeLengthInBits = columnReader.currDictVal.length();
         }
@@ -169,6 +173,7 @@ public class VarLenBinaryReader {
           columnReader.totalValuesRead += columnReader.pageReadStatus.valuesRead;
           columnReader.pageReadStatus.next();
         }
+        columnReader.currDictVal = null;
       }
       recordsReadInCurrentPass++;
     } while (recordsReadInCurrentPass < recordsToReadInThisPass);

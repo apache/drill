@@ -173,15 +173,17 @@ public class ParquetResultListener implements UserResultsListener {
     int recordsInBatch = -1;
     if(result.getHeader().getIsLastChunk()){
       // ensure the right number of columns was returned, especially important to ensure selective column read is working
-      //assert valuesChecked.keySet().size() == props.fields.keySet().size() : "Unexpected number of output columns from parquet scan,";
+      if (testValues) {
+        assertEquals( "Unexpected number of output columns from parquet scan.", valuesChecked.keySet().size(), props.fields.keySet().size() );
+      }
       for (String s : valuesChecked.keySet()) {
         try {
-           if (recordsInBatch == -1 ){
-             recordsInBatch = valuesChecked.get(s);
-           } else {
-             assertEquals("Mismatched record counts in vectors.", recordsInBatch, valuesChecked.get(s).intValue());
-           }
-          //assertEquals("Record count incorrect for column: " + s, totalRecords, (long) valuesChecked.get(s));
+          if (recordsInBatch == -1 ){
+            recordsInBatch = valuesChecked.get(s);
+          } else {
+            assertEquals("Mismatched record counts in vectors.", recordsInBatch, valuesChecked.get(s).intValue());
+          }
+          assertEquals("Record count incorrect for column: " + s, totalRecords, (long) valuesChecked.get(s));
         } catch (AssertionError e) { submissionFailed(new RpcException(e)); }
       }
 

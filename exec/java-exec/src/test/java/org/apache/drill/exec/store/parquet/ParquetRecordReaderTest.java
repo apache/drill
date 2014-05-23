@@ -117,7 +117,17 @@ public class ParquetRecordReaderTest extends BaseTestQuery{
         readEntries += ",";
     }
     String planText = Files.toString(FileUtils.getResourceAsFile("/parquet/parquet_scan_screen_read_entry_replace.json"), Charsets.UTF_8).replaceFirst( "&REPLACED_IN_PARQUET_TEST&", readEntries);
-    testParquetFullEngineLocalText(planText, fileName, i, numberRowGroups, recordsPerRowGroup);
+    testParquetFullEngineLocalText(planText, fileName, i, numberRowGroups, recordsPerRowGroup, true);
+  }
+
+  @Test
+  @Ignore
+  public void testDictionaryError() throws Exception {
+    String readEntries;
+    readEntries = "\"/tmp/lineitem_null_dict.parquet\"";
+
+    String planText = Files.toString(FileUtils.getResourceAsFile("/parquet/parquet_scan_screen_read_entry_replace.json"), Charsets.UTF_8).replaceFirst( "&REPLACED_IN_PARQUET_TEST&", readEntries);
+    testParquetFullEngineLocalText(planText, fileName, 1, 1, 100000, false);
   }
 
   @Test
@@ -135,21 +145,24 @@ public class ParquetRecordReaderTest extends BaseTestQuery{
 
 
   public void testParquetFullEngineLocalPath(String planFileName, String filename, int numberOfTimesRead /* specified in json plan */, int numberOfRowGroups, int recordsPerRowGroup) throws Exception{
-    testParquetFullEngineLocalText(Files.toString(FileUtils.getResourceAsFile(planFileName), Charsets.UTF_8), filename, numberOfTimesRead, numberOfRowGroups, recordsPerRowGroup);
+    testParquetFullEngineLocalText(Files.toString(FileUtils.getResourceAsFile(planFileName), Charsets.UTF_8), filename,
+        numberOfTimesRead, numberOfRowGroups, recordsPerRowGroup, true);
   }
 
   //specific tests should call this method, but it is not marked as a test itself intentionally
-  public void testParquetFullEngineLocalText(String planText, String filename, int numberOfTimesRead /* specified in json plan */, int numberOfRowGroups, int recordsPerRowGroup) throws Exception{
-    testFull(QueryType.LOGICAL, planText, filename, numberOfTimesRead, numberOfRowGroups, recordsPerRowGroup);
+  public void testParquetFullEngineLocalText(String planText, String filename, int numberOfTimesRead /* specified in json plan */,
+                                             int numberOfRowGroups, int recordsPerRowGroup, boolean testValues) throws Exception{
+    testFull(QueryType.LOGICAL, planText, filename, numberOfTimesRead, numberOfRowGroups, recordsPerRowGroup, testValues);
   }
 
-  private void testFull(QueryType type, String planText, String filename, int numberOfTimesRead /* specified in json plan */, int numberOfRowGroups, int recordsPerRowGroup) throws Exception{
+  private void testFull(QueryType type, String planText, String filename, int numberOfTimesRead /* specified in json plan */,
+                        int numberOfRowGroups, int recordsPerRowGroup, boolean testValues) throws Exception{
 
 //    RecordBatchLoader batchLoader = new RecordBatchLoader(getAllocator());
     HashMap<String, FieldInfo> fields = new HashMap<>();
     ParquetTestProperties props = new ParquetTestProperties(numberRowGroups, recordsPerRowGroup, DEFAULT_BYTES_PER_PAGE, fields);
     TestFileGenerator.populateFieldInfoMap(props);
-    ParquetResultListener resultListener = new ParquetResultListener(getAllocator(), props, numberOfTimesRead, true);
+    ParquetResultListener resultListener = new ParquetResultListener(getAllocator(), props, numberOfTimesRead, testValues);
     Stopwatch watch = new Stopwatch().start();
     testWithListener(type, planText, resultListener);
     resultListener.getResults();
@@ -162,7 +175,7 @@ public class ParquetRecordReaderTest extends BaseTestQuery{
   //use this method to submit physical plan
   public void testParquetFullEngineLocalTextDistributed(String planName, String filename, int numberOfTimesRead /* specified in json plan */, int numberOfRowGroups, int recordsPerRowGroup) throws Exception{
     String planText = Files.toString(FileUtils.getResourceAsFile(planName), Charsets.UTF_8);
-    testFull(QueryType.PHYSICAL, planText, filename, numberOfTimesRead, numberOfRowGroups, recordsPerRowGroup);
+    testFull(QueryType.PHYSICAL, planText, filename, numberOfTimesRead, numberOfRowGroups, recordsPerRowGroup, true);
   }
 
   public String pad(String value, int length) {

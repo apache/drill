@@ -167,10 +167,10 @@ final class PageReadStatus {
       parentColumnReader.currDefLevel = -1;
       if (!currentPage.getValueEncoding().usesDictionary()) {
         definitionLevels = currentPage.getDlEncoding().getValuesReader(parentColumnReader.columnDescriptor, ValuesType.DEFINITION_LEVEL);
-        valueReader = currentPage.getValueEncoding().getValuesReader(parentColumnReader.columnDescriptor, ValuesType.VALUES);
         definitionLevels.initFromPage(currentPage.getValueCount(), pageDataByteArray, 0);
         readPosInBytes = definitionLevels.getNextOffset();
         if (parentColumnReader.columnDescriptor.getType() == PrimitiveType.PrimitiveTypeName.BOOLEAN) {
+          valueReader = currentPage.getValueEncoding().getValuesReader(parentColumnReader.columnDescriptor, ValuesType.VALUES);
           valueReader.initFromPage(currentPage.getValueCount(), pageDataByteArray, (int) readPosInBytes);
         }
       } else {
