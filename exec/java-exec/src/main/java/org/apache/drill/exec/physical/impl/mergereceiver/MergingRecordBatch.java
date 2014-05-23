@@ -253,13 +253,15 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
       // pop next value from pq and copy to outgoing batch
       Node node = pqueue.peek();
       if (!copyRecordToOutgoingBatch(node)) {
+        logger.debug("Outgoing vectors space is full; breaking");
+        prevBatchWasFull = true;
         break;
       }
       pqueue.poll();
 
       if (isOutgoingFull()) {
         // set a flag so that we reallocate on the next iteration
-        logger.debug("Outgoing vectors are full; breaking");
+        logger.debug("Outgoing vectors record batch size reached; breaking");
         prevBatchWasFull = true;
       }
 

@@ -16,9 +16,11 @@
  * limitations under the License.
  */
 
-package org.apache.drill.exec.vector.complex.writer;
+package org.apache.drill.exec;
 
-import org.apache.commons.io.FileUtils;
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
+import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.rpc.user.QueryResultBatch;
@@ -33,8 +35,8 @@ import java.util.List;
 
 import static org.junit.Assert.assertTrue;
 
-public class TestJsonReaderLargeFile extends BaseTestQuery {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestJsonReaderLargeFile.class);
+public class TestQueriesOnLargeFile extends BaseTestQuery {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestQueriesOnLargeFile.class);
 
   private static File dataFile = null;
   private static int NUM_RECORDS = 15000;
@@ -54,15 +56,14 @@ public class TestJsonReaderLargeFile extends BaseTestQuery {
     }
 
     PrintWriter printWriter = new PrintWriter(dataFile);
-    String record = "{\n" +
-        "\"project\" : \"Drill\", \n" +
-        "\"summary\" : \"Apache Drill provides low latency ad-hoc queries to many different data sources, " +
-        "including nested data. Inspired by Google's Dremel, Drill is designed to scale to 10,000 servers and " +
-        "query petabytes of data in seconds.\"\n" +
-        "}";
 
     for (int i=1; i<=NUM_RECORDS; i++) {
-      printWriter.println(record);
+      printWriter.println("{");
+      printWriter.println("  \"id\" : " + Math.random() + ",");
+      printWriter.println("  \"summary\" : \"Apache Drill provides low latency ad-hoc queries to many different data sources, "+
+          "including nested data. Inspired by Google's Dremel, Drill is designed to scale to 10,000 servers and " +
+          "query petabytes of data in seconds.\"");
+      printWriter.println("}");
     }
 
     printWriter.close();
@@ -90,11 +91,27 @@ public class TestJsonReaderLargeFile extends BaseTestQuery {
     }
   }
 
+  @Test
+  public void testMergingReceiver() throws Exception {
+    String plan = Files.toString(FileUtils.getResourceAsFile("/largefiles/merging_receiver_large_data.json"),
+        Charsets.UTF_8).replace("#{TEST_FILE}", dataFile.getPath());
+    List<QueryResultBatch> results = testPhysicalWithResults(plan);
+
+    int recordsInOutput = 0;
+    for(QueryResultBatch batch : results) {
+      recordsInOutput += batch.getHeader().getDef().getRecordCount();
+      batch.release();
+    }
+
+    assertTrue(String.format("Number of records in output is wrong: expected=%d, actual=%s",
+        NUM_RECORDS, recordsInOutput), NUM_RECORDS == recordsInOutput);
+  }
+
   @AfterClass
   public static void deleteTestData() throws Exception {
     if (dataFile != null) {
       if (dataFile.exists()) {
-        FileUtils.forceDelete(dataFile);
+        org.apache.commons.io.FileUtils.forceDelete(dataFile);
       }
     }
   }
