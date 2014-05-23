@@ -128,11 +128,13 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
             recordsProcessed = 0;
         }
       }
-      int probeIndex;
+      int probeIndex = -1;
 
       // Check if we need to drain the next row in the probe side
       if (getNextRecord) {
+        if (hashTable != null) {
           probeIndex = hashTable.containsKey(recordsProcessed, true);
+        }
 
           if (probeIndex != -1) {
 
