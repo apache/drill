@@ -111,6 +111,9 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable{
         outIndex = merge(left, right, end, outIndex);
         if (outIndex < vector4.getTotalCount()) newRunStarts.add(outIndex);
       }
+      if (outIndex < vector4.getTotalCount()) {
+        copyRun(outIndex, vector4.getTotalCount());
+      }
       SelectionVector4 tmp = aux.createNewWrapperCurrent();
       aux.clear();
       aux = this.vector4.createNewWrapperCurrent();
@@ -120,6 +123,12 @@ public abstract class MSortTemplate implements MSorter, IndexedSortable{
       runStarts = newRunStarts;
     }
     aux.clear();
+  }
+
+  private void copyRun(int start, int end) {
+    for (int i = start; i < end; i++) {
+      aux.set(i, vector4.get(i));
+    }
   }
 
   @Override
