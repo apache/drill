@@ -32,11 +32,13 @@ import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.ops.OperatorStats;
+import org.apache.drill.exec.ops.SenderStats;
 import org.apache.drill.exec.physical.config.HashPartitionSender;
 import org.apache.drill.exec.physical.impl.BaseRootExec;
 import org.apache.drill.exec.physical.impl.RootExec;
 import org.apache.drill.exec.physical.impl.SendingAccountor;
 import org.apache.drill.exec.physical.impl.svremover.RemovingRecordBatch;
+import org.apache.drill.exec.physical.impl.partitionsender.PartitionerTemplate.OutgoingRecordBatch;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.record.*;
@@ -48,7 +50,6 @@ import com.sun.codemodel.JExpression;
 import com.sun.codemodel.JType;
 import org.apache.drill.exec.vector.CopyUtil;
 
-
 public class PartitionSenderRootExec extends BaseRootExec {
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PartitionSenderRootExec.class);
@@ -56,24 +57,28 @@ public class PartitionSenderRootExec extends BaseRootExec {
   private HashPartitionSender operator;
   private Partitioner partitioner;
   private FragmentContext context;
+  private OperatorContext oContext;
   private boolean ok = true;
   private final SendingAccountor sendCount = new SendingAccountor();
   private final int outGoingBatchCount;
   private final HashPartitionSender popConfig;
   private final StatusHandler statusHandler;
-
+  private final SenderStats stats;
 
   public PartitionSenderRootExec(FragmentContext context,
                                  RecordBatch incoming,
                                  HashPartitionSender operator) throws OutOfMemoryException {
 
-    super(context, operator);
     this.incoming = incoming;
     this.operator = operator;
     this.context = context;
     this.outGoingBatchCount = operator.getDestinations().size();
     this.popConfig = operator;
     this.statusHandler = new StatusHandler(sendCount, context);
+    this.stats = new SenderStats(operator);
+    context.getStats().addOperatorStats(this.stats);
+    setStats(stats);
+    this.oContext = new OperatorContext(operator, context, stats);
   }
 
   @Override
@@ -140,6 +145,7 @@ public class PartitionSenderRootExec extends BaseRootExec {
           context.fail(e);
           return false;
         }
+        stats.updatePartitionStats(partitioner.getOutgoingBatches());
         for (VectorWrapper v : incoming) {
           v.clear();
         }

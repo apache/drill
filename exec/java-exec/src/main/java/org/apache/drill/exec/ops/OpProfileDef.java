@@ -23,6 +23,11 @@ public class OpProfileDef {
   public int operatorType;
   public int incomingCount;
 
+  public OpProfileDef(int operatorId, int operatorType, int incomingCount) {
+    this.operatorId = operatorId;
+    this.operatorType = operatorType;
+    this.incomingCount = incomingCount;
+  }
   public int getOperatorId(){
     return operatorId;
   }

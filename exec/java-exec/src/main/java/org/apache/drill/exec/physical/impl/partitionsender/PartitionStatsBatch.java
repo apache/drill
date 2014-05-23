@@ -15,29 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.physical.impl;
+package org.apache.drill.exec.physical.impl.partitionsender;
 
-import org.apache.drill.exec.ops.OperatorStats;
 
-public abstract class BaseRootExec implements RootExec {
+public interface PartitionStatsBatch {
 
-  protected OperatorStats stats = null;
-
-  @Override
-  public final boolean next() {
-    // Stats should have been initialized
-    assert stats != null;
-    try {
-      stats.startProcessing();
-      return innerNext();
-    } finally {
-      stats.stopProcessing();
-    }
-  }
-
-  public void setStats(OperatorStats stats) {
-    this.stats = stats;
-  }
-
-  public abstract boolean innerNext();
+  public long getTotalRecords();
 }

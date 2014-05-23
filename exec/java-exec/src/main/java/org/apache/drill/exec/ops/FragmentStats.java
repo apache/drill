@@ -54,4 +54,8 @@ public class FragmentStats {
     return stats;
   }
 
+  public void addOperatorStats(OperatorStats stats) {
+    operators.add(stats);
+  }
+
 }

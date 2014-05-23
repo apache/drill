@@ -28,8 +28,8 @@ import com.carrotsearch.hppc.IntLongOpenHashMap;
 public class OperatorStats {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OperatorStats.class);
 
-  private final int operatorId;
-  private final int operatorType;
+  protected final int operatorId;
+  protected final int operatorType;
 
   private IntLongOpenHashMap longMetrics = new IntLongOpenHashMap();
   private IntDoubleOpenHashMap doubleMetrics = new IntDoubleOpenHashMap();
@@ -42,8 +42,8 @@ public class OperatorStats {
   private boolean inProcessing = false;
   private boolean inSetup = false;
 
-  private long processingNanos;
-  private long setupNanos;
+  protected long processingNanos;
+  protected long setupNanos;
 
   private long processingMark;
   private long setupMark;
@@ -105,23 +105,37 @@ public class OperatorStats {
         .setSetupNanos(setupNanos) //
         .setProcessNanos(processingNanos);
 
-    for(int i = 0; i < recordsReceivedByInput.length; i++){
-      b.addInputProfile(StreamProfile.newBuilder().setBatches(batchesReceivedByInput[i]).setRecords(recordsReceivedByInput[i]).setSchemas(this.schemaCountByInput[i]));
-    }
-
-    for(int i =0; i < longMetrics.allocated.length; i++){
-      if(longMetrics.allocated[i]){
-        b.addMetric(MetricValue.newBuilder().setMetricId(longMetrics.keys[i]).setLongValue(longMetrics.values[i]));
-      }
-    }
-
-    for(int i =0; i < doubleMetrics.allocated.length; i++){
-      if(doubleMetrics.allocated[i]){
-        b.addMetric(MetricValue.newBuilder().setMetricId(doubleMetrics.keys[i]).setDoubleValue(doubleMetrics.values[i]));
-      }
-    }
+    addAllMetrics(b);
 
     return b.build();
+  }
+
+  public void addAllMetrics(OperatorProfile.Builder builder) {
+    addStreamProfile(builder);
+    addLongMetrics(builder);
+    addDoubleMetrics(builder);
+  }
+
+  public void addStreamProfile(OperatorProfile.Builder builder) {
+    for(int i = 0; i < recordsReceivedByInput.length; i++){
+      builder.addInputProfile(StreamProfile.newBuilder().setBatches(batchesReceivedByInput[i]).setRecords(recordsReceivedByInput[i]).setSchemas(this.schemaCountByInput[i]));
+    }
+  }
+
+  public void addLongMetrics(OperatorProfile.Builder builder) {
+    for(int i =0; i < longMetrics.allocated.length; i++){
+      if(longMetrics.allocated[i]){
+        builder.addMetric(MetricValue.newBuilder().setMetricId(longMetrics.keys[i]).setLongValue(longMetrics.values[i]));
+      }
+    }
+  }
+
+  public void addDoubleMetrics(OperatorProfile.Builder builder) {
+    for(int i =0; i < doubleMetrics.allocated.length; i++){
+      if(doubleMetrics.allocated[i]){
+        builder.addMetric(MetricValue.newBuilder().setMetricId(doubleMetrics.keys[i]).setDoubleValue(doubleMetrics.values[i]));
+      }
+    }
   }
 
   public void addLongStat(MetricDef metric, long value){

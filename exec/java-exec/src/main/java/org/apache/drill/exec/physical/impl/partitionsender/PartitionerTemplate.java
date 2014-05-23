@@ -66,6 +66,11 @@ public abstract class PartitionerTemplate implements Partitioner {
   public PartitionerTemplate() throws SchemaChangeException {
   }
 
+  @Override
+  public List<? extends PartitionStatsBatch> getOutgoingBatches() {
+    return outgoingBatches;
+  }
+
   public final void setup(FragmentContext context,
                           RecordBatch incoming,
                           HashPartitionSender popConfig,
@@ -189,7 +194,7 @@ public abstract class PartitionerTemplate implements Partitioner {
   public abstract void doSetup(@Named("context") FragmentContext context, @Named("incoming") RecordBatch incoming, @Named("outgoing") OutgoingRecordBatch[] outgoing) throws SchemaChangeException;
   public abstract int doEval(@Named("inIndex") int inIndex);
 
-  public class OutgoingRecordBatch implements VectorAccessible {
+  public class OutgoingRecordBatch implements PartitionStatsBatch, VectorAccessible {
 
     private final DataTunnel tunnel;
     private final HashPartitionSender operator;
@@ -202,6 +207,7 @@ public abstract class PartitionerTemplate implements Partitioner {
     private boolean isLast = false;
     private BatchSchema outSchema;
     private int recordCount;
+    private int totalRecords;
     private OperatorStats stats;
     private static final int DEFAULT_RECORD_BATCH_SIZE = 20000;
     private static final int DEFAULT_VARIABLE_WIDTH_SIZE = 200;
@@ -224,6 +230,7 @@ public abstract class PartitionerTemplate implements Partitioner {
     protected boolean copy(int inIndex) throws IOException {
       if (doEval(inIndex, recordCount)) {
         recordCount++;
+        totalRecords++;
         if (recordCount == DEFAULT_RECORD_BATCH_SIZE) {
           flush();
         }
@@ -328,6 +335,12 @@ public abstract class PartitionerTemplate implements Partitioner {
     @Override
     public int getRecordCount() {
       return recordCount;
+    }
+
+
+    @Override
+    public long getTotalRecords() {
+      return totalRecords;
     }
 
     @Override

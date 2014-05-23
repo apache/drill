@@ -22,7 +22,10 @@ import org.apache.drill.exec.ops.MetricDef;
 public enum PartitionSenderStats implements MetricDef {
 
   BATCHES_SENT,
-  RECORDS_SENT;
+  RECORDS_SENT,
+  MIN_RECORDS,
+  MAX_RECORDS,
+  N_SENDERS;
 
   @Override
   public int metricId() {
