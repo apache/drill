@@ -62,7 +62,7 @@ public class HashAggPrel extends AggPrelBase implements Prel{
 
   public AggregateRelBase copy(RelTraitSet traitSet, RelNode input, BitSet groupSet, List<AggregateCall> aggCalls) {
     try {
-      return new HashAggPrel(getCluster(), traitSet, input, getGroupSet(), aggCalls, 
+      return new HashAggPrel(getCluster(), traitSet, input, getGroupSet(), aggCalls,
           this.getOperatorPhase());
     } catch (InvalidRelException e) {
       throw new AssertionError(e);

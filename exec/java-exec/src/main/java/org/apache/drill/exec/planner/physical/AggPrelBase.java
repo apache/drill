@@ -25,6 +25,14 @@ import java.util.List;
 import net.hydromatic.linq4j.Ord;
 import net.hydromatic.optiq.util.BitSets;
 
+import org.apache.drill.common.expression.ExpressionPosition;
+import org.apache.drill.common.expression.FieldReference;
+import org.apache.drill.common.expression.FunctionCall;
+import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.expression.ValueExpressions;
+import org.apache.drill.common.logical.data.NamedExpression;
+import org.apache.drill.exec.planner.logical.DrillParseContext;
+import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.eigenbase.rel.AggregateCall;
 import org.eigenbase.rel.AggregateRelBase;
 import org.eigenbase.rel.Aggregation;
@@ -39,13 +47,6 @@ import org.eigenbase.sql.SqlFunctionCategory;
 import org.eigenbase.sql.SqlKind;
 import org.eigenbase.sql.type.OperandTypes;
 import org.eigenbase.sql.type.ReturnTypes;
-import org.apache.drill.common.expression.ExpressionPosition;
-import org.apache.drill.common.expression.FieldReference;
-import org.apache.drill.common.expression.FunctionCall;
-import org.apache.drill.common.expression.LogicalExpression;
-import org.apache.drill.common.expression.ValueExpressions;
-import org.apache.drill.common.logical.data.NamedExpression;
-import org.apache.drill.exec.planner.logical.DrillParseContext;
 
 import com.beust.jcommander.internal.Lists;
 import com.google.common.collect.ImmutableList;
@@ -59,18 +60,18 @@ public abstract class AggPrelBase extends AggregateRelBase implements Prel{
   protected List<NamedExpression> keys = Lists.newArrayList();
   protected List<NamedExpression> aggExprs = Lists.newArrayList();
   protected List<AggregateCall> phase2AggCallList = Lists.newArrayList();
-  
-  
+
+
   /**
-   * Specialized aggregate function for SUMing the COUNTs.  Since return type of 
-   * COUNT is non-nullable and return type of SUM is nullable, this class enables 
-   * creating a SUM whose return type is non-nullable. 
+   * Specialized aggregate function for SUMing the COUNTs.  Since return type of
+   * COUNT is non-nullable and return type of SUM is nullable, this class enables
+   * creating a SUM whose return type is non-nullable.
    *
    */
   public class SqlSumCountAggFunction extends SqlAggFunction {
- 
+
     private final RelDataType type;
-    
+
     public SqlSumCountAggFunction(RelDataType type) {
       super("SUM",
           SqlKind.OTHER_FUNCTION,
@@ -78,10 +79,10 @@ public abstract class AggPrelBase extends AggregateRelBase implements Prel{
           null,
           OperandTypes.NUMERIC,
           SqlFunctionCategory.NUMERIC);
-      
+
       this.type = type;
     }
- 
+
     public List<RelDataType> getParameterTypes(RelDataTypeFactory typeFactory) {
       return ImmutableList.of(type);
     }
@@ -93,32 +94,32 @@ public abstract class AggPrelBase extends AggregateRelBase implements Prel{
     public RelDataType getReturnType(RelDataTypeFactory typeFactory) {
       return type;
     }
-    
+
   }
-  
+
   public AggPrelBase(RelOptCluster cluster, RelTraitSet traits, RelNode child, BitSet groupSet,
       List<AggregateCall> aggCalls, OperatorPhase phase) throws InvalidRelException {
     super(cluster, traits, child, groupSet, aggCalls);
     this.operPhase = phase;
     createKeysAndExprs();
   }
-  
+
   public OperatorPhase getOperatorPhase() {
-    return operPhase;  
+    return operPhase;
   }
-  
+
   public List<NamedExpression> getKeys() {
     return keys;
   }
 
   public List<NamedExpression> getAggExprs() {
-    return aggExprs;  
+    return aggExprs;
   }
-  
+
   public List<AggregateCall> getPhase2AggCalls() {
-    return phase2AggCallList;  
+    return phase2AggCallList;
   }
-  
+
   protected void createKeysAndExprs() {
     final List<String> childFields = getChild().getRowType().getFieldNames();
     final List<String> fields = getRowType().getFieldNames();
@@ -134,37 +135,37 @@ public abstract class AggPrelBase extends AggregateRelBase implements Prel{
       LogicalExpression expr = toDrill(aggCall.e, childFields, new DrillParseContext());
       NamedExpression ne = new NamedExpression(expr, ref);
       aggExprs.add(ne);
-      
+
       if (getOperatorPhase() == OperatorPhase.PHASE_1of2) {
         if (aggCall.e.getAggregation().getName().equals("COUNT")) {
-          // If we are doing a COUNT aggregate in Phase1of2, then in Phase2of2 we should SUM the COUNTs, 
+          // If we are doing a COUNT aggregate in Phase1of2, then in Phase2of2 we should SUM the COUNTs,
           Aggregation sumAggFun = new SqlSumCountAggFunction(aggCall.e.getType());
-          AggregateCall newAggCall = 
+          AggregateCall newAggCall =
               new AggregateCall(
-                  sumAggFun, 
-                  aggCall.e.isDistinct(), 
-                  Collections.singletonList(aggExprOrdinal), 
+                  sumAggFun,
+                  aggCall.e.isDistinct(),
+                  Collections.singletonList(aggExprOrdinal),
                   aggCall.e.getType(),
                   aggCall.e.getName());
 
-          phase2AggCallList.add(newAggCall); 
+          phase2AggCallList.add(newAggCall);
         } else {
-          AggregateCall newAggCall = 
+          AggregateCall newAggCall =
               new AggregateCall(
-                  aggCall.e.getAggregation(), 
-                  aggCall.e.isDistinct(), 
-                  Collections.singletonList(aggExprOrdinal), 
+                  aggCall.e.getAggregation(),
+                  aggCall.e.isDistinct(),
+                  Collections.singletonList(aggExprOrdinal),
                   aggCall.e.getType(),
                   aggCall.e.getName());
-          
+
           phase2AggCallList.add(newAggCall);
         }
       }
-    }    
+    }
   }
-  
+
   protected LogicalExpression toDrill(AggregateCall call, List<String> fn, DrillParseContext pContext) {
-    List<LogicalExpression> args = Lists.newArrayList();    
+    List<LogicalExpression> args = Lists.newArrayList();
     for(Integer i : call.getArgList()){
       args.add(new FieldReference(fn.get(i)));
     }
@@ -174,7 +175,7 @@ public abstract class AggPrelBase extends AggregateRelBase implements Prel{
     LogicalExpression expr = new FunctionCall(call.getAggregation().getName().toLowerCase(), args, ExpressionPosition.UNKNOWN );
     return expr;
   }
-  
+
   @Override
   public Iterator<Prel> iterator() {
     return PrelUtil.iter(getChild());

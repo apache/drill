@@ -31,7 +31,7 @@ import mockit.Injectable;
 
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
-import org.apache.drill.exec.proto.UserProtos.QueryType;
+import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.rpc.user.QueryResultBatch;
 import org.apache.drill.exec.rpc.user.UserServer;
