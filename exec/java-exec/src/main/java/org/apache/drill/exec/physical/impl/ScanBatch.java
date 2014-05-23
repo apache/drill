@@ -22,47 +22,48 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.Lists;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
-import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.record.*;
+import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
+import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.RecordBatch;
+import org.apache.drill.exec.record.TypedFieldId;
+import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.record.VectorWrapper;
+import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.NullableVarCharVector;
-import org.apache.drill.exec.util.BatchPrinter;
-import org.apache.drill.exec.util.VectorUtil;
 import org.apache.drill.exec.vector.ValueVector;
-
-import com.google.common.collect.Maps;
 import org.apache.drill.exec.vector.VarCharVector;
-import org.apache.drill.exec.vector.allocator.VectorAllocator;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 /**
  * Record batch used for a particular scan. Operators against one or more
  */
 public class ScanBatch implements RecordBatch {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScanBatch.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScanBatch.class);
 
   private static final long ALLOCATOR_INITIAL_RESERVATION = 1*1024*1024;
   private static final long ALLOCATOR_MAX_RESERVATION = 20L*1000*1000*1000;
 
-  final Map<MaterializedField, ValueVector> fieldVectorMap = Maps.newHashMap();
-  final Map<MaterializedField, Class<?>> fieldVectorClassMap = Maps.newHashMap();
   private static final int MAX_RECORD_CNT = Character.MAX_VALUE;
+
+  private final Map<MaterializedField.Key, ValueVector> fieldVectorMap = Maps.newHashMap();
 
   private final VectorContainer container = new VectorContainer();
   private int recordCount;
@@ -74,8 +75,8 @@ public class ScanBatch implements RecordBatch {
   private final Mutator mutator = new Mutator();
   private Iterator<String[]> partitionColumns;
   private String[] partitionValues;
-  List<ValueVector> partitionVectors;
-  List<Integer> selectedPartitionColumns;
+  private List<ValueVector> partitionVectors;
+  private List<Integer> selectedPartitionColumns;
   private String partitionColumnDesignator;
 
   public ScanBatch(PhysicalOperator subScanConfig, FragmentContext context, Iterator<RecordReader> readers, List<String[]> partitionColumns, List<Integer> selectedPartitionColumns) throws ExecutionSetupException {
@@ -95,7 +96,7 @@ public class ScanBatch implements RecordBatch {
   }
 
   public ScanBatch(PhysicalOperator subScanConfig, FragmentContext context, Iterator<RecordReader> readers) throws ExecutionSetupException {
-    this(subScanConfig, context, readers, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
+    this(subScanConfig, context, readers, Collections.<String[]> emptyList(), Collections.<Integer> emptyList());
   }
 
   @Override
@@ -224,14 +225,14 @@ public class ScanBatch implements RecordBatch {
     @Override
     public <T extends ValueVector> T addField(MaterializedField field, Class<T> clazz) throws SchemaChangeException {
       // Check if the field exists
-      ValueVector v = fieldVectorMap.get(field);
+      ValueVector v = fieldVectorMap.get(field.key());
 
       if (v == null || v.getClass() != clazz) {
         // Field does not exist add it to the map and the output container
         v = TypeHelper.getNewVector(field, oContext.getAllocator());
         if(!clazz.isAssignableFrom(v.getClass())) throw new SchemaChangeException(String.format("The class that was provided %s does not correspond to the expected vector type of %s.", clazz.getSimpleName(), v.getClass().getSimpleName()));
         container.add(v);
-        fieldVectorMap.put(field, v);
+        fieldVectorMap.put(field.key(), v);
 
         // Adding new vectors to the container mark that the schema has changed
         schemaChange = true;
@@ -243,7 +244,7 @@ public class ScanBatch implements RecordBatch {
     @Override
     public void addFields(List<ValueVector> vvList) {
       for (ValueVector v : vvList) {
-        fieldVectorMap.put(v.getField(), v);
+        fieldVectorMap.put(v.getField().key(), v);
         container.add(v);
       }
       schemaChange = true;
@@ -278,6 +279,7 @@ public class ScanBatch implements RecordBatch {
 
   public void cleanup(){
     container.clear();
+    fieldVectorMap.clear();
     oContext.close();
   }
 

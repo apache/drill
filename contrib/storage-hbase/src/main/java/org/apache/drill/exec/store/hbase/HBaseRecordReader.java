@@ -58,13 +58,12 @@ public class HBaseRecordReader implements RecordReader, DrillHBaseConstants {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBaseRecordReader.class);
 
   private static final int TARGET_RECORD_COUNT = 4000;
-
+  
   private LinkedHashSet<SchemaPath> columns;
   private OutputMutator outputMutator;
 
   private Map<String, MapVector> familyVectorMap;
   private VarBinaryVector rowKeyVector;
-  private SchemaPath rowKeySchemaPath;
 
   private HTable hTable;
   private ResultScanner resultScanner;
@@ -86,8 +85,7 @@ public class HBaseRecordReader implements RecordReader, DrillHBaseConstants {
       while(columnIterator.hasNext()) {
         SchemaPath column = columnIterator.next();
         if (column.getRootSegment().getPath().equalsIgnoreCase(ROW_KEY)) {
-          rowKeySchemaPath = ROW_KEY_PATH;
-          this.columns.add(rowKeySchemaPath);
+          this.columns.add(ROW_KEY_PATH);
           continue;
         }
         rowKeyOnly = false;
@@ -104,8 +102,7 @@ public class HBaseRecordReader implements RecordReader, DrillHBaseConstants {
       }
     } else {
       rowKeyOnly = false;
-      rowKeySchemaPath = ROW_KEY_PATH;
-      this.columns.add(rowKeySchemaPath);
+      this.columns.add(ROW_KEY_PATH);
     }
 
     hbaseScan.setFilter(subScanSpec.getScanFilter());
@@ -130,8 +127,8 @@ public class HBaseRecordReader implements RecordReader, DrillHBaseConstants {
     try {
       // Add Vectors to output in the order specified when creating reader
       for (SchemaPath column : columns) {
-        if (column.equals(rowKeySchemaPath)) {
-          MaterializedField field = MaterializedField.create(column, Types.required(TypeProtos.MinorType.VARBINARY));
+        if (column.equals(ROW_KEY_PATH)) {
+          MaterializedField field = MaterializedField.create(column, ROW_KEY_TYPE);
           rowKeyVector = outputMutator.addField(field, VarBinaryVector.class);
         } else {
           getOrCreateFamilyVector(column.getRootSegment().getPath(), false);
@@ -216,7 +213,7 @@ public class HBaseRecordReader implements RecordReader, DrillHBaseConstants {
       MapVector v = familyVectorMap.get(familyName);
       if(v == null) {
         SchemaPath column = SchemaPath.getSimplePath(familyName);
-        MaterializedField field = MaterializedField.create(column, Types.required(TypeProtos.MinorType.MAP));
+        MaterializedField field = MaterializedField.create(column, COLUMN_FAMILY_TYPE);
         v = outputMutator.addField(field, MapVector.class);
         if (allocateOnCreate) {
           v.allocateNew();
@@ -232,7 +229,7 @@ public class HBaseRecordReader implements RecordReader, DrillHBaseConstants {
 
   private NullableVarBinaryVector getOrCreateColumnVector(MapVector mv, String qualifier) {
     int oldSize = mv.size();
-    NullableVarBinaryVector v = mv.addOrGet(qualifier, Types.optional(TypeProtos.MinorType.VARBINARY), NullableVarBinaryVector.class);
+    NullableVarBinaryVector v = mv.addOrGet(qualifier, COLUMN_TYPE, NullableVarBinaryVector.class);
     if (oldSize != mv.size()) {
       v.allocateNew();
     }

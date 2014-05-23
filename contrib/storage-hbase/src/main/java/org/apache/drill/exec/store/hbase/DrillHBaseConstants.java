@@ -18,6 +18,9 @@
 package org.apache.drill.exec.store.hbase;
 
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.types.Types;
 
 public interface DrillHBaseConstants {
   static final String ROW_KEY = "row_key";
@@ -25,5 +28,11 @@ public interface DrillHBaseConstants {
   static final SchemaPath ROW_KEY_PATH = SchemaPath.getSimplePath(ROW_KEY);
 
   static final String HBASE_ZOOKEEPER_PORT = "hbase.zookeeper.property.clientPort";
+
+  static final MajorType ROW_KEY_TYPE = Types.required(MinorType.VARBINARY);
+
+  static final MajorType COLUMN_FAMILY_TYPE = Types.required(MinorType.MAP);
+
+  static final MajorType COLUMN_TYPE = Types.optional(MinorType.VARBINARY);
 
 }

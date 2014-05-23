@@ -18,6 +18,7 @@
 package org.apache.drill.exec.record;
 
 import java.util.List;
+import java.util.Map;
 
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.expression.PathSegment;
@@ -30,15 +31,13 @@ import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 
 import com.google.hive12.common.collect.Lists;
 
-public class MaterializedField{
-  private SchemaPath path;
-  private MajorType type;
+public class MaterializedField {
+  private Key key;
   private List<MaterializedField> children = Lists.newArrayList();
 
   private MaterializedField(SchemaPath path, MajorType type) {
     super();
-    this.path = path;
-    this.type = type;
+    key = new Key(path, type);
   }
 
   public static MaterializedField create(SerializedField serField){
@@ -47,8 +46,8 @@ public class MaterializedField{
 
   public SerializedField.Builder getAsBuilder(){
     return SerializedField.newBuilder() //
-        .setMajorType(type) //
-        .setNamePart(path.getAsNamePart());
+        .setMajorType(key.type) //
+        .setNamePart(key.path.getAsNamePart());
   }
 
   public void addChild(MaterializedField field){
@@ -56,11 +55,11 @@ public class MaterializedField{
   }
 
   public MaterializedField clone(FieldReference ref){
-    return create(ref, type);
+    return create(ref, key.type);
   }
 
   public String getLastName(){
-    PathSegment seg = path.getRootSegment();
+    PathSegment seg = key.path.getRootSegment();
     while(seg.getChild() != null) seg = seg.getChild();
     return seg.getNameSegment().getPath();
   }
@@ -82,7 +81,7 @@ public class MaterializedField{
   }
 
   public SchemaPath getPath(){
-    return path;
+    return key.path;
   }
 
   /**
@@ -91,7 +90,7 @@ public class MaterializedField{
    */
   @Deprecated
   public SchemaPath getAsSchemaPath(){
-    return path;
+    return getPath();
   }
 
 //  public String getName(){
@@ -116,29 +115,29 @@ public class MaterializedField{
 //  }
 
   public int getWidth() {
-    return type.getWidth();
+    return key.type.getWidth();
   }
 
   public MajorType getType() {
-    return type;
+    return key.type;
   }
 
   public int getScale() {
-      return type.getScale();
+      return key.type.getScale();
   }
   public int getPrecision() {
-      return type.getPrecision();
+      return key.type.getPrecision();
   }
   public boolean isNullable() {
-    return type.getMode() == DataMode.OPTIONAL;
+    return key.type.getMode() == DataMode.OPTIONAL;
   }
 
   public DataMode getDataMode() {
-    return type.getMode();
+    return key.type.getMode();
   }
 
   public MaterializedField getOtherNullableVersion(){
-    MajorType mt = type;
+    MajorType mt = key.type;
     DataMode newDataMode = null;
     switch(mt.getMode()){
     case OPTIONAL:
@@ -150,7 +149,7 @@ public class MaterializedField{
     default:
       throw new UnsupportedOperationException();
     }
-    return new MaterializedField(path, mt.toBuilder().setMode(newDataMode).build());
+    return new MaterializedField(key.path, mt.toBuilder().setMode(newDataMode).build());
   }
 
   public Class<?> getValueClass() {
@@ -160,7 +159,7 @@ public class MaterializedField{
   public boolean matches(SchemaPath path) {
     if(!path.isSimplePath()) return false;
 
-    return this.path.equals(path);
+    return key.path.equals(path);
   }
 
 
@@ -169,8 +168,7 @@ public class MaterializedField{
     final int prime = 31;
     int result = 1;
     result = prime * result + ((children == null) ? 0 : children.hashCode());
-    result = prime * result + ((path == null) ? 0 : path.hashCode());
-    result = prime * result + ((type == null) ? 0 : type.hashCode());
+    result = prime * result + ((key == null) ? 0 : key.hashCode());
     return result;
   }
 
@@ -188,25 +186,73 @@ public class MaterializedField{
         return false;
     } else if (!children.equals(other.children))
       return false;
-    if (path == null) {
-      if (other.path != null)
+    if (key == null) {
+      if (other.key != null)
         return false;
-    } else if (!path.equals(other.path))
-      return false;
-    if (type == null) {
-      if (other.type != null)
-        return false;
-    } else if (!type.equals(other.type))
+    } else if (!key.equals(other.key))
       return false;
     return true;
   }
 
   @Override
   public String toString() {
-    return "MaterializedField [path=" + path + ", type=" + Types.toString(type) + "]";
+    return "MaterializedField [path=" + key.path + ", type=" + Types.toString(key.type) + "]";
+  }
+
+  public Key key() {
+    return key;
   }
 
   public String toExpr(){
-    return path.toExpr();
+    return key.path.toExpr();
   }
+
+  /**
+   * Since the {@code MaterializedField) itself is mutable, in certain cases, it is not suitable
+   * as a key of a {@link Map}. This inner class allows the {@link MaterializedField} object to be
+   * used for this purpose.
+   */
+  public class Key {
+
+    private SchemaPath path;
+    private MajorType type;
+
+    private Key(SchemaPath path, MajorType type) {
+      this.path = path;
+      this.type = type;
+    }
+
+    @Override
+    public int hashCode() {
+      final int prime = 31;
+      int result = 1;
+      result = prime * result + ((path == null) ? 0 : path.hashCode());
+      result = prime * result + ((type == null) ? 0 : type.hashCode());
+      return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj)
+        return true;
+      if (obj == null)
+        return false;
+      if (getClass() != obj.getClass())
+        return false;
+      Key other = (Key) obj;
+      if (path == null) {
+        if (other.path != null)
+          return false;
+      } else if (!path.equals(other.path))
+        return false;
+      if (type == null) {
+        if (other.type != null)
+          return false;
+      } else if (!type.equals(other.type))
+        return false;
+      return true;
+    }
+
+  }
+
 }
