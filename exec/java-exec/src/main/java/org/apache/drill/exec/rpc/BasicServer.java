@@ -32,6 +32,7 @@ import io.netty.handler.logging.LoggingHandler;
 
 import java.io.IOException;
 import java.net.BindException;
+import java.util.concurrent.ExecutionException;
 
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -162,7 +163,11 @@ public abstract class BasicServer<T extends EnumLite, C extends RemoteConnection
 
   @Override
   public void close() throws IOException {
-    eventLoopGroup.shutdownGracefully();
+    try {
+      eventLoopGroup.shutdownGracefully().get();
+    } catch (InterruptedException | ExecutionException e) {
+      logger.warn("Failure while shutting down {}. ", this.getClass().getName(), e);
+    }
   }
 
 }

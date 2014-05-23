@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.rpc;
 
+import java.util.concurrent.ExecutionException;
+
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
@@ -54,7 +56,7 @@ public abstract class BasicClient<T extends EnumLite, R extends RemoteConnection
     this.responseClass = responseClass;
     this.handshakeType = handshakeType;
     this.handshakeParser = handshakeParser;
-    
+
     b = new Bootstrap() //
         .group(eventLoopGroup) //
         .channel(NioSocketChannel.class) //
@@ -69,7 +71,7 @@ public abstract class BasicClient<T extends EnumLite, R extends RemoteConnection
 //            logger.debug("initializing client connection.");
             connection = initRemoteConnection(ch);
             ch.closeFuture().addListener(getCloseHandler(connection));
-            
+
             ch.pipeline().addLast( //
                 getDecoder(connection.getAllocator()), //
                 new RpcDecoder("c-" + rpcConfig.getName()), //
@@ -84,7 +86,7 @@ public abstract class BasicClient<T extends EnumLite, R extends RemoteConnection
 
     ;
   }
-  
+
   public abstract ProtobufLengthDecoder getDecoder(BufferAllocator allocator);
 
   public boolean isActive(){
@@ -93,7 +95,7 @@ public abstract class BasicClient<T extends EnumLite, R extends RemoteConnection
 
   protected abstract void validateHandshake(HANDSHAKE_RESPONSE validateHandshake) throws RpcException;
   protected abstract void finalizeConnection(HANDSHAKE_RESPONSE handshake, R connection);
-  
+
   protected GenericFutureListener<ChannelFuture> getCloseHandler(Channel channel) {
     return new ChannelClosedHandler();
   }
@@ -125,7 +127,7 @@ public abstract class BasicClient<T extends EnumLite, R extends RemoteConnection
     public ConnectionMultiListener(RpcConnectionHandler<R> l, HANDSHAKE_SEND handshakeValue) {
       assert l != null;
       assert handshakeValue != null;
-          
+
       this.l = l;
       this.handshakeValue = handshakeValue;
     }
@@ -204,10 +206,14 @@ public abstract class BasicClient<T extends EnumLite, R extends RemoteConnection
   public void setAutoRead(boolean enableAutoRead){
     connection.setAutoRead(enableAutoRead);
   }
-  
+
   public void close() {
     logger.debug("Closing client");
-    connection.getChannel().close();
+    try {
+      connection.getChannel().close().get();
+    } catch (InterruptedException | ExecutionException e) {
+      logger.warn("Failure whiel shutting {}", this.getClass().getName(), e);
+    }
   }
 
 }
