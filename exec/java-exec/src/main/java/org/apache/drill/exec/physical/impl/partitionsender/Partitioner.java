@@ -31,9 +31,4 @@ public interface Partitioner {
   public abstract void partitionBatch(RecordBatch incoming);
 
   public static TemplateClassDefinition<Partitioner> TEMPLATE_DEFINITION = new TemplateClassDefinition<>(Partitioner.class, PartitionerTemplate.class);
-
-  public static TemplateClassDefinition<Partitioner> TEMPLATE_DEFINITION_SV2 = new TemplateClassDefinition<>(Partitioner.class, PartitionerSV2Template.class);
-
-  public static TemplateClassDefinition<Partitioner> TEMPLATE_DEFINITION_SV4 = new TemplateClassDefinition<>(Partitioner.class, PartitionerSV4Template.class);
-
 }

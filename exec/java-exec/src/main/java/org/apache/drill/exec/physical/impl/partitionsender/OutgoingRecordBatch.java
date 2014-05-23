@@ -71,10 +71,9 @@ public class OutgoingRecordBatch implements VectorAccessible {
   private volatile boolean ok = true;
   private BatchSchema outSchema;
   private int recordCount;
-  private int recordCapacity;
-  private static int DEFAULT_ALLOC_SIZE = 20000;
-  private static int DEFAULT_VARIABLE_WIDTH_SIZE = 2048;
   private OperatorStats stats;
+  private static final int DEFAULT_RECORD_BATCH_SIZE = 20000;
+  private static final int DEFAULT_VARIABLE_WIDTH_SIZE = 200;
 
   public OutgoingRecordBatch(OperatorStats stats, SendingAccountor sendCount, HashPartitionSender operator, DataTunnel tunnel, RecordBatch incoming,
                              FragmentContext context, BufferAllocator allocator, int oppositeMinorFragmentId) {
@@ -89,9 +88,8 @@ public class OutgoingRecordBatch implements VectorAccessible {
   }
 
   public void flushIfNecessary() {
-    if (recordCount == recordCapacity) logger.debug("Flush is necesary:  Count is " + recordCount + ", capacity is " + recordCapacity);
     try {
-      if (recordCount == recordCapacity){
+      if (recordCount == DEFAULT_RECORD_BATCH_SIZE) {
         flush();
         stats.addLongStat(PartitionSenderStats.BATCHES_SENT, 1l);
         stats.addLongStat(PartitionSenderStats.RECORDS_SENT, recordCount);
@@ -159,8 +157,8 @@ public class OutgoingRecordBatch implements VectorAccessible {
     recordCount = 0;
     vectorContainer.zeroVectors();
     for (VectorWrapper<?> v : vectorContainer) {
-//      logger.debug("Reallocating vv to capacity " + DEFAULT_ALLOC_SIZE + " after flush.");
-      VectorAllocator.getAllocator(v.getValueVector(), DEFAULT_VARIABLE_WIDTH_SIZE).alloc(DEFAULT_ALLOC_SIZE);
+//      logger.debug("Reallocating vv to capacity " + DEFAULT_RECORD_BATCH_SIZE + " after flush.");
+      VectorAllocator.getAllocator(v.getValueVector(), DEFAULT_VARIABLE_WIDTH_SIZE).alloc(DEFAULT_RECORD_BATCH_SIZE);
     }
     if (!ok) { throw new SchemaChangeException("Flush ended NOT OK!"); }
     return true;
@@ -173,7 +171,6 @@ public class OutgoingRecordBatch implements VectorAccessible {
   public void initializeBatch() {
     isLast = false;
     vectorContainer.clear();
-    recordCapacity = DEFAULT_ALLOC_SIZE;
 
     SchemaBuilder bldr = BatchSchema.newBuilder().setSelectionVectorMode(BatchSchema.SelectionVectorMode.NONE);
     for (VectorWrapper<?> v : incoming) {
@@ -183,12 +180,12 @@ public class OutgoingRecordBatch implements VectorAccessible {
 
       // allocate a new value vector
       ValueVector outgoingVector = TypeHelper.getNewVector(v.getField(), allocator);
-      VectorAllocator.getAllocator(outgoingVector, 100).alloc(recordCapacity);
+      VectorAllocator.getAllocator(outgoingVector, DEFAULT_VARIABLE_WIDTH_SIZE).alloc(DEFAULT_RECORD_BATCH_SIZE);
       vectorContainer.add(outgoingVector);
-//      logger.debug("Reallocating to cap " + recordCapacity + " because of newly init'd vector : " + v.getValueVector());
+//      logger.debug("Reallocating to cap " + DEFAULT_RECORD_BATCH_SIZE + " because of newly init'd vector : " + v.getValueVector());
     }
     outSchema = bldr.build();
-//    logger.debug("Initialized OutgoingRecordBatch.  RecordCount: " + recordCount + ", cap: " + recordCapacity + " Schema: " + outSchema);
+//    logger.debug("Initialized OutgoingRecordBatch.  RecordCount: " + recordCount + ", cap: " + DEFAULT_RECORD_BATCH_SIZE + " Schema: " + outSchema);
   }
 
   /**
@@ -198,7 +195,6 @@ public class OutgoingRecordBatch implements VectorAccessible {
   public void resetBatch() {
     isLast = false;
     recordCount = 0;
-    recordCapacity = 0;
     for (VectorWrapper<?> v : vectorContainer){
       v.getValueVector().clear();
     }
