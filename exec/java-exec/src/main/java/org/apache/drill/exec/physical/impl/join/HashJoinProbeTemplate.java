@@ -177,7 +177,8 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
 
             // If we have a left outer join, project the keys
             if (joinType == JoinRelType.LEFT || joinType == JoinRelType.FULL) {
-              projectProbeRecord(recordsProcessed, outputRecords++);
+              boolean success = projectProbeRecord(recordsProcessed, outputRecords++);
+              assert success;
             }
             recordsProcessed++;
           }
@@ -186,7 +187,8 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
         hjHelper.setRecordMatched(currentCompositeIdx);
         boolean success = projectBuildRecord(currentCompositeIdx, outputRecords);
         assert success;
-        projectProbeRecord(recordsProcessed, outputRecords);
+        success = projectProbeRecord(recordsProcessed, outputRecords);
+        assert success;
         outputRecords++;
 
         currentCompositeIdx = hjHelper.getNextIndex(currentCompositeIdx);

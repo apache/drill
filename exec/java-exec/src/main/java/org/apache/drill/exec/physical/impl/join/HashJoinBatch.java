@@ -414,12 +414,10 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
                 fieldId++;
                 outputFieldId++;
             }
-            g.rotateBlock();
-            g.getEvalBlock()._return(JExpr.TRUE);
-
             recordCount = left.getRecordCount();
         }
-
+        g.rotateBlock();
+        g.getEvalBlock()._return(JExpr.TRUE);
 
         HashJoinProbe hj = context.getImplementationClass(cg);
 

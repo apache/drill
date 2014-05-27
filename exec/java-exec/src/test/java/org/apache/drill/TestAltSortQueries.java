@@ -52,7 +52,6 @@ public class TestAltSortQueries extends BaseTestQuery{
   }
 
   @Test
-  @Ignore
   public void testJoinWithLimit() throws Exception{
     test("SELECT\n" +
         "  nations.N_NAME,\n" +

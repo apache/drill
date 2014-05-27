@@ -113,7 +113,7 @@ public class FragmentContext implements Closeable {
   }
 
   public void fail(Throwable cause) {
-    logger.debug("Fragment Context received failure. {}", cause);
+    logger.error("Fragment Context received failure. {}", cause);
     failed = true;
     failureCause = cause;
   }
