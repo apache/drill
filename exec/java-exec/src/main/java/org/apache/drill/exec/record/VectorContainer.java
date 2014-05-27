@@ -18,6 +18,9 @@
 package org.apache.drill.exec.record;
 
 import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
@@ -84,6 +87,25 @@ public class VectorContainer extends AbstractMapVector implements Iterable<Vecto
     }
     return vc;
   }
+
+  public static VectorContainer canonicalize(VectorContainer original) {
+    VectorContainer vc = new VectorContainer();
+
+    List<VectorWrapper<?>> canonicalWrappers = new ArrayList<VectorWrapper<?>>(original.wrappers);
+
+    // Sort list of VectorWrapper alphabetically based on SchemaPath.
+    Collections.sort(canonicalWrappers, new Comparator<VectorWrapper<?>>() {
+      public int compare(VectorWrapper<?> v1, VectorWrapper<?> v2) {
+        return v1.getField().getPath().toExpr().compareTo(v2.getField().getPath().toExpr());
+      }
+    });
+
+    for (VectorWrapper<?> w : canonicalWrappers) {
+      vc.add(w.getValueVector());
+    }
+    return vc;
+  }
+
 
   private void cloneAndTransfer(VectorWrapper<?> wrapper) {
     wrappers.add(wrapper.cloneAndTransfer());
@@ -160,7 +182,7 @@ public class VectorContainer extends AbstractMapVector implements Iterable<Vecto
           clazz.getCanonicalName(), va.getVectorClass().getCanonicalName()));
     }
 
-    return (VectorWrapper<?>) va.getChildWrapper(fieldIds);
+    return va.getChildWrapper(fieldIds);
 
   }
 
@@ -212,4 +234,6 @@ public class VectorContainer extends AbstractMapVector implements Iterable<Vecto
   public int getNumberOfColumns() {
     return this.wrappers.size();
   }
+
+
 }

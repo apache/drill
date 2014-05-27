@@ -158,4 +158,18 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
     container.clear();
   }
 
+  public void canonicalize() {
+    //logger.debug( "RecordBatchLoader : before schema " + schema);
+    container = VectorContainer.canonicalize(container);
+
+    // rebuild the schema.
+    SchemaBuilder b = BatchSchema.newBuilder();
+    for(VectorWrapper<?> v : container){
+      b.addField(v.getField());
+    }
+    b.setSelectionVectorMode(BatchSchema.SelectionVectorMode.NONE);
+    this.schema = b.build();
+
+    //logger.debug( "RecordBatchLoader : after schema " + schema);
+  }
 }

@@ -61,6 +61,9 @@ import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.allocator.VectorAllocator;
 import org.eigenbase.rel.RelFieldCollation.Direction;
 
+import parquet.Preconditions;
+
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.sun.codemodel.JArray;
 import com.sun.codemodel.JClass;
@@ -197,6 +200,18 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
         batch.release();
         ++batchOffsets[i];
         ++i;
+      }
+
+      // Canonicalize each incoming batch, so that vectors are alphabetically sorted based on SchemaPath.
+      for (RecordBatchLoader loader : batchLoaders) {
+        loader.canonicalize();
+      }
+
+      // Ensure all the incoming batches have the identical schema.
+      if (!isSameSchemaAmongBatches(batchLoaders)) {
+        logger.error("Incoming batches for merging receiver have diffferent schemas!");
+        context.fail(new SchemaChangeException("Incoming batches for merging receiver have diffferent schemas!"));
+        return IterOutcome.STOP;
       }
 
       // create the outgoing schema and vector container, and allocate the initial batch
@@ -395,6 +410,20 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
   @Override
   public WritableBatch getWritableBatch() {
     return WritableBatch.get(this);
+  }
+
+  private boolean isSameSchemaAmongBatches(RecordBatchLoader[] batchLoaders) {
+    Preconditions.checkArgument(batchLoaders.length > 0, "0 batch is not allowed!");
+
+    BatchSchema schema = batchLoaders[0].getSchema();
+
+    for (int i = 1; i < batchLoaders.length; i++) {
+      if (!schema.equals(batchLoaders[i].getSchema())) {
+        logger.error("Schemas are different. Schema 1 : " + schema + ", Schema 2: " + batchLoaders[i].getSchema() );
+        return false;
+      }
+    }
+    return true;
   }
 
   private void allocateOutgoing() {
