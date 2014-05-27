@@ -20,14 +20,13 @@ package org.apache.drill.exec.physical.impl.xsort;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
+import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.client.DrillClient;
-import org.apache.drill.exec.pop.PopUnitTestBase;
-import org.apache.drill.exec.proto.UserProtos;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.rpc.user.QueryResultBatch;
 import org.apache.drill.exec.server.Drillbit;
@@ -43,7 +42,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 
-public class TestSimpleExternalSort extends PopUnitTestBase {
+public class TestSimpleExternalSort extends BaseTestQuery {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestSimpleExternalSort.class);
   DrillConfig c = DrillConfig.create();
 
@@ -51,54 +50,78 @@ public class TestSimpleExternalSort extends PopUnitTestBase {
   @Rule public final TestRule TIMEOUT = TestTools.getTimeoutRule(80000);
 
   @Test
-  public void sortOneKeyDescendingMergeSort() throws Throwable{
-    RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
-
-    try(Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
-        Drillbit bit2 = new Drillbit(CONFIG, serviceSet);
-        DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
-
-      bit1.run();
-      bit2.run();
-      client.connect();
-      List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
-              Files.toString(FileUtils.getResourceAsFile("/xsort/one_key_sort_descending.json"),
-                      Charsets.UTF_8));
-      int count = 0;
-      for(QueryResultBatch b : results) {
-        if (b.getHeader().getRowCount() != 0)
-          count += b.getHeader().getRowCount();
-      }
-      assertEquals(1000000, count);
-
-      long previousBigInt = Long.MAX_VALUE;
-
-      int recordCount = 0;
-      int batchCount = 0;
-
-      for (QueryResultBatch b : results) {
-        if (b.getHeader().getRowCount() == 0) break;
-        batchCount++;
-        RecordBatchLoader loader = new RecordBatchLoader(bit1.getContext().getAllocator());
-        loader.load(b.getHeader().getDef(),b.getData());
-        BigIntVector c1 = (BigIntVector) loader.getValueAccessorById(BigIntVector.class, loader.getValueVectorId(new SchemaPath("blue", ExpressionPosition.UNKNOWN)).getFieldIds()).getValueVector();
-
-
-        BigIntVector.Accessor a1 = c1.getAccessor();
-//        IntVector.Accessor a2 = c2.getAccessor();
-
-        for(int i =0; i < c1.getAccessor().getValueCount(); i++){
-          recordCount++;
-          assertTrue(String.format("%d > %d", previousBigInt, a1.get(i)), previousBigInt >= a1.get(i));
-          previousBigInt = a1.get(i);
-        }
-        loader.clear();
-        b.release();
-      }
-
-      System.out.println(String.format("Sorted %,d records in %d batches.", recordCount, batchCount));
-
+  public void mergeSortWithSv2() throws Exception {
+    List<QueryResultBatch> results = testPhysicalFromFileWithResults("xsort/one_key_sort_descending_sv2.json");
+    int count = 0;
+    for(QueryResultBatch b : results) {
+      if (b.getHeader().getRowCount() != 0)
+        count += b.getHeader().getRowCount();
     }
+    assertEquals(500000, count);
+
+    long previousBigInt = Long.MAX_VALUE;
+
+    int recordCount = 0;
+    int batchCount = 0;
+
+    for (QueryResultBatch b : results) {
+      if (b.getHeader().getRowCount() == 0) break;
+      batchCount++;
+      RecordBatchLoader loader = new RecordBatchLoader(allocator);
+      loader.load(b.getHeader().getDef(),b.getData());
+      BigIntVector c1 = (BigIntVector) loader.getValueAccessorById(BigIntVector.class,
+              loader.getValueVectorId(new SchemaPath("blue", ExpressionPosition.UNKNOWN)).getFieldIds()).getValueVector();
+
+
+      BigIntVector.Accessor a1 = c1.getAccessor();
+
+      for(int i =0; i < c1.getAccessor().getValueCount(); i++){
+        recordCount++;
+        assertTrue(String.format("%d > %d", previousBigInt, a1.get(i)), previousBigInt >= a1.get(i));
+        previousBigInt = a1.get(i);
+      }
+      loader.clear();
+      b.release();
+    }
+
+    System.out.println(String.format("Sorted %,d records in %d batches.", recordCount, batchCount));
+  }
+
+  @Test
+  public void sortOneKeyDescendingMergeSort() throws Throwable{
+    List<QueryResultBatch> results = testPhysicalFromFileWithResults("xsort/one_key_sort_descending.json");
+    int count = 0;
+    for(QueryResultBatch b : results) {
+      if (b.getHeader().getRowCount() != 0)
+        count += b.getHeader().getRowCount();
+    }
+    assertEquals(1000000, count);
+
+    long previousBigInt = Long.MAX_VALUE;
+
+    int recordCount = 0;
+    int batchCount = 0;
+
+    for (QueryResultBatch b : results) {
+      if (b.getHeader().getRowCount() == 0) break;
+      batchCount++;
+      RecordBatchLoader loader = new RecordBatchLoader(allocator);
+      loader.load(b.getHeader().getDef(),b.getData());
+      BigIntVector c1 = (BigIntVector) loader.getValueAccessorById(BigIntVector.class, loader.getValueVectorId(new SchemaPath("blue", ExpressionPosition.UNKNOWN)).getFieldIds()).getValueVector();
+
+
+      BigIntVector.Accessor a1 = c1.getAccessor();
+
+      for(int i =0; i < c1.getAccessor().getValueCount(); i++){
+        recordCount++;
+        assertTrue(String.format("%d > %d", previousBigInt, a1.get(i)), previousBigInt >= a1.get(i));
+        previousBigInt = a1.get(i);
+      }
+      loader.clear();
+      b.release();
+    }
+
+    System.out.println(String.format("Sorted %,d records in %d batches.", recordCount, batchCount));
   }
 
   @Test

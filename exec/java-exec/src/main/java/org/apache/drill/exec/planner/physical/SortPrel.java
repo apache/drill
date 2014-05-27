@@ -100,7 +100,7 @@ public class SortPrel extends SortRel implements Prel {
 
   @Override
   public SelectionVectorMode[] getSupportedEncodings() {
-    return SelectionVectorMode.DEFAULT; // should support SV2 but there is a bug, DRILL-648
+    return SelectionVectorMode.NONE_AND_TWO;
   }
 
   @Override

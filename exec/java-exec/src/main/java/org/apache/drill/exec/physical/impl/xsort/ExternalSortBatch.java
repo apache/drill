@@ -45,6 +45,7 @@ import org.apache.drill.exec.physical.impl.sort.RecordBatchData;
 import org.apache.drill.exec.physical.impl.sort.SortRecordBatchBuilder;
 import org.apache.drill.exec.physical.impl.svremover.RemovingRecordBatch;
 import org.apache.drill.exec.record.*;
+import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.util.Utilities;
@@ -222,7 +223,11 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
           w.start();
           sorter.sort(sv2);
 //          logger.debug("Took {} us to sort {} records", w.elapsed(TimeUnit.MICROSECONDS), sv2.getCount());
-          batchGroups.add(new BatchGroup(new RecordBatchData(incoming).getContainer(), sv2));
+          RecordBatchData rbd = new RecordBatchData(incoming);
+          if (incoming.getSchema().getSelectionVectorMode() == SelectionVectorMode.NONE) {
+            rbd.setSv2(sv2);
+          }
+          batchGroups.add(new BatchGroup(rbd.getContainer(), rbd.getSv2()));
           batchesSinceLastSpill++;
           if (batchGroups.size() > SPILL_THRESHOLD && batchesSinceLastSpill >= SPILL_BATCH_GROUP_SIZE) {
             mergeAndSpill();

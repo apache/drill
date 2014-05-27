@@ -159,6 +159,9 @@ public class BaseTestQuery extends ExecTest{
   protected void testPhysicalFromFile(String file) throws Exception{
     testPhysical(getFile(file));
   }
+  protected List<QueryResultBatch> testPhysicalFromFileWithResults(String file) throws Exception {
+    return testRunAndReturn(QueryType.PHYSICAL, getFile(file));
+  }
   protected void testLogicalFromFile(String file) throws Exception{
     testLogical(getFile(file));
   }
