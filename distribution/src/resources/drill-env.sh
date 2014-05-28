@@ -15,4 +15,8 @@
 DRILL_MAX_DIRECT_MEMORY="8G"
 DRILL_INIT_HEAP="1g"
 DRILL_MAX_HEAP="4g"
-export DRILL_JAVA_OPTS="-Xms$DRILL_INIT_HEAP -Xmx$DRILL_MAX_HEAP -XX:MaxDirectMemorySize=$DRILL_MAX_DIRECT_MEMORY"
+export DRILL_JAVA_OPTS="-Xms$DRILL_INIT_HEAP -Xmx$DRILL_MAX_HEAP -XX:MaxDirectMemorySize=$DRILL_MAX_DIRECT_MEMORY -XX:+UseConcMarkSweepGC"
+
+# Class unloading is disabled by default in Java 7
+# http://hg.openjdk.java.net/jdk7u/jdk7u60/hotspot/file/tip/src/share/vm/runtime/globals.hpp#l1622
+export SERVER_GC_OPTS="-XX:+CMSClassUnloadingEnabled"
