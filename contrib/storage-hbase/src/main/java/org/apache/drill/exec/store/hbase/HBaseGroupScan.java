@@ -18,12 +18,18 @@
 package org.apache.drill.exec.store.hbase;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
+import java.util.PriorityQueue;
+import java.util.Queue;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
@@ -38,12 +44,12 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.Size;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.exec.store.hbase.HBaseSubScan.HBaseSubScanSpec;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HRegionInfo;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.ServerName;
 import org.apache.hadoop.hbase.client.HTable;
-import org.apache.hadoop.hbase.util.Bytes;
 
 import parquet.org.codehaus.jackson.annotate.JsonCreator;
 
@@ -51,15 +57,25 @@ import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 @JsonTypeName("hbase-scan")
 public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConstants {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBaseGroupScan.class);
+
+  private static final Comparator<List<HBaseSubScanSpec>> LIST_SIZE_COMPARATOR = new Comparator<List<HBaseSubScanSpec>>() {
+    @Override
+    public int compare(List<HBaseSubScanSpec> list1, List<HBaseSubScanSpec> list2) {
+      return list1.size() - list2.size();
+    }
+  };
+
+  private static final Comparator<List<HBaseSubScanSpec>> LIST_SIZE_COMPARATOR_REV = Collections.reverseOrder(LIST_SIZE_COMPARATOR);
 
   private HBaseStoragePluginConfig storagePluginConfig;
 
@@ -70,9 +86,11 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
   private HBaseStoragePlugin storagePlugin;
 
   private Stopwatch watch = new Stopwatch();
-  private ArrayListMultimap<Integer, HBaseSubScan.HBaseSubScanSpec> mappings;
-  private List<EndpointAffinity> endpointAffinities;
-  private NavigableMap<HRegionInfo,ServerName> regionsToScan;
+
+  private Map<Integer, List<HBaseSubScanSpec>> endpointFragmentMapping;
+
+  private NavigableMap<HRegionInfo, ServerName> regionsToScan;
+
   private HTableDescriptor hTableDesc;
 
   private boolean filterPushedDown = false;
@@ -85,9 +103,9 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
     this ((HBaseStoragePlugin) pluginRegistry.getPlugin(storagePluginConfig), hbaseScanSpec, columns);
   }
 
-  public HBaseGroupScan(HBaseStoragePlugin storageEngine, HBaseScanSpec scanSpec, List<SchemaPath> columns) {
-    this.storagePlugin = storageEngine;
-    this.storagePluginConfig = storageEngine.getConfig();
+  public HBaseGroupScan(HBaseStoragePlugin storagePlugin, HBaseScanSpec scanSpec, List<SchemaPath> columns) {
+    this.storagePlugin = storagePlugin;
+    this.storagePluginConfig = storagePlugin.getConfig();
     this.hbaseScanSpec = scanSpec;
     this.columns = columns;
     init();
@@ -95,13 +113,12 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
 
   /**
    * Private constructor, used for cloning.
-   * @param that The
+   * @param that The HBaseGroupScan to clone
    */
   private HBaseGroupScan(HBaseGroupScan that) {
     this.columns = that.columns;
-    this.endpointAffinities = that.endpointAffinities;
     this.hbaseScanSpec = that.hbaseScanSpec;
-    this.mappings = that.mappings;
+    this.endpointFragmentMapping = that.endpointFragmentMapping;
     this.regionsToScan = that.regionsToScan;
     this.storagePlugin = that.storagePlugin;
     this.storagePluginConfig = that.storagePluginConfig;
@@ -165,8 +182,7 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
 
     Map<DrillbitEndpoint, EndpointAffinity> affinityMap = new HashMap<DrillbitEndpoint, EndpointAffinity>();
     for (ServerName sn : regionsToScan.values()) {
-      String host = sn.getHostname();
-      DrillbitEndpoint ep = endpointMap.get(host);
+      DrillbitEndpoint ep = endpointMap.get(sn.getHostname());
       if (ep != null) {
         EndpointAffinity affinity = affinityMap.get(ep);
         if (affinity == null) {
@@ -176,9 +192,8 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
         }
       }
     }
-    this.endpointAffinities = Lists.newArrayList(affinityMap.values());
-    logger.debug("Took {} ms to get operator affinity", watch.elapsed(TimeUnit.MILLISECONDS));
-    return this.endpointAffinities;
+    logger.debug("Took {} µs to get operator affinity", watch.elapsed(TimeUnit.NANOSECONDS)/1000);
+    return Lists.newArrayList(affinityMap.values());
   }
 
   /**
@@ -189,41 +204,134 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
   public void applyAssignments(List<DrillbitEndpoint> incomingEndpoints) {
     watch.reset();
     watch.start();
-    Preconditions.checkArgument(incomingEndpoints.size() <= regionsToScan.size(),
-        String.format("Incoming endpoints %d is greater than number of row groups %d", incomingEndpoints.size(), regionsToScan.size()));
 
-    mappings = ArrayListMultimap.create();
-    ArrayListMultimap<String, Integer> incomingEndpointMap = ArrayListMultimap.create();
-    for (int i = 0; i < incomingEndpoints.size(); i++) {
-      incomingEndpointMap.put(incomingEndpoints.get(i).getAddress(), i);
-    }
-    Map<String, Iterator<Integer>> mapIterator = new HashMap<String, Iterator<Integer>>();
-    for (String s : incomingEndpointMap.keySet()) {
-      Iterator<Integer> ints = Iterators.cycle(incomingEndpointMap.get(s));
-      mapIterator.put(s, ints);
-    }
-    Iterator<Integer> nullIterator = Iterators.cycle(incomingEndpointMap.values());
-    for (HRegionInfo regionInfo : regionsToScan.keySet()) {
-      logger.debug("creating read entry. start key: {} end key: {}", Bytes.toStringBinary(regionInfo.getStartKey()), Bytes.toStringBinary(regionInfo.getEndKey()));
-      HBaseSubScan.HBaseSubScanSpec p = new HBaseSubScan.HBaseSubScanSpec()
-          .setTableName(hbaseScanSpec.getTableName())
-          .setStartRow((hbaseScanSpec.getStartRow() != null && regionInfo.containsRow(hbaseScanSpec.getStartRow())) ? hbaseScanSpec.getStartRow() : regionInfo.getStartKey())
-          .setStopRow((hbaseScanSpec.getStopRow() != null && regionInfo.containsRow(hbaseScanSpec.getStopRow())) ? hbaseScanSpec.getStopRow() : regionInfo.getEndKey())
-          .setSerializedFilter(hbaseScanSpec.getSerializedFilter());
-      String host = regionsToScan.get(regionInfo).getHostname();
-      Iterator<Integer> indexIterator = mapIterator.get(host);
-      if (indexIterator == null) {
-        indexIterator = nullIterator;
+    final int numSlots = incomingEndpoints.size();
+    Preconditions.checkArgument(numSlots <= regionsToScan.size(),
+        String.format("Incoming endpoints %d is greater than number of scan regions %d", numSlots, regionsToScan.size()));
+
+    /*
+     * Minimum/Maximum number of assignment per slot
+     */
+    final int minPerEndpointSlot = (int) Math.floor((double)regionsToScan.size() / numSlots);
+    final int maxPerEndpointSlot = (int) Math.ceil((double)regionsToScan.size() / numSlots);
+
+    /*
+     * initialize (endpoint index => HBaseSubScanSpec list) map
+     */
+    endpointFragmentMapping = Maps.newHashMapWithExpectedSize(numSlots);
+
+    /*
+     * another map with endpoint (hostname => corresponding index list) in 'incomingEndpoints' list
+     */
+    Map<String, Queue<Integer>> endpointHostIndexListMap = Maps.newHashMap();
+
+    /*
+     * Initialize these two maps
+     */
+    for (int i = 0; i < numSlots; ++i) {
+      endpointFragmentMapping.put(i, new ArrayList<HBaseSubScanSpec>(maxPerEndpointSlot));
+      String hostname = incomingEndpoints.get(i).getAddress();
+      Queue<Integer> hostIndexQueue = endpointHostIndexListMap.get(hostname);
+      if (hostIndexQueue == null) {
+        hostIndexQueue = Lists.newLinkedList();
+        endpointHostIndexListMap.put(hostname, hostIndexQueue);
       }
-      mappings.put(indexIterator.next(), p);
+      hostIndexQueue.add(i);
     }
+
+    Set<Entry<HRegionInfo, ServerName>> regionsToAssignSet = Sets.newHashSet(regionsToScan.entrySet());
+
+    /*
+     * First, we assign regions which are hosted on region servers running on drillbit endpoints
+     */
+    for (Iterator<Entry<HRegionInfo, ServerName>> regionsIterator = regionsToAssignSet.iterator(); regionsIterator.hasNext(); /*nothing*/) {
+      Entry<HRegionInfo, ServerName> regionEntry = regionsIterator.next();
+      /*
+       * Test if there is a drillbit endpoint which is also an HBase RegionServer that hosts the current HBase region
+       */
+      Queue<Integer> endpointIndexlist = endpointHostIndexListMap.get(regionEntry.getValue().getHostname());
+      if (endpointIndexlist != null) {
+        Integer slotIndex = endpointIndexlist.poll();
+        List<HBaseSubScanSpec> endpointSlotScanList = endpointFragmentMapping.get(slotIndex);
+        endpointSlotScanList.add(regionInfoToSubScanSpec(regionEntry.getKey()));
+        // add to the tail of the slot list, to add more later in round robin fashion
+        endpointIndexlist.offer(slotIndex);
+        // this region has been assigned
+        regionsIterator.remove();
+      }
+    }
+
+    /*
+     * Build priority queues of slots, with ones which has tasks lesser than 'minPerEndpointSlot' and another which have more.
+     */
+    PriorityQueue<List<HBaseSubScanSpec>> minHeap = new PriorityQueue<List<HBaseSubScanSpec>>(numSlots, LIST_SIZE_COMPARATOR);
+    PriorityQueue<List<HBaseSubScanSpec>> maxHeap = new PriorityQueue<List<HBaseSubScanSpec>>(numSlots, LIST_SIZE_COMPARATOR_REV);
+    for(List<HBaseSubScanSpec> listOfScan : endpointFragmentMapping.values()) {
+      if (listOfScan.size() < minPerEndpointSlot) {
+        minHeap.offer(listOfScan);
+      } else if (listOfScan.size() > minPerEndpointSlot){
+        maxHeap.offer(listOfScan);
+      }
+    }
+
+    /*
+     * Now, let's process any regions which remain unassigned and assign them to slots with minimum number of assignments.
+     */
+    if (regionsToAssignSet.size() > 0) {
+      for (Entry<HRegionInfo, ServerName> regionEntry : regionsToAssignSet) {
+        List<HBaseSubScanSpec> smallestList = minHeap.poll();
+        smallestList.add(regionInfoToSubScanSpec(regionEntry.getKey()));
+        if (smallestList.size() < minPerEndpointSlot) {
+          minHeap.offer(smallestList);
+        }
+      }
+    }
+
+    /*
+     * While there are slots with lesser than 'minPerEndpointSlot' unit work, balance from those with more.
+     */
+    while(minHeap.peek() != null && minHeap.peek().size() < minPerEndpointSlot) {
+      List<HBaseSubScanSpec> smallestList = minHeap.poll();
+      List<HBaseSubScanSpec> largestList = maxHeap.poll();
+      smallestList.add(largestList.remove(largestList.size()-1));
+      if (largestList.size() > minPerEndpointSlot) {
+        maxHeap.offer(largestList);
+      }
+      if (smallestList.size() < minPerEndpointSlot) {
+        minHeap.offer(smallestList);
+      }
+    }
+
+    /* no slot should be empty at this point */
+    assert (minHeap.peek() == null || minHeap.peek().size() > 0) : String.format(
+        "Unable to assign tasks to some endpoints.\nEndpoints: {}.\nAssignment Map: {}.",
+        incomingEndpoints, endpointFragmentMapping.toString());
+
+    logger.debug("Built assignment map in {} µs.\nEndpoints: {}.\nAssignment Map: {}",
+        watch.elapsed(TimeUnit.NANOSECONDS)/1000, incomingEndpoints, endpointFragmentMapping.toString());
+  }
+
+  private HBaseSubScanSpec regionInfoToSubScanSpec(HRegionInfo ri) {
+    HBaseScanSpec spec = hbaseScanSpec;
+    return new HBaseSubScanSpec()
+        .setTableName(spec.getTableName())
+        .setRegionServer(regionsToScan.get(ri).getHostname())
+        .setStartRow((!isNullOrEmpty(spec.getStartRow()) && ri.containsRow(spec.getStartRow())) ? spec.getStartRow() : ri.getStartKey())
+        .setStopRow((!isNullOrEmpty(spec.getStopRow()) && ri.containsRow(spec.getStopRow())) ? spec.getStopRow() : ri.getEndKey())
+        .setSerializedFilter(spec.getSerializedFilter());
+  }
+
+  private boolean isNullOrEmpty(byte[] key) {
+    return key == null || key.length == 0;
   }
 
   @Override
   public HBaseSubScan getSpecificScan(int minorFragmentId) {
-    return new HBaseSubScan(storagePlugin, storagePluginConfig, mappings.get(minorFragmentId), columns);
+    assert minorFragmentId < endpointFragmentMapping.size() : String.format(
+        "Mappings length [%d] should be greater than minor fragment id [%d] but it isn't.", endpointFragmentMapping.size(),
+        minorFragmentId);
+    return new HBaseSubScan(storagePlugin, storagePluginConfig, endpointFragmentMapping.get(minorFragmentId), columns);
   }
-
 
   @Override
   public int getMaxParallelizationWidth() {
@@ -311,6 +419,29 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
   @JsonIgnore
   public boolean isFilterPushedDown() {
     return filterPushedDown;
+  }
+
+  /**
+   * Empty constructor, do not use, only for testing.
+   */
+  @VisibleForTesting
+  public HBaseGroupScan() { }
+
+  /**
+   * Do not use, only for testing.
+   */
+  @VisibleForTesting
+  public void setHBaseScanSpec(HBaseScanSpec hbaseScanSpec) {
+    this.hbaseScanSpec = hbaseScanSpec;
+  }
+
+  /**
+   * Do not use, only for testing.
+   */
+  @JsonIgnore
+  @VisibleForTesting
+  public void setRegionsToScan(NavigableMap<HRegionInfo, ServerName> regionsToScan) {
+    this.regionsToScan = regionsToScan;
   }
 
 }

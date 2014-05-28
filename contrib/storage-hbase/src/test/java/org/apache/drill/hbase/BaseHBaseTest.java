@@ -26,6 +26,7 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.rpc.user.QueryResultBatch;
 import org.apache.drill.exec.store.hbase.HBaseStoragePlugin;
+import org.apache.drill.exec.store.hbase.HBaseStoragePluginConfig;
 import org.apache.drill.exec.util.VectorUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
@@ -43,6 +44,10 @@ public class BaseHBaseTest extends BaseTestQuery {
 
   protected static Configuration conf = HBaseConfiguration.create();
 
+  protected static HBaseStoragePlugin storagePlugin;
+
+  protected static HBaseStoragePluginConfig storagePluginConfig;
+
   @Rule public TestName TEST_NAME = new TestName();
 
   private int[] columnWidths = new int[] { 8 };
@@ -58,11 +63,13 @@ public class BaseHBaseTest extends BaseTestQuery {
      * Change the following to HBaseTestsSuite.configure(false, true)
      * if you want to test against an externally running HBase cluster.
      */
-    HBaseTestsSuite.configure(false, true);
-
+    HBaseTestsSuite.configure(true, true);
     HBaseTestsSuite.initCluster();
-    HBaseStoragePlugin plugin = (HBaseStoragePlugin) bit.getContext().getStorage().getPlugin("hbase");
-    plugin.getConfig().setZookeeperPort(HBaseTestsSuite.getZookeeperPort());
+
+    storagePlugin = (HBaseStoragePlugin) bit.getContext().getStorage().getPlugin("hbase");
+    storagePluginConfig = storagePlugin.getConfig();
+
+    storagePluginConfig.setZookeeperPort(HBaseTestsSuite.getZookeeperPort());
   }
 
   @AfterClass
@@ -77,7 +84,7 @@ public class BaseHBaseTest extends BaseTestQuery {
   protected void setColumnWidths(int[] columnWidths) {
     this.columnWidths = columnWidths;
   }
-  
+
   protected String getPlanText(String planFile, String tableName) throws IOException {
     return Files.toString(FileUtils.getResourceAsFile(planFile), Charsets.UTF_8)
         .replaceFirst("\"hbase\\.zookeeper\\.property\\.clientPort\".*:.*\\d+", "\"hbase.zookeeper.property.clientPort\" : " + HBaseTestsSuite.getZookeeperPort())

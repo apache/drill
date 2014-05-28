@@ -36,7 +36,9 @@ import org.junit.runners.Suite.SuiteClasses;
 @SuiteClasses({
   HBaseRecordReaderTest.class,
   TestHBaseFilterPushDown.class,
-  TestHBaseProjectPushDown.class})
+  TestHBaseProjectPushDown.class,
+  TestHBaseRegionScanAssignments.class
+})
 public class HBaseTestsSuite {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBaseTestsSuite.class);
 
@@ -145,6 +147,10 @@ public class HBaseTestsSuite {
   public static void configure(boolean manageHBaseCluster, boolean createTables) {
     HBaseTestsSuite.manageHBaseCluster = manageHBaseCluster;
     HBaseTestsSuite.createTables = createTables;
+  }
+
+  public static HBaseAdmin getAdmin() {
+    return admin;
   }
 
 }

@@ -125,12 +125,14 @@ public class HBaseSubScan extends AbstractBase implements SubScan {
   public static class HBaseSubScanSpec {
 
     protected String tableName;
+    protected String regionServer;
     protected byte[] startRow;
     protected byte[] stopRow;
     protected byte[] serializedFilter;
 
     @parquet.org.codehaus.jackson.annotate.JsonCreator
     public HBaseSubScanSpec(@JsonProperty("tableName") String tableName,
+                            @JsonProperty("regionServer") String regionServer,
                             @JsonProperty("startRow") byte[] startRow,
                             @JsonProperty("stopRow") byte[] stopRow,
                             @JsonProperty("serializedFilter") byte[] serializedFilter,
@@ -139,6 +141,7 @@ public class HBaseSubScan extends AbstractBase implements SubScan {
         throw new IllegalArgumentException("The parameters 'serializedFilter' or 'filterString' cannot be specified at the same time.");
       }
       this.tableName = tableName;
+      this.regionServer = regionServer;
       this.startRow = startRow;
       this.stopRow = stopRow;
       if (serializedFilter != null) {
@@ -167,6 +170,15 @@ public class HBaseSubScan extends AbstractBase implements SubScan {
 
     public HBaseSubScanSpec setTableName(String tableName) {
       this.tableName = tableName;
+      return this;
+    }
+
+    public String getRegionServer() {
+      return regionServer;
+    }
+
+    public HBaseSubScanSpec setRegionServer(String regionServer) {
+      this.regionServer = regionServer;
       return this;
     }
 
@@ -204,7 +216,7 @@ public class HBaseSubScan extends AbstractBase implements SubScan {
           + ", startRow=" + (startRow == null ? null : Bytes.toStringBinary(startRow))
           + ", stopRow=" + (stopRow == null ? null : Bytes.toStringBinary(stopRow))
           + ", filter=" + (getScanFilter() == null ? null : getScanFilter().toString())
-          + "]";
+          + ", regionServer=" + regionServer + "]";
     }
 
   }
