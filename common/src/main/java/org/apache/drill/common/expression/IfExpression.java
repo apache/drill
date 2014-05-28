@@ -23,7 +23,11 @@ import java.util.List;
 
 import org.apache.drill.common.expression.IfExpression.IfCondition;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
+import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.types.Types;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -102,7 +106,22 @@ public class IfExpression extends LogicalExpressionBase{
 
   @Override
   public MajorType getMajorType() {
-    return this.elseExpression.getMajorType();
+    // If the return type of one of the "then" expression or "else" expression is nullable, return "if" expression
+    // type as nullable
+    MajorType majorType = elseExpression.getMajorType();
+    if (majorType.getMode() == DataMode.OPTIONAL) {
+      return majorType;
+    }
+
+    for(IfCondition condition : conditions) {
+      if (condition.expression.getMajorType().getMode() == DataMode.OPTIONAL) {
+        assert condition.expression.getMajorType().getMinorType() == majorType.getMinorType();
+
+        return condition.expression.getMajorType();
+      }
+    }
+
+    return majorType;
   }
 
   public static Builder newBuilder(){

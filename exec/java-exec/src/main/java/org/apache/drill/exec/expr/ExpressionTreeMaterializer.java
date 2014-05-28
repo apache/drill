@@ -284,7 +284,43 @@ public class ExpressionTreeMaterializer {
         }
       }
 
+      // If the type of the IF expression is nullable, apply a convertToNullable*Holder function for "THEN"/"ELSE"
+      // expressions whose type is not nullable.
+      if (IfExpression.newBuilder().setElse(newElseExpr).addConditions(conditions).build().getMajorType().getMode()
+          == DataMode.OPTIONAL) {
+        for (int i = 0; i < conditions.size(); ++i) {
+          IfExpression.IfCondition condition = conditions.get(i);
+          if (condition.expression.getMajorType().getMode() != DataMode.OPTIONAL) {
+            conditions.set(i, new IfExpression.IfCondition(condition.condition,
+                getConvertToNullableExpr(ImmutableList.of(condition.expression),
+                    condition.expression.getMajorType().getMinorType(), registry)));
+          }
+        }
+
+        if (newElseExpr.getMajorType().getMode() != DataMode.OPTIONAL) {
+          newElseExpr = getConvertToNullableExpr(ImmutableList.of(newElseExpr),
+              newElseExpr.getMajorType().getMinorType(), registry);
+        }
+      }
+
       return validateNewExpr(IfExpression.newBuilder().setElse(newElseExpr).addConditions(conditions).build());
+    }
+
+    private LogicalExpression getConvertToNullableExpr(List<LogicalExpression> args, MinorType minorType,
+        FunctionImplementationRegistry registry) {
+      String funcName = "convertToNullable" + minorType.toString();
+      FunctionCall funcCall = new FunctionCall(funcName, args, ExpressionPosition.UNKNOWN);
+      FunctionResolver resolver = FunctionResolverFactory.getResolver(funcCall);
+
+      DrillFuncHolder matchedConvertToNullableFuncHolder =
+          resolver.getBestMatch(registry.getDrillRegistry().getMethods().get(funcName), funcCall);
+
+      if (matchedConvertToNullableFuncHolder == null) {
+        logFunctionResolutionError(errorCollector, funcCall);
+        return NullExpression.INSTANCE;
+      }
+
+      return new DrillFuncHolderExpr(funcName, matchedConvertToNullableFuncHolder, args, ExpressionPosition.UNKNOWN);
     }
 
     private LogicalExpression rewriteNullExpression(LogicalExpression expr, MajorType type) {

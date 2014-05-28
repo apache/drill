@@ -338,21 +338,40 @@ public class DrillOptiq {
     public LogicalExpression visitLiteral(RexLiteral literal) {
       switch(literal.getType().getSqlTypeName()){
       case BIGINT:
+        if (isLiteralNull(literal)) {
+          return createNullExpr(MinorType.BIGINT);
+        }
         long l = ((BigDecimal) literal.getValue()).longValue();
-        return checkNullLiteral(literal, MinorType.BIGINT, ValueExpressions.getBigInt(l));
+        return ValueExpressions.getBigInt(l);
       case BOOLEAN:
-        return checkNullLiteral(literal, MinorType.BIT, ValueExpressions.getBit(((Boolean) literal.getValue())));
+        if (isLiteralNull(literal)) {
+          return createNullExpr(MinorType.BIT);
+        }
+        return ValueExpressions.getBit(((Boolean) literal.getValue()));
       case CHAR:
-        return checkNullLiteral(literal, MinorType.VARCHAR, ValueExpressions.getChar(((NlsString) literal.getValue()).getValue()));
+        if (isLiteralNull(literal)) {
+          return createNullExpr(MinorType.VARCHAR);
+        }
+        return ValueExpressions.getChar(((NlsString)literal.getValue()).getValue());
       case DOUBLE:
+        if (isLiteralNull(literal)){
+          return createNullExpr(MinorType.FLOAT8);
+        }
         double d = ((BigDecimal) literal.getValue()).doubleValue();
-        return checkNullLiteral(literal, MinorType.FLOAT8, ValueExpressions.getFloat8(d));
+        return ValueExpressions.getFloat8(d);
       case FLOAT:
+        if (isLiteralNull(literal)) {
+          return createNullExpr(MinorType.FLOAT4);
+        }
         float f = ((BigDecimal) literal.getValue()).floatValue();
-        return checkNullLiteral(literal, MinorType.FLOAT4, ValueExpressions.getFloat4(f));
+        return ValueExpressions.getFloat4(f);
       case INTEGER:
+        if (isLiteralNull(literal)) {
+          return createNullExpr(MinorType.INT);
+        }
         int a = ((BigDecimal) literal.getValue()).intValue();
-        return checkNullLiteral(literal, MinorType.INT, ValueExpressions.getInt(a));
+        return ValueExpressions.getInt(a);
+
       case DECIMAL:
         /* TODO: Enable using Decimal literals once we have more functions implemented for Decimal
          * For now continue using Double instead of decimals
@@ -367,24 +386,49 @@ public class DrillOptiq {
         } else if (precision <= 38) {
             return ValueExpressions.getDecimal38((BigDecimal)literal.getValue());
         } */
-
+        if (isLiteralNull(literal)) {
+          return createNullExpr(MinorType.FLOAT8);
+        }
         double dbl = ((BigDecimal) literal.getValue()).doubleValue();
         logger.warn("Converting exact decimal into approximate decimal.  Should be fixed once decimal is implemented.");
-        return checkNullLiteral(literal, MinorType.FLOAT8, ValueExpressions.getFloat8(dbl));
+        return ValueExpressions.getFloat8(dbl);
       case VARCHAR:
-        return checkNullLiteral(literal, MinorType.VARCHAR, ValueExpressions.getChar(((NlsString) literal.getValue()).getValue()));
+        if (isLiteralNull(literal)) {
+          return createNullExpr(MinorType.VARCHAR);
+        }
+        return ValueExpressions.getChar(((NlsString)literal.getValue()).getValue());
       case SYMBOL:
-        return checkNullLiteral(literal, MinorType.VARCHAR, ValueExpressions.getChar(literal.getValue().toString()));
+        if (isLiteralNull(literal)) {
+          return createNullExpr(MinorType.VARCHAR);
+        }
+        return ValueExpressions.getChar(literal.getValue().toString());
       case DATE:
-        return checkNullLiteral(literal, MinorType.DATE, ValueExpressions.getDate((GregorianCalendar) literal.getValue()));
+        if (isLiteralNull(literal)) {
+          return createNullExpr(MinorType.DATE);
+        }
+        return (ValueExpressions.getDate((GregorianCalendar)literal.getValue()));
       case TIME:
-        return checkNullLiteral(literal, MinorType.TIME, ValueExpressions.getTime((GregorianCalendar) literal.getValue()));
+        if (isLiteralNull(literal)) {
+          return createNullExpr(MinorType.TIME);
+        }
+        return (ValueExpressions.getTime((GregorianCalendar)literal.getValue()));
       case TIMESTAMP:
-        return checkNullLiteral(literal, MinorType.TIMESTAMP, ValueExpressions.getTimeStamp((GregorianCalendar) literal.getValue()));
+        if (isLiteralNull(literal)) {
+          return createNullExpr(MinorType.TIMESTAMP);
+        }
+        return (ValueExpressions.getTimeStamp((GregorianCalendar) literal.getValue()));
       case INTERVAL_YEAR_MONTH:
-        return checkNullLiteral(literal, MinorType.INTERVALYEAR, ValueExpressions.getIntervalYear(((BigDecimal) (literal.getValue())).intValue()));
+        if (isLiteralNull(literal)) {
+          return createNullExpr(MinorType.INTERVALYEAR);
+        }
+        return (ValueExpressions.getIntervalYear(((BigDecimal) (literal.getValue())).intValue()));
       case INTERVAL_DAY_TIME:
-        return checkNullLiteral(literal, MinorType.INTERVALDAY, ValueExpressions.getIntervalDay(((BigDecimal) (literal.getValue())).longValue()));
+        if (isLiteralNull(literal)) {
+          return createNullExpr(MinorType.INTERVALDAY);
+        }
+        return (ValueExpressions.getIntervalDay(((BigDecimal) (literal.getValue())).longValue()));
+      case NULL:
+        return NullExpression.INSTANCE;
       case ANY:
         if (isLiteralNull(literal)) {
           return NullExpression.INSTANCE;
@@ -395,12 +439,8 @@ public class DrillOptiq {
     }
   }
 
-  private static LogicalExpression checkNullLiteral(RexLiteral literal, MinorType type, LogicalExpression orExpr) {
-    if(isLiteralNull(literal)) {
-      return new TypedNullConstant(Types.optional(type));
-    } else {
-      return orExpr;
-    }
+  private static final TypedNullConstant createNullExpr(MinorType type) {
+    return new TypedNullConstant(Types.optional(type));
   }
 
   private static boolean isLiteralNull(RexLiteral literal) {

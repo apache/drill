@@ -947,4 +947,52 @@ import static org.junit.Assert.fail;
       }
     });
   }
+
+  @Test
+  public void testCaseWithNoElse() throws Exception {
+    JdbcAssert.withNoDefaultSchema()
+        .sql("SELECT employee_id, CASE WHEN employee_id < 100 THEN first_name END from cp.`employee.json` " +
+            "WHERE employee_id = 99 OR employee_id = 100")
+        .returns(
+            "employee_id=99; EXPR$1=Elizabeth\n" +
+            "employee_id=100; EXPR$1=null\n"
+        );
+  }
+
+  @Test
+  public void testCaseWithElse() throws Exception {
+    JdbcAssert.withNoDefaultSchema()
+        .sql("SELECT employee_id, CASE WHEN employee_id < 100 THEN first_name ELSE 'Test' END from cp.`employee.json` " +
+            "WHERE employee_id = 99 OR employee_id = 100")
+        .returns(
+            "employee_id=99; EXPR$1=Elizabeth\n" +
+            "employee_id=100; EXPR$1=Test"
+        );
+  }
+
+  @Test
+  public void testCaseWith2ThensAndNoElse() throws Exception {
+    JdbcAssert.withNoDefaultSchema()
+        .sql("SELECT employee_id, CASE WHEN employee_id < 100 THEN first_name WHEN employee_id = 100 THEN last_name END " +
+            "from cp.`employee.json` " +
+            "WHERE employee_id = 99 OR employee_id = 100 OR employee_id = 101")
+        .returns(
+            "employee_id=99; EXPR$1=Elizabeth\n" +
+            "employee_id=100; EXPR$1=Hunt\n" +
+            "employee_id=101; EXPR$1=null"
+        );
+  }
+
+  @Test
+  public void testCaseWith2ThensAndElse() throws Exception {
+    JdbcAssert.withNoDefaultSchema()
+        .sql("SELECT employee_id, CASE WHEN employee_id < 100 THEN first_name WHEN employee_id = 100 THEN last_name ELSE 'Test' END " +
+            "from cp.`employee.json` " +
+            "WHERE employee_id = 99 OR employee_id = 100 OR employee_id = 101")
+        .returns(
+            "employee_id=99; EXPR$1=Elizabeth\n" +
+            "employee_id=100; EXPR$1=Hunt\n" +
+            "employee_id=101; EXPR$1=Test\n"
+        );
+  }
 }
