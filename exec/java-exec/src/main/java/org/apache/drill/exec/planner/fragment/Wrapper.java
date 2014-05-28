@@ -19,20 +19,24 @@ package org.apache.drill.exec.planner.fragment;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.drill.common.exceptions.PhysicalOperatorSetupException;
-import org.apache.drill.exec.exception.FragmentSetupException;
 import org.apache.drill.exec.physical.EndpointAffinity;
-import org.apache.drill.exec.physical.base.*;
+import org.apache.drill.exec.physical.base.AbstractPhysicalVisitor;
+import org.apache.drill.exec.physical.base.Exchange;
 import org.apache.drill.exec.physical.base.GroupScan;
+import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.physical.base.Store;
+import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.planner.fragment.Fragment.ExchangeFragmentPair;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -47,7 +51,7 @@ public class Wrapper {
   private int width = -1;
   private final Stats stats;
   private boolean endpointsAssigned;
-  private Map<DrillbitEndpoint, EndpointAffinity> endpointAffinity = Maps.newHashMap();
+  private Map<DrillbitEndpoint, EndpointAffinity> endpointAffinityMap = Maps.newHashMap();
   private long initialAllocation = 0;
   private long maxAllocation = 0;
 
@@ -71,14 +75,14 @@ public class Wrapper {
       addEndpointAffinity(ea.getEndpoint(), ea.getAffinity());
     }
   }
-  
+
   public void addEndpointAffinity(DrillbitEndpoint endpoint, float affinity) {
     Preconditions.checkState(!endpointsAssigned);
     Preconditions.checkNotNull(endpoint);
-    EndpointAffinity ea = endpointAffinity.get(endpoint);
+    EndpointAffinity ea = endpointAffinityMap.get(endpoint);
     if (ea == null) {
       ea = new EndpointAffinity(endpoint);
-      endpointAffinity.put(endpoint, ea);
+      endpointAffinityMap.put(endpoint, ea);
     }
 
     ea.addAffinity(affinity);
@@ -116,7 +120,6 @@ public class Wrapper {
 
   private class AssignEndpointsToScanAndStore extends AbstractPhysicalVisitor<Void, List<DrillbitEndpoint>, PhysicalOperatorSetupException>{
 
-    
     @Override
     public Void visitExchange(Exchange exchange, List<DrillbitEndpoint> value) throws PhysicalOperatorSetupException {
       if(exchange == node.getSendingExchange()){
@@ -148,40 +151,42 @@ public class Wrapper {
     public Void visitOp(PhysicalOperator op, List<DrillbitEndpoint> value) throws PhysicalOperatorSetupException {
       return visitChildren(op, value);
     }
-    
-  }
-  
-  public void assignEndpoints(Collection<DrillbitEndpoint> allPossible) throws PhysicalOperatorSetupException {
-    Preconditions.checkState(!endpointsAssigned);
 
+  }
+
+  public void assignEndpoints(Collection<DrillbitEndpoint> allEndpoints, double affinityFactor) throws PhysicalOperatorSetupException {
+    Preconditions.checkState(!endpointsAssigned);
     endpointsAssigned = true;
 
-    List<EndpointAffinity> values = Lists.newArrayList();
-    values.addAll(endpointAffinity.values());
-
-    if (values.size() == 0) {
-      List<DrillbitEndpoint> all = Lists.newArrayList(allPossible);
-      final int div = allPossible.size();
-      int start = ThreadLocalRandom.current().nextInt(div);
-      // round robin with random start.
-      for (int i = start; i < start + width; i++) {
-        Preconditions.checkNotNull(all.get(i % div));
-        endpoints.add(all.get(i % div));
-      }
-    } else {
+    if (endpointAffinityMap.size() > 0) {
+      List<EndpointAffinity> affinedEPs = Lists.newArrayList(endpointAffinityMap.values());
       // get nodes with highest affinity.
-      Collections.sort(values);
-      values = Lists.reverse(values);
-      for (int i = 0; i < width; i++) {
-        Preconditions.checkNotNull(values.get(i%values.size()).getEndpoint());
-        endpoints.add(values.get(i%values.size()).getEndpoint());
+      Collections.sort(affinedEPs);
+      Iterator<EndpointAffinity> affinedEPItr = Iterators.cycle(Lists.reverse(affinedEPs));
+      /** Maximum number of slots which should go to endpoints with affinity */
+      int affinedSlots = Math.min((Math.max(1, (int) (affinityFactor*width/allEndpoints.size())) * affinedEPs.size()), width);
+      while(endpoints.size() < affinedSlots) {
+        EndpointAffinity ea = affinedEPItr.next();
+        DrillbitEndpoint endpoint = ea.getEndpoint();
+        endpoints.add(endpoint);
+      }
+    }
+    // add other endpoints if required
+    if (endpoints.size() < width) {
+      List<DrillbitEndpoint> all = Lists.newArrayList(allEndpoints);
+      all.removeAll(endpointAffinityMap.keySet());
+      // round robin with random start.
+      Collections.shuffle(all, ThreadLocalRandom.current());
+      Iterator<DrillbitEndpoint> otherEPItr = Iterators.cycle(all.size() > 0 ? all : endpointAffinityMap.keySet());
+      while (endpoints.size() < width) {
+        endpoints.add(otherEPItr.next());
       }
     }
 
     // Set scan and store endpoints.
     AssignEndpointsToScanAndStore visitor = new AssignEndpointsToScanAndStore();
     node.getRoot().accept(visitor, endpoints);
-    
+
     // Set the endpoints for this (one at most) sending exchange.
     if (node.getSendingExchange() != null) {
       node.getSendingExchange().setupSenders(majorFragmentId, endpoints);
@@ -202,4 +207,5 @@ public class Wrapper {
     Preconditions.checkState(endpointsAssigned);
     return this.endpoints.get(minorFragmentId);
   }
+
 }

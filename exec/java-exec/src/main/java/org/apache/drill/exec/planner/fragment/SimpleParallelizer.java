@@ -51,6 +51,36 @@ public class SimpleParallelizer {
   private final Materializer materializer = new Materializer();
 
   /**
+   * The maximum level or parallelization any stage of the query can do. Note that while this
+   * might be the number of active Drillbits, realistically, this could be well beyond that
+   * number of we want to do things like speed results return.
+   */
+  private int globalMaxWidth;
+  public SimpleParallelizer setGlobalMaxWidth(int globalMaxWidth) {
+    this.globalMaxWidth = globalMaxWidth;
+    return this;
+  }
+
+  /**
+   * Limits the maximum level of parallelization to this factor time the number of Drillbits
+   */
+  private int maxWidthPerEndpoint;
+  public SimpleParallelizer setMaxWidthPerEndpoint(int maxWidthPerEndpoint) {
+    this.maxWidthPerEndpoint = maxWidthPerEndpoint;
+    return this;
+  }
+
+
+  /**
+   * Factor by which a node with endpoint affinity will be favored while creating assignment
+   */
+  private double affinityFactor = 1.2f;
+  public SimpleParallelizer setAffinityFactor(double affinityFactor) {
+    this.affinityFactor = affinityFactor;
+    return this;
+  }
+
+  /**
    * Generate a set of assigned fragments based on the provided planningSet. Do not allow parallelization stages to go
    * beyond the global max width.
    *
@@ -60,16 +90,12 @@ public class SimpleParallelizer {
    * @param reader          Tool used to read JSON plans
    * @param rootNode        The root node of the PhysicalPlan that we will parallelizing.
    * @param planningSet     The set of queries with collected statistics that we'll work with.
-   * @param globalMaxWidth  The maximum level or parallelization any stage of the query can do. Note that while this
-   *                        might be the number of active Drillbits, realistically, this could be well beyond that
-   *                        number of we want to do things like speed results return.
-   * @param maxWidthPerEndpoint Limits the maximum level of parallelization to this factor time the number of Drillbits
    * @return The list of generated PlanFragment protobuf objects to be assigned out to the individual nodes.
    * @throws ExecutionSetupException
    */
-  public QueryWorkUnit getFragments(OptionList options, DrillbitEndpoint foremanNode, QueryId queryId, Collection<DrillbitEndpoint> activeEndpoints, PhysicalPlanReader reader, Fragment rootNode, PlanningSet planningSet,
-                                    int globalMaxWidth, int maxWidthPerEndpoint) throws ExecutionSetupException {
-    assignEndpoints(activeEndpoints, planningSet, globalMaxWidth, maxWidthPerEndpoint);
+  public QueryWorkUnit getFragments(OptionList options, DrillbitEndpoint foremanNode, QueryId queryId, Collection<DrillbitEndpoint> activeEndpoints,
+      PhysicalPlanReader reader, Fragment rootNode, PlanningSet planningSet) throws ExecutionSetupException {
+    assignEndpoints(activeEndpoints, planningSet);
     return generateWorkUnit(options, foremanNode, queryId, reader, rootNode, planningSet);
   }
 
@@ -152,11 +178,9 @@ public class SimpleParallelizer {
     }
 
     return new QueryWorkUnit(rootOperator, rootFragment, fragments);
-
   }
 
-  private void assignEndpoints(Collection<DrillbitEndpoint> allNodes, PlanningSet planningSet,
-                               int globalMaxWidth, int maxWidthPerEndpoint) throws PhysicalOperatorSetupException {
+  private void assignEndpoints(Collection<DrillbitEndpoint> allNodes, PlanningSet planningSet) throws PhysicalOperatorSetupException {
     // First we determine the amount of parallelization for a fragment. This will be between 1 and maxWidth based on
     // cost. (Later could also be based on cluster operation.) then we decide endpoints based on affinity (later this
     // could be based on endpoint load)
@@ -181,7 +205,8 @@ public class SimpleParallelizer {
 //      logger.debug("Setting width {} on fragment {}", width, wrapper);
       wrapper.setWidth(width);
       // figure out endpoint assignments. also informs the exchanges about their respective endpoints.
-      wrapper.assignEndpoints(allNodes);
+      wrapper.assignEndpoints(allNodes, affinityFactor);
     }
   }
+
 }

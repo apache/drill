@@ -19,18 +19,20 @@ package org.apache.drill.exec.physical;
 
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
+import com.google.protobuf.TextFormat;
+
 
 public class EndpointAffinity implements Comparable<EndpointAffinity>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(EndpointAffinity.class);
-  
+
   private DrillbitEndpoint endpoint;
   private float affinity = 0.0f;
-  
+
   public EndpointAffinity(DrillbitEndpoint endpoint) {
     super();
     this.endpoint = endpoint;
   }
-  
+
   public EndpointAffinity(DrillbitEndpoint endpoint, float affinity) {
     super();
     this.endpoint = endpoint;
@@ -46,15 +48,19 @@ public class EndpointAffinity implements Comparable<EndpointAffinity>{
   public float getAffinity() {
     return affinity;
   }
-  
+
   @Override
   public int compareTo(EndpointAffinity o) {
     return Float.compare(affinity, o.affinity);
   }
-  
+
   public void addAffinity(float f){
     affinity += f;
   }
-  
-  
+
+  @Override
+  public String toString() {
+    return "EndpointAffinity [endpoint=" + TextFormat.shortDebugString(endpoint) + ", affinity=" + affinity + "]";
+  }
+
 }

@@ -121,7 +121,6 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
     cleanupAndSendResult(result);
   }
 
-
   public void cancel() {
     if(isFinished()){
       return;
@@ -148,8 +147,6 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
     }
   }
 
-
-
   /**
    * Called by execution pool to do foreman setup. Actual query execution is a separate phase (and can be scheduled).
    */
@@ -160,10 +157,8 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
     // convert a run query request into action
     try{
       switch (queryRequest.getType()) {
-
       case LOGICAL:
         parseAndRunLogicalPlan(queryRequest.getPlan());
-
         break;
       case PHYSICAL:
         parseAndRunPhysicalPlan(queryRequest.getPlan());
@@ -184,7 +179,6 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
       Thread.currentThread().setName(originalThread);
     }
   }
-
 
   private void parseAndRunLogicalPlan(String json) {
 
@@ -249,8 +243,6 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
 
   }
 
-
-
   private void parseAndRunPhysicalPlan(String json) {
     try {
       PhysicalPlan plan = context.getPlanReader().readPhysicalPlan(json);
@@ -259,7 +251,6 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
       fail("Failure while parsing physical plan.", e);
     }
   }
-
 
   private void runPhysicalPlan(PhysicalPlan plan) {
 
@@ -278,12 +269,14 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
     }
 
     PlanningSet planningSet = StatsCollector.collectStats(rootFragment);
-    SimpleParallelizer parallelizer = new SimpleParallelizer();
+    SimpleParallelizer parallelizer = new SimpleParallelizer()
+      .setGlobalMaxWidth(context.getConfig().getInt(ExecConstants.GLOBAL_MAX_WIDTH))
+      .setMaxWidthPerEndpoint(context.getConfig().getInt(ExecConstants.MAX_WIDTH_PER_ENDPOINT))
+      .setAffinityFactor(context.getConfig().getDouble(ExecConstants.AFFINITY_FACTOR));
 
     try {
-      QueryWorkUnit work = parallelizer.getFragments(context.getOptions().getSessionOptionList(), context.getCurrentEndpoint(), queryId, context.getActiveEndpoints(),
-              context.getPlanReader(), rootFragment, planningSet, context.getConfig().getInt(ExecConstants.GLOBAL_MAX_WIDTH),
-              context.getConfig().getInt(ExecConstants.MAX_WIDTH_PER_ENDPOINT));
+      QueryWorkUnit work = parallelizer.getFragments(context.getOptions().getSessionOptionList(), context.getCurrentEndpoint(),
+          queryId, context.getActiveEndpoints(), context.getPlanReader(), rootFragment, planningSet);
 
       this.context.getWorkBus().setFragmentStatusListener(work.getRootFragment().getHandle().getQueryId(), fragmentManager);
       List<PlanFragment> leafFragments = Lists.newArrayList();
@@ -292,17 +285,13 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
       // store fragments in distributed grid.
       logger.debug("Storing fragments");
       for (PlanFragment f : work.getFragments()) {
-
         // store all fragments in grid since they are part of handshake.
-
         context.getCache().storeFragment(f);
         if (f.getLeafFragment()) {
           leafFragments.add(f);
         } else {
           intermediateFragments.add(f);
         }
-
-
       }
 
       logger.debug("Fragments stored.");
@@ -310,7 +299,6 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
       logger.debug("Submitting fragments to run.");
       fragmentManager.runFragments(bee, work.getRootFragment(), work.getRootOperator(), initiatingClient, leafFragments, intermediateFragments);
       logger.debug("Fragments running.");
-
 
     } catch (ExecutionSetupException | RpcException e) {
       fail("Failure while setting up query.", e);
@@ -352,7 +340,6 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
     return this.state.getState();
   }
 
-
   class ForemanManagerListener{
     void fail(String message, Throwable t) {
       ForemanManagerListener.this.fail(message, t);
@@ -364,13 +351,9 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
 
   }
 
-
-
   @Override
   public int compareTo(Object o) {
     return o.hashCode() - o.hashCode();
   }
-
-
 
 }

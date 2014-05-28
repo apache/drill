@@ -44,6 +44,7 @@ public interface ExecConstants {
   public static final String GLOBAL_MAX_WIDTH = "drill.exec.work.global.max.width";
   public static final String MAX_WIDTH_PER_ENDPOINT = "drill.exec.work.max.width.per.endpoint";
   public static final String EXECUTOR_THREADS = "drill.exec.work.executor.threads";
+  public static final String AFFINITY_FACTOR = "drill.exec.work.affinity.factor";
   public static final String CLIENT_RPC_THREADS = "drill.exec.rpc.user.client.threads";
   public static final String BIT_SERVER_RPC_THREADS = "drill.exec.rpc.bit.server.threads";
   public static final String USER_SERVER_RPC_THREADS = "drill.exec.rpc.user.server.threads";

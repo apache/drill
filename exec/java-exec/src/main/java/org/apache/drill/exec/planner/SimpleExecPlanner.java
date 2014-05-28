@@ -51,9 +51,9 @@ public class SimpleExecPlanner implements ExecPlanner{
 
     int maxWidthPerEndpoint = context.getConfig().getInt(ExecConstants.MAX_WIDTH_PER_ENDPOINT);
 
-    return parallelizer.getFragments(new OptionList(), context.getCurrentEndpoint(), context.getQueryId(), context.getActiveEndpoints(),
-            context.getPlanReader(), fragmentRoot, planningSet, maxWidth, maxWidthPerEndpoint);
-
-
+    parallelizer.setGlobalMaxWidth(maxWidth).setMaxWidthPerEndpoint(maxWidthPerEndpoint);
+    return parallelizer.getFragments(new OptionList(), context.getCurrentEndpoint(),
+        context.getQueryId(), context.getActiveEndpoints(), context.getPlanReader(), fragmentRoot, planningSet);
   }
+
 }
