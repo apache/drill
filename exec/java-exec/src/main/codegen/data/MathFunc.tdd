@@ -82,7 +82,7 @@ unaryMathFunctions : [
       {input: "UInt8", outputType: "UInt8", castType: "long"}
      ]
    	},
-    {className: "Trunc", funcName: "trunc", javaFunc : "(long)", types: [
+    {className: "Trunc", funcName: "trunc", types: [
       {input: "Int",  outputType: "Int", castType: "int"},
       {input: "BigInt",  outputType: "BigInt", castType: "long"},
       {input: "Float4", outputType: "Float4", castType: "float"},
@@ -90,7 +90,7 @@ unaryMathFunctions : [
       {input: "SmallInt",  outputType: "SmallInt", castType: "short"},
       {input: "TinyInt",  outputType: "TinyInt", castType: "byte"},
       {input: "UInt1", outputType: "UInt1", castType: "byte"},
-      {input: "UInt2", outputType: "UInt2", castType: "char"},
+      {input: "UInt2", outputType: "UInt2", castType: "int", extraCast: "char"},
       {input: "UInt4", outputType: "UInt4", castType: "int"},
       {input: "UInt8", outputType: "UInt8", castType: "long"}
      ]

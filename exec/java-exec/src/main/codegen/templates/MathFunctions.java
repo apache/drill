@@ -67,7 +67,13 @@ public class GMathFunctions{
     }
 
     public void eval() {
+
+      <#if func.funcName=='trunc'>
+      java.math.BigDecimal bd = new java.math.BigDecimal(String.valueOf(in.value)).setScale(0, java.math.BigDecimal.ROUND_DOWN);
+      out.value = <#if type.extraCast ??>(${type.extraCast})</#if>bd.${type.castType}Value();
+      <#else>
       out.value =(${type.castType}) ${func.javaFunc}(in.value);
+      </#if>
     }
   }
   
