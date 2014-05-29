@@ -17,12 +17,12 @@
  */
 package org.apache.drill.exec.server.options;
 
-import org.apache.drill.exec.cache.JacksonSerializable;
-
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.google.common.base.Preconditions;
 
-
-public class OptionValue extends JacksonSerializable {
+@JsonInclude(Include.NON_NULL)
+public class OptionValue{
 
   public static enum OptionType {
     BOOT, SYSTEM, SESSION

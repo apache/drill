@@ -43,6 +43,7 @@ import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.SessionOptionManager;
 import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.exec.store.sys.local.LocalTableProvider;
 import org.junit.Rule;
 import org.junit.rules.TestRule;
 
@@ -71,7 +72,10 @@ public class PlanningBase extends ExecTest{
     final DistributedCache cache = new LocalCache();
     cache.run();
 
-    final SystemOptionManager opt = new SystemOptionManager(cache);
+    final LocalTableProvider provider = new LocalTableProvider(config);
+    provider.start();
+
+    final SystemOptionManager opt = new SystemOptionManager(config, provider);
     opt.init();
     final OptionManager sess = new SessionOptionManager(opt);
 
@@ -87,6 +91,8 @@ public class PlanningBase extends ExecTest{
         result = opt;
         dbContext.getCache();
         result = cache;
+        dbContext.getSystemTableProvider();
+        result = provider;
       }
     };
 

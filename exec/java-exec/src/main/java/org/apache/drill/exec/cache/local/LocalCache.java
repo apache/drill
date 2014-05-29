@@ -21,7 +21,9 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -38,7 +40,6 @@ import org.apache.drill.exec.cache.DistributedCache;
 import org.apache.drill.exec.cache.DistributedMap;
 import org.apache.drill.exec.cache.DistributedMultiMap;
 import org.apache.drill.exec.cache.DrillSerializable;
-import org.apache.drill.exec.cache.JacksonSerializable;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.TopLevelAllocator;
@@ -46,20 +47,22 @@ import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Charsets;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.io.ByteArrayDataInput;
+import com.google.common.collect.Multimaps;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
+import com.google.protobuf.Message;
+import com.google.protobuf.Parser;
 
 public class LocalCache implements DistributedCache {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LocalCache.class);
 
-  private volatile Map<FragmentHandle, PlanFragment> handles;
-  private volatile ConcurrentMap<String, DistributedMap<?>> namedMaps;
-  private volatile ConcurrentMap<Class<?>, DistributedMap<?>> maps;
-  private volatile ConcurrentMap<Class<?>, DistributedMultiMap<?>> multiMaps;
+  private volatile ConcurrentMap<CacheConfig<?, ?>, DistributedMap<?, ?>> maps;
+  private volatile ConcurrentMap<CacheConfig<?, ?>, DistributedMultiMap<?, ?>> multiMaps;
   private volatile ConcurrentMap<String, Counter> counters;
   private static final BufferAllocator allocator = new TopLevelAllocator(DrillConfig.create());
 
@@ -67,59 +70,33 @@ public class LocalCache implements DistributedCache {
 
   @Override
   public void close() throws IOException {
-    handles = null;
+
   }
 
   @Override
   public void run() throws DrillbitStartupException {
-    handles = Maps.newConcurrentMap();
     maps = Maps.newConcurrentMap();
     multiMaps = Maps.newConcurrentMap();
     counters = Maps.newConcurrentMap();
-    namedMaps = Maps.newConcurrentMap();
   }
 
   @Override
-  public PlanFragment getFragment(FragmentHandle handle) {
-//    logger.debug("looking for fragment with handle: {}", handle);
-    return handles.get(handle);
-  }
-
-  @Override
-  public void storeFragment(PlanFragment fragment) {
-//    logger.debug("Storing fragment: {}", fragment);
-    handles.put(fragment.getHandle(), fragment);
-  }
-
-  @Override
-  public <V extends DrillSerializable> DistributedMultiMap<V> getMultiMap(Class<V> clazz) {
-    DistributedMultiMap<V> mmap = (DistributedMultiMap<V>) multiMaps.get(clazz);
+  public <K, V> DistributedMultiMap<K, V> getMultiMap(CacheConfig<K, V> config) {
+    DistributedMultiMap<K, V> mmap = (DistributedMultiMap<K, V>) multiMaps.get(config);
     if (mmap == null) {
-      multiMaps.putIfAbsent(clazz, new LocalDistributedMultiMapImpl<V>(clazz));
-      return (DistributedMultiMap<V>) multiMaps.get(clazz);
+      multiMaps.putIfAbsent(config, new LocalDistributedMultiMapImpl<K, V>(config));
+      return (DistributedMultiMap<K, V>) multiMaps.get(config);
     } else {
       return mmap;
     }
   }
 
   @Override
-  public <V extends DrillSerializable> DistributedMap<V> getMap(Class<V> clazz) {
-    DistributedMap m = maps.get(clazz);
+  public <K, V> DistributedMap<K, V> getMap(CacheConfig<K, V> config) {
+    DistributedMap<K, V> m = (DistributedMap<K, V>) maps.get(config);
     if (m == null) {
-      maps.putIfAbsent(clazz, new LocalDistributedMapImpl<V>(clazz));
-      return (DistributedMap<V>) maps.get(clazz);
-    } else {
-      return m;
-    }
-  }
-
-
-  @Override
-  public <V extends DrillSerializable> DistributedMap<V> getNamedMap(String name, Class<V> clazz) {
-    DistributedMap m = namedMaps.get(clazz);
-    if (m == null) {
-      namedMaps.putIfAbsent(name, new LocalDistributedMapImpl<V>(clazz));
-      return (DistributedMap<V>) namedMaps.get(name);
+      maps.putIfAbsent(config, new LocalDistributedMapImpl<K, V>(config));
+      return (DistributedMap<K, V>) maps.get(config);
     } else {
       return m;
     }
@@ -136,112 +113,186 @@ public class LocalCache implements DistributedCache {
     }
   }
 
-  public static ByteArrayDataOutput serialize(DrillSerializable obj) {
-    if(obj instanceof JacksonSerializable){
+  private static BytesHolder serialize(Object obj, SerializationMode mode) {
+    if(obj instanceof String){
+      return new BytesHolder( ((String)obj).getBytes(Charsets.UTF_8));
+    }
       try{
+      switch(mode){
+
+      case DRILL_SERIALIZIABLE: {
+        ByteArrayDataOutput out = ByteStreams.newDataOutput();
+        OutputStream outputStream = DataOutputOutputStream.constructOutputStream(out);
+        ((DrillSerializable)obj).writeToStream(outputStream);
+        outputStream.flush();
+        return new BytesHolder(out.toByteArray());
+      }
+
+      case JACKSON: {
         ByteArrayDataOutput out = ByteStreams.newDataOutput();
         out.write(mapper.writeValueAsBytes(obj));
-        return out;
-      }catch(Exception e){
-        throw new RuntimeException(e);
+        return new BytesHolder(out.toByteArray());
       }
+
+      case PROTOBUF:
+        return new BytesHolder(( (Message) obj).toByteArray());
+
+      }
+    }catch(Exception e){
+      throw new RuntimeException(e);
     }
 
-    ByteArrayDataOutput out = ByteStreams.newDataOutput();
-    OutputStream outputStream = DataOutputOutputStream.constructOutputStream(out);
-    try {
-      obj.writeToStream(outputStream);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-    try {
-      outputStream.flush();
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-    return out;
+    throw new UnsupportedOperationException();
   }
 
-  public static <V extends DrillSerializable> V deserialize(byte[] bytes, Class<V> clazz) {
-    if(JacksonSerializable.class.isAssignableFrom(clazz)){
-      try{
+  private static <V> V deserialize(BytesHolder b, SerializationMode mode, Class<V> clazz) {
+    byte[] bytes = b.bytes;
+    try{
+
+      if (clazz == String.class) {
+        return (V) new String(bytes, Charsets.UTF_8);
+      }
+
+      switch (mode) {
+
+      case DRILL_SERIALIZIABLE: {
+        InputStream inputStream = new ByteArrayInputStream(bytes);
+        V obj = clazz.getConstructor(BufferAllocator.class).newInstance(allocator);
+        ((DrillSerializable) obj).readFromStream(inputStream);
+        return obj;
+      }
+
+      case JACKSON: {
         return (V) mapper.readValue(bytes, clazz);
-      }catch(Exception e){
-        throw new RuntimeException(e);
       }
-    }
 
-    InputStream inputStream = new ByteArrayInputStream(bytes);
-    try {
-      V obj = clazz.getConstructor(BufferAllocator.class).newInstance(allocator);
-      obj.readFromStream(inputStream);
-      return obj;
-    } catch (InstantiationException | IllegalAccessException | IOException | NoSuchMethodException | InvocationTargetException e) {
+      case PROTOBUF: {
+        Parser<V> parser = null;
+        for (Field f : clazz.getFields()) {
+          if (f.getName().equals("PARSER") && Modifier.isStatic(f.getModifiers())) {
+            parser = (Parser<V>) f.get(null);
+          }
+        }
+        if (parser == null) throw new UnsupportedOperationException(String.format("Unable to find parser for class %s.", clazz.getName()));
+        InputStream inputStream = new ByteArrayInputStream(bytes);
+        return parser.parseFrom(inputStream);
+      }
+
+      }
+    }catch(Exception e){
       throw new RuntimeException(e);
     }
+
+    throw new UnsupportedOperationException();
   }
 
-  public static class LocalDistributedMultiMapImpl<V extends DrillSerializable> implements DistributedMultiMap<V> {
-    private ArrayListMultimap<String, ByteArrayDataOutput> mmap;
-    private Class<V> clazz;
+  private static class BytesHolder {
+    final byte[] bytes;
+    public BytesHolder(byte[] bytes){
+      this.bytes = bytes;
+    }
+    @Override
+    public int hashCode() {
+      final int prime = 31;
+      int result = 1;
+      result = prime * result + Arrays.hashCode(bytes);
+      return result;
+    }
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj)
+        return true;
+      if (obj == null)
+        return false;
+      if (getClass() != obj.getClass())
+        return false;
+      BytesHolder other = (BytesHolder) obj;
+      if (!Arrays.equals(bytes, other.bytes))
+        return false;
+      return true;
+    }
 
-    public LocalDistributedMultiMapImpl(Class<V> clazz) {
-      mmap = ArrayListMultimap.create();
-      this.clazz = clazz;
+
+  }
+
+  static class LocalDistributedMultiMapImpl<K, V> implements DistributedMultiMap<K, V> {
+    private ListMultimap<BytesHolder, BytesHolder> mmap;
+    private CacheConfig<K, V> config;
+
+    public LocalDistributedMultiMapImpl(CacheConfig<K, V> config) {
+      ListMultimap<BytesHolder, BytesHolder> innerMap = ArrayListMultimap.create();
+      mmap = Multimaps.synchronizedListMultimap(innerMap);
+      this.config = config;
     }
 
     @Override
-    public Collection<V> get(String key) {
+    public Collection<V> get(K key) {
       List<V> list = Lists.newArrayList();
-      for (ByteArrayDataOutput o : mmap.get(key)) {
-        list.add(deserialize(o.toByteArray(), this.clazz));
+      for (BytesHolder o : mmap.get(serialize(key, config.getMode()))) {
+        list.add(deserialize(o, config.getMode(), config.getValueClass()));
       }
       return list;
     }
 
     @Override
-    public void put(String key, DrillSerializable value) {
-      mmap.put(key, serialize(value));
+    public void put(K key, V value) {
+      mmap.put(serialize(key, config.getMode()), serialize(value, config.getMode()));
     }
   }
 
-  public static class LocalDistributedMapImpl<V extends DrillSerializable> implements DistributedMap<V> {
-    protected ConcurrentMap<String, ByteArrayDataOutput> m;
-    protected Class<V> clazz;
+  public static class LocalDistributedMapImpl<K, V> implements DistributedMap<K, V> {
+    protected ConcurrentMap<BytesHolder, BytesHolder> m;
+    protected CacheConfig<K, V> config;
 
-    public LocalDistributedMapImpl(Class<V> clazz) {
+    public LocalDistributedMapImpl(CacheConfig<K, V> config) {
       m = Maps.newConcurrentMap();
-      this.clazz = clazz;
+      this.config = config;
     }
 
     @Override
-    public V get(String key) {
-      if (m.get(key) == null) return null;
-      ByteArrayDataOutput b = m.get(key);
-      byte[] bytes = b.toByteArray();
-      return (V) deserialize(bytes, this.clazz);
+    public V get(K key) {
+      BytesHolder b = m.get(serialize(key, config.getMode()));
+      if(b == null) return null;
+      return (V) deserialize(b, config.getMode(), config.getValueClass());
     }
 
     @Override
-    public void put(String key, V value) {
-      m.put(key, serialize(value));
+    public Iterable<Entry<K, V>> getLocalEntries() {
+      return new Iterable<Entry<K, V>>(){
+        @Override
+        public Iterator<Entry<K, V>> iterator() {
+          return new DeserializingTransformer(m.entrySet().iterator());
+        }
+      };
+
     }
 
     @Override
-    public void putIfAbsent(String key, V value) {
-      m.putIfAbsent(key, serialize(value));
+    public void put(K key, V value) {
+      m.put(serialize(key, config.getMode()), serialize(value, config.getMode()));
+    }
+
+
+    @Override
+    public void putIfAbsent(K key, V value) {
+      m.putIfAbsent(serialize(key, config.getMode()), serialize(value, config.getMode()));
     }
 
     @Override
-    public void putIfAbsent(String key, V value, long ttl, TimeUnit timeUnit) {
-      m.putIfAbsent(key, serialize(value));
+    public void delete(K key) {
+      m.remove(serialize(key, config.getMode()));
+    }
+
+    @Override
+    public void putIfAbsent(K key, V value, long ttl, TimeUnit timeUnit) {
+      m.putIfAbsent(serialize(key, config.getMode()), serialize(value, config.getMode()));
       logger.warn("Expiration not implemented in local map cache");
     }
 
-    private class DeserializingTransformer implements Iterator<Map.Entry<String, V> >{
-      private Iterator<Map.Entry<String, ByteArrayDataOutput>> inner;
+    private class DeserializingTransformer implements Iterator<Map.Entry<K, V>> {
+      private Iterator<Map.Entry<BytesHolder, BytesHolder>> inner;
 
-      public DeserializingTransformer(Iterator<Entry<String, ByteArrayDataOutput>> inner) {
+      public DeserializingTransformer(Iterator<Entry<BytesHolder, BytesHolder>> inner) {
         super();
         this.inner = inner;
       }
@@ -252,7 +303,7 @@ public class LocalCache implements DistributedCache {
       }
 
       @Override
-      public Entry<String, V> next() {
+      public Entry<K, V> next() {
         return newEntry(inner.next());
       }
 
@@ -261,17 +312,17 @@ public class LocalCache implements DistributedCache {
         throw new UnsupportedOperationException();
       }
 
-      public Entry<String, V> newEntry(final Entry<String, ByteArrayDataOutput> input) {
-        return new Map.Entry<String, V>(){
+      public Entry<K, V> newEntry(final Entry<BytesHolder, BytesHolder> input) {
+        return new Map.Entry<K, V>() {
 
           @Override
-          public String getKey() {
-            return input.getKey();
+          public K getKey() {
+            return deserialize(input.getKey(), config.getMode(), config.getKeyClass());
           }
 
           @Override
           public V getValue() {
-            return deserialize(input.getValue().toByteArray(), clazz);
+            return deserialize(input.getValue(), config.getMode(), config.getValueClass());
           }
 
           @Override
@@ -283,10 +334,8 @@ public class LocalCache implements DistributedCache {
       }
 
     }
-    @Override
-    public Iterator<Entry<String, V>> iterator() {
-      return new DeserializingTransformer(m.entrySet().iterator());
-    }
+
+
   }
 
   public static class LocalCounterImpl implements Counter {

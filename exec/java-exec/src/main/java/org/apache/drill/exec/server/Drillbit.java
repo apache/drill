@@ -25,16 +25,18 @@ import org.apache.drill.exec.cache.DistributedCache;
 import org.apache.drill.exec.cache.infinispan.ICache;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.coord.ClusterCoordinator.RegistrationHandle;
-import org.apache.drill.exec.coord.ZKClusterCoordinator;
+import org.apache.drill.exec.coord.zk.ZKClusterCoordinator;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.server.rest.DrillRestServer;
 import org.apache.drill.exec.service.ServiceEngine;
+import org.apache.drill.exec.store.sys.TableProvider;
+import org.apache.drill.exec.store.sys.local.LocalTableProvider;
+import org.apache.drill.exec.store.sys.zk.ZkTableProvider;
 import org.apache.drill.exec.work.WorkManager;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.servlet.ServletContainer;
 
 import com.google.common.io.Closeables;
@@ -74,6 +76,7 @@ public class Drillbit implements Closeable{
   final ClusterCoordinator coord;
   final ServiceEngine engine;
   final DistributedCache cache;
+  final TableProvider tableProvider;
   final WorkManager manager;
   final BootStrapContext context;
   final Server embeddedJetty;
@@ -97,11 +100,12 @@ public class Drillbit implements Closeable{
     if(serviceSet != null){
       this.coord = serviceSet.getCoordinator();
       this.cache = serviceSet.getCache();
+      this.tableProvider = new LocalTableProvider(config);
     }else{
       Runtime.getRuntime().addShutdownHook(new ShutdownThread(config));
       this.coord = new ZKClusterCoordinator(config);
-      this.cache = new ICache(config, context.getAllocator());
-//      this.cache = new HazelCache(config, context.getAllocator());
+      this.tableProvider = new ZkTableProvider(((ZKClusterCoordinator)coord).getCurator());
+      this.cache = new ICache(config, context.getAllocator(), false);
     }
   }
 
@@ -122,8 +126,9 @@ public class Drillbit implements Closeable{
 
   public void run() throws Exception {
     coord.start(10000);
+    tableProvider.start();
     DrillbitEndpoint md = engine.start();
-    manager.start(md, cache, engine.getController(), engine.getDataConnectionCreator(), coord);
+    manager.start(md, cache, engine.getController(), engine.getDataConnectionCreator(), coord, tableProvider);
     cache.run();
     manager.getContext().getStorage().init();
     manager.getContext().getOptionManager().init();
@@ -145,6 +150,7 @@ public class Drillbit implements Closeable{
       logger.warn("Failure while shutting down embedded jetty server.");
     }
     Closeables.closeQuietly(engine);
+    Closeables.closeQuietly(tableProvider);
     Closeables.closeQuietly(coord);
     Closeables.closeQuietly(manager);
     Closeables.closeQuietly(context);

@@ -38,21 +38,18 @@ public class DrillClientSystemTest extends DrillSystemTestBase {
 
   @BeforeClass
   public static void setUp() throws Exception {
-
     DrillSystemTestBase.setUp();
     plan = Resources.toString(Resources.getResource("simple_plan.json"), Charsets.UTF_8);
 
   }
 
   @After
-  public void tearDown() {
+  public void tearDownTest() {
     stopCluster();
-    stopZookeeper();
   }
 
   @Test
   public void testSubmitPlanSingleNode() throws Exception {
-    startZookeeper(1);
     startCluster(1);
     DrillClient client = new DrillClient();
     client.connect();
@@ -66,7 +63,6 @@ public class DrillClientSystemTest extends DrillSystemTestBase {
 
   @Test
   public void testSubmitPlanTwoNodes() throws Exception {
-    startZookeeper(1);
     startCluster(2);
     DrillClient client = new DrillClient();
     client.connect();

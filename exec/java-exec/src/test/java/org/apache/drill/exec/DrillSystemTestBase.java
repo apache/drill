@@ -36,50 +36,20 @@ import com.google.common.collect.ImmutableList;
  * Base class for Drill system tests.
  * Starts one or more Drillbits, an embedded ZooKeeper cluster and provides a configured client for testing.
  */
-public class DrillSystemTestBase extends ExecTest{
+public class DrillSystemTestBase extends TestWithZookeeper {
 
   static final Logger logger = org.slf4j.LoggerFactory.getLogger(DrillConfig.class);
 
-  private static File testDir = new File("target/test-data");
-  private static DrillConfig config;
-  private static String zkUrl;
-
   private List<Drillbit> servers;
-  private MiniZooKeeperCluster zkCluster;
-
-  @BeforeClass
-  public static void setUp() throws Exception {
-    config = DrillConfig.create();
-    zkUrl = config.getString(ExecConstants.ZK_CONNECTION);
-    setupTestDir();
-  }
-
-  private static void setupTestDir() {
-    if (!testDir.exists()) {
-      testDir.mkdirs();
-    }
-  }
 
   public void startCluster(int numServers) {
     try {
       ImmutableList.Builder<Drillbit> servers = ImmutableList.builder();
       for (int i = 0; i < numServers; i++) {
-        servers.add(Drillbit.start(config));
+        servers.add(Drillbit.start(getConfig()));
       }
       this.servers = servers.build();
     } catch (DrillbitStartupException e) {
-      propagate(e);
-    }
-  }
-
-  public void startZookeeper(int numServers) {
-    try {
-      this.zkCluster = new MiniZooKeeperCluster();
-      zkCluster.setDefaultClientPort(Integer.parseInt(this.zkUrl.split(":")[1]));
-      zkCluster.startup(testDir, numServers);
-    } catch (IOException e) {
-      propagate(e);
-    } catch (InterruptedException e) {
       propagate(e);
     }
   }
@@ -96,19 +66,9 @@ public class DrillSystemTestBase extends ExecTest{
     }
   }
 
-  public void stopZookeeper() {
-    try {
-      this.zkCluster.shutdown();
-    } catch (IOException e) {
-      propagate(e);
-    }
-  }
 
   public Drillbit getABit(){
     return this.servers.iterator().next();
   }
 
-  public static DrillConfig getConfig(){
-    return config;
-  }
 }

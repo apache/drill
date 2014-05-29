@@ -39,6 +39,8 @@ import org.apache.drill.common.expression.PathSegment.NameSegment;
 import org.apache.drill.common.expression.PathSegment.ArraySegment;
 import org.apache.drill.common.types.*;
 import org.apache.drill.common.types.TypeProtos.*;
+import org.apache.drill.common.types.TypeProtos.DataMode;
+import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.exceptions.ExpressionParsingException;
 }
 

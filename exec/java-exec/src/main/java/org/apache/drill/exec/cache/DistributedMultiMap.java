@@ -19,8 +19,8 @@ package org.apache.drill.exec.cache;
 
 import java.util.Collection;
 
-public interface DistributedMultiMap<V extends DrillSerializable> {
+public interface DistributedMultiMap<K, V> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DistributedMultiMap.class);
-  public Collection<V> get(String key);
-  public void put(String key, V value);
+  public Collection<V> get(K key);
+  public void put(K key, V value);
 }

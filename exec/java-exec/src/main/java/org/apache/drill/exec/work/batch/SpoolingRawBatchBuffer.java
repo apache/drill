@@ -271,6 +271,7 @@ public class SpoolingRawBatchBuffer implements RawBatchBuffer {
       ByteBuf buf = allocator.buffer(bodyLength);
       buf.writeBytes(stream, bodyLength);
       batch = new RawFragmentBatch(null, header, buf);
+      buf.release();
       available = true;
       latch.countDown();
       long t = watch.elapsed(TimeUnit.MICROSECONDS);

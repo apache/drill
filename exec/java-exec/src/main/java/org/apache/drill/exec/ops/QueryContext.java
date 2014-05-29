@@ -23,7 +23,6 @@ import net.hydromatic.optiq.SchemaPlus;
 import net.hydromatic.optiq.tools.Frameworks;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.exceptions.ExpressionParsingException;
 import org.apache.drill.exec.cache.DistributedCache;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
@@ -35,9 +34,8 @@ import org.apache.drill.exec.rpc.data.DataConnectionCreator;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionManager;
-import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.eigenbase.sql.SqlLiteral;
+import org.apache.drill.exec.store.sys.TableProvider;
 
 public class QueryContext{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryContext.class);
@@ -57,7 +55,11 @@ public class QueryContext{
     this.session = session;
     this.timer = new Multitimer<>(QuerySetup.class);
     this.plannerSettings = new PlannerSettings(session.getOptions());
-    this.plannerSettings.setNumEndPoints(this.getActiveEndpoints().size()); 
+    this.plannerSettings.setNumEndPoints(this.getActiveEndpoints().size());
+  }
+
+  public TableProvider getSystemTableProvider(){
+    return drillbitContext.getSystemTableProvider();
   }
 
   public PlannerSettings getPlannerSettings(){

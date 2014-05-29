@@ -17,9 +17,11 @@
  */
 package org.apache.drill.exec.rpc.control;
 
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import org.apache.drill.exec.cache.DistributedMap;
 import org.apache.drill.exec.exception.FragmentSetupException;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
@@ -27,6 +29,7 @@ import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.work.WorkManager.WorkerBee;
+import org.apache.drill.exec.work.foreman.Foreman;
 import org.apache.drill.exec.work.foreman.FragmentStatusListener;
 import org.apache.drill.exec.work.fragment.FragmentManager;
 import org.apache.drill.exec.work.fragment.NonRootFragmentManager;
@@ -81,12 +84,16 @@ public class WorkEventBus {
   public FragmentManager getFragmentManager(FragmentHandle handle){
     return managers.get(handle);
   }
-  
+
   public FragmentManager getOrCreateFragmentManager(FragmentHandle handle) throws FragmentSetupException{
     FragmentManager manager = managers.get(handle);
     if (manager != null) return manager;
-
-    PlanFragment fragment = bee.getContext().getCache().getFragment(handle);
+    DistributedMap<FragmentHandle, PlanFragment> planCache = bee.getContext().getCache().getMap(Foreman.FRAGMENT_CACHE);
+    for(Map.Entry<FragmentHandle, PlanFragment> e : planCache.getLocalEntries()){
+      logger.debug("Key: {}", e.getKey());
+      logger.debug("Value: {}", e.getValue());
+    }
+    PlanFragment fragment = bee.getContext().getCache().getMap(Foreman.FRAGMENT_CACHE).get(handle);
 
     if (fragment == null) {
       throw new FragmentSetupException("Received batch where fragment was not in cache.");
@@ -106,7 +113,7 @@ public class WorkEventBus {
 
     return manager;
   }
-  
+
   public void removeFragmentManager(FragmentHandle handle){
     managers.remove(handle);
   }

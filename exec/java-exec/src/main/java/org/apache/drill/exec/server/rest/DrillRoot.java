@@ -28,9 +28,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.drill.exec.cache.DistributedMap;
-import org.apache.drill.exec.cache.ProtobufDrillSerializable.CQueryProfile;
 import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
 import org.apache.drill.exec.work.WorkManager;
+import org.apache.drill.exec.work.foreman.QueryStatus;
 import org.glassfish.jersey.server.mvc.Viewable;
 
 import com.google.common.collect.Lists;
@@ -51,10 +51,10 @@ public class DrillRoot {
   @Path("queries")
   @Produces(MediaType.TEXT_HTML)
   public Viewable getQueries() {
-    DistributedMap<CQueryProfile> profiles = work.getContext().getCache().getNamedMap("sys.queries", CQueryProfile.class);
+    DistributedMap<String, QueryProfile> profiles = work.getContext().getCache().getMap(QueryStatus.QUERY_PROFILE);
 
     List<String> ids = Lists.newArrayList();
-    for(Map.Entry<String, CQueryProfile> entry : profiles){
+    for(Map.Entry<String, QueryProfile> entry : profiles.getLocalEntries()){
       ids.add(entry.getKey());
     }
 
@@ -65,11 +65,11 @@ public class DrillRoot {
   @Path("/query/{queryid}")
   @Produces(MediaType.TEXT_HTML)
   public Viewable getQuery(@PathParam("queryid") String queryId) {
-    DistributedMap<CQueryProfile> profiles = work.getContext().getCache().getNamedMap("sys.queries", CQueryProfile.class);
-    CQueryProfile c = profiles.get(queryId);
-    QueryProfile q = c == null ? QueryProfile.getDefaultInstance() : c.getObj();
+    DistributedMap<String, QueryProfile> profiles = work.getContext().getCache().getMap(QueryStatus.QUERY_PROFILE);
+    QueryProfile profile = profiles.get(queryId);
+    if(profile == null) profile = QueryProfile.getDefaultInstance();
 
-    return new Viewable("/rest/status/profile.ftl", q);
+    return new Viewable("/rest/status/profile.ftl", profile);
 
   }
 

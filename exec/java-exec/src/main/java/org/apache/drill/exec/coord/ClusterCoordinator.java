@@ -20,6 +20,7 @@ package org.apache.drill.exec.coord;
 import java.io.Closeable;
 import java.util.Collection;
 
+import org.apache.curator.framework.recipes.locks.InterProcessSemaphoreV2;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
 /**
@@ -30,7 +31,7 @@ public abstract class ClusterCoordinator implements Closeable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ClusterCoordinator.class);
 
   /**
-   * Start the cluster coordinator.  Millis to wait is   
+   * Start the cluster coordinator.  Millis to wait is
    * @param millisToWait The maximum time to wait before throwing an exception if the cluster coordination service has not successfully started.  Use 0 to wait indefinitely.
    * @throws Exception
    */
@@ -50,5 +51,8 @@ public abstract class ClusterCoordinator implements Closeable {
 
   public interface RegistrationHandle {
   }
+
+  public abstract DistributedSemaphore getSemaphore(String name, int maximumLeases);
+
 
 }

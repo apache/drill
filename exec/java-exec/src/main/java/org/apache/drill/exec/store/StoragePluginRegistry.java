@@ -28,10 +28,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.ConcurrentMap;
 
-import com.google.common.collect.Lists;
-import net.hydromatic.linq4j.expressions.DefaultExpression;
-import net.hydromatic.linq4j.expressions.Expression;
 import net.hydromatic.optiq.SchemaPlus;
 import net.hydromatic.optiq.tools.RuleSet;
 
@@ -41,7 +39,6 @@ import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.util.PathScanner;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.cache.DistributedMap;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.planner.logical.DrillRuleSets;
 import org.apache.drill.exec.planner.logical.StoragePlugins;
@@ -51,35 +48,43 @@ import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.dfs.FormatPlugin;
 import org.apache.drill.exec.store.ischema.InfoSchemaConfig;
 import org.apache.drill.exec.store.ischema.InfoSchemaStoragePlugin;
+import org.apache.drill.exec.store.sys.PTable;
+import org.apache.drill.exec.store.sys.PTableConfig;
 import org.apache.drill.exec.store.sys.SystemTablePlugin;
 import org.apache.drill.exec.store.sys.SystemTablePluginConfig;
 import org.eigenbase.relopt.RelOptRule;
 
 import com.google.common.base.Charsets;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSet.Builder;
+import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
+import com.google.hive12.common.collect.Maps;
 
 
 public class StoragePluginRegistry implements Iterable<Map.Entry<String, StoragePlugin>>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StoragePluginRegistry.class);
 
   private Map<Object, Constructor<? extends StoragePlugin>> availablePlugins = new HashMap<Object, Constructor<? extends StoragePlugin>>();
-  private ImmutableMap<String, StoragePlugin> plugins;
+  private ConcurrentMap<String, StoragePlugin> plugins;
 
   private DrillbitContext context;
   private final DrillSchemaFactory schemaFactory = new DrillSchemaFactory();
+  private final PTable<StoragePluginConfig> pluginSystemTable;
 
   private RuleSet storagePluginsRuleSet;
 
-  private static final Expression EXPRESSION = new DefaultExpression(Object.class);
-
   public StoragePluginRegistry(DrillbitContext context) {
     try{
-    this.context = context;
-    }catch(RuntimeException e){
+      this.context = context;
+      this.pluginSystemTable = context //
+          .getSystemTableProvider() //
+          .getPTable(PTableConfig //
+              .newJacksonBuilder(context.getConfig().getMapper(), StoragePluginConfig.class) //
+              .name("sys.storage_plugins") //
+              .build());
+    }catch(IOException | RuntimeException e){
       logger.error("Failure while loading storage plugin registry.", e);
       throw new RuntimeException("Faiure while reading and loading storage plugin configuration.", e);
     }
@@ -110,7 +115,8 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
     }
 
     // create registered plugins defined in "storage-plugins.json"
-    this.plugins = ImmutableMap.copyOf(createPlugins());
+    this.plugins = Maps.newConcurrentMap();
+    this.plugins.putAll(createPlugins());
 
     // query registered engines for optimizer rules and build the storage plugin RuleSet
     Builder<RelOptRule> setBuilder = ImmutableSet.builder();
@@ -125,47 +131,43 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
 
   private Map<String, StoragePlugin> createPlugins() throws DrillbitStartupException {
     /*
-     * Check if "storage-plugins.json" exists. Also check if "storage-plugins" object exists in Distributed Cache.
-     * If both exist, check that they are the same. If they differ, throw exception. If "storage-plugins.json" exists, but
-     * nothing found in cache, then add it to the cache. If neither are found, throw exception.
+     * Check if the storage plugins system table has any entries.  If not, load the boostrap-storage-plugin file into the system table.
      */
-    StoragePlugins plugins = null;
-    StoragePlugins cachedPlugins = null;
     Map<String, StoragePlugin> activePlugins = new HashMap<String, StoragePlugin>();
+
     try{
-      URL url = Resources.class.getClassLoader().getResource("storage-plugins.json");
-      if (url != null) {
-        String pluginsData = Resources.toString(url, Charsets.UTF_8);
-        plugins = context.getConfig().getMapper().readValue(pluginsData, StoragePlugins.class);
+
+      if(!pluginSystemTable.iterator().hasNext()){
+        // bootstrap load the config since no plugins are stored.
+        logger.info("Bootstrap loading the storage plugin configs.");
+        URL url = Resources.class.getClassLoader().getResource("bootstrap-storage-plugins.json");
+        if (url != null) {
+          String pluginsData = Resources.toString(url, Charsets.UTF_8);
+          StoragePlugins plugins = context.getConfig().getMapper().readValue(pluginsData, StoragePlugins.class);
+
+          for(Map.Entry<String, StoragePluginConfig> config : plugins){
+            pluginSystemTable.put(config.getKey(), config.getValue());
+          }
+
+        }else{
+          throw new IOException("Failure finding bootstrap-storage-plugins.json");
+        }
       }
-      DistributedMap<StoragePlugins> map = context.getCache().getMap(StoragePlugins.class);
-      cachedPlugins = map.get("storage-plugins");
-      if (cachedPlugins != null) {
-        logger.debug("Found cached storage plugin config: {}", cachedPlugins);
-      } else {
-        Preconditions.checkNotNull(plugins,"No storage plugin configuration found");
-        logger.debug("caching storage plugin config {}", plugins);
-        map.put("storage-plugins", plugins);
-        cachedPlugins = map.get("storage-plugins");
+
+      for(Map.Entry<String, StoragePluginConfig> config : pluginSystemTable){
+        try{
+          StoragePlugin plugin = create(config.getKey(), config.getValue());
+          activePlugins.put(config.getKey(), plugin);
+        }catch(ExecutionSetupException e){
+          logger.error("Failure while setting up StoragePlugin with name: '{}'.", config.getKey(), e);
+        }
       }
-      if(!(plugins == null || cachedPlugins.equals(plugins))) {
-        logger.error("Storage plugin config mismatch. {}. {}", plugins, cachedPlugins);
-        throw new DrillbitStartupException("Storage plugin config mismatch");
-      }
-      logger.debug("using plugin config: {}", cachedPlugins);
+
     }catch(IOException e){
-      logger.error("Failure while reading storage plugins data.", e);
-      throw new IllegalStateException("Failure while reading storage plugins data.", e);
+      logger.error("Failure setting up storage plugins.  Drillbit exiting.", e);
+      throw new IllegalStateException(e);
     }
 
-    for(Map.Entry<String, StoragePluginConfig> config : cachedPlugins){
-      try{
-        StoragePlugin plugin = create(config.getKey(), config.getValue());
-        activePlugins.put(config.getKey(), plugin);
-      }catch(ExecutionSetupException e){
-        logger.error("Failure while setting up StoragePlugin with name: '{}'.", config.getKey(), e);
-      }
-    }
     activePlugins.put("INFORMATION_SCHEMA", new InfoSchemaStoragePlugin(new InfoSchemaConfig(), context, "INFORMATION_SCHEMA"));
     activePlugins.put("sys", new SystemTablePlugin(SystemTablePluginConfig.INSTANCE, context, "sys"));
 
@@ -173,7 +175,17 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
   }
 
   public StoragePlugin getPlugin(String registeredStoragePluginName) throws ExecutionSetupException {
-    return plugins.get(registeredStoragePluginName);
+    StoragePlugin plugin = plugins.get(registeredStoragePluginName);
+
+    if(plugin == null){
+      StoragePluginConfig config = this.pluginSystemTable.get(registeredStoragePluginName);
+      if(config != null){
+        this.plugins.put(registeredStoragePluginName, create(registeredStoragePluginName, config));
+        plugin = plugins.get(registeredStoragePluginName);
+      }
+    }
+
+    return plugin;
   }
 
   public StoragePlugin getPlugin(StoragePluginConfig config) throws ExecutionSetupException {

@@ -19,10 +19,10 @@ package org.apache.drill.exec.cache.infinispan;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.config.DrillConfig;
@@ -31,10 +31,8 @@ import org.apache.drill.exec.cache.Counter;
 import org.apache.drill.exec.cache.DistributedCache;
 import org.apache.drill.exec.cache.DistributedMap;
 import org.apache.drill.exec.cache.DistributedMultiMap;
-import org.apache.drill.exec.cache.DrillSerializable;
 import org.apache.drill.exec.cache.SerializationDefinition;
-import org.apache.drill.exec.cache.ProtoSerializable.FragmentHandleSerializable;
-import org.apache.drill.exec.cache.ProtoSerializable.PlanFragmentSerializable;
+import org.apache.drill.exec.cache.local.LocalCache.LocalCounterImpl;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
@@ -46,7 +44,6 @@ import org.infinispan.atomic.DeltaAware;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
-import org.infinispan.configuration.global.GlobalConfiguration;
 import org.infinispan.configuration.global.GlobalConfigurationBuilder;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
@@ -57,40 +54,64 @@ import org.jgroups.protocols.COUNTER;
 import org.jgroups.protocols.FRAG2;
 import org.jgroups.stack.ProtocolStack;
 
+import com.google.hive12.common.collect.Maps;
+
 public class ICache implements DistributedCache{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ICache.class);
 
   private EmbeddedCacheManager manager;
   private ForkChannel cacheChannel;
   private final CounterService counters;
-  private final Cache<FragmentHandleSerializable, PlanFragmentSerializable> fragments;
+  private final boolean local;
+  private volatile ConcurrentMap<String, Counter> localCounters;
 
-  public ICache(DrillConfig config, BufferAllocator allocator) throws Exception {
+  public ICache(DrillConfig config, BufferAllocator allocator, boolean local) throws Exception {
     String clusterName = config.getString(ExecConstants.SERVICE_NAME);
-    GlobalConfiguration gc = new GlobalConfigurationBuilder() //
-      .transport() //
+    this.local = local;
+
+    final CacheMode mode = local ? CacheMode.LOCAL : CacheMode.DIST_ASYNC;
+    GlobalConfigurationBuilder gcb = new GlobalConfigurationBuilder();
+
+    if(!local){
+      gcb.transport() //
         .defaultTransport() //
-        .clusterName(clusterName) //;
-        //
-      .serialization() //
+        .clusterName(clusterName);
+    }
+
+    gcb.serialization() //
         .addAdvancedExternalizer(new VAAdvancedExternalizer(allocator)) //
         .addAdvancedExternalizer(new JacksonAdvancedExternalizer<>(SerializationDefinition.OPTION, config.getMapper())) //
         .addAdvancedExternalizer(new JacksonAdvancedExternalizer<>(SerializationDefinition.STORAGE_PLUGINS, config.getMapper())) //
         .addAdvancedExternalizer(new ProtobufAdvancedExternalizer<>(SerializationDefinition.FRAGMENT_STATUS, FragmentStatus.PARSER)) //
+        .addAdvancedExternalizer(new ProtobufAdvancedExternalizer<>(SerializationDefinition.FRAGMENT_HANDLE, FragmentHandle.PARSER)) //
+        .addAdvancedExternalizer(new ProtobufAdvancedExternalizer<>(SerializationDefinition.PLAN_FRAGMENT, PlanFragment.PARSER)) //
       .build();
 
     Configuration c = new ConfigurationBuilder() //
       .clustering() //
 
-      .cacheMode(CacheMode.DIST_ASYNC) //
+      .cacheMode(mode) //
       .storeAsBinary().enable() //
       .build();
-    this.manager = new DefaultCacheManager(gc, c);
-    JGroupsTransport transport = (JGroupsTransport) manager.getCache("first").getAdvancedCache().getRpcManager().getTransport();
-    this.cacheChannel = new ForkChannel(transport.getChannel(), "drill-stack", "drill-hijacker", true, ProtocolStack.ABOVE, FRAG2.class, new COUNTER());
-    this.fragments = manager.getCache(PlanFragment.class.getName());
-    this.counters = new CounterService(this.cacheChannel);
+    this.manager = new DefaultCacheManager(gcb.build(), c);
+
+    if(!local){
+      JGroupsTransport transport = (JGroupsTransport) manager.getCache("first").getAdvancedCache().getRpcManager().getTransport();
+      this.cacheChannel = new ForkChannel(transport.getChannel(), "drill-stack", "drill-hijacker", true, ProtocolStack.ABOVE, FRAG2.class, new COUNTER());
+      this.counters = new CounterService(this.cacheChannel);
+    }else{
+      this.cacheChannel = null;
+      this.counters = null;
+    }
   }
+
+
+//  @Override
+//  public <K, V> Map<K, V> getSmallAtomicMap(CacheConfig<K, V> config) {
+//    Cache<String, ?> cache = manager.getCache("atomic-maps");
+//    return AtomicMapLookup.getAtomicMap(cache, config.getName());
+//  }
+
 
   @Override
   public void close() throws IOException {
@@ -100,45 +121,45 @@ public class ICache implements DistributedCache{
   @Override
   public void run() throws DrillbitStartupException {
     try {
-      cacheChannel.connect("c1");
+      if(local){
+        localCounters = Maps.newConcurrentMap();
+        manager.start();
+      }else{
+        cacheChannel.connect("c1");
+      }
+
     } catch (Exception e) {
       throw new DrillbitStartupException("Failure while trying to set up JGroups.");
     }
   }
 
   @Override
-  public PlanFragment getFragment(FragmentHandle handle) {
-    PlanFragmentSerializable pfs = fragments.get(new FragmentHandleSerializable(handle));
-    if(pfs == null) return null;
-    return pfs.getObject();
+  public <K, V> DistributedMultiMap<K, V> getMultiMap(CacheConfig<K, V> config) {
+    Cache<K, DeltaList<V>> cache = manager.getCache(config.getName());
+    return new IMulti<K, V>(cache, config);
   }
 
   @Override
-  public void storeFragment(PlanFragment fragment) {
-    fragments.put(new FragmentHandleSerializable(fragment.getHandle()), new PlanFragmentSerializable(fragment));
-  }
-
-  @Override
-  public <V extends DrillSerializable> DistributedMultiMap<V> getMultiMap(Class<V> clazz) {
-    Cache<String, DeltaList<V>> cache = manager.getCache(clazz.getName());
-    return new IMulti<V>(cache, clazz);
-  }
-
-
-  @Override
-  public <V extends DrillSerializable> DistributedMap<V> getNamedMap(String name, Class<V> clazz) {
-    Cache<String, V> c = manager.getCache(name);
-    return new IMap<V>(c);
-  }
-
-  @Override
-  public <V extends DrillSerializable> DistributedMap<V> getMap(Class<V> clazz) {
-    return getNamedMap(clazz.getName(), clazz);
+  public <K, V> DistributedMap<K, V> getMap(CacheConfig<K, V> config) {
+    Cache<K, V> c = manager.getCache(config.getName());
+    return new IMap<K, V>(c, config);
   }
 
   @Override
   public Counter getCounter(String name) {
-    return new JGroupsCounter(counters.getOrCreateCounter(name, 0));
+    if(local){
+        Counter c = localCounters.get(name);
+        if (c == null) {
+          localCounters.putIfAbsent(name, new LocalCounterImpl());
+          return localCounters.get(name);
+        } else {
+          return c;
+        }
+
+    }else{
+      return new JGroupsCounter(counters.getOrCreateCounter(name, 0));
+    }
+
   }
 
   private class JGroupsCounter implements Counter{
@@ -166,63 +187,68 @@ public class ICache implements DistributedCache{
 
   }
 
-  private class IMap<V extends DrillSerializable> implements DistributedMap<V>{
+  private class IMap<K, V> implements DistributedMap<K, V>{
 
-    private Cache<String, V> cache;
+    private Cache<K, V> cache;
+    private CacheConfig<K, V> config;
 
-
-    public IMap(Cache<String, V> cache) {
+    public IMap(Cache<K, V> cache, CacheConfig<K, V> config) {
       super();
       this.cache = cache;
+      this.config = config;
     }
 
     @Override
-    public V get(String key) {
+    public Iterable<Entry<K, V>> getLocalEntries() {
+      return cache.entrySet();
+    }
+
+    @Override
+    public V get(K key) {
       return cache.get(key);
     }
 
     @Override
-    public void put(String key, V value) {
+    public void delete(K key) {
+      cache.remove(key);
+    }
+
+    @Override
+    public void put(K key, V value) {
       cache.put(key,  value);
     }
 
     @Override
-    public void putIfAbsent(String key, V value) {
+    public void putIfAbsent(K key, V value) {
       cache.putIfAbsent(key,  value);
     }
 
     @Override
-    public void putIfAbsent(String key, V value, long ttl, TimeUnit timeUnit) {
+    public void putIfAbsent(K key, V value, long ttl, TimeUnit timeUnit) {
       cache.putIfAbsent(key, value, ttl, timeUnit);
-    }
-
-    @Override
-    public Iterator<Entry<String, V>> iterator() {
-      return cache.entrySet().iterator();
     }
 
   }
 
-  private class IMulti<V extends DrillSerializable> implements DistributedMultiMap<V>{
+  private class IMulti<K, V> implements DistributedMultiMap<K, V>{
 
-    private Cache<String, DeltaList<V>> cache;
-    private Class<V> clazz;
+    private Cache<K, DeltaList<V>> cache;
+    private CacheConfig<K, V> config;
 
-    public IMulti(Cache<String, DeltaList<V>> cache, Class<V> clazz) {
+    public IMulti(Cache<K, DeltaList<V>> cache, CacheConfig<K, V> config) {
       super();
       this.cache = cache;
-      this.clazz = clazz;
+      this.config = config;
     }
 
     @Override
-    public Collection<V> get(String key) {
+    public Collection<V> get(K key) {
       return cache.get(key);
     }
 
     @Override
-    public void put(String key, V value) {
+    public void put(K key, V value) {
       cache.put(key, new DeltaList<V>(value));
-//      cache.getAdvancedCache().applyDelta(key, new DeltaList<V>(value), key);
     }
 
   }
@@ -230,7 +256,7 @@ public class ICache implements DistributedCache{
 
 
 
-  private static class DeltaList<V extends DrillSerializable> extends LinkedList<V> implements DeltaAware, Delta{
+  private static class DeltaList<V> extends LinkedList<V> implements DeltaAware, Delta{
 
     /** The serialVersionUID */
     private static final long serialVersionUID = 2176345973026460708L;
@@ -270,18 +296,4 @@ public class ICache implements DistributedCache{
     }
  }
 
-
-//  public void run() {
-//    Config c = new Config();
-//    SerializerConfig sc = new SerializerConfig() //
-//      .setImplementation(new HCVectorAccessibleSerializer(allocator)) //
-//      .setTypeClass(VectorAccessibleSerializable.class);
-//    c.setInstanceName(instanceName);
-//    c.getSerializationConfig().addSerializerConfig(sc);
-//    instance = getInstanceOrCreateNew(c);
-//    workQueueLengths = instance.getTopic("queue-length");
-//    fragments = new HandlePlan(instance);
-//    endpoints = CacheBuilder.newBuilder().maximumSize(2000).build();
-//    workQueueLengths.addMessageListener(new Listener());
-//  }
 }

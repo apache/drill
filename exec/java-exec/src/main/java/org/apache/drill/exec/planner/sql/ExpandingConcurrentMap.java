@@ -26,7 +26,7 @@ import java.util.concurrent.ConcurrentMap;
 import com.google.common.collect.Maps;
 
 /**
- * A special type of concurrent map which attempts to create an object before returning that it does not exist.  It will also provide the same functionality on it's keyset.  
+ * A special type of concurrent map which attempts to create an object before returning that it does not exist.  It will also provide the same functionality on it's keyset.
  * @param <KEY> The key in the map.
  * @param <VALUE> The value in the map.
  */
@@ -36,7 +36,7 @@ public class ExpandingConcurrentMap<KEY, VALUE> implements ConcurrentMap<KEY, VA
   private final ConcurrentMap<KEY, VALUE> internalMap = Maps.newConcurrentMap();
   private final DelegatingKeySet keySet = new DelegatingKeySet();
   private final MapValueFactory<KEY, VALUE> fac;
-  
+
   /**
    * Create a new ExpandingConcurrentMap.
    * @param fac The object factory responsible for attempting to generate object instances.
@@ -56,10 +56,17 @@ public class ExpandingConcurrentMap<KEY, VALUE> implements ConcurrentMap<KEY, VA
     return internalMap.isEmpty();
   }
 
+  public boolean alreadyContainsKey(Object k){
+    @SuppressWarnings("unchecked") KEY key = (KEY) k;
+
+    if(internalMap.containsKey(key)) return true;
+    return false;
+  }
+
   @Override
   public boolean containsKey(Object k) {
     @SuppressWarnings("unchecked") KEY key = (KEY) k;
-    
+
     if(internalMap.containsKey(key)) return true;
     VALUE v = getNewEntry(k);
     return v != null;
@@ -87,7 +94,7 @@ public class ExpandingConcurrentMap<KEY, VALUE> implements ConcurrentMap<KEY, VA
     fac.destroy(v);
     return old;
   }
-  
+
   @Override
   public VALUE put(KEY key, VALUE value) {
     throw new UnsupportedOperationException();
@@ -142,7 +149,7 @@ public class ExpandingConcurrentMap<KEY, VALUE> implements ConcurrentMap<KEY, VA
   public VALUE replace(KEY key, VALUE value) {
     return null;
   }
-  
+
   private class DelegatingKeySet implements Set<KEY>{
 
     @Override
@@ -212,11 +219,11 @@ public class ExpandingConcurrentMap<KEY, VALUE> implements ConcurrentMap<KEY, VA
     public void clear() {
       throw new UnsupportedOperationException();
     }
-    
+
   }
-  
+
   public interface MapValueFactory<KEY, VALUE> {
-    
+
     public VALUE create(KEY key);
     public void destroy(VALUE value);
   }

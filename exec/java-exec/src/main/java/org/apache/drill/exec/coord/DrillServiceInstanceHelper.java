@@ -17,20 +17,19 @@
  */
 package org.apache.drill.exec.coord;
 
+import org.apache.curator.x.discovery.ServiceInstance;
+import org.apache.curator.x.discovery.ServiceInstanceBuilder;
+import org.apache.curator.x.discovery.details.InstanceSerializer;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillServiceInstance;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
-import com.netflix.curator.x.discovery.ServiceInstance;
-import com.netflix.curator.x.discovery.ServiceInstanceBuilder;
-import com.netflix.curator.x.discovery.details.InstanceSerializer;
-
 public class DrillServiceInstanceHelper {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillServiceInstanceHelper.class);
 
-  
+
   public static final InstanceSerializer<DrillbitEndpoint> SERIALIZER = new DrillServiceInstanceSerializer();
-  
+
   private static class DrillServiceInstanceSerializer implements InstanceSerializer<DrillbitEndpoint>{
 
     @Override
@@ -52,6 +51,6 @@ public class DrillServiceInstanceHelper {
       b.payload(i.getEndpoint());
       return b.build();
     }
-    
+
   }
 }

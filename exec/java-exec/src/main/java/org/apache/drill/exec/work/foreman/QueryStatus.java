@@ -18,8 +18,9 @@
 package org.apache.drill.exec.work.foreman;
 
 import org.apache.drill.exec.cache.DistributedCache;
+import org.apache.drill.exec.cache.DistributedCache.CacheConfig;
+import org.apache.drill.exec.cache.DistributedCache.SerializationMode;
 import org.apache.drill.exec.cache.DistributedMap;
-import org.apache.drill.exec.cache.ProtobufDrillSerializable.CQueryProfile;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
 import org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
@@ -32,6 +33,11 @@ import com.carrotsearch.hppc.IntObjectOpenHashMap;
 public class QueryStatus {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryStatus.class);
 
+  public static final CacheConfig<String, QueryProfile> QUERY_PROFILE = CacheConfig //
+      .newBuilder(QueryProfile.class) //
+      .name("sys.queries") //
+      .mode(SerializationMode.PROTOBUF) //
+      .build();
 
   // doesn't need to be thread safe as map is generated in a single thread and then accessed by multiple threads for reads only.
   private IntObjectOpenHashMap<IntObjectOpenHashMap<FragmentData>> map = new IntObjectOpenHashMap<IntObjectOpenHashMap<FragmentData>>();
@@ -41,13 +47,13 @@ public class QueryStatus {
   private RunQuery query;
   private String planText;
 
-  private final DistributedMap<CQueryProfile> profileCache;
+  private final DistributedMap<String, QueryProfile> profileCache;
 
   public QueryStatus(RunQuery query, QueryId id, DistributedCache cache){
     this.id = id;
     this.query = query;
     this.queryId = QueryIdHelper.getQueryId(id);
-    this.profileCache = cache.getNamedMap("sys.queries", CQueryProfile.class);
+    this.profileCache = cache.getMap(QUERY_PROFILE);
   }
 
   public void setPlanText(String planText){
@@ -75,7 +81,7 @@ public class QueryStatus {
   }
 
   private void updateCache(){
-    profileCache.put(queryId, new CQueryProfile(getAsProfile()));
+    profileCache.put(queryId, getAsProfile());
   }
 
   public String toString(){

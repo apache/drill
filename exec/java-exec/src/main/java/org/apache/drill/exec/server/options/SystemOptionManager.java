@@ -17,28 +17,37 @@
  */
 package org.apache.drill.exec.server.options;
 
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentMap;
 
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.cache.DistributedCache;
-import org.apache.drill.exec.cache.DistributedMap;
+import org.apache.drill.exec.cache.DistributedCache.CacheConfig;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.server.options.OptionValue.OptionType;
+import org.apache.drill.exec.store.sys.PTable;
+import org.apache.drill.exec.store.sys.PTableConfig;
+import org.apache.drill.exec.store.sys.TableProvider;
 import org.eigenbase.sql.SqlLiteral;
 
 import com.google.common.collect.Maps;
 
 public class SystemOptionManager implements OptionManager{
 
+  public static final CacheConfig<String, OptionValue> OPTION_CACHE = CacheConfig //
+      .newBuilder(OptionValue.class) //
+      .name("sys.options") //
+      .jackson()
+      .build();
+
   private final OptionValidator[] VALIDATORS = {
-      PlannerSettings.EXCHANGE, 
+      PlannerSettings.EXCHANGE,
       PlannerSettings.HASHAGG,
       PlannerSettings.STREAMAGG,
       PlannerSettings.HASHJOIN,
-      PlannerSettings.MERGEJOIN, 
+      PlannerSettings.MERGEJOIN,
       PlannerSettings.MULTIPHASE,
       PlannerSettings.BROADCAST,
       PlannerSettings.BROADCAST_THRESHOLD,
@@ -46,17 +55,23 @@ public class SystemOptionManager implements OptionManager{
       ExecConstants.PARQUET_BLOCK_SIZE_VALIDATOR
   };
 
-  private DistributedMap<OptionValue> options;
+  public final PTableConfig<OptionValue> config;
+
+  private PTable<OptionValue> options;
   private SystemOptionAdmin admin;
   private final ConcurrentMap<String, OptionValidator> knownOptions = Maps.newConcurrentMap();
-  private DistributedCache cache;
+  private final TableProvider provider;
 
-  public SystemOptionManager(DistributedCache cache){
-    this.cache = cache;
+  public SystemOptionManager(DrillConfig config, TableProvider provider){
+    this.provider = provider;
+    this.config =  PTableConfig //
+        .newJacksonBuilder(config.getMapper(), OptionValue.class) //
+        .name("sys.options") //
+        .build();
   }
 
-  public void init(){
-    this.options = cache.getNamedMap("system.options", OptionValue.class);
+  public void init() throws IOException{
+    this.options = provider.getPTable(config);
     this.admin = new SystemOptionAdmin();
   }
 

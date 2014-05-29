@@ -17,50 +17,53 @@
  */
 package org.apache.drill.exec.planner.logical;
 
-import com.google.common.collect.ImmutableList;
-import net.hydromatic.optiq.impl.ViewTable;
-import org.apache.drill.exec.planner.types.DrillFixedRelDataTypeImpl;
-import org.apache.drill.exec.planner.types.RelDataTypeDrillImpl;
-import org.apache.drill.exec.planner.types.RelDataTypeHolder;
+import net.hydromatic.optiq.Schema.TableType;
+import net.hydromatic.optiq.Statistic;
+import net.hydromatic.optiq.Statistics;
+import net.hydromatic.optiq.TranslatableTable;
+
+import org.apache.drill.exec.dotdrill.View;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptTable;
 import org.eigenbase.relopt.RelOptTable.ToRelContext;
 import org.eigenbase.relopt.RelOptUtil;
-import org.eigenbase.reltype.*;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypeFactory;
 
-import java.util.List;
+public class DrillViewTable implements TranslatableTable{
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillViewTable.class);
 
-public class DrillViewTable extends ViewTable {
-  private RelDataType rowType;
-  private boolean starSchema = false; // is the view schema "*"?
-  private RelDataTypeHolder holder = new RelDataTypeHolder();
+  private View view;
 
-  public DrillViewTable(String viewSql, List<String> schemaPath, RelDataType rowType) {
-    super(Object.class, null, viewSql, schemaPath);
-
-    this.rowType = rowType;
-    if (rowType.getFieldCount() == 1 && rowType.getFieldNames().get(0).equals("*"))
-      starSchema = true;
+  public DrillViewTable(View view){
+    this.view = view;
   }
 
   @Override
   public RelDataType getRowType(RelDataTypeFactory typeFactory) {
-    // if the view's schema is a "*" schema, create dynamic row type. Otherwise create fixed row type.
-    if (starSchema)
-      return new RelDataTypeDrillImpl(holder, typeFactory);
+    return view.getRowType(typeFactory);
+  }
 
-    return rowType;
+  @Override
+  public Statistic getStatistic() {
+    return Statistics.UNKNOWN;
   }
 
   @Override
   public RelNode toRel(ToRelContext context, RelOptTable relOptTable) {
     RelDataType rowType = relOptTable.getRowType();
-    RelNode rel = context.expandView(rowType, getViewSql(), getSchemaPath());
+    RelNode rel = context.expandView(rowType, view.getSql(), relOptTable.getQualifiedName());
 
-    // if the View's field list is not "*", try to create a cast.
-    if (!starSchema)
+    if (view.isDynamic()){
+      return rel;
+    }else{
+      // if the View's field list is not "*", try to create a cast.
       return RelOptUtil.createCastRel(rel, rowType, true);
+    }
+  }
 
-    return rel;
+  @Override
+  public TableType getJdbcTableType() {
+    return TableType.VIEW;
   }
 }

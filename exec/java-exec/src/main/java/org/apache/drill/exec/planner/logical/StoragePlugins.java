@@ -26,14 +26,13 @@ import java.util.Map.Entry;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
-import org.apache.drill.exec.cache.JacksonSerializable;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
-public class StoragePlugins extends JacksonSerializable implements Iterable<Map.Entry<String, StoragePluginConfig>>{
+public class StoragePlugins implements Iterable<Map.Entry<String, StoragePluginConfig>>{
 
   private Map<String, StoragePluginConfig> storage;
 

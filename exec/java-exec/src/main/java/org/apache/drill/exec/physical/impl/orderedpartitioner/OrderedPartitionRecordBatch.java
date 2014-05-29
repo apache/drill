@@ -34,9 +34,10 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.cache.CachedVectorContainer;
 import org.apache.drill.exec.cache.Counter;
 import org.apache.drill.exec.cache.DistributedCache;
+import org.apache.drill.exec.cache.DistributedCache.CacheConfig;
+import org.apache.drill.exec.cache.DistributedCache.SerializationMode;
 import org.apache.drill.exec.cache.DistributedMap;
 import org.apache.drill.exec.cache.DistributedMultiMap;
-import org.apache.drill.exec.cache.VectorAccessibleSerializable;
 import org.apache.drill.exec.compile.sig.MappingSet;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.SchemaChangeException;
@@ -48,7 +49,6 @@ import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.ValueVectorReadExpression;
 import org.apache.drill.exec.expr.ValueVectorWriteExpression;
 import org.apache.drill.exec.expr.fn.FunctionGenerationHelper;
-import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.OrderedPartitionSender;
@@ -90,6 +90,17 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
   private static final long ALLOCATOR_INITIAL_RESERVATION = 1*1024*1024;
   private static final long ALLOCATOR_MAX_RESERVATION = 20L*1000*1000*1000;
 
+  public static final CacheConfig<String, CachedVectorContainer> SINGLE_CACHE_CONFIG = CacheConfig //
+      .newBuilder(CachedVectorContainer.class) //
+      .name("SINGLE-" + CachedVectorContainer.class.getSimpleName()) //
+      .mode(SerializationMode.DRILL_SERIALIZIABLE) //
+      .build();
+  public static final CacheConfig<String, CachedVectorContainer> MULTI_CACHE_CONFIG = CacheConfig //
+      .newBuilder(CachedVectorContainer.class) //
+      .name("MULTI-" + CachedVectorContainer.class.getSimpleName()) //
+      .mode(SerializationMode.DRILL_SERIALIZIABLE) //
+      .build();
+
   public final MappingSet mainMapping = new MappingSet( (String) null, null, ClassGenerator.DEFAULT_CONSTANT_MAP,
       ClassGenerator.DEFAULT_SCALAR_MAP);
   public final MappingSet incomingMapping = new MappingSet("inIndex", null, "incoming", null,
@@ -115,9 +126,9 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
   private int recordCount;
 
   private final IntVector partitionKeyVector;
-  private final DistributedMap<CachedVectorContainer> tableMap;
+  private final DistributedMap<String, CachedVectorContainer> tableMap;
   private final Counter minorFragmentSampleCount;
-  private final DistributedMultiMap<CachedVectorContainer> mmap;
+  private final DistributedMultiMap<String, CachedVectorContainer> mmap;
   private final String mapKey;
   private List<VectorContainer> sampledIncomingBatches;
 
@@ -131,8 +142,8 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
     this.completionFactor = pop.getCompletionFactor();
 
     DistributedCache cache = context.getDrillbitContext().getCache();
-    this.mmap = cache.getMultiMap(CachedVectorContainer.class);
-    this.tableMap = cache.getMap(CachedVectorContainer.class);
+    this.mmap = cache.getMultiMap(MULTI_CACHE_CONFIG);
+    this.tableMap = cache.getMap(SINGLE_CACHE_CONFIG);
     Preconditions.checkNotNull(tableMap);
 
     this.mapKey = String.format("%s_%d", context.getHandle().getQueryId(), context.getHandle().getMajorFragmentId());

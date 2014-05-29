@@ -1,20 +1,14 @@
 <?xml version="1.0"?>
-<!--
- Licensed to the Apache Software Foundation (ASF) under one or more
- contributor license agreements.  See the NOTICE file distributed with
- this work for additional information regarding copyright ownership.
- The ASF licenses this file to You under the Apache License, Version 2.0
- (the "License"); you may not use this file except in compliance with
- the License.  You may obtain a copy of the License at
-
-     http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
--->
+<!-- Licensed to the Apache Software Foundation (ASF) under one or more contributor 
+  license agreements. See the NOTICE file distributed with this work for additional 
+  information regarding copyright ownership. The ASF licenses this file to 
+  You under the Apache License, Version 2.0 (the "License"); you may not use 
+  this file except in compliance with the License. You may obtain a copy of 
+  the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required 
+  by applicable law or agreed to in writing, software distributed under the 
+  License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS 
+  OF ANY KIND, either express or implied. See the License for the specific 
+  language governing permissions and limitations under the License. -->
 <project
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
   xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
@@ -36,6 +30,16 @@
       <artifactId>protobuf-java</artifactId>
       <version>2.5.0</version>
     </dependency>
+    <dependency>
+      <groupId>com.dyuproject.protostuff</groupId>
+      <artifactId>protostuff-core</artifactId>
+      <version>1.0.8</version>
+    </dependency>
+    <dependency>
+      <groupId>com.dyuproject.protostuff</groupId>
+      <artifactId>protostuff-json</artifactId>
+      <version>1.0.8</version>
+    </dependency>
   </dependencies>
 
   <profiles>
@@ -47,6 +51,56 @@
       <build>
         <plugins>
           <plugin>
+            <groupId>com.dyuproject.protostuff</groupId>
+            <artifactId>protostuff-maven-plugin</artifactId>
+            <version>1.0.8</version>
+            <configuration>
+              <protoModules>
+                <protoModule>
+                  <source>src/main/protobuf/</source>
+                  <outputDir>src/main/java</outputDir>
+                  <output>java_v2protoc_schema</output>
+                  <encoding>UTF-8</encoding>
+                  <options>
+                    <property>
+                      <name>generate_field_map</name>
+                    </property>
+                  </options>
+                </protoModule>
+                <protoModule>
+                  <source>src/main/protobuf/</source>
+                  <outputDir>src/main/java</outputDir>
+                  <output>java_bean</output>
+                  <encoding>UTF-8</encoding>
+                  <options>
+                    <property>
+                      <name>generate_field_map</name>
+                    </property>
+                    <property>
+                      <name>org.apache.drill.exec.proto</name>
+                      <value>org.apache.drill.exec.proto.beans</value>
+                    </property>
+                    <property>
+                      <name>primitive_numbers_if_optional</name>
+                    </property>
+                    <property>
+                      <name>builder_pattern</name>
+                    </property>
+                  </options>
+                </protoModule>
+              </protoModules>
+            </configuration>
+            <executions>
+              <execution>
+                <id>generate-sources</id>
+                <phase>generate-sources</phase>
+                <goals>
+                  <goal>compile</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
             <groupId>com.github.igor-petruk.protobuf</groupId>
             <artifactId>protobuf-maven-plugin</artifactId>
             <version>0.6.3</version>
@@ -56,6 +110,7 @@
                   <goal>run</goal>
                 </goals>
                 <configuration>
+                  <cleanOutputFolder>false</cleanOutputFolder>
                   <outputDirectory>${basedir}/src/main/java</outputDirectory>
                 </configuration>
               </execution>
@@ -86,7 +141,7 @@
   </profiles>
 
   <build>
-    <plugins>	 
+    <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
@@ -100,8 +155,8 @@
             <configuration>
               <artifactSet>
                 <includes>
-                  <include>com.google.protobuf:protobuf-java</include>                     
-                </includes>                 
+                  <include>com.google.protobuf:protobuf-java</include>
+                </includes>
               </artifactSet>
               <shadedArtifactAttached>true</shadedArtifactAttached>
               <shadedClassifierName>rebuffed</shadedClassifierName>

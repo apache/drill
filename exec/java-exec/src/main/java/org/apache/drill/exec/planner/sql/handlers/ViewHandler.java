@@ -21,11 +21,13 @@ import java.io.IOException;
 import java.util.List;
 
 import net.hydromatic.optiq.SchemaPlus;
+import net.hydromatic.optiq.Table;
 import net.hydromatic.optiq.impl.ViewTable;
 import net.hydromatic.optiq.tools.Planner;
 import net.hydromatic.optiq.tools.RelConversionException;
 import net.hydromatic.optiq.tools.ValidationException;
 
+import org.apache.drill.exec.dotdrill.View;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.logical.DrillViewTable;
@@ -34,6 +36,7 @@ import org.apache.drill.exec.planner.sql.parser.SqlCreateView;
 import org.apache.drill.exec.planner.sql.parser.SqlDropView;
 import org.apache.drill.exec.planner.types.DrillFixedRelDataTypeImpl;
 import org.apache.drill.exec.store.AbstractSchema;
+import org.apache.drill.exec.store.dfs.WorkspaceSchemaFactory.WorkspaceSchema;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.sql.SqlNode;
@@ -94,10 +97,14 @@ public abstract class ViewHandler extends AbstractSqlHandler{
           queryRowType = new DrillFixedRelDataTypeImpl(planner.getTypeFactory(), viewFieldNames);
         }
 
-        ViewTable viewTable = new DrillViewTable(viewSql, drillSchema.getSchemaPath(), queryRowType);
+        View view = new View(createView.getName(), viewSql, queryRowType);
 
-        boolean replaced = context.getSession().getViewStore().addView(
-            schemaPath, createView.getName(), viewTable, createView.getReplace());
+        boolean replaced;
+        if (drillSchema instanceof WorkspaceSchema) {
+          replaced = ((WorkspaceSchema) drillSchema).createView(view);
+        }else{
+          return DirectPlan.createDirectPlan(context, false, "Schema provided was not a workspace schema.");
+        }
 
         String summary = String.format("View '%s' %s successfully in '%s' schema",
             createView.getName(), replaced ? "replaced" : "created", schemaPath);
@@ -129,7 +136,11 @@ public abstract class ViewHandler extends AbstractSqlHandler{
           return DirectPlan.createDirectPlan(context, false, String.format("Schema '%s' is not a mutable schema. " +
               "Views don't exist in this schema", schemaPath));
 
-        context.getSession().getViewStore().dropView(schemaPath, dropView.getName());
+        if (drillSchema instanceof WorkspaceSchema) {
+          ((WorkspaceSchema) drillSchema).dropView(dropView.getName());;
+        }else{
+          return DirectPlan.createDirectPlan(context, false, "Schema provided was not a workspace schema.");
+        }
 
         return DirectPlan.createDirectPlan(context, true,
             String.format("View '%s' deleted successfully from '%s' schema", dropView.getName(), schemaPath));

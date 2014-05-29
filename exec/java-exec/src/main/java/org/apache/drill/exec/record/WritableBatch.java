@@ -95,7 +95,7 @@ public class WritableBatch {
     }
 
     SelectionVectorMode svMode;
-    if (def.hasIsSelectionVector2() && def.getIsSelectionVector2()) {
+    if (def.hasCarriesTwoByteSelectionVector() && def.getCarriesTwoByteSelectionVector()) {
       svMode = SelectionVectorMode.TWO_BYTE;
     } else {
       svMode = SelectionVectorMode.NONE;
@@ -145,7 +145,7 @@ public class WritableBatch {
     }
 
     RecordBatchDef batchDef = RecordBatchDef.newBuilder().addAllField(metadata).setRecordCount(recordCount)
-        .setIsSelectionVector2(isSV2).build();
+        .setCarriesTwoByteSelectionVector(isSV2).build();
     WritableBatch b = new WritableBatch(batchDef, buffers);
     return b;
   }

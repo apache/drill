@@ -98,7 +98,7 @@ public class VectorAccessibleSerializable extends AbstractStreamSerializable {
     VectorContainer container = new VectorContainer();
     UserBitShared.RecordBatchDef batchDef = UserBitShared.RecordBatchDef.parseDelimitedFrom(input);
     recordCount = batchDef.getRecordCount();
-    if (batchDef.hasIsSelectionVector2() && batchDef.getIsSelectionVector2()) {
+    if (batchDef.hasCarriesTwoByteSelectionVector() && batchDef.getCarriesTwoByteSelectionVector()) {
 
       if (sv2 == null) {
         sv2 = new SelectionVector2(allocator);

@@ -3715,15 +3715,15 @@ public final class UserBitShared {
     org.apache.drill.exec.proto.UserBitShared.SerializedFieldOrBuilder getFieldOrBuilder(
         int index);
 
-    // optional bool is_selection_vector_2 = 3;
+    // optional bool carries_two_byte_selection_vector = 3;
     /**
-     * <code>optional bool is_selection_vector_2 = 3;</code>
+     * <code>optional bool carries_two_byte_selection_vector = 3;</code>
      */
-    boolean hasIsSelectionVector2();
+    boolean hasCarriesTwoByteSelectionVector();
     /**
-     * <code>optional bool is_selection_vector_2 = 3;</code>
+     * <code>optional bool carries_two_byte_selection_vector = 3;</code>
      */
-    boolean getIsSelectionVector2();
+    boolean getCarriesTwoByteSelectionVector();
   }
   /**
    * Protobuf type {@code exec.shared.RecordBatchDef}
@@ -3791,7 +3791,7 @@ public final class UserBitShared {
             }
             case 24: {
               bitField0_ |= 0x00000002;
-              isSelectionVector2_ = input.readBool();
+              carriesTwoByteSelectionVector_ = input.readBool();
               break;
             }
           }
@@ -3889,26 +3889,26 @@ public final class UserBitShared {
       return field_.get(index);
     }
 
-    // optional bool is_selection_vector_2 = 3;
-    public static final int IS_SELECTION_VECTOR_2_FIELD_NUMBER = 3;
-    private boolean isSelectionVector2_;
+    // optional bool carries_two_byte_selection_vector = 3;
+    public static final int CARRIES_TWO_BYTE_SELECTION_VECTOR_FIELD_NUMBER = 3;
+    private boolean carriesTwoByteSelectionVector_;
     /**
-     * <code>optional bool is_selection_vector_2 = 3;</code>
+     * <code>optional bool carries_two_byte_selection_vector = 3;</code>
      */
-    public boolean hasIsSelectionVector2() {
+    public boolean hasCarriesTwoByteSelectionVector() {
       return ((bitField0_ & 0x00000002) == 0x00000002);
     }
     /**
-     * <code>optional bool is_selection_vector_2 = 3;</code>
+     * <code>optional bool carries_two_byte_selection_vector = 3;</code>
      */
-    public boolean getIsSelectionVector2() {
-      return isSelectionVector2_;
+    public boolean getCarriesTwoByteSelectionVector() {
+      return carriesTwoByteSelectionVector_;
     }
 
     private void initFields() {
       recordCount_ = 0;
       field_ = java.util.Collections.emptyList();
-      isSelectionVector2_ = false;
+      carriesTwoByteSelectionVector_ = false;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -3929,7 +3929,7 @@ public final class UserBitShared {
         output.writeMessage(2, field_.get(i));
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        output.writeBool(3, isSelectionVector2_);
+        output.writeBool(3, carriesTwoByteSelectionVector_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -3950,7 +3950,7 @@ public final class UserBitShared {
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBoolSize(3, isSelectionVector2_);
+          .computeBoolSize(3, carriesTwoByteSelectionVector_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -4077,7 +4077,7 @@ public final class UserBitShared {
         } else {
           fieldBuilder_.clear();
         }
-        isSelectionVector2_ = false;
+        carriesTwoByteSelectionVector_ = false;
         bitField0_ = (bitField0_ & ~0x00000004);
         return this;
       }
@@ -4123,7 +4123,7 @@ public final class UserBitShared {
         if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
           to_bitField0_ |= 0x00000002;
         }
-        result.isSelectionVector2_ = isSelectionVector2_;
+        result.carriesTwoByteSelectionVector_ = carriesTwoByteSelectionVector_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -4169,8 +4169,8 @@ public final class UserBitShared {
             }
           }
         }
-        if (other.hasIsSelectionVector2()) {
-          setIsSelectionVector2(other.getIsSelectionVector2());
+        if (other.hasCarriesTwoByteSelectionVector()) {
+          setCarriesTwoByteSelectionVector(other.getCarriesTwoByteSelectionVector());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -4472,35 +4472,35 @@ public final class UserBitShared {
         return fieldBuilder_;
       }
 
-      // optional bool is_selection_vector_2 = 3;
-      private boolean isSelectionVector2_ ;
+      // optional bool carries_two_byte_selection_vector = 3;
+      private boolean carriesTwoByteSelectionVector_ ;
       /**
-       * <code>optional bool is_selection_vector_2 = 3;</code>
+       * <code>optional bool carries_two_byte_selection_vector = 3;</code>
        */
-      public boolean hasIsSelectionVector2() {
+      public boolean hasCarriesTwoByteSelectionVector() {
         return ((bitField0_ & 0x00000004) == 0x00000004);
       }
       /**
-       * <code>optional bool is_selection_vector_2 = 3;</code>
+       * <code>optional bool carries_two_byte_selection_vector = 3;</code>
        */
-      public boolean getIsSelectionVector2() {
-        return isSelectionVector2_;
+      public boolean getCarriesTwoByteSelectionVector() {
+        return carriesTwoByteSelectionVector_;
       }
       /**
-       * <code>optional bool is_selection_vector_2 = 3;</code>
+       * <code>optional bool carries_two_byte_selection_vector = 3;</code>
        */
-      public Builder setIsSelectionVector2(boolean value) {
+      public Builder setCarriesTwoByteSelectionVector(boolean value) {
         bitField0_ |= 0x00000004;
-        isSelectionVector2_ = value;
+        carriesTwoByteSelectionVector_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>optional bool is_selection_vector_2 = 3;</code>
+       * <code>optional bool carries_two_byte_selection_vector = 3;</code>
        */
-      public Builder clearIsSelectionVector2() {
+      public Builder clearCarriesTwoByteSelectionVector() {
         bitField0_ = (bitField0_ & ~0x00000004);
-        isSelectionVector2_ = false;
+        carriesTwoByteSelectionVector_ = false;
         onChanged();
         return this;
       }
@@ -13331,67 +13331,67 @@ public final class UserBitShared {
       "\rparsing_error\030\005 \003(\0132\031.exec.shared.Parsi" +
       "ngError\"\\\n\014ParsingError\022\024\n\014start_column\030" +
       "\002 \001(\005\022\021\n\tstart_row\030\003 \001(\005\022\022\n\nend_column\030\004",
-      " \001(\005\022\017\n\007end_row\030\005 \001(\005\"r\n\016RecordBatchDef\022" +
+      " \001(\005\022\017\n\007end_row\030\005 \001(\005\"~\n\016RecordBatchDef\022" +
       "\024\n\014record_count\030\001 \001(\005\022+\n\005field\030\002 \003(\0132\034.e" +
-      "xec.shared.SerializedField\022\035\n\025is_selecti" +
-      "on_vector_2\030\003 \001(\010\"\205\001\n\010NamePart\022(\n\004type\030\001" +
-      " \001(\0162\032.exec.shared.NamePart.Type\022\014\n\004name" +
-      "\030\002 \001(\t\022$\n\005child\030\003 \001(\0132\025.exec.shared.Name" +
-      "Part\"\033\n\004Type\022\010\n\004NAME\020\000\022\t\n\005ARRAY\020\001\"\351\001\n\017Se" +
-      "rializedField\022%\n\nmajor_type\030\001 \001(\0132\021.comm" +
-      "on.MajorType\022(\n\tname_part\030\002 \001(\0132\025.exec.s" +
-      "hared.NamePart\022+\n\005child\030\003 \003(\0132\034.exec.sha",
-      "red.SerializedField\022\023\n\013value_count\030\004 \001(\005" +
-      "\022\027\n\017var_byte_length\030\005 \001(\005\022\023\n\013group_count" +
-      "\030\006 \001(\005\022\025\n\rbuffer_length\030\007 \001(\005\"\314\001\n\014QueryP" +
-      "rofile\022 \n\002id\030\001 \001(\0132\024.exec.shared.QueryId" +
-      "\022$\n\004type\030\002 \001(\0162\026.exec.shared.QueryType\022\r" +
-      "\n\005start\030\003 \001(\003\022\013\n\003end\030\004 \001(\003\022\r\n\005query\030\005 \001(" +
-      "\t\022\014\n\004plan\030\006 \001(\t\022;\n\020fragment_profile\030\007 \003(" +
-      "\0132!.exec.shared.MajorFragmentProfile\"t\n\024" +
-      "MajorFragmentProfile\022\031\n\021major_fragment_i" +
-      "d\030\001 \001(\005\022A\n\026minor_fragment_profile\030\002 \003(\0132",
-      "!.exec.shared.MinorFragmentProfile\"\274\002\n\024M" +
-      "inorFragmentProfile\022)\n\005state\030\001 \001(\0162\032.exe" +
-      "c.shared.FragmentState\022(\n\005error\030\002 \001(\0132\031." +
-      "exec.shared.DrillPBError\022\031\n\021minor_fragme" +
-      "nt_id\030\003 \001(\005\0226\n\020operator_profile\030\004 \003(\0132\034." +
-      "exec.shared.OperatorProfile\022\022\n\nstart_tim" +
-      "e\030\005 \001(\003\022\020\n\010end_time\030\006 \001(\003\022\023\n\013memory_used" +
-      "\030\007 \001(\003\022\027\n\017max_memory_used\030\010 \001(\003\022(\n\010endpo" +
-      "int\030\t \001(\0132\026.exec.DrillbitEndpoint\"\346\001\n\017Op" +
-      "eratorProfile\0221\n\rinput_profile\030\001 \003(\0132\032.e",
-      "xec.shared.StreamProfile\022\023\n\013operator_id\030" +
-      "\003 \001(\005\022\025\n\roperator_type\030\004 \001(\005\022\023\n\013setup_na" +
-      "nos\030\005 \001(\003\022\025\n\rprocess_nanos\030\006 \001(\003\022\036\n\026loca" +
-      "l_memory_allocated\030\007 \001(\003\022(\n\006metric\030\010 \003(\013" +
-      "2\030.exec.shared.MetricValue\"B\n\rStreamProf" +
-      "ile\022\017\n\007records\030\001 \001(\003\022\017\n\007batches\030\002 \001(\003\022\017\n" +
-      "\007schemas\030\003 \001(\003\"J\n\013MetricValue\022\021\n\tmetric_" +
-      "id\030\001 \001(\005\022\022\n\nlong_value\030\002 \001(\003\022\024\n\014double_v" +
-      "alue\030\003 \001(\001*5\n\nRpcChannel\022\017\n\013BIT_CONTROL\020" +
-      "\000\022\014\n\010BIT_DATA\020\001\022\010\n\004USER\020\002*/\n\tQueryType\022\007",
-      "\n\003SQL\020\001\022\013\n\007LOGICAL\020\002\022\014\n\010PHYSICAL\020\003*k\n\rFr" +
-      "agmentState\022\013\n\007SENDING\020\000\022\027\n\023AWAITING_ALL" +
-      "OCATION\020\001\022\013\n\007RUNNING\020\002\022\014\n\010FINISHED\020\003\022\r\n\t" +
-      "CANCELLED\020\004\022\n\n\006FAILED\020\005*\345\004\n\020CoreOperator" +
-      "Type\022\021\n\rSINGLE_SENDER\020\000\022\024\n\020BROADCAST_SEN" +
-      "DER\020\001\022\n\n\006FILTER\020\002\022\022\n\016HASH_AGGREGATE\020\003\022\r\n" +
-      "\tHASH_JOIN\020\004\022\016\n\nMERGE_JOIN\020\005\022\031\n\025HASH_PAR" +
-      "TITION_SENDER\020\006\022\t\n\005LIMIT\020\007\022\024\n\020MERGING_RE" +
-      "CEIVER\020\010\022\034\n\030ORDERED_PARTITION_SENDER\020\t\022\013" +
-      "\n\007PROJECT\020\n\022\023\n\017RANDOM_RECEIVER\020\013\022\020\n\014RANG",
-      "E_SENDER\020\014\022\n\n\006SCREEN\020\r\022\034\n\030SELECTION_VECT" +
-      "OR_REMOVER\020\016\022\027\n\023STREAMING_AGGREGATE\020\017\022\016\n" +
-      "\nTOP_N_SORT\020\020\022\021\n\rEXTERNAL_SORT\020\021\022\t\n\005TRAC" +
-      "E\020\022\022\t\n\005UNION\020\023\022\014\n\010OLD_SORT\020\024\022\032\n\026PARQUET_" +
-      "ROW_GROUP_SCAN\020\025\022\021\n\rHIVE_SUB_SCAN\020\026\022\025\n\021S" +
-      "YSTEM_TABLE_SCAN\020\027\022\021\n\rMOCK_SUB_SCAN\020\030\022\022\n" +
-      "\016PARQUET_WRITER\020\031\022\023\n\017DIRECT_SUB_SCAN\020\032\022\017" +
-      "\n\013TEXT_WRITER\020\033\022\021\n\rTEXT_SUB_SCAN\020\034\022\021\n\rJS" +
-      "ON_SUB_SCAN\020\035\022\030\n\024INFO_SCHEMA_SUB_SCAN\020\036B" +
-      ".\n\033org.apache.drill.exec.protoB\rUserBitS",
-      "haredH\001"
+      "xec.shared.SerializedField\022)\n!carries_tw" +
+      "o_byte_selection_vector\030\003 \001(\010\"\205\001\n\010NamePa" +
+      "rt\022(\n\004type\030\001 \001(\0162\032.exec.shared.NamePart." +
+      "Type\022\014\n\004name\030\002 \001(\t\022$\n\005child\030\003 \001(\0132\025.exec" +
+      ".shared.NamePart\"\033\n\004Type\022\010\n\004NAME\020\000\022\t\n\005AR" +
+      "RAY\020\001\"\351\001\n\017SerializedField\022%\n\nmajor_type\030" +
+      "\001 \001(\0132\021.common.MajorType\022(\n\tname_part\030\002 " +
+      "\001(\0132\025.exec.shared.NamePart\022+\n\005child\030\003 \003(",
+      "\0132\034.exec.shared.SerializedField\022\023\n\013value" +
+      "_count\030\004 \001(\005\022\027\n\017var_byte_length\030\005 \001(\005\022\023\n" +
+      "\013group_count\030\006 \001(\005\022\025\n\rbuffer_length\030\007 \001(" +
+      "\005\"\314\001\n\014QueryProfile\022 \n\002id\030\001 \001(\0132\024.exec.sh" +
+      "ared.QueryId\022$\n\004type\030\002 \001(\0162\026.exec.shared" +
+      ".QueryType\022\r\n\005start\030\003 \001(\003\022\013\n\003end\030\004 \001(\003\022\r" +
+      "\n\005query\030\005 \001(\t\022\014\n\004plan\030\006 \001(\t\022;\n\020fragment_" +
+      "profile\030\007 \003(\0132!.exec.shared.MajorFragmen" +
+      "tProfile\"t\n\024MajorFragmentProfile\022\031\n\021majo" +
+      "r_fragment_id\030\001 \001(\005\022A\n\026minor_fragment_pr",
+      "ofile\030\002 \003(\0132!.exec.shared.MinorFragmentP" +
+      "rofile\"\274\002\n\024MinorFragmentProfile\022)\n\005state" +
+      "\030\001 \001(\0162\032.exec.shared.FragmentState\022(\n\005er" +
+      "ror\030\002 \001(\0132\031.exec.shared.DrillPBError\022\031\n\021" +
+      "minor_fragment_id\030\003 \001(\005\0226\n\020operator_prof" +
+      "ile\030\004 \003(\0132\034.exec.shared.OperatorProfile\022" +
+      "\022\n\nstart_time\030\005 \001(\003\022\020\n\010end_time\030\006 \001(\003\022\023\n" +
+      "\013memory_used\030\007 \001(\003\022\027\n\017max_memory_used\030\010 " +
+      "\001(\003\022(\n\010endpoint\030\t \001(\0132\026.exec.DrillbitEnd" +
+      "point\"\346\001\n\017OperatorProfile\0221\n\rinput_profi",
+      "le\030\001 \003(\0132\032.exec.shared.StreamProfile\022\023\n\013" +
+      "operator_id\030\003 \001(\005\022\025\n\roperator_type\030\004 \001(\005" +
+      "\022\023\n\013setup_nanos\030\005 \001(\003\022\025\n\rprocess_nanos\030\006" +
+      " \001(\003\022\036\n\026local_memory_allocated\030\007 \001(\003\022(\n\006" +
+      "metric\030\010 \003(\0132\030.exec.shared.MetricValue\"B" +
+      "\n\rStreamProfile\022\017\n\007records\030\001 \001(\003\022\017\n\007batc" +
+      "hes\030\002 \001(\003\022\017\n\007schemas\030\003 \001(\003\"J\n\013MetricValu" +
+      "e\022\021\n\tmetric_id\030\001 \001(\005\022\022\n\nlong_value\030\002 \001(\003" +
+      "\022\024\n\014double_value\030\003 \001(\001*5\n\nRpcChannel\022\017\n\013" +
+      "BIT_CONTROL\020\000\022\014\n\010BIT_DATA\020\001\022\010\n\004USER\020\002*/\n",
+      "\tQueryType\022\007\n\003SQL\020\001\022\013\n\007LOGICAL\020\002\022\014\n\010PHYS" +
+      "ICAL\020\003*k\n\rFragmentState\022\013\n\007SENDING\020\000\022\027\n\023" +
+      "AWAITING_ALLOCATION\020\001\022\013\n\007RUNNING\020\002\022\014\n\010FI" +
+      "NISHED\020\003\022\r\n\tCANCELLED\020\004\022\n\n\006FAILED\020\005*\345\004\n\020" +
+      "CoreOperatorType\022\021\n\rSINGLE_SENDER\020\000\022\024\n\020B" +
+      "ROADCAST_SENDER\020\001\022\n\n\006FILTER\020\002\022\022\n\016HASH_AG" +
+      "GREGATE\020\003\022\r\n\tHASH_JOIN\020\004\022\016\n\nMERGE_JOIN\020\005" +
+      "\022\031\n\025HASH_PARTITION_SENDER\020\006\022\t\n\005LIMIT\020\007\022\024" +
+      "\n\020MERGING_RECEIVER\020\010\022\034\n\030ORDERED_PARTITIO" +
+      "N_SENDER\020\t\022\013\n\007PROJECT\020\n\022\023\n\017RANDOM_RECEIV",
+      "ER\020\013\022\020\n\014RANGE_SENDER\020\014\022\n\n\006SCREEN\020\r\022\034\n\030SE" +
+      "LECTION_VECTOR_REMOVER\020\016\022\027\n\023STREAMING_AG" +
+      "GREGATE\020\017\022\016\n\nTOP_N_SORT\020\020\022\021\n\rEXTERNAL_SO" +
+      "RT\020\021\022\t\n\005TRACE\020\022\022\t\n\005UNION\020\023\022\014\n\010OLD_SORT\020\024" +
+      "\022\032\n\026PARQUET_ROW_GROUP_SCAN\020\025\022\021\n\rHIVE_SUB" +
+      "_SCAN\020\026\022\025\n\021SYSTEM_TABLE_SCAN\020\027\022\021\n\rMOCK_S" +
+      "UB_SCAN\020\030\022\022\n\016PARQUET_WRITER\020\031\022\023\n\017DIRECT_" +
+      "SUB_SCAN\020\032\022\017\n\013TEXT_WRITER\020\033\022\021\n\rTEXT_SUB_" +
+      "SCAN\020\034\022\021\n\rJSON_SUB_SCAN\020\035\022\030\n\024INFO_SCHEMA" +
+      "_SUB_SCAN\020\036B.\n\033org.apache.drill.exec.pro",
+      "toB\rUserBitSharedH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -13427,7 +13427,7 @@ public final class UserBitShared {
           internal_static_exec_shared_RecordBatchDef_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_exec_shared_RecordBatchDef_descriptor,
-              new java.lang.String[] { "RecordCount", "Field", "IsSelectionVector2", });
+              new java.lang.String[] { "RecordCount", "Field", "CarriesTwoByteSelectionVector", });
           internal_static_exec_shared_NamePart_descriptor =
             getDescriptor().getMessageTypes().get(5);
           internal_static_exec_shared_NamePart_fieldAccessorTable = new

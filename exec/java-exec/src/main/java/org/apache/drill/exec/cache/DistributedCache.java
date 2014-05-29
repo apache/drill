@@ -17,9 +17,11 @@
  */
 package org.apache.drill.exec.cache;
 
+import java.util.Map;
+
 import org.apache.drill.exec.exception.DrillbitStartupException;
-import org.apache.drill.exec.proto.BitControl.PlanFragment;
-import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
+
+import com.google.protobuf.Message;
 
 
 public interface DistributedCache extends AutoCloseable{
@@ -27,13 +29,158 @@ public interface DistributedCache extends AutoCloseable{
 
   public void run() throws DrillbitStartupException;
 
-//  public void updateLocalQueueLength(int length);
-//  public List<WorkQueueStatus> getQueueLengths();
+  public <K, V> DistributedMap<K, V> getMap(CacheConfig<K, V> config);
+  public <K, V> DistributedMultiMap<K, V> getMultiMap(CacheConfig<K, V> config);
 
-  public PlanFragment getFragment(FragmentHandle handle);
-  public void storeFragment(PlanFragment fragment);
-  public <V extends DrillSerializable> DistributedMultiMap<V> getMultiMap(Class<V> clazz);
-  public <V extends DrillSerializable> DistributedMap<V> getMap(Class<V> clazz);
-  public <V extends DrillSerializable> DistributedMap<V> getNamedMap(String name, Class<V> clazz);
   public Counter getCounter(String name);
+
+  public static enum SerializationMode {
+    JACKSON(Object.class),
+    DRILL_SERIALIZIABLE(String.class, DrillSerializable.class),
+    PROTOBUF(String.class, Message.class);
+
+    private final Class<?>[] classes;
+    private SerializationMode(Class<?>... classes){
+      this.classes = classes;
+    }
+
+    public void checkClass(Class<?> classToCheck){
+      for(Class<?> c : classes){
+        if(c.isAssignableFrom(classToCheck)) return;
+      }
+
+      throw new UnsupportedOperationException(String.format("You are trying to serialize the class %s using the serialization mode %s.  This is not allowed.", classToCheck.getName(), this.name()));
+    }
+  }
+
+  public static class CacheConfig<K, V>{
+    private final Class<K> keyClass;
+    private final Class<V> valueClass;
+    private final String name;
+    private final SerializationMode mode;
+
+    public CacheConfig(Class<K> keyClass, Class<V> valueClass, String name, SerializationMode mode) {
+      super();
+      this.keyClass = keyClass;
+      this.valueClass = valueClass;
+      this.name = name;
+      this.mode = mode;
+    }
+
+    public Class<K> getKeyClass() {
+      return keyClass;
+    }
+
+    public Class<V> getValueClass() {
+      return valueClass;
+    }
+
+    public SerializationMode getMode() {
+      return mode;
+    }
+
+    public String getName() {
+      return name;
+    }
+
+    @Override
+    public int hashCode() {
+      final int prime = 31;
+      int result = 1;
+      result = prime * result + ((keyClass == null) ? 0 : keyClass.hashCode());
+      result = prime * result + ((mode == null) ? 0 : mode.hashCode());
+      result = prime * result + ((name == null) ? 0 : name.hashCode());
+      result = prime * result + ((valueClass == null) ? 0 : valueClass.hashCode());
+      return result;
+    }
+
+    public static <V> CacheConfigBuilder<String, V> newBuilder(Class<V> valueClass) {
+      return newBuilder(String.class, valueClass);
+    }
+
+    public static <K, V> CacheConfigBuilder<K, V> newBuilder(Class<K> keyClass, Class<V> valueClass) {
+      return new CacheConfigBuilder<K, V>(keyClass, valueClass);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj)
+        return true;
+      if (obj == null)
+        return false;
+      if (getClass() != obj.getClass())
+        return false;
+      CacheConfig other = (CacheConfig) obj;
+      if (keyClass == null) {
+        if (other.keyClass != null)
+          return false;
+      } else if (!keyClass.equals(other.keyClass))
+        return false;
+      if (mode != other.mode)
+        return false;
+      if (name == null) {
+        if (other.name != null)
+          return false;
+      } else if (!name.equals(other.name))
+        return false;
+      if (valueClass == null) {
+        if (other.valueClass != null)
+          return false;
+      } else if (!valueClass.equals(other.valueClass))
+        return false;
+      return true;
+    }
+
+
+  }
+
+  public static class CacheConfigBuilder<K, V> {
+
+    private Class<K> keyClass;
+    private Class<V> valueClass;
+    private String name;
+    private SerializationMode mode = SerializationMode.DRILL_SERIALIZIABLE;
+
+    private CacheConfigBuilder(Class<K> keyClass, Class<V> valueClass) {
+      this.keyClass = keyClass;
+      this.valueClass = valueClass;
+      this.name = keyClass.getName();
+    }
+
+
+    public CacheConfigBuilder<K, V> mode(SerializationMode mode){
+      this.mode = mode;
+      return this;
+    }
+
+    public CacheConfigBuilder<K, V> proto(){
+      this.mode = SerializationMode.PROTOBUF;
+      return this;
+    }
+
+    public CacheConfigBuilder<K, V> jackson(){
+      this.mode = SerializationMode.JACKSON;
+      return this;
+    }
+
+    public CacheConfigBuilder<K, V> drill(){
+      this.mode = SerializationMode.DRILL_SERIALIZIABLE;
+      return this;
+    }
+
+
+    public CacheConfigBuilder<K, V> name(String name){
+      this.name = name;
+      return this;
+    }
+
+    public CacheConfig<K, V> build(){
+      mode.checkClass(keyClass);
+      mode.checkClass(valueClass);
+      return new CacheConfig<K, V>(keyClass, valueClass, name, mode);
+    }
+
+
+
+  }
 }

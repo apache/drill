@@ -103,7 +103,7 @@ public class BatchGroup implements VectorAccessible {
     watch.start();
     vas.readFromStream(inputStream);
     VectorContainer c = (VectorContainer) vas.get();
-    logger.debug("Took {} us to read {} records", watch.elapsed(TimeUnit.MICROSECONDS), c.getRecordCount());
+//    logger.debug("Took {} us to read {} records", watch.elapsed(TimeUnit.MICROSECONDS), c.getRecordCount());
     spilledBatches--;
     return c;
   }

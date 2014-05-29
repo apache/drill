@@ -32,10 +32,10 @@ import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.rpc.control.Controller;
 import org.apache.drill.exec.rpc.control.WorkEventBus;
 import org.apache.drill.exec.rpc.data.DataConnectionCreator;
-import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.StoragePluginRegistry.DrillSchemaFactory;
+import org.apache.drill.exec.store.sys.TableProvider;
 
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Preconditions;
@@ -56,8 +56,9 @@ public class DrillbitContext {
   private final WorkEventBus workBus;
   private final FunctionImplementationRegistry functionRegistry;
   private final SystemOptionManager systemOptions;
+  private final TableProvider provider;
 
-  public DrillbitContext(DrillbitEndpoint endpoint, BootStrapContext context, ClusterCoordinator coord, Controller controller, DataConnectionCreator connectionsPool, DistributedCache cache, WorkEventBus workBus) {
+  public DrillbitContext(DrillbitEndpoint endpoint, BootStrapContext context, ClusterCoordinator coord, Controller controller, DataConnectionCreator connectionsPool, DistributedCache cache, WorkEventBus workBus, TableProvider provider) {
     super();
     Preconditions.checkNotNull(endpoint);
     Preconditions.checkNotNull(context);
@@ -70,11 +71,12 @@ public class DrillbitContext {
     this.connectionsPool = connectionsPool;
     this.cache = cache;
     this.endpoint = endpoint;
+    this.provider = provider;
     this.storagePlugins = new StoragePluginRegistry(this);
     this.reader = new PhysicalPlanReader(context.getConfig(), context.getConfig().getMapper(), endpoint, storagePlugins);
     this.operatorCreatorRegistry = new OperatorCreatorRegistry(context.getConfig());
     this.functionRegistry = new FunctionImplementationRegistry(context.getConfig());
-    this.systemOptions = new SystemOptionManager(cache);
+    this.systemOptions = new SystemOptionManager(context.getConfig(), provider);
 
 //    this.globalDrillOptions = new DistributedGlobalOptions(this.cache);
   }
@@ -138,6 +140,10 @@ public class DrillbitContext {
 
   public PhysicalPlanReader getPlanReader(){
     return reader;
+  }
+
+  public TableProvider getSystemTableProvider(){
+    return provider;
   }
 
   public DrillSchemaFactory getSchemaFactory(){

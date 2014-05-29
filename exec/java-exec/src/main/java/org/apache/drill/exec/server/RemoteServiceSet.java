@@ -25,7 +25,7 @@ import org.apache.drill.exec.cache.DistributedCache;
 import org.apache.drill.exec.cache.infinispan.ICache;
 import org.apache.drill.exec.cache.local.LocalCache;
 import org.apache.drill.exec.coord.ClusterCoordinator;
-import org.apache.drill.exec.coord.LocalClusterCoordinator;
+import org.apache.drill.exec.coord.local.LocalClusterCoordinator;
 import org.apache.drill.exec.memory.BufferAllocator;
 
 public class RemoteServiceSet implements Closeable{
@@ -66,7 +66,7 @@ public class RemoteServiceSet implements Closeable{
   }
 
   public static RemoteServiceSet getServiceSetWithFullCache(DrillConfig config, BufferAllocator allocator) throws Exception{
-    ICache c = new ICache(config, allocator);
+    ICache c = new ICache(config, allocator, true);
     return new RemoteServiceSet(c, new LocalClusterCoordinator());
   }
 }

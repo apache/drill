@@ -18,22 +18,19 @@
 package org.apache.drill.exec.cache;
 
 import java.util.List;
-import java.util.Map;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecTest;
-import org.apache.drill.exec.cache.ProtoSerializable.FragmentHandleSerializable;
+import org.apache.drill.exec.cache.DistributedCache.CacheConfig;
 import org.apache.drill.exec.cache.infinispan.ICache;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.TopLevelAllocator;
-import org.apache.drill.exec.planner.logical.StoragePlugins;
-import org.apache.drill.exec.proto.BitControl.FragmentStatus;
+import org.apache.drill.exec.physical.impl.orderedpartitioner.OrderedPartitionRecordBatch;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.record.MaterializedField;
@@ -44,7 +41,6 @@ import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.server.options.OptionValue;
 import org.apache.drill.exec.server.options.OptionValue.OptionType;
-import org.apache.drill.exec.store.dfs.FileSystemConfig;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.IntVector;
 import org.apache.drill.exec.vector.ValueVector;
@@ -64,32 +60,20 @@ public class TestCacheSerialization extends ExecTest {
   private static final DrillConfig CONFIG = DrillConfig.create();
 
   @Test
-  public void testProtobufSerialization() {
-    DistributedMap<FragmentHandleSerializable> map = ICACHE.getMap(FragmentHandleSerializable.class);
-    FragmentHandle h = FragmentHandle.newBuilder().setMajorFragmentId(1).setMinorFragmentId(1).setQueryId(QueryId.newBuilder().setPart1(74).setPart2(66).build()).build();
-    FragmentHandleSerializable s = new FragmentHandleSerializable(h);
+  public void protobufSerialization() {
+    DistributedMap<String, FragmentHandle> map = ICACHE.getMap(CacheConfig.newBuilder(FragmentHandle.class).proto().build());
+    FragmentHandle s = FragmentHandle.newBuilder().setMajorFragmentId(1).setMinorFragmentId(1).setQueryId(QueryId.newBuilder().setPart1(74).setPart2(66).build()).build();
     map.put("1", s);
     for(int i =0; i < 2; i++){
-      FragmentHandleSerializable s2 = map.get("1");
-      Assert.assertEquals(s.getObject(), s2.getObject());
+      FragmentHandle s2 = map.get("1");
+      Assert.assertEquals(s, s2);
     }
   }
 
-//  @Test
-//  public void testProtobufExternalizer(){
-//    final FragmentStatus fs = FragmentStatus.newBuilder().setHandle(FragmentHandle.newBuilder().setMajorFragmentId(1).setMajorFragmentId(35)).build();
-//    DistributedMap<OptionValue> map = ICACHE.getNamedMap(FragmentStatus.class);
-//    map.put("1", v);
-//    for(int i = 0; i < 5; i++){
-//      OptionValue v2 = map.get("1");
-//      Assert.assertEquals(v, v2);
-//    }
-//  }
-
   @Test
-  public void testJackSerializable(){
+  public void jacksonSerialization(){
     OptionValue v = OptionValue.createBoolean(OptionType.SESSION, "my test option", true);
-    DistributedMap<OptionValue> map = ICACHE.getNamedMap("sys.options", OptionValue.class);
+    DistributedMap<String, OptionValue> map = ICACHE.getMap(CacheConfig.newBuilder(OptionValue.class).jackson().build());
     map.put("1", v);
     for(int i = 0; i < 5; i++){
       OptionValue v2 = map.get("1");
@@ -98,28 +82,13 @@ public class TestCacheSerialization extends ExecTest {
   }
 
   @Test
-  public void testCustomJsonSerialization(){
-    Map<String, StoragePluginConfig> configs = Maps.newHashMap();
-    configs.put("hello", new FileSystemConfig());
-    StoragePlugins p = new StoragePlugins(configs);
-
-    DistributedMap<StoragePlugins> map = ICACHE.getMap(StoragePlugins.class);
-    map.put("1", p);
-    for(int i =0; i < 2; i++){
-      StoragePlugins p2 = map.get("1");
-      Assert.assertEquals(p, p2);
-    }
-  }
-
-  @Test
-  public void testVectorCache() throws Exception {
+  public void multimapWithDrillSerializable() throws Exception {
     List<ValueVector> vectorList = Lists.newArrayList();
-    RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
-    MaterializedField intField = MaterializedField.create(new SchemaPath("int", ExpressionPosition.UNKNOWN),
+    MaterializedField intField = MaterializedField.create(SchemaPath.getSimplePath("int"),
         Types.required(TypeProtos.MinorType.INT));
     IntVector intVector = (IntVector) TypeHelper.getNewVector(intField, ALLOCATOR);
-    MaterializedField binField = MaterializedField.create(new SchemaPath("binary", ExpressionPosition.UNKNOWN),
+    MaterializedField binField = MaterializedField.create(SchemaPath.getSimplePath("binary"),
         Types.required(TypeProtos.MinorType.VARBINARY));
     VarBinaryVector binVector = (VarBinaryVector) TypeHelper.getNewVector(binField, ALLOCATOR);
     AllocationHelper.allocate(intVector, 4, 4);
@@ -144,7 +113,7 @@ public class TestCacheSerialization extends ExecTest {
     WritableBatch batch = WritableBatch.getBatchNoHVWrap(container.getRecordCount(), container, false);
     CachedVectorContainer wrap = new CachedVectorContainer(batch, ALLOCATOR);
 
-    DistributedMultiMap<CachedVectorContainer> mmap = ICACHE.getMultiMap(CachedVectorContainer.class);
+    DistributedMultiMap<String, CachedVectorContainer> mmap = ICACHE.getMultiMap(OrderedPartitionRecordBatch.MULTI_CACHE_CONFIG);
     mmap.put("vectors", wrap);
 
     for(int x =0; x < 2; x++){
@@ -168,19 +137,10 @@ public class TestCacheSerialization extends ExecTest {
     }
   }
 
-  // @Test
-  // public void testHazelVectorCache() throws Exception {
-  // DrillConfig c = DrillConfig.create();
-  // HazelCache cache = new HazelCache(c, new TopLevelAllocator());
-  // cache.run();
-  // testCache(c, cache);
-  // cache.close();
-  // }
-
   @BeforeClass
   public static void setupCache() throws Exception {
     ALLOCATOR = new TopLevelAllocator();
-    ICACHE = new ICache(CONFIG, ALLOCATOR);
+    ICACHE = new ICache(CONFIG, ALLOCATOR, true);
     ICACHE.run();
   }
 

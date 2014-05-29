@@ -47,7 +47,7 @@ message ParsingError{
 message RecordBatchDef {
   optional int32 record_count = 1;
   repeated SerializedField field = 2;
-  optional bool is_selection_vector_2 = 3;
+  optional bool carries_two_byte_selection_vector = 3;
 }
 
 message NamePart{

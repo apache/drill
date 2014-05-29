@@ -28,6 +28,9 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.logical.PlanProperties.Generator.ResultMode;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.cache.CachedVectorContainer;
+import org.apache.drill.exec.cache.DistributedCache.CacheConfig;
+import org.apache.drill.exec.cache.DistributedCache.SerializationMode;
 import org.apache.drill.exec.exception.FragmentSetupException;
 import org.apache.drill.exec.exception.OptimizerException;
 import org.apache.drill.exec.ops.QueryContext;
@@ -44,6 +47,7 @@ import org.apache.drill.exec.planner.fragment.StatsCollector;
 import org.apache.drill.exec.planner.sql.DirectPlan;
 import org.apache.drill.exec.planner.sql.DrillSqlWorker;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
+import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
@@ -70,6 +74,11 @@ import com.google.common.collect.Lists;
  */
 public class Foreman implements Runnable, Closeable, Comparable<Object>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Foreman.class);
+
+  public static final CacheConfig<FragmentHandle, PlanFragment> FRAGMENT_CACHE = CacheConfig //
+      .newBuilder(FragmentHandle.class, PlanFragment.class) //
+      .mode(SerializationMode.PROTOBUF) //
+      .build();
 
   private QueryId queryId;
   private RunQuery queryRequest;
@@ -286,7 +295,8 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
       logger.debug("Storing fragments");
       for (PlanFragment f : work.getFragments()) {
         // store all fragments in grid since they are part of handshake.
-        context.getCache().storeFragment(f);
+
+        context.getCache().getMap(FRAGMENT_CACHE).put(f.getHandle(), f);
         if (f.getLeafFragment()) {
           leafFragments.add(f);
         } else {

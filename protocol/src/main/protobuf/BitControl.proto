@@ -55,7 +55,7 @@ message PlanFragment {
   optional bool leaf_fragment = 9;
   optional DrillbitEndpoint foreman = 11;
   optional int64 mem_initial = 12 [default = 20000000]; // 20 megs
-  optional int64 mem_max = 13 [default = 20000000000]; // 20 gigs
+  optional int64 mem_max = 13 [default = 2000000000]; // 20 gigs
   optional int64 query_start_time = 14; // start time of query in milliseconds
   optional exec.shared.UserCredentials credentials = 15;
   optional int32 time_zone = 16;
