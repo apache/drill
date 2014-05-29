@@ -31,10 +31,7 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.SelectionVectorRemover;
 import org.apache.drill.exec.record.*;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
-import org.apache.drill.exec.vector.AllocationHelper;
-import org.apache.drill.exec.vector.FixedWidthVector;
-import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.VariableWidthVector;
+import org.apache.drill.exec.vector.*;
 import org.apache.drill.exec.vector.allocator.FixedVectorAllocator;
 import org.apache.drill.exec.vector.allocator.VariableEstimatedVector;
 import org.apache.drill.exec.vector.allocator.VectorAllocator;
@@ -210,7 +207,7 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
 
     try {
       final CodeGenerator<Copier> cg = CodeGenerator.get(Copier.TEMPLATE_DEFINITION2, context.getFunctionRegistry());
-      generateCopies(cg.getRoot(), incoming, false);
+      CopyUtil.generateCopies(cg.getRoot(), incoming, false);
       Copier copier = context.getImplementationClass(cg);
       copier.setupRemover(context, incoming, this, null);
 
@@ -235,7 +232,7 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
 
     try {
       final CodeGenerator<Copier> cg = CodeGenerator.get(Copier.TEMPLATE_DEFINITION4, context.getFunctionRegistry());
-      generateCopies(cg.getRoot(), batch, true);
+      CopyUtil.generateCopies(cg.getRoot(), batch, true);
       Copier copier = context.getImplementationClass(cg);
       copier.setupRemover(context, batch, outgoing, null);
 
@@ -244,43 +241,6 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
       throw new SchemaChangeException("Failure while attempting to load generated class", e);
     }
   }
-
-  public static void generateCopies(ClassGenerator g, VectorAccessible batch, boolean hyper){
-    // we have parallel ids for each value vector so we don't actually have to deal with managing the ids at all.
-    int fieldId = 0;
-
-    JExpression inIndex = JExpr.direct("inIndex");
-    JExpression outIndex = JExpr.direct("outIndex");
-    g.rotateBlock();
-    for(VectorWrapper<?> vv : batch){
-      JVar inVV = g.declareVectorValueSetupAndMember("incoming", new TypedFieldId(vv.getField().getType(), vv.isHyper(), fieldId));
-      JVar outVV = g.declareVectorValueSetupAndMember("outgoing", new TypedFieldId(vv.getField().getType(), false, fieldId));
-
-      if(hyper){
-
-        g.getEvalBlock()._if(
-            outVV
-            .invoke("copyFromSafe")
-            .arg(
-                inIndex.band(JExpr.lit((int) Character.MAX_VALUE)))
-            .arg(outIndex)
-            .arg(
-                inVV.component(inIndex.shrz(JExpr.lit(16)))
-                )
-            .not()
-            )
-            ._then()._return(JExpr.FALSE);
-      }else{
-        g.getEvalBlock()._if(outVV.invoke("copyFromSafe").arg(inIndex).arg(outIndex).arg(inVV).not())._then()._return(JExpr.FALSE);
-      }
-
-
-      fieldId++;
-    }
-    g.rotateBlock();
-    g.getEvalBlock()._return(JExpr.TRUE);
-  }
-
 
   @Override
   public WritableBatch getWritableBatch() {

@@ -20,15 +20,27 @@ package org.apache.drill.exec.physical.impl.partitionsender;
 import org.apache.drill.exec.compile.TemplateClassDefinition;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.OperatorContext;
+import org.apache.drill.exec.ops.OperatorStats;
+import org.apache.drill.exec.physical.config.HashPartitionSender;
+import org.apache.drill.exec.physical.impl.SendingAccountor;
 import org.apache.drill.exec.record.RecordBatch;
+
+import java.io.IOException;
 
 public interface Partitioner {
 
   public abstract void setup(FragmentContext context,
-                             RecordBatch incoming,
-                             OutgoingRecordBatch[] outgoing) throws SchemaChangeException;
+                          RecordBatch incoming,
+                          HashPartitionSender popConfig,
+                          OperatorStats stats,
+                          SendingAccountor sendingAccountor,
+                          OperatorContext oContext) throws SchemaChangeException;
 
-  public abstract void partitionBatch(RecordBatch incoming);
+  public abstract void partitionBatch(RecordBatch incoming) throws IOException;
+  public abstract void flushOutgoingBatches(boolean isLastBatch, boolean schemaChanged) throws IOException;
+  public abstract void initialize();
+  public abstract void clear();
 
   public static TemplateClassDefinition<Partitioner> TEMPLATE_DEFINITION = new TemplateClassDefinition<>(Partitioner.class, PartitionerTemplate.class);
 }

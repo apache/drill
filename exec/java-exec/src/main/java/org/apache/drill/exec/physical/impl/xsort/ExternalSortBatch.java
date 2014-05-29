@@ -49,6 +49,7 @@ import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.util.Utilities;
+import org.apache.drill.exec.vector.CopyUtil;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.allocator.VectorAllocator;
 import org.apache.hadoop.conf.Configuration;
@@ -508,7 +509,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
         generateComparisons(g, batch);
 
         g.setMappingSet(COPIER_MAPPING_SET);
-        RemovingRecordBatch.generateCopies(g, batch, true);
+        CopyUtil.generateCopies(g, batch, true);
         g.setMappingSet(MAIN_MAPPING);
         copier = context.getImplementationClass(cg);
       }

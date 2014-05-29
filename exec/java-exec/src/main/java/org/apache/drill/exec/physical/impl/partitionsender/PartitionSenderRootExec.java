@@ -18,7 +18,7 @@
 package org.apache.drill.exec.physical.impl.partitionsender;
 
 import java.io.IOException;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.ExecutionException;
 
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
@@ -28,7 +28,6 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
-import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
@@ -36,34 +35,32 @@ import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.config.HashPartitionSender;
 import org.apache.drill.exec.physical.impl.RootExec;
 import org.apache.drill.exec.physical.impl.SendingAccountor;
-import org.apache.drill.exec.physical.impl.filter.ReturnValueExpression;
-import org.apache.drill.exec.proto.CoordinationProtos;
+import org.apache.drill.exec.physical.impl.svremover.RemovingRecordBatch;
+import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
-import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.record.TypedFieldId;
-import org.apache.drill.exec.record.VectorWrapper;
-import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.record.*;
+import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
+import org.apache.drill.exec.rpc.data.DataTunnel;
 
-import com.sun.codemodel.JArray;
-import com.sun.codemodel.JClass;
 import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JExpression;
-import com.sun.codemodel.JMod;
 import com.sun.codemodel.JType;
-import com.sun.codemodel.JVar;
+import org.apache.drill.exec.vector.CopyUtil;
+
 
 public class PartitionSenderRootExec implements RootExec {
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PartitionSenderRootExec.class);
   private RecordBatch incoming;
   private HashPartitionSender operator;
-  private OutgoingRecordBatch[] outgoing;
   private Partitioner partitioner;
   private FragmentContext context;
   private OperatorContext oContext;
   private boolean ok = true;
   private final SendingAccountor sendCount = new SendingAccountor();
   private final OperatorStats stats;
+  private final int outGoingBatchCount;
+  private final HashPartitionSender popConfig;
 
 
   public PartitionSenderRootExec(FragmentContext context,
@@ -75,18 +72,8 @@ public class PartitionSenderRootExec implements RootExec {
     this.context = context;
     this.oContext = new OperatorContext(operator, context);
     this.stats = oContext.getStats();
-    this.outgoing = new OutgoingRecordBatch[operator.getDestinations().size()];
-    int fieldId = 0;
-    for (CoordinationProtos.DrillbitEndpoint endpoint : operator.getDestinations()) {
-      FragmentHandle opposite = context.getHandle().toBuilder().setMajorFragmentId(operator.getOppositeMajorFragmentId()).setMinorFragmentId(fieldId).build();
-      outgoing[fieldId] = new OutgoingRecordBatch(stats, sendCount, operator,
-                                                    context.getDataTunnel(endpoint, opposite),
-                                                    incoming,
-                                                    context,
-                                                    oContext.getAllocator(),
-                                                    fieldId);
-      fieldId++;
-    }
+    this.outGoingBatchCount = operator.getDestinations().size();
+    this.popConfig = operator;
   }
 
   @Override
@@ -105,11 +92,12 @@ public class PartitionSenderRootExec implements RootExec {
       case NONE:
         try {
           // send any pending batches
-          for (OutgoingRecordBatch batch : outgoing) {
-            batch.setIsLast();
-            batch.flush();
+          if(partitioner != null) {
+            partitioner.flushOutgoingBatches(true, false);
+          } else {
+            sendEmptyBatch();
           }
-        } catch (SchemaChangeException e) {
+        } catch (IOException e) {
           incoming.kill();
           logger.error("Error while creating partitioning sender or flushing outgoing batches", e);
           context.fail(e);
@@ -117,8 +105,8 @@ public class PartitionSenderRootExec implements RootExec {
         return false;
 
       case STOP:
-        for (OutgoingRecordBatch batch : outgoing) {
-          batch.clear();
+        if (partitioner != null) {
+          partitioner.clear();
         }
         return false;
 
@@ -127,22 +115,31 @@ public class PartitionSenderRootExec implements RootExec {
         try {
           // send all existing batches
           if (partitioner != null) {
-            flushOutgoingBatches(false, true);
+            partitioner.flushOutgoingBatches(false, true);
+            partitioner.clear();
           }
-          for (OutgoingRecordBatch b : outgoing) {
-            b.initializeBatch();
-          }
-          // update OutgoingRecordBatch's schema and generate partitioning code
+          // update DeprecatedOutgoingRecordBatch's schema and generate partitioning code
           createPartitioner();
+        } catch (IOException e) {
+          incoming.kill();
+          logger.error("Error while flushing outgoing batches", e);
+          context.fail(e);
+          return false;
         } catch (SchemaChangeException e) {
           incoming.kill();
-          logger.error("Error while creating partitioning sender or flushing outgoing batches", e);
+          logger.error("Error while setting up partitioner", e);
           context.fail(e);
           return false;
         }
       case OK:
         stats.batchReceived(0, incoming.getRecordCount(), newSchema);
-        partitioner.partitionBatch(incoming);
+        try {
+          partitioner.partitionBatch(incoming);
+        } catch (IOException e) {
+          incoming.kill();
+          context.fail(e);
+          return false;
+        }
         for (VectorWrapper v : incoming) {
           v.clear();
         }
@@ -151,31 +148,6 @@ public class PartitionSenderRootExec implements RootExec {
       default:
         throw new IllegalStateException();
     }
-  }
-
-
-
-  private void generatePartitionFunction() throws SchemaChangeException {
-
-    LogicalExpression filterExpression = operator.getExpr();
-    final ErrorCollector collector = new ErrorCollectorImpl();
-    final ClassGenerator<Partitioner> cg = CodeGenerator.get(Partitioner.TEMPLATE_DEFINITION, context.getFunctionRegistry()).getRoot();
-
-    final LogicalExpression expr = ExpressionTreeMaterializer.materialize(filterExpression, incoming, collector,context.getFunctionRegistry());
-    if(collector.hasErrors()){
-      throw new SchemaChangeException(String.format("Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));
-    }
-
-    cg.addExpr(new ReturnValueExpression(expr));
-
-    try {
-      Partitioner p = context.getImplementationClass(cg);
-      p.setup(context, incoming, outgoing);
-    } catch (ClassTransformationException | IOException e) {
-      throw new SchemaChangeException("Failure while attempting to load generated class", e);
-    }
-
-
   }
 
   private void createPartitioner() throws SchemaChangeException {
@@ -188,6 +160,7 @@ public class PartitionSenderRootExec implements RootExec {
     boolean hyper = false;
 
     cg = CodeGenerator.getRoot(Partitioner.TEMPLATE_DEFINITION, context.getFunctionRegistry());
+    ClassGenerator<Partitioner> cgInner = cg.getInnerGenerator("OutgoingRecordBatch");
 
     final LogicalExpression materializedExpr = ExpressionTreeMaterializer.materialize(expr, incoming, collector, context.getFunctionRegistry());
     if (collector.hasErrors()) {
@@ -197,153 +170,56 @@ public class PartitionSenderRootExec implements RootExec {
     }
 
     // generate code to copy from an incoming value vector to the destination partition's outgoing value vector
-    JExpression inIndex = JExpr.direct("inIndex");
     JExpression bucket = JExpr.direct("bucket");
-    JType outgoingVectorArrayType = cg.getModel().ref(ValueVector.class).array().array();
-    JType outgoingBatchArrayType = cg.getModel().ref(OutgoingRecordBatch.class).array();
 
     // generate evaluate expression to determine the hash
     ClassGenerator.HoldingContainer exprHolder = cg.addExpr(materializedExpr);
-    cg.getEvalBlock().decl(JType.parse(cg.getModel(), "int"), "bucket", exprHolder.getValue().mod(JExpr.lit(outgoing.length)));
-    cg.getEvalBlock().assign(JExpr.ref("bucket"), cg.getModel().ref(Math.class).staticInvoke("abs").arg(bucket));
-    // declare and assign the array of outgoing record batches
-    JVar outgoingBatches = cg.clazz.field(JMod.NONE,
-        outgoingBatchArrayType,
-        "outgoingBatches");
-    cg.getSetupBlock().assign(outgoingBatches, JExpr.direct("outgoing"));
+    cg.getEvalBlock().decl(JType.parse(cg.getModel(), "int"), "bucket", exprHolder.getValue().mod(JExpr.lit(outGoingBatchCount)));
+    cg.getEvalBlock()._return(cg.getModel().ref(Math.class).staticInvoke("abs").arg(bucket));
 
-    // declare a two-dimensional array of value vectors; batch is first dimension, ValueVector is the second
-    JVar outgoingVectors = cg.clazz.field(JMod.NONE,
-                                          outgoingVectorArrayType,
-                                          "outgoingVectors");
+    CopyUtil.generateCopies(cgInner, incoming, incoming.getSchema().getSelectionVectorMode() == SelectionVectorMode.FOUR_BYTE);
 
-    // create 2d array and build initialization list.  For example:
-    //     outgoingVectors = new ValueVector[][] {
-    //                              new ValueVector[] {vv1, vv2},
-    //                              new ValueVector[] {vv3, vv4}
-    //                       });
-    JArray outgoingVectorInit = JExpr.newArray(cg.getModel().ref(ValueVector.class).array());
-
-    int fieldId = 0;
-    int batchId = 0;
-    for (OutgoingRecordBatch batch : outgoing) {
-
-      JArray outgoingVectorInitBatch = JExpr.newArray(cg.getModel().ref(ValueVector.class));
-      for (VectorWrapper<?> vv : batch) {
-        // declare outgoing value vector and assign it to the array
-        JVar outVV = cg.declareVectorValueSetupAndMember("outgoing[" + batchId + "]",
-                                                         new TypedFieldId(vv.getField().getType(),
-                                                                          false,
-                                                                          fieldId));
-        // add vv to initialization list (e.g. { vv1, vv2, vv3 } )
-        outgoingVectorInitBatch.add(outVV);
-        ++fieldId;
-      }
-
-      // add VV array to initialization list (e.g. new ValueVector[] { ... })
-      outgoingVectorInit.add(outgoingVectorInitBatch);
-      ++batchId;
-      fieldId = 0;
-    }
-
-    // generate outgoing value vector 2d array initialization list.
-    cg.getSetupBlock().assign(outgoingVectors, outgoingVectorInit);
-
-    for (VectorWrapper<?> vvIn : incoming) {
-      // declare incoming value vectors
-      JVar incomingVV = cg.declareVectorValueSetupAndMember("incoming", new TypedFieldId(vvIn.getField().getType(),
-          vvIn.isHyper(),
-          fieldId));
-
-      // generate the copyFrom() invocation with explicit cast to the appropriate type
-      Class<?> vvType = TypeHelper.getValueVectorClass(vvIn.getField().getType().getMinorType(),
-                                                       vvIn.getField().getType().getMode());
-      JClass vvClass = cg.getModel().ref(vvType);
-
-      if (!hyper) {
-        // the following block generates calls to copyFrom(); e.g.:
-        // ((IntVector) outgoingVectors[bucket][0]).copyFrom(inIndex,
-        //                                                     outgoingBatches[bucket].getRecordCount(),
-        //                                                     vv1);
-        cg.getEvalBlock()._if(
-          ((JExpression) JExpr.cast(vvClass,
-                ((JExpression)
-                       outgoingVectors
-                         .component(bucket))
-                         .component(JExpr.lit(fieldId))))
-                         .invoke("copyFromSafe")
-                           .arg(inIndex)
-                           .arg(((JExpression) outgoingBatches.component(bucket)).invoke("getRecordCount"))
-                           .arg(incomingVV).not())
-                         ._then()
-                           .add(((JExpression) outgoingBatches.component(bucket)).invoke("flush"))
-                           ._return(JExpr.lit(false));
-      } else {
-        // the following block generates calls to copyFrom(); e.g.:
-        // ((IntVector) outgoingVectors[bucket][0]).copyFrom(inIndex,
-        //                                                     outgoingBatches[bucket].getRecordCount(),
-        //                                                     vv1[((inIndex)>>> 16)]);
-        cg.getEvalBlock()._if(
-          ((JExpression) JExpr.cast(vvClass,
-                ((JExpression)
-                       outgoingVectors
-                         .component(bucket))
-                         .component(JExpr.lit(fieldId))))
-                         .invoke("copyFromSafe")
-                           .arg(inIndex)
-                           .arg(((JExpression) outgoingBatches.component(bucket)).invoke("getRecordCount"))
-                           .arg(incomingVV.component(inIndex.shrz(JExpr.lit(16)))).not())
-                         ._then()
-                           .add(((JExpression) outgoingBatches.component(bucket)).invoke("flush"))
-                           ._return(JExpr.lit(false));
-
-      }
-      ++fieldId;
-    }
-    // generate the OutgoingRecordBatch helper invocations
-    cg.getEvalBlock().add(((JExpression) outgoingBatches.component(bucket)).invoke("incRecordCount"));
-    cg.getEvalBlock().add(((JExpression) outgoingBatches.component(bucket)).invoke("flushIfNecessary"));
-    cg.getEvalBlock()._return(JExpr.lit(true));
     try {
       // compile and setup generated code
 //      partitioner = context.getImplementationClassMultipleOutput(cg);
       partitioner = context.getImplementationClass(cg);
-      partitioner.setup(context, incoming, outgoing);
+      partitioner.setup(context, incoming, popConfig, stats, sendCount, oContext);
 
     } catch (ClassTransformationException | IOException e) {
       throw new SchemaChangeException("Failure while attempting to load generated class", e);
     }
   }
 
-  /**
-   * Flush each outgoing record batch, and optionally reset the state of each outgoing record
-   * batch (on schema change).  Note that the schema is updated based on incoming at the time
-   * this function is invoked.
-   *
-   * @param isLastBatch    true if this is the last incoming batch
-   * @param schemaChanged  true if the schema has changed
-   */
-  public void flushOutgoingBatches(boolean isLastBatch, boolean schemaChanged) throws SchemaChangeException {
-    for (OutgoingRecordBatch batch : outgoing) {
-      logger.debug("Attempting to flush all outgoing batches");
-      if (isLastBatch)
-        batch.setIsLast();
-      batch.flush();
-      if (schemaChanged) {
-        batch.resetBatch();
-        batch.initializeBatch();
-      }
-    }
-  }
-
   public void stop() {
     logger.debug("Partition sender stopping.");
     ok = false;
-    for(OutgoingRecordBatch b : outgoing){
-      b.clear();
+    if (partitioner != null) {
+      partitioner.clear();
     }
     sendCount.waitForSendComplete();
     oContext.close();
     incoming.cleanup();
   }
+
+  public void sendEmptyBatch() {
+    FragmentHandle handle = context.getHandle();
+    int fieldId = 0;
+    VectorContainer container = new VectorContainer();
+    StatusHandler statusHandler = new StatusHandler(sendCount, context);
+    for (DrillbitEndpoint endpoint : popConfig.getDestinations()) {
+      FragmentHandle opposite = context.getHandle().toBuilder().setMajorFragmentId(popConfig.getOppositeMajorFragmentId()).setMinorFragmentId(fieldId).build();
+      DataTunnel tunnel = context.getDataTunnel(endpoint, opposite);
+      FragmentWritableBatch writableBatch = new FragmentWritableBatch(true,
+              handle.getQueryId(),
+              handle.getMajorFragmentId(),
+              handle.getMinorFragmentId(),
+              operator.getOppositeMajorFragmentId(),
+              fieldId,
+              WritableBatch.getBatchNoHVWrap(0, container, false));
+      tunnel.sendRecordBatch(statusHandler, writableBatch);
+      this.sendCount.increment();
+      fieldId++;
+    }
+  }
+
 }
