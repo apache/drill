@@ -23,25 +23,26 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatchLoader;
+import org.apache.drill.exec.record.VectorAccessible;
 
 import static org.apache.drill.exec.compile.sig.GeneratorMapping.GM;
 
 public interface MergingReceiverGeneratorBase {
   
   public abstract void doSetup(FragmentContext context,
-                               RecordBatchLoader[] incomingBatchLoaders,
-                               RecordBatch outgoing) throws SchemaChangeException;
+                               VectorAccessible incoming,
+                               VectorAccessible outgoing) throws SchemaChangeException;
 
-  public abstract int doCompare(MergingRecordBatch.Node left,
-                                MergingRecordBatch.Node right);
+  public abstract int doEval(int leftIndex,
+                                int rightIndex);
 
-  public abstract boolean doCopy(int inBatch, int inIndex, int outIndex);
+  public abstract boolean doCopy(int inIndex, int outIndex);
 
   public static TemplateClassDefinition<MergingReceiverGeneratorBase> TEMPLATE_DEFINITION =
       new TemplateClassDefinition<>(MergingReceiverGeneratorBase.class, MergingReceiverTemplate.class);
 
   public final MappingSet compareMapping =
-    new MappingSet("left.valueIndex", "right.valueIndex",
+    new MappingSet("leftIndex", "rightIndex",
       GM("doSetup", "doCompare", null, null),
       GM("doSetup", "doCompare", null, null));
 

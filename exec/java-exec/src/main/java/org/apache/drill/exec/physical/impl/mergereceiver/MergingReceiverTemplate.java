@@ -21,6 +21,7 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatchLoader;
+import org.apache.drill.exec.record.VectorAccessible;
 
 import javax.inject.Named;
 
@@ -29,34 +30,12 @@ public abstract class MergingReceiverTemplate implements MergingReceiverGenerato
 
   public MergingReceiverTemplate() throws SchemaChangeException { }
 
-  /**
-   * Enter the generated setup routine
-   * @param context current fragment context
-   * @param incomingBatchLoaders one RecordBatchLoader per sender
-   * @param outgoing outgoing RecordBatch iterator
-   * @throws SchemaChangeException
-   */
   public abstract void doSetup(@Named("context") FragmentContext context,
-                               @Named("incomingBatchLoaders") RecordBatchLoader[] incomingBatchLoaders,
-                               @Named("outgoing") RecordBatch outgoing) throws SchemaChangeException;
+                               @Named("incoming") VectorAccessible incoming,
+                               @Named("outgoing") VectorAccessible outgoing) throws SchemaChangeException;
 
-  /**
-   * Enter the generated comparator
-   * @param leftNode  reference to the left-hand value and vector
-   * @param rightNode reference to the right-hand value and vector
-   * @return
-   */
-  public abstract int doCompare(@Named("leftNode") MergingRecordBatch.Node leftNode,
-                                @Named("rightNode") MergingRecordBatch.Node rightNode);
+  public abstract int doEval(@Named("leftIndex") int leftIndex,
+                                @Named("rightIndex") int rightIndex);
 
-  /**
-   * Enter the generated copy function
-   * @param inBatch incoming batch to copy from
-   * @param inIndex incoming record position to copy from
-   * @param outIndex outgoing record position to copy to
-   */
-  public abstract boolean doCopy(@Named("inBatch") int inBatch, @Named("inIndex") int inIndex, @Named("outIndex") int outIndex);
-
-//  public abstract void doEval(@Named("inBatch") int inBatch, @Named("inIndex") int inIndex, @Named("outIndex") int outIndex);
-
+  public abstract boolean doCopy(@Named("inIndex") int inIndex, @Named("outIndex") int outIndex);
 }
