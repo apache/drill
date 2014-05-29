@@ -41,6 +41,7 @@ public class SystemOptionManager implements OptionManager{
       PlannerSettings.MERGEJOIN, 
       PlannerSettings.MULTIPHASE,
       PlannerSettings.BROADCAST,
+      PlannerSettings.BROADCAST_THRESHOLD,
       ExecConstants.OUTPUT_FORMAT_VALIDATOR,
       ExecConstants.PARQUET_BLOCK_SIZE_VALIDATOR
   };

@@ -37,22 +37,22 @@ public class DataTunnel {
   }
 
   public void sendRecordBatch(RpcOutcomeListener<Ack> outcomeListener, FragmentWritableBatch batch) {
-    SendBatch b = new SendBatch(outcomeListener, batch);
+    SendBatchAsyncListen b = new SendBatchAsyncListen(outcomeListener, batch);
     manager.runCommand(b);
   }
 
   public DrillRpcFuture<Ack> sendRecordBatch(FragmentContext context, FragmentWritableBatch batch) {
-    SendBatchAsync b = new SendBatchAsync(batch, context);
+    SendBatchAsyncFuture b = new SendBatchAsyncFuture(batch, context);
     manager.runCommand(b);
     return b.getFuture();
   }
 
 
   
-  public static class SendBatch extends ListeningCommand<Ack, DataClientConnection> {
+  private static class SendBatchAsyncListen extends ListeningCommand<Ack, DataClientConnection> {
     final FragmentWritableBatch batch;
 
-    public SendBatch(RpcOutcomeListener<Ack> listener, FragmentWritableBatch batch) {
+    public SendBatchAsyncListen(RpcOutcomeListener<Ack> listener, FragmentWritableBatch batch) {
       super(listener);
       this.batch = batch;
     }
@@ -70,11 +70,11 @@ public class DataTunnel {
     
   }
 
-  public static class SendBatchAsync extends FutureBitCommand<Ack, DataClientConnection> {
+  private static class SendBatchAsyncFuture extends FutureBitCommand<Ack, DataClientConnection> {
     final FragmentWritableBatch batch;
     final FragmentContext context;
 
-    public SendBatchAsync(FragmentWritableBatch batch, FragmentContext context) {
+    public SendBatchAsyncFuture(FragmentWritableBatch batch, FragmentContext context) {
       super();
       this.batch = batch;
       this.context = context;

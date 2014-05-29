@@ -22,13 +22,15 @@ import net.hydromatic.optiq.tools.FrameworkContext;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionValidator;
 import org.apache.drill.exec.server.options.TypeValidators.BooleanValidator;
+import org.apache.drill.exec.server.options.TypeValidators.PositiveLongValidator;
 
 public class PlannerSettings implements FrameworkContext{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PlannerSettings.class);
 
   private int numEndPoints = 0;
   private boolean useDefaultCosting = false; // True: use default Optiq costing, False: use Drill costing
-  private int broadcastThreshold = 10000; // Consider broadcast inner plans if estimated rows is less than this threshold
+
+  public static final int MAX_BROADCAST_THRESHOLD = Integer.MAX_VALUE; 
 
   public static final OptionValidator EXCHANGE = new BooleanValidator("planner.disable_exchanges", false);
   public static final OptionValidator HASHAGG = new BooleanValidator("planner.enable_hashagg", true);
@@ -36,7 +38,8 @@ public class PlannerSettings implements FrameworkContext{
   public static final OptionValidator HASHJOIN = new BooleanValidator("planner.enable_hashjoin", true);
   public static final OptionValidator MERGEJOIN = new BooleanValidator("planner.enable_mergejoin", true);
   public static final OptionValidator MULTIPHASE = new BooleanValidator("planner.enable_multiphase_agg", true);
-  public static final OptionValidator BROADCAST = new BooleanValidator("planner.enable_broadcast_join", false);
+  public static final OptionValidator BROADCAST = new BooleanValidator("planner.enable_broadcast_join", true);
+  public static final OptionValidator BROADCAST_THRESHOLD = new PositiveLongValidator("planner.broadcast_threshold", MAX_BROADCAST_THRESHOLD, 10000);
 
   public OptionManager options = null;
 
@@ -88,8 +91,8 @@ public class PlannerSettings implements FrameworkContext{
     return options.getOption(BROADCAST.getOptionName()).bool_val;
   }
 
-  public int getBroadcastThreshold() {
-    return broadcastThreshold;
+  public long getBroadcastThreshold() {
+    return options.getOption(BROADCAST_THRESHOLD.getOptionName()).num_val;
   }
 
   @Override

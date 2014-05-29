@@ -74,6 +74,7 @@ public class ScreenCreator implements RootCreator<Screen>{
     public boolean next() {
       if(!ok){
         stop();
+        context.fail(this.listener.ex);
         return false;
       }
 
@@ -135,7 +136,7 @@ public class ScreenCreator implements RootCreator<Screen>{
     private SendListener listener = new SendListener();
 
     private class SendListener extends BaseRpcOutcomeListener<Ack>{
-
+      volatile RpcException ex; 
 
 
       @Override
@@ -150,6 +151,7 @@ public class ScreenCreator implements RootCreator<Screen>{
         logger.error("Failure while sending data to user.", ex);
         ErrorHelper.logAndConvertError(context.getIdentity(), "Failure while sending fragment to client.", ex, logger);
         ok = false;
+        this.ex = ex;
       }
 
     }

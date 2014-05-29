@@ -17,6 +17,8 @@
  ******************************************************************************/
 package org.apache.drill.exec.physical.impl.broadcastsender;
 
+import io.netty.buffer.ByteBuf;
+
 import java.util.List;
 
 import org.apache.drill.exec.ops.FragmentContext;
@@ -26,13 +28,15 @@ import org.apache.drill.exec.physical.impl.SendingAccountor;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
+import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.GeneralRPCProtos;
 import org.apache.drill.exec.record.FragmentWritableBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.WritableBatch;
-import org.apache.drill.exec.rpc.DrillRpcFuture;
+import org.apache.drill.exec.rpc.BaseRpcOutcomeListener;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.data.DataTunnel;
+import org.apache.drill.exec.work.ErrorHelper;
 
 /**
  * Broadcast Sender broadcasts incoming batches to all receivers (one or more).
@@ -47,7 +51,6 @@ public class BroadcastSenderRootExec implements RootExec {
   private final ExecProtos.FragmentHandle handle;
   private volatile boolean ok;
   private final RecordBatch incoming;
-  private final DrillRpcFuture[] responseFutures;
 
   public BroadcastSenderRootExec(FragmentContext context,
                                  RecordBatch incoming,
@@ -63,12 +66,12 @@ public class BroadcastSenderRootExec implements RootExec {
       FragmentHandle opp = handle.toBuilder().setMajorFragmentId(config.getOppositeMajorFragmentId()).setMinorFragmentId(i).build();
       tunnels[i] = context.getDataTunnel(destinations.get(i), opp);
     }
-    responseFutures = new DrillRpcFuture[destinations.size()];
   }
 
   @Override
   public boolean next() {
     if(!ok) {
+      context.fail(statusHandler.ex);
       return false;
     }
 
@@ -79,24 +82,25 @@ public class BroadcastSenderRootExec implements RootExec {
       case NONE:
         for (int i = 0; i < tunnels.length; ++i) {
           FragmentWritableBatch b2 = FragmentWritableBatch.getEmptyLast(handle.getQueryId(), handle.getMajorFragmentId(), handle.getMinorFragmentId(), config.getOppositeMajorFragmentId(), i);
-          responseFutures[i] = tunnels[i].sendRecordBatch(context, b2);
+          tunnels[i].sendRecordBatch(this.statusHandler, b2);
+          statusHandler.sendCount.increment();
         }
 
-        waitAllFutures(false);
         return false;
 
       case OK_NEW_SCHEMA:
       case OK:
         WritableBatch writableBatch = incoming.getWritableBatch();
+        if (tunnels.length > 1) {
+          writableBatch.retainBuffers(tunnels.length - 1);  
+        }
         for (int i = 0; i < tunnels.length; ++i) {
           FragmentWritableBatch batch = new FragmentWritableBatch(false, handle.getQueryId(), handle.getMajorFragmentId(), handle.getMinorFragmentId(), config.getOppositeMajorFragmentId(), i, writableBatch);
-          if(i > 0) {
-            writableBatch.retainBuffers();
-          }
-          responseFutures[i] = tunnels[i].sendRecordBatch(context, batch);
+          tunnels[i].sendRecordBatch(this.statusHandler, batch);   
+          statusHandler.sendCount.increment();
         }
 
-        return waitAllFutures(true);
+        return ok;
 
       case NOT_YET:
       default:
@@ -104,6 +108,7 @@ public class BroadcastSenderRootExec implements RootExec {
     }
   }
 
+  /*
   private boolean waitAllFutures(boolean haltOnError) {
     for (DrillRpcFuture<?> responseFuture : responseFutures) {
       try {
@@ -124,10 +129,34 @@ public class BroadcastSenderRootExec implements RootExec {
     }
     return true;
   }
-
+*/
+  
   @Override
   public void stop() {
       ok = false;
+      statusHandler.sendCount.waitForSendComplete();
       incoming.cleanup();
   }
+  
+  private StatusHandler statusHandler = new StatusHandler();
+  private class StatusHandler extends BaseRpcOutcomeListener<GeneralRPCProtos.Ack> {
+    volatile RpcException ex;
+    private final SendingAccountor sendCount = new SendingAccountor();
+    
+    @Override
+    public void success(Ack value, ByteBuf buffer) {
+      sendCount.decrement();
+      super.success(value, buffer);
+    }
+
+    @Override
+    public void failed(RpcException ex) {
+      sendCount.decrement();
+      logger.error("Failure while sending data to user.", ex);
+      ErrorHelper.logAndConvertError(context.getIdentity(), "Failure while sending fragment to client.", ex, logger);
+      ok = false;
+      this.ex = ex;
+    }
+  }
+
 }

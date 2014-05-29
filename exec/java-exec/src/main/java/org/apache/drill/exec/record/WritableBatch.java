@@ -163,4 +163,10 @@ public class WritableBatch {
       buf.retain();
     }
   }
+  
+  public void retainBuffers(int increment) {
+    for (ByteBuf buf : buffers) {
+      buf.retain(increment);
+    }
+  }
 }
