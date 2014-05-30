@@ -9,14 +9,59 @@
   OF ANY KIND, either express or implied. See the License for the specific
   language governing permissions and limitations under the License. -->
 
-<html>
-Registered Storage Plugins 
-<br />
-<#list model as plugin>
+<#include "*/generic.ftl">
+<#macro page_head>
+</#macro>
 
-${plugin} <a href="/storage/${plugin}/config">view</a> <a href="/storage/${plugin}/config/update">update</a><br />
+<#macro page_body>
+  <a href="/queries">back</a><br/>
+  <div class="page-header">
+  </div>
+  <h3>Registered Storage Plugins</h3>
+  <div class="table-responsive">
+    <table class="table">
+      <tbody>
+        <#list model as plugin>
+        <tr>
+          <td style="border:none;">
+            ${plugin}
+          </td>
+          <td style="border:none;">
+            <form action="/storage/${plugin}/config">
+              <button class="btn btn-default" type="submit">View</button>
+            </form>
+          </td>
+          <td style="border:none;">
+            <form action="/storage/${plugin}/config/update">
+              <button class="btn btn-primary" type="submit">Update</button>
+            </form>
+          </td>
+        </tr>
+        </#list>
+      </tbody>
+    </table>
+  </div>
+  <div>
+    <h4>Create new storage configuration</h4>
+    <form class="form-inline" id="newStorage" role="form" action="/" method="GET">
+      <div class="form-group">
+        <input type="text" class="form-control" id="storageName" placeholder="Storage Name">
+      </div>
+      <script>
+        function doSubmit() {
+          var name = document.getElementById("storageName");
+          var form = document.getElementById("newStorage");
+          form.action = "/storage/" + name.value + "/config/update?";
+          form.submit();
+        }
+      </script>
+      <button type="submit" class="btn btn-default" onclick="javascript:doSubmit();">Submit</button>
+    </form>
+  </div>
+  <script>
+      var elem = document.getElementById("statusFontColor");
+      elem.style.color = "green";
+  </script>
+</#macro>
 
-</#list>
-
-
-</html>
+<@page_html/>

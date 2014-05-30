@@ -16,26 +16,21 @@
 <#macro page_body>
   <a href="/queries">back</a><br/>
   <div class="page-header">
+      <h2>Result</h2>
   </div>
-  <h3>Configuration</h3>
-  <form role="form" action="/storage/config/update" method="POST">
-   <input type="hidden" name="name" value="${model.name}" />
-   <div class="form-group">
-      <textarea class="form-control" id="config" rows="20" cols="50" name="config">${model.config}</textarea>
-   </div>
-   <button class="btn btn-default" type="submit">
-     <#if model.exists >Update<#else>Create</#if>
-   </button>
-  </form>
-  <br/>
-  <#if model.exists >
-    <form role="form" action="/storage/config/delete" method="POST">
-      <input type="hidden" name="name" value="${model.name}" />
-      <button type="submit" class="btn btn-default" onclick="return confirm('Are you sure?')">
-      Delete
-      </button>
-    </form>
-  </#if>
+  <div class="table-responsive">
+    <table class="table">
+      <tbody>
+        <#list model as rows>
+        <tr>
+          <#list rows as row>
+          <td>${row}</td>
+          </#list>
+        </tr>
+        </#list>
+      </tbody>
+    </table>
+  </div>
   <script>
       var elem = document.getElementById("statusFontColor");
       elem.style.color = "green";

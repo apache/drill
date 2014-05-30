@@ -9,12 +9,41 @@
   OF ANY KIND, either express or implied. See the License for the specific
   language governing permissions and limitations under the License. -->
 
-<html>
-Welcome to Drill! 
-<br />
-<#list model as query>
+<#include "*/generic.ftl">
+<#macro page_head>
+</#macro>
 
-<a href="/query/${query}">${query}</a><br />
+<#macro page_body>
+  <a href="/queries">back</a><br/>
+  <div class="page-header">
+  </div>
+  <h3>List of Queries</h3>
+  <div class="table-responsive">
+    <table class="table table-hover">
+      <thead>
+         <td>Time</td>
+         <td>Query</td>
+      </thead>
+      <tbody>
+        <#list model as query>
+        <tr>
+          <td>${query.getValue()}</td>
+          <td>
+            <a href="/query/${query.getKey()}">
+              <div style="height:100%;width:100%">
+                ${query.getKey()}
+              </div>
+            </a>
+          </td>
+        </tr>
+        </#list>
+      </tbody>
+    </table>
+  </div>
+  <script>
+    var elem = document.getElementById("statusFontColor");
+    elem.style.color = "green";
+  </script>
+</#macro>
 
-</#list>
-</html>
+<@page_html/>

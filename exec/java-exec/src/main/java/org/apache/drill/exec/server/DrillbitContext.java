@@ -149,4 +149,8 @@ public class DrillbitContext {
     return storagePlugins.getSchemaFactory();
   }
 
+  public ClusterCoordinator getClusterCoordinator() {
+    return coord;
+  }
+
 }

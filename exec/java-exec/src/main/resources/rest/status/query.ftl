@@ -17,45 +17,34 @@
   <a href="/queries">back</a><br/>
   <div class="page-header">
   </div>
-  <h2>Query</h2>
   <form role="form" action="/query" method="POST">
     <div class="form-group">
-      <textarea class="form-control" id="query" name="query">${model.query}</textarea>
-    </div>
-    <div class="form-group">
-      <div class="radio-inline">
+      <label for="queryType">Query Type</label>
+      <div class="radio">
         <label>
           <input type="radio" name="queryType" id="sql" value="SQL" checked>
           SQL
         </label>
       </div>
-      <div class="radio-inline">
+      <div class="radio">
         <label>
           <input type="radio" name="queryType" id="physical" value="PHYSICAL">
           PHYSICAL
         </label>
       </div>
-      <div class="radio-inline">
+      <div class="radio">
         <label>
           <input type="radio" name="queryType" id="logical" value="LOGICAL">
           LOGICAL
         </label>
       </div>
     </div>
-    <button type="submit" class="btn btn-default">Re-run query</button>
+    <div class="form-group">
+      <label for="query">Query</label>
+      <textarea class="form-control" id="query" rows="5" name="query"></textarea>
+    </div>
+    <button type="submit" class="btn btn-default">Submit</button>
   </form>
-  <div class="page-header">
-    <h2>Physical plan</h2>
-  </div>
-  <div class="well">
-    <p><font face="courier">${model.plan}</font></p>
-  </div>
-  <div class="page-header">
-    <h2>Complete Profile</h2>
-  </div>
-  <div class="well">
-    <p><font face="courier">${model.toString()}</font></p>
-  </div>
   <script>
       var elem = document.getElementById("statusFontColor");
       elem.style.color = "green";

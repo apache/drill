@@ -61,7 +61,7 @@ public class StorageResources {
 
     List<String> names = Lists.newArrayList();
     for (Map.Entry<String, StoragePluginConfig> config : storage.getStore()) {
-      names.add(config.getKey());
+      names.add(config.getKey().toUpperCase());
     }
 
     return new Viewable("/rest/storage/list.ftl", names);
