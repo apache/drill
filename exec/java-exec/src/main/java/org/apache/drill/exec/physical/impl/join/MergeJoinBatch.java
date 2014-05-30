@@ -22,6 +22,7 @@ import static org.apache.drill.exec.compile.sig.GeneratorMapping.GM;
 import java.io.IOException;
 import java.util.List;
 
+import com.google.common.base.Preconditions;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.LogicalExpression;
@@ -181,18 +182,21 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
         case BATCH_RETURNED:
           // only return new schema if new worker has been setup.
           logger.debug("BATCH RETURNED; returning {}", (first ? "OK_NEW_SCHEMA" : "OK"));
+          setRecordCountInContainer();
           return first ? IterOutcome.OK_NEW_SCHEMA : IterOutcome.OK;
         case FAILURE:
           kill();
           return IterOutcome.STOP;
         case NO_MORE_DATA:
           logger.debug("NO MORE DATA; returning {}", (status.getOutPosition() > 0 ? (first ? "OK_NEW_SCHEMA" : "OK") : "NONE"));
+          setRecordCountInContainer();
           return status.getOutPosition() > 0 ? (first ? IterOutcome.OK_NEW_SCHEMA : IterOutcome.OK): IterOutcome.NONE;
         case SCHEMA_CHANGED:
           worker = null;
           if(status.getOutPosition() > 0){
             // if we have current data, let's return that.
             logger.debug("SCHEMA CHANGED; returning {} ", (first ? "OK_NEW_SCHEMA" : "OK"));
+            setRecordCountInContainer();
             return first ? IterOutcome.OK_NEW_SCHEMA : IterOutcome.OK;
           }else{
             // loop again to rebuild worker.
@@ -207,6 +211,13 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
 
     }finally{
       stats.stopProcessing();
+    }
+  }
+
+  private void setRecordCountInContainer() {
+    for(VectorWrapper vw : container){
+      Preconditions.checkArgument(!vw.isHyper());
+      vw.getValueVector().getMutator().setValueCount(getRecordCount());
     }
   }
 
