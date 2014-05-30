@@ -20,10 +20,11 @@
 #include "drill/recordBatch.hpp"
 #include "utils.hpp"
 
-const uint32_t YEARS_TO_MONTHS=12;
-const uint32_t HOURS_TO_MILLIS=60*60*1000;
-const uint32_t MINUTES_TO_MILLIS=60*1000;
-const uint32_t SECONDS_TO_MILLIS=1000;
+const int32_t YEARS_TO_MONTHS=12;
+const int32_t DAYS_TO_MILLIS=24*60*60*1000;
+const int32_t HOURS_TO_MILLIS=60*60*1000;
+const int32_t MINUTES_TO_MILLIS=60*1000;
+const int32_t SECONDS_TO_MILLIS=1000;
 extern "C"
 {
     #include "y2038/time64.h"
@@ -476,45 +477,68 @@ std::string DateTimeTZHolder::toString(){
 std::string IntervalYearHolder::toString(){
     std::stringstream sstr;
 
-    uint32_t years  = (m_month / YEARS_TO_MONTHS);
-    uint32_t months = (m_month % YEARS_TO_MONTHS);
+    bool isNegative = (m_month < 0);
+    int32_t m = (isNegative ? - m_month : m_month);
 
+    int32_t years  = (m / YEARS_TO_MONTHS);
+    int32_t months = (m % YEARS_TO_MONTHS);
+
+    if (isNegative) sstr << "-"; // put negative sign here if negative
     sstr << years << "-" << months;
     return sstr.str();
 };
 
+// Drill may populate data like 25 hours ("0 25:0:0.0"), we should normalize it to
+// 1 day 1 hour "1 1:0:0.0"
 std::string IntervalDayHolder::toString(){
     std::stringstream sstr;
 
-    uint32_t hours  = m_ms / (HOURS_TO_MILLIS);
-    uint32_t millis     = m_ms % (HOURS_TO_MILLIS);
+    bool isNegative = (m_day < 0) || ( m_day == 0 && m_ms < 0);
+    int32_t days = (m_day < 0 ? - m_day : m_day);
+    int32_t ms = (m_ms < 0 ? - m_ms : m_ms);
 
-    uint32_t minutes = millis / (MINUTES_TO_MILLIS);
+    days += ms / (DAYS_TO_MILLIS);
+    int32_t millis = ms % (DAYS_TO_MILLIS);
+    int32_t hours  = millis / (HOURS_TO_MILLIS);
+    millis = millis % (HOURS_TO_MILLIS);
+
+    int32_t minutes = millis / (MINUTES_TO_MILLIS);
     millis      = millis % (MINUTES_TO_MILLIS);
 
-    uint32_t seconds = millis / (SECONDS_TO_MILLIS);
+    int32_t seconds = millis / (SECONDS_TO_MILLIS);
     millis      = millis % (SECONDS_TO_MILLIS);
 
-    sstr << m_day<< " " << hours << ":"<<minutes<<":"<<seconds<<"."<<millis;
+    assert(hours >=0 && hours <= 23);
+    if(isNegative) sstr << "-";
+    sstr << days << " " << hours << ":"<<minutes<<":"<<seconds<<"."<<millis;
     return sstr.str();
 };
 
 std::string IntervalHolder::toString(){
     std::stringstream sstr;
 
-    uint32_t years  = (m_month / YEARS_TO_MONTHS);
-    uint32_t months = (m_month % YEARS_TO_MONTHS);
+    bool isNegative = (m_month < 0) || (m_month == 0 && m_day < 0 ) || (m_month == 0 && m_day == 0 && m_ms < 0);
+    int32_t m = (m_month < 0 ? - m_month : m_month);
+    int32_t days = (m_day < 0 ? - m_day : m_day);
+    int32_t ms = (m_ms < 0 ? - m_ms : m_ms);
 
-    uint32_t hours  = m_ms / (HOURS_TO_MILLIS);
-    uint32_t millis     = m_ms % (HOURS_TO_MILLIS);
+    int32_t years  = (m / YEARS_TO_MONTHS);
+    int32_t months = (m % YEARS_TO_MONTHS);
 
-    uint32_t minutes = millis / (MINUTES_TO_MILLIS);
+    days   += ms / (DAYS_TO_MILLIS);
+    int32_t millis = ms % (DAYS_TO_MILLIS);
+    int32_t hours  = millis / (HOURS_TO_MILLIS);
+    millis      = millis % (HOURS_TO_MILLIS);
+
+    int32_t minutes = millis / (MINUTES_TO_MILLIS);
     millis      = millis % (MINUTES_TO_MILLIS);
 
-    uint32_t seconds = millis / (SECONDS_TO_MILLIS);
+    int32_t seconds = millis / (SECONDS_TO_MILLIS);
     millis      = millis % (SECONDS_TO_MILLIS);
 
-    sstr << years << "-" << months<< "-" << m_day<< " " << hours << ":"<<minutes<<":"<<seconds<<"."<<millis;
+    assert(hours >=0 && hours <= 23);
+    if (isNegative) sstr << "-";
+    sstr << years << "-" << months<< "-" << days << " " << hours << ":"<<minutes<<":"<<seconds<<"."<<millis;
     return sstr.str();
 };
 

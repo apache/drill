@@ -454,41 +454,41 @@ struct DateTimeTZHolder: public DateTimeHolder{
 
 struct IntervalYearHolder{
     IntervalYearHolder(ByteBuf_t b){
-        m_month=*(uint32_t*)b;
+        m_month=*(int32_t*)b;
         load();
     }
     void load(){};
     std::string toString();
-    uint32_t m_month;
+    int32_t m_month;
     static uint32_t size(){ return sizeof(uint32_t); }
 };
 
 struct IntervalDayHolder{
     IntervalDayHolder(ByteBuf_t b){
-        m_day=*(uint32_t*)(b);
-        m_ms=*(uint32_t*)(b+sizeof(uint32_t));
+        m_day=*(int32_t*)(b);
+        m_ms=*(int32_t*)(b+sizeof(int32_t));
         load();
     }
     void load(){};
     std::string toString();
-    uint32_t m_day;
-    uint32_t m_ms;
+    int32_t m_day;
+    int32_t m_ms;
     static uint32_t size(){ return 2*sizeof(uint32_t)+4; }
 };
 
 struct IntervalHolder{
     IntervalHolder(ByteBuf_t b){
-        m_month=*(uint32_t*)b;
-        m_day=*(uint32_t*)(b+sizeof(uint32_t));
-        m_ms=*(uint32_t*)(b+2*sizeof(uint32_t));
+        m_month=*(int32_t*)b;
+        m_day=*(int32_t*)(b+sizeof(int32_t));
+        m_ms=*(int32_t*)(b+2*sizeof(int32_t));
         load();
     }
     void load(){};
     std::string toString();
-    uint32_t m_month;
-    uint32_t m_day;
-    uint32_t m_ms;
-    static uint32_t size(){ return 3*sizeof(uint32_t)+4; }
+    int32_t m_month;
+    int32_t m_day;
+    int32_t m_ms;
+    static uint32_t size(){ return 3*sizeof(int32_t)+4; }
 };
 
 /*
