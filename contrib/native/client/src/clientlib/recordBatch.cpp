@@ -24,6 +24,10 @@ const uint32_t YEARS_TO_MONTHS=12;
 const uint32_t HOURS_TO_MILLIS=60*60*1000;
 const uint32_t MINUTES_TO_MILLIS=60*1000;
 const uint32_t SECONDS_TO_MILLIS=1000;
+extern "C"
+{
+    #include "y2038/time64.h"
+}
 
 namespace Drill{
 
@@ -196,9 +200,9 @@ ValueVectorBase* ValueVectorFactory::allocateValueVector(const Drill::FieldMetad
                 case common::DECIMAL38SPARSE:
                     return new ValueVectorDecimal38Sparse(b,f.getValueCount(), f.getScale());
                 case common::DATE:
-                    return new ValueVectorTyped<DateHolder, uint64_t>(b,f.getValueCount());
+                    return new ValueVectorTyped<DateHolder, int64_t>(b,f.getValueCount());
                 case common::TIMESTAMP:
-                    return new ValueVectorTyped<DateTimeHolder, uint64_t>(b,f.getValueCount());
+                    return new ValueVectorTyped<DateTimeHolder, int64_t>(b,f.getValueCount());
                 case common::TIME:
                     return new ValueVectorTyped<TimeHolder, uint32_t>(b,f.getValueCount());
                 case common::TIMESTAMPTZ:
@@ -235,10 +239,10 @@ ValueVectorBase* ValueVectorFactory::allocateValueVector(const Drill::FieldMetad
                     return new NullableValueVectorFixed<double>(b,f.getValueCount());
                 case common::DATE:
                     return new NullableValueVectorTyped<DateHolder,
-                           ValueVectorTyped<DateHolder, uint64_t> >(b,f.getValueCount());
+                           ValueVectorTyped<DateHolder, int64_t> >(b,f.getValueCount());
                 case common::TIMESTAMP:
                     return new NullableValueVectorTyped<DateTimeHolder,
-                           ValueVectorTyped<DateTimeHolder, uint64_t> >(b,f.getValueCount());
+                           ValueVectorTyped<DateTimeHolder, int64_t> >(b,f.getValueCount());
                 case common::TIME:
                     return new NullableValueVectorTyped<TimeHolder,
                            ValueVectorTyped<TimeHolder, uint32_t> >(b,f.getValueCount());
@@ -357,12 +361,48 @@ void DateHolder::load(){
     m_year=1970;
     m_month=1;
     m_day=1;
+    const Time64_T  t= m_datetime/1000; // number of seconds since beginning of the Unix Epoch.
+    /*
+    TL;DR
 
-    time_t  t= m_datetime/1000; // number of seconds since beginning of the Unix Epoch.
-    struct tm * tm = gmtime(&t);
-    m_year=tm->tm_year+1900;
-    m_month=tm->tm_mon+1;
-    m_day=tm->tm_mday;
+    The gmttime in standard libray on windows platform cannot represent the date before Unix Epoch.
+    http://msdn.microsoft.com/en-us/library/0z9czt0w(v=vs.100).aspx
+
+    """
+    Both the 32-bit and 64-bit versions of gmtime, mktime, mkgmtime, and localtime all use one tm structure per thread for the conversion.
+    Each call to one of these functions destroys the result of any previous call.
+    If timer represents a date before midnight, January 1, 1970, gmtime returns NULL.  There is no error return.
+
+    _gmtime64, which uses the __time64_t structure, enables dates to be expressed up through 23:59:59, December 31, 3000, UTC,
+    whereas _gmtime32 only represent dates through 03:14:07 January 19, 2038, UTC.
+    Midnight, January 1, 1970, is the lower bound of the date range for both of these functions.
+
+    gmtime is an inline function that evaluates to _gmtime64 and time_t is equivalent to __time64_t unless _USE_32BIT_TIME_T is defined.
+    """
+
+    An alternative could be boost date_time libraray.
+
+    ```
+    #include <boost/date_time/posix_time/posix_time.hpp>
+    using namespace boost::posix_time;
+    ptime pt = from_time_t(t);
+    struct tm d = to_tm(pt);
+    ```
+
+    Howerver, boost date_time library still has year 2038 problem which is still not fixed.
+    https://svn.boost.org/trac/boost/ticket/4543
+    One reason is that the library converts the 64-bit`time_t t` into `seconds` type to get posix time.
+    But boost uses `long` to represent `seconds`, which is 4 bytes on windows platform,
+    http://msdn.microsoft.com/en-us/library/s3f49ktz.aspx
+
+    We eventually choose the third-party MIT-licensed library written with ANSI C.
+    https://github.com/schwern/y2038
+    */
+    struct TM d;
+    gmtime64_r(&t,&d);
+    m_year=1900 + static_cast<int32_t>(d.tm_year);
+    m_month=d.tm_mon + 1;
+    m_day=d.tm_mday;
 }
 
 std::string DateHolder::toString(){
@@ -400,15 +440,19 @@ void DateTimeHolder::load(){
     m_sec=0;
     m_msec=0;
 
-    time_t  t= m_datetime/1000; // number of seconds since beginning of the Unix Epoch.
-    struct tm * tm = gmtime(&t);
-    m_year=tm->tm_year+1900;
-    m_month=tm->tm_mon+1;
-    m_day=tm->tm_mday;
-    m_hr=tm->tm_hour;
-    m_min=tm->tm_min;
-    m_sec=tm->tm_sec;
+    const Time64_T  t=m_datetime/1000; // number of seconds since beginning of the Unix Epoch.
+
+    struct TM dt;
+    gmtime64_r(&t,&dt);
+
+    m_year=1900 + dt.tm_year;
+    m_month=dt.tm_mon + 1;
+    m_day=dt.tm_mday;
+    m_hr=dt.tm_hour;
+    m_min=dt.tm_min;
+    m_sec=dt.tm_sec;
     m_msec=m_datetime%1000;
+
 }
 
 std::string DateTimeHolder::toString(){

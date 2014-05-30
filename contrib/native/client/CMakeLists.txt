@@ -56,9 +56,12 @@ add_subdirectory("${CMAKE_SOURCE_DIR}/src/protobuf")
 include_directories(${ProtoHeadersDir})
 include_directories(${ProtoIncludesDir})
 
+# Y2038 library
+add_subdirectory("${CMAKE_SOURCE_DIR}/src/clientlib/y2038")
+
 # Build the Client Library as a shared library
 add_subdirectory("${CMAKE_SOURCE_DIR}/src/clientlib")
-include_directories(${CMAKE_SOURCE_DIR}/src/include ${Zookeeper_INCLUDE_DIRS}  )
+include_directories(${CMAKE_SOURCE_DIR}/src/include ${Zookeeper_INCLUDE_DIRS})
 
 # add a DEBUG preprocessor macro
 set_property(
@@ -71,6 +74,4 @@ link_directories(/usr/local/lib)
 
 add_executable(querySubmitter example/querySubmitter.cpp )
 
-target_link_libraries(querySubmitter ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY} drillClient protomsgs )
-
-
+target_link_libraries(querySubmitter ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY} drillClient protomsgs y2038)

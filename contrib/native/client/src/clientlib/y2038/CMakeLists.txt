@@ -16,29 +16,25 @@
 # limitations under the License.
 #
 
-# Drill Client library
+# Y2038 library
 
-set (CLIENTLIB_SRC_FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/decimalUtils.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/drillClient.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/drillClientImpl.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/recordBatch.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/rpcEncoder.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/rpcDecoder.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/errmsgs.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/logger.cpp
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_GNUCC)
+    set(CMAKE_CXX_FLAGS "-fPIC")
+endif()
+
+if(CMAKE_COMPILER_IS_GNUCC)
+    set(CMAKE_C_FLAGS "-fPIC")
+endif()
+
+set (Y2038_SRC_FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/time64.c
     )
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../include )
-include_directories(${PROTOBUF_INCLUDE_DIR})
-include_directories(${Zookeeper_INCLUDE_DIRS})
-
-link_directories(/usr/local/lib)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../../include )
 
 set_property(
     DIRECTORY
     PROPERTY COMPILE_DEFINITIONS_DEBUG DEBUG DEBUG=1 THREADED
     )
 
-add_library(drillClient SHARED ${CLIENTLIB_SRC_FILES} )
-target_link_libraries(drillClient ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY} ${Zookeeper_LIBRARIES} protomsgs y2038)
+add_library(y2038 STATIC ${Y2038_SRC_FILES} )

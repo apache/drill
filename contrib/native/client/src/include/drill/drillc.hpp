@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#ifndef DRILL_CLIENT__ALL_H
+#ifndef DRILL_CLIENT_ALL_H
 #define DRILL_CLIENT_ALL_H
 
 #include "drill/common.hpp"

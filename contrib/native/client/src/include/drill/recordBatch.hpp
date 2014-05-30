@@ -403,19 +403,20 @@ template <typename VALUE_TYPE>
 // more complex and start doing dynamic allocations in these classes.
 
 struct DateTimeBase{
-    DateTimeBase(){m_datetime=0;}
+    DateTimeBase():m_datetime(0){}
     virtual ~DateTimeBase(){}
-    uint64_t m_datetime;
+    int64_t m_datetime;
+    int64_t getMillis() const { return m_datetime; }
     virtual void load() =0;
     virtual std::string toString()=0;
 };
 
 struct DateHolder: public virtual DateTimeBase{
     DateHolder(){};
-    DateHolder(uint64_t d){m_datetime=d; load();}
-    uint32_t m_year;
-    uint32_t m_month;
-    uint32_t m_day;
+    DateHolder(int64_t d){m_datetime=d; load();}
+    int32_t m_year;
+    int32_t m_month;
+    int32_t m_day;
     void load();
     std::string toString();
 };
@@ -433,21 +434,21 @@ struct TimeHolder: public virtual DateTimeBase{
 
 struct DateTimeHolder: public DateHolder, public TimeHolder{
     DateTimeHolder(){};
-    DateTimeHolder(uint64_t d){m_datetime=d; load();}
+    DateTimeHolder(int64_t d){m_datetime=d; load();}
     void load();
     std::string toString();
 };
 
 struct DateTimeTZHolder: public DateTimeHolder{
     DateTimeTZHolder(ByteBuf_t b){
-        m_datetime=*(uint64_t*)b;
+        m_datetime=*(int64_t*)b;
         m_tzIndex=*(uint32_t*)(b+sizeof(uint64_t));
         load();
     }
     void load();
     std::string toString();
     int32_t m_tzIndex;
-    static uint32_t size(){ return sizeof(uint64_t)+sizeof(uint32_t); }
+    static uint32_t size(){ return sizeof(int64_t)+sizeof(uint32_t); }
 
 };
 
@@ -703,8 +704,8 @@ typedef NullableValueVectorTyped<DecimalValue , ValueVectorDecimal38Dense> Nulla
 typedef NullableValueVectorTyped<DecimalValue , ValueVectorDecimal28Sparse> NullableValueVectorDecimal28Sparse;
 typedef NullableValueVectorTyped<DecimalValue , ValueVectorDecimal38Sparse> NullableValueVectorDecimal38Sparse;
 
-typedef ValueVectorTyped<DateHolder, uint64_t> ValueVectorDate;
-typedef ValueVectorTyped<DateTimeHolder, uint64_t> ValueVectorTimestamp;
+typedef ValueVectorTyped<DateHolder, int64_t> ValueVectorDate;
+typedef ValueVectorTyped<DateTimeHolder, int64_t> ValueVectorTimestamp;
 typedef ValueVectorTyped<TimeHolder, uint32_t> ValueVectorTime;
 typedef ValueVectorTypedComposite<DateTimeTZHolder> ValueVectorTimestampTZ;
 typedef ValueVectorTypedComposite<IntervalHolder> ValueVectorInterval;
