@@ -45,29 +45,6 @@ class FragmentStatus;
 class PlanFragment;
 class WorkQueueStatus;
 
-enum FragmentStatus_FragmentState {
-  FragmentStatus_FragmentState_SENDING = 0,
-  FragmentStatus_FragmentState_AWAITING_ALLOCATION = 1,
-  FragmentStatus_FragmentState_RUNNING = 2,
-  FragmentStatus_FragmentState_FINISHED = 3,
-  FragmentStatus_FragmentState_CANCELLED = 4,
-  FragmentStatus_FragmentState_FAILED = 5
-};
-bool FragmentStatus_FragmentState_IsValid(int value);
-const FragmentStatus_FragmentState FragmentStatus_FragmentState_FragmentState_MIN = FragmentStatus_FragmentState_SENDING;
-const FragmentStatus_FragmentState FragmentStatus_FragmentState_FragmentState_MAX = FragmentStatus_FragmentState_FAILED;
-const int FragmentStatus_FragmentState_FragmentState_ARRAYSIZE = FragmentStatus_FragmentState_FragmentState_MAX + 1;
-
-const ::google::protobuf::EnumDescriptor* FragmentStatus_FragmentState_descriptor();
-inline const ::std::string& FragmentStatus_FragmentState_Name(FragmentStatus_FragmentState value) {
-  return ::google::protobuf::internal::NameOfEnum(
-    FragmentStatus_FragmentState_descriptor(), value);
-}
-inline bool FragmentStatus_FragmentState_Parse(
-    const ::std::string& name, FragmentStatus_FragmentState* value) {
-  return ::google::protobuf::internal::ParseNamedEnum<FragmentStatus_FragmentState>(
-    FragmentStatus_FragmentState_descriptor(), name, value);
-}
 enum RpcType {
   HANDSHAKE = 0,
   ACK = 1,
@@ -338,138 +315,40 @@ class FragmentStatus : public ::google::protobuf::Message {
 
   // nested types ----------------------------------------------------
 
-  typedef FragmentStatus_FragmentState FragmentState;
-  static const FragmentState SENDING = FragmentStatus_FragmentState_SENDING;
-  static const FragmentState AWAITING_ALLOCATION = FragmentStatus_FragmentState_AWAITING_ALLOCATION;
-  static const FragmentState RUNNING = FragmentStatus_FragmentState_RUNNING;
-  static const FragmentState FINISHED = FragmentStatus_FragmentState_FINISHED;
-  static const FragmentState CANCELLED = FragmentStatus_FragmentState_CANCELLED;
-  static const FragmentState FAILED = FragmentStatus_FragmentState_FAILED;
-  static inline bool FragmentState_IsValid(int value) {
-    return FragmentStatus_FragmentState_IsValid(value);
-  }
-  static const FragmentState FragmentState_MIN =
-    FragmentStatus_FragmentState_FragmentState_MIN;
-  static const FragmentState FragmentState_MAX =
-    FragmentStatus_FragmentState_FragmentState_MAX;
-  static const int FragmentState_ARRAYSIZE =
-    FragmentStatus_FragmentState_FragmentState_ARRAYSIZE;
-  static inline const ::google::protobuf::EnumDescriptor*
-  FragmentState_descriptor() {
-    return FragmentStatus_FragmentState_descriptor();
-  }
-  static inline const ::std::string& FragmentState_Name(FragmentState value) {
-    return FragmentStatus_FragmentState_Name(value);
-  }
-  static inline bool FragmentState_Parse(const ::std::string& name,
-      FragmentState* value) {
-    return FragmentStatus_FragmentState_Parse(name, value);
-  }
-
   // accessors -------------------------------------------------------
 
-  // optional int64 memory_use = 1;
-  inline bool has_memory_use() const;
-  inline void clear_memory_use();
-  static const int kMemoryUseFieldNumber = 1;
-  inline ::google::protobuf::int64 memory_use() const;
-  inline void set_memory_use(::google::protobuf::int64 value);
+  // optional .exec.shared.MinorFragmentProfile profile = 1;
+  inline bool has_profile() const;
+  inline void clear_profile();
+  static const int kProfileFieldNumber = 1;
+  inline const ::exec::shared::MinorFragmentProfile& profile() const;
+  inline ::exec::shared::MinorFragmentProfile* mutable_profile();
+  inline ::exec::shared::MinorFragmentProfile* release_profile();
+  inline void set_allocated_profile(::exec::shared::MinorFragmentProfile* profile);
 
-  // optional int64 batches_completed = 2;
-  inline bool has_batches_completed() const;
-  inline void clear_batches_completed();
-  static const int kBatchesCompletedFieldNumber = 2;
-  inline ::google::protobuf::int64 batches_completed() const;
-  inline void set_batches_completed(::google::protobuf::int64 value);
-
-  // optional int64 records_completed = 3;
-  inline bool has_records_completed() const;
-  inline void clear_records_completed();
-  static const int kRecordsCompletedFieldNumber = 3;
-  inline ::google::protobuf::int64 records_completed() const;
-  inline void set_records_completed(::google::protobuf::int64 value);
-
-  // optional int32 estimated_completion_percentage = 4;
-  inline bool has_estimated_completion_percentage() const;
-  inline void clear_estimated_completion_percentage();
-  static const int kEstimatedCompletionPercentageFieldNumber = 4;
-  inline ::google::protobuf::int32 estimated_completion_percentage() const;
-  inline void set_estimated_completion_percentage(::google::protobuf::int32 value);
-
-  // optional .exec.bit.control.FragmentStatus.FragmentState state = 5;
-  inline bool has_state() const;
-  inline void clear_state();
-  static const int kStateFieldNumber = 5;
-  inline ::exec::bit::control::FragmentStatus_FragmentState state() const;
-  inline void set_state(::exec::bit::control::FragmentStatus_FragmentState value);
-
-  // optional int64 data_processed = 6;
-  inline bool has_data_processed() const;
-  inline void clear_data_processed();
-  static const int kDataProcessedFieldNumber = 6;
-  inline ::google::protobuf::int64 data_processed() const;
-  inline void set_data_processed(::google::protobuf::int64 value);
-
-  // optional .exec.bit.FragmentHandle handle = 7;
+  // optional .exec.bit.FragmentHandle handle = 2;
   inline bool has_handle() const;
   inline void clear_handle();
-  static const int kHandleFieldNumber = 7;
+  static const int kHandleFieldNumber = 2;
   inline const ::exec::bit::FragmentHandle& handle() const;
   inline ::exec::bit::FragmentHandle* mutable_handle();
   inline ::exec::bit::FragmentHandle* release_handle();
   inline void set_allocated_handle(::exec::bit::FragmentHandle* handle);
 
-  // optional .exec.shared.DrillPBError error = 8;
-  inline bool has_error() const;
-  inline void clear_error();
-  static const int kErrorFieldNumber = 8;
-  inline const ::exec::shared::DrillPBError& error() const;
-  inline ::exec::shared::DrillPBError* mutable_error();
-  inline ::exec::shared::DrillPBError* release_error();
-  inline void set_allocated_error(::exec::shared::DrillPBError* error);
-
-  // optional int64 running_time = 9;
-  inline bool has_running_time() const;
-  inline void clear_running_time();
-  static const int kRunningTimeFieldNumber = 9;
-  inline ::google::protobuf::int64 running_time() const;
-  inline void set_running_time(::google::protobuf::int64 value);
-
   // @@protoc_insertion_point(class_scope:exec.bit.control.FragmentStatus)
  private:
-  inline void set_has_memory_use();
-  inline void clear_has_memory_use();
-  inline void set_has_batches_completed();
-  inline void clear_has_batches_completed();
-  inline void set_has_records_completed();
-  inline void clear_has_records_completed();
-  inline void set_has_estimated_completion_percentage();
-  inline void clear_has_estimated_completion_percentage();
-  inline void set_has_state();
-  inline void clear_has_state();
-  inline void set_has_data_processed();
-  inline void clear_has_data_processed();
+  inline void set_has_profile();
+  inline void clear_has_profile();
   inline void set_has_handle();
   inline void clear_has_handle();
-  inline void set_has_error();
-  inline void clear_has_error();
-  inline void set_has_running_time();
-  inline void clear_has_running_time();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
-  ::google::protobuf::int64 memory_use_;
-  ::google::protobuf::int64 batches_completed_;
-  ::google::protobuf::int64 records_completed_;
-  ::google::protobuf::int32 estimated_completion_percentage_;
-  int state_;
-  ::google::protobuf::int64 data_processed_;
+  ::exec::shared::MinorFragmentProfile* profile_;
   ::exec::bit::FragmentHandle* handle_;
-  ::exec::shared::DrillPBError* error_;
-  ::google::protobuf::int64 running_time_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(9 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
 
   friend void  protobuf_AddDesc_BitControl_2eproto();
   friend void protobuf_AssignDesc_BitControl_2eproto();
@@ -945,148 +824,53 @@ BitStatus::mutable_fragment_status() {
 
 // FragmentStatus
 
-// optional int64 memory_use = 1;
-inline bool FragmentStatus::has_memory_use() const {
+// optional .exec.shared.MinorFragmentProfile profile = 1;
+inline bool FragmentStatus::has_profile() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
-inline void FragmentStatus::set_has_memory_use() {
+inline void FragmentStatus::set_has_profile() {
   _has_bits_[0] |= 0x00000001u;
 }
-inline void FragmentStatus::clear_has_memory_use() {
+inline void FragmentStatus::clear_has_profile() {
   _has_bits_[0] &= ~0x00000001u;
 }
-inline void FragmentStatus::clear_memory_use() {
-  memory_use_ = GOOGLE_LONGLONG(0);
-  clear_has_memory_use();
+inline void FragmentStatus::clear_profile() {
+  if (profile_ != NULL) profile_->::exec::shared::MinorFragmentProfile::Clear();
+  clear_has_profile();
 }
-inline ::google::protobuf::int64 FragmentStatus::memory_use() const {
-  return memory_use_;
+inline const ::exec::shared::MinorFragmentProfile& FragmentStatus::profile() const {
+  return profile_ != NULL ? *profile_ : *default_instance_->profile_;
 }
-inline void FragmentStatus::set_memory_use(::google::protobuf::int64 value) {
-  set_has_memory_use();
-  memory_use_ = value;
+inline ::exec::shared::MinorFragmentProfile* FragmentStatus::mutable_profile() {
+  set_has_profile();
+  if (profile_ == NULL) profile_ = new ::exec::shared::MinorFragmentProfile;
+  return profile_;
+}
+inline ::exec::shared::MinorFragmentProfile* FragmentStatus::release_profile() {
+  clear_has_profile();
+  ::exec::shared::MinorFragmentProfile* temp = profile_;
+  profile_ = NULL;
+  return temp;
+}
+inline void FragmentStatus::set_allocated_profile(::exec::shared::MinorFragmentProfile* profile) {
+  delete profile_;
+  profile_ = profile;
+  if (profile) {
+    set_has_profile();
+  } else {
+    clear_has_profile();
+  }
 }
 
-// optional int64 batches_completed = 2;
-inline bool FragmentStatus::has_batches_completed() const {
+// optional .exec.bit.FragmentHandle handle = 2;
+inline bool FragmentStatus::has_handle() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
-inline void FragmentStatus::set_has_batches_completed() {
+inline void FragmentStatus::set_has_handle() {
   _has_bits_[0] |= 0x00000002u;
 }
-inline void FragmentStatus::clear_has_batches_completed() {
-  _has_bits_[0] &= ~0x00000002u;
-}
-inline void FragmentStatus::clear_batches_completed() {
-  batches_completed_ = GOOGLE_LONGLONG(0);
-  clear_has_batches_completed();
-}
-inline ::google::protobuf::int64 FragmentStatus::batches_completed() const {
-  return batches_completed_;
-}
-inline void FragmentStatus::set_batches_completed(::google::protobuf::int64 value) {
-  set_has_batches_completed();
-  batches_completed_ = value;
-}
-
-// optional int64 records_completed = 3;
-inline bool FragmentStatus::has_records_completed() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
-}
-inline void FragmentStatus::set_has_records_completed() {
-  _has_bits_[0] |= 0x00000004u;
-}
-inline void FragmentStatus::clear_has_records_completed() {
-  _has_bits_[0] &= ~0x00000004u;
-}
-inline void FragmentStatus::clear_records_completed() {
-  records_completed_ = GOOGLE_LONGLONG(0);
-  clear_has_records_completed();
-}
-inline ::google::protobuf::int64 FragmentStatus::records_completed() const {
-  return records_completed_;
-}
-inline void FragmentStatus::set_records_completed(::google::protobuf::int64 value) {
-  set_has_records_completed();
-  records_completed_ = value;
-}
-
-// optional int32 estimated_completion_percentage = 4;
-inline bool FragmentStatus::has_estimated_completion_percentage() const {
-  return (_has_bits_[0] & 0x00000008u) != 0;
-}
-inline void FragmentStatus::set_has_estimated_completion_percentage() {
-  _has_bits_[0] |= 0x00000008u;
-}
-inline void FragmentStatus::clear_has_estimated_completion_percentage() {
-  _has_bits_[0] &= ~0x00000008u;
-}
-inline void FragmentStatus::clear_estimated_completion_percentage() {
-  estimated_completion_percentage_ = 0;
-  clear_has_estimated_completion_percentage();
-}
-inline ::google::protobuf::int32 FragmentStatus::estimated_completion_percentage() const {
-  return estimated_completion_percentage_;
-}
-inline void FragmentStatus::set_estimated_completion_percentage(::google::protobuf::int32 value) {
-  set_has_estimated_completion_percentage();
-  estimated_completion_percentage_ = value;
-}
-
-// optional .exec.bit.control.FragmentStatus.FragmentState state = 5;
-inline bool FragmentStatus::has_state() const {
-  return (_has_bits_[0] & 0x00000010u) != 0;
-}
-inline void FragmentStatus::set_has_state() {
-  _has_bits_[0] |= 0x00000010u;
-}
-inline void FragmentStatus::clear_has_state() {
-  _has_bits_[0] &= ~0x00000010u;
-}
-inline void FragmentStatus::clear_state() {
-  state_ = 0;
-  clear_has_state();
-}
-inline ::exec::bit::control::FragmentStatus_FragmentState FragmentStatus::state() const {
-  return static_cast< ::exec::bit::control::FragmentStatus_FragmentState >(state_);
-}
-inline void FragmentStatus::set_state(::exec::bit::control::FragmentStatus_FragmentState value) {
-  assert(::exec::bit::control::FragmentStatus_FragmentState_IsValid(value));
-  set_has_state();
-  state_ = value;
-}
-
-// optional int64 data_processed = 6;
-inline bool FragmentStatus::has_data_processed() const {
-  return (_has_bits_[0] & 0x00000020u) != 0;
-}
-inline void FragmentStatus::set_has_data_processed() {
-  _has_bits_[0] |= 0x00000020u;
-}
-inline void FragmentStatus::clear_has_data_processed() {
-  _has_bits_[0] &= ~0x00000020u;
-}
-inline void FragmentStatus::clear_data_processed() {
-  data_processed_ = GOOGLE_LONGLONG(0);
-  clear_has_data_processed();
-}
-inline ::google::protobuf::int64 FragmentStatus::data_processed() const {
-  return data_processed_;
-}
-inline void FragmentStatus::set_data_processed(::google::protobuf::int64 value) {
-  set_has_data_processed();
-  data_processed_ = value;
-}
-
-// optional .exec.bit.FragmentHandle handle = 7;
-inline bool FragmentStatus::has_handle() const {
-  return (_has_bits_[0] & 0x00000040u) != 0;
-}
-inline void FragmentStatus::set_has_handle() {
-  _has_bits_[0] |= 0x00000040u;
-}
 inline void FragmentStatus::clear_has_handle() {
-  _has_bits_[0] &= ~0x00000040u;
+  _has_bits_[0] &= ~0x00000002u;
 }
 inline void FragmentStatus::clear_handle() {
   if (handle_ != NULL) handle_->::exec::bit::FragmentHandle::Clear();
@@ -1114,66 +898,6 @@ inline void FragmentStatus::set_allocated_handle(::exec::bit::FragmentHandle* ha
   } else {
     clear_has_handle();
   }
-}
-
-// optional .exec.shared.DrillPBError error = 8;
-inline bool FragmentStatus::has_error() const {
-  return (_has_bits_[0] & 0x00000080u) != 0;
-}
-inline void FragmentStatus::set_has_error() {
-  _has_bits_[0] |= 0x00000080u;
-}
-inline void FragmentStatus::clear_has_error() {
-  _has_bits_[0] &= ~0x00000080u;
-}
-inline void FragmentStatus::clear_error() {
-  if (error_ != NULL) error_->::exec::shared::DrillPBError::Clear();
-  clear_has_error();
-}
-inline const ::exec::shared::DrillPBError& FragmentStatus::error() const {
-  return error_ != NULL ? *error_ : *default_instance_->error_;
-}
-inline ::exec::shared::DrillPBError* FragmentStatus::mutable_error() {
-  set_has_error();
-  if (error_ == NULL) error_ = new ::exec::shared::DrillPBError;
-  return error_;
-}
-inline ::exec::shared::DrillPBError* FragmentStatus::release_error() {
-  clear_has_error();
-  ::exec::shared::DrillPBError* temp = error_;
-  error_ = NULL;
-  return temp;
-}
-inline void FragmentStatus::set_allocated_error(::exec::shared::DrillPBError* error) {
-  delete error_;
-  error_ = error;
-  if (error) {
-    set_has_error();
-  } else {
-    clear_has_error();
-  }
-}
-
-// optional int64 running_time = 9;
-inline bool FragmentStatus::has_running_time() const {
-  return (_has_bits_[0] & 0x00000100u) != 0;
-}
-inline void FragmentStatus::set_has_running_time() {
-  _has_bits_[0] |= 0x00000100u;
-}
-inline void FragmentStatus::clear_has_running_time() {
-  _has_bits_[0] &= ~0x00000100u;
-}
-inline void FragmentStatus::clear_running_time() {
-  running_time_ = GOOGLE_LONGLONG(0);
-  clear_has_running_time();
-}
-inline ::google::protobuf::int64 FragmentStatus::running_time() const {
-  return running_time_;
-}
-inline void FragmentStatus::set_running_time(::google::protobuf::int64 value) {
-  set_has_running_time();
-  running_time_ = value;
 }
 
 // -------------------------------------------------------------------
@@ -1767,10 +1491,6 @@ inline void WorkQueueStatus::set_report_time(::google::protobuf::int64 value) {
 namespace google {
 namespace protobuf {
 
-template <>
-inline const EnumDescriptor* GetEnumDescriptor< ::exec::bit::control::FragmentStatus_FragmentState>() {
-  return ::exec::bit::control::FragmentStatus_FragmentState_descriptor();
-}
 template <>
 inline const EnumDescriptor* GetEnumDescriptor< ::exec::bit::control::RpcType>() {
   return ::exec::bit::control::RpcType_descriptor();

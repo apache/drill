@@ -23,13 +23,19 @@
 #include <stdint.h>
 #include <string>
 #include <vector>
+#include <boost/shared_ptr.hpp>
+
+#define DRILL_RPC_VERSION 1
 
 #define LENGTH_PREFIX_MAX_LENGTH 5
 #define LEN_PREFIX_BUFLEN LENGTH_PREFIX_MAX_LENGTH
 
+#define MAX_CONNECT_STR 4096
+#define MAX_SOCK_RD_BUFSIZE  1024
+
 #ifdef _DEBUG
 #define EXTRA_DEBUGGING
-#define CODER_DEBUGGING 
+#define CODER_DEBUGGING
 #endif
 
 namespace Drill {
@@ -39,12 +45,15 @@ typedef std::vector<uint8_t> DataBuf;
 typedef uint8_t Byte_t;
 typedef Byte_t * ByteBuf_t;
 
+class FieldMetadata;
+typedef boost::shared_ptr< std::vector<Drill::FieldMetadata*> > FieldDefPtr;
+
 typedef enum{
-    QRY_SUCCESS=0, 
-    QRY_FAILURE=1, 
-    QRY_SUCCESS_WITH_INFO=2, 
-    QRY_NO_MORE_DATA=3, 
-    QRY_CANCEL=4, 
+    QRY_SUCCESS=0,
+    QRY_FAILURE=1,
+    QRY_SUCCESS_WITH_INFO=2,
+    QRY_NO_MORE_DATA=3,
+    QRY_CANCEL=4,
     QRY_OUT_OF_BOUNDS=5,
     QRY_CLIENT_OUTOFMEM=6,
     QRY_INTERNAL_ERROR=7,
@@ -52,8 +61,8 @@ typedef enum{
 } status_t;
 
 typedef enum{
-    CONN_SUCCESS=0, 
-    CONN_FAILURE=1, 
+    CONN_SUCCESS=0,
+    CONN_FAILURE=1,
     CONN_HANDSHAKE_FAILED=2,
     CONN_INVALID_INPUT=3,
     CONN_ZOOKEEPER_ERROR=4

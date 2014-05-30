@@ -29,6 +29,8 @@ static Drill::ErrorMessages errorMessages[]={
     {ERR_CONN_FAILURE, ERR_CATEGORY_CONN, 0, "Connection failure. Host:%s port:%s. Error: %s."},
     {ERR_CONN_EXCEPT, ERR_CATEGORY_CONN, 0, "Socket connection failure with the following exception: %s."},
     {ERR_CONN_UNKPROTO, ERR_CATEGORY_CONN, 0, "Unknown protocol: %s."},
+    {ERR_CONN_RDFAIL, ERR_CATEGORY_CONN, 0, "A socket read failed with error: %s."},
+    {ERR_CONN_WFAIL, ERR_CATEGORY_CONN, 0, "Synchronous socket write failed with error: %s."},
     {ERR_CONN_ZOOKEEPER, ERR_CATEGORY_CONN, 0, "Zookeeper error. %s"},
     {ERR_CONN_NOHSHAKE, ERR_CATEGORY_CONN, 0, "Handshake failed: Expected RPC version %d, got %d."},
     {ERR_CONN_ZKFAIL, ERR_CATEGORY_CONN, 0, "Failed to connect to Zookeeper."},
@@ -45,7 +47,7 @@ static Drill::ErrorMessages errorMessages[]={
     {ERR_QRY_INVRPCTYPE, ERR_CATEGORY_QRY, 0, "Unknown rpc type received from server:%d."},
     {ERR_QRY_OUTOFORDER, ERR_CATEGORY_QRY, 0, "Internal Error: Query result received before query id. Aborting ..."},
     {ERR_QRY_INVRPC, ERR_CATEGORY_QRY, 0, "Rpc Error: %s."},
-    {ERR_QRY_8, ERR_CATEGORY_QRY, 0, "Query Failed."},
+    {ERR_QRY_TIMOUT, ERR_CATEGORY_QRY, 0, "Timed out waiting for server to respond."},
     {ERR_QRY_FAILURE, ERR_CATEGORY_QRY, 0, "Query execution error. Details:[ \n%s\n]"},
     {ERR_QRY_SELVEC2, ERR_CATEGORY_QRY, 0, "Receiving a selection_vector_2 from the server came as a complete surprise at this point"},
     {ERR_QRY_RESPFAIL, ERR_CATEGORY_QRY, 0, "Got a RESPONSE_FAILURE from the server and don't know what to do"},
@@ -66,7 +68,7 @@ std::string getMessage(uint32_t msgId, ...){
     assert(msgId <= ERR_QRY_MAX);
     va_list args;
     va_start (args, msgId);
-    vsprintf (str, errorMessages[msgId].msgFormatStr, args);
+    vsprintf (str, errorMessages[msgId-DRILL_ERR_START].msgFormatStr, args);
     va_end (args);
     s=std::string("[")+boost::lexical_cast<std::string>(msgId)+std::string("]")+str;
     return s;

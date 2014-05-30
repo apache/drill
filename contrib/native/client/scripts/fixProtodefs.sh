@@ -43,7 +43,7 @@ main() {
 
         if [ -e ${TARGDIR}/${FNAME} ]
         then
-            if [ ${SRCDIR}/${FNAME} -nt ${TARGDIR}/${FNAME} ] 
+            if [ ${SRCDIR}/${FNAME} -nt ${TARGDIR}/${FNAME} ]
             then
                 fixFile ${FNAME}
             fi

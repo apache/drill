@@ -45,6 +45,12 @@ class ParsingError;
 class RecordBatchDef;
 class NamePart;
 class SerializedField;
+class QueryProfile;
+class MajorFragmentProfile;
+class MinorFragmentProfile;
+class OperatorProfile;
+class StreamProfile;
+class MetricValue;
 
 enum NamePart_Type {
   NamePart_Type_NAME = 0,
@@ -84,6 +90,97 @@ inline bool RpcChannel_Parse(
     const ::std::string& name, RpcChannel* value) {
   return ::google::protobuf::internal::ParseNamedEnum<RpcChannel>(
     RpcChannel_descriptor(), name, value);
+}
+enum QueryType {
+  SQL = 1,
+  LOGICAL = 2,
+  PHYSICAL = 3
+};
+bool QueryType_IsValid(int value);
+const QueryType QueryType_MIN = SQL;
+const QueryType QueryType_MAX = PHYSICAL;
+const int QueryType_ARRAYSIZE = QueryType_MAX + 1;
+
+const ::google::protobuf::EnumDescriptor* QueryType_descriptor();
+inline const ::std::string& QueryType_Name(QueryType value) {
+  return ::google::protobuf::internal::NameOfEnum(
+    QueryType_descriptor(), value);
+}
+inline bool QueryType_Parse(
+    const ::std::string& name, QueryType* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<QueryType>(
+    QueryType_descriptor(), name, value);
+}
+enum FragmentState {
+  SENDING = 0,
+  AWAITING_ALLOCATION = 1,
+  RUNNING = 2,
+  FINISHED = 3,
+  CANCELLED = 4,
+  FAILED = 5
+};
+bool FragmentState_IsValid(int value);
+const FragmentState FragmentState_MIN = SENDING;
+const FragmentState FragmentState_MAX = FAILED;
+const int FragmentState_ARRAYSIZE = FragmentState_MAX + 1;
+
+const ::google::protobuf::EnumDescriptor* FragmentState_descriptor();
+inline const ::std::string& FragmentState_Name(FragmentState value) {
+  return ::google::protobuf::internal::NameOfEnum(
+    FragmentState_descriptor(), value);
+}
+inline bool FragmentState_Parse(
+    const ::std::string& name, FragmentState* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<FragmentState>(
+    FragmentState_descriptor(), name, value);
+}
+enum CoreOperatorType {
+  SINGLE_SENDER = 0,
+  BROADCAST_SENDER = 1,
+  FILTER = 2,
+  HASH_AGGREGATE = 3,
+  HASH_JOIN = 4,
+  MERGE_JOIN = 5,
+  HASH_PARTITION_SENDER = 6,
+  LIMIT = 7,
+  MERGING_RECEIVER = 8,
+  ORDERED_PARTITION_SENDER = 9,
+  PROJECT = 10,
+  RANDOM_RECEIVER = 11,
+  RANGE_SENDER = 12,
+  SCREEN = 13,
+  SELECTION_VECTOR_REMOVER = 14,
+  STREAMING_AGGREGATE = 15,
+  TOP_N_SORT = 16,
+  EXTERNAL_SORT = 17,
+  TRACE = 18,
+  UNION = 19,
+  OLD_SORT = 20,
+  PARQUET_ROW_GROUP_SCAN = 21,
+  HIVE_SUB_SCAN = 22,
+  SYSTEM_TABLE_SCAN = 23,
+  MOCK_SUB_SCAN = 24,
+  PARQUET_WRITER = 25,
+  DIRECT_SUB_SCAN = 26,
+  TEXT_WRITER = 27,
+  TEXT_SUB_SCAN = 28,
+  JSON_SUB_SCAN = 29,
+  INFO_SCHEMA_SUB_SCAN = 30
+};
+bool CoreOperatorType_IsValid(int value);
+const CoreOperatorType CoreOperatorType_MIN = SINGLE_SENDER;
+const CoreOperatorType CoreOperatorType_MAX = INFO_SCHEMA_SUB_SCAN;
+const int CoreOperatorType_ARRAYSIZE = CoreOperatorType_MAX + 1;
+
+const ::google::protobuf::EnumDescriptor* CoreOperatorType_descriptor();
+inline const ::std::string& CoreOperatorType_Name(CoreOperatorType value) {
+  return ::google::protobuf::internal::NameOfEnum(
+    CoreOperatorType_descriptor(), value);
+}
+inline bool CoreOperatorType_Parse(
+    const ::std::string& name, CoreOperatorType* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<CoreOperatorType>(
+    CoreOperatorType_descriptor(), name, value);
 }
 // ===================================================================
 
@@ -899,6 +996,779 @@ class SerializedField : public ::google::protobuf::Message {
 
   void InitAsDefaultInstance();
   static SerializedField* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class QueryProfile : public ::google::protobuf::Message {
+ public:
+  QueryProfile();
+  virtual ~QueryProfile();
+
+  QueryProfile(const QueryProfile& from);
+
+  inline QueryProfile& operator=(const QueryProfile& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const QueryProfile& default_instance();
+
+  void Swap(QueryProfile* other);
+
+  // implements Message ----------------------------------------------
+
+  QueryProfile* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const QueryProfile& from);
+  void MergeFrom(const QueryProfile& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional .exec.shared.QueryId id = 1;
+  inline bool has_id() const;
+  inline void clear_id();
+  static const int kIdFieldNumber = 1;
+  inline const ::exec::shared::QueryId& id() const;
+  inline ::exec::shared::QueryId* mutable_id();
+  inline ::exec::shared::QueryId* release_id();
+  inline void set_allocated_id(::exec::shared::QueryId* id);
+
+  // optional .exec.shared.QueryType type = 2;
+  inline bool has_type() const;
+  inline void clear_type();
+  static const int kTypeFieldNumber = 2;
+  inline ::exec::shared::QueryType type() const;
+  inline void set_type(::exec::shared::QueryType value);
+
+  // optional int64 start = 3;
+  inline bool has_start() const;
+  inline void clear_start();
+  static const int kStartFieldNumber = 3;
+  inline ::google::protobuf::int64 start() const;
+  inline void set_start(::google::protobuf::int64 value);
+
+  // optional int64 end = 4;
+  inline bool has_end() const;
+  inline void clear_end();
+  static const int kEndFieldNumber = 4;
+  inline ::google::protobuf::int64 end() const;
+  inline void set_end(::google::protobuf::int64 value);
+
+  // optional string query = 5;
+  inline bool has_query() const;
+  inline void clear_query();
+  static const int kQueryFieldNumber = 5;
+  inline const ::std::string& query() const;
+  inline void set_query(const ::std::string& value);
+  inline void set_query(const char* value);
+  inline void set_query(const char* value, size_t size);
+  inline ::std::string* mutable_query();
+  inline ::std::string* release_query();
+  inline void set_allocated_query(::std::string* query);
+
+  // optional string plan = 6;
+  inline bool has_plan() const;
+  inline void clear_plan();
+  static const int kPlanFieldNumber = 6;
+  inline const ::std::string& plan() const;
+  inline void set_plan(const ::std::string& value);
+  inline void set_plan(const char* value);
+  inline void set_plan(const char* value, size_t size);
+  inline ::std::string* mutable_plan();
+  inline ::std::string* release_plan();
+  inline void set_allocated_plan(::std::string* plan);
+
+  // repeated .exec.shared.MajorFragmentProfile fragment_profile = 7;
+  inline int fragment_profile_size() const;
+  inline void clear_fragment_profile();
+  static const int kFragmentProfileFieldNumber = 7;
+  inline const ::exec::shared::MajorFragmentProfile& fragment_profile(int index) const;
+  inline ::exec::shared::MajorFragmentProfile* mutable_fragment_profile(int index);
+  inline ::exec::shared::MajorFragmentProfile* add_fragment_profile();
+  inline const ::google::protobuf::RepeatedPtrField< ::exec::shared::MajorFragmentProfile >&
+      fragment_profile() const;
+  inline ::google::protobuf::RepeatedPtrField< ::exec::shared::MajorFragmentProfile >*
+      mutable_fragment_profile();
+
+  // @@protoc_insertion_point(class_scope:exec.shared.QueryProfile)
+ private:
+  inline void set_has_id();
+  inline void clear_has_id();
+  inline void set_has_type();
+  inline void clear_has_type();
+  inline void set_has_start();
+  inline void clear_has_start();
+  inline void set_has_end();
+  inline void clear_has_end();
+  inline void set_has_query();
+  inline void clear_has_query();
+  inline void set_has_plan();
+  inline void clear_has_plan();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::exec::shared::QueryId* id_;
+  ::google::protobuf::int64 start_;
+  ::google::protobuf::int64 end_;
+  ::std::string* query_;
+  ::std::string* plan_;
+  ::google::protobuf::RepeatedPtrField< ::exec::shared::MajorFragmentProfile > fragment_profile_;
+  int type_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(7 + 31) / 32];
+
+  friend void  protobuf_AddDesc_UserBitShared_2eproto();
+  friend void protobuf_AssignDesc_UserBitShared_2eproto();
+  friend void protobuf_ShutdownFile_UserBitShared_2eproto();
+
+  void InitAsDefaultInstance();
+  static QueryProfile* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class MajorFragmentProfile : public ::google::protobuf::Message {
+ public:
+  MajorFragmentProfile();
+  virtual ~MajorFragmentProfile();
+
+  MajorFragmentProfile(const MajorFragmentProfile& from);
+
+  inline MajorFragmentProfile& operator=(const MajorFragmentProfile& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const MajorFragmentProfile& default_instance();
+
+  void Swap(MajorFragmentProfile* other);
+
+  // implements Message ----------------------------------------------
+
+  MajorFragmentProfile* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const MajorFragmentProfile& from);
+  void MergeFrom(const MajorFragmentProfile& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional int32 major_fragment_id = 1;
+  inline bool has_major_fragment_id() const;
+  inline void clear_major_fragment_id();
+  static const int kMajorFragmentIdFieldNumber = 1;
+  inline ::google::protobuf::int32 major_fragment_id() const;
+  inline void set_major_fragment_id(::google::protobuf::int32 value);
+
+  // repeated .exec.shared.MinorFragmentProfile minor_fragment_profile = 2;
+  inline int minor_fragment_profile_size() const;
+  inline void clear_minor_fragment_profile();
+  static const int kMinorFragmentProfileFieldNumber = 2;
+  inline const ::exec::shared::MinorFragmentProfile& minor_fragment_profile(int index) const;
+  inline ::exec::shared::MinorFragmentProfile* mutable_minor_fragment_profile(int index);
+  inline ::exec::shared::MinorFragmentProfile* add_minor_fragment_profile();
+  inline const ::google::protobuf::RepeatedPtrField< ::exec::shared::MinorFragmentProfile >&
+      minor_fragment_profile() const;
+  inline ::google::protobuf::RepeatedPtrField< ::exec::shared::MinorFragmentProfile >*
+      mutable_minor_fragment_profile();
+
+  // @@protoc_insertion_point(class_scope:exec.shared.MajorFragmentProfile)
+ private:
+  inline void set_has_major_fragment_id();
+  inline void clear_has_major_fragment_id();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::google::protobuf::RepeatedPtrField< ::exec::shared::MinorFragmentProfile > minor_fragment_profile_;
+  ::google::protobuf::int32 major_fragment_id_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
+
+  friend void  protobuf_AddDesc_UserBitShared_2eproto();
+  friend void protobuf_AssignDesc_UserBitShared_2eproto();
+  friend void protobuf_ShutdownFile_UserBitShared_2eproto();
+
+  void InitAsDefaultInstance();
+  static MajorFragmentProfile* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class MinorFragmentProfile : public ::google::protobuf::Message {
+ public:
+  MinorFragmentProfile();
+  virtual ~MinorFragmentProfile();
+
+  MinorFragmentProfile(const MinorFragmentProfile& from);
+
+  inline MinorFragmentProfile& operator=(const MinorFragmentProfile& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const MinorFragmentProfile& default_instance();
+
+  void Swap(MinorFragmentProfile* other);
+
+  // implements Message ----------------------------------------------
+
+  MinorFragmentProfile* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const MinorFragmentProfile& from);
+  void MergeFrom(const MinorFragmentProfile& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional .exec.shared.FragmentState state = 1;
+  inline bool has_state() const;
+  inline void clear_state();
+  static const int kStateFieldNumber = 1;
+  inline ::exec::shared::FragmentState state() const;
+  inline void set_state(::exec::shared::FragmentState value);
+
+  // optional .exec.shared.DrillPBError error = 2;
+  inline bool has_error() const;
+  inline void clear_error();
+  static const int kErrorFieldNumber = 2;
+  inline const ::exec::shared::DrillPBError& error() const;
+  inline ::exec::shared::DrillPBError* mutable_error();
+  inline ::exec::shared::DrillPBError* release_error();
+  inline void set_allocated_error(::exec::shared::DrillPBError* error);
+
+  // optional int32 minor_fragment_id = 3;
+  inline bool has_minor_fragment_id() const;
+  inline void clear_minor_fragment_id();
+  static const int kMinorFragmentIdFieldNumber = 3;
+  inline ::google::protobuf::int32 minor_fragment_id() const;
+  inline void set_minor_fragment_id(::google::protobuf::int32 value);
+
+  // repeated .exec.shared.OperatorProfile operator_profile = 4;
+  inline int operator_profile_size() const;
+  inline void clear_operator_profile();
+  static const int kOperatorProfileFieldNumber = 4;
+  inline const ::exec::shared::OperatorProfile& operator_profile(int index) const;
+  inline ::exec::shared::OperatorProfile* mutable_operator_profile(int index);
+  inline ::exec::shared::OperatorProfile* add_operator_profile();
+  inline const ::google::protobuf::RepeatedPtrField< ::exec::shared::OperatorProfile >&
+      operator_profile() const;
+  inline ::google::protobuf::RepeatedPtrField< ::exec::shared::OperatorProfile >*
+      mutable_operator_profile();
+
+  // optional int64 start_time = 5;
+  inline bool has_start_time() const;
+  inline void clear_start_time();
+  static const int kStartTimeFieldNumber = 5;
+  inline ::google::protobuf::int64 start_time() const;
+  inline void set_start_time(::google::protobuf::int64 value);
+
+  // optional int64 end_time = 6;
+  inline bool has_end_time() const;
+  inline void clear_end_time();
+  static const int kEndTimeFieldNumber = 6;
+  inline ::google::protobuf::int64 end_time() const;
+  inline void set_end_time(::google::protobuf::int64 value);
+
+  // optional int64 memory_used = 7;
+  inline bool has_memory_used() const;
+  inline void clear_memory_used();
+  static const int kMemoryUsedFieldNumber = 7;
+  inline ::google::protobuf::int64 memory_used() const;
+  inline void set_memory_used(::google::protobuf::int64 value);
+
+  // optional int64 max_memory_used = 8;
+  inline bool has_max_memory_used() const;
+  inline void clear_max_memory_used();
+  static const int kMaxMemoryUsedFieldNumber = 8;
+  inline ::google::protobuf::int64 max_memory_used() const;
+  inline void set_max_memory_used(::google::protobuf::int64 value);
+
+  // optional .exec.DrillbitEndpoint endpoint = 9;
+  inline bool has_endpoint() const;
+  inline void clear_endpoint();
+  static const int kEndpointFieldNumber = 9;
+  inline const ::exec::DrillbitEndpoint& endpoint() const;
+  inline ::exec::DrillbitEndpoint* mutable_endpoint();
+  inline ::exec::DrillbitEndpoint* release_endpoint();
+  inline void set_allocated_endpoint(::exec::DrillbitEndpoint* endpoint);
+
+  // @@protoc_insertion_point(class_scope:exec.shared.MinorFragmentProfile)
+ private:
+  inline void set_has_state();
+  inline void clear_has_state();
+  inline void set_has_error();
+  inline void clear_has_error();
+  inline void set_has_minor_fragment_id();
+  inline void clear_has_minor_fragment_id();
+  inline void set_has_start_time();
+  inline void clear_has_start_time();
+  inline void set_has_end_time();
+  inline void clear_has_end_time();
+  inline void set_has_memory_used();
+  inline void clear_has_memory_used();
+  inline void set_has_max_memory_used();
+  inline void clear_has_max_memory_used();
+  inline void set_has_endpoint();
+  inline void clear_has_endpoint();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::exec::shared::DrillPBError* error_;
+  int state_;
+  ::google::protobuf::int32 minor_fragment_id_;
+  ::google::protobuf::RepeatedPtrField< ::exec::shared::OperatorProfile > operator_profile_;
+  ::google::protobuf::int64 start_time_;
+  ::google::protobuf::int64 end_time_;
+  ::google::protobuf::int64 memory_used_;
+  ::google::protobuf::int64 max_memory_used_;
+  ::exec::DrillbitEndpoint* endpoint_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(9 + 31) / 32];
+
+  friend void  protobuf_AddDesc_UserBitShared_2eproto();
+  friend void protobuf_AssignDesc_UserBitShared_2eproto();
+  friend void protobuf_ShutdownFile_UserBitShared_2eproto();
+
+  void InitAsDefaultInstance();
+  static MinorFragmentProfile* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class OperatorProfile : public ::google::protobuf::Message {
+ public:
+  OperatorProfile();
+  virtual ~OperatorProfile();
+
+  OperatorProfile(const OperatorProfile& from);
+
+  inline OperatorProfile& operator=(const OperatorProfile& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const OperatorProfile& default_instance();
+
+  void Swap(OperatorProfile* other);
+
+  // implements Message ----------------------------------------------
+
+  OperatorProfile* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const OperatorProfile& from);
+  void MergeFrom(const OperatorProfile& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // repeated .exec.shared.StreamProfile input_profile = 1;
+  inline int input_profile_size() const;
+  inline void clear_input_profile();
+  static const int kInputProfileFieldNumber = 1;
+  inline const ::exec::shared::StreamProfile& input_profile(int index) const;
+  inline ::exec::shared::StreamProfile* mutable_input_profile(int index);
+  inline ::exec::shared::StreamProfile* add_input_profile();
+  inline const ::google::protobuf::RepeatedPtrField< ::exec::shared::StreamProfile >&
+      input_profile() const;
+  inline ::google::protobuf::RepeatedPtrField< ::exec::shared::StreamProfile >*
+      mutable_input_profile();
+
+  // optional int32 operator_id = 3;
+  inline bool has_operator_id() const;
+  inline void clear_operator_id();
+  static const int kOperatorIdFieldNumber = 3;
+  inline ::google::protobuf::int32 operator_id() const;
+  inline void set_operator_id(::google::protobuf::int32 value);
+
+  // optional int32 operator_type = 4;
+  inline bool has_operator_type() const;
+  inline void clear_operator_type();
+  static const int kOperatorTypeFieldNumber = 4;
+  inline ::google::protobuf::int32 operator_type() const;
+  inline void set_operator_type(::google::protobuf::int32 value);
+
+  // optional int64 setup_nanos = 5;
+  inline bool has_setup_nanos() const;
+  inline void clear_setup_nanos();
+  static const int kSetupNanosFieldNumber = 5;
+  inline ::google::protobuf::int64 setup_nanos() const;
+  inline void set_setup_nanos(::google::protobuf::int64 value);
+
+  // optional int64 process_nanos = 6;
+  inline bool has_process_nanos() const;
+  inline void clear_process_nanos();
+  static const int kProcessNanosFieldNumber = 6;
+  inline ::google::protobuf::int64 process_nanos() const;
+  inline void set_process_nanos(::google::protobuf::int64 value);
+
+  // optional int64 local_memory_allocated = 7;
+  inline bool has_local_memory_allocated() const;
+  inline void clear_local_memory_allocated();
+  static const int kLocalMemoryAllocatedFieldNumber = 7;
+  inline ::google::protobuf::int64 local_memory_allocated() const;
+  inline void set_local_memory_allocated(::google::protobuf::int64 value);
+
+  // repeated .exec.shared.MetricValue metric = 8;
+  inline int metric_size() const;
+  inline void clear_metric();
+  static const int kMetricFieldNumber = 8;
+  inline const ::exec::shared::MetricValue& metric(int index) const;
+  inline ::exec::shared::MetricValue* mutable_metric(int index);
+  inline ::exec::shared::MetricValue* add_metric();
+  inline const ::google::protobuf::RepeatedPtrField< ::exec::shared::MetricValue >&
+      metric() const;
+  inline ::google::protobuf::RepeatedPtrField< ::exec::shared::MetricValue >*
+      mutable_metric();
+
+  // @@protoc_insertion_point(class_scope:exec.shared.OperatorProfile)
+ private:
+  inline void set_has_operator_id();
+  inline void clear_has_operator_id();
+  inline void set_has_operator_type();
+  inline void clear_has_operator_type();
+  inline void set_has_setup_nanos();
+  inline void clear_has_setup_nanos();
+  inline void set_has_process_nanos();
+  inline void clear_has_process_nanos();
+  inline void set_has_local_memory_allocated();
+  inline void clear_has_local_memory_allocated();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::google::protobuf::RepeatedPtrField< ::exec::shared::StreamProfile > input_profile_;
+  ::google::protobuf::int32 operator_id_;
+  ::google::protobuf::int32 operator_type_;
+  ::google::protobuf::int64 setup_nanos_;
+  ::google::protobuf::int64 process_nanos_;
+  ::google::protobuf::int64 local_memory_allocated_;
+  ::google::protobuf::RepeatedPtrField< ::exec::shared::MetricValue > metric_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(7 + 31) / 32];
+
+  friend void  protobuf_AddDesc_UserBitShared_2eproto();
+  friend void protobuf_AssignDesc_UserBitShared_2eproto();
+  friend void protobuf_ShutdownFile_UserBitShared_2eproto();
+
+  void InitAsDefaultInstance();
+  static OperatorProfile* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class StreamProfile : public ::google::protobuf::Message {
+ public:
+  StreamProfile();
+  virtual ~StreamProfile();
+
+  StreamProfile(const StreamProfile& from);
+
+  inline StreamProfile& operator=(const StreamProfile& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const StreamProfile& default_instance();
+
+  void Swap(StreamProfile* other);
+
+  // implements Message ----------------------------------------------
+
+  StreamProfile* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const StreamProfile& from);
+  void MergeFrom(const StreamProfile& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional int64 records = 1;
+  inline bool has_records() const;
+  inline void clear_records();
+  static const int kRecordsFieldNumber = 1;
+  inline ::google::protobuf::int64 records() const;
+  inline void set_records(::google::protobuf::int64 value);
+
+  // optional int64 batches = 2;
+  inline bool has_batches() const;
+  inline void clear_batches();
+  static const int kBatchesFieldNumber = 2;
+  inline ::google::protobuf::int64 batches() const;
+  inline void set_batches(::google::protobuf::int64 value);
+
+  // optional int64 schemas = 3;
+  inline bool has_schemas() const;
+  inline void clear_schemas();
+  static const int kSchemasFieldNumber = 3;
+  inline ::google::protobuf::int64 schemas() const;
+  inline void set_schemas(::google::protobuf::int64 value);
+
+  // @@protoc_insertion_point(class_scope:exec.shared.StreamProfile)
+ private:
+  inline void set_has_records();
+  inline void clear_has_records();
+  inline void set_has_batches();
+  inline void clear_has_batches();
+  inline void set_has_schemas();
+  inline void clear_has_schemas();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::google::protobuf::int64 records_;
+  ::google::protobuf::int64 batches_;
+  ::google::protobuf::int64 schemas_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
+
+  friend void  protobuf_AddDesc_UserBitShared_2eproto();
+  friend void protobuf_AssignDesc_UserBitShared_2eproto();
+  friend void protobuf_ShutdownFile_UserBitShared_2eproto();
+
+  void InitAsDefaultInstance();
+  static StreamProfile* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class MetricValue : public ::google::protobuf::Message {
+ public:
+  MetricValue();
+  virtual ~MetricValue();
+
+  MetricValue(const MetricValue& from);
+
+  inline MetricValue& operator=(const MetricValue& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const MetricValue& default_instance();
+
+  void Swap(MetricValue* other);
+
+  // implements Message ----------------------------------------------
+
+  MetricValue* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const MetricValue& from);
+  void MergeFrom(const MetricValue& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional int32 metric_id = 1;
+  inline bool has_metric_id() const;
+  inline void clear_metric_id();
+  static const int kMetricIdFieldNumber = 1;
+  inline ::google::protobuf::int32 metric_id() const;
+  inline void set_metric_id(::google::protobuf::int32 value);
+
+  // optional int64 long_value = 2;
+  inline bool has_long_value() const;
+  inline void clear_long_value();
+  static const int kLongValueFieldNumber = 2;
+  inline ::google::protobuf::int64 long_value() const;
+  inline void set_long_value(::google::protobuf::int64 value);
+
+  // optional double double_value = 3;
+  inline bool has_double_value() const;
+  inline void clear_double_value();
+  static const int kDoubleValueFieldNumber = 3;
+  inline double double_value() const;
+  inline void set_double_value(double value);
+
+  // @@protoc_insertion_point(class_scope:exec.shared.MetricValue)
+ private:
+  inline void set_has_metric_id();
+  inline void clear_has_metric_id();
+  inline void set_has_long_value();
+  inline void clear_has_long_value();
+  inline void set_has_double_value();
+  inline void clear_has_double_value();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::google::protobuf::int64 long_value_;
+  double double_value_;
+  ::google::protobuf::int32 metric_id_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
+
+  friend void  protobuf_AddDesc_UserBitShared_2eproto();
+  friend void protobuf_AssignDesc_UserBitShared_2eproto();
+  friend void protobuf_ShutdownFile_UserBitShared_2eproto();
+
+  void InitAsDefaultInstance();
+  static MetricValue* default_instance_;
 };
 // ===================================================================
 
@@ -1747,6 +2617,873 @@ inline void SerializedField::set_buffer_length(::google::protobuf::int32 value) 
   buffer_length_ = value;
 }
 
+// -------------------------------------------------------------------
+
+// QueryProfile
+
+// optional .exec.shared.QueryId id = 1;
+inline bool QueryProfile::has_id() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void QueryProfile::set_has_id() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void QueryProfile::clear_has_id() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void QueryProfile::clear_id() {
+  if (id_ != NULL) id_->::exec::shared::QueryId::Clear();
+  clear_has_id();
+}
+inline const ::exec::shared::QueryId& QueryProfile::id() const {
+  return id_ != NULL ? *id_ : *default_instance_->id_;
+}
+inline ::exec::shared::QueryId* QueryProfile::mutable_id() {
+  set_has_id();
+  if (id_ == NULL) id_ = new ::exec::shared::QueryId;
+  return id_;
+}
+inline ::exec::shared::QueryId* QueryProfile::release_id() {
+  clear_has_id();
+  ::exec::shared::QueryId* temp = id_;
+  id_ = NULL;
+  return temp;
+}
+inline void QueryProfile::set_allocated_id(::exec::shared::QueryId* id) {
+  delete id_;
+  id_ = id;
+  if (id) {
+    set_has_id();
+  } else {
+    clear_has_id();
+  }
+}
+
+// optional .exec.shared.QueryType type = 2;
+inline bool QueryProfile::has_type() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void QueryProfile::set_has_type() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void QueryProfile::clear_has_type() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void QueryProfile::clear_type() {
+  type_ = 1;
+  clear_has_type();
+}
+inline ::exec::shared::QueryType QueryProfile::type() const {
+  return static_cast< ::exec::shared::QueryType >(type_);
+}
+inline void QueryProfile::set_type(::exec::shared::QueryType value) {
+  assert(::exec::shared::QueryType_IsValid(value));
+  set_has_type();
+  type_ = value;
+}
+
+// optional int64 start = 3;
+inline bool QueryProfile::has_start() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void QueryProfile::set_has_start() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void QueryProfile::clear_has_start() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void QueryProfile::clear_start() {
+  start_ = GOOGLE_LONGLONG(0);
+  clear_has_start();
+}
+inline ::google::protobuf::int64 QueryProfile::start() const {
+  return start_;
+}
+inline void QueryProfile::set_start(::google::protobuf::int64 value) {
+  set_has_start();
+  start_ = value;
+}
+
+// optional int64 end = 4;
+inline bool QueryProfile::has_end() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void QueryProfile::set_has_end() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void QueryProfile::clear_has_end() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void QueryProfile::clear_end() {
+  end_ = GOOGLE_LONGLONG(0);
+  clear_has_end();
+}
+inline ::google::protobuf::int64 QueryProfile::end() const {
+  return end_;
+}
+inline void QueryProfile::set_end(::google::protobuf::int64 value) {
+  set_has_end();
+  end_ = value;
+}
+
+// optional string query = 5;
+inline bool QueryProfile::has_query() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
+}
+inline void QueryProfile::set_has_query() {
+  _has_bits_[0] |= 0x00000010u;
+}
+inline void QueryProfile::clear_has_query() {
+  _has_bits_[0] &= ~0x00000010u;
+}
+inline void QueryProfile::clear_query() {
+  if (query_ != &::google::protobuf::internal::kEmptyString) {
+    query_->clear();
+  }
+  clear_has_query();
+}
+inline const ::std::string& QueryProfile::query() const {
+  return *query_;
+}
+inline void QueryProfile::set_query(const ::std::string& value) {
+  set_has_query();
+  if (query_ == &::google::protobuf::internal::kEmptyString) {
+    query_ = new ::std::string;
+  }
+  query_->assign(value);
+}
+inline void QueryProfile::set_query(const char* value) {
+  set_has_query();
+  if (query_ == &::google::protobuf::internal::kEmptyString) {
+    query_ = new ::std::string;
+  }
+  query_->assign(value);
+}
+inline void QueryProfile::set_query(const char* value, size_t size) {
+  set_has_query();
+  if (query_ == &::google::protobuf::internal::kEmptyString) {
+    query_ = new ::std::string;
+  }
+  query_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* QueryProfile::mutable_query() {
+  set_has_query();
+  if (query_ == &::google::protobuf::internal::kEmptyString) {
+    query_ = new ::std::string;
+  }
+  return query_;
+}
+inline ::std::string* QueryProfile::release_query() {
+  clear_has_query();
+  if (query_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = query_;
+    query_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void QueryProfile::set_allocated_query(::std::string* query) {
+  if (query_ != &::google::protobuf::internal::kEmptyString) {
+    delete query_;
+  }
+  if (query) {
+    set_has_query();
+    query_ = query;
+  } else {
+    clear_has_query();
+    query_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional string plan = 6;
+inline bool QueryProfile::has_plan() const {
+  return (_has_bits_[0] & 0x00000020u) != 0;
+}
+inline void QueryProfile::set_has_plan() {
+  _has_bits_[0] |= 0x00000020u;
+}
+inline void QueryProfile::clear_has_plan() {
+  _has_bits_[0] &= ~0x00000020u;
+}
+inline void QueryProfile::clear_plan() {
+  if (plan_ != &::google::protobuf::internal::kEmptyString) {
+    plan_->clear();
+  }
+  clear_has_plan();
+}
+inline const ::std::string& QueryProfile::plan() const {
+  return *plan_;
+}
+inline void QueryProfile::set_plan(const ::std::string& value) {
+  set_has_plan();
+  if (plan_ == &::google::protobuf::internal::kEmptyString) {
+    plan_ = new ::std::string;
+  }
+  plan_->assign(value);
+}
+inline void QueryProfile::set_plan(const char* value) {
+  set_has_plan();
+  if (plan_ == &::google::protobuf::internal::kEmptyString) {
+    plan_ = new ::std::string;
+  }
+  plan_->assign(value);
+}
+inline void QueryProfile::set_plan(const char* value, size_t size) {
+  set_has_plan();
+  if (plan_ == &::google::protobuf::internal::kEmptyString) {
+    plan_ = new ::std::string;
+  }
+  plan_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* QueryProfile::mutable_plan() {
+  set_has_plan();
+  if (plan_ == &::google::protobuf::internal::kEmptyString) {
+    plan_ = new ::std::string;
+  }
+  return plan_;
+}
+inline ::std::string* QueryProfile::release_plan() {
+  clear_has_plan();
+  if (plan_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = plan_;
+    plan_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void QueryProfile::set_allocated_plan(::std::string* plan) {
+  if (plan_ != &::google::protobuf::internal::kEmptyString) {
+    delete plan_;
+  }
+  if (plan) {
+    set_has_plan();
+    plan_ = plan;
+  } else {
+    clear_has_plan();
+    plan_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// repeated .exec.shared.MajorFragmentProfile fragment_profile = 7;
+inline int QueryProfile::fragment_profile_size() const {
+  return fragment_profile_.size();
+}
+inline void QueryProfile::clear_fragment_profile() {
+  fragment_profile_.Clear();
+}
+inline const ::exec::shared::MajorFragmentProfile& QueryProfile::fragment_profile(int index) const {
+  return fragment_profile_.Get(index);
+}
+inline ::exec::shared::MajorFragmentProfile* QueryProfile::mutable_fragment_profile(int index) {
+  return fragment_profile_.Mutable(index);
+}
+inline ::exec::shared::MajorFragmentProfile* QueryProfile::add_fragment_profile() {
+  return fragment_profile_.Add();
+}
+inline const ::google::protobuf::RepeatedPtrField< ::exec::shared::MajorFragmentProfile >&
+QueryProfile::fragment_profile() const {
+  return fragment_profile_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::exec::shared::MajorFragmentProfile >*
+QueryProfile::mutable_fragment_profile() {
+  return &fragment_profile_;
+}
+
+// -------------------------------------------------------------------
+
+// MajorFragmentProfile
+
+// optional int32 major_fragment_id = 1;
+inline bool MajorFragmentProfile::has_major_fragment_id() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void MajorFragmentProfile::set_has_major_fragment_id() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void MajorFragmentProfile::clear_has_major_fragment_id() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void MajorFragmentProfile::clear_major_fragment_id() {
+  major_fragment_id_ = 0;
+  clear_has_major_fragment_id();
+}
+inline ::google::protobuf::int32 MajorFragmentProfile::major_fragment_id() const {
+  return major_fragment_id_;
+}
+inline void MajorFragmentProfile::set_major_fragment_id(::google::protobuf::int32 value) {
+  set_has_major_fragment_id();
+  major_fragment_id_ = value;
+}
+
+// repeated .exec.shared.MinorFragmentProfile minor_fragment_profile = 2;
+inline int MajorFragmentProfile::minor_fragment_profile_size() const {
+  return minor_fragment_profile_.size();
+}
+inline void MajorFragmentProfile::clear_minor_fragment_profile() {
+  minor_fragment_profile_.Clear();
+}
+inline const ::exec::shared::MinorFragmentProfile& MajorFragmentProfile::minor_fragment_profile(int index) const {
+  return minor_fragment_profile_.Get(index);
+}
+inline ::exec::shared::MinorFragmentProfile* MajorFragmentProfile::mutable_minor_fragment_profile(int index) {
+  return minor_fragment_profile_.Mutable(index);
+}
+inline ::exec::shared::MinorFragmentProfile* MajorFragmentProfile::add_minor_fragment_profile() {
+  return minor_fragment_profile_.Add();
+}
+inline const ::google::protobuf::RepeatedPtrField< ::exec::shared::MinorFragmentProfile >&
+MajorFragmentProfile::minor_fragment_profile() const {
+  return minor_fragment_profile_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::exec::shared::MinorFragmentProfile >*
+MajorFragmentProfile::mutable_minor_fragment_profile() {
+  return &minor_fragment_profile_;
+}
+
+// -------------------------------------------------------------------
+
+// MinorFragmentProfile
+
+// optional .exec.shared.FragmentState state = 1;
+inline bool MinorFragmentProfile::has_state() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void MinorFragmentProfile::set_has_state() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void MinorFragmentProfile::clear_has_state() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void MinorFragmentProfile::clear_state() {
+  state_ = 0;
+  clear_has_state();
+}
+inline ::exec::shared::FragmentState MinorFragmentProfile::state() const {
+  return static_cast< ::exec::shared::FragmentState >(state_);
+}
+inline void MinorFragmentProfile::set_state(::exec::shared::FragmentState value) {
+  assert(::exec::shared::FragmentState_IsValid(value));
+  set_has_state();
+  state_ = value;
+}
+
+// optional .exec.shared.DrillPBError error = 2;
+inline bool MinorFragmentProfile::has_error() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void MinorFragmentProfile::set_has_error() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void MinorFragmentProfile::clear_has_error() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void MinorFragmentProfile::clear_error() {
+  if (error_ != NULL) error_->::exec::shared::DrillPBError::Clear();
+  clear_has_error();
+}
+inline const ::exec::shared::DrillPBError& MinorFragmentProfile::error() const {
+  return error_ != NULL ? *error_ : *default_instance_->error_;
+}
+inline ::exec::shared::DrillPBError* MinorFragmentProfile::mutable_error() {
+  set_has_error();
+  if (error_ == NULL) error_ = new ::exec::shared::DrillPBError;
+  return error_;
+}
+inline ::exec::shared::DrillPBError* MinorFragmentProfile::release_error() {
+  clear_has_error();
+  ::exec::shared::DrillPBError* temp = error_;
+  error_ = NULL;
+  return temp;
+}
+inline void MinorFragmentProfile::set_allocated_error(::exec::shared::DrillPBError* error) {
+  delete error_;
+  error_ = error;
+  if (error) {
+    set_has_error();
+  } else {
+    clear_has_error();
+  }
+}
+
+// optional int32 minor_fragment_id = 3;
+inline bool MinorFragmentProfile::has_minor_fragment_id() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void MinorFragmentProfile::set_has_minor_fragment_id() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void MinorFragmentProfile::clear_has_minor_fragment_id() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void MinorFragmentProfile::clear_minor_fragment_id() {
+  minor_fragment_id_ = 0;
+  clear_has_minor_fragment_id();
+}
+inline ::google::protobuf::int32 MinorFragmentProfile::minor_fragment_id() const {
+  return minor_fragment_id_;
+}
+inline void MinorFragmentProfile::set_minor_fragment_id(::google::protobuf::int32 value) {
+  set_has_minor_fragment_id();
+  minor_fragment_id_ = value;
+}
+
+// repeated .exec.shared.OperatorProfile operator_profile = 4;
+inline int MinorFragmentProfile::operator_profile_size() const {
+  return operator_profile_.size();
+}
+inline void MinorFragmentProfile::clear_operator_profile() {
+  operator_profile_.Clear();
+}
+inline const ::exec::shared::OperatorProfile& MinorFragmentProfile::operator_profile(int index) const {
+  return operator_profile_.Get(index);
+}
+inline ::exec::shared::OperatorProfile* MinorFragmentProfile::mutable_operator_profile(int index) {
+  return operator_profile_.Mutable(index);
+}
+inline ::exec::shared::OperatorProfile* MinorFragmentProfile::add_operator_profile() {
+  return operator_profile_.Add();
+}
+inline const ::google::protobuf::RepeatedPtrField< ::exec::shared::OperatorProfile >&
+MinorFragmentProfile::operator_profile() const {
+  return operator_profile_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::exec::shared::OperatorProfile >*
+MinorFragmentProfile::mutable_operator_profile() {
+  return &operator_profile_;
+}
+
+// optional int64 start_time = 5;
+inline bool MinorFragmentProfile::has_start_time() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
+}
+inline void MinorFragmentProfile::set_has_start_time() {
+  _has_bits_[0] |= 0x00000010u;
+}
+inline void MinorFragmentProfile::clear_has_start_time() {
+  _has_bits_[0] &= ~0x00000010u;
+}
+inline void MinorFragmentProfile::clear_start_time() {
+  start_time_ = GOOGLE_LONGLONG(0);
+  clear_has_start_time();
+}
+inline ::google::protobuf::int64 MinorFragmentProfile::start_time() const {
+  return start_time_;
+}
+inline void MinorFragmentProfile::set_start_time(::google::protobuf::int64 value) {
+  set_has_start_time();
+  start_time_ = value;
+}
+
+// optional int64 end_time = 6;
+inline bool MinorFragmentProfile::has_end_time() const {
+  return (_has_bits_[0] & 0x00000020u) != 0;
+}
+inline void MinorFragmentProfile::set_has_end_time() {
+  _has_bits_[0] |= 0x00000020u;
+}
+inline void MinorFragmentProfile::clear_has_end_time() {
+  _has_bits_[0] &= ~0x00000020u;
+}
+inline void MinorFragmentProfile::clear_end_time() {
+  end_time_ = GOOGLE_LONGLONG(0);
+  clear_has_end_time();
+}
+inline ::google::protobuf::int64 MinorFragmentProfile::end_time() const {
+  return end_time_;
+}
+inline void MinorFragmentProfile::set_end_time(::google::protobuf::int64 value) {
+  set_has_end_time();
+  end_time_ = value;
+}
+
+// optional int64 memory_used = 7;
+inline bool MinorFragmentProfile::has_memory_used() const {
+  return (_has_bits_[0] & 0x00000040u) != 0;
+}
+inline void MinorFragmentProfile::set_has_memory_used() {
+  _has_bits_[0] |= 0x00000040u;
+}
+inline void MinorFragmentProfile::clear_has_memory_used() {
+  _has_bits_[0] &= ~0x00000040u;
+}
+inline void MinorFragmentProfile::clear_memory_used() {
+  memory_used_ = GOOGLE_LONGLONG(0);
+  clear_has_memory_used();
+}
+inline ::google::protobuf::int64 MinorFragmentProfile::memory_used() const {
+  return memory_used_;
+}
+inline void MinorFragmentProfile::set_memory_used(::google::protobuf::int64 value) {
+  set_has_memory_used();
+  memory_used_ = value;
+}
+
+// optional int64 max_memory_used = 8;
+inline bool MinorFragmentProfile::has_max_memory_used() const {
+  return (_has_bits_[0] & 0x00000080u) != 0;
+}
+inline void MinorFragmentProfile::set_has_max_memory_used() {
+  _has_bits_[0] |= 0x00000080u;
+}
+inline void MinorFragmentProfile::clear_has_max_memory_used() {
+  _has_bits_[0] &= ~0x00000080u;
+}
+inline void MinorFragmentProfile::clear_max_memory_used() {
+  max_memory_used_ = GOOGLE_LONGLONG(0);
+  clear_has_max_memory_used();
+}
+inline ::google::protobuf::int64 MinorFragmentProfile::max_memory_used() const {
+  return max_memory_used_;
+}
+inline void MinorFragmentProfile::set_max_memory_used(::google::protobuf::int64 value) {
+  set_has_max_memory_used();
+  max_memory_used_ = value;
+}
+
+// optional .exec.DrillbitEndpoint endpoint = 9;
+inline bool MinorFragmentProfile::has_endpoint() const {
+  return (_has_bits_[0] & 0x00000100u) != 0;
+}
+inline void MinorFragmentProfile::set_has_endpoint() {
+  _has_bits_[0] |= 0x00000100u;
+}
+inline void MinorFragmentProfile::clear_has_endpoint() {
+  _has_bits_[0] &= ~0x00000100u;
+}
+inline void MinorFragmentProfile::clear_endpoint() {
+  if (endpoint_ != NULL) endpoint_->::exec::DrillbitEndpoint::Clear();
+  clear_has_endpoint();
+}
+inline const ::exec::DrillbitEndpoint& MinorFragmentProfile::endpoint() const {
+  return endpoint_ != NULL ? *endpoint_ : *default_instance_->endpoint_;
+}
+inline ::exec::DrillbitEndpoint* MinorFragmentProfile::mutable_endpoint() {
+  set_has_endpoint();
+  if (endpoint_ == NULL) endpoint_ = new ::exec::DrillbitEndpoint;
+  return endpoint_;
+}
+inline ::exec::DrillbitEndpoint* MinorFragmentProfile::release_endpoint() {
+  clear_has_endpoint();
+  ::exec::DrillbitEndpoint* temp = endpoint_;
+  endpoint_ = NULL;
+  return temp;
+}
+inline void MinorFragmentProfile::set_allocated_endpoint(::exec::DrillbitEndpoint* endpoint) {
+  delete endpoint_;
+  endpoint_ = endpoint;
+  if (endpoint) {
+    set_has_endpoint();
+  } else {
+    clear_has_endpoint();
+  }
+}
+
+// -------------------------------------------------------------------
+
+// OperatorProfile
+
+// repeated .exec.shared.StreamProfile input_profile = 1;
+inline int OperatorProfile::input_profile_size() const {
+  return input_profile_.size();
+}
+inline void OperatorProfile::clear_input_profile() {
+  input_profile_.Clear();
+}
+inline const ::exec::shared::StreamProfile& OperatorProfile::input_profile(int index) const {
+  return input_profile_.Get(index);
+}
+inline ::exec::shared::StreamProfile* OperatorProfile::mutable_input_profile(int index) {
+  return input_profile_.Mutable(index);
+}
+inline ::exec::shared::StreamProfile* OperatorProfile::add_input_profile() {
+  return input_profile_.Add();
+}
+inline const ::google::protobuf::RepeatedPtrField< ::exec::shared::StreamProfile >&
+OperatorProfile::input_profile() const {
+  return input_profile_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::exec::shared::StreamProfile >*
+OperatorProfile::mutable_input_profile() {
+  return &input_profile_;
+}
+
+// optional int32 operator_id = 3;
+inline bool OperatorProfile::has_operator_id() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void OperatorProfile::set_has_operator_id() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void OperatorProfile::clear_has_operator_id() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void OperatorProfile::clear_operator_id() {
+  operator_id_ = 0;
+  clear_has_operator_id();
+}
+inline ::google::protobuf::int32 OperatorProfile::operator_id() const {
+  return operator_id_;
+}
+inline void OperatorProfile::set_operator_id(::google::protobuf::int32 value) {
+  set_has_operator_id();
+  operator_id_ = value;
+}
+
+// optional int32 operator_type = 4;
+inline bool OperatorProfile::has_operator_type() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void OperatorProfile::set_has_operator_type() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void OperatorProfile::clear_has_operator_type() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void OperatorProfile::clear_operator_type() {
+  operator_type_ = 0;
+  clear_has_operator_type();
+}
+inline ::google::protobuf::int32 OperatorProfile::operator_type() const {
+  return operator_type_;
+}
+inline void OperatorProfile::set_operator_type(::google::protobuf::int32 value) {
+  set_has_operator_type();
+  operator_type_ = value;
+}
+
+// optional int64 setup_nanos = 5;
+inline bool OperatorProfile::has_setup_nanos() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void OperatorProfile::set_has_setup_nanos() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void OperatorProfile::clear_has_setup_nanos() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void OperatorProfile::clear_setup_nanos() {
+  setup_nanos_ = GOOGLE_LONGLONG(0);
+  clear_has_setup_nanos();
+}
+inline ::google::protobuf::int64 OperatorProfile::setup_nanos() const {
+  return setup_nanos_;
+}
+inline void OperatorProfile::set_setup_nanos(::google::protobuf::int64 value) {
+  set_has_setup_nanos();
+  setup_nanos_ = value;
+}
+
+// optional int64 process_nanos = 6;
+inline bool OperatorProfile::has_process_nanos() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
+}
+inline void OperatorProfile::set_has_process_nanos() {
+  _has_bits_[0] |= 0x00000010u;
+}
+inline void OperatorProfile::clear_has_process_nanos() {
+  _has_bits_[0] &= ~0x00000010u;
+}
+inline void OperatorProfile::clear_process_nanos() {
+  process_nanos_ = GOOGLE_LONGLONG(0);
+  clear_has_process_nanos();
+}
+inline ::google::protobuf::int64 OperatorProfile::process_nanos() const {
+  return process_nanos_;
+}
+inline void OperatorProfile::set_process_nanos(::google::protobuf::int64 value) {
+  set_has_process_nanos();
+  process_nanos_ = value;
+}
+
+// optional int64 local_memory_allocated = 7;
+inline bool OperatorProfile::has_local_memory_allocated() const {
+  return (_has_bits_[0] & 0x00000020u) != 0;
+}
+inline void OperatorProfile::set_has_local_memory_allocated() {
+  _has_bits_[0] |= 0x00000020u;
+}
+inline void OperatorProfile::clear_has_local_memory_allocated() {
+  _has_bits_[0] &= ~0x00000020u;
+}
+inline void OperatorProfile::clear_local_memory_allocated() {
+  local_memory_allocated_ = GOOGLE_LONGLONG(0);
+  clear_has_local_memory_allocated();
+}
+inline ::google::protobuf::int64 OperatorProfile::local_memory_allocated() const {
+  return local_memory_allocated_;
+}
+inline void OperatorProfile::set_local_memory_allocated(::google::protobuf::int64 value) {
+  set_has_local_memory_allocated();
+  local_memory_allocated_ = value;
+}
+
+// repeated .exec.shared.MetricValue metric = 8;
+inline int OperatorProfile::metric_size() const {
+  return metric_.size();
+}
+inline void OperatorProfile::clear_metric() {
+  metric_.Clear();
+}
+inline const ::exec::shared::MetricValue& OperatorProfile::metric(int index) const {
+  return metric_.Get(index);
+}
+inline ::exec::shared::MetricValue* OperatorProfile::mutable_metric(int index) {
+  return metric_.Mutable(index);
+}
+inline ::exec::shared::MetricValue* OperatorProfile::add_metric() {
+  return metric_.Add();
+}
+inline const ::google::protobuf::RepeatedPtrField< ::exec::shared::MetricValue >&
+OperatorProfile::metric() const {
+  return metric_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::exec::shared::MetricValue >*
+OperatorProfile::mutable_metric() {
+  return &metric_;
+}
+
+// -------------------------------------------------------------------
+
+// StreamProfile
+
+// optional int64 records = 1;
+inline bool StreamProfile::has_records() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void StreamProfile::set_has_records() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void StreamProfile::clear_has_records() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void StreamProfile::clear_records() {
+  records_ = GOOGLE_LONGLONG(0);
+  clear_has_records();
+}
+inline ::google::protobuf::int64 StreamProfile::records() const {
+  return records_;
+}
+inline void StreamProfile::set_records(::google::protobuf::int64 value) {
+  set_has_records();
+  records_ = value;
+}
+
+// optional int64 batches = 2;
+inline bool StreamProfile::has_batches() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void StreamProfile::set_has_batches() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void StreamProfile::clear_has_batches() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void StreamProfile::clear_batches() {
+  batches_ = GOOGLE_LONGLONG(0);
+  clear_has_batches();
+}
+inline ::google::protobuf::int64 StreamProfile::batches() const {
+  return batches_;
+}
+inline void StreamProfile::set_batches(::google::protobuf::int64 value) {
+  set_has_batches();
+  batches_ = value;
+}
+
+// optional int64 schemas = 3;
+inline bool StreamProfile::has_schemas() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void StreamProfile::set_has_schemas() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void StreamProfile::clear_has_schemas() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void StreamProfile::clear_schemas() {
+  schemas_ = GOOGLE_LONGLONG(0);
+  clear_has_schemas();
+}
+inline ::google::protobuf::int64 StreamProfile::schemas() const {
+  return schemas_;
+}
+inline void StreamProfile::set_schemas(::google::protobuf::int64 value) {
+  set_has_schemas();
+  schemas_ = value;
+}
+
+// -------------------------------------------------------------------
+
+// MetricValue
+
+// optional int32 metric_id = 1;
+inline bool MetricValue::has_metric_id() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void MetricValue::set_has_metric_id() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void MetricValue::clear_has_metric_id() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void MetricValue::clear_metric_id() {
+  metric_id_ = 0;
+  clear_has_metric_id();
+}
+inline ::google::protobuf::int32 MetricValue::metric_id() const {
+  return metric_id_;
+}
+inline void MetricValue::set_metric_id(::google::protobuf::int32 value) {
+  set_has_metric_id();
+  metric_id_ = value;
+}
+
+// optional int64 long_value = 2;
+inline bool MetricValue::has_long_value() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void MetricValue::set_has_long_value() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void MetricValue::clear_has_long_value() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void MetricValue::clear_long_value() {
+  long_value_ = GOOGLE_LONGLONG(0);
+  clear_has_long_value();
+}
+inline ::google::protobuf::int64 MetricValue::long_value() const {
+  return long_value_;
+}
+inline void MetricValue::set_long_value(::google::protobuf::int64 value) {
+  set_has_long_value();
+  long_value_ = value;
+}
+
+// optional double double_value = 3;
+inline bool MetricValue::has_double_value() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void MetricValue::set_has_double_value() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void MetricValue::clear_has_double_value() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void MetricValue::clear_double_value() {
+  double_value_ = 0;
+  clear_has_double_value();
+}
+inline double MetricValue::double_value() const {
+  return double_value_;
+}
+inline void MetricValue::set_double_value(double value) {
+  set_has_double_value();
+  double_value_ = value;
+}
+
 
 // @@protoc_insertion_point(namespace_scope)
 
@@ -1764,6 +3501,18 @@ inline const EnumDescriptor* GetEnumDescriptor< ::exec::shared::NamePart_Type>()
 template <>
 inline const EnumDescriptor* GetEnumDescriptor< ::exec::shared::RpcChannel>() {
   return ::exec::shared::RpcChannel_descriptor();
+}
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::exec::shared::QueryType>() {
+  return ::exec::shared::QueryType_descriptor();
+}
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::exec::shared::FragmentState>() {
+  return ::exec::shared::FragmentState_descriptor();
+}
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::exec::shared::CoreOperatorType>() {
+  return ::exec::shared::CoreOperatorType_descriptor();
 }
 
 }  // namespace google

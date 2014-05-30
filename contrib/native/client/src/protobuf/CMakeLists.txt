@@ -22,48 +22,48 @@ include_directories(${PROTOBUF_INCLUDE_DIR})
 
 #Generate Protobuf code
 
-set (PROTO_SRC_FILES 
-    ${CMAKE_BINARY_DIR}/protobuf/BitControl.proto 
-    ${CMAKE_BINARY_DIR}/protobuf/Coordination.proto 
-    ${CMAKE_BINARY_DIR}/protobuf/GeneralRPC.proto 
-    ${CMAKE_BINARY_DIR}/protobuf/Types.proto 
-    ${CMAKE_BINARY_DIR}/protobuf/UserBitShared.proto 
-    ${CMAKE_BINARY_DIR}/protobuf/BitData.proto 
-    ${CMAKE_BINARY_DIR}/protobuf/ExecutionProtos.proto 
-    ${CMAKE_BINARY_DIR}/protobuf/SchemaDef.proto 
+set (PROTO_SRC_FILES
+    ${CMAKE_BINARY_DIR}/protobuf/BitControl.proto
+    ${CMAKE_BINARY_DIR}/protobuf/Coordination.proto
+    ${CMAKE_BINARY_DIR}/protobuf/GeneralRPC.proto
+    ${CMAKE_BINARY_DIR}/protobuf/Types.proto
+    ${CMAKE_BINARY_DIR}/protobuf/UserBitShared.proto
+    ${CMAKE_BINARY_DIR}/protobuf/BitData.proto
+    ${CMAKE_BINARY_DIR}/protobuf/ExecutionProtos.proto
+    ${CMAKE_BINARY_DIR}/protobuf/SchemaDef.proto
     ${CMAKE_BINARY_DIR}/protobuf/User.proto
     )
 
 PROTOBUF_GENERATE_CPP(GenProtoSources GenProtoHeaders ${PROTO_SRC_FILES})
 
-set (PROTO_CPPSRC_FILES 
-    ${CMAKE_CURRENT_SOURCE_DIR}/BitControl.pb.cc 
-    ${CMAKE_CURRENT_SOURCE_DIR}/Coordination.pb.cc 
-    ${CMAKE_CURRENT_SOURCE_DIR}/GeneralRPC.pb.cc 
-    ${CMAKE_CURRENT_SOURCE_DIR}/Types.pb.cc 
-    ${CMAKE_CURRENT_SOURCE_DIR}/UserBitShared.pb.cc 
-    ${CMAKE_CURRENT_SOURCE_DIR}/BitData.pb.cc 
-    ${CMAKE_CURRENT_SOURCE_DIR}/ExecutionProtos.pb.cc 
-    ${CMAKE_CURRENT_SOURCE_DIR}/SchemaDef.pb.cc 
+set (PROTO_CPPSRC_FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/BitControl.pb.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/Coordination.pb.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/GeneralRPC.pb.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/Types.pb.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/UserBitShared.pb.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/BitData.pb.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/ExecutionProtos.pb.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/SchemaDef.pb.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/User.pb.cc
     )
 
 set (PROTO_HDR_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
-set (PROTO_CPPHDR_FILES 
-    ${PROTO_HDR_DIR}/BitControl.pb.h 
-    ${PROTO_HDR_DIR}/Coordination.pb.h 
-    ${PROTO_HDR_DIR}/GeneralRPC.pb.h 
-    ${PROTO_HDR_DIR}/UserBitShared.pb.h 
-    ${PROTO_HDR_DIR}/BitData.pb.h 
-    ${PROTO_HDR_DIR}/ExecutionProtos.pb.h 
-    ${PROTO_HDR_DIR}/SchemaDef.pb.h 
+set (PROTO_CPPHDR_FILES
+    ${PROTO_HDR_DIR}/BitControl.pb.h
+    ${PROTO_HDR_DIR}/Coordination.pb.h
+    ${PROTO_HDR_DIR}/GeneralRPC.pb.h
+    ${PROTO_HDR_DIR}/UserBitShared.pb.h
+    ${PROTO_HDR_DIR}/BitData.pb.h
+    ${PROTO_HDR_DIR}/ExecutionProtos.pb.h
+    ${PROTO_HDR_DIR}/SchemaDef.pb.h
     )
 
 set (PROTO_INC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../include/drill/protobuf)
 
-set (PROTO_CPPINC_FILES 
-    ${PROTO_INC_DIR}/Types.pb.h 
+set (PROTO_CPPINC_FILES
+    ${PROTO_INC_DIR}/Types.pb.h
     ${PROTO_INC_DIR}/User.pb.h
     )
 

@@ -20,8 +20,22 @@
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
-#include <boost/asio.hpp>
 #include "drill/drillc.hpp"
+
+Drill::status_t SchemaListener(void* ctx, Drill::FieldDefPtr fields, Drill::DrillClientError* err){
+    if(!err){
+        printf("SCHEMA CHANGE DETECTED:\n");
+        for(size_t i=0; i<fields->size(); i++){
+            std::string name= fields->at(i)->getName();
+            printf("%s\t", name.c_str());
+        }
+        printf("\n");
+        return Drill::QRY_SUCCESS ;
+    }else{
+        std::cerr<< "ERROR: " << err->msg << std::endl;
+        return Drill::QRY_FAILURE;
+    }
+}
 
 Drill::status_t QueryResultsListener(void* ctx, Drill::RecordBatch* b, Drill::DrillClientError* err){
     if(!err){
@@ -79,18 +93,19 @@ void print(const Drill::FieldMetadata* pFieldMetadata, void* buf, size_t sz){
     return;
 }
 
-int nOptions=5;
+int nOptions=6;
 
 struct Option{
     char name[32];
     char desc[128];
     bool required;
-}qsOptions[]= { 
+}qsOptions[]= {
     {"plan", "Plan files separated by semicolons", false},
     {"query", "Query strings, separated by semicolons", false},
     {"type", "Query type [physical|logical|sql]", true},
     {"connectStr", "Connect string", true},
-    {"api", "API type [sync|async]", true}
+    {"api", "API type [sync|async]", true},
+    {"logLevel", "Logging level [trace|debug|info|warn|error|fatal]", false}
 };
 
 std::map<std::string, std::string> qsOptionValues;
@@ -136,7 +151,7 @@ int parseArgs(int argc, char* argv[]){
             }
         }
     }
-    if(error){ 
+    if(error){
         printUsage();
         exit(1);
     }
@@ -170,7 +185,7 @@ int readPlans(const std::string& planList, std::vector<std::string>& plans){
         std::string plan((std::istreambuf_iterator<char>(f)), (std::istreambuf_iterator<char>()));
         std::cout << "plan:" << plan << std::endl;
         plans.push_back(plan);
-    } 
+    }
     return 0;
 }
 
@@ -201,6 +216,18 @@ bool validate(const std::string& type, const std::string& query, const std::stri
         return true;
 }
 
+Drill::logLevel_t getLogLevel(const char *s){
+    if(s!=NULL){
+        if(!strcmp(s, "trace")) return Drill::LOG_TRACE;
+        if(!strcmp(s, "debug")) return Drill::LOG_DEBUG;
+        if(!strcmp(s, "info")) return Drill::LOG_INFO;
+        if(!strcmp(s, "warn")) return Drill::LOG_WARNING;
+        if(!strcmp(s, "error")) return Drill::LOG_ERROR;
+        if(!strcmp(s, "fatal")) return Drill::LOG_FATAL;
+    }
+    return Drill::LOG_ERROR;
+}
+
 int main(int argc, char* argv[]) {
     try {
 
@@ -213,26 +240,29 @@ int main(int argc, char* argv[]) {
         std::string planList=qsOptionValues["plan"];
         std::string api=qsOptionValues["api"];
         std::string type_str=qsOptionValues["type"];
+        std::string logLevel=qsOptionValues["logLevel"];
 
-        exec::user::QueryType type;
+        exec::shared::QueryType type;
 
         if(!validate(type_str, queryList, planList)){
             exit(1);
         }
 
+        Drill::logLevel_t l=getLogLevel(logLevel.c_str());
+
         std::vector<std::string> queryInputs;
         if(type_str=="sql" ){
             readQueries(queryList, queryInputs);
-            type=exec::user::SQL;
+            type=exec::shared::SQL;
         }else if(type_str=="physical" ){
             readPlans(planList, queryInputs);
-            type=exec::user::PHYSICAL;
+            type=exec::shared::PHYSICAL;
         }else if(type_str == "logical"){
             readPlans(planList, queryInputs);
-            type=exec::user::LOGICAL;
+            type=exec::shared::LOGICAL;
         }else{
             readQueries(queryList, queryInputs);
-            type=exec::user::SQL;
+            type=exec::shared::SQL;
         }
 
         std::vector<std::string>::iterator queryInpIter;
@@ -245,9 +275,9 @@ int main(int argc, char* argv[]) {
 
         Drill::DrillClient client;
         // To log to file
-        //DrillClient::initLogging("/var/log/drill/", LOG_INFO);
+        //DrillClient::initLogging("/var/log/drill/", l);
         // To log to stderr
-        Drill::DrillClient::initLogging(NULL, Drill::LOG_INFO);
+        Drill::DrillClient::initLogging(NULL, l);
 
         if(client.connect(connectStr.c_str())!=Drill::CONN_SUCCESS){
             std::cerr<< "Failed to connect with error: "<< client.getError() << " (Using:"<<connectStr<<")"<<std::endl;
@@ -269,26 +299,27 @@ int main(int argc, char* argv[]) {
                 // get fields.
                 row=0;
                 Drill::RecordIterator* pRecIter=*recordIterIter;
-                std::vector<Drill::FieldMetadata*>& fields = pRecIter->getColDefs();
-                while((ret=pRecIter->next())==Drill::QRY_SUCCESS){
+                Drill::FieldDefPtr fields= pRecIter->getColDefs();
+                while((ret=pRecIter->next()), ret==Drill::QRY_SUCCESS || ret==Drill::QRY_SUCCESS_WITH_INFO){
+                    fields = pRecIter->getColDefs();
                     row++;
-                    if(row%4095==0){
-                        for(size_t i=0; i<fields.size(); i++){
-                            std::string name= fields[i]->getName();
+                    if( (ret==Drill::QRY_SUCCESS_WITH_INFO  && pRecIter->hasSchemaChanged() )|| ( row%100==1)){
+                        for(size_t i=0; i<fields->size(); i++){
+                            std::string name= fields->at(i)->getName();
                             printf("%s\t", name.c_str());
                         }
                         printf("\n");
                     }
                     printf("ROW: %ld\t", row);
-                    for(size_t i=0; i<fields.size(); i++){
+                    for(size_t i=0; i<fields->size(); i++){
                         void* pBuf; size_t sz;
                         pRecIter->getCol(i, &pBuf, &sz);
-                        print(fields[i], pBuf, sz);
+                        print(fields->at(i), pBuf, sz);
                     }
                     printf("\n");
                 }
                 if(ret!=Drill::QRY_NO_MORE_DATA){
-                    std::cerr<< pRecIter->getError();
+                    std::cerr<< pRecIter->getError() << std::endl;
                 }
                 client.freeQueryIterator(&pRecIter);
             }
@@ -296,11 +327,13 @@ int main(int argc, char* argv[]) {
             for(queryInpIter = queryInputs.begin(); queryInpIter != queryInputs.end(); queryInpIter++) {
                 Drill::QueryHandle_t* qryHandle = new Drill::QueryHandle_t;
                 client.submitQuery(type, *queryInpIter, QueryResultsListener, NULL, qryHandle);
+                client.registerSchemaChangeListener(qryHandle, SchemaListener);
                 queryHandles.push_back(qryHandle);
             }
             client.waitForResults();
             for(queryHandleIter = queryHandles.begin(); queryHandleIter != queryHandles.end(); queryHandleIter++) {
                 client.freeQueryResources(*queryHandleIter);
+                delete *queryHandleIter;
             }
         }
         client.close();

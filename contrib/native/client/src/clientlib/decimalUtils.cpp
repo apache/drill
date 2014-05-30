@@ -60,7 +60,7 @@ DecimalValue getDecimalValueFromByteBuf(SlicedByteBuf& data, size_t startIndex, 
     bool needsEndiannessSwap = !truncateScale;
 
     // Initialize the BigDecimal, first digit in the ByteBuf has the sign so mask it out
-    cpp_int decimalDigits = (needsEndiannessSwap ? 
+    cpp_int decimalDigits = (needsEndiannessSwap ?
             bswap_32(data.getUint32(startIndex)) & 0x7FFFFFFF :
             (data.getUint32(startIndex) & 0x7FFFFFFF));
 

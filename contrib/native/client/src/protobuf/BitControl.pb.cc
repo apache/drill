@@ -31,7 +31,6 @@ const ::google::protobuf::internal::GeneratedMessageReflection*
 const ::google::protobuf::Descriptor* FragmentStatus_descriptor_ = NULL;
 const ::google::protobuf::internal::GeneratedMessageReflection*
   FragmentStatus_reflection_ = NULL;
-const ::google::protobuf::EnumDescriptor* FragmentStatus_FragmentState_descriptor_ = NULL;
 const ::google::protobuf::Descriptor* PlanFragment_descriptor_ = NULL;
 const ::google::protobuf::internal::GeneratedMessageReflection*
   PlanFragment_reflection_ = NULL;
@@ -82,16 +81,9 @@ void protobuf_AssignDesc_BitControl_2eproto() {
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(BitStatus));
   FragmentStatus_descriptor_ = file->message_type(2);
-  static const int FragmentStatus_offsets_[9] = {
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(FragmentStatus, memory_use_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(FragmentStatus, batches_completed_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(FragmentStatus, records_completed_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(FragmentStatus, estimated_completion_percentage_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(FragmentStatus, state_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(FragmentStatus, data_processed_),
+  static const int FragmentStatus_offsets_[2] = {
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(FragmentStatus, profile_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(FragmentStatus, handle_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(FragmentStatus, error_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(FragmentStatus, running_time_),
   };
   FragmentStatus_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
@@ -104,7 +96,6 @@ void protobuf_AssignDesc_BitControl_2eproto() {
       ::google::protobuf::DescriptorPool::generated_pool(),
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(FragmentStatus));
-  FragmentStatus_FragmentState_descriptor_ = FragmentStatus_descriptor_->enum_type(0);
   PlanFragment_descriptor_ = file->message_type(3);
   static const int PlanFragment_offsets_[15] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(PlanFragment, handle_),
@@ -208,39 +199,31 @@ void protobuf_AddDesc_BitControl_2eproto() {
     "(\0162\027.exec.shared.RpcChannel:\013BIT_CONTROL"
     "\022(\n\010endpoint\030\003 \001(\0132\026.exec.DrillbitEndpoi"
     "nt\"F\n\tBitStatus\0229\n\017fragment_status\030\001 \003(\013"
-    "2 .exec.bit.control.FragmentStatus\"\261\003\n\016F"
-    "ragmentStatus\022\022\n\nmemory_use\030\001 \001(\003\022\031\n\021bat"
-    "ches_completed\030\002 \001(\003\022\031\n\021records_complete"
-    "d\030\003 \001(\003\022\'\n\037estimated_completion_percenta"
-    "ge\030\004 \001(\005\022=\n\005state\030\005 \001(\0162..exec.bit.contr"
-    "ol.FragmentStatus.FragmentState\022\026\n\016data_"
-    "processed\030\006 \001(\003\022(\n\006handle\030\007 \001(\0132\030.exec.b"
-    "it.FragmentHandle\022(\n\005error\030\010 \001(\0132\031.exec."
-    "shared.DrillPBError\022\024\n\014running_time\030\t \001("
-    "\003\"k\n\rFragmentState\022\013\n\007SENDING\020\000\022\027\n\023AWAIT"
-    "ING_ALLOCATION\020\001\022\013\n\007RUNNING\020\002\022\014\n\010FINISHE"
-    "D\020\003\022\r\n\tCANCELLED\020\004\022\n\n\006FAILED\020\005\"\276\003\n\014PlanF"
-    "ragment\022(\n\006handle\030\001 \001(\0132\030.exec.bit.Fragm"
-    "entHandle\022\024\n\014network_cost\030\004 \001(\002\022\020\n\010cpu_c"
-    "ost\030\005 \001(\002\022\021\n\tdisk_cost\030\006 \001(\002\022\023\n\013memory_c"
-    "ost\030\007 \001(\002\022\025\n\rfragment_json\030\010 \001(\t\022*\n\nassi"
-    "gnment\030\n \001(\0132\026.exec.DrillbitEndpoint\022\025\n\r"
-    "leaf_fragment\030\t \001(\010\022\'\n\007foreman\030\013 \001(\0132\026.e"
-    "xec.DrillbitEndpoint\022\035\n\013mem_initial\030\014 \001("
-    "\003:\01020000000\022\034\n\007mem_max\030\r \001(\003:\0132000000000"
-    "0\022\030\n\020query_start_time\030\016 \001(\003\0221\n\013credentia"
-    "ls\030\017 \001(\0132\034.exec.shared.UserCredentials\022\021"
-    "\n\ttime_zone\030\020 \001(\005\022\024\n\014options_json\030\021 \001(\t\""
-    "f\n\017WorkQueueStatus\022(\n\010endpoint\030\001 \001(\0132\026.e"
-    "xec.DrillbitEndpoint\022\024\n\014queue_length\030\002 \001"
-    "(\005\022\023\n\013report_time\030\003 \001(\003*\332\001\n\007RpcType\022\r\n\tH"
-    "ANDSHAKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\033\n\027REQ_"
-    "INIATILIZE_FRAGMENT\020\003\022\027\n\023REQ_CANCEL_FRAG"
-    "MENT\020\006\022\027\n\023REQ_FRAGMENT_STATUS\020\007\022\022\n\016REQ_B"
-    "IT_STATUS\020\010\022\030\n\024RESP_FRAGMENT_HANDLE\020\t\022\030\n"
-    "\024RESP_FRAGMENT_STATUS\020\n\022\023\n\017RESP_BIT_STAT"
-    "US\020\013B+\n\033org.apache.drill.exec.protoB\nBit"
-    "ControlH\001", 1569);
+    "2 .exec.bit.control.FragmentStatus\"n\n\016Fr"
+    "agmentStatus\0222\n\007profile\030\001 \001(\0132!.exec.sha"
+    "red.MinorFragmentProfile\022(\n\006handle\030\002 \001(\013"
+    "2\030.exec.bit.FragmentHandle\"\276\003\n\014PlanFragm"
+    "ent\022(\n\006handle\030\001 \001(\0132\030.exec.bit.FragmentH"
+    "andle\022\024\n\014network_cost\030\004 \001(\002\022\020\n\010cpu_cost\030"
+    "\005 \001(\002\022\021\n\tdisk_cost\030\006 \001(\002\022\023\n\013memory_cost\030"
+    "\007 \001(\002\022\025\n\rfragment_json\030\010 \001(\t\022*\n\nassignme"
+    "nt\030\n \001(\0132\026.exec.DrillbitEndpoint\022\025\n\rleaf"
+    "_fragment\030\t \001(\010\022\'\n\007foreman\030\013 \001(\0132\026.exec."
+    "DrillbitEndpoint\022\035\n\013mem_initial\030\014 \001(\003:\0102"
+    "0000000\022\034\n\007mem_max\030\r \001(\003:\01320000000000\022\030\n"
+    "\020query_start_time\030\016 \001(\003\0221\n\013credentials\030\017"
+    " \001(\0132\034.exec.shared.UserCredentials\022\021\n\tti"
+    "me_zone\030\020 \001(\005\022\024\n\014options_json\030\021 \001(\t\"f\n\017W"
+    "orkQueueStatus\022(\n\010endpoint\030\001 \001(\0132\026.exec."
+    "DrillbitEndpoint\022\024\n\014queue_length\030\002 \001(\005\022\023"
+    "\n\013report_time\030\003 \001(\003*\332\001\n\007RpcType\022\r\n\tHANDS"
+    "HAKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\033\n\027REQ_INIA"
+    "TILIZE_FRAGMENT\020\003\022\027\n\023REQ_CANCEL_FRAGMENT"
+    "\020\006\022\027\n\023REQ_FRAGMENT_STATUS\020\007\022\022\n\016REQ_BIT_S"
+    "TATUS\020\010\022\030\n\024RESP_FRAGMENT_HANDLE\020\t\022\030\n\024RES"
+    "P_FRAGMENT_STATUS\020\n\022\023\n\017RESP_BIT_STATUS\020\013"
+    "B+\n\033org.apache.drill.exec.protoB\nBitCont"
+    "rolH\001", 1245);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "BitControl.proto", &protobuf_RegisterTypes);
   BitControlHandshake::default_instance_ = new BitControlHandshake();
@@ -789,45 +772,9 @@ void BitStatus::Swap(BitStatus* other) {
 
 // ===================================================================
 
-const ::google::protobuf::EnumDescriptor* FragmentStatus_FragmentState_descriptor() {
-  protobuf_AssignDescriptorsOnce();
-  return FragmentStatus_FragmentState_descriptor_;
-}
-bool FragmentStatus_FragmentState_IsValid(int value) {
-  switch(value) {
-    case 0:
-    case 1:
-    case 2:
-    case 3:
-    case 4:
-    case 5:
-      return true;
-    default:
-      return false;
-  }
-}
-
 #ifndef _MSC_VER
-const FragmentStatus_FragmentState FragmentStatus::SENDING;
-const FragmentStatus_FragmentState FragmentStatus::AWAITING_ALLOCATION;
-const FragmentStatus_FragmentState FragmentStatus::RUNNING;
-const FragmentStatus_FragmentState FragmentStatus::FINISHED;
-const FragmentStatus_FragmentState FragmentStatus::CANCELLED;
-const FragmentStatus_FragmentState FragmentStatus::FAILED;
-const FragmentStatus_FragmentState FragmentStatus::FragmentState_MIN;
-const FragmentStatus_FragmentState FragmentStatus::FragmentState_MAX;
-const int FragmentStatus::FragmentState_ARRAYSIZE;
-#endif  // _MSC_VER
-#ifndef _MSC_VER
-const int FragmentStatus::kMemoryUseFieldNumber;
-const int FragmentStatus::kBatchesCompletedFieldNumber;
-const int FragmentStatus::kRecordsCompletedFieldNumber;
-const int FragmentStatus::kEstimatedCompletionPercentageFieldNumber;
-const int FragmentStatus::kStateFieldNumber;
-const int FragmentStatus::kDataProcessedFieldNumber;
+const int FragmentStatus::kProfileFieldNumber;
 const int FragmentStatus::kHandleFieldNumber;
-const int FragmentStatus::kErrorFieldNumber;
-const int FragmentStatus::kRunningTimeFieldNumber;
 #endif  // !_MSC_VER
 
 FragmentStatus::FragmentStatus()
@@ -836,8 +783,8 @@ FragmentStatus::FragmentStatus()
 }
 
 void FragmentStatus::InitAsDefaultInstance() {
+  profile_ = const_cast< ::exec::shared::MinorFragmentProfile*>(&::exec::shared::MinorFragmentProfile::default_instance());
   handle_ = const_cast< ::exec::bit::FragmentHandle*>(&::exec::bit::FragmentHandle::default_instance());
-  error_ = const_cast< ::exec::shared::DrillPBError*>(&::exec::shared::DrillPBError::default_instance());
 }
 
 FragmentStatus::FragmentStatus(const FragmentStatus& from)
@@ -848,15 +795,8 @@ FragmentStatus::FragmentStatus(const FragmentStatus& from)
 
 void FragmentStatus::SharedCtor() {
   _cached_size_ = 0;
-  memory_use_ = GOOGLE_LONGLONG(0);
-  batches_completed_ = GOOGLE_LONGLONG(0);
-  records_completed_ = GOOGLE_LONGLONG(0);
-  estimated_completion_percentage_ = 0;
-  state_ = 0;
-  data_processed_ = GOOGLE_LONGLONG(0);
+  profile_ = NULL;
   handle_ = NULL;
-  error_ = NULL;
-  running_time_ = GOOGLE_LONGLONG(0);
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -866,8 +806,8 @@ FragmentStatus::~FragmentStatus() {
 
 void FragmentStatus::SharedDtor() {
   if (this != default_instance_) {
+    delete profile_;
     delete handle_;
-    delete error_;
   }
 }
 
@@ -894,21 +834,12 @@ FragmentStatus* FragmentStatus::New() const {
 
 void FragmentStatus::Clear() {
   if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    memory_use_ = GOOGLE_LONGLONG(0);
-    batches_completed_ = GOOGLE_LONGLONG(0);
-    records_completed_ = GOOGLE_LONGLONG(0);
-    estimated_completion_percentage_ = 0;
-    state_ = 0;
-    data_processed_ = GOOGLE_LONGLONG(0);
+    if (has_profile()) {
+      if (profile_ != NULL) profile_->::exec::shared::MinorFragmentProfile::Clear();
+    }
     if (has_handle()) {
       if (handle_ != NULL) handle_->::exec::bit::FragmentHandle::Clear();
     }
-    if (has_error()) {
-      if (error_ != NULL) error_->::exec::shared::DrillPBError::Clear();
-    }
-  }
-  if (_has_bits_[8 / 32] & (0xffu << (8 % 32))) {
-    running_time_ = GOOGLE_LONGLONG(0);
   }
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
   mutable_unknown_fields()->Clear();
@@ -920,143 +851,26 @@ bool FragmentStatus::MergePartialFromCodedStream(
   ::google::protobuf::uint32 tag;
   while ((tag = input->ReadTag()) != 0) {
     switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // optional int64 memory_use = 1;
+      // optional .exec.shared.MinorFragmentProfile profile = 1;
       case 1: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int64, ::google::protobuf::internal::WireFormatLite::TYPE_INT64>(
-                 input, &memory_use_)));
-          set_has_memory_use();
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_profile()));
         } else {
           goto handle_uninterpreted;
         }
-        if (input->ExpectTag(16)) goto parse_batches_completed;
+        if (input->ExpectTag(18)) goto parse_handle;
         break;
       }
 
-      // optional int64 batches_completed = 2;
+      // optional .exec.bit.FragmentHandle handle = 2;
       case 2: {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
-         parse_batches_completed:
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int64, ::google::protobuf::internal::WireFormatLite::TYPE_INT64>(
-                 input, &batches_completed_)));
-          set_has_batches_completed();
-        } else {
-          goto handle_uninterpreted;
-        }
-        if (input->ExpectTag(24)) goto parse_records_completed;
-        break;
-      }
-
-      // optional int64 records_completed = 3;
-      case 3: {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
-         parse_records_completed:
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int64, ::google::protobuf::internal::WireFormatLite::TYPE_INT64>(
-                 input, &records_completed_)));
-          set_has_records_completed();
-        } else {
-          goto handle_uninterpreted;
-        }
-        if (input->ExpectTag(32)) goto parse_estimated_completion_percentage;
-        break;
-      }
-
-      // optional int32 estimated_completion_percentage = 4;
-      case 4: {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
-         parse_estimated_completion_percentage:
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
-                 input, &estimated_completion_percentage_)));
-          set_has_estimated_completion_percentage();
-        } else {
-          goto handle_uninterpreted;
-        }
-        if (input->ExpectTag(40)) goto parse_state;
-        break;
-      }
-
-      // optional .exec.bit.control.FragmentStatus.FragmentState state = 5;
-      case 5: {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
-         parse_state:
-          int value;
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   int, ::google::protobuf::internal::WireFormatLite::TYPE_ENUM>(
-                 input, &value)));
-          if (::exec::bit::control::FragmentStatus_FragmentState_IsValid(value)) {
-            set_state(static_cast< ::exec::bit::control::FragmentStatus_FragmentState >(value));
-          } else {
-            mutable_unknown_fields()->AddVarint(5, value);
-          }
-        } else {
-          goto handle_uninterpreted;
-        }
-        if (input->ExpectTag(48)) goto parse_data_processed;
-        break;
-      }
-
-      // optional int64 data_processed = 6;
-      case 6: {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
-         parse_data_processed:
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int64, ::google::protobuf::internal::WireFormatLite::TYPE_INT64>(
-                 input, &data_processed_)));
-          set_has_data_processed();
-        } else {
-          goto handle_uninterpreted;
-        }
-        if (input->ExpectTag(58)) goto parse_handle;
-        break;
-      }
-
-      // optional .exec.bit.FragmentHandle handle = 7;
-      case 7: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
          parse_handle:
           DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
                input, mutable_handle()));
-        } else {
-          goto handle_uninterpreted;
-        }
-        if (input->ExpectTag(66)) goto parse_error;
-        break;
-      }
-
-      // optional .exec.shared.DrillPBError error = 8;
-      case 8: {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
-         parse_error:
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
-               input, mutable_error()));
-        } else {
-          goto handle_uninterpreted;
-        }
-        if (input->ExpectTag(72)) goto parse_running_time;
-        break;
-      }
-
-      // optional int64 running_time = 9;
-      case 9: {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
-         parse_running_time:
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int64, ::google::protobuf::internal::WireFormatLite::TYPE_INT64>(
-                 input, &running_time_)));
-          set_has_running_time();
         } else {
           goto handle_uninterpreted;
         }
@@ -1082,52 +896,16 @@ bool FragmentStatus::MergePartialFromCodedStream(
 
 void FragmentStatus::SerializeWithCachedSizes(
     ::google::protobuf::io::CodedOutputStream* output) const {
-  // optional int64 memory_use = 1;
-  if (has_memory_use()) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt64(1, this->memory_use(), output);
+  // optional .exec.shared.MinorFragmentProfile profile = 1;
+  if (has_profile()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+      1, this->profile(), output);
   }
 
-  // optional int64 batches_completed = 2;
-  if (has_batches_completed()) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt64(2, this->batches_completed(), output);
-  }
-
-  // optional int64 records_completed = 3;
-  if (has_records_completed()) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt64(3, this->records_completed(), output);
-  }
-
-  // optional int32 estimated_completion_percentage = 4;
-  if (has_estimated_completion_percentage()) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(4, this->estimated_completion_percentage(), output);
-  }
-
-  // optional .exec.bit.control.FragmentStatus.FragmentState state = 5;
-  if (has_state()) {
-    ::google::protobuf::internal::WireFormatLite::WriteEnum(
-      5, this->state(), output);
-  }
-
-  // optional int64 data_processed = 6;
-  if (has_data_processed()) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt64(6, this->data_processed(), output);
-  }
-
-  // optional .exec.bit.FragmentHandle handle = 7;
+  // optional .exec.bit.FragmentHandle handle = 2;
   if (has_handle()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      7, this->handle(), output);
-  }
-
-  // optional .exec.shared.DrillPBError error = 8;
-  if (has_error()) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      8, this->error(), output);
-  }
-
-  // optional int64 running_time = 9;
-  if (has_running_time()) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt64(9, this->running_time(), output);
+      2, this->handle(), output);
   }
 
   if (!unknown_fields().empty()) {
@@ -1138,54 +916,18 @@ void FragmentStatus::SerializeWithCachedSizes(
 
 ::google::protobuf::uint8* FragmentStatus::SerializeWithCachedSizesToArray(
     ::google::protobuf::uint8* target) const {
-  // optional int64 memory_use = 1;
-  if (has_memory_use()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(1, this->memory_use(), target);
+  // optional .exec.shared.MinorFragmentProfile profile = 1;
+  if (has_profile()) {
+    target = ::google::protobuf::internal::WireFormatLite::
+      WriteMessageNoVirtualToArray(
+        1, this->profile(), target);
   }
 
-  // optional int64 batches_completed = 2;
-  if (has_batches_completed()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(2, this->batches_completed(), target);
-  }
-
-  // optional int64 records_completed = 3;
-  if (has_records_completed()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(3, this->records_completed(), target);
-  }
-
-  // optional int32 estimated_completion_percentage = 4;
-  if (has_estimated_completion_percentage()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(4, this->estimated_completion_percentage(), target);
-  }
-
-  // optional .exec.bit.control.FragmentStatus.FragmentState state = 5;
-  if (has_state()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteEnumToArray(
-      5, this->state(), target);
-  }
-
-  // optional int64 data_processed = 6;
-  if (has_data_processed()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(6, this->data_processed(), target);
-  }
-
-  // optional .exec.bit.FragmentHandle handle = 7;
+  // optional .exec.bit.FragmentHandle handle = 2;
   if (has_handle()) {
     target = ::google::protobuf::internal::WireFormatLite::
       WriteMessageNoVirtualToArray(
-        7, this->handle(), target);
-  }
-
-  // optional .exec.shared.DrillPBError error = 8;
-  if (has_error()) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      WriteMessageNoVirtualToArray(
-        8, this->error(), target);
-  }
-
-  // optional int64 running_time = 9;
-  if (has_running_time()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(9, this->running_time(), target);
+        2, this->handle(), target);
   }
 
   if (!unknown_fields().empty()) {
@@ -1199,68 +941,18 @@ int FragmentStatus::ByteSize() const {
   int total_size = 0;
 
   if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    // optional int64 memory_use = 1;
-    if (has_memory_use()) {
+    // optional .exec.shared.MinorFragmentProfile profile = 1;
+    if (has_profile()) {
       total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::Int64Size(
-          this->memory_use());
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          this->profile());
     }
 
-    // optional int64 batches_completed = 2;
-    if (has_batches_completed()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::Int64Size(
-          this->batches_completed());
-    }
-
-    // optional int64 records_completed = 3;
-    if (has_records_completed()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::Int64Size(
-          this->records_completed());
-    }
-
-    // optional int32 estimated_completion_percentage = 4;
-    if (has_estimated_completion_percentage()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::Int32Size(
-          this->estimated_completion_percentage());
-    }
-
-    // optional .exec.bit.control.FragmentStatus.FragmentState state = 5;
-    if (has_state()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::EnumSize(this->state());
-    }
-
-    // optional int64 data_processed = 6;
-    if (has_data_processed()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::Int64Size(
-          this->data_processed());
-    }
-
-    // optional .exec.bit.FragmentHandle handle = 7;
+    // optional .exec.bit.FragmentHandle handle = 2;
     if (has_handle()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
           this->handle());
-    }
-
-    // optional .exec.shared.DrillPBError error = 8;
-    if (has_error()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
-          this->error());
-    }
-
-  }
-  if (_has_bits_[8 / 32] & (0xffu << (8 % 32))) {
-    // optional int64 running_time = 9;
-    if (has_running_time()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::Int64Size(
-          this->running_time());
     }
 
   }
@@ -1290,34 +982,11 @@ void FragmentStatus::MergeFrom(const ::google::protobuf::Message& from) {
 void FragmentStatus::MergeFrom(const FragmentStatus& from) {
   GOOGLE_CHECK_NE(&from, this);
   if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    if (from.has_memory_use()) {
-      set_memory_use(from.memory_use());
-    }
-    if (from.has_batches_completed()) {
-      set_batches_completed(from.batches_completed());
-    }
-    if (from.has_records_completed()) {
-      set_records_completed(from.records_completed());
-    }
-    if (from.has_estimated_completion_percentage()) {
-      set_estimated_completion_percentage(from.estimated_completion_percentage());
-    }
-    if (from.has_state()) {
-      set_state(from.state());
-    }
-    if (from.has_data_processed()) {
-      set_data_processed(from.data_processed());
+    if (from.has_profile()) {
+      mutable_profile()->::exec::shared::MinorFragmentProfile::MergeFrom(from.profile());
     }
     if (from.has_handle()) {
       mutable_handle()->::exec::bit::FragmentHandle::MergeFrom(from.handle());
-    }
-    if (from.has_error()) {
-      mutable_error()->::exec::shared::DrillPBError::MergeFrom(from.error());
-    }
-  }
-  if (from._has_bits_[8 / 32] & (0xffu << (8 % 32))) {
-    if (from.has_running_time()) {
-      set_running_time(from.running_time());
     }
   }
   mutable_unknown_fields()->MergeFrom(from.unknown_fields());
@@ -1342,15 +1011,8 @@ bool FragmentStatus::IsInitialized() const {
 
 void FragmentStatus::Swap(FragmentStatus* other) {
   if (other != this) {
-    std::swap(memory_use_, other->memory_use_);
-    std::swap(batches_completed_, other->batches_completed_);
-    std::swap(records_completed_, other->records_completed_);
-    std::swap(estimated_completion_percentage_, other->estimated_completion_percentage_);
-    std::swap(state_, other->state_);
-    std::swap(data_processed_, other->data_processed_);
+    std::swap(profile_, other->profile_);
     std::swap(handle_, other->handle_);
-    std::swap(error_, other->error_);
-    std::swap(running_time_, other->running_time_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.Swap(&other->_unknown_fields_);
     std::swap(_cached_size_, other->_cached_size_);

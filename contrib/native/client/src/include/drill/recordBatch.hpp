@@ -21,6 +21,7 @@
 
 
 #include <assert.h>
+#include <math.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <ostream>
@@ -45,7 +46,7 @@
   #if __GNUC__ >= 4
     #define DECLSPEC_DRILL_CLIENT __attribute__ ((visibility ("default")))
   #else
-    #define DECLSPEC_DRILL_CLIENT 
+    #define DECLSPEC_DRILL_CLIENT
   #endif
 #endif
 
@@ -55,7 +56,7 @@ namespace Drill {
 class FieldBatch;
 class ValueVectorBase;
 
-//TODO: The base classes for value vectors should have abstract functions instead of implementations 
+//TODO: The base classes for value vectors should have abstract functions instead of implementations
 //that return 'NOT IMPLEMENTED YET'
 
 // A Read Only Sliced byte buffer
@@ -111,7 +112,7 @@ class SlicedByteBuf{
         ByteBuf_t getSliceStart(){ return this->m_buffer+this->m_start;}
 
         //    accessor functions
-        //  
+        //
         //    TYPE getTYPE(size_t index){
         //    if(index>=m_length) return 0;
         //      return (TYPE) m_buffer[offset+index];
@@ -122,8 +123,8 @@ class SlicedByteBuf{
             // Type T can only be an integer type
             // Type T cannot be a struct of fixed size
             // Because struct alignment is compiler dependent
-            // we can end up with a struct size that is larger 
-            // than the buffer in the sliced buf.  
+            // we can end up with a struct size that is larger
+            // than the buffer in the sliced buf.
             assert((index + sizeof(T) <= this->m_length));
             if(index + sizeof(T) <= this->m_length)
                 return *((T*)(this->m_buffer+this->m_start+index));
@@ -145,7 +146,7 @@ class SlicedByteBuf{
 
         ByteBuf_t getAt(size_t index){
             return this->m_buffer+m_start+index;
-        } 
+        }
 
         bool getBit(size_t index){
             // refer to BitVector.java http://bit.ly/Py1jof
@@ -202,7 +203,7 @@ class DECLSPEC_DRILL_CLIENT ValueVectorUnimplemented:public ValueVectorBase{
         const char* get(size_t index) const { return 0;};
         virtual void getValueAt(size_t index, char* buf, size_t nChars) const{
             *buf=0; return;
-        } 
+        }
 
         virtual uint32_t getSize(size_t index) const{ return 0;};
 
@@ -284,7 +285,7 @@ class DECLSPEC_DRILL_CLIENT ValueVectorBit:public ValueVectorFixedWidth{
 template <int DECIMAL_DIGITS, int WIDTH_IN_BYTES, bool IS_SPARSE, int MAX_PRECISION = 0 >
     class ValueVectorDecimal: public ValueVectorFixedWidth {
         public:
-            ValueVectorDecimal(SlicedByteBuf* b, size_t rowCount, int32_t scale): 
+            ValueVectorDecimal(SlicedByteBuf* b, size_t rowCount, int32_t scale):
                 ValueVectorFixedWidth(b, rowCount),
                 m_scale(scale)
         {
@@ -319,7 +320,7 @@ template <int DECIMAL_DIGITS, int WIDTH_IN_BYTES, bool IS_SPARSE, int MAX_PRECIS
 template<typename VALUE_TYPE>
     class ValueVectorDecimalTrivial: public ValueVectorFixedWidth {
         public:
-            ValueVectorDecimalTrivial(SlicedByteBuf* b, size_t rowCount, int32_t scale): 
+            ValueVectorDecimalTrivial(SlicedByteBuf* b, size_t rowCount, int32_t scale):
                 ValueVectorFixedWidth(b, rowCount),
                 m_scale(scale)
         {
@@ -329,7 +330,7 @@ template<typename VALUE_TYPE>
             DecimalValue get(size_t index) const {
                 return DecimalValue(
                         m_pBuffer->readAt<VALUE_TYPE>(index * sizeof(VALUE_TYPE)),
-                        m_scale); 
+                        m_scale);
             }
 
             void getValueAt(size_t index, char* buf, size_t nChars) const {
@@ -355,7 +356,7 @@ template <typename VALUE_TYPE>
 {
     public:
         NullableValueVectorFixed(SlicedByteBuf *b, size_t rowCount):ValueVectorBase(b, rowCount){
-            size_t offsetEnd = rowCount/8 + 1; 
+            size_t offsetEnd = (size_t)ceil(rowCount/8.0);
             this->m_pBitmap= new SlicedByteBuf(*b, 0, offsetEnd);
             this->m_pData= new SlicedByteBuf(*b, offsetEnd, b->getLength());
             // TODO: testing boundary case(null columns)
@@ -372,7 +373,7 @@ template <typename VALUE_TYPE>
         }
 
         VALUE_TYPE get(size_t index) const {
-            // it should not be called if the value is null 
+            // it should not be called if the value is null
             assert( "value is null" && !isNull(index));
             return m_pData->readAt<VALUE_TYPE>(index * sizeof(VALUE_TYPE));
         }
@@ -390,14 +391,14 @@ template <typename VALUE_TYPE>
             return sizeof(VALUE_TYPE);
         }
     private:
-        SlicedByteBuf* m_pBitmap; 
+        SlicedByteBuf* m_pBitmap;
         SlicedByteBuf* m_pData;
 };
 
 // The 'holder' classes are (by contract) simple structs with primitive members and no dynamic allocations.
-// The template classes create an instance of the class and return it to the caller in the 'get' routines. 
-// The compiler will create a copy and return it to the caller. If the object is more complex than a struct of 
-// primitives, the class _must_ provide a copy constructor. 
+// The template classes create an instance of the class and return it to the caller in the 'get' routines.
+// The compiler will create a copy and return it to the caller. If the object is more complex than a struct of
+// primitives, the class _must_ provide a copy constructor.
 // We don't really need a destructor here, but we declare a virtual dtor in the base class in case we ever get
 // more complex and start doing dynamic allocations in these classes.
 
@@ -490,11 +491,11 @@ struct IntervalHolder{
 };
 
 /*
- * VALUEHOLDER_CLASS_TYPE is a struct with a constructor that takes a parameter of type VALUE_VECTOR_TYPE 
+ * VALUEHOLDER_CLASS_TYPE is a struct with a constructor that takes a parameter of type VALUE_VECTOR_TYPE
  * (a primitive type)
  * VALUEHOLDER_CLASS_TYPE implements a toString function
- * Note that VALUEHOLDER_CLASS_TYPE is created on the stack and the copy returned in the get function. 
- * So the class needs to have the appropriate copy constructor or the default bitwise copy should work 
+ * Note that VALUEHOLDER_CLASS_TYPE is created on the stack and the copy returned in the get function.
+ * So the class needs to have the appropriate copy constructor or the default bitwise copy should work
  * correctly.
  */
 template <class VALUEHOLDER_CLASS_TYPE, typename VALUE_TYPE>
@@ -552,7 +553,7 @@ template <class VALUEHOLDER_CLASS_TYPE, class VALUE_VECTOR_TYPE>
         public:
 
             NullableValueVectorTyped(SlicedByteBuf *b, size_t rowCount):ValueVectorBase(b, rowCount){
-                size_t offsetEnd = rowCount/8 + 1; 
+                size_t offsetEnd = (size_t)ceil(rowCount/8.0);
                 this->m_pBitmap= new SlicedByteBuf(*b, 0, offsetEnd);
                 this->m_pData= new SlicedByteBuf(*b, offsetEnd, b->getLength()-offsetEnd);
                 this->m_pVector= new VALUE_VECTOR_TYPE(m_pData, rowCount);
@@ -575,7 +576,7 @@ template <class VALUEHOLDER_CLASS_TYPE, class VALUE_VECTOR_TYPE>
 
             void getValueAt(size_t index, char* buf, size_t nChars) const{
                 std::stringstream sstr;
-                if(this->isNull(index)){ 
+                if(this->isNull(index)){
                     sstr<<"NULL";
                     strncpy(buf, sstr.str().c_str(), nChars);
                 }else{
@@ -589,7 +590,7 @@ template <class VALUEHOLDER_CLASS_TYPE, class VALUE_VECTOR_TYPE>
             }
 
         private:
-            SlicedByteBuf* m_pBitmap; 
+            SlicedByteBuf* m_pBitmap;
             SlicedByteBuf* m_pData;
             VALUE_VECTOR_TYPE* m_pVector;
     };
@@ -617,10 +618,10 @@ class DECLSPEC_DRILL_CLIENT ValueVectorVarWidth:public ValueVectorBase{
             size_t endIdx = this->m_pOffsetArray->getUint32((index+1)*sizeof(uint32_t));
             size_t length = endIdx - startIdx;
             assert(length >= 0);
-            // Return an object created on the stack. The compiler will return a 
-            // copy and destroy the stack object. The optimizer will hopefully 
+            // Return an object created on the stack. The compiler will return a
+            // copy and destroy the stack object. The optimizer will hopefully
             // elide this so we can return an object with no extra memory allocation
-            // and no copies.(SEE: http://en.wikipedia.org/wiki/Return_value_optimization) 
+            // and no copies.(SEE: http://en.wikipedia.org/wiki/Return_value_optimization)
             VarWidthHolder dst;
             dst.data=this->m_pData->getSliceStart()+startIdx;
             dst.size=length;
@@ -673,9 +674,9 @@ class DECLSPEC_DRILL_CLIENT ValueVectorVarBinary:public ValueVectorVarWidth{
         }
 };
 //
-//TODO: For windows, we have to export instantiations of the template class. 
+//TODO: For windows, we have to export instantiations of the template class.
 //see: http://msdn.microsoft.com/en-us/library/twa2aw10.aspx
-//for example: 
+//for example:
 //template class __declspec(dllexport) B<int>;
 //class __declspec(dllexport) D : public B<int> { }
 //
@@ -686,7 +687,7 @@ typedef NullableValueVectorTyped<int, ValueVectorBit > NullableValueVectorBit;
 // Aliases for Decimal Types:
 // The definitions for decimal digits, width, max precision are defined in
 // /exec/java-exec/src/main/codegen/data/ValueVectorTypes.tdd
-// 
+//
 // Decimal9 and Decimal18 could be optimized, maybe write seperate classes?
 typedef ValueVectorDecimalTrivial<int32_t> ValueVectorDecimal9;
 typedef ValueVectorDecimalTrivial<int64_t> ValueVectorDecimal18;
@@ -778,7 +779,7 @@ class FieldBatch{
         ret_t load();
 
         const ValueVectorBase * getVector(){
-            return m_pValueVector; 
+            return m_pValueVector;
         }
 
     private:
@@ -795,33 +796,27 @@ class ValueVectorFactory{
 
 class DECLSPEC_DRILL_CLIENT RecordBatch{
     public:
-        RecordBatch(exec::user::QueryResult* pResult, ByteBuf_t b){
-            m_pQueryResult=pResult;      
+
+        //m_allocatedBuffer is the memory block allocated to hold the incoming RPC message. Record BAtches operate on
+        //slices of the allcoated buffer. The first slice (the first Field Batch), begins at m_buffer. Data in the
+        //allocated buffer before m_buffer is mostly the RPC header, and the QueryResult object.
+        RecordBatch(exec::user::QueryResult* pResult, ByteBuf_t r, ByteBuf_t b)
+                :m_fieldDefs(new(std::vector<Drill::FieldMetadata*>)){
+            m_pQueryResult=pResult;
             m_pRecordBatchDef=&pResult->def();
             m_numRecords=pResult->row_count();
+            m_allocatedBuffer=r;
             m_buffer=b;
             m_numFields=pResult->def().field_size();
             m_bHasSchemaChanged=false;
         }
 
-        ~RecordBatch(){
-            m_buffer=NULL;
-            //free memory allocated for FieldBatch objects saved in m_fields;
-            for(std::vector<FieldBatch*>::iterator it = m_fields.begin(); it != m_fields.end(); ++it){
-                delete *it;    
-            }
-            m_fields.clear();
-            for(std::vector<Drill::FieldMetadata*>::iterator it = m_fieldDefs.begin(); it != m_fieldDefs.end(); ++it){
-                delete *it;    
-            }
-            m_fieldDefs.clear();
-            delete m_pQueryResult;
-        }
+        ~RecordBatch();
 
         // get the ith field metadata
         const Drill::FieldMetadata& getFieldMetadata(size_t index){
             //return this->m_pRecordBatchDef->field(index);
-            return *(m_fieldDefs[index]); 
+            return *(m_fieldDefs->at(index));
         }
 
         size_t getNumRecords(){ return m_numRecords;}
@@ -829,13 +824,13 @@ class DECLSPEC_DRILL_CLIENT RecordBatch{
         size_t getNumFields() { return m_pRecordBatchDef->field_size(); }
         bool isLastChunk() { return m_pQueryResult->is_last_chunk(); }
 
-        std::vector<Drill::FieldMetadata*>& getColumnDefs(){ return m_fieldDefs;}
+        boost::shared_ptr<std::vector<Drill::FieldMetadata*> > getColumnDefs(){ return m_fieldDefs;}
 
-        // 
+        //
         // build the record batch: i.e. fill up the value vectors from the buffer.
-        // On fetching the data from the server, the caller creates a RecordBatch 
-        // object then calls build() to build the value vectors.The caller saves the 
-        // Record Batch and is responsible for freeing both the RecordBatch and the 
+        // On fetching the data from the server, the caller creates a RecordBatch
+        // object then calls build() to build the value vectors.The caller saves the
+        // Record Batch and is responsible for freeing both the RecordBatch and the
         // raw buffer memory
         //
         ret_t build();
@@ -843,7 +838,7 @@ class DECLSPEC_DRILL_CLIENT RecordBatch{
         void print(std::ostream& s, size_t num);
 
         const ValueVectorBase * getVector(size_t index){
-            return m_fields[index]->getVector(); 
+            return m_fields[index]->getVector();
         }
 
         void schemaChanged(bool b){
@@ -858,9 +853,10 @@ class DECLSPEC_DRILL_CLIENT RecordBatch{
     private:
         const exec::user::QueryResult* m_pQueryResult;
         const exec::shared::RecordBatchDef* m_pRecordBatchDef;
+        ByteBuf_t m_allocatedBuffer;
         ByteBuf_t m_buffer;
         //build the current schema out of the field metadata
-        std::vector<Drill::FieldMetadata*> m_fieldDefs;
+        FieldDefPtr m_fieldDefs;
         std::vector<FieldBatch*> m_fields;
         size_t m_numFields;
         size_t m_numRecords;

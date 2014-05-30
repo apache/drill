@@ -13,7 +13,7 @@
     cp: {type: "classpath"}
   },
   query:[
-    
+
                 {
                   @id:"1",
                   op: "scan",
@@ -38,7 +38,7 @@
                   input:"2",
                   op: "filter",
                   expr: "donuts.ppu < 1.00"
-                }, 
+                },
                 {
                   @id:"4",
                   input:"3",
@@ -51,7 +51,7 @@
                   input:"4",
                   op: "collapsingaggregate",
                   within: "ppusegment",
-                  carryovers: ["donuts.ppu"], 
+                  carryovers: ["donuts.ppu"],
                   aggregations: [
                     { ref: "donuts.typeCount",  expr: "count(1)" },
                     { ref: "donuts.quantity",  expr: "sum(quantity)" },
@@ -65,7 +65,7 @@
                   orderings: [
                     {order: "DESC", expr: "donuts.ppu" }
                   ]
-                }, 
+                },
                 {
                   @id:"7",
                   input:"6",
@@ -80,7 +80,7 @@
                   op: "limit",
           first: 0,
           last: 100
-        }, 
+        },
                 {
                   @id:"9",
                   input:"8",
@@ -88,7 +88,7 @@
                   memo: "output sink",
                   storageengine: "console",
                   target: {pipe: "STD_OUT"}
-                }      
+                }
   ]
 }
 

@@ -16,11 +16,9 @@
  * limitations under the License.
  */
 
-
-#include <boost/log/trivial.hpp>
-
 #include "drill/common.hpp"
 #include "drill/recordBatch.hpp"
+#include "utils.hpp"
 
 const uint32_t YEARS_TO_MONTHS=12;
 const uint32_t HOURS_TO_MILLIS=60*60*1000;
@@ -33,14 +31,14 @@ static char timezoneMap[][36]={
     "Africa/Abidjan", "Africa/Accra", "Africa/Addis_Ababa", "Africa/Algiers", "Africa/Asmara", "Africa/Asmera",
     "Africa/Bamako", "Africa/Bangui", "Africa/Banjul", "Africa/Bissau", "Africa/Blantyre", "Africa/Brazzaville",
     "Africa/Bujumbura", "Africa/Cairo", "Africa/Casablanca", "Africa/Ceuta", "Africa/Conakry", "Africa/Dakar",
-    "Africa/Dar_es_Salaam", "Africa/Djibouti", "Africa/Douala", "Africa/El_Aaiun", 
+    "Africa/Dar_es_Salaam", "Africa/Djibouti", "Africa/Douala", "Africa/El_Aaiun",
     "Africa/Freetown", "Africa/Gaborone",
     "Africa/Harare", "Africa/Johannesburg", "Africa/Juba", "Africa/Kampala", "Africa/Khartoum", "Africa/Kigali",
     "Africa/Kinshasa", "Africa/Lagos", "Africa/Libreville", "Africa/Lome", "Africa/Luanda", "Africa/Lubumbashi",
     "Africa/Lusaka", "Africa/Malabo", "Africa/Maputo", "Africa/Maseru", "Africa/Mbabane", "Africa/Mogadishu",
-    "Africa/Monrovia", "Africa/Nairobi", "Africa/Ndjamena", "Africa/Niamey", 
+    "Africa/Monrovia", "Africa/Nairobi", "Africa/Ndjamena", "Africa/Niamey",
     "Africa/Nouakchott", "Africa/Ouagadougou",
-    "Africa/Porto-Novo", "Africa/Sao_Tome", "Africa/Timbuktu", "Africa/Tripoli", 
+    "Africa/Porto-Novo", "Africa/Sao_Tome", "Africa/Timbuktu", "Africa/Tripoli",
     "Africa/Tunis", "Africa/Windhoek",
     "America/Adak", "America/Anchorage", "America/Anguilla", "America/Antigua", "America/Araguaina",
     "America/Argentina/Buenos_Aires", "America/Argentina/Catamarca", "America/Argentina/ComodRivadavia",
@@ -57,10 +55,10 @@ static char timezoneMap[][36]={
     "America/Edmonton", "America/Eirunepe", "America/El_Salvador", "America/Ensenada", "America/Fort_Wayne",
     "America/Fortaleza", "America/Glace_Bay", "America/Godthab", "America/Goose_Bay", "America/Grand_Turk",
     "America/Grenada", "America/Guadeloupe", "America/Guatemala", "America/Guayaquil", "America/Guyana",
-    "America/Halifax", "America/Havana", "America/Hermosillo", 
+    "America/Halifax", "America/Havana", "America/Hermosillo",
     "America/Indiana/Indianapolis", "America/Indiana/Knox",
     "America/Indiana/Marengo", "America/Indiana/Petersburg", "America/Indiana/Tell_City",
-    "America/Indiana/Vevay", "America/Indiana/Vincennes", "America/Indiana/Winamac", 
+    "America/Indiana/Vevay", "America/Indiana/Vincennes", "America/Indiana/Winamac",
     "America/Indianapolis", "America/Inuvik",
     "America/Iqaluit", "America/Jamaica", "America/Jujuy", "America/Juneau", "America/Kentucky/Louisville",
     "America/Kentucky/Monticello", "America/Knox_IN", "America/Kralendijk", "America/La_Paz", "America/Lima",
@@ -68,23 +66,23 @@ static char timezoneMap[][36]={
     "America/Manaus", "America/Marigot", "America/Martinique", "America/Matamoros", "America/Mazatlan",
     "America/Mendoza", "America/Menominee", "America/Merida", "America/Metlakatla", "America/Mexico_City",
     "America/Miquelon", "America/Moncton", "America/Monterrey", "America/Montevideo", "America/Montreal",
-    "America/Montserrat", "America/Nassau", "America/New_York", "America/Nipigon", 
+    "America/Montserrat", "America/Nassau", "America/New_York", "America/Nipigon",
     "America/Nome", "America/Noronha",
     "America/North_Dakota/Beulah", "America/North_Dakota/Center", "America/North_Dakota/New_Salem",
     "America/Ojinaga", "America/Panama", "America/Pangnirtung",
     "America/Paramaribo", "America/Phoenix", "America/Port-au-Prince",
     "America/Port_of_Spain", "America/Porto_Acre", "America/Porto_Velho",
     "America/Puerto_Rico", "America/Rainy_River", "America/Rankin_Inlet",
-    "America/Recife", "America/Regina", "America/Resolute", "America/Rio_Branco", 
+    "America/Recife", "America/Regina", "America/Resolute", "America/Rio_Branco",
     "America/Rosario", "America/Santa_Isabel",
     "America/Santarem", "America/Santiago", "America/Santo_Domingo",
-    "America/Sao_Paulo", "America/Scoresbysund", "America/Shiprock", "America/Sitka", 
+    "America/Sao_Paulo", "America/Scoresbysund", "America/Shiprock", "America/Sitka",
     "America/St_Barthelemy", "America/St_Johns",
     "America/St_Kitts", "America/St_Lucia", "America/St_Thomas",
     "America/St_Vincent", "America/Swift_Current", "America/Tegucigalpa",
-    "America/Thule", "America/Thunder_Bay", "America/Tijuana", "America/Toronto", 
+    "America/Thule", "America/Thunder_Bay", "America/Tijuana", "America/Toronto",
     "America/Tortola", "America/Vancouver",
-    "America/Virgin", "America/Whitehorse", "America/Winnipeg", "America/Yakutat", 
+    "America/Virgin", "America/Whitehorse", "America/Winnipeg", "America/Yakutat",
     "America/Yellowknife", "Antarctica/Casey",
     "Antarctica/Davis", "Antarctica/DumontDUrville", "Antarctica/Macquarie",
     "Antarctica/Mawson", "Antarctica/McMurdo", "Antarctica/Palmer",
@@ -104,33 +102,33 @@ static char timezoneMap[][36]={
     "Asia/Shanghai", "Asia/Singapore", "Asia/Taipei", "Asia/Tashkent", "Asia/Tbilisi", "Asia/Tehran",
     "Asia/Tel_Aviv", "Asia/Thimbu", "Asia/Thimphu", "Asia/Tokyo", "Asia/Ujung_Pandang", "Asia/Ulaanbaatar",
     "Asia/Ulan_Bator", "Asia/Urumqi", "Asia/Vientiane", "Asia/Vladivostok", "Asia/Yakutsk", "Asia/Yekaterinburg",
-    "Asia/Yerevan", "Atlantic/Azores", "Atlantic/Bermuda", "Atlantic/Canary", 
+    "Asia/Yerevan", "Atlantic/Azores", "Atlantic/Bermuda", "Atlantic/Canary",
     "Atlantic/Cape_Verde", "Atlantic/Faeroe",
     "Atlantic/Faroe", "Atlantic/Jan_Mayen", "Atlantic/Madeira",
     "Atlantic/Reykjavik", "Atlantic/South_Georgia", "Atlantic/St_Helena",
-    "Atlantic/Stanley", "Australia/ACT", "Australia/Adelaide", "Australia/Brisbane", 
+    "Atlantic/Stanley", "Australia/ACT", "Australia/Adelaide", "Australia/Brisbane",
     "Australia/Broken_Hill", "Australia/Canberra",
-    "Australia/Currie", "Australia/Darwin", "Australia/Eucla", "Australia/Hobart", 
+    "Australia/Currie", "Australia/Darwin", "Australia/Eucla", "Australia/Hobart",
     "Australia/LHI", "Australia/Lindeman",
-    "Australia/Lord_Howe", "Australia/Melbourne", "Australia/NSW", "Australia/North", 
+    "Australia/Lord_Howe", "Australia/Melbourne", "Australia/NSW", "Australia/North",
     "Australia/Perth", "Australia/Queensland",
-    "Australia/South", "Australia/Sydney", "Australia/Tasmania", "Australia/Victoria", 
+    "Australia/South", "Australia/Sydney", "Australia/Tasmania", "Australia/Victoria",
     "Australia/West", "Australia/Yancowinna",
     "Brazil/Acre", "Brazil/DeNoronha", "Brazil/East", "Brazil/West", "CET", "CST6CDT",
-    "Canada/Atlantic", "Canada/Central", "Canada/East-Saskatchewan", "Canada/Eastern", 
+    "Canada/Atlantic", "Canada/Central", "Canada/East-Saskatchewan", "Canada/Eastern",
     "Canada/Mountain", "Canada/Newfoundland",
     "Canada/Pacific", "Canada/Saskatchewan", "Canada/Yukon", "Chile/Continental", "Chile/EasterIsland", "Cuba",
     "EET", "EST", "EST5EDT", "Egypt", "Eire", "Etc/GMT", "Etc/GMT+0", "Etc/GMT+1", "Etc/GMT+10",
-    "Etc/GMT+11", "Etc/GMT+12", "Etc/GMT+2", "Etc/GMT+3", "Etc/GMT+4", "Etc/GMT+5", "Etc/GMT+6", 
+    "Etc/GMT+11", "Etc/GMT+12", "Etc/GMT+2", "Etc/GMT+3", "Etc/GMT+4", "Etc/GMT+5", "Etc/GMT+6",
     "Etc/GMT+7", "Etc/GMT+8",
-    "Etc/GMT+9", "Etc/GMT-0", "Etc/GMT-1", "Etc/GMT-10", "Etc/GMT-11", "Etc/GMT-12", 
+    "Etc/GMT+9", "Etc/GMT-0", "Etc/GMT-1", "Etc/GMT-10", "Etc/GMT-11", "Etc/GMT-12",
     "Etc/GMT-13", "Etc/GMT-14", "Etc/GMT-2",
-    "Etc/GMT-3", "Etc/GMT-4", "Etc/GMT-5", "Etc/GMT-6", "Etc/GMT-7", "Etc/GMT-8", 
+    "Etc/GMT-3", "Etc/GMT-4", "Etc/GMT-5", "Etc/GMT-6", "Etc/GMT-7", "Etc/GMT-8",
     "Etc/GMT-9", "Etc/GMT0", "Etc/Greenwich",
     "Etc/UCT", "Etc/UTC", "Etc/Universal", "Etc/Zulu", "Europe/Amsterdam", "Europe/Andorra",
     "Europe/Athens", "Europe/Belfast", "Europe/Belgrade", "Europe/Berlin", "Europe/Bratislava", "Europe/Brussels",
     "Europe/Bucharest", "Europe/Budapest", "Europe/Chisinau",
-    "Europe/Copenhagen", "Europe/Dublin", "Europe/Gibraltar", "Europe/Guernsey", 
+    "Europe/Copenhagen", "Europe/Dublin", "Europe/Gibraltar", "Europe/Guernsey",
     "Europe/Helsinki", "Europe/Isle_of_Man",
     "Europe/Istanbul", "Europe/Jersey", "Europe/Kaliningrad", "Europe/Kiev", "Europe/Lisbon", "Europe/Ljubljana",
     "Europe/London", "Europe/Luxembourg", "Europe/Madrid", "Europe/Malta", "Europe/Mariehamn", "Europe/Minsk",
@@ -145,20 +143,20 @@ static char timezoneMap[][36]={
     "Indian/Mayotte", "Indian/Reunion", "Iran", "Israel", "Jamaica", "Japan", "Kwajalein", "Libya", "MET",
     "MST", "MST7MDT", "Mexico/BajaNorte", "Mexico/BajaSur", "Mexico/General", "NZ", "NZ-CHAT", "Navajo", "PRC",
     "PST8PDT", "Pacific/Apia", "Pacific/Auckland", "Pacific/Chatham", "Pacific/Chuuk", "Pacific/Easter",
-    "Pacific/Efate", "Pacific/Enderbury", "Pacific/Fakaofo", "Pacific/Fiji", 
+    "Pacific/Efate", "Pacific/Enderbury", "Pacific/Fakaofo", "Pacific/Fiji",
     "Pacific/Funafuti", "Pacific/Galapagos",
-    "Pacific/Gambier", "Pacific/Guadalcanal", "Pacific/Guam", "Pacific/Honolulu", 
+    "Pacific/Gambier", "Pacific/Guadalcanal", "Pacific/Guam", "Pacific/Honolulu",
     "Pacific/Johnston", "Pacific/Kiritimati",
-    "Pacific/Kosrae", "Pacific/Kwajalein", "Pacific/Majuro", "Pacific/Marquesas", 
+    "Pacific/Kosrae", "Pacific/Kwajalein", "Pacific/Majuro", "Pacific/Marquesas",
     "Pacific/Midway", "Pacific/Nauru",
-    "Pacific/Niue", "Pacific/Norfolk", "Pacific/Noumea", "Pacific/Pago_Pago", 
+    "Pacific/Niue", "Pacific/Norfolk", "Pacific/Noumea", "Pacific/Pago_Pago",
     "Pacific/Palau", "Pacific/Pitcairn",
-    "Pacific/Pohnpei", "Pacific/Ponape", "Pacific/Port_Moresby", "Pacific/Rarotonga", 
+    "Pacific/Pohnpei", "Pacific/Ponape", "Pacific/Port_Moresby", "Pacific/Rarotonga",
     "Pacific/Saipan", "Pacific/Samoa",
     "Pacific/Tahiti", "Pacific/Tarawa", "Pacific/Tongatapu", "Pacific/Truk", "Pacific/Wake", "Pacific/Wallis",
     "Pacific/Yap", "Poland", "Portugal", "ROC", "ROK", "Singapore", "Turkey", "UCT", "US/Alaska", "US/Aleutian",
     "US/Arizona", "US/Central", "US/East-Indiana", "US/Eastern", "US/Hawaii", "US/Indiana-Starke",
-    "US/Michigan", "US/Mountain", "US/Pacific", "US/Pacific-New", "US/Samoa", 
+    "US/Michigan", "US/Mountain", "US/Pacific", "US/Pacific-New", "US/Samoa",
     "UTC", "Universal", "W-SU", "WET", "Zulu"
 };
 
@@ -214,12 +212,12 @@ ValueVectorBase* ValueVectorFactory::allocateValueVector(const Drill::FieldMetad
                 case common::BIT:
                     return new ValueVectorBit(b,f.getValueCount());
                 case common::VARBINARY:
-                    return new ValueVectorVarBinary(b, f.getValueCount()); 
+                    return new ValueVectorVarBinary(b, f.getValueCount());
                 case common::VARCHAR:
-                    return new ValueVectorVarChar(b, f.getValueCount()); 
+                    return new ValueVectorVarChar(b, f.getValueCount());
                 case common::MONEY:
                 default:
-                    return new ValueVectorUnimplemented(b, f.getValueCount()); 
+                    return new ValueVectorUnimplemented(b, f.getValueCount());
             }
         case common::DM_OPTIONAL:
             switch (type) {
@@ -236,28 +234,28 @@ ValueVectorBase* ValueVectorFactory::allocateValueVector(const Drill::FieldMetad
                 case common::FLOAT8:
                     return new NullableValueVectorFixed<double>(b,f.getValueCount());
                 case common::DATE:
-                    return new NullableValueVectorTyped<DateHolder, 
+                    return new NullableValueVectorTyped<DateHolder,
                            ValueVectorTyped<DateHolder, uint64_t> >(b,f.getValueCount());
                 case common::TIMESTAMP:
-                    return new NullableValueVectorTyped<DateTimeHolder, 
+                    return new NullableValueVectorTyped<DateTimeHolder,
                            ValueVectorTyped<DateTimeHolder, uint64_t> >(b,f.getValueCount());
                 case common::TIME:
                     return new NullableValueVectorTyped<TimeHolder,
                            ValueVectorTyped<TimeHolder, uint32_t> >(b,f.getValueCount());
                 case common::TIMESTAMPTZ:
-                    return new NullableValueVectorTyped<DateTimeTZHolder, 
+                    return new NullableValueVectorTyped<DateTimeTZHolder,
                            ValueVectorTypedComposite<DateTimeTZHolder> >(b,f.getValueCount());
                 case common::INTERVAL:
-                    return new NullableValueVectorTyped<IntervalHolder, 
+                    return new NullableValueVectorTyped<IntervalHolder,
                            ValueVectorTypedComposite<IntervalHolder> >(b,f.getValueCount());
                 case common::INTERVALDAY:
-                    return new NullableValueVectorTyped<IntervalDayHolder, 
+                    return new NullableValueVectorTyped<IntervalDayHolder,
                            ValueVectorTypedComposite<IntervalDayHolder> >(b,f.getValueCount());
                 case common::INTERVALYEAR:
-                    return new NullableValueVectorTyped<IntervalYearHolder, 
+                    return new NullableValueVectorTyped<IntervalYearHolder,
                            ValueVectorTypedComposite<IntervalYearHolder> >(b,f.getValueCount());
                 case common::BIT:
-                    return new NullableValueVectorTyped<uint8_t, 
+                    return new NullableValueVectorTyped<uint8_t,
                            ValueVectorBit >(b,f.getValueCount());
                 case common::VARBINARY:
                     //TODO: Varbinary is untested
@@ -266,16 +264,16 @@ ValueVectorBase* ValueVectorFactory::allocateValueVector(const Drill::FieldMetad
                     return new NullableValueVectorTyped<VarWidthHolder, ValueVectorVarChar >(b,f.getValueCount());
                     // not implemented yet
                 default:
-                    return new ValueVectorUnimplemented(b, f.getValueCount()); 
+                    return new ValueVectorUnimplemented(b, f.getValueCount());
             }
         case common::DM_REPEATED:
             switch (type) {
                 // not implemented yet
                 default:
-                    return new ValueVectorUnimplemented(b, f.getValueCount()); 
+                    return new ValueVectorUnimplemented(b, f.getValueCount());
             }
     }
-    return new ValueVectorUnimplemented(b, f.getValueCount()); 
+    return new ValueVectorUnimplemented(b, f.getValueCount());
 }
 
 
@@ -285,13 +283,28 @@ ret_t FieldBatch::load(){
     return RET_SUCCESS;
 }
 
+RecordBatch::~RecordBatch(){
+    m_buffer=NULL;
+    //free memory allocated for FieldBatch objects saved in m_fields;
+    for(std::vector<FieldBatch*>::iterator it = m_fields.begin(); it != m_fields.end(); ++it){
+        delete *it;
+    }
+    m_fields.clear();
+    for(std::vector<Drill::FieldMetadata*>::iterator it = m_fieldDefs->begin(); it != m_fieldDefs->end(); ++it){
+        delete *it;
+    }
+    m_fieldDefs->clear();
+    delete m_pQueryResult;
+    Utils::freeBuffer(m_allocatedBuffer);
+}
+
 ret_t RecordBatch::build(){
     // For every Field, get the corresponding SlicedByteBuf.
-    // Create a Materialized field. Set the Sliced Byted Buf to the correct slice. 
+    // Create a Materialized field. Set the Sliced Byted Buf to the correct slice.
     // Set the Field Metadata.
     // Load the vector.(Load creates a valuevector object of the correct type:
-    //    Use ValueVectorFactory(type) to create the right type. 
-    //    Create a Value Vector of the Sliced Byte Buf. 
+    //    Use ValueVectorFactory(type) to create the right type.
+    //    Create a Value Vector of the Sliced Byte Buf.
     // Add the field batch to vector
     size_t startOffset=0;
     //TODO: handle schema changes here. Call a client provided callback?
@@ -305,7 +318,7 @@ ret_t RecordBatch::build(){
         startOffset+=len;
         pField->load(); // set up the value vectors
         this->m_fields.push_back(pField);
-        this->m_fieldDefs.push_back(pFmd);
+        this->m_fieldDefs->push_back(pFmd);
     }
     return RET_SUCCESS;
 }
@@ -317,7 +330,7 @@ void RecordBatch::print(std::ostream& s, size_t num){
         std::string name= fmd.getName();
         nameList+=name;
         nameList+="    ";
-    } 
+    }
     size_t numToPrint=this->m_numRecords;
     if(num>0 && num<numToPrint)numToPrint=num;
     s<<nameList<<std::endl;
@@ -335,7 +348,7 @@ void RecordBatch::print(std::ostream& s, size_t num){
             }
             values+=valueBuf;
             values+="    ";
-        } 
+        }
         s<<values<<std::endl;
     }
 }

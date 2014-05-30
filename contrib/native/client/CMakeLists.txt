@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.6)
 
 project(drillclient)
 
@@ -26,20 +26,21 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmakeModules/")
 
 
 # Find Boost
-set(Boost_USE_STATIC_LIBS OFF) 
-set(Boost_USE_MULTITHREADED ON)  
-set(Boost_USE_STATIC_RUNTIME OFF) 
-find_package(Boost REQUIRED COMPONENTS regex system date_time chrono thread log log_setup)
+set(Boost_USE_STATIC_LIBS OFF)
+set(Boost_USE_MULTITHREADED ON)
+set(Boost_USE_STATIC_RUNTIME OFF)
+find_package(Boost 1.53.0 REQUIRED COMPONENTS regex system date_time chrono thread )
 include_directories(${Boost_INCLUDE_DIRS})
 
-if(CMAKE_COMPILER_IS_GNUCXX) 
-    set(CMAKE_EXE_LINKER_FLAGS "-lrt -lpthread")                                                   
-endif()    
+if(CMAKE_COMPILER_IS_GNUCXX)
+    set(CMAKE_EXE_LINKER_FLAGS "-lrt -lpthread")
+    set(CMAKE_CXX_FLAGS "-fPIC")
+endif()
 
 add_definitions(-DBOOST_ALL_DYN_LINK)
 
 # Find Protobufs
-find_package(Protobuf REQUIRED)
+find_package(Protobuf REQUIRED )
 include_directories(${PROTOBUF_INCLUDE_DIR})
 
 #Find Zookeeper
@@ -50,13 +51,13 @@ find_package(Zookeeper  REQUIRED )
 #
 
 # Preprocess to fix protobuf .proto definitions
-add_subdirectory("${CMAKE_SOURCE_DIR}/src/protobuf") 
+add_subdirectory("${CMAKE_SOURCE_DIR}/src/protobuf")
 # protobuf includes are required by clientlib
 include_directories(${ProtoHeadersDir})
 include_directories(${ProtoIncludesDir})
 
 # Build the Client Library as a shared library
-add_subdirectory("${CMAKE_SOURCE_DIR}/src/clientlib") 
+add_subdirectory("${CMAKE_SOURCE_DIR}/src/clientlib")
 include_directories(${CMAKE_SOURCE_DIR}/src/include ${Zookeeper_INCLUDE_DIRS}  )
 
 # add a DEBUG preprocessor macro
@@ -68,7 +69,7 @@ set_property(
 # Link directory
 link_directories(/usr/local/lib)
 
-add_executable(querySubmitter example/querySubmitter.cpp ) 
+add_executable(querySubmitter example/querySubmitter.cpp )
 
 target_link_libraries(querySubmitter ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY} drillClient protomsgs )
 

@@ -96,26 +96,6 @@ inline bool RpcType_Parse(
   return ::google::protobuf::internal::ParseNamedEnum<RpcType>(
     RpcType_descriptor(), name, value);
 }
-enum QueryType {
-  SQL = 1,
-  LOGICAL = 2,
-  PHYSICAL = 3
-};
-bool QueryType_IsValid(int value);
-const QueryType QueryType_MIN = SQL;
-const QueryType QueryType_MAX = PHYSICAL;
-const int QueryType_ARRAYSIZE = QueryType_MAX + 1;
-
-const ::google::protobuf::EnumDescriptor* QueryType_descriptor();
-inline const ::std::string& QueryType_Name(QueryType value) {
-  return ::google::protobuf::internal::NameOfEnum(
-    QueryType_descriptor(), value);
-}
-inline bool QueryType_Parse(
-    const ::std::string& name, QueryType* value) {
-  return ::google::protobuf::internal::ParseNamedEnum<QueryType>(
-    QueryType_descriptor(), name, value);
-}
 enum QueryResultsMode {
   STREAM_FULL = 1
 };
@@ -604,12 +584,12 @@ class RunQuery : public ::google::protobuf::Message {
   inline ::exec::user::QueryResultsMode results_mode() const;
   inline void set_results_mode(::exec::user::QueryResultsMode value);
 
-  // optional .exec.user.QueryType type = 2;
+  // optional .exec.shared.QueryType type = 2;
   inline bool has_type() const;
   inline void clear_type();
   static const int kTypeFieldNumber = 2;
-  inline ::exec::user::QueryType type() const;
-  inline void set_type(::exec::user::QueryType value);
+  inline ::exec::shared::QueryType type() const;
+  inline void set_type(::exec::shared::QueryType value);
 
   // optional string plan = 3;
   inline bool has_plan() const;
@@ -1456,7 +1436,7 @@ inline void RunQuery::set_results_mode(::exec::user::QueryResultsMode value) {
   results_mode_ = value;
 }
 
-// optional .exec.user.QueryType type = 2;
+// optional .exec.shared.QueryType type = 2;
 inline bool RunQuery::has_type() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
@@ -1470,11 +1450,11 @@ inline void RunQuery::clear_type() {
   type_ = 1;
   clear_has_type();
 }
-inline ::exec::user::QueryType RunQuery::type() const {
-  return static_cast< ::exec::user::QueryType >(type_);
+inline ::exec::shared::QueryType RunQuery::type() const {
+  return static_cast< ::exec::shared::QueryType >(type_);
 }
-inline void RunQuery::set_type(::exec::user::QueryType value) {
-  assert(::exec::user::QueryType_IsValid(value));
+inline void RunQuery::set_type(::exec::shared::QueryType value) {
+  assert(::exec::shared::QueryType_IsValid(value));
   set_has_type();
   type_ = value;
 }
@@ -1925,10 +1905,6 @@ inline const EnumDescriptor* GetEnumDescriptor< ::exec::user::QueryResult_QueryS
 template <>
 inline const EnumDescriptor* GetEnumDescriptor< ::exec::user::RpcType>() {
   return ::exec::user::RpcType_descriptor();
-}
-template <>
-inline const EnumDescriptor* GetEnumDescriptor< ::exec::user::QueryType>() {
-  return ::exec::user::QueryType_descriptor();
 }
 template <>
 inline const EnumDescriptor* GetEnumDescriptor< ::exec::user::QueryResultsMode>() {

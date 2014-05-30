@@ -21,8 +21,6 @@
 #define DRILL_CLIENT_H
 
 #include <vector>
-#include <boost/log/core.hpp>
-#include <boost/log/trivial.hpp>
 #include <boost/thread.hpp>
 #include "drill/common.hpp"
 #include "drill/protobuf/User.pb.h"
@@ -42,7 +40,7 @@
   #if __GNUC__ >= 4
     #define DECLSPEC_DRILL_CLIENT __attribute__ ((visibility ("default")))
   #else
-    #define DECLSPEC_DRILL_CLIENT 
+    #define DECLSPEC_DRILL_CLIENT
   #endif
 #endif
 
@@ -65,7 +63,7 @@ class DECLSPEC_DRILL_CLIENT DrillClientError{
 
         static DrillClientError*  getErrorObject(const exec::shared::DrillPBError& e);
 
-        // To get the error number we add a error range start number to 
+        // To get the error number we add a error range start number to
         // the status code returned (either status_t or connectionStatus_t)
         uint32_t status; // could be either status_t or connectionStatus_t
         uint32_t errnum;
@@ -83,10 +81,13 @@ class DECLSPEC_DRILL_CLIENT DrillClientInitializer{
 class DECLSPEC_DRILL_CLIENT DrillClientConfig{
     public:
         DrillClientConfig();
+        ~DrillClientConfig();
         static void initLogging(const char* path);
         static void setLogLevel(logLevel_t l);
         static void setBufferLimit(uint64_t l);
         static uint64_t getBufferLimit();
+        static void setSocketTimeout(int32_t l);
+        static int32_t getSocketTimeout();
         static logLevel_t getLogLevel();
     private:
         // The logging level
@@ -94,7 +95,9 @@ class DECLSPEC_DRILL_CLIENT DrillClientConfig{
         // The total amount of memory to be allocated by an instance of DrillClient.
         // For future use. Currently, not enforced.
         static uint64_t s_bufferLimit;
-        static boost::mutex s_mutex; 
+        // Timeout (in seconds) for asynchronous read operations. Default is 180 seconds
+        static int32_t s_socketTimeout;
+        static boost::mutex s_mutex;
 };
 
 
@@ -104,8 +107,8 @@ class DECLSPEC_DRILL_CLIENT DrillClientConfig{
 typedef void* QueryHandle_t;
 
 /*
- * Query Results listener callback. This function is called for every record batch after it has 
- * been received and decoded. The listener function should return a status. 
+ * Query Results listener callback. This function is called for every record batch after it has
+ * been received and decoded. The listener function should return a status.
  * If the listener returns failure, the query will be canceled.
  *
  * DrillClientQueryResult will hold a listener & listener contxt for the call back function
@@ -114,13 +117,13 @@ typedef status_t (*pfnQueryResultsListener)(QueryHandle_t ctx, RecordBatch* b, D
 
 /*
  * The schema change listener callback. This function is called if the record batch detects a
- * change in the schema. The client application can call getColDefs in the RecordIterator or 
+ * change in the schema. The client application can call getColDefs in the RecordIterator or
  * get the field information from the RecordBatch itself and handle the change appropriately.
  */
-typedef uint32_t (*pfnSchemaListener)(void* ctx, SchemaDef* s, DrillClientError* err);
+typedef status_t (*pfnSchemaListener)(void* ctx, FieldDefPtr f, DrillClientError* err);
 
-/* 
- * A Record Iterator instance is returned by the SubmitQuery class. Calls block until some data 
+/*
+ * A Record Iterator instance is returned by the SubmitQuery class. Calls block until some data
  * is available, or until all data has been returned.
  */
 
@@ -129,12 +132,12 @@ class DECLSPEC_DRILL_CLIENT RecordIterator{
     public:
 
     ~RecordIterator();
-    /* 
-     * Returns a vector of column(i.e. field) definitions. The returned reference is guaranteed to be valid till the 
-     * end of the query or until a schema change event is received. If a schema change event is received by the 
-     * application, the application should discard the reference it currently holds and call this function again. 
+    /*
+     * Returns a vector of column(i.e. field) definitions. The returned reference is guaranteed to be valid till the
+     * end of the query or until a schema change event is received. If a schema change event is received by the
+     * application, the application should discard the reference it currently holds and call this function again.
      */
-    std::vector<Drill::FieldMetadata*>& getColDefs();
+    FieldDefPtr getColDefs();
 
     /* Move the current pointer to the next record. */
     status_t next();
@@ -148,26 +151,29 @@ class DECLSPEC_DRILL_CLIENT RecordIterator{
     /* Cancels the query. */
     status_t cancel();
 
-    void registerSchemaChangeListener(pfnSchemaListener* l);
+    /*  Returns true is the schem has changed from the previous record. Returns false for the first record. */
+    bool hasSchemaChanged();
+
+    void registerSchemaChangeListener(pfnSchemaListener l);
 
     /*
      * Returns the last error message
      */
-    std::string& getError();
+    const std::string& getError();
 
     private:
     RecordIterator(DrillClientQueryResult* pResult){
         this->m_currentRecord=-1;
         this->m_pCurrentRecordBatch=NULL;
         this->m_pQueryResult=pResult;
-        m_pColDefs=NULL;
+        //m_pColDefs=NULL;
     }
 
     DrillClientQueryResult* m_pQueryResult;
     size_t m_currentRecord;
     RecordBatch* m_pCurrentRecordBatch;
-    boost::mutex m_recordBatchMutex; 
-    std::vector<Drill::FieldMetadata*>* m_pColDefs; // Copy of the latest column defs made from the 
+    boost::mutex m_recordBatchMutex;
+    FieldDefPtr m_pColDefs; // Copy of the latest column defs made from the
     // first record batch with this definition
 };
 
@@ -189,19 +195,19 @@ class DECLSPEC_DRILL_CLIENT DrillClient{
         void close() ;
 
         /*
-         * Submit a query asynchronously and wait for results to be returned thru a callback. A query context handle is passed 
+         * Submit a query asynchronously and wait for results to be returned thru a callback. A query context handle is passed
          * back. The listener callback will return the handle in the ctx parameter.
          */
-        status_t submitQuery(exec::user::QueryType t, const std::string& plan, pfnQueryResultsListener listener, void* listenerCtx, QueryHandle_t* qHandle);
+        status_t submitQuery(::exec::shared::QueryType t, const std::string& plan, pfnQueryResultsListener listener, void* listenerCtx, QueryHandle_t* qHandle);
 
         /*
          * Submit a query asynchronously and wait for results to be returned thru an iterator that returns
          * results synchronously. The client app needs to call delete on the iterator when done.
          */
-        RecordIterator* submitQuery(exec::user::QueryType t, const std::string& plan, DrillClientError* err);
+        RecordIterator* submitQuery(::exec::shared::QueryType t, const std::string& plan, DrillClientError* err);
 
-        /* 
-         * The client application should call this function to wait for results if it has registered a 
+        /*
+         * The client application should call this function to wait for results if it has registered a
          * listener.
          */
         void waitForResults();
@@ -212,10 +218,21 @@ class DECLSPEC_DRILL_CLIENT DrillClient{
         std::string& getError();
 
         /*
-         * Applications using the async query submit method should call freeQueryResources to free up resources 
+         * Applications using the async query submit method can register a listener for schema changes
+         *
+         */
+        void registerSchemaChangeListener(QueryHandle_t* handle, pfnSchemaListener l);
+
+        /*
+         * Applications using the async query submit method should call freeQueryResources to free up resources
          * once the query is no longer being processed.
-         * */
+         */
         void freeQueryResources(QueryHandle_t* handle);
+
+        /*
+         * Applications using the sync query submit method should call freeQueryIterator to free up resources
+         * once the RecordIterator is no longer being processed.
+         */
         void freeQueryIterator(RecordIterator** pIter){ delete *pIter; *pIter=NULL;};
 
     private:

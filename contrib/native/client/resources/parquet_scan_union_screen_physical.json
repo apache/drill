@@ -34,7 +34,7 @@
         @id: 3,
         child: 2,
         pop: "screen"
-      } 
+      }
     ]
 }
 

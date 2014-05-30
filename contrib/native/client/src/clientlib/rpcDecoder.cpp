@@ -48,6 +48,7 @@ int RpcDecoder::LengthDecode(const uint8_t* buf, uint32_t* p_length) {
     cerr << "Reading full length " << *p_length << endl;
     #endif
     assert( (pos1-pos0) == getRawVarintSize(*p_length));
+    delete cis;
     return (pos1-pos0);
 }
 
@@ -143,6 +144,7 @@ int RpcDecoder::Decode(const uint8_t* buf, int length, InBoundRpcMessage& msg) {
 
     int pos1 = cis->CurrentPosition();
     assert((pos1-pos0) == length);
+    delete cis;
     return (pos1-pos0);
 }
 

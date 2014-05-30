@@ -17,14 +17,23 @@
  */
 
 
-#ifndef DRILL_CLIENT_ASYNC_H
-#define DRILL_CLIENT_ASYNC_H
+#ifndef DRILL_CLIENT_IMPL_H
+#define DRILL_CLIENT_IMPL_H
+
+/* Define some BOOST defines */
+#define BOOST_ASIO_ENABLE_CANCELIO
+// If we want to support older versions of windows than Windows 7, we should
+// disable IOCP
+//#ifdef _WIN32
+//#define BOOST_ASIO_DISABLE_IOCP
+//#endif // _WIN32
 
 #include <stdlib.h>
 #include <time.h>
 #include <queue>
 #include <vector>
 #include <boost/asio.hpp>
+#include <boost/asio/deadline_timer.hpp>
 #include <boost/thread.hpp>
 #include <zookeeper/zookeeper.h>
 
@@ -32,6 +41,7 @@
 #include "drill/drillClient.hpp"
 #include "rpcEncoder.hpp"
 #include "rpcDecoder.hpp"
+#include "utils.hpp"
 #include "User.pb.h"
 #include "UserBitShared.pb.h"
 
@@ -43,7 +53,6 @@ class OutBoundRpcMessage;
 class RecordBatch;
 class RpcEncoder;
 class RpcDecoder;
-//struct UserServerEndPoint;
 
 class DrillClientQueryResult{
     friend class DrillClientImpl;
@@ -51,17 +60,20 @@ class DrillClientQueryResult{
     DrillClientQueryResult(DrillClientImpl * pClient, uint64_t coordId):
         m_pClient(pClient),
         m_coordinationId(coordId),
+        m_numBatches(0),
+        m_columnDefs(new std::vector<Drill::FieldMetadata*>),
         m_bIsQueryPending(true),
         m_bIsLastChunk(false),
         m_bCancel(false),
-        m_bHasSchemaChanged(false), 
+        m_bHasSchemaChanged(false),
         m_bHasData(false),
         m_bHasError(false),
         m_pError(NULL),
         m_pQueryId(NULL),
+        m_pSchemaListener(NULL),
         m_pResultsListener(NULL),
-        m_pListenerCtx(NULL)
-    {};
+        m_pListenerCtx(NULL) {
+    };
 
     ~DrillClientQueryResult(){
         this->clearAndDestroy();
@@ -73,25 +85,29 @@ class DrillClientQueryResult{
         this->m_pListenerCtx = listenerCtx;
     }
 
-    // Synchronous call to get data. Caller assumes ownership of the recod batch 
+    void registerSchemaChangeListener(pfnSchemaListener l){
+        m_pSchemaListener=l;
+    }
+
+    // Synchronous call to get data. Caller assumes ownership of the recod batch
     // returned and it is assumed to have been consumed.
     RecordBatch*  getNext();
-    // Synchronous call to get a look at the next Record Batch. This 
-    // call does not move the current pointer forward. Repeatied calls 
+    // Synchronous call to get a look at the next Record Batch. This
+    // call does not move the current pointer forward. Repeatied calls
     // to peekNext return the same value until getNext is called.
     RecordBatch*  peekNext();
     // Blocks until data is available.
     void waitForData();
 
     // placeholder to return an empty col def vector when calls are made out of order.
-    static std::vector<Drill::FieldMetadata*> s_emptyColDefs;
+    static FieldDefPtr s_emptyColDefs;
 
-    std::vector<Drill::FieldMetadata*>& getColumnDefs(){ 
+    FieldDefPtr getColumnDefs(){
         boost::lock_guard<boost::mutex> bufferLock(this->m_schemaMutex);
         return this->m_columnDefs;
     }
 
-    void cancel();    
+    void cancel();
     bool isCancelled(){return this->m_bCancel;};
     bool hasSchemaChanged(){return this->m_bHasSchemaChanged;};
     int32_t getCoordinationId(){ return this->m_coordinationId;}
@@ -101,7 +117,7 @@ class DrillClientQueryResult{
     exec::shared::QueryId& getQueryId(){ return *(this->m_pQueryId); }
     bool hasError(){ return m_bHasError;}
     status_t getErrorStatus(){ return m_pError!=NULL?(status_t)m_pError->status:QRY_SUCCESS;}
-    DrillClientError* getError(){ return m_pError;}
+    const DrillClientError* getError(){ return m_pError;}
 
     private:
     status_t setupColumnDefs(exec::user::QueryResult* pQueryResult);
@@ -114,20 +130,21 @@ class DrillClientQueryResult{
     DrillClientImpl* m_pClient;
 
     int32_t m_coordinationId;
+    size_t m_numBatches; // number of record batches received so far
 
     // Vector of Buffers holding data returned by the server
     // Each data buffer is decoded into a RecordBatch
     std::vector<ByteBuf_t> m_dataBuffers;
     std::queue<RecordBatch*> m_recordBatches;
-    std::vector<Drill::FieldMetadata*> m_columnDefs;
+    FieldDefPtr m_columnDefs;
 
     // Mutex to protect schema definitions
-    boost::mutex m_schemaMutex; 
+    boost::mutex m_schemaMutex;
     // Mutex for Cond variable for read write to batch vector
-    boost::mutex m_cvMutex; 
-    // Condition variable to signal arrival of more data. Condition variable is signaled 
+    boost::mutex m_cvMutex;
+    // Condition variable to signal arrival of more data. Condition variable is signaled
     // if the recordBatches queue is not empty
-    boost::condition_variable m_cv; 
+    boost::condition_variable m_cv;
 
     // state
     // if m_bIsQueryPending is true, we continue to wait for results
@@ -138,10 +155,12 @@ class DrillClientQueryResult{
     bool m_bHasData;
     bool m_bHasError;
 
-    DrillClientError* m_pError;
+    const DrillClientError* m_pError;
 
     exec::shared::QueryId* m_pQueryId;
 
+    //Schema change listener
+    pfnSchemaListener m_pSchemaListener;
     // Results callback
     pfnQueryResultsListener m_pResultsListener;
 
@@ -152,32 +171,41 @@ class DrillClientQueryResult{
 class DrillClientImpl{
     public:
         DrillClientImpl():
-            m_coordinationId(1) ,
+            m_coordinationId(1),
+            m_handshakeVersion(0),
             m_bIsConnected(false),
-            m_pendingRequests(0), 
-            m_pError(NULL), 
-            m_pListenerThread(NULL), 
-            m_socket(m_io_service), 
-            m_rbuf(1024), 
-            m_wbuf(1024)
+            m_pendingRequests(0),
+            m_pError(NULL),
+            m_pListenerThread(NULL),
+            m_socket(m_io_service),
+            m_deadlineTimer(m_io_service),
+            m_rbuf(NULL),
+            m_wbuf(MAX_SOCK_RD_BUFSIZE)
     {
         srand(time(NULL));
         m_coordinationId=rand()%1729+1;
     };
 
-        ~DrillClientImpl(){ 
-            //TODO: Cleanup. 
+        ~DrillClientImpl(){
+            //TODO: Cleanup.
             //Free any record batches or buffers remaining
             //Cancel any pending requests
             //Clear and destroy DrillClientQueryResults vector?
 
-            //Terminate and free the listener thread
-            if(this->m_pListenerThread!=NULL){
-                this->m_pListenerThread->interrupt();
-                delete this->m_pListenerThread;
+            m_deadlineTimer.cancel();
+            m_io_service.stop();
+            m_socket.close();
+            if(m_rbuf!=NULL){
+                Utils::freeBuffer(m_rbuf); m_rbuf=NULL;
             }
             if(m_pError!=NULL){
                 delete m_pError; m_pError=NULL;
+            }
+            //Terminate and free the listener thread
+            if(this->m_pListenerThread!=NULL){
+                this->m_pListenerThread->interrupt();
+                this->m_pListenerThread->join();
+                delete this->m_pListenerThread;
             }
         };
 
@@ -187,10 +215,9 @@ class DrillClientImpl{
         bool Active();
         void Close() ;
         DrillClientError* getError(){ return m_pError;}
-        DrillClientQueryResult* SubmitQuery(exec::user::QueryType t, const std::string& plan, pfnQueryResultsListener listener, void* listenerCtx);
+        DrillClientQueryResult* SubmitQuery(::exec::shared::QueryType t, const std::string& plan, pfnQueryResultsListener listener, void* listenerCtx);
         void waitForResults();
-        bool ValidateHandShake(); // throw expection if not valid
-
+        bool validateHandShake();
 
     private:
         friend class DrillClientQueryResult;
@@ -201,31 +228,30 @@ class DrillClientImpl{
             }
         };
 
-        //allocate memory for Record Batches
-        ByteBuf_t allocateBuffer(size_t len){
-            ByteBuf_t b = (ByteBuf_t)malloc(len); memset(b, 0, len); return b;
-        }
-        void freeBuffer(ByteBuf_t b){ free(b); }
-
         // Direct connection to a drillbit
         // host can be name or ip address, port can be port number or name of service in /etc/services
-        connectionStatus_t connect(const char* host, const char* port);       
+        connectionStatus_t connect(const char* host, const char* port);
         int32_t getNextCoordinationId(){ return ++m_coordinationId; };
-        void parseConnectStr(const char* connectStr, std::string& protocol, std::string& hostPortStr);
-        // end and receive synchronous messages
-        void recvSync(InBoundRpcMessage& msg);
-        void sendSync(OutBoundRpcMessage& msg);
-
+        void parseConnectStr(const char* connectStr, std::string& pathToDrill, std::string& protocol, std::string& hostPortStr);
+        // send synchronous messages
+        //connectionStatus_t recvSync(InBoundRpcMessage& msg);
+        connectionStatus_t sendSync(OutBoundRpcMessage& msg);
+        // handshake
+        connectionStatus_t recvHandshake();
+        void handleHandshake(ByteBuf_t b, const boost::system::error_code& err, std::size_t bytes_transferred );
+        void handleHShakeReadTimeout(const boost::system::error_code & err);
+        // Query results
         void getNextResult();
-        status_t readMsg(ByteBuf_t _buf, InBoundRpcMessage& msg, boost::system::error_code& error);
-        status_t processQueryResult(InBoundRpcMessage& msg);
-        status_t processQueryId(InBoundRpcMessage& msg );
+        status_t readMsg(ByteBuf_t _buf, ByteBuf_t* allocatedBuffer, InBoundRpcMessage& msg, boost::system::error_code& error);
+        status_t processQueryResult(ByteBuf_t allocatedBuffer, InBoundRpcMessage& msg);
+        status_t processQueryId(ByteBuf_t allocatedBuffer, InBoundRpcMessage& msg );
+        void handleReadTimeout(const boost::system::error_code & err);
         void handleRead(ByteBuf_t _buf, const boost::system::error_code & err, size_t bytes_transferred) ;
         status_t validateMessage(InBoundRpcMessage& msg, exec::user::QueryResult& qr, std::string& valError);
         connectionStatus_t handleConnError(connectionStatus_t status, std::string msg);
         status_t handleQryError(status_t status, std::string msg, DrillClientQueryResult* pQueryResult);
-        status_t handleQryError(status_t status, 
-                const exec::shared::DrillPBError& e, 
+        status_t handleQryError(status_t status,
+                const exec::shared::DrillPBError& e,
                 DrillClientQueryResult* pQueryResult);
         void broadcastError(DrillClientError* pErr);
         void clearMapEntries(DrillClientQueryResult* pQueryResult);
@@ -237,29 +263,31 @@ class DrillClientImpl{
         static RpcDecoder s_decoder;
 
         int32_t m_coordinationId;
+        int32_t m_handshakeVersion;
         bool m_bIsConnected;
 
-        // number of outstanding read requests. 
+        // number of outstanding read requests.
         // handleRead will keep asking for more results as long as this number is not zero.
-        size_t m_pendingRequests;   
+        size_t m_pendingRequests;
 
-        // Error Object. NULL if no error. Set if the error is valid for ALL running queries. 
+        // Error Object. NULL if no error. Set if the error is valid for ALL running queries.
         // All the query result objects will
         // also have the error object set.
-        // If the error is query specific, only the query results object will have the error set. 
+        // If the error is query specific, only the query results object will have the error set.
         DrillClientError* m_pError;
 
-        // for boost asio 
+        // for boost asio
         boost::thread * m_pListenerThread;
         boost::asio::io_service m_io_service;
         boost::asio::ip::tcp::socket m_socket;
+        boost::asio::deadline_timer m_deadlineTimer; // to timeout async queries that never return
 
         //for synchronous messages, like validate handshake
-        DataBuf m_rbuf; // buffer for receiving synchronous messages
+        ByteBuf_t m_rbuf; // buffer for receiving synchronous messages
         DataBuf m_wbuf; // buffer for sending synchronous message
 
-        // Mutex to protect drill client operations 
-        boost::mutex m_dcMutex; 
+        // Mutex to protect drill client operations
+        boost::mutex m_dcMutex;
 
         // Map of coordination id to  Query Ids.
         std::map<int, DrillClientQueryResult*> m_queryIds;
@@ -283,12 +311,12 @@ inline void DrillClientImpl::Close() {
 
 class ZookeeperImpl{
     public:
-        ZookeeperImpl(); 
-        ~ZookeeperImpl(); 
+        ZookeeperImpl();
+        ~ZookeeperImpl();
         static ZooLogLevel getZkLogLevel();
-        // comma separated host:port pairs, each corresponding to a zk 
+        // comma separated host:port pairs, each corresponding to a zk
         // server. e.g. "127.0.0.1:3000,127.0.0.1:3001,127.0.0.1:3002
-        int connectToZookeeper(const char* connectStr);
+        int connectToZookeeper(const char* connectStr, const char* pathToDrill);
         void close();
         static void watcher(zhandle_t *zzh, int type, int state, const char *path, void* context);
         void debugPrint();
@@ -297,16 +325,17 @@ class ZookeeperImpl{
 
     private:
         static char s_drillRoot[];
-        zhandle_t* m_zh;      
+        static char s_defaultCluster[];
+        zhandle_t* m_zh;
         clientid_t m_id;
         int m_state;
         std::string m_err;
 
         struct String_vector* m_pDrillbits;
 
-        boost::mutex m_cvMutex; 
-        // Condition variable to signal connection callback has been processed 
-        boost::condition_variable m_cv; 
+        boost::mutex m_cvMutex;
+        // Condition variable to signal connection callback has been processed
+        boost::condition_variable m_cv;
         bool m_bConnecting;
         exec::DrillServiceInstance m_drillServiceInstance;
 };

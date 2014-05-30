@@ -99,6 +99,9 @@ bool RpcEncoder::Encode(DataBuf& buf, OutBoundRpcMessage& msg) {
     cos->WriteVarint32(proto_body_length);
     msg.m_pbody->SerializeToCodedStream(cos);
 
+    delete os;
+    delete cos;
+
     // Done! no read to write data body for client
     return true;
 }

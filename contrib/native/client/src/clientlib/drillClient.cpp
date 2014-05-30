@@ -17,17 +17,11 @@
  */
 
 
-#include <boost/format.hpp>
-#include <boost/log/expressions.hpp>
-#include <boost/log/sinks/text_file_backend.hpp>
-#include <boost/log/utility/setup/file.hpp>
-#include <boost/log/utility/setup/common_attributes.hpp>
-#include <boost/log/sources/severity_logger.hpp>
-
 #include "drill/drillClient.hpp"
 #include "drill/recordBatch.hpp"
 #include "drillClientImpl.hpp"
 #include "errmsgs.hpp"
+#include "logger.hpp"
 
 #include "Types.pb.h"
 
@@ -50,84 +44,96 @@ DrillClientInitializer::~DrillClientInitializer(){
 
 logLevel_t DrillClientConfig::s_logLevel=LOG_ERROR;
 uint64_t DrillClientConfig::s_bufferLimit=-1;
-boost::mutex DrillClientConfig::s_mutex; 
+int32_t DrillClientConfig::s_socketTimeout=180;
+boost::mutex DrillClientConfig::s_mutex;
 
 DrillClientConfig::DrillClientConfig(){
     initLogging(NULL);
 }
 
+DrillClientConfig::~DrillClientConfig(){
+    Logger::close();
+}
+
 void DrillClientConfig::initLogging(const char* path){
-    if(path!=NULL){
-        std::string f=std::string(path)+"drill_clientlib_%N.log";
-        try{
-            boost::log::add_file_log
-                (
-                 boost::log::keywords::file_name = f.c_str(),
-                 boost::log::keywords::rotation_size = 10 * 1024 * 1024,
-                 boost::log::keywords::time_based_rotation = 
-                 boost::log::sinks::file::rotation_at_time_point(0, 0, 0),
-                 boost::log::keywords::format = "[%TimeStamp%]: %Message%"
-                );
-        }catch(std::exception& e){
-            // do nothing. Logging will happen to stderr
-            BOOST_LOG_TRIVIAL(error) << "Logging could not be initialized. Logging to stderr." ;
-        }
-    }
-    boost::log::add_common_attributes();
-    boost::log::core::get()->set_filter(boost::log::trivial::severity >= s_logLevel);
+    Logger::init(path);
 }
 
 void DrillClientConfig::setLogLevel(logLevel_t l){
-    boost::lock_guard<boost::mutex> bufferLock(DrillClientConfig::s_mutex);
+    boost::lock_guard<boost::mutex> configLock(DrillClientConfig::s_mutex);
     s_logLevel=l;
-    boost::log::core::get()->set_filter(boost::log::trivial::severity >= s_logLevel);
+    Logger::s_level=l;
+    //boost::log::core::get()->set_filter(boost::log::trivial::severity >= s_logLevel);
 }
 
 void DrillClientConfig::setBufferLimit(uint64_t l){
-    boost::lock_guard<boost::mutex> bufferLock(DrillClientConfig::s_mutex);
+    boost::lock_guard<boost::mutex> configLock(DrillClientConfig::s_mutex);
     s_bufferLimit=l;
 }
 
 uint64_t DrillClientConfig::getBufferLimit(){
-    boost::lock_guard<boost::mutex> bufferLock(DrillClientConfig::s_mutex);
+    boost::lock_guard<boost::mutex> configLock(DrillClientConfig::s_mutex);
     return s_bufferLimit;
 }
 
+void DrillClientConfig::setSocketTimeout(int32_t t){
+    boost::lock_guard<boost::mutex> configLock(DrillClientConfig::s_mutex);
+    s_socketTimeout=t;
+}
+
+int32_t DrillClientConfig::getSocketTimeout(){
+    boost::lock_guard<boost::mutex> configLock(DrillClientConfig::s_mutex);
+    return s_socketTimeout;
+}
+
 logLevel_t DrillClientConfig::getLogLevel(){
-    boost::lock_guard<boost::mutex> bufferLock(DrillClientConfig::s_mutex);
+    boost::lock_guard<boost::mutex> configLock(DrillClientConfig::s_mutex);
     return s_logLevel;
 }
 
 RecordIterator::~RecordIterator(){
     if(m_pColDefs!=NULL){
-        for(std::vector<Drill::FieldMetadata*>::iterator it=m_pColDefs->begin(); 
-                it!=m_pColDefs->end(); 
+        for(std::vector<Drill::FieldMetadata*>::iterator it=m_pColDefs->begin();
+                it!=m_pColDefs->end();
                 ++it){
             delete *it;
         }
     }
-    delete this->m_pColDefs;
-    this->m_pColDefs=NULL;
     delete this->m_pQueryResult;
     this->m_pQueryResult=NULL;
+    if(this->m_pCurrentRecordBatch!=NULL){
+        DRILL_LOG(LOG_TRACE) << "Deleted last Record batch " << (void*) m_pCurrentRecordBatch << std::endl;
+        delete this->m_pCurrentRecordBatch; this->m_pCurrentRecordBatch=NULL;
+    }
 }
 
-std::vector<Drill::FieldMetadata*>&  RecordIterator::getColDefs(){
+FieldDefPtr RecordIterator::getColDefs(){
     if(m_pQueryResult->hasError()){
         return DrillClientQueryResult::s_emptyColDefs;
     }
     //NOTE: if query is cancelled, return whatever you have. Client applications job to deal with it.
-    if(this->m_pColDefs==NULL){
+    if(this->m_pColDefs==NULL || this->hasSchemaChanged()){
         if(this->m_pCurrentRecordBatch==NULL){
             this->m_pQueryResult->waitForData();
             if(m_pQueryResult->hasError()){
                 return DrillClientQueryResult::s_emptyColDefs;
             }
         }
-        std::vector<Drill::FieldMetadata*>* pColDefs = new std::vector<Drill::FieldMetadata*>;
+        if(this->hasSchemaChanged()){
+            if(m_pColDefs!=NULL){
+                for(std::vector<Drill::FieldMetadata*>::iterator it=m_pColDefs->begin();
+                        it!=m_pColDefs->end();
+                        ++it){
+                    delete *it;
+                }
+                m_pColDefs->clear();
+                //delete m_pColDefs; m_pColDefs=NULL;
+            }
+        }
+        FieldDefPtr pColDefs(  new std::vector<Drill::FieldMetadata*>);
         {   //lock after we come out of the  wait.
             boost::lock_guard<boost::mutex> bufferLock(this->m_recordBatchMutex);
-            std::vector<Drill::FieldMetadata*>&  currentColDefs=DrillClientQueryResult::s_emptyColDefs;
+            boost::shared_ptr< std::vector<Drill::FieldMetadata*> >  currentColDefs=DrillClientQueryResult::s_emptyColDefs;
             if(this->m_pCurrentRecordBatch!=NULL){
                 currentColDefs=this->m_pCurrentRecordBatch->getColumnDefs();
             }else{
@@ -138,7 +144,7 @@ std::vector<Drill::FieldMetadata*>&  RecordIterator::getColDefs(){
                     currentColDefs=pR->getColumnDefs();
                 }
             }
-            for(std::vector<Drill::FieldMetadata*>::iterator it=currentColDefs.begin(); it!=currentColDefs.end(); ++it){
+            for(std::vector<Drill::FieldMetadata*>::iterator it=currentColDefs->begin(); it!=currentColDefs->end(); ++it){
                 Drill::FieldMetadata* fmd= new Drill::FieldMetadata;
                 fmd->copy(*(*it));//Yup, that's 2 stars
                 pColDefs->push_back(fmd);
@@ -146,7 +152,7 @@ std::vector<Drill::FieldMetadata*>&  RecordIterator::getColDefs(){
         }
         this->m_pColDefs = pColDefs;
     }
-    return *this->m_pColDefs;
+    return this->m_pColDefs;
 }
 
 status_t RecordIterator::next(){
@@ -160,12 +166,19 @@ status_t RecordIterator::next(){
     if(!this->m_pQueryResult->isCancelled()){
         if(this->m_pCurrentRecordBatch==NULL || this->m_currentRecord==this->m_pCurrentRecordBatch->getNumRecords()){
             boost::lock_guard<boost::mutex> bufferLock(this->m_recordBatchMutex);
-            delete this->m_pCurrentRecordBatch; //free the previous record batch
+            if(this->m_pCurrentRecordBatch !=NULL){
+                DRILL_LOG(LOG_TRACE) << "Deleted old Record batch " << (void*) m_pCurrentRecordBatch << std::endl;
+                delete this->m_pCurrentRecordBatch; //free the previous record batch
+            }
             this->m_currentRecord=0;
             this->m_pCurrentRecordBatch=this->m_pQueryResult->getNext();
-            BOOST_LOG_TRIVIAL(trace) << "Fetched new Record batch " ;
+            if(this->m_pCurrentRecordBatch != NULL){
+                DRILL_LOG(LOG_TRACE) << "Fetched new Record batch " << std::endl;
+            }else{
+                DRILL_LOG(LOG_TRACE) << "No new Record batch found " << std::endl;
+            }
             if(this->m_pCurrentRecordBatch==NULL || this->m_pCurrentRecordBatch->getNumRecords()==0){
-                BOOST_LOG_TRIVIAL(trace) << "No more data." ;
+                DRILL_LOG(LOG_TRACE) << "No more data." << std::endl;
                 ret = QRY_NO_MORE_DATA;
             }else if(this->m_pCurrentRecordBatch->hasSchemaChanged()){
                 ret=QRY_SUCCESS_WITH_INFO;
@@ -213,11 +226,16 @@ status_t RecordIterator::cancel(){
     return QRY_CANCEL;
 }
 
-void RecordIterator::registerSchemaChangeListener(pfnSchemaListener* l){
-    //TODO:
+bool RecordIterator::hasSchemaChanged(){
+    return m_currentRecord==0 && m_pCurrentRecordBatch!=NULL && m_pCurrentRecordBatch->hasSchemaChanged();
 }
 
-std::string& RecordIterator::getError(){
+void RecordIterator::registerSchemaChangeListener(pfnSchemaListener l){
+    assert(m_pQueryResult!=NULL);
+    this->m_pQueryResult->registerSchemaChangeListener(l);
+}
+
+const std::string& RecordIterator::getError(){
     return m_pQueryResult->getError()->msg;
 }
 
@@ -243,7 +261,7 @@ connectionStatus_t DrillClient::connect(const char* connectStr ){
     ret=this->m_pImpl->connect(connectStr);
 
     if(ret==CONN_SUCCESS)
-        ret=this->m_pImpl->ValidateHandShake()?CONN_SUCCESS:CONN_HANDSHAKE_FAILED;
+        ret=this->m_pImpl->validateHandShake()?CONN_SUCCESS:CONN_HANDSHAKE_FAILED;
     return ret;
 
 }
@@ -256,13 +274,13 @@ void DrillClient::close() {
     this->m_pImpl->Close();
 }
 
-status_t DrillClient::submitQuery(exec::user::QueryType t, const std::string& plan, pfnQueryResultsListener listener, void* listenerCtx, QueryHandle_t* qHandle){
+status_t DrillClient::submitQuery(::exec::shared::QueryType t, const std::string& plan, pfnQueryResultsListener listener, void* listenerCtx, QueryHandle_t* qHandle){
     DrillClientQueryResult* pResult=this->m_pImpl->SubmitQuery(t, plan, listener, listenerCtx);
     *qHandle=(QueryHandle_t)pResult;
-    return QRY_SUCCESS; 
+    return QRY_SUCCESS;
 }
 
-RecordIterator* DrillClient::submitQuery(exec::user::QueryType t, const std::string& plan, DrillClientError* err){
+RecordIterator* DrillClient::submitQuery(::exec::shared::QueryType t, const std::string& plan, DrillClientError* err){
     RecordIterator* pIter=NULL;
     DrillClientQueryResult* pResult=this->m_pImpl->SubmitQuery(t, plan, NULL, NULL);
     if(pResult){
@@ -278,6 +296,12 @@ std::string& DrillClient::getError(){
 
 void DrillClient::waitForResults(){
     this->m_pImpl->waitForResults();
+}
+
+void DrillClient::registerSchemaChangeListener(QueryHandle_t* handle, pfnSchemaListener l){
+    if(handle!=NULL){
+        ((DrillClientQueryResult*)(*handle))->registerSchemaChangeListener(l);
+    }
 }
 
 void DrillClient::freeQueryResources(QueryHandle_t* handle){

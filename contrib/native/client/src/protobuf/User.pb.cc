@@ -47,7 +47,6 @@ const ::google::protobuf::internal::GeneratedMessageReflection*
   QueryResult_reflection_ = NULL;
 const ::google::protobuf::EnumDescriptor* QueryResult_QueryState_descriptor_ = NULL;
 const ::google::protobuf::EnumDescriptor* RpcType_descriptor_ = NULL;
-const ::google::protobuf::EnumDescriptor* QueryType_descriptor_ = NULL;
 const ::google::protobuf::EnumDescriptor* QueryResultsMode_descriptor_ = NULL;
 
 }  // namespace
@@ -200,8 +199,7 @@ void protobuf_AssignDesc_User_2eproto() {
       sizeof(QueryResult));
   QueryResult_QueryState_descriptor_ = QueryResult_descriptor_->enum_type(0);
   RpcType_descriptor_ = file->enum_type(0);
-  QueryType_descriptor_ = file->enum_type(1);
-  QueryResultsMode_descriptor_ = file->enum_type(2);
+  QueryResultsMode_descriptor_ = file->enum_type(1);
 }
 
 namespace {
@@ -273,32 +271,31 @@ void protobuf_AddDesc_User_2eproto() {
     "redentials\022-\n\nproperties\030\005 \001(\0132\031.exec.us"
     "er.UserProperties\"S\n\016RequestResults\022&\n\010q"
     "uery_id\030\001 \001(\0132\024.exec.shared.QueryId\022\031\n\021m"
-    "aximum_responses\030\002 \001(\005\"o\n\010RunQuery\0221\n\014re"
+    "aximum_responses\030\002 \001(\005\"q\n\010RunQuery\0221\n\014re"
     "sults_mode\030\001 \001(\0162\033.exec.user.QueryResult"
-    "sMode\022\"\n\004type\030\002 \001(\0162\024.exec.user.QueryTyp"
-    "e\022\014\n\004plan\030\003 \001(\t\")\n\022BitToUserHandshake\022\023\n"
-    "\013rpc_version\030\002 \001(\005\"7\n\nNodeStatus\022\017\n\007node"
-    "_id\030\001 \001(\005\022\030\n\020memory_footprint\030\002 \001(\003\"\331\003\n\013"
-    "QueryResult\0226\n\013query_state\030\001 \001(\0162!.exec."
-    "user.QueryResult.QueryState\022&\n\010query_id\030"
-    "\002 \001(\0132\024.exec.shared.QueryId\022\025\n\ris_last_c"
-    "hunk\030\003 \001(\010\022\021\n\trow_count\030\004 \001(\005\022\024\n\014records"
-    "_scan\030\005 \001(\003\022\025\n\rrecords_error\030\006 \001(\003\022\027\n\017su"
-    "bmission_time\030\007 \001(\003\022*\n\013node_status\030\010 \003(\013"
-    "2\025.exec.user.NodeStatus\022(\n\005error\030\t \003(\0132\031"
-    ".exec.shared.DrillPBError\022(\n\003def\030\n \001(\0132\033"
-    ".exec.shared.RecordBatchDef\022\026\n\016schema_ch"
-    "anged\030\013 \001(\010\"b\n\nQueryState\022\013\n\007PENDING\020\000\022\013"
-    "\n\007RUNNING\020\001\022\r\n\tCOMPLETED\020\002\022\014\n\010CANCELED\020\003"
-    "\022\n\n\006FAILED\020\004\022\021\n\rUNKNOWN_QUERY\020\005*\270\001\n\007RpcT"
-    "ype\022\r\n\tHANDSHAKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002"
-    "\022\r\n\tRUN_QUERY\020\003\022\020\n\014CANCEL_QUERY\020\004\022\023\n\017REQ"
-    "UEST_RESULTS\020\005\022\020\n\014QUERY_RESULT\020\006\022\020\n\014QUER"
-    "Y_HANDLE\020\007\022\026\n\022REQ_META_FUNCTIONS\020\010\022\026\n\022RE"
-    "SP_FUNCTION_LIST\020\t*/\n\tQueryType\022\007\n\003SQL\020\001"
-    "\022\013\n\007LOGICAL\020\002\022\014\n\010PHYSICAL\020\003*#\n\020QueryResu"
-    "ltsMode\022\017\n\013STREAM_FULL\020\001B+\n\033org.apache.d"
-    "rill.exec.protoB\nUserProtosH\001", 1469);
+    "sMode\022$\n\004type\030\002 \001(\0162\026.exec.shared.QueryT"
+    "ype\022\014\n\004plan\030\003 \001(\t\")\n\022BitToUserHandshake\022"
+    "\023\n\013rpc_version\030\002 \001(\005\"7\n\nNodeStatus\022\017\n\007no"
+    "de_id\030\001 \001(\005\022\030\n\020memory_footprint\030\002 \001(\003\"\331\003"
+    "\n\013QueryResult\0226\n\013query_state\030\001 \001(\0162!.exe"
+    "c.user.QueryResult.QueryState\022&\n\010query_i"
+    "d\030\002 \001(\0132\024.exec.shared.QueryId\022\025\n\ris_last"
+    "_chunk\030\003 \001(\010\022\021\n\trow_count\030\004 \001(\005\022\024\n\014recor"
+    "ds_scan\030\005 \001(\003\022\025\n\rrecords_error\030\006 \001(\003\022\027\n\017"
+    "submission_time\030\007 \001(\003\022*\n\013node_status\030\010 \003"
+    "(\0132\025.exec.user.NodeStatus\022(\n\005error\030\t \003(\013"
+    "2\031.exec.shared.DrillPBError\022(\n\003def\030\n \001(\013"
+    "2\033.exec.shared.RecordBatchDef\022\026\n\016schema_"
+    "changed\030\013 \001(\010\"b\n\nQueryState\022\013\n\007PENDING\020\000"
+    "\022\013\n\007RUNNING\020\001\022\r\n\tCOMPLETED\020\002\022\014\n\010CANCELED"
+    "\020\003\022\n\n\006FAILED\020\004\022\021\n\rUNKNOWN_QUERY\020\005*\270\001\n\007Rp"
+    "cType\022\r\n\tHANDSHAKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE"
+    "\020\002\022\r\n\tRUN_QUERY\020\003\022\020\n\014CANCEL_QUERY\020\004\022\023\n\017R"
+    "EQUEST_RESULTS\020\005\022\020\n\014QUERY_RESULT\020\006\022\020\n\014QU"
+    "ERY_HANDLE\020\007\022\026\n\022REQ_META_FUNCTIONS\020\010\022\026\n\022"
+    "RESP_FUNCTION_LIST\020\t*#\n\020QueryResultsMode"
+    "\022\017\n\013STREAM_FULL\020\001B+\n\033org.apache.drill.ex"
+    "ec.protoB\nUserProtosH\001", 1422);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "User.proto", &protobuf_RegisterTypes);
   Property::default_instance_ = new Property();
@@ -342,21 +339,6 @@ bool RpcType_IsValid(int value) {
     case 7:
     case 8:
     case 9:
-      return true;
-    default:
-      return false;
-  }
-}
-
-const ::google::protobuf::EnumDescriptor* QueryType_descriptor() {
-  protobuf_AssignDescriptorsOnce();
-  return QueryType_descriptor_;
-}
-bool QueryType_IsValid(int value) {
-  switch(value) {
-    case 1:
-    case 2:
-    case 3:
       return true;
     default:
       return false;
@@ -1607,7 +1589,7 @@ bool RunQuery::MergePartialFromCodedStream(
         break;
       }
 
-      // optional .exec.user.QueryType type = 2;
+      // optional .exec.shared.QueryType type = 2;
       case 2: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
@@ -1616,8 +1598,8 @@ bool RunQuery::MergePartialFromCodedStream(
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
                    int, ::google::protobuf::internal::WireFormatLite::TYPE_ENUM>(
                  input, &value)));
-          if (::exec::user::QueryType_IsValid(value)) {
-            set_type(static_cast< ::exec::user::QueryType >(value));
+          if (::exec::shared::QueryType_IsValid(value)) {
+            set_type(static_cast< ::exec::shared::QueryType >(value));
           } else {
             mutable_unknown_fields()->AddVarint(2, value);
           }
@@ -1669,7 +1651,7 @@ void RunQuery::SerializeWithCachedSizes(
       1, this->results_mode(), output);
   }
 
-  // optional .exec.user.QueryType type = 2;
+  // optional .exec.shared.QueryType type = 2;
   if (has_type()) {
     ::google::protobuf::internal::WireFormatLite::WriteEnum(
       2, this->type(), output);
@@ -1698,7 +1680,7 @@ void RunQuery::SerializeWithCachedSizes(
       1, this->results_mode(), target);
   }
 
-  // optional .exec.user.QueryType type = 2;
+  // optional .exec.shared.QueryType type = 2;
   if (has_type()) {
     target = ::google::protobuf::internal::WireFormatLite::WriteEnumToArray(
       2, this->type(), target);
@@ -1731,7 +1713,7 @@ int RunQuery::ByteSize() const {
         ::google::protobuf::internal::WireFormatLite::EnumSize(this->results_mode());
     }
 
-    // optional .exec.user.QueryType type = 2;
+    // optional .exec.shared.QueryType type = 2;
     if (has_type()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::EnumSize(this->type());
