@@ -23,6 +23,8 @@ import org.apache.drill.exec.proto.BitControl.RpcType;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
+import org.apache.drill.exec.proto.UserBitShared.QueryId;
+import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
 import org.apache.drill.exec.rpc.DrillRpcFuture;
 import org.apache.drill.exec.rpc.FutureBitCommand;
 import org.apache.drill.exec.rpc.ListeningCommand;
@@ -57,6 +59,12 @@ public class ControlTunnel {
   
   public DrillRpcFuture<Ack> sendFragmentStatus(FragmentStatus status){
     SendFragmentStatus b = new SendFragmentStatus(status);
+    manager.runCommand(b);
+    return b.getFuture();
+  }
+
+  public DrillRpcFuture<QueryProfile> requestQueryProfile(QueryId queryId) {
+    RequestProfile b = new RequestProfile(queryId);
     manager.runCommand(b);
     return b.getFuture();
   }
@@ -105,6 +113,20 @@ public class ControlTunnel {
       connection.send(outcomeListener, RpcType.REQ_INIATILIZE_FRAGMENT, fragment, Ack.class);
     }
 
+  }
+
+  public static class RequestProfile extends FutureBitCommand<QueryProfile, ControlConnection> {
+    final QueryId queryId;
+
+    public RequestProfile(QueryId queryId) {
+      super();
+      this.queryId = queryId;
+    }
+
+    @Override
+    public void doRpcCall(RpcOutcomeListener<QueryProfile> outcomeListener, ControlConnection connection) {
+      connection.send(outcomeListener, RpcType.REQ_QUERY_STATUS, queryId, QueryProfile.class);
+    }
   }
 
 }

@@ -73,6 +73,33 @@ message SerializedField {
   optional int32 buffer_length = 7;
 }
 
+message NodeStatus {
+	optional int32 node_id = 1;
+	optional int64 memory_footprint = 2;
+}
+
+message QueryResult {
+	enum QueryState {
+	  PENDING = 0;
+	  RUNNING = 1;
+	  COMPLETED = 2;
+	  CANCELED = 3;
+	  FAILED = 4;
+	  UNKNOWN_QUERY = 5;
+	}
+
+	optional QueryState query_state = 1;
+	optional QueryId query_id = 2;
+	optional bool is_last_chunk = 3;
+	optional int32 row_count = 4;
+	optional int64 records_scan = 5;
+	optional int64 records_error = 6;
+	optional int64 submission_time = 7;
+	repeated NodeStatus node_status = 8;
+	repeated DrillPBError error = 9;
+	optional RecordBatchDef def = 10;
+	optional bool schema_changed = 11;
+}
 
 
 
@@ -83,7 +110,11 @@ message QueryProfile {
   optional int64 end = 4;
   optional string query = 5;
   optional string plan = 6;
-  repeated MajorFragmentProfile fragment_profile = 7;
+  optional DrillbitEndpoint foreman = 7;
+  optional QueryResult.QueryState state = 8;
+  optional int32 total_fragments = 9;
+  optional int32 finished_fragments = 10;
+  repeated MajorFragmentProfile fragment_profile = 11;
 }
 
 message MajorFragmentProfile {

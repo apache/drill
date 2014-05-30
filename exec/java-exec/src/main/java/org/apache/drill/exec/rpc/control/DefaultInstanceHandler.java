@@ -23,6 +23,7 @@ import org.apache.drill.exec.proto.BitControl.FragmentStatus;
 import org.apache.drill.exec.proto.BitControl.RpcType;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
+import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
 import org.apache.drill.exec.rpc.RpcException;
 
 import com.google.protobuf.MessageLite;
@@ -43,7 +44,9 @@ public class DefaultInstanceHandler {
       return FragmentStatus.getDefaultInstance();
     case RpcType.RESP_BIT_STATUS_VALUE:
       return BitStatus.getDefaultInstance();
-      
+    case RpcType.RESP_QUERY_STATUS_VALUE:
+      return QueryProfile.getDefaultInstance();
+
     default:
       throw new UnsupportedOperationException();
     }

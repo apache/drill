@@ -51,8 +51,8 @@ import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserBitShared.DrillPBError;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
-import org.apache.drill.exec.proto.UserProtos.QueryResult;
-import org.apache.drill.exec.proto.UserProtos.QueryResult.QueryState;
+import org.apache.drill.exec.proto.UserBitShared.QueryResult;
+import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.UserProtos.RequestResults;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
@@ -94,7 +94,7 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
     this.queryRequest = queryRequest;
     this.context = new QueryContext(connection.getSession(), queryId, dContext);
     this.initiatingClient = connection;
-    this.fragmentManager = new QueryManager(queryId, queryRequest, bee.getContext().getCache(), new ForemanManagerListener(), dContext.getController());
+    this.fragmentManager = new QueryManager(queryId, queryRequest, bee.getContext().getPersistentStoreProvider(), new ForemanManagerListener(), dContext.getController(), this);
     this.bee = bee;
 
     this.state = new AtomicState<QueryState>(QueryState.PENDING) {
@@ -102,6 +102,10 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
         return QueryState.valueOf(i);
       }
     };
+  }
+
+  public QueryContext getContext() {
+    return context;
   }
 
   private boolean isFinished(){
@@ -118,6 +122,10 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
   private void fail(String message, Throwable t) {
     if(isFinished()){
       logger.error("Received a failure message query finished of: {}", message, t);
+    }
+    if (!state.updateState(QueryState.RUNNING, QueryState.FAILED)) {
+      if (!state.updateState(QueryState.PENDING, QueryState.FAILED))
+      logger.warn("Tried to update query state to FAILED, but was not RUNNING");
     }
     DrillPBError error = ErrorHelper.logAndConvertError(context.getCurrentEndpoint(), message, t, logger);
     QueryResult result = QueryResult //
@@ -145,6 +153,7 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
   void cleanupAndSendResult(QueryResult result){
     bee.retireForeman(this);
     initiatingClient.sendResult(new ResponseSendListener(), new QueryWritableBatch(result));
+    state.updateState(QueryState.RUNNING, QueryState.COMPLETED);
   }
 
   private class ResponseSendListener extends BaseRpcOutcomeListener<Ack> {
@@ -163,6 +172,7 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
 
     final String originalThread = Thread.currentThread().getName();
     Thread.currentThread().setName(QueryIdHelper.getQueryId(queryId) + ":foreman");
+    fragmentManager.getStatus().setStartTime(System.currentTimeMillis());
     // convert a run query request into action
     try{
       switch (queryRequest.getType()) {
@@ -310,6 +320,11 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
       fragmentManager.runFragments(bee, work.getRootFragment(), work.getRootOperator(), initiatingClient, leafFragments, intermediateFragments);
       logger.debug("Fragments running.");
 
+      state.updateState(QueryState.PENDING, QueryState.RUNNING);
+      int totalFragments = 1 + intermediateFragments.size() + leafFragments.size();
+      fragmentManager.getStatus().setTotalFragments(totalFragments);
+      fragmentManager.getStatus().updateCache();
+
     } catch (ExecutionSetupException | RpcException e) {
       fail("Failure while setting up query.", e);
     }
@@ -346,9 +361,14 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
   public void close() throws IOException {
   }
 
-  QueryState getQueryState(){
+  public QueryState getQueryState(){
     return this.state.getState();
   }
+
+  public QueryStatus getQueryStatus() {
+    return this.fragmentManager.getStatus();
+  }
+
 
   class ForemanManagerListener{
     void fail(String message, Throwable t) {

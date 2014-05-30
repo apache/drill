@@ -21,8 +21,7 @@ import java.util.Arrays;
 
 import io.netty.buffer.ByteBuf;
 
-import org.apache.drill.exec.proto.UserProtos.QueryResult;
-import org.apache.drill.exec.record.WritableBatch;
+import org.apache.drill.exec.proto.UserBitShared.QueryResult;
 
 public class QueryWritableBatch {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryWritableBatch.class);

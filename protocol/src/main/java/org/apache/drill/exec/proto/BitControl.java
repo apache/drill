@@ -66,7 +66,7 @@ public final class BitControl {
      * <code>REQ_FRAGMENT_STATUS = 7;</code>
      *
      * <pre>
-     * get a fragment status, returns FragmentStatus
+     * send a fragment status, return Ack
      * </pre>
      */
     REQ_FRAGMENT_STATUS(5, 7),
@@ -79,21 +79,29 @@ public final class BitControl {
      */
     REQ_BIT_STATUS(6, 8),
     /**
-     * <code>RESP_FRAGMENT_HANDLE = 9;</code>
+     * <code>REQ_QUERY_STATUS = 9;</code>
+     */
+    REQ_QUERY_STATUS(7, 9),
+    /**
+     * <code>RESP_FRAGMENT_HANDLE = 10;</code>
      *
      * <pre>
      * bit responses
      * </pre>
      */
-    RESP_FRAGMENT_HANDLE(7, 9),
+    RESP_FRAGMENT_HANDLE(8, 10),
     /**
-     * <code>RESP_FRAGMENT_STATUS = 10;</code>
+     * <code>RESP_FRAGMENT_STATUS = 11;</code>
      */
-    RESP_FRAGMENT_STATUS(8, 10),
+    RESP_FRAGMENT_STATUS(9, 11),
     /**
-     * <code>RESP_BIT_STATUS = 11;</code>
+     * <code>RESP_BIT_STATUS = 12;</code>
      */
-    RESP_BIT_STATUS(9, 11),
+    RESP_BIT_STATUS(10, 12),
+    /**
+     * <code>RESP_QUERY_STATUS = 13;</code>
+     */
+    RESP_QUERY_STATUS(11, 13),
     ;
 
     /**
@@ -128,7 +136,7 @@ public final class BitControl {
      * <code>REQ_FRAGMENT_STATUS = 7;</code>
      *
      * <pre>
-     * get a fragment status, returns FragmentStatus
+     * send a fragment status, return Ack
      * </pre>
      */
     public static final int REQ_FRAGMENT_STATUS_VALUE = 7;
@@ -141,21 +149,29 @@ public final class BitControl {
      */
     public static final int REQ_BIT_STATUS_VALUE = 8;
     /**
-     * <code>RESP_FRAGMENT_HANDLE = 9;</code>
+     * <code>REQ_QUERY_STATUS = 9;</code>
+     */
+    public static final int REQ_QUERY_STATUS_VALUE = 9;
+    /**
+     * <code>RESP_FRAGMENT_HANDLE = 10;</code>
      *
      * <pre>
      * bit responses
      * </pre>
      */
-    public static final int RESP_FRAGMENT_HANDLE_VALUE = 9;
+    public static final int RESP_FRAGMENT_HANDLE_VALUE = 10;
     /**
-     * <code>RESP_FRAGMENT_STATUS = 10;</code>
+     * <code>RESP_FRAGMENT_STATUS = 11;</code>
      */
-    public static final int RESP_FRAGMENT_STATUS_VALUE = 10;
+    public static final int RESP_FRAGMENT_STATUS_VALUE = 11;
     /**
-     * <code>RESP_BIT_STATUS = 11;</code>
+     * <code>RESP_BIT_STATUS = 12;</code>
      */
-    public static final int RESP_BIT_STATUS_VALUE = 11;
+    public static final int RESP_BIT_STATUS_VALUE = 12;
+    /**
+     * <code>RESP_QUERY_STATUS = 13;</code>
+     */
+    public static final int RESP_QUERY_STATUS_VALUE = 13;
 
 
     public final int getNumber() { return value; }
@@ -169,9 +185,11 @@ public final class BitControl {
         case 6: return REQ_CANCEL_FRAGMENT;
         case 7: return REQ_FRAGMENT_STATUS;
         case 8: return REQ_BIT_STATUS;
-        case 9: return RESP_FRAGMENT_HANDLE;
-        case 10: return RESP_FRAGMENT_STATUS;
-        case 11: return RESP_BIT_STATUS;
+        case 9: return REQ_QUERY_STATUS;
+        case 10: return RESP_FRAGMENT_HANDLE;
+        case 11: return RESP_FRAGMENT_STATUS;
+        case 12: return RESP_BIT_STATUS;
+        case 13: return RESP_QUERY_STATUS;
         default: return null;
       }
     }
@@ -5221,14 +5239,15 @@ public final class BitControl {
       "e_zone\030\020 \001(\005\022\024\n\014options_json\030\021 \001(\t\"f\n\017Wo" +
       "rkQueueStatus\022(\n\010endpoint\030\001 \001(\0132\026.exec.D" +
       "rillbitEndpoint\022\024\n\014queue_length\030\002 \001(\005\022\023\n" +
-      "\013report_time\030\003 \001(\003*\332\001\n\007RpcType\022\r\n\tHANDSH" +
+      "\013report_time\030\003 \001(\003*\207\002\n\007RpcType\022\r\n\tHANDSH" +
       "AKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\033\n\027REQ_INIAT" +
       "ILIZE_FRAGMENT\020\003\022\027\n\023REQ_CANCEL_FRAGMENT\020" +
       "\006\022\027\n\023REQ_FRAGMENT_STATUS\020\007\022\022\n\016REQ_BIT_ST" +
-      "ATUS\020\010\022\030\n\024RESP_FRAGMENT_HANDLE\020\t\022\030\n\024RESP" +
-      "_FRAGMENT_STATUS\020\n\022\023\n\017RESP_BIT_STATUS\020\013B",
-      "+\n\033org.apache.drill.exec.protoB\nBitContr" +
-      "olH\001"
+      "ATUS\020\010\022\024\n\020REQ_QUERY_STATUS\020\t\022\030\n\024RESP_FRA" +
+      "GMENT_HANDLE\020\n\022\030\n\024RESP_FRAGMENT_STATUS\020\013",
+      "\022\023\n\017RESP_BIT_STATUS\020\014\022\025\n\021RESP_QUERY_STAT" +
+      "US\020\rB+\n\033org.apache.drill.exec.protoB\nBit" +
+      "ControlH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {

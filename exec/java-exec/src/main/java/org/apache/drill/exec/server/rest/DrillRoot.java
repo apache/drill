@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.server.rest;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.AbstractMap;
 import java.util.Collections;
@@ -43,12 +44,14 @@ import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
+import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.user.ConnectionThrottle;
 import org.apache.drill.exec.rpc.user.QueryResultBatch;
 import org.apache.drill.exec.rpc.user.UserResultsListener;
+import org.apache.drill.exec.store.sys.PStore;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.work.WorkManager;
 import org.apache.drill.exec.work.foreman.QueryStatus;
@@ -80,38 +83,66 @@ public class DrillRoot {
   @GET
   @Path("/queries")
   @Produces(MediaType.TEXT_HTML)
-  public Viewable getResults() {
-    DistributedMap<String, QueryProfile> cprofiles = work.getContext().getCache().getMap(QueryStatus.QUERY_PROFILE);
+  public Viewable getResults() throws IOException {
+    PStore<QueryProfile> profiles = work.getContext().getPersistentStoreProvider().getPStore(QueryStatus.QUERY_PROFILE);
 
-    List<Map.Entry<String, Long>> ids = Lists.newArrayList();
-    for(Map.Entry<String, QueryProfile> entry : cprofiles.getLocalEntries()){
+    List<Map.Entry<String, Long>> runningIds = Lists.newArrayList();
+    List<Map.Entry<String, Long>> finishedIds = Lists.newArrayList();
+    for(Map.Entry<String, QueryProfile> entry : profiles){
       QueryProfile q = entry.getValue();
-      ids.add(new AbstractMap.SimpleEntry<>(entry.getKey(), q.getFragmentProfile(0).getMinorFragmentProfile(0).getStartTime()));
+      if (q.getState() == QueryState.RUNNING || q.getState() == QueryState.PENDING) {
+        runningIds.add(new AbstractMap.SimpleEntry<>(entry.getKey(), q.getStart()));
+      } else {
+        finishedIds.add(new AbstractMap.SimpleEntry<>(entry.getKey(), q.getStart()));
+      }
     }
 
-    Collections.sort(ids, new Comparator<Map.Entry<String, Long>>() {
+    Comparator<Map.Entry<String,Long>> comparator = new Comparator<Map.Entry<String,Long>>() {
       @Override
       public int compare(Map.Entry<String, Long> o1, Map.Entry<String, Long> o2) {
         return o2.getValue().compareTo(o1.getValue());
       }
-    });
+    };
 
-    List<Map.Entry<String, String>> queries = Lists.newArrayList();
-    for(Map.Entry<String, Long> entry : ids){
-      queries.add(new AbstractMap.SimpleEntry<>(entry.getKey(), new SimpleDateFormat("MM/dd/yyyy HH:mm:ss").format(new Date(entry.getValue()))));
+    Collections.sort(runningIds, comparator);
+    Collections.sort(finishedIds, comparator);
+
+    List<Map.Entry<String, String>> runningQueries = Lists.newArrayList();
+    List<Map.Entry<String, String>> oldQueries = Lists.newArrayList();
+    for(Map.Entry<String, Long> entry : runningIds){
+      runningQueries.add(new AbstractMap.SimpleEntry<>(entry.getKey(), new SimpleDateFormat("MM/dd/yyyy HH:mm:ss").format(new Date(entry.getValue()))));
     }
 
+    for(Map.Entry<String, Long> entry : finishedIds){
+      oldQueries.add(new AbstractMap.SimpleEntry<>(entry.getKey(), new SimpleDateFormat("MM/dd/yyyy HH:mm:ss").format(new Date(entry.getValue()))));
+    }
     // add status (running, done)
+
+    Queries queries = new Queries();
+    queries.runningQueries = runningQueries;
+    queries.oldQueries = oldQueries;
 
     return new Viewable("/rest/status/list.ftl", queries);
   }
 
+  public static class Queries {
+    List<Map.Entry<String, String>> runningQueries;
+    List<Map.Entry<String, String>> oldQueries;
+
+    public List<Map.Entry<String, String>> getRunningQueries() {
+      return runningQueries;
+    }
+
+    public List<Map.Entry<String, String>> getOldQueries() {
+      return oldQueries;
+    }
+  }
 
   @GET
   @Path("/query/{queryid}")
   @Produces(MediaType.TEXT_HTML)
-  public Viewable getQuery(@PathParam("queryid") String queryId) {
-    DistributedMap<String, QueryProfile> profiles = work.getContext().getCache().getMap(QueryStatus.QUERY_PROFILE);
+  public Viewable getQuery(@PathParam("queryid") String queryId) throws IOException {
+    PStore<QueryProfile> profiles = work.getContext().getPersistentStoreProvider().getPStore(QueryStatus.QUERY_PROFILE);
     QueryProfile profile = profiles.get(queryId);
     if(profile == null) profile = QueryProfile.getDefaultInstance();
 

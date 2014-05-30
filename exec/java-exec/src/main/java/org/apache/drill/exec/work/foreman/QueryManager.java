@@ -32,14 +32,15 @@ import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
-import org.apache.drill.exec.proto.UserProtos.QueryResult;
-import org.apache.drill.exec.proto.UserProtos.QueryResult.QueryState;
+import org.apache.drill.exec.proto.UserBitShared.QueryResult;
+import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
 import org.apache.drill.exec.rpc.control.Controller;
 import org.apache.drill.exec.rpc.control.WorkEventBus;
 import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
+import org.apache.drill.exec.store.sys.PStoreProvider;
 import org.apache.drill.exec.work.EndpointListener;
 import org.apache.drill.exec.work.WorkManager.WorkerBee;
 import org.apache.drill.exec.work.batch.IncomingBuffers;
@@ -56,21 +57,21 @@ public class QueryManager implements FragmentStatusListener{
 
   private final QueryStatus status;
   private final Controller controller;
-  private ForemanManagerListener foreman;
+  private ForemanManagerListener foremanManagerListener;
   private AtomicInteger remainingFragmentCount;
   private WorkEventBus workBus;
   private QueryId queryId;
   private FragmentExecutor rootRunner;
   private RunQuery query;
 
-  public QueryManager(QueryId id, RunQuery query, DistributedCache cache, ForemanManagerListener foreman, Controller controller) {
+  public QueryManager(QueryId id, RunQuery query, PStoreProvider pStoreProvider, ForemanManagerListener foremanManagerListener, Controller controller, Foreman foreman) {
     super();
-    this.foreman = foreman;
+    this.foremanManagerListener = foremanManagerListener;
     this.query = query;
     this.queryId =  id;
     this.controller = controller;
     this.remainingFragmentCount = new AtomicInteger(0);
-    this.status = new QueryStatus(query, id, cache);
+    this.status = new QueryStatus(query, id, pStoreProvider, foreman);
   }
 
   public QueryStatus getStatus(){
@@ -81,7 +82,9 @@ public class QueryManager implements FragmentStatusListener{
 
   }
 
-  public void runFragments(WorkerBee bee, PlanFragment rootFragment, FragmentRoot rootOperator, UserClientConnection rootClient, List<PlanFragment> leafFragments, List<PlanFragment> intermediateFragments) throws ExecutionSetupException{
+  public void runFragments(WorkerBee bee, PlanFragment rootFragment, FragmentRoot rootOperator,
+                           UserClientConnection rootClient, List<PlanFragment> leafFragments,
+                           List<PlanFragment> intermediateFragments) throws ExecutionSetupException{
     logger.debug("Setting up fragment runs.");
     remainingFragmentCount.set(leafFragments.size()+1);
     assert queryId == rootFragment.getHandle().getQueryId();
@@ -139,7 +142,7 @@ public class QueryManager implements FragmentStatusListener{
     logger.debug("New fragment status was provided to Foreman of {}", status);
     switch(status.getProfile().getState()){
     case AWAITING_ALLOCATION:
-      updateStatus(status);
+      updateStatus(status, true);
       break;
     case CANCELLED:
       // we don't care about cancellation messages since we're the only entity that should drive cancellations.
@@ -151,19 +154,18 @@ public class QueryManager implements FragmentStatusListener{
       finished(status);
       break;
     case RUNNING:
-      updateStatus(status);
+      updateStatus(status, false);
       break;
     default:
       throw new UnsupportedOperationException(String.format("Received status of %s", status));
     }
   }
 
-  private void updateStatus(FragmentStatus status){
-    this.status.update(status);
+  private void updateStatus(FragmentStatus status, boolean updateCache){
+    this.status.update(status, updateCache);
   }
 
   private void finished(FragmentStatus status){
-    updateStatus(status);
     int remaining = remainingFragmentCount.decrementAndGet();
     if(remaining == 0){
       logger.info("Outcome status: {}", this.status);
@@ -171,15 +173,19 @@ public class QueryManager implements FragmentStatusListener{
               .setQueryState(QueryState.COMPLETED) //
               .setQueryId(queryId) //
               .build();
-      foreman.cleanupAndSendResult(result);
+      foremanManagerListener.cleanupAndSendResult(result);
     }
+    this.status.setEndTime(System.currentTimeMillis());
+    this.status.incrementFinishedFragments();
+    updateStatus(status, true);
   }
 
   private void fail(FragmentStatus status){
-    updateStatus(status);
     stopQuery();
     QueryResult result = QueryResult.newBuilder().setQueryId(queryId).setQueryState(QueryState.FAILED).addError(status.getProfile().getError()).build();
-    foreman.cleanupAndSendResult(result);
+    foremanManagerListener.cleanupAndSendResult(result);
+    this.status.setEndTime(System.currentTimeMillis());
+    updateStatus(status, true);
   }
 
 

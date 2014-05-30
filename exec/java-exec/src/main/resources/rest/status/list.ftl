@@ -17,7 +17,7 @@
   <a href="/queries">back</a><br/>
   <div class="page-header">
   </div>
-  <h3>List of Queries</h3>
+  <h3>Running Queries</h3>
   <div class="table-responsive">
     <table class="table table-hover">
       <thead>
@@ -25,7 +25,30 @@
          <td>Query</td>
       </thead>
       <tbody>
-        <#list model as query>
+        <#list model.getRunningQueries() as query>
+        <tr>
+          <td>${query.getValue()}</td>
+          <td>
+            <a href="/query/${query.getKey()}">
+              <div style="height:100%;width:100%">
+                ${query.getKey()}
+              </div>
+            </a>
+          </td>
+        </tr>
+        </#list>
+      </tbody>
+    </table>
+  </div>
+  <h3>Completed Queries</h3>
+  <div class="table-responsive">
+    <table class="table table-hover">
+      <thead>
+         <td>Time</td>
+         <td>Query</td>
+      </thead>
+      <tbody>
+        <#list model.getOldQueries() as query>
         <tr>
           <td>${query.getValue()}</td>
           <td>

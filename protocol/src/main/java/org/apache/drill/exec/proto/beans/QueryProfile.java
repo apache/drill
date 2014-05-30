@@ -55,6 +55,10 @@ public final class QueryProfile implements Externalizable, Message<QueryProfile>
     private long end;
     private String query;
     private String plan;
+    private DrillbitEndpoint foreman;
+    private QueryResult.QueryState state;
+    private int totalFragments;
+    private int finishedFragments;
     private List<MajorFragmentProfile> fragmentProfile;
 
     public QueryProfile()
@@ -139,6 +143,58 @@ public final class QueryProfile implements Externalizable, Message<QueryProfile>
     public QueryProfile setPlan(String plan)
     {
         this.plan = plan;
+        return this;
+    }
+
+    // foreman
+
+    public DrillbitEndpoint getForeman()
+    {
+        return foreman;
+    }
+
+    public QueryProfile setForeman(DrillbitEndpoint foreman)
+    {
+        this.foreman = foreman;
+        return this;
+    }
+
+    // state
+
+    public QueryResult.QueryState getState()
+    {
+        return state == null ? QueryResult.QueryState.PENDING : state;
+    }
+
+    public QueryProfile setState(QueryResult.QueryState state)
+    {
+        this.state = state;
+        return this;
+    }
+
+    // totalFragments
+
+    public int getTotalFragments()
+    {
+        return totalFragments;
+    }
+
+    public QueryProfile setTotalFragments(int totalFragments)
+    {
+        this.totalFragments = totalFragments;
+        return this;
+    }
+
+    // finishedFragments
+
+    public int getFinishedFragments()
+    {
+        return finishedFragments;
+    }
+
+    public QueryProfile setFinishedFragments(int finishedFragments)
+    {
+        this.finishedFragments = finishedFragments;
         return this;
     }
 
@@ -229,6 +285,19 @@ public final class QueryProfile implements Externalizable, Message<QueryProfile>
                     message.plan = input.readString();
                     break;
                 case 7:
+                    message.foreman = input.mergeObject(message.foreman, DrillbitEndpoint.getSchema());
+                    break;
+
+                case 8:
+                    message.state = QueryResult.QueryState.valueOf(input.readEnum());
+                    break;
+                case 9:
+                    message.totalFragments = input.readInt32();
+                    break;
+                case 10:
+                    message.finishedFragments = input.readInt32();
+                    break;
+                case 11:
                     if(message.fragmentProfile == null)
                         message.fragmentProfile = new ArrayList<MajorFragmentProfile>();
                     message.fragmentProfile.add(input.mergeObject(null, MajorFragmentProfile.getSchema()));
@@ -262,12 +331,25 @@ public final class QueryProfile implements Externalizable, Message<QueryProfile>
         if(message.plan != null)
             output.writeString(6, message.plan, false);
 
+        if(message.foreman != null)
+             output.writeObject(7, message.foreman, DrillbitEndpoint.getSchema(), false);
+
+
+        if(message.state != null)
+             output.writeEnum(8, message.state.number, false);
+
+        if(message.totalFragments != 0)
+            output.writeInt32(9, message.totalFragments, false);
+
+        if(message.finishedFragments != 0)
+            output.writeInt32(10, message.finishedFragments, false);
+
         if(message.fragmentProfile != null)
         {
             for(MajorFragmentProfile fragmentProfile : message.fragmentProfile)
             {
                 if(fragmentProfile != null)
-                    output.writeObject(7, fragmentProfile, MajorFragmentProfile.getSchema(), true);
+                    output.writeObject(11, fragmentProfile, MajorFragmentProfile.getSchema(), true);
             }
         }
 
@@ -283,7 +365,11 @@ public final class QueryProfile implements Externalizable, Message<QueryProfile>
             case 4: return "end";
             case 5: return "query";
             case 6: return "plan";
-            case 7: return "fragmentProfile";
+            case 7: return "foreman";
+            case 8: return "state";
+            case 9: return "totalFragments";
+            case 10: return "finishedFragments";
+            case 11: return "fragmentProfile";
             default: return null;
         }
     }
@@ -303,7 +389,11 @@ public final class QueryProfile implements Externalizable, Message<QueryProfile>
         __fieldMap.put("end", 4);
         __fieldMap.put("query", 5);
         __fieldMap.put("plan", 6);
-        __fieldMap.put("fragmentProfile", 7);
+        __fieldMap.put("foreman", 7);
+        __fieldMap.put("state", 8);
+        __fieldMap.put("totalFragments", 9);
+        __fieldMap.put("finishedFragments", 10);
+        __fieldMap.put("fragmentProfile", 11);
     }
     
 }

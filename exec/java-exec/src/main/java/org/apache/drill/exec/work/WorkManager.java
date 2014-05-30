@@ -110,6 +110,10 @@ public class WorkManager implements Closeable{
     return userWorker;
   }
 
+  public WorkerBee getBee() {
+    return bee;
+  }
+
   @Override
   public void close() throws IOException {
     try {
@@ -136,6 +140,7 @@ public class WorkManager implements Closeable{
 
     public void addNewForeman(Foreman foreman){
       pendingTasks.add(foreman);
+      queries.put(foreman.getQueryId(), foreman);
     }
 
 

@@ -19,13 +19,15 @@ enum RpcType {
   REQ_INIATILIZE_FRAGMENT = 3; // Returns Handle
     
   REQ_CANCEL_FRAGMENT = 6; // send a cancellation message for a fragment, returns Ack
-  REQ_FRAGMENT_STATUS = 7; // get a fragment status, returns FragmentStatus
+  REQ_FRAGMENT_STATUS = 7; // send a fragment status, return Ack
   REQ_BIT_STATUS = 8; // get bit status.
+  REQ_QUERY_STATUS = 9;
       
     // bit responses
-  RESP_FRAGMENT_HANDLE = 9;
-  RESP_FRAGMENT_STATUS = 10;
-  RESP_BIT_STATUS = 11;
+  RESP_FRAGMENT_HANDLE = 10;
+  RESP_FRAGMENT_STATUS = 11;
+  RESP_BIT_STATUS = 12;
+  RESP_QUERY_STATUS = 13;
 }
 
 

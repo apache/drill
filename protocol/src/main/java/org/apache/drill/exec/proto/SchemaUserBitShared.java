@@ -941,6 +941,313 @@ public final class SchemaUserBitShared
         }
     }
 
+    public static final class NodeStatus
+    {
+        public static final org.apache.drill.exec.proto.SchemaUserBitShared.NodeStatus.MessageSchema WRITE =
+            new org.apache.drill.exec.proto.SchemaUserBitShared.NodeStatus.MessageSchema();
+        public static final org.apache.drill.exec.proto.SchemaUserBitShared.NodeStatus.BuilderSchema MERGE =
+            new org.apache.drill.exec.proto.SchemaUserBitShared.NodeStatus.BuilderSchema();
+        
+        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.NodeStatus>
+        {
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.NodeStatus message) throws java.io.IOException
+            {
+                if(message.hasNodeId())
+                    output.writeInt32(1, message.getNodeId(), false);
+                if(message.hasMemoryFootprint())
+                    output.writeInt64(2, message.getMemoryFootprint(), false);
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserBitShared.NodeStatus message)
+            {
+                return message.isInitialized();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserBitShared.NodeStatus.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserBitShared.NodeStatus.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserBitShared.NodeStatus> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.NodeStatus.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.NodeStatus.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.NodeStatus.class.getName();
+            }
+            //unused
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.NodeStatus message) throws java.io.IOException {}
+            public org.apache.drill.exec.proto.UserBitShared.NodeStatus newMessage() { return null; }
+        }
+        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.NodeStatus.Builder>
+        {
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.NodeStatus.Builder builder) throws java.io.IOException
+            {
+                for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
+                {
+                    switch(number)
+                    {
+                        case 0:
+                            return;
+                        case 1:
+                            builder.setNodeId(input.readInt32());
+                            break;
+                        case 2:
+                            builder.setMemoryFootprint(input.readInt64());
+                            break;
+                        default:
+                            input.handleUnknownField(number, this);
+                    }
+                }
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserBitShared.NodeStatus.Builder builder)
+            {
+                return builder.isInitialized();
+            }
+            public org.apache.drill.exec.proto.UserBitShared.NodeStatus.Builder newMessage()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.NodeStatus.newBuilder();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserBitShared.NodeStatus.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserBitShared.NodeStatus.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserBitShared.NodeStatus.Builder> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.NodeStatus.Builder.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.NodeStatus.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.NodeStatus.class.getName();
+            }
+            //unused
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.NodeStatus.Builder builder) throws java.io.IOException {}
+        }
+        public static java.lang.String getFieldName(int number)
+        {
+            switch(number)
+            {
+                case 1: return "nodeId";
+                case 2: return "memoryFootprint";
+                default: return null;
+            }
+        }
+        public static int getFieldNumber(java.lang.String name)
+        {
+            java.lang.Integer number = fieldMap.get(name);
+            return number == null ? 0 : number.intValue();
+        }
+        private static final java.util.HashMap<java.lang.String,java.lang.Integer> fieldMap = new java.util.HashMap<java.lang.String,java.lang.Integer>();
+        static
+        {
+            fieldMap.put("nodeId", 1);
+            fieldMap.put("memoryFootprint", 2);
+        }
+    }
+
+    public static final class QueryResult
+    {
+        public static final org.apache.drill.exec.proto.SchemaUserBitShared.QueryResult.MessageSchema WRITE =
+            new org.apache.drill.exec.proto.SchemaUserBitShared.QueryResult.MessageSchema();
+        public static final org.apache.drill.exec.proto.SchemaUserBitShared.QueryResult.BuilderSchema MERGE =
+            new org.apache.drill.exec.proto.SchemaUserBitShared.QueryResult.BuilderSchema();
+        
+        public static class MessageSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.QueryResult>
+        {
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.QueryResult message) throws java.io.IOException
+            {
+                if(message.hasQueryState())
+                    output.writeEnum(1, message.getQueryState().getNumber(), false);
+                if(message.hasQueryId())
+                    output.writeObject(2, message.getQueryId(), org.apache.drill.exec.proto.SchemaUserBitShared.QueryId.WRITE, false);
+
+                if(message.hasIsLastChunk())
+                    output.writeBool(3, message.getIsLastChunk(), false);
+                if(message.hasRowCount())
+                    output.writeInt32(4, message.getRowCount(), false);
+                if(message.hasRecordsScan())
+                    output.writeInt64(5, message.getRecordsScan(), false);
+                if(message.hasRecordsError())
+                    output.writeInt64(6, message.getRecordsError(), false);
+                if(message.hasSubmissionTime())
+                    output.writeInt64(7, message.getSubmissionTime(), false);
+                for(org.apache.drill.exec.proto.UserBitShared.NodeStatus nodeStatus : message.getNodeStatusList())
+                    output.writeObject(8, nodeStatus, org.apache.drill.exec.proto.SchemaUserBitShared.NodeStatus.WRITE, true);
+
+                for(org.apache.drill.exec.proto.UserBitShared.DrillPBError error : message.getErrorList())
+                    output.writeObject(9, error, org.apache.drill.exec.proto.SchemaUserBitShared.DrillPBError.WRITE, true);
+
+                if(message.hasDef())
+                    output.writeObject(10, message.getDef(), org.apache.drill.exec.proto.SchemaUserBitShared.RecordBatchDef.WRITE, false);
+
+                if(message.hasSchemaChanged())
+                    output.writeBool(11, message.getSchemaChanged(), false);
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserBitShared.QueryResult message)
+            {
+                return message.isInitialized();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserBitShared.QueryResult.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserBitShared.QueryResult.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserBitShared.QueryResult> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.QueryResult.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.QueryResult.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.QueryResult.class.getName();
+            }
+            //unused
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.QueryResult message) throws java.io.IOException {}
+            public org.apache.drill.exec.proto.UserBitShared.QueryResult newMessage() { return null; }
+        }
+        public static class BuilderSchema implements com.dyuproject.protostuff.Schema<org.apache.drill.exec.proto.UserBitShared.QueryResult.Builder>
+        {
+            public void mergeFrom(com.dyuproject.protostuff.Input input, org.apache.drill.exec.proto.UserBitShared.QueryResult.Builder builder) throws java.io.IOException
+            {
+                for(int number = input.readFieldNumber(this);; number = input.readFieldNumber(this))
+                {
+                    switch(number)
+                    {
+                        case 0:
+                            return;
+                        case 1:
+                            builder.setQueryState(org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState.valueOf(input.readEnum()));
+                            break;
+                        case 2:
+                            builder.setQueryId(input.mergeObject(org.apache.drill.exec.proto.UserBitShared.QueryId.newBuilder(), org.apache.drill.exec.proto.SchemaUserBitShared.QueryId.MERGE));
+
+                            break;
+                        case 3:
+                            builder.setIsLastChunk(input.readBool());
+                            break;
+                        case 4:
+                            builder.setRowCount(input.readInt32());
+                            break;
+                        case 5:
+                            builder.setRecordsScan(input.readInt64());
+                            break;
+                        case 6:
+                            builder.setRecordsError(input.readInt64());
+                            break;
+                        case 7:
+                            builder.setSubmissionTime(input.readInt64());
+                            break;
+                        case 8:
+                            builder.addNodeStatus(input.mergeObject(org.apache.drill.exec.proto.UserBitShared.NodeStatus.newBuilder(), org.apache.drill.exec.proto.SchemaUserBitShared.NodeStatus.MERGE));
+
+                            break;
+                        case 9:
+                            builder.addError(input.mergeObject(org.apache.drill.exec.proto.UserBitShared.DrillPBError.newBuilder(), org.apache.drill.exec.proto.SchemaUserBitShared.DrillPBError.MERGE));
+
+                            break;
+                        case 10:
+                            builder.setDef(input.mergeObject(org.apache.drill.exec.proto.UserBitShared.RecordBatchDef.newBuilder(), org.apache.drill.exec.proto.SchemaUserBitShared.RecordBatchDef.MERGE));
+
+                            break;
+                        case 11:
+                            builder.setSchemaChanged(input.readBool());
+                            break;
+                        default:
+                            input.handleUnknownField(number, this);
+                    }
+                }
+            }
+            public boolean isInitialized(org.apache.drill.exec.proto.UserBitShared.QueryResult.Builder builder)
+            {
+                return builder.isInitialized();
+            }
+            public org.apache.drill.exec.proto.UserBitShared.QueryResult.Builder newMessage()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.QueryResult.newBuilder();
+            }
+            public java.lang.String getFieldName(int number)
+            {
+                return org.apache.drill.exec.proto.SchemaUserBitShared.QueryResult.getFieldName(number);
+            }
+            public int getFieldNumber(java.lang.String name)
+            {
+                return org.apache.drill.exec.proto.SchemaUserBitShared.QueryResult.getFieldNumber(name);
+            }
+            public java.lang.Class<org.apache.drill.exec.proto.UserBitShared.QueryResult.Builder> typeClass()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.QueryResult.Builder.class;
+            }
+            public java.lang.String messageName()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.QueryResult.class.getSimpleName();
+            }
+            public java.lang.String messageFullName()
+            {
+                return org.apache.drill.exec.proto.UserBitShared.QueryResult.class.getName();
+            }
+            //unused
+            public void writeTo(com.dyuproject.protostuff.Output output, org.apache.drill.exec.proto.UserBitShared.QueryResult.Builder builder) throws java.io.IOException {}
+        }
+        public static java.lang.String getFieldName(int number)
+        {
+            switch(number)
+            {
+                case 1: return "queryState";
+                case 2: return "queryId";
+                case 3: return "isLastChunk";
+                case 4: return "rowCount";
+                case 5: return "recordsScan";
+                case 6: return "recordsError";
+                case 7: return "submissionTime";
+                case 8: return "nodeStatus";
+                case 9: return "error";
+                case 10: return "def";
+                case 11: return "schemaChanged";
+                default: return null;
+            }
+        }
+        public static int getFieldNumber(java.lang.String name)
+        {
+            java.lang.Integer number = fieldMap.get(name);
+            return number == null ? 0 : number.intValue();
+        }
+        private static final java.util.HashMap<java.lang.String,java.lang.Integer> fieldMap = new java.util.HashMap<java.lang.String,java.lang.Integer>();
+        static
+        {
+            fieldMap.put("queryState", 1);
+            fieldMap.put("queryId", 2);
+            fieldMap.put("isLastChunk", 3);
+            fieldMap.put("rowCount", 4);
+            fieldMap.put("recordsScan", 5);
+            fieldMap.put("recordsError", 6);
+            fieldMap.put("submissionTime", 7);
+            fieldMap.put("nodeStatus", 8);
+            fieldMap.put("error", 9);
+            fieldMap.put("def", 10);
+            fieldMap.put("schemaChanged", 11);
+        }
+    }
+
     public static final class QueryProfile
     {
         public static final org.apache.drill.exec.proto.SchemaUserBitShared.QueryProfile.MessageSchema WRITE =
@@ -965,8 +1272,17 @@ public final class SchemaUserBitShared
                     output.writeString(5, message.getQuery(), false);
                 if(message.hasPlan())
                     output.writeString(6, message.getPlan(), false);
+                if(message.hasForeman())
+                    output.writeObject(7, message.getForeman(), org.apache.drill.exec.proto.SchemaCoordinationProtos.DrillbitEndpoint.WRITE, false);
+
+                if(message.hasState())
+                    output.writeEnum(8, message.getState().getNumber(), false);
+                if(message.hasTotalFragments())
+                    output.writeInt32(9, message.getTotalFragments(), false);
+                if(message.hasFinishedFragments())
+                    output.writeInt32(10, message.getFinishedFragments(), false);
                 for(org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile fragmentProfile : message.getFragmentProfileList())
-                    output.writeObject(7, fragmentProfile, org.apache.drill.exec.proto.SchemaUserBitShared.MajorFragmentProfile.WRITE, true);
+                    output.writeObject(11, fragmentProfile, org.apache.drill.exec.proto.SchemaUserBitShared.MajorFragmentProfile.WRITE, true);
 
             }
             public boolean isInitialized(org.apache.drill.exec.proto.UserBitShared.QueryProfile message)
@@ -1027,6 +1343,19 @@ public final class SchemaUserBitShared
                             builder.setPlan(input.readString());
                             break;
                         case 7:
+                            builder.setForeman(input.mergeObject(org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint.newBuilder(), org.apache.drill.exec.proto.SchemaCoordinationProtos.DrillbitEndpoint.MERGE));
+
+                            break;
+                        case 8:
+                            builder.setState(org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState.valueOf(input.readEnum()));
+                            break;
+                        case 9:
+                            builder.setTotalFragments(input.readInt32());
+                            break;
+                        case 10:
+                            builder.setFinishedFragments(input.readInt32());
+                            break;
+                        case 11:
                             builder.addFragmentProfile(input.mergeObject(org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile.newBuilder(), org.apache.drill.exec.proto.SchemaUserBitShared.MajorFragmentProfile.MERGE));
 
                             break;
@@ -1076,7 +1405,11 @@ public final class SchemaUserBitShared
                 case 4: return "end";
                 case 5: return "query";
                 case 6: return "plan";
-                case 7: return "fragmentProfile";
+                case 7: return "foreman";
+                case 8: return "state";
+                case 9: return "totalFragments";
+                case 10: return "finishedFragments";
+                case 11: return "fragmentProfile";
                 default: return null;
             }
         }
@@ -1094,7 +1427,11 @@ public final class SchemaUserBitShared
             fieldMap.put("end", 4);
             fieldMap.put("query", 5);
             fieldMap.put("plan", 6);
-            fieldMap.put("fragmentProfile", 7);
+            fieldMap.put("foreman", 7);
+            fieldMap.put("state", 8);
+            fieldMap.put("totalFragments", 9);
+            fieldMap.put("finishedFragments", 10);
+            fieldMap.put("fragmentProfile", 11);
         }
     }
 
