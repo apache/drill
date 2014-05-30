@@ -58,8 +58,12 @@ public class FunctionCallFactory {
     opToFuncTable.put("<>", "not_equal");
     opToFuncTable.put(">=", "greater_than_or_equal_to");
     opToFuncTable.put("<=", "less_than_or_equal_to");
+    opToFuncTable.put("is null", "isnull");
     opToFuncTable.put("is not null", "isnotnull");
     opToFuncTable.put("is true", "istrue");
+    opToFuncTable.put("is not true", "isnottrue");
+    opToFuncTable.put("is false", "isfalse");
+    opToFuncTable.put("is not false", "isnotfalse");
     
     opToFuncTable.put("!", "not");
     opToFuncTable.put("u-", "negative");
