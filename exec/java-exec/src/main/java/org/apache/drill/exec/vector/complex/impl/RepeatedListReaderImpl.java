@@ -98,7 +98,10 @@ public class RepeatedListReaderImpl extends AbstractFieldReader{
   public FieldReader reader(){
     if(reader == null){
       reader = container.get(name, ValueVector.class).getAccessor().getReader();
-      reader.setPosition(currentOffset);
+      if (currentOffset == NO_VALUES)
+        reader = NullReader.INSTANCE;
+      else
+        reader.setPosition(currentOffset);
     }
     return reader;
   }

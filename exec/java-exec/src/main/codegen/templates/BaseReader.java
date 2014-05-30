@@ -39,6 +39,7 @@ public interface BaseReader extends Positionable{
   public interface RepeatedMapReader extends MapReader{
     boolean next();
     int size();
+    void copyAsValue(MapWriter writer);
   }
   
   public interface ListReader extends BaseReader{

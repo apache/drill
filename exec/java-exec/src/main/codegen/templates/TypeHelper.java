@@ -115,14 +115,17 @@ public class TypeHelper {
     }
     throw new UnsupportedOperationException();
   }
-  public static Class<?> getReaderClassName( MinorType type, DataMode mode){
+  public static Class<?> getReaderClassName( MinorType type, DataMode mode, boolean isSingularRepeated){
     switch (type) {
     case MAP:
       switch (mode) {
       case REQUIRED:
-        return SingleMapReaderImpl.class;
-      case REPEATED:
-        return RepeatedMapReaderImpl.class;
+        if (!isSingularRepeated)
+          return SingleMapReaderImpl.class;
+        else
+          return SingleLikeRepeatedMapReaderImpl.class;
+      case REPEATED: 
+          return RepeatedMapReaderImpl.class;
       }
     case LIST:
       switch (mode) {
@@ -193,6 +196,25 @@ public class TypeHelper {
             return Nullable${minor.class}WriterImpl.class;
           case REPEATED:
             return Repeated${minor.class}WriterImpl.class;
+        }
+  </#list>
+</#list>
+      default:
+        break;
+      }
+      throw new UnsupportedOperationException();    
+  }
+
+  public static Class<?> getSingularReaderImpl( MinorType type, DataMode mode){
+    switch (type) {      
+<#list vv.types as type>
+  <#list type.minor as minor>
+      case ${minor.class?upper_case}:
+        switch (mode) {
+          case REQUIRED:
+            return ${minor.class}SingularReaderImpl.class;
+          case OPTIONAL:
+            return Nullable${minor.class}SingularReaderImpl.class;
         }
   </#list>
 </#list>

@@ -18,7 +18,9 @@
 package org.apache.drill.exec.vector.complex;
 
 import org.apache.drill.common.expression.PathSegment;
+import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.vector.ValueVector;
 
@@ -49,11 +51,13 @@ public abstract class AbstractContainerVector implements ValueVector{
     if(seg.isArray()){
 
       if(seg.isLastPath()){
-        if(addToBreadCrumb) builder.intermediateType(this.getField().getType());
+
+        //if(addToBreadCrumb) builder.intermediateType(this.getField().getType());
+
         return builder //
           .remainder(seg) //
-          .finalType(this.getField().getType()) //
           .withIndex() //
+          .finalType(getLastPathType()) //
           .build();
       }else{
         if(addToBreadCrumb){
@@ -72,28 +76,48 @@ public abstract class AbstractContainerVector implements ValueVector{
     VectorWithOrdinal vord = getVectorWithOrdinal(seg.isArray() ? null : seg.getNameSegment().getPath());
     if(vord == null) return null;
 
+    ValueVector v = vord.vector;
 
     if(addToBreadCrumb){
-      builder.intermediateType(this.getField().getType());
+      //builder.intermediateType(this.getField().getType());
+      builder.intermediateType(v.getField().getType());
       builder.addId(vord.ordinal);
     }
-
-    ValueVector v = vord.vector;
 
     if(v instanceof AbstractContainerVector){
       // we're looking for a multi path.
       AbstractContainerVector c = (AbstractContainerVector) v;
       return c.getFieldIdIfMatches(builder, addToBreadCrumb, seg.getChild());
     }else{
-      if(seg.isLastPath()){
+      if (seg != null && seg.isLastPath() && ! seg.isArray()) {
         if(addToBreadCrumb) builder.intermediateType(v.getField().getType());
         return builder.finalType(v.getField().getType()).build();
+      }else if(seg != null && seg.isLastPath() && seg.isArray()){
+        //if(addToBreadCrumb) builder.intermediateType(v.getField().getType());
+        return builder
+                .finalType(v.getField().getType().toBuilder().setMode(DataMode.OPTIONAL).build())
+                .build();
       }else{
-        logger.warn("You tried to request a complex type inside a scalar object.");
+        logger.warn("You tried to request a complex type inside a scalar object or path or type is wrong.");
         return null;
       }
     }
 
+  }
+
+  private MajorType getLastPathType() {
+    if((this.getField().getType().getMinorType() == MinorType.LIST  &&
+        this.getField().getType().getMode() == DataMode.REPEATED)) {  // Use Repeated scalar type instead of Required List.
+      VectorWithOrdinal vord = getVectorWithOrdinal(null);
+      ValueVector v = vord.vector;
+      if (! (v instanceof  AbstractContainerVector))
+        return v.getField().getType();
+    } else if (this.getField().getType().getMinorType() == MinorType.MAP  &&
+        this.getField().getType().getMode() == DataMode.REPEATED) {  // Use Required Map
+      return this.getField().getType().toBuilder().setMode(DataMode.REQUIRED).build();
+    }
+
+    return this.getField().getType();
   }
 
   protected boolean supportsDirectRead(){

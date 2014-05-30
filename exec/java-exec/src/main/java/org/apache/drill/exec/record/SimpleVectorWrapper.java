@@ -19,6 +19,7 @@ package org.apache.drill.exec.record;
 
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.AbstractContainerVector;
 import org.apache.drill.exec.vector.complex.MapVector;
@@ -115,6 +116,7 @@ public class SimpleVectorWrapper<T extends ValueVector> implements VectorWrapper
         if(child.isArray() && child.isLastPath()){
           builder.remainder(child);
           builder.withIndex();
+          builder.finalType(v.getField().getType().toBuilder().setMode(DataMode.OPTIONAL).build());
           return builder.build();
         }else{
           return null;

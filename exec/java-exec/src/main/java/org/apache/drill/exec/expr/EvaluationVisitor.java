@@ -20,6 +20,7 @@ package org.apache.drill.exec.expr;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.io.input.NullReader;
 import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.ConvertExpression;
 import org.apache.drill.common.expression.FunctionCall;
@@ -46,6 +47,7 @@ import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
 import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
+import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
@@ -80,33 +82,32 @@ public class EvaluationVisitor {
     this.registry = registry;
   }
 
-  public HoldingContainer addExpr(LogicalExpression e, ClassGenerator<?> generator){
+  public HoldingContainer addExpr(LogicalExpression e, ClassGenerator<?> generator) {
     Set<LogicalExpression> constantBoundaries = ConstantExpressionIdentifier.getConstantExpressionSet(e);
-    //Set<LogicalExpression> constantBoundaries = Collections.emptySet();
     return e.accept(new ConstantFilter(constantBoundaries), generator);
   }
 
   private class EvalVisitor extends AbstractExprVisitor<HoldingContainer, ClassGenerator<?>, RuntimeException> {
 
-
     @Override
     public HoldingContainer visitFunctionCall(FunctionCall call, ClassGenerator<?> generator) throws RuntimeException {
-      throw new UnsupportedOperationException("FunctionCall is not expected here. "+
-        "It should have been converted to FunctionHolderExpression in materialization");
+      throw new UnsupportedOperationException("FunctionCall is not expected here. "
+          + "It should have been converted to FunctionHolderExpression in materialization");
     }
 
     @Override
-    public HoldingContainer visitFunctionHolderExpression(
-      FunctionHolderExpression holderExpr, ClassGenerator<?> generator) throws RuntimeException {
+    public HoldingContainer visitFunctionHolderExpression(FunctionHolderExpression holderExpr,
+        ClassGenerator<?> generator) throws RuntimeException {
       // TODO: hack: (Drill/Hive)FuncHolderExpr reference classes in exec so
       // code generate methods can't be superclass FunctionHolderExpression
       // which is defined in common
 
       if (holderExpr instanceof DrillFuncHolderExpr) {
-        DrillFuncHolder holder = ((DrillFuncHolderExpr)holderExpr).getHolder();
+        DrillFuncHolder holder = ((DrillFuncHolderExpr) holderExpr).getHolder();
         JVar[] workspaceVars = holder.renderStart(generator, null);
 
-        if(holder.isNested()) generator.getMappingSet().enterChild();
+        if (holder.isNested())
+          generator.getMappingSet().enterChild();
 
         HoldingContainer[] args = new HoldingContainer[holderExpr.args.size()];
         for (int i = 0; i < holderExpr.args.size(); i++) {
@@ -115,13 +116,14 @@ public class EvaluationVisitor {
 
         holder.renderMiddle(generator, args, workspaceVars);
 
-        if(holder.isNested()) generator.getMappingSet().exitChild();
+        if (holder.isNested())
+          generator.getMappingSet().exitChild();
 
         return holder.renderEnd(generator, args, workspaceVars);
 
       } else if (holderExpr instanceof HiveFuncHolderExpr) {
 
-        HiveFuncHolder holder = ((HiveFuncHolderExpr)holderExpr).getHolder();
+        HiveFuncHolder holder = ((HiveFuncHolderExpr) holderExpr).getHolder();
 
         HoldingContainer[] args = new HoldingContainer[holderExpr.args.size()];
         for (int i = 0; i < holderExpr.args.size(); i++) {
@@ -131,7 +133,8 @@ public class EvaluationVisitor {
         return holder.renderEnd(generator, args, holder.renderStart(generator, null));
       }
 
-      throw new UnsupportedOperationException(String.format("Unknown expression '%s'", holderExpr.getClass().getCanonicalName()));
+      throw new UnsupportedOperationException(String.format("Unknown expression '%s'", holderExpr.getClass()
+          .getCanonicalName()));
     }
 
     @Override
@@ -183,7 +186,6 @@ public class EvaluationVisitor {
       return output;
     }
 
-
     @Override
     public HoldingContainer visitSchemaPath(SchemaPath path, ClassGenerator<?> generator) throws RuntimeException {
       throw new UnsupportedOperationException("All schema paths should have been replaced with ValueVectorExpressions.");
@@ -218,21 +220,24 @@ public class EvaluationVisitor {
     }
 
     @Override
-    public HoldingContainer visitIntervalYearConstant(IntervalYearExpression e, ClassGenerator<?> generator) throws RuntimeException {
+    public HoldingContainer visitIntervalYearConstant(IntervalYearExpression e, ClassGenerator<?> generator)
+        throws RuntimeException {
       HoldingContainer out = generator.declare(e.getMajorType());
       generator.getEvalBlock().assign(out.getValue(), JExpr.lit(e.getIntervalYear()));
       return out;
     }
 
     @Override
-    public HoldingContainer visitTimeStampConstant(TimeStampExpression e, ClassGenerator<?> generator) throws RuntimeException {
+    public HoldingContainer visitTimeStampConstant(TimeStampExpression e, ClassGenerator<?> generator)
+        throws RuntimeException {
       HoldingContainer out = generator.declare(e.getMajorType());
       generator.getEvalBlock().assign(out.getValue(), JExpr.lit(e.getTimeStamp()));
       return out;
     }
 
     @Override
-    public HoldingContainer visitDoubleConstant(DoubleExpression e, ClassGenerator<?> generator) throws RuntimeException {
+    public HoldingContainer visitDoubleConstant(DoubleExpression e, ClassGenerator<?> generator)
+        throws RuntimeException {
       HoldingContainer out = generator.declare(e.getMajorType());
       generator.getEvalBlock().assign(out.getValue(), JExpr.lit(e.getDouble()));
       return out;
@@ -254,13 +259,13 @@ public class EvaluationVisitor {
         return visitValueVectorWriteExpression((ValueVectorWriteExpression) e, generator);
       } else if (e instanceof ReturnValueExpression) {
         return visitReturnValueExpression((ReturnValueExpression) e, generator);
-      }else if(e instanceof HoldingContainerExpression){
+      } else if (e instanceof HoldingContainerExpression) {
         return ((HoldingContainerExpression) e).getContainer();
-      }else if(e instanceof NullExpression){
+      } else if (e instanceof NullExpression) {
         return generator.declare(Types.optional(MinorType.INT));
       } else if (e instanceof TypedNullConstant) {
         return generator.declare(e.getMajorType());
-      }    else {
+      } else {
         return super.visitUnknown(e, generator);
       }
 
@@ -271,27 +276,30 @@ public class EvaluationVisitor {
       final LogicalExpression child = e.getChild();
       final HoldingContainer inputContainer = child.accept(this, generator);
       final boolean complex = Types.isComplex(inputContainer.getMajorType());
+      final boolean repeated = Types.isRepeated(inputContainer.getMajorType());
 
       JBlock block = generator.getEvalBlock();
       JExpression outIndex = generator.getMappingSet().getValueWriteIndex();
       JVar vv = generator.declareVectorValueSetupAndMember(generator.getMappingSet().getOutgoing(), e.getFieldId());
 
-      if(complex){
-        JType writerImpl = generator.getModel()._ref(TypeHelper.getWriterImpl(inputContainer.getMinorType(), inputContainer.getMajorType().getMode()));
-        JType writerIFace = generator.getModel()._ref(TypeHelper.getWriterInterface(inputContainer.getMinorType(), inputContainer.getMajorType().getMode()));
+      if (complex || repeated) {
+        JType writerImpl = generator.getModel()._ref(
+            TypeHelper.getWriterImpl(inputContainer.getMinorType(), inputContainer.getMajorType().getMode()));
+        JType writerIFace = generator.getModel()._ref(
+            TypeHelper.getWriterInterface(inputContainer.getMinorType(), inputContainer.getMajorType().getMode()));
         JVar writer = generator.declareClassField("writer", writerIFace);
         generator.getSetupBlock().assign(writer, JExpr._new(writerImpl).arg(vv).arg(JExpr._null()));
         generator.getEvalBlock().add(writer.invoke("setPosition").arg(outIndex));
         String copyMethod = inputContainer.isSingularRepeated() ? "copyAsValueSingle" : "copyAsValue";
         generator.getEvalBlock().add(inputContainer.getHolder().invoke(copyMethod).arg(writer));
-        if(e.isSafe()){
+        if (e.isSafe()) {
           HoldingContainer outputContainer = generator.declare(Types.REQUIRED_BIT);
           JConditional ifOut = generator.getEvalBlock()._if(writer.invoke("ok"));
           ifOut._then().assign(outputContainer.getValue(), JExpr.lit(1));
           ifOut._else().assign(outputContainer.getValue(), JExpr.lit(0));
           return outputContainer;
         }
-      }else{
+      } else {
         String setMethod = e.isSafe() ? "setSafe" : "set";
 
         String isSafeMethod = "isSafe";
@@ -299,24 +307,26 @@ public class EvaluationVisitor {
         JInvocation setMeth;
         if (Types.usesHolderForGet(inputContainer.getMajorType())) {
           setMeth = vv.invoke("getMutator").invoke(setMethod).arg(outIndex).arg(inputContainer.getHolder());
-        }else{
+        } else {
           setMeth = vv.invoke("getMutator").invoke(setMethod).arg(outIndex).arg(inputContainer.getValue());
         }
 
-        if(e.isSafe()){
+        if (e.isSafe()) {
           HoldingContainer outputContainer = generator.declare(Types.REQUIRED_BIT);
           block.assign(outputContainer.getValue(), JExpr.lit(1));
-          if(inputContainer.isOptional()){
-//            block._if(vv.invoke("getMutator").invoke(setMethod).arg(outIndex).not())._then().assign(outputContainer.getValue(), JExpr.lit(0));
+          if (inputContainer.isOptional()) {
+            // block._if(vv.invoke("getMutator").invoke(setMethod).arg(outIndex).not())._then().assign(outputContainer.getValue(),
+            // JExpr.lit(0));
             JConditional jc = block._if(inputContainer.getIsSet().eq(JExpr.lit(0)).not());
             block = jc._then();
-            jc._else()._if(vv.invoke("getMutator").invoke(isSafeMethod).arg(outIndex).not())._then().assign(outputContainer.getValue(), JExpr.lit(0));
+            jc._else()._if(vv.invoke("getMutator").invoke(isSafeMethod).arg(outIndex).not())._then()
+                .assign(outputContainer.getValue(), JExpr.lit(0));
           }
           block._if(setMeth.not())._then().assign(outputContainer.getValue(), JExpr.lit(0));
           return outputContainer;
-        }else{
+        } else {
           if (inputContainer.isOptional()) {
-//            block.add(vv.invoke("getMutator").invoke(setMethod).arg(outIndex));
+            // block.add(vv.invoke("getMutator").invoke(setMethod).arg(outIndex));
             JConditional jc = block._if(inputContainer.getIsSet().eq(JExpr.lit(0)).not());
             block = jc._then();
           }
@@ -325,7 +335,6 @@ public class EvaluationVisitor {
 
       }
 
-
       return null;
     }
 
@@ -333,35 +342,37 @@ public class EvaluationVisitor {
         throws RuntimeException {
       // declare value vector
 
-      JExpression vv1 = generator.declareVectorValueSetupAndMember(generator.getMappingSet().getIncoming(), e.getFieldId());
+      JExpression vv1 = generator.declareVectorValueSetupAndMember(generator.getMappingSet().getIncoming(),
+          e.getFieldId());
       JExpression indexVariable = generator.getMappingSet().getValueReadIndex();
 
       JExpression componentVariable = indexVariable.shrz(JExpr.lit(16));
       if (e.isSuperReader()) {
-        vv1 =  (vv1.component(componentVariable));
+        vv1 = (vv1.component(componentVariable));
         indexVariable = indexVariable.band(JExpr.lit((int) Character.MAX_VALUE));
       }
 
       // evaluation work.
       HoldingContainer out = generator.declare(e.getMajorType());
+
       final boolean primitive = !Types.usesHolderForGet(e.getMajorType());
       final boolean hasReadPath = e.hasReadPath();
       final boolean complex = Types.isComplex(e.getMajorType());
+      final boolean repeated = Types.isRepeated(e.getMajorType());
 
       int[] fieldIds = e.getFieldId().getFieldIds();
-      for(int i = 1; i < fieldIds.length; i++){
+      for (int i = 1; i < fieldIds.length; i++) {
 
       }
 
-      if(!hasReadPath && !complex){
-
+      if (!hasReadPath && !complex) {
         JInvocation getValueAccessor = vv1.invoke("getAccessor").invoke("get");
         JInvocation getValueAccessor2 = vv1.invoke("getAccessor");
         JBlock eval = new JBlock();
 
-        if(primitive){
+        if (primitive) {
           eval.assign(out.getValue(), getValueAccessor.arg(indexVariable));
-        }else{
+        } else {
           eval.add(getValueAccessor.arg(indexVariable).arg(out.getHolder()));
         }
 
@@ -370,13 +381,14 @@ public class EvaluationVisitor {
           blk.assign(out.getIsSet(), getValueAccessor2.invoke("isSet").arg(indexVariable));
           JConditional jc = blk._if(out.getIsSet().eq(JExpr.lit(1)));
           jc._then().add(eval);
-        }else{
+        } else {
           generator.getEvalBlock().add(eval);
         }
 
-      }else{
+      } else {
         JExpression vector = e.isSuperReader() ? vv1.component(componentVariable) : vv1;
         JExpression expr = vector.invoke("getAccessor").invoke("getReader");
+        JVar isNull = generator.getEvalBlock().decl(generator.getModel().INT, "isNull", JExpr.lit(0));
 
         JLabel label = generator.getEvalBlock().label("complex");
         JBlock eval = generator.getEvalBlock().block();
@@ -387,64 +399,76 @@ public class EvaluationVisitor {
         int listNum = 0;
         boolean lastWasArray = false;
 
-        while(seg != null){
-          if(seg.isArray()){
+        while (seg != null) {
+          if (seg.isArray()) {
             lastWasArray = true;
 
-            if(seg.isLastPath() && !complex) break;
+            if (seg.isLastPath() && !complex && !repeated)
+              break;
 
             JVar list = generator.declareClassField("list", generator.getModel()._ref(FieldReader.class));
-            generator.getSetupBlock().assign(list, expr);
+            eval.assign(list, expr);
             expr = list;
 
-            // if this is an array, set a single position for the expression to allow us to read the right data lower down.
-            JVar desiredIndex = eval.decl(generator.getModel().INT, "desiredIndex" + listNum, JExpr.lit(seg.getArraySegment().getIndex()));
-            // start with negative one so that we are at zero after first call to next.
+            // if this is an array, set a single position for the expression to
+            // allow us to read the right data lower down.
+            JVar desiredIndex = eval.decl(generator.getModel().INT, "desiredIndex" + listNum,
+                JExpr.lit(seg.getArraySegment().getIndex()));
+            // start with negative one so that we are at zero after first call
+            // to next.
             JVar currentIndex = eval.decl(generator.getModel().INT, "currentIndex" + listNum, JExpr.lit(-1));
 
             eval._while( //
                 currentIndex.lt(desiredIndex) //
-                .cand(expr.invoke("next")) ).body().assign(currentIndex, currentIndex.plus(JExpr.lit(1)));
+                    .cand(list.invoke("next"))).body().assign(currentIndex, currentIndex.plus(JExpr.lit(1)));
+
+            expr = list.invoke("reader");
 
             JBlock ifNoVal = eval._if(desiredIndex.ne(currentIndex))._then().block();
-            if(!complex) ifNoVal.assign(out.getIsSet(), JExpr.lit(0));
+            if (out.isOptional()) {
+              ifNoVal.assign(out.getIsSet(), JExpr.lit(0));
+            }            
+            ifNoVal.assign(isNull,  JExpr.lit(1));
             ifNoVal._break(label);
 
             listNum++;
-
-          }else{
+          } else {
             lastWasArray = false;
             JExpression fieldName = JExpr.lit(seg.getNameSegment().getPath());
             expr = expr.invoke("reader").arg(fieldName);
           }
           seg = seg.getChild();
 
-          // stop once we get to last column or when the segment is an array at the end of the reference.
-          if(seg == null || seg.isLastPath() && seg.isArray()) break;
+          // stop once we get to last column or when the segment is an array at
+          // the end of the reference.
+          // if(seg == null || seg.isLastPath() && seg.isArray()) break;
         }
-        MajorType secondaryType = e.getFieldId().getSecondaryFinal();
-        JType readerImpl = generator.getModel()._ref(TypeHelper.getReaderClassName(secondaryType.getMinorType(), secondaryType.getMode()));
-        JVar complexReader = generator.declareClassField("reader", readerImpl);
-        generator.getSetupBlock().assign(complexReader, JExpr.cast(readerImpl, expr));
-        expr = complexReader;
 
-        if(complex){
-          HoldingContainer hc = new HoldingContainer(e.getMajorType(), (JVar) expr, null, null, lastWasArray);
+        if (complex || repeated) {
+          MajorType finalType = e.getFieldId().getFinalType();
+          // //
+          JVar complexReader = generator.declareClassField("reader", generator.getModel()._ref(FieldReader.class));
+
+          JConditional jc = generator.getEvalBlock()._if(isNull.eq(JExpr.lit(0)));
+
+          JClass nrClass = generator.getModel().ref(org.apache.drill.exec.vector.complex.impl.NullReader.class);
+          JExpression nullReader = nrClass.staticRef("INSTANCE");
+
+          jc._then().assign(complexReader, expr);
+          jc._else().assign(complexReader, nullReader);
+
+          HoldingContainer hc = new HoldingContainer(e.getMajorType(), complexReader, null, null, false);
           return hc;
-          //eval.assign(out.getHolder().ref("reader"), expr);
-        }else{
-          if(seg != null){
+          // //eval.assign(out.getHolder().ref("reader"), expr);
+        } else {
+          if (seg != null) {
             eval.add(expr.invoke("read").arg(JExpr.lit(seg.getArraySegment().getIndex())).arg(out.getHolder()));
-          }else{
-
+          } else {
             eval.add(expr.invoke("read").arg(out.getHolder()));
           }
         }
 
       }
-
-
-
 
       return out;
     }
@@ -453,9 +477,9 @@ public class EvaluationVisitor {
       LogicalExpression child = e.getChild();
       // Preconditions.checkArgument(child.getMajorType().equals(Types.REQUIRED_BOOLEAN));
       HoldingContainer hc = child.accept(this, generator);
-      if(e.isReturnTrueOnOne()){
+      if (e.isReturnTrueOnOne()) {
         generator.getEvalBlock()._return(hc.getValue().eq(JExpr.lit(1)));
-      }else{
+      } else {
         generator.getEvalBlock()._return(hc.getValue());
       }
 
@@ -470,7 +494,8 @@ public class EvaluationVisitor {
       JType holderType = generator.getHolderType(majorType);
       JVar var = generator.declareClassField("string", holderType);
       JExpression stringLiteral = JExpr.lit(e.value);
-      setup.assign(var, generator.getModel().ref(ValueHolderHelper.class).staticInvoke("getVarCharHolder").arg(stringLiteral));
+      setup.assign(var,
+          generator.getModel().ref(ValueHolderHelper.class).staticInvoke("getVarCharHolder").arg(stringLiteral));
       return new HoldingContainer(majorType, var, null, null);
     }
 
@@ -483,12 +508,16 @@ public class EvaluationVisitor {
       JVar var = generator.declareClassField("intervalday", holderType);
       JExpression dayLiteral = JExpr.lit(e.getIntervalDay());
       JExpression millisLiteral = JExpr.lit(e.getIntervalMillis());
-      setup.assign(var, generator.getModel().ref(ValueHolderHelper.class).staticInvoke("getIntervalDayHolder").arg(dayLiteral).arg(millisLiteral));
+      setup.assign(
+          var,
+          generator.getModel().ref(ValueHolderHelper.class).staticInvoke("getIntervalDayHolder").arg(dayLiteral)
+              .arg(millisLiteral));
       return new HoldingContainer(majorType, var, null, null);
     }
 
     @Override
-    public HoldingContainer visitDecimal9Constant(Decimal9Expression e, ClassGenerator<?> generator) throws RuntimeException {
+    public HoldingContainer visitDecimal9Constant(Decimal9Expression e, ClassGenerator<?> generator)
+        throws RuntimeException {
       MajorType majorType = e.getMajorType();
       JBlock setup = generator.getBlock(BlockType.SETUP);
       JType holderType = generator.getHolderType(majorType);
@@ -496,12 +525,16 @@ public class EvaluationVisitor {
       JExpression valueLiteral = JExpr.lit(e.getIntFromDecimal());
       JExpression scaleLiteral = JExpr.lit(e.getScale());
       JExpression precisionLiteral = JExpr.lit(e.getPrecision());
-      setup.assign(var, generator.getModel().ref(ValueHolderHelper.class).staticInvoke("getDecimal9Holder").arg(valueLiteral).arg(scaleLiteral).arg(precisionLiteral));
+      setup.assign(
+          var,
+          generator.getModel().ref(ValueHolderHelper.class).staticInvoke("getDecimal9Holder").arg(valueLiteral)
+              .arg(scaleLiteral).arg(precisionLiteral));
       return new HoldingContainer(majorType, var, null, null);
     }
 
     @Override
-    public HoldingContainer visitDecimal18Constant(Decimal18Expression e, ClassGenerator<?> generator) throws RuntimeException {
+    public HoldingContainer visitDecimal18Constant(Decimal18Expression e, ClassGenerator<?> generator)
+        throws RuntimeException {
       MajorType majorType = e.getMajorType();
       JBlock setup = generator.getBlock(BlockType.SETUP);
       JType holderType = generator.getHolderType(majorType);
@@ -509,7 +542,10 @@ public class EvaluationVisitor {
       JExpression valueLiteral = JExpr.lit(e.getLongFromDecimal());
       JExpression scaleLiteral = JExpr.lit(e.getScale());
       JExpression precisionLiteral = JExpr.lit(e.getPrecision());
-      setup.assign(var, generator.getModel().ref(ValueHolderHelper.class).staticInvoke("getDecimal18Holder").arg(valueLiteral).arg(scaleLiteral).arg(precisionLiteral));
+      setup.assign(
+          var,
+          generator.getModel().ref(ValueHolderHelper.class).staticInvoke("getDecimal18Holder").arg(valueLiteral)
+              .arg(scaleLiteral).arg(precisionLiteral));
       return new HoldingContainer(majorType, var, null, null);
     }
 
@@ -521,7 +557,8 @@ public class EvaluationVisitor {
       JType holderType = generator.getHolderType(majorType);
       JVar var = generator.declareClassField("dec28", holderType);
       JExpression stringLiteral = JExpr.lit(e.getBigDecimal().toString());
-      setup.assign(var, generator.getModel().ref(ValueHolderHelper.class).staticInvoke("getDecimal28Holder").arg(stringLiteral));
+      setup.assign(var,
+          generator.getModel().ref(ValueHolderHelper.class).staticInvoke("getDecimal28Holder").arg(stringLiteral));
       return new HoldingContainer(majorType, var, null, null);
     }
 
@@ -533,33 +570,33 @@ public class EvaluationVisitor {
       JType holderType = generator.getHolderType(majorType);
       JVar var = generator.declareClassField("dec38", holderType);
       JExpression stringLiteral = JExpr.lit(e.getBigDecimal().toString());
-      setup.assign(var, generator.getModel().ref(ValueHolderHelper.class).staticInvoke("getVarCharHolder").arg(stringLiteral));
+      setup.assign(var,
+          generator.getModel().ref(ValueHolderHelper.class).staticInvoke("getVarCharHolder").arg(stringLiteral));
       return new HoldingContainer(majorType, var, null, null);
     }
 
     @Override
     public HoldingContainer visitCastExpression(CastExpression e, ClassGenerator<?> value) throws RuntimeException {
-      throw new UnsupportedOperationException("CastExpression is not expected here. "+
-        "It should have been converted to FunctionHolderExpression in materialization");
+      throw new UnsupportedOperationException("CastExpression is not expected here. "
+          + "It should have been converted to FunctionHolderExpression in materialization");
     }
 
     @Override
-    public HoldingContainer visitConvertExpression(ConvertExpression e, ClassGenerator<?> value) throws RuntimeException {
+    public HoldingContainer visitConvertExpression(ConvertExpression e, ClassGenerator<?> value)
+        throws RuntimeException {
       String convertFunctionName = e.getConvertFunction() + e.getEncodingType();
 
       List<LogicalExpression> newArgs = Lists.newArrayList();
-      newArgs.add(e.getInput());  //input_expr
+      newArgs.add(e.getInput()); // input_expr
 
       FunctionCall fc = new FunctionCall(convertFunctionName, newArgs, e.getPosition());
       return fc.accept(this, value);
     }
   }
 
-
   private class ConstantFilter extends EvalVisitor {
 
     private Set<LogicalExpression> constantBoundaries;
-
 
     public ConstantFilter(Set<LogicalExpression> constantBoundaries) {
       super();
@@ -568,17 +605,18 @@ public class EvaluationVisitor {
 
     @Override
     public HoldingContainer visitFunctionCall(FunctionCall e, ClassGenerator<?> generator) throws RuntimeException {
-      throw new UnsupportedOperationException("FunctionCall is not expected here. "+
-        "It should have been converted to FunctionHolderExpression in materialization");
+      throw new UnsupportedOperationException("FunctionCall is not expected here. "
+          + "It should have been converted to FunctionHolderExpression in materialization");
     }
 
     @Override
-    public HoldingContainer visitFunctionHolderExpression(FunctionHolderExpression e, ClassGenerator<?> generator) throws RuntimeException {
+    public HoldingContainer visitFunctionHolderExpression(FunctionHolderExpression e, ClassGenerator<?> generator)
+        throws RuntimeException {
       if (constantBoundaries.contains(e)) {
         generator.getMappingSet().enterConstant();
         HoldingContainer c = super.visitFunctionHolderExpression(e, generator);
-        //generator.getMappingSet().exitConstant();
-        //return c;
+        // generator.getMappingSet().exitConstant();
+        // return c;
         return renderConstantExpression(generator, c);
       } else if (generator.getMappingSet().isWithinConstant()) {
         return super.visitFunctionHolderExpression(e, generator).setConstant(true);
@@ -607,8 +645,8 @@ public class EvaluationVisitor {
       if (constantBoundaries.contains(e)) {
         generator.getMappingSet().enterConstant();
         HoldingContainer c = super.visitSchemaPath(e, generator);
-        //generator.getMappingSet().exitConstant();
-        //return c;
+        // generator.getMappingSet().exitConstant();
+        // return c;
         return renderConstantExpression(generator, c);
       } else if (generator.getMappingSet().isWithinConstant()) {
         return super.visitSchemaPath(e, generator).setConstant(true);
@@ -622,8 +660,8 @@ public class EvaluationVisitor {
       if (constantBoundaries.contains(e)) {
         generator.getMappingSet().enterConstant();
         HoldingContainer c = super.visitLongConstant(e, generator);
-        //generator.getMappingSet().exitConstant();
-        //return c;
+        // generator.getMappingSet().exitConstant();
+        // return c;
         return renderConstantExpression(generator, c);
       } else if (generator.getMappingSet().isWithinConstant()) {
         return super.visitLongConstant(e, generator).setConstant(true);
@@ -632,9 +670,9 @@ public class EvaluationVisitor {
       }
     }
 
-
     @Override
-    public HoldingContainer visitDecimal9Constant(Decimal9Expression e, ClassGenerator<?> generator) throws RuntimeException {
+    public HoldingContainer visitDecimal9Constant(Decimal9Expression e, ClassGenerator<?> generator)
+        throws RuntimeException {
       if (constantBoundaries.contains(e)) {
         generator.getMappingSet().enterConstant();
         HoldingContainer c = super.visitDecimal9Constant(e, generator);
@@ -647,7 +685,8 @@ public class EvaluationVisitor {
     }
 
     @Override
-    public HoldingContainer visitDecimal18Constant(Decimal18Expression e, ClassGenerator<?> generator) throws RuntimeException {
+    public HoldingContainer visitDecimal18Constant(Decimal18Expression e, ClassGenerator<?> generator)
+        throws RuntimeException {
       if (constantBoundaries.contains(e)) {
         generator.getMappingSet().enterConstant();
         HoldingContainer c = super.visitDecimal18Constant(e, generator);
@@ -660,7 +699,8 @@ public class EvaluationVisitor {
     }
 
     @Override
-    public HoldingContainer visitDecimal28Constant(Decimal28Expression e, ClassGenerator<?> generator) throws RuntimeException {
+    public HoldingContainer visitDecimal28Constant(Decimal28Expression e, ClassGenerator<?> generator)
+        throws RuntimeException {
       if (constantBoundaries.contains(e)) {
         generator.getMappingSet().enterConstant();
         HoldingContainer c = super.visitDecimal28Constant(e, generator);
@@ -673,7 +713,8 @@ public class EvaluationVisitor {
     }
 
     @Override
-    public HoldingContainer visitDecimal38Constant(Decimal38Expression e, ClassGenerator<?> generator) throws RuntimeException {
+    public HoldingContainer visitDecimal38Constant(Decimal38Expression e, ClassGenerator<?> generator)
+        throws RuntimeException {
       if (constantBoundaries.contains(e)) {
         generator.getMappingSet().enterConstant();
         HoldingContainer c = super.visitDecimal38Constant(e, generator);
@@ -690,8 +731,8 @@ public class EvaluationVisitor {
       if (constantBoundaries.contains(e)) {
         generator.getMappingSet().enterConstant();
         HoldingContainer c = super.visitIntConstant(e, generator);
-        //generator.getMappingSet().exitConstant();
-        //return c;
+        // generator.getMappingSet().exitConstant();
+        // return c;
         return renderConstantExpression(generator, c);
       } else if (generator.getMappingSet().isWithinConstant()) {
         return super.visitIntConstant(e, generator).setConstant(true);
@@ -714,7 +755,6 @@ public class EvaluationVisitor {
       }
     }
 
-
     @Override
     public HoldingContainer visitTimeConstant(TimeExpression e, ClassGenerator<?> generator) throws RuntimeException {
       if (constantBoundaries.contains(e)) {
@@ -730,7 +770,8 @@ public class EvaluationVisitor {
     }
 
     @Override
-    public HoldingContainer visitIntervalYearConstant(IntervalYearExpression e, ClassGenerator<?> generator) throws RuntimeException {
+    public HoldingContainer visitIntervalYearConstant(IntervalYearExpression e, ClassGenerator<?> generator)
+        throws RuntimeException {
       if (constantBoundaries.contains(e)) {
         generator.getMappingSet().enterConstant();
         HoldingContainer c = super.visitIntervalYearConstant(e, generator);
@@ -744,7 +785,8 @@ public class EvaluationVisitor {
     }
 
     @Override
-    public HoldingContainer visitTimeStampConstant(TimeStampExpression e, ClassGenerator<?> generator) throws RuntimeException {
+    public HoldingContainer visitTimeStampConstant(TimeStampExpression e, ClassGenerator<?> generator)
+        throws RuntimeException {
       if (constantBoundaries.contains(e)) {
         generator.getMappingSet().enterConstant();
         HoldingContainer c = super.visitTimeStampConstant(e, generator);
@@ -758,12 +800,13 @@ public class EvaluationVisitor {
     }
 
     @Override
-    public HoldingContainer visitDoubleConstant(DoubleExpression e, ClassGenerator<?> generator) throws RuntimeException {
+    public HoldingContainer visitDoubleConstant(DoubleExpression e, ClassGenerator<?> generator)
+        throws RuntimeException {
       if (constantBoundaries.contains(e)) {
         generator.getMappingSet().enterConstant();
         HoldingContainer c = super.visitDoubleConstant(e, generator);
-        //generator.getMappingSet().exitConstant();
-        //return c;
+        // generator.getMappingSet().exitConstant();
+        // return c;
         return renderConstantExpression(generator, c);
       } else if (generator.getMappingSet().isWithinConstant()) {
         return super.visitDoubleConstant(e, generator).setConstant(true);
@@ -778,8 +821,8 @@ public class EvaluationVisitor {
       if (constantBoundaries.contains(e)) {
         generator.getMappingSet().enterConstant();
         HoldingContainer c = super.visitBooleanConstant(e, generator);
-        //generator.getMappingSet().exitConstant();
-        //return c;
+        // generator.getMappingSet().exitConstant();
+        // return c;
         return renderConstantExpression(generator, c);
       } else if (generator.getMappingSet().isWithinConstant()) {
         return super.visitBooleanConstant(e, generator).setConstant(true);
@@ -788,14 +831,13 @@ public class EvaluationVisitor {
       }
     }
 
-
     @Override
     public HoldingContainer visitUnknown(LogicalExpression e, ClassGenerator<?> generator) throws RuntimeException {
       if (constantBoundaries.contains(e)) {
         generator.getMappingSet().enterConstant();
         HoldingContainer c = super.visitUnknown(e, generator);
-        //generator.getMappingSet().exitConstant();
-        //return c;
+        // generator.getMappingSet().exitConstant();
+        // return c;
         return renderConstantExpression(generator, c);
       } else if (generator.getMappingSet().isWithinConstant()) {
         return super.visitUnknown(e, generator).setConstant(true);
@@ -810,8 +852,8 @@ public class EvaluationVisitor {
       if (constantBoundaries.contains(e)) {
         generator.getMappingSet().enterConstant();
         HoldingContainer c = super.visitQuotedStringConstant(e, generator);
-        //generator.getMappingSet().exitConstant();
-        //return c;
+        // generator.getMappingSet().exitConstant();
+        // return c;
         return renderConstantExpression(generator, c);
       } else if (generator.getMappingSet().isWithinConstant()) {
         return super.visitQuotedStringConstant(e, generator).setConstant(true);
@@ -819,7 +861,6 @@ public class EvaluationVisitor {
         return super.visitQuotedStringConstant(e, generator);
       }
     }
-
 
     @Override
     public HoldingContainer visitIntervalDayConstant(IntervalDayExpression e, ClassGenerator<?> generator)
@@ -836,14 +877,16 @@ public class EvaluationVisitor {
       }
     }
 
-    /* Get a HoldingContainer for a constant expression. The returned HoldingContainder will indicate it's for
-     * a constant expression.
-     * */
-    private HoldingContainer renderConstantExpression(ClassGenerator<?> generator, HoldingContainer input){
+    /*
+     * Get a HoldingContainer for a constant expression. The returned
+     * HoldingContainder will indicate it's for a constant expression.
+     */
+    private HoldingContainer renderConstantExpression(ClassGenerator<?> generator, HoldingContainer input) {
       JVar fieldValue = generator.declareClassField("constant", generator.getHolderType(input.getMajorType()));
       generator.getEvalBlock().assign(fieldValue, input.getHolder());
       generator.getMappingSet().exitConstant();
-      return new HoldingContainer(input.getMajorType(), fieldValue, fieldValue.ref("value"), fieldValue.ref("isSet")).setConstant(true);
+      return new HoldingContainer(input.getMajorType(), fieldValue, fieldValue.ref("value"), fieldValue.ref("isSet"))
+          .setConstant(true);
     }
   }
 }

@@ -24,19 +24,25 @@ import java.util.Map;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.ClassGenerator.BlockType;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
+import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
+import org.apache.drill.exec.vector.complex.impl.NullableBigIntSingularReaderImpl;
+import org.apache.drill.exec.vector.complex.reader.FieldReader;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.sun.codemodel.JBlock;
+import com.sun.codemodel.JExpr;
+import com.sun.codemodel.JType;
 import com.sun.codemodel.JVar;
 
 public abstract class DrillFuncHolder {
@@ -126,7 +132,14 @@ public abstract class DrillFuncHolder {
 
         ValueReference parameter = parameters[i];
         HoldingContainer inputVariable = inputVariables[i];
-        sub.decl(inputVariable.getHolder().type(), parameter.name, inputVariable.getHolder());
+        if (parameter.isFieldReader && ! Types.isComplex(inputVariable.getMajorType()) && ! Types.isRepeated(inputVariable.getMajorType())) {
+          JType singularReaderClass = g.getModel()._ref(TypeHelper.getSingularReaderImpl(inputVariable.getMajorType().getMinorType(), 
+                                                                                         inputVariable.getMajorType().getMode()));   
+          JType fieldReadClass = g.getModel()._ref(FieldReader.class);
+          sub.decl(fieldReadClass, parameter.name, JExpr._new(singularReaderClass).arg(inputVariable.getHolder()));
+        } else {
+          sub.decl(inputVariable.getHolder().type(), parameter.name, inputVariable.getHolder());
+        }
       }
     }
 
@@ -181,6 +194,10 @@ public abstract class DrillFuncHolder {
     return this.parameters[i].isConstant;
   }
 
+  public boolean isFieldReader(int i) {
+    return this.parameters[i].isFieldReader;
+  }
+
   public MajorType getReturnType(List<LogicalExpression> args) {
     if (nullHandling == NullHandling.NULL_IF_NULL) {
       // if any one of the input types is nullable, then return nullable return type
@@ -220,6 +237,7 @@ public abstract class DrillFuncHolder {
     MajorType type;
     String name;
     boolean isConstant;
+    boolean isFieldReader;
 
     public ValueReference(MajorType type, String name) {
       super();
@@ -228,6 +246,7 @@ public abstract class DrillFuncHolder {
       this.type = type;
       this.name = name;
       isConstant = false;
+      this.isFieldReader = false;
     }
 
     public void setConstant(boolean isConstant) {
@@ -239,6 +258,13 @@ public abstract class DrillFuncHolder {
       return "ValueReference [type=" + Types.toString(type) + ", name=" + name + "]";
     }
 
+    public static ValueReference createFieldReaderRef(String name) {
+      MajorType type = Types.required(MinorType.LATE);
+      ValueReference ref = new ValueReference(type, name);
+      ref.isFieldReader = true;
+
+      return ref;
+    }
   }
 
   public static class WorkspaceReference {

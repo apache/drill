@@ -34,6 +34,13 @@ public class NullReader extends AbstractBaseReader implements FieldReader{
   private NullReader(){
     super();
   }
+
+  @Override
+  public MajorType getType() {
+    return Types.NULL;
+  }
+  
+  public void copyAsValue(MapWriter writer) {}
   
   <#list vv.types as type><#list type.minor as minor><#assign name = minor.class?cap_first /> 
   public void read(Nullable${name}Holder holder){

@@ -77,6 +77,7 @@ import org.apache.hadoop.io.Text;
 
 
 
+
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -117,6 +118,13 @@ public class RepeatedMapReaderImpl extends AbstractFieldReader{
     return reader;
   }
 
+  public FieldReader reader() {
+    if (currentOffset == NO_VALUES) 
+      return NullReader.INSTANCE;
+    
+    setChildrenPosition(currentOffset);
+    return new SingleLikeRepeatedMapReaderImpl(vector, this);
+  }
 
   private int currentOffset;
   private int maxOffset;
@@ -163,6 +171,10 @@ public class RepeatedMapReaderImpl extends AbstractFieldReader{
     }
   }
 
+  public boolean isNull() {
+    return currentOffset == NO_VALUES;
+  }
+
   @Override
   public Object readObject() {
     return vector.getAccessor().getObject(idx());
@@ -178,7 +190,7 @@ public class RepeatedMapReaderImpl extends AbstractFieldReader{
 
   @Override
   public boolean isSet() {
-    return false;
+    return true;
   }
 
   public void copyAsValue(MapWriter writer){

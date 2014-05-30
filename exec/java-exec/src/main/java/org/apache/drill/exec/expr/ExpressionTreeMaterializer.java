@@ -153,9 +153,9 @@ public class ExpressionTreeMaterializer {
             ( parmType.getMode().equals(TypeProtos.DataMode.OPTIONAL) ||
               matchedFuncHolder.getNullHandling() == FunctionTemplate.NullHandling.NULL_IF_NULL)) {
             argsWithCast.add(new TypedNullConstant(parmType));
-          } else if (Types.softEquals(parmType, currentArg.getMajorType(), matchedFuncHolder.getNullHandling() ==
-                  FunctionTemplate.NullHandling.NULL_IF_NULL)) {
-            //Case 2: argument and parameter matches. Do nothing.
+          } else if (Types.softEquals(parmType, currentArg.getMajorType(), matchedFuncHolder.getNullHandling() == FunctionTemplate.NullHandling.NULL_IF_NULL) ||
+                     matchedFuncHolder.isFieldReader(i)) {
+            //Case 2: argument and parameter matches, or parameter is FieldReader.  Do nothing.
             argsWithCast.add(currentArg);
           } else {
             //Case 3: insert cast if param type is different from arg type.

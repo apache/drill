@@ -351,7 +351,8 @@ public class MapVector extends AbstractContainerVector {
 
     @Override
     public FieldReader getReader() {
-      return new SingleMapReaderImpl(MapVector.this);
+      //return new SingleMapReaderImpl(MapVector.this);
+      return reader;
     }
 
   }

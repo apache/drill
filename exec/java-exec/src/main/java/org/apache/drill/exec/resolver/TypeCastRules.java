@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.drill.common.expression.FunctionCall;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
@@ -796,6 +797,14 @@ public class TypeCastRules {
       MajorType argType = call.args.get(i).getMajorType();
       MajorType parmType = holder.getParmMajorType(i);
 
+      //@Param FieldReader will match any type
+      if (holder.isFieldReader(i)) {
+//        if (Types.isComplex(call.args.get(i).getMajorType()) ||Types.isRepeated(call.args.get(i).getMajorType()) )
+          continue;
+//        else
+//          return -1;
+      }
+
       if (!TypeCastRules.isCastable(argType, parmType, holder.getNullHandling())) {
         return -1;
       }
@@ -832,7 +841,7 @@ public class TypeCastRules {
       }
       // Check null vs non-null, using same logic as that in Types.softEqual()
       // Only when the function uses NULL_IF_NULL, nullable and non-nullable are inter-changable.
-      // Otherwise, the function implementation is not a match. 
+      // Otherwise, the function implementation is not a match.
       if (argType.getMode() != parmType.getMode()) {
         // TODO - this does not seem to do what it is intended to
 //        if (!((holder.getNullHandling() == NullHandling.NULL_IF_NULL) &&

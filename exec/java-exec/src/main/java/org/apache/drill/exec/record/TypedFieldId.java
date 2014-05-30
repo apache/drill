@@ -121,6 +121,7 @@ public class TypedFieldId {
     final IntArrayList ids = new IntArrayList();
     MajorType finalType;
     MajorType intermediateType;
+    MajorType secondaryFinal;
     PathSegment remainder;
     boolean hyperReader = false;
     boolean withIndex = false;
@@ -150,6 +151,11 @@ public class TypedFieldId {
       return this;
     }
 
+    public Builder secondaryFinal(MajorType secondaryFinal) {
+      this.secondaryFinal = secondaryFinal;
+      return this;
+    }
+
     public Builder intermediateType(MajorType intermediateType){
       this.intermediateType = intermediateType;
       return this;
@@ -160,15 +166,17 @@ public class TypedFieldId {
       Preconditions.checkNotNull(finalType);
 
       if(intermediateType == null) intermediateType = finalType;
+      if (secondaryFinal == null) secondaryFinal = finalType;
+
       MajorType actualFinalType = finalType;
-      MajorType secondaryFinal = finalType;
+      //MajorType secondaryFinal = finalType;
 
       // if this has an index, switch to required type for output
-      if(withIndex && intermediateType == finalType) actualFinalType = finalType.toBuilder().setMode(DataMode.REQUIRED).build();
+      //if(withIndex && intermediateType == finalType) actualFinalType = finalType.toBuilder().setMode(DataMode.REQUIRED).build();
 
       // if this isn't a direct access, switch the final type to nullable as offsets may be null.
       // TODO: there is a bug here with some things.
-      if(intermediateType != finalType) actualFinalType = finalType.toBuilder().setMode(DataMode.OPTIONAL).build();
+      //if(intermediateType != finalType) actualFinalType = finalType.toBuilder().setMode(DataMode.OPTIONAL).build();
 
       return new TypedFieldId(intermediateType, secondaryFinal, actualFinalType, hyperReader, remainder, ids.toArray());
     }

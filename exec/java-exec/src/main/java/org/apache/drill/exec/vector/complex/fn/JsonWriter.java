@@ -118,10 +118,13 @@ public class JsonWriter {
         break;
       case MAP:
         gen.writeStartObject();
-        for(String name : reader){
-          if(reader.isSet()){
-            gen.writeFieldName(name);
-            writeValue(reader.reader(name));
+        if (reader.isSet()) {
+          for(String name : reader){
+            FieldReader childReader = reader.reader(name);
+            if(childReader.isSet()){
+              gen.writeFieldName(name);
+              writeValue(childReader);
+            }
           }
         }
         gen.writeEndObject();

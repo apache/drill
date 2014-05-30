@@ -36,6 +36,7 @@ import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder.ValueReference;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder.WorkspaceReference;
 import org.apache.drill.exec.expr.holders.ValueHolder;
+import org.apache.drill.exec.vector.complex.reader.FieldReader;
 import org.codehaus.commons.compiler.CompileException;
 import org.codehaus.janino.Java.CompilationUnit;
 import org.codehaus.janino.Parser;
@@ -52,9 +53,9 @@ import com.google.common.io.Resources;
  */
 public class FunctionConverter {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FunctionConverter.class);
-  
+
   private Map<String, CompilationUnit> functionUnits = Maps.newHashMap();
-  
+
   private CompilationUnit get(Class<?> c) throws IOException{
     String path = c.getName();
     path = path.replaceFirst("\\$.*", "");
@@ -70,7 +71,7 @@ public class FunctionConverter {
         throw new IOException(String.format("Failure trying to located source code for Class %s, tried to read on classpath location %s", c.getName(), path));
       }
       String body = IO.toString(is);
-      
+
       //TODO: Hack to remove annotations so Janino doesn't choke.  Need to reconsider this problem...
       body = body.replaceAll("@\\w+(?:\\([^\\\\]*?\\))?", "");
       try{
@@ -81,11 +82,11 @@ public class FunctionConverter {
         logger.warn("Failure while parsing function class:\n{}", body, e);
         return null;
       }
-      
+
     }
-    
+
   }
-  
+
   public <T extends DrillFunc> DrillFuncHolder getHolder(Class<T> clazz){
     FunctionTemplate template = clazz.getAnnotation(FunctionTemplate.class);
     if(template == null){
@@ -100,16 +101,16 @@ public class FunctionConverter {
     // start by getting field information.
     List<ValueReference> params = Lists.newArrayList();
     List<WorkspaceReference> workspaceFields = Lists.newArrayList();
-    
+
     ValueReference outputField = null;
-    
-    
+
+
     for(Field field : clazz.getDeclaredFields()){
 
       Param param = field.getAnnotation(Param.class);
       Output output = field.getAnnotation(Output.class);
       Workspace workspace = field.getAnnotation(Workspace.class);
-      
+
       int i =0;
       if(param != null) i++;
       if(output != null) i++;
@@ -121,12 +122,18 @@ public class FunctionConverter {
       }
 
       if(param != null || output != null){
-        
+
+        // Special processing for @Param FieldReader
+        if (param != null && FieldReader.class.isAssignableFrom(field.getType())) {
+          params.add(ValueReference.createFieldReaderRef(field.getName()));
+          continue;
+        }
+
         // check that param and output are value holders.
         if(!ValueHolder.class.isAssignableFrom(field.getType())){
           return failure(String.format("The field doesn't holds value of type %s which does not implement the ValueHolder interface.  All fields of type @Param or @Output must extend this interface..", field.getType()), clazz, field);
         }
-        
+
         // get the type field from the value holder.
         MajorType type = null;
         try{
@@ -134,34 +141,34 @@ public class FunctionConverter {
         }catch(Exception e){
           return failure("Failure while trying to access the ValueHolder's TYPE static variable.  All ValueHolders must contain a static TYPE variable that defines their MajorType.", e, clazz, field.getName());
         }
-        
-        
+
+
         ValueReference p = new ValueReference(type, field.getName());
         if(param != null){
           if (param.constant()) {
             p.setConstant(true);
           }
           params.add(p);
-        }else{ 
+        }else{
           if(outputField != null){
             return failure("You've declared more than one @Output field.  You must declare one and only @Output field per Function class.", clazz, field);
           }else{
-            outputField = p; 
-            
+            outputField = p;
+
           }
-           
+
         }
-        
+
       }else{
         // workspace work.
 //        logger.debug("Found workspace field {}:{}", field.getType(), field.getName());
         //workspaceFields.add(new WorkspaceReference(field.getType(), field.getName()));
         WorkspaceReference wsReference = new WorkspaceReference(field.getType(), field.getName());
-             
+
         if (template.scope() == FunctionScope.POINT_AGGREGATE && !ValueHolder.class.isAssignableFrom(field.getType()) ) {
-          return failure(String.format("Aggregate function '%s' workspace variable '%s' is of type '%s'. Please change it to Holder type.", template.name(), field.getName(), field.getType()), clazz, field);          
+          return failure(String.format("Aggregate function '%s' workspace variable '%s' is of type '%s'. Please change it to Holder type.", template.name(), field.getName(), field.getType()), clazz, field);
         }
- 
+
         //If the workspace var is of Holder type, get its MajorType and assign to WorkspaceReference.
         if(ValueHolder.class.isAssignableFrom(field.getType())){
           MajorType majorType = null;
@@ -172,18 +179,18 @@ public class FunctionConverter {
           }
           wsReference.setMajorType(majorType);
         }
-        
+
         workspaceFields.add(wsReference);
       }
-      
+
     }
-    
-    
+
+
    // if(!workspaceFields.isEmpty()) return failure("This function declares one or more workspace fields.  However, those have not yet been implemented.", clazz);
     if(outputField == null)  return failure("This function declares zero output fields.  A function must declare one output field.", clazz);
-    
-    // get function body.     
-   
+
+    // get function body.
+
     CompilationUnit cu;
     try {
       cu = get(clazz);
@@ -191,8 +198,8 @@ public class FunctionConverter {
     } catch (IOException e) {
       return failure("Failure while getting class body.", e, clazz);
     }
-    
-    
+
+
     try{
       Map<String, String> methods = MethodGrabbingVisitor.getMethods(cu, clazz);
       List<String> imports = ImportGrabber.getMethods(cu);
@@ -238,11 +245,11 @@ public class FunctionConverter {
     }catch(Exception | NoSuchFieldError | AbstractMethodError ex){
       return failure("Failure while creating function holder.", ex, clazz);
     }
-    
+
   }
-  
-  
-  
+
+
+
   private String getClassBody(Class<?> c) throws CompileException, IOException{
     String path = c.getName();
     path = path.replaceFirst("\\$.*", "");
@@ -255,28 +262,28 @@ public class FunctionConverter {
         throw new IOException(String.format("Failure trying to located source code for Class %s, tried to read on classpath location %s", c.getName(), path));
       }
       String body = IO.toString(is);
-      
+
       //TODO: Hack to remove annotations so Janino doesn't choke.  Need to reconsider this problem...
       //return body.replaceAll("@(?:Output|Param|Workspace|Override|SuppressWarnings\\([^\\\\]*?\\)|FunctionTemplate\\([^\\\\]*?\\))", "");
       return body.replaceAll("@(?:\\([^\\\\]*?\\))?", "");
     }
-    
+
   }
-  
-  
-  
+
+
+
   @SuppressWarnings("unchecked")
   private <T> T getStaticFieldValue(String fieldName, Class<?> valueType, Class<T> c) throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException{
       Field f = valueType.getDeclaredField(fieldName);
       Object val = f.get(null);
       return (T) val;
   }
-  
+
   private static DrillFuncHolder failure(String message, Throwable t, Class<?> clazz, String fieldName){
     logger.warn("Failure loading function class {}, field {}. " + message, clazz.getName(), fieldName, t);
     return null;
-  }  
-  
+  }
+
   private DrillFuncHolder failure(String message, Class<?> clazz, String fieldName){
     logger.warn("Failure loading function class {}, field {}. " + message, clazz.getName(), fieldName);
     return null;
@@ -291,11 +298,11 @@ public class FunctionConverter {
     logger.warn("Failure loading function class [{}]. Message: {}", clazz.getName(), message, t);
     return null;
   }
-  
+
   private DrillFuncHolder failure(String message, Class<?> clazz, Field field){
     return failure(message, clazz, field.getName());
   }
-  
 
-  
+
+
 }

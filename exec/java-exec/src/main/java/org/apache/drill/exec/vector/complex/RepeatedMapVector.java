@@ -248,10 +248,10 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
       //todo: make these bulk copies
       for(int i = holder.start; i < holder.end; i++, newIndex++){
         for(TransferPair p : pairs){
-          if(!p.copyValueSafe(from, to)) return false;
+          if(!p.copyValueSafe(i, newIndex)) return false;
         }
       }
-      if(!this.to.offsets.getMutator().setSafe(to, newIndex)) return false;
+      if(!this.to.offsets.getMutator().setSafe(to+1, newIndex)) return false;
       return true;
     }
 

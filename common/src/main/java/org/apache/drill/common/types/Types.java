@@ -46,6 +46,10 @@ public class Types {
     return false;
   }
 
+  public static boolean isRepeated(MajorType type){
+    return type.getMode() == REPEATED ;
+  }
+
   public static boolean isNumericType(MajorType type){
     if(type.getMode() == REPEATED) return false;
 
@@ -343,6 +347,8 @@ public class Types {
     case "time":
       return withMode(MinorType.TIME, mode);
     case "binary":
+      return withMode(MinorType.VARBINARY, mode);
+    case "json":
       return withMode(MinorType.VARBINARY, mode);
     default:
       throw new UnsupportedOperationException("Could not determine type: " + typeName);

@@ -130,9 +130,6 @@ package org.apache.drill.exec.vector;
     }
   }
 
-
-    
-<#if type.major == "VarLen">
     public void copyFrom(int inIndex, int outIndex, Repeated${minor.class}Vector v){
       int count = v.getAccessor().getCount(inIndex);
       getMutator().startNewGroup(outIndex);
@@ -151,16 +148,6 @@ package org.apache.drill.exec.vector;
       }
       return true;
     }
-<#else>
-
-    public void copyFrom(int inIndex, int outIndex, Repeated${minor.class}Vector v){
-        throw new UnsupportedOperationException();
-    }
-
-    public boolean copyFromSafe(int inIndex, int outIndex, Repeated${minor.class}Vector v){
-        throw new UnsupportedOperationException();
-    }
-</#if>
 
   public boolean allocateNewSafe(){
     if(!offsets.allocateNewSafe()) return false;
@@ -341,12 +328,17 @@ package org.apache.drill.exec.vector;
     public void get(int index, int positionIndex, ${minor.class}Holder holder) {
       int offset = offsets.getAccessor().get(index);
       assert offset >= 0;
+      assert positionIndex < getCount(index);
       values.getAccessor().get(offset + positionIndex, holder);
     }
     
     public void get(int index, int positionIndex, Nullable${minor.class}Holder holder) {
       int offset = offsets.getAccessor().get(index);
       assert offset >= 0;
+      if (positionIndex >= getCount(index)) {
+        holder.isSet = 0;
+        return;
+      }
       values.getAccessor().get(offset + positionIndex, holder);
     }
 
@@ -407,9 +399,19 @@ package org.apache.drill.exec.vector;
       return (b1 && b2);
     }
 
-    
+    <#else>
+
+    public boolean addSafe(int index, ${minor.javaType!type.javaType} srcValue) {
+      if(offsets.getValueCapacity() <= index+1) return false;
+      int nextOffset = offsets.getAccessor().get(index+1);
+      boolean b1 = values.getMutator().setSafe(nextOffset, srcValue);
+      boolean b2 = offsets.getMutator().setSafe(index+1, nextOffset+1);
+      return (b1 && b2);
+    }
+        
     </#if>
 
+    
     public boolean setSafe(int index, Repeated${minor.class}Holder h){
       ${minor.class}Holder ih = new ${minor.class}Holder();
       getMutator().startNewGroup(index);

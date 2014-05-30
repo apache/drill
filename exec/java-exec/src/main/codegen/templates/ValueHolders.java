@@ -32,14 +32,28 @@ package org.apache.drill.exec.expr.holders;
 public final class ${className} implements ValueHolder{
   
   public static final MajorType TYPE = Types.${mode.name?lower_case}(MinorType.${minor.class?upper_case});
-
+  
+  public MajorType getType() {return TYPE;}
+  
     <#if mode.name != "Repeated">
       
     public static final int WIDTH = ${type.width};
       <#if mode.name == "Optional">
       /** Whether the given holder holds a valid value.  1 means non-null.  0 means null. **/
       public int isSet;
+      
+      public boolean isSet() {
+        return isSet == 1;
+      }
+      <#else>
+    
+      public boolean isSet() {
+        return true;
+      }
+      
       </#if>
+     
+  
       
       <#if type.major != "VarLen">
 
@@ -132,6 +146,11 @@ public final class ${className} implements ValueHolder{
       
       /** The Vector holding the actual values. **/
       public ${minor.class}Vector vector;
+      
+      public boolean isSet() {
+        return true;
+      }
+
     </#if>
 }
 
