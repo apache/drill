@@ -167,7 +167,10 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
   }
   
   public boolean copyFromSafe(int fromIndex, int thisIndex, ${minor.class}Vector from){
-    if(thisIndex >= getValueCapacity()) return false;
+    if(thisIndex >= getValueCapacity()) {
+        allocationMonitor--;
+        return false;
+    }
     
     int start = from.offsetVector.getAccessor().get(fromIndex);
     int end =   from.offsetVector.getAccessor().get(fromIndex+1);
@@ -175,7 +178,10 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     
     int outputStart = offsetVector.data.get${(minor.javaType!type.javaType)?cap_first}(thisIndex * ${type.width});
     
-    if(data.capacity() < outputStart + len) return false;
+    if(data.capacity() < outputStart + len) {
+        allocationMonitor--;
+        return false;
+    }
     
     from.data.getBytes(start, data, outputStart, len);
     offsetVector.data.set${(minor.javaType!type.javaType)?cap_first}( (thisIndex+1) * ${type.width}, outputStart + len);

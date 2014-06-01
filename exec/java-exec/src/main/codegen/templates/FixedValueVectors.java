@@ -205,7 +205,10 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
   }
   
   public boolean copyFromSafe(int fromIndex, int thisIndex, ${minor.class}Vector from){
-    if(thisIndex >= getValueCapacity()) return false;
+    if(thisIndex >= getValueCapacity()) {
+      allocationMonitor--;
+      return false;
+    }
     copyFrom(fromIndex, thisIndex, from);
     return true;
   }
@@ -586,13 +589,19 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
    }
 
    public boolean setSafe(int index, ${minor.class}Holder holder){
-     if(index >= getValueCapacity()) return false;
+     if(index >= getValueCapacity()) {
+       allocationMonitor--;
+       return false;
+     }
      set(index, holder);
      return true;
    }
 
    public boolean setSafe(int index, Nullable${minor.class}Holder holder){
-     if(index >= getValueCapacity()) return false;
+     if(index >= getValueCapacity()) {
+       allocationMonitor--;
+       return false;
+     }
      set(index, holder);
      return true;
    }
@@ -612,13 +621,19 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
    }
 
    public boolean setSafe(int index, ${minor.class}Holder holder){
-     if(index >= getValueCapacity()) return false;
+     if(index >= getValueCapacity()) {
+       allocationMonitor--;
+       return false;
+     }
      set(index, holder);
      return true;
    }
 
    public boolean setSafe(int index, Nullable${minor.class}Holder holder){
-     if(index >= getValueCapacity()) return false;
+     if(index >= getValueCapacity()) {
+       allocationMonitor--;
+       return false;
+     }
      set(index, holder);
      return true;
    }
@@ -636,13 +651,19 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
    }
 
    public boolean setSafe(int index, ${minor.class}Holder holder){
-     if(index >= getValueCapacity()) return false;
+     if(index >= getValueCapacity()) {
+       allocationMonitor--;
+       return false;
+     }
      set(index, holder);
      return true;
    }
 
    public boolean setSafe(int index, Nullable${minor.class}Holder holder){
-     if(index >= getValueCapacity()) return false;
+     if(index >= getValueCapacity()) {
+       allocationMonitor--;
+       return false;
+     }
      set(index, holder);
      return true;
    }
@@ -679,13 +700,19 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
    }
 
    public boolean setSafe(int index,  Nullable${minor.class}Holder holder){
-       if(index >= getValueCapacity()) return false;
+       if(index >= getValueCapacity()) {
+         allocationMonitor--;
+         return false;
+       }
        set(index, holder);
        return true;
    }
 
    public boolean setSafe(int index,  ${minor.class}Holder holder){
-       if(index >= getValueCapacity()) return false;
+       if(index >= getValueCapacity()) {
+         allocationMonitor--;
+         return false;
+       }
        set(index, holder);
        return true;
    }
@@ -696,7 +723,10 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
    }
    
    public boolean setSafe(int index, ${minor.class}Holder holder){
-     if(index >= getValueCapacity()) return false;
+     if(index >= getValueCapacity()) {
+       allocationMonitor--;
+       return false;
+     }
      set(index, holder);
      return true;
    }
@@ -737,7 +767,10 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
    }
 
    public boolean setSafe(int index, ${minor.class}Holder holder){
-     if(index >= getValueCapacity()) return false;
+     if(index >= getValueCapacity()) {
+       allocationMonitor--;
+       return false;
+     }
      set(index, holder);
      return true;
    }
@@ -747,7 +780,10 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
    }
 
    public boolean setSafe(int index, Nullable${minor.class}Holder holder){
-     if(index >= getValueCapacity()) return false;
+     if(index >= getValueCapacity()) {
+       allocationMonitor--;
+       return false;
+     }
      set(index, holder);
      return true;
    }

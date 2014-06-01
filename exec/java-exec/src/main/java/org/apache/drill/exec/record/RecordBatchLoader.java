@@ -60,6 +60,7 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
    */
   public boolean load(RecordBatchDef def, ByteBuf buf) throws SchemaChangeException {
 //    logger.debug("Loading record batch with def {} and data {}", def, buf);
+    container.zeroVectors();
     this.valueCount = def.getRecordCount();
     boolean schemaChanged = schema == null;
 //    logger.info("Load, ThreadID: {}", Thread.currentThread().getId(), new RuntimeException("For Stack Trace Only"));
