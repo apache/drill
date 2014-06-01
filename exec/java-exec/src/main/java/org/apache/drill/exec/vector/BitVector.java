@@ -60,11 +60,11 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
   }
 
   private int getSizeFromCount(int valueCount) {
-    return (int) Math.ceil((float)valueCount / 8.0);
+    return (int) Math.ceil(valueCount / 8.0);
   }
 
   private int getByteIndex(int index) {
-    return (int) Math.floor((float) index / 8.0);
+    return (int) Math.floor(index / 8.0);
   }
 
   public void allocateNew() {
@@ -174,27 +174,30 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
   public void splitAndTransferTo(int startIndex, int length, BitVector target) {
     assert startIndex + length <= valueCount;
     int firstByte = getByteIndex(startIndex);
-    int lastByte = getSizeFromCount(startIndex + length) - 1;
+    int byteSize = getSizeFromCount(length);
     int offset = startIndex % 8;
     if (offset == 0) {
       // slice
-      target.data = this.data.slice(firstByte, lastByte - firstByte + 1);
+      target.data = this.data.slice(firstByte, byteSize);
       target.data.retain();
     } else {
       // Copy data
+      // When the first bit starts from the middle of a byte (offset != 0), copy data from src BitVector.
+      // Each byte in the target is composed by a part in i-th byte, another part in (i+1)-th byte.
+      // The last byte copied to target is a bit tricky :
+      //   1) if length requires partly byte ( length % 8 !=0), copy the remaining bits only.
+      //   2) otherwise, copy the last byte in the same way as to the prior bytes.
       target.clear();
       target.allocateNew(length);
-      if ((startIndex + length) % 8 == 0) {
-        lastByte++;
-      }
-      int i = firstByte;
       // TODO maybe do this one word at a time, rather than byte?
-      for (; i <= lastByte - 1; i++) {
-        target.data.setByte(i - firstByte, (((this.data.getByte(i) & 0xFF) >>> offset) + (this.data.getByte(i + 1) <<  (8 - offset))));
+      for (int i = 0; i < byteSize - 1; i++) {
+        target.data.setByte(i, (((this.data.getByte(firstByte + i) & 0xFF) >>> offset) + (this.data.getByte(firstByte + i + 1) <<  (8 - offset))));
       }
-      if (startIndex + length == this.valueCount) {
-        target.data.setByte(i - firstByte, ((this.data.getByte(lastByte) & 0xFF) >>> offset));
-      }
+      if (length % 8 != 0)
+        target.data.setByte(byteSize - 1, ((this.data.getByte(firstByte + byteSize - 1) & 0xFF) >>> offset));
+      else
+        target.data.setByte(byteSize - 1,
+            (((this.data.getByte(firstByte + byteSize - 1) & 0xFF) >>> offset) + (this.data.getByte(firstByte + byteSize) <<  (8 - offset))));
     }
   }
 
