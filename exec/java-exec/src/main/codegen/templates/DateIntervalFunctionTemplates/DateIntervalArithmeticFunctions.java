@@ -88,7 +88,11 @@ public class ${datetype}${intervaltype}Functions {
     @Param ${datetype}Holder left;
     @Param ${intervaltype}Holder right;
     @Workspace org.joda.time.MutableDateTime temp;
+    <#if datetype == "Date" && (intervaltype.startsWith("Interval"))>
+    @Output TimeStampHolder out;
+    <#else>
     @Output ${datetype}Holder out;
+    </#if>
 
         public void setup(RecordBatch incoming) {
             <#if datetype == "TimeStampTZ">

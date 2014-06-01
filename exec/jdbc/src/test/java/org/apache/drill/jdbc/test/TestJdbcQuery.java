@@ -44,6 +44,7 @@ import org.junit.rules.TestRule;
 import com.google.common.base.Function;
 import com.google.common.base.Stopwatch;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -764,7 +765,9 @@ import static org.junit.Assert.fail;
 
           // show tables on view
           ResultSet resultSet = statement.executeQuery("select date '2008-2-23', time '12:23:34', timestamp '2008-2-23 12:23:34.456', " +
-                                                       "interval '1' year, interval '2' day " +
+                                                       "interval '1' year, interval '2' day, " +
+                                                       "date_add(date '2008-2-23', interval '1 10:20:30' day to second), " +
+                                                       "date_add(date '2010-2-23', 1) " +
                                                        "from cp.`employee.json` limit 1");
 
           java.sql.Date date = resultSet.getDate(1);
@@ -772,9 +775,17 @@ import static org.junit.Assert.fail;
           java.sql.Timestamp ts = resultSet.getTimestamp(3);
           String intervalYear = resultSet.getString(4);
           String intervalDay  = resultSet.getString(5);
+          java.sql.Timestamp ts1 = resultSet.getTimestamp(6);
+          java.sql.Date date1 = resultSet.getDate(7);
+
+          java.sql.Timestamp result = java.sql.Timestamp.valueOf("2008-2-24 10:20:30");
+          java.sql.Date result1 = java.sql.Date.valueOf("2010-2-24");
+          assertEquals(ts1, result);
+          assertEquals(date1, result1);
 
           System.out.println("Date: " + date.toString() + " time: " + time.toString() + " timestamp: " + ts.toString() +
-                             "\ninterval year: " + intervalYear + " intervalDay: " + intervalDay);
+                             "\ninterval year: " + intervalYear + " intervalDay: " + intervalDay +
+                             " date_interval_add: " + ts1.toString() + "date_int_add: " + date1.toString());
 
           statement.close();
           return null;

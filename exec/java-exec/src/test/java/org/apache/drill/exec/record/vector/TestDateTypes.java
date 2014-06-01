@@ -293,7 +293,7 @@ public class TestDateTypes extends PopUnitTestBase {
 
                 ValueVector.Accessor accessor = v.getValueVector().getAccessor();
 
-                assertEquals((accessor.getObject(0).toString()), ("2008-03-27"));
+                assertEquals((accessor.getObject(0).toString()), ("2008-03-27 00:00:00.000"));
 
 
             }
