@@ -88,7 +88,7 @@ DecimalValue getDecimalValueFromByteBuf(SlicedByteBuf& data, size_t startIndex, 
     val.m_unscaledValue = decimalDigits;
 
     // set the sign
-    if (data.getUint32((startIndex) & 0x80000000) != 0)
+    if ((data.getUint32(startIndex) & 0x80000000) != 0)
     {
         val.m_unscaledValue *= -1;
     }

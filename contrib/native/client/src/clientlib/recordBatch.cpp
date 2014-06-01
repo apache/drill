@@ -238,6 +238,18 @@ ValueVectorBase* ValueVectorFactory::allocateValueVector(const Drill::FieldMetad
                     return new NullableValueVectorFixed<float>(b,f.getValueCount());
                 case common::FLOAT8:
                     return new NullableValueVectorFixed<double>(b,f.getValueCount());
+                case common::DECIMAL9:
+                    return new NullableValueVectorDecimal9(b,f.getValueCount(), f.getScale());
+                case common::DECIMAL18:
+                    return new NullableValueVectorDecimal18(b,f.getValueCount(), f.getScale());
+                case common::DECIMAL28DENSE:
+                    return new NullableValueVectorDecimal28Dense(b,f.getValueCount(), f.getScale());
+                case common::DECIMAL38DENSE:
+                    return new NullableValueVectorDecimal38Dense(b,f.getValueCount(), f.getScale());
+                case common::DECIMAL28SPARSE:
+                    return new NullableValueVectorDecimal28Sparse(b,f.getValueCount(), f.getScale());
+                case common::DECIMAL38SPARSE:
+                    return new NullableValueVectorDecimal38Sparse(b,f.getValueCount(), f.getScale());
                 case common::DATE:
                     return new NullableValueVectorTyped<DateHolder,
                            ValueVectorTyped<DateHolder, int64_t> >(b,f.getValueCount());

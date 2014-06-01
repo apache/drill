@@ -303,9 +303,13 @@ template <int DECIMAL_DIGITS, int WIDTH_IN_BYTES, bool IS_SPARSE, int MAX_PRECIS
             void getValueAt(size_t index, char* buf, size_t nChars) const {
                 const DecimalValue& val = this->get(index);
                 const std::string& str = boost::lexical_cast<std::string>(val.m_unscaledValue);
-                size_t idxDecimalMark = str.length() - m_scale;
-                const std::string& decStr= str.substr(0, idxDecimalMark) + "." + str.substr(idxDecimalMark, m_scale);
-                strncpy(buf, decStr.c_str(), nChars);
+                if (m_scale == 0) {
+                    strncpy(buf, str.c_str(), nChars);
+                } else {
+                    size_t idxDecimalMark = str.length() - m_scale;
+                    const std::string& decStr= str.substr(0, idxDecimalMark) + "." + str.substr(idxDecimalMark, m_scale);
+                    strncpy(buf, decStr.c_str(), nChars);
+                }
                 return;
             }
 
@@ -336,9 +340,13 @@ template<typename VALUE_TYPE>
             void getValueAt(size_t index, char* buf, size_t nChars) const {
                 VALUE_TYPE value = m_pBuffer->readAt<VALUE_TYPE>(index * sizeof(VALUE_TYPE));
                 const std::string& str = boost::lexical_cast<std::string>(value);
-                size_t idxDecimalMark = str.length() - m_scale;
-                const std::string& decStr= str.substr(0, idxDecimalMark) + "." + str.substr(idxDecimalMark, m_scale);
-                strncpy(buf, decStr.c_str(), nChars);
+                if (m_scale == 0) {
+                    strncpy(buf, str.c_str(), nChars);
+                } else {
+                    size_t idxDecimalMark = str.length() - m_scale;
+                    const std::string& decStr= str.substr(0, idxDecimalMark) + "." + str.substr(idxDecimalMark, m_scale);
+                    strncpy(buf, decStr.c_str(), nChars);
+                }
                 return;
             }
 
@@ -559,6 +567,13 @@ template <class VALUEHOLDER_CLASS_TYPE, class VALUE_VECTOR_TYPE>
                 this->m_pData= new SlicedByteBuf(*b, offsetEnd, b->getLength()-offsetEnd);
                 this->m_pVector= new VALUE_VECTOR_TYPE(m_pData, rowCount);
             }
+            // Specialized for Decimal Types
+            NullableValueVectorTyped(SlicedByteBuf *b, size_t rowCount, int32_t scale):ValueVectorBase(b, rowCount){
+                size_t offsetEnd = (size_t)ceil(rowCount/8.0);
+                this->m_pBitmap= new SlicedByteBuf(*b, 0, offsetEnd);
+                this->m_pData= new SlicedByteBuf(*b, offsetEnd, b->getLength()-offsetEnd);
+                this->m_pVector= new VALUE_VECTOR_TYPE(m_pData, rowCount, scale);
+            }
 
             ~NullableValueVectorTyped(){
                 delete this->m_pBitmap;
@@ -732,11 +747,12 @@ class DECLSPEC_DRILL_CLIENT FieldMetadata{
             m_precision=f.major_type().precision();
             m_bufferLength=f.buffer_length();
         }
-        const std::string& getName(){ return m_name;}
+        const std::string& getName() const{ return m_name;}
         common::MinorType getMinorType() const{ return m_minorType;}
         common::DataMode getDataMode() const{return m_dataMode;}
         uint32_t getValueCount() const{return m_valueCount;}
         uint32_t getScale() const{return m_scale;}
+        uint32_t getPrecision() const{return m_precision;}
         uint32_t getBufferLength() const{return m_bufferLength;}
         void copy(Drill::FieldMetadata& f){
             m_name=f.m_name;
