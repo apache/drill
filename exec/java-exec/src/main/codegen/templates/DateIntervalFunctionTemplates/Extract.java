@@ -34,6 +34,7 @@ public class ${className} {
 <#list extract.fromTypes as fromUnit>
 <#list extract.toTypes as toUnit>
 <#if fromUnit == "Date" || fromUnit == "Time" || fromUnit == "TimeStamp" || fromUnit == "TimeStampTZ">
+<#if !(fromUnit == "Time" && (toUnit == "Year" || toUnit == "Month" || toUnit == "Day"))>
   @FunctionTemplate(name = "extract${toUnit}", scope = FunctionTemplate.FunctionScope.SIMPLE,
       nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)
   public static class ${toUnit}From${fromUnit} implements DrillSimpleFunc {
@@ -68,6 +69,7 @@ public class ${className} {
     </#if>
     }
   }
+</#if>
 <#else>
   @FunctionTemplate(name = "extract${toUnit}", scope = FunctionTemplate.FunctionScope.SIMPLE,
       nulls = FunctionTemplate.NullHandling.NULL_IF_NULL)

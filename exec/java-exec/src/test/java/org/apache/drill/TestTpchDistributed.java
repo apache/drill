@@ -61,7 +61,6 @@ public class TestTpchDistributed extends BaseTestQuery{
   }
 
   @Test
-  @Ignore // DRILL-516
   public void tpch07() throws Exception{
     testDistributed("queries/tpch/07.sql");
   }
