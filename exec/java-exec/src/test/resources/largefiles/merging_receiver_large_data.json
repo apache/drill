@@ -9,7 +9,7 @@
   "graph" : [ {
     "pop" : "fs-scan",
     "@id" : 1,
-    "files" : [ "#{TEST_FILE}" ],
+    "files" : [ #{TEST_FILE} ],
     "storage" : {
       "type" : "file",
       "connection" : "file:///",
@@ -53,7 +53,7 @@
       "type" : "json"
     },
     "columns" : [ "`id`", "`summary`" ],
-    "selectionRoot" : "#{TEST_FILE}"
+    "selectionRoot" : #{TEST_FILE}
   }, {
     "pop" : "project",
     "@id" : 2,

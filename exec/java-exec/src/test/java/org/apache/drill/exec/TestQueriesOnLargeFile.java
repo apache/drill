@@ -94,7 +94,7 @@ public class TestQueriesOnLargeFile extends BaseTestQuery {
   @Test
   public void testMergingReceiver() throws Exception {
     String plan = Files.toString(FileUtils.getResourceAsFile("/largefiles/merging_receiver_large_data.json"),
-        Charsets.UTF_8).replace("#{TEST_FILE}", dataFile.getPath());
+        Charsets.UTF_8).replace("#{TEST_FILE}", escapeJsonString(dataFile.getPath()));
     List<QueryResultBatch> results = testPhysicalWithResults(plan);
 
     int recordsInOutput = 0;

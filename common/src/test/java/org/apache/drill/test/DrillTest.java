@@ -31,11 +31,16 @@ import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 import org.slf4j.Logger;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 public class DrillTest {
   static final Logger logger = org.slf4j.LoggerFactory.getLogger(DrillTest.class);
 
+  protected static final ObjectMapper objectMapper = new ObjectMapper();
+
   static final SystemManager manager = new SystemManager();
-  
+
   static final Logger testReporter = org.slf4j.LoggerFactory.getLogger("org.apache.drill.TestReporter");
   static final TestLogReporter LOG_OUTCOME = new TestLogReporter();
 
@@ -120,6 +125,14 @@ public class DrillTest {
       }
     }
 
+  }
+
+  public static String escapeJsonString(String original) {
+    try {
+      return objectMapper.writeValueAsString(original);
+    } catch (JsonProcessingException e) {
+      return original;
+    }
   }
 
   public static String readable(long bytes) {
