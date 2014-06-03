@@ -17,6 +17,7 @@
  */
 package org.apache.drill.jdbc.test;
 
+import java.io.File;
 import java.lang.Exception;
 import java.lang.RuntimeException;
 import java.nio.file.Paths;
@@ -30,6 +31,7 @@ import java.sql.Statement;
 import java.sql.Types;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.store.hive.HiveTestDataGenerator;
 import org.apache.drill.jdbc.Driver;
@@ -65,6 +67,13 @@ import static org.junit.Assert.fail;
   @BeforeClass
   public static void generateHive() throws Exception{
     new HiveTestDataGenerator().generateTestData();
+
+    // delete tmp workspace directory
+    File f = new File("/tmp/drilltest");
+    if(f.exists()){
+      FileUtils.cleanDirectory(f);
+      FileUtils.forceDelete(f);
+    }
   }
 
   @Test
@@ -497,12 +506,14 @@ import static org.junit.Assert.fail;
           Statement statement = connection.createStatement();
           ResultSet resultSet = statement.executeQuery("USE hive.db1");
           String result = JdbcAssert.toString(resultSet).trim();
+          resultSet.close();
           String expected = "ok=true; summary=Default schema changed to 'hive.db1'";
           assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected), expected.equals(result));
 
 
           resultSet = statement.executeQuery("SELECT * FROM kv_db1 LIMIT 2");
           result = JdbcAssert.toString(resultSet).trim();
+          resultSet.close();
           expected = "key=1; value= key_1\nkey=2; value= key_2";
           assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected), expected.equals(result));
           statement.close();
@@ -527,6 +538,7 @@ import static org.junit.Assert.fail;
           // create view
           ResultSet resultSet = statement.executeQuery(viewCreate);
           String result = JdbcAssert.toString(resultSet).trim();
+          resultSet.close();
           String viewCreateResult = "ok=true; summary=View '" + viewName + "' created successfully in 'dfs.tmp' schema";
           assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, viewCreateResult),
               viewCreateResult.equals(result));
@@ -534,6 +546,7 @@ import static org.junit.Assert.fail;
           // query from view
           resultSet = statement.executeQuery(viewQuery);
           result = JdbcAssert.toString(resultSet).trim();
+          resultSet.close();
           assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, queryResult),
               queryResult.equals(result));
 
@@ -700,12 +713,14 @@ import static org.junit.Assert.fail;
           // query from view
           ResultSet resultSet = statement.executeQuery("SELECT regionid FROM testview3 LIMIT 1");
           String result = JdbcAssert.toString(resultSet).trim();
+          resultSet.close();
           String expected = "regionid=0";
           assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected),
               expected.equals(result));
 
           resultSet = statement.executeQuery("DROP VIEW testview3");
           result = JdbcAssert.toString(resultSet).trim();
+          resultSet.close();
           expected = "ok=true; summary=View 'testview3' deleted successfully from 'dfs.tmp' schema";
           assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected),
               expected.equals(result));
@@ -736,6 +751,7 @@ import static org.junit.Assert.fail;
           // show tables on view
           ResultSet resultSet = statement.executeQuery("SHOW TABLES like 'testview3'");
           String result = JdbcAssert.toString(resultSet).trim();
+          resultSet.close();
           String expected = "TABLE_SCHEMA=dfs.tmp; TABLE_NAME=testview3";
           assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected),
               expected.equals(result));
@@ -743,11 +759,14 @@ import static org.junit.Assert.fail;
           // describe a view
           resultSet = statement.executeQuery("DESCRIBE dfs.tmp.testview3");
           result = JdbcAssert.toString(resultSet).trim();
+          resultSet.close();
           expected =
               "COLUMN_NAME=key; DATA_TYPE=INTEGER; IS_NULLABLE=NO\n" +
               "COLUMN_NAME=value; DATA_TYPE=VARCHAR; IS_NULLABLE=NO";
           assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected),
               expected.equals(result));
+
+          statement.executeQuery("drop view testview3").close();
 
           statement.close();
           return null;
@@ -821,6 +840,7 @@ import static org.junit.Assert.fail;
           ResultSet resultSet = statement.executeQuery("show files from `/tmp`");
 
           System.out.println(JdbcAssert.toString(resultSet));
+          resultSet.close();
           statement.close();
           return null;
         } catch (Exception e) {
@@ -845,6 +865,7 @@ import static org.junit.Assert.fail;
           assert (resultSet.getMetaData().getColumnType(3) == Types.TIMESTAMP);
 
           System.out.println(JdbcAssert.toString(resultSet));
+          resultSet.close();
           statement.close();
           return null;
         } catch (Exception e) {
@@ -867,16 +888,20 @@ import static org.junit.Assert.fail;
           // create a view with full schema identifier
           ResultSet resultSet =  statement.executeQuery("CREATE VIEW dfs.tmp.testview AS SELECT * FROM hive.kv");
           String result = JdbcAssert.toString(resultSet).trim();
+          resultSet.close();
           String expected = "ok=true; summary=View 'testview' created successfully in 'dfs.tmp' schema";
-//          assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected),
-//              expected.equals(result));
+          assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected),
+              expected.equals(result));
 
           // query from view
           resultSet = statement.executeQuery("SELECT key FROM dfs.tmp.testview LIMIT 1");
           result = JdbcAssert.toString(resultSet).trim();
+          resultSet.close();
           expected = "key=1";
           assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected),
               expected.equals(result));
+
+          statement.executeQuery("drop view dfs.tmp.testview").close();
 
           statement.close();
           return null;
@@ -900,6 +925,7 @@ import static org.junit.Assert.fail;
           // create a view with partial schema identifier
           ResultSet resultSet =  statement.executeQuery("CREATE VIEW tmp.testview AS SELECT * FROM hive.kv");
           String result = JdbcAssert.toString(resultSet).trim();
+          resultSet.close();
           String expected = "ok=true; summary=View 'testview' created successfully in 'dfs.tmp' schema";
           assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected),
               expected.equals(result));
@@ -907,6 +933,7 @@ import static org.junit.Assert.fail;
           // query from view
           resultSet = statement.executeQuery("SELECT key FROM tmp.testview LIMIT 1");
           result = JdbcAssert.toString(resultSet).trim();
+          resultSet.close();
           expected = "key=1";
           assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected),
               expected.equals(result));
@@ -915,8 +942,11 @@ import static org.junit.Assert.fail;
           statement.executeQuery("USE dfs.tmp");
           resultSet = statement.executeQuery("SELECT key FROM testview LIMIT 1");
           result = JdbcAssert.toString(resultSet).trim();
+          resultSet.close();
           assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected),
               expected.equals(result));
+
+          statement.executeQuery("drop view tmp.testview").close();
 
           statement.close();
           return null;
@@ -944,12 +974,14 @@ import static org.junit.Assert.fail;
           // change default schema
           ResultSet resultSet = statement.executeQuery("USE `dfs.default`");
           String result = JdbcAssert.toString(resultSet).trim();
+          resultSet.close();
           String expected = "ok=true; summary=Default schema changed to 'dfs.default'";
           assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected), expected.equals(result));
 
           resultSet =  statement.executeQuery(
               String.format("select R_REGIONKEY from `%s/../../sample-data/region.parquet` LIMIT 1", WORKING_PATH));
           result = JdbcAssert.toString(resultSet).trim();
+          resultSet.close();
           expected = "R_REGIONKEY=0";
           assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected),
               expected.equals(result));
