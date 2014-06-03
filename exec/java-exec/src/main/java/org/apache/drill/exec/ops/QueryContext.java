@@ -35,7 +35,7 @@ import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.apache.drill.exec.store.sys.TableProvider;
+import org.apache.drill.exec.store.sys.PStoreProvider;
 
 public class QueryContext{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryContext.class);
@@ -58,8 +58,8 @@ public class QueryContext{
     this.plannerSettings.setNumEndPoints(this.getActiveEndpoints().size());
   }
 
-  public TableProvider getSystemTableProvider(){
-    return drillbitContext.getSystemTableProvider();
+  public PStoreProvider getPersistentStoreProvider(){
+    return drillbitContext.getPersistentStoreProvider();
   }
 
   public PlannerSettings getPlannerSettings(){

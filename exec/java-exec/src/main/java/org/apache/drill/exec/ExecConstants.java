@@ -74,7 +74,8 @@ public interface ExecConstants {
   public static final OptionValidator PARQUET_BLOCK_SIZE_VALIDATOR = new LongValidator(PARQUET_BLOCK_SIZE, 512*1024*1024);
   public static final String HTTP_ENABLE = "drill.exec.http.enabled";
   public static final String HTTP_PORT = "drill.exec.http.port";
-  public static final String SYS_TABLES_LOCAL_PATH = "drill.exec.sys.tables.local.path";
-  public static final String SYS_TABLES_LOCAL_ENABLE_WRITE = "drill.exec.sys.tables.local.write";
+  public static final String SYS_STORE_PROVIDER_CLASS = "drill.exec.sys.store.provider.class";
+  public static final String SYS_STORE_PROVIDER_LOCAL_PATH = "drill.exec.sys.store.provider.local.path";
+  public static final String SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE = "drill.exec.sys.store.provider.local.write";
   public static final String ERROR_ON_MEMORY_LEAK = "drill.exec.debug.error_on_leak";
 }

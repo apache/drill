@@ -29,20 +29,20 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.drill.exec.store.sys.PTable;
-import org.apache.drill.exec.store.sys.PTableConfig;
+import org.apache.drill.exec.store.sys.PStore;
+import org.apache.drill.exec.store.sys.PStoreConfig;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
-public class LocalTable<V> implements PTable<V>{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LocalTable.class);
+public class LocalPStore<V> implements PStore<V>{
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LocalPStore.class);
 
   private final File basePath;
-  private final PTableConfig<V> config;
+  private final PStoreConfig<V> config;
   private static final String SUFFIX = ".sys.drill";
 
-  public LocalTable(File base, PTableConfig<V> config) {
+  public LocalPStore(File base, PStoreConfig<V> config) {
     super();
     this.basePath = new File(base, config.getName());
     if(!basePath.exists()){

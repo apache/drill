@@ -21,16 +21,16 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.drill.exec.store.sys.PTable;
+import org.apache.drill.exec.store.sys.PStore;
 
 import com.google.hive12.common.collect.Maps;
 
-public class NoWriteLocalTable<V> implements PTable<V>{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NoWriteLocalTable.class);
+public class NoWriteLocalPStore<V> implements PStore<V>{
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NoWriteLocalPStore.class);
 
   private ConcurrentMap<String, V> map = Maps.newConcurrentMap();
 
-  public NoWriteLocalTable() {
+  public NoWriteLocalPStore() {
     super();
   }
 
@@ -58,6 +58,5 @@ public class NoWriteLocalTable<V> implements PTable<V>{
   public void delete(String key) {
     map.remove(key);
   }
-
 
 }

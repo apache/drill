@@ -15,36 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.sys.zk;
+package org.apache.drill.exec.store.sys;
 
-import java.io.IOException;
+import java.util.Map;
 
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.drill.exec.store.sys.PTable;
-import org.apache.drill.exec.store.sys.PTableConfig;
-import org.apache.drill.exec.store.sys.TableProvider;
-
-public class ZkTableProvider implements TableProvider{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ZkTableProvider.class);
-
-  private final CuratorFramework curator;
-
-  public ZkTableProvider(CuratorFramework curator){
-    this.curator = curator;
-  }
-
-  @Override
-  public void close() {
-  }
-
-  @Override
-  public <V> PTable<V> getPTable(PTableConfig<V> table) throws IOException {
-    return new ZkPTable<V>(curator, table);
-  }
-
-  @Override
-  public void start() {
-  }
-
-
+public interface PStore<V> extends Iterable<Map.Entry<String, V>> {
+  public V get(String key);
+  public void put(String key, V value);
+  public boolean putIfAbsent(String key, V value);
+  public void delete(String key);
 }

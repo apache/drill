@@ -201,6 +201,7 @@ public class ZKClusterCoordinator extends ClusterCoordinator {
   public ServiceDiscovery<DrillbitEndpoint> getDiscovery() {
     return ServiceDiscoveryBuilder
       .builder(DrillbitEndpoint.class)
+      .basePath("/")
       .client(curator)
       .serializer(DrillServiceInstanceHelper.SERIALIZER)
       .build();

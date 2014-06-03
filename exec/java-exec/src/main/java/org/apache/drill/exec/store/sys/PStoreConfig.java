@@ -27,12 +27,12 @@ import com.google.common.base.Preconditions;
 import com.google.protobuf.Message;
 import com.google.protobuf.Message.Builder;
 
-public class PTableConfig<V> {
+public class PStoreConfig<V> {
 
   private final String name;
   private final PClassSerializer<V> valueSerializer;
 
-  private PTableConfig(String name, PClassSerializer<V> valueSerializer) {
+  private PStoreConfig(String name, PClassSerializer<V> valueSerializer) {
     super();
     this.name = name;
     this.valueSerializer = valueSerializer;
@@ -46,32 +46,33 @@ public class PTableConfig<V> {
     return valueSerializer;
   }
 
-  public static <V extends Message, X extends Builder> PTableConfigBuilder<V> newProtoBuilder(Schema<V> writeSchema, Schema<X> readSchema) {
-    return new PTableConfigBuilder<V>(new ProtoSerializer<V, X>(writeSchema, readSchema));
+  public static <V extends Message, X extends Builder> PStoreConfigBuilder<V> newProtoBuilder(Schema<V> writeSchema, Schema<X> readSchema) {
+    return new PStoreConfigBuilder<V>(new ProtoSerializer<V, X>(writeSchema, readSchema));
   }
 
-  public static <V> PTableConfigBuilder<V> newJacksonBuilder(ObjectMapper mapper, Class<V> clazz) {
-    return new PTableConfigBuilder<V>(new JacksonSerializer<V>(mapper, clazz));
+  public static <V> PStoreConfigBuilder<V> newJacksonBuilder(ObjectMapper mapper, Class<V> clazz) {
+    return new PStoreConfigBuilder<V>(new JacksonSerializer<V>(mapper, clazz));
   }
 
-  public static class PTableConfigBuilder<V> {
+  public static class PStoreConfigBuilder<V> {
     String name;
     PClassSerializer<V> serializer;
 
-    PTableConfigBuilder(PClassSerializer<V> serializer) {
+    PStoreConfigBuilder(PClassSerializer<V> serializer) {
       super();
       this.serializer = serializer;
     }
 
-    public <X extends Builder> PTableConfigBuilder<V> name(String name) {
+    public <X extends Builder> PStoreConfigBuilder<V> name(String name) {
       this.name = name;
       return this;
     }
 
-
-    public PTableConfig<V> build(){
+    public PStoreConfig<V> build(){
       Preconditions.checkNotNull(name);
-      return new PTableConfig<V>(name, serializer);
+      return new PStoreConfig<V>(name, serializer);
     }
+
   }
+
 }

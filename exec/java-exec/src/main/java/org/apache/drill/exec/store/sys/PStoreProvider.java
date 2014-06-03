@@ -17,11 +17,10 @@
  */
 package org.apache.drill.exec.store.sys;
 
-import java.util.Map;
+import java.io.Closeable;
+import java.io.IOException;
 
-public interface PTable<V> extends Iterable<Map.Entry<String, V>> {
-  public V get(String key);
-  public void put(String key, V value);
-  public boolean putIfAbsent(String key, V value);
-  public void delete(String key);
+public interface PStoreProvider extends AutoCloseable, Closeable{
+  public <V> PStore<V> getPStore(PStoreConfig<V> table) throws IOException;
+  public void start() throws IOException;
 }

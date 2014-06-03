@@ -48,8 +48,8 @@ import org.apache.drill.exec.store.dfs.FileSystemPlugin;
 import org.apache.drill.exec.store.dfs.FormatPlugin;
 import org.apache.drill.exec.store.ischema.InfoSchemaConfig;
 import org.apache.drill.exec.store.ischema.InfoSchemaStoragePlugin;
-import org.apache.drill.exec.store.sys.PTable;
-import org.apache.drill.exec.store.sys.PTableConfig;
+import org.apache.drill.exec.store.sys.PStore;
+import org.apache.drill.exec.store.sys.PStoreConfig;
 import org.apache.drill.exec.store.sys.SystemTablePlugin;
 import org.apache.drill.exec.store.sys.SystemTablePluginConfig;
 import org.eigenbase.relopt.RelOptRule;
@@ -71,7 +71,7 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
 
   private DrillbitContext context;
   private final DrillSchemaFactory schemaFactory = new DrillSchemaFactory();
-  private final PTable<StoragePluginConfig> pluginSystemTable;
+  private final PStore<StoragePluginConfig> pluginSystemTable;
 
   private RuleSet storagePluginsRuleSet;
 
@@ -79,8 +79,8 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
     try{
       this.context = context;
       this.pluginSystemTable = context //
-          .getSystemTableProvider() //
-          .getPTable(PTableConfig //
+          .getPersistentStoreProvider() //
+          .getPStore(PStoreConfig //
               .newJacksonBuilder(context.getConfig().getMapper(), StoragePluginConfig.class) //
               .name("sys.storage_plugins") //
               .build());

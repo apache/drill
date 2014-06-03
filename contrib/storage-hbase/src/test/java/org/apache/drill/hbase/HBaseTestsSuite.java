@@ -37,7 +37,8 @@ import org.junit.runners.Suite.SuiteClasses;
   HBaseRecordReaderTest.class,
   TestHBaseFilterPushDown.class,
   TestHBaseProjectPushDown.class,
-  TestHBaseRegionScanAssignments.class
+  TestHBaseRegionScanAssignments.class,
+  TestHBaseTableProvider.class
 })
 public class HBaseTestsSuite {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBaseTestsSuite.class);

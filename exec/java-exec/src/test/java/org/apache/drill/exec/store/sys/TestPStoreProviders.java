@@ -23,24 +23,24 @@ import org.apache.curator.retry.RetryNTimes;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.TestWithZookeeper;
-import org.apache.drill.exec.store.sys.local.LocalTableProvider;
-import org.apache.drill.exec.store.sys.zk.ZkTableProvider;
+import org.apache.drill.exec.store.sys.local.LocalPStoreProvider;
+import org.apache.drill.exec.store.sys.zk.ZkPStoreProvider;
 import org.junit.Test;
 
-public class TestTableProviders extends TestWithZookeeper {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestTableProviders.class);
+public class TestPStoreProviders extends TestWithZookeeper {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestPStoreProviders.class);
 
-  static LocalTableProvider provider;
+  static LocalPStoreProvider provider;
 
   @Test
-  public void verifyLocalTable() throws Exception {
-    try(LocalTableProvider provider = new LocalTableProvider(DrillConfig.create())){
-      PTableTestUtil.test(provider);
+  public void verifyLocalStore() throws Exception {
+    try(LocalPStoreProvider provider = new LocalPStoreProvider(DrillConfig.create())){
+      PStoreTestUtil.test(provider);
     }
   }
 
   @Test
-  public void verifyZkTable() throws Exception {
+  public void verifyZkStore() throws Exception {
     DrillConfig config = getConfig();
     String connect = config.getString(ExecConstants.ZK_CONNECTION);
     CuratorFrameworkFactory.Builder builder = CuratorFrameworkFactory.builder()
@@ -51,8 +51,8 @@ public class TestTableProviders extends TestWithZookeeper {
 
     try(CuratorFramework curator = builder.build()){
       curator.start();
-      ZkTableProvider provider = new ZkTableProvider(curator);
-      PTableTestUtil.test(provider);
+      ZkPStoreProvider provider = new ZkPStoreProvider(curator);
+      PStoreTestUtil.test(provider);
     }
   }
 }

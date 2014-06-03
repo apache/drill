@@ -145,7 +145,7 @@
       <outputDirectory>conf</outputDirectory>
     </file>
     <file>
-      <source>src/resources/storage-plugins.json</source>
+      <source>src/resources/bootstrap-storage-plugins.json</source>
       <outputDirectory>conf</outputDirectory>
     </file>
   </files>   

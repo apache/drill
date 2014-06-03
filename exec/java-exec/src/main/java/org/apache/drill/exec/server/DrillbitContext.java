@@ -35,7 +35,7 @@ import org.apache.drill.exec.rpc.data.DataConnectionCreator;
 import org.apache.drill.exec.server.options.SystemOptionManager;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.StoragePluginRegistry.DrillSchemaFactory;
-import org.apache.drill.exec.store.sys.TableProvider;
+import org.apache.drill.exec.store.sys.PStoreProvider;
 
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Preconditions;
@@ -56,9 +56,9 @@ public class DrillbitContext {
   private final WorkEventBus workBus;
   private final FunctionImplementationRegistry functionRegistry;
   private final SystemOptionManager systemOptions;
-  private final TableProvider provider;
+  private final PStoreProvider provider;
 
-  public DrillbitContext(DrillbitEndpoint endpoint, BootStrapContext context, ClusterCoordinator coord, Controller controller, DataConnectionCreator connectionsPool, DistributedCache cache, WorkEventBus workBus, TableProvider provider) {
+  public DrillbitContext(DrillbitEndpoint endpoint, BootStrapContext context, ClusterCoordinator coord, Controller controller, DataConnectionCreator connectionsPool, DistributedCache cache, WorkEventBus workBus, PStoreProvider provider) {
     super();
     Preconditions.checkNotNull(endpoint);
     Preconditions.checkNotNull(context);
@@ -121,7 +121,6 @@ public class DrillbitContext {
     return context.getBitLoopGroup();
   }
 
-
   public DataConnectionCreator getDataConnectionsPool(){
     return connectionsPool;
   }
@@ -142,7 +141,7 @@ public class DrillbitContext {
     return reader;
   }
 
-  public TableProvider getSystemTableProvider(){
+  public PStoreProvider getPersistentStoreProvider(){
     return provider;
   }
 

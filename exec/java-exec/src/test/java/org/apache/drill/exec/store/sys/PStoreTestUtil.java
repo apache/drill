@@ -28,22 +28,22 @@ import java.util.Map.Entry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Maps;
 
-public class PTableTestUtil {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PTableTestUtil.class);
+public class PStoreTestUtil {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PStoreTestUtil.class);
 
-  public static void test(TableProvider provider) throws Exception{
-    PTable<String> table = provider.getPTable(PTableConfig.newJacksonBuilder(new ObjectMapper(), String.class).name("sys.test").build());
+  public static void test(PStoreProvider provider) throws Exception{
+    PStore<String> store = provider.getPStore(PStoreConfig.newJacksonBuilder(new ObjectMapper(), String.class).name("sys.test").build());
     String[] keys = {"first", "second"};
     String[] values = {"value1", "value2"};
     Map<String, String> expectedMap = Maps.newHashMap();
 
     for(int i =0; i < keys.length; i++){
       expectedMap.put(keys[i], values[i]);
-      table.put(keys[i], values[i]);
+      store.put(keys[i], values[i]);
     }
 
     {
-      Iterator<Map.Entry<String, String>> iter = table.iterator();
+      Iterator<Map.Entry<String, String>> iter = store.iterator();
       for(int i =0; i < keys.length; i++){
         Entry<String, String> e = iter.next();
         assertTrue(expectedMap.containsKey(e.getKey()));
@@ -54,13 +54,13 @@ public class PTableTestUtil {
     }
 
     {
-      Iterator<Map.Entry<String, String>> iter = table.iterator();
+      Iterator<Map.Entry<String, String>> iter = store.iterator();
       while(iter.hasNext()){
         iter.next();
         iter.remove();
       }
     }
 
-    assertFalse(table.iterator().hasNext());
+    assertFalse(store.iterator().hasNext());
   }
 }

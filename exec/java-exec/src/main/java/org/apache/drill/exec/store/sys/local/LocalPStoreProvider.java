@@ -20,24 +20,25 @@ package org.apache.drill.exec.store.sys.local;
 import java.io.File;
 import java.io.IOException;
 
-import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.store.sys.PTable;
-import org.apache.drill.exec.store.sys.PTableConfig;
-import org.apache.drill.exec.store.sys.TableProvider;
+import org.apache.drill.exec.store.sys.PStore;
+import org.apache.drill.exec.store.sys.PStoreConfig;
+import org.apache.drill.exec.store.sys.PStoreProvider;
+
+import com.typesafe.config.Config;
 
 /**
  * A really simple provider that stores data in the local file system, one value per file.
  */
-public class LocalTableProvider implements TableProvider{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LocalTableProvider.class);
+public class LocalPStoreProvider implements PStoreProvider{
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LocalPStoreProvider.class);
 
   private File path;
   private final boolean enableWrite;
 
-  public LocalTableProvider(DrillConfig config){
-    path = new File(config.getString(ExecConstants.SYS_TABLES_LOCAL_PATH));
-    enableWrite = config.getBoolean(ExecConstants.SYS_TABLES_LOCAL_ENABLE_WRITE);
+  public LocalPStoreProvider(Config config) {
+    path = new File(config.getString(ExecConstants.SYS_STORE_PROVIDER_LOCAL_PATH));
+    enableWrite = config.getBoolean(ExecConstants.SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE);
   }
 
   @Override
@@ -45,17 +46,16 @@ public class LocalTableProvider implements TableProvider{
   }
 
   @Override
-  public <V> PTable<V> getPTable(PTableConfig<V> table) throws IOException {
+  public <V> PStore<V> getPStore(PStoreConfig<V> storeConfig) throws IOException {
     if(enableWrite){
-      return new LocalTable<V>(path, table);
+      return new LocalPStore<V>(path, storeConfig);
     }else{
-      return new NoWriteLocalTable<V>();
+      return new NoWriteLocalPStore<V>();
     }
   }
 
   @Override
   public void start() {
   }
-
 
 }

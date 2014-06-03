@@ -23,21 +23,20 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import org.apache.curator.framework.CuratorFramework;
-import org.apache.drill.exec.store.sys.PTable;
-import org.apache.drill.exec.store.sys.PTableConfig;
+import org.apache.drill.exec.store.sys.PStore;
+import org.apache.drill.exec.store.sys.PStoreConfig;
 import org.apache.zookeeper.CreateMode;
 
 import com.google.common.base.Preconditions;
 
-public class ZkPTable<V> implements PTable<V>{
+public class ZkPStore<V> implements PStore<V>{
 
   private CuratorFramework framework;
-  private PTableConfig<V> config;
+  private PStoreConfig<V> config;
   private String prefix;
   private String parent;
 
-  ZkPTable(CuratorFramework framework, PTableConfig<V> config) throws IOException {
-    super();
+  ZkPStore(CuratorFramework framework, PStoreConfig<V> config) throws IOException {
     this.parent = "/" + config.getName();
     this.prefix = parent + "/";
     this.framework = framework;
@@ -123,7 +122,6 @@ public class ZkPTable<V> implements PTable<V>{
     }
   }
 
-
   private class Iter implements Iterator<Entry<String, V>>{
 
     private Iterator<String> keys;
@@ -151,11 +149,9 @@ public class ZkPTable<V> implements PTable<V>{
       keys.remove();
     }
 
-
     private class DeferredEntry implements Entry<String, V>{
 
       private String name;
-
 
       public DeferredEntry(String name) {
         super();
@@ -178,5 +174,7 @@ public class ZkPTable<V> implements PTable<V>{
       }
 
     }
+
   }
+
 }

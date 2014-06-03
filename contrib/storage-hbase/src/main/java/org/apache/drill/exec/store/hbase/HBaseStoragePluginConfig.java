@@ -88,6 +88,16 @@ public class HBaseStoragePluginConfig extends StoragePluginConfigBase implements
   }
 
   @JsonIgnore
+  public String getZookeeperQuorum() {
+    return getHBaseConf().get(HConstants.ZOOKEEPER_QUORUM);
+  }
+
+  @JsonIgnore
+  public String getZookeeperport() {
+    return getHBaseConf().get(HBASE_ZOOKEEPER_PORT);
+  }
+
+  @JsonIgnore
   @VisibleForTesting
   public void setZookeeperPort(int zookeeperPort) {
     this.config.put(HBASE_ZOOKEEPER_PORT, String.valueOf(zookeeperPort));

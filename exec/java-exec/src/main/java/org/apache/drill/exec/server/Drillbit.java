@@ -30,9 +30,10 @@ import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.server.rest.DrillRestServer;
 import org.apache.drill.exec.service.ServiceEngine;
-import org.apache.drill.exec.store.sys.TableProvider;
-import org.apache.drill.exec.store.sys.local.LocalTableProvider;
-import org.apache.drill.exec.store.sys.zk.ZkTableProvider;
+import org.apache.drill.exec.store.sys.PStoreRegistry;
+import org.apache.drill.exec.store.sys.PStoreProvider;
+import org.apache.drill.exec.store.sys.local.LocalPStoreProvider;
+import org.apache.drill.exec.store.sys.zk.ZkPStoreProvider;
 import org.apache.drill.exec.work.WorkManager;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -76,7 +77,7 @@ public class Drillbit implements Closeable{
   final ClusterCoordinator coord;
   final ServiceEngine engine;
   final DistributedCache cache;
-  final TableProvider tableProvider;
+  final PStoreProvider storeProvider;
   final WorkManager manager;
   final BootStrapContext context;
   final Server embeddedJetty;
@@ -90,21 +91,20 @@ public class Drillbit implements Closeable{
     this.manager = new WorkManager(context);
     this.engine = new ServiceEngine(manager.getControlMessageHandler(), manager.getUserWorker(), context, manager.getWorkBus(), manager.getDataHandler(), allowPortHunting);
 
-    if(enableHttp){
+    if(enableHttp) {
       this.embeddedJetty = new Server(config.getInt(ExecConstants.HTTP_PORT));
-    }else{
+    } else {
       this.embeddedJetty = null;
     }
 
-
-    if(serviceSet != null){
+    if(serviceSet != null) {
       this.coord = serviceSet.getCoordinator();
       this.cache = serviceSet.getCache();
-      this.tableProvider = new LocalTableProvider(config);
-    }else{
+      this.storeProvider = new LocalPStoreProvider(config);
+    } else {
       Runtime.getRuntime().addShutdownHook(new ShutdownThread(config));
       this.coord = new ZKClusterCoordinator(config);
-      this.tableProvider = new ZkTableProvider(((ZKClusterCoordinator)coord).getCurator());
+      this.storeProvider = new PStoreRegistry(this.coord, config).newPStoreProvider();
       this.cache = new ICache(config, context.getAllocator(), false);
     }
   }
@@ -126,9 +126,9 @@ public class Drillbit implements Closeable{
 
   public void run() throws Exception {
     coord.start(10000);
-    tableProvider.start();
+    storeProvider.start();
     DrillbitEndpoint md = engine.start();
-    manager.start(md, cache, engine.getController(), engine.getDataConnectionCreator(), coord, tableProvider);
+    manager.start(md, cache, engine.getController(), engine.getDataConnectionCreator(), coord, storeProvider);
     cache.run();
     manager.getContext().getStorage().init();
     manager.getContext().getOptionManager().init();
@@ -150,7 +150,7 @@ public class Drillbit implements Closeable{
       logger.warn("Failure while shutting down embedded jetty server.");
     }
     Closeables.closeQuietly(engine);
-    Closeables.closeQuietly(tableProvider);
+    Closeables.closeQuietly(storeProvider);
     Closeables.closeQuietly(coord);
     Closeables.closeQuietly(manager);
     Closeables.closeQuietly(context);

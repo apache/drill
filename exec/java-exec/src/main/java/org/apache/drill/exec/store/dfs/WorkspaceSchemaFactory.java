@@ -47,9 +47,9 @@ import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.dfs.shim.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.shim.DrillInputStream;
 import org.apache.drill.exec.store.dfs.shim.DrillOutputStream;
-import org.apache.drill.exec.store.sys.PTable;
-import org.apache.drill.exec.store.sys.PTableConfig;
-import org.apache.drill.exec.store.sys.TableProvider;
+import org.apache.drill.exec.store.sys.PStore;
+import org.apache.drill.exec.store.sys.PStoreConfig;
+import org.apache.drill.exec.store.sys.PStoreProvider;
 import org.apache.hadoop.fs.Path;
 
 import com.fasterxml.jackson.core.JsonParseException;
@@ -72,12 +72,12 @@ public class WorkspaceSchemaFactory implements ExpandingConcurrentMap.MapValueFa
   private final FileSystemPlugin plugin;
 //  private final PTable<String> knownPaths;
 
-  private final PTable<String> knownViews;
+  private final PStore<String> knownViews;
   private final ObjectMapper mapper;
 
 
 
-  public WorkspaceSchemaFactory(DrillConfig drillConfig, TableProvider provider, FileSystemPlugin plugin, String schemaName, String storageEngineName,
+  public WorkspaceSchemaFactory(DrillConfig drillConfig, PStoreProvider provider, FileSystemPlugin plugin, String schemaName, String storageEngineName,
       DrillFileSystem fileSystem, WorkspaceConfig config,
       List<FormatMatcher> formatMatchers) throws ExecutionSetupException, IOException {
     this.fs = fileSystem;
@@ -95,7 +95,7 @@ public class WorkspaceSchemaFactory implements ExpandingConcurrentMap.MapValueFa
       this.knownViews = null;
 //      this.knownPaths = null;
     }else{
-      this.knownViews = provider.getPTable(PTableConfig //
+      this.knownViews = provider.getPStore(PStoreConfig //
           .newJacksonBuilder(drillConfig.getMapper(), String.class) //
           .name(Joiner.on('.').join("storage.views", storageEngineName, schemaName)) //
           .build());

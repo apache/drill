@@ -30,6 +30,7 @@ import org.apache.drill.exec.store.hbase.HBaseGroupScan;
 import org.apache.drill.exec.store.hbase.HBaseScanSpec;
 import org.apache.hadoop.hbase.HRegionInfo;
 import org.apache.hadoop.hbase.ServerName;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -82,6 +83,11 @@ public class TestHBaseRegionScanAssignments extends BaseHBaseTest {
    */
   @BeforeClass
   public static void setUpBeforeClass() throws Exception {
+    // do nothing
+  }
+
+  @AfterClass
+  public static void tearDownAfterClass() throws Exception {
     // do nothing
   }
 

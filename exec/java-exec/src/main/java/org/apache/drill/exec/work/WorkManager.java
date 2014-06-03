@@ -41,7 +41,7 @@ import org.apache.drill.exec.rpc.data.DataResponseHandler;
 import org.apache.drill.exec.rpc.data.DataResponseHandlerImpl;
 import org.apache.drill.exec.server.BootStrapContext;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.store.sys.TableProvider;
+import org.apache.drill.exec.store.sys.PStoreProvider;
 import org.apache.drill.exec.work.batch.ControlHandlerImpl;
 import org.apache.drill.exec.work.batch.ControlMessageHandler;
 import org.apache.drill.exec.work.foreman.Foreman;
@@ -87,7 +87,7 @@ public class WorkManager implements Closeable{
     this.dataHandler = new DataResponseHandlerImpl(bee);
   }
 
-  public void start(DrillbitEndpoint endpoint, DistributedCache cache, Controller controller, DataConnectionCreator data, ClusterCoordinator coord, TableProvider provider){
+  public void start(DrillbitEndpoint endpoint, DistributedCache cache, Controller controller, DataConnectionCreator data, ClusterCoordinator coord, PStoreProvider provider){
     this.dContext = new DrillbitContext(endpoint, bContext, coord, controller, data, cache, workBus, provider);
  //   executor = Executors.newFixedThreadPool(dContext.getConfig().getInt(ExecConstants.EXECUTOR_THREADS)
     executor = Executors.newCachedThreadPool(new NamedThreadFactory("WorkManager-"));
@@ -113,7 +113,9 @@ public class WorkManager implements Closeable{
   @Override
   public void close() throws IOException {
     try {
-      executor.awaitTermination(1, TimeUnit.SECONDS);
+      if (executor != null) {
+        executor.awaitTermination(1, TimeUnit.SECONDS);
+      }
     } catch (InterruptedException e) {
       logger.warn("Executor interrupted while awaiting termination");
     }
