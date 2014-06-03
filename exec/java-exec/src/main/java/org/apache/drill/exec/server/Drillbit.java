@@ -30,12 +30,12 @@ import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.server.rest.DrillRestServer;
 import org.apache.drill.exec.service.ServiceEngine;
-import org.apache.drill.exec.store.sys.PStoreRegistry;
 import org.apache.drill.exec.store.sys.PStoreProvider;
+import org.apache.drill.exec.store.sys.PStoreRegistry;
 import org.apache.drill.exec.store.sys.local.LocalPStoreProvider;
-import org.apache.drill.exec.store.sys.zk.ZkPStoreProvider;
 import org.apache.drill.exec.work.WorkManager;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.ErrorHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.glassfish.jersey.servlet.ServletContainer;
@@ -113,6 +113,11 @@ public class Drillbit implements Closeable{
     if(embeddedJetty == null) return;
 
     ServletContextHandler context = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
+
+    ErrorHandler errorHandler = new ErrorHandler();
+    errorHandler.setShowStacks(true);
+    errorHandler.setShowMessageInTitle(true);
+    context.setErrorHandler(errorHandler);
     context.setContextPath("/");
     embeddedJetty.setHandler(context);
     ServletHolder h = new ServletHolder(new ServletContainer(new DrillRestServer(manager)));
@@ -120,6 +125,8 @@ public class Drillbit implements Closeable{
     h.setInitOrder(1);
     context.addServlet(h, "/*");
     embeddedJetty.start();
+
+    System.out.println("");
   }
 
 

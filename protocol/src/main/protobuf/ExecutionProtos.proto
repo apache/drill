@@ -13,9 +13,3 @@ message FragmentHandle {
 	optional int32 minor_fragment_id = 3;
 }
 
-message ViewPointer {
-  optional string name = 1;
-  optional string path = 2;
-}
-
-

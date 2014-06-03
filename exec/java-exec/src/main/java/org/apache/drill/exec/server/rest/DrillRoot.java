@@ -27,8 +27,12 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.cache.DistributedMap;
 import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
+import org.apache.drill.exec.store.StoragePlugin;
+import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.work.WorkManager;
 import org.apache.drill.exec.work.foreman.QueryStatus;
 import org.glassfish.jersey.server.mvc.Viewable;
@@ -37,6 +41,8 @@ import com.google.common.collect.Lists;
 
 @Path("/")
 public class DrillRoot {
+
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillRoot.class);
 
   @Inject WorkManager work;
 
@@ -60,6 +66,7 @@ public class DrillRoot {
 
     return new Viewable("/rest/status/list.ftl", ids);
   }
+
 
   @GET
   @Path("/query/{queryid}")

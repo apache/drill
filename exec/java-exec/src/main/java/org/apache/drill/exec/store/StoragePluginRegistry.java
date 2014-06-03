@@ -34,6 +34,7 @@ import net.hydromatic.optiq.SchemaPlus;
 import net.hydromatic.optiq.tools.RuleSet;
 
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
@@ -55,7 +56,6 @@ import org.apache.drill.exec.store.sys.SystemTablePluginConfig;
 import org.eigenbase.relopt.RelOptRule;
 
 import com.google.common.base.Charsets;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSet.Builder;
 import com.google.common.collect.Lists;
@@ -72,8 +72,10 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
   private DrillbitContext context;
   private final DrillSchemaFactory schemaFactory = new DrillSchemaFactory();
   private final PStore<StoragePluginConfig> pluginSystemTable;
-
+  private final Object updateLock = new Object();
+  private volatile long lastUpdate = 0;
   private RuleSet storagePluginsRuleSet;
+  private static final long UPDATE_FREQUENCY = 2 * 60 * 1000;
 
   public StoragePluginRegistry(DrillbitContext context) {
     try{
@@ -88,6 +90,10 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
       logger.error("Failure while loading storage plugin registry.", e);
       throw new RuntimeException("Faiure while reading and loading storage plugin configuration.", e);
     }
+  }
+
+  public PStore<StoragePluginConfig> getStore(){
+    return pluginSystemTable;
   }
 
   @SuppressWarnings("unchecked")
@@ -174,23 +180,53 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
     return activePlugins;
   }
 
-  public StoragePlugin getPlugin(String registeredStoragePluginName) throws ExecutionSetupException {
-    StoragePlugin plugin = plugins.get(registeredStoragePluginName);
+  public void deletePlugin(String name){
+    plugins.remove(name);
+    pluginSystemTable.delete(name);
+  }
 
-    if(plugin == null){
-      StoragePluginConfig config = this.pluginSystemTable.get(registeredStoragePluginName);
-      if(config != null){
-        this.plugins.put(registeredStoragePluginName, create(registeredStoragePluginName, config));
-        plugin = plugins.get(registeredStoragePluginName);
-      }
+  public StoragePlugin createOrUpdate(String name, StoragePluginConfig config, boolean persist) throws ExecutionSetupException{
+    StoragePlugin oldPlugin = plugins.get(name);
+
+    StoragePlugin newPlugin = create(name, config);
+    boolean ok;
+    if(oldPlugin != null){
+      ok = plugins.replace(name, oldPlugin, newPlugin);
+    }else{
+      ok = (null == plugins.putIfAbsent(name, newPlugin));
     }
 
-    return plugin;
+    if(!ok) throw new ExecutionSetupException("Two processes tried to change a plugin at the same time.");
+
+    if(persist) pluginSystemTable.put(name, config);
+
+    return newPlugin;
+  }
+
+
+  public StoragePlugin getPlugin(String name) throws ExecutionSetupException {
+    StoragePlugin plugin = plugins.get(name);
+    if(name.equals("sys") || name.equals("INFORMATION_SCHEMA")) return plugin;
+
+    StoragePluginConfig config = this.pluginSystemTable.get(name);
+
+    // since we lazily manage the list of plugins per server, we need to update this once we know that it is time.
+
+    if(config == null){
+      if(plugin != null) plugins.remove(name);
+      return null;
+    }else{
+      if(plugin == null || !plugin.getConfig().equals(config)){
+        plugin = createOrUpdate(name, config, false);
+      }
+      return plugin;
+    }
+
   }
 
   public StoragePlugin getPlugin(StoragePluginConfig config) throws ExecutionSetupException {
     if(config instanceof NamedStoragePluginConfig){
-      return plugins.get(((NamedStoragePluginConfig) config).name);
+      return getPlugin(((NamedStoragePluginConfig) config).name);
     }else{
       // TODO: for now, we'll throw away transient configs.  we really ought to clean these up.
       return create(null, config);
@@ -222,6 +258,7 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
     }
   }
 
+
   @Override
   public Iterator<Entry<String, StoragePlugin>> iterator() {
     return plugins.entrySet().iterator();
@@ -239,9 +276,21 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
 
     @Override
     public void registerSchemas(UserSession session, SchemaPlus parent) {
-      for(Map.Entry<String, StoragePlugin> e : plugins.entrySet()){
-        e.getValue().registerSchemas(session, parent);
+      try{
+      for(Map.Entry<String, StoragePluginConfig> e : pluginSystemTable){
+        StoragePlugin p = getPlugin(e.getKey());
+        if(p != null){
+          p.registerSchemas(session, parent);
+        }
       }
+
+      getPlugin("sys").registerSchemas(session, parent);
+      getPlugin("INFORMATION_SCHEMA").registerSchemas(session, parent);
+
+      }catch(ExecutionSetupException e){
+        throw new DrillRuntimeException("Failure while updating storage plugins", e);
+      }
+
 
       // Add second level schema as top level schema with name qualified with parent schema name
       // Ex: "dfs" schema has "default" and "tmp" as sub schemas. Add following extra schemas "dfs.default" and

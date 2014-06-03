@@ -18,28 +18,57 @@
 package org.apache.drill.exec.server.rest;
 
 import org.apache.drill.exec.client.DrillClient;
+import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.exec.store.sys.PStoreProvider;
 import org.apache.drill.exec.work.WorkManager;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
-import org.glassfish.jersey.jackson.JacksonFeature;
+import org.glassfish.jersey.CommonProperties;
+import org.glassfish.jersey.internal.util.PropertiesHelper;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.mvc.freemarker.FreemarkerMvcFeature;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.jaxrs.base.JsonMappingExceptionMapper;
+import com.fasterxml.jackson.jaxrs.base.JsonParseExceptionMapper;
+import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 
 public class DrillRestServer extends ResourceConfig {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillRestServer.class);
 
   public DrillRestServer(final WorkManager workManager) {
-//    registerClasses(HelloResource.class);
-    register(JacksonFeature.class);
     register(DrillRoot.class);
+    register(StorageResources.class);
     register(FreemarkerMvcFeature.class);
     property(ServerProperties.METAINF_SERVICES_LOOKUP_DISABLE, true);
+    register(MultiPartFeature.class);
+
+    register_jackson : {
+
+      //disable moxy so it doesn't conflict with jackson.
+      final String disableMoxy = PropertiesHelper.getPropertyNameForRuntime(CommonProperties.MOXY_JSON_FEATURE_DISABLE, getConfiguration().getRuntimeType());
+      property(disableMoxy, true);
+
+      register(JsonParseExceptionMapper.class);
+      register(JsonMappingExceptionMapper.class);
+
+      JacksonJaxbJsonProvider provider = new JacksonJaxbJsonProvider();
+      provider.setMapper(workManager.getContext().getConfig().getMapper());
+      register(provider);
+    }
+
+
     register(new AbstractBinder() {
       @Override
       protected void configure() {
         bind(workManager).to(WorkManager.class);
+        bind(workManager.getContext().getConfig().getMapper()).to(ObjectMapper.class);
+        bind(workManager.getContext().getPersistentStoreProvider()).to(PStoreProvider.class);
+        bind(workManager.getContext().getStorage()).to(StoragePluginRegistry.class);
         bind(new DrillClient()).to(DrillClient.class);
       }
     });
   }
+
 }
