@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.rpc.data;
 
+import io.netty.buffer.ByteBuf;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.BitData.RpcType;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
@@ -66,8 +67,14 @@ public class DataTunnel {
     public String toString() {
       return "SendBatch [batch.header=" + batch.getHeader() + "]";
     }
-    
-    
+
+    @Override
+    public void connectionFailed(FailureType type, Throwable t) {
+      for(ByteBuf buffer : batch.getBuffers()) {
+        buffer.release();
+      }
+      super.connectionFailed(type, t);
+    }
   }
 
   private static class SendBatchAsyncFuture extends FutureBitCommand<Ack, DataClientConnection> {

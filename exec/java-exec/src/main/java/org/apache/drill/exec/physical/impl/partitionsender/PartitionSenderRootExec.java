@@ -61,6 +61,7 @@ public class PartitionSenderRootExec implements RootExec {
   private final OperatorStats stats;
   private final int outGoingBatchCount;
   private final HashPartitionSender popConfig;
+  private final StatusHandler statusHandler;
 
 
   public PartitionSenderRootExec(FragmentContext context,
@@ -74,6 +75,7 @@ public class PartitionSenderRootExec implements RootExec {
     this.stats = oContext.getStats();
     this.outGoingBatchCount = operator.getDestinations().size();
     this.popConfig = operator;
+    this.statusHandler = new StatusHandler(sendCount, context);
   }
 
   @Override
@@ -183,7 +185,7 @@ public class PartitionSenderRootExec implements RootExec {
       // compile and setup generated code
 //      partitioner = context.getImplementationClassMultipleOutput(cg);
       partitioner = context.getImplementationClass(cg);
-      partitioner.setup(context, incoming, popConfig, stats, sendCount, oContext);
+      partitioner.setup(context, incoming, popConfig, stats, sendCount, oContext, statusHandler);
 
     } catch (ClassTransformationException | IOException e) {
       throw new SchemaChangeException("Failure while attempting to load generated class", e);
@@ -197,6 +199,11 @@ public class PartitionSenderRootExec implements RootExec {
       partitioner.clear();
     }
     sendCount.waitForSendComplete();
+
+    if (!statusHandler.isOk()) {
+      context.fail(statusHandler.getException());
+    }
+
     oContext.close();
     incoming.cleanup();
   }

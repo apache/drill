@@ -35,7 +35,8 @@ public interface Partitioner {
                           HashPartitionSender popConfig,
                           OperatorStats stats,
                           SendingAccountor sendingAccountor,
-                          OperatorContext oContext) throws SchemaChangeException;
+                          OperatorContext oContext,
+                          StatusHandler statusHandler) throws SchemaChangeException;
 
   public abstract void partitionBatch(RecordBatch incoming) throws IOException;
   public abstract void flushOutgoingBatches(boolean isLastBatch, boolean schemaChanged) throws IOException;

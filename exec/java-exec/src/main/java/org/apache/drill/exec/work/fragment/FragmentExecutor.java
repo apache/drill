@@ -106,6 +106,9 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
       }
 
       root.stop();
+      if(context.isFailed()) {
+        internalFail(context.getFailureCause());
+      }
 
       closed = true;
 
@@ -115,10 +118,15 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
       internalFail(ex);
     }finally{
       Thread.currentThread().setName(originalThread);
-      if(!closed) try{
-        context.close();
-      }catch(RuntimeException e){
-        logger.warn("Failure while closing context in failed state.", e);
+      if(!closed) {
+        try {
+          if(context.isFailed()) {
+            internalFail(context.getFailureCause());
+          }
+          context.close();
+        } catch (RuntimeException e) {
+          logger.warn("Failure while closing context in failed state.", e);
+        }
       }
     }
     logger.debug("Fragment runner complete. {}:{}", context.getHandle().getMajorFragmentId(), context.getHandle().getMinorFragmentId());

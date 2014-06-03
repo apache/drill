@@ -71,7 +71,8 @@ public abstract class PartitionerTemplate implements Partitioner {
                           HashPartitionSender popConfig,
                           OperatorStats stats,
                           SendingAccountor sendingAccountor,
-                          OperatorContext oContext) throws SchemaChangeException {
+                          OperatorContext oContext,
+                          StatusHandler statusHandler) throws SchemaChangeException {
 
     this.incoming = incoming;
     doSetup(context, incoming, null);
@@ -79,7 +80,8 @@ public abstract class PartitionerTemplate implements Partitioner {
     int fieldId = 0;
     for (DrillbitEndpoint endpoint : popConfig.getDestinations()) {
       FragmentHandle opposite = context.getHandle().toBuilder().setMajorFragmentId(popConfig.getOppositeMajorFragmentId()).setMinorFragmentId(fieldId).build();
-      outgoingBatches.add(new OutgoingRecordBatch(stats, sendingAccountor, popConfig, context.getDataTunnel(endpoint, opposite), context, oContext.getAllocator(), fieldId));
+      outgoingBatches.add(new OutgoingRecordBatch(stats, sendingAccountor, popConfig,
+          context.getDataTunnel(endpoint, opposite), context, oContext.getAllocator(), fieldId, statusHandler));
       fieldId++;
     }
 
@@ -204,10 +206,11 @@ public abstract class PartitionerTemplate implements Partitioner {
     private static final int DEFAULT_RECORD_BATCH_SIZE = 20000;
     private static final int DEFAULT_VARIABLE_WIDTH_SIZE = 200;
 
-    private StatusHandler statusHandler;
+    private final StatusHandler statusHandler;
 
     public OutgoingRecordBatch(OperatorStats stats, SendingAccountor sendCount, HashPartitionSender operator, DataTunnel tunnel,
-                               FragmentContext context, BufferAllocator allocator, int oppositeMinorFragmentId) {
+                               FragmentContext context, BufferAllocator allocator, int oppositeMinorFragmentId,
+                               StatusHandler statusHandler) {
       this.context = context;
       this.allocator = allocator;
       this.operator = operator;
@@ -215,7 +218,7 @@ public abstract class PartitionerTemplate implements Partitioner {
       this.sendCount = sendCount;
       this.stats = stats;
       this.oppositeMinorFragmentId = oppositeMinorFragmentId;
-      this.statusHandler = new StatusHandler(sendCount, context);
+      this.statusHandler = statusHandler;
     }
 
     protected boolean copy(int inIndex) throws IOException {
@@ -345,9 +348,6 @@ public abstract class PartitionerTemplate implements Partitioner {
     public WritableBatch getWritableBatch() {
       return WritableBatch.getBatchNoHVWrap(recordCount, this, false);
     }
-
-
-
 
     public void clear(){
       vectorContainer.clear();
