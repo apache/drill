@@ -224,6 +224,7 @@ public class EasyGroupScan extends AbstractGroupScan{
 
   @Override
   public GroupScan clone(List<SchemaPath> columns) {
+    if(!formatPlugin.supportsPushDown()) throw new IllegalStateException(String.format("%s doesn't support pushdown.", this.getClass().getSimpleName()));
     EasyGroupScan newScan = new EasyGroupScan(this);
     newScan.columns = columns;
     return newScan;
@@ -231,7 +232,7 @@ public class EasyGroupScan extends AbstractGroupScan{
 
   @JsonIgnore
   public boolean canPushdownProjects(List<SchemaPath> columns) {
-    return true;
+    return this.formatPlugin.supportsPushDown();
   }
 
 }

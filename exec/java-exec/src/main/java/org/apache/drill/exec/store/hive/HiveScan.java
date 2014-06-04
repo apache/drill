@@ -268,7 +268,7 @@ public class HiveScan extends AbstractGroupScan {
 
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException {
-    return new HiveScan(hiveReadEntry, storagePlugin, columns);
+    return new HiveScan(this);
   }
 
   @Override

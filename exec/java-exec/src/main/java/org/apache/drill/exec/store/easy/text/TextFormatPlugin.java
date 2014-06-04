@@ -140,4 +140,9 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
   public int getWriterOperatorType() {
     return CoreOperatorType.TEXT_WRITER_VALUE;
   }
+
+  @Override
+  public boolean supportsPushDown() {
+    return true;
+  }
 }

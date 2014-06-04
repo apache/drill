@@ -24,12 +24,15 @@ import java.util.List;
 import net.hydromatic.optiq.rules.java.JavaRules.EnumerableTableAccessRel;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
-import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.planner.physical.PrelUtil;
+import org.apache.drill.exec.planner.physical.PrelUtil.ProjectPushInfo;
 import org.eigenbase.rel.ProjectRel;
 import org.eigenbase.rel.rules.RemoveTrivialProjectRule;
 import org.eigenbase.relopt.RelOptRule;
 import org.eigenbase.relopt.RelOptRuleCall;
+import org.eigenbase.rex.RexNode;
+
+import com.google.common.collect.Lists;
 
 public class DrillPushProjIntoScan extends RelOptRule {
   public static final RelOptRule INSTANCE = new DrillPushProjIntoScan();
@@ -38,31 +41,37 @@ public class DrillPushProjIntoScan extends RelOptRule {
     super(RelOptHelper.some(ProjectRel.class, RelOptHelper.any(EnumerableTableAccessRel.class)), "DrillPushProjIntoScan");
   }
 
+
   @Override
   public void onMatch(RelOptRuleCall call) {
     final ProjectRel proj = (ProjectRel) call.rel(0);
     final EnumerableTableAccessRel scan = (EnumerableTableAccessRel) call.rel(1);
 
     try {
-      List<SchemaPath> columns = PrelUtil.getColumns(scan.getRowType(), proj.getProjects());
+      ProjectPushInfo columnInfo = PrelUtil.getColumns(scan.getRowType(), proj.getProjects());
 
-      if (columns.isEmpty() || !scan.getTable().unwrap(DrillTable.class)
-          .getGroupScan().canPushdownProjects(columns)) {
-        return;
-      }
+      if(columnInfo == null || columnInfo.isStarQuery() //
+          || !scan.getTable().unwrap(DrillTable.class) //
+          .getGroupScan().canPushdownProjects(columnInfo.columns)) return;
 
       final DrillScanRel newScan =
           new DrillScanRel(scan.getCluster(),
               scan.getTraitSet().plus(DrillRel.DRILL_LOGICAL),
               scan.getTable(),
-              scan.getRowType(),
-              columns);
+              columnInfo.createNewRowType(proj.getChild().getCluster().getTypeFactory()),
+              columnInfo.columns);
+
+
+      List<RexNode> newProjects = Lists.newArrayList();
+      for(RexNode n : proj.getChildExps()){
+        newProjects.add(n.accept(columnInfo.getInputRewriter()));
+      }
 
       final DrillProjectRel newProj =
           new DrillProjectRel(proj.getCluster(),
               proj.getTraitSet().plus(DrillRel.DRILL_LOGICAL),
               newScan,
-              proj.getChildExps(),
+              newProjects,
               proj.getRowType());
 
       if (RemoveTrivialProjectRule.isTrivial(newProj)) {

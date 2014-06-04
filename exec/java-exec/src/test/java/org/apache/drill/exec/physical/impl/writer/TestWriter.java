@@ -17,14 +17,15 @@
  */
 package org.apache.drill.exec.physical.impl.writer;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.util.List;
+
 import org.apache.drill.BaseTestQuery;
-import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.record.RecordBatchLoader;
-import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.rpc.user.QueryResultBatch;
 import org.apache.drill.exec.vector.BigIntVector;
 import org.apache.drill.exec.vector.VarCharVector;
@@ -33,12 +34,11 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
 
 public class TestWriter extends BaseTestQuery {
 
@@ -53,6 +53,7 @@ public class TestWriter extends BaseTestQuery {
     fs = FileSystem.get(conf);
   }
 
+  @Ignore("DRILL-903")
   @Test
   public void simpleCsv() throws Exception {
     // before executing the test deleting the existing CSV files in /tmp/csvtest

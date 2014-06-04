@@ -55,7 +55,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
-import com.google.hive12.common.collect.Maps;
+import com.google.common.collect.Maps;
 
 public class TestCacheSerialization extends ExecTest {
 

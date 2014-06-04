@@ -72,7 +72,7 @@ public class DirectGroupScan extends AbstractGroupScan{
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException {
     assert children == null || children.isEmpty();
-    return new DirectSubScan(reader);
+    return new DirectGroupScan(reader);
   }
 
   @Override

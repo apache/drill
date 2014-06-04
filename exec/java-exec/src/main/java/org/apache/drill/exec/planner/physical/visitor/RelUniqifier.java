@@ -23,8 +23,8 @@ import java.util.Set;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.eigenbase.rel.RelNode;
 
-import com.google.hive12.hive12.common.collect.Sets;
-import com.google.hive12.hive12.hive12.common.collect.Lists;
+import com.google.common.collect.Sets;
+import com.google.common.collect.Lists;
 
 public class RelUniqifier extends BasePrelVisitor<Prel, Set<Prel>, RuntimeException>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RelUniqifier.class);

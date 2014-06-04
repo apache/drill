@@ -52,7 +52,7 @@ public class PlanTestBase extends BaseTestQuery {
     String planStr = getPlanInString(sql, JSON_FORMAT);
 
     for (String colNames : expectedSubstrs) {
-      assertTrue(planStr.contains(colNames));
+      assertTrue(String.format("Unable to find expected string %s in plan: %s!", colNames, planStr), planStr.contains(colNames));
     }
   }
 

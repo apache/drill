@@ -97,6 +97,8 @@ public abstract class EasyFormatPlugin<T extends FormatPluginConfig> implements 
     return name;
   }
 
+  public abstract boolean supportsPushDown();
+
   /**
    * Whether or not you can split the format based on blocks within file boundaries. If not, the simple format engine will
    * only split on file boundaries.

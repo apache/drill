@@ -31,8 +31,6 @@ import org.apache.drill.common.expression.PathSegment.ArraySegment;
 import org.apache.drill.common.expression.PathSegment.NameSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.data.Order.Ordering;
-import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.physical.config.SelectionVectorRemover;
 import org.apache.drill.exec.planner.physical.DrillDistributionTrait.DistributionField;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.eigenbase.rel.RelCollation;
@@ -43,14 +41,19 @@ import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.RelOptRuleCall;
 import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypeFactory;
+import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.rex.RexCall;
 import org.eigenbase.rex.RexInputRef;
 import org.eigenbase.rex.RexLiteral;
+import org.eigenbase.rex.RexLocalRef;
 import org.eigenbase.rex.RexNode;
+import org.eigenbase.rex.RexShuttle;
 import org.eigenbase.rex.RexVisitorImpl;
 
-import com.google.common.collect.Lists;
+import com.carrotsearch.hppc.IntIntOpenHashMap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 public class PrelUtil {
@@ -109,34 +112,124 @@ public class PrelUtil {
     return new SelectionVectorRemoverPrel(prel);
   }
 
-  public static List<SchemaPath> getColumns(RelDataType rowType, List<RexNode> projects) {
+  public static ProjectPushInfo getColumns(RelDataType rowType, List<RexNode> projects) {
     final List<String> fieldNames = rowType.getFieldNames();
-    if (fieldNames.isEmpty()) return ImmutableList.of();
+    if (fieldNames.isEmpty()) return null;
 
-    RefFieldsVisitor v = new RefFieldsVisitor(fieldNames);
+    RefFieldsVisitor v = new RefFieldsVisitor(rowType);
     for (RexNode exp : projects) {
       PathSegment segment = exp.accept(v);
       v.addColumn(segment);
     }
 
-    List<SchemaPath> columns = v.getColumns();
-    for (SchemaPath column : columns) {
-      if (column.getRootSegment().getPath().startsWith("*")) {
-        return ImmutableList.of();
-      }
+    return v.getInfo();
+
+  }
+
+  public static class DesiredField {
+    public final int origIndex;
+    public final String name;
+    public final RelDataTypeField field;
+
+    public DesiredField(int origIndex, String name, RelDataTypeField field) {
+      super();
+      this.origIndex = origIndex;
+      this.name = name;
+      this.field = field;
     }
 
-    return columns;
+    @Override
+    public int hashCode() {
+      final int prime = 31;
+      int result = 1;
+      result = prime * result + ((field == null) ? 0 : field.hashCode());
+      result = prime * result + ((name == null) ? 0 : name.hashCode());
+      result = prime * result + origIndex;
+      return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj)
+        return true;
+      if (obj == null)
+        return false;
+      if (getClass() != obj.getClass())
+        return false;
+      DesiredField other = (DesiredField) obj;
+      if (field == null) {
+        if (other.field != null)
+          return false;
+      } else if (!field.equals(other.field))
+        return false;
+      if (name == null) {
+        if (other.name != null)
+          return false;
+      } else if (!name.equals(other.name))
+        return false;
+      if (origIndex != other.origIndex)
+        return false;
+      return true;
+    }
+
+  }
+
+
+  public static class ProjectPushInfo {
+    public final List<SchemaPath> columns;
+    public final List<DesiredField> desiredFields;
+    public final InputRewriter rewriter;
+    private final List<String> fieldNames;
+    private final List<RelDataType> types;
+
+    public ProjectPushInfo(List<SchemaPath> columns, ImmutableList<DesiredField> desiredFields) {
+      super();
+      this.columns = columns;
+      this.desiredFields = desiredFields;
+
+      this.fieldNames = Lists.newArrayListWithCapacity(desiredFields.size());
+      this.types = Lists.newArrayListWithCapacity(desiredFields.size());
+      IntIntOpenHashMap oldToNewIds = new IntIntOpenHashMap();
+
+      int i =0;
+      for(DesiredField f : desiredFields){
+        fieldNames.add(f.name);
+        types.add(f.field.getType());
+        oldToNewIds.put(f.origIndex, i);
+        i++;
+      }
+      this.rewriter = new InputRewriter(oldToNewIds);
+    }
+
+    public InputRewriter getInputRewriter(){
+      return rewriter;
+    }
+
+    public boolean isStarQuery() {
+      for (SchemaPath column : columns) {
+        if (column.getRootSegment().getPath().startsWith("*")) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    public RelDataType createNewRowType(RelDataTypeFactory factory) {
+      return factory.createStructType(types, fieldNames);
+    }
   }
 
   /** Visitor that finds the set of inputs that are used. */
   private static class RefFieldsVisitor extends RexVisitorImpl<PathSegment> {
     final Set<SchemaPath> columns = Sets.newLinkedHashSet();
     final private List<String> fieldNames;
+    final private List<RelDataTypeField> fields;
+    final private Set<DesiredField> desiredFields = Sets.newHashSet();
 
-    public RefFieldsVisitor(List<String> fieldNames) {
+    public RefFieldsVisitor(RelDataType rowType) {
       super(true);
-      this.fieldNames = fieldNames;
+      this.fieldNames = rowType.getFieldNames();
+      this.fields = rowType.getFieldList();
     }
 
     public void addColumn(PathSegment segment) {
@@ -145,13 +238,19 @@ public class PrelUtil {
       }
     }
 
-    public List<SchemaPath> getColumns() {
-      return ImmutableList.copyOf(columns);
+    public ProjectPushInfo getInfo(){
+      return new ProjectPushInfo(ImmutableList.copyOf(columns), ImmutableList.copyOf(desiredFields));
     }
+
 
     @Override
     public PathSegment visitInputRef(RexInputRef inputRef) {
-      return new NameSegment(fieldNames.get(inputRef.getIndex()));
+      int index = inputRef.getIndex();
+      String name = fieldNames.get(index);
+      RelDataTypeField field = fields.get(index);
+      DesiredField f = new DesiredField(index, name, field);
+      desiredFields.add(f);
+      return new NameSegment(name);
     }
 
     @Override
@@ -195,5 +294,46 @@ public class PrelUtil {
     }else{
       return set;
     }
+  }
+
+  public static class InputRefRemap {
+    private int oldIndex;
+    private int newIndex;
+
+    public InputRefRemap(int oldIndex, int newIndex) {
+      super();
+      this.oldIndex = oldIndex;
+      this.newIndex = newIndex;
+    }
+    public int getOldIndex() {
+      return oldIndex;
+    }
+    public int getNewIndex() {
+      return newIndex;
+    }
+
+
+  }
+
+
+  public static class InputRewriter extends RexShuttle {
+
+    final IntIntOpenHashMap map;
+
+    public InputRewriter(IntIntOpenHashMap map) {
+      super();
+      this.map = map;
+    }
+
+    @Override
+    public RexNode visitInputRef(RexInputRef inputRef) {
+      return new RexInputRef(map.get(inputRef.getIndex()), inputRef.getType());
+    }
+
+    @Override
+    public RexNode visitLocalRef(RexLocalRef localRef) {
+      return new RexInputRef(map.get(localRef.getIndex()), localRef.getType());
+    }
+
   }
 }

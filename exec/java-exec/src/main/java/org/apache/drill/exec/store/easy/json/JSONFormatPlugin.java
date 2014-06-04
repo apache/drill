@@ -93,5 +93,10 @@ public class JSONFormatPlugin extends EasyFormatPlugin<JSONFormatConfig> {
     throw new UnsupportedOperationException();
   }
 
+  @Override
+  public boolean supportsPushDown() {
+    return false;
+  }
+
 
 }
