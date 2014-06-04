@@ -92,7 +92,7 @@ public class InfoSchemaGroupScan extends AbstractGroupScan{
 
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException {
-    return this;
+    return new InfoSchemaGroupScan (this);
   }
 
   @Override

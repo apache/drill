@@ -360,8 +360,7 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
   @JsonIgnore
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
     Preconditions.checkArgument(children.isEmpty());
-    //TODO return copy of self
-    return this;
+    return new HBaseGroupScan(this);
   }
 
   @JsonIgnore

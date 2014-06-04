@@ -130,7 +130,7 @@ public class BaseTestQuery extends ExecTest{
 
   private int testRunAndPrint(QueryType type, String query) throws Exception{
     query = query.replace("[WORKING_PATH]", TestTools.getWorkingPath());
-    PrintingResultsListener resultListener = new PrintingResultsListener(Format.TSV, VectorUtil.DEFAULT_COLUMN_WIDTH);
+    PrintingResultsListener resultListener = new PrintingResultsListener(client.getConfig(), Format.TSV, VectorUtil.DEFAULT_COLUMN_WIDTH);
     client.runQuery(type, query, resultListener);
     return resultListener.await();
   }

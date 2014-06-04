@@ -22,6 +22,8 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
@@ -55,20 +57,28 @@ public class ScanPrel extends AbstractRelNode implements DrillScanPrel {
   public ScanPrel(RelOptCluster cluster, RelTraitSet traits,
       GroupScan groupScan, RelDataType rowType) {
     super(cluster, traits);
-    this.groupScan = groupScan;
+    this.groupScan = getCopy(groupScan);
     this.rowType = rowType;
   }
 
   @Override
   public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
-    return new ScanPrel(this.getCluster(), traitSet, this.groupScan,
+    return new ScanPrel(this.getCluster(), traitSet, groupScan,
         this.rowType);
   }
 
   @Override
   protected Object clone() throws CloneNotSupportedException {
-    return new ScanPrel(this.getCluster(), this.getTraitSet(), this.groupScan,
+    return new ScanPrel(this.getCluster(), this.getTraitSet(), getCopy(groupScan),
         this.rowType);
+  }
+
+  private static GroupScan getCopy(GroupScan scan){
+    try {
+      return (GroupScan) scan.getNewWithChildren((List<PhysicalOperator>) (Object) Collections.emptyList());
+    } catch (ExecutionSetupException e) {
+      throw new DrillRuntimeException("Unexpected failure while coping node.", e);
+    }
   }
 
   @Override
@@ -85,7 +95,7 @@ public class ScanPrel extends AbstractRelNode implements DrillScanPrel {
 
   public static ScanPrel create(RelNode old, RelTraitSet traitSets,
       GroupScan scan, RelDataType rowType) {
-    return new ScanPrel(old.getCluster(), traitSets, scan, rowType);
+    return new ScanPrel(old.getCluster(), traitSets, getCopy(scan), rowType);
   }
 
   @Override

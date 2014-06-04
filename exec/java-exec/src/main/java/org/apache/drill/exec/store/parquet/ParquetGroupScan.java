@@ -385,8 +385,7 @@ public class ParquetGroupScan extends AbstractGroupScan {
   @JsonIgnore
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
     Preconditions.checkArgument(children.isEmpty());
-    // TODO return copy of self
-    return this;
+    return new ParquetGroupScan(this);
   }
 
   @Override

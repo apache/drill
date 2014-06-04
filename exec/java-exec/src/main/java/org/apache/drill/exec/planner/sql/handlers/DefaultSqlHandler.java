@@ -43,6 +43,7 @@ import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.explain.PrelSequencer;
 import org.apache.drill.exec.planner.physical.visitor.FinalColumnReorderer;
 import org.apache.drill.exec.planner.physical.visitor.JoinPrelRenameVisitor;
+import org.apache.drill.exec.planner.physical.visitor.RelUniqifier;
 import org.apache.drill.exec.planner.physical.visitor.SelectionVectorPrelVisitor;
 import org.apache.drill.exec.planner.sql.DrillSqlWorker;
 import org.apache.drill.exec.util.Pointer;
@@ -147,6 +148,9 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     // before we return data to the user as we may have accindentally shuffled things.  This adds
     // a trivial project to reorder columns prior to output.
     phyRelNode = FinalColumnReorderer.addFinalColumnOrdering(phyRelNode);
+
+    // Make sure that the no rels are repeats.  This could happen in the case of querying the same table twice as Optiq may canonicalize these.
+    phyRelNode = RelUniqifier.uniqifyGraph(phyRelNode);
 
     // the last thing we do is add any required selection vector removers given the supported encodings of each
     // operator. This will ultimately move to a new trait but we're managing here for now to avoid introducing new

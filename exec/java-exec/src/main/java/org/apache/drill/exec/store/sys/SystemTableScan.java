@@ -74,7 +74,7 @@ public class SystemTableScan extends AbstractGroupScan implements SubScan{
 
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException {
-    return this;
+    return new SystemTableScan(table, plugin);
   }
 
   @Override

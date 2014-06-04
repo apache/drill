@@ -18,19 +18,24 @@
 package org.apache.drill.exec.planner.logical;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.drill.common.JSONOptions;
+import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.common.logical.data.Scan;
 import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.base.GroupScan;
+import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.Size;
 import org.apache.drill.exec.planner.common.DrillScanRelBase;
 import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
 import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.apache.drill.exec.planner.torel.ConversionContext;
+import org.eigenbase.rel.RelWriter;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanner;
@@ -61,16 +66,24 @@ public class DrillScanRel extends DrillScanRelBase implements DrillRel {
 
     try {
       if (columns == null || columns.isEmpty()) {
-        this.groupScan = this.drillTable.getGroupScan();
+        this.groupScan = (GroupScan) getCopy(this.drillTable.getGroupScan()) ;
       } else {
         this.groupScan = this.drillTable.getGroupScan().clone(columns);
       }
     } catch (IOException e) {
-      this.groupScan = null;
-      e.printStackTrace();
+      throw new DrillRuntimeException("Failure creating scan.", e);
     }
 
   }
+
+  private static GroupScan getCopy(GroupScan scan){
+    try {
+      return (GroupScan) scan.getNewWithChildren((List<PhysicalOperator>) (Object) Collections.emptyList());
+    } catch (ExecutionSetupException e) {
+      throw new DrillRuntimeException("Unexpected failure while coping node.", e);
+    }
+  }
+
 
   @Override
   public LogicalOperator implement(DrillImplementor implementor) {
@@ -91,6 +104,10 @@ public class DrillScanRel extends DrillScanRelBase implements DrillRel {
     return this.rowType;
   }
 
+  @Override
+  public RelWriter explainTerms(RelWriter pw) {
+    return super.explainTerms(pw).item("groupscan", groupScan.getDigest());
+  }
 
   @Override
   public double getRows() {
@@ -103,27 +120,27 @@ public class DrillScanRel extends DrillScanRelBase implements DrillRel {
   @Override
   public RelOptCost computeSelfCost(RelOptPlanner planner) {
     Size scanSize = this.groupScan.getSize();
-    int columnCount = this.getRowType().getFieldCount();   
-    
+    int columnCount = this.getRowType().getFieldCount();
+
     if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
       OperatorCost scanCost = this.groupScan.getCost();
       return planner.getCostFactory().makeCost(scanSize.getRecordCount() * columnCount, scanCost.getCpu(), scanCost.getDisk());
     }
-    
+
     // double rowCount = RelMetadataQuery.getRowCount(this);
     double rowCount = scanSize.getRecordCount();
-    
-    double cpuCost = rowCount * columnCount; // for now, assume cpu cost is proportional to row count. 
+
+    double cpuCost = rowCount * columnCount; // for now, assume cpu cost is proportional to row count.
     // Even though scan is reading from disk, in the currently generated plans all plans will
-    // need to read the same amount of data, so keeping the disk io cost 0 is ok for now.  
-    // In the future we might consider alternative scans that go against projections or 
+    // need to read the same amount of data, so keeping the disk io cost 0 is ok for now.
+    // In the future we might consider alternative scans that go against projections or
     // different compression schemes etc that affect the amount of data read. Such alternatives
-    // would affect both cpu and io cost. 
+    // would affect both cpu and io cost.
     double ioCost = 0;
     DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
-    return costFactory.makeCost(rowCount, cpuCost, ioCost, 0);   
-  }  
-  
+    return costFactory.makeCost(rowCount, cpuCost, ioCost, 0);
+  }
+
   public GroupScan getGroupScan() {
     return groupScan;
   }
