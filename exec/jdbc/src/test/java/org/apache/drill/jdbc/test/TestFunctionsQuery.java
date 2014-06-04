@@ -27,9 +27,16 @@ import java.sql.Statement;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.util.TestTools;
+import org.apache.drill.exec.expr.fn.impl.DateUtility;
 import org.apache.drill.exec.store.hive.HiveTestDataGenerator;
 import org.apache.drill.jdbc.Driver;
 import org.apache.drill.jdbc.JdbcTest;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.DateTimeFormatterBuilder;
+import org.joda.time.format.DateTimeParser;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -480,4 +487,18 @@ public class TestFunctionsQuery {
             "SIGN_INT=1\n");
   }
 
+  @Test
+  public void testToTimeStamp() throws Exception {
+    String query = "select to_timestamp(cast('800120400.12312' as decimal(38, 5))) as DEC38_TS, to_timestamp(200120400) as INT_TS " +
+        "from cp.`employee.json` where employee_id < 2";
+
+    DateTime result1 = new DateTime(800120400123l);
+    DateTime result2 = new DateTime(200120400000l);
+    DateTimeFormatter f = DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZZ");
+    JdbcAssert.withNoDefaultSchema()
+        .sql(query)
+        .returns(
+            "DEC38_TS=" + f.print(result1)+ "; " +
+            "INT_TS=" + f.print(result2) + "\n");
+  }
 }
