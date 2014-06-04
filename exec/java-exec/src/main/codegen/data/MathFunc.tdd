@@ -96,15 +96,15 @@
    	},
     {className: "Sign", funcName: "sign", javaFunc : "java.lang.Math.signum", types: [
       {input: "Int",  outputType: "Int", castType: "int"},
-      {input: "BigInt",  outputType: "BigInt", castType: "long"},
-      {input: "Float4", outputType: "Float4", castType: "float"},
-      {input: "Float8", outputType: "Float8", castType: "double"},
-      {input: "SmallInt",  outputType: "SmallInt", castType: "short"},
-      {input: "TinyInt",  outputType: "TinyInt", castType: "byte"},
-      {input: "UInt1", outputType: "UInt1", castType: "byte"},
-      {input: "UInt2", outputType: "UInt2", castType: "char"},
-      {input: "UInt4", outputType: "UInt4", castType: "int"},
-      {input: "UInt8", outputType: "UInt8", castType: "long"}
+      {input: "BigInt",  outputType: "Int", castType: "int"},
+      {input: "Float4", outputType: "Int", castType: "int"},
+      {input: "Float8", outputType: "Int", castType: "int"},
+      {input: "SmallInt",  outputType: "Int", castType: "int"},
+      {input: "TinyInt",  outputType: "Int", castType: "int"},
+      {input: "UInt1", outputType: "Int", castType: "int"},
+      {input: "UInt2", outputType: "Int", castType: "int"},
+      {input: "UInt4", outputType: "Int", castType: "int"},
+      {input: "UInt8", outputType: "Int", castType: "int"}
      ]
    	}      	   
   ],  

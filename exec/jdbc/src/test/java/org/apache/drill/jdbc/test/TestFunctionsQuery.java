@@ -467,4 +467,17 @@ public class TestFunctionsQuery {
             "DEC_38=3.00000\n");
   }
 
+  @Test
+  public void testSignFunction() throws Exception {
+    String query = "select sign(cast('1.23' as float)) as SIGN_FLOAT, sign(-1234.4567) as SIGN_DOUBLE, sign(23) as SIGN_INT " +
+        "from cp.`employee.json` where employee_id < 2";
+
+    JdbcAssert.withNoDefaultSchema()
+        .sql(query)
+        .returns(
+            "SIGN_FLOAT=1; " +
+            "SIGN_DOUBLE=-1; " +
+            "SIGN_INT=1\n");
+  }
+
 }
