@@ -61,7 +61,7 @@ public class LocalCache implements DistributedCache {
   private volatile ConcurrentMap<Class<?>, DistributedMap<?>> maps;
   private volatile ConcurrentMap<Class<?>, DistributedMultiMap<?>> multiMaps;
   private volatile ConcurrentMap<String, Counter> counters;
-  private static final BufferAllocator allocator = new TopLevelAllocator();
+  private static final BufferAllocator allocator = new TopLevelAllocator(DrillConfig.create());
 
   private static final ObjectMapper mapper = DrillConfig.create().getMapper();
 

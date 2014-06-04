@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.physical.impl;
 
+import io.netty.buffer.Unpooled;
+
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -30,6 +32,7 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
+import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
@@ -47,7 +50,6 @@ import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.VarCharVector;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -160,15 +162,8 @@ public class ScanBatch implements RecordBatch {
     try {
       partitionVectors = Lists.newArrayList();
       for (int i : selectedPartitionColumns) {
-        MaterializedField field;
-        ValueVector v;
-        if (partitionValues.length > i) {
-          field = MaterializedField.create(SchemaPath.getSimplePath(partitionColumnDesignator + i), Types.required(MinorType.VARCHAR));
-          v = mutator.addField(field, VarCharVector.class);
-        } else {
-          field = MaterializedField.create(SchemaPath.getSimplePath(partitionColumnDesignator + i), Types.optional(MinorType.VARCHAR));
-          v = mutator.addField(field, NullableVarCharVector.class);
-        }
+        MaterializedField field = MaterializedField.create(SchemaPath.getSimplePath(partitionColumnDesignator + i), Types.optional(MinorType.VARCHAR));
+        ValueVector v = mutator.addField(field, NullableVarCharVector.class);
         partitionVectors.add(v);
       }
     } catch(SchemaChangeException e) {
@@ -179,12 +174,18 @@ public class ScanBatch implements RecordBatch {
   private void populatePartitionVectors() {
     for (int i : selectedPartitionColumns) {
       if (partitionValues.length > i) {
-        VarCharVector v = (VarCharVector) partitionVectors.get(i);
+        NullableVarCharVector v = (NullableVarCharVector) partitionVectors.get(i);
         String val = partitionValues[i];
-        byte[] bytes = val.getBytes();
         AllocationHelper.allocate(v, recordCount, val.length());
+        NullableVarCharHolder h = new NullableVarCharHolder();
+        byte[] bytes = val.getBytes();
+        h.buffer = Unpooled.buffer(bytes.length);
+        h.buffer.writeBytes(bytes);
+        h.start = 0;
+        h.isSet = 1;
+        h.end = bytes.length;
         for (int j = 0; j < recordCount; j++) {
-          v.getMutator().setSafe(j, bytes);
+          v.getMutator().setSafe(j, h);
         }
         v.getMutator().setValueCount(recordCount);
       } else {

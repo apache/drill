@@ -17,17 +17,19 @@
  */
 package org.apache.drill.exec.store.text;
 
-import com.google.common.base.Joiner;
-import org.apache.drill.exec.store.StringOutputRecordWriter;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.store.StringOutputRecordWriter;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+
+import com.google.common.base.Joiner;
 
 public class DrillTextRecordWriter extends StringOutputRecordWriter {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillTextRecordWriter.class);
@@ -46,6 +48,10 @@ public class DrillTextRecordWriter extends StringOutputRecordWriter {
   // Record write status
   private boolean fRecordStarted = false; // true once the startRecord() is called until endRecord() is called
   private StringBuilder currentRecord; // contains the current record separated by field delimiter
+
+  public DrillTextRecordWriter(BufferAllocator allocator){
+    super(allocator);
+  }
 
   @Override
   public void init(Map<String, String> writerOptions) throws IOException {

@@ -39,8 +39,10 @@ public class AtomicRemainder {
   private final long initShared;
   private final long initPrivate;
   private boolean closed = false;
+  private final boolean errorOnLeak;
 
-  public AtomicRemainder(AtomicRemainder parent, long max, long pre) {
+  public AtomicRemainder(boolean errorOnLeak, AtomicRemainder parent, long max, long pre) {
+    this.errorOnLeak = errorOnLeak;
     this.parent = parent;
     this.availableShared = new AtomicLong(max - pre);
     this.availablePrivate = new AtomicLong(pre);
@@ -160,11 +162,16 @@ public class AtomicRemainder {
       logger.warn("Tried to close remainder, but it has already been closed", new Exception());
       return;
     }
-    if (availablePrivate.get() != initPrivate || availableShared.get() != initShared)
-      throw new IllegalStateException(
+    if (availablePrivate.get() != initPrivate || availableShared.get() != initShared){
+      IllegalStateException e = new IllegalStateException(
           String
               .format(ERROR, initPrivate, availablePrivate.get(), initPrivate - availablePrivate.get(), initShared, availableShared.get(), initShared - availableShared.get()));
-    
+      if(errorOnLeak){
+        throw e;
+      }else{
+        logger.warn("Memory leaked during query.", e);
+      }
+    }
     if(parent != null) parent.returnAllocation(initPrivate);
     closed = true;
   }

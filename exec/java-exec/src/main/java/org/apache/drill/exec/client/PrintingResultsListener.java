@@ -20,6 +20,7 @@ package org.apache.drill.exec.client;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.client.QuerySubmitter.Format;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -38,10 +39,11 @@ public class PrintingResultsListener implements UserResultsListener {
   RecordBatchLoader loader;
   Format format;
   int    columnWidth;
-  BufferAllocator allocator = new TopLevelAllocator();
+  BufferAllocator allocator;
   volatile Exception exception;
 
-  public PrintingResultsListener(Format format, int columnWidth) {
+  public PrintingResultsListener(DrillConfig config, Format format, int columnWidth) {
+    this.allocator = new TopLevelAllocator(config);
     loader = new RecordBatchLoader(allocator);
     this.format = format;
     this.columnWidth = columnWidth;

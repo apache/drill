@@ -31,20 +31,20 @@ import com.codahale.metrics.MetricRegistry;
 
 public class BootStrapContext implements Closeable{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BootStrapContext.class);
-  
+
   private final DrillConfig config;
   private final NioEventLoopGroup loop;
   private final NioEventLoopGroup loop2;
   private final MetricRegistry metrics;
   private final BufferAllocator allocator;
-  
+
   public BootStrapContext(DrillConfig config) {
     super();
     this.config = config;
     this.loop = new NioEventLoopGroup(config.getInt(ExecConstants.BIT_SERVER_RPC_THREADS), new NamedThreadFactory("BitServer-"));
     this.loop2 = new NioEventLoopGroup(config.getInt(ExecConstants.BIT_SERVER_RPC_THREADS), new NamedThreadFactory("BitClient-"));
     this.metrics = new MetricRegistry();
-    this.allocator = new TopLevelAllocator();
+    this.allocator = new TopLevelAllocator(config);
   }
 
   public DrillConfig getConfig() {
@@ -71,5 +71,5 @@ public class BootStrapContext implements Closeable{
     loop.shutdownGracefully();
     allocator.close();
   }
-  
+
 }

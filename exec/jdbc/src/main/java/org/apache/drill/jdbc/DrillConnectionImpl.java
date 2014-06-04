@@ -60,11 +60,12 @@ abstract class DrillConnectionImpl extends AvaticaConnection implements org.apac
     super(driver, factory, url, info);
     this.config = new DrillConnectionConfig(info);
 
-  this.allocator = new TopLevelAllocator();
+
 
     try{
       if(config.isLocal()){
         DrillConfig dConfig = DrillConfig.create();
+        this.allocator = new TopLevelAllocator(dConfig);
         RemoteServiceSet set = GlobalServiceSetReference.SETS.get();
         if(set == null){
           // we're embedded, start a local drill bit.
@@ -83,7 +84,9 @@ abstract class DrillConnectionImpl extends AvaticaConnection implements org.apac
         this.client = new DrillClient(dConfig, set.getCoordinator());
         this.client.connect(null, info);
       }else{
-        this.client = new DrillClient(DrillConfig.createClient());
+        DrillConfig dConfig = DrillConfig.createClient();
+        this.allocator = new TopLevelAllocator(dConfig);
+        this.client = new DrillClient();
         this.client.connect(config.getZookeeperConnectionString(), info);
       }
     }catch(RpcException e){

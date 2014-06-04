@@ -74,6 +74,5 @@ public interface ExecConstants {
   public static final OptionValidator PARQUET_BLOCK_SIZE_VALIDATOR = new LongValidator(PARQUET_BLOCK_SIZE, 512*1024*1024);
   public static final String HTTP_ENABLE = "drill.exec.http.enabled";
   public static final String HTTP_PORT = "drill.exec.http.port";
-
-
+  public static final String ERROR_ON_MEMORY_LEAK = "drill.exec.debug.error_on_leak";
 }

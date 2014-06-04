@@ -39,18 +39,28 @@ public class TopLevelAllocator implements BufferAllocator {
   private final Set<ChildAllocator> children;
   private final PooledByteBufAllocatorL innerAllocator = PooledByteBufAllocatorL.DEFAULT;
   private final Accountor acct;
+  private final boolean errorOnLeak;
 
+  @Deprecated
   public TopLevelAllocator() {
     this(DrillConfig.getMaxDirectMemory());
   }
 
-  public TopLevelAllocator(DrillConfig config) {
-    this(Math.min(DrillConfig.getMaxDirectMemory(), config.getLong(ExecConstants.TOP_LEVEL_MAX_ALLOC)));
-  }
-  
+  @Deprecated
   public TopLevelAllocator(long maximumAllocation) {
-    this.acct = new Accountor(null, null, maximumAllocation, 0);
-    this.children = ENABLE_ACCOUNTING ? new HashSet<ChildAllocator>() : null; 
+    this(maximumAllocation, true);
+  }
+
+  private TopLevelAllocator(long maximumAllocation, boolean errorOnLeak){
+    this.errorOnLeak = errorOnLeak;
+    this.acct = new Accountor(errorOnLeak, null, null, maximumAllocation, 0);
+    this.children = ENABLE_ACCOUNTING ? new HashSet<ChildAllocator>() : null;
+  }
+
+  public TopLevelAllocator(DrillConfig config) {
+    this(Math.min(DrillConfig.getMaxDirectMemory(), config.getLong(ExecConstants.TOP_LEVEL_MAX_ALLOC)),
+        config.getBoolean(ExecConstants.ERROR_ON_MEMORY_LEAK)
+        );
   }
 
   public AccountingByteBuf buffer(int min, int max) {
@@ -60,7 +70,7 @@ public class TopLevelAllocator implements BufferAllocator {
     acct.reserved(min, wrapped);
     return wrapped;
   }
-  
+
   @Override
   public AccountingByteBuf buffer(int size) {
     return buffer(size, size);
@@ -98,7 +108,7 @@ public class TopLevelAllocator implements BufferAllocator {
     acct.close();
   }
 
-  
+
   private class ChildAllocator implements BufferAllocator{
 
     private Accountor childAcct;
@@ -108,23 +118,23 @@ public class TopLevelAllocator implements BufferAllocator {
 
     public ChildAllocator(FragmentHandle handle, Accountor parentAccountor, long max, long pre) throws OutOfMemoryException{
       assert max >= pre;
-      childAcct = new Accountor(handle, parentAccountor, max, pre);
+      childAcct = new Accountor(errorOnLeak, handle, parentAccountor, max, pre);
       this.handle = handle;
     }
-    
+
     @Override
     public AccountingByteBuf buffer(int size, int max) {
       if(!childAcct.reserve(size)){
         logger.warn("Unable to allocate buffer of size {} due to memory limit. Current allocation: {}", size, getAllocatedMemory());
         return null;
       };
-      
+
       ByteBuf buffer = innerAllocator.directBuffer(size, max);
       AccountingByteBuf wrapped = new AccountingByteBuf(childAcct, (PooledUnsafeDirectByteBufL) buffer);
       childAcct.reserved(buffer.capacity(), wrapped);
       return wrapped;
     }
-    
+
     public AccountingByteBuf buffer(int size) {
       return buffer(size, size);
     }
@@ -146,7 +156,7 @@ public class TopLevelAllocator implements BufferAllocator {
     }
 
     public PreAllocator getNewPreAllocator(){
-      return new PreAlloc(this.childAcct); 
+      return new PreAlloc(this.childAcct);
     }
 
     @Override
@@ -161,9 +171,16 @@ public class TopLevelAllocator implements BufferAllocator {
               sb.append(elements[i]);
               sb.append("\n");
             }
-            throw new IllegalStateException(String.format(
+
+
+            IllegalStateException e = new IllegalStateException(String.format(
                     "Failure while trying to close child allocator: Child level allocators not closed. Fragment %d:%d. Stack trace: \n %s",
                     handle.getMajorFragmentId(), handle.getMinorFragmentId(), sb.toString()));
+            if(errorOnLeak){
+              throw e;
+            }else{
+              logger.warn("Memory leak.", e);
+            }
           }
         }
       }
@@ -179,34 +196,34 @@ public class TopLevelAllocator implements BufferAllocator {
     public long getAllocatedMemory() {
       return childAcct.getAllocation();
     }
-    
+
   }
-  
+
   public PreAllocator getNewPreAllocator(){
-    return new PreAlloc(this.acct); 
+    return new PreAlloc(this.acct);
   }
-  
+
   public class PreAlloc implements PreAllocator{
     int bytes = 0;
     final Accountor acct;
     private PreAlloc(Accountor acct){
       this.acct = acct;
     }
-    
+
     /**
-     * 
+     *
      */
     public boolean preAllocate(int bytes){
-      
+
       if(!acct.reserve(bytes)){
         return false;
       }
       this.bytes += bytes;
       return true;
-   
+
     }
-    
-    
+
+
     public AccountingByteBuf getAllocation(){
       AccountingByteBuf b = new AccountingByteBuf(acct, (PooledUnsafeDirectByteBufL) innerAllocator.buffer(bytes));
       acct.reserved(bytes, b);

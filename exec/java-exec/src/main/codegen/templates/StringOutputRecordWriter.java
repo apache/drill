@@ -26,6 +26,7 @@ import com.google.common.collect.Lists;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.vector.*;
 
@@ -45,7 +46,11 @@ import java.util.Map;
 public abstract class StringOutputRecordWriter implements RecordWriter {
 
   private ValueVector[] columnVectors;
-
+  private final BufferAllocator allocator;
+  protected StringOutputRecordWriter(BufferAllocator allocator){
+    this.allocator = allocator;
+  }
+  
   public void updateSchema(BatchSchema schema) throws IOException {
     columnVectors = new ValueVector[schema.getFieldCount()];
 
@@ -57,7 +62,7 @@ public abstract class StringOutputRecordWriter implements RecordWriter {
     startNewSchema(columnNames);
 
     for (int i=0; i<columnVectors.length; i++) {
-      columnVectors[i] = TypeHelper.getNewVector(schema.getColumn(i), new TopLevelAllocator());
+      columnVectors[i] = TypeHelper.getNewVector(schema.getColumn(i), allocator);
       AllocationHelper.allocate(columnVectors[i], 1, TypeHelper.getSize(schema.getColumn(i).getType()));
     }
   }

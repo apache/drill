@@ -40,12 +40,14 @@ public class Accountor {
   private ConcurrentMap<ByteBuf, DebugStackTrace> buffers = Maps.newConcurrentMap();
   private final FragmentHandle handle;
   private Accountor parent;
+  private final boolean errorOnLeak;
 
-  public Accountor(FragmentHandle handle, Accountor parent, long max, long preAllocated) {
+  public Accountor(boolean errorOnLeak, FragmentHandle handle, Accountor parent, long max, long preAllocated) {
     // TODO: fix preallocation stuff
+    this.errorOnLeak = errorOnLeak;
     AtomicRemainder parentRemainder = parent != null ? parent.remainder : null;
     this.parent = parent;
-    this.remainder = new AtomicRemainder(parentRemainder, max, preAllocated);
+    this.remainder = new AtomicRemainder(errorOnLeak, parentRemainder, max, preAllocated);
     this.total = max;
     this.handle = handle;
     if (ENABLE_ACCOUNTING) {
@@ -103,7 +105,7 @@ public class Accountor {
       }
     }
   }
-  
+
   public void release(AccountingByteBuf buf, long size) {
     remainder.returnAllocation(size);
     if (ENABLE_ACCOUNTING) {
@@ -112,7 +114,7 @@ public class Accountor {
   }
 
   public void close() {
-     
+
     if (ENABLE_ACCOUNTING && !buffers.isEmpty()) {
       StringBuffer sb = new StringBuffer();
       sb.append("Attempted to close accountor with ");
@@ -148,13 +150,18 @@ public class Accountor {
         sb.append("at stack location:\n");
         entry.addToString(sb);
       }
+      IllegalStateException e = new IllegalStateException(sb.toString());
+      if(errorOnLeak){
+        throw e;
+      }else{
+        logger.warn("Memory leaked.", e);
+      }
 
-      throw new IllegalStateException(sb.toString());
 
     }
 
     remainder.close();
-    
+
   }
 
   public class DebugStackTrace {

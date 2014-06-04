@@ -94,7 +94,7 @@ public class DrillClient implements Closeable, ConnectionThrottle{
   public DrillClient(DrillConfig config, ClusterCoordinator coordinator, BufferAllocator allocator){
     this.ownsZkConnection = coordinator == null;
     this.ownsAllocator = allocator == null;
-    this.allocator = allocator == null ? new TopLevelAllocator(Long.MAX_VALUE) : allocator;
+    this.allocator = allocator == null ? new TopLevelAllocator(config) : allocator;
     this.config = config;
     this.clusterCoordinator = coordinator;
     this.reconnectTimes = config.getInt(ExecConstants.BIT_RETRY_TIMES);
