@@ -352,6 +352,15 @@ public class ParquetRecordReaderTest extends BaseTestQuery{
         "/tmp/test.parquet", i, props);
   }
 
+  @Test
+  public void testReadError_Drill_901() throws Exception {
+    // select cast( L_COMMENT as varchar) from  dfs.`/tmp/drilltest/employee_parquet`
+    HashMap<String, FieldInfo> fields = new HashMap<>();
+    ParquetTestProperties props = new ParquetTestProperties(1, 120350, DEFAULT_BYTES_PER_PAGE, fields);
+    testParquetFullEngineEventBased(false, false, "/parquet/par_writer_test.json", null,
+        "unused, no file is generated", 1, props, false);
+  }
+
 
   @Ignore
   @Test

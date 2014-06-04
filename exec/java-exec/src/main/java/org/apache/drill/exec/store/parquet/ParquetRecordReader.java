@@ -228,7 +228,7 @@ public class ParquetRecordReader implements RecordReader {
 
     // none of the columns in the parquet file matched the request columns from the query
     if (columnsToScan == 0){
-      return;
+      throw new ExecutionSetupException("Error reading from parquet file. No columns requested were found in the file.");
     }
     if (allFieldsFixedLength) {
       recordsPerBatch = (int) Math.min(Math.min(batchSize / bitWidthAllFixedFields,

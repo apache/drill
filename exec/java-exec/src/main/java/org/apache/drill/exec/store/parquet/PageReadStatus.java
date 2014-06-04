@@ -110,6 +110,7 @@ final class PageReadStatus {
   public boolean next() throws IOException {
 
     currentPage = null;
+    valuesRead = 0;
 
     // TODO - the metatdata for total size appears to be incorrect for impala generated files, need to find cause
     // and submit a bug report
@@ -162,7 +163,6 @@ final class PageReadStatus {
     pageDataByteArray = currentPage.getBytes().toByteArray();
 
     readPosInBytes = 0;
-    valuesRead = 0;
     if (parentColumnReader.columnDescriptor.getMaxDefinitionLevel() != 0){
       parentColumnReader.currDefLevel = -1;
       if (!currentPage.getValueEncoding().usesDictionary()) {
