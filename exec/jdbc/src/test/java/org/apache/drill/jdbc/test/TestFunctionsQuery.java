@@ -501,4 +501,18 @@ public class TestFunctionsQuery {
             "DEC38_TS=" + f.print(result1)+ "; " +
             "INT_TS=" + f.print(result2) + "\n");
   }
+
+  @Test
+  public void testPadFunctions() throws Exception {
+    String query = "select rpad(first_name, 10) as RPAD_DEF, rpad(first_name, 10, '*') as RPAD_STAR, lpad(first_name, 10) as LPAD_DEF, lpad(first_name, 10, '*') as LPAD_STAR " +
+        "from cp.`employee.json` where employee_id = 1";
+
+    JdbcAssert.withNoDefaultSchema()
+        .sql(query)
+        .returns(
+            "RPAD_DEF=Sheri     ; " +
+            "RPAD_STAR=Sheri*****; " +
+            "LPAD_DEF=     Sheri; " +
+            "LPAD_STAR=*****Sheri\n");
+  }
 }
