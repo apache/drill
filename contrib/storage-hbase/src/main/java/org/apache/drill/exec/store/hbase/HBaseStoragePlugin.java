@@ -76,9 +76,7 @@ public class HBaseStoragePlugin extends AbstractStoragePlugin {
   }
 
   public Set<StoragePluginOptimizerRule> getOptimizerRules() {
-    return ImmutableSet.of();
-//     reenable once DRILL-904 is fixed
-//    return ImmutableSet.of(HBasePushFilterIntoScan.INSTANCE);
+    return ImmutableSet.of(HBasePushFilterIntoScan.INSTANCE);
   }
 
 }

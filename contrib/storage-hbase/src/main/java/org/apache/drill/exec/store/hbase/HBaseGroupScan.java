@@ -123,6 +123,7 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
     this.storagePlugin = that.storagePlugin;
     this.storagePluginConfig = that.storagePluginConfig;
     this.hTableDesc = that.hTableDesc;
+    this.filterPushedDown = that.filterPushedDown;
   }
 
   @Override
