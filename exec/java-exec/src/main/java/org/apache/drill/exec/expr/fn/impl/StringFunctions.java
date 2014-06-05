@@ -627,10 +627,10 @@ public class StringFunctions{
         out.start = text.start;
         out.end = text.end;
       } else if (length.value < textCharCount) {
-        //case 3: truncate text on left side, by (textCharCount - length.value) chars. 
+        //case 3: truncate text on the right side. It's same as substring(text, 1, length).
         out.buffer = text.buffer;
-        out.start = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.getUTF8CharPosition(text.buffer, text.start, text.end, (int) (textCharCount - length.value));
-        out.end = text.end;
+        out.start = text.start;
+        out.end = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.getUTF8CharPosition(text.buffer, text.start, text.end, (int)length.value);
       } else if (length.value > textCharCount) {        
         //case 4: copy "text" into "out", then copy "fill" on the right.
         out.buffer = buffer;

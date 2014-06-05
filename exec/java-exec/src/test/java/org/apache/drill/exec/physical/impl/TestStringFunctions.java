@@ -222,7 +222,7 @@ public class TestStringFunctions extends ExecTest {
   @Test
   public void testRpad(@Injectable final DrillbitContext bitContext,
                            @Injectable UserServer.UserClientConnection connection) throws Throwable{
-    Object [] expected = new Object[] {"", "", "abcdef", "ef", "ef", "abcdef", "abcdefAAAA", "abcdefABAB", "abcdefABCA", "abcdefABCD"};
+    Object [] expected = new Object[] {"", "", "abcdef", "ab", "ab", "abcdef", "abcdefAAAA", "abcdefABAB", "abcdefABCA", "abcdefABCD"};
 
     runTest(bitContext, connection, expected, "functions/string/testRpad.json");
   }

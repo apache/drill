@@ -504,7 +504,8 @@ public class TestFunctionsQuery {
 
   @Test
   public void testPadFunctions() throws Exception {
-    String query = "select rpad(first_name, 10) as RPAD_DEF, rpad(first_name, 10, '*') as RPAD_STAR, lpad(first_name, 10) as LPAD_DEF, lpad(first_name, 10, '*') as LPAD_STAR " +
+    String query = "select rpad(first_name, 10) as RPAD_DEF, rpad(first_name, 10, '*') as RPAD_STAR, lpad(first_name, 10) as LPAD_DEF, lpad(first_name, 10, '*') as LPAD_STAR, " +
+        "lpad(first_name, 2) as LPAD_TRUNC, rpad(first_name, 2) as RPAD_TRUNC " +
         "from cp.`employee.json` where employee_id = 1";
 
     JdbcAssert.withNoDefaultSchema()
@@ -513,6 +514,8 @@ public class TestFunctionsQuery {
             "RPAD_DEF=Sheri     ; " +
             "RPAD_STAR=Sheri*****; " +
             "LPAD_DEF=     Sheri; " +
-            "LPAD_STAR=*****Sheri\n");
+            "LPAD_STAR=*****Sheri; " +
+            "LPAD_TRUNC=Sh; " +
+            "RPAD_TRUNC=Sh\n");
   }
 }
