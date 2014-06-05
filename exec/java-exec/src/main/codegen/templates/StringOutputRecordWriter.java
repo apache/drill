@@ -52,6 +52,7 @@ public abstract class StringOutputRecordWriter implements RecordWriter {
   }
   
   public void updateSchema(BatchSchema schema) throws IOException {
+    cleanupColumnVectors();
     columnVectors = new ValueVector[schema.getFieldCount()];
 
     List<String> columnNames = Lists.newArrayList();
@@ -129,9 +130,16 @@ public abstract class StringOutputRecordWriter implements RecordWriter {
 </#list>
 
   public void cleanup() throws IOException {
+    cleanupColumnVectors();
+  }
+
+  private void cleanupColumnVectors() {
     if (columnVectors != null){
-      for(ValueVector vector : columnVectors)
-        if (vector != null) vector.clear();
+      for(ValueVector vector : columnVectors){
+        if(vector!=null){
+          vector.clear();
+        }
+      }
     }
   }
 

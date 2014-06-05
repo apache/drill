@@ -53,7 +53,6 @@ public class TestWriter extends BaseTestQuery {
     fs = FileSystem.get(conf);
   }
 
-  @Ignore("DRILL-903")
   @Test
   public void simpleCsv() throws Exception {
     // before executing the test deleting the existing CSV files in /tmp/csvtest
