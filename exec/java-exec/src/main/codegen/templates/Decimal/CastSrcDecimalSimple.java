@@ -189,10 +189,10 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
             if (power == 0) {
                 power = 9;
             } else {
-                padding = (int) (Math.pow(10, (org.apache.drill.common.util.DecimalUtility.MAX_DIGITS - power)));
+                padding = (int) (org.apache.drill.common.util.DecimalUtility.getPowerOfTen((int) (org.apache.drill.common.util.DecimalUtility.MAX_DIGITS - power)));
             }
 
-            int mask = (int) Math.pow(10, power);
+            int mask = (int) org.apache.drill.common.util.DecimalUtility.getPowerOfTen(power);
 
             out.setInteger(index, (int) ((value % mask) * padding));
 
@@ -254,7 +254,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
         out.value = in.value;
 
         // Truncate or pad additional zeroes if the output scale is different from input scale
-        out.value = (${type.javatype}) (out.value * ((int) Math.pow(10, (out.scale - in.scale))));
+        out.value = (${type.javatype}) (org.apache.drill.common.util.DecimalUtility.adjustScaleMultiply(out.value, (int) (out.scale - in.scale)));
     }
 }
 </#if>

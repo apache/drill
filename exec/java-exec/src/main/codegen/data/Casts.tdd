@@ -147,8 +147,8 @@
     {from: "Decimal38Sparse", to: "Float8", major: "DecimalComplexDouble", javatype: "double"},
     {from: "Decimal38Dense", to: "Float8", major: "DecimalComplexDouble", javatype: "double"},
 
-    {from: "VarChar", to: "Decimal9", major: "VarCharDecimalSimple"},
-    {from: "VarChar", to: "Decimal18", major: "VarCharDecimalSimple"},
+    {from: "VarChar", to: "Decimal9", major: "VarCharDecimalSimple", javatype: "int"},
+    {from: "VarChar", to: "Decimal18", major: "VarCharDecimalSimple", javatype: "long"},
     {from: "VarChar", to: "Decimal28Sparse", major: "VarCharDecimalComplex", arraySize: "5"},
     {from: "VarChar", to: "Decimal38Sparse", major: "VarCharDecimalComplex", arraySize: "6"},
 

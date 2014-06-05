@@ -236,10 +236,10 @@ import org.apache.drill.exec.expr.annotations.Workspace;
             int adjustment = 0;
 
             if (left.scale < right.scale) {
-                left.value = (${javaType}) (left.value * Math.pow(10, (right.scale - left.scale)));
+                left.value = (${javaType}) (org.apache.drill.common.util.DecimalUtility.adjustScaleMultiply(left.value, (int) (right.scale - left.scale)));
                 left.scale = right.scale;
             } else if (right.scale < left.scale) {
-                right.value = (${javaType}) (right.value * Math.pow(10, (left.scale - right.scale)));
+                right.value = (${javaType}) (org.apache.drill.common.util.DecimalUtility.adjustScaleMultiply(right.value, (int) (left.scale - right.scale)));
                 right.scale = left.scale;
             }
 </#macro>
@@ -800,7 +800,7 @@ public class ${type.name}Functions {
             // We truncated the decimal digit. Now we need to truncate within the base 1 billion fractional digit
             int truncateFactor = org.apache.drill.common.util.DecimalUtility.MAX_DIGITS - (right.value % org.apache.drill.common.util.DecimalUtility.MAX_DIGITS);
             if (truncateFactor != org.apache.drill.common.util.DecimalUtility.MAX_DIGITS) {
-              truncateFactor = (int) Math.pow(10, truncateFactor);
+              truncateFactor = (int) org.apache.drill.common.util.DecimalUtility.getPowerOfTen(truncateFactor);
               int fractionalDigits = result.getInteger(${type.storage} - 1);
               fractionalDigits /= truncateFactor;
               result.setInteger(${type.storage} - 1, fractionalDigits * truncateFactor);
@@ -1305,7 +1305,7 @@ public class ${type.name}Functions {
 
         public void eval() {
 
-            out.value =(${type.storage}) (in.value / (Math.pow(10, in.scale)));
+            out.value =(${type.storage}) (org.apache.drill.common.util.DecimalUtility.adjustScaleDivide(in.value, (int) in.scale));
             out.precision = out.maxPrecision;
             out.scale = 0;
         }
@@ -1322,7 +1322,7 @@ public class ${type.name}Functions {
 
         public void eval() {
 
-            out.value = (${type.storage}) (left.value / ( Math.pow(10, (left.scale - right.value))));
+            out.value = (${type.storage}) (org.apache.drill.common.util.DecimalUtility.adjustScaleDivide(left.value, (int) (left.scale - right.value)));
             out.precision = out.maxPrecision;
             out.scale = right.value;
         }
@@ -1339,7 +1339,7 @@ public class ${type.name}Functions {
         }
 
         public void eval() {
-          ${type.storage} scaleFactor = (${type.storage}) (Math.pow(10, in.scale));
+          ${type.storage} scaleFactor = (${type.storage}) (org.apache.drill.common.util.DecimalUtility.getPowerOfTen((int) in.scale));
 
           // Get the integer part
           ${type.storage} integerPart = in.value / scaleFactor;
@@ -1366,7 +1366,7 @@ public class ${type.name}Functions {
 
         public void eval() {
 
-          ${type.storage} scaleFactor = (${type.storage}) (Math.pow(10, in.scale));
+          ${type.storage} scaleFactor = (${type.storage}) (org.apache.drill.common.util.DecimalUtility.getPowerOfTen((int) in.scale));
           out.scale = 0;
           out.value = (in.value / scaleFactor);
 
@@ -1391,7 +1391,7 @@ public class ${type.name}Functions {
 
         public void eval() {
 
-          ${type.storage} scaleFactor = (${type.storage}) (Math.pow(10, in.scale));
+          ${type.storage} scaleFactor = (${type.storage}) (org.apache.drill.common.util.DecimalUtility.getPowerOfTen((int) in.scale));
           ${type.storage} extractDigit = scaleFactor / 10;
 
           out.scale = 0;
@@ -1426,13 +1426,14 @@ public class ${type.name}Functions {
 
         public void eval() {
 
-          ${type.storage} scaleFactor = (${type.storage}) (Math.pow(10, left.scale));
-          ${type.storage} newScaleFactor = (${type.storage}) (Math.pow(10, right.value));
-          ${type.storage} truncScaleFactor = (${type.storage}) (Math.pow(10, left.scale - right.value));
+          ${type.storage} scaleFactor = (${type.storage}) (org.apache.drill.common.util.DecimalUtility.getPowerOfTen((int) left.scale));
+          ${type.storage} newScaleFactor = (${type.storage}) (org.apache.drill.common.util.DecimalUtility.getPowerOfTen((int) right.value));
+          ${type.storage} truncScaleFactor = (${type.storage}) (org.apache.drill.common.util.DecimalUtility.getPowerOfTen( Math.abs(left.scale - right.value)));
+          int truncFactor = (int) (left.scale - right.value);
 
           // If rounding scale is >= current scale
           if (right.value >= left.scale) {
-            out.value = (${type.storage}) (left.value * (int) Math.pow(10, (right.value - left.scale)));
+            out.value = (${type.storage}) (org.apache.drill.common.util.DecimalUtility.adjustScaleMultiply(left.value, (int) (right.value - left.scale)));
           }
           else {
             out.scale = right.value;
@@ -1443,12 +1444,12 @@ public class ${type.name}Functions {
             ${type.storage} fractionalPart = left.value % scaleFactor;
 
             // From the entire fractional part extract the digits upto which rounding is needed
-            ${type.storage} newFractionalPart = fractionalPart / truncScaleFactor;
+            ${type.storage} newFractionalPart = (${type.storage}) (org.apache.drill.common.util.DecimalUtility.adjustScaleDivide(fractionalPart, truncFactor));
             ${type.storage} truncatedFraction = fractionalPart % truncScaleFactor;
 
 
             // Get the truncated fractional part and extract the first digit to see if we need to add 1
-            int digit = Math.abs((int) (truncatedFraction / (truncScaleFactor / 10)));
+            int digit = Math.abs((int) org.apache.drill.common.util.DecimalUtility.adjustScaleDivide(truncatedFraction, truncFactor - 1));
 
             if (digit > 4) {
               if (left.value > 0) {

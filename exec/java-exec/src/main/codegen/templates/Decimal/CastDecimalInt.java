@@ -53,7 +53,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
     public void eval() {
 
         // Assign the integer part of the decimal to the output holder
-        out.value = (${type.javatype}) ((in.value / Math.pow(10, in.scale)));
+        out.value = (${type.javatype}) (org.apache.drill.common.util.DecimalUtility.adjustScaleDivide(in.value, (int) in.scale));
     }
 }
 

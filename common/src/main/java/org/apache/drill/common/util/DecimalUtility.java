@@ -45,6 +45,60 @@ public class DecimalUtility {
             "00000000",
             "000000000"};
 
+    public final static long[] scale_long_constants = {
+        1,
+        10,
+        100,
+        1000,
+        10000,
+        100000,
+        1000000,
+        10000000,
+        100000000,
+        1000000000,
+        10000000000l,
+        100000000000l,
+        1000000000000l,
+        10000000000000l,
+        100000000000000l,
+        1000000000000000l,
+        10000000000000000l,
+        100000000000000000l,
+        1000000000000000000l};
+
+    /*
+     * Simple function that returns the static precomputed
+     * power of ten, instead of using Math.pow
+     */
+    public static long getPowerOfTen(int power) {
+      assert power >= 0 && power < scale_long_constants.length;
+      return scale_long_constants[(power)];
+    }
+
+    /*
+     * Math.pow returns a double and while multiplying with large digits
+     * in the decimal data type we encounter noise. So instead of multiplying
+     * with Math.pow we use the static constants to perform the multiplication
+     */
+    public static long adjustScaleMultiply(long input, int factor) {
+      int index = Math.abs(factor);
+      assert index >= 0 && index < scale_long_constants.length;
+      if (factor >= 0) {
+        return input * scale_long_constants[index];
+      } else {
+        return input / scale_long_constants[index];
+      }
+    }
+
+    public static long adjustScaleDivide(long input, int factor) {
+      int index = Math.abs(factor);
+      assert index >= 0 && index < scale_long_constants.length;
+      if (factor >= 0) {
+        return input / scale_long_constants[index];
+      } else {
+        return input * scale_long_constants[index];
+      }
+    }
 
     /* Given the number of actual digits this function returns the
      * number of indexes it will occupy in the array of integers

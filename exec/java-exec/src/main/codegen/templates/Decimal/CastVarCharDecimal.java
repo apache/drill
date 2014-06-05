@@ -134,7 +134,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
         // Pad the number with zeroes if number of fractional digits is less than scale
         if (fractionalDigits < scale.value) {
-            out.value *= Math.pow(10, scale.value - fractionalDigits);
+            out.value = (${type.javatype}) (org.apache.drill.common.util.DecimalUtility.adjustScaleMultiply(out.value, (int) (scale.value - fractionalDigits)));
         }
 
         // Negate the number if we saw a -ve sign
@@ -292,7 +292,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
             next = (byte) Character.digit(next, radix);
 
-            int value = (((int) Math.pow(10, ndigits)) * next) + (out.getInteger(decimalBufferIndex));
+            int value = (((int) org.apache.drill.common.util.DecimalUtility.getPowerOfTen(ndigits)) * next) + (out.getInteger(decimalBufferIndex));
             out.setInteger(decimalBufferIndex, value);
 
             ndigits++;
@@ -337,7 +337,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
                 ndigits++;
             }
             // Pad zeroes in the fractional part so that number of digits = MAX_DIGITS
-            int padding = (int) Math.pow(10, org.apache.drill.common.util.DecimalUtility.MAX_DIGITS - ndigits);
+            int padding = (int) org.apache.drill.common.util.DecimalUtility.getPowerOfTen((int) (org.apache.drill.common.util.DecimalUtility.MAX_DIGITS - ndigits));
             out.setInteger(decimalBufferIndex, out.getInteger(decimalBufferIndex) * padding);
         }
     }

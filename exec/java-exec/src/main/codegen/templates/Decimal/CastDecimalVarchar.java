@@ -67,7 +67,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
             in.value *= -1;
         }
 
-        ${type.javatype} separator = (${type.javatype}) Math.pow(10, in.scale);
+        ${type.javatype} separator = (${type.javatype}) org.apache.drill.common.util.DecimalUtility.getPowerOfTen((int) in.scale);
 
         str.append(in.value / separator);
 
@@ -192,7 +192,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
             if (actualDigits != 0) {
 
                 // Strip padded zeroes at the end that is not part of the scale
-                lastFractionalDigit /= (int) (Math.pow(10, org.apache.drill.common.util.DecimalUtility.MAX_DIGITS - actualDigits));
+                lastFractionalDigit /= (int) (org.apache.drill.common.util.DecimalUtility.getPowerOfTen((int) (org.apache.drill.common.util.DecimalUtility.MAX_DIGITS - actualDigits)));
                 str.append(org.apache.drill.common.util.DecimalUtility.toStringWithZeroes(lastFractionalDigit, actualDigits));
             } else {
                 // Last digit does not have any padding print as is

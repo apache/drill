@@ -66,7 +66,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
         out.value = (${type.javatype}) in.value;
 
         // converting from integer to decimal, pad zeroes if scale is non zero
-        out.value = (${type.javatype}) (out.value * Math.pow(10, scale.value));
+        out.value = (${type.javatype}) org.apache.drill.common.util.DecimalUtility.adjustScaleMultiply(out.value, (int) scale.value);
 
         <#else>
         out.start = 0;
