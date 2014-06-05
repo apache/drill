@@ -126,6 +126,10 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
           case OK:
             recordsToProcess = probeBatch.getRecordCount();
             recordsProcessed = 0;
+            // If we received an empty batch do nothing
+            if (recordsToProcess == 0) {
+              continue;
+            }
         }
       }
       int probeIndex = -1;
