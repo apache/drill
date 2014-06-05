@@ -17,27 +17,21 @@
  */
 package org.apache.drill.exec.planner.common;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
-import org.apache.drill.common.expression.LogicalExpression;
-import org.apache.drill.common.logical.data.NamedExpression;
-import org.apache.drill.exec.planner.logical.DrillOptiq;
-import org.apache.drill.exec.planner.logical.DrillParseContext;
+import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
 import org.eigenbase.rel.InvalidRelException;
 import org.eigenbase.rel.JoinRelBase;
 import org.eigenbase.rel.JoinRelType;
 import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.Convention;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.rex.RexNode;
-import org.eigenbase.util.Pair;
 
 import com.google.common.collect.Lists;
 
@@ -52,8 +46,18 @@ public abstract class DrillJoinRelBase extends JoinRelBase implements DrillRelNo
       JoinRelType joinType) throws InvalidRelException {
     super(cluster, traits, left, right, condition, joinType, Collections.<String> emptySet());
   }
-  
-  
+
+  @Override
+  public RelOptCost computeSelfCost(RelOptPlanner planner) {
+    if(condition.isAlwaysTrue()){
+      return ((DrillCostFactory)planner.getCostFactory()).makeInfiniteCost();
+    }
+    return super.computeSelfCost(planner);
+  }
+
+
+
+
   /**
    * Returns whether there are any elements in common between left and right.
    */
@@ -68,11 +72,11 @@ public abstract class DrillJoinRelBase extends JoinRelBase implements DrillRelNo
   protected static <T> boolean isUnique(List<T> list) {
     return new HashSet<>(list).size() == list.size();
   }
-  
+
   public List<Integer> getLeftKeys() {
     return this.leftKeys;
   }
-  
+
   public List<Integer> getRightKeys() {
     return this.rightKeys;
   }

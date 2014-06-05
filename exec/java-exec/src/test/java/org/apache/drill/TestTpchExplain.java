@@ -64,19 +64,16 @@ public class TestTpchExplain extends BaseTestQuery{
   }
 
   @Test
-  @Ignore // DRILL-516
   public void tpch07() throws Exception{
     doExplain("queries/tpch/07.sql");
   }
 
   @Test
-  @Ignore // DRILL-516
   public void tpch08() throws Exception{
     doExplain("queries/tpch/08.sql");
   }
 
   @Test
-  @Ignore // DRILL-516
   public void tpch09() throws Exception{
     doExplain("queries/tpch/09.sql");
   }
@@ -108,7 +105,7 @@ public class TestTpchExplain extends BaseTestQuery{
   }
 
   @Test
-  @Ignore // requires views.
+  @Ignore // non equality join
   public void tpch15() throws Exception{
     doExplain("queries/tpch/15.sql");
   }
@@ -119,7 +116,7 @@ public class TestTpchExplain extends BaseTestQuery{
   }
 
   @Test
-  @Ignore // DRILL-517
+  @Ignore // non-equality join
   public void tpch17() throws Exception{
     doExplain("queries/tpch/17.sql");
   }
@@ -136,7 +133,6 @@ public class TestTpchExplain extends BaseTestQuery{
   }
 
   @Test
-  @Ignore // DRILL-517
   public void tpch20() throws Exception{
     doExplain("queries/tpch/20.sql");
   }

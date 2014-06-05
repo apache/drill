@@ -19,10 +19,13 @@
 package org.apache.drill.exec.expr.fn.impl;
 
 import java.util.HashMap;
-import org.joda.time.format.DateTimeFormatter;
+
 import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeParser;
+import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.DateTimeFormatterBuilder;
+import org.joda.time.format.DateTimeParser;
+
+import com.carrotsearch.hppc.ObjectIntOpenHashMap;
 
 // Utility class for Date, DateTime, TimeStamp, Interval data types
 public class DateUtility {
@@ -33,7 +36,7 @@ public class DateUtility {
      * reconstruct the timestamp, we use this index to index through the array timezoneList
      * and get the corresponding timezone and pass it to joda-time
      */
-    public static HashMap<String, Integer> timezoneMap = new HashMap<String, Integer>();
+    public static ObjectIntOpenHashMap<String> timezoneMap = new ObjectIntOpenHashMap<String>();
 
     public static String[] timezoneList =  {"Africa/Abidjan",
                                             "Africa/Accra",
