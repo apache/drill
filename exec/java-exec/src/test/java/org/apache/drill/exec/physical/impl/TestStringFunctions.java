@@ -93,7 +93,7 @@ public class TestStringFunctions extends ExecTest {
 
       for (int i = 0; i<res.length; i++) {
         assertEquals(String.format("column %s does not match", i), expectedResults[i],  res[i]);
-      }
+      }      
     }
 
     if(context.getFailureCause() != null){
@@ -190,7 +190,7 @@ public class TestStringFunctions extends ExecTest {
   @Test
   public void testSubstr(@Injectable final DrillbitContext bitContext,
                            @Injectable UserServer.UserClientConnection connection) throws Throwable{
-    Object [] expected = new Object[] {"abc", "bcd", "bcdef", "bcdef", "", "", "", "", "भारत", "वर्ष", "वर्ष"};
+    Object [] expected = new Object[] {"abc", "bcd", "bcdef", "bcdef", "", "", "", "", "भारत", "वर्ष", "वर्ष", "cdef", "", "", "", "ड्रिल"};
 
     runTest(bitContext, connection, expected, "functions/string/testSubstr.json");
   }

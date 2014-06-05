@@ -33,7 +33,12 @@
               { ref: "col8", expr: "substring('abcdef', 10, 2)"},
               { ref: "col9", expr: "substring('भारतवर्ष', 1, 4)"},
               { ref: "col10", expr: "substring('भारतवर्ष', 5, 4)"},
-              { ref: "col11", expr: "substring('भारतवर्ष', 5, 5)"}
+              { ref: "col11", expr: "substring('भारतवर्ष', 5, 5)"},
+              { ref: "col12", expr: "substring('abcdef', 3)"},
+              { ref: "col13", expr: "substring('abcdef', -2)"},
+              { ref: "col14", expr: "substring('abcdef', 0)"},
+              { ref: "col15", expr: "substring('abcdef', 10)"},
+              { ref: "col16", expr: "substring('अपाचे ड्रिल', 7)"}
             ]
         },
         {
