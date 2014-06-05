@@ -32,6 +32,7 @@ import org.apache.drill.exec.rpc.user.QueryResultBatch;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.vector.BigIntVector;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
@@ -177,6 +178,7 @@ public class TestSimpleExternalSort extends BaseTestQuery {
   }
 
   @Test
+  @Ignore
   public void outOfMemoryExternalSort() throws Throwable{
     RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
