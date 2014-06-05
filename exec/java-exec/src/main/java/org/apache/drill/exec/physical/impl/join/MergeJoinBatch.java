@@ -110,6 +110,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
   private final JoinRelType joinType;
   private JoinWorker worker;
   public MergeJoinBatchBuilder batchBuilder;
+  private boolean done = false;
 
   protected MergeJoinBatch(MergeJoinPOP popConfig, FragmentContext context, RecordBatch left, RecordBatch right) throws OutOfMemoryException {
     super(popConfig, context);
@@ -136,6 +137,9 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
 
   @Override
   public IterOutcome innerNext() {
+    if (done) {
+      return IterOutcome.NONE;
+    }
     // we do this in the here instead of the constructor because don't necessary want to start consuming on construction.
     status.ensureInitial();
 
@@ -190,9 +194,10 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
         kill();
         return IterOutcome.STOP;
       case NO_MORE_DATA:
-        logger.debug("NO MORE DATA; returning {}", (status.getOutPosition() > 0 ? (first ? "OK_NEW_SCHEMA" : "OK") : "NONE"));
+        logger.debug("NO MORE DATA; returning {}", (status.getOutPosition() > 0 ? (first ? "OK_NEW_SCHEMA" : "OK") : (first ? "OK_NEW_SCHEMA" :"NONE")));
         setRecordCountInContainer();
-        return status.getOutPosition() > 0 ? (first ? IterOutcome.OK_NEW_SCHEMA : IterOutcome.OK): IterOutcome.NONE;
+        done = true;
+        return status.getOutPosition() > 0 ? (first ? IterOutcome.OK_NEW_SCHEMA : IterOutcome.OK): (first ? IterOutcome.OK_NEW_SCHEMA : IterOutcome.NONE);
       case SCHEMA_CHANGED:
         worker = null;
         if(status.getOutPosition() > 0){
@@ -349,7 +354,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
     //////////////////////
     cg.setMappingSet(copyLeftMapping);
     int vectorId = 0;
-    if (status.isLeftPositionAllowed()) {
+    if (worker == null || status.isLeftPositionAllowed()) {
       for (VectorWrapper<?> vw : left) {
         MajorType inputType = vw.getField().getType();
         MajorType outputType;
@@ -379,7 +384,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
     cg.setMappingSet(copyRightMappping);
 
     int rightVectorBase = vectorId;
-    if (status.isRightPositionAllowed()) {
+    if (worker == null || status.isRightPositionAllowed()) {
       for (VectorWrapper<?> vw : right) {
         MajorType inputType = vw.getField().getType();
         MajorType outputType;
@@ -414,12 +419,12 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
     container.clear();
 
     //estimation of joinBatchSize : max of left/right size, expanded by a factor of 16, which is then bounded by MAX_BATCH_SIZE.
-    int leftCount = status.isLeftPositionAllowed() ? left.getRecordCount() : 0;
-    int rightCount = status.isRightPositionAllowed() ? right.getRecordCount() : 0;
+    int leftCount = worker == null ? left.getRecordCount() : (status.isLeftPositionAllowed() ? left.getRecordCount() : 0);
+    int rightCount = worker == null ? left.getRecordCount() : (status.isRightPositionAllowed() ? right.getRecordCount() : 0);
     int joinBatchSize = Math.min(Math.max(leftCount, rightCount) * 16, MAX_BATCH_SIZE);
 
     // add fields from both batches
-    if (leftCount > 0) {
+    if (worker == null || leftCount > 0) {
 
       for (VectorWrapper<?> w : left) {
         MajorType inputType = w.getField().getType();
@@ -430,12 +435,12 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
           outputType = inputType;
         }
         ValueVector outgoingVector = TypeHelper.getNewVector(MaterializedField.create(w.getField().getPath(), outputType), oContext.getAllocator());
-        VectorAllocator.getAllocator(outgoingVector, (int) Math.ceil(w.getValueVector().getBufferSize() / left.getRecordCount())).alloc(joinBatchSize);
+        VectorAllocator.getAllocator(outgoingVector, (int) Math.ceil(w.getValueVector().getBufferSize() / Math.max(1, left.getRecordCount()))).alloc(joinBatchSize);
         container.add(outgoingVector);
       }
     }
 
-    if (rightCount > 0) {
+    if (worker == null || rightCount > 0) {
       for (VectorWrapper<?> w : right) {
         MajorType inputType = w.getField().getType();
         MajorType outputType;
@@ -445,7 +450,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
           outputType = inputType;
         }
         ValueVector outgoingVector = TypeHelper.getNewVector(MaterializedField.create(w.getField().getPath(), outputType), oContext.getAllocator());
-        VectorAllocator.getAllocator(outgoingVector, (int) Math.ceil(w.getValueVector().getBufferSize() / right.getRecordCount())).alloc(joinBatchSize);
+        VectorAllocator.getAllocator(outgoingVector, (int) Math.ceil(w.getValueVector().getBufferSize() / Math.max(1, right.getRecordCount()))).alloc(joinBatchSize);
         container.add(outgoingVector);
       }
     }
@@ -465,7 +470,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
 
       // materialize value vector readers from join expression
       LogicalExpression materializedLeftExpr;
-      if (status.isLeftPositionAllowed()) {
+      if (worker == null || status.isLeftPositionAllowed()) {
         materializedLeftExpr = ExpressionTreeMaterializer.materialize(leftFieldExpr, left, collector, context.getFunctionRegistry());
       } else {
         materializedLeftExpr = new TypedNullConstant(Types.optional(MinorType.INT));
@@ -475,7 +480,7 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
             "Failure while trying to materialize incoming left field.  Errors:\n %s.", collector.toErrorString()));
 
       LogicalExpression materializedRightExpr;
-      if (status.isRightPositionAllowed()) {
+      if (worker == null || status.isRightPositionAllowed()) {
         materializedRightExpr = ExpressionTreeMaterializer.materialize(rightFieldExpr, right, collector, context.getFunctionRegistry());
       } else {
         materializedRightExpr = new TypedNullConstant(Types.optional(MinorType.INT));

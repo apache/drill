@@ -23,6 +23,11 @@ import org.junit.Test;
 
 public class TestExampleQueries extends BaseTestQuery{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestExampleQueries.class);
+
+  @Test
+  public void testQ() throws Exception {
+    test("select * from cp.`customer.json` where 0 = 1");
+  }
   
   @Test // see DRILL-553
   public void testQueryWithNullValues() throws Exception {
@@ -102,6 +107,7 @@ public class TestExampleQueries extends BaseTestQuery{
 
   @Test
   public void testJoin() throws Exception{
+    test("alter session set `planner.enable_hashjoin` = false");
     test("SELECT\n" +
         "  nations.N_NAME,\n" +
         "  regions.R_NAME\n" +
@@ -109,7 +115,7 @@ public class TestExampleQueries extends BaseTestQuery{
         "  dfs.`[WORKING_PATH]/../../sample-data/nation.parquet` nations\n" +
         "JOIN\n" +
         "  dfs.`[WORKING_PATH]/../../sample-data/region.parquet` regions\n" +
-        "  on nations.N_REGIONKEY = regions.R_REGIONKEY");
+        "  on nations.N_REGIONKEY = regions.R_REGIONKEY where 1 = 0");
   }
 
 

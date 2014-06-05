@@ -23,12 +23,15 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.Statement;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.collect.Lists;
 import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.store.hive.HiveTestDataGenerator;
 import org.apache.drill.jdbc.Driver;
 import org.apache.drill.jdbc.JdbcTest;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -182,16 +185,17 @@ public class TestJdbcDistQuery extends JdbcTest{
         Statement s = c.createStatement();
         ResultSet r = s.executeQuery(sql);
         boolean first = true;
-        while (r.next()) {
-          ResultSetMetaData md = r.getMetaData();
-          if (first == true) {
-            for (int i = 1; i <= md.getColumnCount(); i++) {
-              System.out.print(md.getColumnName(i));
-              System.out.print('\t');
-            }
-            System.out.println();
-            first = false;
+        ResultSetMetaData md = r.getMetaData();
+        if (first == true) {
+          for (int i = 1; i <= md.getColumnCount(); i++) {
+            System.out.print(md.getColumnName(i));
+            System.out.print('\t');
           }
+          System.out.println();
+          first = false;
+        }
+        while(r.next()){
+          md = r.getMetaData();
 
           for (int i = 1; i <= md.getColumnCount(); i++) {
             System.out.print(r.getObject(i));
@@ -211,4 +215,24 @@ public class TestJdbcDistQuery extends JdbcTest{
 
 
   }
+
+  @Test
+  public void testSchemaForEmptyResultSet() throws Exception {
+    String query = "select fullname, occupation, postal_code from cp.`customer.json` where 0 = 1";
+    try (Connection c = DriverManager.getConnection("jdbc:drill:zk=local", null);) {
+      Statement s = c.createStatement();
+      ResultSet r = s.executeQuery(query);
+      ResultSetMetaData md = r.getMetaData();
+      List<String> columns = Lists.newArrayList();
+      for (int i = 1; i <= md.getColumnCount(); i++) {
+        System.out.print(md.getColumnName(i));
+        System.out.print('\t');
+        columns.add(md.getColumnName(i));
+      }
+      String[] expected = {"fullname", "occupation", "postal_code"};
+      Assert.assertEquals(3, md.getColumnCount());
+      Assert.assertArrayEquals(expected, columns.toArray());
+    }
+  }
+
 }

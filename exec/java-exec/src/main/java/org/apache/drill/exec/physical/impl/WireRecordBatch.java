@@ -48,6 +48,7 @@ public class WireRecordBatch implements RecordBatch {
   private FragmentContext context;
   private BatchSchema schema;
   private OperatorStats stats;
+  private boolean first = true;
 
 
   public WireRecordBatch(FragmentContext context, RawFragmentBatchProvider fragProvider, RandomReceiver config) throws OutOfMemoryException {
@@ -114,13 +115,22 @@ public class WireRecordBatch implements RecordBatch {
         batch = fragProvider.getNext();
 
         // skip over empty batches. we do this since these are basically control messages.
-        while(batch != null && !batch.getHeader().getIsOutOfMemory() && batch.getHeader().getDef().getRecordCount() == 0){
+        while(batch != null && !batch.getHeader().getIsOutOfMemory() && batch.getHeader().getDef().getRecordCount() == 0 && !first){
+          if (first) {
+            first = false;
+            RecordBatchDef rbd = batch.getHeader().getDef();
+            batchLoader.load(rbd, batch.getBody());
+            batch.release();
+            schema = batchLoader.getSchema().clone();
+            batchLoader.clear();
+          }
           batch = fragProvider.getNext();
         }
       } finally {
         stats.stopWait();
       }
 
+      first = false;
 
       if (batch == null){
         batchLoader.clear();

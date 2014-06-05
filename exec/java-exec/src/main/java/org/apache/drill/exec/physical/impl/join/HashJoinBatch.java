@@ -109,6 +109,8 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
     // Schema of the build side
     private BatchSchema rightSchema = null;
 
+    private boolean first = true;
+
     // Generator mapping for the build side
     private static final GeneratorMapping PROJECT_BUILD = GeneratorMapping.create("doSetup"/* setup method */,
                                                                                   "projectBuildRecord" /* eval method */,
@@ -187,7 +189,8 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
                  * 2. We've filled up the outgoing batch to the maximum and we need to return upstream
                  * Either case build the output container's schema and return
                  */
-                if (outputRecords > 0) {
+                if (outputRecords > 0 || first) {
+                  first = false;
 
                   // Build the container schema and set the counts
                   container.buildSchema(BatchSchema.SelectionVectorMode.NONE);

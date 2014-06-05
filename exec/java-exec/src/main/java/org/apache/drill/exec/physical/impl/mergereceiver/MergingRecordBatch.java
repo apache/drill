@@ -46,6 +46,7 @@ import org.apache.drill.exec.physical.config.MergingReceiverPOP;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.record.AbstractRecordBatch;
 import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.ExpandableHyperContainer;
 import org.apache.drill.exec.record.RawFragmentBatch;
 import org.apache.drill.exec.record.RawFragmentBatchProvider;
@@ -97,6 +98,8 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
   private int[] batchOffsets;
   private PriorityQueue <Node> pqueue;
   private List<VectorAllocator> allocators;
+  private RawFragmentBatch emptyBatch = null;
+  private boolean done = false;
 
   public static enum Metric implements MetricDef{
     NEXT_WAIT_NANOS;
@@ -134,6 +137,7 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
   @Override
   public IterOutcome innerNext() {
     if (fragProviders.length == 0) return IterOutcome.NONE;
+    if (done) return IterOutcome.NONE;
     boolean schemaChanged = false;
 
     if (prevBatchWasFull) {
@@ -155,6 +159,7 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
 
       // set up each (non-empty) incoming record batch
       List<RawFragmentBatch> rawBatches = Lists.newArrayList();
+      boolean firstBatch = true;
       for (RawFragmentBatchProvider provider : fragProviders) {
         RawFragmentBatch rawBatch = null;
         try {
@@ -165,12 +170,31 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
         }
         if (rawBatch.getHeader().getDef().getRecordCount() != 0) {
           rawBatches.add(rawBatch);
+        } else if (emptyBatch == null) {
+          emptyBatch = rawBatch;
+        }
+        if (firstBatch) {
+          schema = BatchSchema.newBuilder().addSerializedFields(rawBatch.getHeader().getDef().getFieldList()).build();
         }
       }
 
       // allocate the incoming record batch loaders
       senderCount = rawBatches.size();
       if (senderCount == 0) {
+        if (firstBatch) {
+          RecordBatchLoader loader = new RecordBatchLoader(oContext.getAllocator());
+          try {
+            loader.load(emptyBatch.getHeader().getDef(), emptyBatch.getBody());
+          } catch (SchemaChangeException e) {
+            throw new RuntimeException(e);
+          }
+          for (VectorWrapper w : loader) {
+            outgoingContainer.add(w.getValueVector());
+          }
+          outgoingContainer.buildSchema(SelectionVectorMode.NONE);
+          done = true;
+          return IterOutcome.OK_NEW_SCHEMA;
+        }
         return IterOutcome.NONE;
       }
       incomingBatches = new RawFragmentBatch[senderCount];

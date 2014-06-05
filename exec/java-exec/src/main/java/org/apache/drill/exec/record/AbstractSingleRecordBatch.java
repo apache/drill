@@ -43,7 +43,6 @@ public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> exte
   @Override
   public IterOutcome innerNext() {
     IterOutcome upstream = next(incoming);
-    if(first && upstream == IterOutcome.OK) upstream = IterOutcome.OK_NEW_SCHEMA;
     if (!first && upstream == IterOutcome.OK && incoming.getRecordCount() == 0) {
       do {
         for (VectorWrapper w : incoming) {
@@ -51,15 +50,17 @@ public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> exte
         }
       } while ((upstream = next(incoming)) == IterOutcome.OK && incoming.getRecordCount() == 0);
     }
-    first = false;
+    if(first && upstream == IterOutcome.OK) upstream = IterOutcome.OK_NEW_SCHEMA;
     switch(upstream){
     case NONE:
+      assert !first;
     case NOT_YET:
     case STOP:
       return upstream;
     case OUT_OF_MEMORY:
       return upstream;
     case OK_NEW_SCHEMA:
+      first = false;
       try{
         stats.startSetup();
         setupNewSchema();
@@ -73,6 +74,7 @@ public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> exte
       }
       // fall through.
     case OK:
+      assert !first : "First batch should be OK_NEW_SCHEMA";
       doWork();
       if (outOfMemory) {
         outOfMemory = false;
@@ -89,6 +91,11 @@ public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> exte
 //    logger.debug("Cleaning up.");
     super.cleanup();
     incoming.cleanup();
+  }
+
+  @Override
+  public BatchSchema getSchema() {
+    return container.getSchema();
   }
 
   protected abstract void setupNewSchema() throws SchemaChangeException;

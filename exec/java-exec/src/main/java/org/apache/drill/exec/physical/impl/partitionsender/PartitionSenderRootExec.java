@@ -208,18 +208,17 @@ public class PartitionSenderRootExec extends BaseRootExec {
   public void sendEmptyBatch() {
     FragmentHandle handle = context.getHandle();
     int fieldId = 0;
-    VectorContainer container = new VectorContainer();
     StatusHandler statusHandler = new StatusHandler(sendCount, context);
     for (DrillbitEndpoint endpoint : popConfig.getDestinations()) {
       FragmentHandle opposite = context.getHandle().toBuilder().setMajorFragmentId(popConfig.getOppositeMajorFragmentId()).setMinorFragmentId(fieldId).build();
       DataTunnel tunnel = context.getDataTunnel(endpoint, opposite);
-      FragmentWritableBatch writableBatch = new FragmentWritableBatch(true,
+      FragmentWritableBatch writableBatch = FragmentWritableBatch.getEmptyLastWithSchema(
               handle.getQueryId(),
               handle.getMajorFragmentId(),
               handle.getMinorFragmentId(),
               operator.getOppositeMajorFragmentId(),
               fieldId,
-              WritableBatch.getBatchNoHVWrap(0, container, false));
+              incoming.getSchema());
       stats.startWait();
       try {
         tunnel.sendRecordBatch(statusHandler, writableBatch);

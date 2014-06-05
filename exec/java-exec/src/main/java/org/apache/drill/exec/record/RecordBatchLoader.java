@@ -25,6 +25,7 @@ import java.util.Map;
 
 import javax.jdo.metadata.FieldMetadata;
 
+import io.netty.buffer.EmptyByteBuf;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
@@ -85,7 +86,8 @@ public class RecordBatchLoader implements VectorAccessible, Iterable<VectorWrapp
         v = TypeHelper.getNewVector(fieldDef, allocator);
       }
       if (fmd.getValueCount() == 0){
-        v.clear();
+//        v.clear();
+        v.load(fmd, new EmptyByteBuf(allocator.getUnderlyingAllocator()));
       } else {
         v.load(fmd, buf.slice(bufOffset, fmd.getBufferLength()));
       }

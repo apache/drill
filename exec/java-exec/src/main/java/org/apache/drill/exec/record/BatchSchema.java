@@ -17,6 +17,9 @@
  */
 package org.apache.drill.exec.record;
 
+
+import com.google.common.collect.Lists;
+
 import java.util.Iterator;
 import java.util.List;
 
@@ -52,6 +55,12 @@ public class BatchSchema implements Iterable<MaterializedField> {
 
   public SelectionVectorMode getSelectionVectorMode() {
     return selectionVectorMode;
+  }
+
+  public BatchSchema clone() {
+    List<MaterializedField> newFields = Lists.newArrayList();
+    newFields.addAll(fields);
+    return new BatchSchema(selectionVectorMode, newFields);
   }
 
   @Override

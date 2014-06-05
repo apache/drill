@@ -46,7 +46,9 @@ import org.apache.drill.exec.physical.impl.svremover.Copier;
 import org.apache.drill.exec.physical.impl.svremover.RemovingRecordBatch;
 import org.apache.drill.exec.record.AbstractRecordBatch;
 import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.ExpandableHyperContainer;
+import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorAccessible;
@@ -113,7 +115,14 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
     return sv4;
   }
 
-
+  @Override
+  public BatchSchema getSchema() {
+    List<MaterializedField> fields = Lists.newArrayList();
+    for (MaterializedField field : incoming.getSchema()) {
+      fields.add(field);
+    }
+    return BatchSchema.newBuilder().addFields(fields).setSelectionVectorMode(SelectionVectorMode.FOUR_BYTE).build();
+  }
 
   @Override
   public void cleanup() {

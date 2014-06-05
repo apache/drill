@@ -80,7 +80,8 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
       switch(out){
       case STOP:
       case NONE:
-        FragmentWritableBatch b2 = FragmentWritableBatch.getEmptyLast(handle.getQueryId(), handle.getMajorFragmentId(), handle.getMinorFragmentId(), recMajor, 0);
+        FragmentWritableBatch b2 = FragmentWritableBatch.getEmptyLastWithSchema(handle.getQueryId(), handle.getMajorFragmentId(),
+                handle.getMinorFragmentId(), recMajor, 0, incoming.getSchema());
         sendCount.increment();
         stats.startWait();
         try {
@@ -92,7 +93,8 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
 
       case OK_NEW_SCHEMA:
       case OK:
-        FragmentWritableBatch batch = new FragmentWritableBatch(false, handle.getQueryId(), handle.getMajorFragmentId(), handle.getMinorFragmentId(), recMajor, 0, incoming.getWritableBatch());
+        FragmentWritableBatch batch = new FragmentWritableBatch(false, handle.getQueryId(), handle.getMajorFragmentId(),
+                handle.getMinorFragmentId(), recMajor, 0, incoming.getWritableBatch());
         sendCount.increment();
         stats.startWait();
         try {

@@ -17,12 +17,17 @@
  */
 package org.apache.drill.exec.record;
 
+import com.google.common.collect.Lists;
 import io.netty.buffer.ByteBuf;
 
 import org.apache.drill.exec.proto.BitData.FragmentRecordBatch;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.RecordBatchDef;
+import org.apache.drill.exec.proto.UserBitShared.RecordBatchDefOrBuilder;
+import org.apache.drill.exec.proto.UserBitShared.SerializedField;
+
+import java.util.List;
 
 public class FragmentWritableBatch{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FragmentWritableBatch.class);
@@ -57,6 +62,17 @@ public class FragmentWritableBatch{
   
   public static FragmentWritableBatch getEmptyLast(QueryId queryId, int sendMajorFragmentId, int sendMinorFragmentId, int receiveMajorFragmentId, int receiveMinorFragmentId){
     return new FragmentWritableBatch(true, queryId, sendMajorFragmentId, sendMinorFragmentId, receiveMajorFragmentId, receiveMinorFragmentId, EMPTY_DEF);
+  }
+
+  public static FragmentWritableBatch getEmptyLastWithSchema(QueryId queryId, int sendMajorFragmentId, int sendMinorFragmentId,
+                                                             int receiveMajorFragmentId, int receiveMinorFragmentId, BatchSchema schema){
+
+    List<SerializedField> fields = Lists.newArrayList();
+    for (MaterializedField field : schema) {
+      fields.add(field.getAsBuilder().build());
+    }
+    RecordBatchDef def = RecordBatchDef.newBuilder().addAllField(fields).build();
+    return new FragmentWritableBatch(true, queryId, sendMajorFragmentId, sendMinorFragmentId, receiveMajorFragmentId, receiveMinorFragmentId, def);
   }
 
   public ByteBuf[] getBuffers(){

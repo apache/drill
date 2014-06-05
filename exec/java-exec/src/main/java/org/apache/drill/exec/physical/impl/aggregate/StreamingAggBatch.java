@@ -45,6 +45,7 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.StreamingAggregate;
 import org.apache.drill.exec.physical.impl.aggregate.StreamingAggregator.AggOutcome;
 import org.apache.drill.exec.record.AbstractRecordBatch;
+import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
@@ -65,6 +66,7 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
   private StreamingAggregator aggregator;
   private final RecordBatch incoming;
   private boolean done = false;
+  private boolean first = true;
 
   public StreamingAggBatch(StreamingAggregate popConfig, RecordBatch incoming, FragmentContext context) throws OutOfMemoryException {
     super(popConfig, context);
@@ -74,12 +76,17 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
   @Override
   public int getRecordCount() {
     if(done) return 0;
+    if (aggregator == null) return 0;
     return aggregator.getOutputCount();
   }
 
   @Override
   public IterOutcome innerNext() {
-    // this is only called on the first batch. Beyond this, the aggregator manages batches.
+    if (done) {
+      container.zeroVectors();
+      return IterOutcome.NONE;
+    }
+      // this is only called on the first batch. Beyond this, the aggregator manages batches.
     if (aggregator == null) {
       IterOutcome outcome = next(incoming);
       logger.debug("Next outcome of {}", outcome);
@@ -106,17 +113,25 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
       logger.debug("Aggregator response {}, records {}", out, aggregator.getOutputCount());
       switch(out){
       case CLEANUP_AND_RETURN:
-        container.clear();
+        if (!first) container.zeroVectors();
         done = true;
-        return aggregator.getOutcome();
+        // fall through
       case RETURN_OUTCOME:
-        return aggregator.getOutcome();
+        IterOutcome outcome = aggregator.getOutcome();
+        if (outcome == IterOutcome.NONE && first) {
+          first = false;
+          done = true;
+          return IterOutcome.OK_NEW_SCHEMA;
+        }
+        first = false;
+        return outcome;
       case UPDATE_AGGREGATOR:
+        first = false;
         aggregator = null;
         if(!createAggregator()){
           return IterOutcome.STOP;
-        }
-        continue;
+      }
+      continue;
       default:
         throw new IllegalStateException(String.format("Unknown state %s.", out));
       }

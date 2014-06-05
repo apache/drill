@@ -48,7 +48,9 @@ public abstract class SingleBatchSorterTemplate implements SingleBatchSorter, In
     QuickSort qs = new QuickSort();
     Stopwatch watch = new Stopwatch();
     watch.start();
-    qs.sort(this, 0, vector2.getCount());
+    if (vector2.getCount() > 0) {
+      qs.sort(this, 0, vector2.getCount());
+    }
     logger.debug("Took {} us to sort {} records", watch.elapsed(TimeUnit.MICROSECONDS), vector2.getCount());
   }
 

@@ -20,16 +20,15 @@ package org.apache.drill.jdbc;
 import java.sql.SQLException;
 import java.util.Calendar;
 import java.util.List;
-import java.util.concurrent.LinkedBlockingDeque;
 
 import net.hydromatic.avatica.ColumnMetaData;
 import net.hydromatic.avatica.Cursor;
 
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.user.QueryResultBatch;
-import org.apache.drill.jdbc.DrillResultSet.Listener;
 
 public class DrillCursor implements Cursor{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillCursor.class);
@@ -41,8 +40,10 @@ public class DrillCursor implements Cursor{
   private final RecordBatchLoader currentBatch;
   private final DrillResultSet.Listener listener;
   private boolean redoFirstNext = false;
+  private boolean first = true;
   
   private DrillColumnMetaDataList columnMetaDataList;
+  private BatchSchema schema;
   
   final DrillResultSet results;
   int currentRecord = 0;
@@ -82,11 +83,13 @@ public class DrillCursor implements Cursor{
       try {
         QueryResultBatch qrb = listener.getNext();
         recordBatchCount++;
-        while(qrb != null && qrb.getHeader().getRowCount() == 0 ){
+        while(qrb != null && qrb.getHeader().getRowCount() == 0 && !first){
           qrb.release();
           qrb = listener.getNext();
           recordBatchCount++;
         }
+
+        first = false;
         
         if(qrb == null){
           finished = true;
@@ -94,7 +97,11 @@ public class DrillCursor implements Cursor{
         }else{
           currentRecord = 0;
           boolean changed = currentBatch.load(qrb.getHeader().getDef(), qrb.getData());
+          schema = currentBatch.getSchema();
           if(changed) updateColumns();
+          if (redoFirstNext && currentBatch.getRecordCount() == 0) {
+            redoFirstNext = false;
+          }
           return true;
         }
       } catch (RpcException | InterruptedException | SchemaChangeException e) {
@@ -106,8 +113,8 @@ public class DrillCursor implements Cursor{
   
   void updateColumns(){
     accessors.generateAccessors(this, currentBatch);
-    columnMetaDataList.updateColumnMetaData(UNKNOWN, UNKNOWN, UNKNOWN, currentBatch.getSchema());
-    if(results.changeListener != null) results.changeListener.schemaChanged(currentBatch.getSchema());
+    columnMetaDataList.updateColumnMetaData(UNKNOWN, UNKNOWN, UNKNOWN, schema);
+    if(results.changeListener != null) results.changeListener.schemaChanged(schema);
   }
   
   public long getRecordBatchCount(){

@@ -102,6 +102,8 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
   private int spillCount = 0;
   private int batchesSinceLastSpill = 0;
   private long uid;//used for spill files to ensure multiple sorts within same fragment don't clobber each others' files
+  private boolean useIncomingSchema = false;
+  private boolean first = true;
 
   public ExternalSortBatch(ExternalSort popConfig, FragmentContext context, RecordBatch incoming) throws OutOfMemoryException {
     super(popConfig, context);
@@ -144,6 +146,17 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
     return this.sv4;
   }
 
+  @Override
+  public BatchSchema getSchema() {
+    if (useIncomingSchema) {
+      List<MaterializedField> fields = Lists.newArrayList();
+      for (MaterializedField field : incoming.getSchema()) {
+        fields.add(field);
+      }
+      return BatchSchema.newBuilder().addFields(fields).setSelectionVectorMode(SelectionVectorMode.FOUR_BYTE).build();
+    }
+    return super.getSchema();
+  }
 
 
   @Override
@@ -205,6 +218,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
 //        logger.debug("Took {} us to get next", watch.elapsed(TimeUnit.MICROSECONDS));
         switch (upstream) {
         case NONE:
+          assert !first;
           break outer;
         case NOT_YET:
           throw new UnsupportedOperationException();
@@ -212,6 +226,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
           return upstream;
         case OK_NEW_SCHEMA:
           // only change in the case that the schema truly changes.  Artificial schema changes are ignored.
+          first = false;
           if(!incoming.getSchema().equals(schema)){
             if (schema != null) throw new UnsupportedOperationException("Sort doesn't currently support sorts with changing schemas.");
             this.schema = incoming.getSchema();
@@ -220,6 +235,9 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
           // fall through.
         case OK:
           SelectionVector2 sv2;
+//          if (incoming.getRecordCount() == 0) {
+//            break outer;
+//          }
           if (incoming.getSchema().getSelectionVectorMode() == BatchSchema.SelectionVectorMode.TWO_BYTE) {
             sv2 = incoming.getSelectionVector2();
           } else {
@@ -231,9 +249,9 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
           }
           int count = sv2.getCount();
           totalcount += count;
-          if (count == 0) {
-            break outer;
-          }
+//          if (count == 0) {
+//            break outer;
+//          }
           sorter.setup(context, sv2, incoming);
           Stopwatch w = new Stopwatch();
           w.start();
@@ -261,18 +279,20 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
         }
       }
 
-      if (schema == null || totalcount == 0){
-        // builder may be null at this point if the first incoming batch is empty
-        return IterOutcome.NONE;
-      }
+//      if (schema == null || totalcount == 0){
+//        builder may be null at this point if the first incoming batch is empty
+//        useIncomingSchema = true;
+//        return IterOutcome.NONE;
+//      }
 
       if (spillCount == 0) {
         Stopwatch watch = new Stopwatch();
         watch.start();
-        if (schema == null){
+//        if (schema == null){
           // builder may be null at this point if the first incoming batch is empty
-          return IterOutcome.NONE;
-        }
+//          useIncomingSchema = true;
+//          return IterOutcome.NONE;
+//        }
 
         builder = new SortRecordBatchBuilder(oContext.getAllocator(), MAX_SORT_BYTES);
 

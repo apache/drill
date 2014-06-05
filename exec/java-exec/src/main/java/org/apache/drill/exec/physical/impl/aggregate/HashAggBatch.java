@@ -40,9 +40,11 @@ import org.apache.drill.exec.expr.ValueVectorWriteExpression;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.HashAggregate;
 import org.apache.drill.exec.record.AbstractRecordBatch;
+import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
+import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
@@ -65,6 +67,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
   private LogicalExpression[] aggrExprs;
   private TypedFieldId[] groupByOutFieldIds ;
   private TypedFieldId[] aggrOutFieldIds ;      // field ids for the outgoing batch
+  private boolean first = true;
 
   private final GeneratorMapping UPDATE_AGGR_INSIDE =
     GeneratorMapping.create("setupInterior" /* setup method */, "updateAggrValuesInternal" /* eval method */,
@@ -90,12 +93,16 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
 
   @Override
   public IterOutcome innerNext() {
+    if (done) {
+      return IterOutcome.NONE;
+    }
     // this is only called on the first batch. Beyond this, the aggregator manages batches.
     if (aggregator == null) {
       IterOutcome outcome = next(incoming);
       logger.debug("Next outcome of {}", outcome);
       switch (outcome) {
       case NONE:
+        throw new UnsupportedOperationException("Received NONE on first batch");
       case NOT_YET:
       case STOP:
         return outcome;
@@ -118,7 +125,13 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
 
   if (aggregator.buildComplete() && ! aggregator.allFlushed()) {
     // aggregation is complete and not all records have been output yet
-    return aggregator.outputCurrentBatch();
+    IterOutcome outcome = aggregator.outputCurrentBatch();
+    if (outcome == IterOutcome.NONE && first) {
+      first = false;
+      done = true;
+      return IterOutcome.OK_NEW_SCHEMA;
+    }
+    return outcome;
   }
 
   logger.debug("Starting aggregator doWork; incoming record count = {} ", incoming.getRecordCount());
@@ -128,11 +141,17 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
       logger.debug("Aggregator response {}, records {}", out, aggregator.getOutputCount());
       switch(out){
       case CLEANUP_AND_RETURN:
-        container.clear();
+        container.zeroVectors();
         aggregator.cleanup();
         done = true;
-        return aggregator.getOutcome();
+        // fall through
       case RETURN_OUTCOME:
+        IterOutcome outcome = aggregator.getOutcome();
+        if (outcome == IterOutcome.NONE && first) {
+          first = false;
+          done = true;
+          return IterOutcome.OK_NEW_SCHEMA;
+        }
         return aggregator.getOutcome();
       case UPDATE_AGGREGATOR:
         aggregator = null;

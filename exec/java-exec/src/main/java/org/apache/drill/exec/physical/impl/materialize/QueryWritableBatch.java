@@ -18,10 +18,18 @@
 package org.apache.drill.exec.physical.impl.materialize;
 
 import java.util.Arrays;
+import java.util.List;
 
+import com.google.common.collect.Lists;
 import io.netty.buffer.ByteBuf;
 
+import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult;
+import org.apache.drill.exec.proto.UserBitShared.RecordBatchDef;
+import org.apache.drill.exec.proto.UserBitShared.SerializedField;
+import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.WritableBatch;
 
 public class QueryWritableBatch {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryWritableBatch.class);
@@ -48,6 +56,20 @@ public class QueryWritableBatch {
   public String toString() {
     return "QueryWritableBatch [header=" + header + ", buffers=" + Arrays.toString(buffers) + "]";
   }
-  
+
+  public static QueryWritableBatch getEmptyBatchWithSchema(QueryId queryId, int rowCount, boolean isLastChunk, BatchSchema schema) {
+    List<SerializedField> fields = Lists.newArrayList();
+    for (MaterializedField field : schema) {
+      fields.add(field.getAsBuilder().build());
+    }
+    RecordBatchDef def = RecordBatchDef.newBuilder().addAllField(fields).build();
+    QueryResult header = QueryResult.newBuilder() //
+            .setQueryId(queryId) //
+            .setRowCount(rowCount) //
+            .setDef(def) //
+            .setIsLastChunk(isLastChunk) //
+            .build();
+    return new QueryWritableBatch(header);
+  }
   
 }

@@ -58,7 +58,7 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
     this.allocators = allocators;
     this.outgoing = outgoing;
     setupInterior(incoming, outgoing);
-    this.currentIndex = this.getVectorIndex(underlyingIndex);
+    this.currentIndex = incoming.getRecordCount() == 0 ? 0 : this.getVectorIndex(underlyingIndex);
   }
 
 
@@ -158,13 +158,18 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
 
         try{
           while(true){
+            if (previous != null) {
+              previous.clear();
+            }
             previous = new InternalBatch(incoming);
             IterOutcome out = outgoing.next(0, incoming);
             if(EXTRA_DEBUG) logger.debug("Received IterOutcome of {}", out);
             switch(out){
             case NONE:
               lastOutcome = out;
-              if(addedRecordCount > 0){
+              if (first && addedRecordCount == 0) {
+                return setOkAndReturn();
+              } else if(addedRecordCount > 0){
                 if( !outputToBatchPrev( previous, previousIndex, outputCount) ) remainderBatch = previous;
                 if(EXTRA_DEBUG) logger.debug("Received no more batches, returning.");
                 return setOkAndReturn();

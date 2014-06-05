@@ -32,6 +32,9 @@
         },
         "parquet" : {
           type: "parquet"
+        },
+        "json" : {
+          type: "json"
         }
       }
     },

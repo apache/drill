@@ -21,6 +21,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 
 import com.google.common.collect.Lists;
@@ -61,6 +62,13 @@ public class SchemaBuilder {
   public SchemaBuilder addFields(Iterable<MaterializedField> fields){
     for(MaterializedField f : fields){
       addField(f);
+    }
+    return this;
+  }
+
+  public SchemaBuilder addSerializedFields(Iterable<SerializedField> fields) {
+    for (SerializedField f : fields) {
+      addField(MaterializedField.create(f));
     }
     return this;
   }

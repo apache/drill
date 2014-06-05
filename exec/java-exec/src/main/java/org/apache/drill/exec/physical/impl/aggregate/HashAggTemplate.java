@@ -429,7 +429,7 @@ public abstract class HashAggTemplate implements HashAggregator {
     // get the number of groups in the batch holder corresponding to this batch index
     int batchOutputRecords = batchHolders.get(outBatchIndex).getNumGroups();
     
-    if (batchOutputRecords == 0) {
+    if (!first && batchOutputRecords == 0) {
       this.outcome = IterOutcome.NONE;
       return outcome;
     }

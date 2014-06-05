@@ -80,6 +80,8 @@ public class ScanBatch implements RecordBatch {
   private List<ValueVector> partitionVectors;
   private List<Integer> selectedPartitionColumns;
   private String partitionColumnDesignator;
+  private boolean first = true;
+  private boolean done = false;
 
   public ScanBatch(PhysicalOperator subScanConfig, FragmentContext context, Iterator<RecordReader> readers, List<String[]> partitionColumns, List<Integer> selectedPartitionColumns) throws ExecutionSetupException {
     this.context = context;
@@ -92,7 +94,7 @@ public class ScanBatch implements RecordBatch {
     this.partitionColumns = partitionColumns.iterator();
     this.partitionValues = this.partitionColumns.hasNext() ? this.partitionColumns.next() : null;
     this.selectedPartitionColumns = selectedPartitionColumns;
-    DrillConfig config = context.getConfig(); //This nonsense it is to not break all the stupid unit tests using SimpleRootExec
+    DrillConfig config = context.getConfig();
     this.partitionColumnDesignator = config == null ? "dir" : config.getString(ExecConstants.FILESYSTEM_PARTITION_COLUMN_LABEL);
     addPartitionVectors();
   }
@@ -122,11 +124,14 @@ public class ScanBatch implements RecordBatch {
   }
 
   private void releaseAssets() {
-    container.clear();
+    container.zeroVectors();
   }
 
   @Override
   public IterOutcome next() {
+    if (done) {
+      return IterOutcome.NONE;
+    }
     oContext.getStats().startProcessing();
     try {
       mutator.allocate(MAX_RECORD_CNT);
@@ -135,6 +140,14 @@ public class ScanBatch implements RecordBatch {
           if (!readers.hasNext()) {
             currentReader.cleanup();
             releaseAssets();
+            if (first) {
+              first = false;
+              done = true;
+              populatePartitionVectors();
+              container.buildSchema(SelectionVectorMode.NONE);
+              schema = container.getSchema();
+              return IterOutcome.OK_NEW_SCHEMA;
+            }
             return IterOutcome.NONE;
           }
           oContext.getStats().startSetup();
@@ -154,6 +167,7 @@ public class ScanBatch implements RecordBatch {
           return IterOutcome.STOP;
         }
       }
+      first = false;
 
       populatePartitionVectors();
       if (mutator.isNewSchema()) {

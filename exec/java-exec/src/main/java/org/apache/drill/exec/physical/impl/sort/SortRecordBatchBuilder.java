@@ -69,11 +69,12 @@ public class SortRecordBatchBuilder {
    */
   public boolean add(VectorAccessible batch){
     if(batch.getSchema().getSelectionVectorMode() == SelectionVectorMode.FOUR_BYTE) throw new UnsupportedOperationException("A sort cannot currently work against a sv4 batch.");
-    if (batch.getRecordCount() == 0)
+    if (batch.getRecordCount() == 0 && batches.size() > 0) {
       return true; // skip over empty record batches.
+    }
 
     long batchBytes = getSize(batch);
-    if (batchBytes == 0) {
+    if (batchBytes == 0 && batches.size() > 0) {
       return true;
     }
     if(batchBytes + runningBytes > maxBytes) return false; // enough data memory.
@@ -81,7 +82,6 @@ public class SortRecordBatchBuilder {
     if(!svAllocator.preAllocate(batch.getRecordCount()*4)) return false;  // sv allocation available.
 
 
-    if (batch.getRecordCount() == 0) return true;
     RecordBatchData bd = new RecordBatchData(batch);
     runningBytes += batchBytes;
     batches.put(batch.getSchema(), bd);
@@ -91,7 +91,7 @@ public class SortRecordBatchBuilder {
 
   public boolean add(RecordBatchData rbd) {
     long batchBytes = getSize(rbd.getContainer());
-    if (batchBytes == 0) {
+    if (batchBytes == 0 && batches.size() > 0) {
       return true;
     }
     if(batchBytes + runningBytes > maxBytes) {
@@ -105,7 +105,7 @@ public class SortRecordBatchBuilder {
     }
 
 
-    if (rbd.getRecordCount() == 0) return true;
+    if (rbd.getRecordCount() == 0 && batches.size() > 0) return true;
     runningBytes += batchBytes;
     batches.put(rbd.getContainer().getSchema(), rbd);
     recordCount += rbd.getRecordCount();

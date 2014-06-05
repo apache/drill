@@ -35,6 +35,7 @@ public class IteratorValidatorBatchIterator implements RecordBatch {
 
   private IterOutcome state = IterOutcome.NOT_YET;
   private final RecordBatch incoming;
+  private boolean first = true;
 
   public IteratorValidatorBatchIterator(RecordBatch incoming) {
     this.incoming = incoming;
@@ -67,7 +68,6 @@ public class IteratorValidatorBatchIterator implements RecordBatch {
 
   @Override
   public BatchSchema getSchema() {
-    validateReadState();
     return incoming.getSchema();
   }
 
@@ -110,6 +110,10 @@ public class IteratorValidatorBatchIterator implements RecordBatch {
   public IterOutcome next() {
     if(state == IterOutcome.NONE ) throw new IllegalStateException("The incoming iterator has previously moved to a state of NONE. You should not be attempting to call next() again.");
     state = incoming.next();
+    if (first && state == IterOutcome.NONE) {
+      throw new IllegalStateException("The incoming iterator returned a state of NONE on the first batch. There should always be at least one batch output before returning NONE");
+    }
+    if (first) first = !first;
 
     if(state == IterOutcome.OK || state == IterOutcome.OK_NEW_SCHEMA) {
       BatchSchema schema = incoming.getSchema();

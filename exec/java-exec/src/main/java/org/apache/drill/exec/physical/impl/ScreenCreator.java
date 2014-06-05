@@ -64,6 +64,7 @@ public class ScreenCreator implements RootCreator<Screen>{
     final FragmentContext context;
     final UserClientConnection connection;
     private RecordMaterializer materializer;
+    private boolean first = true;
 
     public ScreenRoot(FragmentContext context, RecordBatch incoming, Screen config) throws OutOfMemoryException {
       super(context, config);
@@ -108,13 +109,18 @@ public class ScreenCreator implements RootCreator<Screen>{
       case NONE: {
         sendCount.waitForSendComplete();
 //        context.getStats().batchesCompleted.inc(1);
-        QueryResult header = QueryResult.newBuilder() //
-            .setQueryId(context.getHandle().getQueryId()) //
-            .setRowCount(0) //
-            .setDef(RecordBatchDef.getDefaultInstance()) //
-            .setIsLastChunk(true) //
-            .build();
-        QueryWritableBatch batch = new QueryWritableBatch(header);
+        QueryWritableBatch batch;
+        if (!first) {
+          QueryResult header = QueryResult.newBuilder() //
+              .setQueryId(context.getHandle().getQueryId()) //
+              .setRowCount(0) //
+              .setDef(RecordBatchDef.getDefaultInstance()) //
+              .setIsLastChunk(true) //
+              .build();
+          batch = new QueryWritableBatch(header);
+        } else {
+          batch = QueryWritableBatch.getEmptyBatchWithSchema(context.getHandle().getQueryId(), 0, true, incoming.getSchema());
+        }
         stats.startWait();
         try {
           connection.sendResult(listener, batch);
@@ -140,6 +146,7 @@ public class ScreenCreator implements RootCreator<Screen>{
         }
         sendCount.increment();
 
+        first = false;
         return true;
       default:
         throw new UnsupportedOperationException();
@@ -179,6 +186,7 @@ public class ScreenCreator implements RootCreator<Screen>{
     RecordBatch getIncoming() {
       return incoming;
     }
+
 
 
   }
