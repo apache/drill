@@ -19,43 +19,35 @@ package org.apache.drill.exec.store.ischema;
 
 import net.hydromatic.optiq.SchemaPlus;
 
+import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.ischema.InfoSchemaTable.Catalogs;
 import org.apache.drill.exec.store.ischema.InfoSchemaTable.Columns;
 import org.apache.drill.exec.store.ischema.InfoSchemaTable.Schemata;
 import org.apache.drill.exec.store.ischema.InfoSchemaTable.Tables;
 import org.apache.drill.exec.store.ischema.InfoSchemaTable.Views;
-import org.apache.drill.exec.store.ischema.OptiqProvider.OptiqScanner;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 
 public enum SelectedTable{
-  CATALOGS(new Catalogs(), new ScannerFactory(){public OptiqScanner get(SchemaPlus root) {return new OptiqProvider.Catalogs(root);}} ), //
-  SCHEMATA(new Schemata(), new ScannerFactory(){public OptiqScanner get(SchemaPlus root) {return new OptiqProvider.Schemata(root);}} ), //
-  VIEWS(new Views(), new ScannerFactory(){public OptiqScanner get(SchemaPlus root) {return new OptiqProvider.Views(root);}} ), //
-  COLUMNS(new Columns(), new ScannerFactory(){public OptiqScanner get(SchemaPlus root) {return new OptiqProvider.Columns(root);}} ), //
-  TABLES(new Tables(), new ScannerFactory(){public OptiqScanner get(SchemaPlus root) {return new OptiqProvider.Tables(root);}} ); //
+  CATALOGS(new Catalogs()),
+  SCHEMATA(new Schemata()),
+  VIEWS(new Views()),
+  COLUMNS(new Columns()),
+  TABLES(new Tables());
   
-  private final FixedTable tableDef;
-  private final ScannerFactory providerFactory;
+  private final InfoSchemaTable tableDef;
   
-  private SelectedTable(FixedTable tableDef, ScannerFactory providerFactory) {
+  private SelectedTable(InfoSchemaTable tableDef) {
     this.tableDef = tableDef;
-    this.providerFactory = providerFactory;
   }
   
-  public OptiqScanner getProvider(SchemaPlus root){
-    return providerFactory.get(root);
-  }
-  
-  private interface ScannerFactory{
-    public OptiqScanner get(SchemaPlus root);
+  public RecordReader getRecordReader(SchemaPlus rootSchema) {
+    RecordGenerator recordGenerator = tableDef.getRecordGenerator();
+    recordGenerator.scanSchema(rootSchema);
+    return recordGenerator.getRecordReader();
   }
   
   public RelDataType getRowType(RelDataTypeFactory typeFactory) {
     return tableDef.getRowType(typeFactory);
-  }
-  
-  public FixedTable getFixedTable(){
-    return tableDef;
   }
 }

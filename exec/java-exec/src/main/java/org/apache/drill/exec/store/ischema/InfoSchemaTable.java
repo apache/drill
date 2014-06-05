@@ -17,136 +17,159 @@
  */
 package org.apache.drill.exec.store.ischema;
 
+import com.beust.jcommander.internal.Lists;
+import com.google.common.collect.ImmutableList;
 import org.apache.drill.common.types.TypeProtos.MajorType;
-import org.apache.drill.exec.vector.IntVector;
-import org.apache.drill.exec.vector.VarCharVector;
+import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.types.Types;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypeFactory;
+import org.eigenbase.sql.type.SqlTypeName;
 
-/**
- * InfoSchemaTable defines the various Information Schema tables.
- * <p>
- * All the information schema tables are grouped together for convenience.
- * For each specific table, the corresponding class:
- * <p>Declares the table name.
- * <p>Declares the field names and types.
- * <p>Optionally defines a typed method to write a row of data to the vectors.
- *    If not defined here, FixedTable will kick in and do the job using
- *    a slower, generic method.
- */
-public class InfoSchemaTable{
+import java.util.List;
 
-  /**
-   * Layout for the SCHEMATA table.
-   */
-  public static class Schemata extends FixedTable {
-    static final String tableName = "SCHEMATA";
-    static final String[] fieldNames = {"CATALOG_NAME", "SCHEMA_NAME", "SCHEMA_OWNER", "TYPE"};
-    static final MajorType[] fieldTypes = {VARCHAR,         VARCHAR,       VARCHAR, VARCHAR};
+/** Base class of tables in INFORMATION_SCHEMA. Defines the table (fields and types) */
+public abstract class InfoSchemaTable{
 
-    public Schemata() {
-      super(tableName, fieldNames, fieldTypes);
-    }
+  public static class Field {
+    public String name;
+    public MajorType type;
 
-    // Optional ...
-    public boolean writeRowToVectors(int index, Object[] row) {
-      return
-          setSafe((VarCharVector)vectors.get(0), index, (String)row[0])  &&
-          setSafe((VarCharVector)vectors.get(1), index,  (String)row[1]) &&
-          setSafe((VarCharVector)vectors.get(2), index,  (String)row[2]) &&
-          setSafe((VarCharVector)vectors.get(3), index,  (String)row[3]);
+    public static Field create(String name, MajorType type) {
+      Field field = new Field();
+      field.name = name;
+      field.type = type;
+      return field;
     }
   }
 
-  /**
-   * Layout for the TABLES table.
-   */
-  public static class Tables extends FixedTable {
-    static final String tableName = "TABLES";
-    static final String[] fieldNames = {"TABLE_CATALOG", "TABLE_SCHEMA", "TABLE_NAME", "TABLE_TYPE"};
-    static final MajorType[] fieldTypes = {VARCHAR,          VARCHAR,        VARCHAR,      VARCHAR};
+  public static final MajorType VARCHAR = Types.required(MinorType.VARCHAR);
+  public static final MajorType INT = Types.required(MinorType.INT);
 
-    public Tables() {
-      super(tableName, fieldNames, fieldTypes);
-    }
+  private final String tableName;
+  private final List<Field> fields;
 
-    // Optional ...
-    public boolean writeRowToVectors(int index, Object[] row) {
-      return
-          setSafe((VarCharVector)vectors.get(0), index, (String)row[0]) &&
-          setSafe((VarCharVector)vectors.get(1), index, (String)row[1]) &&
-          setSafe((VarCharVector)vectors.get(2), index, (String)row[2]) &&
-          setSafe((VarCharVector)vectors.get(3), index, (String)row[3]);
+  public InfoSchemaTable(String tableName, List<Field> fields) {
+    this.tableName = tableName;
+    this.fields = fields;
+  }
+
+  static public RelDataType getRelDataType(RelDataTypeFactory typeFactory, MajorType type) {
+    switch (type.getMinorType()) {
+    case INT: return typeFactory.createSqlType(SqlTypeName.INTEGER);
+    case VARCHAR: return typeFactory.createSqlType(SqlTypeName.VARCHAR);
+    default: throw new UnsupportedOperationException("Only INT and VARCHAR types are supported in INFORMATION_SCHEMA");
     }
   }
 
+  public RelDataType getRowType(RelDataTypeFactory typeFactory) {
 
-  /**
-   * Layout for the COLUMNS table.
-   */
-  public static class Columns extends FixedTable {
-    static final String tableName = "COLUMNS";
-    static final String[] fieldNames = {"TABLE_CATALOG",     "TABLE_SCHEMA",     "TABLE_NAME",    "COLUMN_NAME",
-      "ORDINAL_POSITION",   "IS_NULLABLE",      "DATA_TYPE",     "CHARACTER_MAXIMUM_LENGTH",
-      "NUMERIC_PRECISION_RADIX", "NUMERIC_SCALE", "NUMERIC_PRECISION"};
-    static final MajorType[] fieldTypes= { VARCHAR,         VARCHAR,       VARCHAR,      VARCHAR,
-      INT,             VARCHAR,        VARCHAR,     INT,
-      INT,             INT,            INT};
-    public Columns() {
-      super(tableName, fieldNames, fieldTypes);
+    // Convert the array of Drill types to an array of Optiq types
+    List<RelDataType> relTypes = Lists.newArrayList();
+    List<String> fieldNames = Lists.newArrayList();
+    for (Field field : fields) {
+      relTypes.add(getRelDataType(typeFactory, field.type));
+      fieldNames.add(field.name);
     }
 
-
-    // Optional ...
-    public boolean writeRowToVectors(int index, Object[] row) {
-      return
-          setSafe((VarCharVector)vectors.get(0), index, (String)row[0]) &&
-          setSafe((VarCharVector)vectors.get(1), index, (String)row[1]) &&
-          setSafe((VarCharVector)vectors.get(2), index, (String)row[2]) &&
-          setSafe((VarCharVector)vectors.get(3), index, (String)row[3]) &&
-          setSafe((IntVector)vectors.get(4), index, (int)row[4])        &&
-          setSafe((VarCharVector)vectors.get(5), index, (String)row[5])     &&
-          setSafe((VarCharVector)vectors.get(6), index, (String)row[6]) &&
-          setSafe((IntVector)vectors.get(7), index, (int)row[7]) &&
-          setSafe((IntVector)vectors.get(8), index, (int)row[8])        &&
-          setSafe((IntVector)vectors.get(9), index, (int)row[9])        &&
-          setSafe((IntVector)vectors.get(10), index, (int)row[10]);
-    }
+    return typeFactory.createStructType(relTypes, fieldNames);
   }
 
+  public abstract RecordGenerator getRecordGenerator();
 
-  /**
-   * Layout for the VIEWS table.
-   */
-  static public class Views extends FixedTable {
-    static final String tableName = "VIEWS";
-    static final String[] fieldNames = {"TABLE_CATALOG", "TABLE_SHEMA", "TABLE_NAME", "VIEW_DEFINITION"};
-    static final MajorType[] fieldTypes = {VARCHAR,         VARCHAR,       VARCHAR,      VARCHAR};
-
-    Views() {
-      super(tableName, fieldNames, fieldTypes);
-    }
-
-    // Optional ...
-    public boolean writeRowToVectors(int index, Object[] row) {
-      return setSafe((VarCharVector)vectors.get(0), index, (String)row[0]) &&
-          setSafe((VarCharVector)vectors.get(1), index, (String)row[1])    &&
-          setSafe((VarCharVector)vectors.get(2), index, (String)row[2])    &&
-          setSafe((VarCharVector)vectors.get(3), index, (String)row[3]);
-    }
-  }
-
-
-  /**
-   * Layout for the CATALOGS table.
-   */
-  static public class Catalogs extends FixedTable {
-    static final String tableName = "CATALOGS";
-    static final String[] fieldNames = {"CATALOG_NAME", "CATALOG_DESCRIPTION", "CATALOG_CONNECT"};
-    static final MajorType[] fieldTypes = {VARCHAR,      VARCHAR,               VARCHAR};
+  /** Layout for the CATALOGS table. */
+  static public class Catalogs extends InfoSchemaTable {
+    private static final List<Field> fields = ImmutableList.of(
+        Field.create("CATALOG_NAME", VARCHAR),
+        Field.create("CATALOG_DESCRIPTION", VARCHAR),
+        Field.create("CATALOG_CONNECT", VARCHAR));
 
     Catalogs() {
-      super(tableName, fieldNames, fieldTypes);
+      super("CATALOGS", fields);
+    }
+
+    @Override
+    public RecordGenerator getRecordGenerator() {
+      return new RecordGenerator.Catalogs();
     }
   }
 
+  /** Layout for the SCHEMATA table. */
+  public static class Schemata extends InfoSchemaTable {
+    private static final List<Field> fields = ImmutableList.of(
+        Field.create("CATALOG_NAME", VARCHAR),
+        Field.create("SCHEMA_NAME", VARCHAR),
+        Field.create("SCHEMA_OWNER", VARCHAR),
+        Field.create("TYPE", VARCHAR));
 
+    public Schemata() {
+      super("SCHEMATA", fields);
+    }
+
+    @Override
+    public RecordGenerator getRecordGenerator() {
+      return new RecordGenerator.Schemata();
+    }
+  }
+
+  /** Layout for the TABLES table. */
+  public static class Tables extends InfoSchemaTable {
+    private static final List<Field> fields = ImmutableList.of(
+        Field.create("TABLE_CATALOG", VARCHAR),
+        Field.create("TABLE_SCHEMA", VARCHAR),
+        Field.create("TABLE_NAME", VARCHAR),
+        Field.create("TABLE_TYPE", VARCHAR));
+
+    public Tables() {
+      super("TABLES", fields);
+    }
+
+    @Override
+    public RecordGenerator getRecordGenerator() {
+      return new RecordGenerator.Tables();
+    }
+  }
+
+  /** Layout for the VIEWS table. */
+  static public class Views extends InfoSchemaTable {
+    private static final List<Field> fields = ImmutableList.of(
+        Field.create("TABLE_CATALOG", VARCHAR),
+        Field.create("TABLE_SCHEMA", VARCHAR),
+        Field.create("TABLE_NAME", VARCHAR),
+        Field.create("VIEW_DEFINITION", VARCHAR));
+
+    public Views() {
+      super("VIEWS", fields);
+    }
+
+    @Override
+    public RecordGenerator getRecordGenerator() {
+      return new RecordGenerator.Views();
+    }
+  }
+
+  /** Layout for the COLUMNS table. */
+  public static class Columns extends InfoSchemaTable {
+    private static final List<Field> fields = ImmutableList.of(
+        Field.create("TABLE_CATALOG", VARCHAR),
+        Field.create("TABLE_SCHEMA", VARCHAR),
+        Field.create("TABLE_NAME", VARCHAR),
+        Field.create("COLUMN_NAME", VARCHAR),
+        Field.create("ORDINAL_POSITION", INT),
+        Field.create("IS_NULLABLE", VARCHAR),
+        Field.create("DATA_TYPE", VARCHAR),
+        Field.create("CHARACTER_MAXIMUM_LENGTH", INT),
+        Field.create("NUMERIC_PRECISION_RADIX", INT),
+        Field.create("NUMERIC_SCALE", INT),
+        Field.create("NUMERIC_PRECISION", INT));
+
+    public Columns() {
+      super("COLUMNS", fields);
+    }
+
+    @Override
+    public RecordGenerator getRecordGenerator() {
+      return new RecordGenerator.Columns();
+    }
+  }
 }

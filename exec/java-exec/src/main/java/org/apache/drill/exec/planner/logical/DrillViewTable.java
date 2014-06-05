@@ -66,4 +66,8 @@ public class DrillViewTable implements TranslatableTable{
   public TableType getJdbcTableType() {
     return TableType.VIEW;
   }
+
+  public String getViewSql() {
+    return view.getSql();
+  }
 }

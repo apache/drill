@@ -30,13 +30,10 @@ import net.hydromatic.optiq.Table;
 import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
-import org.apache.drill.exec.planner.logical.DrillTable;
-import org.apache.drill.exec.rpc.user.DrillUser;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
-import org.apache.drill.exec.store.dfs.FileSystemConfig;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
