@@ -335,8 +335,8 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
     }
     
     public void get(int index, Nullable${minor.class}Holder holder){
-      holder.isSet = bits.getAccessor().get(index);
       values.getAccessor().get(index, holder);
+      holder.isSet = bits.getAccessor().get(index);
 
       <#if minor.class.startsWith("Decimal")>
       holder.scale = getField().getScale();
