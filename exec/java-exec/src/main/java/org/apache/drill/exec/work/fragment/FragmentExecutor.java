@@ -113,7 +113,7 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
       closed = true;
 
       context.close();
-    }catch(Exception ex){
+    }catch(AssertionError | Exception ex){
       logger.debug("Caught exception while running fragment", ex);
       internalFail(ex);
     }finally{
