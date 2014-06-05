@@ -31,6 +31,7 @@ public class TestProjectPushDown extends PlanTestBase {
       .getLogger(TestProjectPushDown.class);
 
   @Test
+  @Ignore
   public void testGroupBy() throws Exception {
     String expectedColNames = " \"columns\" : [ \"`marital_status`\" ]";
     testPhysicalPlan(
@@ -39,6 +40,7 @@ public class TestProjectPushDown extends PlanTestBase {
   }
 
   @Test
+  @Ignore
   public void testOrderBy() throws Exception {
     String expectedColNames = "\"columns\" : [ \"`employee_id`\", \"`full_name`\", \"`first_name`\", \"`last_name`\" ]";
     testPhysicalPlan("select employee_id , full_name, first_name , last_name "
@@ -47,6 +49,7 @@ public class TestProjectPushDown extends PlanTestBase {
   }
 
   @Test
+  @Ignore
   public void testExprInSelect() throws Exception {
     String expectedColNames = "\"columns\" : [ \"`employee_id`\", \"`full_name`\", \"`first_name`\", \"`last_name`\" ]";
     testPhysicalPlan(
@@ -56,6 +59,7 @@ public class TestProjectPushDown extends PlanTestBase {
   }
 
   @Test
+  @Ignore
   public void testExprInWhere() throws Exception {
     String expectedColNames = "\"columns\" : [ \"`employee_id`\", \"`full_name`\", \"`first_name`\", \"`last_name`\" ]";
     testPhysicalPlan(
