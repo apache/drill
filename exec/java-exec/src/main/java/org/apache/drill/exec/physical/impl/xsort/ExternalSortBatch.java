@@ -185,6 +185,8 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
       }
     }
 
+    long totalcount = 0;
+    
     try{
       outer: while (true) {
         Stopwatch watch = new Stopwatch();
@@ -218,12 +220,15 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
             }
           }
           int count = sv2.getCount();
-          assert sv2.getCount() > 0;
+          totalcount += count;
+          if (count == 0) {
+            break outer;
+          }
           sorter.setup(context, sv2, incoming);
           Stopwatch w = new Stopwatch();
           w.start();
           sorter.sort(sv2);
-//          logger.debug("Took {} us to sort {} records", w.elapsed(TimeUnit.MICROSECONDS), sv2.getCount());
+//          logger.debug("Took {} us to sort {} records", w.elapsed(TimeUnit.MICROSECONDS), count);
           RecordBatchData rbd = new RecordBatchData(incoming);
           if (incoming.getSchema().getSelectionVectorMode() == SelectionVectorMode.NONE) {
             rbd.setSv2(sv2);
@@ -246,7 +251,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
         }
       }
 
-      if (schema == null){
+      if (schema == null || totalcount == 0){
         // builder may be null at this point if the first incoming batch is empty
         return IterOutcome.NONE;
       }
