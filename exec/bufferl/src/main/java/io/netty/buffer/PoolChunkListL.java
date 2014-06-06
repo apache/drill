@@ -61,7 +61,7 @@ final class PoolChunkListL<T> {
      * @return
      */
     boolean allocate(PooledByteBufL<T> buf, int minRequested, int maxRequested) {
-    	
+
     	// If list is empty, then allocation fails
         if (head == null) {
             return false;
@@ -69,7 +69,7 @@ final class PoolChunkListL<T> {
 
         // Do for each chunk in the list
         for (PoolChunkL<T> cur = head;;) {
-        	
+
         	// If we successfully allocated from the chunk ...
             long handle = cur.allocate(minRequested, maxRequested);
             if (handle < 0) {
@@ -77,11 +77,11 @@ final class PoolChunkListL<T> {
                 if (cur == null) {
                     return false;
                 }
-                
+
             // ... then add the memory to the buffer container
             } else {
                 cur.initBuf(buf, handle, minRequested, maxRequested);
-                
+
                 // If usage changed, then move to next list
                 if (cur.usage() >= maxUsage) {
                     remove(cur);
@@ -92,17 +92,17 @@ final class PoolChunkListL<T> {
         }
     }
 
-    
+
     /**
      * Release a buffer back to the original chunk.
      * @param chunk
      * @param handle
      */
     void free(PoolChunkL<T> chunk, long handle) {
-    	
+
     	// Release buffer back to the original chunk
         chunk.free(handle);
-        
+
         // If usage changed, then move to different list
         if (chunk.usage() < minUsage) {
             remove(chunk);
@@ -114,7 +114,7 @@ final class PoolChunkListL<T> {
             }
         }
     }
-    
+
     /**
      * Shrink the buffer down to the specified size, freeing up unused memory.
      * @param chunk - chunk the buffer resides in
@@ -123,29 +123,30 @@ final class PoolChunkListL<T> {
      * @return a new handle to the smaller buffer
      */
     long trim(PoolChunkL<T> chunk, long handle, int size) {
-    	
-    	// Trim the buffer, possibly getting a new handle.
-    	handle = chunk.trim(handle,  size);
-    	if (handle == -1) return handle;
-    	
-    	// Move the chunk to a different list if usage changed significantly
-    	if (chunk.usage() < minUsage) {
-    		assert chunk.usage() > 0 && prevList != null;
-    		remove(chunk);
-    		prevList.add(chunk);
+    	synchronized(arena){
+        // Trim the buffer, possibly getting a new handle.
+        handle = chunk.trim(handle,  size);
+        if (handle == -1) return handle;
+
+        // Move the chunk to a different list if usage changed significantly
+        if (chunk.usage() < minUsage) {
+          assert chunk.usage() > 0 && prevList != null;
+          remove(chunk);
+          prevList.add(chunk);
+        }
+
+        // return new handle for the smaller buffer
+        return handle;
     	}
-    	
-    	// return new handle for the smaller buffer
-    	return handle;
     }
 
-    
+
     /**
      * Add a chunk to the current chunklist
      * @param chunk
      */
     void add(PoolChunkL<T> chunk) {
-    	
+
     	// If usage has change, then add to the neighboring list instead
     	int usage = chunk.usage();
         if (usage >= maxUsage) {
@@ -170,7 +171,7 @@ final class PoolChunkListL<T> {
         }
     }
 
-    
+
     /**
      * Remove a chunk from the current linked list of chunks
      * @param cur
