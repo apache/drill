@@ -17,35 +17,14 @@
  */
 package org.apache.drill.jdbc.test;
 
-import java.lang.Exception;
 import java.nio.file.Paths;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.Statement;
-import java.util.concurrent.TimeUnit;
 
-import org.apache.drill.common.util.TestTools;
-import org.apache.drill.exec.expr.fn.impl.DateUtility;
-import org.apache.drill.exec.store.hive.HiveTestDataGenerator;
 import org.apache.drill.jdbc.Driver;
-import org.apache.drill.jdbc.JdbcTest;
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
-import org.joda.time.format.DateTimeFormatterBuilder;
-import org.joda.time.format.DateTimeParser;
-import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Ignore;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TestRule;
-
-import com.google.common.base.Function;
-import com.google.common.base.Stopwatch;
 
 public class TestFunctionsQuery {
 
@@ -488,6 +467,7 @@ public class TestFunctionsQuery {
   }
 
   @Test
+  @Ignore
   public void testToTimeStamp() throws Exception {
     String query = "select to_timestamp(cast('800120400.12312' as decimal(38, 5))) as DEC38_TS, to_timestamp(200120400) as INT_TS " +
         "from cp.`employee.json` where employee_id < 2";
