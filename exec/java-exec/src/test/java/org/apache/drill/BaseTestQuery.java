@@ -20,6 +20,7 @@ package org.apache.drill;
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -55,6 +56,13 @@ public class BaseTestQuery extends ExecTest{
 
   private static final String ENABLE_FULL_CACHE = "drill.exec.test.use-full-cache";
 
+  @SuppressWarnings("serial")
+  private static final Properties TEST_CONFIGURATIONS = new Properties() {
+    {
+      put("drill.exec.sys.store.provider.local.write", "false");
+    }
+  };
+
   public final TestRule resetWatcher = new TestWatcher() {
     @Override
     protected void failed(Throwable e, Description description) {
@@ -80,7 +88,7 @@ public class BaseTestQuery extends ExecTest{
 
   @BeforeClass
   public static void openClient() throws Exception{
-    config = DrillConfig.create();
+    config = DrillConfig.create(TEST_CONFIGURATIONS);
     allocator = new TopLevelAllocator(config);
     if(config.hasPath(ENABLE_FULL_CACHE) && config.getBoolean(ENABLE_FULL_CACHE)){
       serviceSet = RemoteServiceSet.getServiceSetWithFullCache(config, allocator);

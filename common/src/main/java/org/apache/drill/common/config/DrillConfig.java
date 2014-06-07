@@ -22,6 +22,7 @@ import java.lang.management.RuntimeMXBean;
 import java.net.URL;
 import java.util.Collection;
 import java.util.List;
+import java.util.Properties;
 import java.util.Queue;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -53,7 +54,6 @@ public final class DrillConfig extends NestedConfig{
   @SuppressWarnings("unchecked")
   private volatile List<Queue<Object>> sinkQueues = new CopyOnWriteArrayList<Queue<Object>>(new Queue[1]);
 
-
   @SuppressWarnings("restriction")
   @VisibleForTesting
   public DrillConfig(Config config, boolean enableServer) {
@@ -82,8 +82,6 @@ public final class DrillConfig extends NestedConfig{
     this.startupArguments = ImmutableList.copyOf(bean.getInputArguments());
 
   };
-
-
 
   public List<String> getStartupArguments(){
     return startupArguments;
@@ -125,9 +123,16 @@ public final class DrillConfig extends NestedConfig{
     return create(overrideFileName, true);
   }
 
+  @VisibleForTesting
+  public static DrillConfig create(Properties testConfigurations) {
+    return create(null, testConfigurations, true);
+  }
 
   public static DrillConfig create(String overrideFileName, boolean enableServerConfigs) {
+    return create(overrideFileName, null, enableServerConfigs);
+  }
 
+  private static DrillConfig create(String overrideFileName, Properties overriderProps, boolean enableServerConfigs) {
     overrideFileName = overrideFileName == null ? CommonConstants.CONFIG_OVERRIDE : overrideFileName;
 
     // first we load defaults.
@@ -138,8 +143,12 @@ public final class DrillConfig extends NestedConfig{
       fallback = ConfigFactory.parseURL(url).withFallback(fallback);
     }
 
-    Config c = ConfigFactory.load(overrideFileName).withFallback(fallback).resolve();
-    return new DrillConfig(c, enableServerConfigs);
+    Config effectiveConfig = ConfigFactory.load(overrideFileName).withFallback(fallback);
+    if (overriderProps != null) {
+      effectiveConfig = ConfigFactory.parseProperties(overriderProps).withFallback(effectiveConfig);
+    }
+
+    return new DrillConfig(effectiveConfig.resolve(), enableServerConfigs);
   }
 
   public <T> Class<T> getClassAt(String location, Class<T> clazz) throws DrillConfigurationException{
@@ -170,8 +179,6 @@ public final class DrillConfig extends NestedConfig{
     }
   }
 
-
-
   public void setSinkQueues(int number, Queue<Object> queue){
     sinkQueues.set(number, queue);
   }
@@ -199,4 +206,5 @@ public final class DrillConfig extends NestedConfig{
   public static long getMaxDirectMemory(){
     return MAX_DIRECT_MEMORY;
   }
+
 }

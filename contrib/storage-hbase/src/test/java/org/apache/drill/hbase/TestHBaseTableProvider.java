@@ -96,6 +96,8 @@ public class TestHBaseTableProvider extends BaseHBaseTest {
 
   @AfterClass
   public static void tearDownTestHBaseTableProvider() {
-    provider.close();
+    if (provider != null) {
+      provider.close();
+    }
   }
 }
