@@ -40,7 +40,11 @@ public class ${className} {
   public static class ${toUnit}From${fromUnit} implements DrillSimpleFunc {
 
     @Param ${fromUnit}Holder in;
+    <#if toUnit == "Second">
+    @Output Float8Holder out;
+    <#else>
     @Output BigIntHolder out;
+    </#if>
     @Workspace org.joda.time.MutableDateTime dateTime;
 
     public void setup(RecordBatch incoming) {
@@ -56,6 +60,7 @@ public class ${className} {
 
     <#if toUnit == "Second">
       out.value = dateTime.getSecondOfMinute();
+      out.value += ((double) dateTime.getMillisOfSecond()) / 1000;
     <#elseif toUnit = "Minute">
       out.value = dateTime.getMinuteOfHour();
     <#elseif toUnit = "Hour">
@@ -76,7 +81,11 @@ public class ${className} {
   public static class ${toUnit}From${fromUnit} implements DrillSimpleFunc {
 
     @Param ${fromUnit}Holder in;
+    <#if toUnit == "Second">
+    @Output Float8Holder out;
+    <#else>
     @Output BigIntHolder out;
+    </#if>
 
     public void setup(RecordBatch incoming) { }
 
@@ -94,9 +103,7 @@ public class ${className} {
       int millis = in.milliSeconds % (org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis);
       out.value = millis / (org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis);
     <#elseif toUnit == "Second">
-      int millis = in.milliSeconds % (org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis);
-      millis = millis % (org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis);
-      out.value = millis / (org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis);
+      out.value = (double) in.milliSeconds / (org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis);
     </#if>
   <#elseif fromUnit == "IntervalDay">
     <#if toUnit == "Year" || toUnit == "Month">
@@ -109,9 +116,7 @@ public class ${className} {
       int millis = in.milliSeconds % (org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis);
       out.value = millis / (org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis);
     <#elseif toUnit == "Second">
-      int millis = in.milliSeconds % (org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis);
-      millis = millis % (org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis);
-      out.value = millis / (org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis);
+      out.value = (double) in.milliSeconds/ (org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis);
     </#if>
   <#else> <#-- IntervalYear type -->
     <#if toUnit == "Year">

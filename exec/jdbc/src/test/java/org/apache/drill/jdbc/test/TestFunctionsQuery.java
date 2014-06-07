@@ -498,4 +498,18 @@ public class TestFunctionsQuery {
             "LPAD_TRUNC=Sh; " +
             "RPAD_TRUNC=Sh\n");
   }
+
+  @Test
+  public void testExtractSecond() throws Exception {
+    String query = "select extract(second from date '2008-2-23') as DATE_EXT, extract(second from timestamp '2008-2-23 10:00:20.123') as TS_EXT, " +
+        "extract(second from time '10:20:30.303') as TM_EXT " +
+        "from cp.`employee.json` where employee_id = 1";
+
+    JdbcAssert.withNoDefaultSchema()
+        .sql(query)
+        .returns(
+            "DATE_EXT=0.0; " +
+            "TS_EXT=20.123; " +
+            "TM_EXT=30.303\n");
+  }
 }

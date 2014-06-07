@@ -29,7 +29,6 @@
             @id:3,
             child: 2,
             exprs: [
-              { ref: "extractSecond", expr: "extractSecond(castExp)" },
               { ref: "extractMinute", expr: "extractMinute(castExp)" },
               { ref: "extractHour", expr: "extractHour(castExp)" },
               { ref: "extractDay", expr: "extractDay(castExp)" },

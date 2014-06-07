@@ -47,32 +47,32 @@ public class TestExtractFunctions extends PopUnitTestBase {
 
   @Test
   public void testFromDate() throws Exception {
-    long expectedValues[][] = { {00, 00, 00, 02, 01, 1970}, {00, 00, 00, 28, 12, 2008}, {00, 00, 00, 27, 02, 2000} };
+    long expectedValues[][] = { {00, 00, 02, 01, 1970}, {00, 00, 28, 12, 2008}, {00, 00, 27, 02, 2000} };
     testFrom("date", "/test_simple_date.json", "stringdate", expectedValues);
   }
 
   @Test
   @Ignore // failing due to some issue in castTime(varchar)
   public void testFromTime() throws Exception {
-    long expectedValues[][] = { {33, 20, 10, 00, 00, 0000}, {00, 34, 11, 00, 00, 0000}, {00, 24, 14, 00, 00, 0000} };
+    long expectedValues[][] = { {20, 10, 00, 00, 0000}, {34, 11, 00, 00, 0000}, {24, 14, 00, 00, 0000} };
     testFrom("time", "/test_simple_time.json", "stringtime", expectedValues);
   }
 
   @Test
   public void testFromTimeStamp() throws Exception {
-    long expectedValues[][] = { {33, 20, 10, 02, 01, 1970}, {00, 34, 11, 28, 12, 2008}, {00, 24, 14, 27, 02, 2000} };
+    long expectedValues[][] = { {20, 10, 02, 01, 1970}, {34, 11, 28, 12, 2008}, {24, 14, 27, 02, 2000} };
     testFrom("timestamp", "/test_simple_date.json", "stringdate", expectedValues);
   }
 
   @Test
   public void testFromInterval() throws Exception {
     long expectedValues[][] = {
-      { 35, 20, 01, 01, 02, 02},
-      { 00, 00, 00, 00, 02, 02},
-      { 35, 20, 01, 00, 00, 00},
-      { 35, 20, 01, 01, 02, 02},
-      { 35, 00, 00, 00, 00, 00},
-      {-25,-39, 00, 01, 10, 01}
+      { 20, 01, 01, 02, 02},
+      { 00, 00, 00, 02, 02},
+      { 20, 01, 00, 00, 00},
+      { 20, 01, 01, 02, 02},
+      { 00, 00, 00, 00, 00},
+      { -39, 00, 01, 10, 01}
     };
     testFrom("interval", "/test_simple_interval.json", "stringinterval", expectedValues);
   }
@@ -80,12 +80,12 @@ public class TestExtractFunctions extends PopUnitTestBase {
   @Test
   public void testFromIntervalDay() throws Exception {
     long expectedValues[][] = {
-      { 35, 20, 01, 01, 00, 00},
-      { 00, 00, 00, 00, 00, 00},
-      { 35, 20, 01, 00, 00, 00},
-      { 35, 20, 01, 01, 00, 00},
-      { 35, 00, 00, 00, 00, 00},
-      {-25,-39, 00, 01, 00, 00}
+      {20, 01, 01, 00, 00},
+      {00, 00, 00, 00, 00},
+      {20, 01, 00, 00, 00},
+      {20, 01, 01, 00, 00},
+      {00, 00, 00, 00, 00},
+      {-39, 00, 01, 00, 00}
     };
     testFrom("intervalday", "/test_simple_interval.json", "stringinterval", expectedValues);
   }
@@ -93,12 +93,12 @@ public class TestExtractFunctions extends PopUnitTestBase {
   @Test
   public void testFromIntervalYear() throws Exception {
     long expectedValues[][] = {
-      { 00, 00, 00, 00, 02, 02},
-      { 00, 00, 00, 00, 02, 02},
-      { 00, 00, 00, 00, 00, 00},
-      { 00, 00, 00, 00, 02, 02},
-      { 00, 00, 00, 00, 00, 00},
-      { 00, 00, 00, 00, 10, 01}
+      {00, 00, 00, 02, 02},
+      {00, 00, 00, 02, 02},
+      {00, 00, 00, 00, 00},
+      {00, 00, 00, 02, 02},
+      {00, 00, 00, 00, 00},
+      {00, 00, 00, 10, 01}
     };
     testFrom("intervalyear", "/test_simple_interval.json", "stringinterval", expectedValues);
   }
