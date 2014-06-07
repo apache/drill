@@ -115,6 +115,7 @@ public class Wrapper {
 
   public void addAllocation(PhysicalOperator pop) {
     initialAllocation += pop.getInitialAllocation();
+    logger.debug("Incrementing initialAllocation by {} to {}. Pop: {}", pop.getInitialAllocation(), initialAllocation, pop);
     maxAllocation += pop.getMaxAllocation();
   }
 

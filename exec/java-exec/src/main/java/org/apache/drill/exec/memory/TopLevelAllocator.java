@@ -91,6 +91,7 @@ public class TopLevelAllocator implements BufferAllocator {
     if(!acct.reserve(initialReservation)){
       throw new OutOfMemoryException(String.format("You attempted to create a new child allocator with initial reservation %d but only %d bytes of memory were available.", initialReservation, acct.getCapacity() - acct.getAllocation()));
     };
+    logger.debug("New child allocator with initial reservation {}", initialReservation);
     ChildAllocator allocator = new ChildAllocator(handle, acct, maximumReservation, initialReservation);
     if(ENABLE_ACCOUNTING) children.add(allocator);
     return allocator;
@@ -150,6 +151,7 @@ public class TopLevelAllocator implements BufferAllocator {
       if(!childAcct.reserve(initialReservation)){
         throw new OutOfMemoryException(String.format("You attempted to create a new child allocator with initial reservation %d but only %d bytes of memory were available.", initialReservation, childAcct.getAvailable()));
       };
+      logger.debug("New child allocator with initial reservation {}", initialReservation);
       ChildAllocator newChildAllocator = new ChildAllocator(handle, childAcct, maximumReservation, initialReservation);
       this.children.put(newChildAllocator, Thread.currentThread().getStackTrace());
       return newChildAllocator;
