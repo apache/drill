@@ -76,6 +76,7 @@ public class ZKClusterCoordinator extends ClusterCoordinator {
       .connectString(connect)
       .build();
     curator.getConnectionStateListenable().addListener(new InitialConnectionListener());
+    curator.start();
     discovery = getDiscovery();
     serviceCache = discovery.
       serviceCacheBuilder()
@@ -89,7 +90,6 @@ public class ZKClusterCoordinator extends ClusterCoordinator {
 
   public void start(long millisToWait) throws Exception {
     logger.debug("Starting ZKClusterCoordination.");
-    curator.start();
     discovery.start();
     serviceCache.start();
     serviceCache.addListener(new ZKListener());
@@ -100,7 +100,6 @@ public class ZKClusterCoordinator extends ClusterCoordinator {
     }else{
       this.initialConnection.await();
     }
-
 
     updateEndpoints();
   }
