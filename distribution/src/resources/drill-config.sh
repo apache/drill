@@ -20,11 +20,16 @@
 #
 # Environment Variables:
 #
-#   JAVA_HOME        The java implementation to use.
+#   JAVA_HOME                  The java implementation to use.
 #
-#   DRILL_CLASSPATH  Extra Java CLASSPATH entries.
+#   DRILL_CLASSPATH            Extra Java CLASSPATH entries.
 #
-#   HADOOP_HOME      Hadoop home
+#   DRILL_CLASSPATH_PREFIX     Extra Java CLASSPATH entries that should
+#                              be prefixed to the system classpath.
+#
+#   HADOOP_HOME                Hadoop home
+#
+#   HBASE_HOME                 HBase home
 
 # resolve links - "${BASH_SOURCE-$0}" may be a softlink
 this="${BASH_SOURCE-$0}"
@@ -104,17 +109,38 @@ then
   export HBASE_CLASSPATH=$HBASE_CLASSPATH
 fi
 
-# Setup Drill classpath entries
-CP=$DRILL_HOME/jars/*:$DRILL_CLASSPATH
-CP=$DRILL_HOME/lib/*:$CP
-CP=$DRILL_HOME/contrib/*:$CP
+# Add Drill conf folder at the beginning of the classpath
+CP=$DRILL_CONF_DIR
+
+# Followed by any user specified override jars
+if [ "${DRILL_CLASSPATH_PREFIX}x" != "x" ]; then
+  CP=$CP:$DRILL_CLASSPATH_PREFIX
+fi
+
+# Next Drill core jars
+CP=$CP:$DRILL_HOME/jars/*
+
+# Followed by Drill override dependency jars
+CP=$CP:$DRILL_HOME/extlib/*
+
+# Followed by Hadoop's jar
 if [ "${HADOOP_CLASSPATH}x" != "x" ]; then
-  CP=$HADOOP_CLASSPATH:$CP
+  CP=$CP:$HADOOP_CLASSPATH
 fi
+
+# Followed by HBase' jar
 if [ "${HBASE_CLASSPATH}x" != "x" ]; then
-  CP=$HBASE_CLASSPATH:$CP
+  CP=$CP:$HBASE_CLASSPATH
 fi
-CP=$DRILL_CONF_DIR:$CP
+
+# Followed by Drill other dependency jars
+CP=$CP:$DRILL_HOME/lib/*
+CP=$CP:$DRILL_HOME/contrib/*
+
+# Finally any user specified 
+if [ "${DRILL_CLASSPATH}x" != "x" ]; then
+  CP=$CP:$DRILL_CLASSPATH
+fi
 
 # Newer versions of glibc use an arena memory allocator that causes virtual
 # memory usage to explode. Tune the variable down to prevent vmem explosion.
