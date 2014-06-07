@@ -34,6 +34,7 @@ import org.apache.drill.exec.store.sys.PStoreProvider;
 import org.apache.drill.exec.store.sys.PStoreRegistry;
 import org.apache.drill.exec.store.sys.local.LocalPStoreProvider;
 import org.apache.drill.exec.work.WorkManager;
+import org.apache.zookeeper.Environment;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ErrorHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -46,7 +47,11 @@ import com.google.common.io.Closeables;
  * Starts, tracks and stops all the required services for a Drillbit daemon to work.
  */
 public class Drillbit implements Closeable{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Drillbit.class);
+  static final org.slf4j.Logger logger;
+  static {
+    logger = org.slf4j.LoggerFactory.getLogger(Drillbit.class);
+    Environment.logEnv("Drillbit environment:.", logger);
+  }
 
   public static Drillbit start(StartupOptions options) throws DrillbitStartupException {
     return start(DrillConfig.create(options.getConfigLocation()));
