@@ -60,7 +60,9 @@ public abstract class FilterTemplate2 implements Filterer{
   }
   
   public void filterBatch(int recordCount){
-    outgoingSelectionVector.allocateNew(recordCount);
+    if (! outgoingSelectionVector.allocateNew(recordCount)) {
+      throw new UnsupportedOperationException("Unable to allocate filter batch");
+    }
     switch(svMode){
     case NONE:
       filterBatchNoSV(recordCount);
@@ -89,10 +91,9 @@ public abstract class FilterTemplate2 implements Filterer{
 
   private void filterBatchNoSV(int recordCount){
     int svIndex = 0;
-    for(char i =0; i < recordCount; i++){
-      
+    for(int i = 0; i < recordCount; i++){
       if(doEval(i, 0)){
-        outgoingSelectionVector.setIndex(svIndex, i);
+        outgoingSelectionVector.setIndex(svIndex, (char)i);
         svIndex++;
       }
     }
