@@ -25,6 +25,7 @@ import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.metrics.DrillMetrics;
 import org.apache.drill.exec.rpc.NamedThreadFactory;
 
 import com.codahale.metrics.MetricRegistry;
@@ -43,7 +44,7 @@ public class BootStrapContext implements Closeable{
     this.config = config;
     this.loop = new NioEventLoopGroup(config.getInt(ExecConstants.BIT_SERVER_RPC_THREADS), new NamedThreadFactory("BitServer-"));
     this.loop2 = new NioEventLoopGroup(config.getInt(ExecConstants.BIT_SERVER_RPC_THREADS), new NamedThreadFactory("BitClient-"));
-    this.metrics = new MetricRegistry();
+    this.metrics = DrillMetrics.getInstance();
     this.allocator = new TopLevelAllocator(config);
   }
 

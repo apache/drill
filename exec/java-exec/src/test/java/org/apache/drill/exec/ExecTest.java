@@ -17,9 +17,15 @@
  */
 package org.apache.drill.exec;
 
+import org.apache.drill.exec.metrics.DrillMetrics;
 import org.apache.drill.test.DrillTest;
+import org.junit.After;
 
 public class ExecTest extends DrillTest{
 
+  @After
+  public void clear(){
+    DrillMetrics.resetMetrics();
+  }
 
 }

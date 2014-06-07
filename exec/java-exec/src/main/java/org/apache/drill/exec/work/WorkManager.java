@@ -50,6 +50,8 @@ import org.apache.drill.exec.work.fragment.FragmentExecutor;
 import org.apache.drill.exec.work.fragment.FragmentManager;
 import org.apache.drill.exec.work.user.UserWorker;
 
+import com.codahale.metrics.Gauge;
+import com.codahale.metrics.MetricRegistry;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Queues;
 
@@ -92,6 +94,20 @@ public class WorkManager implements Closeable{
  //   executor = Executors.newFixedThreadPool(dContext.getConfig().getInt(ExecConstants.EXECUTOR_THREADS)
     executor = Executors.newCachedThreadPool(new NamedThreadFactory("WorkManager-"));
     eventThread.start();
+    dContext.getMetrics().register(MetricRegistry.name("drill.exec.work.running_fragments." + dContext.getEndpoint().getUserPort()),
+        new Gauge<Integer>() {
+            @Override
+            public Integer getValue() {
+                return runningFragments.size();
+            }
+        });
+    dContext.getMetrics().register(MetricRegistry.name("drill.exec.work.pendingTasks" + dContext.getEndpoint().getUserPort()),
+        new Gauge<Integer>() {
+            @Override
+            public Integer getValue() {
+                return pendingTasks.size();
+            }
+        });
   }
 
   public WorkEventBus getWorkBus(){

@@ -19,6 +19,8 @@ package org.apache.drill.exec.server;
 
 import java.io.Closeable;
 
+import javax.servlet.Servlet;
+
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.cache.DistributedCache;
@@ -41,6 +43,8 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.glassfish.jersey.servlet.ServletContainer;
 
+import com.codahale.metrics.servlets.MetricsServlet;
+import com.codahale.metrics.servlets.ThreadDumpServlet;
 import com.google.common.io.Closeables;
 
 /**
@@ -129,6 +133,9 @@ public class Drillbit implements Closeable{
 //    h.setInitParameter(ServerProperties.PROVIDER_PACKAGES, "org.apache.drill.exec.server");
     h.setInitOrder(1);
     context.addServlet(h, "/*");
+    context.addServlet(new ServletHolder(new MetricsServlet(this.context.getMetrics())), "/status/metrics");
+    context.addServlet(new ServletHolder(new ThreadDumpServlet()), "/status/threads");
+
     embeddedJetty.start();
 
     System.out.println("");
