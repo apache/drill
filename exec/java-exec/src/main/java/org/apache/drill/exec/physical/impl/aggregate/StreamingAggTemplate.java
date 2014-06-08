@@ -89,7 +89,8 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
   @Override
   public AggOutcome doWork() {
     try{ // outside loop to ensure that first is set to false after the first run.
-
+      outputCount = 0;
+      
       // if we're in the first state, allocate outgoing.
       if(first){
         allocateOutgoing();
