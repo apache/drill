@@ -23,7 +23,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.RawFragmentBatch;
-import org.apache.drill.exec.rpc.RemoteConnection;
 
 import com.google.common.collect.Queues;
 
@@ -32,22 +31,36 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
 
   private final LinkedBlockingDeque<RawFragmentBatch> buffer;
   private volatile boolean finished = false;
-  private int softlimit;
-  private int startlimit;
-  private AtomicBoolean overlimit = new AtomicBoolean(false);
+  private final int softlimit;
+  private final int startlimit;
+  private final AtomicBoolean overlimit = new AtomicBoolean(false);
+  private final ReadController readController;
+  private final boolean multiFragment;
 
-  public UnlimitedRawBatchBuffer(FragmentContext context) {
-    softlimit = context.getConfig().getInt(ExecConstants.INCOMING_BUFFER_SIZE);
-    startlimit = softlimit/2;
-    buffer = Queues.newLinkedBlockingDeque();
+  public UnlimitedRawBatchBuffer(FragmentContext context, ReadController readController, int fragmentCount) {
+    int bufferSizePerSocket = context.getConfig().getInt(ExecConstants.INCOMING_BUFFER_SIZE);
+
+    this.multiFragment = fragmentCount > 1;
+    this.readController = readController;
+    this.softlimit = bufferSizePerSocket * fragmentCount;
+    this.startlimit = Math.max(softlimit/2, 1);
+    this.buffer = Queues.newLinkedBlockingDeque();
   }
-  
+
+  private void setRead(int minorFragmentId, boolean setting){
+    if(multiFragment){
+      readController.setAutoRead(setting);
+    }else{
+      readController.setAutoRead(minorFragmentId, setting);
+    }
+  }
+
   @Override
   public void enqueue(RawFragmentBatch batch) {
     buffer.add(batch);
     if(buffer.size() == softlimit){
       overlimit.set(true);
-      batch.getConnection().setAutoRead(false);
+      setRead(batch.getHeader().getSendingMinorFragmentId(), false);
     }
   }
 
@@ -64,7 +77,6 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
     }
   }
 
-  
   @Override
   public void finished() {
     finished = true;
@@ -72,11 +84,11 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
 
   @Override
   public RawFragmentBatch getNext(){
-    
+
     RawFragmentBatch b = null;
-    
+
     b = buffer.poll();
-    
+
     // if we didn't get a buffer, block on waiting for buffer.
     if(b == null && !finished){
       try {
@@ -85,18 +97,19 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
         return null;
       }
     }
-    
+
     // if we are in the overlimit condition and aren't finished, check if we've passed the start limit.  If so, turn off the overlimit condition and set auto read to true (start reading from socket again).
     if(!finished && overlimit.get()){
       if(buffer.size() == startlimit){
         overlimit.set(false);
-        b.getConnection().setAutoRead(true);
+        setRead(b.getHeader().getSendingMinorFragmentId(), true);
+        readController.setAutoRead(true);
       }
     }
-    
+
     return b;
-    
+
   }
 
-  
+
 }

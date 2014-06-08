@@ -77,7 +77,7 @@ public class SpoolingRawBatchBuffer implements RawBatchBuffer {
   private boolean closed = false;
   private FragmentManager fragmentManager;
 
-  public SpoolingRawBatchBuffer(FragmentContext context) throws IOException, OutOfMemoryException {
+  public SpoolingRawBatchBuffer(FragmentContext context, ReadController readController, int fragmentCount) throws IOException, OutOfMemoryException {
     this.context = context;
     this.allocator = context.getNewChildAllocator(ALLOCATOR_INITIAL_RESERVATION, ALLOCATOR_MAX_RESERVATION);
     this.threshold = context.getConfig().getLong(ExecConstants.SPOOLING_BUFFER_MEMORY);
@@ -133,7 +133,7 @@ public class SpoolingRawBatchBuffer implements RawBatchBuffer {
     allocator.close();
   }
 
-  
+
   @Override
   public void finished() {
     finished = true;

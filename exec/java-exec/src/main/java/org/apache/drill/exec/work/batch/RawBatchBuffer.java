@@ -32,7 +32,7 @@ public interface RawBatchBuffer extends RawFragmentBatchProvider {
 
   /**
    * Add the next new raw fragment batch to the buffer.
-   * 
+   *
    * @param batch
    *          Batch to enqueue
    * @throws IOException

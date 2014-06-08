@@ -90,7 +90,7 @@ public class DrillJoinRule extends RelOptRule {
         }
         newJoinCondition = RexUtil.composeConjunction(builder, equijoinList, false);
       } else {
-        tracer.warning("Non-equijoins are only supported in the presence of an equijoin.");
+//        tracer.warning("Non-equijoins are only supported in the presence of an equijoin.");
         return;
       }
     }
