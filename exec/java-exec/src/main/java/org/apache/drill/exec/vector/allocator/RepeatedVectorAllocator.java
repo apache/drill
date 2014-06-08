@@ -33,4 +33,11 @@ class RepeatedVectorAllocator extends VectorAllocator{
   public void alloc(int recordCount){
     out.allocateNew(in.getByteCapacity(), in.getAccessor().getValueCount(), in.getAccessor().getValueCount());
   }
+
+  @Override
+  public String toString() {
+    return "RepeatedVectorAllocator [out=" + out + ", valueCapacity" + out.getValueCapacity() + ", bytesCapacity" + out.getByteCapacity() + "]";
+  }
+
+
 }

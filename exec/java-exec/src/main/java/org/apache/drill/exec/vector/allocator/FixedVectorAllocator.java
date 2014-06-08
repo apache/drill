@@ -21,7 +21,7 @@ import org.apache.drill.exec.vector.FixedWidthVector;
 
 public class FixedVectorAllocator extends VectorAllocator{
   FixedWidthVector out;
-  
+
   public FixedVectorAllocator(FixedWidthVector out) {
     super();
     this.out = out;
@@ -33,8 +33,8 @@ public class FixedVectorAllocator extends VectorAllocator{
 
   @Override
   public String toString() {
-    return "FixedVectorAllocator [out=" + out + "]";
+    return "FixedVectorAllocator [out=" + out + ", valueCapacity" + out.getValueCapacity() + "]";
   }
-  
-  
+
+
 }

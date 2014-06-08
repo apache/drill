@@ -66,6 +66,7 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
     for (VectorAllocator a : allocators) {
       if(EXTRA_DEBUG) logger.debug("Allocating {} with {} records.", a, 20000);
       a.alloc(20000);
+      if(EXTRA_DEBUG) logger.debug("Allocated {}", a);
     }
   }
 
