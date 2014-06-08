@@ -71,10 +71,11 @@ public class AssignmentCreator<T extends CompleteWork> {
 
     ArrayList<T> rowGroupList = new ArrayList<>(units);
     for (double cutoff : ASSIGNMENT_CUTOFFS) {
-      scanAndAssign(rowGroupList, cutoff, false);
+      scanAndAssign(rowGroupList, cutoff, false, false);
     }
-    scanAndAssign(rowGroupList, 0.0, true);
-    
+    scanAndAssign(rowGroupList, 0.0, true, false);
+    scanAndAssign(rowGroupList, 0.0, true, true);
+
     logger.debug("Took {} ms to apply assignments", watch.elapsed(TimeUnit.MILLISECONDS));
     Preconditions.checkState(rowGroupList.isEmpty(), "All readEntries should be assigned by now, but some are still unassigned");
     Preconditions.checkState(!units.isEmpty());
@@ -94,7 +95,7 @@ public class AssignmentCreator<T extends CompleteWork> {
    * @param assignAll
    *          if true, will assign even if no affinity
    */
-  private void scanAndAssign(List<T> workunits, double requiredPercentage, boolean assignAll) {
+  private void scanAndAssign(List<T> workunits, double requiredPercentage, boolean assignAllToEmpty, boolean assignAll) {
     Collections.sort(workunits);
     int fragmentPointer = 0;
     final boolean requireAffinity = requiredPercentage > 0;
@@ -112,6 +113,7 @@ public class AssignmentCreator<T extends CompleteWork> {
         boolean haveAffinity = endpointByteMap.isSet(currentEndpoint);
 
         if (assignAll
+            || (assignAllToEmpty && !mappings.containsKey(minorFragmentId))
             || (!endpointByteMap.isEmpty() && (!requireAffinity || haveAffinity)
                 && (!mappings.containsKey(minorFragmentId) || mappings.get(minorFragmentId).size() < maxAssignments) && (!requireAffinity || endpointByteMap
                 .get(currentEndpoint) >= endpointByteMap.getMaxBytes() * requiredPercentage))) {
