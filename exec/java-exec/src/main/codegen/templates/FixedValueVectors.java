@@ -115,8 +115,13 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
   public SerializedField getMetadata() {
     return getMetadataBuilder()
              .setValueCount(valueCount)
-             .setBufferLength(valueCount * ${type.width})
+             .setBufferLength(getBufferSize())
              .build();
+  }
+
+  public int getBufferSize() {
+    if(valueCount == 0) return 0;
+    return valueCount * ${type.width};
   }
 
   @Override
@@ -160,6 +165,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     int currentWriterIndex = data.writerIndex();
     int startPoint = startIndex * ${type.width};
     int sliceLength = length * ${type.width};
+    target.valueCount = length;
     target.data = this.data.slice(startPoint, sliceLength);
     target.data.writerIndex(sliceLength);
     target.data.retain();

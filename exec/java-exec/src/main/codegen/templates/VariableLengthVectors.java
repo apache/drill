@@ -154,7 +154,8 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     }
     target.data = this.data.slice(startPoint, sliceLength);
     target.data.retain();
-  }
+    target.getMutator().setValueCount(length);
+}
   
   protected void copyFrom(int fromIndex, int thisIndex, ${minor.class}Vector from){
     int start = from.offsetVector.getAccessor().get(fromIndex);

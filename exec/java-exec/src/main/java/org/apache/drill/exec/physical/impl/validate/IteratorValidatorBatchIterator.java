@@ -115,8 +115,12 @@ public class IteratorValidatorBatchIterator implements RecordBatch {
       if(schema.getFieldCount() == 0){
         throw new IllegalStateException ("Incoming batch has an empty schema. This is not allowed.");
       }
-     if(incoming.getRecordCount() > MAX_BATCH_SIZE){
-       throw new IllegalStateException (String.format("Incoming batch of %s has size %d, which is beyond the limit of %d",  incoming.getClass().getName(), incoming.getRecordCount(), MAX_BATCH_SIZE));
+      if(incoming.getRecordCount() > MAX_BATCH_SIZE){
+        throw new IllegalStateException (String.format("Incoming batch of %s has size %d, which is beyond the limit of %d",  incoming.getClass().getName(), incoming.getRecordCount(), MAX_BATCH_SIZE));
+      }
+      int valueCount = incoming.getRecordCount();
+      for (VectorWrapper vw : incoming) {
+        assert valueCount == vw.getValueVector().getAccessor().getValueCount() : "Count of values in each vector within this batch does not match.";
       }
     }
 
