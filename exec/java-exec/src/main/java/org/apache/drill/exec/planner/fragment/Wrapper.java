@@ -69,6 +69,11 @@ public class Wrapper {
     return stats;
   }
 
+  public void resetAllocation() {
+    initialAllocation = 0;
+    maxAllocation = 0;
+  }
+
   public void addEndpointAffinity(List<EndpointAffinity> affinities){
     Preconditions.checkState(!endpointsAssigned);
     for(EndpointAffinity ea : affinities){

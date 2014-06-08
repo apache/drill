@@ -129,6 +129,7 @@ public class SimpleParallelizer {
       // Create a minorFragment for each major fragment.
       for (int minorFragmentId = 0; minorFragmentId < wrapper.getWidth(); minorFragmentId++) {
         IndexedFragmentNode iNode = new IndexedFragmentNode(minorFragmentId, wrapper);
+        wrapper.resetAllocation();
         PhysicalOperator op = physicalOperatorRoot.accept(materializer, iNode);
         Preconditions.checkArgument(op instanceof FragmentRoot);
         FragmentRoot root = (FragmentRoot) op;
