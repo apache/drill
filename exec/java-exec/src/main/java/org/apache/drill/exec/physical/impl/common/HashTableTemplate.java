@@ -21,13 +21,8 @@ import java.util.ArrayList;
 
 import javax.inject.Named;
 
-import org.apache.drill.common.expression.ExpressionPosition;
-import org.apache.drill.common.expression.FieldReference;
-import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.common.logical.data.NamedExpression;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -41,9 +36,6 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.vector.IntVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.allocator.VectorAllocator;
-import org.apache.drill.exec.vector.BigIntVector;
-import org.apache.drill.exec.expr.holders.BigIntHolder;
-import org.apache.drill.exec.vector.allocator.FixedVectorAllocator;
 
 public abstract class HashTableTemplate implements HashTable {
 
@@ -96,8 +88,6 @@ public abstract class HashTableTemplate implements HashTable {
 
   private MaterializedField dummyIntField;
 
-  private int outputCount = 0;
-
   // This class encapsulates the links, keys and values for up to BATCH_SIZE
   // *unique* records. Thus, suppose there are N incoming record batches, each
   // of size BATCH_SIZE..but they have M unique keys altogether, the number of
@@ -113,7 +103,8 @@ public abstract class HashTableTemplate implements HashTable {
     // Array of hash values - this is useful when resizing the hash table
     private IntVector hashValues;
 
-    int maxOccupiedIdx = -1;
+    private int maxOccupiedIdx = -1;
+    private int batchOutputCount = 0;
 
     private BatchHolder(int idx) {
 
@@ -269,16 +260,16 @@ public abstract class HashTableTemplate implements HashTable {
       */
 
       for (int i = 0; i <= maxOccupiedIdx; i++) {
-        if (outputRecordKeys(i, outputCount) ) {
-          if (EXTRA_DEBUG) logger.debug("Outputting keys to {}", outputCount) ;
+        if (outputRecordKeys(i, batchOutputCount) ) {
+          if (EXTRA_DEBUG) logger.debug("Outputting keys to output index: {}", batchOutputCount) ;
 
           // debugging
           // holder.value = vv0.getAccessor().get(i);
           // if (holder.value == 100018 || holder.value == 100021) {
-          //  logger.debug("Outputting key = {} at index - {} to outgoing index = {}.", holder.value, i, outputCount);
+          //  logger.debug("Outputting key = {} at index - {} to outgoing index = {}.", holder.value, i, batchOutputCount);
           // }
 
-          outputCount++;
+          batchOutputCount++;
         } else {
           return false;
         }

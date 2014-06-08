@@ -74,6 +74,7 @@ public abstract class HashAggTemplate implements HashAggregator {
   private int outputCount = 0;
   private int numGroupedRecords = 0;
   private int outBatchIndex = 0;
+  private int lastBatchOutputCount = 0;
   private RecordBatch incoming;
   private BatchSchema schema;
   private RecordBatch outgoing;
@@ -97,8 +98,8 @@ public abstract class HashAggTemplate implements HashAggregator {
   public class BatchHolder {
 
     private VectorContainer aggrValuesContainer; // container for aggr values (workspace variables)
-    int maxOccupiedIdx = -1;
-    int batchOutputCount = 0;
+    private int maxOccupiedIdx = -1;
+    private int batchOutputCount = 0;
 
     private BatchHolder() {
 
@@ -130,7 +131,7 @@ public abstract class HashAggTemplate implements HashAggregator {
     private boolean outputValues() {
       for (int i = 0; i <= maxOccupiedIdx; i++) {
         if (outputRecordValues(i, batchOutputCount) ) {
-          if (EXTRA_DEBUG_2) logger.debug("Outputting values to batch index: {} output index: {}", batchOutputCount) ;
+          if (EXTRA_DEBUG_2) logger.debug("Outputting values to output index: {}", batchOutputCount) ;
           batchOutputCount++;
         } else {
           return false;
@@ -275,18 +276,10 @@ public abstract class HashAggTemplate implements HashAggregator {
               
               buildComplete = true;
               
-              // outputKeysAndValues() ;
-
               // output the first batch; remaining batches will be output 
               // in response to each next() call by a downstream operator
               
-              // outputKeysAndValues(outBatchIndex);
               outputCurrentBatch();
-
-              //if (isLastBatchOutput()) {
-                // cleanup my internal state since there is nothing more to return
-              //  this.cleanup();
-              // }
               
               // cleanup incoming batch since output of aggregation does not need
               // any references to the incoming
@@ -332,8 +325,8 @@ public abstract class HashAggTemplate implements HashAggregator {
 
   @Override
   public int getOutputCount() {
-    return outputCount;
-    // return batchHolders.get(outBatchIndex).getOutputCount();
+    // return outputCount;
+    return lastBatchOutputCount;
   }
 
   @Override
@@ -394,29 +387,6 @@ public abstract class HashAggTemplate implements HashAggregator {
 
     bh.setup();
   }
-
-  /*
-  private boolean outputKeysAndValues() {
-
-    allocateOutgoing();
-
-    int batchIdx = 0;
-    for (BatchHolder bh : batchHolders) {
-      if (! this.htable.outputKeys(batchIdx++)) {
-        return false;
-      }
-    }
-
-    for (BatchHolder bh : batchHolders) {
-      if (! bh.outputValues() ) {
-        return false;
-      }
-    }
-    
-    allFlushed = true ;
-    return true;
-  }
-*/
   
   // output the keys and values for a particular batch holder
   private boolean outputKeysAndValues(int batchIdx) {
@@ -455,8 +425,9 @@ public abstract class HashAggTemplate implements HashAggregator {
     
     allocateOutgoing(batchOutputRecords);
     
-    if (this.htable.outputKeys(outBatchIndex) 
-        && batchHolders.get(outBatchIndex).outputValues()) {
+    boolean outputKeysStatus = this.htable.outputKeys(outBatchIndex) ;
+    boolean outputValuesStatus = batchHolders.get(outBatchIndex).outputValues(); 
+    if (outputKeysStatus && outputValuesStatus) {
       
       // set the value count for outgoing batch value vectors
       for(VectorWrapper<?> v : outgoing) {
@@ -472,7 +443,8 @@ public abstract class HashAggTemplate implements HashAggregator {
       }
       
       logger.debug("HashAggregate: Output current batch index {} with {} records.", outBatchIndex, batchOutputRecords);
-      
+
+      lastBatchOutputCount = batchOutputRecords;
       outBatchIndex++;
       if (outBatchIndex == batchHolders.size()) {
         allFlushed = true;
@@ -483,6 +455,8 @@ public abstract class HashAggTemplate implements HashAggregator {
         this.cleanup();
       }
     } else {
+      if (!outputKeysStatus) context.fail(new Exception("Failed to output keys for current batch !"));
+      if (!outputValuesStatus) context.fail(new Exception("Failed to output values for current batch !"));
       this.outcome = IterOutcome.STOP;
     }
     
