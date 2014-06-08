@@ -19,11 +19,15 @@ package org.apache.drill.exec.store.parquet;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.util.DecimalUtility;
+import org.apache.drill.exec.expr.holders.DateHolder;
 import org.apache.drill.exec.expr.holders.Decimal28SparseHolder;
 import org.apache.drill.exec.expr.holders.Decimal38SparseHolder;
+import org.apache.drill.exec.store.ParquetOutputRecordWriter;
+import org.apache.drill.exec.vector.DateVector;
 import org.apache.drill.exec.vector.Decimal28SparseVector;
 import org.apache.drill.exec.vector.Decimal38SparseVector;
 import org.apache.drill.exec.vector.ValueVector;
+import org.joda.time.DateTimeUtils;
 import parquet.column.ColumnDescriptor;
 import parquet.format.ConvertedType;
 import parquet.format.SchemaElement;
@@ -90,6 +94,24 @@ class FixedByteAlignedReader extends ColumnReader {
      * @param index the index of the ValueVector
      */
     abstract void addNext(int start, int index);
+  }
+
+  public static class DateReader extends ConvertedReader {
+
+    DateVector dateVector;
+
+    DateReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
+                    boolean fixedLength, ValueVector v, SchemaElement schemaElement) throws ExecutionSetupException {
+      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+      dateVector = (DateVector) v;
+    }
+
+    @Override
+    void addNext(int start, int index) {
+      dateVector.getMutator().set(index, DateTimeUtils.fromJulianDay(
+          NullableFixedByteAlignedReader.NullableDateReader.readIntLittleEndian(bytes, start)
+              - ParquetOutputRecordWriter.JULIAN_DAY_EPOC - 0.5));
+    }
   }
 
   public static class Decimal28Reader extends ConvertedReader {

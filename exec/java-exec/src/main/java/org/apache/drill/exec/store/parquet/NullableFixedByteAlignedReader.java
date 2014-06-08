@@ -21,10 +21,14 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.util.DecimalUtility;
 import org.apache.drill.exec.expr.holders.NullableDecimal28SparseHolder;
 import org.apache.drill.exec.expr.holders.NullableDecimal38SparseHolder;
+import org.apache.drill.exec.store.ParquetOutputRecordWriter;
+import org.apache.drill.exec.vector.NullableDateVector;
 import org.apache.drill.exec.vector.NullableDecimal28SparseVector;
 import org.apache.drill.exec.vector.NullableDecimal38SparseVector;
 import org.apache.drill.exec.vector.ValueVector;
 
+import org.joda.time.DateTimeUtils;
+import parquet.bytes.BytesUtils;
 import parquet.column.ColumnDescriptor;
 import parquet.format.ConvertedType;
 import parquet.format.SchemaElement;
@@ -84,6 +88,32 @@ class NullableFixedByteAlignedReader extends NullableColumnReader {
     }
 
     abstract void addNext(int start, int index);
+  }
+
+  public static class NullableDateReader extends NullableConvertedReader {
+
+    NullableDateVector dateVector;
+
+    NullableDateReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
+               boolean fixedLength, ValueVector v, SchemaElement schemaElement) throws ExecutionSetupException {
+      super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+      dateVector = (NullableDateVector) v;
+    }
+
+    @Override
+    void addNext(int start, int index) {
+      dateVector.getMutator().set(index, DateTimeUtils.fromJulianDay(readIntLittleEndian(bytes, start) - ParquetOutputRecordWriter.JULIAN_DAY_EPOC - 0.5));
+    }
+
+    // copied out of parquet library, didn't want to deal with the uneeded throws statement they had declared
+    public static int readIntLittleEndian(byte[] in, int offset) {
+      int ch4 = in[offset] & 0xff;
+      int ch3 = in[offset + 1] & 0xff;
+      int ch2 = in[offset + 2] & 0xff;
+      int ch1 = in[offset + 3] & 0xff;
+      return ((ch1 << 24) + (ch2 << 16) + (ch3 << 8) + (ch4 << 0));
+    }
+
   }
 
   public static class NullableDecimal28Reader extends NullableConvertedReader {

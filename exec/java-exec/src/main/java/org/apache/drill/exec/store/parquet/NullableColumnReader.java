@@ -74,8 +74,7 @@ abstract class NullableColumnReader<V extends ValueVector> extends ColumnReader<
         lastValueWasNull = true;
         nullsFound = 0;
         if (currentValueIndexInVector == recordsToReadInThisPass
-            || currentValueIndexInVector >= valueVec.getValueCapacity()
-            || pageReadStatus.readPosInBytes >= pageReadStatus.byteLength){
+            || currentValueIndexInVector >= valueVec.getValueCapacity()) {
           break;
         }
         while(currentValueIndexInVector < recordsToReadInThisPass

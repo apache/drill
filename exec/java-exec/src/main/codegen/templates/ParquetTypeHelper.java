@@ -56,6 +56,7 @@ public class ParquetTypeHelper {
             minor.class == "Time" ||
             minor.class == "IntervalYear" ||
             minor.class == "Decimal9" ||
+            minor.class == "Date" ||
             minor.class == "UInt4">
                     typeMap.put(MinorType.${minor.class?upper_case}, PrimitiveTypeName.INT32);
     <#elseif
@@ -65,7 +66,6 @@ public class ParquetTypeHelper {
             minor.class == "BigInt" ||
             minor.class == "Decimal18" ||
             minor.class == "TimeStamp" ||
-            minor.class == "Date" ||
             minor.class == "UInt8">
                     typeMap.put(MinorType.${minor.class?upper_case}, PrimitiveTypeName.INT64);
     <#elseif

@@ -83,6 +83,27 @@ public class TestParquetWriter extends BaseTestQuery {
   }
 
   @Test
+  public void testTPCHReadWrite1_date_convertedType() throws Exception {
+    String selection = "L_ORDERKEY, L_PARTKEY, L_SUPPKEY, L_LINENUMBER, L_QUANTITY, L_EXTENDEDPRICE, L_DISCOUNT, L_TAX, " +
+        "L_RETURNFLAG, L_LINESTATUS, L_SHIPDATE, cast(L_COMMITDATE as DATE) as COMMITDATE, cast(L_RECEIPTDATE as DATE) AS RECEIPTDATE, L_SHIPINSTRUCT, L_SHIPMODE, L_COMMENT";
+    String validationSelection = "L_ORDERKEY, L_PARTKEY, L_SUPPKEY, L_LINENUMBER, L_QUANTITY, L_EXTENDEDPRICE, L_DISCOUNT, L_TAX, " +
+        "L_RETURNFLAG, L_LINESTATUS, L_SHIPDATE,COMMITDATE ,RECEIPTDATE, L_SHIPINSTRUCT, L_SHIPMODE, L_COMMENT";
+    String inputTable = "cp.`tpch/lineitem.parquet`";
+    runTestAndValidate(selection, validationSelection, inputTable, "lineitem_parquet");
+  }
+
+  // TODO file a JIRA for running this query with the projected column names the same as the originals, it failed with a deadbuf
+  // on the client, it appeared that the projection was sending batches out with a record count but a deadbuf
+  /*
+  String selection = "L_ORDERKEY, L_PARTKEY, L_SUPPKEY, L_LINENUMBER, L_QUANTITY, L_EXTENDEDPRICE, L_DISCOUNT, L_TAX, " +
+      "L_RETURNFLAG, L_LINESTATUS, L_SHIPDATE, cast(L_COMMITDATE as DATE) as L_COMMITDATE, cast(L_RECEIPTDATE as DATE) AS L_RECEIPTDATE, L_SHIPINSTRUCT, L_SHIPMODE, L_COMMENT";
+  String validationSelection = "L_ORDERKEY, L_PARTKEY, L_SUPPKEY, L_LINENUMBER, L_QUANTITY, L_EXTENDEDPRICE, L_DISCOUNT, L_TAX, " +
+      "L_RETURNFLAG, L_LINESTATUS, L_SHIPDATE,COMMITDATE ,RECEIPTDATE, L_SHIPINSTRUCT, L_SHIPMODE, L_COMMENT";
+      */
+  // this is rather odd, I can select the data out fo parquet and project it to cast the date fields
+  // this stores all of the data correctly, but when I got to read it out again with the query that created it (with redudant casts I beleive) it has
+  // everything but the cast date columns as nulls
+  @Test
   public void testTPCHReadWrite2() throws Exception {
     String inputTable = "cp.`tpch/customer.parquet`";
     runTestAndValidate("*", "*", inputTable, "customer_parquet");
@@ -152,7 +173,6 @@ public class TestParquetWriter extends BaseTestQuery {
 
 
   @Test
-  @Ignore //enable once Date is enabled
   public void testDate() throws Exception {
     String selection = "cast(hire_date as DATE) as hire_date";
     String validateSelection = "hire_date";

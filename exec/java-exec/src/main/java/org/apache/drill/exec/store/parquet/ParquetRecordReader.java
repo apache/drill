@@ -321,8 +321,9 @@ public class ParquetRecordReader implements RecordReader {
         } else if (length <= 16) {
           columnStatuses.add(new Decimal38Reader(this, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement));
         }
-      }
-      else{
+      } else if (columnChunkMetaData.getType() == PrimitiveTypeName.INT32 && convertedType == ConvertedType.DATE){
+        columnStatuses.add(new FixedByteAlignedReader.DateReader(this, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement));
+      } else{
         if (columnChunkMetaData.getEncodings().contains(Encoding.PLAIN_DICTIONARY)) {
           columnStatuses.add(new ParquetFixedWidthDictionaryReader(this, allocateSize, descriptor, columnChunkMetaData,
               fixedLength, v, schemaElement));
@@ -337,6 +338,8 @@ public class ParquetRecordReader implements RecordReader {
       if (columnChunkMetaData.getType() == PrimitiveType.PrimitiveTypeName.BOOLEAN){
         columnStatuses.add(new NullableBitReader(this, allocateSize, descriptor, columnChunkMetaData,
             fixedLength, v, schemaElement));
+      } else if (columnChunkMetaData.getType() == PrimitiveTypeName.INT32 && convertedType == ConvertedType.DATE){
+        columnStatuses.add(new NullableFixedByteAlignedReader.NullableDateReader(this, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement));
       } else if (columnChunkMetaData.getType() == PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY && convertedType == ConvertedType.DECIMAL){
         int length = schemaElement.type_length;
         if (length <= 12) {
@@ -411,6 +414,7 @@ public class ParquetRecordReader implements RecordReader {
     return toMajorType(primitiveTypeName, 0, mode, schemaElement);
   }
 
+  // TODO - move this into ParquetTypeHelper and use code generation to create the list
   static TypeProtos.MajorType toMajorType(PrimitiveType.PrimitiveTypeName primitiveTypeName, int length,
                                                TypeProtos.DataMode mode, SchemaElement schemaElement) {
     ConvertedType convertedType = schemaElement.getConverted_type();

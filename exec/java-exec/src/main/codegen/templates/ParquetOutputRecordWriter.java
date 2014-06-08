@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+import org.joda.time.DateTimeUtils;
 import parquet.io.api.Binary;
 
 import java.lang.Override;
@@ -38,6 +39,14 @@ import parquet.io.api.RecordConsumer;
 import parquet.schema.MessageType;
 import parquet.io.api.Binary;
 import io.netty.buffer.ByteBuf;
+import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.record.BatchSchema;
+import org.apache.drill.exec.record.MaterializedField;
+
+
+import org.apache.drill.common.types.TypeProtos;
+
+import org.joda.time.DateTimeUtils;
 
 import java.io.IOException;
 import java.lang.UnsupportedOperationException;
@@ -57,6 +66,7 @@ public abstract class ParquetOutputRecordWriter implements RecordWriter {
 
   private RecordConsumer consumer;
   private MessageType schema;
+  public static final long JULIAN_DAY_EPOC = DateTimeUtils.toJulianDayNumber(0);
 
   public void setUp(MessageType schema, RecordConsumer consumer) {
     this.schema = schema;
@@ -106,7 +116,6 @@ public abstract class ParquetOutputRecordWriter implements RecordWriter {
         minor.class == "BigInt" ||
         minor.class == "Decimal18" ||
         minor.class == "TimeStamp" ||
-        minor.class == "Date" ||
         minor.class == "UInt8">
       <#if mode.prefix == "Repeated" >
               consumer.addLong(valueHolder.vector.getAccessor().get(i));
@@ -115,6 +124,15 @@ public abstract class ParquetOutputRecordWriter implements RecordWriter {
     consumer.addLong(valueHolder.value);
     consumer.endField(schema.getFieldName(fieldId), fieldId);
       </#if>
+  <#elseif minor.class == "Date">
+    <#if mode.prefix == "Repeated" >
+      consumer.addInteger((int) (DateTimeUtils.toJulianDayNumber(valueHolder.vector.getAccessor().get(i)) + JULIAN_DAY_EPOC));
+    <#else>
+      consumer.startField(schema.getFieldName(fieldId), fieldId);
+      // convert from internal Drill date format to Julian Day centered around Unix Epoc
+      consumer.addInteger((int) (DateTimeUtils.toJulianDayNumber(valueHolder.value) + JULIAN_DAY_EPOC));
+      consumer.endField(schema.getFieldName(fieldId), fieldId);
+    </#if>
   <#elseif
         minor.class == "Float8">
       <#if mode.prefix == "Repeated" >
@@ -139,6 +157,9 @@ public abstract class ParquetOutputRecordWriter implements RecordWriter {
       <#if mode.prefix == "Repeated" >
       <#else>
       consumer.startField(schema.getFieldName(fieldId), fieldId);
+      ${minor.class}Vector tempVec = new ${minor.class}Vector(MaterializedField.create("", TypeProtos.MajorType.getDefaultInstance()), new TopLevelAllocator());
+      tempVec.allocateNew(10);
+      tempVec.getMutator().setSafe(0, valueHolder);
       byte[] bytes = DecimalUtility.getBigDecimalFromSparse(
               valueHolder.buffer, valueHolder.start, ${minor.class}Holder.nDecimalDigits, valueHolder.scale).unscaledValue().toByteArray();
       byte[] output = new byte[ParquetTypeHelper.getLengthForMinorType(MinorType.${minor.class?upper_case})];
