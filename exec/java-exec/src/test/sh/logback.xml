@@ -16,26 +16,26 @@
  limitations under the License.
 -->
 <configuration>
-	<appender name="SOCKET"
-		class="de.huxhorn.lilith.logback.appender.ClassicMultiplexSocketAppender">
-		<Compressing>true</Compressing>
-		<ReconnectionDelay>10000</ReconnectionDelay>
-		<IncludeCallerData>true</IncludeCallerData>
-		<RemoteHosts>localhost</RemoteHosts>
-	</appender>
+  <appender name="SOCKET"
+    class="de.huxhorn.lilith.logback.appender.ClassicMultiplexSocketAppender">
+    <Compressing>true</Compressing>
+    <ReconnectionDelay>10000</ReconnectionDelay>
+    <IncludeCallerData>true</IncludeCallerData>
+    <RemoteHosts>${LILITH_HOSTNAME:-localhost}</RemoteHosts>
+  </appender>
 
-	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-		<encoder>
-			<pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n
-			</pattern>
-		</encoder>
-	</appender>
+  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n
+      </pattern>
+    </encoder>
+  </appender>
 
-	<logger name="org.apache.drill" additivity="false">
-		<level value="info" />
+  <logger name="org.apache.drill" additivity="false">
+    <level value="info" />
     <appender-ref ref="STDOUT" />
 <!--     <appender-ref ref="STDOUT" /> -->
-	</logger>
+  </logger>
   
   <logger name="org.apache.drill" additivity="false">
     <level value="debug" />
@@ -43,9 +43,9 @@
 <!--     <appender-ref ref="STDOUT" /> -->
   </logger>
 
-	<root>
-		<level value="error" />
-		<appender-ref ref="STDOUT" />
-	</root>  
+  <root>
+    <level value="error" />
+    <appender-ref ref="STDOUT" />
+  </root>  
 
 </configuration>

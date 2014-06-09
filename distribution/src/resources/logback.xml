@@ -21,7 +21,7 @@
     <Compressing>true</Compressing>
     <ReconnectionDelay>10000</ReconnectionDelay>
     <IncludeCallerData>true</IncludeCallerData>
-    <RemoteHosts>localhost</RemoteHosts>
+    <RemoteHosts>${LILITH_HOSTNAME:-localhost}</RemoteHosts>
   </appender>
 
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">

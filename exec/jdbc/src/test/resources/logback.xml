@@ -18,10 +18,10 @@
 <configuration>
 
   <appender name="SOCKET" class="de.huxhorn.lilith.logback.appender.ClassicMultiplexSocketAppender">
-    <Compressing>true</Compressing> 
+    <Compressing>true</Compressing>
     <ReconnectionDelay>10000</ReconnectionDelay>
     <IncludeCallerData>true</IncludeCallerData>
-    <RemoteHosts>localhost</RemoteHosts>
+    <RemoteHosts>${LILITH_HOSTNAME:-localhost}</RemoteHosts>
   </appender>
 
  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
@@ -32,7 +32,7 @@
     </encoder>
     <level value="warn" />
   </appender>
-  
+
   <logger name="org.apache.drill" additivity="false">
     <level value="debug" />
     <appender-ref ref="SOCKET" />
