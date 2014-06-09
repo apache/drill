@@ -129,7 +129,7 @@ public class TestMetadataDDL extends TestJdbcQuery {
 
   @Test
   public void testDescribeTable() throws Exception{
-    JdbcAssert.withNoDefaultSchema()
+    JdbcAssert.withFull("INFORMATION_SCHEMA")
         .sql("DESCRIBE CATALOGS")
         .returns(
             "COLUMN_NAME=CATALOG_NAME; DATA_TYPE=VARCHAR; IS_NULLABLE=NO\n"+
@@ -146,6 +146,47 @@ public class TestMetadataDDL extends TestJdbcQuery {
             "COLUMN_NAME=TABLE_SCHEMA; DATA_TYPE=VARCHAR; IS_NULLABLE=NO\n"+
             "COLUMN_NAME=TABLE_NAME; DATA_TYPE=VARCHAR; IS_NULLABLE=NO\n"+
             "COLUMN_NAME=TABLE_TYPE; DATA_TYPE=VARCHAR; IS_NULLABLE=NO\n");
+  }
+
+  @Test
+  public void testDescribeSameTableInMultipleSchemas() throws Exception{
+    JdbcAssert.withNoDefaultSchema().withConnection(new Function<Connection, Void>() {
+      public Void apply(Connection connection) {
+        try {
+          Statement statement = connection.createStatement();
+          statement.executeQuery("USE dfs.tmp").close();
+
+          // INFORMATION_SCHEMA already has a table named "TABLES". Now create a table with same name in "dfs.tmp" schema
+          statement.executeQuery("CREATE OR REPLACE VIEW `TABLES` AS SELECT key FROM hive.kv").close();
+
+          // Test describe of `TABLES` with no schema qualifier
+          ResultSet resultSet = statement.executeQuery("DESCRIBE `TABLES`");
+          String result = JdbcAssert.toString(resultSet).trim();
+          resultSet.close();
+          String expected = "COLUMN_NAME=key; DATA_TYPE=INTEGER; IS_NULLABLE=NO";
+          assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected), expected.equals(result));
+
+          // Test describe of `TABLES` with a schema qualifier which is not in default schema
+          resultSet = statement.executeQuery("DESCRIBE INFORMATION_SCHEMA.`TABLES`");
+          result = JdbcAssert.toString(resultSet).trim();
+          resultSet.close();
+          expected =
+              "COLUMN_NAME=TABLE_CATALOG; DATA_TYPE=VARCHAR; IS_NULLABLE=NO\n" +
+              "COLUMN_NAME=TABLE_SCHEMA; DATA_TYPE=VARCHAR; IS_NULLABLE=NO\n" +
+              "COLUMN_NAME=TABLE_NAME; DATA_TYPE=VARCHAR; IS_NULLABLE=NO\n" +
+              "COLUMN_NAME=TABLE_TYPE; DATA_TYPE=VARCHAR; IS_NULLABLE=NO";
+          assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected), expected.equals(result));
+
+          // drop created view
+          statement.executeQuery("DROP VIEW `TABLES`").close();
+
+          statement.close();
+          return null;
+        } catch (Exception e) {
+          throw new RuntimeException(e);
+        }
+      }
+    });
   }
 
   @Test

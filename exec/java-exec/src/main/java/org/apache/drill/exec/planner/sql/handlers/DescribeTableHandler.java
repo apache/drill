@@ -19,11 +19,13 @@
 package org.apache.drill.exec.planner.sql.handlers;
 
 import com.google.common.collect.ImmutableList;
+import net.hydromatic.optiq.SchemaPlus;
 import net.hydromatic.optiq.tools.Planner;
 import net.hydromatic.optiq.tools.RelConversionException;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.planner.sql.parser.DrillParserUtil;
 import org.apache.drill.exec.planner.sql.parser.SqlDescribeTable;
+import org.apache.drill.exec.store.AbstractSchema;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.parser.SqlParserPos;
@@ -39,50 +41,61 @@ public class DescribeTableHandler extends DefaultSqlHandler {
 
   /** Rewrite the parse tree as SELECT ... FROM INFORMATION_SCHEMA.COLUMNS ... */
   @Override
-  public SqlNode rewrite(SqlNode sqlNode) throws RelConversionException{
+  public SqlNode rewrite(SqlNode sqlNode) throws RelConversionException {
     SqlDescribeTable node = unwrap(sqlNode, SqlDescribeTable.class);
 
-    List<SqlNode> selectList = ImmutableList.of((SqlNode)new SqlIdentifier("COLUMN_NAME", SqlParserPos.ZERO),
-        new SqlIdentifier("DATA_TYPE", SqlParserPos.ZERO),
-        new SqlIdentifier("IS_NULLABLE", SqlParserPos.ZERO));
+    try {
+      List<SqlNode> selectList = ImmutableList.of((SqlNode) new SqlIdentifier("COLUMN_NAME", SqlParserPos.ZERO),
+          new SqlIdentifier("DATA_TYPE", SqlParserPos.ZERO),
+          new SqlIdentifier("IS_NULLABLE", SqlParserPos.ZERO));
 
-    SqlNode fromClause = new SqlIdentifier(
-        ImmutableList.of("INFORMATION_SCHEMA", "COLUMNS"), null, SqlParserPos.ZERO, null);
+      SqlNode fromClause = new SqlIdentifier(
+          ImmutableList.of("INFORMATION_SCHEMA", "COLUMNS"), null, SqlParserPos.ZERO, null);
 
-    final SqlIdentifier table = node.getTable();
-    final int numLevels = table.names.size();
+      final SqlIdentifier table = node.getTable();
+      final SchemaPlus schema = findSchema(context.getRootSchema(), context.getNewDefaultSchema(),
+          Util.skipLast(table.names));
+      final String tableName = Util.last(table.names);
 
-    SqlNode schemaCondition = null;
-    if (numLevels > 1) {
-      schemaCondition = DrillParserUtil.createCondition(
-          new SqlIdentifier("TABLE_SCHEMA", SqlParserPos.ZERO),
+      if (schema.getTable(tableName) == null) {
+        throw new RelConversionException(String.format("Table %s is not valid", Util.sepList(table.names, ".")));
+      }
+
+      SqlNode schemaCondition = null;
+      if (!isRootSchema(schema)) {
+        AbstractSchema drillSchema = getDrillSchema(schema);
+
+        schemaCondition = DrillParserUtil.createCondition(
+            new SqlIdentifier("TABLE_SCHEMA", SqlParserPos.ZERO),
+            SqlStdOperatorTable.EQUALS,
+            SqlLiteral.createCharString(drillSchema.getFullSchemaName(), CHARSET, SqlParserPos.ZERO)
+        );
+      }
+
+      SqlNode where = DrillParserUtil.createCondition(
+          new SqlIdentifier("TABLE_NAME", SqlParserPos.ZERO),
           SqlStdOperatorTable.EQUALS,
-          SqlLiteral.createCharString(Util.sepList(table.names.subList(0, numLevels - 1), "."),
-              CHARSET, SqlParserPos.ZERO)
-      );
+          SqlLiteral.createCharString(tableName, CHARSET, SqlParserPos.ZERO));
+
+      where = DrillParserUtil.createCondition(schemaCondition, SqlStdOperatorTable.AND, where);
+
+      SqlNode columnFilter = null;
+      if (node.getColumn() != null) {
+        columnFilter = DrillParserUtil.createCondition(new SqlIdentifier("COLUMN_NAME", SqlParserPos.ZERO),
+            SqlStdOperatorTable.EQUALS,
+            SqlLiteral.createCharString(node.getColumn().toString(), CHARSET, SqlParserPos.ZERO));
+      } else if (node.getColumnQualifier() != null) {
+        columnFilter = DrillParserUtil.createCondition(new SqlIdentifier("COLUMN_NAME", SqlParserPos.ZERO),
+            SqlStdOperatorTable.LIKE, node.getColumnQualifier());
+      }
+
+      where = DrillParserUtil.createCondition(where, SqlStdOperatorTable.AND, columnFilter);
+
+      return new SqlSelect(SqlParserPos.ZERO, null, new SqlNodeList(selectList, SqlParserPos.ZERO),
+          fromClause, where, null, null, null, null, null, null);
+    } catch (Exception ex) {
+      throw new RelConversionException("Error while rewriting DESCRIBE query: " + ex.getMessage(), ex);
     }
-
-    SqlNode where = DrillParserUtil.createCondition(
-        new SqlIdentifier("TABLE_NAME", SqlParserPos.ZERO),
-        SqlStdOperatorTable.EQUALS,
-        SqlLiteral.createCharString(table.names.get(numLevels-1), CHARSET, SqlParserPos.ZERO));
-
-    where = DrillParserUtil.createCondition(schemaCondition, SqlStdOperatorTable.AND, where);
-
-    SqlNode columnFilter = null;
-    if (node.getColumn() != null) {
-      columnFilter = DrillParserUtil.createCondition(new SqlIdentifier("COLUMN_NAME", SqlParserPos.ZERO),
-          SqlStdOperatorTable.EQUALS,
-          SqlLiteral.createCharString(node.getColumn().toString(), CHARSET, SqlParserPos.ZERO));
-    } else if (node.getColumnQualifier() != null) {
-      columnFilter = DrillParserUtil.createCondition(new SqlIdentifier("COLUMN_NAME", SqlParserPos.ZERO),
-          SqlStdOperatorTable.LIKE, node.getColumnQualifier());
-    }
-
-    where = DrillParserUtil.createCondition(where, SqlStdOperatorTable.AND, columnFilter);
-
-    return new SqlSelect(SqlParserPos.ZERO, null, new SqlNodeList(selectList, SqlParserPos.ZERO),
-        fromClause, where, null, null, null, null, null, null);
   }
 }
 

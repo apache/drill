@@ -79,6 +79,10 @@ public abstract class AbstractSqlHandler {
     throw new Exception(String.format("Invalid schema path '%s'.", Joiner.on(".").join(schemaPath)));
   }
 
+  public static boolean isRootSchema(SchemaPlus schema) {
+    return schema.getParentSchema() == null;
+  }
+
   private static SchemaPlus searchSchemaTree(SchemaPlus schema, List<String> schemaPath) {
     for (String schemaName : schemaPath) {
       schema = schema.getSubSchema(schemaName);
