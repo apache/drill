@@ -31,10 +31,10 @@
       </tbody>
     </table>
   </div>
-  <script>
+  <!-- <script>
       var elem = document.getElementById("statusFontColor");
       elem.style.color = "green";
-  </script>
+  </script> -->
 </#macro>
 
 <@page_html/>

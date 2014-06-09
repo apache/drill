@@ -37,9 +37,9 @@ public class PlannerSettings implements FrameworkContext{
   public static final OptionValidator STREAMAGG = new BooleanValidator("planner.enable_streamagg", true);
   public static final OptionValidator HASHJOIN = new BooleanValidator("planner.enable_hashjoin", true);
   public static final OptionValidator MERGEJOIN = new BooleanValidator("planner.enable_mergejoin", true);
-  public static final OptionValidator MULTIPHASE = new BooleanValidator("planner.enable_multiphase_agg", false);
+  public static final OptionValidator MULTIPHASE = new BooleanValidator("planner.enable_multiphase_agg", true);
   public static final OptionValidator BROADCAST = new BooleanValidator("planner.enable_broadcast_join", true);
-  public static final OptionValidator BROADCAST_THRESHOLD = new PositiveLongValidator("planner.broadcast_threshold", MAX_BROADCAST_THRESHOLD, 10000);
+  public static final OptionValidator BROADCAST_THRESHOLD = new PositiveLongValidator("planner.broadcast_threshold", MAX_BROADCAST_THRESHOLD, 1000000);
 
   public OptionManager options = null;
 

@@ -55,8 +55,10 @@
             <ul class="nav navbar-nav">
               <li><a href="/"><font color="red" id="statusFontColor">Status</font></a></li>
               <li><a href="/query">Query</a></li>
-              <li><a href="/results">Results</a></li>
+              <li><a href="/profiles">Profiles</a></li>
               <li><a href="/storage">Storage</a></li>
+              <li><a href="/status/metrics">Metrics</a></li>
+              <li><a href="/status/threads">Threads</a></li>
             </ul>
           </div>
         </div>
