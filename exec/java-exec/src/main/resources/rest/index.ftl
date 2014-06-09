@@ -18,10 +18,6 @@
   <div class="page-header">
   </div>
   <p class="lead"> Read about Apache Drill <a href="http://incubator.apache.org/drill/drill_overview.html" rel="nofollow">here</a>.</p>
-  <script>
-      var elem = document.getElementById("statusFontColor");
-      elem.style.color = "green";
-  </script>
 </#macro>
 
 <@page_html/>

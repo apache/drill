@@ -45,21 +45,17 @@
     <button type="submit" class="btn btn-default">Re-run query</button>
   </form>
   <div class="page-header">
-    <h2>Physical plan</h2>
+    <h2>Physical Plan</h2>
   </div>
   <div class="well">
-    <p><font face="courier">${model.plan}</font></p>
+    <p><pre>${model.plan}</pre></p>
   </div>
   <div class="page-header">
     <h2>Complete Profile</h2>
   </div>
   <div class="well">
-    <p><font face="courier">${model.toString()}</font></p>
+    <p><pre>${model.toString()}</pre></p>
   </div>
-  <script>
-      var elem = document.getElementById("statusFontColor");
-      elem.style.color = "green";
-  </script>
 </#macro>
 
 <@page_html/>

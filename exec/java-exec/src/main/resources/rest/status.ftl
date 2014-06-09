@@ -20,10 +20,6 @@
       <strong>${model}</strong>
     </div>
   </div>
-  <script>
-      var elem = document.getElementById("statusFontColor");
-      elem.style.color = "green";
-  </script>
 </#macro>
 
 <@page_html/>

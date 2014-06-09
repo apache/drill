@@ -17,21 +17,8 @@
  */
 package org.apache.drill.exec.server.rest;
 
-import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
-import org.glassfish.jersey.server.mvc.Viewable;
 
-@Path("/")
-public class DrillRoot {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillRoot.class);
-
-  @GET
-  @Produces(MediaType.TEXT_HTML)
-  public Viewable getHello() {
-    String status = "Running!";
-    return new Viewable("/rest/index.ftl", status);
-  }
-
+@Path("/metrics")
+public class MetricsResources {
 }

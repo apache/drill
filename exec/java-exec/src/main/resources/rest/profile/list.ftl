@@ -52,7 +52,7 @@
         <tr>
           <td>${query.getValue()}</td>
           <td>
-            <a href="/query/${query.getKey()}">
+            <a href="/profile/${query.getKey()}">
               <div style="height:100%;width:100%">
                 ${query.getKey()}
               </div>
@@ -63,10 +63,6 @@
       </tbody>
     </table>
   </div>
-  <script>
-    var elem = document.getElementById("statusFontColor");
-    elem.style.color = "green";
-  </script>
 </#macro>
 
 <@page_html/>

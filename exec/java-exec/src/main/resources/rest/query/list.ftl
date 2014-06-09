@@ -17,34 +17,7 @@
   <a href="/queries">back</a><br/>
   <div class="page-header">
   </div>
-  <form role="form" action="/query" method="POST">
-    <div class="form-group">
-      <label for="queryType">Query Type</label>
-      <div class="radio">
-        <label>
-          <input type="radio" name="queryType" id="sql" value="SQL" checked>
-          SQL
-        </label>
-      </div>
-      <div class="radio">
-        <label>
-          <input type="radio" name="queryType" id="physical" value="PHYSICAL">
-          PHYSICAL
-        </label>
-      </div>
-      <div class="radio">
-        <label>
-          <input type="radio" name="queryType" id="logical" value="LOGICAL">
-          LOGICAL
-        </label>
-      </div>
-    </div>
-    <div class="form-group">
-      <label for="query">Query</label>
-      <textarea class="form-control" id="query" rows="5" name="query"></textarea>
-    </div>
-    <button type="submit" class="btn btn-default">Submit</button>
-  </form>
+  <h3>Under Construction.</h3>
 </#macro>
 
 <@page_html/>

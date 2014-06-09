@@ -16,25 +16,21 @@
 <#macro page_body>
   <a href="/queries">back</a><br/>
   <div class="page-header">
-      <h2>Result</h2>
   </div>
+  <h2>Result</h2>
   <div class="table-responsive">
     <table class="table">
       <tbody>
         <#list model as rows>
         <tr>
           <#list rows as row>
-          <td>${row}</td>
+          <td style="border:none;"><pre>${row}</pre></td>
           </#list>
         </tr>
         </#list>
       </tbody>
     </table>
   </div>
-  <!-- <script>
-      var elem = document.getElementById("statusFontColor");
-      elem.style.color = "green";
-  </script> -->
 </#macro>
 
 <@page_html/>

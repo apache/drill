@@ -17,21 +17,22 @@
  */
 package org.apache.drill.exec.server.rest;
 
+import org.glassfish.jersey.server.mvc.Viewable;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import org.glassfish.jersey.server.mvc.Viewable;
 
-@Path("/")
-public class DrillRoot {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillRoot.class);
+@Path("/status")
+public class StatusResources {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StatusResources.class);
 
   @GET
   @Produces(MediaType.TEXT_HTML)
-  public Viewable getHello() {
+  public Viewable getStatus() {
     String status = "Running!";
-    return new Viewable("/rest/index.ftl", status);
+    return new Viewable("/rest/status/status.ftl", status);
   }
 
 }

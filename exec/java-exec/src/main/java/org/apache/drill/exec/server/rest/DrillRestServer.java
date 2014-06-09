@@ -17,7 +17,10 @@
  */
 package org.apache.drill.exec.server.rest;
 
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.client.DrillClient;
+import org.apache.drill.exec.coord.ClusterCoordinator;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.sys.PStoreProvider;
 import org.apache.drill.exec.work.WorkManager;
@@ -39,6 +42,7 @@ public class DrillRestServer extends ResourceConfig {
 
   public DrillRestServer(final WorkManager workManager) {
     register(DrillRoot.class);
+    register(StatusResources.class);
     register(StorageResources.class);
     register(ProfileResources.class);
     register(QueryResources.class);
@@ -60,7 +64,10 @@ public class DrillRestServer extends ResourceConfig {
       register(provider);
     }
 
-
+    final DrillConfig config = workManager.getContext().getConfig();
+    final BufferAllocator allocator = workManager.getContext().getAllocator();
+    final ClusterCoordinator coordinator = workManager.getContext().getClusterCoordinator();
+    final DrillClient client = new DrillClient(config, coordinator, allocator);
     register(new AbstractBinder() {
       @Override
       protected void configure() {
@@ -68,7 +75,7 @@ public class DrillRestServer extends ResourceConfig {
         bind(workManager.getContext().getConfig().getMapper()).to(ObjectMapper.class);
         bind(workManager.getContext().getPersistentStoreProvider()).to(PStoreProvider.class);
         bind(workManager.getContext().getStorage()).to(StoragePluginRegistry.class);
-        bind(new DrillClient()).to(DrillClient.class);
+        bind(client).to(DrillClient.class);
       }
     });
   }

@@ -53,7 +53,7 @@
           </div>
           <div class="navbar-collapse collapse">
             <ul class="nav navbar-nav">
-              <li><a href="/"><font color="red" id="statusFontColor">Status</font></a></li>
+              <li><a href="/status">Status</a></li>
               <li><a href="/query">Query</a></li>
               <li><a href="/profiles">Profiles</a></li>
               <li><a href="/storage">Storage</a></li>
