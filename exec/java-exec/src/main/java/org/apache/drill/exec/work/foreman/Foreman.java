@@ -28,7 +28,6 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.logical.PlanProperties.Generator.ResultMode;
 import org.apache.drill.exec.ExecConstants;
-import org.apache.drill.exec.cache.CachedVectorContainer;
 import org.apache.drill.exec.cache.DistributedCache.CacheConfig;
 import org.apache.drill.exec.cache.DistributedCache.SerializationMode;
 import org.apache.drill.exec.exception.FragmentSetupException;
@@ -314,16 +313,16 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
         }
       }
 
+      int totalFragments = 1 + intermediateFragments.size() + leafFragments.size();
+      fragmentManager.getStatus().setTotalFragments(totalFragments);
+      fragmentManager.getStatus().updateCache();
       logger.debug("Fragments stored.");
 
       logger.debug("Submitting fragments to run.");
       fragmentManager.runFragments(bee, work.getRootFragment(), work.getRootOperator(), initiatingClient, leafFragments, intermediateFragments);
-      logger.debug("Fragments running.");
 
+      logger.debug("Fragments running.");
       state.updateState(QueryState.PENDING, QueryState.RUNNING);
-      int totalFragments = 1 + intermediateFragments.size() + leafFragments.size();
-      fragmentManager.getStatus().setTotalFragments(totalFragments);
-      fragmentManager.getStatus().updateCache();
 
     } catch (ExecutionSetupException | RpcException e) {
       fail("Failure while setting up query.", e);
