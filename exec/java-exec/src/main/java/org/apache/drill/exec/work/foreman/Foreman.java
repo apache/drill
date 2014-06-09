@@ -21,13 +21,20 @@ import io.netty.buffer.ByteBuf;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.logical.PlanProperties.Generator.ResultMode;
 import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.cache.CachedVectorContainer;
 import org.apache.drill.exec.cache.DistributedCache.CacheConfig;
 import org.apache.drill.exec.cache.DistributedCache.SerializationMode;
 import org.apache.drill.exec.coord.DistributedSemaphore;
@@ -347,10 +354,11 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
 
       // store fragments in distributed grid.
       logger.debug("Storing fragments");
+      List<Future<PlanFragment>> queue = new LinkedList<>();
       for (PlanFragment f : work.getFragments()) {
         // store all fragments in grid since they are part of handshake.
 
-        context.getCache().getMap(FRAGMENT_CACHE).put(f.getHandle(), f);
+        queue.add(context.getCache().getMap(FRAGMENT_CACHE).put(f.getHandle(), f));
         if (f.getLeafFragment()) {
           leafFragments.add(f);
         } else {
@@ -358,9 +366,14 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
         }
       }
 
-      int totalFragments = 1 + intermediateFragments.size() + leafFragments.size();
-      fragmentManager.getStatus().setTotalFragments(totalFragments);
-      fragmentManager.getStatus().updateCache();
+      for (Future<PlanFragment> f : queue) {
+        try {
+          f.get(10, TimeUnit.SECONDS);
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+          throw new ExecutionSetupException("failure while storing plan fragments", e);
+        }
+      }
+
       logger.debug("Fragments stored.");
 
       logger.debug("Submitting fragments to run.");
@@ -368,6 +381,9 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
 
       logger.debug("Fragments running.");
       state.updateState(QueryState.PENDING, QueryState.RUNNING);
+      int totalFragments = 1 + intermediateFragments.size() + leafFragments.size();
+      fragmentManager.getStatus().setTotalFragments(totalFragments);
+      fragmentManager.getStatus().updateCache();
 
     } catch (Exception e) {
       fail("Failure while setting up query.", e);

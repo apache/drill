@@ -18,15 +18,16 @@
 package org.apache.drill.exec.cache;
 
 import java.util.Map;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 public interface DistributedMap<K, V>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DistributedMap.class);
   public V get(K key);
-  public void put(K key, V value);
-  public void delete(K key);
-  public void putIfAbsent(K key, V value);
-  public void putIfAbsent(K key, V value, long ttl, TimeUnit timeUnit);
+  public Future<V> put(K key, V value);
+  public Future<V> delete(K key);
+  public Future<V> putIfAbsent(K key, V value);
+  public Future<V> putIfAbsent(K key, V value, long ttl, TimeUnit timeUnit);
   public Iterable<Map.Entry<K, V>> getLocalEntries();
 
 }

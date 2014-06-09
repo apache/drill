@@ -29,8 +29,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.drill.common.config.DrillConfig;
@@ -235,8 +234,43 @@ public class LocalCache implements DistributedCache {
     }
 
     @Override
-    public void put(K key, V value) {
+    public Future<Boolean> put(K key, V value) {
       mmap.put(serialize(key, config.getMode()), serialize(value, config.getMode()));
+      return new LocalCacheFuture(true);
+    }
+  }
+
+  public static class LocalCacheFuture<V> implements Future<V> {
+
+    V value;
+
+    public LocalCacheFuture(V value) {
+      this.value = value;
+    }
+
+    @Override
+    public boolean cancel(boolean mayInterruptIfRunning) {
+      return false;
+    }
+
+    @Override
+    public boolean isCancelled() {
+      return false;
+    }
+
+    @Override
+    public boolean isDone() {
+      return true;
+    }
+
+    @Override
+    public V get() throws InterruptedException, ExecutionException {
+      return value;
+    }
+
+    @Override
+    public V get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+      return value;
     }
   }
 
@@ -268,25 +302,30 @@ public class LocalCache implements DistributedCache {
     }
 
     @Override
-    public void put(K key, V value) {
+    public Future<V> put(K key, V value) {
       m.put(serialize(key, config.getMode()), serialize(value, config.getMode()));
+      return new LocalCacheFuture(value);
     }
 
 
     @Override
-    public void putIfAbsent(K key, V value) {
+    public Future<V> putIfAbsent(K key, V value) {
       m.putIfAbsent(serialize(key, config.getMode()), serialize(value, config.getMode()));
+      return new LocalCacheFuture(value);
     }
 
     @Override
-    public void delete(K key) {
+    public Future<V> delete(K key) {
+      V value = get(key);
       m.remove(serialize(key, config.getMode()));
+      return new LocalCacheFuture(value);
     }
 
     @Override
-    public void putIfAbsent(K key, V value, long ttl, TimeUnit timeUnit) {
+    public Future<V> putIfAbsent(K key, V value, long ttl, TimeUnit timeUnit) {
       m.putIfAbsent(serialize(key, config.getMode()), serialize(value, config.getMode()));
       logger.warn("Expiration not implemented in local map cache");
+      return new LocalCacheFuture<V>(value);
     }
 
     private class DeserializingTransformer implements Iterator<Map.Entry<K, V>> {

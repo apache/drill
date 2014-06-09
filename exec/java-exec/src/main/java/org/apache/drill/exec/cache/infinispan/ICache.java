@@ -25,6 +25,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.collect.Maps;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.cache.Counter;
@@ -54,7 +55,6 @@ import org.jgroups.protocols.COUNTER;
 import org.jgroups.protocols.FRAG2;
 import org.jgroups.stack.ProtocolStack;
 
-import com.google.common.collect.Maps;
 
 public class ICache implements DistributedCache{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ICache.class);
@@ -69,7 +69,7 @@ public class ICache implements DistributedCache{
     String clusterName = config.getString(ExecConstants.SERVICE_NAME);
     this.local = local;
 
-    final CacheMode mode = local ? CacheMode.LOCAL : CacheMode.DIST_ASYNC;
+    final CacheMode mode = local ? CacheMode.LOCAL : CacheMode.DIST_SYNC;
     GlobalConfigurationBuilder gcb = new GlobalConfigurationBuilder();
 
     if(!local){
@@ -209,23 +209,23 @@ public class ICache implements DistributedCache{
     }
 
     @Override
-    public void delete(K key) {
-      cache.remove(key);
+    public Future<V> delete(K key) {
+      return cache.removeAsync(key);
     }
 
     @Override
-    public void put(K key, V value) {
-      cache.put(key,  value);
+    public Future<V> put(K key, V value) {
+      return cache.putAsync(key, value);
     }
 
     @Override
-    public void putIfAbsent(K key, V value) {
-      cache.putIfAbsent(key,  value);
+    public Future<V> putIfAbsent(K key, V value) {
+      return cache.putIfAbsentAsync(key, value);
     }
 
     @Override
-    public void putIfAbsent(K key, V value, long ttl, TimeUnit timeUnit) {
-      cache.putIfAbsent(key, value, ttl, timeUnit);
+    public Future<V> putIfAbsent(K key, V value, long ttl, TimeUnit timeUnit) {
+      return cache.putIfAbsentAsync(key, value, ttl, timeUnit);
     }
 
   }
@@ -247,16 +247,52 @@ public class ICache implements DistributedCache{
     }
 
     @Override
-    public void put(K key, V value) {
-      cache.put(key, new DeltaList<V>(value));
+    public Future<Boolean> put(K key, V value) {
+      return new ICacheFuture(cache.putAsync(key, new DeltaList(value)));
     }
 
+  }
+
+  public static class ICacheFuture implements Future<Boolean> {
+
+    Future future;
+
+    public ICacheFuture(Future future) {
+      this.future = future;
+    }
+
+    @Override
+    public boolean cancel(boolean mayInterruptIfRunning) {
+      return future.cancel(mayInterruptIfRunning);
+    }
+
+    @Override
+    public boolean isCancelled() {
+      return future.isCancelled();
+    }
+
+    @Override
+    public boolean isDone() {
+      return future.isDone();
+    }
+
+    @Override
+    public Boolean get() throws InterruptedException, ExecutionException {
+      future.get();
+      return true;
+    }
+
+    @Override
+    public Boolean get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+      future.get(timeout, unit);
+      return true;
+    }
   }
 
 
 
 
-  private static class DeltaList<V> extends LinkedList<V> implements DeltaAware, Delta{
+  private static class DeltaList<V> extends LinkedList<V> implements DeltaAware, Delta, List<V> {
 
     /** The serialVersionUID */
     private static final long serialVersionUID = 2176345973026460708L;
