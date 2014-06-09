@@ -49,7 +49,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
   private final Accessor accessor = new Accessor();
   private final Mutator mutator = new Mutator();
 
-  private int allocationTotalByteCount = 40000;
+  private int allocationTotalByteCount = 32768;
   private int allocationMonitor = 0;
 
   public ${minor.class}Vector(MaterializedField field, BufferAllocator allocator) {
@@ -229,11 +229,11 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
   @Override
   public boolean allocateNewSafe() {
     clear();
-    if (allocationMonitor > 5) {
-      allocationTotalByteCount = Math.max(1, (int) (allocationTotalByteCount * 0.9));
+    if (allocationMonitor > 10) {
+      allocationTotalByteCount = Math.max(8, (int) (allocationTotalByteCount / 2));
       allocationMonitor = 0;
-    } else if (allocationMonitor < -5) {
-      allocationTotalByteCount = (int) (allocationTotalByteCount * 1.1);
+    } else if (allocationMonitor < -2) {
+      allocationTotalByteCount = (int) (allocationTotalByteCount * 2);
       allocationMonitor = 0;
     }
     data = allocator.buffer(allocationTotalByteCount);
@@ -254,6 +254,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     assert totalBytes >= 0;
     data = allocator.buffer(totalBytes);
     data.readerIndex(0);
+    allocationTotalByteCount = totalBytes;
     offsetVector.allocateNew(valueCount+1);
     offsetVector.zeroVector();
   }
@@ -359,7 +360,6 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
 
     public boolean setSafe(int index, byte[] bytes) {
       assert index >= 0;
-      if(index >= getValueCapacity()) return false;
 
       int currentOffset = offsetVector.getAccessor().get(index);
       if (data.capacity() < currentOffset + bytes.length) {
@@ -391,7 +391,6 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
 
     public boolean setSafe(int index, byte[] bytes, int start, int length) {
       assert index >= 0;
-      if(index >= getValueCapacity()) return false;
 
       int currentOffset = offsetVector.getAccessor().get(index);
 
@@ -409,8 +408,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
    
     public boolean setSafe(int index, Nullable${minor.class}Holder holder){
       assert holder.isSet == 1;
-      if(index >= getValueCapacity()) return false;
-      
+
       int start = holder.start;
       int end =   holder.end;
       int len = end - start;
@@ -433,8 +431,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     }
     
     public boolean setSafe(int index, ${minor.class}Holder holder){
-      if(index >= getValueCapacity()) return false;
-      
+
       int start = holder.start;
       int end =   holder.end;
       int len = end - start;
@@ -483,8 +480,10 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       ${minor.class}Vector.this.valueCount = valueCount;
       int idx = offsetVector.getAccessor().get(valueCount);
       data.writerIndex(idx);
-      if (((float) currentByteCapacity) / idx > 1.1) {
+      if (valueCount > 0 && currentByteCapacity > idx * 2) {
         allocationMonitor++;
+      } else if (allocationMonitor > 0) {
+        allocationMonitor--;
       }
       if (data instanceof AccountingByteBuf) {
         data.capacity(idx);

@@ -53,7 +53,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
   private final Accessor accessor = new Accessor();
   private final Mutator mutator = new Mutator();
 
-  private int allocationValueCount = 4000;
+  private int allocationValueCount = 4096;
   private int allocationMonitor = 0;
   
   public ${minor.class}Vector(MaterializedField field, BufferAllocator allocator) {
@@ -81,11 +81,11 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
   
   public boolean allocateNewSafe() {
     clear();
-    if (allocationMonitor > 5) {
-      allocationValueCount = Math.max(2, (int) (allocationValueCount * 0.9));
+    if (allocationMonitor > 10) {
+      allocationValueCount = Math.max(8, (int) (allocationValueCount / 2));
       allocationMonitor = 0;
-    } else if (allocationMonitor < -5) {
-      allocationValueCount = (int) (allocationValueCount * 1.1);
+    } else if (allocationMonitor < -2) {
+      allocationValueCount = (int) (allocationValueCount * 2);
       allocationMonitor = 0;
     }
     this.data = allocator.buffer(allocationValueCount * ${type.width});
@@ -102,6 +102,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
     clear();
     this.data = allocator.buffer(valueCount * ${type.width});
     this.data.readerIndex(0);
+    this.allocationValueCount = valueCount;
   }
 
   /**
@@ -815,8 +816,10 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
      int currentValueCapacity = getValueCapacity();
      ${minor.class}Vector.this.valueCount = valueCount;
      int idx = (${type.width} * valueCount);
-     if (((float) currentValueCapacity) / idx > 1.1) {
+     if (valueCount > 0 && currentValueCapacity > idx * 2) {
        allocationMonitor++;
+     } else if (allocationMonitor > 0) {
+       allocationMonitor--;
      }
      data.writerIndex(idx);
      if (data instanceof AccountingByteBuf) {

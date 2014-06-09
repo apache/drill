@@ -98,6 +98,8 @@ package org.apache.drill.exec.vector;
     int endValue = offsets.getAccessor().get(startIndex + length);
     values.splitAndTransferTo(startValue, endValue - startValue, target.values);
     offsets.splitAndTransferTo(startIndex, length, target.offsets);
+    target.parentValueCount = parentValueCount;
+    target.childValueCount = childValueCount;
     sliceOffset = startIndex;
   }
   
@@ -369,8 +371,7 @@ package org.apache.drill.exec.vector;
       if(getValueCapacity() <= index){
         return false;
       }
-      offsets.getMutator().set(index+1, offsets.getAccessor().get(index));
-      return true;
+      return offsets.getMutator().setSafe(index+1, offsets.getAccessor().get(index));
     }
 
     /**
@@ -392,7 +393,9 @@ package org.apache.drill.exec.vector;
     }
 
     public boolean addSafe(int index, byte[] bytes, int start, int length) {
-      if(offsets.getValueCapacity() <= index+1) return false;
+      if(offsets.getValueCapacity() <= index+1) {
+        return false;
+      }
       int nextOffset = offsets.getAccessor().get(index+1);
       boolean b1 = values.getMutator().setSafe(nextOffset, bytes, start, length);
       boolean b2 = offsets.getMutator().setSafe(index+1, nextOffset+1);

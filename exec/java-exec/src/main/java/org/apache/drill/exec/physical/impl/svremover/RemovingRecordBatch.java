@@ -49,6 +49,7 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
   private int recordCount;
   private boolean hasRemainder;
   private int remainderIndex;
+  private boolean first;
 
   public RemovingRecordBatch(SelectionVectorRemover popConfig, FragmentContext context, RecordBatch incoming) throws OutOfMemoryException {
     super(popConfig, context, incoming);
@@ -93,9 +94,10 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
 
   @Override
   protected void doWork() {
-    recordCount = incoming.getRecordCount();
-    int copiedRecords = copier.copyRecords(0, recordCount);
-    if (copiedRecords < recordCount) {
+    int incomingRecordCount = incoming.getRecordCount();
+    int copiedRecords = copier.copyRecords(0, incomingRecordCount);
+
+    if (copiedRecords < incomingRecordCount) {
       for(VectorWrapper<?> v : container){
         ValueVector.Mutator m = v.getValueVector().getMutator();
         m.setValueCount(copiedRecords);
@@ -104,6 +106,7 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
       remainderIndex = copiedRecords;
       this.recordCount = remainderIndex;
     } else {
+      recordCount = copiedRecords;
       for(VectorWrapper<?> v : container){
         ValueVector.Mutator m = v.getValueVector().getMutator();
         m.setValueCount(recordCount);
@@ -118,16 +121,37 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
       }
     }
 
-    logger.debug(String.format("doWork(): %s records copied for out of %s, remaining: %s, incoming schema %s ",
+    assert recordCount >= copiedRecords;
+    logger.debug("doWork(): {} records copied out of {}, remaining: {}, incoming schema {} ",
         copiedRecords,
-        incoming.getRecordCount(),
-        incoming.getRecordCount() - remainderIndex,
-        incoming.getSchema()));
+        incomingRecordCount,
+        incomingRecordCount - remainderIndex,
+        incoming.getSchema());
   }
 
   private void handleRemainder() {
+    int recordCount = incoming.getRecordCount();
     int remainingRecordCount = incoming.getRecordCount() - remainderIndex;
-    int copiedRecords = copier.copyRecords(remainderIndex, remainingRecordCount);
+    int copiedRecords;
+    while((copiedRecords = copier.copyRecords(remainderIndex, remainingRecordCount)) == 0) {
+      logger.debug("Copied zero records. Retrying");
+      container.zeroVectors();
+    }
+
+    /*
+    StringBuilder builder = new StringBuilder();
+    for (VectorWrapper w : container) {
+      builder.append(w.getField().getPath());
+      builder.append(" Value capacity: ");
+      builder.append(w.getValueVector().getValueCapacity());
+      if (w.getValueVector() instanceof VariableWidthVector) {
+        builder.append(" Byte capacity: ");
+        builder.append(((VariableWidthVector) w.getValueVector()).getByteCapacity());
+        builder.append("\n");
+      }
+    }
+    logger.debug(builder.toString());
+    */
 
     if (copiedRecords < remainingRecordCount) {
       for(VectorWrapper<?> v : container){
@@ -150,10 +174,10 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
       remainderIndex = 0;
       hasRemainder = false;
     }
-    if(logger.isDebugEnabled()) logger.debug(String.format("handleRemainder(): %s records copied for out of %s, remaining: %s, incoming schema %s ",
+    logger.debug(String.format("handleRemainder(): %s records copied out of %s, remaining: %s, incoming schema %s ",
         copiedRecords,
-        incoming.getRecordCount(),
-        incoming.getRecordCount() - remainderIndex,
+        recordCount,
+        recordCount - remainderIndex,
         incoming.getSchema()));
   }
 

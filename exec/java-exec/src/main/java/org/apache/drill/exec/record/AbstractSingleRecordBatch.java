@@ -44,6 +44,13 @@ public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> exte
   public IterOutcome innerNext() {
     IterOutcome upstream = next(incoming);
     if(first && upstream == IterOutcome.OK) upstream = IterOutcome.OK_NEW_SCHEMA;
+    if (!first && upstream == IterOutcome.OK && incoming.getRecordCount() == 0) {
+      do {
+        for (VectorWrapper w : incoming) {
+          w.clear();
+        }
+      } while ((upstream = next(incoming)) == IterOutcome.OK && incoming.getRecordCount() == 0);
+    }
     first = false;
     switch(upstream){
     case NONE:

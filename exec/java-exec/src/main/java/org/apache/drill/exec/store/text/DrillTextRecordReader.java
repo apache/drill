@@ -63,6 +63,7 @@ public class DrillTextRecordReader implements RecordReader {
   private Text value;
   private int numCols = 0;
   private boolean redoRecord = false;
+  private boolean first = true;
 
   public DrillTextRecordReader(FileSplit split, FragmentContext context, char delimiter, List<SchemaPath> columns) {
     this.context = context;
@@ -106,10 +107,12 @@ public class DrillTextRecordReader implements RecordReader {
 
   @Override
   public int next() {
-    AllocationHelper.allocate(vector, targetRecordCount, 50);
+    logger.debug("vector value capacity {}", vector.getValueCapacity());
+    logger.debug("vector byte capacity {}", vector.getByteCapacity());
+    int batchSize = 0;
     try {
       int recordCount = 0;
-      while (redoRecord || (recordCount < targetRecordCount && reader.next(key, value))) {
+      while (redoRecord || (batchSize < 200*1000 && reader.next(key, value))) {
         redoRecord = false;
         int start;
         int end = -1;
@@ -126,9 +129,10 @@ public class DrillTextRecordReader implements RecordReader {
             end = value.getLength();
           }
           if (numCols > 0 && i++ < columnIds.get(p)) {
-            if (!vector.getMutator().addSafe(recordCount, value.getBytes(), start + 1, start + 1)) {
+            if (!vector.getMutator().addSafe(recordCount, value.getBytes(), start + 1, 0)) {
               redoRecord = true;
               vector.getMutator().setValueCount(recordCount);
+              logger.debug("text scan batch size {}", batchSize);
               return recordCount;
             }
             continue;
@@ -137,8 +141,10 @@ public class DrillTextRecordReader implements RecordReader {
           if (!vector.getMutator().addSafe(recordCount, value.getBytes(), start + 1, end - start - 1)) {
             redoRecord = true;
             vector.getMutator().setValueCount(recordCount);
+            logger.debug("text scan batch size {}", batchSize);
             return recordCount;
           }
+          batchSize += end - start;
         }
         recordCount++;
       }
@@ -146,6 +152,7 @@ public class DrillTextRecordReader implements RecordReader {
         v.getMutator().setValueCount(recordCount);
       }
       vector.getMutator().setValueCount(recordCount);
+      logger.debug("text scan batch size {}", batchSize);
       return recordCount;
     } catch (IOException e) {
       cleanup();
