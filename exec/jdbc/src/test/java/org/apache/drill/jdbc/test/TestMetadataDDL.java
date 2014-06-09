@@ -46,19 +46,11 @@ public class TestMetadataDDL extends TestJdbcQuery {
 
   @Test
   public void testShowTables() throws Exception{
-    JdbcAssert.withNoDefaultSchema()
+    JdbcAssert.withFull("hive.default")
         .sql("SHOW TABLES")
         .returns(
             "TABLE_SCHEMA=hive.default; TABLE_NAME=kv\n" +
-            "TABLE_SCHEMA=hive.default; TABLE_NAME=foodate\n" +
-            "TABLE_SCHEMA=hive.db1; TABLE_NAME=kv_db1\n" +
-            "TABLE_SCHEMA=sys; TABLE_NAME=drillbits\n" +
-            "TABLE_SCHEMA=sys; TABLE_NAME=options\n" +
-            "TABLE_SCHEMA=INFORMATION_SCHEMA; TABLE_NAME=VIEWS\n" +
-            "TABLE_SCHEMA=INFORMATION_SCHEMA; TABLE_NAME=COLUMNS\n" +
-            "TABLE_SCHEMA=INFORMATION_SCHEMA; TABLE_NAME=TABLES\n" +
-            "TABLE_SCHEMA=INFORMATION_SCHEMA; TABLE_NAME=CATALOGS\n" +
-            "TABLE_SCHEMA=INFORMATION_SCHEMA; TABLE_NAME=SCHEMATA\n"
+            "TABLE_SCHEMA=hive.default; TABLE_NAME=foodate\n"
         );
   }
 
@@ -74,7 +66,7 @@ public class TestMetadataDDL extends TestJdbcQuery {
             "TABLE_SCHEMA=INFORMATION_SCHEMA; TABLE_NAME=SCHEMATA\n"
         );
 
-    JdbcAssert.withNoDefaultSchema()
+    JdbcAssert.withFull("dfs.tmp")
         .sql("SHOW TABLES IN hive.`default`")
         .returns(
             "TABLE_SCHEMA=hive.default; TABLE_NAME=kv\n" +
@@ -90,7 +82,7 @@ public class TestMetadataDDL extends TestJdbcQuery {
 
   @Test
   public void testShowTablesLike() throws Exception{
-    JdbcAssert.withNoDefaultSchema()
+    JdbcAssert.withFull("INFORMATION_SCHEMA")
         .sql("SHOW TABLES LIKE '%CH%'")
         .returns("TABLE_SCHEMA=INFORMATION_SCHEMA; TABLE_NAME=SCHEMATA\n");
   }

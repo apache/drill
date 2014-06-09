@@ -20,11 +20,13 @@ package org.apache.drill.exec.planner.sql.handlers;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import net.hydromatic.optiq.SchemaPlus;
 import net.hydromatic.optiq.tools.Planner;
 import net.hydromatic.optiq.tools.RelConversionException;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.planner.sql.parser.DrillParserUtil;
 import org.apache.drill.exec.planner.sql.parser.SqlShowTables;
+import org.apache.drill.exec.store.AbstractSchema;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.parser.SqlParserPos;
@@ -43,7 +45,7 @@ public class ShowTablesHandler extends DefaultSqlHandler {
     SqlShowTables node = unwrap(sqlNode, SqlShowTables.class);
     List<SqlNode> selectList = Lists.newArrayList();
     SqlNode fromClause;
-    SqlNode where = null;
+    SqlNode where;
 
     // create select columns
     selectList.add(new SqlIdentifier("TABLE_SCHEMA", SqlParserPos.ZERO));
@@ -52,12 +54,33 @@ public class ShowTablesHandler extends DefaultSqlHandler {
     fromClause = new SqlIdentifier(ImmutableList.of("INFORMATION_SCHEMA", "TABLES"), SqlParserPos.ZERO);
 
     final SqlIdentifier db = node.getDb();
+    String tableSchema;
     if (db != null) {
-      where = DrillParserUtil.createCondition(
-          new SqlIdentifier("TABLE_SCHEMA", SqlParserPos.ZERO),
-          SqlStdOperatorTable.EQUALS,
-          SqlLiteral.createCharString(db.toString(), CHARSET, db.getParserPosition()));
+      tableSchema = db.toString();
+    } else {
+      // If no schema is given in SHOW TABLES command, list tables from current schema
+      SchemaPlus schema = context.getNewDefaultSchema();
+
+      if (isRootSchema(schema)) {
+        // If the default schema is a root schema, throw an error to select a default schema
+        throw new RelConversionException("No schema selected. Select a schema using 'USE schema' command");
+      }
+
+      AbstractSchema drillSchema;
+
+      try {
+        drillSchema = getDrillSchema(schema);
+      } catch(Exception ex) {
+        throw new RelConversionException("Error while rewriting SHOW TABLES query: " + ex.getMessage(), ex);
+      }
+
+      tableSchema = drillSchema.getFullSchemaName();
     }
+
+    where = DrillParserUtil.createCondition(
+        new SqlIdentifier("TABLE_SCHEMA", SqlParserPos.ZERO),
+        SqlStdOperatorTable.EQUALS,
+        SqlLiteral.createCharString(tableSchema, CHARSET, SqlParserPos.ZERO));
 
     SqlNode filter = null;
     final SqlNode likePattern = node.getLikePattern();
