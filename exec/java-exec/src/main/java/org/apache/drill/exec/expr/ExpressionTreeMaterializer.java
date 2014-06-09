@@ -25,6 +25,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+
 import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.ConvertExpression;
 import org.apache.drill.common.expression.ErrorCollector;
@@ -63,6 +64,7 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
+import org.apache.drill.exec.expr.fn.DrillComplexWriterFuncHolder;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.expr.fn.HiveFuncHolder;
@@ -81,7 +83,12 @@ public class ExpressionTreeMaterializer {
   };
 
   public static LogicalExpression materialize(LogicalExpression expr, VectorAccessible batch, ErrorCollector errorCollector, FunctionImplementationRegistry registry) {
-    LogicalExpression out =  expr.accept(new MaterializeVisitor(batch, errorCollector), registry);
+    return ExpressionTreeMaterializer.materialize(expr, batch, errorCollector, registry, false);
+  }
+
+  public static LogicalExpression materialize(LogicalExpression expr, VectorAccessible batch, ErrorCollector errorCollector, FunctionImplementationRegistry registry, 
+      boolean allowComplexWriterExpr) {
+    LogicalExpression out =  expr.accept(new MaterializeVisitor(batch, errorCollector, allowComplexWriterExpr), registry);
     if(out instanceof NullExpression){
       return new TypedNullConstant(Types.optional(MinorType.INT));
     }else{
@@ -93,10 +100,12 @@ public class ExpressionTreeMaterializer {
     private ExpressionValidator validator = new ExpressionValidator();
     private final ErrorCollector errorCollector;
     private final VectorAccessible batch;
+    private final boolean allowComplexWriter; 
 
-    public MaterializeVisitor(VectorAccessible batch, ErrorCollector errorCollector) {
+    public MaterializeVisitor(VectorAccessible batch, ErrorCollector errorCollector, boolean allowComplexWriter) {
       this.batch = batch;
       this.errorCollector = errorCollector;
+      this.allowComplexWriter = allowComplexWriter;
     }
 
     private LogicalExpression validateNewExpr(LogicalExpression newExpr) {
@@ -135,6 +144,10 @@ public class ExpressionTreeMaterializer {
       DrillFuncHolder matchedFuncHolder =
         resolver.getBestMatch(registry.getDrillRegistry().getMethods().get(call.getName()), call);
 
+      if (matchedFuncHolder instanceof DrillComplexWriterFuncHolder && ! allowComplexWriter) {
+        errorCollector.addGeneralError(call.getPosition(), "Only ProjectRecordBatch could have complex writer function. You are using complex writer function " + call.getName() + " in a non-project operation!");
+      }
+      
       //new arg lists, possible with implicit cast inserted.
       List<LogicalExpression> argsWithCast = Lists.newArrayList();
 

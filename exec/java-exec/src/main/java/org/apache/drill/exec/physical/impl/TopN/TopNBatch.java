@@ -363,6 +363,12 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
     public Iterator<VectorWrapper<?>> iterator() {
       return container.iterator();
     }
+    
+    @Override
+    public VectorContainer getOutgoingContainer() {
+      throw new UnsupportedOperationException(String.format(" You should not call getOutgoingContainer() for class %s", this.getClass().getCanonicalName()));
+    }
+
   }
 
 

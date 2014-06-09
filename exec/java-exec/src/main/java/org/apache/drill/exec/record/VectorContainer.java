@@ -26,6 +26,8 @@ import java.util.List;
 
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.exec.expr.TypeHelper;
+import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.AbstractMapVector;
@@ -39,8 +41,14 @@ public class VectorContainer extends AbstractMapVector implements Iterable<Vecto
   protected final List<VectorWrapper<?>> wrappers = Lists.newArrayList();
   private BatchSchema schema;
   private int recordCount = -1;
-
+  private final OperatorContext oContext;
+  
   public VectorContainer() {
+    this.oContext = null;
+  }
+
+  public VectorContainer( OperatorContext oContext) {
+    this.oContext = oContext;
   }
 
   // public VectorContainer(List<ValueVector> vectors, List<ValueVector[]> hyperVectors) {
@@ -66,8 +74,17 @@ public class VectorContainer extends AbstractMapVector implements Iterable<Vecto
     add(vv, releasable);
   }
 
-  public <T extends ValueVector> T addOrGet(String name, MajorType type, Class<T> clazz){
-    return null;
+  public <T extends ValueVector> T addOrGet(String name, MajorType type, Class<T> clazz){    
+    MaterializedField field = MaterializedField.create(name, type);
+    ValueVector v = TypeHelper.getNewVector(field, this.oContext.getAllocator());
+    
+    add(v);
+    
+    if(clazz.isAssignableFrom(v.getClass())){
+      return (T) v;
+    }else{
+      throw new IllegalStateException(String.format("Vector requested [%s] was different than type stored [%s].  Drill doesn't yet support hetergenous types.", clazz.getSimpleName(), v.getClass().getSimpleName()));
+    }
   }
 
   /**

@@ -284,4 +284,9 @@ public class ScanBatch implements RecordBatch {
     oContext.close();
   }
 
+  @Override
+  public VectorContainer getOutgoingContainer() {
+    throw new UnsupportedOperationException(String.format(" You should not call getOutgoingContainer() for class %s", this.getClass().getCanonicalName()));
+  }
+  
 }

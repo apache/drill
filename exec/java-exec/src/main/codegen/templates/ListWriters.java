@@ -121,7 +121,8 @@ public class ${mode}ListWriter extends AbstractFieldWriter{
     switch(mode){
     case INIT:
       int vectorCount = container.size();
-      Repeated${capName}Vector vector = container.addOrGet(name, ${upperName}_TYPE, Repeated${capName}Vector.class);     
+      Repeated${capName}Vector vector = container.addOrGet(name, ${upperName}_TYPE, Repeated${capName}Vector.class);   
+      innerVector = vector;
       writer = new Repeated${capName}WriterImpl(vector, this);
       if(vectorCount != container.size()) writer.allocate();
       writer.setPosition(${index});

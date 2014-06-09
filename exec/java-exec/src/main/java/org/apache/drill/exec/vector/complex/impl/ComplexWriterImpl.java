@@ -17,11 +17,15 @@
  */
 package org.apache.drill.exec.vector.complex.impl;
 
+import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.complex.MapVector;
 import org.apache.drill.exec.vector.complex.StateTool;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 
 import com.google.common.base.Preconditions;
@@ -160,5 +164,29 @@ public class ComplexWriterImpl extends AbstractFieldWriter implements ComplexWri
 
     return listRoot;
   }
+  
 
+  private static class VectorAccessibleFacade extends MapVector {
+
+    private final VectorContainer vc;
+    
+    public VectorAccessibleFacade(VectorContainer vc) {
+      super("", null);
+      this.vc = vc;
+    }
+
+    @Override
+    public <T extends ValueVector> T addOrGet(String name, MajorType type, Class<T> clazz) {
+      ValueVector v = vc.addOrGet(name, type, clazz);
+      this.put(name, v);
+      return this.typeify(v, clazz);
+
+    }
+
+  }
+
+  public static ComplexWriter getWriter(String name, VectorContainer container){
+    VectorAccessibleFacade vc = new VectorAccessibleFacade(container);
+    return new ComplexWriterImpl(name, vc);
+  }
 }

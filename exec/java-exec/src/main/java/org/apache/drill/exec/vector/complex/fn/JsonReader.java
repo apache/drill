@@ -43,30 +43,16 @@ import com.google.common.base.Charsets;
 public class JsonReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JsonReader.class);
 
-  public static enum WriteState {
-    WRITE_SUCCEED, WRITE_FAILED, NO_MORE
-  }
 
   private final JsonFactory factory = new JsonFactory();
-  private ByteBufInputStream stream;
-  private long byteOffset;
-  private JsonRecordSplitter splitter;
-  private Reader reader;
   private JsonParser parser;
 
-  public JsonReader(JsonRecordSplitter splitter) throws JsonParseException, IOException {
-    this.splitter = splitter;
+  public JsonReader() throws JsonParseException, IOException {
     factory.configure(Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
     factory.configure(Feature.ALLOW_COMMENTS, true);
-    reader = splitter.getNextReader();
   }
 
-  public WriteState write(ComplexWriter writer) throws JsonParseException, IOException {
-    if(reader == null){
-      reader = splitter.getNextReader();
-      if(reader == null) return WriteState.NO_MORE;
-
-    }
+  public boolean write(Reader reader, ComplexWriter writer) throws JsonParseException, IOException {
 
     parser = factory.createJsonParser(reader);
     reader.mark(1024*128);
@@ -82,7 +68,7 @@ public class JsonReader {
       writeData(writer.rootAsList());
       break;
     case NOT_AVAILABLE:
-      return WriteState.NO_MORE;
+      return false;
     default:
       throw new JsonParseException(
           String.format("Failure while parsing JSON.  Found token of [%s]  Drill currently only supports parsing "
@@ -91,13 +77,7 @@ public class JsonReader {
           parser.getCurrentLocation());
     }
 
-    if (!writer.ok()) {
-      reader.reset();
-      return WriteState.WRITE_FAILED;
-    } else {
-      reader = null;
-      return WriteState.WRITE_SUCCEED;
-    }
+    return true;
   }
 
 
@@ -227,5 +207,7 @@ public class JsonReader {
       }
     }
     list.end();
+    
+    
   }
 }

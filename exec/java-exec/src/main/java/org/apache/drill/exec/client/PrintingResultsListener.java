@@ -86,6 +86,7 @@ public class PrintingResultsListener implements UserResultsListener {
     if (isLastChunk) {
       allocator.close();
       latch.countDown();
+      System.out.println("Total rows returned : " + count.get());
     }
 
   }

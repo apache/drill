@@ -85,6 +85,9 @@ public interface RecordBatch extends VectorAccessible {
 
   public abstract SelectionVector4 getSelectionVector4();
 
+  
+  public VectorContainer getOutgoingContainer();
+  
   /**
    * Get the value vector type and id for the given schema path. The TypedFieldId should store a fieldId which is the
    * same as the ordinal position of the field within the Iterator provided this classes implementation of

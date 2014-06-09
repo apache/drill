@@ -31,7 +31,7 @@ import org.apache.drill.exec.record.selection.SelectionVector4;
 public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements RecordBatch{
   final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(this.getClass());
 
-  protected final VectorContainer container = new VectorContainer();
+  protected final VectorContainer container; //= new VectorContainer();
   protected final T popConfig;
   protected final FragmentContext context;
   protected final OperatorContext oContext;
@@ -43,6 +43,7 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
     this.popConfig = popConfig;
     this.oContext = new OperatorContext(popConfig, context);
     this.stats = oContext.getStats();
+    this.container = new VectorContainer(this.oContext);
   }
 
   @Override
@@ -135,4 +136,10 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
     return batch;
 
   }
+  
+  @Override
+  public VectorContainer getOutgoingContainer() {
+    throw new UnsupportedOperationException(String.format(" You should not call getOutgoingContainer() for class %s", this.getClass().getCanonicalName()));
+  }
+
 }

@@ -37,6 +37,7 @@ import org.apache.drill.exec.expr.fn.DrillFuncHolder.ValueReference;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder.WorkspaceReference;
 import org.apache.drill.exec.expr.holders.ValueHolder;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 import org.codehaus.commons.compiler.CompileException;
 import org.codehaus.janino.Java.CompilationUnit;
 import org.codehaus.janino.Parser;
@@ -129,6 +130,17 @@ public class FunctionConverter {
           continue;
         }
 
+        // Special processing for @Output ComplexWriter
+        if (output != null && ComplexWriter.class.isAssignableFrom(field.getType())) {
+          
+          if(outputField != null){
+            return failure("You've declared more than one @Output field.  You must declare one and only @Output field per Function class.", clazz, field);
+          }else{
+            outputField = ValueReference.createComplexWriterRef(field.getName());
+          }
+          continue;
+        }
+        
         // check that param and output are value holders.
         if(!ValueHolder.class.isAssignableFrom(field.getType())){
           return failure(String.format("The field doesn't holds value of type %s which does not implement the ValueHolder interface.  All fields of type @Param or @Output must extend this interface..", field.getType()), clazz, field);
@@ -154,15 +166,11 @@ public class FunctionConverter {
             return failure("You've declared more than one @Output field.  You must declare one and only @Output field per Function class.", clazz, field);
           }else{
             outputField = p;
-
           }
-
         }
-
+        
       }else{
         // workspace work.
-//        logger.debug("Found workspace field {}:{}", field.getType(), field.getName());
-        //workspaceFields.add(new WorkspaceReference(field.getType(), field.getName()));
         WorkspaceReference wsReference = new WorkspaceReference(field.getType(), field.getName());
 
         if (template.scope() == FunctionScope.POINT_AGGREGATE && !ValueHolder.class.isAssignableFrom(field.getType()) ) {
@@ -217,8 +225,16 @@ public class FunctionConverter {
         return new DrillDecimalAggFuncHolder(template.scope(), template.nulls(), template.isBinaryCommutative(),
           template.isRandom(), registeredNames, ps, outputField, works, methods, imports);
       case SIMPLE:
-        return new DrillSimpleFuncHolder(template.scope(), template.nulls(), template.isBinaryCommutative(),
-          template.isRandom(), registeredNames, ps, outputField, works, methods, imports);
+        if (outputField.isComplexWriter)
+          return new DrillComplexWriterFuncHolder(template.scope(), template.nulls(), 
+              template.isBinaryCommutative(),
+              template.isRandom(), registeredNames, 
+              ps, outputField, works, methods, imports);
+        else
+          return new DrillSimpleFuncHolder(template.scope(), template.nulls(), 
+                                           template.isBinaryCommutative(),
+                                           template.isRandom(), registeredNames, 
+                                           ps, outputField, works, methods, imports);
       case DECIMAL_MAX_SCALE:
           return new DrillDecimalMaxScaleFuncHolder(template.scope(), template.nulls(), template.isBinaryCommutative(),
                   template.isRandom(), registeredNames, ps, outputField, works, methods, imports);

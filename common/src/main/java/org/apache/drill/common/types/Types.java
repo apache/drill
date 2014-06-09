@@ -349,7 +349,7 @@ public class Types {
     case "binary":
       return withMode(MinorType.VARBINARY, mode);
     case "json":
-      return withMode(MinorType.VARBINARY, mode);
+      return withMode(MinorType.LATE, mode);
     default:
       throw new UnsupportedOperationException("Could not determine type: " + typeName);
     }

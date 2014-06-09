@@ -22,12 +22,13 @@ import java.util.List;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.apache.drill.common.types.TypeProtos.MajorType;
-
+import org.apache.drill.exec.expr.fn.DrillComplexWriterFuncHolder;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 
 public class DrillFuncHolderExpr extends FunctionHolderExpression implements Iterable<LogicalExpression>{
@@ -65,5 +66,9 @@ public class DrillFuncHolderExpr extends FunctionHolderExpression implements Ite
 
   public boolean argConstantOnly(int i) {
     return holder.isConstant(i);
+  }
+  
+  public boolean isComplexWriterFuncHolder() {
+    return holder instanceof DrillComplexWriterFuncHolder;
   }
 }

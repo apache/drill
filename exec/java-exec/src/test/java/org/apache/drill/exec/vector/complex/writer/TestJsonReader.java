@@ -26,6 +26,7 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.vector.complex.MapVector;
 import org.apache.drill.exec.vector.complex.fn.JsonReader;
+import org.apache.drill.exec.vector.complex.fn.JsonReaderWithState;
 import org.apache.drill.exec.vector.complex.fn.JsonWriter;
 import org.apache.drill.exec.vector.complex.fn.ReaderJSONRecordSplitter;
 import org.apache.drill.exec.vector.complex.impl.ComplexWriterImpl;
@@ -87,7 +88,7 @@ public class TestJsonReader {
     writer.allocate();
 
 
-    JsonReader jsonReader = new JsonReader(new ReaderJSONRecordSplitter(compound));
+    JsonReaderWithState jsonReader = new JsonReaderWithState(new ReaderJSONRecordSplitter(compound));
     int i =0;
     List<Integer> batchSizes = Lists.newArrayList();
 

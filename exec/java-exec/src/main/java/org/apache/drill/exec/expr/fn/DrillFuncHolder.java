@@ -236,8 +236,9 @@ public abstract class DrillFuncHolder {
   public static class ValueReference {
     MajorType type;
     String name;
-    boolean isConstant;
-    boolean isFieldReader;
+    boolean isConstant = false;
+    boolean isFieldReader = false;
+    boolean isComplexWriter = false;
 
     public ValueReference(MajorType type, String name) {
       super();
@@ -245,8 +246,6 @@ public abstract class DrillFuncHolder {
       Preconditions.checkNotNull(name);
       this.type = type;
       this.name = name;
-      isConstant = false;
-      this.isFieldReader = false;
     }
 
     public void setConstant(boolean isConstant) {
@@ -265,6 +264,15 @@ public abstract class DrillFuncHolder {
 
       return ref;
     }
+
+    public static ValueReference createComplexWriterRef(String name) {
+      MajorType type = Types.required(MinorType.LATE);
+      ValueReference ref = new ValueReference(type, name);
+      ref.isComplexWriter = true;
+
+      return ref;
+    }
+    
   }
 
   public static class WorkspaceReference {

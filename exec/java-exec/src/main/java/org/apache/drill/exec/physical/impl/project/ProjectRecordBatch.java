@@ -37,10 +37,12 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.CodeGenerator;
+import org.apache.drill.exec.expr.DrillFuncHolderExpr;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.ValueVectorReadExpression;
 import org.apache.drill.exec.expr.ValueVectorWriteExpression;
+import org.apache.drill.exec.expr.fn.DrillComplexWriterFuncHolder;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.config.Project;
@@ -50,8 +52,10 @@ import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.TypedFieldId;
+import org.apache.drill.exec.record.VectorContainer;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 
 import com.carrotsearch.hppc.IntOpenHashSet;
 import com.google.common.base.Preconditions;
@@ -63,6 +67,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
 
   private Projector projector;
   private List<ValueVector> allocationVectors;
+  private List<ComplexWriter> complexWriters;
   private boolean hasRemainder = false;
   private int remainderIndex = 0;
   private int recordCount;
@@ -85,55 +90,47 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
     return super.innerNext();
   }
 
+  public VectorContainer getOutgoingContainer() {
+    return this.container;
+  }
+
   @Override
   protected void doWork() {
 //    VectorUtil.showVectorAccessibleContent(incoming, ",");
     int incomingRecordCount = incoming.getRecordCount();
-    for(ValueVector v : this.allocationVectors){
-//      AllocationHelper.allocate(v, incomingRecordCount, 250);
-//      v.allocateNew();
-      v.allocateNewSafe();
-    }
+    
+    doAlloc();
+    
     int outputRecords = projector.projectRecords(0, incomingRecordCount, 0);
     if (outputRecords < incomingRecordCount) {
-      for(ValueVector v : allocationVectors){
-        ValueVector.Mutator m = v.getMutator();
-        m.setValueCount(outputRecords);
-      }
+      setValueCount(outputRecords);
       hasRemainder = true;
       remainderIndex = outputRecords;
       this.recordCount = remainderIndex;
     } else {
-      for(ValueVector v : allocationVectors){
-        ValueVector.Mutator m = v.getMutator();
-        m.setValueCount(incomingRecordCount);
-      }
+      setValueCount(incomingRecordCount);
       for(VectorWrapper<?> v: incoming) {
         v.clear();
       }
       this.recordCount = outputRecords;
     }
+    // In case of complex writer expression, vectors would be added to batch run-time. 
+    // We have to re-build the schema. 
+    if (complexWriters != null) {
+      container.buildSchema(SelectionVectorMode.NONE);
+    }
   }
 
   private void handleRemainder() {
     int remainingRecordCount = incoming.getRecordCount() - remainderIndex;
-    for(ValueVector v : this.allocationVectors){
-      //AllocationHelper.allocate(v, remainingRecordCount, 250);
-      v.allocateNewSafe();
-    }
+    doAlloc();
     int projRecords = projector.projectRecords(remainderIndex, remainingRecordCount, 0);
     if (projRecords < remainingRecordCount) {
-      for(ValueVector v : allocationVectors){
-        ValueVector.Mutator m = v.getMutator();
-        m.setValueCount(projRecords);
-      }
+      setValueCount(projRecords);
       this.recordCount = projRecords;
       remainderIndex += projRecords;
     } else {
-      for(ValueVector v : allocationVectors){
-        ValueVector.Mutator m = v.getMutator();
-        m.setValueCount(remainingRecordCount);
-      }
+      setValueCount(remainingRecordCount);
       hasRemainder = false;
       remainderIndex = 0;
       for(VectorWrapper<?> v: incoming) {
@@ -141,8 +138,48 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
       }
       this.recordCount = remainingRecordCount;
     }
+    // In case of complex writer expression, vectors would be added to batch run-time. 
+    // We have to re-build the schema. 
+    if (complexWriters != null) {
+      container.buildSchema(SelectionVectorMode.NONE);
+    }   
   }
 
+  public void addComplexWriter(ComplexWriter writer) {
+    complexWriters.add(writer);
+  }
+  
+  private boolean doAlloc() {
+    //Allocate vv in the allocationVectors.
+    for(ValueVector v : this.allocationVectors){
+      //AllocationHelper.allocate(v, remainingRecordCount, 250);
+      if (!v.allocateNewSafe())
+        return false;
+    }
+    
+    //Allocate vv for complexWriters.
+    if (complexWriters == null)
+      return true;
+    
+    for (ComplexWriter writer : complexWriters)
+      writer.allocate();
+    
+    return true;
+  }
+  
+  private void setValueCount(int count) {
+    for(ValueVector v : allocationVectors){
+      ValueVector.Mutator m = v.getMutator();
+      m.setValueCount(count);
+    }
+
+    if (complexWriters == null)
+      return;
+
+    for (ComplexWriter writer : complexWriters)
+      writer.setValueCount(count);    
+  }
+  
   /** hack to make ref and full work together... need to figure out if this is still necessary. **/
   private FieldReference getRef(NamedExpression e){
     FieldReference ref = e.getRef();
@@ -200,12 +237,11 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
     }else{
       for(int i = 0; i < exprs.size(); i++){
         final NamedExpression namedExpression = exprs.get(i);
-        final LogicalExpression expr = ExpressionTreeMaterializer.materialize(namedExpression.getExpr(), incoming, collector, context.getFunctionRegistry());
+        final LogicalExpression expr = ExpressionTreeMaterializer.materialize(namedExpression.getExpr(), incoming, collector, context.getFunctionRegistry(), true);
         final MaterializedField outputField = MaterializedField.create(getRef(namedExpression), expr.getMajorType());
         if(collector.hasErrors()){
           throw new SchemaChangeException(String.format("Failure while trying to materialize incoming schema.  Errors:\n %s.", collector.toErrorString()));
         }
-
 
         // add value vector to transfer if direct reference and this is allowed, otherwise, add to evaluation stack.
         if(expr instanceof ValueVectorReadExpression && incoming.getSchema().getSelectionVectorMode() == SelectionVectorMode.NONE
@@ -223,7 +259,17 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
           container.add(tp.getTo());
           transferFieldIds.add(vectorRead.getFieldId().getFieldIds()[0]);
 //          logger.debug("Added transfer.");
-        }else{
+        } else if (expr instanceof DrillFuncHolderExpr && 
+                  ((DrillFuncHolderExpr) expr).isComplexWriterFuncHolder())  {  
+          // Need to process ComplexWriter function evaluation. 
+          // Lazy initialization of the list of complex writers, if not done yet. 
+          if (complexWriters == null)
+            complexWriters = Lists.newArrayList();
+         
+          // The reference name will be passed to ComplexWriter, used as the name of the output vector from the writer. 
+          ((DrillComplexWriterFuncHolder) ((DrillFuncHolderExpr) expr).getHolder()).setReference(namedExpression.getRef());
+          cg.addExpr(expr);          
+        } else{
           // need to do evaluation.
           ValueVector vector = TypeHelper.getNewVector(outputField, oContext.getAllocator());
           allocationVectors.add(vector);
@@ -231,13 +277,10 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
           ValueVectorWriteExpression write = new ValueVectorWriteExpression(fid, expr, true);
           HoldingContainer hc = cg.addExpr(write);
 
-
           cg.getEvalBlock()._if(hc.getValue().eq(JExpr.lit(0)))._then()._return(JExpr.FALSE);
           logger.debug("Added eval.");
         }
       }
-
-
     }
     cg.rotateBlock();
     cg.getEvalBlock()._return(JExpr.TRUE);

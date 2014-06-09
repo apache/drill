@@ -74,6 +74,10 @@ public interface BaseWriter extends Positionable{
     MapWriter rootAsMap();
     ListWriter rootAsList();
     boolean ok();
+    
+    public void setPosition(int index);
+    public void setValueCount(int count);
+    public void reset();
   }
 }
 
