@@ -31,8 +31,11 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.client.DrillClient;
+import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
@@ -50,8 +53,6 @@ public class QueryResources {
 
   @Inject
   WorkManager work;
-  @Inject
-  DrillClient client;
 
   @GET
   @Produces(MediaType.TEXT_HTML)
@@ -63,6 +64,11 @@ public class QueryResources {
   @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
   @Produces(MediaType.TEXT_HTML)
   public Viewable submitQuery(@FormParam("query") String query, @FormParam("queryType") String queryType) throws Exception {
+    final DrillConfig config = work.getContext().getConfig();
+    final ClusterCoordinator coordinator = work.getContext().getClusterCoordinator();
+    final BufferAllocator allocator = work.getContext().getAllocator();
+    DrillClient client = new DrillClient(config, coordinator, allocator);
+
     UserBitShared.QueryType type = UserBitShared.QueryType.SQL;
     switch (queryType){
       case "SQL" : type = UserBitShared.QueryType.SQL; break;

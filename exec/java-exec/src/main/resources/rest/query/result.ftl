@@ -11,6 +11,12 @@
 
 <#include "*/generic.ftl">
 <#macro page_head>
+  <link rel="stylesheet" type="text/css" href="//code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css">
+  <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/plug-ins/be7019ee387/integration/jqueryui/dataTables.jqueryui.css">
+
+  <script type="text/javascript" language="javascript" src="//code.jquery.com/jquery-1.10.2.min.js"></script>
+  <script type="text/javascript" language="javascript" src="//cdn.datatables.net/1.10.0/js/jquery.dataTables.min.js"></script>
+  <script type="text/javascript" language="javascript" src="//cdn.datatables.net/plug-ins/be7019ee387/integration/jqueryui/dataTables.jqueryui.js"></script>
 </#macro>
 
 <#macro page_body>
@@ -18,19 +24,34 @@
   <div class="page-header">
   </div>
   <h2>Result</h2>
-  <div class="table-responsive">
-    <table class="table">
-      <tbody>
-        <#list model as rows>
+  <div style="width=100%; overflow: auto;">
+    <table id="relation" class="table table-striped table-bordered table-condensed" style="display: table; table-layout: fized; width=100%;">
+      <#assign rows = model[0]>
+      <thead style="overflow: auto;">
         <tr>
           <#list rows as row>
-          <td style="border:none;"><pre>${row}</pre></td>
+          <th>${row}</th>
           </#list>
         </tr>
-        </#list>
+      </thead>
+      <tbody style="overflow: auto;">
+      <#list model as rows>
+        <#if (rows_index > 0)>
+          <tr>
+            <#list rows as row>
+            <td>${row}</td>
+            </#list>
+          </tr>
+        </#if>
+      </#list>
       </tbody>
     </table>
   </div>
+  <script charset="utf-8">
+    $(document).ready(function() {
+      $('#relation').dataTable( { "scrollX" : true } );
+    } );
+  </script>
 </#macro>
 
 <@page_html/>

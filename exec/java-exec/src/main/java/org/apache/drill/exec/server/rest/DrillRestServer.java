@@ -64,10 +64,6 @@ public class DrillRestServer extends ResourceConfig {
       register(provider);
     }
 
-    final DrillConfig config = workManager.getContext().getConfig();
-    final BufferAllocator allocator = workManager.getContext().getAllocator();
-    final ClusterCoordinator coordinator = workManager.getContext().getClusterCoordinator();
-    final DrillClient client = new DrillClient(config, coordinator, allocator);
     register(new AbstractBinder() {
       @Override
       protected void configure() {
@@ -75,7 +71,6 @@ public class DrillRestServer extends ResourceConfig {
         bind(workManager.getContext().getConfig().getMapper()).to(ObjectMapper.class);
         bind(workManager.getContext().getPersistentStoreProvider()).to(PStoreProvider.class);
         bind(workManager.getContext().getStorage()).to(StoragePluginRegistry.class);
-        bind(client).to(DrillClient.class);
       }
     });
   }

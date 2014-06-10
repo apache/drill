@@ -24,17 +24,15 @@
         <#list model as plugin>
         <tr>
           <td style="border:none;">
-            ${plugin}
+            ${plugin.name}
           </td>
           <td style="border:none;">
-            <form action="/storage/${plugin}/config">
-              <button class="btn btn-default" type="submit">View</button>
-            </form>
-          </td>
-          <td style="border:none;">
-            <form action="/storage/${plugin}/config/update">
-              <button class="btn btn-primary" type="submit">Update</button>
-            </form>
+            <a class="btn btn-primary" href="/storage/${plugin.name}/config/update">Update</a>
+            <#if plugin.enabled>
+              <a class="btn btn-default" href="/storage/${plugin.name}/enable/false">Disable</a>
+            <#else>
+              <a class="btn btn-primary" href="/storage/${plugin.name}/enable/true">Enable</a>
+            </#if>
           </td>
         </tr>
         </#list>
@@ -55,13 +53,9 @@
           form.submit();
         }
       </script>
-      <button type="submit" class="btn btn-default" onclick="javascript:doSubmit();">Submit</button>
+      <button type="submit" class="btn btn-default" onclick="javascript:doSubmit();">Create</button>
     </form>
   </div>
-  <script>
-      var elem = document.getElementById("statusFontColor");
-      elem.style.color = "green";
-  </script>
 </#macro>
 
 <@page_html/>

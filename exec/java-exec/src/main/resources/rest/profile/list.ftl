@@ -29,7 +29,7 @@
         <tr>
           <td>${query.getValue()}</td>
           <td>
-            <a href="/query/${query.getKey()}">
+            <a href="/profiles/${query.getKey()}">
               <div style="height:100%;width:100%">
                 ${query.getKey()}
               </div>
@@ -52,7 +52,7 @@
         <tr>
           <td>${query.getValue()}</td>
           <td>
-            <a href="/profile/${query.getKey()}">
+            <a href="/profiles/${query.getKey()}">
               <div style="height:100%;width:100%">
                 ${query.getKey()}
               </div>

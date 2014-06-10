@@ -47,15 +47,11 @@
   <div class="page-header">
     <h2>Physical Plan</h2>
   </div>
-  <div class="well">
     <p><pre>${model.plan}</pre></p>
-  </div>
   <div class="page-header">
     <h2>Complete Profile</h2>
   </div>
-  <div class="well">
     <p><pre>${model.toString()}</pre></p>
-  </div>
 </#macro>
 
 <@page_html/>

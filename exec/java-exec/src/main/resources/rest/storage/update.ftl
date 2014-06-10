@@ -19,27 +19,28 @@
   </div>
   <h3>Configuration</h3>
   <form role="form" action="/storage/config/update" method="POST">
-   <input type="hidden" name="name" value="${model.name}" />
-   <div class="form-group">
-      <textarea class="form-control" id="config" rows="20" cols="50" name="config">${model.config}</textarea>
-   </div>
-   <button class="btn btn-default" type="submit">
-     <#if model.exists >Update<#else>Create</#if>
-   </button>
+    <input type="hidden" name="name" value="${model.name}" />
+    <div class="form-group">
+      <textarea class="form-control" id="config" rows="20" cols="50" name="config" style="font-family: Courier;">${model.config}</textarea>
+    </div>
+    <a class="btn btn-default" href="/storage">Back</a>
+    <button class="btn btn-default" type="submit">
+      <#if model.exists >Update<#else>Create</#if>
+    </button>
+    <#if model.enabled>
+      <a class="btn btn-default" href="/storage/${model.name}/enable/false">Disable</a>
+    <#else>
+      <a class="btn btn-primary" href="/storage/${model.name}/enable/true">Enable</a>
+    </#if>
+    <#if model.exists >
+      <form role="form" action="/storage/config/delete" method="POST">
+        <input type="hidden" name="name" value="${model.name}" />
+        <button type="submit" class="btn btn-default" onclick="return confirm('Are you sure?')">
+        Delete
+        </button>
+      </form>
+    </#if>
   </form>
-  <br/>
-  <#if model.exists >
-    <form role="form" action="/storage/config/delete" method="POST">
-      <input type="hidden" name="name" value="${model.name}" />
-      <button type="submit" class="btn btn-default" onclick="return confirm('Are you sure?')">
-      Delete
-      </button>
-    </form>
-  </#if>
-  <script>
-      var elem = document.getElementById("statusFontColor");
-      elem.style.color = "green";
-  </script>
 </#macro>
 
 <@page_html/>

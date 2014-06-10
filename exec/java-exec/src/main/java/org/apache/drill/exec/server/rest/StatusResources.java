@@ -32,7 +32,7 @@ public class StatusResources {
   @Produces(MediaType.TEXT_HTML)
   public Viewable getStatus() {
     String status = "Running!";
-    return new Viewable("/rest/status/status.ftl", status);
+    return new Viewable("/rest/status.ftl", status);
   }
 
 }

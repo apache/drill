@@ -19,6 +19,8 @@ package org.apache.drill.exec.server.rest;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -30,7 +32,10 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.StoragePluginConfig;
@@ -59,12 +64,15 @@ public class StorageResources {
   @Produces(MediaType.TEXT_HTML)
   public Viewable getQueries() {
 
-    List<String> names = Lists.newArrayList();
+    List<SimpleHash> list = Lists.newArrayList();
     for (Map.Entry<String, StoragePluginConfig> config : storage.getStore()) {
-      names.add(config.getKey());
+      SimpleHash map = new SimpleHash();
+      map.put("name", config.getKey());
+      map.put("enabled", config.getValue().isEnabled());
+      list.add(map);
     }
 
-    return new Viewable("/rest/storage/list.ftl", names);
+    return new Viewable("/rest/storage/list.ftl", list);
   }
 
   @GET
@@ -78,7 +86,22 @@ public class StorageResources {
     map.put("config", conf);
     map.put("name", name);
     map.put("exists", config != null);
+    map.put("enabled", config.isEnabled());
     return new Viewable("/rest/storage/update.ftl", map);
+  }
+
+  @GET
+  @Path("/{name}/enable/{val}")
+  @Produces(MediaType.TEXT_HTML)
+  public Response setEnable(@Context UriInfo uriInfo, @PathParam("name") String name, @PathParam("val") Boolean enable) throws ExecutionSetupException {
+    StoragePluginConfig config = findConfig(name);
+    if (config != null) {
+      config.setEnabled(enable);
+      storage.createOrUpdate(name, config, true);
+    }
+
+    URI uri = uriInfo.getBaseUriBuilder().path("/storage").build();
+    return Response.seeOther(uri).build();
   }
 
   @GET
