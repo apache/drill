@@ -414,5 +414,13 @@ public class TestJdbcQuery extends JdbcTest{
         );
   }
 
-
+  @Test
+  public void testLengthUTF8VarCharInput() throws Exception {
+    JdbcAssert.withNoDefaultSchema()
+        .sql("select length('Sheri', 'UTF8') as L_UTF8 " +
+            "from cp.`employee.json` where employee_id = 1")
+        .returns(
+            "L_UTF8=5\n"
+        );
+  }
 }

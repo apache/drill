@@ -125,8 +125,18 @@ public class ResolverTypePrecedence {
     rule.add(MinorType.INTERVAL);
     rule.add(MinorType.INTERVALYEAR);
     rule.add(MinorType.INTERVALDAY);
-
     secondaryImplicitCastRules.put(MinorType.VARCHAR, rule);
+
+    rule = new HashSet<>();
+
+    // Be able to implicitly cast to VARBINARY
+    rule.add(MinorType.INT);
+    rule.add(MinorType.BIGINT);
+    rule.add(MinorType.FLOAT4);
+    rule.add(MinorType.FLOAT8);
+    rule.add(MinorType.VARCHAR);
+    secondaryImplicitCastRules.put(MinorType.VARBINARY, rule);
+
   }
 
 }

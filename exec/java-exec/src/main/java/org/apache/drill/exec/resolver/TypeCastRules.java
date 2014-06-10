@@ -761,6 +761,7 @@ public class TypeCastRules {
     rule.add(MinorType.FLOAT4);
     rule.add(MinorType.FLOAT8);
     rule.add(MinorType.BIT);
+    rule.add(MinorType.VARCHAR);
     rule.add(MinorType.VARBINARY);
     rule.add(MinorType.FIXEDBINARY);
     rules.put(MinorType.VARBINARY, rule);
