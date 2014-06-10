@@ -402,4 +402,17 @@ public class TestJdbcQuery extends JdbcTest{
         );
   }
 
+  @Test
+  public void testLeftRightReplace() throws Exception {
+    JdbcAssert.withNoDefaultSchema()
+        .sql("SELECT `left`('abcdef', 2) as LEFT_STR, `right`('abcdef', 2) as RIGHT_STR, `replace`('abcdef', 'ab', 'zz') as REPLACE_STR " +
+            "from cp.`employee.json` limit 1")
+        .returns(
+            "LEFT_STR=ab; " +
+            "RIGHT_STR=ef; " +
+            "REPLACE_STR=zzcdef\n"
+        );
+  }
+
+
 }
