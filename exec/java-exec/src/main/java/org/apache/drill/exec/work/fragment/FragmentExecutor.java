@@ -81,6 +81,8 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
       root = ImplCreator.getExec(context, rootOperator);
     } catch (ExecutionSetupException e) {
       context.fail(e);
+      logger.debug("Failure while running fragement", e);
+      internalFail(e);
       return;
     }
 
