@@ -262,7 +262,7 @@
           <artifactId>maven-surefire-plugin</artifactId>
           <version>2.17</version>
           <configuration>
-            <argLine>-Xms512m -Xmx1g -Ddrill.exec.http.enabled=false -Ddrill.exec.sys.store.provider.local.write=false -XX:MaxPermSize=256M -XX:MaxDirectMemorySize=10000M -XX:+CMSClassUnloadingEnabled</argLine>
+            <argLine>-Xms512m -Xmx2g -Ddrill.exec.http.enabled=false -Ddrill.exec.sys.store.provider.local.write=false -XX:MaxPermSize=256M -XX:MaxDirectMemorySize=10000M -XX:+CMSClassUnloadingEnabled</argLine>
             <forkCount>4</forkCount>
             <reuseForks>true</reuseForks>
             <additionalClasspathElements>
