@@ -391,4 +391,15 @@ public class TestJdbcQuery extends JdbcTest{
             "employee_id=101; EXPR$1=Test\n"
         );
   }
+
+  @Test
+  public void testAggWithDrillFunc() throws Exception {
+    JdbcAssert.withNoDefaultSchema()
+        .sql("SELECT extract(year from max(to_timestamp(hire_date, 'yyyy-MM-dd HH:mm:SS.SSS' ))) as MAX_YEAR " +
+            "from cp.`employee.json` ")
+        .returns(
+            "MAX_YEAR=1998\n"
+        );
+  }
+
 }
