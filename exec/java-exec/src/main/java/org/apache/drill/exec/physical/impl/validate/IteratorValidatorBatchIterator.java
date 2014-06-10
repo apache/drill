@@ -118,10 +118,10 @@ public class IteratorValidatorBatchIterator implements RecordBatch {
       if(incoming.getRecordCount() > MAX_BATCH_SIZE){
         throw new IllegalStateException (String.format("Incoming batch of %s has size %d, which is beyond the limit of %d",  incoming.getClass().getName(), incoming.getRecordCount(), MAX_BATCH_SIZE));
       }
-      int valueCount = incoming.getRecordCount();
-      for (VectorWrapper vw : incoming) {
-        assert valueCount == vw.getValueVector().getAccessor().getValueCount() : "Count of values in each vector within this batch does not match.";
-      }
+//      int valueCount = incoming.getRecordCount();
+//      for (VectorWrapper vw : incoming) {
+//        assert valueCount == vw.getValueVector().getAccessor().getValueCount() : "Count of values in each vector within this batch does not match.";
+//      }
     }
 
     return state;
