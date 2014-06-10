@@ -18,21 +18,20 @@
 package org.apache.drill.exec.physical.impl.union;
 
 import com.google.common.collect.Lists;
+
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.ops.OperatorContext;
-import org.apache.drill.exec.physical.config.Union;
+import org.apache.drill.exec.physical.config.UnionAll;
 import org.apache.drill.exec.record.*;
 import org.apache.drill.exec.record.selection.SelectionVector2;
-import org.apache.drill.exec.vector.ValueVector;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class UnionRecordBatch extends AbstractRecordBatch<Union> {
+public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
 
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UnionRecordBatch.class);
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UnionAllRecordBatch.class);
 
   private final List<RecordBatch> incoming;
   private SelectionVector2 sv;
@@ -41,7 +40,7 @@ public class UnionRecordBatch extends AbstractRecordBatch<Union> {
   private ArrayList<TransferPair> transfers;
   private int outRecordCount;
 
-  public UnionRecordBatch(Union config, List<RecordBatch> children, FragmentContext context) throws OutOfMemoryException {
+  public UnionAllRecordBatch(UnionAll config, List<RecordBatch> children, FragmentContext context) throws OutOfMemoryException {
     super(config, context);
     this.incoming = children;
     this.incomingIterator = incoming.iterator();
@@ -145,4 +144,14 @@ public class UnionRecordBatch extends AbstractRecordBatch<Union> {
   public WritableBatch getWritableBatch() {
     return WritableBatch.get(this);
   }
+  
+  @Override
+  public void cleanup() {
+    super.cleanup();
+    for (int i = 0; i < incoming.size(); i++) {
+      RecordBatch in = incoming.get(i);
+      in.cleanup();
+    }
+  }
+
 }

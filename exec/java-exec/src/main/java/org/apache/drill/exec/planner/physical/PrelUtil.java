@@ -95,6 +95,10 @@ public class PrelUtil {
   public static Iterator<Prel> iter(RelNode... nodes){
     return (Iterator<Prel>) (Object) Arrays.asList(nodes).iterator();
   }
+  
+  public static Iterator<Prel> iter(List<RelNode> nodes) {
+    return (Iterator<Prel>) (Object) nodes.iterator();
+  }
 
   public static PlannerSettings getSettings(RelOptCluster cluster){
     return cluster.getPlanner().getFrameworkContext().unwrap(PlannerSettings.class);

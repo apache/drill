@@ -165,6 +165,8 @@ public class DrillRuleSets {
     ruleList.add(LimitPrule.INSTANCE);
     ruleList.add(WriterPrule.INSTANCE);
     ruleList.add(PushLimitToTopN.INSTANCE);
+    ruleList.add(UnionAllPrule.INSTANCE);
+    // ruleList.add(UnionDistinctPrule.INSTANCE);
     
     PlannerSettings ps = qcontext.getPlannerSettings();
     

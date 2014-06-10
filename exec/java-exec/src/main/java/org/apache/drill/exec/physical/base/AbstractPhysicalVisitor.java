@@ -28,7 +28,7 @@ public abstract class AbstractPhysicalVisitor<T, X, E extends Throwable> impleme
   }
 
   @Override
-  public T visitUnion(Union union, X value) throws E {
+  public T visitUnion(UnionAll union, X value) throws E {
     return visitOp(union, value);
   }
 

@@ -15,26 +15,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.planner.common;
 
+package org.apache.drill.exec.planner.physical;
+
+import java.util.Iterator;
 import java.util.List;
 
+import org.apache.drill.exec.planner.common.DrillUnionRelBase;
+import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.eigenbase.rel.InvalidRelException;
 import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.UnionRelBase;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelTraitSet;
+import org.eigenbase.reltype.RelDataType;
 
-/**
- * Base class for logical and physical Union implemented in Drill
- */
-public abstract class DrillUnionRelBase extends UnionRelBase implements DrillRelNode {
- 
-  public DrillUnionRelBase(RelOptCluster cluster, RelTraitSet traits,
-      List<RelNode> inputs, boolean all) throws InvalidRelException {
+public abstract class UnionPrel extends DrillUnionRelBase implements Prel{
+
+  public UnionPrel(RelOptCluster cluster, RelTraitSet traits, List<RelNode> inputs, boolean all) throws InvalidRelException{
     super(cluster, traits, inputs, all);
-    if (! this.isHomogeneous(false /* don't compare names */)) {
-      throw new InvalidRelException("Input row types of the Union are not compatible.");
-    }
   }
+
+  @Override
+  public <T, X, E extends Throwable> T accept(PrelVisitor<T, X, E> logicalVisitor, X value) throws E {
+    return logicalVisitor.visitPrel(this, value);
+  }
+
+  @Override
+  public Iterator<Prel> iterator() {
+    return PrelUtil.iter(this.getInputs());
+  }
+
 }

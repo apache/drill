@@ -18,18 +18,22 @@
 package org.apache.drill.exec.planner.logical;
 
 import org.apache.drill.exec.planner.common.DrillUnionRelBase;
+import org.eigenbase.rel.InvalidRelException;
 import org.eigenbase.rel.UnionRel;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.*;
+import org.eigenbase.trace.EigenbaseTrace;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 /**
  * Rule that converts a {@link UnionRel} to a {@link DrillUnionRelBase}, implemented by a "union" operation.
  */
 public class DrillUnionRule extends RelOptRule {
   public static final RelOptRule INSTANCE = new DrillUnionRule();
+  protected static final Logger tracer = EigenbaseTrace.getPlannerTracer();
 
   private DrillUnionRule() {
     super(RelOptHelper.any(UnionRel.class, Convention.NONE), "DrillUnionRule");
@@ -44,6 +48,10 @@ public class DrillUnionRule extends RelOptRule {
       final RelNode convertedInput = convert(input, input.getTraitSet().plus(DrillRel.DRILL_LOGICAL));
       convertedInputs.add(convertedInput);
     }
-    call.transformTo(new DrillUnionRel(union.getCluster(), traits, convertedInputs, union.all));
+    try { 
+      call.transformTo(new DrillUnionRel(union.getCluster(), traits, convertedInputs, union.all));
+    } catch (InvalidRelException e) {
+      tracer.warning(e.toString()) ;
+    }
   }
 }

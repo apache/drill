@@ -27,14 +27,14 @@ import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
 import java.util.List;
 
-@JsonTypeName("union")
+@JsonTypeName("union-all")
 
-public class Union extends AbstractMultiple {
+public class UnionAll extends AbstractMultiple {
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Filter.class);
 
   @JsonCreator
-  public Union(@JsonProperty("children") PhysicalOperator[] children) {
+  public UnionAll(@JsonProperty("children") PhysicalOperator[] children) {
     super(children);
   }
 
@@ -45,7 +45,7 @@ public class Union extends AbstractMultiple {
 
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
-    return new Union(children.toArray(new PhysicalOperator[children.size()]));
+    return new UnionAll(children.toArray(new PhysicalOperator[children.size()]));
   }
 
   @Override
