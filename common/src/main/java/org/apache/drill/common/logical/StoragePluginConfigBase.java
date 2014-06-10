@@ -23,12 +23,9 @@ import org.apache.drill.common.config.CommonConstants;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.PathScanner;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-public abstract class StoragePluginConfigBase implements StoragePluginConfig{
+public abstract class StoragePluginConfigBase extends StoragePluginConfig {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StoragePluginConfigBase.class);
-  
-  
+
   public synchronized static Class<?>[] getSubTypes(DrillConfig config){
     List<String> packages = config.getStringList(CommonConstants.STORAGE_PLUGIN_CONFIG_SCAN_PACKAGES);
     Class<?>[] sec = PathScanner.scanForImplementationsArr(StoragePluginConfig.class, packages);
@@ -37,5 +34,5 @@ public abstract class StoragePluginConfigBase implements StoragePluginConfig{
   }
 
   public abstract boolean equals(Object o);
-  
+
 }

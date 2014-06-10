@@ -25,7 +25,7 @@ import org.apache.drill.common.logical.StoragePluginConfig;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName(FileSystemConfig.NAME)
-public class FileSystemConfig implements StoragePluginConfig{
+public class FileSystemConfig extends StoragePluginConfig {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FileSystemConfig.class);
   public static final String NAME = "file";
   public String connection;
@@ -43,4 +43,5 @@ public class FileSystemConfig implements StoragePluginConfig{
             ((this.formats== null && that.formats == null) || this.formats.equals(that.formats));
     return same;
   }
+
 }

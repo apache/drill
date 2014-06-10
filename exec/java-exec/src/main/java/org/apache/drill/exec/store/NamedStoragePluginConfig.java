@@ -22,6 +22,12 @@ import org.apache.drill.common.logical.StoragePluginConfig;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName("named")
-public class NamedStoragePluginConfig implements StoragePluginConfig{
+public class NamedStoragePluginConfig extends StoragePluginConfig {
   public String name;
+
+  @Override
+  public boolean equals(Object o) {
+    return this == o;
+  }
+
 }

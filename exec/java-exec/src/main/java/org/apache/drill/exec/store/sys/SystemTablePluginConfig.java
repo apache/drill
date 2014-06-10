@@ -19,7 +19,7 @@ package org.apache.drill.exec.store.sys;
 
 import org.apache.drill.common.logical.StoragePluginConfig;
 
-public class SystemTablePluginConfig implements StoragePluginConfig{
+public class SystemTablePluginConfig extends StoragePluginConfig {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SystemTablePluginConfig.class);
 
   public static String NAME = "system-tables";
@@ -29,4 +29,10 @@ public class SystemTablePluginConfig implements StoragePluginConfig{
   private SystemTablePluginConfig(){
 
   }
+
+  @Override
+  public boolean equals(Object o) {
+    return this == o;
+  }
+
 }

@@ -49,7 +49,7 @@ public class HBaseStoragePluginConfig extends StoragePluginConfigBase implements
     if (config == null) {
       config = Maps.newHashMap();
     }
-    logger.debug("Configuring HBase StoragePlugin with zookeeper quorum '{}', port '{}'.",
+    logger.debug("Initializing HBase StoragePlugin configuration with zookeeper quorum '{}', port '{}'.",
         config.get(HConstants.ZOOKEEPER_QUORUM), config.get(HBASE_ZOOKEEPER_PORT));
   }
 

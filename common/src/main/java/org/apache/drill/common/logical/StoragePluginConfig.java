@@ -22,7 +22,18 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property="type")
-public interface StoragePluginConfig{
+public abstract class StoragePluginConfig{
 
-  public boolean equals(Object o);
+  private boolean enabled = true;
+
+  public boolean isEnabled() {
+    return enabled;
+  }
+
+  public void setEnabled(boolean enabled) {
+    this.enabled = enabled;
+  }
+
+  public abstract boolean equals(Object o);
+
 }
