@@ -50,7 +50,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-  public class TestJdbcQuery extends JdbcTest{
+public class TestJdbcQuery extends JdbcTest{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestJdbcQuery.class);
 
 
@@ -77,12 +77,6 @@ import static org.junit.Assert.fail;
   }
 
   @Test
-  @Ignore
-  public void testHiveRead() throws Exception{
-    testQuery("select * from hive.kv");
-  }
-
-  @Test
   public void testHiveReadWithDb() throws Exception{
     testQuery("select * from hive.`default`.kv");
     testQuery("select key from hive.`default`.kv group by key");
@@ -92,6 +86,11 @@ import static org.junit.Assert.fail;
   public void testHiveWithDate() throws Exception {
     testQuery("select * from hive.`default`.foodate");
     testQuery("select date_add(a, time '12:23:33'), b from hive.`default`.foodate");
+  }
+
+  @Test
+  public void testQueryEmptyHiveTable() throws Exception {
+    testQuery("SELECT * FROM hive.`default`.empty_table");
   }
 
   @Test

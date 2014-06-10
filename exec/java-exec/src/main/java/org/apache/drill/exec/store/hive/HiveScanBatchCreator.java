@@ -66,6 +66,13 @@ public class HiveScanBatchCreator implements BatchCreator<HiveSubScan> {
         }
       }
     }
+
+    // If there are no readers created (which is possible when the table is empty), create an empty RecordReader to
+    // output the schema
+    if (readers.size() == 0) {
+      readers.add(new HiveRecordReader(table, null, null, config.getColumns(), context));
+    }
+
     return new ScanBatch(config, context, readers.iterator());
   }
 }

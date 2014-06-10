@@ -49,6 +49,7 @@ public class TestMetadataDDL extends TestJdbcQuery {
     JdbcAssert.withFull("hive.default")
         .sql("SHOW TABLES")
         .returns(
+            "TABLE_SCHEMA=hive.default; TABLE_NAME=empty_table\n" +
             "TABLE_SCHEMA=hive.default; TABLE_NAME=kv\n" +
             "TABLE_SCHEMA=hive.default; TABLE_NAME=foodate\n"
         );
@@ -69,6 +70,7 @@ public class TestMetadataDDL extends TestJdbcQuery {
     JdbcAssert.withFull("dfs.tmp")
         .sql("SHOW TABLES IN hive.`default`")
         .returns(
+            "TABLE_SCHEMA=hive.default; TABLE_NAME=empty_table\n" +
             "TABLE_SCHEMA=hive.default; TABLE_NAME=kv\n" +
             "TABLE_SCHEMA=hive.default; TABLE_NAME=foodate\n");
   }

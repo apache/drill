@@ -85,6 +85,8 @@ public class HiveTestDataGenerator {
         "ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE");
     executeQuery(String.format("LOAD DATA LOCAL INPATH '%s' OVERWRITE INTO TABLE default.foodate", testDateDataFile));
 
+    // create a table with no data
+    executeQuery("CREATE TABLE IF NOT EXISTS default.empty_table(a INT, b STRING)");
 
     ss.close();
   }

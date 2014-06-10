@@ -108,6 +108,7 @@ public class HiveRecordReader implements RecordReader {
   protected List<ValueVector> pVectors = Lists.newArrayList();
   protected Object redoRecord;
   List<Object> partitionValues = Lists.newArrayList();
+  protected boolean empty;
 
   protected static final int TARGET_RECORD_COUNT = 4000;
 
@@ -117,6 +118,7 @@ public class HiveRecordReader implements RecordReader {
     this.inputSplit = inputSplit;
     this.context = context;
     this.columns = columns;
+    this.empty = (inputSplit == null && partition == null);
     init();
   }
 
@@ -144,11 +146,9 @@ public class HiveRecordReader implements RecordReader {
     }
     job.setInputFormat(format.getClass());
 
-    if (partition != null) {
-      List<FieldSchema> partitionKeys = table.getPartitionKeys();
-      for (FieldSchema field : partitionKeys) {
-        partitionNames.add(field.getName());
-      }
+    List<FieldSchema> partitionKeys = table.getPartitionKeys();
+    for (FieldSchema field : partitionKeys) {
+      partitionNames.add(field.getName());
     }
 
     try {
@@ -168,7 +168,7 @@ public class HiveRecordReader implements RecordReader {
         for (SchemaPath field : columns) {
           String columnName = field.getRootSegment().getPath(); //TODO?
           if (!tableColumns.contains(columnName)) {
-            if (partition != null && partitionNames.contains(columnName)) {
+            if (partitionNames.contains(columnName)) {
               selectedPartitionNames.add(columnName);
             } else {
               throw new ExecutionSetupException(String.format("Column %s does not exist", columnName));
@@ -195,11 +195,11 @@ public class HiveRecordReader implements RecordReader {
         selectedPartitionNames = partitionNames;
       }
 
-      if (partition != null) {
-        for (int i = 0; i < table.getPartitionKeys().size(); i++) {
-          FieldSchema field = table.getPartitionKeys().get(i);
-          if (selectedPartitionNames.contains(field.getName())) {
-            selectedPartitionTypes.add(field.getType());
+      for (int i = 0; i < table.getPartitionKeys().size(); i++) {
+        FieldSchema field = table.getPartitionKeys().get(i);
+        if (selectedPartitionNames.contains(field.getName())) {
+          selectedPartitionTypes.add(field.getType());
+          if (partition != null) {
             partitionValues.add(convertPartitionType(field.getType(), partition.getValues().get(i)));
           }
         }
@@ -207,13 +207,16 @@ public class HiveRecordReader implements RecordReader {
     } catch (SerDeException e) {
       throw new ExecutionSetupException(e);
     }
-    try {
-      reader = format.getRecordReader(inputSplit, job, Reporter.NULL);
-    } catch (IOException e) {
-      throw new ExecutionSetupException("Failed to get Recordreader", e);
+
+    if (!empty) {
+      try {
+        reader = format.getRecordReader(inputSplit, job, Reporter.NULL);
+      } catch (IOException e) {
+        throw new ExecutionSetupException("Failed to get Recordreader", e);
+      }
+      key = reader.createKey();
+      value = reader.createValue();
     }
-    key = reader.createKey();
-    value = reader.createValue();
   }
 
   @Override
@@ -228,7 +231,7 @@ public class HiveRecordReader implements RecordReader {
       }
       for (int i = 0; i < selectedPartitionNames.size(); i++) {
         String type = selectedPartitionTypes.get(i);
-        MaterializedField field = MaterializedField.create(SchemaPath.getSimplePath(columnNames.get(i)), Types.getMajorTypeFromName(type));
+        MaterializedField field = MaterializedField.create(SchemaPath.getSimplePath(selectedPartitionNames.get(i)), Types.getMajorTypeFromName(type));
         Class vvClass = TypeHelper.getValueVectorClass(field.getType().getMinorType(), field.getDataMode());
         pVectors.add(output.addField(field, vvClass));
       }
@@ -439,6 +442,10 @@ public class HiveRecordReader implements RecordReader {
 
   @Override
   public int next() {
+    if (empty) {
+      return 0;
+    }
+
     for (ValueVector vv : vectors) {
       VectorAllocator.getAllocator(vv, 50).alloc(TARGET_RECORD_COUNT);
     }
