@@ -30,6 +30,8 @@ import static org.junit.Assert.assertTrue;
 /** Contains tests for creating/droping and using views in Drill. */
 public class TestViews extends TestJdbcQuery {
 
+  private final static String NEW_LINE = System.getProperty("line.separator");
+
   /** Helper test method for view tests */
   private void testViewHelper(final String viewCreate, final String viewName,
                               final String viewQuery, final String queryResult) throws Exception{
@@ -265,7 +267,7 @@ public class TestViews extends TestJdbcQuery {
               "WHERE TABLE_NAME = 'testview3'");
           result = JdbcAssert.toString(resultSet).trim();
           resultSet.close();
-          expected = "TABLE_CATALOG=DRILL; TABLE_SCHEMA=dfs.tmp; TABLE_NAME=testview3; VIEW_DEFINITION=SELECT *\nFROM `hive`.`kv`";
+          expected = "TABLE_CATALOG=DRILL; TABLE_SCHEMA=dfs.tmp; TABLE_NAME=testview3; VIEW_DEFINITION=SELECT *"+NEW_LINE+"FROM `hive`.`kv`";
           assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected),
               expected.equals(result));
 
