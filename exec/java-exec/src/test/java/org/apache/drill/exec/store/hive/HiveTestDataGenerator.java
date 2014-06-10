@@ -88,6 +88,13 @@ public class HiveTestDataGenerator {
     // create a table with no data
     executeQuery("CREATE TABLE IF NOT EXISTS default.empty_table(a INT, b STRING)");
 
+    // create a table that has all supported types in Drill
+    testDataFile = generateAllTypesDataFile();
+    executeQuery("CREATE TABLE IF NOT EXISTS alltypes (c1 INT, c2 BOOLEAN, c3 DOUBLE, c4 STRING, " +
+        "c9 TINYINT, c10 SMALLINT, c11 FLOAT, c12 BIGINT, c19 BINARY) " +
+        "ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE");
+    executeQuery(String.format("LOAD DATA LOCAL INPATH '%s' OVERWRITE INTO TABLE default.alltypes", testDataFile));
+
     ss.close();
   }
 
@@ -98,7 +105,7 @@ public class HiveTestDataGenerator {
     executeQuery(String.format("LOAD DATA LOCAL INPATH '%s' OVERWRITE INTO TABLE %s.%s", dataFile, dbName, tblName));
   }
 
-  private String generateTestDataFile() throws Exception {
+  private File getTempFile() throws Exception {
     File file = null;
     while (true) {
       file = File.createTempFile("drill-hive-test", ".txt");
@@ -111,6 +118,12 @@ public class HiveTestDataGenerator {
       logger.debug("retry creating tmp file");
     }
 
+    return file;
+  }
+
+  private String generateTestDataFile() throws Exception {
+    File file = getTempFile();
+
     PrintWriter printWriter = new PrintWriter(file);
     for (int i=1; i<=5; i++)
       printWriter.println (String.format("%d, key_%d", i, i));
@@ -120,17 +133,7 @@ public class HiveTestDataGenerator {
   }
 
   private String generateTestDataFileWithDate() throws Exception {
-    File file = null;
-    while (true) {
-      file = File.createTempFile("drill-hive-test-date", ".txt");
-      if (file.exists()) {
-        boolean success = file.delete();
-        if (success) {
-          break;
-        }
-      }
-      logger.debug("retry creating tmp file");
-    }
+    File file = getTempFile();
 
     PrintWriter printWriter = new PrintWriter(file);
     for (int i=1; i<=5; i++) {
@@ -138,6 +141,18 @@ public class HiveTestDataGenerator {
       Timestamp ts = new Timestamp(System.currentTimeMillis());
       printWriter.println (String.format("%s,%s", date.toString(), ts.toString()));
     }
+    printWriter.close();
+
+    return file.getPath();
+  }
+
+  private String generateAllTypesDataFile() throws Exception {
+    File file = getTempFile();
+
+    PrintWriter printWriter = new PrintWriter(file);
+    printWriter.println("\\N,\\N,\\N,\\N,\\N,\\N,\\N,\\N,\\N");
+    printWriter.println("-1,false,-1.1,,-1,-1,-1.0,-1,\\N");
+    printWriter.println("1,true,1.1,1,1,1,1.0,1,YWJjZA==");
     printWriter.close();
 
     return file.getPath();
