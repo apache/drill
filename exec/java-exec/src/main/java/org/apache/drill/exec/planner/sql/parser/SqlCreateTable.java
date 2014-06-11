@@ -17,7 +17,8 @@
  */
 package org.apache.drill.exec.planner.sql.parser;
 
-import java.util.List;
+import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableList;
 
 import net.hydromatic.optiq.tools.Planner;
 
@@ -37,7 +38,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 public class SqlCreateTable extends DrillSqlCall {
-  public static final SqlSpecialOperator OPERATOR = new SqlSpecialOperator("CREATE_TABLE", SqlKind.OTHER);
+  public static final SqlSpecialOperator OPERATOR = new SqlSpecialOperator("CREATE_TABLE", SqlKind.OTHER){
+    public SqlCall createCall(SqlLiteral functionQualifier, SqlParserPos pos, SqlNode... operands) {
+      return new SqlCreateTable(pos, (SqlIdentifier) operands[0], (SqlNodeList) operands[1], operands[2]);
+    }
+  };
 
   private SqlIdentifier tblName;
   private SqlNodeList fieldList;
@@ -57,8 +62,11 @@ public class SqlCreateTable extends DrillSqlCall {
 
   @Override
   public List<SqlNode> getOperandList() {
-    if (fieldList == null) return ImmutableList.of(tblName, fieldList);
-    else return ImmutableList.of(tblName, query, fieldList);
+    List<SqlNode> ops = Lists.newArrayList();
+    ops.add(tblName);
+    ops.add(fieldList);
+    ops.add(query);
+    return ops;
   }
 
   @Override

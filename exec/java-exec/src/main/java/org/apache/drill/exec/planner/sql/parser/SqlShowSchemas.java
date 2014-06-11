@@ -43,7 +43,11 @@ public class SqlShowSchemas extends DrillSqlCall {
   private final SqlNode whereClause;
 
   public static final SqlSpecialOperator OPERATOR =
-    new SqlSpecialOperator("SHOW_SCHEMAS", SqlKind.OTHER);
+    new SqlSpecialOperator("SHOW_SCHEMAS", SqlKind.OTHER){
+    public SqlCall createCall(SqlLiteral functionQualifier, SqlParserPos pos, SqlNode... operands) {
+      return new SqlShowSchemas(pos, operands[0], operands[1]);
+    }
+  };
 
   public SqlShowSchemas(SqlParserPos pos, SqlNode likePattern, SqlNode whereClause) {
     super(pos);
@@ -59,8 +63,8 @@ public class SqlShowSchemas extends DrillSqlCall {
   @Override
   public List<SqlNode> getOperandList() {
     List<SqlNode> opList = Lists.newArrayList();
-    if (likePattern != null) opList.add(likePattern);
-    if (whereClause != null) opList.add(whereClause);
+    opList.add(likePattern);
+    opList.add(whereClause);
     return opList;
   }
 

@@ -55,14 +55,14 @@ public abstract class DrillProjectRelBase extends ProjectRelBase implements Dril
   @Override
   public RelOptCost computeSelfCost(RelOptPlanner planner) {
     if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
-      return super.computeSelfCost(planner).multiplyBy(.1); 
+      return super.computeSelfCost(planner).multiplyBy(.1);
     }
-    
+
     // cost is proportional to the number of rows and number of columns being projected
     double rowCount = RelMetadataQuery.getRowCount(this);
     double cpuCost = DrillCostBase.PROJECT_CPU_COST * getRowType().getFieldCount();
     DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();
-    return costFactory.makeCost(rowCount, cpuCost, 0, 0);    
+    return costFactory.makeCost(rowCount, cpuCost, 0, 0);
   }
 
   private List<Pair<RexNode, String>> projects() {
@@ -73,7 +73,7 @@ public abstract class DrillProjectRelBase extends ProjectRelBase implements Dril
     List<NamedExpression> expressions = Lists.newArrayList();
     for (Pair<RexNode, String> pair : projects()) {
       LogicalExpression expr = DrillOptiq.toDrill(context, getChild(), pair.left);
-      expressions.add(new NamedExpression(expr, new FieldReference(pair.right)));
+      expressions.add(new NamedExpression(expr, FieldReference.getWithQuotedRef(pair.right)));
     }
     return expressions;
   }

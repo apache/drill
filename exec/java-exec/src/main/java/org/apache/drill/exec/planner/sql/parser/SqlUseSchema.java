@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.planner.sql.parser;
 
+import java.util.Collections;
 import java.util.List;
 
 import net.hydromatic.optiq.tools.Planner;
@@ -24,15 +25,15 @@ import net.hydromatic.optiq.tools.Planner;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.UseSchemaHandler;
+import org.eigenbase.sql.SqlCall;
 import org.eigenbase.sql.SqlIdentifier;
 import org.eigenbase.sql.SqlKind;
+import org.eigenbase.sql.SqlLiteral;
 import org.eigenbase.sql.SqlNode;
 import org.eigenbase.sql.SqlOperator;
 import org.eigenbase.sql.SqlSpecialOperator;
 import org.eigenbase.sql.SqlWriter;
 import org.eigenbase.sql.parser.SqlParserPos;
-
-import com.google.common.collect.ImmutableList;
 
 /**
  * Sql parser tree node to represent <code>USE SCHEMA</code> statement.
@@ -40,7 +41,12 @@ import com.google.common.collect.ImmutableList;
 public class SqlUseSchema extends DrillSqlCall {
 
   public static final SqlSpecialOperator OPERATOR =
-      new SqlSpecialOperator("USE_SCHEMA", SqlKind.OTHER);
+      new SqlSpecialOperator("USE_SCHEMA", SqlKind.OTHER){
+    public SqlCall createCall(SqlLiteral functionQualifier, SqlParserPos pos, SqlNode... operands) {
+      return new SqlUseSchema(pos, (SqlIdentifier) operands[0]);
+    }
+  };
+
   private SqlIdentifier schema;
 
   public SqlUseSchema(SqlParserPos pos, SqlIdentifier schema) {
@@ -51,7 +57,7 @@ public class SqlUseSchema extends DrillSqlCall {
 
   @Override
   public List<SqlNode> getOperandList() {
-    return ImmutableList.of((SqlNode)schema);
+    return Collections.singletonList((SqlNode)schema);
   }
 
   @Override

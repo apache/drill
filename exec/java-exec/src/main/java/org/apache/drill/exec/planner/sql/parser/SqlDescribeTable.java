@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.planner.sql.parser;
 
-import java.util.List;
+import com.google.common.collect.Lists;
 
 import net.hydromatic.optiq.tools.Planner;
 
@@ -45,7 +45,11 @@ public class SqlDescribeTable extends DrillSqlCall {
   private final SqlNode columnQualifier;
 
   public static final SqlSpecialOperator OPERATOR =
-    new SqlSpecialOperator("DESCRIBE_TABLE", SqlKind.OTHER);
+    new SqlSpecialOperator("DESCRIBE_TABLE", SqlKind.OTHER){
+    public SqlCall createCall(SqlLiteral functionQualifier, SqlParserPos pos, SqlNode... operands) {
+      return new SqlDescribeTable(pos, (SqlIdentifier) operands[0], (SqlIdentifier) operands[1], operands[2]);
+    }
+  };
 
   public SqlDescribeTable(SqlParserPos pos, SqlIdentifier table, SqlIdentifier column, SqlNode columnQualifier) {
     super(pos);
@@ -63,8 +67,8 @@ public class SqlDescribeTable extends DrillSqlCall {
   public List<SqlNode> getOperandList() {
     List<SqlNode> opList = Lists.newArrayList();
     opList.add(table);
-    if (column != null) opList.add(column);
-    if (columnQualifier != null) opList.add(columnQualifier);
+    opList.add(column);
+    opList.add(columnQualifier);
     return opList;
   }
 

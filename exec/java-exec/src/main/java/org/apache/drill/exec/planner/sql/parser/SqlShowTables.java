@@ -45,7 +45,11 @@ public class SqlShowTables extends DrillSqlCall {
   private final SqlNode whereClause;
 
   public static final SqlSpecialOperator OPERATOR =
-    new SqlSpecialOperator("SHOW_TABLES", SqlKind.OTHER);
+    new SqlSpecialOperator("SHOW_TABLES", SqlKind.OTHER){
+    public SqlCall createCall(SqlLiteral functionQualifier, SqlParserPos pos, SqlNode... operands) {
+      return new SqlShowTables(pos, (SqlIdentifier) operands[0], operands[1], operands[2]);
+    }
+  };
 
   public SqlShowTables(SqlParserPos pos, SqlIdentifier db, SqlNode likePattern, SqlNode whereClause) {
     super(pos);
@@ -62,9 +66,9 @@ public class SqlShowTables extends DrillSqlCall {
   @Override
   public List<SqlNode> getOperandList() {
     List<SqlNode> opList = Lists.newArrayList();
-    if (db != null) opList.add(db);
-    if (likePattern != null) opList.add(likePattern);
-    if (whereClause != null) opList.add(whereClause);
+    opList.add(db);
+    opList.add(likePattern);
+    opList.add(whereClause);
     return opList;
   }
 

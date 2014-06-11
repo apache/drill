@@ -43,7 +43,11 @@ public class SqlShowFiles extends DrillSqlCall {
   private final SqlIdentifier db;
 
   public static final SqlSpecialOperator OPERATOR =
-      new SqlSpecialOperator("SHOW_FILES", SqlKind.OTHER);
+      new SqlSpecialOperator("SHOW_FILES", SqlKind.OTHER){
+    public SqlCall createCall(SqlLiteral functionQualifier, SqlParserPos pos, SqlNode... operands) {
+      return new SqlShowFiles(pos, (SqlIdentifier) operands[0]);
+    }
+  };
 
   public SqlShowFiles(SqlParserPos pos, SqlIdentifier db) {
     super(pos);
@@ -57,9 +61,7 @@ public class SqlShowFiles extends DrillSqlCall {
 
   @Override
   public List<SqlNode> getOperandList() {
-    List<SqlNode> opList = Lists.newArrayList();
-    if (db != null) opList.add(db);
-    return opList;
+    return Collections.singletonList( (SqlNode) db);
   }
 
   @Override

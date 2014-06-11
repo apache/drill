@@ -17,7 +17,8 @@
  */
 package org.apache.drill.exec.planner.sql.parser;
 
-import java.util.List;
+import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableList;
 
 import net.hydromatic.optiq.tools.Planner;
 
@@ -34,16 +35,24 @@ import org.eigenbase.sql.SqlSpecialOperator;
 import org.eigenbase.sql.SqlWriter;
 import org.eigenbase.sql.parser.SqlParserPos;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
+import java.util.List;
 
 public class SqlCreateView extends DrillSqlCall {
-  public static final SqlSpecialOperator OPERATOR = new SqlSpecialOperator("CREATE_VIEW", SqlKind.OTHER);
+  public static final SqlSpecialOperator OPERATOR = new SqlSpecialOperator("CREATE_VIEW", SqlKind.OTHER){
+    public SqlCall createCall(SqlLiteral functionQualifier, SqlParserPos pos, SqlNode... operands) {
+      return new SqlCreateView(pos, (SqlIdentifier) operands[0], (SqlNodeList) operands[1], operands[2], (SqlLiteral) operands[3]);
+    }
+  };
 
   private SqlIdentifier viewName;
   private SqlNodeList fieldList;
   private SqlNode query;
   private boolean replaceView;
+
+  public SqlCreateView(SqlParserPos pos, SqlIdentifier viewName, SqlNodeList fieldList,
+      SqlNode query, SqlLiteral replaceView) {
+    this(pos, viewName, fieldList, query, replaceView.booleanValue());
+  }
 
   public SqlCreateView(SqlParserPos pos, SqlIdentifier viewName, SqlNodeList fieldList,
                        SqlNode query, boolean replaceView) {
@@ -61,8 +70,12 @@ public class SqlCreateView extends DrillSqlCall {
 
   @Override
   public List<SqlNode> getOperandList() {
-    return ImmutableList.of(viewName, fieldList, query,
-        SqlLiteral.createBoolean(replaceView, SqlParserPos.ZERO));
+    List<SqlNode> ops = Lists.newArrayList();
+    ops.add(viewName);
+    ops.add(fieldList);
+    ops.add(query);
+    ops.add(SqlLiteral.createBoolean(replaceView, SqlParserPos.ZERO));
+    return ops;
   }
 
   @Override

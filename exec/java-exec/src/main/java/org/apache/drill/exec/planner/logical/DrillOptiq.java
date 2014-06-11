@@ -83,7 +83,7 @@ public class DrillOptiq {
     public LogicalExpression visitInputRef(RexInputRef inputRef) {
       final int index = inputRef.getIndex();
       final RelDataTypeField field = input.getRowType().getFieldList().get(index);
-      return new FieldReference(field.getName());
+      return FieldReference.getWithQuotedRef(field.getName());
     }
 
     @Override

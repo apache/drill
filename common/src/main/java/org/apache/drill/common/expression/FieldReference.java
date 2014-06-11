@@ -60,10 +60,22 @@ public class FieldReference extends SchemaPath {
     checkSimpleString(value);
   }
 
+  public static FieldReference getWithQuotedRef(CharSequence safeString){
+    return new FieldReference(safeString, ExpressionPosition.UNKNOWN, false);
+  }
+
+
   public FieldReference(CharSequence value, ExpressionPosition pos) {
+    this(value, pos, true);
+  }
+
+  public FieldReference(CharSequence value, ExpressionPosition pos, boolean check) {
     super(new NameSegment(value), pos);
-    checkData();
-    checkSimpleString(value);
+    if(check){
+      checkData();
+      checkSimpleString(value);
+    }
+
   }
 
   public FieldReference(String value, ExpressionPosition pos, MajorType dataType) {

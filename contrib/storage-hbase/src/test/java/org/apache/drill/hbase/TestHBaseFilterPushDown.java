@@ -63,9 +63,9 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
     runSQLVerifyCount("SELECT\n"
         + "  *\n"
         + "FROM\n"
-        + "  hbase.`[TABLE_NAME]` tableName\n"
+        + "  hbase.`[TABLE_NAME]` t\n"
         + "WHERE\n"
-        + "  (row_key >= 'b5' OR row_key <= 'a2') AND (f['c1'] >= '1' OR f['c1'] is null)"
+        + "  (row_key >= 'b5' OR row_key <= 'a2') AND (t.f.c1 >= '1' OR t.f.c1 is null)"
         , 4);
   }
 

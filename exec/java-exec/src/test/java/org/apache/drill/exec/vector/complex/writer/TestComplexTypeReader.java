@@ -25,21 +25,21 @@ public class TestComplexTypeReader extends BaseTestQuery{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestComplexTypeReader.class);
 
   @Test
-  // Repeated map (map) -> json. 
+  // Repeated map (map) -> json.
   public void testX() throws Exception{
     test("select convert_to(z[0], 'JSON') from cp.`jsoninput/input2.json`;");
   }
 
   @Test
-  //map -> json. 
+  //map -> json.
   public void testX2() throws Exception{
     test("select convert_to(x, 'JSON') from cp.`jsoninput/input2.json`;");
   }
 
   @Test
-  //Map (mapfield) -> json.  
+  //Map (mapfield) -> json.
   public void testX3() throws Exception{
-    test("select convert_to(x['y'], 'JSON') from cp.`jsoninput/input2.json`;");
+    test("select convert_to(tbl.x.y, 'JSON') from cp.`jsoninput/input2.json` tbl;");
   }
 
   @Test
@@ -53,9 +53,9 @@ public class TestComplexTypeReader extends BaseTestQuery{
   public void testX5() throws Exception{
     test("select convert_to(`integer`, 'JSON') from cp.`jsoninput/input2.json`;");
   }
-  
+
   @Test
-  // repeated map -> json. 
+  // repeated map -> json.
   public void testX6() throws Exception{
     test("select convert_to(z, 'JSON')  from cp.`jsoninput/input2.json`;");
   }
@@ -90,7 +90,7 @@ public class TestComplexTypeReader extends BaseTestQuery{
 
   @Test
   public void testY3() throws Exception{
-    test("select x['y'] from cp.`jsoninput/input2.json`;");
+    test("select tbl.x.y from cp.`jsoninput/input2.json` tbl;");
   }
 
   @Test
@@ -99,13 +99,13 @@ public class TestComplexTypeReader extends BaseTestQuery{
   }
 
   @Test
-  //repeated list (Repeated BigInt) 
+  //repeated list (Repeated BigInt)
   public void testZ() throws Exception{
     test("select rl[1] from cp.`jsoninput/input2.json`;");
   }
 
   @Test
-  //repeated list (Repeated BigInt ( BigInt) ) ) 
+  //repeated list (Repeated BigInt ( BigInt) ) )
   public void testZ1() throws Exception{
     test("select rl[0][1] from cp.`jsoninput/input2.json`;");
   }
@@ -123,27 +123,27 @@ public class TestComplexTypeReader extends BaseTestQuery{
   }
 
   @Test
-  //repeated map  --> Json.  It will go beyond the buffer of size 256 allocated in setup. 
+  //repeated map  --> Json.  It will go beyond the buffer of size 256 allocated in setup.
   public void testA0() throws Exception{
     test("  select convert_to(types, 'JSON') from cp.`jsoninput/vvtypes.json`;");
   }
 
   @Test
-  //repeated map (map) --> Json. 
+  //repeated map (map) --> Json.
   public void testA1() throws Exception{
     test("  select convert_to(types[1], 'JSON') from cp.`jsoninput/vvtypes.json`;");
   }
 
   @Test
-  //repeated map (map (repeated map) ) --> Json. 
+  //repeated map (map (repeated map) ) --> Json.
   public void testA2() throws Exception{
-    test("  select convert_to(types[1]['minor'], 'JSON') from cp.`jsoninput/vvtypes.json`;");
+    test("  select convert_to(types[1].minor, 'JSON') from cp.`jsoninput/vvtypes.json`;");
   }
-  
+
   @Test
-  //repeated map (map( repeated map (map (varchar)))) --> Json. 
+  //repeated map (map( repeated map (map (varchar)))) --> Json.
   public void testA3() throws Exception{
-    test("  select convert_to(types[1]['minor'][0]['valueHolder'], 'JSON') from cp.`jsoninput/vvtypes.json`;");
+    test("  select convert_to(types[1].minor[0].valueHolder, 'JSON') from cp.`jsoninput/vvtypes.json`;");
   }
 
   @Test
@@ -155,13 +155,13 @@ public class TestComplexTypeReader extends BaseTestQuery{
   @Test
   //repeated map (map (repeated map) ).
   public void testB2() throws Exception{
-    test("  select types[1]['minor'] from cp.`jsoninput/vvtypes.json`;");
+    test("  select types[1].minor from cp.`jsoninput/vvtypes.json`;");
   }
 
   @Test
   //repeated map (map( repeated map (map (varchar)))).
   public void testB3() throws Exception{
-    test("  select types[1]['minor'][0]['valueHolder'] from cp.`jsoninput/vvtypes.json`;");
+    test("  select types[1].minor[0].valueholder from cp.`jsoninput/vvtypes.json`;");
   }
 
 }

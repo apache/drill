@@ -35,7 +35,11 @@ import org.eigenbase.sql.parser.SqlParserPos;
 import com.google.common.collect.ImmutableList;
 
 public class SqlDropView extends DrillSqlCall {
-  public static final SqlSpecialOperator OPERATOR = new SqlSpecialOperator("DROP_VIEW", SqlKind.OTHER);
+  public static final SqlSpecialOperator OPERATOR = new SqlSpecialOperator("DROP_VIEW", SqlKind.OTHER){
+    public SqlCall createCall(SqlLiteral functionQualifier, SqlParserPos pos, SqlNode... operands) {
+      return new SqlDropView(pos, (SqlIdentifier) operands[0]);
+    }
+  };
 
   private SqlIdentifier viewName;
 
@@ -51,7 +55,7 @@ public class SqlDropView extends DrillSqlCall {
 
   @Override
   public List<SqlNode> getOperandList() {
-    return ImmutableList.of((SqlNode)viewName);
+    return Collections.singletonList((SqlNode)viewName);
   }
 
   @Override

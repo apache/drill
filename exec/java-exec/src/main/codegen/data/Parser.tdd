@@ -65,4 +65,8 @@
   implementationFiles: [
     "parserImpls.ftl"
   ]
+  
+  includeCompoundIdentifier: false
+  
+  
 }
