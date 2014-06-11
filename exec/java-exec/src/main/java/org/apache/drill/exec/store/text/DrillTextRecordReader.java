@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.text;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
@@ -79,6 +80,7 @@ public class DrillTextRecordReader implements RecordReader {
           columnIds.add(index);
         }
       }
+      Collections.sort(columnIds);
     }
     targetRecordCount = context.getConfig().getInt(ExecConstants.TEXT_LINE_READER_BATCH_SIZE);
     numCols = columnIds.size();
