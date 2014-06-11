@@ -19,16 +19,20 @@ package org.apache.drill.exec.store.hive.schema;
 
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.List;
 
-import org.apache.drill.common.logical.StoragePluginConfig;
+import com.google.common.collect.Lists;
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.store.hive.HiveReadEntry;
 import org.apache.drill.exec.store.hive.HiveStoragePlugin;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
-import org.apache.hadoop.hive.ql.metadata.Table;
-import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
-import org.apache.hadoop.hive.serde2.objectinspector.PrimitiveObjectInspector;
-import org.apache.hadoop.hive.serde2.objectinspector.StructField;
+import org.apache.hadoop.hive.metastore.api.Table;
+import org.apache.hadoop.hive.serde2.typeinfo.ListTypeInfo;
+import org.apache.hadoop.hive.serde2.typeinfo.MapTypeInfo;
+import org.apache.hadoop.hive.serde2.typeinfo.PrimitiveTypeInfo;
+import org.apache.hadoop.hive.serde2.typeinfo.StructTypeInfo;
+import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
+import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.sql.SqlCollation;
@@ -41,82 +45,35 @@ public class DrillHiveTable extends DrillTable{
   
   public DrillHiveTable(String storageEngineName, HiveStoragePlugin plugin, HiveReadEntry readEntry) {
     super(storageEngineName, plugin, readEntry);
-    this.hiveTable = new org.apache.hadoop.hive.ql.metadata.Table(readEntry.getTable());
+    this.hiveTable = readEntry.getTable();
   }
 
   @Override
   public RelDataType getRowType(RelDataTypeFactory typeFactory) {
-    ArrayList<RelDataType> typeList = new ArrayList<>();
-    ArrayList<String> fieldNameList = new ArrayList<>();
+    List<RelDataType> typeList = Lists.newArrayList();
+    List<String> fieldNameList = Lists.newArrayList();
 
-    ArrayList<StructField> hiveFields = hiveTable.getFields();
-    for(StructField hiveField : hiveFields) {
-      fieldNameList.add(hiveField.getFieldName());
-      typeList.add(getRelDataTypeFromHiveType(typeFactory, hiveField.getFieldObjectInspector()));
+    List<FieldSchema> hiveFields = hiveTable.getSd().getCols();
+    for(FieldSchema hiveField : hiveFields) {
+      fieldNameList.add(hiveField.getName());
+      typeList.add(getRelDataTypeFromHiveType(
+          typeFactory, TypeInfoUtils.getTypeInfoFromTypeString(hiveField.getType())));
     }
 
     for (FieldSchema field : hiveTable.getPartitionKeys()) {
       fieldNameList.add(field.getName());
-      typeList.add(getRelDataTypeFromHiveTypeString(typeFactory, field.getType()));
+      typeList.add(getRelDataTypeFromHiveType(
+          typeFactory, TypeInfoUtils.getTypeInfoFromTypeString(field.getType())));
     }
 
-    final RelDataType rowType = typeFactory.createStructType(typeList, fieldNameList);
-    return rowType;
+    return typeFactory.createStructType(typeList, fieldNameList);
   }
 
-  private RelDataType getRelDataTypeFromHiveTypeString(RelDataTypeFactory typeFactory, String type) {
-    switch(type) {
-      case "boolean":
-        return typeFactory.createSqlType(SqlTypeName.BOOLEAN);
-
-      case "tinyint":
-        return typeFactory.createSqlType(SqlTypeName.TINYINT);
-
-      case "smallint":
-        return typeFactory.createSqlType(SqlTypeName.SMALLINT);
-
-      case "int":
-        return typeFactory.createSqlType(SqlTypeName.INTEGER);
-
-      case "bigint":
-        return typeFactory.createSqlType(SqlTypeName.BIGINT);
-
-      case "float":
-        return typeFactory.createSqlType(SqlTypeName.FLOAT);
-
-      case "double":
-        return typeFactory.createSqlType(SqlTypeName.DOUBLE);
-
-      case "date":
-        return typeFactory.createSqlType(SqlTypeName.DATE);
-
-      case "timestamp":
-        return typeFactory.createSqlType(SqlTypeName.TIMESTAMP);
-
-      case "binary":
-        return typeFactory.createSqlType(SqlTypeName.BINARY);
-
-      case "decimal":
-        return typeFactory.createSqlType(SqlTypeName.DECIMAL);
-
-      case "string":
-      case "varchar": {
-        return typeFactory.createTypeWithCharsetAndCollation(
-                typeFactory.createSqlType(SqlTypeName.VARCHAR), /*input type*/
-                Charset.forName("ISO-8859-1"), /*unicode char set*/
-                SqlCollation.IMPLICIT /* TODO: need to decide if implicit is the correct one */
-        );
-      }
-
-      default:
-        throw new RuntimeException("Unknown or unsupported hive type: " + type);
-    }
-  }
-
-  private RelDataType getRelDataTypeFromHivePrimitiveType(RelDataTypeFactory typeFactory, PrimitiveObjectInspector poi) {
-    switch(poi.getPrimitiveCategory()) {
+  private RelDataType getRelDataTypeFromHivePrimitiveType(RelDataTypeFactory typeFactory, PrimitiveTypeInfo pTypeInfo) {
+    switch(pTypeInfo.getPrimitiveCategory()) {
       case BOOLEAN:
         return typeFactory.createSqlType(SqlTypeName.BOOLEAN);
+
       case BYTE:
         return typeFactory.createSqlType(SqlTypeName.TINYINT);
 
@@ -159,20 +116,59 @@ public class DrillHiveTable extends DrillTable{
       case UNKNOWN:
       case VOID:
       default:
-        throw new RuntimeException("Unknown or unsupported hive type");
+        throwUnsupportedHiveDataTypeError(pTypeInfo.getPrimitiveCategory().toString());
     }
+
+    return null;
   }
 
-  private RelDataType getRelDataTypeFromHiveType(RelDataTypeFactory typeFactory, ObjectInspector oi) {
-    switch(oi.getCategory()) {
+  private RelDataType getRelDataTypeFromHiveType(RelDataTypeFactory typeFactory, TypeInfo typeInfo) {
+    switch(typeInfo.getCategory()) {
       case PRIMITIVE:
-        return getRelDataTypeFromHivePrimitiveType(typeFactory, ((PrimitiveObjectInspector) oi));
-      case LIST:
-      case MAP:
-      case STRUCT:
+        return getRelDataTypeFromHivePrimitiveType(typeFactory, ((PrimitiveTypeInfo) typeInfo));
+
+      case LIST: {
+        ListTypeInfo listTypeInfo = (ListTypeInfo)typeInfo;
+        RelDataType listElemTypeInfo = getRelDataTypeFromHiveType(typeFactory, listTypeInfo.getListElementTypeInfo());
+        return typeFactory.createArrayType(listElemTypeInfo, -1);
+      }
+
+      case MAP: {
+        MapTypeInfo mapTypeInfo = (MapTypeInfo)typeInfo;
+        RelDataType keyType = getRelDataTypeFromHiveType(typeFactory, mapTypeInfo.getMapKeyTypeInfo());
+        RelDataType valueType = getRelDataTypeFromHiveType(typeFactory, mapTypeInfo.getMapValueTypeInfo());
+        return typeFactory.createMapType(keyType, valueType);
+      }
+
+      case STRUCT: {
+        StructTypeInfo structTypeInfo = (StructTypeInfo)typeInfo;
+        ArrayList<String> fieldNames = structTypeInfo.getAllStructFieldNames();
+        ArrayList<TypeInfo> fieldHiveTypeInfoList = structTypeInfo.getAllStructFieldTypeInfos();
+        List<RelDataType> fieldRelDataTypeList = Lists.newArrayList();
+        for(TypeInfo fieldHiveType : fieldHiveTypeInfoList) {
+          fieldRelDataTypeList.add(getRelDataTypeFromHiveType(typeFactory, fieldHiveType));
+        }
+        return typeFactory.createStructType(fieldRelDataTypeList, fieldNames);
+      }
+
       case UNION:
-      default:
-        throw new RuntimeException("Unknown or unsupported hive type");
+        logger.warn("There is no UNION data type in SQL. Converting it to Sql type OTHER to avoid " +
+            "breaking INFORMATION_SCHEMA queries");
+        return typeFactory.createSqlType(SqlTypeName.OTHER);
     }
+
+    throwUnsupportedHiveDataTypeError(typeInfo.getCategory().toString());
+    return null;
+  }
+
+  private void throwUnsupportedHiveDataTypeError(String hiveType) {
+    StringBuilder errMsg = new StringBuilder();
+    errMsg.append(String.format("Unsupported Hive data type %s. ", hiveType));
+    errMsg.append(System.getProperty("line.separator"));
+    errMsg.append("Following Hive data types are supported in Drill INFORMATION_SCHEMA: ");
+    errMsg.append("BOOLEAN, BYTE, SHORT, INT, LONG, FLOAT, DOUBLE, DATE, TIMESTAMP, BINARY, DECIMAL, STRING, " +
+        "VARCHAR, LIST, MAP, STRUCT and UNION");
+
+    throw new RuntimeException(errMsg.toString());
   }
 }

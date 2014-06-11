@@ -80,7 +80,7 @@ public class TestJdbcQuery extends JdbcTest{
   public void testHiveReadWithDb() throws Exception{
     testQuery("select * from hive.`default`.kv");
     testQuery("select key from hive.`default`.kv group by key");
-    testQuery("select * from hive.`default`.alltypes");
+    testQuery("select * from hive.`default`.allreadsupportedhivedatatypes");
   }
 
   @Test

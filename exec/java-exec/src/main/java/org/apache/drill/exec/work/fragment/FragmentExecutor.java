@@ -79,9 +79,9 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
     boolean closed = false;
     try {
       root = ImplCreator.getExec(context, rootOperator);
-    } catch (ExecutionSetupException e) {
+    } catch (AssertionError | Exception e) {
       context.fail(e);
-      logger.debug("Failure while running fragement", e);
+      logger.debug("Failure while initializing operator tree", e);
       internalFail(e);
       return;
     }

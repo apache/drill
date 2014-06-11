@@ -88,12 +88,35 @@ public class HiveTestDataGenerator {
     // create a table with no data
     executeQuery("CREATE TABLE IF NOT EXISTS default.empty_table(a INT, b STRING)");
 
-    // create a table that has all supported types in Drill
+    // create a Hive table that has columns with data types which are supported for reading in Drill.
     testDataFile = generateAllTypesDataFile();
-    executeQuery("CREATE TABLE IF NOT EXISTS alltypes (c1 INT, c2 BOOLEAN, c3 DOUBLE, c4 STRING, " +
+    executeQuery("CREATE TABLE IF NOT EXISTS allReadSupportedHiveDataTypes (c1 INT, c2 BOOLEAN, c3 DOUBLE, c4 STRING, " +
         "c9 TINYINT, c10 SMALLINT, c11 FLOAT, c12 BIGINT, c19 BINARY) " +
         "ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE");
-    executeQuery(String.format("LOAD DATA LOCAL INPATH '%s' OVERWRITE INTO TABLE default.alltypes", testDataFile));
+    executeQuery(String.format("LOAD DATA LOCAL INPATH '%s' OVERWRITE INTO TABLE " +
+        "default.allReadSupportedHiveDataTypes", testDataFile));
+
+    // create a table that has all Hive types. This is to test how hive tables metadata is populated in
+    // Drill's INFORMATION_SCHEMA.
+    executeQuery("CREATE TABLE IF NOT EXISTS allHiveDataTypes(" +
+        "booleanType BOOLEAN, " +
+        "tinyintType TINYINT, " +
+        "smallintType SMALLINT, " +
+        "intType INT, " +
+        "bigintType BIGINT, " +
+        "floatType FLOAT, " +
+        "doubleType DOUBLE, " +
+        "dataType DATE, " +
+        "timestampType TIMESTAMP, " +
+        "binaryType BINARY, " +
+        "decimalType DECIMAL, " +
+        "stringType STRING, " +
+        "varCharType VARCHAR(20), " +
+        "listType ARRAY<STRING>, " +
+        "mapType MAP<STRING,INT>, " +
+        "structType STRUCT<sint:INT,sboolean:BOOLEAN,sstring:STRING>, " +
+        "uniontypeType UNIONTYPE<int, double, array<string>>)"
+    );
 
     ss.close();
   }

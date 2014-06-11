@@ -64,7 +64,17 @@ public class Records {
 
       this.ORDINAL_POSITION = field.getIndex();
       this.IS_NULLABLE = type.isNullable() ? "YES" : "NO";
-      this.DATA_TYPE = sqlType.getName();
+
+      if (sqlType == SqlTypeName.ARRAY || sqlType == SqlTypeName.MAP || sqlType == SqlTypeName.ROW) {
+        // For complex types use the toString method to display the inside elements
+        String typeString = type.toString();
+
+        // RelDataType.toString prints "RecordType" for "STRUCT".
+        this.DATA_TYPE = type.toString().replace("RecordType", "STRUCT");
+      } else {
+        this.DATA_TYPE = sqlType.toString();
+      }
+
       this.NUMERIC_PRECISION_RADIX = (sqlType == SqlTypeName.DECIMAL) ? 10 : -1; // TODO: where do we get radix?
       this.CHARACTER_MAXIMUM_LENGTH = -1;  // TODO: where do we get char length?
       this.NUMERIC_PRECISION = (sqlType.allowsPrec())?type.getPrecision(): -1;
