@@ -251,6 +251,10 @@ public class FragmentContext implements Closeable {
     for(Thread thread: daemonThreads){
      thread.interrupt();
     }
+    if (buffers != null) {
+      buffers.close();
+    }
     allocator.close();
   }
+
 }

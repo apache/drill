@@ -135,4 +135,14 @@ public abstract class AbstractDataCollector implements DataCollector, ReadContro
   }
 
   protected abstract RawBatchBuffer getBuffer(int minorFragmentId);
+
+  @Override
+  public void close() {
+    for (int i = 0; i < connections.length(); i++) {
+      if (connections.get(i) != null) {
+        connections.get(i).close();
+      };
+    }
+  }
+
 }

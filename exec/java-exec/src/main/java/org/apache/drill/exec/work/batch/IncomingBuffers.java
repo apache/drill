@@ -35,7 +35,7 @@ import com.google.common.collect.Maps;
 /**
  * Determines when a particular fragment has enough data for each of its receiving exchanges to commence execution.  Also monitors whether we've collected all incoming data.
  */
-public class IncomingBuffers {
+public class IncomingBuffers implements AutoCloseable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(IncomingBuffers.class);
 
   private final AtomicInteger streamsRemaining = new AtomicInteger(0);
@@ -63,7 +63,7 @@ public class IncomingBuffers {
 
   public boolean batchArrived(RawFragmentBatch batch) throws FragmentSetupException {
     // no need to do anything if we've already enabled running.
-//    logger.debug("New Batch Arrived {}", batch);
+    // logger.debug("New Batch Arrived {}", batch);
     if (batch.getHeader().getIsOutOfMemory()) {
       for (DataCollector fSet : fragCounts.values()) {
         try {
@@ -99,13 +99,13 @@ public class IncomingBuffers {
   public RawBatchBuffer[] getBuffers(int senderMajorFragmentId){
     return fragCounts.get(senderMajorFragmentId).getBuffers();
   }
-  
-  
+
+
   /**
    * Designed to setup initial values for arriving fragment accounting.
    */
   public class CountRequiredFragments extends AbstractPhysicalVisitor<Void, Map<Integer, DataCollector>, RuntimeException> {
-    
+
     @Override
     public Void visitReceiver(Receiver receiver, Map<Integer, DataCollector> counts) throws RuntimeException {
       DataCollector set;
@@ -114,13 +114,12 @@ public class IncomingBuffers {
       } else {
         set = new PartitionedCollector(remainingRequired, receiver, context);
       }
-      
+
       counts.put(set.getOppositeMajorFragmentId(), set);
       remainingRequired.incrementAndGet();
       return null;
     }
 
-    
     @Override
     public Void visitOp(PhysicalOperator op, Map<Integer, DataCollector> value) throws RuntimeException {
       for(PhysicalOperator o : op){
@@ -129,10 +128,17 @@ public class IncomingBuffers {
       return null;
     }
 
-
   }
 
   public boolean isDone(){
     return streamsRemaining.get() < 1;
   }
+
+  @Override
+  public void close() {
+    for (DataCollector fragment : fragCounts.values()) {
+      fragment.close();
+    }
+  }
+
 }
