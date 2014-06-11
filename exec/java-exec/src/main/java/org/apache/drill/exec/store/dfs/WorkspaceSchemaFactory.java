@@ -223,7 +223,7 @@ public class WorkspaceSchemaFactory implements ExpandingConcurrentMap.MapValueFa
         for(DotDrillFile f : files){
           switch(f.getType()){
           case VIEW:
-            return new DrillViewTable(getView(f));
+            return new DrillViewTable(schemaPath, getView(f));
           }
         }
       } catch (Exception e) {

@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.planner.logical;
 
+import java.util.List;
+
 import net.hydromatic.optiq.Schema.TableType;
 import net.hydromatic.optiq.Statistic;
 import net.hydromatic.optiq.Statistics;
@@ -33,10 +35,12 @@ import org.eigenbase.reltype.RelDataTypeFactory;
 public class DrillViewTable implements TranslatableTable{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillViewTable.class);
 
-  private View view;
+  private final View view;
+  private final List<String> path;
 
-  public DrillViewTable(View view){
+  public DrillViewTable(List<String> path, View view){
     this.view = view;
+    this.path = path;
   }
 
   @Override
@@ -52,7 +56,7 @@ public class DrillViewTable implements TranslatableTable{
   @Override
   public RelNode toRel(ToRelContext context, RelOptTable relOptTable) {
     RelDataType rowType = relOptTable.getRowType();
-    RelNode rel = context.expandView(rowType, view.getSql(), relOptTable.getQualifiedName());
+    RelNode rel = context.expandView(rowType, view.getSql(), path);
 
     if (view.isDynamic()){
       return rel;
