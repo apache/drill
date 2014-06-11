@@ -56,17 +56,22 @@ public class DrillHiveTable extends DrillTable{
     List<FieldSchema> hiveFields = hiveTable.getSd().getCols();
     for(FieldSchema hiveField : hiveFields) {
       fieldNameList.add(hiveField.getName());
-      typeList.add(getRelDataTypeFromHiveType(
+      typeList.add(getNullableRelDataTypeFromHiveType(
           typeFactory, TypeInfoUtils.getTypeInfoFromTypeString(hiveField.getType())));
     }
 
     for (FieldSchema field : hiveTable.getPartitionKeys()) {
       fieldNameList.add(field.getName());
-      typeList.add(getRelDataTypeFromHiveType(
+      typeList.add(getNullableRelDataTypeFromHiveType(
           typeFactory, TypeInfoUtils.getTypeInfoFromTypeString(field.getType())));
     }
 
     return typeFactory.createStructType(typeList, fieldNameList);
+  }
+
+  private RelDataType getNullableRelDataTypeFromHiveType(RelDataTypeFactory typeFactory, TypeInfo typeInfo) {
+    RelDataType relDataType = getRelDataTypeFromHiveType(typeFactory, typeInfo);
+    return typeFactory.createTypeWithNullability(relDataType, true);
   }
 
   private RelDataType getRelDataTypeFromHivePrimitiveType(RelDataTypeFactory typeFactory, PrimitiveTypeInfo pTypeInfo) {

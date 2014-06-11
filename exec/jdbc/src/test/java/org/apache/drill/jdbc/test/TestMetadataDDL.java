@@ -135,6 +135,17 @@ public class TestMetadataDDL extends TestJdbcQuery {
             "COLUMN_NAME=CATALOG_CONNECT; DATA_TYPE=VARCHAR; IS_NULLABLE=NO\n");
   }
 
+
+  @Test
+  public void testDescribeTableNullableColumns() throws Exception{
+    JdbcAssert.withNoDefaultSchema()
+        .sql("DESCRIBE hive.`default`.kv")
+        .returns(
+            "COLUMN_NAME=key; DATA_TYPE=INTEGER; IS_NULLABLE=YES\n" +
+            "COLUMN_NAME=value; DATA_TYPE=VARCHAR; IS_NULLABLE=YES\n"
+        );
+  }
+
   @Test
   public void testDescribeTableWithSchema() throws Exception{
     JdbcAssert.withNoDefaultSchema()
