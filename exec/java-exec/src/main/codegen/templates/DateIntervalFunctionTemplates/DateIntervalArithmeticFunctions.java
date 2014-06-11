@@ -176,24 +176,17 @@ import org.apache.drill.exec.expr.fn.impl.DateUtility;
 
 public class ${datetype}${intervaltype}Functions {
 <#macro timeIntervalArithmeticBlock left right temp op output intervaltype>
-    <#if intervaltype == "Interval">
-    if (${right}.months != 0 || ${right}.days != 0) {
-        throw new UnsupportedOperationException("Cannot add interval type with months or days to TIME");
-    }
-    ${output} = ${left}.value ${op} ${right}.milliSeconds;
-    <#elseif intervaltype == "IntervalYear">
-    if (1 == 1) {
-        throw new UnsupportedOperationException("Cannot add IntervalYear to TIME");
-    }
-    <#elseif intervaltype == "IntervalDay">
-    if (${right}.days != 0) {
-        throw new UnsupportedOperationException("Cannot add days to TIME");
-    }
-    ${output} = ${left}.value ${op} ${right}.milliSeconds;
-    <#elseif intervaltype == "Int" || intervaltype == "BigInt">
+    <#if intervaltype == "Int" || intervaltype == "BigInt">
     if (1 == 1) {
         throw new UnsupportedOperationException("Cannot add integer to TIME, cast it to specific interval");
     }
+    <#elseif intervaltype == "IntervalYear">
+    // Needn't add anything to time from interval year data type. Output is same as input
+    ${output} = ${left}.value;
+    <#else>
+    ${output} = ${left}.value ${op} ${right}.milliSeconds;
+    // Wrap around 24 hour clock if we exceeded it while adding the time component
+    ${output} = ${output} % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis;
     </#if>
 </#macro>
 

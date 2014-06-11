@@ -409,8 +409,8 @@ public class TestJdbcQuery extends JdbcTest{
             "from cp.`employee.json` limit 1")
         .returns(
             "LEFT_STR=ab; " +
-            "RIGHT_STR=ef; " +
-            "REPLACE_STR=zzcdef\n"
+                "RIGHT_STR=ef; " +
+                "REPLACE_STR=zzcdef\n"
         );
   }
 
@@ -421,6 +421,16 @@ public class TestJdbcQuery extends JdbcTest{
             "from cp.`employee.json` where employee_id = 1")
         .returns(
             "L_UTF8=5\n"
+       );
+  }
+ 
+  @Test
+  public void testTimeIntervalAddOverflow() throws Exception {
+    JdbcAssert.withNoDefaultSchema()
+        .sql("select extract(hour from (interval '10 20' day to hour + time '10:00:00')) as TIME_INT_ADD " +
+            "from cp.`employee.json` where employee_id = 1")
+        .returns(
+            "TIME_INT_ADD=6\n"
         );
   }
 }
