@@ -232,6 +232,21 @@ public class TestMetadataDDL extends TestJdbcQuery {
   }
 
   @Test
+  public void testVarCharMaxLengthAndDecimalPrecisionInInfoSchema() throws Exception{
+    JdbcAssert.withNoDefaultSchema()
+        .sql("SELECT COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH, NUMERIC_PRECISION " +
+            "FROM INFORMATION_SCHEMA.`COLUMNS` " +
+            "WHERE TABLE_SCHEMA = 'hive.default' AND TABLE_NAME = 'allhivedatatypes' AND " +
+            "(COLUMN_NAME = 'stringtype' OR COLUMN_NAME = 'varchartype' OR " +
+            "COLUMN_NAME = 'inttype' OR COLUMN_NAME = 'decimaltype')")
+        .returns(
+            "COLUMN_NAME=inttype; DATA_TYPE=INTEGER; CHARACTER_MAXIMUM_LENGTH=-1; NUMERIC_PRECISION=-1\n" +
+            "COLUMN_NAME=decimaltype; DATA_TYPE=DECIMAL; CHARACTER_MAXIMUM_LENGTH=-1; NUMERIC_PRECISION=38\n" +
+            "COLUMN_NAME=stringtype; DATA_TYPE=VARCHAR; CHARACTER_MAXIMUM_LENGTH=65535; NUMERIC_PRECISION=-1\n" +
+            "COLUMN_NAME=varchartype; DATA_TYPE=VARCHAR; CHARACTER_MAXIMUM_LENGTH=20; NUMERIC_PRECISION=-1");
+  }
+
+  @Test
   public void testDefaultSchemaDfs() throws Exception{
     JdbcAssert.withFull("dfs")
         .sql(String.format("SELECT R_REGIONKEY FROM `%s/../../sample-data/region.parquet` LIMIT 2", WORKING_PATH))

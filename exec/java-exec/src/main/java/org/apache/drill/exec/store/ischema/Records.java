@@ -76,8 +76,16 @@ public class Records {
       }
 
       this.NUMERIC_PRECISION_RADIX = (sqlType == SqlTypeName.DECIMAL) ? 10 : -1; // TODO: where do we get radix?
-      this.CHARACTER_MAXIMUM_LENGTH = -1;  // TODO: where do we get char length?
-      this.NUMERIC_PRECISION = (sqlType.allowsPrec())?type.getPrecision(): -1;
+
+      if (sqlType == SqlTypeName.VARCHAR) {
+        // Max length is stored as precision in Optiq.
+        this.CHARACTER_MAXIMUM_LENGTH = (sqlType.allowsPrec()) ? type.getPrecision() : -1;
+        this.NUMERIC_PRECISION = -1;
+      } else {
+        this.CHARACTER_MAXIMUM_LENGTH = -1;
+        this.NUMERIC_PRECISION = (sqlType.allowsPrec()) ? type.getPrecision() : -1;
+      }
+
       this.NUMERIC_SCALE = (sqlType.allowsScale())?type.getScale(): -1;
     }
   }

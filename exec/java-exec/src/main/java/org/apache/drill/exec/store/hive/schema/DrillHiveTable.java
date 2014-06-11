@@ -107,12 +107,14 @@ public class DrillHiveTable extends DrillTable{
         return typeFactory.createSqlType(SqlTypeName.BINARY);
 
       case DECIMAL:
-        return typeFactory.createSqlType(SqlTypeName.DECIMAL);
+        final int precision = 38; // Hive 0.12 has standard precision
+        return typeFactory.createSqlType(SqlTypeName.DECIMAL, precision);
 
       case STRING:
       case VARCHAR: {
+        int maxLen = TypeInfoUtils.getCharacterLengthForType(pTypeInfo);
         return typeFactory.createTypeWithCharsetAndCollation(
-          typeFactory.createSqlType(SqlTypeName.VARCHAR), /*input type*/
+          typeFactory.createSqlType(SqlTypeName.VARCHAR, maxLen), /*input type*/
           Charset.forName("ISO-8859-1"), /*unicode char set*/
           SqlCollation.IMPLICIT /* TODO: need to decide if implicit is the correct one */
         );
