@@ -79,7 +79,7 @@ rem ----
 
 set DRILL_BIN_DIR=%~dp0
 pushd %DRILL_BIN_DIR%..
-set DRILL_HOME=%cd%
+set DRILL_HOME=^"%cd%^"
 popd
 
 if "test%DRILL_CONF_DIR%" == "test" (
