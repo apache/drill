@@ -34,6 +34,7 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
   private final int softlimit;
   private final int startlimit;
   private final AtomicBoolean overlimit = new AtomicBoolean(false);
+  private final AtomicBoolean outOfMemory = new AtomicBoolean(false);
   private final ReadController readController;
   private final boolean multiFragment;
 
@@ -57,6 +58,15 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
 
   @Override
   public void enqueue(RawFragmentBatch batch) {
+    if (batch.getHeader().getIsOutOfMemory()) {
+      logger.debug("Setting autoread false");
+      readController.setAutoRead(false);
+      if (!outOfMemory.get() && !buffer.peekFirst().getHeader().getIsOutOfMemory()) {
+        buffer.addFirst(batch);
+      }
+      outOfMemory.set(true);
+      return;
+    }
     buffer.add(batch);
     if(buffer.size() == softlimit){
       overlimit.set(true);
@@ -85,6 +95,12 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
   @Override
   public RawFragmentBatch getNext(){
 
+    if (outOfMemory.get() && buffer.size() < 10) {
+      logger.debug("Setting autoread true");
+      outOfMemory.set(false);
+      readController.setAutoRead(true);
+    }
+
     RawFragmentBatch b = null;
 
     b = buffer.poll();
@@ -97,6 +113,13 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
         return null;
       }
     }
+
+    if (b != null && b.getHeader().getIsOutOfMemory()) {
+      outOfMemory.set(true);
+      readController.setAutoRead(false);
+      return b;
+    }
+
 
     // if we are in the overlimit condition and aren't finished, check if we've passed the start limit.  If so, turn off the overlimit condition and set auto read to true (start reading from socket again).
     if(!finished && overlimit.get()){

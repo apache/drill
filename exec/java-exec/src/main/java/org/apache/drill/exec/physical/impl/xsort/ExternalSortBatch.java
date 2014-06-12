@@ -243,7 +243,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
 //          logger.debug("Took {} us to sort {} records", t, count);
           break;
         case OUT_OF_MEMORY:
-          mergeAndSpill();
+          if (batchesSinceLastSpill > 2) mergeAndSpill();
           batchesSinceLastSpill = 0;
           break;
         default:

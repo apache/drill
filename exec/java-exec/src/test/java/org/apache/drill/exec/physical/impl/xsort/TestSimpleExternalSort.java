@@ -178,7 +178,6 @@ public class TestSimpleExternalSort extends BaseTestQuery {
   }
 
   @Test
-  @Ignore
   public void outOfMemoryExternalSort() throws Throwable{
     RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
 
