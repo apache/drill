@@ -11,3 +11,4 @@ jersey
 eclipse
 common
 guava
+servlet
