@@ -52,7 +52,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
     public void eval() {
 
         // Divide the decimal with the scale to get the floating point value
-        out.value = (${type.javatype}) (org.apache.drill.common.util.DecimalUtility.adjustScaleDivide(in.value, (int) in.scale));
+        out.value = ((${type.javatype}) (in.value)) / (org.apache.drill.common.util.DecimalUtility.getPowerOfTen((int) in.scale));
     }
 }
 <#elseif type.major == "DecimalComplexFloat" || type.major == "DecimalComplexDouble"> <#-- Cast function template for conversion from Decimal9, Decimal18 to Float4 -->

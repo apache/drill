@@ -512,4 +512,15 @@ public class TestFunctionsQuery {
             "TS_EXT=20.123; " +
             "TM_EXT=30.303\n");
   }
+
+  @Test
+  public void testCastDecimalDouble() throws Exception {
+    String query = "select cast((cast('1.0001' as decimal(18, 9))) as double) DECIMAL_DOUBLE_CAST " +
+        "from cp.`employee.json` where employee_id = 1";
+
+    JdbcAssert.withNoDefaultSchema()
+        .sql(query)
+        .returns(
+            "DECIMAL_DOUBLE_CAST=1.0001\n");
+  }
 }
