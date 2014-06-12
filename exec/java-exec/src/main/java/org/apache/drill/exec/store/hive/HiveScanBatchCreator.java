@@ -40,32 +40,26 @@ public class HiveScanBatchCreator implements BatchCreator<HiveSubScan> {
     Table table = config.getTable();
     List<InputSplit> splits = config.getInputSplits();
     List<Partition> partitions = config.getPartitions();
-    if (partitions == null || partitions.size() == 0) {
-      if (table.getSd().getInputFormat().equals(TextInputFormat.class.getCanonicalName()) &&
-              table.getSd().getSerdeInfo().getSerializationLib().equals(LazySimpleSerDe.class.getCanonicalName()) &&
-              config.getColumns() != null) {
-        for (InputSplit split : splits) {
-          readers.add(new HiveTextRecordReader(table, null, split, config.getColumns(), context));
-        }
-      } else {
-        for (InputSplit split : splits) {
-          readers.add(new HiveRecordReader(table, null, split, config.getColumns(), context));
-        }
+    boolean hasPartitions = (partitions != null && partitions.size() > 0);
+    int i = 0;
+
+    // Native hive text record reader doesn't handle all types currently. For now use HiveRecordReader which uses
+    // Hive InputFormat and SerDe classes to read the data.
+    //if (table.getSd().getInputFormat().equals(TextInputFormat.class.getCanonicalName()) &&
+    //        table.getSd().getSerdeInfo().getSerializationLib().equals(LazySimpleSerDe.class.getCanonicalName()) &&
+    //        config.getColumns() != null) {
+    //  for (InputSplit split : splits) {
+    //    readers.add(new HiveTextRecordReader(table,
+    //        (hasPartitions ? partitions.get(i++) : null),
+    //        split, config.getColumns(), context));
+    //  }
+    //} else {
+      for (InputSplit split : splits) {
+        readers.add(new HiveRecordReader(table,
+            (hasPartitions ? partitions.get(i++) : null),
+            split, config.getColumns(), context));
       }
-    } else {
-      int i = 0;
-      if (table.getSd().getInputFormat().equals(TextInputFormat.class.getCanonicalName()) &&
-              table.getSd().getSerdeInfo().getSerializationLib().equals(LazySimpleSerDe.class.getCanonicalName()) &&
-              config.getColumns() != null) {
-        for (InputSplit split : splits) {
-          readers.add(new HiveTextRecordReader(table, partitions.get(i++), split, config.getColumns(), context));
-        }
-      } else {
-        for (InputSplit split : splits) {
-          readers.add(new HiveRecordReader(config.getTable(), partitions.get(i++), split, config.getColumns(), context));
-        }
-      }
-    }
+    //}
 
     // If there are no readers created (which is possible when the table is empty), create an empty RecordReader to
     // output the schema

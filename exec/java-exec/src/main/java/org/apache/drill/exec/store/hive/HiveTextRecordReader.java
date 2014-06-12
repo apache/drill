@@ -37,14 +37,18 @@ import org.apache.hadoop.mapred.InputSplit;
 
 import com.google.common.collect.Lists;
 
+/**
+ * Note: Native hive text record reader is not complete in implementation. For now use
+ * {@link org.apache.drill.exec.store.hive.HiveRecordReader}.
+ */
 public class HiveTextRecordReader extends HiveRecordReader {
 
   public final byte delimiter;
   public final List<Integer> columnIds;
   private final int numCols;
 
-  public HiveTextRecordReader(Table table, Partition partition, InputSplit inputSplit, List<SchemaPath> columns, FragmentContext context) throws ExecutionSetupException {
-    super(table, partition, inputSplit, columns, context);
+  public HiveTextRecordReader(Table table, Partition partition, InputSplit inputSplit, List<SchemaPath> projectedColumns, FragmentContext context) throws ExecutionSetupException {
+    super(table, partition, inputSplit, projectedColumns, context);
     String d = table.getSd().getSerdeInfo().getParameters().get("field.delim");
     if (d != null) {
       delimiter = d.getBytes()[0];
@@ -54,7 +58,7 @@ public class HiveTextRecordReader extends HiveRecordReader {
     assert delimiter > 0;
     List<Integer> ids = Lists.newArrayList();
     for (int i = 0; i < tableColumns.size(); i++) {
-      if (columnNames.contains(tableColumns.get(i))) {
+      if (selectedColumnNames.contains(tableColumns.get(i))) {
         ids.add(i);
       }
     }
@@ -133,9 +137,9 @@ public class HiveTextRecordReader extends HiveRecordReader {
           }
         }
         for (int id : columnIds) {
-          boolean success = setValue(primitiveCategories.get(id), vectors.get(id), recordCount, bytes, delimPositions[id]);
+          boolean success = false; // setValue(primitiveCategories.get(id), vectors.get(id), recordCount, bytes, delimPositions[id]);
           if (!success) {
-            throw new DrillRuntimeException(String.format("Failed to write value for column %s", columnNames.get(id)));
+            throw new DrillRuntimeException(String.format("Failed to write value for column %s", selectedColumnNames.get(id)));
           }
 
         }
@@ -154,7 +158,7 @@ public class HiveTextRecordReader extends HiveRecordReader {
         }
         for (int i = 0; i < columnIds.size(); i++) {
           int id = columnIds.get(i);
-          boolean success = setValue(primitiveCategories.get(i), vectors.get(i), recordCount, bytes, delimPositions[id] + 1);
+          boolean success = false; // setValue(primitiveCategories.get(i), vectors.get(i), recordCount, bytes, delimPositions[id] + 1);
           if (!success) {
             redoRecord = value;
             if (partition != null) populatePartitionVectors(recordCount);
