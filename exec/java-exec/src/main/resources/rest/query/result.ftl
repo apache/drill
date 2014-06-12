@@ -17,6 +17,9 @@
   <script type="text/javascript" language="javascript" src="//code.jquery.com/jquery-1.10.2.min.js"></script>
   <script type="text/javascript" language="javascript" src="//cdn.datatables.net/1.10.0/js/jquery.dataTables.min.js"></script>
   <script type="text/javascript" language="javascript" src="//cdn.datatables.net/plug-ins/be7019ee387/integration/jqueryui/dataTables.jqueryui.js"></script>
+
+  <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/colvis/1.1.0/css/dataTables.colVis.css">
+  <script type="text/javascript" language="javascript" src="//cdn.datatables.net/colvis/1.1.0/js/dataTables.colVis.min.js"></script>
 </#macro>
 
 <#macro page_body>
@@ -25,16 +28,16 @@
   </div>
   <h2>Result</h2>
   <div style="width=100%; overflow: auto;">
-    <table id="relation" class="table table-striped table-bordered table-condensed" style="display: table; table-layout: fized; width=100%;">
+    <table id="relation" class="table table-striped table-bordered table-condensed" style="table-layout: auto; width=100%;">
       <#assign rows = model[0]>
-      <thead style="overflow: auto;">
+      <thead>
         <tr>
           <#list rows as row>
           <th>${row}</th>
           </#list>
         </tr>
       </thead>
-      <tbody style="overflow: auto;">
+      <tbody>
       <#list model as rows>
         <#if (rows_index > 0)>
           <tr>
@@ -49,7 +52,10 @@
   </div>
   <script charset="utf-8">
     $(document).ready(function() {
-      $('#relation').dataTable( { "scrollX" : true } );
+      $('#relation').dataTable( {
+        "scrollX" : true,
+        "dom": '<Clfrtip>'
+      } );
     } );
   </script>
 </#macro>
