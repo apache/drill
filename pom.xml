@@ -181,7 +181,7 @@
             <exclude>**/*.project</exclude>
             <exclude>**/*.checkstyle</exclude>
             <exclude>.*/**</exclude>
-            <exclude>*.patch</exclude>
+            <exclude>**/*.patch</exclude>
             <exclude>**/*.pb.cc</exclude>
             <exclude>**/*.pb.h</exclude>
             <exclude>**/*.linux</exclude>

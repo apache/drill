@@ -28,6 +28,7 @@
 //#define BOOST_ASIO_DISABLE_IOCP
 //#endif // _WIN32
 
+#include "drill/common.hpp"
 #include <stdlib.h>
 #include <time.h>
 #include <queue>
@@ -35,7 +36,11 @@
 #include <boost/asio.hpp>
 #include <boost/asio/deadline_timer.hpp>
 #include <boost/thread.hpp>
+#ifdef _WIN32
+#include <zookeeper.h>
+#else
 #include <zookeeper/zookeeper.h>
+#endif
 
 #include "drill/common.hpp"
 #include "drill/drillClient.hpp"

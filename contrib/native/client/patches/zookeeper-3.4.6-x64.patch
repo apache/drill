@@ -1,0 +1,163 @@
+From 64697ddd8a90f29d1693658f04e975e435e3c869 Mon Sep 17 00:00:00 2001
+From: unknown <norrisl@NorrisL.simba.ad>
+Date: Thu, 5 Jun 2014 16:40:48 -0700
+Subject: [PATCH] Allow zookeeper to build in x64
+
+---
+ src/c/include/winstdint.h |  4 ++++
+ src/c/src/mt_adaptor.c    | 54 +++++++++++++++++++++++------------------------
+ 2 files changed, 30 insertions(+), 28 deletions(-)
+
+diff --git a/src/c/include/winstdint.h b/src/c/include/winstdint.h
+index d02608a..df405f7 100644
+--- a/src/c/include/winstdint.h
++++ b/src/c/include/winstdint.h
+@@ -40,6 +40,9 @@
+ #pragma once
+ #endif
+ 
++#if (_MSC_VER > 1500) // Visual Studio 2010 and Beyond
++#include <stdint.h>
++#else 
+ #include <limits.h>
+ 
+ // For Visual Studio 6 in C++ mode and for many Visual Studio versions when
+@@ -244,4 +247,5 @@ typedef uint64_t  uintmax_t;
+ #endif // __STDC_CONSTANT_MACROS ]
+ 
+ 
++#endif
+ #endif // _MSC_STDINT_H_ ]
+diff --git a/src/c/src/mt_adaptor.c b/src/c/src/mt_adaptor.c
+index 974063f..5ce0fd9 100644
+--- a/src/c/src/mt_adaptor.c
++++ b/src/c/src/mt_adaptor.c
+@@ -114,7 +114,7 @@ int process_async(int outstanding_sync)
+ unsigned __stdcall do_io( void * );
+ unsigned __stdcall do_completion( void * );
+ 
+-int handle_error(SOCKET sock, char* message)
++int handle_error(zhandle_t* zh, SOCKET sock, char* message)
+ {
+        LOG_ERROR(("%s. %d",message, WSAGetLastError()));
+        closesocket (sock);
+@@ -122,7 +122,7 @@ int handle_error(SOCKET sock, char* message)
+ }
+ 
+ //--create socket pair for interupting selects.
+-int create_socket_pair(SOCKET fds[2]) 
++int create_socket_pair(zhandle_t* zh, SOCKET fds[2]) 
+ { 
+     struct sockaddr_in inaddr; 
+     struct sockaddr addr; 
+@@ -141,23 +141,23 @@ int create_socket_pair(SOCKET fds[2])
+     inaddr.sin_port = 0; //--system assigns the port
+ 
+     if ( setsockopt(lst,SOL_SOCKET,SO_REUSEADDR,(char*)&yes,sizeof(yes)) == SOCKET_ERROR  ) {
+-       return handle_error(lst,"Error trying to set socket option.");          
++       return handle_error(zh, lst,"Error trying to set socket option.");          
+     }  
+     if (bind(lst,(struct sockaddr *)&inaddr,sizeof(inaddr)) == SOCKET_ERROR){
+-       return handle_error(lst,"Error trying to bind socket.");                
++       return handle_error(zh, lst,"Error trying to bind socket.");                
+     }
+     if (listen(lst,1) == SOCKET_ERROR){
+-       return handle_error(lst,"Error trying to listen on socket.");
++       return handle_error(zh, lst,"Error trying to listen on socket.");
+     }
+     len=sizeof(inaddr); 
+     getsockname(lst, &addr,&len); 
+     fds[0]=socket(AF_INET, SOCK_STREAM,0); 
+     if (connect(fds[0],&addr,len) == SOCKET_ERROR){
+-       return handle_error(lst, "Error while connecting to socket.");
++       return handle_error(zh, lst, "Error while connecting to socket.");
+     }
+     if ((fds[1]=accept(lst,0,0)) == INVALID_SOCKET){
+        closesocket(fds[0]);
+-       return handle_error(lst, "Error while accepting socket connection.");
++       return handle_error(zh, lst, "Error while accepting socket connection.");
+     }
+     closesocket(lst);  
+     return 0;
+@@ -238,11 +238,11 @@ int adaptor_init(zhandle_t *zh)
+ 
+     /* We use a pipe for interrupting select() in unix/sol and socketpair in windows. */
+ #ifdef WIN32   
+-    if (create_socket_pair(adaptor_threads->self_pipe) == -1){
++    if (create_socket_pair(zh, adaptor_threads->self_pipe) == -1){
+        LOG_ERROR(("Can't make a socket."));
+ #else
+     if(pipe(adaptor_threads->self_pipe)==-1) {
+-        LOG_ERROR(("Can't make a pipe %d",errno));
++        LOG_ERROR(LOGCALLBACK(zh), "Can't make a pipe %d",errno);
+ #endif
+         free(adaptor_threads);
+         return -1;
+@@ -255,6 +255,7 @@ int adaptor_init(zhandle_t *zh)
+     zh->adaptor_priv = adaptor_threads;
+     pthread_mutex_init(&zh->to_process.lock,0);
+     pthread_mutex_init(&adaptor_threads->zh_lock,0);
++    pthread_mutex_init(&adaptor_threads->zh_lock,0);
+     // to_send must be recursive mutex    
+     pthread_mutexattr_init(&recursive_mx_attr);
+     pthread_mutexattr_settype(&recursive_mx_attr, PTHREAD_MUTEX_RECURSIVE);
+@@ -364,7 +365,7 @@ void *do_io(void *v)
+ 
+     api_prolog(zh);
+     notify_thread_ready(zh);
+-    LOG_DEBUG(("started IO thread"));
++    LOG_DEBUG(LOGCALLBACK(zh), "started IO thread");
+     fds[0].fd=adaptor_threads->self_pipe[0];
+     fds[0].events=POLLIN;
+     while(!zh->close_requested) {
+@@ -483,25 +484,9 @@ int32_t inc_ref_counter(zhandle_t* zh,int i)
+ int32_t fetch_and_add(volatile int32_t* operand, int incr)
+ {
+ #ifndef WIN32
+-    int32_t result;
+-    asm __volatile__(
+-         "lock xaddl %0,%1\n"
+-         : "=r"(result), "=m"(*(int *)operand)
+-         : "0"(incr)
+-         : "memory");
+-   return result;
++    return __sync_fetch_and_add(operand, incr);
+ #else
+-    volatile int32_t result;
+-    _asm
+-    {
+-        mov eax, operand; //eax = v;
+-       mov ebx, incr; // ebx = i;
+-        mov ecx, 0x0; // ecx = 0;
+-        lock xadd dword ptr [eax], ecx; 
+-       lock xadd dword ptr [eax], ebx; 
+-        mov result, ecx; // result = ebx;        
+-     }
+-     return result;    
++    return InterlockedExchangeAdd(operand, incr);
+ #endif
+ }
+ 
+@@ -515,6 +500,19 @@ __attribute__((constructor)) int32_t get_xid()
+     return fetch_and_add(&xid,1);
+ }
+ 
++void lock_reconfig(struct _zhandle *zh)
++{
++    struct adaptor_threads *adaptor = zh->adaptor_priv;
++    if(adaptor)
++        pthread_mutex_lock(&adaptor->zh_lock);
++}
++void unlock_reconfig(struct _zhandle *zh)
++{
++    struct adaptor_threads *adaptor = zh->adaptor_priv;
++    if(adaptor)
++        pthread_mutex_lock(&adaptor->zh_lock);
++}
++
+ void enter_critical(zhandle_t* zh)
+ {
+     struct adaptor_threads *adaptor = zh->adaptor_priv;
+-- 
+1.9.2.msysgit.0
+
