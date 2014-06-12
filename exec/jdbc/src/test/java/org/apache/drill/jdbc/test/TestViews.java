@@ -28,7 +28,7 @@ import java.sql.Statement;
 import static org.junit.Assert.assertTrue;
 
 /** Contains tests for creating/droping and using views in Drill. */
-public class TestViews extends TestJdbcQuery {
+public class TestViews extends JdbcTestQueryBase {
 
   private final static String NEW_LINE = System.getProperty("line.separator");
 

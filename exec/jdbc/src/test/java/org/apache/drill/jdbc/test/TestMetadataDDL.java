@@ -33,7 +33,7 @@ import static org.junit.Assert.assertTrue;
  * -- USE schema
  * -- SHOW FILES
  */
-public class TestMetadataDDL extends TestJdbcQuery {
+public class TestMetadataDDL extends JdbcTestQueryBase {
 
   @Test
   public void testInfoSchema() throws Exception{

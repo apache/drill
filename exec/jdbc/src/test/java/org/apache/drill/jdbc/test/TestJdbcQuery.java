@@ -50,31 +50,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-public class TestJdbcQuery extends JdbcTest{
+public class TestJdbcQuery extends JdbcTestQueryBase{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestJdbcQuery.class);
-
-
-  // Set a timeout unless we're debugging.
-  @Rule public TestRule TIMEOUT = TestTools.getTimeoutRule(20000);
-
-  protected static final String WORKING_PATH;
-  static{
-    Driver.load();
-    WORKING_PATH = Paths.get("").toAbsolutePath().toString();
-
-  }
-
-  @BeforeClass
-  public static void generateHive() throws Exception{
-    new HiveTestDataGenerator().generateTestData();
-
-    // delete tmp workspace directory
-    File f = new File("/tmp/drilltest");
-    if(f.exists()){
-      FileUtils.cleanDirectory(f);
-      FileUtils.forceDelete(f);
-    }
-  }
 
   @Test
   public void testHiveReadWithDb() throws Exception{
@@ -144,42 +121,6 @@ public class TestJdbcQuery extends JdbcTest{
   @Ignore
   public void checkUnknownColumn() throws Exception{
     testQuery(String.format("SELECT unknownColumn FROM dfs.`%s/../../sample-data/region.parquet`", WORKING_PATH));
-  }
-
-  protected void testQuery(String sql) throws Exception{
-    boolean success = false;
-    try (Connection c = DriverManager.getConnection("jdbc:drill:zk=local", null);) {
-      for (int x = 0; x < 1; x++) {
-        Stopwatch watch = new Stopwatch().start();
-        Statement s = c.createStatement();
-        ResultSet r = s.executeQuery(sql);
-        boolean first = true;
-        while (r.next()) {
-          ResultSetMetaData md = r.getMetaData();
-          if (first == true) {
-            for (int i = 1; i <= md.getColumnCount(); i++) {
-              System.out.print(md.getColumnName(i));
-              System.out.print('\t');
-            }
-            System.out.println();
-            first = false;
-          }
-
-          for (int i = 1; i <= md.getColumnCount(); i++) {
-            System.out.print(r.getObject(i));
-            System.out.print('\t');
-          }
-          System.out.println();
-        }
-
-        System.out.println(String.format("Query completed in %d millis.", watch.elapsed(TimeUnit.MILLISECONDS)));
-      }
-
-      System.out.println("\n\n\n");
-      success = true;
-    }finally{
-      if(!success) Thread.sleep(2000);
-    }
   }
 
   @Test
