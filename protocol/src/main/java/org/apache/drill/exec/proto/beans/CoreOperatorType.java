@@ -52,7 +52,8 @@ public enum CoreOperatorType implements com.dyuproject.protostuff.EnumLite<CoreO
     TEXT_WRITER(27),
     TEXT_SUB_SCAN(28),
     JSON_SUB_SCAN(29),
-    INFO_SCHEMA_SUB_SCAN(30);
+    INFO_SCHEMA_SUB_SCAN(30),
+    FLATTEN(31);
     
     public final int number;
     
@@ -101,6 +102,7 @@ public enum CoreOperatorType implements com.dyuproject.protostuff.EnumLite<CoreO
             case 28: return TEXT_SUB_SCAN;
             case 29: return JSON_SUB_SCAN;
             case 30: return INFO_SCHEMA_SUB_SCAN;
+            case 31: return FLATTEN;
             default: return null;
         }
     }

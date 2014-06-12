@@ -7,28 +7,23 @@ option optimize_for = SPEED;
 import "SchemaDef.proto";
 import "UserBitShared.proto";
 
-
-
 ////// UserToBit RPC ///////
 enum RpcType {
-    HANDSHAKE = 0;
-    ACK = 1;
-    GOODBYE = 2;
-    
-    // user to bit
-    RUN_QUERY = 3;
-    CANCEL_QUERY = 4;
-    REQUEST_RESULTS = 5;
-    
-    
-    // bit to user
-	QUERY_RESULT = 6;
-	QUERY_HANDLE = 7;
-	
-	REQ_META_FUNCTIONS = 8;
-	RESP_FUNCTION_LIST = 9;
-	
-	
+  HANDSHAKE = 0;
+  ACK = 1;
+  GOODBYE = 2;
+
+  // user to bit
+  RUN_QUERY = 3;
+  CANCEL_QUERY = 4;
+  REQUEST_RESULTS = 5;
+
+  // bit to user
+  QUERY_RESULT = 6;
+  QUERY_HANDLE = 7;
+
+  REQ_META_FUNCTIONS = 8;
+  RESP_FUNCTION_LIST = 9;
 }
 
 message Property {
@@ -46,6 +41,7 @@ message UserToBitHandshake {
   optional int32 rpc_version = 3;
   optional exec.shared.UserCredentials credentials = 4;
   optional UserProperties properties = 5;
+  optional bool support_complex_types = 6 [default = false];
 }
 
 message RequestResults {
@@ -60,16 +56,11 @@ message RunQuery {
 }
 
 enum QueryResultsMode {
-	STREAM_FULL = 1; // Server will inform the client regularly on the status of the query. Once the query is completed, service will inform the client as each query chunk is made available.
-	// STREAM_FIRST = 2; // Server will inform the client regularly on the status of the query.  Once the query is completed, server will inform the client of the first query chunk.
-	// QUERY_FOR_STATUS = 3; // Client will need to query for status of query.
+  STREAM_FULL = 1; // Server will inform the client regularly on the status of the query. Once the query is completed, service will inform the client as each query chunk is made available.
+  // STREAM_FIRST = 2; // Server will inform the client regularly on the status of the query.  Once the query is completed, server will inform the client of the first query chunk.
+  // QUERY_FOR_STATUS = 3; // Client will need to query for status of query.
 }
-
 
 message BitToUserHandshake {
-	optional int32 rpc_version = 2;
+  optional int32 rpc_version = 2;
 }
-
-
-
-

@@ -46,12 +46,14 @@ public final class UserToBitHandshake implements Externalizable, Message<UserToB
 
     static final UserToBitHandshake DEFAULT_INSTANCE = new UserToBitHandshake();
 
+    static final Boolean DEFAULT_SUPPORT_COMPLEX_TYPES = new Boolean(false);
     
     private RpcChannel channel;
     private Boolean supportListening;
     private int rpcVersion;
     private UserCredentials credentials;
     private UserProperties properties;
+    private Boolean supportComplexTypes = DEFAULT_SUPPORT_COMPLEX_TYPES;
 
     public UserToBitHandshake()
     {
@@ -122,6 +124,19 @@ public final class UserToBitHandshake implements Externalizable, Message<UserToB
     public UserToBitHandshake setProperties(UserProperties properties)
     {
         this.properties = properties;
+        return this;
+    }
+
+    // supportComplexTypes
+
+    public Boolean getSupportComplexTypes()
+    {
+        return supportComplexTypes;
+    }
+
+    public UserToBitHandshake setSupportComplexTypes(Boolean supportComplexTypes)
+    {
+        this.supportComplexTypes = supportComplexTypes;
         return this;
     }
 
@@ -196,6 +211,9 @@ public final class UserToBitHandshake implements Externalizable, Message<UserToB
                     message.properties = input.mergeObject(message.properties, UserProperties.getSchema());
                     break;
 
+                case 6:
+                    message.supportComplexTypes = input.readBool();
+                    break;
                 default:
                     input.handleUnknownField(number, this);
             }   
@@ -221,6 +239,9 @@ public final class UserToBitHandshake implements Externalizable, Message<UserToB
         if(message.properties != null)
              output.writeObject(5, message.properties, UserProperties.getSchema(), false);
 
+
+        if(message.supportComplexTypes != null && message.supportComplexTypes != DEFAULT_SUPPORT_COMPLEX_TYPES)
+            output.writeBool(6, message.supportComplexTypes, false);
     }
 
     public String getFieldName(int number)
@@ -232,6 +253,7 @@ public final class UserToBitHandshake implements Externalizable, Message<UserToB
             case 3: return "rpcVersion";
             case 4: return "credentials";
             case 5: return "properties";
+            case 6: return "supportComplexTypes";
             default: return null;
         }
     }
@@ -250,6 +272,7 @@ public final class UserToBitHandshake implements Externalizable, Message<UserToB
         __fieldMap.put("rpcVersion", 3);
         __fieldMap.put("credentials", 4);
         __fieldMap.put("properties", 5);
+        __fieldMap.put("supportComplexTypes", 6);
     }
     
 }

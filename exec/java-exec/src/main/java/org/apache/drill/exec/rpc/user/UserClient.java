@@ -56,10 +56,12 @@ public class UserClient extends BasicClientWithConnection<RpcType, UserToBitHand
       throws RpcException, InterruptedException {
     UserToBitHandshake.Builder hsBuilder = UserToBitHandshake.newBuilder()
         .setRpcVersion(UserRpcConfig.RPC_VERSION)
-        .setSupportListening(true);
+        .setSupportListening(true)
+        .setSupportComplexTypes(true);
 
-    if (props != null)
+    if (props != null) {
       hsBuilder.setProperties(props);
+    }
 
     this.connectAsClient(handler, hsBuilder.build(), endpoint.getAddress(), endpoint.getUserPort());
   }

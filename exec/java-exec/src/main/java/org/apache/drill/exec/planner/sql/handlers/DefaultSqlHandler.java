@@ -41,6 +41,7 @@ import org.apache.drill.exec.planner.physical.DrillDistributionTrait;
 import org.apache.drill.exec.planner.physical.PhysicalPlanCreator;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.explain.PrelSequencer;
+import org.apache.drill.exec.planner.physical.visitor.FlattenPrelVisitor;
 import org.apache.drill.exec.planner.physical.visitor.FinalColumnReorderer;
 import org.apache.drill.exec.planner.physical.visitor.JoinPrelRenameVisitor;
 import org.apache.drill.exec.planner.physical.visitor.RelUniqifier;
@@ -140,22 +141,46 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     RelTraitSet traits = drel.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(DrillDistributionTrait.SINGLETON);
     Prel phyRelNode = (Prel) planner.transform(DrillSqlWorker.PHYSICAL_MEM_RULES, traits, drel);
 
-    // Join might cause naming conflicts from its left and right child.
-    // In such case, we have to insert Project to rename the conflicting names.
+    /*  The order of the following transformation is important */
+
+    /*
+     * 1.)
+     * Join might cause naming conflicts from its left and right child.
+     * In such case, we have to insert Project to rename the conflicting names.
+     */
     phyRelNode = JoinPrelRenameVisitor.insertRenameProject(phyRelNode);
 
-    // Since our operators work via names rather than indices, we have to make to reorder any output
-    // before we return data to the user as we may have accindentally shuffled things.  This adds
-    // a trivial project to reorder columns prior to output.
+    /*
+     * 2.)
+     * Since our operators work via names rather than indices, we have to make to reorder any
+     * output before we return data to the user as we may have accidentally shuffled things.
+     * This adds a trivial project to reorder columns prior to output.
+     */
     phyRelNode = FinalColumnReorderer.addFinalColumnOrdering(phyRelNode);
 
-    // Make sure that the no rels are repeats.  This could happen in the case of querying the same table twice as Optiq may canonicalize these.
+    /* 3.)
+     * Next, we add any required selection vector removers given the supported encodings of each
+     * operator. This will ultimately move to a new trait but we're managing here for now to avoid
+     * introducing new issues in planning before the next release
+     */
+    phyRelNode = SelectionVectorPrelVisitor.addSelectionRemoversWhereNecessary(phyRelNode);
+
+    /* 4.)
+     * if the client does not support complex types (Map, Repeated)
+     * insert a project which which would convert
+     */
+    if (!context.getSession().isSupportComplexTypes()) {
+      logger.debug("Client does not support complex types, add Flatten operator.");
+      phyRelNode = FlattenPrelVisitor.addFlattenPrel(phyRelNode);
+    }
+
+    /* 5.)
+     * Finally, Make sure that the no rels are repeats.
+     * This could happen in the case of querying the same table twice as Optiq may canonicalize these.
+     */
     phyRelNode = RelUniqifier.uniqifyGraph(phyRelNode);
 
-    // the last thing we do is add any required selection vector removers given the supported encodings of each
-    // operator. This will ultimately move to a new trait but we're managing here for now to avoid introducing new
-    // issues in planning before the next release
-    return SelectionVectorPrelVisitor.addSelectionRemoversWhereNecessary(phyRelNode);
+    return phyRelNode;
   }
 
   protected PhysicalOperator convertToPop(Prel prel) throws IOException {

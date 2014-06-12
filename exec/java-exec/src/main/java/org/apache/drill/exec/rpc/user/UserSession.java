@@ -18,7 +18,6 @@
 package org.apache.drill.exec.rpc.user;
 
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.Map;
 
 import net.hydromatic.optiq.SchemaPlus;
@@ -38,6 +37,7 @@ public class UserSession {
 
   private DrillUser user;
   private boolean enableExchanges = true;
+  private boolean supportComplexTypes = false;
   private UserCredentials credentials;
   private Map<String, String> properties;
   private OptionManager options;
@@ -105,6 +105,15 @@ public class UserSession {
       if(schema == null) break;
     }
     return schema;
+  }
+
+  public boolean isSupportComplexTypes() {
+    return supportComplexTypes;
+  }
+
+  public UserSession setSupportComplexTypes(boolean supportComplexType) {
+    this.supportComplexTypes = supportComplexType;
+    return this;
   }
 
 }

@@ -18,17 +18,20 @@
 package org.apache.drill.exec.physical.impl.project;
 
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.List;
 
+import org.apache.drill.common.expression.ConvertExpression;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
+import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FieldReference;
+import org.apache.drill.common.expression.FunctionCallFactory;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.PathSegment.NameSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.data.NamedExpression;
+import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ClassGenerator;
@@ -48,7 +51,6 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorWrapper;
-import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.ValueVector;
 
 import com.carrotsearch.hppc.IntOpenHashSet;
@@ -170,7 +172,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
   protected void setupNewSchema() throws SchemaChangeException{
     this.allocationVectors = Lists.newArrayList();
     container.clear();
-    final List<NamedExpression> exprs = popConfig.getExprs();
+    final List<NamedExpression> exprs = getExpressionList();
     final ErrorCollector collector = new ErrorCollectorImpl();
     final List<TransferPair> transfers = Lists.newArrayList();
 
@@ -250,5 +252,23 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
     }
   }
 
+  private List<NamedExpression> getExpressionList() {
+    if (popConfig.getExprs() != null) {
+      return popConfig.getExprs();
+    }
+
+    List<NamedExpression> exprs = Lists.newArrayList();
+    for (MaterializedField field : incoming.getSchema()) {
+      if (Types.isComplex(field.getType())) {
+        exprs.add(new NamedExpression(
+            FunctionCallFactory.createConvert(ConvertExpression.CONVERT_TO, "JSON", field.getPath(), ExpressionPosition.UNKNOWN),
+            new FieldReference(field.getPath()))
+            );
+      } else {
+        exprs.add(new NamedExpression(field.getPath(), new FieldReference(field.getPath())));
+      }
+    }
+    return exprs;
+  }
 
 }

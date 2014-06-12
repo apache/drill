@@ -27,12 +27,10 @@ import java.io.IOException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.physical.impl.materialize.QueryWritableBatch;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
-import org.apache.drill.exec.proto.UserBitShared.UserCredentials;
 import org.apache.drill.exec.proto.UserProtos.BitToUserHandshake;
 import org.apache.drill.exec.proto.UserProtos.RequestResults;
 import org.apache.drill.exec.proto.UserProtos.RpcType;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
-import org.apache.drill.exec.proto.UserProtos.UserProperties;
 import org.apache.drill.exec.proto.UserProtos.UserToBitHandshake;
 import org.apache.drill.exec.rpc.Acks;
 import org.apache.drill.exec.rpc.BasicServer;
@@ -61,7 +59,7 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
 
   @Override
   protected MessageLite getResponseDefaultInstance(int rpcType) throws RpcException {
-    // a user server only expects acknowledgements on messages it creates.
+    // a user server only expects acknowledgments on messages it creates.
     switch (rpcType) {
     case RpcType.ACK_VALUE:
       return Ack.getDefaultInstance();
@@ -76,7 +74,7 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
     switch (rpcType) {
 
     case RpcType.RUN_QUERY_VALUE:
-      // logger.debug("Received query to run.  Returning query handle.");
+      logger.trace("Received query to run.  Returning query handle.");
       try {
         RunQuery query = RunQuery.PARSER.parseFrom(new ByteBufInputStream(pBody));
         return new Response(RpcType.QUERY_HANDLE, worker.submitWork(connection, query));
@@ -85,7 +83,7 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
       }
 
     case RpcType.REQUEST_RESULTS_VALUE:
-      // logger.debug("Received results requests.  Returning empty query result.");
+      logger.trace("Received results requests.  Returning empty query result.");
       try {
         RequestResults req = RequestResults.PARSER.parseFrom(new ByteBufInputStream(pBody));
         return new Response(RpcType.QUERY_RESULT, worker.getResult(connection, req));
@@ -112,8 +110,9 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
       super(channel);
     }
 
-    void setUser(UserCredentials credentials, UserProperties props) throws IOException{
-      session = new UserSession(worker.getSystemOptions(), credentials, props);
+    void setUser(UserToBitHandshake inbound) throws IOException {
+      session = new UserSession(worker.getSystemOptions(), inbound.getCredentials(), inbound.getProperties());
+      session.setSupportComplexTypes(inbound.getSupportComplexTypes());
     }
 
     public UserSession getSession(){
@@ -121,7 +120,7 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
     }
 
     public void sendResult(RpcOutcomeListener<Ack> listener, QueryWritableBatch result){
-//      logger.debug("Sending result to client with {}", result);
+      logger.trace("Sending result to client with {}", result);
       send(listener, this, RpcType.QUERY_RESULT, result.getHeader(), Ack.class, result.getBuffers());
     }
 
@@ -129,7 +128,6 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
     public BufferAllocator getAllocator() {
       return alloc;
     }
-
 
   }
 
@@ -140,16 +138,23 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
 
   @Override
   protected ServerHandshakeHandler<UserToBitHandshake> getHandshakeHandler(final UserClientConnection connection) {
+
     return new ServerHandshakeHandler<UserToBitHandshake>(RpcType.HANDSHAKE, UserToBitHandshake.PARSER){
 
       @Override
       public MessageLite getHandshakeResponse(UserToBitHandshake inbound) throws Exception {
-//        logger.debug("Handling handshake from user to bit. {}", inbound);
-        if(inbound.getRpcVersion() != UserRpcConfig.RPC_VERSION) throw new RpcException(String.format("Invalid rpc version.  Expected %d, actual %d.", inbound.getRpcVersion(), UserRpcConfig.RPC_VERSION));
-        connection.setUser(inbound.getCredentials(), inbound.getProperties());
+        logger.trace("Handling handshake from user to bit. {}", inbound);
+        if(inbound.getRpcVersion() != UserRpcConfig.RPC_VERSION) {
+          throw new RpcException(String.format("Invalid rpc version. Expected %d, actual %d.", inbound.getRpcVersion(), UserRpcConfig.RPC_VERSION));
+        }
+
+        connection.setUser(inbound);
+
         return BitToUserHandshake.newBuilder().setRpcVersion(UserRpcConfig.RPC_VERSION).build();
       }
+
     };
+
   }
 
   @Override
