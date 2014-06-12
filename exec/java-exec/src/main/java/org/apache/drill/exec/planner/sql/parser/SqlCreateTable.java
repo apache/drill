@@ -17,16 +17,24 @@
  */
 package org.apache.drill.exec.planner.sql.parser;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.ImmutableList;
+import java.util.List;
+
 import net.hydromatic.optiq.tools.Planner;
+
 import org.apache.drill.exec.ops.QueryContext;
-import org.apache.drill.exec.planner.sql.handlers.CreateTableHandler;
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
-import org.eigenbase.sql.*;
+import org.apache.drill.exec.planner.sql.handlers.CreateTableHandler;
+import org.eigenbase.sql.SqlIdentifier;
+import org.eigenbase.sql.SqlKind;
+import org.eigenbase.sql.SqlNode;
+import org.eigenbase.sql.SqlNodeList;
+import org.eigenbase.sql.SqlOperator;
+import org.eigenbase.sql.SqlSpecialOperator;
+import org.eigenbase.sql.SqlWriter;
 import org.eigenbase.sql.parser.SqlParserPos;
 
-import java.util.List;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 public class SqlCreateTable extends DrillSqlCall {
   public static final SqlSpecialOperator OPERATOR = new SqlSpecialOperator("CREATE_TABLE", SqlKind.OTHER);

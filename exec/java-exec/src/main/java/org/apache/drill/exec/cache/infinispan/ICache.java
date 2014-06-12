@@ -54,7 +54,7 @@ import org.jgroups.protocols.COUNTER;
 import org.jgroups.protocols.FRAG2;
 import org.jgroups.stack.ProtocolStack;
 
-import com.google.hive12.common.collect.Maps;
+import com.google.common.collect.Maps;
 
 public class ICache implements DistributedCache{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ICache.class);

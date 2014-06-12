@@ -27,9 +27,11 @@ import org.apache.drill.exec.proto.BitData.BitClientHandshake;
 import org.apache.drill.exec.proto.BitData.BitServerHandshake;
 import org.apache.drill.exec.proto.BitData.RpcType;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
-import org.apache.drill.exec.proto.UserBitShared.RpcChannel;
-import org.apache.drill.exec.rpc.*;
-import org.apache.drill.exec.rpc.control.ControlProtobufLengthDecoder;
+import org.apache.drill.exec.rpc.BasicClient;
+import org.apache.drill.exec.rpc.OutOfMemoryHandler;
+import org.apache.drill.exec.rpc.ProtobufLengthDecoder;
+import org.apache.drill.exec.rpc.Response;
+import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.server.BootStrapContext;
 
 import com.google.protobuf.MessageLite;

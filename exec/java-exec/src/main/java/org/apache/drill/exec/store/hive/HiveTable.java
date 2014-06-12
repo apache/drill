@@ -17,15 +17,21 @@
  */
 package org.apache.drill.exec.store.hive;
 
-import com.google.common.collect.Lists;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.hadoop.hive.metastore.api.FieldSchema;
+import org.apache.hadoop.hive.metastore.api.Order;
+import org.apache.hadoop.hive.metastore.api.Partition;
+import org.apache.hadoop.hive.metastore.api.SerDeInfo;
+import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
+import org.apache.hadoop.hive.metastore.api.Table;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import org.apache.hadoop.hive.metastore.api.*;
-
-import java.util.List;
-import java.util.Map;
+import com.google.common.collect.Lists;
 
 @JsonTypeName("table")
 public class HiveTable {

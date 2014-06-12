@@ -106,6 +106,7 @@
             <exclude>**/conffiles</exclude>
             <exclude>**/git.properties</exclude>
             <exclude>**/control</exclude>
+            <exclude>**/*.checkstyle</exclude>
             <exclude>**/*.json</exclude>
             <exclude>**/hadoop-excludes.txt</exclude>
           </excludes>

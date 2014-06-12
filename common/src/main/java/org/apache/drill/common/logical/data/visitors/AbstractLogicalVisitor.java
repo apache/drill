@@ -17,7 +17,23 @@
  */
 package org.apache.drill.common.logical.data.visitors;
 
-import org.apache.drill.common.logical.data.*;
+import org.apache.drill.common.logical.data.Constant;
+import org.apache.drill.common.logical.data.Filter;
+import org.apache.drill.common.logical.data.Flatten;
+import org.apache.drill.common.logical.data.GroupingAggregate;
+import org.apache.drill.common.logical.data.Join;
+import org.apache.drill.common.logical.data.Limit;
+import org.apache.drill.common.logical.data.LogicalOperator;
+import org.apache.drill.common.logical.data.Order;
+import org.apache.drill.common.logical.data.Project;
+import org.apache.drill.common.logical.data.RunningAggregate;
+import org.apache.drill.common.logical.data.Scan;
+import org.apache.drill.common.logical.data.Sequence;
+import org.apache.drill.common.logical.data.Store;
+import org.apache.drill.common.logical.data.Transform;
+import org.apache.drill.common.logical.data.Union;
+import org.apache.drill.common.logical.data.WindowFrame;
+import org.apache.drill.common.logical.data.Writer;
 
 
 public abstract class AbstractLogicalVisitor<T, X, E extends Throwable> implements LogicalVisitor<T, X, E> {

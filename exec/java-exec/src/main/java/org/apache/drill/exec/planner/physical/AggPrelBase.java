@@ -48,8 +48,8 @@ import org.eigenbase.sql.SqlKind;
 import org.eigenbase.sql.type.OperandTypes;
 import org.eigenbase.sql.type.ReturnTypes;
 
-import com.beust.jcommander.internal.Lists;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 
 public abstract class AggPrelBase extends AggregateRelBase implements Prel{

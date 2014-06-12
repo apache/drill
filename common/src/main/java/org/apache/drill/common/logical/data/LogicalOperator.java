@@ -20,13 +20,16 @@ package org.apache.drill.common.logical.data;
 import java.util.Collection;
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.*;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.drill.common.graph.GraphValue;
 import org.apache.drill.common.logical.ValidationError;
-
 import org.apache.drill.common.logical.data.visitors.LogicalVisitor;
+
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @JsonPropertyOrder({"@id", "memo", "input"}) // op will always be first since it is wrapped.
 @JsonIdentityInfo(generator = ObjectIdGenerators.IntSequenceGenerator.class, property = "@id")

@@ -17,23 +17,17 @@
  */
 package org.apache.drill.exec.physical.impl.xsort;
 
-import com.google.common.collect.Lists;
-import com.google.common.base.Stopwatch;
-import org.apache.drill.common.expression.ExpressionPosition;
-import org.apache.drill.common.expression.SchemaPath;
+import java.util.List;
+
+import javax.inject.Named;
+
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
-import org.apache.drill.exec.physical.impl.sort.RecordBatchData;
-import org.apache.drill.exec.record.*;
-import org.apache.drill.exec.record.selection.SelectionVector2;
+import org.apache.drill.exec.record.VectorAccessible;
+import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.allocator.VectorAllocator;
-
-import javax.inject.Named;
-import java.io.IOException;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 public abstract class PriorityQueueCopierTemplate implements PriorityQueueCopier {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PriorityQueueCopierTemplate.class);

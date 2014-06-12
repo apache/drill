@@ -17,16 +17,19 @@
  */
 package org.apache.drill.exec.planner.logical;
 
-import org.apache.drill.exec.planner.common.DrillUnionRelBase;
-import org.eigenbase.rel.InvalidRelException;
-import org.eigenbase.rel.UnionRel;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.*;
-import org.eigenbase.trace.EigenbaseTrace;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
+
+import org.apache.drill.exec.planner.common.DrillUnionRelBase;
+import org.eigenbase.rel.InvalidRelException;
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.UnionRel;
+import org.eigenbase.relopt.Convention;
+import org.eigenbase.relopt.RelOptRule;
+import org.eigenbase.relopt.RelOptRuleCall;
+import org.eigenbase.relopt.RelTraitSet;
+import org.eigenbase.trace.EigenbaseTrace;
 
 /**
  * Rule that converts a {@link UnionRel} to a {@link DrillUnionRelBase}, implemented by a "union" operation.

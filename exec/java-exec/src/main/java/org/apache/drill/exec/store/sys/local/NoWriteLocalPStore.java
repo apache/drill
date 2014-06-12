@@ -23,7 +23,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.apache.drill.exec.store.sys.PStore;
 
-import com.google.hive12.common.collect.Maps;
+import com.google.common.collect.Maps;
 
 public class NoWriteLocalPStore<V> implements PStore<V>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NoWriteLocalPStore.class);

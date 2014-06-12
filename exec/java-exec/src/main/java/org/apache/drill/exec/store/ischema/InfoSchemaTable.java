@@ -17,8 +17,8 @@
  */
 package org.apache.drill.exec.store.ischema;
 
-import com.beust.jcommander.internal.Lists;
-import com.google.common.collect.ImmutableList;
+import java.util.List;
+
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
@@ -26,7 +26,8 @@ import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.sql.type.SqlTypeName;
 
-import java.util.List;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 /** Base class of tables in INFORMATION_SCHEMA. Defines the table (fields and types) */
 public abstract class InfoSchemaTable{

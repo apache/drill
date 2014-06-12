@@ -17,7 +17,11 @@
  */
 package org.apache.drill.exec.store;
 
-import org.apache.drill.exec.vector.*;
+import org.apache.drill.exec.vector.AllocationHelper;
+import org.apache.drill.exec.vector.RepeatedFixedWidthVector;
+import org.apache.drill.exec.vector.RepeatedMutator;
+import org.apache.drill.exec.vector.RepeatedVariableWidthVector;
+import org.apache.drill.exec.vector.ValueVector;
 
 public class VectorHolder {
   private int count;

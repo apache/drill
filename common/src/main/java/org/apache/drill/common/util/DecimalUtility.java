@@ -17,11 +17,8 @@
  */
 package org.apache.drill.common.util;
 
-import java.math.*;
-
-
-import io.netty.buffer.Unpooled;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;

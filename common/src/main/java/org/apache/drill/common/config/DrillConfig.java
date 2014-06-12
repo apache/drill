@@ -54,7 +54,6 @@ public final class DrillConfig extends NestedConfig{
   @SuppressWarnings("unchecked")
   private volatile List<Queue<Object>> sinkQueues = new CopyOnWriteArrayList<Queue<Object>>(new Queue[1]);
 
-  @SuppressWarnings("restriction")
   @VisibleForTesting
   public DrillConfig(Config config, boolean enableServer) {
     super(config);

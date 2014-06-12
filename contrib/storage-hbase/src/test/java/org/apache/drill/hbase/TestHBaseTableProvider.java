@@ -20,23 +20,14 @@ package org.apache.drill.hbase;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
-import java.util.Map;
 import java.util.Map.Entry;
 
-import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.exec.store.hbase.DrillHBaseConstants;
 import org.apache.drill.exec.store.hbase.config.HBasePStoreProvider;
 import org.apache.drill.exec.store.sys.PStore;
 import org.apache.drill.exec.store.sys.PStoreConfig;
-import org.apache.drill.exec.store.sys.PStoreRegistry;
-import org.apache.hadoop.hbase.HConstants;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import com.google.hive12.common.collect.Maps;
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigValueFactory;
 
 public class TestHBaseTableProvider extends BaseHBaseTest {
 

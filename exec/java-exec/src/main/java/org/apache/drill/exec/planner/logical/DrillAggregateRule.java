@@ -17,13 +17,16 @@
  */
 package org.apache.drill.exec.planner.logical;
 
+import java.util.logging.Logger;
+
 import org.eigenbase.rel.AggregateRel;
 import org.eigenbase.rel.InvalidRelException;
 import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.*;
+import org.eigenbase.relopt.Convention;
+import org.eigenbase.relopt.RelOptRule;
+import org.eigenbase.relopt.RelOptRuleCall;
+import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.trace.EigenbaseTrace;
-
-import java.util.logging.Logger;
 
 /**
  * Rule that converts an {@link AggregateRel} to a {@link DrillAggregateRel}, implemented by a Drill "segment" operation

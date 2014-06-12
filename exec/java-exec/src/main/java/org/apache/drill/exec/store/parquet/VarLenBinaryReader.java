@@ -17,11 +17,13 @@
  */
 package org.apache.drill.exec.store.parquet;
 
-import org.apache.drill.exec.store.parquet.VarLengthColumnReaders.*;
-import parquet.bytes.BytesUtils;
-
 import java.io.IOException;
 import java.util.List;
+
+import org.apache.drill.exec.store.parquet.VarLengthColumnReaders.NullableVarLengthColumn;
+import org.apache.drill.exec.store.parquet.VarLengthColumnReaders.VarLengthColumn;
+
+import parquet.bytes.BytesUtils;
 
 public class VarLenBinaryReader {
 

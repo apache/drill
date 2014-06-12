@@ -18,17 +18,22 @@
 
 package org.apache.drill.exec.planner.sql.handlers;
 
-import com.google.common.collect.ImmutableList;
+import java.util.List;
+
 import net.hydromatic.optiq.tools.Planner;
 import net.hydromatic.optiq.tools.RelConversionException;
+
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.planner.sql.parser.DrillParserUtil;
 import org.apache.drill.exec.planner.sql.parser.SqlShowSchemas;
-import org.eigenbase.sql.*;
+import org.eigenbase.sql.SqlIdentifier;
+import org.eigenbase.sql.SqlNode;
+import org.eigenbase.sql.SqlNodeList;
+import org.eigenbase.sql.SqlSelect;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.parser.SqlParserPos;
 
-import java.util.List;
+import com.google.common.collect.ImmutableList;
 
 public class ShowSchemasHandler extends DefaultSqlHandler {
 

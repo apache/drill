@@ -37,10 +37,9 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder.WorkspaceReference;
 import org.apache.drill.exec.record.TypedFieldId;
 
-import com.google.common.collect.Lists;
-import com.beust.jcommander.internal.Maps;
 import com.google.common.base.Preconditions;
-import com.sun.codemodel.JArray;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.sun.codemodel.JBlock;
 import com.sun.codemodel.JClass;
 import com.sun.codemodel.JClassAlreadyExistsException;

@@ -18,9 +18,12 @@
 package org.apache.drill.common.util;
 
 
-import org.apache.commons.lang3.exception.ExceptionUtils;
+import java.io.DataInput;
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.InputStream;
 
-import java.io.*;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 
 
 public class DataInputInputStream extends InputStream {

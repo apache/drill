@@ -17,15 +17,22 @@
  */
 package org.apache.drill.exec.planner.sql.parser;
 
-import com.google.common.collect.Lists;
+import java.util.List;
+
 import net.hydromatic.optiq.tools.Planner;
+
 import org.apache.drill.exec.ops.QueryContext;
-import org.apache.drill.exec.planner.sql.handlers.DescribeTableHandler;
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
-import org.eigenbase.sql.*;
+import org.apache.drill.exec.planner.sql.handlers.DescribeTableHandler;
+import org.eigenbase.sql.SqlIdentifier;
+import org.eigenbase.sql.SqlKind;
+import org.eigenbase.sql.SqlNode;
+import org.eigenbase.sql.SqlOperator;
+import org.eigenbase.sql.SqlSpecialOperator;
+import org.eigenbase.sql.SqlWriter;
 import org.eigenbase.sql.parser.SqlParserPos;
 
-import java.util.List;
+import com.google.common.collect.Lists;
 
 /**
  * Sql parser tree node to represent statement:

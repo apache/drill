@@ -111,7 +111,7 @@
         <executions>
           <execution>
             <id>rat-checks</id>
-            <phase>compile</phase>
+            <phase>validate</phase>
             <goals>
               <goal>check</goal>
             </goals>
@@ -136,6 +136,7 @@
             <exclude>**/*.iml</exclude>
             <exclude>**/*.tdd</exclude>
             <exclude>**/*.project</exclude>
+            <exclude>**/*.checkstyle</exclude>
             <exclude>.*/**</exclude>
             <exclude>*.patch</exclude>
             <exclude>**/*.pb.cc</exclude>
@@ -143,7 +144,30 @@
           </excludes>
         </configuration>
       </plugin>
-
+      
+      <plugin>
+       <groupId>org.apache.maven.plugins</groupId>
+       <artifactId>maven-checkstyle-plugin</artifactId>
+       <version>2.12.1</version>
+       <executions>
+         <execution>
+           <id>checkstyle-validation</id>
+           <phase>validate</phase>
+           <configuration>
+             <encoding>UTF-8</encoding>
+             <failsOnError>true</failsOnError>
+             <consoleOutput>true</consoleOutput>
+             <includeTestSourceDirectory>true</includeTestSourceDirectory>
+             <configLocation>src/main/resources/checkstyle-config.xml</configLocation>
+             <suppressionsLocation>src/main/resources/checkstyle-suppressions.xml</suppressionsLocation>
+           </configuration>
+           <goals>
+             <goal>check</goal>
+           </goals>
+         </execution>
+       </executions>
+      </plugin>
+ 
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>

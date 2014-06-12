@@ -19,8 +19,11 @@
 package org.apache.drill.exec.expr.fn.impl;
 
 import org.apache.drill.exec.expr.DrillSimpleFunc;
-import org.apache.drill.exec.expr.annotations.*;
-import org.apache.drill.exec.expr.holders.*;
+import org.apache.drill.exec.expr.annotations.FunctionTemplate;
+import org.apache.drill.exec.expr.annotations.Output;
+import org.apache.drill.exec.expr.annotations.Param;
+import org.apache.drill.exec.expr.holders.BitHolder;
+import org.apache.drill.exec.expr.holders.NullableBitHolder;
 import org.apache.drill.exec.record.RecordBatch;
 
 public class IsNotTrue {

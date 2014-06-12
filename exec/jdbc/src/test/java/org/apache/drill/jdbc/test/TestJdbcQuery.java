@@ -17,38 +17,17 @@
  */
 package org.apache.drill.jdbc.test;
 
-import java.io.File;
-import java.lang.Exception;
-import java.lang.RuntimeException;
-import java.nio.file.Paths;
-import java.sql.*;
+import static org.junit.Assert.assertEquals;
+
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
-import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.drill.common.util.TestTools;
-import org.apache.drill.exec.store.hive.HiveTestDataGenerator;
-import org.apache.drill.jdbc.Driver;
-import org.apache.drill.jdbc.JdbcTest;
-import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Ignore;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TestRule;
 
 import com.google.common.base.Function;
-import com.google.common.base.Stopwatch;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 public class TestJdbcQuery extends JdbcTestQueryBase{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestJdbcQuery.class);

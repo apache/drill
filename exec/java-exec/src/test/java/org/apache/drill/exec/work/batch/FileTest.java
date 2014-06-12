@@ -17,16 +17,19 @@
  */
 package org.apache.drill.exec.work.batch;
 
-import com.google.common.base.Stopwatch;
-import org.apache.drill.exec.store.LocalSyncableFileSystem;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.*;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+
+import com.google.common.base.Stopwatch;
 
 public class FileTest {
   public static void main(String[] args) throws IOException {

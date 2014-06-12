@@ -38,11 +38,10 @@ import org.apache.drill.exec.store.LocalSyncableFileSystem;
 import org.apache.drill.exec.store.dfs.shim.DrillFileSystem;
 import org.apache.drill.exec.store.dfs.shim.FileSystemCreator;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 
 import com.google.common.collect.Lists;
-import com.beust.jcommander.internal.Maps;
-
-import org.apache.hadoop.fs.FileSystem;
+import com.google.common.collect.Maps;
 
 /**
  * A Storage engine associated with a Hadoop FileSystem Implementation. Examples include HDFS, MapRFS, QuantacastFileSystem,

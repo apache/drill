@@ -24,8 +24,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import com.google.common.base.Preconditions;
-
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
@@ -36,7 +34,6 @@ import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
-import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
@@ -45,25 +42,39 @@ import org.apache.drill.exec.store.parquet.FixedByteAlignedReader.Decimal28Reade
 import org.apache.drill.exec.store.parquet.FixedByteAlignedReader.Decimal38Reader;
 import org.apache.drill.exec.store.parquet.NullableFixedByteAlignedReader.NullableDecimal28Reader;
 import org.apache.drill.exec.store.parquet.NullableFixedByteAlignedReader.NullableDecimal38Reader;
-import org.apache.drill.exec.vector.*;
+import org.apache.drill.exec.store.parquet.VarLengthColumnReaders.Decimal28Column;
+import org.apache.drill.exec.store.parquet.VarLengthColumnReaders.Decimal38Column;
+import org.apache.drill.exec.store.parquet.VarLengthColumnReaders.NullableDecimal28Column;
+import org.apache.drill.exec.store.parquet.VarLengthColumnReaders.NullableDecimal38Column;
+import org.apache.drill.exec.store.parquet.VarLengthColumnReaders.NullableVarBinaryColumn;
+import org.apache.drill.exec.store.parquet.VarLengthColumnReaders.NullableVarCharColumn;
+import org.apache.drill.exec.store.parquet.VarLengthColumnReaders.NullableVarLengthColumn;
+import org.apache.drill.exec.store.parquet.VarLengthColumnReaders.VarBinaryColumn;
+import org.apache.drill.exec.store.parquet.VarLengthColumnReaders.VarCharColumn;
+import org.apache.drill.exec.store.parquet.VarLengthColumnReaders.VarLengthColumn;
+import org.apache.drill.exec.vector.Decimal28SparseVector;
+import org.apache.drill.exec.vector.Decimal38SparseVector;
+import org.apache.drill.exec.vector.NullableDecimal28SparseVector;
+import org.apache.drill.exec.vector.NullableDecimal38SparseVector;
+import org.apache.drill.exec.vector.NullableVarBinaryVector;
+import org.apache.drill.exec.vector.NullableVarCharVector;
+import org.apache.drill.exec.vector.ValueVector;
+import org.apache.drill.exec.vector.VarBinaryVector;
+import org.apache.drill.exec.vector.VarCharVector;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
 import parquet.column.ColumnDescriptor;
+import parquet.column.Encoding;
 import parquet.format.ConvertedType;
 import parquet.format.FileMetaData;
 import parquet.format.SchemaElement;
 import parquet.format.converter.ParquetMetadataConverter;
 import parquet.hadoop.CodecFactoryExposer;
 import parquet.hadoop.ParquetFileWriter;
-import parquet.column.Encoding;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
 import parquet.hadoop.metadata.ParquetMetadata;
 import parquet.schema.PrimitiveType;
-
-import org.apache.drill.exec.store.parquet.VarLengthColumnReaders.*;
-
-import com.google.common.base.Joiner;
 import parquet.schema.PrimitiveType.PrimitiveTypeName;
 
 public class ParquetRecordReader implements RecordReader {

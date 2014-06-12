@@ -26,7 +26,6 @@ import net.hydromatic.optiq.SchemaPlus;
 import net.hydromatic.optiq.tools.Frameworks;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.compile.ClassTransformer;
 import org.apache.drill.exec.compile.QueryClassLoader;
@@ -49,7 +48,7 @@ import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.work.batch.IncomingBuffers;
 
 import com.google.common.collect.Lists;
-import com.beust.jcommander.internal.Maps;
+import com.google.common.collect.Maps;
 
 /**
  * Contextual objects required for execution of a particular fragment.

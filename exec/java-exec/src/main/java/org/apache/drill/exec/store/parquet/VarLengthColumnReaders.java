@@ -17,24 +17,27 @@
  ******************************************************************************/
 package org.apache.drill.exec.store.parquet;
 
+import java.math.BigDecimal;
+
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.util.DecimalUtility;
 import org.apache.drill.exec.expr.holders.Decimal28SparseHolder;
 import org.apache.drill.exec.expr.holders.Decimal38SparseHolder;
-import org.apache.drill.exec.expr.holders.NullableDecimal28SparseHolder;
-import org.apache.drill.exec.vector.*;
+import org.apache.drill.exec.vector.Decimal28SparseVector;
+import org.apache.drill.exec.vector.Decimal38SparseVector;
+import org.apache.drill.exec.vector.NullableDecimal28SparseVector;
+import org.apache.drill.exec.vector.NullableDecimal38SparseVector;
 import org.apache.drill.exec.vector.NullableVarBinaryVector;
 import org.apache.drill.exec.vector.NullableVarCharVector;
+import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarBinaryVector;
 import org.apache.drill.exec.vector.VarCharVector;
+
 import parquet.column.ColumnDescriptor;
-import parquet.format.ConvertedType;
 import parquet.column.Encoding;
 import parquet.format.SchemaElement;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
 import parquet.io.api.Binary;
-
-import java.math.BigDecimal;
 
 public class VarLengthColumnReaders {
 
