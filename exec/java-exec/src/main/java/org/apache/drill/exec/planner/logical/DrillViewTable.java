@@ -32,7 +32,7 @@ import org.eigenbase.relopt.RelOptUtil;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 
-public class DrillViewTable implements TranslatableTable{
+public class DrillViewTable implements TranslatableTable, DrillViewInfoProvider {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillViewTable.class);
 
   private final View view;
@@ -71,6 +71,7 @@ public class DrillViewTable implements TranslatableTable{
     return TableType.VIEW;
   }
 
+  @Override
   public String getViewSql() {
     return view.getSql();
   }

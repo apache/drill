@@ -258,7 +258,12 @@ public class HiveSchemaFactory implements SchemaFactory {
     DrillTable getDrillTable(String dbName, String t){
       HiveReadEntry entry = getSelectionBaseOnName(dbName, t);
       if(entry == null) return null;
-      return new DrillHiveTable(schemaName, plugin, entry);
+
+      if (entry.getJdbcTableType() == TableType.VIEW) {
+        return new DrillHiveViewTable(schemaName, plugin, entry);
+      } else {
+        return new DrillHiveTable(schemaName, plugin, entry);
+      }
     }
 
     HiveReadEntry getSelectionBaseOnName(String dbName, String t) {

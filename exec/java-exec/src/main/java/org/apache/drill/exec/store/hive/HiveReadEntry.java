@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.hive;
 
 import java.util.List;
 
+import net.hydromatic.optiq.Schema.TableType;
 import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.base.Size;
 import org.apache.hadoop.hive.metastore.api.Partition;
@@ -60,5 +61,13 @@ public class HiveReadEntry {
     return partitionsUnwrapped;
   }
 
+  @JsonIgnore
+  public TableType getJdbcTableType() {
+    if (table.getTable().getTableType().equals(org.apache.hadoop.hive.metastore.TableType.VIRTUAL_VIEW.toString())) {
+      return TableType.VIEW;
+    }
+
+    return TableType.TABLE;
+  }
 }
 

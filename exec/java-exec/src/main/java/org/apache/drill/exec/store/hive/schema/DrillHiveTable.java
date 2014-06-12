@@ -41,7 +41,7 @@ import org.eigenbase.sql.type.SqlTypeName;
 public class DrillHiveTable extends DrillTable{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillHiveTable.class);
   
-  private final Table hiveTable;
+  protected final Table hiveTable;
   
   public DrillHiveTable(String storageEngineName, HiveStoragePlugin plugin, HiveReadEntry readEntry) {
     super(storageEngineName, plugin, readEntry);

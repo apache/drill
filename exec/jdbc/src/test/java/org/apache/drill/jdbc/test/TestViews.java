@@ -302,6 +302,14 @@ public class TestViews extends TestJdbcQuery {
   }
 
   @Test
+  public void testInfoSchemaWithHiveView() throws Exception {
+    JdbcAssert.withFull("hive.default")
+        .sql("SELECT * FROM INFORMATION_SCHEMA.VIEWS WHERE TABLE_NAME = 'hiveview'")
+        .returns("TABLE_CATALOG=DRILL; TABLE_SCHEMA=hive.default; TABLE_NAME=hiveview; " +
+            "VIEW_DEFINITION=SELECT `kv`.`key`, `kv`.`value` FROM `default`.`kv`");
+  }
+
+  @Test
   public void testViewWithFullSchemaIdentifier() throws Exception{
     JdbcAssert.withNoDefaultSchema().withConnection(new Function<Connection, Void>() {
       public Void apply(Connection connection) {

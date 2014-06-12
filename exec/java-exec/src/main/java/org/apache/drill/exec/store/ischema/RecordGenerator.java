@@ -23,7 +23,7 @@ import net.hydromatic.optiq.Schema.TableType;
 import net.hydromatic.optiq.SchemaPlus;
 import net.hydromatic.optiq.Table;
 import net.hydromatic.optiq.jdbc.JavaTypeFactoryImpl;
-import org.apache.drill.exec.planner.logical.DrillViewTable;
+import org.apache.drill.exec.planner.logical.DrillViewInfoProvider;
 import org.apache.drill.exec.store.AbstractSchema;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.pojo.PojoRecordReader;
@@ -148,7 +148,7 @@ public abstract class RecordGenerator {
     @Override
     public boolean visitTable(String schemaName, String tableName, Table table) {
       if (table.getJdbcTableType() == TableType.VIEW) {
-        records.add(new Records.View("DRILL", schemaName, tableName, ((DrillViewTable)table).getViewSql()));
+        records.add(new Records.View("DRILL", schemaName, tableName, ((DrillViewInfoProvider) table).getViewSql()));
       }
       return false;
     }

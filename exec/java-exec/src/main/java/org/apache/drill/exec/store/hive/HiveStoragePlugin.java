@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.List;
 
 import net.hydromatic.optiq.Schema;
+import net.hydromatic.optiq.Schema.TableType;
 import net.hydromatic.optiq.SchemaPlus;
 
 import org.apache.drill.common.JSONOptions;
@@ -67,6 +68,10 @@ public class HiveStoragePlugin extends AbstractStoragePlugin {
   public HiveScan getPhysicalScan(JSONOptions selection, List<SchemaPath> columns) throws IOException {
     HiveReadEntry hiveReadEntry = selection.getListWith(new ObjectMapper(), new TypeReference<HiveReadEntry>(){});
     try {
+      if (hiveReadEntry.getJdbcTableType() == TableType.VIEW) {
+        throw new UnsupportedOperationException("Querying Hive views from Drill is not supported in current version.");
+      }
+
       return new HiveScan(hiveReadEntry, this, null);   
     } catch (ExecutionSetupException e) {
       throw new IOException(e);

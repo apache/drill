@@ -118,6 +118,9 @@ public class HiveTestDataGenerator {
         "uniontypeType UNIONTYPE<int, double, array<string>>)"
     );
 
+    // create a Hive view to test how its metadata is populated in Drill's INFORMATION_SCHEMA
+    executeQuery("CREATE VIEW IF NOT EXISTS hiveview AS SELECT * FROM kv");
+
     ss.close();
   }
 
