@@ -20,12 +20,12 @@ package org.apache.drill.exec.store.sys.local;
 import java.io.File;
 import java.io.IOException;
 
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.store.sys.PStore;
 import org.apache.drill.exec.store.sys.PStoreConfig;
 import org.apache.drill.exec.store.sys.PStoreProvider;
-
-import com.typesafe.config.Config;
+import org.apache.drill.exec.store.sys.PStoreRegistry;
 
 /**
  * A really simple provider that stores data in the local file system, one value per file.
@@ -36,9 +36,13 @@ public class LocalPStoreProvider implements PStoreProvider{
   private File path;
   private final boolean enableWrite;
 
-  public LocalPStoreProvider(Config config) {
+  public LocalPStoreProvider(DrillConfig config) {
     path = new File(config.getString(ExecConstants.SYS_STORE_PROVIDER_LOCAL_PATH));
     enableWrite = config.getBoolean(ExecConstants.SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE);
+  }
+
+  public LocalPStoreProvider(PStoreRegistry registry) {
+    this(registry.getConfig());
   }
 
   @Override

@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.store.hbase.DrillHBaseConstants;
 import org.apache.drill.exec.store.hbase.config.HBasePStoreProvider;
 import org.apache.drill.exec.store.sys.PStore;
@@ -43,14 +44,7 @@ public class TestHBaseTableProvider extends BaseHBaseTest {
 
   @BeforeClass // mask HBase cluster start function
   public static void setUpBeforeTestHBaseTableProvider() throws Exception {
-    Map<String, String> hbaseProps = Maps.newHashMap();
-    hbaseProps.put(HConstants.ZOOKEEPER_QUORUM, storagePluginConfig.getZookeeperQuorum());
-    hbaseProps.put(DrillHBaseConstants.HBASE_ZOOKEEPER_PORT, storagePluginConfig.getZookeeperport());
-    Config newConfig = bit.getContext().getConfig()
-        .withValue(DrillHBaseConstants.SYS_STORE_PROVIDER_HBASE_CONFIG, ConfigValueFactory.fromMap(hbaseProps))
-        .withValue(DrillHBaseConstants.SYS_STORE_PROVIDER_HBASE_TABLE, ConfigValueFactory.fromAnyRef("drill_store"));
-    PStoreRegistry registry = new PStoreRegistry(bit.getCoordinator(), newConfig);
-    provider = new HBasePStoreProvider(registry);
+    provider = new HBasePStoreProvider(storagePluginConfig.getHBaseConf(), "drill_store");
     provider.start();
   }
 

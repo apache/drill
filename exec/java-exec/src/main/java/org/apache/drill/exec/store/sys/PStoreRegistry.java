@@ -20,20 +20,20 @@ package org.apache.drill.exec.store.sys;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 
-import com.typesafe.config.Config;
 import com.typesafe.config.ConfigException;
 
 public class PStoreRegistry {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PStoreRegistry.class);
 
-  private Config config;
+  private DrillConfig config;
   private ClusterCoordinator coord;
 
-  public PStoreRegistry(ClusterCoordinator coord, Config config) {
+  public PStoreRegistry(ClusterCoordinator coord, DrillConfig config) {
     this.coord = coord;
     this.config = config;
   }
@@ -42,7 +42,7 @@ public class PStoreRegistry {
     return this.coord;
   }
 
-  public Config getConfig() {
+  public DrillConfig getConfig() {
     return this.config;
   }
 

@@ -37,6 +37,8 @@ import org.apache.hadoop.hbase.client.HConnectionManager;
 import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.util.Bytes;
 
+import com.google.common.annotations.VisibleForTesting;
+
 public class HBasePStoreProvider implements PStoreProvider {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBasePStoreProvider.class);
 
@@ -63,6 +65,12 @@ public class HBasePStoreProvider implements PStoreProvider {
       }
     }
     this.storeTableName = registry.getConfig().getString(DrillHBaseConstants.SYS_STORE_PROVIDER_HBASE_TABLE);
+  }
+
+  @VisibleForTesting
+  public HBasePStoreProvider(Configuration conf, String storeTableName) {
+    this.hbaseConf = conf;
+    this.storeTableName = storeTableName;
   }
 
   @Override
