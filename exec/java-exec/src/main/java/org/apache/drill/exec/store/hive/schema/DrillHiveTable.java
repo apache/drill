@@ -26,7 +26,7 @@ import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.store.hive.HiveReadEntry;
 import org.apache.drill.exec.store.hive.HiveStoragePlugin;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
-import org.apache.hadoop.hive.metastore.api.Table;
+import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.serde2.typeinfo.ListTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.MapTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.PrimitiveTypeInfo;
@@ -45,7 +45,7 @@ public class DrillHiveTable extends DrillTable{
   
   public DrillHiveTable(String storageEngineName, HiveStoragePlugin plugin, HiveReadEntry readEntry) {
     super(storageEngineName, plugin, readEntry);
-    this.hiveTable = readEntry.getTable();
+    this.hiveTable = new Table(readEntry.getTable());
   }
 
   @Override
@@ -53,7 +53,7 @@ public class DrillHiveTable extends DrillTable{
     List<RelDataType> typeList = Lists.newArrayList();
     List<String> fieldNameList = Lists.newArrayList();
 
-    List<FieldSchema> hiveFields = hiveTable.getSd().getCols();
+    List<FieldSchema> hiveFields = hiveTable.getCols();
     for(FieldSchema hiveField : hiveFields) {
       fieldNameList.add(hiveField.getName());
       typeList.add(getNullableRelDataTypeFromHiveType(
