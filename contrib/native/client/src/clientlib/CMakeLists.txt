@@ -41,5 +41,10 @@ set_property(
     PROPERTY COMPILE_DEFINITIONS_DEBUG DEBUG DEBUG=1 THREADED
     )
 
+if(MSVC)
+    set(CMAKE_CXX_FLAGS "/EHsc")
+    add_definitions(-DDRILL_CLIENT_EXPORTS)
+endif()
+
 add_library(drillClient SHARED ${CLIENTLIB_SRC_FILES} )
 target_link_libraries(drillClient ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY} ${Zookeeper_LIBRARIES} protomsgs y2038)

@@ -17,6 +17,7 @@
  */
 
 
+#include "drill/common.hpp"
 #include "drill/drillClient.hpp"
 #include "drill/recordBatch.hpp"
 #include "drillClientImpl.hpp"

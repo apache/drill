@@ -20,6 +20,14 @@
 #ifndef _COMMON_H_
 #define _COMMON_H_
 
+#ifdef _WIN32
+// The order of inclusion is important. Including winsock2 before everything else
+// ensures that the correct typedefs are defined and that the older typedefs defined
+// in winsock and windows.h are not picked up.
+#include <winsock2.h>
+#include <windows.h>
+#endif
+
 #include <stdint.h>
 #include <string>
 #include <vector>
