@@ -18,9 +18,13 @@
 package org.apache.drill.jdbc.test;
 
 import com.google.common.base.Function;
+import org.apache.commons.io.FileUtils;
+import org.apache.drill.exec.store.hive.HiveTestDataGenerator;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.io.File;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -31,6 +35,18 @@ import static org.junit.Assert.assertTrue;
 public class TestViews extends JdbcTestQueryBase {
 
   private final static String NEW_LINE = System.getProperty("line.separator");
+
+  @BeforeClass
+  public static void generateHive() throws Exception{
+    new HiveTestDataGenerator().generateTestData();
+
+    // delete tmp workspace directory
+    File f = new File("/tmp/drilltest");
+    if(f.exists()){
+      FileUtils.cleanDirectory(f);
+      FileUtils.forceDelete(f);
+    }
+  }
 
   /** Helper test method for view tests */
   private void testViewHelper(final String viewCreate, final String viewName,

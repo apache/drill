@@ -48,18 +48,6 @@ public class JdbcTestQueryBase extends JdbcTest {
 
   }
 
-  @BeforeClass
-  public static void generateHive() throws Exception{
-    new HiveTestDataGenerator().generateTestData();
-
-    // delete tmp workspace directory
-    File f = new File("/tmp/drilltest");
-    if(f.exists()){
-      FileUtils.cleanDirectory(f);
-      FileUtils.forceDelete(f);
-    }
-  }
-
   protected void testQuery(String sql) throws Exception{
     boolean success = false;
     try (Connection c = DriverManager.getConnection("jdbc:drill:zk=local", null);) {

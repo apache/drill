@@ -18,8 +18,12 @@
 package org.apache.drill.jdbc.test;
 
 import com.google.common.base.Function;
+import org.apache.commons.io.FileUtils;
+import org.apache.drill.exec.store.hive.HiveTestDataGenerator;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.io.File;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -34,6 +38,11 @@ import static org.junit.Assert.assertTrue;
  * -- SHOW FILES
  */
 public class TestMetadataDDL extends JdbcTestQueryBase {
+
+  @BeforeClass
+  public static void generateHive() throws Exception{
+    new HiveTestDataGenerator().generateTestData();
+  }
 
   @Test
   public void testInfoSchema() throws Exception{

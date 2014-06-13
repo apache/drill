@@ -17,8 +17,8 @@
  */
 package org.apache.drill.jdbc.test;
 
-import static org.junit.Assert.assertEquals;
-
+import java.lang.Exception;
+import java.lang.RuntimeException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -29,26 +29,10 @@ import org.junit.Test;
 
 import com.google.common.base.Function;
 
+import static org.junit.Assert.assertEquals;
+
 public class TestJdbcQuery extends JdbcTestQueryBase{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestJdbcQuery.class);
-
-  @Test
-  public void testHiveReadWithDb() throws Exception{
-    testQuery("select * from hive.`default`.kv");
-    testQuery("select key from hive.`default`.kv group by key");
-    testQuery("select * from hive.`default`.allreadsupportedhivedatatypes");
-  }
-
-  @Test
-  public void testHiveWithDate() throws Exception {
-    testQuery("select * from hive.`default`.foodate");
-    testQuery("select date_add(a, time '12:23:33'), b from hive.`default`.foodate");
-  }
-
-  @Test
-  public void testQueryEmptyHiveTable() throws Exception {
-    testQuery("SELECT * FROM hive.`default`.empty_table");
-  }
 
   @Test
   @Ignore
