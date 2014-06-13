@@ -293,4 +293,12 @@ public abstract class DrillFuncHolder {
     }
 
   }
+
+  public boolean matchInputOutputType() {
+    return false;
+  }
+
+  public MajorType getReturnType() {
+    return returnValue.type;
+  }
 }

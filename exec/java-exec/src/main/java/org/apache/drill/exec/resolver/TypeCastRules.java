@@ -794,6 +794,16 @@ public class TypeCastRules {
     // number of arguments that could implicitly casts using precedence map or didn't require casting at all
     int nCasts = 0;
 
+    // Check if the function holder requires the input type and output type to match
+    if (holder.matchInputOutputType() == true) {
+      MinorType outputType = holder.getReturnType(call.args).getMinorType();
+      for (int i = 0; i < holder.getParamCount(); i++) {
+        if (call.args.get(i).getMajorType().getMinorType() != outputType) {
+          return -1;
+        }
+      }
+    }
+
     for (int i = 0; i < holder.getParamCount(); i++) {
       MajorType argType = call.args.get(i).getMajorType();
       MajorType parmType = holder.getParmMajorType(i);
