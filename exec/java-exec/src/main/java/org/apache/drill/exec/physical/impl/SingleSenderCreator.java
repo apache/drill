@@ -22,7 +22,10 @@ import io.netty.buffer.ByteBuf;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.OperatorContext;
+import org.apache.drill.exec.ops.SenderStats;
 import org.apache.drill.exec.physical.config.SingleSender;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
@@ -44,7 +47,7 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
   
   
   
-  private static class SingleSenderRootExec implements RootExec{
+  private static class SingleSenderRootExec extends BaseRootExec {
     static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SingleSenderRootExec.class);
     private RecordBatch incoming;
     private DataTunnel tunnel;
@@ -53,8 +56,9 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
     private FragmentContext context;
     private volatile boolean ok = true;
     private final SendingAccountor sendCount = new SendingAccountor();
-    
-    public SingleSenderRootExec(FragmentContext context, RecordBatch batch, SingleSender config){
+
+    public SingleSenderRootExec(FragmentContext context, RecordBatch batch, SingleSender config) throws OutOfMemoryException {
+      super(context, config);
       this.incoming = batch;
       assert(incoming != null);
       this.handle = context.getHandle();
@@ -65,27 +69,37 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
     }
     
     @Override
-    public boolean next() {
+    public boolean innerNext() {
       if(!ok){
         incoming.kill();
         
         return false;
       }
-      IterOutcome out = incoming.next();
+      IterOutcome out = next(incoming);
 //      logger.debug("Outcome of sender next {}", out);
       switch(out){
       case STOP:
       case NONE:
         FragmentWritableBatch b2 = FragmentWritableBatch.getEmptyLast(handle.getQueryId(), handle.getMajorFragmentId(), handle.getMinorFragmentId(), recMajor, 0);
         sendCount.increment();
-        tunnel.sendRecordBatch(new RecordSendFailure(), b2);
+        stats.startWait();
+        try {
+          tunnel.sendRecordBatch(new RecordSendFailure(), b2);
+        } finally {
+          stats.stopWait();
+        }
         return false;
 
       case OK_NEW_SCHEMA:
       case OK:
         FragmentWritableBatch batch = new FragmentWritableBatch(false, handle.getQueryId(), handle.getMajorFragmentId(), handle.getMinorFragmentId(), recMajor, 0, incoming.getWritableBatch());
         sendCount.increment();
-        tunnel.sendRecordBatch(new RecordSendFailure(), batch);
+        stats.startWait();
+        try {
+          tunnel.sendRecordBatch(new RecordSendFailure(), batch);
+        } finally {
+          stats.stopWait();
+        }
         return true;
 
       case NOT_YET:
@@ -98,6 +112,7 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
     public void stop() {
       ok = false;
       sendCount.waitForSendComplete();
+      oContext.close();
       incoming.cleanup();
     }
     

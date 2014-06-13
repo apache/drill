@@ -265,7 +265,12 @@ public abstract class PartitionerTemplate implements Partitioner {
                 oppositeMinorFragmentId,
                 getWritableBatch());
 
-        tunnel.sendRecordBatch(statusHandler, writableBatch);
+        stats.startWait();
+        try {
+          tunnel.sendRecordBatch(statusHandler, writableBatch);
+        } finally {
+          stats.stopWait();
+        }
         this.sendCount.increment();
       } else {
         logger.debug("Flush requested on an empty outgoing record batch" + (isLast ? " (last batch)" : ""));
@@ -278,7 +283,12 @@ public abstract class PartitionerTemplate implements Partitioner {
                   operator.getOppositeMajorFragmentId(),
                   oppositeMinorFragmentId,
                   getWritableBatch());
-          tunnel.sendRecordBatch(statusHandler, writableBatch);
+          stats.startWait();
+          try {
+            tunnel.sendRecordBatch(statusHandler, writableBatch);
+          } finally {
+            stats.stopWait();
+          }
           this.sendCount.increment();
           vectorContainer.clear();
           return;

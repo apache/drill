@@ -21,7 +21,10 @@ import io.netty.buffer.ByteBuf;
 
 import java.util.List;
 
+import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.config.Screen;
 import org.apache.drill.exec.physical.impl.materialize.QueryWritableBatch;
 import org.apache.drill.exec.physical.impl.materialize.RecordMaterializer;
@@ -44,14 +47,14 @@ public class ScreenCreator implements RootCreator<Screen>{
 
 
   @Override
-  public RootExec getRoot(FragmentContext context, Screen config, List<RecordBatch> children) {
+  public RootExec getRoot(FragmentContext context, Screen config, List<RecordBatch> children) throws ExecutionSetupException {
     Preconditions.checkNotNull(children);
     Preconditions.checkArgument(children.size() == 1);
-    return new ScreenRoot(context, children.iterator().next());
+    return new ScreenRoot(context, children.iterator().next(), config);
   }
 
 
-  static class ScreenRoot implements RootExec{
+  static class ScreenRoot extends BaseRootExec {
     static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScreenRoot.class);
     volatile boolean ok = true;
 
@@ -62,9 +65,9 @@ public class ScreenCreator implements RootCreator<Screen>{
     final UserClientConnection connection;
     private RecordMaterializer materializer;
 
-    public ScreenRoot(FragmentContext context, RecordBatch incoming){
+    public ScreenRoot(FragmentContext context, RecordBatch incoming, Screen config) throws OutOfMemoryException {
+      super(context, config);
       assert context.getConnection() != null : "A screen root should only be run on the driving node which is connected directly to the client.  As such, this should always be true.";
-
       this.context = context;
       this.incoming = incoming;
       this.connection = context.getConnection();
@@ -72,14 +75,14 @@ public class ScreenCreator implements RootCreator<Screen>{
 
 
     @Override
-    public boolean next() {
+    public boolean innerNext() {
       if(!ok){
         stop();
         context.fail(this.listener.ex);
         return false;
       }
 
-      IterOutcome outcome = incoming.next();
+      IterOutcome outcome = next(incoming);
 //      logger.debug("Screen Outcome {}", outcome);
       switch(outcome){
       case STOP: {
@@ -92,7 +95,12 @@ public class ScreenCreator implements RootCreator<Screen>{
               .setIsLastChunk(true) //
               .build();
           QueryWritableBatch batch = new QueryWritableBatch(header);
-          connection.sendResult(listener, batch);
+          stats.startWait();
+          try {
+            connection.sendResult(listener, batch);
+          } finally {
+            stats.stopWait();
+          }
           sendCount.increment();
 
           return false;
@@ -107,7 +115,12 @@ public class ScreenCreator implements RootCreator<Screen>{
             .setIsLastChunk(true) //
             .build();
         QueryWritableBatch batch = new QueryWritableBatch(header);
-        connection.sendResult(listener, batch);
+        stats.startWait();
+        try {
+          connection.sendResult(listener, batch);
+        } finally {
+          stats.stopWait();
+        }
         sendCount.increment();
 
         return false;
@@ -119,7 +132,12 @@ public class ScreenCreator implements RootCreator<Screen>{
 //        context.getStats().batchesCompleted.inc(1);
 //        context.getStats().recordsCompleted.inc(incoming.getRecordCount());
         QueryWritableBatch batch = materializer.convertNext(false);
-        connection.sendResult(listener, batch);
+        stats.startWait();
+        try {
+          connection.sendResult(listener, batch);
+        } finally {
+          stats.stopWait();
+        }
         sendCount.increment();
 
         return true;
@@ -131,6 +149,7 @@ public class ScreenCreator implements RootCreator<Screen>{
     @Override
     public void stop() {
       sendCount.waitForSendComplete();
+      oContext.close();
       incoming.cleanup();
     }
 

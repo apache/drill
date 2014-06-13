@@ -17,11 +17,25 @@
  */
 package org.apache.drill.exec.physical.impl;
 
+import org.apache.drill.exec.memory.OutOfMemoryException;
+import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.ops.OperatorStats;
+import org.apache.drill.exec.ops.SenderStats;
+import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.record.RecordBatch;
+import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 
 public abstract class BaseRootExec implements RootExec {
 
-  protected OperatorStats stats = null;
+  protected SenderStats stats = null;
+  protected OperatorContext oContext = null;
+
+  public BaseRootExec(FragmentContext context, PhysicalOperator config) throws OutOfMemoryException {
+    this.stats = new SenderStats(config);
+    context.getStats().addOperatorStats(this.stats);
+    this.oContext = new OperatorContext(config, context, stats);
+  }
 
   @Override
   public final boolean next() {
@@ -35,8 +49,24 @@ public abstract class BaseRootExec implements RootExec {
     }
   }
 
-  public void setStats(OperatorStats stats) {
-    this.stats = stats;
+  public final IterOutcome next(RecordBatch b){
+    stats.stopProcessing();
+    IterOutcome next;
+    try {
+      next = b.next();
+    } finally {
+      stats.startProcessing();
+    }
+
+    switch(next){
+      case OK_NEW_SCHEMA:
+        stats.batchReceived(0, b.getRecordCount(), true);
+        break;
+      case OK:
+        stats.batchReceived(0, b.getRecordCount(), false);
+        break;
+    }
+    return next;
   }
 
   public abstract boolean innerNext();

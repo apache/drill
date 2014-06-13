@@ -127,34 +127,44 @@ public class ScanBatch implements RecordBatch {
 
   @Override
   public IterOutcome next() {
-    mutator.allocate(MAX_RECORD_CNT);
-    while ((recordCount = currentReader.next()) == 0) {
-      try {
-        if (!readers.hasNext()) {
-          currentReader.cleanup();
+    oContext.getStats().startProcessing();
+    try {
+      mutator.allocate(MAX_RECORD_CNT);
+      while ((recordCount = currentReader.next()) == 0) {
+        try {
+          if (!readers.hasNext()) {
+            currentReader.cleanup();
+            releaseAssets();
+            return IterOutcome.NONE;
+          }
+          oContext.getStats().startSetup();
+          try {
+            currentReader.cleanup();
+            currentReader = readers.next();
+            partitionValues = partitionColumns.hasNext() ? partitionColumns.next() : null;
+            currentReader.setup(mutator);
+            mutator.allocate(MAX_RECORD_CNT);
+            addPartitionVectors();
+          } finally {
+            oContext.getStats().stopSetup();
+          }
+        } catch (ExecutionSetupException e) {
+          this.context.fail(e);
           releaseAssets();
-          return IterOutcome.NONE;
+          return IterOutcome.STOP;
         }
-        currentReader.cleanup();
-        currentReader = readers.next();
-        partitionValues = partitionColumns.hasNext() ? partitionColumns.next() : null;
-        currentReader.setup(mutator);
-        mutator.allocate(MAX_RECORD_CNT);
-        addPartitionVectors();
-      } catch (ExecutionSetupException e) {
-        this.context.fail(e);
-        releaseAssets();
-        return IterOutcome.STOP;
       }
-    }
 
-    populatePartitionVectors();
-    if (mutator.isNewSchema()) {
-      container.buildSchema(SelectionVectorMode.NONE);
-      schema = container.getSchema();
-      return IterOutcome.OK_NEW_SCHEMA;
-    } else {
-      return IterOutcome.OK;
+      populatePartitionVectors();
+      if (mutator.isNewSchema()) {
+        container.buildSchema(SelectionVectorMode.NONE);
+        schema = container.getSchema();
+        return IterOutcome.OK_NEW_SCHEMA;
+      } else {
+        return IterOutcome.OK;
+      }
+    } finally {
+      oContext.getStats().stopProcessing();
     }
   }
 

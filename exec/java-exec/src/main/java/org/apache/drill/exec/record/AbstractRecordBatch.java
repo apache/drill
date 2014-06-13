@@ -66,7 +66,9 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
   }
 
   public final IterOutcome next(int inputIndex, RecordBatch b){
+    stats.stopProcessing();
     IterOutcome next = b.next();
+    stats.startProcessing();
 
     switch(next){
     case OK_NEW_SCHEMA:

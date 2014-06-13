@@ -119,13 +119,16 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
   }
 
   private RawFragmentBatch getNext(RawFragmentBatchProvider provider) throws IOException{
-    long startNext = System.nanoTime();
-    RawFragmentBatch b = provider.getNext();
-    if(b != null){
-      stats.batchReceived(0, b.getHeader().getDef().getRecordCount(), false);
+    stats.startWait();
+    try {
+      RawFragmentBatch b = provider.getNext();
+      if(b != null){
+        stats.batchReceived(0, b.getHeader().getDef().getRecordCount(), false);
+      }
+      return b;
+    } finally {
+      stats.stopWait();
     }
-    stats.addLongStat(Metric.NEXT_WAIT_NANOS, System.nanoTime() - startNext);
-    return b;
   }
 
   @Override

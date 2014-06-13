@@ -39,7 +39,7 @@ public class RandomReceiverCreator implements BatchCreator<RandomReceiver>{
     RawBatchBuffer[] buffers = bufHolder.getBuffers(receiver.getOppositeMajorFragmentId());
     assert buffers.length == 1;
     RawBatchBuffer buffer = buffers[0];
-    return new WireRecordBatch(context, buffer);
+    return new WireRecordBatch(context, buffer, receiver);
   }
   
   

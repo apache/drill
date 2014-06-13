@@ -41,12 +41,15 @@ public class OperatorStats {
 
   private boolean inProcessing = false;
   private boolean inSetup = false;
+  private boolean inWait = false;
 
   protected long processingNanos;
   protected long setupNanos;
+  protected long waitNanos;
 
   private long processingMark;
   private long setupMark;
+  private long waitMark;
 
   private long schemas;
 
@@ -89,6 +92,20 @@ public class OperatorStats {
     inProcessing = false;
   }
 
+  public void startWait() {
+    assert !inWait;
+    stopProcessing();
+    inWait = true;
+    waitMark = System.nanoTime();
+  }
+
+  public void stopWait() {
+    assert inWait;
+    startProcessing();
+    waitNanos += System.nanoTime() - waitMark;
+    inWait = false;
+  }
+
   public void batchReceived(int inputIndex, long records, boolean newSchema) {
     recordsReceivedByInput[inputIndex] += records;
     batchesReceivedByInput[inputIndex]++;
@@ -103,7 +120,8 @@ public class OperatorStats {
         .setOperatorType(operatorType) //
         .setOperatorId(operatorId) //
         .setSetupNanos(setupNanos) //
-        .setProcessNanos(processingNanos);
+        .setProcessNanos(processingNanos)
+        .setWaitNanos(waitNanos);
 
     addAllMetrics(b);
 

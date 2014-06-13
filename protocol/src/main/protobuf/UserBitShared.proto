@@ -142,6 +142,7 @@ message OperatorProfile {
   optional int64 process_nanos = 6;
   optional int64 local_memory_allocated = 7;  
   repeated MetricValue metric = 8;
+  optional int64 wait_nanos = 9;
 }
 
 message StreamProfile {

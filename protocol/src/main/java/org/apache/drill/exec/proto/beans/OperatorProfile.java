@@ -56,6 +56,7 @@ public final class OperatorProfile implements Externalizable, Message<OperatorPr
     private long processNanos;
     private long localMemoryAllocated;
     private List<MetricValue> metric;
+    private long waitNanos;
 
     public OperatorProfile()
     {
@@ -155,6 +156,19 @@ public final class OperatorProfile implements Externalizable, Message<OperatorPr
         return this;
     }
 
+    // waitNanos
+
+    public long getWaitNanos()
+    {
+        return waitNanos;
+    }
+
+    public OperatorProfile setWaitNanos(long waitNanos)
+    {
+        this.waitNanos = waitNanos;
+        return this;
+    }
+
     // java serialization
 
     public void readExternal(ObjectInput in) throws IOException
@@ -236,6 +250,9 @@ public final class OperatorProfile implements Externalizable, Message<OperatorPr
                     message.metric.add(input.mergeObject(null, MetricValue.getSchema()));
                     break;
 
+                case 9:
+                    message.waitNanos = input.readInt64();
+                    break;
                 default:
                     input.handleUnknownField(number, this);
             }   
@@ -279,6 +296,9 @@ public final class OperatorProfile implements Externalizable, Message<OperatorPr
             }
         }
 
+
+        if(message.waitNanos != 0)
+            output.writeInt64(9, message.waitNanos, false);
     }
 
     public String getFieldName(int number)
@@ -292,6 +312,7 @@ public final class OperatorProfile implements Externalizable, Message<OperatorPr
             case 6: return "processNanos";
             case 7: return "localMemoryAllocated";
             case 8: return "metric";
+            case 9: return "waitNanos";
             default: return null;
         }
     }
@@ -312,6 +333,7 @@ public final class OperatorProfile implements Externalizable, Message<OperatorPr
         __fieldMap.put("processNanos", 6);
         __fieldMap.put("localMemoryAllocated", 7);
         __fieldMap.put("metric", 8);
+        __fieldMap.put("waitNanos", 9);
     }
     
 }
