@@ -70,15 +70,13 @@ public class UnionAllPrel extends UnionPrel {
   @Override
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
     List<PhysicalOperator> inputPops = Lists.newArrayList();
-    
+
     for (int i = 0; i < this.getInputs().size(); i++) {
       inputPops.add( ((Prel)this.getInputs().get(i)).getPhysicalOperator(creator));
     }
 
     UnionAll unionall = new UnionAll(inputPops.toArray(new PhysicalOperator[inputPops.size()]));
-    unionall.setOperatorId(creator.getOperatorId(this));
-
-    return unionall;
+    return creator.addMetadata(this, unionall);
   }
 
   @Override

@@ -17,17 +17,15 @@
  ******************************************************************************/
 package org.apache.drill.exec.physical.config;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeName;
-
-import org.apache.drill.common.expression.LogicalExpression;
-import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.base.AbstractSingle;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName("limit")
 public class Limit extends AbstractSingle {
@@ -52,11 +50,6 @@ public class Limit extends AbstractSingle {
   @Override
   protected PhysicalOperator getNewWithChild(PhysicalOperator child) {
     return new Limit(child, first, last);
-  }
-
-  @Override
-  public OperatorCost getCost() {
-    return new OperatorCost(0, 0, 0, 0.25f);
   }
 
   @Override

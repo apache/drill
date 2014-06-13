@@ -21,7 +21,6 @@ import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.graph.GraphValue;
-import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.planner.physical.PhysicalPlanCreator;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 
@@ -39,21 +38,6 @@ import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "@id")
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "pop")
 public interface  PhysicalOperator extends GraphValue<PhysicalOperator> {
-
-  /**
-   * Get the cost of execution of this particular operator.
-   *
-   * @return
-   */
-  @JsonIgnore
-  public OperatorCost getCost();
-
-  /**
-   * Get the estimated size of this particular operator.
-   * @return
-   */
-  @JsonIgnore
-  public Size getSize();
 
   /**
    * Describes whether or not a particular physical operator can actually be executed. Most physical operators can be
@@ -104,6 +88,12 @@ public interface  PhysicalOperator extends GraphValue<PhysicalOperator> {
 
   @JsonProperty("@id")
   public void setOperatorId(int id);
+
+  @JsonProperty("cost")
+  public void setCost(double cost);
+
+  @JsonProperty("cost")
+  public double getCost();
 
   @JsonIgnore
   public int getOperatorType();

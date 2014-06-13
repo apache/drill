@@ -46,6 +46,9 @@ public interface GroupScan extends Scan, HasAffinity{
   @JsonIgnore
   public abstract String getDigest();
 
+  @JsonIgnore
+  public ScanStats getScanStats();
+
   /**
    * Returns a clone of GroupScan instance, except that the new GroupScan will use the provided list of columns .
    */
@@ -61,33 +64,5 @@ public interface GroupScan extends Scan, HasAffinity{
    * have exact column row count.
    */
   public long getColumnValueCount(SchemaPath column);
-
-  /**
-   * Return if GroupScan knows the exact row count in the result of getSize() call.
-   * By default, groupscan does not know the exact row count, before it scans every rows.
-   * Currently, parquet group scan will return the exact row count.
-   */
-  @JsonIgnore
-  public GroupScanProperty getProperty();
-
-  public class GroupScanProperty {
-    public static final GroupScanProperty NO_EXACT_ROW_COUNT = new GroupScanProperty(false, false);
-    public static final GroupScanProperty EXACT_ROW_COUNT = new GroupScanProperty(true, true);
-
-    private boolean hasExactRowCount, hasExactColumnValueCount;
-
-    public GroupScanProperty (boolean hasExactRowCount, boolean hasExactColumnValueCount) {
-      this.hasExactRowCount = hasExactRowCount;
-      this.hasExactColumnValueCount = hasExactColumnValueCount;
-    }
-
-    public boolean hasExactRowCount() {
-      return hasExactRowCount;
-    }
-
-    public boolean hasExactColumnValueCount() {
-      return hasExactColumnValueCount;
-    }
-  }
 
 }

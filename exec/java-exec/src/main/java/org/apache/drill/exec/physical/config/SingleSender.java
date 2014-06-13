@@ -20,8 +20,6 @@ package org.apache.drill.exec.physical.config;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.drill.common.graph.GraphVisitor;
-import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.base.AbstractSender;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
@@ -52,12 +50,6 @@ public class SingleSender extends AbstractSender {
   @JsonIgnore
   public List<DrillbitEndpoint> getDestinations() {
     return Collections.singletonList(destination);
-  }
-
-  @Override
-  public OperatorCost getCost() {
-    long recordSize = child.getSize().getRecordSize() * child.getSize().getRecordCount();
-    return new OperatorCost((float) recordSize, recordSize, 0, child.getSize().getRecordCount()/(1<<16));
   }
 
   @Override

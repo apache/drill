@@ -20,11 +20,9 @@ package org.apache.drill.exec.physical.config;
 import java.util.List;
 
 import org.apache.drill.common.logical.data.Order.Ordering;
-import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.base.AbstractSingle;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
-import org.apache.drill.exec.physical.base.Size;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 
@@ -57,23 +55,6 @@ public class Sort extends AbstractSingle{
   @Override
   public <T, X, E extends Throwable> T accept(PhysicalVisitor<T, X, E> physicalVisitor, X value) throws E{
     return physicalVisitor.visitSort(this, value);
-  }
-
-  @Override
-  public OperatorCost getCost() {
-    Size childSize = child.getSize();
-    long n = childSize.getRecordCount();
-    long width = childSize.getRecordSize();
-
-    //TODO: Magic Number, let's assume 1/10 of data can fit in memory.
-    int k = 10;
-    long n2 = n/k;
-    double cpuCost =
-        k * n2 * (Math.log(n2)/Math.log(2)) + //
-        n * (Math.log(k)/Math.log(2));
-    double diskCost = n*width*2;
-
-    return new OperatorCost(0, (float) diskCost, (float) n2*width, (float) cpuCost);
   }
 
   @Override

@@ -26,11 +26,11 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.physical.EndpointAffinity;
-import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.physical.base.Size;
+import org.apache.drill.exec.physical.base.ScanStats;
+import org.apache.drill.exec.physical.base.ScanStats.GroupScanProperty;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.dfs.FileSelection;
@@ -40,7 +40,6 @@ import org.apache.drill.exec.store.schedule.BlockMapBuilder;
 import org.apache.drill.exec.store.schedule.CompleteFileWork;
 import org.apache.drill.exec.store.schedule.CompleteFileWork.FileWorkImpl;
 
-import com.google.common.collect.Lists;
 import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -48,6 +47,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Lists;
 
 @JsonTypeName("fs-scan")
 public class EasyGroupScan extends AbstractGroupScan{
@@ -130,16 +130,16 @@ public class EasyGroupScan extends AbstractGroupScan{
     return maxWidth;
   }
 
-  @Override
-  public OperatorCost getCost() {
-    return new OperatorCost(1,1,1,1);
-  }
 
   @Override
-  public Size getSize() {
-    int numColumns = (columns == null || columns.isEmpty()) ? 100 : columns.size();
-    int avgColumnSize = 10;
-    return new Size(1024, numColumns*avgColumnSize);
+  public ScanStats getScanStats() {
+    long data =0;
+    for(CompleteFileWork work : chunks){
+      data += work.getTotalBytes();
+    }
+
+    long estRowCount = data/1024;
+    return new ScanStats(GroupScanProperty.NO_EXACT_ROW_COUNT, estRowCount, 1, data);
   }
 
   @JsonProperty("files")

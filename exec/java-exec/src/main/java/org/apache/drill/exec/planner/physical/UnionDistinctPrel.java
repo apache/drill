@@ -70,16 +70,14 @@ public class UnionDistinctPrel extends UnionPrel {
   @Override
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
     List<PhysicalOperator> inputPops = Lists.newArrayList();
-    
+
     for (int i = 0; i < this.getInputs().size(); i++) {
       inputPops.add( ((Prel)this.getInputs().get(i)).getPhysicalOperator(creator));
     }
 
     ///TODO: change this to UnionDistinct once implemented end-to-end..
     UnionAll unionAll = new UnionAll(inputPops.toArray(new PhysicalOperator[inputPops.size()]));
-    unionAll.setOperatorId(creator.getOperatorId(this));
-
-    return unionAll;
+    return creator.addMetadata(this, unionAll);
   }
 
   @Override

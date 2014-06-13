@@ -25,7 +25,7 @@ public class TestTpchDistributed extends BaseTestQuery{
 
   private void testDistributed(String fileName) throws Exception{
     String query = getFile(fileName);
-    test(query);
+    test("alter session set `planner.slice_target` = 10; " + query);
   }
 
   @Test

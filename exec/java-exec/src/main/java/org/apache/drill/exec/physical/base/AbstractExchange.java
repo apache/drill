@@ -20,11 +20,7 @@ package org.apache.drill.exec.physical.base;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.PhysicalOperatorSetupException;
-import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 public abstract class AbstractExchange extends AbstractSingle implements Exchange {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractExchange.class);
@@ -62,29 +58,8 @@ public abstract class AbstractExchange extends AbstractSingle implements Exchang
   }
 
   @Override
-  public OperatorCost getAggregateSendCost() {
-    return getExchangeCost().getSendCost();
-  }
-
-  @Override
-  public OperatorCost getAggregateReceiveCost() {
-    return getExchangeCost().getReceiveCost();
-  }
-
-  @Override
   public final <T, X, E extends Throwable> T accept(PhysicalVisitor<T, X, E> physicalVisitor, X value) throws E {
     return physicalVisitor.visitExchange(this, value);
-  }
-
-  @Override
-  public ExchangeCost getExchangeCost(){
-    return ExchangeCost.getSimpleEstimate(getSize());
-  }
-
-  @JsonIgnore
-  @Override
-  public OperatorCost getCost() {
-    return getExchangeCost().getCombinedCost();
   }
 
   @Override

@@ -27,10 +27,9 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.data.LogicalOperator;
 import org.apache.drill.common.logical.data.Scan;
-import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.physical.base.Size;
+import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.planner.common.DrillScanRelBase;
 import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
 import org.apache.drill.exec.planner.physical.PrelUtil;
@@ -111,7 +110,7 @@ public class DrillScanRel extends DrillScanRelBase implements DrillRel {
 
   @Override
   public double getRows() {
-    return this.groupScan.getSize().getRecordCount();
+    return this.groupScan.getScanStats().getRecordCount();
   }
 
   /// TODO: this method is same as the one for ScanPrel...eventually we should consolidate
@@ -119,16 +118,15 @@ public class DrillScanRel extends DrillScanRelBase implements DrillRel {
   /// by both logical and physical rels.
   @Override
   public RelOptCost computeSelfCost(RelOptPlanner planner) {
-    Size scanSize = this.groupScan.getSize();
+    ScanStats stats = this.groupScan.getScanStats();
     int columnCount = this.getRowType().getFieldCount();
 
     if(PrelUtil.getSettings(getCluster()).useDefaultCosting()) {
-      OperatorCost scanCost = this.groupScan.getCost();
-      return planner.getCostFactory().makeCost(scanSize.getRecordCount() * columnCount, scanCost.getCpu(), scanCost.getDisk());
+      return planner.getCostFactory().makeCost(stats.getRecordCount() * columnCount, stats.getCpuCost(), stats.getDiskCost());
     }
 
     // double rowCount = RelMetadataQuery.getRowCount(this);
-    double rowCount = scanSize.getRecordCount();
+    double rowCount = stats.getRecordCount();
 
     double cpuCost = rowCount * columnCount; // for now, assume cpu cost is proportional to row count.
     // Even though scan is reading from disk, in the currently generated plans all plans will

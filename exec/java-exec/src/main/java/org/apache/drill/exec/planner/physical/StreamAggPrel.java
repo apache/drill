@@ -85,8 +85,7 @@ public class StreamAggPrel extends AggPrelBase implements Prel{
     StreamingAggregate g = new StreamingAggregate(child.getPhysicalOperator(creator), keys.toArray(new NamedExpression[keys.size()]),
         aggExprs.toArray(new NamedExpression[aggExprs.size()]), 1.0f);
 
-    g.setOperatorId(creator.getOperatorId(this));
-    return g;
+    return creator.addMetadata(this, g);
 
   }
 

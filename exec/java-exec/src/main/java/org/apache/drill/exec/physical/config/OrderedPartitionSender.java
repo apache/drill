@@ -21,18 +21,16 @@ import java.util.List;
 
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.logical.data.Order.Ordering;
-import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.base.AbstractSender;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
-import org.apache.drill.exec.physical.base.Size;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
-import com.google.common.collect.Lists;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.google.common.collect.Lists;
 
 @JsonTypeName("OrderedPartitionSender")
 public class OrderedPartitionSender extends AbstractSender {
@@ -85,17 +83,6 @@ public class OrderedPartitionSender extends AbstractSender {
   @Override
   public <T, X, E extends Throwable> T accept(PhysicalVisitor<T, X, E> physicalVisitor, X value) throws E{
     return physicalVisitor.visitOrderedPartitionSender(this, value);
-  }
-
-  @Override
-  public OperatorCost getCost() {
-    return new OperatorCost(0, 0, 1000, child.getSize().getRecordCount());
-  }
-
-  @Override
-  public Size getSize() {
-    //TODO: This should really change the row width...
-    return child.getSize();
   }
 
   @Override

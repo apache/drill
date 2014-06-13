@@ -18,19 +18,17 @@
 
 package org.apache.drill.exec.physical.config;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeName;
+import java.util.List;
 
-import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.base.AbstractSender;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
+import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
-import java.util.List;
-
-import static org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName("broadcast-sender")
 public class BroadcastSender extends AbstractSender {
@@ -43,12 +41,6 @@ public class BroadcastSender extends AbstractSender {
                          @JsonProperty("destinations") List<DrillbitEndpoint> destinations) {
     super(oppositeMajorFragmentId, child);
     this.destinations = destinations;
-  }
-
-  @Override
-  public OperatorCost getCost() {
-    return new OperatorCost(child.getSize().getAggSize() * destinations.size(),
-                            0, 1000, child.getSize().getRecordCount());
   }
 
   @Override

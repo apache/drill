@@ -18,11 +18,9 @@
 
 package org.apache.drill.exec.physical.config;
 
-import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.base.AbstractSingle;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
-import org.apache.drill.exec.physical.base.Size;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -47,21 +45,6 @@ public class Trace extends AbstractSingle {
     @Override
     public <T, X, E extends Throwable> T accept(PhysicalVisitor<T, X, E> physicalVisitor, X value) throws E {
         return physicalVisitor.visitTrace(this, value);
-    }
-
-    @Override
-    public OperatorCost getCost() {
-
-        /* Compute the total size (row count * row size) */
-        Size size     = child.getSize();
-        long diskSize = size.getRecordCount() * size.getRecordSize();
-
-        return new OperatorCost(0, diskSize, 0, child.getSize().getRecordCount());
-    }
-
-    @Override
-    public Size getSize() {
-        return child.getSize();
     }
 
     @Override

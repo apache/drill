@@ -64,21 +64,19 @@ public class StatsCollector {
     @Override
     public Void visitSendingExchange(Exchange exchange, Wrapper wrapper) throws RuntimeException {
       Stats stats = wrapper.getStats();
-      stats.addCost(exchange.getAggregateSendCost());
       stats.addMaxWidth(exchange.getMaxSendWidth());
       return super.visitSendingExchange(exchange, wrapper);
     }
 
     @Override
     public Void visitReceivingExchange(Exchange exchange, Wrapper wrapper) throws RuntimeException {
-      wrapper.getStats().addCost(exchange.getAggregateReceiveCost());
       // no traversal since it would cross fragment boundary.
       return null;
     }
 
     @Override
     public Void visitGroupScan(GroupScan groupScan, Wrapper wrapper) {
-      Stats stats = wrapper.getStats();      
+      Stats stats = wrapper.getStats();
       stats.addMaxWidth(groupScan.getMaxParallelizationWidth());
       return super.visitGroupScan(groupScan, wrapper);
     }
@@ -86,7 +84,7 @@ public class StatsCollector {
     @Override
     public Void visitSubScan(SubScan subScan, Wrapper wrapper) throws RuntimeException {
       // TODO - implement this
-      return super.visitOp(subScan, wrapper);
+      return visitOp(subScan, wrapper);
     }
 
     @Override

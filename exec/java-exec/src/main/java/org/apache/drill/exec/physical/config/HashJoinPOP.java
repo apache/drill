@@ -18,30 +18,22 @@
 
 package org.apache.drill.exec.physical.config;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
-
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.logical.data.JoinCondition;
-import org.apache.drill.common.logical.data.NamedExpression;
-import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.base.AbstractBase;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
-import org.apache.drill.exec.physical.base.Size;
-
-import com.google.common.collect.Lists;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterators;
-
-import org.apache.drill.exec.physical.impl.common.HashTable;
-import org.apache.drill.exec.physical.impl.common.HashTableConfig;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.eigenbase.rel.JoinRelType;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
 
 @JsonTypeName("hash-join")
 public class HashJoinPOP extends AbstractBase {
@@ -52,11 +44,6 @@ public class HashJoinPOP extends AbstractBase {
     private final PhysicalOperator right;
     private final List<JoinCondition> conditions;
     private final JoinRelType joinType;
-
-    @Override
-    public OperatorCost getCost() {
-        return new OperatorCost(0,0,0,0);
-    }
 
     @JsonCreator
     public HashJoinPOP(
@@ -70,11 +57,6 @@ public class HashJoinPOP extends AbstractBase {
         this.conditions = conditions;
         Preconditions.checkArgument(joinType != null, "Join type is missing!");
         this.joinType = joinType;
-    }
-
-    @Override
-    public Size getSize() {
-        return left.getSize().add(right.getSize());
     }
 
     @Override

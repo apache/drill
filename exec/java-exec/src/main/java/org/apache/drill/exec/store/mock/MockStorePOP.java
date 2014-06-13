@@ -21,12 +21,10 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.drill.exec.physical.EndpointAffinity;
-import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.base.AbstractStore;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.Store;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -58,11 +56,6 @@ public class MockStorePOP extends AbstractStore {
   @Override
   public Store getSpecificStore(PhysicalOperator child, int minorFragmentId) {
     return new MockStorePOP(child);
-  }
-
-  @Override
-  public OperatorCost getCost() {
-    return new OperatorCost(1,getSize().getRecordCount()*getSize().getRecordSize(),1,1);
   }
 
   @Override

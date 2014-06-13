@@ -67,14 +67,6 @@ public abstract class AbstractGroupScan extends AbstractBase implements GroupSca
   }
 
   /**
-   * By default, groupscan does not have exact row count, does not have exact column value count.
-   */
-  @Override
-  public GroupScanProperty getProperty() {
-    return GroupScanProperty.NO_EXACT_ROW_COUNT;
-  }
-
-  /**
    * By default, throw exception, since group scan does not have exact column value count.
    */
   @Override

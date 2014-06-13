@@ -24,11 +24,11 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.PhysicalOperatorSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.EndpointAffinity;
-import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.physical.base.Size;
+import org.apache.drill.exec.physical.base.ScanStats;
+import org.apache.drill.exec.physical.base.ScanStats.GroupScanProperty;
 import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.store.RecordReader;
@@ -59,14 +59,8 @@ public class DirectGroupScan extends AbstractGroupScan{
     return 1;
   }
 
-  @Override
-  public OperatorCost getCost() {
-    return new OperatorCost(1,1,1,1);
-  }
-
-  @Override
-  public Size getSize() {
-    return new Size(1,1);
+  public ScanStats getScanStats(){
+    return ScanStats.TRIVIAL_TABLE;
   }
 
   @Override

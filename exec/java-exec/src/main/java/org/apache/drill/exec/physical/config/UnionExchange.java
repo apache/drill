@@ -21,12 +21,9 @@ import java.util.List;
 
 import org.apache.drill.common.exceptions.PhysicalOperatorSetupException;
 import org.apache.drill.exec.physical.base.AbstractExchange;
-import org.apache.drill.exec.physical.base.ExchangeCost;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.Receiver;
 import org.apache.drill.exec.physical.base.Sender;
-import org.apache.drill.exec.physical.base.Size;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -39,11 +36,11 @@ public class UnionExchange extends AbstractExchange{
 
   private List<DrillbitEndpoint> senderLocations;
   private DrillbitEndpoint destinationLocation;
-  
+
   public UnionExchange(@JsonProperty("child") PhysicalOperator child) {
     super(child);
   }
-  
+
   @Override
   public void setupSenders(List<DrillbitEndpoint> senderLocations) {
     this.senderLocations = senderLocations;

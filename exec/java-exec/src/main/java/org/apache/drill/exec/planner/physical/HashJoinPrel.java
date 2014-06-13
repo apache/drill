@@ -102,9 +102,7 @@ public class HashJoinPrel  extends JoinPrel {
     }
 
     HashJoinPOP hjoin = new HashJoinPOP(leftPop, rightPop, conditions, jtype);
-    hjoin.setOperatorId(creator.getOperatorId(this));
-
-    return hjoin;
+    return creator.addMetadata(this, hjoin);
   }
 
   @Override

@@ -24,11 +24,10 @@ import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.PhysicalOperatorSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.EndpointAffinity;
-import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.physical.base.Size;
+import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
@@ -72,21 +71,13 @@ public class InfoSchemaGroupScan extends AbstractGroupScan{
     return new InfoSchemaSubScan(table);
   }
 
+  public ScanStats getScanStats(){
+    return ScanStats.TRIVIAL_TABLE;
+  }
+
   @Override
   public int getMaxParallelizationWidth() {
     return 1;
-  }
-
-  @Override
-  public OperatorCost getCost() {
-    return new OperatorCost(1,1,1,1);
-  }
-
-  @Override
-  public Size getSize() {
-    int avgColumnSize = 10;
-    int numColumns = (columns == null || columns.isEmpty()) ? 100 : columns.size();
-    return new Size(1000, numColumns*avgColumnSize);
   }
 
   @Override

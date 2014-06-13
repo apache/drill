@@ -25,11 +25,13 @@ import java.util.concurrent.ConcurrentMap;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.cache.DistributedCache.CacheConfig;
+import org.apache.drill.exec.planner.fragment.SimpleParallelizer;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.server.options.OptionValue.OptionType;
 import org.apache.drill.exec.store.sys.PStore;
 import org.apache.drill.exec.store.sys.PStoreConfig;
 import org.apache.drill.exec.store.sys.PStoreProvider;
+import org.apache.drill.exec.work.foreman.Foreman;
 import org.eigenbase.sql.SqlLiteral;
 
 import com.google.common.collect.Maps;
@@ -52,7 +54,17 @@ public class SystemOptionManager implements OptionManager{
       PlannerSettings.BROADCAST,
       PlannerSettings.BROADCAST_THRESHOLD,
       ExecConstants.OUTPUT_FORMAT_VALIDATOR,
-      ExecConstants.PARQUET_BLOCK_SIZE_VALIDATOR
+      ExecConstants.PARQUET_BLOCK_SIZE_VALIDATOR,
+      ExecConstants.SLICE_TARGET_OPTION,
+      ExecConstants.AFFINITY_FACTOR,
+      ExecConstants.MAX_WIDTH_GLOBAL,
+      ExecConstants.MAX_WIDTH_PER_NODE,
+      ExecConstants.ENABLE_QUEUE,
+      ExecConstants.LARGE_QUEUE_SIZE,
+      ExecConstants.QUEUE_THRESHOLD_SIZE,
+      ExecConstants.QUEUE_TIMEOUT,
+      ExecConstants.SMALL_QUEUE_SIZE
+
   };
 
   public final PStoreConfig<OptionValue> config;
@@ -167,7 +179,7 @@ public class SystemOptionManager implements OptionManager{
     @Override
     public OptionValue validate(String name, SqlLiteral value) throws SetOptionException {
       OptionValidator validator = knownOptions.get(name);
-      if(validator == null) throw new SetOptionException("Unknown option " + name);
+      if(validator == null) throw new SetOptionException("Unknown option: " + name);
       return validator.validate(value);
     }
 

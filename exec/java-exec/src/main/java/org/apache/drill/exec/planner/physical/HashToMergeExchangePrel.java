@@ -90,8 +90,8 @@ public class HashToMergeExchangePrel extends ExchangePrel {
     HashToMergeExchange g = new HashToMergeExchange(childPOP,
         PrelUtil.getHashExpression(this.distFields, getChild().getRowType()),
         PrelUtil.getOrdering(this.collation, getChild().getRowType()));
-    g.setOperatorId(creator.getOperatorId(this));
-    return g;
+    return creator.addMetadata(this, g);
+
   }
 
   public List<DistributionField> getDistFields() {

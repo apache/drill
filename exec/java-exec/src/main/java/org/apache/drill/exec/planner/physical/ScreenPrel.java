@@ -52,9 +52,7 @@ public class ScreenPrel extends DrillScreenRelBase implements Prel {
     PhysicalOperator childPOP = child.getPhysicalOperator(creator);
 
     Screen s = new Screen(childPOP, creator.getContext().getCurrentEndpoint());
-    s.setOperatorId(creator.getOperatorId(this));
-
-    return s;
+    return creator.addMetadata(this, s);
   }
 
   @Override

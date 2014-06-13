@@ -19,6 +19,7 @@ package org.apache.drill.exec.planner.physical;
 
 import net.hydromatic.optiq.tools.FrameworkContext;
 
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionValidator;
 import org.apache.drill.exec.server.options.TypeValidators.BooleanValidator;
@@ -93,6 +94,10 @@ public class PlannerSettings implements FrameworkContext{
 
   public long getBroadcastThreshold() {
     return options.getOption(BROADCAST_THRESHOLD.getOptionName()).num_val;
+  }
+
+  public long getSliceTarget(){
+    return options.getOption(ExecConstants.SLICE_TARGET).num_val;
   }
 
   @Override

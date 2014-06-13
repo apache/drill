@@ -26,6 +26,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.TestTools;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.client.PrintingResultsListener;
@@ -99,7 +100,13 @@ public class BaseTestQuery extends ExecTest{
     bit.run();
     client = new DrillClient(config, serviceSet.getCoordinator());
     client.connect();
+    List<QueryResultBatch> results = client.runQuery(QueryType.SQL, String.format("alter session set `%s` = 2", ExecConstants.MAX_WIDTH_PER_NODE_KEY));
+    for(QueryResultBatch b : results){
+      b.release();
+    }
   }
+
+
 
   protected BufferAllocator getAllocator(){
     return allocator;

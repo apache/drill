@@ -104,9 +104,7 @@ public class MergeJoinPrel  extends JoinPrel {
     }
 
     MergeJoinPOP mjoin = new MergeJoinPOP(leftPop, rightPop, conditions, jtype);
-    mjoin.setOperatorId(creator.getOperatorId(this));
-
-    return mjoin;
+    return creator.addMetadata(this, mjoin);
 
   }
 

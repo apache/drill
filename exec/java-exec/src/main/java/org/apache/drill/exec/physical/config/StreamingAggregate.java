@@ -18,11 +18,9 @@
 package org.apache.drill.exec.physical.config;
 
 import org.apache.drill.common.logical.data.NamedExpression;
-import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.base.AbstractSingle;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
-import org.apache.drill.exec.physical.base.Size;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -61,19 +59,8 @@ public class StreamingAggregate extends AbstractSingle {
   }
 
   @Override
-  public OperatorCost getCost() {
-    return child.getCost();
-  }
-
-  @Override
   protected PhysicalOperator getNewWithChild(PhysicalOperator child) {
     return new StreamingAggregate(child, keys, exprs, cardinality);
-  }
-
-  @Override
-  public Size getSize() {
-    // not a great hack...
-    return new Size( (long) (child.getSize().getRecordCount()*cardinality), child.getSize().getRecordSize());
   }
 
   @Override

@@ -47,9 +47,7 @@ public class SelectionVectorRemoverPrel extends SinglePrel{
   @Override
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
     SelectionVectorRemover r =  new SelectionVectorRemover( ((Prel)getChild()).getPhysicalOperator(creator));
-    r.setOperatorId(creator.getOperatorId(this));
-    return r;
-
+    return creator.addMetadata(this, r);
   }
 
   @Override

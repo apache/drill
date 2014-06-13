@@ -17,9 +17,6 @@
  */
 package org.apache.drill.exec.physical.base;
 
-import org.apache.drill.exec.physical.OperatorCost;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 
 
@@ -27,7 +24,7 @@ public abstract class AbstractSender extends AbstractSingle implements Sender {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractSender.class);
 
   protected final int oppositeMajorFragmentId;
-  
+
   public AbstractSender(int oppositeMajorFragmentId, PhysicalOperator child) {
     super(child);
     this.oppositeMajorFragmentId = oppositeMajorFragmentId;
@@ -39,15 +36,9 @@ public abstract class AbstractSender extends AbstractSingle implements Sender {
   }
 
   @Override
-  public OperatorCost getCost() {
-    float network = child.getSize().getAggSize();
-    return new OperatorCost(network, 0, 1000, child.getSize().getRecordCount());
-  }
-
-  @Override
   public int getOppositeMajorFragmentId() {
     return oppositeMajorFragmentId;
   }
-  
-  
+
+
 }

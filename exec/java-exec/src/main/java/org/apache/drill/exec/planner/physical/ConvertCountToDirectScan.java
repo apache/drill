@@ -99,7 +99,7 @@ public class ConvertCountToDirectScan extends Prule {
     //    2) No GroupBY key,
     //    3) only one agg function (Check if it's count(*) below).
     //    4) No distinct agg call.
-    if (! (oldGrpScan.getProperty().hasExactRowCount()
+    if (! (oldGrpScan.getScanStats().getGroupScanProperty().hasExactRowCount()
         && agg.getGroupCount() == 0
         && agg.getAggCallList().size() == 1
         && !agg.containsDistinctCall())) {
@@ -116,7 +116,7 @@ public class ConvertCountToDirectScan extends Prule {
       if (aggCall.getArgList().isEmpty() ||
           (aggCall.getArgList().size() == 1 &&
            ! agg.getChild().getRowType().getFieldList().get(aggCall.getArgList().get(0).intValue()).getType().isNullable())) {
-        cnt = oldGrpScan.getSize().getRecordCount();
+        cnt = (long) oldGrpScan.getScanStats().getRecordCount();
       } else if (aggCall.getArgList().size() == 1) {
       // count(columnName) ==> Agg ( Scan )) ==> columnValueCount
         int index = aggCall.getArgList().get(0);

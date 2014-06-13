@@ -37,11 +37,11 @@ import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.EndpointAffinity;
-import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.physical.base.Size;
+import org.apache.drill.exec.physical.base.ScanStats;
+import org.apache.drill.exec.physical.base.ScanStats.GroupScanProperty;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.hbase.HBaseSubScan.HBaseSubScanSpec;
@@ -340,21 +340,12 @@ public class HBaseGroupScan extends AbstractGroupScan implements DrillHBaseConst
   }
 
   @Override
-  public OperatorCost getCost() {
-    //TODO Figure out how to properly calculate cost
-    return new OperatorCost(regionsToScan.size(), // network
-                            1,  // disk
-                            1,  // memory
-                            1); // cpu
-  }
-
-  @Override
-  public Size getSize() {
-    // TODO - this is wrong, need to populate correctly
+  public ScanStats getScanStats() {
+    //TODO: look at stats for this.
     int rowCount = (hbaseScanSpec.getFilter() != null ? 5 : 10) * regionsToScan.size();
     int avgColumnSize = 10;
     int numColumns = (columns == null || columns.isEmpty()) ? 100 : columns.size();
-    return new Size(rowCount, numColumns*avgColumnSize);
+    return new ScanStats(GroupScanProperty.NO_EXACT_ROW_COUNT, rowCount, 1, avgColumnSize * numColumns * rowCount);
   }
 
   @Override

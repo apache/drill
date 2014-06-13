@@ -22,12 +22,9 @@ import java.util.List;
 
 import org.apache.drill.common.exceptions.PhysicalOperatorSetupException;
 import org.apache.drill.exec.physical.EndpointAffinity;
-import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.base.AbstractStore;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
-import org.apache.drill.exec.physical.base.Root;
-import org.apache.drill.exec.physical.base.Size;
 import org.apache.drill.exec.physical.base.Store;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
@@ -36,7 +33,6 @@ import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.google.common.base.Preconditions;
 
 @JsonTypeName("screen")
 public class Screen extends AbstractStore {
@@ -87,11 +83,6 @@ public class Screen extends AbstractStore {
   @Override
   public String toString() {
     return "Screen [endpoint=" + endpoint + ", getChild()=" + getChild() + "]";
-  }
-
-  @Override
-  public OperatorCost getCost() {
-    return new OperatorCost(0, 0, 1000, child.getSize().getRecordCount());
   }
 
   @Override

@@ -19,7 +19,6 @@ package org.apache.drill.exec.physical.config;
 
 import java.util.List;
 
-import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.base.AbstractMultiple;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
@@ -48,16 +47,6 @@ public class UnionAll extends AbstractMultiple {
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
     return new UnionAll(children.toArray(new PhysicalOperator[children.size()]));
-  }
-
-  @Override
-  public OperatorCost getCost() {
-    OperatorCost cost = new OperatorCost(0,0,0,0);
-    for (int i = 0; i < children.length; i++) {
-      PhysicalOperator child = children[i];
-      cost.add(child.getCost());
-    }
-    return cost;
   }
 
   @Override

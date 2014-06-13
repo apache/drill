@@ -81,8 +81,7 @@ public class UnionExchangePrel extends ExchangePrel {
     if(PrelUtil.getSettings(getCluster()).isSingleMode()) return childPOP;
 
     UnionExchange g = new UnionExchange(childPOP);
-    g.setOperatorId(creator.getOperatorId(this));
-    return g;
+    return creator.addMetadata(this, g);
   }
 
   @Override

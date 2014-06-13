@@ -90,8 +90,8 @@ public class WorkEventBus {
     if (manager != null) return manager;
     DistributedMap<FragmentHandle, PlanFragment> planCache = bee.getContext().getCache().getMap(Foreman.FRAGMENT_CACHE);
     for(Map.Entry<FragmentHandle, PlanFragment> e : planCache.getLocalEntries()){
-      logger.debug("Key: {}", e.getKey());
-      logger.debug("Value: {}", e.getValue());
+//      logger.debug("Key: {}", e.getKey());
+//      logger.debug("Value: {}", e.getValue());
     }
     PlanFragment fragment = bee.getContext().getCache().getMap(Foreman.FRAGMENT_CACHE).get(handle);
 

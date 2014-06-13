@@ -20,8 +20,7 @@ package org.apache.drill.exec.store.hive;
 import java.util.List;
 
 import net.hydromatic.optiq.Schema.TableType;
-import org.apache.drill.exec.physical.OperatorCost;
-import org.apache.drill.exec.physical.base.Size;
+
 import org.apache.hadoop.hive.metastore.api.Partition;
 import org.apache.hadoop.hive.metastore.api.Table;
 

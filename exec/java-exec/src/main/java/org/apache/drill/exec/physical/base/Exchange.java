@@ -20,28 +20,16 @@ package org.apache.drill.exec.physical.base;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.PhysicalOperatorSetupException;
-import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
-import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 public interface Exchange extends PhysicalOperator {
-
-  @JsonIgnore
-  public abstract OperatorCost getAggregateSendCost();
-
-  @JsonIgnore
-  public abstract OperatorCost getAggregateReceiveCost();
-
-  @JsonIgnore
-  public abstract ExchangeCost getExchangeCost();
 
   /**
    * Inform this Exchange node about its sender locations. This list should be index-ordered the same as the expected
    * minorFragmentIds for each sender.
-   * 
+   *
    * @param senderLocations
    */
   public abstract void setupSenders(int majorFragmentId, List<DrillbitEndpoint> senderLocations) throws PhysicalOperatorSetupException;
@@ -49,7 +37,7 @@ public interface Exchange extends PhysicalOperator {
   /**
    * Inform this Exchange node about its receiver locations. This list should be index-ordered the same as the expected
    * minorFragmentIds for each receiver.
-   * 
+   *
    * @param receiverLocations
    */
   public abstract void setupReceivers(int majorFragmentId, List<DrillbitEndpoint> receiverLocations) throws PhysicalOperatorSetupException;
@@ -57,7 +45,7 @@ public interface Exchange extends PhysicalOperator {
   /**
    * Get the Sender associated with the given minorFragmentId. Cannot be called until after setupSenders() and
    * setupReceivers() have been called.
-   * 
+   *
    * @param minorFragmentId
    *          The minor fragment id, must be in the range [0, fragment.width).
    * @param child
@@ -69,7 +57,7 @@ public interface Exchange extends PhysicalOperator {
   /**
    * Get the Receiver associated with the given minorFragmentId. Cannot be called until after setupSenders() and
    * setupReceivers() have been called.
-   * 
+   *
    * @param minorFragmentId
    *          The minor fragment id, must be in the range [0, fragment.width).
    * @return The materialized recevier for the given arguments.
@@ -78,7 +66,7 @@ public interface Exchange extends PhysicalOperator {
 
   /**
    * The widest width this sender can send (max sending parallelization). Typically Integer.MAX_VALUE.
-   * 
+   *
    * @return
    */
   @JsonIgnore
@@ -86,9 +74,9 @@ public interface Exchange extends PhysicalOperator {
 
   /**
    * Return the feeding child of this operator node.
-   * 
+   *
    * @return
    */
   public PhysicalOperator getChild();
-  
+
 }

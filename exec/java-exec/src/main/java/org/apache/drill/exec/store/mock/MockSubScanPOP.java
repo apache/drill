@@ -21,11 +21,9 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.base.AbstractBase;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
-import org.apache.drill.exec.physical.base.Size;
 import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
@@ -72,16 +70,6 @@ public class MockSubScanPOP extends AbstractBase implements SubScan {
   @Override
   public Iterator<PhysicalOperator> iterator() {
     return Iterators.emptyIterator();
-  }
-
-  @Override @JsonIgnore
-  public OperatorCost getCost() {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override @JsonIgnore
-  public Size getSize() {
-    throw new UnsupportedOperationException();
   }
 
   // will want to replace these two methods with an interface above for AbstractSubScan

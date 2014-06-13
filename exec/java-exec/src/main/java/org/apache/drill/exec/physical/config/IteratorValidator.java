@@ -17,11 +17,9 @@
  */
 package org.apache.drill.exec.physical.config;
 
-import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.base.AbstractSingle;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
-import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
 public class IteratorValidator extends AbstractSingle{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(IteratorValidator.class);
@@ -29,11 +27,6 @@ public class IteratorValidator extends AbstractSingle{
   public IteratorValidator(PhysicalOperator child) {
     super(child);
 
-  }
-
-  @Override
-  public OperatorCost getCost() {
-    return new OperatorCost(0f, 0f, 0f, 0f);
   }
 
   @Override

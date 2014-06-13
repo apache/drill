@@ -17,54 +17,33 @@
  */
 package org.apache.drill.exec.planner.fragment;
 
-import org.apache.drill.exec.physical.OperatorCost;
 
 public class Stats {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Stats.class);
-  
+
   private int maxWidth = Integer.MAX_VALUE;
-  private float networkCost; 
-  private float diskCost;
-  private float memoryCost;
-  private float cpuCost;
-  
+  private double totalCost;
+
   public void addMaxWidth(int maxWidth){
     this.maxWidth = Math.min(this.maxWidth, maxWidth);
   }
-  
-  public void addCost(OperatorCost cost){
-    networkCost += cost.getNetwork();
-    diskCost += cost.getDisk();
-    memoryCost += cost.getMemory();
-    cpuCost += cost.getCpu();
+
+  public void addCost(double cost){
+    totalCost += cost;
   }
 
   public int getMaxWidth() {
     return maxWidth;
   }
 
-  public float getNetworkCost() {
-    return networkCost;
-  }
-
-  public float getDiskCost() {
-    return diskCost;
-  }
-
-  public float getMemoryCost() {
-    return memoryCost;
-  }
-
-  public float getCpuCost() {
-    return cpuCost;
-  }
-
   @Override
   public String toString() {
-    return "FragmentStats [maxWidth=" + maxWidth + ", networkCost=" + networkCost + ", diskCost=" + diskCost
-        + ", memoryCost=" + memoryCost + ", cpuCost=" + cpuCost + "]";
+    return "Stats [maxWidth=" + maxWidth + ", totalCost=" + totalCost + "]";
   }
-  
-  
-  
+
+  public double getTotalCost(){
+    return totalCost;
+  }
+
+
 }

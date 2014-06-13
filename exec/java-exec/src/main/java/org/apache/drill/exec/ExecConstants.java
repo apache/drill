@@ -18,7 +18,10 @@
 package org.apache.drill.exec;
 
 import org.apache.drill.exec.server.options.OptionValidator;
+import org.apache.drill.exec.server.options.TypeValidators.BooleanValidator;
+import org.apache.drill.exec.server.options.TypeValidators.DoubleValidator;
 import org.apache.drill.exec.server.options.TypeValidators.LongValidator;
+import org.apache.drill.exec.server.options.TypeValidators.PositiveLongValidator;
 import org.apache.drill.exec.server.options.TypeValidators.StringValidator;
 
 public interface ExecConstants {
@@ -41,10 +44,6 @@ public interface ExecConstants {
   public static final String METRICS_JMX_OUTPUT_ENABLED = "drill.exec.metrics.jmx.enabled";
   public static final String METRICS_LOG_OUTPUT_ENABLED = "drill.exec.metrics.log.enabled";
   public static final String METRICS_LOG_OUTPUT_INTERVAL = "drill.exec.metrics.log.interval";
-  public static final String GLOBAL_MAX_WIDTH = "drill.exec.work.global.max.width";
-  public static final String MAX_WIDTH_PER_ENDPOINT = "drill.exec.work.max.width.per.endpoint";
-  public static final String EXECUTOR_THREADS = "drill.exec.work.executor.threads";
-  public static final String AFFINITY_FACTOR = "drill.exec.work.affinity.factor";
   public static final String CLIENT_RPC_THREADS = "drill.exec.rpc.user.client.threads";
   public static final String BIT_SERVER_RPC_THREADS = "drill.exec.rpc.bit.server.threads";
   public static final String USER_SERVER_RPC_THREADS = "drill.exec.rpc.user.server.threads";
@@ -68,14 +67,59 @@ public interface ExecConstants {
   public static final String FILESYSTEM_PARTITION_COLUMN_LABEL = "drill.exec.storage.file.partition.column.label";
   public static final String HAZELCAST_SUBNETS = "drill.exec.cache.hazel.subnets";
   public static final String TOP_LEVEL_MAX_ALLOC = "drill.exec.memory.top.max";
-  public static final String OUTPUT_FORMAT_OPTION = "store.format";
-  public static final OptionValidator OUTPUT_FORMAT_VALIDATOR = new StringValidator(OUTPUT_FORMAT_OPTION, "parquet");
-  public static final String PARQUET_BLOCK_SIZE = "parquet.block.size";
-  public static final OptionValidator PARQUET_BLOCK_SIZE_VALIDATOR = new LongValidator(PARQUET_BLOCK_SIZE, 512*1024*1024);
   public static final String HTTP_ENABLE = "drill.exec.http.enabled";
   public static final String HTTP_PORT = "drill.exec.http.port";
   public static final String SYS_STORE_PROVIDER_CLASS = "drill.exec.sys.store.provider.class";
   public static final String SYS_STORE_PROVIDER_LOCAL_PATH = "drill.exec.sys.store.provider.local.path";
   public static final String SYS_STORE_PROVIDER_LOCAL_ENABLE_WRITE = "drill.exec.sys.store.provider.local.write";
   public static final String ERROR_ON_MEMORY_LEAK = "drill.exec.debug.error_on_leak";
+
+
+
+  public static final String OUTPUT_FORMAT_OPTION = "store.format";
+  public static final OptionValidator OUTPUT_FORMAT_VALIDATOR = new StringValidator(OUTPUT_FORMAT_OPTION, "parquet");
+  public static final String PARQUET_BLOCK_SIZE = "store.parquet.block-size";
+  public static final OptionValidator PARQUET_BLOCK_SIZE_VALIDATOR = new LongValidator(PARQUET_BLOCK_SIZE, 512*1024*1024);
+
+
+
+
+  public static final String SLICE_TARGET = "planner.slice_target";
+  public static final OptionValidator SLICE_TARGET_OPTION = new PositiveLongValidator(SLICE_TARGET, Long.MAX_VALUE, 1000000);
+
+  /**
+   * Limits the maximum level of parallelization to this factor time the number of Drillbits
+   */
+  public static final String MAX_WIDTH_PER_NODE_KEY = "planner.width.max_per_node";
+  public static final OptionValidator MAX_WIDTH_PER_NODE = new PositiveLongValidator(MAX_WIDTH_PER_NODE_KEY, Integer.MAX_VALUE, (long) Math.ceil(Runtime.getRuntime().availableProcessors() * 0.70));
+
+  /**
+   * The maximum level or parallelization any stage of the query can do. Note that while this
+   * might be the number of active Drillbits, realistically, this could be well beyond that
+   * number of we want to do things like speed results return.
+   */
+  public static final String MAX_WIDTH_GLOBAL_KEY = "planner.width.max_per_query";
+  public static final OptionValidator MAX_WIDTH_GLOBAL = new PositiveLongValidator(MAX_WIDTH_GLOBAL_KEY, Integer.MAX_VALUE, 1000);
+
+  /**
+   * Factor by which a node with endpoint affinity will be favored while creating assignment
+   */
+  public static final String AFFINITY_FACTOR_KEY = "planner.affinity_factor";
+  public static final OptionValidator AFFINITY_FACTOR = new DoubleValidator(AFFINITY_FACTOR_KEY, 1.2d);
+
+  public static final String ENABLE_QUEUE_KEY = "exec.queue.enable";
+  public static final OptionValidator ENABLE_QUEUE = new BooleanValidator(ENABLE_QUEUE_KEY, false);
+
+  public static final String LARGE_QUEUE_KEY = "exec.queue.large";
+  public static final OptionValidator LARGE_QUEUE_SIZE = new PositiveLongValidator(LARGE_QUEUE_KEY, 1000, 10);
+
+  public static final String SMALL_QUEUE_KEY = "exec.queue.small";
+  public static final OptionValidator SMALL_QUEUE_SIZE = new PositiveLongValidator(SMALL_QUEUE_KEY, 100000, 100);
+
+  public static final String QUEUE_THRESHOLD_KEY = "exec.queue.threshold";
+  public static final OptionValidator QUEUE_THRESHOLD_SIZE = new PositiveLongValidator(QUEUE_THRESHOLD_KEY, Long.MAX_VALUE, 30000000);
+
+  public static final String QUEUE_TIMEOUT_KEY = "exec.queue.timeout_millis";
+  public static final OptionValidator QUEUE_TIMEOUT = new PositiveLongValidator(QUEUE_TIMEOUT_KEY, Long.MAX_VALUE, 60*1000*5);
+
 }

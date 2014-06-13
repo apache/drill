@@ -22,17 +22,18 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.validation.constraints.Size;
+
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.physical.EndpointAffinity;
-import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.physical.base.Size;
+import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
@@ -50,22 +51,17 @@ public class MockGroupScanPOP extends AbstractGroupScan {
 
   private final String url;
   protected final List<MockScanEntry> readEntries;
-  private final OperatorCost cost;
-  private final Size size;
   private  LinkedList<MockScanEntry>[] mappings;
 
   @JsonCreator
   public MockGroupScanPOP(@JsonProperty("url") String url, @JsonProperty("entries") List<MockScanEntry> readEntries) {
     this.readEntries = readEntries;
-    OperatorCost cost = new OperatorCost(0,0,0,0);
-    Size size = new Size(0,0);
-    for(MockScanEntry r : readEntries){
-      cost = cost.add(r.getCost());
-      size = size.add(r.getSize());
-    }
-    this.cost = cost;
-    this.size = size;
+
     this.url = url;
+  }
+
+  public ScanStats getScanStats(){
+    return ScanStats.TRIVIAL_TABLE;
   }
 
   public String getUrl() {
@@ -95,22 +91,12 @@ public class MockGroupScanPOP extends AbstractGroupScan {
       this.recordSize = size;
     }
 
-    @JsonIgnore
-    public OperatorCost getCost() {
-      return new OperatorCost(1, 2, 1, 1);
-    }
-
     public int getRecords() {
       return records;
     }
 
     public MockColumn[] getTypes() {
       return types;
-    }
-
-    @JsonIgnore
-    public Size getSize() {
-      return new Size(records, recordSize);
     }
 
     @Override
@@ -211,16 +197,6 @@ public class MockGroupScanPOP extends AbstractGroupScan {
   @Override
   public int getMaxParallelizationWidth() {
     return readEntries.size();
-  }
-
-  @Override
-  public OperatorCost getCost() {
-    return cost;
-  }
-
-  @Override
-  public Size getSize() {
-    return size;
   }
 
   @Override

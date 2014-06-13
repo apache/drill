@@ -22,7 +22,6 @@ import java.io.IOException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
-import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.base.AbstractWriter;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
@@ -87,12 +86,6 @@ public class ParquetWriter extends AbstractWriter {
   @Override
   protected PhysicalOperator getNewWithChild(PhysicalOperator child) {
     return new ParquetWriter(child, location, formatPlugin);
-  }
-
-  @Override
-  public OperatorCost getCost() {
-    // TODO:
-    return new OperatorCost(1,1,1,1);
   }
 
   @Override

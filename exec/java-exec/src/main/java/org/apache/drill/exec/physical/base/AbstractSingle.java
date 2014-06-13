@@ -31,7 +31,7 @@ import com.google.common.collect.Iterators;
  */
 public abstract class AbstractSingle extends AbstractBase{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractSingle.class);
-  
+
   protected final PhysicalOperator child;
 
   public AbstractSingle(PhysicalOperator child) {
@@ -47,22 +47,17 @@ public abstract class AbstractSingle extends AbstractBase{
   public PhysicalOperator getChild(){
     return child;
   }
-  
-  @Override
-  public Size getSize() {
-    return child.getSize();
-  }
-  
+
   @Override
   @JsonIgnore
   public final PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) {
     Preconditions.checkArgument(children.size() == 1);
     return getNewWithChild(children.iterator().next());
   }
-  
+
   protected abstract PhysicalOperator getNewWithChild(PhysicalOperator child);
-    
-  
-  
-  
+
+
+
+
 }

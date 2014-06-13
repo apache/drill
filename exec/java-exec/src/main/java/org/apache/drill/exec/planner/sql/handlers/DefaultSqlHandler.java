@@ -30,6 +30,7 @@ import org.apache.drill.common.logical.PlanProperties;
 import org.apache.drill.common.logical.PlanProperties.Generator.ResultMode;
 import org.apache.drill.common.logical.PlanProperties.PlanPropertiesBuilder;
 import org.apache.drill.common.logical.PlanProperties.PlanType;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.physical.base.AbstractPhysicalVisitor;
@@ -41,8 +42,9 @@ import org.apache.drill.exec.planner.physical.DrillDistributionTrait;
 import org.apache.drill.exec.planner.physical.PhysicalPlanCreator;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.explain.PrelSequencer;
-import org.apache.drill.exec.planner.physical.visitor.FlattenPrelVisitor;
+import org.apache.drill.exec.planner.physical.visitor.ExcessiveExchangeIdentifier;
 import org.apache.drill.exec.planner.physical.visitor.FinalColumnReorderer;
+import org.apache.drill.exec.planner.physical.visitor.FlattenPrelVisitor;
 import org.apache.drill.exec.planner.physical.visitor.JoinPrelRenameVisitor;
 import org.apache.drill.exec.planner.physical.visitor.RelUniqifier;
 import org.apache.drill.exec.planner.physical.visitor.SelectionVectorPrelVisitor;
@@ -64,6 +66,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
   protected final Planner planner;
   protected final QueryContext context;
   private Pointer<String> textPlan;
+  private final long targetSliceSize;
 
   public DefaultSqlHandler(Planner planner, QueryContext context) {
     this(planner, context, null);
@@ -74,6 +77,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     this.planner = planner;
     this.context = context;
     this.textPlan = textPlan;
+    targetSliceSize = context.getOptions().getOption(ExecConstants.SLICE_TARGET).num_val;
   }
 
   protected void log(String name, RelNode node) {
@@ -158,14 +162,22 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
      */
     phyRelNode = FinalColumnReorderer.addFinalColumnOrdering(phyRelNode);
 
-    /* 3.)
+    /*
+     * 3.)
+     * If two fragments are both estimated to be parallelization one, remove the exchange
+     * separating them
+     */
+    phyRelNode = ExcessiveExchangeIdentifier.removeExcessiveEchanges(phyRelNode, targetSliceSize);
+
+
+    /* 4.)
      * Next, we add any required selection vector removers given the supported encodings of each
      * operator. This will ultimately move to a new trait but we're managing here for now to avoid
      * introducing new issues in planning before the next release
      */
     phyRelNode = SelectionVectorPrelVisitor.addSelectionRemoversWhereNecessary(phyRelNode);
 
-    /* 4.)
+    /* 5.)
      * if the client does not support complex types (Map, Repeated)
      * insert a project which which would convert
      */
@@ -174,11 +186,11 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
       phyRelNode = FlattenPrelVisitor.addFlattenPrel(phyRelNode);
     }
 
-    /* 5.)
+    /* 6.)
      * Finally, Make sure that the no rels are repeats.
      * This could happen in the case of querying the same table twice as Optiq may canonicalize these.
      */
-    phyRelNode = RelUniqifier.uniqifyGraph(phyRelNode);
+    phyRelNode = ExcessiveExchangeIdentifier.removeExcessiveEchanges(phyRelNode, targetSliceSize);
 
     return phyRelNode;
   }

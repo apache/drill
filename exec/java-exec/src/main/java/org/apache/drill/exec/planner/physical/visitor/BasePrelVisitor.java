@@ -20,10 +20,17 @@ package org.apache.drill.exec.planner.physical.visitor;
 import org.apache.drill.exec.planner.physical.ExchangePrel;
 import org.apache.drill.exec.planner.physical.JoinPrel;
 import org.apache.drill.exec.planner.physical.Prel;
+import org.apache.drill.exec.planner.physical.ScanPrel;
 import org.apache.drill.exec.planner.physical.ScreenPrel;
 import org.apache.drill.exec.planner.physical.WriterPrel;
 
 public class BasePrelVisitor<RETURN, EXTRA, EXCEP extends Throwable> implements PrelVisitor<RETURN, EXTRA, EXCEP> {
+
+
+  @Override
+  public RETURN visitScan(ScanPrel prel, EXTRA value) throws EXCEP {
+    return visitPrel(prel, value);
+  }
 
   @Override
   public RETURN visitExchange(ExchangePrel prel, EXTRA value) throws EXCEP {

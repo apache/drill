@@ -29,6 +29,7 @@ public abstract class AbstractBase implements PhysicalOperator{
   protected long initialAllocation = 1000000L;
   protected long maxAllocation = 10000000000L;
   private int id;
+  private double cost;
 
   @Override
   public void accept(GraphVisitor<PhysicalOperator> visitor) {
@@ -63,6 +64,14 @@ public abstract class AbstractBase implements PhysicalOperator{
   @Override
   public long getInitialAllocation() {
     return initialAllocation;
+  }
+
+  public double getCost() {
+    return cost;
+  }
+
+  public void setCost(double cost) {
+    this.cost = cost;
   }
 
   @Override

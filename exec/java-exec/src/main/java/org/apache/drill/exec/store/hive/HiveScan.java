@@ -30,15 +30,16 @@ import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.EndpointAffinity;
-import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.physical.base.Size;
+import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.physical.base.SubScan;
+import org.apache.drill.exec.physical.base.ScanStats.GroupScanProperty;
 import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.exec.store.schedule.CompleteFileWork;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.api.Partition;
@@ -254,16 +255,18 @@ public class HiveScan extends AbstractGroupScan {
   }
 
   @Override
-  public OperatorCost getCost() {
-    return new OperatorCost(1, 2, 1, 1);
-  }
+  public ScanStats getScanStats() {
+    try {
+      long data =0;
+      for(InputSplit split : inputSplits){
+          data += split.getLength();
+      }
 
-  @Override
-  public Size getSize() {
-    // TODO - this is wrong, need to populate correctly
-    int avgColumnSize = 10;
-    int numColumns = (columns == null || columns.isEmpty()) ? 100 : columns.size();
-    return new Size(10, avgColumnSize*numColumns);
+      long estRowCount = data/1024;
+      return new ScanStats(GroupScanProperty.NO_EXACT_ROW_COUNT, estRowCount, 1, data);
+    } catch (IOException e) {
+      throw new DrillRuntimeException(e);
+    }
   }
 
   @Override

@@ -20,22 +20,19 @@ package org.apache.drill.exec.physical.config;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.drill.common.logical.data.Join;
 import org.apache.drill.common.logical.data.JoinCondition;
-import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.base.AbstractBase;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
-import org.apache.drill.exec.physical.base.Size;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.eigenbase.rel.JoinRelType;
 
-import com.google.common.collect.Lists;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
 
 @JsonTypeName("merge-join")
 public class MergeJoinPOP extends AbstractBase{
@@ -46,11 +43,6 @@ public class MergeJoinPOP extends AbstractBase{
   private final PhysicalOperator right;
   private final List<JoinCondition> conditions;
   private final JoinRelType joinType;
-
-  @Override
-  public OperatorCost getCost() {
-    return new OperatorCost(0,0,0,0);
-  }
 
   @JsonCreator
   public MergeJoinPOP(
@@ -65,11 +57,6 @@ public class MergeJoinPOP extends AbstractBase{
     Preconditions.checkArgument(joinType != null, "Join type is missing!");
     this.joinType = joinType;
     Preconditions.checkArgument(joinType != JoinRelType.FULL, "Full outer join not currently supported");
-  }
-
-  @Override
-  public Size getSize() {
-    return left.getSize().add(right.getSize());
   }
 
   @Override

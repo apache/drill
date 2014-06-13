@@ -31,11 +31,11 @@ import org.apache.drill.common.logical.FormatPluginConfig;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.metrics.DrillMetrics;
 import org.apache.drill.exec.physical.EndpointAffinity;
-import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.physical.base.Size;
+import org.apache.drill.exec.physical.base.ScanStats;
+import org.apache.drill.exec.physical.base.ScanStats.GroupScanProperty;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.dfs.ReadEntryFromHDFS;
@@ -357,28 +357,11 @@ public class ParquetGroupScan extends AbstractGroupScan {
     return columns;
   }
 
-  @Override
-  public OperatorCost getCost() {
-    // TODO Figure out how to properly calculate cost
-    return new OperatorCost(1, rowGroupInfos.size(), 1, 1);
-  }
 
   @Override
-  public Size getSize() {
-//    long totalSize = 0;
-//    for (RowGroupInfo rowGrpInfo : rowGroupInfos) {
-//      totalSize += rowGrpInfo.getTotalBytes();
-//    }
-//    int rowSize = (int) (totalSize/rowCount);
-
-    // if all the columns are required.
-    if (columns == null || columns.isEmpty()) {
-      return new Size(rowCount, columnValueCounts.size());
-    } else {
-      // project pushdown : subset of columns are required.
-      return new Size(rowCount, columns.size());
-    }
-
+  public ScanStats getScanStats() {
+    int columnCount = columns == null ? 20 : columns.size();
+    return new ScanStats(GroupScanProperty.EXACT_ROW_COUNT, rowCount, 1, rowCount * columnCount);
   }
 
   @Override
@@ -410,11 +393,6 @@ public class ParquetGroupScan extends AbstractGroupScan {
   @JsonIgnore
   public boolean canPushdownProjects(List<SchemaPath> columns) {
     return true;
-  }
-
-  @Override
-  public GroupScanProperty getProperty() {
-    return GroupScanProperty.EXACT_ROW_COUNT;
   }
 
   /**

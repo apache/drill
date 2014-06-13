@@ -22,14 +22,16 @@ import io.netty.buffer.ByteBuf;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.LogicalPlan;
 import org.apache.drill.common.logical.PlanProperties.Generator.ResultMode;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.cache.DistributedCache.CacheConfig;
 import org.apache.drill.exec.cache.DistributedCache.SerializationMode;
+import org.apache.drill.exec.coord.DistributedSemaphore;
+import org.apache.drill.exec.coord.DistributedSemaphore.DistributedLease;
 import org.apache.drill.exec.exception.FragmentSetupException;
 import org.apache.drill.exec.exception.OptimizerException;
 import org.apache.drill.exec.ops.QueryContext;
@@ -74,6 +76,7 @@ import com.google.common.collect.Lists;
 public class Foreman implements Runnable, Closeable, Comparable<Object>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Foreman.class);
 
+
   public static final CacheConfig<FragmentHandle, PlanFragment> FRAGMENT_CACHE = CacheConfig //
       .newBuilder(FragmentHandle.class, PlanFragment.class) //
       .mode(SerializationMode.PROTOBUF) //
@@ -86,12 +89,33 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
   private WorkerBee bee;
   private UserClientConnection initiatingClient;
   private final AtomicState<QueryState> state;
+  private final DistributedSemaphore smallSemaphore;
+  private final DistributedSemaphore largeSemaphore;
+  private final long queueThreshold;
+  private final long queueTimeout;
+  private volatile DistributedLease lease;
+  private final boolean queuingEnabled;
 
   public Foreman(WorkerBee bee, DrillbitContext dContext, UserClientConnection connection, QueryId queryId,
       RunQuery queryRequest) {
     this.queryId = queryId;
     this.queryRequest = queryRequest;
     this.context = new QueryContext(connection.getSession(), queryId, dContext);
+    this.queuingEnabled = context.getOptions().getOption(ExecConstants.ENABLE_QUEUE_KEY).bool_val;
+    if(queuingEnabled){
+      int smallQueue = context.getOptions().getOption(ExecConstants.SMALL_QUEUE_KEY).num_val.intValue();
+      int largeQueue = context.getOptions().getOption(ExecConstants.LARGE_QUEUE_KEY).num_val.intValue();
+      this.largeSemaphore = dContext.getClusterCoordinator().getSemaphore("query.large", largeQueue);
+      this.smallSemaphore = dContext.getClusterCoordinator().getSemaphore("query.small", smallQueue);
+      this.queueThreshold = context.getOptions().getOption(ExecConstants.QUEUE_THRESHOLD_KEY).num_val;
+      this.queueTimeout = context.getOptions().getOption(ExecConstants.QUEUE_TIMEOUT_KEY).num_val;
+    }else{
+      this.largeSemaphore = null;
+      this.smallSemaphore = null;
+      this.queueThreshold = 0;
+      this.queueTimeout = 0;
+    }
+
     this.initiatingClient = connection;
     this.fragmentManager = new QueryManager(queryId, queryRequest, bee.getContext().getPersistentStoreProvider(), new ForemanManagerListener(), dContext.getController(), this);
     this.bee = bee;
@@ -194,10 +218,21 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
       System.out.flush();
       System.exit(-1);
     }finally{
+      releaseLease();
       Thread.currentThread().setName(originalThread);
     }
   }
 
+  private void releaseLease(){
+    if(lease != null){
+      try{
+        lease.close();
+      }catch(Exception e){
+        logger.warn("Failure while releasing lease.", e);
+      };
+    }
+
+  }
   private void parseAndRunLogicalPlan(String json) {
 
     try {
@@ -260,7 +295,6 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
     }
 
   }
-
   private void parseAndRunPhysicalPlan(String json) {
     try {
       PhysicalPlan plan = context.getPlanReader().readPhysicalPlan(json);
@@ -271,6 +305,9 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
   }
 
   private void runPhysicalPlan(PhysicalPlan plan) {
+
+
+
 
     if(plan.getProperties().resultMode != ResultMode.EXEC){
       fail(String.format("Failure running plan.  You requested a result mode of %s and a physical plan can only be output as EXEC", plan.getProperties().resultMode), new Exception());
@@ -287,12 +324,20 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
     }
 
     PlanningSet planningSet = StatsCollector.collectStats(rootFragment);
-    SimpleParallelizer parallelizer = new SimpleParallelizer()
-      .setGlobalMaxWidth(context.getConfig().getInt(ExecConstants.GLOBAL_MAX_WIDTH))
-      .setMaxWidthPerEndpoint(context.getConfig().getInt(ExecConstants.MAX_WIDTH_PER_ENDPOINT))
-      .setAffinityFactor(context.getConfig().getDouble(ExecConstants.AFFINITY_FACTOR));
+    SimpleParallelizer parallelizer = new SimpleParallelizer(context);
 
     try {
+
+      double size = 0;
+      for(PhysicalOperator ops : plan.getSortedOperators()){
+        size += ops.getCost();
+      }
+      if(queuingEnabled && size > this.queueThreshold){
+        this.lease = largeSemaphore.acquire(this.queueTimeout, TimeUnit.MILLISECONDS);
+      }else{
+        this.lease = smallSemaphore.acquire(this.queueTimeout, TimeUnit.MILLISECONDS);
+      }
+
       QueryWorkUnit work = parallelizer.getFragments(context.getOptions().getSessionOptionList(), context.getCurrentEndpoint(),
           queryId, context.getActiveEndpoints(), context.getPlanReader(), rootFragment, planningSet);
 
@@ -324,7 +369,7 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
       logger.debug("Fragments running.");
       state.updateState(QueryState.PENDING, QueryState.RUNNING);
 
-    } catch (ExecutionSetupException | RpcException e) {
+    } catch (Exception e) {
       fail("Failure while setting up query.", e);
     }
 

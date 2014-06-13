@@ -18,11 +18,9 @@
 package org.apache.drill.exec.physical.config;
 
 import org.apache.drill.common.expression.LogicalExpression;
-import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.base.AbstractSingle;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
-import org.apache.drill.exec.physical.base.Size;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 
@@ -55,18 +53,8 @@ public class Filter extends AbstractSingle {
   }
 
   @Override
-  public OperatorCost getCost() {
-    return child.getCost();
-  }
-
-  @Override
   protected PhysicalOperator getNewWithChild(PhysicalOperator child) {
     return new Filter(child, expr, selectivity);
-  }
-
-  @Override
-  public Size getSize() {
-    return new Size( (long) (child.getSize().getRecordCount()*selectivity), child.getSize().getRecordSize());
   }
 
   @Override

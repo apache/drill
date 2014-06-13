@@ -58,9 +58,7 @@ public class ProjectPrel extends DrillProjectRelBase implements Prel{
     PhysicalOperator childPOP = child.getPhysicalOperator(creator);
 
     Project p = new Project(this.getProjectExpressions(new DrillParseContext()),  childPOP);
-    p.setOperatorId(creator.getOperatorId(this));
-
-    return p;
+    return creator.addMetadata(this, p);
   }
 
   @Override

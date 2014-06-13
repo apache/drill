@@ -24,11 +24,9 @@ import java.util.List;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
-import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.base.AbstractBase;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
-import org.apache.drill.exec.physical.base.Size;
 import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.hadoop.fs.Path;
@@ -119,17 +117,6 @@ public class HiveSubScan extends AbstractBase implements SubScan {
     ByteArrayDataInput byteArrayDataInput = ByteStreams.newDataInput(Base64.decodeBase64(base64));
     split.readFields(byteArrayDataInput);
     return split;
-  }
-
-  @Override
-  public OperatorCost getCost() {
-    return new OperatorCost(1, 2, 1, 1);
-  }
-
-  @Override
-  public Size getSize() {
-    // TODO - this is wrong, need to populate correctly
-    return new Size(10,10);
   }
 
   @Override

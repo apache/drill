@@ -20,11 +20,9 @@ package org.apache.drill.exec.physical.config;
 import java.util.List;
 
 import org.apache.drill.common.logical.data.NamedExpression;
-import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.base.AbstractSingle;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
-import org.apache.drill.exec.physical.base.Size;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 
@@ -51,17 +49,6 @@ public class Project extends AbstractSingle{
   @Override
   public <T, X, E extends Throwable> T accept(PhysicalVisitor<T, X, E> physicalVisitor, X value) throws E{
     return physicalVisitor.visitProject(this, value);
-  }
-
-  @Override
-  public OperatorCost getCost() {
-    return new OperatorCost(0, 0, 1000, child.getSize().getRecordCount());
-  }
-
-  @Override
-  public Size getSize() {
-    //TODO: This should really change the row width...
-    return child.getSize();
   }
 
   @Override

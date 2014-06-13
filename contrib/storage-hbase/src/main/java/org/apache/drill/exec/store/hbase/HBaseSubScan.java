@@ -24,11 +24,9 @@ import java.util.List;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.logical.StoragePluginConfig;
-import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.base.AbstractBase;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
-import org.apache.drill.exec.physical.base.Size;
 import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.hadoop.hbase.filter.Filter;
@@ -84,16 +82,6 @@ public class HBaseSubScan extends AbstractBase implements SubScan {
 
   public List<SchemaPath> getColumns() {
     return columns;
-  }
-
-  @Override
-  public OperatorCost getCost() {
-    return null;
-  }
-
-  @Override
-  public Size getSize() {
-    return null;
   }
 
   @Override

@@ -53,9 +53,7 @@ public class WriterPrel extends DrillWriterRelBase implements Prel {
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
     Prel child = (Prel) this.getChild();
     PhysicalOperator g = getCreateTableEntry().getWriter(child.getPhysicalOperator(creator));
-    g.setOperatorId(creator.getOperatorId(this));
-
-    return g;
+    return creator.addMetadata(this, g);
   }
 
 

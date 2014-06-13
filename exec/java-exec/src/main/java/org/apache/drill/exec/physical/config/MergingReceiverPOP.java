@@ -20,10 +20,8 @@ package org.apache.drill.exec.physical.config;
 import java.util.List;
 
 import org.apache.drill.common.logical.data.Order.Ordering;
-import org.apache.drill.exec.physical.OperatorCost;
 import org.apache.drill.exec.physical.base.AbstractReceiver;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
-import org.apache.drill.exec.physical.base.Size;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
@@ -63,20 +61,8 @@ public class MergingReceiverPOP extends AbstractReceiver{
   }
 
   @Override
-  public OperatorCost getCost() {
-    //TODO: deal with receiver cost through exchange.
-    return new OperatorCost(1,1,1,1);
-  }
-
-  @Override
   public <T, X, E extends Throwable> T accept(PhysicalVisitor<T, X, E> physicalVisitor, X value) throws E {
     return physicalVisitor.visitMergingReceiver(this, value);
-  }
-
-  @Override
-  public Size getSize() {
-    //TODO: deal with size info through exchange.
-    return new Size(1,1);
   }
 
   public List<Ordering> getOrderings() {

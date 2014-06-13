@@ -23,8 +23,10 @@ import java.util.List;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.PhysicalOperatorSetupException;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.FragmentSetupException;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
+import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
@@ -47,38 +49,30 @@ import com.google.common.collect.Lists;
  * is done based on round robin assignment ordered by operator affinity (locality) to available execution Drillbits.
  */
 public class SimpleParallelizer {
+
+
+
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SimpleParallelizer.class);
   private final Materializer materializer = new Materializer();
+  private final long parallelizationThreshold;
+  private final int maxWidthPerNode;
+  private final int maxGlobalWidth;
+  private double affinityFactor;
 
-  /**
-   * The maximum level or parallelization any stage of the query can do. Note that while this
-   * might be the number of active Drillbits, realistically, this could be well beyond that
-   * number of we want to do things like speed results return.
-   */
-  private int globalMaxWidth;
-  public SimpleParallelizer setGlobalMaxWidth(int globalMaxWidth) {
-    this.globalMaxWidth = globalMaxWidth;
-    return this;
+  public SimpleParallelizer(QueryContext context){
+    this.parallelizationThreshold = context.getOptions().getOption(ExecConstants.SLICE_TARGET).num_val;
+    this.maxWidthPerNode = context.getOptions().getOption(ExecConstants.MAX_WIDTH_PER_NODE_KEY).num_val.intValue();
+    this.maxGlobalWidth = context.getOptions().getOption(ExecConstants.MAX_WIDTH_GLOBAL_KEY).num_val.intValue();
+    this.affinityFactor = context.getOptions().getOption(ExecConstants.AFFINITY_FACTOR_KEY).float_val.intValue();
   }
 
-  /**
-   * Limits the maximum level of parallelization to this factor time the number of Drillbits
-   */
-  private int maxWidthPerEndpoint;
-  public SimpleParallelizer setMaxWidthPerEndpoint(int maxWidthPerEndpoint) {
-    this.maxWidthPerEndpoint = maxWidthPerEndpoint;
-    return this;
-  }
-
-
-  /**
-   * Factor by which a node with endpoint affinity will be favored while creating assignment
-   */
-  private double affinityFactor = 1.2f;
-  public SimpleParallelizer setAffinityFactor(double affinityFactor) {
+  public SimpleParallelizer(long parallelizationThreshold, int maxWidthPerNode, int maxGlobalWidth, double affinityFactor){
+    this.parallelizationThreshold = parallelizationThreshold;
+    this.maxWidthPerNode = maxWidthPerNode;
+    this.maxGlobalWidth = maxGlobalWidth;
     this.affinityFactor = affinityFactor;
-    return this;
   }
+
 
   /**
    * Generate a set of assigned fragments based on the provided planningSet. Do not allow parallelization stages to go
@@ -151,11 +145,7 @@ public class SimpleParallelizer {
             .setQueryId(queryId) //
             .build();
         PlanFragment fragment = PlanFragment.newBuilder() //
-            .setCpuCost(stats.getCpuCost()) //
-            .setDiskCost(stats.getDiskCost()) //
             .setForeman(foremanNode) //
-            .setMemoryCost(stats.getMemoryCost()) //
-            .setNetworkCost(stats.getNetworkCost()) //
             .setFragmentJson(plan) //
             .setHandle(handle) //
             .setAssignment(wrapper.getAssignedEndpoint(minorFragmentId)) //
@@ -182,25 +172,19 @@ public class SimpleParallelizer {
   }
 
   private void assignEndpoints(Collection<DrillbitEndpoint> allNodes, PlanningSet planningSet) throws PhysicalOperatorSetupException {
-    // First we determine the amount of parallelization for a fragment. This will be between 1 and maxWidth based on
-    // cost. (Later could also be based on cluster operation.) then we decide endpoints based on affinity (later this
-    // could be based on endpoint load)
+    // for each node, set the width based on the parallelization threshold and cluster width.
     for (Wrapper wrapper : planningSet) {
 
       Stats stats = wrapper.getStats();
 
+      double targetSlices = stats.getTotalCost()/parallelizationThreshold;
+      int targetIntSlices = (int) Math.ceil(targetSlices);
+
       // figure out width.
-      int width = Math.min(stats.getMaxWidth(), globalMaxWidth);
-      float diskCost = stats.getDiskCost();
-//      logger.debug("Frag max width: {} and diskCost: {}", stats.getMaxWidth(), diskCost);
+      int width = Math.min(targetIntSlices, Math.min(stats.getMaxWidth(), maxGlobalWidth));
 
-      // TODO: right now we'll just assume that each task is cost 1 so we'll set the breadth at the lesser of the number
-      // of tasks or the maximum width of the fragment.
-      if (diskCost < width) {
-//        width = (int) diskCost;
-      }
 
-      width = Math.min(width, maxWidthPerEndpoint*allNodes.size());
+      width = Math.min(width, maxWidthPerNode*allNodes.size());
 
       if (width < 1) width = 1;
 //      logger.debug("Setting width {} on fragment {}", width, wrapper);
