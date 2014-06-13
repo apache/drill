@@ -20,15 +20,17 @@ package org.apache.drill.exec.util;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+
 import org.apache.hadoop.io.Text;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 /*
  * Simple class that extends the regular java.util.HashMap but overrides the
  * toString() method of the HashMap class to produce a JSON string instead
  */
-public class JsonStringHashMap<K, V> extends HashMap<K, V> {
+public class JsonStringHashMap<K, V> extends LinkedHashMap<K, V> {
 
   private static ObjectMapper mapper;
 

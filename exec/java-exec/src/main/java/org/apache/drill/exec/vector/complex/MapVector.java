@@ -53,7 +53,7 @@ public class MapVector extends AbstractContainerVector {
 
   public final static MajorType TYPE = MajorType.newBuilder().setMinorType(MinorType.MAP).setMode(DataMode.REQUIRED).build();
 
-  final HashMap<String, ValueVector> vectors = Maps.newHashMap();
+  final HashMap<String, ValueVector> vectors = Maps.newLinkedHashMap();
   private final Map<String, VectorWithOrdinal> vectorIds = Maps.newHashMap();
   private final IntObjectOpenHashMap<ValueVector> vectorsById = new IntObjectOpenHashMap<>();
   private final SingleMapReaderImpl reader = new SingleMapReaderImpl(MapVector.this);

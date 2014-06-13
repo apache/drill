@@ -55,7 +55,7 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
   public final static MajorType TYPE = MajorType.newBuilder().setMinorType(MinorType.MAP).setMode(DataMode.REPEATED).build();
 
   private final UInt4Vector offsets;   // offsets to start of each record
-  private final Map<String, ValueVector> vectors = Maps.newHashMap();
+  private final Map<String, ValueVector> vectors = Maps.newLinkedHashMap();
   private final Map<String, VectorWithOrdinal> vectorIds = Maps.newHashMap();
   private final RepeatedMapReaderImpl reader = new RepeatedMapReaderImpl(RepeatedMapVector.this);
   private final IntObjectOpenHashMap<ValueVector> vectorsById = new IntObjectOpenHashMap<>();
@@ -356,7 +356,7 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
       List<Object> l = new JsonStringArrayList();
       int end = offsets.getAccessor().get(index+1);
       for(int i =  offsets.getAccessor().get(index); i < end; i++){
-        Map<String, Object> vv = Maps.newHashMap();
+        Map<String, Object> vv = Maps.newLinkedHashMap();
         for(Map.Entry<String, ValueVector> e : vectors.entrySet()){
           ValueVector v = e.getValue();
           String k = e.getKey();
