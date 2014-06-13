@@ -57,7 +57,9 @@ public class ProfileResources {
     QueryProfile profile = profiles.get(queryId);
     if(profile == null) profile = QueryProfile.getDefaultInstance();
 
-    return new Viewable("/rest/profile/profile.ftl", profile);
+    ProfileWrapper wrapper = new ProfileWrapper(profile);
+
+    return new Viewable("/rest/profile/profile.ftl", wrapper);
 
   }
 

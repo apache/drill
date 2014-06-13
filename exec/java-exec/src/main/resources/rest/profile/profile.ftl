@@ -20,7 +20,7 @@
   <h2>Query</h2>
   <form role="form" action="/query" method="POST">
     <div class="form-group">
-      <textarea class="form-control" id="query" name="query">${model.query}</textarea>
+      <textarea class="form-control" id="query" name="query">${model.getProfile().query}</textarea>
     </div>
     <div class="form-group">
       <div class="radio-inline">
@@ -47,11 +47,15 @@
   <div class="page-header">
     <h2>Physical Plan</h2>
   </div>
-    <p><pre>${model.plan}</pre></p>
+    <p><pre>${model.profile.plan}</pre></p>
+  <div class="page-header">
+    <h2>Profile Summary</h2>
+  </div>
+    <p><pre>${model.toString()}</pre></p>
   <div class="page-header">
     <h2>Complete Profile</h2>
   </div>
-    <p><pre>${model.toString()}</pre></p>
+    <p><pre>${model.profile.toString()}</pre></p>
 </#macro>
 
 <@page_html/>

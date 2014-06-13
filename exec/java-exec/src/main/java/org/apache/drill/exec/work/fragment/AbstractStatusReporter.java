@@ -48,6 +48,7 @@ public abstract class AbstractStatusReporter implements StatusReporter{
     }
     status.setHandle(context.getHandle());
     b.setMemoryUsed(context.getAllocator().getAllocatedMemory());
+    b.setMinorFragmentId(context.getHandle().getMinorFragmentId());
     status.setProfile(b);
     return status;
   }
