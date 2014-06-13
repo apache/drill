@@ -58,10 +58,10 @@ public class TestMetadataDDL extends JdbcTestQueryBase {
     JdbcAssert.withFull("hive.default")
         .sql("SHOW TABLES")
         .returns(
+            "TABLE_SCHEMA=hive.default; TABLE_NAME=readtest\n" +
             "TABLE_SCHEMA=hive.default; TABLE_NAME=empty_table\n" +
-            "TABLE_SCHEMA=hive.default; TABLE_NAME=allhivedatatypes\n" +
+            "TABLE_SCHEMA=hive.default; TABLE_NAME=infoschematest\n" +
             "TABLE_SCHEMA=hive.default; TABLE_NAME=hiveview\n" +
-            "TABLE_SCHEMA=hive.default; TABLE_NAME=allreadsupportedhivedatatypes\n" +
             "TABLE_SCHEMA=hive.default; TABLE_NAME=kv\n" +
             "TABLE_SCHEMA=hive.default; TABLE_NAME=foodate\n"
         );
@@ -82,10 +82,10 @@ public class TestMetadataDDL extends JdbcTestQueryBase {
     JdbcAssert.withFull("dfs.tmp")
         .sql("SHOW TABLES IN hive.`default`")
         .returns(
+            "TABLE_SCHEMA=hive.default; TABLE_NAME=readtest\n" +
             "TABLE_SCHEMA=hive.default; TABLE_NAME=empty_table\n" +
-            "TABLE_SCHEMA=hive.default; TABLE_NAME=allhivedatatypes\n" +
+            "TABLE_SCHEMA=hive.default; TABLE_NAME=infoschematest\n" +
             "TABLE_SCHEMA=hive.default; TABLE_NAME=hiveview\n" +
-            "TABLE_SCHEMA=hive.default; TABLE_NAME=allreadsupportedhivedatatypes\n" +
             "TABLE_SCHEMA=hive.default; TABLE_NAME=kv\n" +
             "TABLE_SCHEMA=hive.default; TABLE_NAME=foodate\n");
   }
@@ -247,7 +247,7 @@ public class TestMetadataDDL extends JdbcTestQueryBase {
     JdbcAssert.withNoDefaultSchema()
         .sql("SELECT COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH, NUMERIC_PRECISION " +
             "FROM INFORMATION_SCHEMA.`COLUMNS` " +
-            "WHERE TABLE_SCHEMA = 'hive.default' AND TABLE_NAME = 'allhivedatatypes' AND " +
+            "WHERE TABLE_SCHEMA = 'hive.default' AND TABLE_NAME = 'infoschematest' AND " +
             "(COLUMN_NAME = 'stringtype' OR COLUMN_NAME = 'varchartype' OR " +
             "COLUMN_NAME = 'inttype' OR COLUMN_NAME = 'decimaltype')")
         .returns(

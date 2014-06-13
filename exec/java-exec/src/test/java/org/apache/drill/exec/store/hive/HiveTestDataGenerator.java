@@ -90,15 +90,75 @@ public class HiveTestDataGenerator {
 
     // create a Hive table that has columns with data types which are supported for reading in Drill.
     testDataFile = generateAllTypesDataFile();
-    executeQuery("CREATE TABLE IF NOT EXISTS allReadSupportedHiveDataTypes (c1 INT, c2 BOOLEAN, c3 DOUBLE, c4 STRING, " +
-        "c9 TINYINT, c10 SMALLINT, c11 FLOAT, c12 BIGINT, c19 BINARY) " +
-        "ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE");
-    executeQuery(String.format("LOAD DATA LOCAL INPATH '%s' OVERWRITE INTO TABLE " +
-        "default.allReadSupportedHiveDataTypes", testDataFile));
+    executeQuery(
+        "CREATE TABLE IF NOT EXISTS readtest (" +
+        "  binary_field BINARY," +
+        "  boolean_field BOOLEAN," +
+        "  tinyint_field TINYINT," +
+        "  decimal_field DECIMAL," +
+        "  double_field DOUBLE," +
+        "  float_field FLOAT," +
+        "  int_field INT," +
+        "  bigint_field BIGINT," +
+        "  smallint_field SMALLINT," +
+        "  string_field STRING," +
+        "  varchar_field VARCHAR(50)," +
+        "  timestamp_field TIMESTAMP," +
+        "  date_field DATE" +
+        ") PARTITIONED BY (" +
+        "  binary_part BINARY," +
+        "  boolean_part BOOLEAN," +
+        "  tinyint_part TINYINT," +
+        "  decimal_part DECIMAL," +
+        "  double_part DOUBLE," +
+        "  float_part FLOAT," +
+        "  int_part INT," +
+        "  bigint_part BIGINT," +
+        "  smallint_part SMALLINT," +
+        "  string_part STRING," +
+        "  varchar_part VARCHAR(50)," +
+        "  timestamp_part TIMESTAMP," +
+        "  date_part DATE" +
+        ") ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE"
+    );
+
+    // Add a partition to table 'readtest'
+    executeQuery(
+        "ALTER TABLE readtest ADD IF NOT EXISTS PARTITION ( " +
+        "  binary_part='binary', " +
+        "  boolean_part='true', " +
+        "  tinyint_part='64', " +
+        "  decimal_part='3489423929323435243', " +
+        "  double_part='8.345', " +
+        "  float_part='4.67', " +
+        "  int_part='123456', " +
+        "  bigint_part='234235', " +
+        "  smallint_part='3455', " +
+        "  string_part='string', " +
+        "  varchar_part='varchar', " +
+        "  timestamp_part='2013-07-05 17:01:00', " +
+        "  date_part='2013-07-05')"
+    );
+
+    // Load data into table 'readtest'
+    executeQuery(String.format("LOAD DATA LOCAL INPATH '%s' OVERWRITE INTO TABLE default.readtest PARTITION (" +
+        "  binary_part='binary', " +
+        "  boolean_part='true', " +
+        "  tinyint_part='64', " +
+        "  decimal_part='3489423929323435243', " +
+        "  double_part='8.345', " +
+        "  float_part='4.67', " +
+        "  int_part='123456', " +
+        "  bigint_part='234235', " +
+        "  smallint_part='3455', " +
+        "  string_part='string', " +
+        "  varchar_part='varchar', " +
+        "  timestamp_part='2013-07-05 17:01:00', " +
+        "  date_part='2013-07-05')", testDataFile));
 
     // create a table that has all Hive types. This is to test how hive tables metadata is populated in
     // Drill's INFORMATION_SCHEMA.
-    executeQuery("CREATE TABLE IF NOT EXISTS allHiveDataTypes(" +
+    executeQuery("CREATE TABLE IF NOT EXISTS infoschematest(" +
         "booleanType BOOLEAN, " +
         "tinyintType TINYINT, " +
         "smallintType SMALLINT, " +
@@ -176,9 +236,7 @@ public class HiveTestDataGenerator {
     File file = getTempFile();
 
     PrintWriter printWriter = new PrintWriter(file);
-    printWriter.println("\\N,\\N,\\N,\\N,\\N,\\N,\\N,\\N,\\N");
-    printWriter.println("-1,false,-1.1,,-1,-1,-1.0,-1,\\N");
-    printWriter.println("1,true,1.1,1,1,1,1.0,1,YWJjZA==");
+    printWriter.println("YmluYXJ5ZmllbGQ=,false,34,3489423929323435243,8.345,4.67,123456,234235,3455,stringfield,varcharfield,2013-07-05 17:01:00,2013-07-05");
     printWriter.close();
 
     return file.getPath();
