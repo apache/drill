@@ -39,6 +39,7 @@ public class TestExampleQueries extends BaseTestQuery{
     test("select count(*) from cp.`customer.json` limit 1");
   }
   
+
   @Test
   public void testCaseReturnValueVarChar() throws Exception{
     test("select case when employee_id < 1000 then 'ABC' else 'DEF' end from cp.`employee.json` limit 5");
@@ -193,6 +194,13 @@ public class TestExampleQueries extends BaseTestQuery{
   // cast non-exist column from json file. Should return null value. 
   public void testDrill428() throws Exception {
     test("select cast(NON_EXIST_COL as varchar(10)) from cp.`employee.json` limit 2; ");
+  }
+  
+  @Test  // Bugs DRILL-727, DRILL-940
+  public void testOrderByDiffColumn() throws Exception {
+    test("select r_name from cp.`tpch/region.parquet` order by r_regionkey");  
+    test("select r_name from cp.`tpch/region.parquet` order by r_name, r_regionkey");  
+    test("select cast(r_name as varchar(20)) from cp.`tpch/region.parquet` order by r_name");
   }
   
 }
