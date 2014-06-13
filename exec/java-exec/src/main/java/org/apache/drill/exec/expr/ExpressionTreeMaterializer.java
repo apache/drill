@@ -459,10 +459,13 @@ public class ExpressionTreeMaterializer {
 
       if(castEqual(e.getPosition(), newMajor, input.getMajorType())) return input; // don't do pointless cast.
 
-      if(newMinor == MinorType.LATE || newMinor == MinorType.NULL){
+      if(newMinor == MinorType.LATE){
         // if the type still isn't fully bound, leave as cast expression.
         return new CastExpression(input, e.getMajorType(), e.getPosition());
-      }else{
+      } else if (newMinor == MinorType.NULL) {
+        // if input is a NULL expression, remove cast expression and return a TypedNullConstant directly.  
+        return new TypedNullConstant(Types.optional(e.getMajorType().getMinorType()));
+      } else {
         // if the type is fully bound, convert to functioncall and materialze the function.
         MajorType type = e.getMajorType();
 

@@ -23,7 +23,7 @@ import org.junit.Test;
 
 public class TestExampleQueries extends BaseTestQuery{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestExampleQueries.class);
-
+  
   @Test // see DRILL-553
   public void testQueryWithNullValues() throws Exception {
     test("select count(*) from cp.`customer.json` limit 1");
@@ -188,5 +188,11 @@ public class TestExampleQueries extends BaseTestQuery{
   public void testUnionAll6() throws Exception {
     test("select n_nationkey, n_regionkey from cp.`tpch/nation.parquet` where n_regionkey = 1 union all select r_regionkey, r_regionkey from cp.`tpch/region.parquet` where r_regionkey = 2");
   }  
+
+  @Test
+  // cast non-exist column from json file. Should return null value. 
+  public void testDrill428() throws Exception {
+    test("select cast(NON_EXIST_COL as varchar(10)) from cp.`employee.json` limit 2; ");
+  }
   
 }
