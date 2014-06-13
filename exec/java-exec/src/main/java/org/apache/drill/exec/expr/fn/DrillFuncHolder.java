@@ -294,7 +294,7 @@ public abstract class DrillFuncHolder {
 
   }
 
-  public boolean matchInputOutputType() {
+  public boolean checkPrecisionRange() {
     return false;
   }
 

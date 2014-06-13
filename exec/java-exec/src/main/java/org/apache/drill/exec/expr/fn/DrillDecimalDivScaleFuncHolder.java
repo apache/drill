@@ -24,6 +24,8 @@ import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 
+import org.apache.drill.common.util.DecimalScalePrecisionDivideFunction;
+import org.apache.drill.common.util.DecimalUtility;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 
@@ -36,12 +38,15 @@ public class DrillDecimalDivScaleFuncHolder extends DrillSimpleFuncHolder{
     super(scope, nullHandling, isBinaryCommutative, isRandom, registeredNames, parameters, returnValue, workspaceVars, methods, imports);
   }
 
+  /*
+   * This function scope is used by divide functions for decimal data type.
+   * DecimalScalePrecisionDivideFunction is used to compute the output types'
+   * scale and precision
+   */
   @Override
   public MajorType getReturnType(List<LogicalExpression> args) {
 
     TypeProtos.DataMode mode = returnValue.type.getMode();
-    int scale = 0;
-    int precision = 0;
 
     if (nullHandling == NullHandling.NULL_IF_NULL) {
       // if any one of the input types is nullable, then return nullable return type
@@ -53,12 +58,21 @@ public class DrillDecimalDivScaleFuncHolder extends DrillSimpleFuncHolder{
       }
     }
 
-    /* Set the scale to be the same as the fist input's scale
-     * Used by divide and modulo functions
-     */
-    scale = args.get(0).getMajorType().getScale();
-    precision = args.get(0).getMajorType().getPrecision();
 
-    return (TypeProtos.MajorType.newBuilder().setMinorType(returnValue.type.getMinorType()).setScale(scale).setPrecision(precision).setMode(mode).build());
+    /* Get the result's scale and precision. This is a function scope for Divide function, assert we have
+     * only two inputs
+     */
+    assert args.size() == 2;
+
+    DecimalScalePrecisionDivideFunction outputScalePrec =
+      new DecimalScalePrecisionDivideFunction(args.get(0).getMajorType().getPrecision(), args.get(0).getMajorType().getScale(),
+                                              args.get(1).getMajorType().getPrecision(), args.get(1).getMajorType().getScale());
+    return (TypeProtos.MajorType.newBuilder().setMinorType(DecimalUtility.getDecimalDataType(outputScalePrec.getOutputPrecision()))
+        .setScale(outputScalePrec.getOutputScale()).setPrecision(outputScalePrec.getOutputPrecision()).setMode(mode).build());
+  }
+  
+  @Override
+  public boolean checkPrecisionRange() {
+    return true;
   }
 }

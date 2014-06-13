@@ -34,6 +34,7 @@ import org.apache.drill.exec.rpc.user.QueryResultBatch;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.RemoteServiceSet;
 import org.apache.drill.exec.vector.ValueVector;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
@@ -208,22 +209,18 @@ public class TestDecimal extends PopUnitTestBase{
 
             String addOutput[] = {"-99999998877.700000000", "11.423456789", "123456789.100000000", "-0.119998000", "100000000112.423456789" , "-99999999879.907000000", "123456789123456801.300000000"};
             String subtractOutput[] = {"-100000001124.300000000", "10.823456789", "-123456788.900000000", "-0.120002000", "99999999889.823456789", "-100000000122.093000000", "123456789123456776.700000000"};
-            String multiplyOutput[] = {"-112330000001123.300000000000000000", "3.337037036700000000" , "12345678.900000000000000000", "-0.000000240000000000" , "11130000000125.040740615700000000" , "-12109300000121.093000000000000000", "1518518506218518504.700000000000000000" };
 
             Iterator<VectorWrapper<?>> itr = batchLoader.iterator();
 
             ValueVector.Accessor addAccessor = itr.next().getValueVector().getAccessor();
             ValueVector.Accessor subAccessor = itr.next().getValueVector().getAccessor();
-            ValueVector.Accessor mulAccessor = itr.next().getValueVector().getAccessor();
 
             for (int i = 0; i < addAccessor.getValueCount(); i++) {
                 assertEquals(addAccessor.getObject(i).toString(), addOutput[i]);
                 assertEquals(subAccessor.getObject(i).toString(), subtractOutput[i]);
-                assertEquals(mulAccessor.getObject(i).toString(), multiplyOutput[i]);
             }
             assertEquals(7, addAccessor.getValueCount());
             assertEquals(7, subAccessor.getValueCount());
-            assertEquals(7, mulAccessor.getValueCount());
 
             batchLoader.clear();
             for (QueryResultBatch result : results) {

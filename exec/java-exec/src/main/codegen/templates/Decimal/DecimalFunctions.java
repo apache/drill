@@ -379,6 +379,8 @@ public class ${type.name}Functions {
         @Param ${type.name}Holder right;
         @Workspace ByteBuf buffer;
         @Workspace int[] tempResult;
+        @Workspace int outputScale;
+        @Workspace int outputPrecision;
         @Output ${type.name}Holder result;
 
         public void setup(RecordBatch incoming) {
@@ -386,10 +388,20 @@ public class ${type.name}Functions {
             buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte[size]);
             buffer = new io.netty.buffer.SwappedByteBuf(buffer);
             tempResult = new int[${type.storage} * ${type.storage}];
+            outputPrecision = Integer.MIN_VALUE;
         }
 
         public void eval() {
 
+            if (outputPrecision == Integer.MIN_VALUE) {
+                org.apache.drill.common.util.DecimalScalePrecisionMulFunction resultScalePrec =
+                new org.apache.drill.common.util.DecimalScalePrecisionMulFunction((int) left.precision, (int) left.scale, (int) right.precision, (int) right.scale);
+                outputScale = resultScalePrec.getOutputScale();
+                outputPrecision = resultScalePrec.getOutputPrecision();
+            }
+            // Set the scale and precision
+            result.scale = outputScale;
+            result.precision = outputPrecision;
             result.buffer = buffer;
             result.start = 0;
 
@@ -474,10 +486,6 @@ public class ${type.name}Functions {
               result.setInteger(outputIndex--, 0);
             }
 
-            // Set the scale and precision
-            result.scale = left.scale + right.scale;
-            result.precision = result.maxPrecision;
-
             result.sign = (left.sign == right.sign) ? false : true;
         }
     }
@@ -489,17 +497,25 @@ public class ${type.name}Functions {
         @Param ${type.name}Holder right;
         @Output ${type.name}Holder result;
         @Workspace ByteBuf buffer;
+        @Workspace int outputScale;
+        @Workspace int outputPrecision;
 
         public void setup(RecordBatch incoming) {
             int size = (${type.storage} * (org.apache.drill.common.util.DecimalUtility.integerSize));
             buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte[size]);
             buffer = new io.netty.buffer.SwappedByteBuf(buffer);
+            outputPrecision = Integer.MIN_VALUE;
         }
 
         public void eval() {
-
-            result.scale = left.scale;
-            result.precision = left.precision;
+            if (outputPrecision == Integer.MIN_VALUE) {
+                org.apache.drill.common.util.DecimalScalePrecisionDivideFunction resultScalePrec =
+                new org.apache.drill.common.util.DecimalScalePrecisionDivideFunction((int) left.precision, (int) left.scale, (int) right.precision, (int) right.scale);
+                outputScale = resultScalePrec.getOutputScale();
+                outputPrecision = resultScalePrec.getOutputPrecision();
+            }
+            result.scale = outputScale;
+            result.precision = outputPrecision;
             result.buffer = buffer;
             result.start = 0;
 
@@ -524,17 +540,25 @@ public class ${type.name}Functions {
         @Param ${type.name}Holder right;
         @Output ${type.name}Holder result;
         @Workspace ByteBuf buffer;
+        @Workspace int outputScale;
+        @Workspace int outputPrecision;
 
         public void setup(RecordBatch incoming) {
             int size = (${type.storage} * (org.apache.drill.common.util.DecimalUtility.integerSize));
             buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte[size]);
             buffer = new io.netty.buffer.SwappedByteBuf(buffer);
+            outputPrecision = Integer.MIN_VALUE;
         }
 
         public void eval() {
-
-            result.scale = left.scale;
-            result.precision = left.precision;
+            if (outputPrecision == Integer.MIN_VALUE) {
+                org.apache.drill.common.util.DecimalScalePrecisionDivideFunction resultScalePrec =
+                new org.apache.drill.common.util.DecimalScalePrecisionDivideFunction((int) left.precision, (int) left.scale, (int) right.precision, (int) right.scale);
+                outputScale = resultScalePrec.getOutputScale();
+                outputPrecision = resultScalePrec.getOutputPrecision();
+            }
+            result.scale = outputScale;
+            result.precision = outputPrecision;
             result.buffer = buffer;
             result.start = 0;
 
@@ -542,7 +566,7 @@ public class ${type.name}Functions {
             java.math.BigDecimal denominator = org.apache.drill.common.util.DecimalUtility.getBigDecimalFromByteBuf(right.buffer, right.start, right.nDecimalDigits, right.scale, true);
 
             java.math.BigDecimal output = numerator.remainder(denominator);
-            output.setScale(left.scale, java.math.BigDecimal.ROUND_DOWN);
+            output.setScale(result.scale, java.math.BigDecimal.ROUND_DOWN);
 
             // Initialize the result buffer
             for (int i = 0; i < ${type.storage}; i++) {
@@ -1204,15 +1228,24 @@ public class ${type.name}Functions {
 
         @Param ${type.name}Holder left;
         @Param ${type.name}Holder right;
+        @Workspace int outputScale;
+        @Workspace int outputPrecision;
         @Output ${type.name}Holder result;
 
-        public void setup(RecordBatch incoming) {}
+        public void setup(RecordBatch incoming) {
+            outputPrecision = Integer.MIN_VALUE;
+        }
 
         public void eval() {
-
+            if (outputPrecision == Integer.MIN_VALUE) {
+                org.apache.drill.common.util.DecimalScalePrecisionMulFunction resultScalePrec =
+                new org.apache.drill.common.util.DecimalScalePrecisionMulFunction((int) left.precision, (int) left.scale, (int) right.precision, (int) right.scale);
+                outputScale = resultScalePrec.getOutputScale();
+                outputPrecision = resultScalePrec.getOutputPrecision();
+            }
             result.value = left.value * right.value;
-            result.precision = result.maxPrecision;
-            result.scale = left.scale + right.scale;
+            result.precision = outputPrecision;
+            result.scale = outputScale;
         }
     }
 
@@ -1242,12 +1275,23 @@ public class ${type.name}Functions {
         @Param ${type.name}Holder left;
         @Param ${type.name}Holder right;
         @Output ${type.name}Holder result;
+        @Workspace int outputScale;
+        @Workspace int outputPrecision;
 
-        public void setup(RecordBatch incoming) {}
+        public void setup(RecordBatch incoming) {
+            outputPrecision = Integer.MIN_VALUE;
+        }
 
         public void eval() {
 
-            result.scale = left.scale;
+            if (outputPrecision == Integer.MIN_VALUE) {
+                org.apache.drill.common.util.DecimalScalePrecisionDivideFunction resultScalePrec =
+                new org.apache.drill.common.util.DecimalScalePrecisionDivideFunction((int) left.precision, (int) left.scale, (int) right.precision, (int) right.scale);
+                outputScale = resultScalePrec.getOutputScale();
+                outputPrecision = resultScalePrec.getOutputPrecision();
+            }
+            result.scale = outputScale;
+            result.precision = outputPrecision;
 
             java.math.BigDecimal numerator = new java.math.BigDecimal(java.math.BigInteger.valueOf(left.value), left.scale);
             java.math.BigDecimal denominator = new java.math.BigDecimal(java.math.BigInteger.valueOf(right.value), right.scale);
@@ -1263,21 +1307,30 @@ public class ${type.name}Functions {
 
         @Param ${type.name}Holder left;
         @Param ${type.name}Holder right;
+        @Workspace int outputScale;
+        @Workspace int outputPrecision;
         @Output ${type.name}Holder result;
 
-        public void setup(RecordBatch incoming) {}
+        public void setup(RecordBatch incoming) {
+            outputPrecision = Integer.MIN_VALUE;
+        }
 
         public void eval() {
-
+            if (outputPrecision == Integer.MIN_VALUE) {
+                org.apache.drill.common.util.DecimalScalePrecisionDivideFunction resultScalePrec =
+                new org.apache.drill.common.util.DecimalScalePrecisionDivideFunction((int) left.precision, (int) left.scale, (int) right.precision, (int) right.scale);
+                outputScale = resultScalePrec.getOutputScale();
+                outputPrecision = resultScalePrec.getOutputPrecision();
+            }
+            result.precision = outputPrecision;
+            result.scale = outputScale;
             java.math.BigDecimal numerator = new java.math.BigDecimal(java.math.BigInteger.valueOf(left.value), left.scale);
             java.math.BigDecimal denominator = new java.math.BigDecimal(java.math.BigInteger.valueOf(right.value), right.scale);
 
             java.math.BigDecimal output = numerator.remainder(denominator);
-            output.setScale(left.scale, java.math.BigDecimal.ROUND_DOWN);
+            output.setScale(result.scale, java.math.BigDecimal.ROUND_DOWN);
 
             result.value = output.unscaledValue().${type.storage}Value();
-            result.precision = result.maxPrecision;
-            result.scale = left.scale;
         }
     }
 

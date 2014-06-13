@@ -22,7 +22,7 @@
           "ref" : "DE",
           "expr" : " (cast(B as decimal38sparse(38, 9))) "
         },
-        {"ref" : "DE1", "expr": " cast(A as decimal38sparse(38, 9))" }
+        {"ref" : "DE1", "expr": " cast(A as decimal18(15, 6))" }
         ],
 
         "child" : 1
@@ -34,8 +34,7 @@
           "ref" : "DEC38ADD",
           "expr" : " (DE + DE1)  "
         },
-        {"ref" : "DEC38SUB" , "expr" : " (DE - DE1) " },
-        {"ref" : "DEC38MUL" , "expr" : " (DE * DE1) " }
+        {"ref" : "DEC38SUB" , "expr" : " (DE - DE1) " }
         ],
 
         "child" : 2
@@ -47,8 +46,7 @@
           "ref" : "DEC38ADD",
           "expr" : " cast(DEC38ADD as varchar(100))  "
         },
-        {"ref" : "DEC38SUB" , "expr" : " cast(DEC38SUB as varchar(100)) " },
-        {"ref" : "DEC38MUL" , "expr" : " cast(DEC38MUL as varchar(100)) " }
+        {"ref" : "DEC38SUB" , "expr" : " cast(DEC38SUB as varchar(100)) " }
         ],
 
         "child" : 3

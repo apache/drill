@@ -28,6 +28,7 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
+import org.apache.drill.common.util.DecimalUtility;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 
@@ -794,13 +795,13 @@ public class TypeCastRules {
     // number of arguments that could implicitly casts using precedence map or didn't require casting at all
     int nCasts = 0;
 
-    // Check if the function holder requires the input type and output type to match
-    if (holder.matchInputOutputType() == true) {
-      MinorType outputType = holder.getReturnType(call.args).getMinorType();
-      for (int i = 0; i < holder.getParamCount(); i++) {
-        if (call.args.get(i).getMajorType().getMinorType() != outputType) {
-          return -1;
-        }
+    /*
+     * If we are determining function holder for decimal data type, we need to make sure the output type of
+     * the function can fit the precision that we need based on the input types.
+     */
+    if (holder.checkPrecisionRange() == true) {
+      if (DecimalUtility.getMaxPrecision(holder.getReturnType().getMinorType()) < holder.getReturnType(call.args).getPrecision()) {
+        return -1;
       }
     }
 

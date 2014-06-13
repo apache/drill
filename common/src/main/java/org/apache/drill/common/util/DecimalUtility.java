@@ -19,6 +19,7 @@ package org.apache.drill.common.util;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import org.apache.drill.common.types.TypeProtos;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -646,5 +647,42 @@ public class DecimalUtility {
     }
   }
 
+  /*
+   * Function returns the Minor decimal type given the precision
+   */
+  public static TypeProtos.MinorType getDecimalDataType(int precision) {
+    if (precision <= 9) {
+      return TypeProtos.MinorType.DECIMAL9;
+    } else if (precision <= 18) {
+      return TypeProtos.MinorType.DECIMAL18;
+    } else if (precision <= 28) {
+      return TypeProtos.MinorType.DECIMAL28SPARSE;
+    } else {
+      return TypeProtos.MinorType.DECIMAL38SPARSE;
+    }
+  }
+
+  public static int getMaxPrecision(TypeProtos.MinorType decimalType) {
+    if (decimalType == TypeProtos.MinorType.DECIMAL9) {
+      return 9;
+    } else if (decimalType == TypeProtos.MinorType.DECIMAL18) {
+      return 18;
+    } else if (decimalType == TypeProtos.MinorType.DECIMAL28SPARSE) {
+      return 28;
+    } else if (decimalType == TypeProtos.MinorType.DECIMAL38SPARSE) {
+      return 38;
+    }
+    return 0;
+  }
+
+
+  /*
+   * Given a precision it provides the max precision of that decimal data type;
+   * For eg: given the precision 12, we would use DECIMAL18 to store the data
+   * which has a max precision range of 18 digits
+   */
+  public static int getPrecisionRange(int precision) {
+    return getMaxPrecision(getDecimalDataType(precision));
+  }
 }
 

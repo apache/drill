@@ -24,6 +24,8 @@ import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 
+import org.apache.drill.common.util.DecimalScalePrecisionMulFunction;
+import org.apache.drill.common.util.DecimalUtility;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 
@@ -40,19 +42,32 @@ public class DrillDecimalSumScaleFuncHolder extends DrillSimpleFuncHolder{
     public MajorType getReturnType(List<LogicalExpression> args) {
 
         TypeProtos.DataMode mode = returnValue.type.getMode();
-        int scale = 0;
-        int precision = 0;
 
         if (nullHandling == NullHandling.NULL_IF_NULL) {
             // if any one of the input types is nullable, then return nullable return type
             for (LogicalExpression e : args) {
                 if (e.getMajorType().getMode() == TypeProtos.DataMode.OPTIONAL) {
                     mode = TypeProtos.DataMode.OPTIONAL;
+                    break;
                 }
-                scale += e.getMajorType().getScale();
-                precision = Math.max(precision, e.getMajorType().getPrecision());
             }
         }
-        return (TypeProtos.MajorType.newBuilder().setMinorType(returnValue.type.getMinorType()).setScale(scale).setPrecision(precision).setMode(mode).build());
+
+    /* Get the result's scale and precision. This is a function scope for Multiply function, assert we have
+     * only two inputs
+     */
+    assert args.size() == 2;
+
+    DecimalScalePrecisionMulFunction outputScalePrec =
+      new DecimalScalePrecisionMulFunction(args.get(0).getMajorType().getPrecision(), args.get(0).getMajorType().getScale(),
+                                              args.get(1).getMajorType().getPrecision(), args.get(1).getMajorType().getScale());
+        return (TypeProtos.MajorType.newBuilder().setMinorType(DecimalUtility.getDecimalDataType(outputScalePrec.getOutputPrecision()))
+            .setScale(outputScalePrec.getOutputScale()).setPrecision(outputScalePrec.getOutputPrecision()).setMode(mode).build());
     }
+
+    @Override
+    public boolean checkPrecisionRange() {
+        return true;
+    }
+
 }

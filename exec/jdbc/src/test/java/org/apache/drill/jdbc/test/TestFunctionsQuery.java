@@ -523,4 +523,19 @@ public class TestFunctionsQuery {
         .returns(
             "DECIMAL_DOUBLE_CAST=1.0001\n");
   }
+
+  @Test
+  public void testCastDecimalDivide() throws Exception {
+    String query = "select  (cast('9' as decimal(9, 1)) / cast('2' as decimal(4, 1))) as DEC9_DIV, " +
+        "cast('123456789.123456789' as decimal(18, 9)) * cast('123456789.123456789' as decimal(18, 9)) as DEC18_MUL " +
+        "from cp.`employee.json` where employee_id = 1";
+
+    JdbcAssert.withNoDefaultSchema()
+        .sql(query)
+        .returns(
+            "DEC9_DIV=4.5000000; " +
+            "DEC18_MUL=15241578780673678.515622620750190521\n");
+  }
+
+
 }
