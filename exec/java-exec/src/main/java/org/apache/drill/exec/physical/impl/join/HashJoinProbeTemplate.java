@@ -27,6 +27,7 @@ import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 import org.apache.drill.exec.record.VectorContainer;
+import org.apache.drill.exec.record.AbstractRecordBatch;
 
 import org.eigenbase.rel.JoinRelType;
 
@@ -40,6 +41,8 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
 
   // Join type, INNER, LEFT, RIGHT or OUTER
   private JoinRelType joinType;
+  
+  private HashJoinBatch outgoingJoinBatch = null;
 
   /* Helper class
    * Maintains linked list of build side records with the same key
@@ -74,7 +77,7 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
 
   @Override
   public void setupHashJoinProbe(FragmentContext context, VectorContainer buildBatch, RecordBatch probeBatch,
-                                 int probeRecordCount, RecordBatch outgoing, HashTable hashTable,
+                                 int probeRecordCount, HashJoinBatch outgoing, HashTable hashTable,
                                  HashJoinHelper hjHelper, JoinRelType joinRelType) {
 
     this.probeBatch = probeBatch;
@@ -82,6 +85,7 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
     this.recordsToProcess = probeRecordCount;
     this.hashTable = hashTable;
     this.hjHelper = hjHelper;
+    this.outgoingJoinBatch = outgoing;
 
     doSetup(context, buildBatch, probeBatch, outgoing);
   }
@@ -104,7 +108,7 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
           wrapper.getValueVector().clear();
         }
 
-        IterOutcome leftUpstream = probeBatch.next();
+        IterOutcome leftUpstream = outgoingJoinBatch.next(HashJoinHelper.LEFT_INPUT, probeBatch);
 
         switch (leftUpstream) {
           case NONE:

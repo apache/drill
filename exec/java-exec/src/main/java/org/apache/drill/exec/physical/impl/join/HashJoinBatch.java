@@ -63,9 +63,6 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
   public static final long ALLOCATOR_INITIAL_RESERVATION = 1*1024*1024;
   public static final long ALLOCATOR_MAX_RESERVATION = 20L*1000*1000*1000;
 
-    private static final int LEFT_INPUT = 0;
-    private static final int RIGHT_INPUT = 1;
-
     // Probe side record batch
     private final RecordBatch left;
 
@@ -159,7 +156,7 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
                  * as well, for the materialization to be successful. This batch will not be used
                  * till we complete the build phase.
                  */
-                leftUpstream = next(LEFT_INPUT, left);
+                leftUpstream = next(HashJoinHelper.LEFT_INPUT, left);
 
                 // Build the hash table, using the build side record batches.
                 executeBuildPhase();
@@ -207,12 +204,12 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
                     for (VectorWrapper<?> wrapper : left) {
                       wrapper.getValueVector().clear();
                     }
-                    leftUpstream = next(LEFT_INPUT, left);
+                    leftUpstream = next(HashJoinHelper.LEFT_INPUT, left);
                     while (leftUpstream == IterOutcome.OK_NEW_SCHEMA || leftUpstream == IterOutcome.OK) {
                       for (VectorWrapper<?> wrapper : left) {
                         wrapper.getValueVector().clear();
                       }
-                      leftUpstream = next(LEFT_INPUT, left);
+                      leftUpstream = next(HashJoinHelper.LEFT_INPUT, left);
                     }
                 }
             }
@@ -263,7 +260,7 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
     public void executeBuildPhase() throws SchemaChangeException, ClassTransformationException, IOException {
 
         //Setup the underlying hash table
-        IterOutcome rightUpstream = next(RIGHT_INPUT, right);
+        IterOutcome rightUpstream = next(HashJoinHelper.RIGHT_INPUT, right);
 
         boolean moreData = true;
 
@@ -330,7 +327,7 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
                     break;
             }
             // Get the next record batch
-            rightUpstream = next(RIGHT_INPUT, right);
+            rightUpstream = next(HashJoinHelper.RIGHT_INPUT, right);
         }
     }
 

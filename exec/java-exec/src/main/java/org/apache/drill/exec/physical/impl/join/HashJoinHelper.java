@@ -69,6 +69,9 @@ public class HashJoinHelper {
   // bits to shift while obtaining batch index from SV4
   static final int SHIFT_SIZE = 16;
 
+  public static final int LEFT_INPUT = 0;
+  public static final int RIGHT_INPUT = 1;
+  
   public HashJoinHelper(FragmentContext context, BufferAllocator allocator) {
     this.context = context;
     this.allocator = allocator;

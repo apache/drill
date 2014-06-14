@@ -42,7 +42,7 @@ public interface HashAggregator {
 	  }
   
   public abstract void setup(HashAggregate hashAggrConfig, FragmentContext context, BufferAllocator allocator, RecordBatch incoming,
-                             RecordBatch outgoing, LogicalExpression[] valueExprs, 
+                             HashAggBatch outgoing, LogicalExpression[] valueExprs, 
                              List<TypedFieldId> valueFieldIds,
                              TypedFieldId[] keyFieldIds,
                              VectorAllocator[] keyAllocators, VectorAllocator[] valueAllocators)

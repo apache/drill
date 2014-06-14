@@ -32,7 +32,7 @@ public interface StreamingAggregator {
 	    RETURN_OUTCOME, CLEANUP_AND_RETURN, UPDATE_AGGREGATOR;
 	  }
   
-  public abstract void setup(FragmentContext context, RecordBatch incoming, RecordBatch outgoing,
+  public abstract void setup(FragmentContext context, RecordBatch incoming, StreamingAggBatch outgoing,
       VectorAllocator[] allocators) throws SchemaChangeException;
 
   public abstract IterOutcome getOutcome();

@@ -77,7 +77,7 @@ public abstract class HashAggTemplate implements HashAggregator {
   private int lastBatchOutputCount = 0;
   private RecordBatch incoming;
   private BatchSchema schema;
-  private RecordBatch outgoing;
+  private HashAggBatch outgoing;
   private VectorAllocator[] keyAllocators;
   private VectorAllocator[] valueAllocators;
   private FragmentContext context;
@@ -166,7 +166,7 @@ public abstract class HashAggTemplate implements HashAggregator {
 
 
   @Override
-  public void setup(HashAggregate hashAggrConfig, FragmentContext context, BufferAllocator allocator, RecordBatch incoming, RecordBatch outgoing,
+  public void setup(HashAggregate hashAggrConfig, FragmentContext context, BufferAllocator allocator, RecordBatch incoming, HashAggBatch outgoing,
                     LogicalExpression[] valueExprs,
                     List<TypedFieldId> valueFieldIds,
                     TypedFieldId[] groupByOutFieldIds,
@@ -245,7 +245,7 @@ public abstract class HashAggTemplate implements HashAggregator {
             for (VectorWrapper<?> v : incoming) {
               v.getValueVector().clear();
             }
-            IterOutcome out = incoming.next();
+            IterOutcome out = outgoing.next(0, incoming);
             if(EXTRA_DEBUG_1) logger.debug("Received IterOutcome of {}", out);
             switch(out){
             case NOT_YET:

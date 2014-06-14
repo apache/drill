@@ -43,14 +43,14 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
   private int outputCount = 0;
   private RecordBatch incoming;
   private BatchSchema schema;
-  private RecordBatch outgoing;
+  private StreamingAggBatch outgoing;
   private VectorAllocator[] allocators;
   private FragmentContext context;
   private InternalBatch remainderBatch;
 
 
   @Override
-  public void setup(FragmentContext context, RecordBatch incoming, RecordBatch outgoing, VectorAllocator[] allocators) throws SchemaChangeException {
+  public void setup(FragmentContext context, RecordBatch incoming, StreamingAggBatch outgoing, VectorAllocator[] allocators) throws SchemaChangeException {
     this.allocators = allocators;
     this.context = context;
     this.incoming = incoming;
@@ -159,7 +159,7 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
         try{
           while(true){
             previous = new InternalBatch(incoming);
-            IterOutcome out = incoming.next();
+            IterOutcome out = outgoing.next(0, incoming);
             if(EXTRA_DEBUG) logger.debug("Received IterOutcome of {}", out);
             switch(out){
             case NONE:
