@@ -29,8 +29,7 @@ public class PlanningSet implements Iterable<Wrapper>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PlanningSet.class);
   
   private Map<Fragment, Wrapper> fragmentMap = Maps.newHashMap();
-  private int majorFragmentIdIndex = 0;
-  
+
   PlanningSet(){
   }
 
@@ -45,7 +44,8 @@ public class PlanningSet implements Iterable<Wrapper>{
   Wrapper get(Fragment node){
     Wrapper wrapper = fragmentMap.get(node);
     if(wrapper == null){
-      wrapper = new Wrapper(node, majorFragmentIdIndex++);
+      int majorFragmentId = node.getRoot().getOperatorId() == 0 ? 0 : node.getSendingExchange().getChild().getOperatorId() >> 16;
+      wrapper = new Wrapper(node, majorFragmentId);
       fragmentMap.put(node,  wrapper);
     }
     return wrapper;
