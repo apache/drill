@@ -61,6 +61,7 @@ public @interface FunctionTemplate {
     DECIMAL_CAST,
     DECIMAL_DIV_SCALE,
     DECIMAL_SET_SCALE,
-    DECIMAL_ZERO_SCALE;
+    DECIMAL_ZERO_SCALE,
+    SC_BOOLEAN_OPERATOR
   }
 }

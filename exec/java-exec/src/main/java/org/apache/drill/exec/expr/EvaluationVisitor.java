@@ -55,6 +55,7 @@ import org.apache.drill.exec.compile.sig.ConstantExpressionIdentifier;
 import org.apache.drill.exec.expr.ClassGenerator.BlockType;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
+import org.apache.drill.exec.expr.fn.DrillSCBooleanOPHolder;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.expr.fn.HiveFuncHolder;
 import org.apache.drill.exec.physical.impl.filter.ReturnValueExpression;
@@ -104,6 +105,15 @@ public class EvaluationVisitor {
 
       if (holderExpr instanceof DrillFuncHolderExpr) {
         DrillFuncHolder holder = ((DrillFuncHolderExpr) holderExpr).getHolder();
+        
+        if (holder instanceof DrillSCBooleanOPHolder && holderExpr.getName().equals("booleanAnd")) {
+          return visitBooleanAnd(holderExpr, generator);
+        }
+
+        if (holder instanceof DrillSCBooleanOPHolder && holderExpr.getName().equals("booleanOr")) {
+          return visitBooleanOr(holderExpr, generator);
+        }
+
         JVar[] workspaceVars = holder.renderStart(generator, null);
 
         if (holder.isNested())
@@ -592,6 +602,132 @@ public class EvaluationVisitor {
       FunctionCall fc = new FunctionCall(convertFunctionName, newArgs, e.getPosition());
       return fc.accept(this, value);
     }
+    
+    private HoldingContainer visitBooleanAnd(FunctionHolderExpression holderExpr,
+        ClassGenerator<?> generator) {
+      
+      HoldingContainer out = generator.declare(holderExpr.getMajorType());
+      
+      JLabel label = generator.getEvalBlockLabel("AndOP");
+      JBlock eval = generator.getEvalBlock().block();  // enter into nested block
+      generator.nestEvalBlock(eval);
+
+      HoldingContainer arg = null;
+      
+      JExpression e = null;
+      
+      //  value of boolean "and" when one side is null
+      //    p       q     p and q
+      //    true    null     null
+      //    false   null     false
+      //    null    true     null
+      //    null    false    false
+      //    null    null     null
+      for (int i = 0; i < holderExpr.args.size(); i++) {
+        arg = holderExpr.args.get(i).accept(this, generator);
+        
+        JBlock earlyExit = null;
+        if (arg.isOptional()) {
+          earlyExit = eval._if(arg.getIsSet().eq(JExpr.lit(1)).cand(arg.getValue().ne(JExpr.lit(1))))._then();          
+          if(e == null){
+            e = arg.getIsSet();
+          }else{
+            e = e.mul(arg.getIsSet());
+          }            
+        } else {
+          earlyExit = eval._if(arg.getValue().ne(JExpr.lit(1)))._then();               
+        }
+        
+        if (out.isOptional()) {
+          earlyExit.assign(out.getIsSet(), JExpr.lit(1));
+        } 
+        
+        earlyExit.assign(out.getValue(),  JExpr.lit(0));             
+        earlyExit._break(label);            
+      }
+      
+      if (out.isOptional()) {
+        assert (e != null);
+        
+        JConditional notSetJC = eval._if(e.eq(JExpr.lit(0)));
+        notSetJC._then().assign(out.getIsSet(), JExpr.lit(0));
+        
+        JBlock setBlock = notSetJC._else().block();
+        setBlock.assign(out.getIsSet(), JExpr.lit(1));
+        setBlock.assign(out.getValue(), JExpr.lit(1));
+      } else {
+        assert (e == null);            
+        eval.assign(out.getValue(), JExpr.lit(1)) ;
+      }
+      
+      generator.unNestEvalBlock();     // exit from nested block 
+      
+      return out;
+    }
+    
+    private HoldingContainer visitBooleanOr(FunctionHolderExpression holderExpr,
+        ClassGenerator<?> generator) {
+      
+      HoldingContainer out = generator.declare(holderExpr.getMajorType());
+      
+      JLabel label = generator.getEvalBlockLabel("OrOP");
+      JBlock eval = generator.getEvalBlock().block();
+      generator.nestEvalBlock(eval);   // enter into nested block. 
+
+      HoldingContainer arg = null;
+      
+      JExpression e = null;
+
+      //  value of boolean "or" when one side is null
+      //    p       q       p and q
+      //    true    null     true
+      //    false   null     null
+      //    null    true     true
+      //    null    false    null
+      //    null    null     null
+      
+      for (int i = 0; i < holderExpr.args.size(); i++) {
+        arg = holderExpr.args.get(i).accept(this, generator);
+        
+        JBlock earlyExit = null;
+        if (arg.isOptional()) {
+          earlyExit = eval._if(arg.getIsSet().eq(JExpr.lit(1)).cand(arg.getValue().eq(JExpr.lit(1))))._then();          
+          if(e == null){
+            e = arg.getIsSet();
+          }else{
+            e = e.mul(arg.getIsSet());
+          }            
+        } else {
+          earlyExit = eval._if(arg.getValue().eq(JExpr.lit(1)))._then();               
+        }
+        
+        if (out.isOptional()) {
+          earlyExit.assign(out.getIsSet(), JExpr.lit(1));
+        } 
+        
+        earlyExit.assign(out.getValue(),  JExpr.lit(1));             
+        earlyExit._break(label);            
+      }
+      
+      if (out.isOptional()) {
+        assert (e != null);
+        
+        JConditional notSetJC = eval._if(e.eq(JExpr.lit(0)));
+        notSetJC._then().assign(out.getIsSet(), JExpr.lit(0));
+        
+        JBlock setBlock = notSetJC._else().block();
+        setBlock.assign(out.getIsSet(), JExpr.lit(1));
+        setBlock.assign(out.getValue(), JExpr.lit(0));
+      } else {
+        assert (e == null);            
+        eval.assign(out.getValue(), JExpr.lit(0)) ;
+      }
+      
+      generator.unNestEvalBlock();   // exit from nested block. 
+      
+      return out;
+    }
+    
   }
 
   private class ConstantFilter extends EvalVisitor {

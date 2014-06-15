@@ -49,6 +49,7 @@ import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JExpression;
 import com.sun.codemodel.JFieldRef;
 import com.sun.codemodel.JInvocation;
+import com.sun.codemodel.JLabel;
 import com.sun.codemodel.JMethod;
 import com.sun.codemodel.JMod;
 import com.sun.codemodel.JType;
@@ -76,6 +77,7 @@ public class ClassGenerator<T>{
   private final JCodeModel model;
 
   private int index = 0;
+  private int labelIndex = 0;
   private MappingSet mappings;
 
   public static MappingSet getDefaultMapping(){
@@ -149,6 +151,20 @@ public class ClassGenerator<T>{
     return getBlock(getCurrentMapping().getMethodName(BlockType.CLEANUP));
   }
 
+  public void nestEvalBlock(JBlock block) {
+    String methodName = getCurrentMapping().getMethodName(BlockType.EVAL);
+    this.blocks[sig.get(methodName)].addLast(block);
+  }
+  
+  public void unNestEvalBlock() {
+    String methodName = getCurrentMapping().getMethodName(BlockType.EVAL);
+    this.blocks[sig.get(methodName)].removeLast();
+  }
+  
+  public JLabel getEvalBlockLabel (String prefix) {
+    return getEvalBlock().label(prefix + labelIndex ++);
+  }
+  
   public JVar declareVectorValueSetupAndMember(String batchName, TypedFieldId fieldId){
     return declareVectorValueSetupAndMember( DirectExpression.direct(batchName), fieldId);
   }

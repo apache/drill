@@ -235,6 +235,12 @@ public class FunctionConverter {
                                            template.isBinaryCommutative(),
                                            template.isRandom(), registeredNames, 
                                            ps, outputField, works, methods, imports);
+      case SC_BOOLEAN_OPERATOR:
+        return new DrillSCBooleanOPHolder(template.scope(), template.nulls(), 
+            template.isBinaryCommutative(),
+            template.isRandom(), registeredNames, 
+            ps, outputField, works, methods, imports);
+        
       case DECIMAL_MAX_SCALE:
           return new DrillDecimalMaxScaleFuncHolder(template.scope(), template.nulls(), template.isBinaryCommutative(),
                   template.isRandom(), registeredNames, ps, outputField, works, methods, imports);
