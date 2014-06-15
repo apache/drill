@@ -27,6 +27,7 @@ import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.config.HashAggregate;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
@@ -41,7 +42,8 @@ public interface HashAggregator {
     RETURN_OUTCOME, CLEANUP_AND_RETURN, UPDATE_AGGREGATOR
 	  }
   
-  public abstract void setup(HashAggregate hashAggrConfig, FragmentContext context, BufferAllocator allocator, RecordBatch incoming,
+  public abstract void setup(HashAggregate hashAggrConfig, FragmentContext context, 
+                             OperatorStats stats, BufferAllocator allocator, RecordBatch incoming,
                              HashAggBatch outgoing, LogicalExpression[] valueExprs, 
                              List<TypedFieldId> valueFieldIds,
                              TypedFieldId[] keyFieldIds,

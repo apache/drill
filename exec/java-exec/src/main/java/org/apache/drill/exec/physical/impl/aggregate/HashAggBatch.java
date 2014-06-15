@@ -220,7 +220,8 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
     container.buildSchema(SelectionVectorMode.NONE);
     HashAggregator agg = context.getImplementationClass(top);
 
-    agg.setup(popConfig, context, oContext.getAllocator(), incoming, this,
+    agg.setup(popConfig, context, this.stats,
+              oContext.getAllocator(), incoming, this,
               aggrExprs,
               cgInner.getWorkspaceTypes(),
               groupByOutFieldIds,

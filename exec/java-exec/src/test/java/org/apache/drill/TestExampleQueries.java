@@ -202,5 +202,5 @@ public class TestExampleQueries extends BaseTestQuery{
     test("select r_name from cp.`tpch/region.parquet` order by r_name, r_regionkey");  
     test("select cast(r_name as varchar(20)) from cp.`tpch/region.parquet` order by r_name");
   }
-  
+
 }

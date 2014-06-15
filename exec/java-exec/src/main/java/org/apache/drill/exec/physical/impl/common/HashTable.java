@@ -52,6 +52,8 @@ public interface HashTable {
   
   public int containsKey(int incomingRowIdx, boolean isProbe);
 
+  public void getStats(HashTableStats stats);
+
   public int size();
 
   public boolean isEmpty();

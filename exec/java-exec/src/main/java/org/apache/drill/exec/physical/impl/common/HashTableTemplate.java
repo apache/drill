@@ -88,6 +88,8 @@ public abstract class HashTableTemplate implements HashTable {
 
   private MaterializedField dummyIntField;
 
+  private int numResizing = 0;
+  
   // This class encapsulates the links, keys and values for up to BATCH_SIZE
   // *unique* records. Thus, suppose there are N incoming record batches, each
   // of size BATCH_SIZE..but they have M unique keys altogether, the number of
@@ -363,8 +365,19 @@ public abstract class HashTableTemplate implements HashTable {
     return startIndices.getAccessor().getValueCount();
   }
 
+  public int numResizing() { 
+    return numResizing;  
+  }
+
   public int size() {
     return numEntries;
+  }
+
+  public void getStats(HashTableStats stats) { 
+    assert stats != null; 
+    stats.numBuckets = numBuckets();
+    stats.numEntries = numEntries;
+    stats.numResizing = numResizing;
   }
 
   public boolean isEmpty() {
@@ -594,6 +607,8 @@ public abstract class HashTableTemplate implements HashTable {
         bh.dump(idx);
       }
     }
+
+    numResizing++;
   }
 
   /* 

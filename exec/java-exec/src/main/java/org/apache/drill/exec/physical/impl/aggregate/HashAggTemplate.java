@@ -19,7 +19,6 @@ package org.apache.drill.exec.physical.impl.aggregate;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import javax.inject.Named;
@@ -37,10 +36,13 @@ import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.holders.IntHolder;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.config.HashAggregate;
 import org.apache.drill.exec.physical.impl.common.ChainedHashTable;
 import org.apache.drill.exec.physical.impl.common.HashTable;
 import org.apache.drill.exec.physical.impl.common.HashTableConfig;
+import org.apache.drill.exec.physical.impl.common.HashTableMetrics;
+import org.apache.drill.exec.physical.impl.common.HashTableStats;
 import org.apache.drill.exec.physical.impl.common.HashTableTemplate.BatchHolder;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.MaterializedField;
@@ -94,6 +96,9 @@ public abstract class HashAggTemplate implements HashAggregator {
   private MaterializedField[] materializedValueFields;
   private boolean allFlushed = false;
   private boolean  buildComplete = false;
+
+  private OperatorStats stats = null;
+  private HashTableStats htStats = new HashTableStats();
 
   public class BatchHolder {
 
@@ -166,7 +171,9 @@ public abstract class HashAggTemplate implements HashAggregator {
 
 
   @Override
-  public void setup(HashAggregate hashAggrConfig, FragmentContext context, BufferAllocator allocator, RecordBatch incoming, HashAggBatch outgoing,
+  public void setup(HashAggregate hashAggrConfig, FragmentContext context, 
+                    OperatorStats stats,
+                    BufferAllocator allocator, RecordBatch incoming, HashAggBatch outgoing,
                     LogicalExpression[] valueExprs,
                     List<TypedFieldId> valueFieldIds,
                     TypedFieldId[] groupByOutFieldIds,
@@ -181,6 +188,7 @@ public abstract class HashAggTemplate implements HashAggregator {
     }
 
     this.context = context;
+    this.stats = stats;
     this.allocator = allocator;
     this.incoming = incoming;
     this.schema = incoming.getSchema();
@@ -276,6 +284,8 @@ public abstract class HashAggTemplate implements HashAggregator {
               
               buildComplete = true;
               
+              updateStats(htable);
+
               // output the first batch; remaining batches will be output 
               // in response to each next() call by a downstream operator
               
@@ -533,6 +543,13 @@ public abstract class HashAggTemplate implements HashAggregator {
     }
 
     return false;
+  }
+  
+  private void updateStats(HashTable htable) {
+    htable.getStats(htStats);
+    this.stats.addLongStat(HashTableMetrics.HTABLE_NUM_BUCKETS, htStats.numBuckets);
+    this.stats.addLongStat(HashTableMetrics.HTABLE_NUM_ENTRIES, htStats.numEntries);
+    this.stats.addLongStat(HashTableMetrics.HTABLE_NUM_RESIZING, htStats.numResizing);      
   }
 
   // Code-generated methods (implemented in HashAggBatch)

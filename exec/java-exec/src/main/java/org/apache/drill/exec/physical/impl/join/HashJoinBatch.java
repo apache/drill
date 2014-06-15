@@ -41,6 +41,8 @@ import org.apache.drill.exec.physical.config.HashJoinPOP;
 import org.apache.drill.exec.physical.impl.common.ChainedHashTable;
 import org.apache.drill.exec.physical.impl.common.HashTable;
 import org.apache.drill.exec.physical.impl.common.HashTableConfig;
+import org.apache.drill.exec.physical.impl.common.HashTableMetrics;
+import org.apache.drill.exec.physical.impl.common.HashTableStats;
 import org.apache.drill.exec.physical.impl.sort.RecordBatchData;
 import org.apache.drill.exec.physical.impl.svremover.RemovingRecordBatch;
 import org.apache.drill.exec.record.AbstractRecordBatch;
@@ -132,6 +134,8 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
     boolean firstOutputBatch = true;
 
     IterOutcome leftUpstream = IterOutcome.NONE;
+    
+    private HashTableStats htStats = new HashTableStats();
 
     @Override
     public int getRecordCount() {
@@ -161,10 +165,13 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
                 // Build the hash table, using the build side record batches.
                 executeBuildPhase();
 
+                // Update the hash table related stats for the operator
+                updateStats(this.hashTable);
+
                 // Create the run time generated code needed to probe and project
                 hashJoinProbe = setupHashJoinProbe();
             }
-
+                        
             // Store the number of records projected
             if (hashTable != null 
                 || joinType != JoinRelType.INNER) {
@@ -432,6 +439,13 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
         this.conditions = popConfig.getConditions();
     }
 
+    private void updateStats(HashTable htable) {
+      htable.getStats(htStats);
+      this.stats.addLongStat(HashTableMetrics.HTABLE_NUM_BUCKETS, htStats.numBuckets);
+      this.stats.addLongStat(HashTableMetrics.HTABLE_NUM_ENTRIES, htStats.numEntries);
+      this.stats.addLongStat(HashTableMetrics.HTABLE_NUM_RESIZING, htStats.numResizing);  
+    }
+    
     @Override
     public void killIncoming() {
         this.left.kill();
