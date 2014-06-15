@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.sql.Timestamp;
 import java.sql.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
@@ -119,6 +120,15 @@ public class HiveRecordReader implements RecordReader {
     JobConf job = new JobConf();
     if (partition != null) {
       properties = MetaStoreUtils.getPartitionMetadata(partition, table);
+
+      // SerDe expects properties from Table, but above call doesn't add Table properties.
+      // Include Table properties in final list in order to not to break SerDes that depend on
+      // Table properties. For example AvroSerDe gets the schema from properties (passed as second argument)
+      for (Map.Entry<String, String> entry : table.getParameters().entrySet()) {
+        if (entry.getKey() != null && entry.getKey() != null) {
+          properties.put(entry.getKey(), entry.getValue());
+        }
+      }
     } else {
       properties = MetaStoreUtils.getTableMetadata(table);
     }
