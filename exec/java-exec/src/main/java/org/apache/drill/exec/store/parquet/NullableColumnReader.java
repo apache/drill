@@ -63,7 +63,7 @@ abstract class NullableColumnReader<V extends ValueVector> extends ColumnReader<
       // are located and copied together, rather than copying individual values
 
       long runStart = pageReadStatus.readPosInBytes;
-      int runLength = 0;
+      int runLength;
       int currentDefinitionLevel = 0;
       int currentValueIndexInVector = (int) recordsReadInThisIteration;
       boolean lastValueWasNull = true;
@@ -73,6 +73,7 @@ abstract class NullableColumnReader<V extends ValueVector> extends ColumnReader<
         definitionLevelsRead = 0;
         lastValueWasNull = true;
         nullsFound = 0;
+        runLength = 0;
         if (currentValueIndexInVector == recordsToReadInThisPass
             || currentValueIndexInVector >= valueVec.getValueCapacity()) {
           break;

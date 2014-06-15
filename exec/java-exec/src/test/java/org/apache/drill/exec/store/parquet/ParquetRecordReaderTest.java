@@ -392,6 +392,17 @@ public class ParquetRecordReaderTest extends BaseTestQuery{
         "unused, no file is generated", 1, props, true);
   }
 
+  @Ignore
+  @Test
+  public void drill_958bugTest() throws Exception {
+    HashMap<String, FieldInfo> fields = new HashMap<>();
+    ParquetTestProperties props = new ParquetTestProperties(5, 300000, DEFAULT_BYTES_PER_PAGE, fields);
+    TestFileGenerator.populatePigTPCHCustomerFields(props);
+    String readEntries = "\"/tmp/store_sales\"";
+    testParquetFullEngineEventBased(false, false, "/parquet/parquet_scan_screen_read_entry_replace.json", readEntries,
+        "unused, no file is generated", 1, props, true);
+  }
+
   @Test
   public void testMultipleRowGroupsEvent() throws Exception {
     HashMap<String, FieldInfo> fields = new HashMap<>();
