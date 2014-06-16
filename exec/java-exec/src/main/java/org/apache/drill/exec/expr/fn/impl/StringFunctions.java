@@ -928,7 +928,7 @@ public class StringFunctions{
     public void eval() {
       out.buffer = in.buffer;
       out.start = in.start;
-      out.end = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.parseBinaryString(in.buffer, in.start, in.end);
+      out.end = org.apache.drill.common.util.DrillStringUtils.parseBinaryString(in.buffer, in.start, in.end);
       out.buffer.readerIndex(out.start);
       out.buffer.writerIndex(out.end);
     }

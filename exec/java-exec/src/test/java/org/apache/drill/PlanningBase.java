@@ -100,8 +100,7 @@ public class PlanningBase extends ExecTest{
     registry.init();
     final FunctionImplementationRegistry functionRegistry = new FunctionImplementationRegistry(config);
     final SchemaPlus root = Frameworks.createRootSchema(false);
-    registry.getSchemaFactory().registerSchemas(new UserSession(null, null, null).setSupportComplexTypes(true), root);
-
+    registry.getSchemaFactory().registerSchemas(UserSession.Builder.newBuilder().setSupportComplexTypes(true).build(), root);
 
 
     new NonStrictExpectations() {
@@ -113,7 +112,7 @@ public class PlanningBase extends ExecTest{
         context.getFunctionRegistry();
         result = functionRegistry;
         context.getSession();
-        result = new UserSession(null, null, null).setSupportComplexTypes(true);
+        result = UserSession.Builder.newBuilder().setSupportComplexTypes(true).build();
         context.getCurrentEndpoint();
         result = DrillbitEndpoint.getDefaultInstance();
         context.getActiveEndpoints();

@@ -24,7 +24,7 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
   @Test
   public void testFilterPushDownRowKeyEqual() throws Exception {
     setColumnWidths(new int[] {8, 38, 38});
-    runSQLVerifyCount("SELECT\n"
+    runHBaseSQLVerifyCount("SELECT\n"
         + "  *\n"
         + "FROM\n"
         + "  hbase.`[TABLE_NAME]` tableName\n"
@@ -36,7 +36,7 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
   @Test
   public void testFilterPushDownRowKeyGreaterThan() throws Exception {
     setColumnWidths(new int[] {8, 38, 38});
-    runSQLVerifyCount("SELECT\n"
+    runHBaseSQLVerifyCount("SELECT\n"
         + "  *\n"
         + "FROM\n"
         + "  hbase.`[TABLE_NAME]` tableName\n"
@@ -48,7 +48,7 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
   @Test
   public void testFilterPushDownRowKeyBetween() throws Exception {
     setColumnWidths(new int[] {8, 74, 38});
-    runSQLVerifyCount("SELECT\n"
+    runHBaseSQLVerifyCount("SELECT\n"
         + "  *\n"
         + "FROM\n"
         + "  hbase.`[TABLE_NAME]` tableName\n"
@@ -60,7 +60,7 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
   @Test
   public void testFilterPushDownMultiColumns() throws Exception {
     setColumnWidths(new int[] {8, 74, 38});
-    runSQLVerifyCount("SELECT\n"
+    runHBaseSQLVerifyCount("SELECT\n"
         + "  *\n"
         + "FROM\n"
         + "  hbase.`[TABLE_NAME]` t\n"
@@ -72,7 +72,7 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
   @Test
   public void testFilterPushDownConvertExpression() throws Exception {
     setColumnWidths(new int[] {8, 38, 38});
-    runSQLVerifyCount("SELECT\n"
+    runHBaseSQLVerifyCount("SELECT\n"
         + "  *\n"
         + "FROM\n"
         + "  hbase.`[TABLE_NAME]` tableName\n"
@@ -84,7 +84,7 @@ public class TestHBaseFilterPushDown extends BaseHBaseTest {
   @Test
   public void testFilterPushDownRowKeyLessThanOrEqualTo() throws Exception {
     setColumnWidths(new int[] {8, 74, 38});
-    runSQLVerifyCount("SELECT\n"
+    runHBaseSQLVerifyCount("SELECT\n"
         + "  *\n"
         + "FROM\n"
         + "  hbase.`[TABLE_NAME]` tableName\n"

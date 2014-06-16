@@ -20,9 +20,9 @@ package org.apache.drill.exec.planner.fragment;
 import java.util.Collection;
 import java.util.List;
 
-import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.PhysicalOperatorSetupException;
+import org.apache.drill.common.util.DrillStringUtils;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.FragmentSetupException;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
@@ -158,11 +158,11 @@ public class SimpleParallelizer {
             .build();
 
         if (isRootNode) {
-          logger.debug("Root fragment:\n {}", StringEscapeUtils.unescapeJava(fragment.toString()));
+          logger.debug("Root fragment:\n {}", DrillStringUtils.unescapeJava(fragment.toString()));
           rootFragment = fragment;
           rootOperator = root;
         } else {
-          logger.debug("Remote fragment:\n {}", StringEscapeUtils.unescapeJava(fragment.toString()));
+          logger.debug("Remote fragment:\n {}", DrillStringUtils.unescapeJava(fragment.toString()));
           fragments.add(fragment);
         }
       }

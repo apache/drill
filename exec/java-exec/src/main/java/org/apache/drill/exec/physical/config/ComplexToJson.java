@@ -27,12 +27,12 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
-@JsonTypeName("flatten")
-public class Flatten extends AbstractSingle {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Flatten.class);
+@JsonTypeName("complex-to-json")
+public class ComplexToJson extends AbstractSingle {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ComplexToJson.class);
 
   @JsonCreator
-  public Flatten(@JsonProperty("child") PhysicalOperator child) {
+  public ComplexToJson(@JsonProperty("child") PhysicalOperator child) {
     super(child);
   }
 
@@ -43,7 +43,7 @@ public class Flatten extends AbstractSingle {
 
   @Override
   protected PhysicalOperator getNewWithChild(PhysicalOperator child) {
-    return new Flatten(child);
+    return new ComplexToJson(child);
   }
 
   @Override
@@ -53,7 +53,7 @@ public class Flatten extends AbstractSingle {
 
   @Override
   public int getOperatorType() {
-    return CoreOperatorType.FLATTEN_VALUE;
+    return CoreOperatorType.COMPLEX_TO_JSON_VALUE;
   }
 
 }

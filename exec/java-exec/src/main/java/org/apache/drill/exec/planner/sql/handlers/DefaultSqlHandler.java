@@ -44,7 +44,7 @@ import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.explain.PrelSequencer;
 import org.apache.drill.exec.planner.physical.visitor.ExcessiveExchangeIdentifier;
 import org.apache.drill.exec.planner.physical.visitor.FinalColumnReorderer;
-import org.apache.drill.exec.planner.physical.visitor.FlattenPrelVisitor;
+import org.apache.drill.exec.planner.physical.visitor.ComplexToJsonPrelVisitor;
 import org.apache.drill.exec.planner.physical.visitor.JoinPrelRenameVisitor;
 import org.apache.drill.exec.planner.physical.visitor.RelUniqifier;
 import org.apache.drill.exec.planner.physical.visitor.SelectionVectorPrelVisitor;
@@ -182,8 +182,8 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
      * insert a project which which would convert
      */
     if (!context.getSession().isSupportComplexTypes()) {
-      logger.debug("Client does not support complex types, add Flatten operator.");
-      phyRelNode = FlattenPrelVisitor.addFlattenPrel(phyRelNode);
+      logger.debug("Client does not support complex types, add ComplexToJson operator.");
+      phyRelNode = ComplexToJsonPrelVisitor.addComplexToJsonPrel(phyRelNode);
     }
 
     /* 6.)

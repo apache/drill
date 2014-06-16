@@ -25,12 +25,16 @@ import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FieldReference;
+import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.expression.FunctionCallFactory;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.PathSegment.NameSegment;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.common.expression.ValueExpressions;
+import org.apache.drill.common.expression.fn.CastFunctions;
 import org.apache.drill.common.logical.data.NamedExpression;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.exception.SchemaChangeException;
@@ -98,9 +102,9 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
   protected void doWork() {
 //    VectorUtil.showVectorAccessibleContent(incoming, ",");
     int incomingRecordCount = incoming.getRecordCount();
-    
+
     doAlloc();
-    
+
     int outputRecords = projector.projectRecords(0, incomingRecordCount, 0);
     if (outputRecords < incomingRecordCount) {
       setValueCount(outputRecords);
@@ -114,8 +118,8 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
       }
       this.recordCount = outputRecords;
     }
-    // In case of complex writer expression, vectors would be added to batch run-time. 
-    // We have to re-build the schema. 
+    // In case of complex writer expression, vectors would be added to batch run-time.
+    // We have to re-build the schema.
     if (complexWriters != null) {
       container.buildSchema(SelectionVectorMode.NONE);
     }
@@ -138,17 +142,17 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
       }
       this.recordCount = remainingRecordCount;
     }
-    // In case of complex writer expression, vectors would be added to batch run-time. 
-    // We have to re-build the schema. 
+    // In case of complex writer expression, vectors would be added to batch run-time.
+    // We have to re-build the schema.
     if (complexWriters != null) {
       container.buildSchema(SelectionVectorMode.NONE);
-    }   
+    }
   }
 
   public void addComplexWriter(ComplexWriter writer) {
     complexWriters.add(writer);
   }
-  
+
   private boolean doAlloc() {
     //Allocate vv in the allocationVectors.
     for(ValueVector v : this.allocationVectors){
@@ -156,17 +160,17 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
       if (!v.allocateNewSafe())
         return false;
     }
-    
+
     //Allocate vv for complexWriters.
     if (complexWriters == null)
       return true;
-    
+
     for (ComplexWriter writer : complexWriters)
       writer.allocate();
-    
+
     return true;
   }
-  
+
   private void setValueCount(int count) {
     for(ValueVector v : allocationVectors){
       ValueVector.Mutator m = v.getMutator();
@@ -177,9 +181,9 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
       return;
 
     for (ComplexWriter writer : complexWriters)
-      writer.setValueCount(count);    
+      writer.setValueCount(count);
   }
-  
+
   /** hack to make ref and full work together... need to figure out if this is still necessary. **/
   private FieldReference getRef(NamedExpression e){
     FieldReference ref = e.getRef();
@@ -259,16 +263,16 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
           container.add(tp.getTo());
           transferFieldIds.add(vectorRead.getFieldId().getFieldIds()[0]);
 //          logger.debug("Added transfer.");
-        } else if (expr instanceof DrillFuncHolderExpr && 
-                  ((DrillFuncHolderExpr) expr).isComplexWriterFuncHolder())  {  
-          // Need to process ComplexWriter function evaluation. 
-          // Lazy initialization of the list of complex writers, if not done yet. 
+        } else if (expr instanceof DrillFuncHolderExpr &&
+                  ((DrillFuncHolderExpr) expr).isComplexWriterFuncHolder())  {
+          // Need to process ComplexWriter function evaluation.
+          // Lazy initialization of the list of complex writers, if not done yet.
           if (complexWriters == null)
             complexWriters = Lists.newArrayList();
-         
-          // The reference name will be passed to ComplexWriter, used as the name of the output vector from the writer. 
+
+          // The reference name will be passed to ComplexWriter, used as the name of the output vector from the writer.
           ((DrillComplexWriterFuncHolder) ((DrillFuncHolderExpr) expr).getHolder()).setReference(namedExpression.getRef());
-          cg.addExpr(expr);          
+          cg.addExpr(expr);
         } else{
           // need to do evaluation.
           ValueVector vector = TypeHelper.getNewVector(outputField, oContext.getAllocator());
@@ -303,10 +307,18 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
     List<NamedExpression> exprs = Lists.newArrayList();
     for (MaterializedField field : incoming.getSchema()) {
       if (Types.isComplex(field.getType())) {
-        exprs.add(new NamedExpression(
-            FunctionCallFactory.createConvert(ConvertExpression.CONVERT_TO, "JSON", field.getPath(), ExpressionPosition.UNKNOWN),
-            new FieldReference(field.getPath()))
-            );
+        LogicalExpression convertToJson = FunctionCallFactory.createConvert(ConvertExpression.CONVERT_TO, "JSON", field.getPath(), ExpressionPosition.UNKNOWN);
+        String castFuncName = CastFunctions.getCastFunc(MinorType.VARCHAR);
+        List<LogicalExpression> castArgs = Lists.newArrayList();
+        castArgs.add(convertToJson);  //input_expr
+        /*
+         * We are implicitly casting to VARCHAR so we don't have a max length,
+         * using an arbitrary value. We trim down the size of the stored bytes
+         * to the actual size so this size doesn't really matter.
+         */
+        castArgs.add(new ValueExpressions.LongExpression(65536, null)); //
+        FunctionCall castCall = new FunctionCall(castFuncName, castArgs, ExpressionPosition.UNKNOWN);
+        exprs.add(new NamedExpression(castCall, new FieldReference(field.getPath())));
       } else {
         exprs.add(new NamedExpression(field.getPath(), new FieldReference(field.getPath())));
       }

@@ -90,7 +90,9 @@ public abstract class BasicClient<T extends EnumLite, R extends RemoteConnection
   public abstract ProtobufLengthDecoder getDecoder(BufferAllocator allocator);
 
   public boolean isActive(){
-    return connection.getChannel().isActive() ;
+    return connection != null
+        && connection.getChannel() != null
+        && connection.getChannel().isActive() ;
   }
 
   protected abstract void validateHandshake(HANDSHAKE_RESPONSE validateHandshake) throws RpcException;

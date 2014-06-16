@@ -24,19 +24,19 @@ public class HBaseRecordReaderTest extends BaseHBaseTest {
   @Test
   public void testLocalDistributed() throws Exception {
     String planName = "/hbase/hbase_scan_screen_physical.json";
-    runPhysicalVerifyCount(planName, HBaseTestsSuite.TEST_TABLE_1, 6);
+    runHBasePhysicalVerifyCount(planName, HBaseTestsSuite.TEST_TABLE_1, 6);
   }
 
   @Test
   public void testLocalDistributedColumnSelect() throws Exception {
     String planName = "/hbase/hbase_scan_screen_physical_column_select.json";
-    runPhysicalVerifyCount(planName, HBaseTestsSuite.TEST_TABLE_1, 2);
+    runHBasePhysicalVerifyCount(planName, HBaseTestsSuite.TEST_TABLE_1, 2);
   }
 
   @Test
   public void testLocalDistributedFamilySelect() throws Exception {
     String planName = "/hbase/hbase_scan_screen_physical_family_select.json";
-    runPhysicalVerifyCount(planName, HBaseTestsSuite.TEST_TABLE_1, 3);
+    runHBasePhysicalVerifyCount(planName, HBaseTestsSuite.TEST_TABLE_1, 3);
   }
 
 }

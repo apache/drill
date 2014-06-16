@@ -23,6 +23,7 @@ import io.netty.buffer.Unpooled;
 
 import java.io.DataInput;
 
+import org.apache.drill.common.util.DrillStringUtils;
 import org.apache.drill.exec.expr.fn.impl.StringFunctionUtil;
 
 public class ConvertUtil {
@@ -45,7 +46,7 @@ public class ConvertUtil {
     int actualLen = (end - start);
     if (actualLen != requiredLen) {
       throw new IllegalArgumentException(String.format("Wrong length %d(%d-%d) in the buffer '%s', expected %d.",
-          actualLen, end, start, StringFunctionUtil.toBinaryString(buffer, start, end), requiredLen));
+          actualLen, end, start, DrillStringUtils.toBinaryString(buffer, start, end), requiredLen));
     }
   }
 
@@ -90,7 +91,7 @@ public class ConvertUtil {
       int availableBytes = (end-start);
       if (availableBytes < getVIntSize(i)) {
         throw new NumberFormatException("Expected " + getVIntSize(i) + " bytes but the buffer '"
-            + StringFunctionUtil.toBinaryString(buffer, start, end) + "' has only "
+            + DrillStringUtils.toBinaryString(buffer, start, end) + "' has only "
             + availableBytes + " bytes.");
       }
       buffer.writerIndex(start);
@@ -150,7 +151,7 @@ public class ConvertUtil {
         return firstByte;
       } else if (availableBytes < len) {
         throw new NumberFormatException("Expected " + len + " bytes but the buffer '"
-            + StringFunctionUtil.toBinaryString(buffer, start, end) + "' has  "
+            + DrillStringUtils.toBinaryString(buffer, start, end) + "' has  "
             + availableBytes + " bytes.");
       }
 

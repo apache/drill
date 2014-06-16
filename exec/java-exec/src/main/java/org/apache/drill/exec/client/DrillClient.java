@@ -72,6 +72,7 @@ public class DrillClient implements Closeable, ConnectionThrottle{
   private final BufferAllocator allocator;
   private int reconnectTimes;
   private int reconnectDelay;
+  private boolean supportComplexTypes = true;
   private final boolean ownsZkConnection;
   private final boolean ownsAllocator;
 
@@ -110,7 +111,18 @@ public class DrillClient implements Closeable, ConnectionThrottle{
     client.setAutoRead(enableAutoRead);
   }
 
-
+  /**
+   * Sets whether the application is willing to accept complex types (Map, Arrays) in the returned result set.
+   * Default is {@code true}. If set to {@code false}, the complex types are returned as JSON encoded VARCHAR type.
+   *
+   * @throws IllegalStateException if called after a connection has been established.
+   */
+  public void setSupportComplexTypes(boolean supportComplexTypes) {
+    if (connected) {
+      throw new IllegalStateException("Attempted to modify client connection property after connection has been established.");
+    }
+    this.supportComplexTypes = supportComplexTypes;
+  }
 
   /**
    * Connects the client to a Drillbit server
@@ -181,7 +193,7 @@ public class DrillClient implements Closeable, ConnectionThrottle{
   private void connect(DrillbitEndpoint endpoint) throws RpcException {
     FutureHandler f = new FutureHandler();
     try {
-      client.connect(f, endpoint, props);
+      client.setSupportComplexTypes(supportComplexTypes).connect(f, endpoint, props);
       f.checkedGet();
     } catch (InterruptedException e) {
       throw new RpcException(e);

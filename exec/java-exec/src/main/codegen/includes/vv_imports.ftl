@@ -33,6 +33,7 @@ import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.common.types.TypeProtos.*;
 import org.apache.drill.common.types.Types;
+import org.apache.drill.common.util.DrillStringUtils;
 import org.apache.drill.exec.vector.complex.*;
 import org.apache.drill.exec.vector.complex.reader.*;
 import org.apache.drill.exec.vector.complex.impl.*;

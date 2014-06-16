@@ -42,6 +42,8 @@ import com.google.common.io.Files;
 
 public class BaseHBaseTest extends BaseTestQuery {
 
+  private static final String HBASE_STORAGE_PLUGIN_NAME = "hbase";
+
   protected static Configuration conf = HBaseConfiguration.create();
 
   protected static HBaseStoragePlugin storagePlugin;
@@ -66,10 +68,11 @@ public class BaseHBaseTest extends BaseTestQuery {
     HBaseTestsSuite.configure(true, true);
     HBaseTestsSuite.initCluster();
 
-    storagePlugin = (HBaseStoragePlugin) bit.getContext().getStorage().getPlugin("hbase");
+    storagePlugin = (HBaseStoragePlugin) bit.getContext().getStorage().getPlugin(HBASE_STORAGE_PLUGIN_NAME);
     storagePluginConfig = storagePlugin.getConfig();
-
+    storagePluginConfig.setEnabled(true);
     storagePluginConfig.setZookeeperPort(HBaseTestsSuite.getZookeeperPort());
+    bit.getContext().getStorage().createOrUpdate(HBASE_STORAGE_PLUGIN_NAME, storagePluginConfig, true);
   }
 
   @AfterClass
@@ -91,20 +94,24 @@ public class BaseHBaseTest extends BaseTestQuery {
         .replace("[TABLE_NAME]", tableName);
   }
 
-  protected void runPhysicalVerifyCount(String planFile, String tableName, int expectedRowCount) throws Exception{
+  protected void runHBasePhysicalVerifyCount(String planFile, String tableName, int expectedRowCount) throws Exception{
     String physicalPlan = getPlanText(planFile, tableName);
     List<QueryResultBatch> results = testPhysicalWithResults(physicalPlan);
     printResultAndVerifyRowCount(results, expectedRowCount);
   }
 
-  protected void runSQLVerifyCount(String sql, int expectedRowCount) throws Exception{
-    sql = canonizeSQL(sql);
+  protected List<QueryResultBatch> runHBaseSQLlWithResults(String sql) throws Exception {
+    sql = canonizeHBaseSQL(sql);
     System.out.println("Running query:\n" + sql);
-    List<QueryResultBatch> results = testSqlWithResults(sql);
+    return testSqlWithResults(sql);
+  }
+
+  protected void runHBaseSQLVerifyCount(String sql, int expectedRowCount) throws Exception{
+    List<QueryResultBatch> results = runHBaseSQLlWithResults(sql);
     printResultAndVerifyRowCount(results, expectedRowCount);
   }
 
-  private void printResultAndVerifyRowCount(List<QueryResultBatch> results, int expectedRowCount) throws SchemaChangeException {
+  protected int printResult(List<QueryResultBatch> results) throws SchemaChangeException {
     int rowCount = 0;
     RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
     for(QueryResultBatch result : results){
@@ -118,12 +125,17 @@ public class BaseHBaseTest extends BaseTestQuery {
       result.release();
     }
     System.out.println("Total record count: " + rowCount);
+    return rowCount;
+  }
+
+  private void printResultAndVerifyRowCount(List<QueryResultBatch> results, int expectedRowCount) throws SchemaChangeException {
+    int rowCount = printResult(results);
     if (expectedRowCount != -1) {
       Assert.assertEquals(expectedRowCount, rowCount);
     }
   }
 
-  protected String canonizeSQL(String sql) {
+  protected String canonizeHBaseSQL(String sql) {
     return sql.replace("[TABLE_NAME]", HBaseTestsSuite.TEST_TABLE_1);
   }
 

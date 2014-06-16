@@ -20,6 +20,8 @@ package org.apache.drill.exec.util;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.drill.common.util.DrillStringUtils;
+import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.record.VectorWrapper;
 
@@ -84,7 +86,8 @@ public class VectorUtil {
       int columnWidth = getColumnWidth(columnWidths, columnIndex);
       width += columnWidth + 2;
       formats.add("| %-" + columnWidth + "s");
-      columns.add(vw.getValueVector().getField().getPath().getAsUnescapedPath());
+      MaterializedField field = vw.getValueVector().getField();
+      columns.add(field.getPath().getAsUnescapedPath() + "<" + field.getType().getMinorType() + ">");
       columnIndex++;
     }
 
@@ -107,19 +110,13 @@ public class VectorUtil {
       for (VectorWrapper<?> vw : va) {
         int columnWidth = getColumnWidth(columnWidths, columnIndex);
         Object o = vw.getValueVector().getAccessor().getObject(row);
-        if (o == null) {
-          //null value
-          System.out.printf(formats.get(columnIndex), "");
-        }
-        else if (o instanceof byte[]) {
-          String value = new String((byte[]) o);
-          System.out.printf(formats.get(columnIndex), value.length() <= columnWidth ? value : value.substring(0, columnWidth - 1));
-        } else if (o instanceof List) {
-          System.out.printf("| %s", o);
+        String cellString;
+        if (o instanceof byte[]) {
+          cellString = DrillStringUtils.toBinaryString((byte[]) o);
         } else {
-          String value = o.toString();
-          System.out.printf(formats.get(columnIndex), value.length() <= columnWidth ? value : value.substring(0,columnWidth - 1));
+          cellString = DrillStringUtils.escapeNewLines(String.valueOf(o));
         }
+        System.out.printf(formats.get(columnIndex), cellString.length() <= columnWidth ? cellString : cellString.substring(0, columnWidth - 1));
         columnIndex++;
       }
       System.out.printf("|\n");

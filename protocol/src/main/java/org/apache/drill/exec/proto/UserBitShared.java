@@ -455,9 +455,9 @@ public final class UserBitShared {
      */
     INFO_SCHEMA_SUB_SCAN(30, 30),
     /**
-     * <code>FLATTEN = 31;</code>
+     * <code>COMPLEX_TO_JSON = 31;</code>
      */
-    FLATTEN(31, 31),
+    COMPLEX_TO_JSON(31, 31),
     ;
 
     /**
@@ -585,9 +585,9 @@ public final class UserBitShared {
      */
     public static final int INFO_SCHEMA_SUB_SCAN_VALUE = 30;
     /**
-     * <code>FLATTEN = 31;</code>
+     * <code>COMPLEX_TO_JSON = 31;</code>
      */
-    public static final int FLATTEN_VALUE = 31;
+    public static final int COMPLEX_TO_JSON_VALUE = 31;
 
 
     public final int getNumber() { return value; }
@@ -625,7 +625,7 @@ public final class UserBitShared {
         case 28: return TEXT_SUB_SCAN;
         case 29: return JSON_SUB_SCAN;
         case 30: return INFO_SCHEMA_SUB_SCAN;
-        case 31: return FLATTEN;
+        case 31: return COMPLEX_TO_JSON;
         default: return null;
       }
     }
@@ -16530,7 +16530,7 @@ public final class UserBitShared {
       "\020\001\022\013\n\007LOGICAL\020\002\022\014\n\010PHYSICAL\020\003*k\n\rFragmen" +
       "tState\022\013\n\007SENDING\020\000\022\027\n\023AWAITING_ALLOCATI",
       "ON\020\001\022\013\n\007RUNNING\020\002\022\014\n\010FINISHED\020\003\022\r\n\tCANCE" +
-      "LLED\020\004\022\n\n\006FAILED\020\005*\362\004\n\020CoreOperatorType\022" +
+      "LLED\020\004\022\n\n\006FAILED\020\005*\372\004\n\020CoreOperatorType\022" +
       "\021\n\rSINGLE_SENDER\020\000\022\024\n\020BROADCAST_SENDER\020\001" +
       "\022\n\n\006FILTER\020\002\022\022\n\016HASH_AGGREGATE\020\003\022\r\n\tHASH" +
       "_JOIN\020\004\022\016\n\nMERGE_JOIN\020\005\022\031\n\025HASH_PARTITIO" +
@@ -16545,9 +16545,9 @@ public final class UserBitShared {
       "_TABLE_SCAN\020\027\022\021\n\rMOCK_SUB_SCAN\020\030\022\022\n\016PARQ" +
       "UET_WRITER\020\031\022\023\n\017DIRECT_SUB_SCAN\020\032\022\017\n\013TEX" +
       "T_WRITER\020\033\022\021\n\rTEXT_SUB_SCAN\020\034\022\021\n\rJSON_SU" +
-      "B_SCAN\020\035\022\030\n\024INFO_SCHEMA_SUB_SCAN\020\036\022\013\n\007FL" +
-      "ATTEN\020\037B.\n\033org.apache.drill.exec.protoB\r" +
-      "UserBitSharedH\001"
+      "B_SCAN\020\035\022\030\n\024INFO_SCHEMA_SUB_SCAN\020\036\022\023\n\017CO" +
+      "MPLEX_TO_JSON\020\037B.\n\033org.apache.drill.exec" +
+      ".protoB\rUserBitSharedH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {

@@ -19,22 +19,30 @@ package org.apache.drill.exec.planner.physical;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.List;
 
 import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.physical.config.Flatten;
+import org.apache.drill.exec.physical.config.ComplexToJson;
 import org.apache.drill.exec.planner.physical.visitor.PrelVisitor;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
+import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.SingleRel;
+import org.eigenbase.relopt.RelTraitSet;
 
-public class FlattenPrel extends SingleRel implements Prel {
+public class ComplexToJsonPrel extends SingleRel implements Prel {
 
-  public FlattenPrel(Prel phyRelNode) {
+  public ComplexToJsonPrel(Prel phyRelNode) {
     super(phyRelNode.getCluster(), phyRelNode.getTraitSet(), phyRelNode);
+  }
+
+  @Override 
+  public final RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
+    return new ComplexToJsonPrel((Prel) sole(inputs));
   }
 
   @Override
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
-    Flatten p = new Flatten(((Prel) getChild()).getPhysicalOperator(creator));
+    ComplexToJson p = new ComplexToJson(((Prel) getChild()).getPhysicalOperator(creator));
     return creator.addMetadata(this, p);
   }
 

@@ -2,6 +2,7 @@
   "storage":{
     hbase : {
       type:"hbase",
+      enabled: false,
       config : {
         "hbase.zookeeper.quorum" : "localhost",
         "hbase.zookeeper.property.clientPort" : 2181

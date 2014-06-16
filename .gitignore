@@ -1,6 +1,7 @@
 .project
 .buildpath
 .classpath
+.checkstyle
 .settings/
 .idea/
 *.log

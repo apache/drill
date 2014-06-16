@@ -38,7 +38,8 @@ import org.junit.runners.Suite.SuiteClasses;
   TestHBaseFilterPushDown.class,
   TestHBaseProjectPushDown.class,
   TestHBaseRegionScanAssignments.class,
-  TestHBaseTableProvider.class
+  TestHBaseTableProvider.class,
+  TestHBaseCFAsJSONString.class
 })
 public class HBaseTestsSuite {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HBaseTestsSuite.class);
@@ -55,6 +56,9 @@ public class HBaseTestsSuite {
 
   private static volatile AtomicInteger initCount = new AtomicInteger(0);
 
+  /**
+   * This flag controls whether {@link HBaseTestsSuite} starts a mini HBase cluster to run the unit test.
+   */
   private static boolean manageHBaseCluster = System.getProperty("drill.hbase.tests.manageHBaseCluster", "true").equalsIgnoreCase("true");
   private static boolean hbaseClusterCreated = false;
 

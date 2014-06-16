@@ -17,7 +17,6 @@
  */
 package org.apache.drill.exec.rpc.user;
 
-import java.io.IOException;
 import java.util.Map;
 
 import net.hydromatic.optiq.SchemaPlus;
@@ -42,16 +41,54 @@ public class UserSession {
   private Map<String, String> properties;
   private OptionManager options;
 
-  public UserSession(OptionManager systemOptions, UserCredentials credentials, UserProperties properties) throws IOException{
-    this.credentials = credentials;
-    this.options = new SessionOptionManager(systemOptions);
-    this.properties = Maps.newHashMap();
+  public static class Builder {
+    UserSession userSession;
 
-    if (properties == null) return;
-    for (int i=0; i<properties.getPropertiesCount(); i++) {
-      Property prop = properties.getProperties(i);
-      this.properties.put(prop.getKey(), prop.getValue());
+    public static Builder newBuilder() {
+      return new Builder();
     }
+
+    public Builder withCredentials(UserCredentials credentials) {
+      userSession.credentials = credentials;
+      return this;
+    }
+
+    public Builder withOptionManager(OptionManager systemOptions) {
+      userSession.options = new SessionOptionManager(systemOptions);
+      return this;
+    }
+
+    public Builder withUserProperties(UserProperties properties) {
+      userSession.properties = Maps.newHashMap();
+      if (properties != null) {
+        for (int i = 0; i < properties.getPropertiesCount(); i++) {
+          Property prop = properties.getProperties(i);
+          userSession.properties.put(prop.getKey(), prop.getValue());
+        }
+      }
+      return this;
+    }
+
+    public Builder setSupportComplexTypes(boolean supportComplexTypes) {
+      userSession.supportComplexTypes = supportComplexTypes;
+      return this;
+    }
+
+    public UserSession build() {
+      UserSession session = userSession;
+      userSession = null;
+      return session;
+    }
+
+    Builder() {
+      userSession = new UserSession();
+    }
+  }
+
+  private UserSession() { }
+
+  public boolean isSupportComplexTypes() {
+    return supportComplexTypes;
   }
 
   public OptionManager getOptions(){
@@ -61,7 +98,6 @@ public class UserSession {
   public DrillUser getUser(){
     return user;
   }
-
 
   /**
    * Update the schema path for the session.
@@ -105,15 +141,6 @@ public class UserSession {
       if(schema == null) break;
     }
     return schema;
-  }
-
-  public boolean isSupportComplexTypes() {
-    return supportComplexTypes;
-  }
-
-  public UserSession setSupportComplexTypes(boolean supportComplexType) {
-    this.supportComplexTypes = supportComplexType;
-    return this;
   }
 
 }

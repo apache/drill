@@ -19,8 +19,8 @@ package org.apache.drill.exec.rpc;
 
 import java.util.concurrent.ExecutionException;
 
-import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.drill.common.exceptions.DrillIOException;
+import org.apache.drill.common.util.DrillStringUtils;
 
 /**
  * Parent class for all rpc exceptions.
@@ -38,7 +38,7 @@ public class RpcException extends DrillIOException{
   }
 
   private static String format(String message) {
-    return StringEscapeUtils.unescapeJava(message);
+    return DrillStringUtils.unescapeJava(message);
   }
 
   public RpcException(String message) {

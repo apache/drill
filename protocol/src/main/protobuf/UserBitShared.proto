@@ -198,5 +198,5 @@ enum CoreOperatorType {
   TEXT_SUB_SCAN = 28;
   JSON_SUB_SCAN = 29;
   INFO_SCHEMA_SUB_SCAN = 30;
-  FLATTEN = 31;
+  COMPLEX_TO_JSON = 31;
 }

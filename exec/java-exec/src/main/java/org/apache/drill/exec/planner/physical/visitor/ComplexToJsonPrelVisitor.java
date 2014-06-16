@@ -19,22 +19,22 @@ package org.apache.drill.exec.planner.physical.visitor;
 
 import java.util.Collections;
 
-import org.apache.drill.exec.planner.physical.FlattenPrel;
+import org.apache.drill.exec.planner.physical.ComplexToJsonPrel;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.ScreenPrel;
 import org.eigenbase.rel.RelNode;
 
-public class FlattenPrelVisitor extends BasePrelVisitor<Prel, Void, RuntimeException> {
+public class ComplexToJsonPrelVisitor extends BasePrelVisitor<Prel, Void, RuntimeException> {
 
-  private static final FlattenPrelVisitor INSTANCE = new FlattenPrelVisitor();
+  private static final ComplexToJsonPrelVisitor INSTANCE = new ComplexToJsonPrelVisitor();
 
-  public static Prel addFlattenPrel(Prel prel) {
+  public static Prel addComplexToJsonPrel(Prel prel) {
     return prel.accept(INSTANCE, null);
   }
 
   @Override
   public Prel visitScreen(ScreenPrel prel, Void value) throws RuntimeException {
-    return prel.copy(prel.getTraitSet(), Collections.singletonList((RelNode)new FlattenPrel((Prel)prel.getChild())));
+    return prel.copy(prel.getTraitSet(), Collections.singletonList((RelNode)new ComplexToJsonPrel((Prel)prel.getChild())));
   }
 
 }

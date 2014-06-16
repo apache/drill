@@ -111,8 +111,12 @@ public class UserServer extends BasicServer<RpcType, UserServer.UserClientConnec
     }
 
     void setUser(UserToBitHandshake inbound) throws IOException {
-      session = new UserSession(worker.getSystemOptions(), inbound.getCredentials(), inbound.getProperties());
-      session.setSupportComplexTypes(inbound.getSupportComplexTypes());
+      session = UserSession.Builder.newBuilder()
+          .withCredentials(inbound.getCredentials())
+          .withOptionManager(worker.getSystemOptions())
+          .withUserProperties(inbound.getProperties())
+          .setSupportComplexTypes(inbound.getSupportComplexTypes())
+          .build();
     }
 
     public UserSession getSession(){

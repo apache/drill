@@ -98,6 +98,7 @@
         <inherited>true</inherited>
         <configuration>
           <excludes>
+            <exclude>**/.checkstyle</exclude>
             <exclude>**/.buildpath</exclude>
             <exclude>**/*.json</exclude>
             <exclude>**/git.properties</exclude>
