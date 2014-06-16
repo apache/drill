@@ -26,20 +26,25 @@ import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JInvocation;
 import com.sun.codemodel.JTryBlock;
 import com.sun.codemodel.JVar;
+import org.apache.drill.common.expression.ExpressionPosition;
+import org.apache.drill.common.expression.FunctionHolderExpression;
+import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
+import org.apache.drill.exec.expr.HiveFuncHolderExpr;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.fn.impl.hive.DrillDeferredObject;
 import org.apache.drill.exec.expr.fn.impl.hive.ObjectInspectorHelper;
-import org.apache.drill.exec.expr.holders.ValueHolder;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.ql.exec.UDF;
 import org.apache.hadoop.hive.ql.udf.generic.GenericUDFBridge;
 import org.apache.hadoop.hive.ql.udf.generic.GenericUDF;
 
-public class HiveFuncHolder {
+import java.util.List;
+
+public class HiveFuncHolder extends AbstractFuncHolder {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FunctionImplementationRegistry.class);
 
   private MajorType[] argTypes;
@@ -110,6 +115,7 @@ public class HiveFuncHolder {
    * Start generating code
    * @return workspace variables
    */
+  @Override
   public JVar[] renderStart(ClassGenerator<?> g, HoldingContainer[] inputVariables){
     JVar[] workspaceJVars = new JVar[5];
 
@@ -130,6 +136,7 @@ public class HiveFuncHolder {
    * @param workspaceJVars
    * @return HoldingContainer for return value
    */
+  @Override
   public HoldingContainer renderEnd(ClassGenerator<?> g, HoldingContainer[] inputVariables, JVar[]  workspaceJVars) {
     generateSetup(g, workspaceJVars);
     return generateEval(g, inputVariables, workspaceJVars);
@@ -144,6 +151,11 @@ public class HiveFuncHolder {
         .arg(JExpr.lit(false))
         .arg(JExpr.dotclass(m.directClass(udfClazz.getCanonicalName())));
     }
+  }
+
+  @Override
+  public FunctionHolderExpression getExpr(String name, List<LogicalExpression> args, ExpressionPosition pos) {
+    return new HiveFuncHolderExpr(name, this, args, pos);
   }
 
   private void generateSetup(ClassGenerator<?> g, JVar[] workspaceJVars) {

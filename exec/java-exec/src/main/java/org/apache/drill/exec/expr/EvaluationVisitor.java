@@ -20,7 +20,6 @@ package org.apache.drill.exec.expr;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.io.input.NullReader;
 import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.ConvertExpression;
@@ -48,21 +47,17 @@ import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.expression.ValueExpressions.TimeExpression;
 import org.apache.drill.common.expression.ValueExpressions.TimeStampExpression;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
-import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.compile.sig.ConstantExpressionIdentifier;
 import org.apache.drill.exec.expr.ClassGenerator.BlockType;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
-import org.apache.drill.exec.expr.fn.DrillFuncHolder;
-import org.apache.drill.exec.expr.fn.DrillBooleanOPHolder;
+import org.apache.drill.exec.expr.fn.AbstractFuncHolder;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.expr.fn.HiveFuncHolder;
 import org.apache.drill.exec.physical.impl.filter.ReturnValueExpression;
 import org.apache.drill.exec.vector.ValueHolderHelper;
 import org.apache.drill.exec.vector.complex.reader.FieldReader;
-import org.apache.drill.exec.vector.complex.writer.FieldWriter;
 
 import com.google.common.collect.Lists;
 import com.sun.codemodel.JBlock;
@@ -112,45 +107,25 @@ public class EvaluationVisitor {
     @Override
     public HoldingContainer visitFunctionHolderExpression(FunctionHolderExpression holderExpr,
         ClassGenerator<?> generator) throws RuntimeException {
-      // TODO: hack: (Drill/Hive)FuncHolderExpr reference classes in exec so
-      // code generate methods can't be superclass FunctionHolderExpression
-      // which is defined in common
 
-      if (holderExpr instanceof DrillFuncHolderExpr) {
-        DrillFuncHolder holder = ((DrillFuncHolderExpr) holderExpr).getHolder();
-        
+      AbstractFuncHolder holder = (AbstractFuncHolder) holderExpr.getHolder();
 
-        JVar[] workspaceVars = holder.renderStart(generator, null);
+      JVar[] workspaceVars = holder.renderStart(generator, null);
 
-        if (holder.isNested())
-          generator.getMappingSet().enterChild();
+      if (holder.isNested())
+        generator.getMappingSet().enterChild();
 
-        HoldingContainer[] args = new HoldingContainer[holderExpr.args.size()];
-        for (int i = 0; i < holderExpr.args.size(); i++) {
-          args[i] = holderExpr.args.get(i).accept(this, generator);
-        }
-
-        holder.renderMiddle(generator, args, workspaceVars);
-
-        if (holder.isNested())
-          generator.getMappingSet().exitChild();
-
-        return holder.renderEnd(generator, args, workspaceVars);
-
-      } else if (holderExpr instanceof HiveFuncHolderExpr) {
-
-        HiveFuncHolder holder = ((HiveFuncHolderExpr) holderExpr).getHolder();
-
-        HoldingContainer[] args = new HoldingContainer[holderExpr.args.size()];
-        for (int i = 0; i < holderExpr.args.size(); i++) {
-          args[i] = holderExpr.args.get(i).accept(this, generator);
-        }
-
-        return holder.renderEnd(generator, args, holder.renderStart(generator, null));
+      HoldingContainer[] args = new HoldingContainer[holderExpr.args.size()];
+      for (int i = 0; i < holderExpr.args.size(); i++) {
+        args[i] = holderExpr.args.get(i).accept(this, generator);
       }
 
-      throw new UnsupportedOperationException(String.format("Unknown expression '%s'", holderExpr.getClass()
-          .getCanonicalName()));
+      holder.renderMiddle(generator, args, workspaceVars);
+
+      if (holder.isNested())
+        generator.getMappingSet().exitChild();
+
+      return holder.renderEnd(generator, args, workspaceVars);
     }
 
     @Override

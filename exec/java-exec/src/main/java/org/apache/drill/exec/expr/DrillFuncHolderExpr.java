@@ -20,13 +20,10 @@ package org.apache.drill.exec.expr;
 import java.util.Iterator;
 import java.util.List;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.LogicalExpression;
-import org.apache.drill.common.expression.visitors.ExprVisitor;
+import org.apache.drill.common.expression.fn.FuncHolder;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.expr.fn.DrillComplexWriterFuncHolder;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
@@ -50,7 +47,8 @@ public class DrillFuncHolderExpr extends FunctionHolderExpression implements Ite
     return args.iterator();
   }
 
-  public DrillFuncHolder getHolder() {
+  @Override
+  public FuncHolder getHolder() {
     return holder;
   }
 
@@ -64,6 +62,7 @@ public class DrillFuncHolderExpr extends FunctionHolderExpression implements Ite
     return holder.isRandom();
   }
 
+  @Override
   public boolean argConstantOnly(int i) {
     return holder.isConstant(i);
   }

@@ -32,7 +32,7 @@ import org.eigenbase.sql.validate.SqlValidatorScope;
 public class DrillSqlOperator extends SqlFunction {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillSqlOperator.class);
 
-  DrillSqlOperator(String name, int argCount) {
+  public DrillSqlOperator(String name, int argCount) {
     super(new SqlIdentifier(name, SqlParserPos.ZERO), DynamicReturnType.INSTANCE, null, new Checker(argCount), null, SqlFunctionCategory.USER_DEFINED_FUNCTION);
   }
 

@@ -23,6 +23,7 @@ import java.util.List;
 import org.apache.drill.common.expression.ExpressionPosition;
 import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.LogicalExpression;
+import org.apache.drill.common.expression.fn.FuncHolder;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 
@@ -47,7 +48,7 @@ public class HiveFuncHolderExpr extends FunctionHolderExpression implements Iter
     return args.iterator();
   }
 
-  public HiveFuncHolder getHolder() {
+  public FuncHolder getHolder() {
     return holder;
   }
 

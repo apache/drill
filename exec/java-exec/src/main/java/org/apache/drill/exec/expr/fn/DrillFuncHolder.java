@@ -21,6 +21,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.drill.common.expression.ExpressionPosition;
+import org.apache.drill.common.expression.FunctionHolderExpression;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MajorType;
@@ -29,6 +31,7 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.ClassGenerator.BlockType;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
+import org.apache.drill.exec.expr.DrillFuncHolderExpr;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionCostCategory;
@@ -46,7 +49,7 @@ import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JType;
 import com.sun.codemodel.JVar;
 
-public abstract class DrillFuncHolder {
+public abstract class DrillFuncHolder extends AbstractFuncHolder {
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FunctionImplementationRegistry.class);
 
@@ -83,17 +86,26 @@ public abstract class DrillFuncHolder {
     return imports;
   }
 
+  @Override
   public JVar[] renderStart(ClassGenerator<?> g, HoldingContainer[] inputVariables) {
     return declareWorkspaceVariables(g);
   };
 
+  @Override
   public void renderMiddle(ClassGenerator<?> g, HoldingContainer[] inputVariables, JVar[] workspaceJVars) {
   };
 
+  @Override
   public abstract HoldingContainer renderEnd(ClassGenerator<?> g, HoldingContainer[] inputVariables,
       JVar[] workspaceJVars);
 
+  @Override
   public abstract boolean isNested();
+
+  @Override
+  public FunctionHolderExpression getExpr(String name, List<LogicalExpression> args, ExpressionPosition pos) {
+    return new DrillFuncHolderExpr(name, this, args, pos);
+  }
 
   public boolean isAggregating() {
     return false;

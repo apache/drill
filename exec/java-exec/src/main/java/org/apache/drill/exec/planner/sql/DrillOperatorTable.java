@@ -46,31 +46,12 @@ public class DrillOperatorTable extends SqlStdOperatorTable {
     operators = Lists.newArrayList();
     operators.addAll(inner.getOperatorList());
 
-    for (Map.Entry<String, Collection<DrillFuncHolder>> function : registry.getDrillRegistry().getMethods().asMap().entrySet()) {
-      Set<Integer> argCounts = Sets.newHashSet();
-      String name = function.getKey().toUpperCase();
-      for (DrillFuncHolder f : function.getValue()) {
-        if (argCounts.add(f.getParamCount())) {
-          SqlOperator op = null;
-          if (f.isAggregating()) {
-            op = new DrillSqlAggOperator(name, f.getParamCount());
-          } else {
-            op = new DrillSqlOperator(name, f.getParamCount());
-          }
-          operators.add(op);
-          opMap.put(function.getKey(), op);
-        }
-      }
-    }
+    registry.register(this);
+  }
 
-    for (String name : Sets.union(
-        registry.getHiveRegistry().getGenericUDFs().asMap().keySet(),
-        registry.getHiveRegistry().getUDFs().asMap().keySet())) {
-
-      SqlOperator op = new HiveUDFOperator(name.toUpperCase());
-      operators.add(op);
-      opMap.put(name, op);
-    }
+  public void add(String name, SqlOperator op) {
+    operators.add(op);
+    opMap.put(name, op);
   }
 
   @Override

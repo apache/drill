@@ -20,7 +20,6 @@ package org.apache.drill.exec.expr;
 import java.util.List;
 
 import com.google.common.base.Function;
-import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -37,7 +36,6 @@ import org.apache.drill.common.expression.IfExpression;
 import org.apache.drill.common.expression.IfExpression.IfCondition;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.expression.NullExpression;
-import org.apache.drill.common.expression.PathSegment;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.common.expression.TypedNullConstant;
 import org.apache.drill.common.expression.ValueExpressions;
@@ -66,10 +64,10 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
+import org.apache.drill.exec.expr.fn.AbstractFuncHolder;
 import org.apache.drill.exec.expr.fn.DrillComplexWriterFuncHolder;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
-import org.apache.drill.exec.expr.fn.HiveFuncHolder;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorAccessible;
 import org.apache.drill.exec.resolver.FunctionResolver;
@@ -157,12 +155,8 @@ public class ExpressionTreeMaterializer {
       //replace with a new function call, since its argument could be changed.
       call = new FunctionCall(call.getName(), args, call.getPosition());
 
-      // First try to resolve as Drill function, if that fails try resolving as hive function
-      // TODO: Need to refactor the resolver to have generic interface for Drill and Hive functions
-
       FunctionResolver resolver = FunctionResolverFactory.getResolver(call);
-      DrillFuncHolder matchedFuncHolder =
-        resolver.getBestMatch(registry.getDrillRegistry().getMethods(call.getName()), call);
+      DrillFuncHolder matchedFuncHolder = registry.findDrillFunction(resolver, call);
 
       if (matchedFuncHolder instanceof DrillComplexWriterFuncHolder && ! allowComplexWriter) {
         errorCollector.addGeneralError(call.getPosition(), "Only ProjectRecordBatch could have complex writer function. You are using complex writer function " + call.getName() + " in a non-project operation!");
@@ -211,25 +205,26 @@ public class ExpressionTreeMaterializer {
             }
 
             FunctionCall castCall = new FunctionCall(castFuncName, castArgs, ExpressionPosition.UNKNOWN);
-            DrillFuncHolder matchedCastFuncHolder = resolver.getBestMatch(
-              registry.getDrillRegistry().getMethods(castFuncName), castCall);
+            DrillFuncHolder matchedCastFuncHolder = registry.findDrillFunction(resolver, castCall);
 
             if (matchedCastFuncHolder == null) {
               logFunctionResolutionError(errorCollector, castCall);
               return NullExpression.INSTANCE;
             }
 
-            argsWithCast.add(new DrillFuncHolderExpr(call.getName(), matchedCastFuncHolder, castArgs, ExpressionPosition.UNKNOWN));
+            argsWithCast.add(matchedCastFuncHolder.getExpr(call.getName(), castArgs, ExpressionPosition.UNKNOWN));
 
           }
         }
-        return new DrillFuncHolderExpr(call.getName(), matchedFuncHolder, argsWithCast, call.getPosition());
+
+        return matchedFuncHolder.getExpr(call.getName(), argsWithCast, call.getPosition());
       }
 
-      // as no drill func is found, search for the function in hive
-      HiveFuncHolder matchedHiveHolder = registry.getHiveRegistry().getFunction(call);
-      if (matchedHiveHolder != null)
-        return new HiveFuncHolderExpr(call.getName(), matchedHiveHolder, call.args, call.getPosition());
+      // as no drill func is found, search for a non-Drill function.
+      AbstractFuncHolder matchedNonDrillFuncHolder = registry.findNonDrillFunction(call);
+      if (matchedNonDrillFuncHolder != null) {
+        return matchedNonDrillFuncHolder.getExpr(call.getName(), call.args, call.getPosition());
+      }
 
       logFunctionResolutionError(errorCollector, call);
       return NullExpression.INSTANCE;
@@ -345,15 +340,14 @@ public class ExpressionTreeMaterializer {
       FunctionCall funcCall = new FunctionCall(funcName, args, ExpressionPosition.UNKNOWN);
       FunctionResolver resolver = FunctionResolverFactory.getResolver(funcCall);
 
-      DrillFuncHolder matchedConvertToNullableFuncHolder =
-          resolver.getBestMatch(registry.getDrillRegistry().getMethods(funcName), funcCall);
+      DrillFuncHolder matchedConvertToNullableFuncHolder = registry.findDrillFunction(resolver, funcCall);
 
       if (matchedConvertToNullableFuncHolder == null) {
         logFunctionResolutionError(errorCollector, funcCall);
         return NullExpression.INSTANCE;
       }
 
-      return new DrillFuncHolderExpr(funcName, matchedConvertToNullableFuncHolder, args, ExpressionPosition.UNKNOWN);
+      return matchedConvertToNullableFuncHolder.getExpr(funcName, args, ExpressionPosition.UNKNOWN);
     }
 
     private LogicalExpression rewriteNullExpression(LogicalExpression expr, MajorType type) {

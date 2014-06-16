@@ -17,22 +17,113 @@
  */
 package org.apache.drill.exec.expr.fn;
 
+import com.google.common.collect.Lists;
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.common.expression.FunctionCall;
+import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.common.util.PathScanner;
+import org.apache.drill.exec.ExecConstants;
+import org.apache.drill.exec.planner.sql.DrillOperatorTable;
+import org.apache.drill.exec.resolver.FunctionResolver;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+import java.util.Set;
 
 public class FunctionImplementationRegistry {
-  private DrillFunctionImplementationRegistry drillFuncRegistry;
-  private HiveFunctionImplementationRegistry hiveFuncRegistry;
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FunctionImplementationRegistry.class);
+
+  private DrillFunctionRegistry drillFuncRegistry;
+  private List<PluggableFunctionRegistry> pluggableFuncRegistries = Lists.newArrayList();
 
   public FunctionImplementationRegistry(DrillConfig config){
-    drillFuncRegistry = new DrillFunctionImplementationRegistry(config);
-    hiveFuncRegistry = new HiveFunctionImplementationRegistry(config);
+    drillFuncRegistry = new DrillFunctionRegistry(config);
+
+    Set<Class<? extends PluggableFunctionRegistry>> registryClasses = PathScanner.scanForImplementations(
+        PluggableFunctionRegistry.class, config.getStringList(ExecConstants.FUNCTION_PACKAGES));
+
+    for (Class<? extends PluggableFunctionRegistry> clazz : registryClasses) {
+      for (Constructor<?> c : clazz.getConstructors()) {
+        Class<?>[] params = c.getParameterTypes();
+        if (params.length != 1 || params[0] != DrillConfig.class) {
+          logger.warn("Skipping PluggableFunctionRegistry constructor {} for class {} since it doesn't implement a " +
+              "[constructor(DrillConfig)]", c, clazz);
+          continue;
+        }
+
+        try {
+          PluggableFunctionRegistry registry = (PluggableFunctionRegistry)c.newInstance(config);
+          pluggableFuncRegistries.add(registry);
+        } catch(InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+          logger.warn("Unable to instantiate PluggableFunctionRegistry class '{}'. Skipping it.", clazz, e);
+        }
+
+        break;
+      }
+    }
   }
 
-  public DrillFunctionImplementationRegistry getDrillRegistry() {
-    return drillFuncRegistry;
+  /**
+   * Register functions in given operator table.
+   * @param operatorTable
+   */
+  public void register(DrillOperatorTable operatorTable) {
+    // Register Drill functions first and move to pluggable function registries.
+    drillFuncRegistry.register(operatorTable);
+
+    for(PluggableFunctionRegistry registry : pluggableFuncRegistries) {
+      registry.register(operatorTable);
+    }
   }
 
-  public HiveFunctionImplementationRegistry getHiveRegistry() {
-    return hiveFuncRegistry;
+  /**
+   * Using the given <code>functionResolver</code> find Drill function implementation for given
+   * <code>functionCall</code>
+   *
+   * @param functionResolver
+   * @param functionCall
+   * @return
+   */
+  public DrillFuncHolder findDrillFunction(FunctionResolver functionResolver, FunctionCall functionCall) {
+    return functionResolver.getBestMatch(drillFuncRegistry.getMethods(functionCall.getName()), functionCall);
+  }
+
+  /**
+   * Find the Drill function implementation that matches the name, arg types and return type.
+   * @param name
+   * @param argTypes
+   * @param returnType
+   * @return
+   */
+  public DrillFuncHolder findExactMatchingDrillFunction(String name, List<MajorType> argTypes, MajorType returnType) {
+    for (DrillFuncHolder h : drillFuncRegistry.getMethods(name)) {
+      if (h.matches(returnType, argTypes)) {
+        return h;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Find function implementation for given <code>functionCall</code> in non-Drill function registries such as Hive UDF
+   * registry.
+   *
+   * Note: Order of searching is same as order of {@link org.apache.drill.exec.expr.fn.PluggableFunctionRegistry}
+   * implementations found on classpath.
+   *
+   * @param functionCall
+   * @return
+   */
+  public AbstractFuncHolder findNonDrillFunction(FunctionCall functionCall) {
+    for(PluggableFunctionRegistry registry : pluggableFuncRegistries) {
+      AbstractFuncHolder h = registry.getFunction(functionCall);
+      if (h != null) {
+        return h;
+      }
+    }
+
+    return null;
   }
 }

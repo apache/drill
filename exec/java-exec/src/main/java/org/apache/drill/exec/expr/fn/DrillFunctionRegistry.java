@@ -17,22 +17,29 @@
  */
 package org.apache.drill.exec.expr.fn;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Set;
 
+import com.google.common.collect.Sets;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.PathScanner;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.expr.DrillFunc;
 
 import com.google.common.collect.ArrayListMultimap;
+import org.apache.drill.exec.planner.sql.DrillOperatorTable;
+import org.apache.drill.exec.planner.sql.DrillSqlAggOperator;
+import org.apache.drill.exec.planner.sql.DrillSqlOperator;
+import org.eigenbase.sql.SqlOperator;
 
-public class DrillFunctionImplementationRegistry {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillFunctionImplementationRegistry.class);
+public class DrillFunctionRegistry {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillFunctionRegistry.class);
 
   private ArrayListMultimap<String, DrillFuncHolder> methods = ArrayListMultimap.create();
 
-  public DrillFunctionImplementationRegistry(DrillConfig config){
+  public DrillFunctionRegistry(DrillConfig config){
     FunctionConverter converter = new FunctionConverter();
     Set<Class<? extends DrillFunc>> providerClasses = PathScanner.scanForImplementations(DrillFunc.class, config.getStringList(ExecConstants.FUNCTION_PACKAGES));
     for (Class<? extends DrillFunc> clazz : providerClasses) {
@@ -54,12 +61,26 @@ public class DrillFunctionImplementationRegistry {
     }
   }
 
-  public ArrayListMultimap<String, DrillFuncHolder> getMethods() {
-    return this.methods;
-  }
-
   /** Returns functions with given name. Function name is case insensitive. */
   public List<DrillFuncHolder> getMethods(String name) {
     return this.methods.get(name.toLowerCase());
+  }
+
+  public void register(DrillOperatorTable operatorTable) {
+    SqlOperator op;
+    for (Entry<String, Collection<DrillFuncHolder>> function : methods.asMap().entrySet()) {
+      Set<Integer> argCounts = Sets.newHashSet();
+      String name = function.getKey().toUpperCase();
+      for (DrillFuncHolder f : function.getValue()) {
+        if (argCounts.add(f.getParamCount())) {
+          if (f.isAggregating()) {
+            op = new DrillSqlAggOperator(name, f.getParamCount());
+          } else {
+            op = new DrillSqlOperator(name, f.getParamCount());
+          }
+          operatorTable.add(function.getKey(), op);
+        }
+      }
+    }
   }
 }

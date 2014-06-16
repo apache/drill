@@ -19,6 +19,7 @@ package org.apache.drill.common.expression;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import org.apache.drill.common.expression.fn.FuncHolder;
 import org.apache.drill.common.expression.visitors.ExprVisitor;
 
 import java.util.List;
@@ -72,5 +73,7 @@ public abstract class FunctionHolderExpression extends LogicalExpressionBase {
    * @ return a copy of FunctionHolderExpression, with passed in argument list.
    */
   public abstract FunctionHolderExpression copy(List<LogicalExpression> args);
-  
+
+  /** Return the underlying function implementation holder. */
+  public abstract FuncHolder getHolder();
 }

@@ -52,7 +52,7 @@ public class DrillSqlAggOperator extends SqlAggFunction {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillSqlAggOperator.class);
 
   
-  DrillSqlAggOperator(String name, int argCount) {
+  public DrillSqlAggOperator(String name, int argCount) {
     super(name, new SqlIdentifier(name, SqlParserPos.ZERO), SqlKind.OTHER_FUNCTION, DynamicReturnType.INSTANCE, null, new Checker(argCount), SqlFunctionCategory.USER_DEFINED_FUNCTION);
   }
 

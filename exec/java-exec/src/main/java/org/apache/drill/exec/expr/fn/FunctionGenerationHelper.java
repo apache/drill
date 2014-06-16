@@ -28,6 +28,7 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
+import org.apache.drill.exec.expr.DrillFunc;
 import org.apache.drill.exec.expr.DrillFuncHolderExpr;
 import org.apache.drill.exec.expr.HoldingContainerExpression;
 
@@ -57,13 +58,12 @@ public class FunctionGenerationHelper {
       argTypes.add(c.getMajorType());
       argExpressions.add(new HoldingContainerExpression(c));
     }
-    
-    for (DrillFuncHolder h : registry.getDrillRegistry().getMethods(name)) {
-      if (h.matches(returnType, argTypes)) {
-        return new DrillFuncHolderExpr(name, h, argExpressions, ExpressionPosition.UNKNOWN);
-      }
+
+    DrillFuncHolder holder = registry.findExactMatchingDrillFunction(name, argTypes, returnType);
+    if (holder != null) {
+      return holder.getExpr(name, argExpressions, ExpressionPosition.UNKNOWN);
     }
-    
+
     StringBuilder sb = new StringBuilder();
     sb.append("Failure finding function that runtime code generation expected.  Signature: ");
     sb.append(name);

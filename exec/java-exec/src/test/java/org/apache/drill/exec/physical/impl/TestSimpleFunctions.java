@@ -143,7 +143,7 @@ public class TestSimpleFunctions extends ExecTest {
         ExpressionPosition.UNKNOWN
     );
     FunctionResolver resolver = FunctionResolverFactory.getResolver(call);
-    DrillFuncHolder matchedFuncHolder = resolver.getBestMatch(registry.getDrillRegistry().getMethods(call.getName()), call);
+    DrillFuncHolder matchedFuncHolder = registry.findDrillFunction(resolver, call);
     assertEquals( expectedBestInputMode, matchedFuncHolder.getParmMajorType(0).getMode());
   }
 

@@ -20,13 +20,15 @@ package org.apache.drill.exec.expr.fn;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.google.common.collect.Sets;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.FunctionCall;
-import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.common.util.PathScanner;
 import org.apache.drill.exec.expr.fn.impl.hive.ObjectInspectorHelper;
+import org.apache.drill.exec.planner.sql.DrillOperatorTable;
+import org.apache.drill.exec.planner.sql.HiveUDFOperator;
 import org.apache.hadoop.hive.ql.exec.Description;
 import org.apache.hadoop.hive.ql.exec.UDF;
 import org.apache.hadoop.hive.ql.exec.UDFArgumentException;
@@ -37,8 +39,8 @@ import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 
 import com.google.common.collect.ArrayListMultimap;
 
-public class HiveFunctionImplementationRegistry {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveFunctionImplementationRegistry.class);
+public class HiveFunctionRegistry implements PluggableFunctionRegistry{
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HiveFunctionRegistry.class);
 
   private ArrayListMultimap<String, Class<? extends GenericUDF>> methodsGenericUDF = ArrayListMultimap.create();
   private ArrayListMultimap<String, Class<? extends UDF>> methodsUDF = ArrayListMultimap.create();
@@ -50,7 +52,7 @@ public class HiveFunctionImplementationRegistry {
    * (function name) --> (implementation class) mappings.
    * @param config
    */
-  public HiveFunctionImplementationRegistry(DrillConfig config){
+  public HiveFunctionRegistry(DrillConfig config){
     Set<Class<? extends GenericUDF>> genericUDFClasses = PathScanner.scanForImplementations(GenericUDF.class, null);
     for (Class<? extends GenericUDF> clazz : genericUDFClasses)
       register(clazz, methodsGenericUDF);
@@ -58,6 +60,13 @@ public class HiveFunctionImplementationRegistry {
     Set<Class<? extends UDF>> udfClasses = PathScanner.scanForImplementations(UDF.class, null);
     for (Class<? extends UDF> clazz : udfClasses)
       register(clazz, methodsUDF);
+  }
+
+  @Override
+  public void register(DrillOperatorTable operatorTable) {
+    for (String name : Sets.union(methodsGenericUDF.asMap().keySet(), methodsUDF.asMap().keySet())) {
+      operatorTable.add(name, new HiveUDFOperator(name.toUpperCase()));
+    }
   }
 
   private <C,I> void register(Class<? extends I> clazz, ArrayListMultimap<String,Class<? extends I>> methods) {
@@ -79,20 +88,13 @@ public class HiveFunctionImplementationRegistry {
     }
   }
 
-  public ArrayListMultimap<String, Class<? extends GenericUDF>> getGenericUDFs() {
-    return methodsGenericUDF;
-  }
-
-  public ArrayListMultimap<String, Class<? extends UDF>> getUDFs() {
-    return methodsUDF;
-  }
-
   /**
    * Find the UDF class for given function name and check if it accepts the given input argument
    * types. If a match is found, create a holder and return
    * @param call
    * @return
    */
+  @Override
   public HiveFuncHolder getFunction(FunctionCall call){
     HiveFuncHolder holder;
     MajorType[] argTypes = new MajorType[call.args.size()];
