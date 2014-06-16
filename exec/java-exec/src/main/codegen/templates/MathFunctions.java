@@ -98,6 +98,27 @@ public class GMathFunctions{
   }
   </#list>
   </#list>
+
+  <#list mathFunc.otherMathFunctions as func>
+  <#list func.types as type>
+
+  @FunctionTemplate(name = "${func.funcName}", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  public static class ${func.className}${type.dataType} implements DrillSimpleFunc {
+
+    @Param ${type.dataType}Holder input1;
+    @Param IntHolder input2;
+    @Output Float8Holder out;
+
+    public void setup(RecordBatch b) {
+    }
+
+    public void eval() {
+      java.math.BigDecimal temp = new java.math.BigDecimal(input1.value);
+      out.value = temp.setScale(input2.value, java.math.RoundingMode.${func.mode}).doubleValue();
+    }
+  }
+  </#list>
+  </#list>
 }
 
 

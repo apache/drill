@@ -137,6 +137,34 @@ unaryMathFunctions : [
      ]
     }
   ],
+  otherMathFunctions : [
+  	{className: "Truncate", funcName: "trunc", mode: "DOWN", types: [
+      {dataType: "Int" },
+      {dataType: "BigInt" },
+      {dataType: "Float4" },
+      {dataType: "Float8" },
+      {dataType: "SmallInt" },
+      {dataType: "TinyInt" },
+      {dataType: "UInt1" },
+      {dataType: "UInt2" },
+      {dataType: "UInt4" },
+      {dataType: "UInt8" }
+     ]
+   	},
+  	{className: "Roundd", funcName: "round", mode: "HALF_UP", types: [
+      {dataType: "Int" },
+      {dataType: "BigInt" },
+      {dataType: "Float4" },
+      {dataType: "Float8" },
+      {dataType: "SmallInt" },
+      {dataType: "TinyInt" },
+      {dataType: "UInt1" },
+      {dataType: "UInt2" },
+      {dataType: "UInt4" },
+      {dataType: "UInt8" }
+     ]
+    }
+  ],
 
 logBaseMathFunction : [
  {className: "LogBase", funcName: "log", javaFunc : "java.lang.Math.log", outputType: "Float8", types: [

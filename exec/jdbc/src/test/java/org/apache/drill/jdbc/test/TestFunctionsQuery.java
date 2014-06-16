@@ -251,6 +251,37 @@ public class TestFunctionsQuery {
   }
 
   @Test
+  public void testTruncateWithParamFunction() throws Exception {
+    String query = String.format("SELECT " +
+      "trunc(1234.4567, 2) as T_1, " +
+      "trunc(-1234.4567, 2) as T_2, " +
+      "trunc(1234.4567, -2) as T_3, " +
+      "trunc(-1234.4567, -2) as T_4, " +
+      "trunc(1234, 4) as T_5, " +
+      "trunc(-1234, 4) as T_6, " +
+      "trunc(1234, -4) as T_7, " +
+      "trunc(-1234, -4) as T_8, " +
+      "trunc(8124674407369523212, 0) as T_9, " +
+      "trunc(81246744073695.395, 1) as T_10 " +
+      "FROM dfs.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
+
+    JdbcAssert.withNoDefaultSchema()
+      .sql(query)
+      .returns(
+        "T_1=1234.45; " +
+          "T_2=-1234.45; " +
+          "T_3=1200.0; " +
+          "T_4=-1200.0; " +
+          "T_5=1234.0; " +
+          "T_6=-1234.0; " +
+          "T_7=0.0; " +
+          "T_8=0.0; " +
+          "T_9=8.1246744073695232E18; " +
+          "T_10=8.12467440736953E13\n"
+      );
+  }
+
+  @Test
   public void testRoundDecimalFunction() throws Exception {
     String query = String.format("SELECT " +
         "round(cast('1234.5567' as decimal(9, 5))) as DEC9_1, " +
@@ -350,6 +381,37 @@ public class TestFunctionsQuery {
                 "DEC38_6=-1234567891234567891234567891234567891.4; " +
                 "DEC38_7=-1000000000000000000000000000000000000\n"
         );
+  }
+
+  @Test
+  public void testRoundWithParamFunction() throws Exception {
+    String query = String.format("SELECT " +
+      "round(1234.4567, 2) as T_1, " +
+      "round(-1234.4567, 2) as T_2, " +
+      "round(1234.4567, -2) as T_3, " +
+      "round(-1234.4567, -2) as T_4, " +
+      "round(1234, 4) as T_5, " +
+      "round(-1234, 4) as T_6, " +
+      "round(1234, -4) as T_7, " +
+      "round(-1234, -4) as T_8, " +
+      "round(8124674407369523212, -4) as T_9, " +
+      "round(81246744073695.395, 1) as T_10 " +
+      "FROM dfs.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
+
+    JdbcAssert.withNoDefaultSchema()
+      .sql(query)
+      .returns(
+        "T_1=1234.46; " +
+          "T_2=-1234.46; " +
+          "T_3=1200.0; " +
+          "T_4=-1200.0; " +
+          "T_5=1234.0; " +
+          "T_6=-1234.0; " +
+          "T_7=0.0; " +
+          "T_8=0.0; " +
+          "T_9=8.1246744073695201E18; " +
+          "T_10=8.12467440736954E13\n"
+      );
   }
 
   @Test
