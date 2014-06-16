@@ -29,9 +29,9 @@
           <td style="border:none;">
             <a class="btn btn-primary" href="/storage/${plugin.name}/config/update">Update</a>
             <#if plugin.enabled>
-              <a class="btn btn-default" href="/storage/${plugin.name}/enable/false">Disable</a>
+              <a class="btn btn-default" href="/storage/${plugin.name}/config/enable/false">Disable</a>
             <#else>
-              <a class="btn btn-primary" href="/storage/${plugin.name}/enable/true">Enable</a>
+              <a class="btn btn-primary" href="/storage/${plugin.name}/config/enable/true">Enable</a>
             </#if>
           </td>
         </tr>
@@ -49,7 +49,7 @@
         function doSubmit() {
           var name = document.getElementById("storageName");
           var form = document.getElementById("newStorage");
-          form.action = "/storage/" + name.value + "/config/update?";
+          form.action = "/storage/" + name.value + "/config/update";
           form.submit();
         }
       </script>

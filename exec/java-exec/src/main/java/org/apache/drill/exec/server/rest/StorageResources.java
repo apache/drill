@@ -86,12 +86,12 @@ public class StorageResources {
     map.put("config", conf);
     map.put("name", name);
     map.put("exists", config != null);
-    map.put("enabled", config.isEnabled());
+    map.put("enabled", config != null && config.isEnabled());
     return new Viewable("/rest/storage/update.ftl", map);
   }
 
   @GET
-  @Path("/{name}/enable/{val}")
+  @Path("/{name}/config/enable/{val}")
   @Produces(MediaType.TEXT_HTML)
   public Response setEnable(@Context UriInfo uriInfo, @PathParam("name") String name, @PathParam("val") Boolean enable) throws ExecutionSetupException {
     StoragePluginConfig config = findConfig(name);
@@ -102,6 +102,14 @@ public class StorageResources {
 
     URI uri = uriInfo.getBaseUriBuilder().path("/storage").build();
     return Response.seeOther(uri).build();
+  }
+
+  @GET
+  @Path("/{name}/config/delete")
+  @Produces(MediaType.TEXT_HTML)
+  public Viewable deleteConfig(@PathParam("name") String name) {
+    storage.deletePlugin(name);
+    return new Viewable("/rest/status.ftl", "Deleted " + name);
   }
 
   @GET
@@ -126,22 +134,13 @@ public class StorageResources {
 
   @POST
   @Path("/config/update")
-  @Produces(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.TEXT_HTML)
   @Consumes("application/x-www-form-urlencoded")
-  public JsonResult createTrackInJSON(@FormParam("name") String name, @FormParam("config") String storagePluginConfig)
+  public Viewable createTrackInJSON(@FormParam("name") String name, @FormParam("config") String storagePluginConfig)
       throws ExecutionSetupException, JsonParseException, JsonMappingException, IOException {
     StoragePluginConfig config = mapper.readValue(new StringReader(storagePluginConfig), StoragePluginConfig.class);
     storage.createOrUpdate(name, config, true);
-    return r("success");
-  }
-
-  @POST
-  @Path("/config/delete")
-  @Produces(MediaType.APPLICATION_JSON)
-  @Consumes("application/x-www-form-urlencoded")
-  public JsonResult deleteConfig(@FormParam("name") String name) {
-    storage.deletePlugin(name);
-    return r("success");
+    return new Viewable("/rest/status.ftl", "Updated " + name);
   }
 
   private JsonResult r(String message) {
