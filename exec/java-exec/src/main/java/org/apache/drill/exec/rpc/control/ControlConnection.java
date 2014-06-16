@@ -63,6 +63,11 @@ public class ControlConnection extends RemoteConnection {
     bus.send(outcomeListener, this, rpcType, protobufBody, clazz, dataBodies);
   }
 
+  public <SEND extends MessageLite, RECEIVE extends MessageLite> void sendUnsafe(RpcOutcomeListener<RECEIVE> outcomeListener,
+      RpcType rpcType, SEND protobufBody, Class<RECEIVE> clazz, ByteBuf... dataBodies) {
+    bus.send(outcomeListener, this, rpcType, protobufBody, clazz, true, dataBodies);
+  }
+
   public void disable() {
     active = false;
   }

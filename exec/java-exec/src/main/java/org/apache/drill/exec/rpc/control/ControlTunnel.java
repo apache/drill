@@ -41,7 +41,7 @@ public class ControlTunnel {
     this.manager = manager;
     this.endpoint = endpoint;
   }
-  
+
   public DrillbitEndpoint getEndpoint(){
     return manager.getEndpoint();
   }
@@ -50,13 +50,13 @@ public class ControlTunnel {
     SendFragment b = new SendFragment(outcomeListener, fragment);
     manager.runCommand(b);
   }
-  
+
   public DrillRpcFuture<Ack> cancelFragment(FragmentHandle handle){
     CancelFragment b = new CancelFragment(handle);
     manager.runCommand(b);
     return b.getFuture();
   }
-  
+
   public DrillRpcFuture<Ack> sendFragmentStatus(FragmentStatus status){
     SendFragmentStatus b = new SendFragmentStatus(status);
     manager.runCommand(b);
@@ -80,7 +80,7 @@ public class ControlTunnel {
 
     @Override
     public void doRpcCall(RpcOutcomeListener<Ack> outcomeListener, ControlConnection connection) {
-      connection.send(outcomeListener, RpcType.REQ_FRAGMENT_STATUS, status, Ack.class);
+      connection.sendUnsafe(outcomeListener, RpcType.REQ_FRAGMENT_STATUS, status, Ack.class);
     }
 
   }
