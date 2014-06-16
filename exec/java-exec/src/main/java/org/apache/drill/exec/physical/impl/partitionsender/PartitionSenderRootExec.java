@@ -220,7 +220,6 @@ public class PartitionSenderRootExec extends BaseRootExec {
               operator.getOppositeMajorFragmentId(),
               fieldId,
               WritableBatch.getBatchNoHVWrap(0, container, false));
-      tunnel.sendRecordBatch(statusHandler, writableBatch);
       stats.startWait();
       try {
         tunnel.sendRecordBatch(statusHandler, writableBatch);

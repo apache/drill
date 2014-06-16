@@ -110,6 +110,8 @@ public class TestCastFunctions extends PopUnitTestBase{
       assertEquals(5, count);
     }
 
+    exec.stop();
+
     context.close();
     allocator.close();
 
@@ -155,6 +157,8 @@ public class TestCastFunctions extends PopUnitTestBase{
       assertEquals(5, count);
     }
 
+    exec.stop();
+
     context.close();
     allocator.close();
 
@@ -197,6 +201,8 @@ public class TestCastFunctions extends PopUnitTestBase{
       }
       assertEquals(5, count);
     }
+
+    exec.stop();
 
     context.close();
     allocator.close();
@@ -242,6 +248,8 @@ public class TestCastFunctions extends PopUnitTestBase{
       assertEquals(5, count);
     }
 
+    exec.stop();
+
     context.close();
     allocator.close();
 
@@ -285,6 +293,8 @@ public class TestCastFunctions extends PopUnitTestBase{
       }
       assertEquals(5, count);
     }
+
+    exec.stop();
 
     context.close();
     allocator.close();
@@ -330,6 +340,7 @@ public class TestCastFunctions extends PopUnitTestBase{
       }
       assertEquals(5, count);
     }
+    exec.stop();
 
     context.close();
     allocator.close();
@@ -374,6 +385,7 @@ public class TestCastFunctions extends PopUnitTestBase{
       }
       assertEquals(5, count);
     }
+    exec.stop();
 
     context.close();
     allocator.close();
@@ -407,6 +419,8 @@ public class TestCastFunctions extends PopUnitTestBase{
 
     while(exec.next()){
     }
+
+    exec.stop();
 
     context.close();
     allocator.close();

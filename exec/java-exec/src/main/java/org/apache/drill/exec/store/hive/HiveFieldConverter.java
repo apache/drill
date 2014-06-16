@@ -17,7 +17,8 @@
  */
 package org.apache.drill.exec.store.hive;
 
-import com.beust.jcommander.internal.Maps;
+import java.util.Map;
+
 import org.apache.drill.exec.vector.NullableBigIntVector;
 import org.apache.drill.exec.vector.NullableBitVector;
 import org.apache.drill.exec.vector.NullableDateVector;
@@ -52,7 +53,7 @@ import org.apache.hadoop.io.Text;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
-import java.util.Map;
+import com.google.common.collect.Maps;
 
 public abstract class HiveFieldConverter {
 

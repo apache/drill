@@ -339,10 +339,12 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
       for(PhysicalOperator ops : plan.getSortedOperators()){
         size += ops.getCost();
       }
-      if(queuingEnabled && size > this.queueThreshold){
-        this.lease = largeSemaphore.acquire(this.queueTimeout, TimeUnit.MILLISECONDS);
-      }else{
-        this.lease = smallSemaphore.acquire(this.queueTimeout, TimeUnit.MILLISECONDS);
+      if(queuingEnabled){
+        if(size > this.queueThreshold){
+          this.lease = largeSemaphore.acquire(this.queueTimeout, TimeUnit.MILLISECONDS);
+        }else{
+          this.lease = smallSemaphore.acquire(this.queueTimeout, TimeUnit.MILLISECONDS);
+        }
       }
 
       QueryWorkUnit work = parallelizer.getFragments(context.getOptions().getSessionOptionList(), context.getCurrentEndpoint(),

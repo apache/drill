@@ -35,8 +35,7 @@ public class FlattenPrel extends SingleRel implements Prel {
   @Override
   public PhysicalOperator getPhysicalOperator(PhysicalPlanCreator creator) throws IOException {
     Flatten p = new Flatten(((Prel) getChild()).getPhysicalOperator(creator));
-    p.setOperatorId(creator.getOperatorId(this));
-    return p;
+    return creator.addMetadata(this, p);
   }
 
   @Override

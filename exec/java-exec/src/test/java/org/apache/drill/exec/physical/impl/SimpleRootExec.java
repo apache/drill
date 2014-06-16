@@ -38,10 +38,11 @@ public class SimpleRootExec implements RootExec, Iterable<ValueVector>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SimpleRootExec.class);
 
   private RecordBatch incoming;
-
+  private ScreenRoot screenRoot;
   public SimpleRootExec(RootExec e){
     if(e instanceof ScreenRoot){
       incoming = ((ScreenRoot)e).getIncoming();
+      screenRoot = (ScreenRoot) e;
     }else{
       throw new UnsupportedOperationException();
     }
@@ -80,7 +81,7 @@ public class SimpleRootExec implements RootExec, Iterable<ValueVector>{
 
   @Override
   public void stop() {
-    incoming.cleanup();
+    screenRoot.stop();
   }
 
   @Override

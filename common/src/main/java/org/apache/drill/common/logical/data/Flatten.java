@@ -29,13 +29,14 @@ import org.apache.drill.common.logical.data.visitors.LogicalVisitor;
 import java.util.Iterator;
 
 @JsonTypeName("flatten")
-public class Flatten extends SingleInputOperator{
+public class Flatten extends SingleInputOperator {
   private final FieldReference name;
   private final LogicalExpression expr;
   private final boolean drop;
 
   @JsonCreator
-  public Flatten(@JsonProperty("name") FieldReference name, @JsonProperty("expr") LogicalExpression expr, @JsonProperty("drop") boolean drop) {
+  public Flatten(@JsonProperty("name") FieldReference name, @JsonProperty("expr") LogicalExpression expr,
+      @JsonProperty("drop") boolean drop) {
     this.name = name;
     this.expr = expr;
     this.drop = drop;
@@ -53,17 +54,14 @@ public class Flatten extends SingleInputOperator{
     return drop;
   }
 
-    @Override
-    public <T, X, E extends Throwable> T accept(LogicalVisitor<T, X, E> logicalVisitor, X value) throws E {
-        return logicalVisitor.visitFlatten(this, value);
-    }
+  @Override
+  public <T, X, E extends Throwable> T accept(LogicalVisitor<T, X, E> logicalVisitor, X value) throws E {
+    return logicalVisitor.visitFlatten(this, value);
+  }
 
-    @Override
-    public Iterator<LogicalOperator> iterator() {
-        return Iterators.singletonIterator(getInput());
-    }
-  
-  
+  @Override
+  public Iterator<LogicalOperator> iterator() {
+    return Iterators.singletonIterator(getInput());
+  }
 
-	
 }

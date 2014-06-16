@@ -17,16 +17,17 @@
  */
 package org.apache.drill.exec.planner.sql.parser;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.ImmutableList;
+import java.util.List;
 
 import net.hydromatic.optiq.tools.Planner;
 
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.CreateTableHandler;
+import org.eigenbase.sql.SqlCall;
 import org.eigenbase.sql.SqlIdentifier;
 import org.eigenbase.sql.SqlKind;
+import org.eigenbase.sql.SqlLiteral;
 import org.eigenbase.sql.SqlNode;
 import org.eigenbase.sql.SqlNodeList;
 import org.eigenbase.sql.SqlOperator;

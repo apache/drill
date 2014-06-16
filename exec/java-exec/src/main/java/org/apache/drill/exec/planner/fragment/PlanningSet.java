@@ -25,28 +25,43 @@ import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 
 import com.google.common.collect.Maps;
 
-public class PlanningSet implements Iterable<Wrapper>{
+public class PlanningSet implements Iterable<Wrapper> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PlanningSet.class);
-  
-  private Map<Fragment, Wrapper> fragmentMap = Maps.newHashMap();
 
-  PlanningSet(){
+  private Map<Fragment, Wrapper> fragmentMap = Maps.newHashMap();
+  private int majorFragmentIdIndex = 0;
+
+  PlanningSet() {
   }
 
-  public void addAffinity(Fragment n, DrillbitEndpoint endpoint, float affinity){
+  public void addAffinity(Fragment n, DrillbitEndpoint endpoint, float affinity) {
     get(n).addEndpointAffinity(endpoint, affinity);
   }
-  
-  public void setWidth(Fragment n, int width){
+
+  public void setWidth(Fragment n, int width) {
     get(n).setWidth(width);
   }
-  
-  Wrapper get(Fragment node){
+
+  Wrapper get(Fragment node) {
     Wrapper wrapper = fragmentMap.get(node);
-    if(wrapper == null){
-      int majorFragmentId = node.getRoot().getOperatorId() == 0 ? 0 : node.getSendingExchange().getChild().getOperatorId() >> 16;
+    if (wrapper == null) {
+
+      int majorFragmentId = 0;
+
+      // If there is a sending exchange, we need to number other than zero.
+      if (node.getSendingExchange() != null) {
+
+        // assign the upper 16 bits as the major fragment id.
+        majorFragmentId = node.getSendingExchange().getChild().getOperatorId() >> 16;
+
+        // if they are not assigned, that means we mostly likely have an externally generated plan.  in this case, come up with a major fragmentid.
+        if (majorFragmentId == 0) {
+          majorFragmentId = majorFragmentIdIndex;
+        }
+      }
       wrapper = new Wrapper(node, majorFragmentId);
-      fragmentMap.put(node,  wrapper);
+      fragmentMap.put(node, wrapper);
+      majorFragmentIdIndex++;
     }
     return wrapper;
   }
@@ -60,7 +75,5 @@ public class PlanningSet implements Iterable<Wrapper>{
   public String toString() {
     return "FragmentPlanningSet:\n" + fragmentMap.values() + "]";
   }
-  
-  
-  
+
 }

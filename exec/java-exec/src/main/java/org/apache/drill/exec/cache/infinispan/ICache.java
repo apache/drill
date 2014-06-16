@@ -23,9 +23,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
-import com.google.common.collect.Maps;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.cache.Counter;
@@ -54,6 +56,8 @@ import org.jgroups.fork.ForkChannel;
 import org.jgroups.protocols.COUNTER;
 import org.jgroups.protocols.FRAG2;
 import org.jgroups.stack.ProtocolStack;
+
+import com.google.common.collect.Maps;
 
 
 public class ICache implements DistributedCache{

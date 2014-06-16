@@ -60,10 +60,10 @@ public class TestCacheSerialization extends ExecTest {
   private static final DrillConfig CONFIG = DrillConfig.create();
 
   @Test
-  public void protobufSerialization() {
+  public void protobufSerialization() throws Exception {
     DistributedMap<String, FragmentHandle> map = ICACHE.getMap(CacheConfig.newBuilder(FragmentHandle.class).proto().build());
     FragmentHandle s = FragmentHandle.newBuilder().setMajorFragmentId(1).setMinorFragmentId(1).setQueryId(QueryId.newBuilder().setPart1(74).setPart2(66).build()).build();
-    map.put("1", s);
+    map.put("1", s).get();
     for(int i =0; i < 2; i++){
       FragmentHandle s2 = map.get("1");
       Assert.assertEquals(s, s2);
@@ -71,10 +71,10 @@ public class TestCacheSerialization extends ExecTest {
   }
 
   @Test
-  public void jacksonSerialization(){
+  public void jacksonSerialization() throws Exception {
     OptionValue v = OptionValue.createBoolean(OptionType.SESSION, "my test option", true);
     DistributedMap<String, OptionValue> map = ICACHE.getMap(CacheConfig.newBuilder(OptionValue.class).jackson().build());
-    map.put("1", v);
+    map.put("1", v).get();
     for(int i = 0; i < 5; i++){
       OptionValue v2 = map.get("1");
       Assert.assertEquals(v, v2);
@@ -114,7 +114,7 @@ public class TestCacheSerialization extends ExecTest {
     CachedVectorContainer wrap = new CachedVectorContainer(batch, ALLOCATOR);
 
     DistributedMultiMap<String, CachedVectorContainer> mmap = ICACHE.getMultiMap(OrderedPartitionRecordBatch.MULTI_CACHE_CONFIG);
-    mmap.put("vectors", wrap);
+    mmap.put("vectors", wrap).get();
 
     for(int x =0; x < 2; x++){
       CachedVectorContainer newWrap = (CachedVectorContainer) mmap.get("vectors").iterator().next();
