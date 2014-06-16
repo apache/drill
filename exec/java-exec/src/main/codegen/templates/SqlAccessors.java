@@ -45,9 +45,11 @@ public class ${name}Accessor extends AbstractSqlAccessor{
     this.ac = vector.getAccessor();
   }
 
+  <#if minor.class != "TimeStampTZ" && minor.class != "TimeStamp" && minor.class != "Time" && minor.class != "Date">
   public Object getObject(int index){
     return ac.getObject(index);
   }
+  </#if>
   
   <#if type.major == "VarLen">
 
@@ -65,6 +67,10 @@ public class ${name}Accessor extends AbstractSqlAccessor{
   
   <#switch minor.class>
     <#case "VarBinary">
+    public String getString(int index) {
+      byte [] b = ac.get(index);
+      return StringFunctionUtil.toBinaryString(io.netty.buffer.Unpooled.wrappedBuffer(b), 0, b.length);
+    }
       <#break>
     <#case "VarChar">
     @Override 
@@ -98,6 +104,10 @@ public class ${name}Accessor extends AbstractSqlAccessor{
 
   <#else>
   <#if minor.class == "TimeStampTZ">
+  public Object getObject(int index) {
+    return getTimestamp(index);
+  }
+
   @Override
   public Timestamp getTimestamp(int index) {
     return new Timestamp(ac.getObject(index).getMillis());
@@ -113,6 +123,10 @@ public class ${name}Accessor extends AbstractSqlAccessor{
       return ac.getObject(index);
   }
   <#elseif minor.class == "Date">
+  public Object getObject(int index) {
+    return getDate(index);
+  }
+
   @Override
   public Date getDate(int index) {
     org.joda.time.DateTime date = new org.joda.time.DateTime(ac.get(index), org.joda.time.DateTimeZone.UTC);
@@ -120,6 +134,10 @@ public class ${name}Accessor extends AbstractSqlAccessor{
     return new Date(date.getMillis());
   }
   <#elseif minor.class == "TimeStamp">
+  public Object getObject(int index) {
+    return getTimestamp(index);
+  }
+
   @Override
   public Timestamp getTimestamp(int index) {
     org.joda.time.DateTime date = new org.joda.time.DateTime(ac.get(index), org.joda.time.DateTimeZone.UTC);
@@ -127,6 +145,10 @@ public class ${name}Accessor extends AbstractSqlAccessor{
     return new Timestamp(date.getMillis());
   }
   <#elseif minor.class == "Time">
+  public Object getObject(int index) {
+    return getTime(index);
+  }
+
   @Override
   public Time getTime(int index) {
     org.joda.time.DateTime time = new org.joda.time.DateTime(ac.get(index), org.joda.time.DateTimeZone.UTC);

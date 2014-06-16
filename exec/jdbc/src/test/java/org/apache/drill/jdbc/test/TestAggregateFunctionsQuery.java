@@ -19,6 +19,7 @@ package org.apache.drill.jdbc.test;
 
 import java.nio.file.Paths;
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -29,6 +30,7 @@ import org.apache.drill.common.util.TestTools;
 import org.apache.drill.exec.store.hive.HiveTestDataGenerator;
 import org.apache.drill.jdbc.Driver;
 import org.apache.drill.jdbc.JdbcTest;
+import org.joda.time.chrono.ISOChronology;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -36,10 +38,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
 
-import org.joda.time.DateTime;
-
 import com.google.common.base.Function;
 import com.google.common.base.Stopwatch;
+
 
 public class TestAggregateFunctionsQuery {
 
@@ -55,8 +56,10 @@ public class TestAggregateFunctionsQuery {
         " FROM `employee.json`");
 
 
-    String t = new DateTime(1998, 1, 1, 0, 0, 0, 0).toString();
-    String t1 = new DateTime(1993, 5, 1, 0, 0, 0, 0).toString();
+    String t  = new Date(ISOChronology.getInstance().getDateTimeMillis(1998, 1, 1, 0)).toString();
+    String t1 = new Date(ISOChronology.getInstance().getDateTimeMillis(1993, 5, 1, 0)).toString();
+    //String t = new Date(1998, 1, 1).toString();
+    //String t1 = new Date(1993, 5, 1).toString();
 
     String result = String.format("MAX_DATE="+ t + "; " + "MIN_DATE=" + t1 + "\n");
 
