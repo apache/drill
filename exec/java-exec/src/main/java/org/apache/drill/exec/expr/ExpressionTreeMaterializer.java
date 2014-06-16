@@ -142,7 +142,7 @@ public class ExpressionTreeMaterializer {
 
       FunctionResolver resolver = FunctionResolverFactory.getResolver(call);
       DrillFuncHolder matchedFuncHolder =
-        resolver.getBestMatch(registry.getDrillRegistry().getMethods().get(call.getName()), call);
+        resolver.getBestMatch(registry.getDrillRegistry().getMethods(call.getName()), call);
 
       if (matchedFuncHolder instanceof DrillComplexWriterFuncHolder && ! allowComplexWriter) {
         errorCollector.addGeneralError(call.getPosition(), "Only ProjectRecordBatch could have complex writer function. You are using complex writer function " + call.getName() + " in a non-project operation!");
@@ -192,7 +192,7 @@ public class ExpressionTreeMaterializer {
 
             FunctionCall castCall = new FunctionCall(castFuncName, castArgs, ExpressionPosition.UNKNOWN);
             DrillFuncHolder matchedCastFuncHolder = resolver.getBestMatch(
-              registry.getDrillRegistry().getMethods().get(castFuncName), castCall);
+              registry.getDrillRegistry().getMethods(castFuncName), castCall);
 
             if (matchedCastFuncHolder == null) {
               logFunctionResolutionError(errorCollector, castCall);
@@ -326,7 +326,7 @@ public class ExpressionTreeMaterializer {
       FunctionResolver resolver = FunctionResolverFactory.getResolver(funcCall);
 
       DrillFuncHolder matchedConvertToNullableFuncHolder =
-          resolver.getBestMatch(registry.getDrillRegistry().getMethods().get(funcName), funcCall);
+          resolver.getBestMatch(registry.getDrillRegistry().getMethods(funcName), funcCall);
 
       if (matchedConvertToNullableFuncHolder == null) {
         logFunctionResolutionError(errorCollector, funcCall);

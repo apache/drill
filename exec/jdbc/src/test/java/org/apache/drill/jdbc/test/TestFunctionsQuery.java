@@ -548,4 +548,15 @@ public class TestFunctionsQuery {
             "EXT_INTDAY=45.1\n");
   }
 
+  @Test
+  public void testFunctionCaseInsensitiveNames() throws Exception {
+    String query = "SELECT to_date('2003/07/09', 'yyyy/MM/dd') as col1, " +
+        "TO_DATE('2003/07/09', 'yyyy/MM/dd') as col2, " +
+        "To_DaTe('2003/07/09', 'yyyy/MM/dd') as col3 " +
+        "from cp.`employee.json` LIMIT 1";
+
+    JdbcAssert.withNoDefaultSchema()
+        .sql(query)
+        .returns("col1=2003-07-09; col2=2003-07-09; col3=2003-07-09");
+  }
 }

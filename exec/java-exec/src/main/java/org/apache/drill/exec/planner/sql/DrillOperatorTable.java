@@ -84,7 +84,7 @@ public class DrillOperatorTable extends SqlStdOperatorTable {
         return;
       }
 
-      List<SqlOperator> drillOps = opMap.get(opName.getSimple());
+      List<SqlOperator> drillOps = opMap.get(opName.getSimple().toLowerCase());
       if(drillOps != null){
         operatorList.addAll(drillOps);
       }

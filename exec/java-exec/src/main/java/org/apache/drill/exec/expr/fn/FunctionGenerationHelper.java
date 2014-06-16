@@ -58,7 +58,7 @@ public class FunctionGenerationHelper {
       argExpressions.add(new HoldingContainerExpression(c));
     }
     
-    for (DrillFuncHolder h : registry.getDrillRegistry().getMethods().get(name)) {
+    for (DrillFuncHolder h : registry.getDrillRegistry().getMethods(name)) {
       if (h.matches(returnType, argTypes)) {
         return new DrillFuncHolderExpr(name, h, argExpressions, ExpressionPosition.UNKNOWN);
       }

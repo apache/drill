@@ -75,12 +75,7 @@ public class HiveFunctionImplementationRegistry {
 
 
     for(int i=0; i<names.length;i++){
-      methods.put(names[i], clazz);
-      if (!names[i].toLowerCase().equals(names[i])) {
-        // After the Optiq-Drill conversion of function calls, function names are in lowercase
-        // and we fail to find them in the map. Add a lowercase name entry.
-        methods.put(names[i].toLowerCase(), clazz);
-      }
+      methods.put(names[i].toLowerCase(), clazz);
     }
   }
 
@@ -107,15 +102,17 @@ public class HiveFunctionImplementationRegistry {
       argOIs[i] = ObjectInspectorHelper.getDrillObjectInspector(argTypes[i].getMinorType());
     }
 
+    String funcName = call.getName().toLowerCase();
+
     // search in GenericUDF list
-    for(Class<? extends GenericUDF> clazz: methodsGenericUDF.get(call.getName())) {
+    for(Class<? extends GenericUDF> clazz: methodsGenericUDF.get(funcName)) {
       holder = matchAndCreateGenericUDFHolder(clazz, argTypes, argOIs);
       if(holder != null)
         return holder;
     }
 
     // search in UDF list
-    for (Class<? extends UDF> clazz : methodsUDF.get(call.getName())) {
+    for (Class<? extends UDF> clazz : methodsUDF.get(funcName)) {
       holder = matchAndCreateUDFHolder(call.getName(), clazz, argTypes, argOIs);
       if (holder != null)
         return holder;

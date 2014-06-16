@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.expr.fn;
 
+import java.util.List;
 import java.util.Set;
 
 import org.apache.drill.common.config.DrillConfig;
@@ -39,7 +40,7 @@ public class DrillFunctionImplementationRegistry {
       if(holder != null){
         // register handle for each name the function can be referred to
         String[] names = holder.getRegisteredNames();
-        for(String name : names) methods.put(name, holder);
+        for(String name : names) methods.put(name.toLowerCase(), holder);
       }else{
         logger.warn("Unable to initialize function for class {}", clazz.getName());
       }
@@ -55,5 +56,10 @@ public class DrillFunctionImplementationRegistry {
 
   public ArrayListMultimap<String, DrillFuncHolder> getMethods() {
     return this.methods;
+  }
+
+  /** Returns functions with given name. Function name is case insensitive. */
+  public List<DrillFuncHolder> getMethods(String name) {
+    return this.methods.get(name.toLowerCase());
   }
 }
