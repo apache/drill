@@ -28,6 +28,8 @@
     {to: "BigInt", from: "Float4" , explicit: "long", major: "Fixed"},
     {to: "Int", from: "Float8" , explicit: "int", major: "Fixed"},
     {to: "BigInt", from: "Float8" , explicit: "long", major: "Fixed"},
+    {from: "TinyInt", to: "Bit", major: "Fixed"},
+    {from: "Bit", to: "TinyInt", explicit: "byte", major: "Fixed"},
     
     {from: "VarChar", to: "BigInt", major: "SrcVarlen", javaType: "Long", primeType: "long"},
     {from: "VarChar", to: "Int", major: "SrcVarlen", javaType:"Integer", primeType:"int"},
