@@ -537,5 +537,15 @@ public class TestFunctionsQuery {
             "DEC18_MUL=15241578780673678.515622620750190521\n");
   }
 
+  @Test
+  public void testExtractSecondFromInterval() throws Exception {
+    String query = "select extract (second from interval '1 2:30:45.100' day to second) as EXT_INTDAY " +
+        "from cp.`employee.json` where employee_id = 1";
+
+    JdbcAssert.withNoDefaultSchema()
+        .sql(query)
+        .returns(
+            "EXT_INTDAY=45.1\n");
+  }
 
 }

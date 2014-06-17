@@ -103,7 +103,8 @@ public class ${className} {
       int millis = in.milliSeconds % (org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis);
       out.value = millis / (org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis);
     <#elseif toUnit == "Second">
-      out.value = (double) in.milliSeconds / (org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis);
+      long millis = in.milliSeconds % org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis;
+      out.value = (double) millis / (org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis);
     </#if>
   <#elseif fromUnit == "IntervalDay">
     <#if toUnit == "Year" || toUnit == "Month">
@@ -116,7 +117,8 @@ public class ${className} {
       int millis = in.milliSeconds % (org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis);
       out.value = millis / (org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis);
     <#elseif toUnit == "Second">
-      out.value = (double) in.milliSeconds/ (org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis);
+      long millis = in.milliSeconds % org.apache.drill.exec.expr.fn.impl.DateUtility.minutesToMillis;
+      out.value = (double) millis / (org.apache.drill.exec.expr.fn.impl.DateUtility.secondsToMillis);
     </#if>
   <#else> <#-- IntervalYear type -->
     <#if toUnit == "Year">
