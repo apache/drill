@@ -38,8 +38,9 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
 public class TestAggregateFunction extends PopUnitTestBase {
-        @Test
-    public void testSortDate() throws Exception {
+
+    public void runTest(Object[] values, String planPath, String dataPath) throws Throwable {
+
         try (RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
              Drillbit bit = new Drillbit(CONFIG, serviceSet);
              DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator())) {
@@ -48,27 +49,17 @@ public class TestAggregateFunction extends PopUnitTestBase {
             bit.run();
             client.connect();
             List<QueryResultBatch> results = client.runQuery(QueryType.PHYSICAL,
-                    Files.toString(FileUtils.getResourceAsFile("/functions/test_stddev_variance.json"), Charsets.UTF_8)
-                            .replace("#{TEST_FILE}", "/simple_stddev_variance_input.json"));
+                    Files.toString(FileUtils.getResourceAsFile(planPath), Charsets.UTF_8).replace("#{TEST_FILE}", dataPath));
 
             RecordBatchLoader batchLoader = new RecordBatchLoader(bit.getContext().getAllocator());
 
             QueryResultBatch batch = results.get(0);
             assertTrue(batchLoader.load(batch.getHeader().getDef(), batch.getData()));
 
-            Double values[] = {2.0d,
-                               2.138089935299395d,
-                               2.138089935299395d,
-                               4.0d,
-                               4.571428571428571d,
-                               4.571428571428571d};
-
             int i = 0;
             for (VectorWrapper<?> v : batchLoader) {
-
-                ValueVector.Accessor accessor = v.getValueVector().getAccessor();
-                System.out.println(accessor.getObject(0));
-                assertEquals((accessor.getObject(0)), values[i++]);
+				ValueVector.Accessor accessor = v.getValueVector().getAccessor();
+				assertEquals(values[i++], (accessor.getObject(0)));
             }
 
             batchLoader.clear();
@@ -77,4 +68,22 @@ public class TestAggregateFunction extends PopUnitTestBase {
             }
         }
     }
+
+	@Test
+    public void testSortDate() throws Throwable {
+		String planPath = "/functions/test_stddev_variance.json";
+		String dataPath = "/simple_stddev_variance_input.json";
+		Double expectedValues[] = {2.0d, 2.138089935299395d, 2.138089935299395d, 4.0d, 4.571428571428571d, 4.571428571428571d};
+
+		runTest(expectedValues, planPath, dataPath);
+    }
+
+	@Test
+	 public void testCovarianceCorrelation() throws Throwable {
+		String planPath = "/functions/test_covariance.json";
+		String dataPath = "/covariance_input.json";
+		Double expectedValues[] = {4.571428571428571d, 4.857142857142857d, -6.000000000000002d, 4.0d , 4.25d, -5.250000000000002d, 1.0d, 0.9274260335029677d, -1.0000000000000004d};
+
+		runTest(expectedValues, planPath, dataPath);
+}
 }

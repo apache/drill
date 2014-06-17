@@ -25,6 +25,8 @@ data: {
     decimalaggrtypes1: tdd(../data/DecimalAggrTypes1.tdd),
     aggrtypes2: tdd(../data/AggrTypes2.tdd),
     aggrtypes3: tdd(../data/AggrTypes3.tdd),
+    covarTypes: tdd(../data/CovarTypes.tdd),
+    corrTypes: tdd(../data/CorrelationTypes.tdd),
     date: tdd(../data/DateTypes.tdd),
     extract: tdd(../data/ExtractTypes.tdd),
     parser: tdd(../data/Parser.tdd),
@@ -36,6 +38,4 @@ data: {
 }
 freemarkerLinks: {
     includes: includes/
-} 
-
-    
+}
