@@ -159,15 +159,15 @@ public class EvaluationVisitor {
         HoldingContainer holdingContainer = c.condition.accept(this, generator);
         if (jc == null) {
           if (holdingContainer.isOptional()) {
-            jc = conditionalBlock._if(holdingContainer.getIsSet().cand(holdingContainer.getValue()));
+            jc = conditionalBlock._if(holdingContainer.getIsSet().eq(JExpr.lit(1)).cand(holdingContainer.getValue().eq(JExpr.lit(1))));
           } else {
             jc = conditionalBlock._if(holdingContainer.getValue().eq(JExpr.lit(1)));
           }
         } else {
           if (holdingContainer.isOptional()) {
-            jc = jc._else()._if(holdingContainer.getIsSet().cand(holdingContainer.getValue()));
+            jc = jc._else()._if(holdingContainer.getIsSet().eq(JExpr.lit(1)).cand(holdingContainer.getValue().eq(JExpr.lit(1))));
           } else {
-            jc = jc._else()._if(holdingContainer.getValue());
+            jc = jc._else()._if(holdingContainer.getValue().eq(JExpr.lit(1)));
           }
         }
 
@@ -176,7 +176,7 @@ public class EvaluationVisitor {
           JConditional newCond = jc._then()._if(thenExpr.getIsSet().ne(JExpr.lit(0)));
           JBlock b = newCond._then();
           b.assign(output.getHolder(), thenExpr.getHolder());
-          b.assign(output.getIsSet(), thenExpr.getIsSet());
+          //b.assign(output.getIsSet(), thenExpr.getIsSet());
         } else {
           jc._then().assign(output.getHolder(), thenExpr.getHolder());
         }
@@ -188,7 +188,7 @@ public class EvaluationVisitor {
         JConditional newCond = jc._else()._if(elseExpr.getIsSet().ne(JExpr.lit(0)));
         JBlock b = newCond._then();
         b.assign(output.getHolder(), elseExpr.getHolder());
-        b.assign(output.getIsSet(), elseExpr.getIsSet());
+        //b.assign(output.getIsSet(), elseExpr.getIsSet());
       } else {
         jc._else().assign(output.getHolder(), elseExpr.getHolder());
       }

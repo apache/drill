@@ -78,14 +78,14 @@ public class ExpressionValidator implements ExprVisitor<Void, ErrorCollector, Ru
     int i = 0;
     for (IfCondition c : ifExpr.conditions) {
       MajorType mt = c.condition.getMajorType();
-      if (mt.getMode() != DataMode.REQUIRED || mt.getMinorType() != MinorType.BIT) {
+      if ( mt.getMinorType() != MinorType.BIT) {
         errors
             .addGeneralError(
                 c.condition.getPosition(),
                 String
                     .format(
-                        "Failure composing If Expression.  All conditions must return a required value and be of type boolean.  Condition %d was DatMode %s and Type %s.",
-                        i, mt.getMode(), mt.getMinorType()));
+                        "Failure composing If Expression.  All conditions must return a boolean type.  Condition %d was of Type %s.",
+                        i, mt.getMinorType()));
       }
       i++;
     }
