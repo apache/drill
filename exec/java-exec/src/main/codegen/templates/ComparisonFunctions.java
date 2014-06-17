@@ -96,6 +96,7 @@ package org.apache.drill.exec.expr.fn.impl;
 
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
+import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.*;
@@ -117,8 +118,10 @@ public class GCompare${left}${right}{
         <@compareBlock mode=type.mode left=left right=right output="out.value" nullCompare=true />
       }
   }
-  
-  @FunctionTemplate(names = {"less_than", "<"}, scope = FunctionTemplate.FunctionScope.SIMPLE)
+
+  <#if ! left?starts_with("Nullable")  &&  ! right?starts_with("Nullable") >
+
+  @FunctionTemplate(names = {"less_than", "<"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
   public static class LessThan${left}${right} implements DrillSimpleFunc {
 
       @Param ${left}Holder left;
@@ -128,20 +131,7 @@ public class GCompare${left}${right}{
       public void setup(RecordBatch b) {}
 
       public void eval() {
-        sout: {
-        <#if left?starts_with("Nullable")>
-        if(left.isSet ==0){
-          out.value = 0;
-          break sout;
-        }
-        </#if>
-        <#if right?starts_with("Nullable")>
-        if(right.isSet ==0){
-          out.value = 0;
-          break sout;
-        }
-        </#if>
-
+        
         <#if type.mode == "var" >
         int cmp;
         <@compareBlock mode=type.mode left=left right=right output="cmp" nullCompare=false/>
@@ -150,11 +140,10 @@ public class GCompare${left}${right}{
         out.value = left.value < right.value ? 1 : 0;
         </#if>
 
-        }
       }
   }
   
-  @FunctionTemplate(names = {"less_than_or_equal_to", "<="}, scope = FunctionTemplate.FunctionScope.SIMPLE)
+  @FunctionTemplate(names = {"less_than_or_equal_to", "<="}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
   public static class LessThanE${left}${right} implements DrillSimpleFunc {
 
       @Param ${left}Holder left;
@@ -164,19 +153,6 @@ public class GCompare${left}${right}{
       public void setup(RecordBatch b) {}
 
       public void eval() {
-        sout: {
-        <#if left?starts_with("Nullable")>
-        if(left.isSet ==0){
-          out.value = 0;
-          break sout;
-        }
-        </#if>
-        <#if right?starts_with("Nullable")>
-        if(right.isSet ==0){
-          out.value = 0;
-          break sout;
-        }
-        </#if>
         
         <#if type.mode == "var" >
         int cmp;
@@ -186,11 +162,10 @@ public class GCompare${left}${right}{
         out.value = left.value <= right.value ? 1 : 0;
         </#if>
 
-        }
     }
   }
   
-  @FunctionTemplate(names = {"greater_than", ">"}, scope = FunctionTemplate.FunctionScope.SIMPLE)
+  @FunctionTemplate(names = {"greater_than", ">"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
   public static class GreaterThan${left}${right} implements DrillSimpleFunc {
 
       @Param ${left}Holder left;
@@ -200,19 +175,6 @@ public class GCompare${left}${right}{
       public void setup(RecordBatch b) {}
 
       public void eval() {
-        sout: {
-        <#if left?starts_with("Nullable")>
-        if(left.isSet ==0){
-          out.value = 0;
-          break sout;
-        }
-        </#if>
-        <#if right?starts_with("Nullable")>
-        if(right.isSet ==0){
-          out.value = 0;
-          break sout;
-        }
-        </#if>
         
         <#if type.mode == "var" >
         int cmp;
@@ -222,11 +184,10 @@ public class GCompare${left}${right}{
         out.value = left.value > right.value ? 1 : 0;
         </#if>
 
-        }
     }
   }
   
-  @FunctionTemplate(names = {"greater_than_or_equal_to", ">="}, scope = FunctionTemplate.FunctionScope.SIMPLE)
+  @FunctionTemplate(names = {"greater_than_or_equal_to", ">="}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
   public static class GreaterThanE${left}${right} implements DrillSimpleFunc {
 
       @Param ${left}Holder left;
@@ -236,19 +197,6 @@ public class GCompare${left}${right}{
       public void setup(RecordBatch b) {}
 
       public void eval() {
-        sout: {
-        <#if left?starts_with("Nullable")>
-        if(left.isSet ==0){
-          out.value = 0;
-          break sout;
-        }
-        </#if>
-        <#if right?starts_with("Nullable")>
-        if(right.isSet ==0){
-          out.value = 0;
-          break sout;
-        }
-        </#if>
         
         <#if type.mode == "var" >            
         int cmp;
@@ -258,11 +206,10 @@ public class GCompare${left}${right}{
         out.value = left.value >= right.value ? 1 : 0;
         </#if>
 
-        }
       }
   }
   
-  @FunctionTemplate(names = {"equal","==","="}, scope = FunctionTemplate.FunctionScope.SIMPLE)
+  @FunctionTemplate(names = {"equal","==","="}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
   public static class Equals${left}${right} implements DrillSimpleFunc {
 
       @Param ${left}Holder left;
@@ -272,19 +219,6 @@ public class GCompare${left}${right}{
       public void setup(RecordBatch b) {}
 
       public void eval() {
-        sout: {
-          <#if left?starts_with("Nullable")>
-          if(left.isSet ==0){
-            out.value = 0;
-            break sout;
-          }
-          </#if>
-          <#if right?starts_with("Nullable")>
-          if(right.isSet ==0){
-            out.value = 0;
-            break sout;
-          }
-          </#if>
         
           <#if type.mode == "var" >
 outside: 
@@ -310,11 +244,10 @@ outside:
           out.value = left.value == right.value ? 1 : 0;
           </#if>
 
-        }
       }
   }
   
-  @FunctionTemplate(names = {"not_equal","<>","!="}, scope = FunctionTemplate.FunctionScope.SIMPLE)
+  @FunctionTemplate(names = {"not_equal","<>","!="}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
   public static class NotEquals${left}${right} implements DrillSimpleFunc {
 
       @Param ${left}Holder left;
@@ -324,19 +257,6 @@ outside:
       public void setup(RecordBatch b) {}
 
       public void eval() {
-        sout: {
-        <#if left?starts_with("Nullable")>
-        if(left.isSet ==0){
-          out.value = 0;
-          break sout;
-        }
-        </#if>
-        <#if right?starts_with("Nullable")>
-        if(right.isSet ==0){
-          out.value = 0;
-          break sout;
-        }
-        </#if>
         
         <#if type.mode == "var" >            
         int cmp;
@@ -345,11 +265,12 @@ outside:
         <#else>
         out.value = left.value != right.value ? 1 : 0;
         </#if>
-        
-        }
-        
+                
       }
   }
+
+  </#if>
+
 }
 </#list>
 </#list>
