@@ -213,11 +213,22 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
   
   public boolean copyFromSafe(int fromIndex, int thisIndex, ${minor.class}Vector from){
     if(thisIndex >= getValueCapacity()) {
-      allocationMonitor--;
+      decrementAllocationMonitor();
       return false;
     }
     copyFrom(fromIndex, thisIndex, from);
     return true;
+  }
+
+  private void decrementAllocationMonitor() {
+    if (allocationMonitor > 0) {
+      allocationMonitor = 0;
+    }
+    --allocationMonitor;
+  }
+
+  private void incrementAllocationMonitor() {
+    ++allocationMonitor;
   }
 
   public final class Accessor extends BaseValueVector.BaseAccessor{
@@ -576,7 +587,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
 
    public boolean setSafe(int index, <#if (type.width > 4)>${minor.javaType!type.javaType}<#else>int</#if> value) {
      if(index >= getValueCapacity()) {
-       allocationMonitor--;
+       decrementAllocationMonitor();
        return false;
      }
      data.setBytes(index * ${type.width}, value, 0, ${type.width});
@@ -597,7 +608,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
 
    public boolean setSafe(int index, ${minor.class}Holder holder){
      if(index >= getValueCapacity()) {
-       allocationMonitor--;
+       decrementAllocationMonitor();
        return false;
      }
      set(index, holder);
@@ -606,7 +617,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
 
    public boolean setSafe(int index, Nullable${minor.class}Holder holder){
      if(index >= getValueCapacity()) {
-       allocationMonitor--;
+       decrementAllocationMonitor();
        return false;
      }
      set(index, holder);
@@ -629,7 +640,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
 
    public boolean setSafe(int index, ${minor.class}Holder holder){
      if(index >= getValueCapacity()) {
-       allocationMonitor--;
+       decrementAllocationMonitor();
        return false;
      }
      set(index, holder);
@@ -638,7 +649,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
 
    public boolean setSafe(int index, Nullable${minor.class}Holder holder){
      if(index >= getValueCapacity()) {
-       allocationMonitor--;
+       decrementAllocationMonitor();
        return false;
      }
      set(index, holder);
@@ -659,7 +670,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
 
    public boolean setSafe(int index, ${minor.class}Holder holder){
      if(index >= getValueCapacity()) {
-       allocationMonitor--;
+       decrementAllocationMonitor();
        return false;
      }
      set(index, holder);
@@ -668,7 +679,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
 
    public boolean setSafe(int index, Nullable${minor.class}Holder holder){
      if(index >= getValueCapacity()) {
-       allocationMonitor--;
+       decrementAllocationMonitor();
        return false;
      }
      set(index, holder);
@@ -708,7 +719,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
 
    public boolean setSafe(int index,  Nullable${minor.class}Holder holder){
        if(index >= getValueCapacity()) {
-         allocationMonitor--;
+         decrementAllocationMonitor();
          return false;
        }
        set(index, holder);
@@ -717,7 +728,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
 
    public boolean setSafe(int index,  ${minor.class}Holder holder){
        if(index >= getValueCapacity()) {
-         allocationMonitor--;
+         decrementAllocationMonitor();
          return false;
        }
        set(index, holder);
@@ -731,7 +742,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
    
    public boolean setSafe(int index, ${minor.class}Holder holder){
      if(index >= getValueCapacity()) {
-       allocationMonitor--;
+       decrementAllocationMonitor();
        return false;
      }
      set(index, holder);
@@ -762,7 +773,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
 
    public boolean setSafe(int index, <#if (type.width >= 4)>${minor.javaType!type.javaType}<#else>int</#if> value) {
      if(index >= getValueCapacity()) {
-       allocationMonitor--;
+       decrementAllocationMonitor();
        return false;
      }
      set(index, value);
@@ -775,7 +786,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
 
    public boolean setSafe(int index, ${minor.class}Holder holder){
      if(index >= getValueCapacity()) {
-       allocationMonitor--;
+       decrementAllocationMonitor();
        return false;
      }
      set(index, holder);
@@ -788,7 +799,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
 
    public boolean setSafe(int index, Nullable${minor.class}Holder holder){
      if(index >= getValueCapacity()) {
-       allocationMonitor--;
+       decrementAllocationMonitor();
        return false;
      }
      set(index, holder);
@@ -816,10 +827,10 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
      int currentValueCapacity = getValueCapacity();
      ${minor.class}Vector.this.valueCount = valueCount;
      int idx = (${type.width} * valueCount);
-     if (valueCount > 0 && currentValueCapacity > idx * 2) {
-       allocationMonitor++;
+     if (valueCount > 0 && currentValueCapacity > valueCount * 2) {
+       incrementAllocationMonitor();
      } else if (allocationMonitor > 0) {
-       allocationMonitor--;
+       allocationMonitor = 0;
      }
      data.writerIndex(idx);
      if (data instanceof AccountingByteBuf) {

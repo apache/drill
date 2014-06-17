@@ -168,11 +168,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
   }
   
   public boolean copyFromSafe(int fromIndex, int thisIndex, ${minor.class}Vector from){
-    if(thisIndex >= getValueCapacity()) {
-        allocationMonitor--;
-        return false;
-    }
-    
+
     int start = from.offsetVector.getAccessor().get(fromIndex);
     int end =   from.offsetVector.getAccessor().get(fromIndex+1);
     int len = end - start;
@@ -180,10 +176,15 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     int outputStart = offsetVector.data.get${(minor.javaType!type.javaType)?cap_first}(thisIndex * ${type.width});
     
     if(data.capacity() < outputStart + len) {
-        allocationMonitor--;
+        decrementAllocationMonitor();
         return false;
     }
-    
+
+    if (!offsetVector.getMutator().setSafe(thisIndex + 1, outputStart + len)) {
+       decrementAllocationMonitor();
+       return false;
+    }
+
     from.data.getBytes(start, data, outputStart, len);
     offsetVector.data.set${(minor.javaType!type.javaType)?cap_first}( (thisIndex+1) * ${type.width}, outputStart + len);
 
@@ -258,6 +259,17 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
     offsetVector.allocateNew(valueCount+1);
     offsetVector.zeroVector();
   }
+
+    private void decrementAllocationMonitor() {
+      if (allocationMonitor > 0) {
+        allocationMonitor = 0;
+      }
+      --allocationMonitor;
+    }
+
+    private void incrementAllocationMonitor() {
+      ++allocationMonitor;
+    }
 
   public Accessor getAccessor(){
     return accessor;
@@ -363,7 +375,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
 
       int currentOffset = offsetVector.getAccessor().get(index);
       if (data.capacity() < currentOffset + bytes.length) {
-        allocationMonitor--;
+        decrementAllocationMonitor();
         return false;
       }
       if (!offsetVector.getMutator().setSafe(index + 1, currentOffset + bytes.length)) {
@@ -395,7 +407,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       int currentOffset = offsetVector.getAccessor().get(index);
 
       if (data.capacity() < currentOffset + length) {
-        allocationMonitor--;
+        decrementAllocationMonitor();
         return false;
       }
       if (!offsetVector.getMutator().setSafe(index + 1, currentOffset + length)) {
@@ -416,7 +428,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       int outputStart = offsetVector.data.get${(minor.javaType!type.javaType)?cap_first}(index * ${type.width});
       
       if(data.capacity() < outputStart + len) {
-        allocationMonitor--;
+        decrementAllocationMonitor();
         return false;
       }
       
@@ -439,7 +451,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       int outputStart = offsetVector.data.get${(minor.javaType!type.javaType)?cap_first}(index * ${type.width});
       
       if(data.capacity() < outputStart + len) {
-        allocationMonitor--;
+        decrementAllocationMonitor();
         return false;
       }
       
@@ -481,9 +493,9 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       int idx = offsetVector.getAccessor().get(valueCount);
       data.writerIndex(idx);
       if (valueCount > 0 && currentByteCapacity > idx * 2) {
-        allocationMonitor++;
+        incrementAllocationMonitor();
       } else if (allocationMonitor > 0) {
-        allocationMonitor--;
+        allocationMonitor = 0;
       }
       if (data instanceof AccountingByteBuf) {
         data.capacity(idx);

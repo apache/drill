@@ -303,7 +303,9 @@ public final class ${className} extends BaseValueVector implements <#if type.maj
     <#if type.major == "VarLen">
     if(!mutator.fillEmpties(thisIndex)) return false;
     </#if>
-    return bits.copyFromSafe(fromIndex, thisIndex, from.bits) && values.copyFromSafe(fromIndex, thisIndex, from.values);
+    boolean b1 = bits.copyFromSafe(fromIndex, thisIndex, from.bits);
+    boolean b2 = values.copyFromSafe(fromIndex, thisIndex, from.values);
+    return b1 && b2;
   }
 
   

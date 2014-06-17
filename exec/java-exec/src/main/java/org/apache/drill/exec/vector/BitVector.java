@@ -42,7 +42,7 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
   private final Accessor accessor = new Accessor();
   private final Mutator mutator = new Mutator();
 
-  private int allocationValueCount = 4000;
+  private int allocationValueCount = 4096;
   private int allocationMonitor = 0;
 
   private int valueCapacity;
@@ -73,11 +73,11 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
 
   public boolean allocateNewSafe() {
     clear();
-    if (allocationMonitor > 5) {
-      allocationValueCount = Math.max(1, (int)(allocationValueCount * 0.9));
+    if (allocationMonitor > 10) {
+      allocationValueCount = Math.max(8, (int) (allocationValueCount / 2));
       allocationMonitor = 0;
-    } else if (allocationMonitor < -5) {
-      allocationValueCount = (int) (allocationValueCount * 1.1);
+    } else if (allocationMonitor < -2) {
+      allocationValueCount = (int) (allocationValueCount * 2);
       allocationMonitor = 0;
     }
 
@@ -127,7 +127,10 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
   }
 
   public boolean copyFromSafe(int inIndex, int outIndex, BitVector from){
-    if(outIndex >= this.getValueCapacity()) return false;
+    if(outIndex >= this.getValueCapacity()) {
+      decrementAllocationMonitor();
+      return false;
+    }
     copyFrom(inIndex, outIndex, from);
     return true;
   }
@@ -231,6 +234,17 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
     }
   }
 
+  private void decrementAllocationMonitor() {
+    if (allocationMonitor > 0) {
+      allocationMonitor = 0;
+    }
+    --allocationMonitor;
+  }
+
+  private void incrementAllocationMonitor() {
+    ++allocationMonitor;
+  }
+
   public class Accessor extends BaseAccessor {
 
     /**
@@ -318,7 +332,7 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
 
     public boolean setSafe(int index, int value) {
       if(index >= getValueCapacity()) {
-        allocationMonitor--;
+        decrementAllocationMonitor();
         return false;
       }
       set(index, value);
@@ -326,22 +340,31 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
     }
 
     public boolean setSafe(int index, BitHolder holder) {
-      if(index >= getValueCapacity()) return false;
+      if(index >= getValueCapacity()) {
+        decrementAllocationMonitor();
+        return false;
+      }
       set(index, holder.value);
       return true;
     }
 
     public boolean setSafe(int index, NullableBitHolder holder) {
-      if(index >= getValueCapacity()) return false;
+      if(index >= getValueCapacity()) {
+        decrementAllocationMonitor();
+        return false;
+      }
       set(index, holder.value);
       return true;
     }
 
     public final void setValueCount(int valueCount) {
+      int currentValueCapacity = getValueCapacity();
       BitVector.this.valueCount = valueCount;
       int idx = getSizeFromCount(valueCount);
-      if (((float) data.capacity()) / idx > 1.1) {
-        allocationMonitor++;
+      if (valueCount > 0 && currentValueCapacity > valueCount * 2) {
+        incrementAllocationMonitor();
+      } else if (allocationMonitor > 0) {
+        allocationMonitor = 0;
       }
       data.writerIndex(idx);
       if (data instanceof AccountingByteBuf) {
