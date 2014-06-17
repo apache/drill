@@ -141,10 +141,15 @@ public class GCompare${left}${right}{
           break sout;
         }
         </#if>
-        
+
+        <#if type.mode == "var" >
         int cmp;
         <@compareBlock mode=type.mode left=left right=right output="cmp" nullCompare=false/>
         out.value = cmp == -1 ? 1 : 0;
+        <#else>
+        out.value = left.value < right.value ? 1 : 0;
+        </#if>
+
         }
       }
   }
@@ -173,9 +178,14 @@ public class GCompare${left}${right}{
         }
         </#if>
         
+        <#if type.mode == "var" >
         int cmp;
         <@compareBlock mode=type.mode left=left right=right output="cmp" nullCompare=false/>
         out.value = cmp < 1 ? 1 : 0;
+        <#else>
+        out.value = left.value <= right.value ? 1 : 0;
+        </#if>
+
         }
     }
   }
@@ -204,9 +214,14 @@ public class GCompare${left}${right}{
         }
         </#if>
         
+        <#if type.mode == "var" >
         int cmp;
         <@compareBlock mode=type.mode left=left right=right output="cmp" nullCompare=false/>
         out.value = cmp == 1 ? 1 : 0;
+        <#else>
+        out.value = left.value > right.value ? 1 : 0;
+        </#if>
+
         }
     }
   }
@@ -235,9 +250,14 @@ public class GCompare${left}${right}{
         }
         </#if>
         
+        <#if type.mode == "var" >            
         int cmp;
         <@compareBlock mode=type.mode left=left right=right output="cmp" nullCompare=false/>
         out.value = cmp > -1 ? 1 : 0;
+        <#else>
+        out.value = left.value >= right.value ? 1 : 0;
+        </#if>
+
         }
       }
   }
@@ -265,10 +285,31 @@ public class GCompare${left}${right}{
             break sout;
           }
           </#if>
-          
-          int cmp;
-          <@compareBlock mode=type.mode left=left right=right output="cmp" nullCompare=false/>
-          out.value = cmp == 0 ? 1 : 0;
+        
+          <#if type.mode == "var" >
+outside: 
+        {          
+          if (left.end - left.start == right.end - right.start) {
+            int n = left.end - left.start;
+            int l = left.start;
+            int r = right.start;
+            while (n-- !=0) {
+              byte leftByte = left.buffer.getByte(l++);
+              byte rightByte = right.buffer.getByte(r++);
+              if (leftByte != rightByte) {
+                out.value = 0;
+                break outside;
+              }
+            }
+            out.value = 1;
+          } else {
+            out.value = 0;
+          }
+        } 
+          <#else>
+          out.value = left.value == right.value ? 1 : 0;
+          </#if>
+
         }
       }
   }
@@ -297,9 +338,14 @@ public class GCompare${left}${right}{
         }
         </#if>
         
+        <#if type.mode == "var" >            
         int cmp;
         <@compareBlock mode=type.mode left=left right=right output="cmp" nullCompare=false/>
         out.value = cmp == 0 ? 0 : 1;
+        <#else>
+        out.value = left.value != right.value ? 1 : 0;
+        </#if>
+        
         }
         
       }

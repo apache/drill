@@ -27,6 +27,8 @@
 
 package org.apache.drill.exec.expr.fn.impl;
 
+import javax.xml.ws.Holder;
+
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
@@ -63,9 +65,7 @@ public class GCompare${type.name}Functions {
       public void setup(RecordBatch b) {}
 
       public void eval() {
-
-          int cmp = (left.value > right.value) ? 1 : ((left.value < right.value) ? -1 : 0);
-          out.value = (cmp == -1) ? 1 : 0;
+        out.value = left.value < right.value ? 1 : 0;
       }
   }
 
@@ -79,9 +79,7 @@ public class GCompare${type.name}Functions {
       public void setup(RecordBatch b) {}
 
       public void eval() {
-
-          int cmp = (left.value > right.value) ? 1 : ((left.value < right.value) ? -1 : 0);
-          out.value = (cmp < 1) ? 1 : 0;
+        out.value = left.value <= right.value ? 1 : 0;
     }
   }
 
@@ -95,9 +93,7 @@ public class GCompare${type.name}Functions {
       public void setup(RecordBatch b) {}
 
       public void eval() {
-
-          int cmp = (left.value > right.value) ? 1 : ((left.value < right.value) ? -1 : 0);
-          out.value = (cmp == 1) ? 1 : 0;
+        out.value = left.value > right.value ? 1 : 0;
     }
   }
 
@@ -111,8 +107,7 @@ public class GCompare${type.name}Functions {
       public void setup(RecordBatch b) {}
 
       public void eval() {
-         int cmp = (left.value > right.value) ? 1 : ((left.value < right.value) ? -1 : 0);
-          out.value = (cmp > -1) ? 1 : 0;
+        out.value = left.value >= right.value ? 1 : 0;
       }
   }
 
@@ -126,9 +121,7 @@ public class GCompare${type.name}Functions {
       public void setup(RecordBatch b) {}
 
       public void eval() {
-
-          int cmp = (left.value > right.value) ? 1 : ((left.value < right.value) ? -1 : 0);
-          out.value = (cmp == 0) ? 1 : 0;
+        out.value = left.value == right.value ? 1 : 0;
       }
   }
 
@@ -142,8 +135,7 @@ public class GCompare${type.name}Functions {
       public void setup(RecordBatch b) {}
 
       public void eval() {
-          int cmp = (left.value > right.value) ? 1 : ((left.value < right.value) ? -1 : 0);
-          out.value = (cmp != 0) ? 1 : 0;
+        out.value = left.value != right.value ? 1 : 0;
       }
   }
 
@@ -172,6 +164,23 @@ outside: {
         ${output} = ((leftMS < rightMS) ? -1 : ((leftMS > rightMS) ? 1 : 0));
 
     }
+</#macro>
+
+<#macro intervalConvertBlock left right leftMonths leftDays leftMillis rightMonths rightDays rightMillis>
+        org.joda.time.MutableDateTime leftDate  = new org.joda.time.MutableDateTime(1970, 1, 1, 0, 0, 0, 0, org.joda.time.DateTimeZone.UTC);
+        org.joda.time.MutableDateTime rightDate = new org.joda.time.MutableDateTime(1970, 1, 1, 0, 0, 0, 0, org.joda.time.DateTimeZone.UTC);
+
+        // Left and right date have the same starting point (epoch), add the interval period and compare the two
+        leftDate.addMonths(${leftMonths});
+        leftDate.addDays(${leftDays});
+        leftDate.add(${leftMillis});
+
+        rightDate.addMonths(${rightMonths});
+        rightDate.addDays(${rightDays});
+        rightDate.add(${rightMillis});
+
+        long leftMS  = leftDate.getMillis();
+        long rightMS = rightDate.getMillis();
 </#macro>
 
 <@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/GCompare${type.name}Functions.java" />
@@ -222,15 +231,13 @@ public class GCompare${type.name}Functions {
 
       public void eval() {
 
-          int cmp;
-
           <#if type.name == "Interval">
-          <@intervalCompareBlock left="left" right="right" leftMonths="left.months" leftDays="left.days" leftMillis="left.milliSeconds" rightMonths="right.months" rightDays="right.days" rightMillis="right.milliSeconds" output="cmp"/>
+          <@intervalConvertBlock left="left" right="right" leftMonths="left.months" leftDays="left.days" leftMillis="left.milliSeconds" rightMonths="right.months" rightDays="right.days" rightMillis="right.milliSeconds"/>
           <#else>
-          <@intervalCompareBlock left="left" right="right" leftMonths="0" leftDays="left.days" leftMillis="left.milliSeconds" rightMonths="0" rightDays="right.days" rightMillis="right.milliSeconds" output="cmp"/>
+          <@intervalConvertBlock left="left" right="right" leftMonths="0" leftDays="left.days" leftMillis="left.milliSeconds" rightMonths="0" rightDays="right.days" rightMillis="right.milliSeconds"/>
           </#if>
 
-          out.value = (cmp == -1) ? 1 : 0;
+          out.value = leftMS < rightMS ? 1 : 0;
       }
   }
 
@@ -245,15 +252,13 @@ public class GCompare${type.name}Functions {
 
       public void eval() {
 
-          int cmp;
-
           <#if type.name == "Interval">
-          <@intervalCompareBlock left="left" right="right" leftMonths="left.months" leftDays="left.days" leftMillis="left.milliSeconds" rightMonths="right.months" rightDays="right.days" rightMillis="right.milliSeconds" output="cmp"/>
+          <@intervalConvertBlock left="left" right="right" leftMonths="left.months" leftDays="left.days" leftMillis="left.milliSeconds" rightMonths="right.months" rightDays="right.days" rightMillis="right.milliSeconds"/>
           <#else>
-          <@intervalCompareBlock left="left" right="right" leftMonths="0" leftDays="left.days" leftMillis="left.milliSeconds" rightMonths="0" rightDays="right.days" rightMillis="right.milliSeconds" output="cmp"/>
+          <@intervalConvertBlock left="left" right="right" leftMonths="0" leftDays="left.days" leftMillis="left.milliSeconds" rightMonths="0" rightDays="right.days" rightMillis="right.milliSeconds"/>
           </#if>
 
-          out.value = (cmp < 1) ? 1 : 0;
+          out.value = leftMS <= rightMS ? 1 : 0;
     }
   }
 
@@ -268,15 +273,13 @@ public class GCompare${type.name}Functions {
 
       public void eval() {
 
-          int cmp;
-
           <#if type.name == "Interval">
-          <@intervalCompareBlock left="left" right="right" leftMonths="left.months" leftDays="left.days" leftMillis="left.milliSeconds" rightMonths="right.months" rightDays="right.days" rightMillis="right.milliSeconds" output="cmp"/>
+          <@intervalConvertBlock left="left" right="right" leftMonths="left.months" leftDays="left.days" leftMillis="left.milliSeconds" rightMonths="right.months" rightDays="right.days" rightMillis="right.milliSeconds"/>
           <#else>
-          <@intervalCompareBlock left="left" right="right" leftMonths="0" leftDays="left.days" leftMillis="left.milliSeconds" rightMonths="0" rightDays="right.days" rightMillis="right.milliSeconds" output="cmp"/>
+          <@intervalConvertBlock left="left" right="right" leftMonths="0" leftDays="left.days" leftMillis="left.milliSeconds" rightMonths="0" rightDays="right.days" rightMillis="right.milliSeconds"/>
           </#if>
 
-          out.value = (cmp == 1) ? 1 : 0;
+          out.value = leftMS > rightMS ? 1 : 0;
     }
   }
 
@@ -291,15 +294,13 @@ public class GCompare${type.name}Functions {
 
       public void eval() {
 
-          int cmp;
-
           <#if type.name == "Interval">
-          <@intervalCompareBlock left="left" right="right" leftMonths="left.months" leftDays="left.days" leftMillis="left.milliSeconds" rightMonths="right.months" rightDays="right.days" rightMillis="right.milliSeconds" output="cmp"/>
+          <@intervalConvertBlock left="left" right="right" leftMonths="left.months" leftDays="left.days" leftMillis="left.milliSeconds" rightMonths="right.months" rightDays="right.days" rightMillis="right.milliSeconds"/>
           <#else>
-          <@intervalCompareBlock left="left" right="right" leftMonths="0" leftDays="left.days" leftMillis="left.milliSeconds" rightMonths="0" rightDays="right.days" rightMillis="right.milliSeconds" output="cmp"/>
+          <@intervalConvertBlock left="left" right="right" leftMonths="0" leftDays="left.days" leftMillis="left.milliSeconds" rightMonths="0" rightDays="right.days" rightMillis="right.milliSeconds"/>
           </#if>
 
-          out.value = (cmp > -1) ? 1 : 0;
+          out.value = leftMS >= rightMS ? 1 : 0;
       }
   }
 
@@ -313,16 +314,13 @@ public class GCompare${type.name}Functions {
       public void setup(RecordBatch b) {}
 
       public void eval() {
-
-          int cmp;
-
           <#if type.name == "Interval">
-          <@intervalCompareBlock left="left" right="right" leftMonths="left.months" leftDays="left.days" leftMillis="left.milliSeconds" rightMonths="right.months" rightDays="right.days" rightMillis="right.milliSeconds" output="cmp"/>
+          <@intervalConvertBlock left="left" right="right" leftMonths="left.months" leftDays="left.days" leftMillis="left.milliSeconds" rightMonths="right.months" rightDays="right.days" rightMillis="right.milliSeconds"/>
           <#else>
-          <@intervalCompareBlock left="left" right="right" leftMonths="0" leftDays="left.days" leftMillis="left.milliSeconds" rightMonths="0" rightDays="right.days" rightMillis="right.milliSeconds" output="cmp"/>
+          <@intervalConvertBlock left="left" right="right" leftMonths="0" leftDays="left.days" leftMillis="left.milliSeconds" rightMonths="0" rightDays="right.days" rightMillis="right.milliSeconds"/>
           </#if>
 
-          out.value = (cmp == 0) ? 1 : 0;
+          out.value = leftMS == rightMS ? 1 : 0;
       }
   }
 
@@ -336,16 +334,13 @@ public class GCompare${type.name}Functions {
       public void setup(RecordBatch b) {}
 
       public void eval() {
-
-          int cmp;
-
           <#if type.name == "Interval">
-          <@intervalCompareBlock left="left" right="right" leftMonths="left.months" leftDays="left.days" leftMillis="left.milliSeconds" rightMonths="right.months" rightDays="right.days" rightMillis="right.milliSeconds" output="cmp"/>
+          <@intervalConvertBlock left="left" right="right" leftMonths="left.months" leftDays="left.days" leftMillis="left.milliSeconds" rightMonths="right.months" rightDays="right.days" rightMillis="right.milliSeconds"/>
           <#else>
-          <@intervalCompareBlock left="left" right="right" leftMonths="0" leftDays="left.days" leftMillis="left.milliSeconds" rightMonths="0" rightDays="right.days" rightMillis="right.milliSeconds" output="cmp"/>
+          <@intervalConvertBlock left="left" right="right" leftMonths="0" leftDays="left.days" leftMillis="left.milliSeconds" rightMonths="0" rightDays="right.days" rightMillis="right.milliSeconds"/>
           </#if>
 
-          out.value = (cmp != 0) ? 1 : 0;
+          out.value = leftMS != rightMS ? 1 : 0;
       }
   }
 }
