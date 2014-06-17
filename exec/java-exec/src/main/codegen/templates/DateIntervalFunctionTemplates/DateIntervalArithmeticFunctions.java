@@ -132,7 +132,7 @@ public class ${datetype}${intervaltype}Functions {
     }
 
     @SuppressWarnings("unused")
-    @FunctionTemplate(names = {"date_sub", "subtract"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.NULL_IF_NULL)
+    @FunctionTemplate(names = {"date_sub", "subtract", "date_diff"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.NULL_IF_NULL)
     public static class ${datetype}${intervaltype}SubtractFunction implements DrillSimpleFunc {
     @Param ${datetype}Holder left;
     @Param ${intervaltype}Holder right;
@@ -220,7 +220,7 @@ public class ${datetype}${intervaltype}Functions {
     }
 
     @SuppressWarnings("unused")
-    @FunctionTemplate(names = {"date_sub", "subtract"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.NULL_IF_NULL)
+    @FunctionTemplate(names = {"date_sub", "subtract", "date_diff"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.NULL_IF_NULL)
     public static class ${datetype}${intervaltype}SubtractFunction implements DrillSimpleFunc {
     @Param ${datetype}Holder left;
     @Param ${intervaltype}Holder right;

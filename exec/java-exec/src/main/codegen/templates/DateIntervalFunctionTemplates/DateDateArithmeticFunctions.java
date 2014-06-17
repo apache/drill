@@ -40,7 +40,7 @@ import org.apache.drill.exec.record.RecordBatch;
 import io.netty.buffer.ByteBuf;
 
 @SuppressWarnings("unused")
-@FunctionTemplate(names = {"date_diff", "subtract"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+@FunctionTemplate(names = {"date_diff", "subtract", "date_sub"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
 public class G${type}Difference implements DrillSimpleFunc {
 
     @Param  ${type}Holder left;
