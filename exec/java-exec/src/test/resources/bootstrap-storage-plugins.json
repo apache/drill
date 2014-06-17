@@ -35,6 +35,10 @@
             },
             "parquet" : {
               type: "parquet"
+            },
+            "txt" : {
+              type : "text",
+              extensions: [ "txt" ]
             }
           }
     },

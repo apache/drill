@@ -126,9 +126,13 @@ public class DrillTextRecordReader implements RecordReader {
             break;
           }
           start = end;
-          end = find(value, delimiter, start + 1);
-          if (end == -1) {
+          if (delimiter == '\n') {
             end = value.getLength();
+          } else {
+            end = find(value, delimiter, start + 1);
+            if (end == -1) {
+              end = value.getLength();
+            }
           }
           if (numCols > 0 && i++ < columnIds.get(p)) {
             if (!vector.getMutator().addSafe(recordCount, value.getBytes(), start + 1, 0)) {
@@ -166,8 +170,12 @@ public class DrillTextRecordReader implements RecordReader {
     int len = text.getLength();
     int p = start;
     byte[] bytes = text.getBytes();
+    boolean inQuotes = false;
     while (p < len) {
-      if (bytes[p] == what) {
+      if ('\"' == bytes[p]) {
+        inQuotes = !inQuotes;
+      }
+      if (!inQuotes && bytes[p] == what) {
         return p;
       }
       p++;

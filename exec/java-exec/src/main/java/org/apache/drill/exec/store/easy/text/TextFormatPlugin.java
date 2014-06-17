@@ -100,7 +100,7 @@ public class TextFormatPlugin extends EasyFormatPlugin<TextFormatPlugin.TextForm
   public static class TextFormatConfig implements FormatPluginConfig {
 
     public List<String> extensions;
-    public String delimiter;
+    public String delimiter = "\n";
 
     public List<String> getExtensions() {
       return extensions;

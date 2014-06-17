@@ -128,6 +128,7 @@
             <exclude>**/*.sql</exclude>
             <exclude>**/git.properties</exclude>
             <exclude>**/*.csv</exclude>
+            <exclude>**/*.txt</exclude>
             <exclude>**/drill-*.conf</exclude>
             <exclude>**/.buildpath</exclude>
             <exclude>**/*.proto</exclude>
