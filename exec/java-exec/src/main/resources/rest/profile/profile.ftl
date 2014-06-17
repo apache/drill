@@ -51,7 +51,7 @@
   <div class="page-header">
     <h2>Profile Summary</h2>
   </div>
-    <p><pre>${model.toString()}</pre></p>
+    <p>${model.toString()}</p>
   <div class="page-header">
     <h2>Complete Profile</h2>
   </div>

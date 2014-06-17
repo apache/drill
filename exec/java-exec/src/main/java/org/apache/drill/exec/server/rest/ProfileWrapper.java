@@ -17,7 +17,8 @@
  */
 package org.apache.drill.exec.server.rest;
 
-import com.google.common.collect.Lists;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 import org.apache.drill.exec.proto.UserBitShared.MajorFragmentProfile;
 import org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile;
@@ -28,16 +29,13 @@ import org.apache.drill.exec.proto.UserBitShared.StreamProfile;
 import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
-import java.util.List;
+import java.util.Comparator;
 import java.util.Locale;
+import java.util.TreeMap;
 
 public class ProfileWrapper {
-
-  NumberFormat format = NumberFormat.getInstance(Locale.US);
-  DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss.SSS");
-
   public QueryProfile profile;
 
   public ProfileWrapper(QueryProfile profile) {
@@ -51,149 +49,305 @@ public class ProfileWrapper {
   @Override
   public String toString() {
     StringBuilder builder = new StringBuilder();
-    builder.append("MAJOR FRAGMENTS\nid\tfirst start\tlast start\tfirst end\tlast end\tmin\tavg\tmax\t(time in ms)\n\n" + listMajorFragments());
-    builder.append("\n");
-    for (MajorFragmentProfile majorProfile : profile.getFragmentProfileList()) {
-      builder.append(String.format("Major Fragment: %d\n%s\n", majorProfile.getMajorFragmentId(), printOperatorsInMajor(majorProfile)));
+    ArrayList<MajorFragmentProfile> majors = new ArrayList<MajorFragmentProfile>(profile.getFragmentProfileList());
+    
+    Collections.sort(majors, Comparators.majorIdCompare);
+    builder.append(queryTimingProfile(majors));
+    for (MajorFragmentProfile m : majors) {
+      builder.append(majorFragmentOperatorProfile(m));
     }
-    builder.append("\n");
-    for (MajorFragmentProfile majorProfile : profile.getFragmentProfileList()) {
-      builder.append(String.format("Major Fragment: %d\n%s\n", majorProfile.getMajorFragmentId(), printMinorFragmentsInMajor(majorProfile)));
+    for (MajorFragmentProfile m : majors) {
+      builder.append(majorFragmentTimingProfile(m));
+    }
+    for (MajorFragmentProfile m : majors) {
+      for (MinorFragmentProfile mi : m.getMinorFragmentProfileList()) {
+        builder.append(minorFragmentOperatorProfile(m.getMajorFragmentId(), mi));
+      }
     }
     return builder.toString();
   }
 
-  public String listMajorFragments() {
-    StringBuilder builder = new StringBuilder();
-    for (MajorFragmentProfile m : profile.getFragmentProfileList()) {
-      List<Long> totalTimes = Lists.newArrayList();
-      List<Long> startTimes = Lists.newArrayList();
-      List<Long> endTimes = Lists.newArrayList();
-      for (MinorFragmentProfile minorFragmentProfile : m.getMinorFragmentProfileList()) {
-        totalTimes.add(minorFragmentProfile.getEndTime() - minorFragmentProfile.getStartTime());
-        startTimes.add(minorFragmentProfile.getStartTime());
-        endTimes.add(minorFragmentProfile.getEndTime());
+  public String queryTimingProfile(ArrayList<MajorFragmentProfile> majors) {
+    final String[] columns = {"id", "minors", "first start", "last start", "first end", "last end", "tmin", "tavg", "tmax"};
+    TableBuilder builder = new TableBuilder("Query Timing Profile", "QueryTimingProfile", columns);
+
+    
+    long t0 = 0;
+    for (MajorFragmentProfile m : majors) {
+      ArrayList<MinorFragmentProfile> minors = new ArrayList<MinorFragmentProfile>(m.getMinorFragmentProfileList());
+      final String fmt = " (<a href=\"#MinorFragment" + m.getMajorFragmentId() + "_%1$dOperatorProfile\">%1$d</a>)";
+      int li = minors.size() - 1;
+      double total = 0;
+      
+      for (MinorFragmentProfile p : minors) {
+        total += p.getEndTime() - p.getStartTime();
       }
-      long min = Collections.min(totalTimes);
-      long max = Collections.max(totalTimes);
-      long sum = 0;
-      for (Long l : totalTimes) {
-        sum += l;
+      
+      builder.appendInteger(m.getMajorFragmentId(), null);
+      builder.appendInteger(minors.size(), null);
+      
+      Collections.sort(minors, Comparators.startTimeCompare);
+      if (t0 == 0) {
+        t0 = minors.get(0).getStartTime();
       }
-      long firstStart = Collections.min(startTimes);
-      long lastStart = Collections.max(startTimes);
-      long firstEnd = Collections.min(endTimes);
-      long lastEnd = Collections.max(endTimes);
-      long avg = sum / totalTimes.size();
-      builder.append(String.format("%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", m.getMajorFragmentId(), dateFormat.format(new Date(firstStart)),
-              dateFormat.format(new Date(lastStart)), dateFormat.format(new Date(firstEnd)), dateFormat.format(new Date(lastEnd)),
-              format.format(min), format.format(avg), format.format(max)));
+      builder.appendMillis(minors.get(0).getStartTime() - t0, String.format(fmt, minors.get(0).getMinorFragmentId()));
+      builder.appendMillis(minors.get(li).getStartTime() - t0,String.format(fmt, minors.get(li).getMinorFragmentId()));
+
+      Collections.sort(minors, Comparators.endTimeCompare);
+      builder.appendMillis(minors.get(0).getEndTime() - t0,String.format(fmt, minors.get(0).getMinorFragmentId()));
+      builder.appendMillis(minors.get(li).getEndTime() - t0, String.format(fmt, minors.get(li).getMinorFragmentId()));
+      
+      Collections.sort(minors, Comparators.runTimeCompare);
+      builder.appendMillis(minors.get(0).getEndTime() - minors.get(0).getStartTime(), String.format(fmt, minors.get(0).getMinorFragmentId()));
+      builder.appendMillis((long) (total / minors.size()), null);
+      builder.appendMillis(minors.get(li).getEndTime() - minors.get(li).getStartTime(), String.format(fmt, minors.get(li).getMinorFragmentId()));
     }
     return builder.toString();
   }
 
-  public String printMinorFragmentsInMajor(MajorFragmentProfile majorFragmentProfile) {
-    StringBuilder builder = new StringBuilder();
-    builder.append("id\tstart\tend\ttotal time (ms)\tmax records\tbatches\n");
-    for (MinorFragmentProfile m : majorFragmentProfile.getMinorFragmentProfileList()) {
-      long startTime = m.getStartTime();
-      long endTime = m.getEndTime();
+  public String majorFragmentTimingProfile(MajorFragmentProfile majorFragmentProfile) {
+    ArrayList<MinorFragmentProfile> minors = new ArrayList<MinorFragmentProfile>(majorFragmentProfile.getMinorFragmentProfileList());
+    
+    final String[] columns = {"id", "start", "end", "total time", "max records", "max batches"};
+    TableBuilder builder = new TableBuilder(
+        "Major Fragment #" + majorFragmentProfile.getMajorFragmentId() + " Timing Profile",
+        "MajorFragment" + majorFragmentProfile.getMajorFragmentId() + "TimingProfile",
+        columns);
 
-      List<OperatorProfile> operators = m.getOperatorProfileList();
-      OperatorProfile biggest = null;
-      int biggestIncomingRecords = 0;
-      for (OperatorProfile oProfile : operators) {
-        if (biggest == null) {
-          biggest = oProfile;
-          int incomingRecordCount = 0;
-          for (StreamProfile streamProfile : oProfile.getInputProfileList()) {
-            incomingRecordCount += streamProfile.getRecords();
-          }
-          biggestIncomingRecords = incomingRecordCount;
-        } else {
-          int incomingRecordCount = 0;
-          for (StreamProfile streamProfile : oProfile.getInputProfileList()) {
-            incomingRecordCount += streamProfile.getRecords();
-          }
-          if (incomingRecordCount > biggestIncomingRecords) {
-            biggest = oProfile;
-            biggestIncomingRecords = incomingRecordCount;
-          }
+    Collections.sort(minors, Comparators.minorIdCompare);
+    for (MinorFragmentProfile m : minors) {
+      ArrayList<OperatorProfile> ops = new ArrayList<OperatorProfile>(m.getOperatorProfileList());
+      long biggestIncomingRecords = 0;
+      long biggestBatches = 0;
+      
+      for (StreamProfile sp : ops.get(0).getInputProfileList()) {
+        biggestIncomingRecords += sp.getRecords();
+        biggestBatches += sp.getBatches();
+      }
+      
+      builder.appendInteger(m.getMinorFragmentId(), null);
+      builder.appendTime(m.getStartTime(), null);
+      builder.appendTime(m.getEndTime(), null);
+      builder.appendMillis(m.getEndTime() - m.getStartTime(), null);
+      
+      Collections.sort(ops, Comparators.incomingRecordCompare);
+      builder.appendInteger(biggestIncomingRecords, null);
+      builder.appendInteger(biggestBatches, null);
+    }
+    return builder.toString();
+  }
+
+  public String majorFragmentOperatorProfile(MajorFragmentProfile major) {
+    TreeMap<Integer, ArrayList<Pair<OperatorProfile, Integer>>> opmap =
+        new TreeMap<Integer, ArrayList<Pair<OperatorProfile, Integer>>>();
+
+    
+    
+    final String [] columns = {"id", "type", "setup min", "setup avg", "setup max", "process min", "process avg", "process max", "wait min", "wait avg", "wait max"};
+    TableBuilder builder = new TableBuilder(
+        String.format("Major Fragment #%d Operator Profile", major.getMajorFragmentId()),
+        String.format("MajorFragment%dOperatorProfile", major.getMajorFragmentId()),
+        columns);
+    
+    
+    for (MinorFragmentProfile m : major.getMinorFragmentProfileList()) {
+      int mid = m.getMinorFragmentId();
+      
+      for (OperatorProfile op : m.getOperatorProfileList()) {
+        int opid = op.getOperatorId();
+        
+        if (!opmap.containsKey(opid)) {
+          opmap.put(opid, new ArrayList<Pair<OperatorProfile, Integer>>());
         }
+        opmap.get(opid).add(new ImmutablePair<OperatorProfile, Integer>(op, mid));
       }
+    }
+    
+    for (Integer opid : opmap.keySet()) {
+      ArrayList<Pair<OperatorProfile, Integer>> oplist = opmap.get(opid);
+      final String fmt = " (<a href=\"#MinorFragment" + major.getMajorFragmentId() + "_%1$dOperatorProfile\">%1$d</a>)";
+      int li = oplist.size() - 1;
+      double totalsetup = 0;
+      double totalprocess = 0;
+      double totalwait = 0;
 
-      int biggestBatches = 0;
-      for (StreamProfile sProfile : biggest.getInputProfileList()) {
-        biggestBatches += sProfile.getBatches();
+      for (Pair<OperatorProfile, Integer> opint : oplist) {
+        totalsetup += opint.getLeft().getSetupNanos();
+        totalprocess += opint.getLeft().getProcessNanos();
+        totalwait += opint.getLeft().getWaitNanos();
       }
+      
+      builder.appendInteger(oplist.get(0).getLeft().getOperatorId(), null);
+      builder.appendCell(CoreOperatorType.valueOf(oplist.get(0).getLeft().getOperatorType()).toString(), null);
+      
+      Collections.sort(oplist, Comparators.setupTimeSort);
+      builder.appendNanos(oplist.get(0).getLeft().getSetupNanos(), String.format(fmt, oplist.get(0).getRight()));
+      builder.appendNanos((long) (totalsetup / oplist.size()), null);
+      builder.appendNanos(oplist.get(li).getLeft().getSetupNanos(), String.format(fmt, oplist.get(li).getRight()));
 
-      builder.append(String.format("%d\t%s\t%s\t%s\t%s\t%s\n", m.getMinorFragmentId(), dateFormat.format(new Date(startTime)),
-              dateFormat.format(new Date(endTime)), format.format(endTime - startTime), biggestIncomingRecords, biggestBatches));
+      Collections.sort(opmap.get(opid), Comparators.processTimeSort);
+      builder.appendNanos(oplist.get(0).getLeft().getProcessNanos(), String.format(fmt, oplist.get(0).getRight()));
+      builder.appendNanos((long) (totalprocess / oplist.size()), null);
+      builder.appendNanos(oplist.get(li).getLeft().getProcessNanos(), String.format(fmt, oplist.get(li).getRight()));
+      
+      Collections.sort(opmap.get(opid), Comparators.waitTimeSort);
+      builder.appendNanos(oplist.get(0).getLeft().getWaitNanos(), String.format(fmt, oplist.get(0).getRight()));
+      builder.appendNanos((long) (totalwait / oplist.size()), null);
+      builder.appendNanos(oplist.get(li).getLeft().getWaitNanos(), String.format(fmt, oplist.get(li).getRight()));
     }
     return builder.toString();
   }
+  
+  public String minorFragmentOperatorProfile(int majorId, MinorFragmentProfile minorFragmentProfile) {
+    ArrayList<OperatorProfile> oplist = new ArrayList<OperatorProfile>(minorFragmentProfile.getOperatorProfileList());
+    
+    final String[] columns = {"id", "type", "setup", "process", "wait"};
+    TableBuilder builder = new TableBuilder(
+        String.format("Minor Fragment #%d-%d Operator Profile", majorId, minorFragmentProfile.getMinorFragmentId()),
+        String.format("MinorFragment%d_%dOperatorProfile", majorId, minorFragmentProfile.getMinorFragmentId()),
+        columns);
 
-  public String printOperatorsInMajor(MajorFragmentProfile majorFragmentProfile) {
-    StringBuilder builder = new StringBuilder();
-    builder.append("id\ttype\tp min\tp avg\tp max\ts min\ts avg\ts max\tw min\tw avg\tw max\n");
-    int numOperators = majorFragmentProfile.getMinorFragmentProfile(0).getOperatorProfileCount();
-    int numFragments = majorFragmentProfile.getMinorFragmentProfileCount();
-    long[][] processing = new long[numOperators + 1][numFragments];
-    long[][] setup = new long[numOperators + 1][numFragments];
-    long[][] wait = new long[numOperators + 1][numFragments];
-    CoreOperatorType[] operatorTypes = new CoreOperatorType[numOperators + 1];
-
-    for (int i = 0; i < numFragments; i++) {
-      MinorFragmentProfile minorProfile = majorFragmentProfile.getMinorFragmentProfile(i);
-      for (int j = 0; j < numOperators; j++) {
-        OperatorProfile operatorProfile = minorProfile.getOperatorProfile(j);
-        int operatorId = operatorProfile.getOperatorId();
-        processing[operatorId][i] = operatorProfile.getProcessNanos();
-        setup[operatorId][i] = operatorProfile.getSetupNanos();
-        wait[operatorId][i] = operatorProfile.getWaitNanos();
-        if (i == 0) {
-          operatorTypes[operatorId] = CoreOperatorType.valueOf(operatorProfile.getOperatorType());
-        }
-      }
+    Collections.sort(oplist, Comparators.operatorIdCompare);
+    for (OperatorProfile op : oplist) {
+      builder.appendInteger(op.getOperatorId(), null);
+      builder.appendCell(CoreOperatorType.valueOf(op.getOperatorType()).toString(), null);
+      builder.appendNanos(op.getSetupNanos(), null);
+      builder.appendNanos(op.getProcessNanos(), null);
+      builder.appendNanos(op.getWaitNanos(), null);
     }
-
-    for (int j = 0; j < numOperators + 1; j++) {
-      if (operatorTypes[j] == null) {
-        continue;
-      }
-      long processingMin = Long.MAX_VALUE;
-      long processingMax = Long.MIN_VALUE;
-      long processingSum = 0;
-      long setupMin = Long.MAX_VALUE;
-      long setupMax = Long.MIN_VALUE;
-      long setupSum = 0;
-      long waitMin = Long.MAX_VALUE;
-      long waitMax = Long.MIN_VALUE;
-      long waitSum = 0;
-
-      for (int i = 0; i < numFragments; i++) {
-        processingMin = Math.min(processingMin, processing[j][i]);
-        processingMax = Math.max(processingMax, processing[j][i]);
-        processingSum += processing[j][i];
-
-        setupMin = Math.min(setupMin, setup[j][i]);
-        setupMax = Math.max(setupMax, setup[j][i]);
-        setupSum += setup[j][i];
-
-        waitMin = Math.min(waitMin, wait[j][i]);
-        waitMax = Math.max(waitMax, wait[j][i]);
-        waitSum += wait[j][i];
-      }
-
-      long processingAvg = processingSum / numFragments;
-      long setupAvg = setupSum / numFragments;
-      long waitAvg = waitSum / numFragments;
-
-      builder.append(String.format("%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", j, operatorTypes[j].toString(),
-              format.format(processingMin/1000/1000), format.format(processingAvg/1000/1000), format.format(processingMax/1000/1000),
-              format.format(setupMin/1000/1000), format.format(setupAvg/1000/1000), format.format(setupMax/1000/1000),
-              format.format(waitMin/1000/1000), format.format(waitAvg/1000/1000), format.format(waitMax/1000/1000)));
-    }
+    
     return builder.toString();
+  }
+
+  private static class Comparators {
+    final static Comparator<MajorFragmentProfile> majorIdCompare = new Comparator<MajorFragmentProfile>() {
+      public int compare(MajorFragmentProfile o1, MajorFragmentProfile o2) {
+        return o1.getMajorFragmentId() < o2.getMajorFragmentId() ? -1 : 1;
+      }
+    };
+    
+    final static Comparator<MinorFragmentProfile> minorIdCompare = new Comparator<MinorFragmentProfile>() {
+      public int compare(MinorFragmentProfile o1, MinorFragmentProfile o2) {
+        return o1.getMinorFragmentId() < o2.getMinorFragmentId() ? -1 : 1;
+      }
+    };
+    
+    final static Comparator<MinorFragmentProfile> startTimeCompare = new Comparator<MinorFragmentProfile>() {
+      public int compare(MinorFragmentProfile o1, MinorFragmentProfile o2) {
+        return o1.getStartTime() < o2.getStartTime() ? -1 : 1;
+      }
+    };
+
+    final static Comparator<MinorFragmentProfile> endTimeCompare = new Comparator<MinorFragmentProfile>() {
+      public int compare(MinorFragmentProfile o1, MinorFragmentProfile o2) {
+        return o1.getEndTime() < o2.getEndTime() ? -1 : 1;
+      }
+    };
+
+    final static Comparator<MinorFragmentProfile> runTimeCompare = new Comparator<MinorFragmentProfile>() {
+      public int compare(MinorFragmentProfile o1, MinorFragmentProfile o2) {
+        return o1.getEndTime() - o1.getStartTime() < o2.getEndTime() - o2.getStartTime() ? -1 : 1;
+      }
+    };
+    
+    final static Comparator<OperatorProfile> operatorIdCompare = new Comparator<OperatorProfile>() {
+      public int compare(OperatorProfile o1, OperatorProfile o2) {
+        return o1.getOperatorId() < o2.getOperatorId() ? -1 : 1;
+      }
+    };
+    
+    final static Comparator<OperatorProfile> incomingRecordCompare = new Comparator<OperatorProfile>() {
+      public long incomingRecordCount(OperatorProfile op) {
+        long count = 0;
+        for (StreamProfile sp : op.getInputProfileList()) {
+          count += sp.getRecords();
+        }
+        return count;
+      }
+      
+      public int compare(OperatorProfile o1, OperatorProfile o2) {
+        return incomingRecordCount(o1) > incomingRecordCount(o2) ? -1 : 1;
+      }
+    };
+    
+    final static Comparator<Pair<OperatorProfile, Integer>> setupTimeSort = new Comparator<Pair<OperatorProfile, Integer>>() {
+      public int compare(Pair<OperatorProfile, Integer> o1, Pair<OperatorProfile, Integer> o2) {
+        return o1.getLeft().getSetupNanos() < o2.getLeft().getSetupNanos() ? -1 : 1;
+      }
+    };
+    
+    final static Comparator<Pair<OperatorProfile, Integer>> processTimeSort = new Comparator<Pair<OperatorProfile, Integer>>() {
+      public int compare(Pair<OperatorProfile, Integer> o1, Pair<OperatorProfile, Integer> o2) {
+        return o1.getLeft().getProcessNanos() < o2.getLeft().getProcessNanos() ? -1 : 1;
+      }
+    };
+    
+    final static Comparator<Pair<OperatorProfile, Integer>> waitTimeSort = new Comparator<Pair<OperatorProfile, Integer>>() {
+      public int compare(Pair<OperatorProfile, Integer> o1, Pair<OperatorProfile, Integer> o2) {
+        return o1.getLeft().getWaitNanos() < o2.getLeft().getWaitNanos() ? -1 : 1;
+      }
+    };
+  }
+  
+  class TableBuilder {
+    NumberFormat format = NumberFormat.getInstance(Locale.US);
+    DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss.SSS");
+    
+    StringBuilder sb;
+    int w = 0;
+    int width;
+    
+    public TableBuilder(String title, String id, String[] columns) {
+      sb = new StringBuilder();
+      width = columns.length;
+      
+      format.setMaximumFractionDigits(3);
+      format.setMinimumFractionDigits(3);
+      
+      sb.append(String.format("<h3 id=\"%s\">%s</h3>\n", id, title));
+      sb.append("<table class=\"table table-bordered text-right\">\n<tr>");
+      for (String cn : columns) {
+        sb.append("<th>" + cn + "</th>");
+      }
+      sb.append("</tr>\n");
+    }
+    
+    public void appendCell(String s, String link) {
+      if (w == 0) {
+        sb.append("<tr>");
+      }
+      sb.append(String.format("<td>%s%s</td>", s, link != null ? link : ""));
+      if (++w >= width) {
+        sb.append("</tr>\n");
+        w = 0;
+      }
+    }
+    
+    public void appendTime(long d, String link) {
+      appendCell(dateFormat.format(d), link);
+    }
+    
+    public void appendMillis(long p, String link) {
+      appendCell(format.format(p / 1000.0), link);
+    }
+    
+    public void appendNanos(long p, String link) {
+      appendMillis((long) (p / 1000.0 / 1000.0), link);
+    }
+    
+    public void appendFormattedNumber(Number n, String link) {
+      appendCell(format.format(n), link);
+    }
+
+    public void appendInteger(long l, String link) {
+      appendCell(Long.toString(l), link);
+    }
+    
+    public String toString() {
+      String rv;
+      rv = sb.append("\n</table>").toString();
+      sb = null;
+      return rv;
+    }
   }
 }
