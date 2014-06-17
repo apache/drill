@@ -25,8 +25,8 @@ import net.hydromatic.optiq.tools.StdFrameworkConfig;
 import org.apache.drill.exec.planner.sql.DrillConvertletTable;
 import org.apache.drill.exec.planner.sql.parser.CompoundIdentifierConverter;
 import org.apache.drill.exec.planner.sql.parser.impl.DrillParserImpl;
+import org.apache.drill.test.DrillAssert;
 import org.eigenbase.sql.SqlNode;
-import org.junit.Assert;
 import org.junit.Test;
 
 public class TestSqlBracketlessSyntax {
@@ -61,7 +61,7 @@ public class TestSqlBracketlessSyntax {
     SqlNode rewritten = node.accept(new CompoundIdentifierConverter());
     String rewrittenQuery = rewritten.toString();
 
-    Assert.assertEquals(expected, rewrittenQuery);
+    DrillAssert.assertMultiLineStringEquals(expected, rewrittenQuery);
   }
 
 

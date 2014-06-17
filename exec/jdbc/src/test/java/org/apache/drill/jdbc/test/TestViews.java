@@ -18,8 +18,10 @@
 package org.apache.drill.jdbc.test;
 
 import com.google.common.base.Function;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.drill.exec.store.hive.HiveTestDataGenerator;
+import org.apache.drill.test.DrillAssert;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -33,8 +35,6 @@ import static org.junit.Assert.assertTrue;
 
 /** Contains tests for creating/droping and using views in Drill. */
 public class TestViews extends JdbcTestQueryBase {
-
-  private final static String NEW_LINE = System.getProperty("line.separator");
 
   @BeforeClass
   public static void generateHive() throws Exception{
@@ -283,9 +283,9 @@ public class TestViews extends JdbcTestQueryBase {
               "WHERE TABLE_NAME = 'testview3'");
           result = JdbcAssert.toString(resultSet).trim();
           resultSet.close();
-          expected = "TABLE_CATALOG=DRILL; TABLE_SCHEMA=dfs.tmp; TABLE_NAME=testview3; VIEW_DEFINITION=SELECT *"+NEW_LINE+"FROM `hive`.`kv`";
-          assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected),
-              expected.equals(result));
+          expected = "TABLE_CATALOG=DRILL; TABLE_SCHEMA=dfs.tmp; TABLE_NAME=testview3; VIEW_DEFINITION=SELECT *\nFROM `hive`.`kv`";
+          DrillAssert.assertMultiLineStringEquals(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected),
+              expected, result);
 
           // test record in INFORMATION_SCHEMA.TABLES
           resultSet = statement.executeQuery("SELECT * FROM INFORMATION_SCHEMA.`TABLES` " +
