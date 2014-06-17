@@ -62,7 +62,7 @@ public abstract class AggPruleBase extends Prule {
   protected boolean create2PhasePlan(RelOptRuleCall call, DrillAggregateRel aggregate) {
     PlannerSettings settings = PrelUtil.getPlannerSettings(call.getPlanner());
     RelNode child = call.rel(0).getInputs().get(0);
-    boolean smallInput = child.computeSelfCost(call.getPlanner()).getRows() < settings.getSliceTarget();
+    boolean smallInput = child.getRows() < settings.getSliceTarget();
     if (! settings.isMultiPhaseAggEnabled() || settings.isSingleMode() || smallInput) {
       return false;
     }

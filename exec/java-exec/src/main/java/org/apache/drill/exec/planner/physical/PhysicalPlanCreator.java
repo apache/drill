@@ -60,7 +60,7 @@ public class PhysicalPlanCreator {
 
   public PhysicalOperator addMetadata(Prel originalPrel, PhysicalOperator op){
     op.setOperatorId(opIdMap.get(originalPrel).getAsSingleInt());
-    op.setCost(originalPrel.computeSelfCost(originalPrel.getCluster().getPlanner()).getRows());
+    op.setCost(originalPrel.getRows());
     return op;
   }
 

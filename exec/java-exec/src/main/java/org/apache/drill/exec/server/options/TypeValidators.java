@@ -45,6 +45,25 @@ public class TypeValidators {
     }
   }
 
+  public static class RangeDoubleValidator extends DoubleValidator {
+    private final double min;
+    private final double max;
+
+    public RangeDoubleValidator(String name, double def, double min, double max) {
+      super(name, def);
+      this.min = min;
+      this.max = max;
+    }
+
+    @Override
+    public void extraValidate(OptionValue v) throws ExpressionParsingException {
+      if (v.float_val > max || v.float_val < min)
+        throw new ExpressionParsingException(String.format("Option %s must be between %d and %d.", getOptionName(), min,
+            max));
+    }
+
+  }
+
   public static class BooleanValidator extends TypeValidator{
     public BooleanValidator(String name, boolean def){
       super(name, Kind.BOOLEAN, OptionValue.createBoolean(OptionType.SYSTEM, name, def));

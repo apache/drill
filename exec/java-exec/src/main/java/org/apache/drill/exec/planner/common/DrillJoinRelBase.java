@@ -22,6 +22,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.apache.drill.exec.planner.cost.DrillCostBase.DrillCostFactory;
+import org.apache.drill.exec.planner.physical.PrelUtil;
 import org.eigenbase.rel.InvalidRelException;
 import org.eigenbase.rel.JoinRelBase;
 import org.eigenbase.rel.JoinRelType;
@@ -41,10 +42,12 @@ import com.google.common.collect.Lists;
 public abstract class DrillJoinRelBase extends JoinRelBase implements DrillRelNode {
   protected List<Integer> leftKeys = Lists.newArrayList();
   protected List<Integer> rightKeys = Lists.newArrayList() ;
+  private final double joinRowFactor;
 
   public DrillJoinRelBase(RelOptCluster cluster, RelTraitSet traits, RelNode left, RelNode right, RexNode condition,
       JoinRelType joinType) throws InvalidRelException {
     super(cluster, traits, left, right, condition, joinType, Collections.<String> emptySet());
+    this.joinRowFactor = PrelUtil.getPlannerSettings(cluster.getPlanner()).getRowCountEstimateFactor();
   }
 
   @Override
@@ -55,8 +58,10 @@ public abstract class DrillJoinRelBase extends JoinRelBase implements DrillRelNo
     return super.computeSelfCost(planner);
   }
 
-
-
+  @Override
+  public double getRows() {
+    return joinRowFactor * Math.max(this.getLeft().getRows(), this.getRight().getRows());
+  }
 
   /**
    * Returns whether there are any elements in common between left and right.

@@ -53,6 +53,7 @@ public class SystemOptionManager implements OptionManager{
       PlannerSettings.MULTIPHASE,
       PlannerSettings.BROADCAST,
       PlannerSettings.BROADCAST_THRESHOLD,
+      PlannerSettings.JOIN_ROW_COUNT_ESTIMATE_FACTOR,
       ExecConstants.OUTPUT_FORMAT_VALIDATOR,
       ExecConstants.PARQUET_BLOCK_SIZE_VALIDATOR,
       ExecConstants.SLICE_TARGET_OPTION,

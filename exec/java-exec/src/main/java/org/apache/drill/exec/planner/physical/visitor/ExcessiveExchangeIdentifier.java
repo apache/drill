@@ -88,8 +88,7 @@ public class ExcessiveExchangeIdentifier extends BasePrelVisitor<Prel, Excessive
     private int maxWidth = Integer.MAX_VALUE;
 
     public void add(Prel prel){
-      RelOptCost cost = prel.computeSelfCost(prel.getCluster().getPlanner());
-      maxRows = Math.max(cost.getRows(), maxRows);
+      maxRows = Math.max(prel.getRows(), maxRows);
     }
 
     public void setSingular(){
