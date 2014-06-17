@@ -376,6 +376,9 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
         }
       }
 
+      int totalFragments = 1 + intermediateFragments.size() + leafFragments.size();
+      fragmentManager.getStatus().setTotalFragments(totalFragments);
+      fragmentManager.getStatus().updateCache();
       logger.debug("Fragments stored.");
 
       logger.debug("Submitting fragments to run.");
@@ -383,9 +386,6 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
 
       logger.debug("Fragments running.");
       state.updateState(QueryState.PENDING, QueryState.RUNNING);
-      int totalFragments = 1 + intermediateFragments.size() + leafFragments.size();
-      fragmentManager.getStatus().setTotalFragments(totalFragments);
-      fragmentManager.getStatus().updateCache();
 
     } catch (Exception e) {
       fail("Failure while setting up query.", e);
