@@ -67,40 +67,40 @@ public class OperatorStats {
   }
 
   public void startSetup() {
-    assert !inSetup;
+    assert !inSetup  : "Failure while starting setup.  Currently in setup.";
     stopProcessing();
     inSetup = true;
     setupMark = System.nanoTime();
   }
 
   public void stopSetup() {
-    assert inSetup;
+    assert inSetup :  "Failure while stopping setup.  Not currently in setup.";
     startProcessing();
     setupNanos += System.nanoTime() - setupMark;
     inSetup = false;
   }
 
   public void startProcessing() {
-    assert !inProcessing;
+    assert !inProcessing : "Failure while starting processing.  Currently in processing.";
     processingMark = System.nanoTime();
     inProcessing = true;
   }
 
   public void stopProcessing() {
-    assert inProcessing;
+    assert inProcessing : "Failure while stopping processing.  Not currently in processing.";
     processingNanos += System.nanoTime() - processingMark;
     inProcessing = false;
   }
 
   public void startWait() {
-    assert !inWait;
+    assert !inWait : "Failure while starting waiting.  Currently in waiting.";
     stopProcessing();
     inWait = true;
     waitMark = System.nanoTime();
   }
 
   public void stopWait() {
-    assert inWait;
+    assert inWait : "Failure while stopping waiting.  Currently not in waiting.";
     startProcessing();
     waitNanos += System.nanoTime() - waitMark;
     inWait = false;
