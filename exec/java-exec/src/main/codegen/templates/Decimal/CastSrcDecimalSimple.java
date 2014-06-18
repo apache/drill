@@ -72,7 +72,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
         out.buffer = buffer;
         out.start = 0;
-        out.sign = (in.value < 0) ? true : false;
+        out.setSign((in.value < 0));
 
         /* Since we will be dividing the decimal value with base 1 billion
          * we don't want negative results if the decimal is negative.
@@ -169,7 +169,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
 
         out.buffer = buffer;
         out.start = 0;
-        out.sign = (in.value < 0) ? true : false;
+        out.setSign((in.value < 0));
 
         /* Since we will be dividing the decimal value with base 1 billion
          * we don't want negative results if the decimal is negative.

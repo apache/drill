@@ -402,20 +402,8 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
          * big endian ordering makes sense for this purpose.  So we have to deal with
          * the sign bit for the two representation in a slightly different fashion
          */
-
-        // Get the sign of the decimal
-          <#if minor.class.endsWith("Sparse")>
-          if ((holder.buffer.getInt(holder.start) & 0x80000000) != 0) {
-          <#elseif minor.class.endsWith("Dense")>
-          if ((holder.buffer.getInt(holder.start) & 0x00000080) != 0) {
-          </#if>
-            holder.sign = true;
-        }
-
         holder.scale = getField().getScale();
         holder.precision = getField().getPrecision();
-
-
     }
 
     public void get(int index, Nullable${minor.class}Holder holder) {
@@ -423,15 +411,6 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
         holder.start = index * ${type.width};
 
         holder.buffer = data;
-
-          // Get the sign the of the decimal
-          <#if minor.class.endsWith("Sparse")>
-          if ((holder.buffer.getInt(holder.start) & 0x80000000) != 0) {
-          <#elseif minor.class.endsWith("Dense")>
-          if ((holder.buffer.getInt(holder.start) & 0x00000080) != 0) {
-          </#if>
-            holder.sign = true;
-        }
     }
 
       @Override
@@ -690,31 +669,10 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
 
    public void set(int index, ${minor.class}Holder holder){
       data.setBytes(index * ${type.width}, holder.buffer, holder.start, ${type.width});
-
-      // Set the sign of the decimal
-      if (holder.sign == true) {
-          int value = data.getInt(index * ${type.width});
-          <#if minor.class.endsWith("Sparse")>
-          data.setInt(index * ${type.width}, (value | 0x80000000));
-          <#elseif minor.class.endsWith("Dense")>
-          data.setInt(index * ${type.width}, (value | 0x00000080));
-          </#if>
-
-      }
    }
 
    void set(int index, Nullable${minor.class}Holder holder){
        data.setBytes(index * ${type.width}, holder.buffer, holder.start, ${type.width});
-
-      // Set the sign of the decimal
-      if (holder.sign == true) {
-          int value = data.getInt(index * ${type.width});
-          <#if minor.class.endsWith("Sparse")>
-          data.setInt(index * ${type.width}, (value | 0x80000000));
-          <#elseif minor.class.endsWith("Dense")>
-          data.setInt(index * ${type.width}, (value | 0x00000080));
-          </#if>
-      }
    }
 
    public boolean setSafe(int index,  Nullable${minor.class}Holder holder){

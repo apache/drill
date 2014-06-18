@@ -57,7 +57,7 @@ public class ${className} implements DrillSimpleFunc {
     output.scale = input.scale;
     output.precision = input.precision;
     <#if minor.class.startsWith("Decimal28") || minor.class.startsWith("Decimal38")>
-    output.sign = input.sign;
+    output.setSign(input.getSign());
     output.start = input.start;
     output.buffer = input.buffer;
     <#else>

@@ -63,7 +63,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
         }
         out.scale = (int) scale.value;
         out.precision = (int) precision.value;
-        out.sign = in.sign;
+        out.setSign(in.getSign());
 
         /* We store base 1 Billion integers in our representation, which requires
          * 30 bits, but a typical integer requires 32 bits. In our dense representation

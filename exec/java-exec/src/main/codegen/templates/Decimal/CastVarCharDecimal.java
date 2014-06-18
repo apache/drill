@@ -186,6 +186,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
         out.scale = (int) scale.value;
         out.precision = (int) precision.value;
+        boolean sign = false;
 
         // Initialize the output buffer
         for (int i = 0; i < ${type.arraySize}; i++) {
@@ -207,7 +208,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
         if (next == '-') {
             readIndex++;
-            out.sign = true;
+            sign = true;
         }
 
         if (next == '.') {
@@ -340,6 +341,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
             int padding = (int) org.apache.drill.common.util.DecimalUtility.getPowerOfTen((int) (org.apache.drill.common.util.DecimalUtility.MAX_DIGITS - ndigits));
             out.setInteger(decimalBufferIndex, out.getInteger(decimalBufferIndex) * padding);
         }
+        out.setSign(sign);
     }
 }
 </#if> <#-- type.major -->

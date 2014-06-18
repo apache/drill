@@ -72,13 +72,13 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     for (int i = 0; i < value.nDecimalDigits; i++) {
       value.setInteger(i, 0xFFFFFFFF);
     }
-    value.sign = true;
+    value.setSign(true);
     <#elseif aggrtype.funcName == "min">
     for (int i = 0; i < value.nDecimalDigits; i++) {
       value.setInteger(i, 0x7FFFFFFF);
     }
     // Set sign to be positive so initial value is maximum
-    value.sign = false;
+    value.setSign(false);
     value.precision = ${type.runningType}Holder.maxPrecision;
     </#if>
     <#elseif type.outputType == "Decimal9" || type.outputType == "Decimal18">
@@ -101,21 +101,21 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     value.value++;
     <#elseif aggrtype.funcName == "max">
     <#if type.outputType.endsWith("Dense")>
-    int cmp = org.apache.drill.common.util.DecimalUtility.compareDenseBytes(in.buffer, in.start, in.sign, value.buffer, value.start, value.sign, in.WIDTH);
+    int cmp = org.apache.drill.common.util.DecimalUtility.compareDenseBytes(in.buffer, in.start, in.getSign(), value.buffer, value.start, value.getSign(), in.WIDTH);
     if (cmp == 1) {
       in.buffer.getBytes(in.start, value.buffer, 0, value.WIDTH);
-      value.sign = in.sign;
+      value.setSign(in.getSign());
       value.scale = in.scale;
       value.precision = in.precision;
     }
     <#elseif type.outputType.endsWith("Sparse")>
-    int cmp = org.apache.drill.common.util.DecimalUtility.compareSparseBytes(in.buffer, in.start, in.sign,
+    int cmp = org.apache.drill.common.util.DecimalUtility.compareSparseBytes(in.buffer, in.start, in.getSign(),
       in.scale, in.precision, value.buffer,
-      value.start, value.sign, value.precision,
+      value.start, value.getSign(), value.precision,
       value.scale, in.WIDTH, in.nDecimalDigits, false);
     if (cmp == 1) {
       in.buffer.getBytes(in.start, value.buffer, 0, value.WIDTH);
-      value.sign = in.sign;
+      value.setSign(in.getSign());
       value.scale = in.scale;
       value.precision = in.precision;
     }
@@ -124,21 +124,21 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     </#if>
     <#elseif aggrtype.funcName == "min">
     <#if type.outputType.endsWith("Dense")>
-    int cmp = org.apache.drill.common.util.DecimalUtility.compareDenseBytes(in.buffer, in.start, in.sign, value.buffer, value.start, value.sign, in.WIDTH);
+    int cmp = org.apache.drill.common.util.DecimalUtility.compareDenseBytes(in.buffer, in.start, in.getSign(), value.buffer, value.start, value.getSign(), in.WIDTH);
     if (cmp == -1) {
       in.buffer.getBytes(in.start, value.buffer, 0, value.WIDTH);
-      value.sign = in.sign;
+      value.setSign(in.getSign());
       value.scale = in.scale;
       value.precision = in.precision;
     }
     <#elseif type.outputType.endsWith("Sparse")>
-    int cmp = org.apache.drill.common.util.DecimalUtility.compareSparseBytes(in.buffer, in.start, in.sign,
+    int cmp = org.apache.drill.common.util.DecimalUtility.compareSparseBytes(in.buffer, in.start, in.getSign(),
       in.scale, in.precision, value.buffer,
-      value.start, value.sign, value.precision,
+      value.start, value.getSign(), value.precision,
       value.scale, in.WIDTH, in.nDecimalDigits, false);
     if (cmp == -1) {
       in.buffer.getBytes(in.start, value.buffer, 0, value.WIDTH);
-      value.sign = in.sign;
+      value.setSign(in.getSign());
       value.scale = in.scale;
       value.precision = in.precision;
     }
@@ -159,7 +159,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     <#if type.outputType.endsWith("Dense") || type.outputType.endsWith("Sparse")>
     out.buffer = value.buffer;
     out.start = value.start;
-    out.sign = value.sign;
+    out.setSign(value.getSign());
     <#elseif type.outputType == "Decimal9" || type.outputType == "Decimal18">
     out.value = value.value;
     </#if>
@@ -184,9 +184,9 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     }
     <#if aggrtype.funcName == "min">
     // Set sign to be positive so initial value is maximum
-    value.sign = false;
+    value.setSign(false);
     <#elseif aggrtype.funcName == "max">
-    value.sign = true;
+    value.setSign(true);
     </#if>
     <#elseif type.outputType == "Decimal9" || type.outputType == "Decimal18">
     value.value = ${type.initValue};

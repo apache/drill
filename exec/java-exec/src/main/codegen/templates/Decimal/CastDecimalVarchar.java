@@ -146,7 +146,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
 
         // If we have valid digits print '-' sign
-        if ((in.sign == true) && index < ${type.arraySize}) {
+        if ((in.getSign() == true) && index < ${type.arraySize}) {
             str.append("-");
         }
 

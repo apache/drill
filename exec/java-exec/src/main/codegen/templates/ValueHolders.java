@@ -72,7 +72,6 @@ public final class ${className} implements ValueHolder{
     public int precision;
     public static final int maxPrecision = ${minor.maxPrecisionDigits};
     <#if minor.class.startsWith("Decimal28") || minor.class.startsWith("Decimal38")>
-    public boolean sign;
     public int start;
     public ByteBuf buffer;
     public static final int nDecimalDigits = ${minor.nDecimalDigits};
@@ -94,6 +93,18 @@ public final class ${className} implements ValueHolder{
 
     public void setInteger(int index, int value) {
         buffer.setInt(start + (index * 4), value);
+    }
+
+    public void setSign(boolean sign) {
+      // Set MSB to 1 if sign is negative
+      if (sign == true) {
+        int value = getInteger(0);
+        setInteger(0, (value | 0x80000000));
+      }
+    }
+
+    public boolean getSign() {
+      return ((buffer.getInt(start) & 0x80000000) != 0);
     }
 
     <#else>

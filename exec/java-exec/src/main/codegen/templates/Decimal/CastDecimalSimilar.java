@@ -61,7 +61,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
         out.start = 0;
         out.scale = (int) scale.value;
         out.precision = (int) precision.value;
-        out.sign = in.sign;
+        boolean sign = (in.getSign());
 
         // Re initialize the buffer everytime
         for (int i = 0; i < ${type.arraySize}; i++) {
@@ -79,6 +79,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
         if (in.scale != out.scale) {
           org.apache.drill.common.util.DecimalUtility.roundDecimal(out.buffer, out.start, out.nDecimalDigits, out.scale, in.scale);
         }
+        out.setSign(sign);
     }
 }
 </#if> <#-- type.major -->

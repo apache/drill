@@ -85,7 +85,7 @@ public class ValueHolderHelper {
 
     dch.scale = bigDecimal.scale();
     dch.precision = bigDecimal.precision();
-    dch.sign = (bigDecimal.signum() == -1);
+    dch.setSign(bigDecimal.signum() == -1);
     dch.start = 0;
 
     dch.buffer = Unpooled.wrappedBuffer(new byte[5 * DecimalUtility.integerSize]);
@@ -104,7 +104,7 @@ public class ValueHolderHelper {
 
       dch.scale = bigDecimal.scale();
       dch.precision = bigDecimal.precision();
-      dch.sign = (bigDecimal.signum() == -1);
+      dch.setSign(bigDecimal.signum() == -1);
       dch.start = 0;
 
 

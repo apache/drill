@@ -79,7 +79,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
         // check if input is a negative number and store the sign
         if (in.value < 0) {
-            out.sign = true;
+            out.setSign(true);
         }
 
         // Figure out how many array positions to be left for the scale part

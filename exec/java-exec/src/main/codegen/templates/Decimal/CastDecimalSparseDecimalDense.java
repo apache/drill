@@ -66,8 +66,6 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
         out.scale = (int) scale.value;
         out.precision = (int) precision.value;
 
-        out.sign = in.sign;
-
         /* Before converting from a sparse representation to a dense representation
          * we need to convert it to an intermediate representation. In the sparse
          * representation we separate out the scale and the integer part of the decimal
@@ -169,6 +167,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
 
           // Set the bytes in the buffer
           out.buffer.setBytes(dstIndex, intermediateBytes, 1, (size - 1));
+          out.setSign(in.getSign());
     }
 }
 </#if>

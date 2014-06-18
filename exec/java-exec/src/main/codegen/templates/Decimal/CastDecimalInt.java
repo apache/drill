@@ -96,7 +96,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
             out.value = (${type.javatype}) ((out.value * org.apache.drill.common.util.DecimalUtility.DIGITS_BASE) + in.getInteger(i));
         }
 
-        if (in.sign == true) {
+        if (in.getSign() == true) {
             out.value *= -1;
         }
     }

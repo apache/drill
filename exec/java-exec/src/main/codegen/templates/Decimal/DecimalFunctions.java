@@ -23,9 +23,9 @@ import org.apache.drill.exec.expr.annotations.Workspace;
 <#macro compareBlock holderType left right absCompare output>
 
         outside:{
-            ${output} = org.apache.drill.common.util.DecimalUtility.compareSparseBytes(left.buffer, left.start, left.sign,
+            ${output} = org.apache.drill.common.util.DecimalUtility.compareSparseBytes(left.buffer, left.start, left.getSign(),
                             left.scale, left.precision, right.buffer,
-                            right.start, right.sign, right.precision,
+                            right.start, right.getSign(), right.precision,
                             right.scale, left.WIDTH, left.nDecimalDigits, ${absCompare});
 
     }
@@ -295,9 +295,9 @@ public class ${type.name}Functions {
              * causes the sign of one of the inputs to change and hence it effectively
              * becomes addition
              */
-            if (left.sign != right.sign) {
+            if (left.getSign() != right.getSign()) {
                 <@addBlock holderType=type.name in1="left" in2="right" result="result"/>
-                result.sign = left.sign;
+                result.setSign(left.getSign());
             } else {
                 /* Sign of the inputs are the same, meaning we have to perform subtraction
                  * For subtraction we need left input to be greater than right input
@@ -313,10 +313,10 @@ public class ${type.name}Functions {
                 }
 
                 //Determine the sign of the result
-                if ((left.sign == false && cmp == -1) || (left.sign == true && cmp == 1)) {
-                    result.sign = true;
+                if ((left.getSign() == false && cmp == -1) || (left.getSign() == true && cmp == 1)) {
+                    result.setSign(true);
                 } else {
-                    result.sign = false;
+                    result.setSign(false);
                 }
             }
 
@@ -347,7 +347,7 @@ public class ${type.name}Functions {
             }
 
             /* If sign is different use the subtraction logic */
-            if (left.sign != right.sign) {
+            if (left.getSign() != right.getSign()) {
 
                 /* Subtract logic assumes, left input is greater than right input
                  * swap if necessary
@@ -357,17 +357,17 @@ public class ${type.name}Functions {
 
                 if (cmp == -1) {
                     <@subtractBlock holderType=type.name in1="right" in2="left" result="result"/>
-                    result.sign = right.sign;
+                    result.setSign(right.getSign());
                 } else {
                     <@subtractBlock holderType=type.name in1="left" in2="right" result="result"/>
-                    result.sign = left.sign;
+                    result.setSign(left.getSign());
                 }
 
 
             } else {
                 /* Sign of the two input decimals is the same, use the add logic */
                 <@addBlock holderType=type.name in1="left" in2="right" result="result"/>
-                result.sign = left.sign;
+                result.setSign(left.getSign());
             }
         }
     }
@@ -486,7 +486,7 @@ public class ${type.name}Functions {
               result.setInteger(outputIndex--, 0);
             }
 
-            result.sign = (left.sign == right.sign) ? false : true;
+            result.setSign(left.getSign() != right.getSign());
         }
     }
 
@@ -609,7 +609,7 @@ public class ${type.name}Functions {
 
           boolean zeroValue = true;
 
-          if (in.sign == true) {
+          if (in.getSign() == true) {
             out.value = -1;
           } else {
             for (int i = 0; i < ${type.storage}; i++) {
@@ -637,7 +637,7 @@ public class ${type.name}Functions {
           out.precision = in.precision;
           out.buffer = in.buffer;
           out.start = in.start;
-          out.sign = in.sign;
+          boolean sign = in.getSign();
 
           // Indicates whether we need to add 1 to the integer part, while performing ceil
           int carry = 0;
@@ -645,7 +645,7 @@ public class ${type.name}Functions {
           int scaleStartIndex = ${type.storage} - org.apache.drill.common.util.DecimalUtility.roundUp(in.scale);
           int srcIntIndex = scaleStartIndex - 1;
 
-          if (out.sign == false) {
+          if (sign == false) {
             // For negative values ceil we don't need to increment the integer part
             while (scaleStartIndex < ${type.storage}) {
               if (out.getInteger(scaleStartIndex) != 0) {
@@ -684,6 +684,8 @@ public class ${type.name}Functions {
               }
             }
           }
+          // set the sign
+          out.setSign(sign);
         }
     }
 
@@ -701,7 +703,7 @@ public class ${type.name}Functions {
           out.precision = in.precision;
           out.buffer = in.buffer;
           out.start = in.start;
-          out.sign = in.sign;
+          boolean sign = in.getSign();
 
           // Indicates whether we need to decrement 1 from the integer part, while performing floor, done for -ve values
           int carry = 0;
@@ -709,7 +711,7 @@ public class ${type.name}Functions {
           int scaleStartIndex = ${type.storage} - org.apache.drill.common.util.DecimalUtility.roundUp(in.scale);
           int srcIntIndex = scaleStartIndex - 1;
 
-          if (out.sign == true) {
+          if (sign == true) {
             // For negative values ceil we don't need to increment the integer part
             while (scaleStartIndex < ${type.storage}) {
               if (out.getInteger(scaleStartIndex) != 0) {
@@ -730,7 +732,6 @@ public class ${type.name}Functions {
           while (destIndex >= 0) {
             out.setInteger(destIndex--, 0);
           }
-
           // Add the carry
           if (carry != 0) {
             destIndex = ${type.storage} - 1;
@@ -748,6 +749,8 @@ public class ${type.name}Functions {
               }
             }
           }
+          // set the sign
+          out.setSign(sign);
         }
     }
 
@@ -765,7 +768,7 @@ public class ${type.name}Functions {
           out.precision = in.precision;
           out.buffer = in.buffer;
           out.start = in.start;
-          out.sign = in.sign;
+          boolean sign = in.getSign();
 
           // Integer part's src index
           int srcIntIndex = ${type.storage} - org.apache.drill.common.util.DecimalUtility.roundUp(in.scale) - 1;
@@ -780,6 +783,8 @@ public class ${type.name}Functions {
           while (destIndex >= 0) {
             out.setInteger(destIndex--, 0);
           }
+            // set the sign
+            out.setSign(sign);
         }
     }
 
@@ -798,7 +803,7 @@ public class ${type.name}Functions {
           result.precision = left.precision;
           result.buffer = left.buffer;
           result.start = left.start;
-          result.sign = left.sign;
+          boolean sign = left.getSign();
 
           int newScaleRoundedUp  = org.apache.drill.common.util.DecimalUtility.roundUp(right.value);
           int origScaleRoundedUp = org.apache.drill.common.util.DecimalUtility.roundUp(left.scale);
@@ -855,6 +860,8 @@ public class ${type.name}Functions {
               }
             }
           }
+            // set the sign
+            result.setSign(sign);
         }
     }
 
@@ -872,7 +879,7 @@ public class ${type.name}Functions {
           out.precision = in.precision;
           out.buffer = in.buffer;
           out.start = in.start;
-          out.sign = in.sign;
+          boolean sign = in.getSign();
 
           boolean roundUp = false;
 
@@ -915,6 +922,8 @@ public class ${type.name}Functions {
               }
             }
           }
+            // set the sign
+            out.setSign(sign);
         }
     }
 
@@ -933,9 +942,11 @@ public class ${type.name}Functions {
           result.precision = left.precision;
           result.buffer = left.buffer;
           result.start = left.start;
-          result.sign = left.sign;
+          boolean sign = left.getSign();
 
           org.apache.drill.common.util.DecimalUtility.roundDecimal(result.buffer, result.start, result.nDecimalDigits, result.scale, left.scale);
+          // set the sign
+          result.setSign(sign);
         }
     }
 
@@ -1074,7 +1085,7 @@ public class ${type.name}Functions {
         public void setup(RecordBatch incoming) {}
 
         public void eval() {
-            out.value = org.apache.drill.common.util.DecimalUtility.compareDenseBytes(left.buffer, left.start, left.sign, right.buffer, right.start, right.sign, left.WIDTH);
+            out.value = org.apache.drill.common.util.DecimalUtility.compareDenseBytes(left.buffer, left.start, left.getSign(), right.buffer, right.start, right.getSign(), left.WIDTH);
         }
     }
 
@@ -1087,7 +1098,7 @@ public class ${type.name}Functions {
         public void setup(RecordBatch incoming) {}
 
         public void eval() {
-            int cmp  = org.apache.drill.common.util.DecimalUtility.compareDenseBytes(left.buffer, left.start, left.sign, right.buffer, right.start, right.sign, left.WIDTH);
+            int cmp  = org.apache.drill.common.util.DecimalUtility.compareDenseBytes(left.buffer, left.start, left.getSign(), right.buffer, right.start, right.getSign(), left.WIDTH);
             out.value = cmp == -1 ? 1 : 0;
         }
     }
@@ -1101,7 +1112,7 @@ public class ${type.name}Functions {
         public void setup(RecordBatch incoming) {}
 
         public void eval() {
-            int cmp = org.apache.drill.common.util.DecimalUtility.compareDenseBytes(left.buffer, left.start, left.sign, right.buffer, right.start, right.sign, left.WIDTH);
+            int cmp = org.apache.drill.common.util.DecimalUtility.compareDenseBytes(left.buffer, left.start, left.getSign(), right.buffer, right.start, right.getSign(), left.WIDTH);
             out.value = cmp < 1 ? 1 : 0;
         }
     }
@@ -1115,7 +1126,7 @@ public class ${type.name}Functions {
         public void setup(RecordBatch incoming) {}
 
         public void eval() {
-            int cmp = org.apache.drill.common.util.DecimalUtility.compareDenseBytes(left.buffer, left.start, left.sign, right.buffer, right.start, right.sign, left.WIDTH);
+            int cmp = org.apache.drill.common.util.DecimalUtility.compareDenseBytes(left.buffer, left.start, left.getSign(), right.buffer, right.start, right.getSign(), left.WIDTH);
             out.value = cmp == 1 ? 1 : 0;
         }
     }
@@ -1129,7 +1140,7 @@ public class ${type.name}Functions {
         public void setup(RecordBatch incoming) {}
 
         public void eval() {
-            int cmp = org.apache.drill.common.util.DecimalUtility.compareDenseBytes(left.buffer, left.start, left.sign, right.buffer, right.start, right.sign, left.WIDTH);
+            int cmp = org.apache.drill.common.util.DecimalUtility.compareDenseBytes(left.buffer, left.start, left.getSign(), right.buffer, right.start, right.getSign(), left.WIDTH);
             out.value = cmp > -1 ? 1 : 0;
         }
     }
@@ -1143,7 +1154,7 @@ public class ${type.name}Functions {
         public void setup(RecordBatch incoming) {}
 
         public void eval() {
-            int cmp = org.apache.drill.common.util.DecimalUtility.compareDenseBytes(left.buffer, left.start, left.sign, right.buffer, right.start, right.sign, left.WIDTH);
+            int cmp = org.apache.drill.common.util.DecimalUtility.compareDenseBytes(left.buffer, left.start, left.getSign(), right.buffer, right.start, right.getSign(), left.WIDTH);
             out.value = cmp == 0 ? 1 : 0;
         }
     }
@@ -1159,7 +1170,7 @@ public class ${type.name}Functions {
 
         public void eval() {
 
-            int cmp = org.apache.drill.common.util.DecimalUtility.compareDenseBytes(left.buffer, left.start, left.sign, right.buffer, right.start, right.sign, left.WIDTH);
+            int cmp = org.apache.drill.common.util.DecimalUtility.compareDenseBytes(left.buffer, left.start, left.getSign(), right.buffer, right.start, right.getSign(), left.WIDTH);
             out.value = cmp != 0 ? 1 : 0;
         }
     }
