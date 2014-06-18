@@ -175,7 +175,7 @@ connectionStatus_t DrillClientImpl::recvHandshake(){
     DRILL_LOG(LOG_DEBUG) << "Sent handshake read request to server" << std::endl;
     m_io_service.run();
     if(m_rbuf!=NULL){
-        Utils::freeBuffer(m_rbuf); m_rbuf=NULL;
+        Utils::freeBuffer(m_rbuf, MAX_SOCK_RD_BUFSIZE); m_rbuf=NULL;
     }
     return CONN_SUCCESS;
 }
@@ -332,6 +332,13 @@ void DrillClientImpl::getNextResult(){
     // This call is always made from within a function where the mutex has already been acquired
     //boost::lock_guard<boost::mutex> lock(this->m_dcMutex);
 
+    {
+        boost::unique_lock<boost::mutex> memLock(AllocatedBuffer::s_memCVMutex);
+        DRILL_LOG(LOG_TRACE) << "Read blocked waiting for memory." << std::endl;
+        while(AllocatedBuffer::s_isBufferLimitReached){
+            AllocatedBuffer::s_memCV.wait(memLock);
+        }
+    }
     //use free, not delete to free
     ByteBuf_t readBuf = Utils::allocateBuffer(LEN_PREFIX_BUFLEN);
 
@@ -362,10 +369,13 @@ void DrillClientImpl::waitForResults(){
     delete this->m_pListenerThread; this->m_pListenerThread=NULL;
 }
 
-status_t DrillClientImpl::readMsg(ByteBuf_t _buf, ByteBuf_t* allocatedBuffer, InBoundRpcMessage& msg, boost::system::error_code& error){
+status_t DrillClientImpl::readMsg(ByteBuf_t _buf,
+        AllocatedBufferPtr* allocatedBuffer,
+        InBoundRpcMessage& msg,
+        boost::system::error_code& error){
     size_t leftover=0;
     uint32_t rmsgLen;
-    ByteBuf_t currentBuffer;
+    AllocatedBufferPtr currentBuffer;
     *allocatedBuffer=NULL;
     {
         // We need to protect the readLength and read buffer, and the pending requests counter,
@@ -379,18 +389,18 @@ status_t DrillClientImpl::readMsg(ByteBuf_t _buf, ByteBuf_t* allocatedBuffer, In
             leftover = LEN_PREFIX_BUFLEN - bytes_read;
             // Allocate a buffer
             DRILL_LOG(LOG_TRACE) << "Allocated and locked buffer." << std::endl;
-            currentBuffer=Utils::allocateBuffer(rmsgLen);
+            currentBuffer=new AllocatedBuffer(rmsgLen);
             if(currentBuffer==NULL){
-                Utils::freeBuffer(_buf);
+                Utils::freeBuffer(_buf, LEN_PREFIX_BUFLEN);
                 return handleQryError(QRY_CLIENT_OUTOFMEM, getMessage(ERR_QRY_OUTOFMEM), NULL);
             }
             *allocatedBuffer=currentBuffer;
             if(leftover){
-                memcpy(currentBuffer, _buf + bytes_read, leftover);
+                memcpy(currentBuffer->m_pBuffer, _buf + bytes_read, leftover);
             }
             DRILL_LOG(LOG_TRACE) << "reading data (rmsgLen - leftover) : "
                 << (rmsgLen - leftover) << std::endl;
-            ByteBuf_t b=currentBuffer + leftover;
+            ByteBuf_t b=currentBuffer->m_pBuffer + leftover;
             size_t bytesToRead=rmsgLen - leftover;
             while(1){
                 size_t dataBytesRead=this->m_socket.read_some(
@@ -404,24 +414,24 @@ status_t DrillClientImpl::readMsg(ByteBuf_t _buf, ByteBuf_t* allocatedBuffer, In
             }
             if(!error){
                 // read data successfully
-                DrillClientImpl::s_decoder.Decode(currentBuffer, rmsgLen, msg);
+                DrillClientImpl::s_decoder.Decode(currentBuffer->m_pBuffer, rmsgLen, msg);
                 DRILL_LOG(LOG_TRACE) << "Done decoding chunk. Coordination id: " <<msg.m_coord_id<< std::endl;
             }else{
-                Utils::freeBuffer(_buf);
+                Utils::freeBuffer(_buf, LEN_PREFIX_BUFLEN);
                 return handleQryError(QRY_COMM_ERROR,
                         getMessage(ERR_QRY_COMMERR, error.message().c_str()), NULL);
             }
         }else{
             // got a message with an invalid read length.
-            Utils::freeBuffer(_buf);
+            Utils::freeBuffer(_buf, LEN_PREFIX_BUFLEN);
             return handleQryError(QRY_INTERNAL_ERROR, getMessage(ERR_QRY_INVREADLEN), NULL);
         }
     }
-    Utils::freeBuffer(_buf);
+    Utils::freeBuffer(_buf, LEN_PREFIX_BUFLEN);
     return QRY_SUCCESS;
 }
 
-status_t DrillClientImpl::processQueryResult(ByteBuf_t allocatedBuffer, InBoundRpcMessage& msg ){
+status_t DrillClientImpl::processQueryResult(AllocatedBufferPtr  allocatedBuffer, InBoundRpcMessage& msg ){
     DrillClientQueryResult* pDrillClientQueryResult=NULL;
     status_t ret=QRY_SUCCESS;
     {
@@ -453,14 +463,14 @@ status_t DrillClientImpl::processQueryResult(ByteBuf_t allocatedBuffer, InBoundR
         //Check QueryResult.queryState. QueryResult could have an error.
         if(qr->query_state() == exec::shared::QueryResult_QueryState_FAILED){
             status_t ret=handleQryError(QRY_FAILURE, qr->error(0), pDrillClientQueryResult);
-            Utils::freeBuffer(allocatedBuffer);
+            delete allocatedBuffer;
             delete qr;
             return ret;
         }
         //Validate the RPC message
         std::string valErr;
         if( (ret=validateMessage(msg, *qr, valErr)) != QRY_SUCCESS){
-            Utils::freeBuffer(allocatedBuffer);
+            delete allocatedBuffer;
             delete qr;
             return handleQryError(ret, getMessage(ERR_QRY_INVRPC, valErr.c_str()), pDrillClientQueryResult);
         }
@@ -521,7 +531,7 @@ status_t DrillClientImpl::processQueryResult(ByteBuf_t allocatedBuffer, InBoundR
     return ret;
 }
 
-status_t DrillClientImpl::processQueryId(ByteBuf_t allocatedBuffer, InBoundRpcMessage& msg ){
+status_t DrillClientImpl::processQueryId(AllocatedBufferPtr allocatedBuffer, InBoundRpcMessage& msg ){
     DrillClientQueryResult* pDrillClientQueryResult=NULL;
     DRILL_LOG(LOG_DEBUG) << "Processing Query Handle with coordination id:" << msg.m_coord_id << std::endl;
     status_t ret=QRY_SUCCESS;
@@ -539,10 +549,10 @@ status_t DrillClientImpl::processQueryId(ByteBuf_t allocatedBuffer, InBoundRpcMe
         //save queryId allocated here so we can free it later
         pDrillClientQueryResult->setQueryId(qid);
     }else{
-        Utils::freeBuffer(allocatedBuffer);
+        delete allocatedBuffer;
         return handleQryError(QRY_INTERNAL_ERROR, getMessage(ERR_QRY_INVQUERYID), NULL);
     }
-    Utils::freeBuffer(allocatedBuffer);
+    delete allocatedBuffer;
     return ret;
 }
 
@@ -580,7 +590,7 @@ void DrillClientImpl::handleRead(ByteBuf_t _buf,
         InBoundRpcMessage msg;
 
         DRILL_LOG(LOG_TRACE) << "Getting new message" << std::endl;
-        ByteBuf_t allocatedBuffer=NULL;
+        AllocatedBufferPtr allocatedBuffer=NULL;
 
         if(readMsg(_buf, &allocatedBuffer, msg, error)!=QRY_SUCCESS){
             if(m_pendingRequests!=0){
@@ -628,7 +638,7 @@ void DrillClientImpl::handleRead(ByteBuf_t _buf,
         }
     }else{
         // boost error
-        Utils::freeBuffer(_buf);
+        Utils::freeBuffer(_buf, LEN_PREFIX_BUFLEN);
         boost::lock_guard<boost::mutex> lock(this->m_dcMutex);
         handleQryError(QRY_COMM_ERROR, getMessage(ERR_QRY_COMMERR, error.message().c_str()), NULL);
         return;
@@ -828,7 +838,7 @@ status_t DrillClientQueryResult::defaultQueryResultsListener(void* ctx,
     return QRY_SUCCESS;
 }
 
-RecordBatch*  DrillClientQueryResult::peekNext() {
+RecordBatch*  DrillClientQueryResult::peekNext(){
     RecordBatch* pRecordBatch=NULL;
     //if no more data, return NULL;
     if(!m_bIsQueryPending) return NULL;

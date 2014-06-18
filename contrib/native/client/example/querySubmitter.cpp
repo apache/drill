@@ -280,6 +280,7 @@ int main(int argc, char* argv[]) {
         //DrillClient::initLogging("/var/log/drill/", l);
         // To log to stderr
         Drill::DrillClient::initLogging(NULL, l);
+        Drill::DrillClientConfig::setBufferLimit(2*1024*1024); // 2MB. Allows us to hold at least two record batches.
 
         if(client.connect(connectStr.c_str(), schema.c_str())!=Drill::CONN_SUCCESS){
             std::cerr<< "Failed to connect with error: "<< client.getError() << " (Using:"<<connectStr<<")"<<std::endl;

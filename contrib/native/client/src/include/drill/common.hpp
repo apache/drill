@@ -33,6 +33,9 @@
 #define MAX_CONNECT_STR 4096
 #define MAX_SOCK_RD_BUFSIZE  1024
 
+#define MEM_CHUNK_SIZE 64*1024; // 64K
+#define MAX_MEM_ALLOC_SIZE 256*1024*1024; // 256 MB
+
 #ifdef _DEBUG
 #define EXTRA_DEBUGGING
 #define CODER_DEBUGGING
@@ -47,6 +50,9 @@ typedef Byte_t * ByteBuf_t;
 
 class FieldMetadata;
 typedef boost::shared_ptr< std::vector<Drill::FieldMetadata*> > FieldDefPtr;
+
+class AllocatedBuffer;
+typedef AllocatedBuffer* AllocatedBufferPtr;
 
 typedef enum{
     QRY_SUCCESS=0,

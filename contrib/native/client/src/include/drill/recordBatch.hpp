@@ -836,10 +836,10 @@ class ValueVectorFactory{
 class DECLSPEC_DRILL_CLIENT RecordBatch{
     public:
 
-        //m_allocatedBuffer is the memory block allocated to hold the incoming RPC message. Record BAtches operate on
-        //slices of the allcoated buffer. The first slice (the first Field Batch), begins at m_buffer. Data in the
+        //m_allocatedBuffer is the memory block allocated to hold the incoming RPC message. Record Batches operate on
+        //slices of the allocated buffer. The first slice (the first Field Batch), begins at m_buffer. Data in the
         //allocated buffer before m_buffer is mostly the RPC header, and the QueryResult object.
-        RecordBatch(exec::shared::QueryResult* pResult, ByteBuf_t r, ByteBuf_t b)
+        RecordBatch(exec::shared::QueryResult* pResult, AllocatedBufferPtr r, ByteBuf_t b)
                 :m_fieldDefs(new(std::vector<Drill::FieldMetadata*>)){
             m_pQueryResult=pResult;
             m_pRecordBatchDef=&pResult->def();
@@ -892,7 +892,7 @@ class DECLSPEC_DRILL_CLIENT RecordBatch{
     private:
         const exec::shared::QueryResult* m_pQueryResult;
         const exec::shared::RecordBatchDef* m_pRecordBatchDef;
-        ByteBuf_t m_allocatedBuffer;
+        AllocatedBufferPtr m_allocatedBuffer;
         ByteBuf_t m_buffer;
         //build the current schema out of the field metadata
         FieldDefPtr m_fieldDefs;

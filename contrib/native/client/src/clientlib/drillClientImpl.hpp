@@ -198,7 +198,7 @@ class DrillClientImpl{
             m_socket.shutdown(boost::asio::ip::tcp::socket::shutdown_send, ignorederr);
             m_socket.close();
             if(m_rbuf!=NULL){
-                Utils::freeBuffer(m_rbuf); m_rbuf=NULL;
+                Utils::freeBuffer(m_rbuf, MAX_SOCK_RD_BUFSIZE); m_rbuf=NULL;
             }
             if(m_pError!=NULL){
                 delete m_pError; m_pError=NULL;
@@ -244,9 +244,13 @@ class DrillClientImpl{
         void handleHShakeReadTimeout(const boost::system::error_code & err);
         // Query results
         void getNextResult();
-        status_t readMsg(ByteBuf_t _buf, ByteBuf_t* allocatedBuffer, InBoundRpcMessage& msg, boost::system::error_code& error);
-        status_t processQueryResult(ByteBuf_t allocatedBuffer, InBoundRpcMessage& msg);
-        status_t processQueryId(ByteBuf_t allocatedBuffer, InBoundRpcMessage& msg );
+        status_t readMsg(
+                ByteBuf_t _buf,
+                AllocatedBufferPtr* allocatedBuffer,
+                InBoundRpcMessage& msg,
+                boost::system::error_code& error);
+        status_t processQueryResult(AllocatedBufferPtr allocatedBuffer, InBoundRpcMessage& msg);
+        status_t processQueryId(AllocatedBufferPtr allocatedBuffer, InBoundRpcMessage& msg );
         void handleReadTimeout(const boost::system::error_code & err);
         void handleRead(ByteBuf_t _buf, const boost::system::error_code & err, size_t bytes_transferred) ;
         status_t validateMessage(InBoundRpcMessage& msg, exec::shared::QueryResult& qr, std::string& valError);
