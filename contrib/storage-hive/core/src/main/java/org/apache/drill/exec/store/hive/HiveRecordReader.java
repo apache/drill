@@ -169,7 +169,7 @@ public class HiveRecordReader implements RecordReader {
         List<Integer> columnIds = Lists.newArrayList();
         selectedColumnNames = Lists.newArrayList();
         for (SchemaPath field : projectedColumns) {
-          String columnName = field.getRootSegment().getPath(); //TODO?
+          String columnName = field.getRootSegment().getPath();
           if (!tableColumns.contains(columnName)) {
             if (partitionNames.contains(columnName)) {
               selectedPartitionNames.add(columnName);

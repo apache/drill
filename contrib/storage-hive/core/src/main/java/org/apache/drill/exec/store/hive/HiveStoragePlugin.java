@@ -72,7 +72,7 @@ public class HiveStoragePlugin extends AbstractStoragePlugin {
         throw new UnsupportedOperationException("Querying Hive views from Drill is not supported in current version.");
       }
 
-      return new HiveScan(hiveReadEntry, this, null);   
+      return new HiveScan(hiveReadEntry, this, columns);
     } catch (ExecutionSetupException e) {
       throw new IOException(e);
     }

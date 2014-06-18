@@ -23,8 +23,11 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Date;
 import java.sql.Timestamp;
+import java.util.Map;
 
+import com.google.common.collect.Maps;
 import org.apache.commons.io.FileUtils;
+import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.CommandNeedRetryException;
@@ -52,7 +55,23 @@ public class HiveTestDataGenerator {
       FileUtils.forceDelete(f);
     }
   }
-  
+
+  public void createAndAddHiveTestPlugin(StoragePluginRegistry pluginRegistry) throws Exception {
+    // generate test tables and data
+    generateTestData();
+
+    // add Hive plugin to given registry
+    Map<String, String> config = Maps.newHashMap();
+    config.put("hive.metastore.uris", "");
+    config.put("javax.jdo.option.ConnectionURL", String.format("jdbc:derby:;databaseName=%s;create=true", DB_DIR));
+    config.put("hive.metastore.warehouse.dir", WH_DIR);
+    config.put("fs.default.name", "file:///");
+    HiveStoragePluginConfig pluginConfig = new HiveStoragePluginConfig(config);
+    pluginConfig.setEnabled(true);
+
+    pluginRegistry.createOrUpdate("hive", pluginConfig, true);
+  }
+
   public void generateTestData() throws Exception {
     
     // remove data from previous runs.

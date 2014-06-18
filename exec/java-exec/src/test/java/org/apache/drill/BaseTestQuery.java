@@ -175,6 +175,10 @@ public class BaseTestQuery extends ExecTest{
     return testRunAndPrint(QueryType.PHYSICAL, query);
   }
 
+  protected int testSql(String query) throws Exception{
+    return testRunAndPrint(QueryType.SQL, query);
+  }
+
   protected void testPhysicalFromFile(String file) throws Exception{
     testPhysical(getFile(file));
   }

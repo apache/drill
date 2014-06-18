@@ -89,9 +89,10 @@ public class HiveScan extends AbstractGroupScan {
   Map<InputSplit, Partition> partitionMap = new HashMap();
 
   @JsonCreator
-  public HiveScan(@JsonProperty("hive-table") HiveReadEntry hiveReadEntry, @JsonProperty("storage-plugin") String storagePluginName,
-      @JsonProperty("columns") List<SchemaPath> columns,
-      @JacksonInject StoragePluginRegistry pluginRegistry) throws ExecutionSetupException {
+  public HiveScan(@JsonProperty("hive-table") HiveReadEntry hiveReadEntry,
+                  @JsonProperty("storage-plugin") String storagePluginName,
+                  @JsonProperty("columns") List<SchemaPath> columns,
+                  @JacksonInject StoragePluginRegistry pluginRegistry) throws ExecutionSetupException {
     this.hiveReadEntry = hiveReadEntry;
     this.table = hiveReadEntry.getTable();
     this.storagePluginName = storagePluginName;
@@ -300,4 +301,8 @@ public class HiveScan extends AbstractGroupScan {
     return newScan;
   }
 
+  @Override
+  public boolean canPushdownProjects(List<SchemaPath> columns) {
+    return true;
+  }
 }
