@@ -82,6 +82,12 @@ if [ "$DRILL_LOG_DIR" = "" ]; then
   DRILL_LOG_DIR=/var/log/drill
 fi
 
+if [ ! -d $DRILL_LOG_DIR ]; then
+  echo "Drill log directory $DRILL_LOG_DIR does not exist, defaulting to $DRILL_HOME/log"
+  DRILL_LOG_DIR=$DRILL_HOME/log
+  mkdir -p $DRILL_LOG_DIR
+fi
+
 # If HADOOP_HOME is specified, add all Hadoop jars except those
 # specifically excluded in $DRILL_HOME/bin/hadoop-excludes.txt
 if [ "${HADOOP_HOME}x" != "x" ] ; then
