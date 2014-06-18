@@ -29,6 +29,8 @@ import mockit.NonStrictExpectations;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.common.util.TestTools;
+import org.apache.drill.exec.cache.DistributedCache;
+import org.apache.drill.exec.cache.local.LocalCache;
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.memory.TopLevelAllocator;
@@ -42,7 +44,6 @@ import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.pop.PopUnitTestBase;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.CoordinationProtos;
-import org.apache.drill.exec.proto.UserProtos;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.rpc.user.QueryResultBatch;
@@ -50,7 +51,10 @@ import org.apache.drill.exec.rpc.user.UserServer;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.server.RemoteServiceSet;
-import org.apache.drill.exec.vector.NullableIntVector;
+import org.apache.drill.exec.server.options.OptionManager;
+import org.apache.drill.exec.server.options.SessionOptionManager;
+import org.apache.drill.exec.server.options.SystemOptionManager;
+import org.apache.drill.exec.store.sys.local.LocalPStoreProvider;
 import org.apache.drill.exec.vector.ValueVector;
 import org.junit.Rule;
 import org.junit.Test;
@@ -69,11 +73,16 @@ public class TestHashJoin extends PopUnitTestBase{
     DrillConfig c = DrillConfig.create();
 
     private void testHJMockScanCommon(final DrillbitContext bitContext, UserServer.UserClientConnection connection, String physicalPlan, int expectedRows) throws Throwable {
+      final LocalPStoreProvider provider = new LocalPStoreProvider(c);
+      provider.start();
+      final SystemOptionManager opt = new SystemOptionManager(c, provider);
+      opt.init();
         new NonStrictExpectations(){{
             bitContext.getMetrics(); result = new MetricRegistry();
             bitContext.getAllocator(); result = new TopLevelAllocator();
             bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
             bitContext.getConfig(); result = c;
+            bitContext.getOptionManager(); result = opt;
         }};
 
         PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());

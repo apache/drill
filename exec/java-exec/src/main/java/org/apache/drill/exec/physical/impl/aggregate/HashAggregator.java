@@ -29,6 +29,7 @@ import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.config.HashAggregate;
+import org.apache.drill.exec.physical.impl.common.HashTableConfig;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 import org.apache.drill.exec.record.TypedFieldId;
@@ -42,7 +43,7 @@ public interface HashAggregator {
     RETURN_OUTCOME, CLEANUP_AND_RETURN, UPDATE_AGGREGATOR
 	  }
   
-  public abstract void setup(HashAggregate hashAggrConfig, FragmentContext context, 
+  public abstract void setup(HashAggregate hashAggrConfig, HashTableConfig htConfig, FragmentContext context, 
                              OperatorStats stats, BufferAllocator allocator, RecordBatch incoming,
                              HashAggBatch outgoing, LogicalExpression[] valueExprs, 
                              List<TypedFieldId> valueFieldIds,

@@ -21,8 +21,6 @@ import org.apache.drill.common.logical.data.NamedExpression;
 import org.apache.drill.exec.physical.base.AbstractSingle;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
-import org.apache.drill.exec.physical.impl.common.HashTable;
-import org.apache.drill.exec.physical.impl.common.HashTableConfig;
 import org.apache.drill.exec.proto.UserBitShared.CoreOperatorType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -39,23 +37,12 @@ public class HashAggregate extends AbstractSingle {
 
   private final float cardinality;
 
-  // configuration parameters for the hash table
-  private final HashTableConfig htConfig;
-
   @JsonCreator
   public HashAggregate(@JsonProperty("child") PhysicalOperator child, @JsonProperty("keys") NamedExpression[] groupByExprs, @JsonProperty("exprs") NamedExpression[] aggrExprs, @JsonProperty("cardinality") float cardinality) {
     super(child);
     this.groupByExprs = groupByExprs;
     this.aggrExprs = aggrExprs;
     this.cardinality = cardinality;
-
-    int initial_capacity = cardinality > HashTable.DEFAULT_INITIAL_CAPACITY ?
-      (int) cardinality : HashTable.DEFAULT_INITIAL_CAPACITY;
-
-    this.htConfig = new HashTableConfig(initial_capacity,
-                                        HashTable.DEFAULT_LOAD_FACTOR,
-                                        groupByExprs,
-                                        null /* no probe exprs */) ;
   }
 
   public NamedExpression[] getGroupByExprs() {
@@ -68,10 +55,6 @@ public class HashAggregate extends AbstractSingle {
 
   public double getCardinality() {
     return cardinality;
-  }
-
-  public HashTableConfig getHtConfig() {
-    return htConfig;
   }
 
   @Override

@@ -171,7 +171,8 @@ public abstract class HashAggTemplate implements HashAggregator {
 
 
   @Override
-  public void setup(HashAggregate hashAggrConfig, FragmentContext context, 
+  public void setup(HashAggregate hashAggrConfig, HashTableConfig htConfig, 
+                    FragmentContext context, 
                     OperatorStats stats,
                     BufferAllocator allocator, RecordBatch incoming, HashAggBatch outgoing,
                     LogicalExpression[] valueExprs,
@@ -219,7 +220,7 @@ public abstract class HashAggTemplate implements HashAggregator {
       }
     }
 
-    ChainedHashTable ht = new ChainedHashTable(hashAggrConfig.getHtConfig(), context, allocator, incoming, null /* no incoming probe */, outgoing) ;
+    ChainedHashTable ht = new ChainedHashTable(htConfig, context, allocator, incoming, null /* no incoming probe */, outgoing) ;
     this.htable = ht.createAndSetupHashTable(groupByOutFieldIds) ;
 
     batchHolders = new ArrayList<BatchHolder>();

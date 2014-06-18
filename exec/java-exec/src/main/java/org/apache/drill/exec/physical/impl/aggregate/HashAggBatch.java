@@ -25,6 +25,7 @@ import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.LogicalExpression;
 import org.apache.drill.common.logical.data.NamedExpression;
+import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.compile.sig.GeneratorMapping;
 import org.apache.drill.exec.compile.sig.MappingSet;
 import org.apache.drill.exec.exception.ClassTransformationException;
@@ -48,6 +49,8 @@ import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.allocator.VectorAllocator;
 import org.apache.drill.exec.physical.impl.aggregate.HashAggregator.AggOutcome;
+import org.apache.drill.exec.physical.impl.common.HashTable;
+import org.apache.drill.exec.physical.impl.common.HashTableConfig;
 
 import com.google.common.collect.Lists;
 import com.sun.codemodel.JExpr;
@@ -220,7 +223,12 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
     container.buildSchema(SelectionVectorMode.NONE);
     HashAggregator agg = context.getImplementationClass(top);
 
-    agg.setup(popConfig, context, this.stats,
+    HashTableConfig htConfig = new HashTableConfig(context.getOptions().getOption(ExecConstants.MIN_HASH_TABLE_SIZE_KEY).num_val.intValue(),
+                                                   HashTable.DEFAULT_LOAD_FACTOR,
+                                                   popConfig.getGroupByExprs(),
+                                                   null /* no probe exprs */) ;
+    
+    agg.setup(popConfig, htConfig, context, this.stats,
               oContext.getAllocator(), incoming, this,
               aggrExprs,
               cgInner.getWorkspaceTypes(),

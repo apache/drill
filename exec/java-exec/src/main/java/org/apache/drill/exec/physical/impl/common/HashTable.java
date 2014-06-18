@@ -30,7 +30,7 @@ public interface HashTable {
   public static TemplateClassDefinition<HashTable> TEMPLATE_DEFINITION = new TemplateClassDefinition<HashTable>(HashTable.class, HashTableTemplate.class);
 
   /** The initial default capacity of the hash table (in terms of number of buckets). */
-  static final public int DEFAULT_INITIAL_CAPACITY = 1 << 8; 
+  static final public int DEFAULT_INITIAL_CAPACITY = 1 << 16; 
 
   /** The maximum capacity of the hash table (in terms of number of buckets). */
   static final public int MAXIMUM_CAPACITY = 1 << 30; 

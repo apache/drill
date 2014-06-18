@@ -64,8 +64,9 @@ public class SystemOptionManager implements OptionManager{
       ExecConstants.LARGE_QUEUE_SIZE,
       ExecConstants.QUEUE_THRESHOLD_SIZE,
       ExecConstants.QUEUE_TIMEOUT,
-      ExecConstants.SMALL_QUEUE_SIZE
-
+      ExecConstants.SMALL_QUEUE_SIZE, 
+      ExecConstants.MIN_HASH_TABLE_SIZE,
+      ExecConstants.MAX_HASH_TABLE_SIZE
   };
 
   public final PStoreConfig<OptionValue> config;
