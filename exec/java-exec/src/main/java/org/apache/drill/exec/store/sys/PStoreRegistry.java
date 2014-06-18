@@ -50,6 +50,7 @@ public class PStoreRegistry {
   public PStoreProvider newPStoreProvider() throws ExecutionSetupException {
     try {
       String storeProviderClassName = config.getString(ExecConstants.SYS_STORE_PROVIDER_CLASS);
+      logger.info("Using the configured PStoreProvider class: '{}'.", storeProviderClassName);
       Class<? extends PStoreProvider> storeProviderClass = (Class<? extends PStoreProvider>) Class.forName(storeProviderClassName);
       Constructor<? extends PStoreProvider> c = storeProviderClass.getConstructor(PStoreRegistry.class);
       return c.newInstance(this);
