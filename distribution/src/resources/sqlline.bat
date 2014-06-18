@@ -133,22 +133,25 @@ if "test%HBASE_HOME%" == "test" (
 )
 
 echo Calculating Drill classpath...
-set DRILL_CLASSPATH=%DRILL_HOME%\jars\*;%DRILL_CLASSPATH%
-set DRILL_CLASSPATH=%DRILL_HOME%\lib\*;%DRILL_CLASSPATH%
-set DRILL_CLASSPATH=%DRILL_HOME%\contrib\*;%DRILL_CLASSPATH%
-if "test%USE_HADOOP_CP%"=="1" set DRILL_CLASSPATH=%HADOOP_CLASSPATH%;!DRILL_CLASSPATH!
-if "test%USE_HBASE_CP%"=="1" set DRILL_CLASSPATH=%HBASE_CLASSPATH%;!DRILL_CLASSPATH!
-set DRILL_CLASSPATH=%DRILL_CONF_DIR%;%DRILL_CLASSPATH%
+
+set DRILL_CP=%DRILL_CONF_DIR%
+if NOT "test%DRILL_CLASSPATH_PREFIX%"=="test" set DRILL_CP=!DRILL_CP!;%DRILL_CLASSPATH_PREFIX%
+set DRILL_CP=%DRILL_CP%;%DRILL_HOME%\jars\*
+set DRILL_CP=%DRILL_CP%;%DRILL_HOME%\extlib\*
+if "test%USE_HADOOP_CP%"=="test1" set DRILL_CP=!DRILL_CP!;%HADOOP_CLASSPATH%
+if "test%USE_HBASE_CP%"=="test1" set DRILL_CP=!DRILL_CP!;%HBASE_CLASSPATH%
+set DRILL_CP=%DRILL_CP%;%DRILL_HOME%\lib\*
+set DRILL_CP=%DRILL_CP%;%DRILL_HOME%\contrib\*
+if NOT "test%DRILL_CLASSPATH%"=="test" set DRILL_CP=!DRILL_CP!;%DRILL_CLASSPATH%
 
 set "DRILL_SHELL_JAVA_OPTS=%DRILL_SHELL_JAVA_OPTS% -Dlog.path=%DRILL_LOG_DIR%\sqlline.log"
 
 if NOT "test%QUERY%"=="test" (
-  echo %QUERY% | java %DRILL_SHELL_JAVA_OPTS% %DRILL_JAVA_OPTS% -cp %DRILL_CLASSPATH% sqlline.SqlLine -d org.apache.drill.jdbc.Driver %DRILL_ARGS%
+  echo %QUERY% | java %DRILL_SHELL_JAVA_OPTS% %DRILL_JAVA_OPTS% -cp %DRILL_CP% sqlline.SqlLine -d org.apache.drill.jdbc.Driver %DRILL_ARGS%
 ) else (
   if NOT "test%FILE%"=="test" (
-    java %DRILL_SHELL_JAVA_OPTS% %DRILL_JAVA_OPTS% -cp %DRILL_CLASSPATH% sqlline.SqlLine -d org.apache.drill.jdbc.Driver %DRILL_ARGS% --run=%FILE%
+    java %DRILL_SHELL_JAVA_OPTS% %DRILL_JAVA_OPTS% -cp %DRILL_CP% sqlline.SqlLine -d org.apache.drill.jdbc.Driver %DRILL_ARGS% --run=%FILE%
   ) else (
-    java %DRILL_SHELL_JAVA_OPTS% %DRILL_JAVA_OPTS% -cp %DRILL_CLASSPATH% sqlline.SqlLine -d org.apache.drill.jdbc.Driver %DRILL_ARGS%
+    java %DRILL_SHELL_JAVA_OPTS% %DRILL_JAVA_OPTS% -cp %DRILL_CP% sqlline.SqlLine -d org.apache.drill.jdbc.Driver %DRILL_ARGS%
   )
 )
-
