@@ -632,7 +632,7 @@ public class DateUtility {
     public static final int minutesToMillis = 60 * 1000;
     public static final int secondsToMillis = 1000;
     public static final int monthToStandardDays = 30;
-    public static final int monthsToMillis = 30 * 24 * 60 * 60 * 1000;
+    public static final long monthsToMillis = 2592000000L; // 30 * 24 * 60 * 60 * 1000
     public static final int daysToStandardMillis = 24 * 60 * 60 * 1000;
 
 
