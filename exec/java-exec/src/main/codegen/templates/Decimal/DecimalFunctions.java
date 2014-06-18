@@ -392,7 +392,6 @@ public class ${type.name}Functions {
         }
 
         public void eval() {
-
             if (outputPrecision == Integer.MIN_VALUE) {
                 org.apache.drill.common.util.DecimalScalePrecisionMulFunction resultScalePrec =
                 new org.apache.drill.common.util.DecimalScalePrecisionMulFunction((int) left.precision, (int) left.scale, (int) right.precision, (int) right.scale);
@@ -437,10 +436,6 @@ public class ${type.name}Functions {
             int resultIntegerSize = leftIntegerSize + rightIntegerSize;
             int resultScaleSize = org.apache.drill.common.util.DecimalUtility.roundUp(left.scale + right.scale);
 
-            if ((resultIntegerSize + resultScaleSize) > result.nDecimalDigits) {
-                throw new org.apache.drill.common.exceptions.DrillRuntimeException("Cannot fit multiplication result in the given Decimal type");
-            }
-
             int leftSize  = left.nDecimalDigits - 1;
             int rightSize = right.nDecimalDigits - 1;
 
@@ -475,6 +470,63 @@ public class ${type.name}Functions {
                 resultIndex--;
             }
 
+            /* We have computed the result of the multiplication; check if we need to
+             * round a portion of the fractional part
+             */
+            resultScaleSize = org.apache.drill.common.util.DecimalUtility.roundUp(result.scale);
+
+            if (result.scale < (left.scale + right.scale)) {
+              /* The scale of the output data type is lesser than the scale
+               * we obtained as a result of multiplication, we need to round
+               * a chunk of the fractional part
+               */
+              int lastScaleIndex = currentIndex + resultIntegerSize + resultScaleSize - 1;
+
+              // Compute the power of 10 necessary to chop of the fractional part
+              int scaleFactor = (int) (org.apache.drill.common.util.DecimalUtility.getPowerOfTen(
+                                        org.apache.drill.common.util.DecimalUtility.MAX_DIGITS - (result.scale % org.apache.drill.common.util.DecimalUtility.MAX_DIGITS)));
+
+              // compute the power of 10 necessary to find if we need to round up
+              int roundFactor = (int) (org.apache.drill.common.util.DecimalUtility.getPowerOfTen(
+                                        org.apache.drill.common.util.DecimalUtility.MAX_DIGITS - ((result.scale + 1) % org.apache.drill.common.util.DecimalUtility.MAX_DIGITS)));
+
+              // index of rounding digit
+              int roundIndex = currentIndex + resultIntegerSize + org.apache.drill.common.util.DecimalUtility.roundUp(result.scale + 1) - 1;
+
+              // Check the first chopped digit to see if we need to round up
+              int carry = ((tempResult[roundIndex] / roundFactor) % 10) > 4 ? 1 : 0;
+
+              // Adjust the carry so that it gets added to the correct digit
+              carry *= scaleFactor;
+
+              // Chop the unwanted fractional part
+              tempResult[lastScaleIndex] /=  scaleFactor;
+              tempResult[lastScaleIndex] *= scaleFactor;
+
+              // propogate the carry
+              while (carry > 0 && lastScaleIndex >= 0) {
+                int tempSum = tempResult[lastScaleIndex] + carry;
+                if (tempSum >= org.apache.drill.common.util.DecimalUtility.DIGITS_BASE) {
+                  tempResult[lastScaleIndex] = (tempSum % org.apache.drill.common.util.DecimalUtility.DIGITS_BASE);
+                  carry = (int) (tempSum / org.apache.drill.common.util.DecimalUtility.DIGITS_BASE);
+                } else {
+                  tempResult[lastScaleIndex] = tempSum;
+                  carry = 0;
+                }
+                lastScaleIndex--;
+              }
+
+              // check if carry has increased integer digit
+              if ((lastScaleIndex + 1) < currentIndex) {
+                resultIntegerSize++;
+                currentIndex = lastScaleIndex + 1;
+              }
+            }
+
+            if (resultIntegerSize > result.nDecimalDigits) {
+              throw new org.apache.drill.common.exceptions.DrillRuntimeException("Cannot fit multiplication result in the given decimal type");
+            }
+
             int outputIndex = result.nDecimalDigits - 1;
 
             for (int i = (currentIndex + resultIntegerSize + resultScaleSize - 1); i >= currentIndex; i--) {
@@ -485,7 +537,6 @@ public class ${type.name}Functions {
             while(outputIndex >= 0) {
               result.setInteger(outputIndex--, 0);
             }
-
             result.setSign(left.getSign() != right.getSign());
         }
     }

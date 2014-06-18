@@ -562,12 +562,27 @@ public class TestFunctionsQuery {
 
   @Test
   public void testDecimal18Decimal38Comparison() throws Exception {
-    String query = "select cast('999999999.999999999' as decimal(18, 9)) = cast('999999999.999999999' as decimal(38, 18)) as CMP " +
+    String query = "select cast('-999999999.999999999' as decimal(18, 9)) = cast('-999999999.999999999' as decimal(38, 18)) as CMP " +
         "from cp.`employee.json` where employee_id = 1";
 
     JdbcAssert.withNoDefaultSchema()
         .sql(query)
         .returns(
             "CMP=true\n");
+  }
+
+  @Test
+  public void testDecimalMultiplicationOverflowHandling() throws Exception {
+    String query = "select cast('1' as decimal(9, 5)) * cast ('999999999999999999999999999.999999999' as decimal(38, 9)) as DEC38_1, " +
+                   "cast('1000000000000000001.000000000000000000' as decimal(38, 18)) * cast('0.999999999999999999' as decimal(38, 18)) as DEC38_2, " +
+                   "cast('3' as decimal(9, 8)) * cast ('333333333.3333333333333333333' as decimal(38, 19)) as DEC38_3 " +
+                   "from cp.`employee.json` where employee_id = 1";
+
+    JdbcAssert.withNoDefaultSchema()
+        .sql(query)
+        .returns(
+            "DEC38_1=1000000000000000000000000000.00000; " +
+            "DEC38_2=1000000000000000000; " +
+            "DEC38_3=1000000000.000000000000000000\n");
   }
 }
