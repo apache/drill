@@ -66,9 +66,13 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
   }
 
   public final IterOutcome next(int inputIndex, RecordBatch b){
+    IterOutcome next = null;
     stats.stopProcessing();
-    IterOutcome next = b.next();
-    stats.startProcessing();
+    try{
+      next = b.next();
+    }finally{
+      stats.startProcessing();
+    }
 
     switch(next){
     case OK_NEW_SCHEMA:
@@ -138,7 +142,7 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
     return batch;
 
   }
-  
+
   @Override
   public VectorContainer getOutgoingContainer() {
     throw new UnsupportedOperationException(String.format(" You should not call getOutgoingContainer() for class %s", this.getClass().getCanonicalName()));

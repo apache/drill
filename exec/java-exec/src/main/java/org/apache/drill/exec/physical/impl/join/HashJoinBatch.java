@@ -134,8 +134,8 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
     boolean firstOutputBatch = true;
 
     IterOutcome leftUpstream = IterOutcome.NONE;
-    
-    private HashTableStats htStats = new HashTableStats();
+
+    private final HashTableStats htStats = new HashTableStats();
 
     @Override
     public int getRecordCount() {
@@ -171,9 +171,9 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
                 // Create the run time generated code needed to probe and project
                 hashJoinProbe = setupHashJoinProbe();
             }
-                        
+
             // Store the number of records projected
-            if (hashTable != null 
+            if (hashTable != null
                 || joinType != JoinRelType.INNER) {
 
                 // Allocate the memory for the vectors in the output container
@@ -440,12 +440,13 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
     }
 
     private void updateStats(HashTable htable) {
+      if(htable == null) return;
       htable.getStats(htStats);
       this.stats.addLongStat(HashTableMetrics.HTABLE_NUM_BUCKETS, htStats.numBuckets);
       this.stats.addLongStat(HashTableMetrics.HTABLE_NUM_ENTRIES, htStats.numEntries);
-      this.stats.addLongStat(HashTableMetrics.HTABLE_NUM_RESIZING, htStats.numResizing);  
+      this.stats.addLongStat(HashTableMetrics.HTABLE_NUM_RESIZING, htStats.numResizing);
     }
-    
+
     @Override
     public void killIncoming() {
         this.left.kill();

@@ -66,41 +66,44 @@ public class OperatorStats {
     this.schemaCountByInput = new long[inputCount];
   }
 
+  private String assertionError(String msg){
+    return String.format("Failure while %s for operator id %d. Currently have states of processing:%s, setup:%s, waiting:%s.", msg, operatorId, inProcessing, inSetup, inWait);
+  }
   public void startSetup() {
-    assert !inSetup  : "Failure while starting setup.  Currently in setup.";
+    assert !inSetup  : assertionError("starting setup");
     stopProcessing();
     inSetup = true;
     setupMark = System.nanoTime();
   }
 
   public void stopSetup() {
-    assert inSetup :  "Failure while stopping setup.  Not currently in setup.";
+    assert inSetup :  assertionError("stopping setup");
     startProcessing();
     setupNanos += System.nanoTime() - setupMark;
     inSetup = false;
   }
 
   public void startProcessing() {
-    assert !inProcessing : "Failure while starting processing.  Currently in processing.";
+    assert !inProcessing : assertionError("starting processing");
     processingMark = System.nanoTime();
     inProcessing = true;
   }
 
   public void stopProcessing() {
-    assert inProcessing : "Failure while stopping processing.  Not currently in processing.";
+    assert inProcessing : assertionError("stopping processing");
     processingNanos += System.nanoTime() - processingMark;
     inProcessing = false;
   }
 
   public void startWait() {
-    assert !inWait : "Failure while starting waiting.  Currently in waiting.";
+    assert !inWait : assertionError("starting waiting");
     stopProcessing();
     inWait = true;
     waitMark = System.nanoTime();
   }
 
   public void stopWait() {
-    assert inWait : "Failure while stopping waiting.  Currently not in waiting.";
+    assert inWait : assertionError("stopping waiting");
     startProcessing();
     waitNanos += System.nanoTime() - waitMark;
     inWait = false;

@@ -156,9 +156,10 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
       // update the schema in RecordWriter
       stats.startSetup();
       recordWriter.updateSchema(incoming.getSchema());
-      stats.stopSetup();
     } catch(IOException ex) {
       throw new RuntimeException("Failed to update schema in RecordWriter", ex);
+    } finally{
+      stats.stopSetup();
     }
 
     eventBasedRecordWriter = new EventBasedRecordWriter(incoming.getSchema(),

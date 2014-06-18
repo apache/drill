@@ -154,14 +154,14 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
     try{
       stats.startSetup();
       this.aggregator = createAggregatorInternal();
-      stats.stopSetup();
       return true;
     }catch(SchemaChangeException | ClassTransformationException | IOException ex){
-      stats.stopSetup();
       context.fail(ex);
       container.clear();
       incoming.kill();
       return false;
+    }finally{
+      stats.stopSetup();
     }
   }
 

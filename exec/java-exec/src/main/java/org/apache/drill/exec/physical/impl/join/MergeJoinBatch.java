@@ -166,12 +166,12 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
           stats.startSetup();
           this.worker = generateNewWorker();
           first = true;
-          stats.stopSetup();
         } catch (ClassTransformationException | IOException | SchemaChangeException e) {
-          stats.stopSetup();
           context.fail(new SchemaChangeException(e));
           kill();
           return IterOutcome.STOP;
+        } finally {
+          stats.stopSetup();
         }
       }
 

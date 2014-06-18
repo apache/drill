@@ -136,13 +136,14 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
     try{
       stats.startSetup();
       this.aggregator = createAggregatorInternal();
-      stats.stopSetup();
       return true;
     }catch(SchemaChangeException | ClassTransformationException | IOException ex){
       context.fail(ex);
       container.clear();
       incoming.kill();
       return false;
+    }finally{
+      stats.stopSetup();
     }
   }
 
