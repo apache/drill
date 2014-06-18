@@ -17,6 +17,7 @@
  */
 package org.apache.drill.common.expression.visitors;
 
+import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.ConvertExpression;
 import org.apache.drill.common.expression.ErrorCollector;
@@ -72,6 +73,25 @@ public class ExpressionValidator implements ExprVisitor<Void, ErrorCollector, Ru
     return null;
   }
 
+  @Override
+  public Void visitBooleanOperator(BooleanOperator op, ErrorCollector errors) throws RuntimeException {
+    int i = 0;
+    for (LogicalExpression arg : op.args) {
+      if ( arg.getMajorType().getMinorType() != MinorType.BIT) {
+        errors
+            .addGeneralError(
+                arg.getPosition(),
+                String
+                    .format(
+                        "Failure composing boolean operator %s.  All conditions must return a boolean type.  Condition %d was of Type %s.",
+                        op.getName(), i, arg.getMajorType().getMinorType()));
+      }
+      i++;
+    }
+    
+    return null;
+  }
+  
   @Override
   public Void visitIfExpression(IfExpression ifExpr, ErrorCollector errors) throws RuntimeException {
     // confirm that all conditions are required boolean values.

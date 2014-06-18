@@ -26,6 +26,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
+import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.ConvertExpression;
 import org.apache.drill.common.expression.ErrorCollector;
@@ -57,6 +58,7 @@ import org.apache.drill.common.expression.ValueExpressions.IntExpression;
 import org.apache.drill.common.expression.ValueExpressions.QuotedString;
 import org.apache.drill.common.expression.fn.CastFunctions;
 import org.apache.drill.common.expression.visitors.AbstractExprVisitor;
+import org.apache.drill.common.expression.visitors.ConditionalExprOptimizer;
 import org.apache.drill.common.expression.visitors.ExpressionValidator;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.DataMode;
@@ -89,6 +91,11 @@ public class ExpressionTreeMaterializer {
   public static LogicalExpression materialize(LogicalExpression expr, VectorAccessible batch, ErrorCollector errorCollector, FunctionImplementationRegistry registry, 
       boolean allowComplexWriterExpr) {
     LogicalExpression out =  expr.accept(new MaterializeVisitor(batch, errorCollector, allowComplexWriterExpr), registry);
+    
+    if (!errorCollector.hasErrors()) {
+      out = out.accept(ConditionalExprOptimizer.INSTANCE, null);
+    }
+    
     if(out instanceof NullExpression){
       return new TypedNullConstant(Types.optional(MinorType.INT));
     }else{
@@ -125,6 +132,19 @@ public class ExpressionTreeMaterializer {
       return holder;
     }
 
+    @Override
+    public LogicalExpression visitBooleanOperator(BooleanOperator op, FunctionImplementationRegistry registry) {
+      List<LogicalExpression> args = Lists.newArrayList();
+      for (int i = 0; i < op.args.size(); ++i) {
+        LogicalExpression newExpr = op.args.get(i).accept(this, registry);
+        assert newExpr != null : String.format("Materialization of %s return a null expression.", op.args.get(i));
+        args.add(newExpr);
+      }
+
+      //replace with a new function call, since its argument could be changed.
+      return new BooleanOperator(op.getName(), args, op.getPosition());      
+    }
+    
     @Override
     public LogicalExpression visitFunctionCall(FunctionCall call, FunctionImplementationRegistry registry) {
       List<LogicalExpression> args = Lists.newArrayList();

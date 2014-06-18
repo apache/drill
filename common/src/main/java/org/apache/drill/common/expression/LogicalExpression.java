@@ -52,6 +52,9 @@ public interface LogicalExpression extends Iterable<LogicalExpression>{
 
   public ExpressionPosition getPosition();
 
+  public int getSelfCost();
+  public int getCumulativeCost();
+  
   public static class De extends StdDeserializer<LogicalExpression> {
     DrillConfig config;
 

@@ -27,10 +27,9 @@
 
 package org.apache.drill.exec.expr.fn.impl;
 
-import javax.xml.ws.Holder;
-
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
+import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionCostCategory;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
@@ -191,6 +190,7 @@ package org.apache.drill.exec.expr.fn.impl;
 
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
+import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionCostCategory;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
@@ -200,7 +200,8 @@ import org.apache.drill.exec.record.RecordBatch;
 @SuppressWarnings("unused")
 public class GCompare${type.name}Functions {
 
-  @FunctionTemplate(name = "compare_to", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "compare_to", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL, 
+      costCategory = FunctionCostCategory.COMPLEX)
   public static class GCCompare${type.name} implements DrillSimpleFunc {
 
       @Param ${type.name}Holder left;
@@ -220,7 +221,8 @@ public class GCompare${type.name}Functions {
       }
   }
 
-  @FunctionTemplate(name = "less_than", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "less_than", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL, 
+      costCategory = FunctionCostCategory.COMPLEX)
   public static class LessThan${type.name} implements DrillSimpleFunc {
 
       @Param ${type.name}Holder left;
@@ -241,7 +243,8 @@ public class GCompare${type.name}Functions {
       }
   }
 
-  @FunctionTemplate(name = "less_than_or_equal_to", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "less_than_or_equal_to", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL, 
+      costCategory = FunctionCostCategory.COMPLEX)
   public static class LessThanE${type.name} implements DrillSimpleFunc {
 
       @Param ${type.name}Holder left;
@@ -262,7 +265,8 @@ public class GCompare${type.name}Functions {
     }
   }
 
-  @FunctionTemplate(name = "greater_than", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "greater_than", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL,
+      costCategory = FunctionCostCategory.COMPLEX)
   public static class GreaterThan${type.name} implements DrillSimpleFunc {
 
       @Param ${type.name}Holder left;
@@ -283,7 +287,8 @@ public class GCompare${type.name}Functions {
     }
   }
 
-  @FunctionTemplate(name = "greater_than_or_equal_to", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "greater_than_or_equal_to", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL,
+      costCategory = FunctionCostCategory.COMPLEX)
   public static class GreaterThanE${type.name} implements DrillSimpleFunc {
 
       @Param ${type.name}Holder left;
@@ -304,7 +309,8 @@ public class GCompare${type.name}Functions {
       }
   }
 
-  @FunctionTemplate(name = "equal", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "equal", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL,
+      costCategory = FunctionCostCategory.COMPLEX)
   public static class Equals${type.name} implements DrillSimpleFunc {
 
       @Param ${type.name}Holder left;
@@ -324,7 +330,8 @@ public class GCompare${type.name}Functions {
       }
   }
 
-  @FunctionTemplate(name = "not_equal", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  @FunctionTemplate(name = "not_equal", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL,
+      costCategory = FunctionCostCategory.COMPLEX)
   public static class NotEquals${type.name} implements DrillSimpleFunc {
 
       @Param ${type.name}Holder left;

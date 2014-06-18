@@ -46,6 +46,8 @@ public @interface FunctionTemplate {
   boolean isBinaryCommutative() default false;
   boolean isRandom()  default false;
   
+  FunctionCostCategory costCategory() default FunctionCostCategory.SIMPLE;
+  
   public static enum NullHandling {
     INTERNAL, NULL_IF_NULL;
   }
@@ -63,5 +65,24 @@ public @interface FunctionTemplate {
     DECIMAL_SET_SCALE,
     DECIMAL_ZERO_SCALE,
     SC_BOOLEAN_OPERATOR
+  }
+  
+  public static enum FunctionCostCategory {
+    SIMPLE(1), MEDIUM(3), COMPLEX(5);
+    
+    private final int value;
+    
+    private FunctionCostCategory(int value) {
+      this.value = value;
+    }
+    
+    public int getValue() {
+      return this.value;
+    }
+    
+    public static FunctionCostCategory getDefault() {
+      return SIMPLE;
+    }
+    
   }
 }

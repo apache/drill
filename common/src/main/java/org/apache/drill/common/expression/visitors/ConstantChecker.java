@@ -17,6 +17,7 @@
  */
 package org.apache.drill.common.expression.visitors;
 
+import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.ConvertExpression;
 import org.apache.drill.common.expression.ErrorCollector;
@@ -78,6 +79,15 @@ final class ConstantChecker implements ExprVisitor<Boolean, ErrorCollector, Runt
     return allArgsAreConstant;
   }
 
+  @Override
+  public Boolean visitBooleanOperator(BooleanOperator op, ErrorCollector errors) {
+    for (LogicalExpression e : op.args) {
+      if (!e.accept(this, errors))
+        return false;
+    }
+    return true;
+  }
+  
   @Override
   public Boolean visitIfExpression(IfExpression ifExpr, ErrorCollector errors) {
     for (IfCondition c : ifExpr.conditions) {

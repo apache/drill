@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.io.input.NullReader;
+import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.ConvertExpression;
 import org.apache.drill.common.expression.FunctionCall;
@@ -55,7 +56,7 @@ import org.apache.drill.exec.compile.sig.ConstantExpressionIdentifier;
 import org.apache.drill.exec.expr.ClassGenerator.BlockType;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.fn.DrillFuncHolder;
-import org.apache.drill.exec.expr.fn.DrillSCBooleanOPHolder;
+import org.apache.drill.exec.expr.fn.DrillBooleanOPHolder;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.expr.fn.HiveFuncHolder;
 import org.apache.drill.exec.physical.impl.filter.ReturnValueExpression;
@@ -97,6 +98,18 @@ public class EvaluationVisitor {
     }
 
     @Override
+    public HoldingContainer visitBooleanOperator(BooleanOperator op,         
+        ClassGenerator<?> generator) throws RuntimeException {
+      if (op.getName().equals("booleanAnd")) {
+        return visitBooleanAnd(op, generator);
+      }else if(op.getName().equals("booleanOr")) {
+        return visitBooleanOr(op, generator);       
+      } else {
+        throw new UnsupportedOperationException("BooleanOperator can only be booleanAnd, booleanOr. You are using " + op.getName());
+      }
+    }
+    
+    @Override
     public HoldingContainer visitFunctionHolderExpression(FunctionHolderExpression holderExpr,
         ClassGenerator<?> generator) throws RuntimeException {
       // TODO: hack: (Drill/Hive)FuncHolderExpr reference classes in exec so
@@ -106,13 +119,6 @@ public class EvaluationVisitor {
       if (holderExpr instanceof DrillFuncHolderExpr) {
         DrillFuncHolder holder = ((DrillFuncHolderExpr) holderExpr).getHolder();
         
-        if (holder instanceof DrillSCBooleanOPHolder && holderExpr.getName().equals("booleanAnd")) {
-          return visitBooleanAnd(holderExpr, generator);
-        }
-
-        if (holder instanceof DrillSCBooleanOPHolder && holderExpr.getName().equals("booleanOr")) {
-          return visitBooleanOr(holderExpr, generator);
-        }
 
         JVar[] workspaceVars = holder.renderStart(generator, null);
 
@@ -603,10 +609,10 @@ public class EvaluationVisitor {
       return fc.accept(this, value);
     }
     
-    private HoldingContainer visitBooleanAnd(FunctionHolderExpression holderExpr,
+    private HoldingContainer visitBooleanAnd(BooleanOperator op,
         ClassGenerator<?> generator) {
       
-      HoldingContainer out = generator.declare(holderExpr.getMajorType());
+      HoldingContainer out = generator.declare(op.getMajorType());
       
       JLabel label = generator.getEvalBlockLabel("AndOP");
       JBlock eval = generator.getEvalBlock().block();  // enter into nested block
@@ -623,8 +629,8 @@ public class EvaluationVisitor {
       //    null    true     null
       //    null    false    false
       //    null    null     null
-      for (int i = 0; i < holderExpr.args.size(); i++) {
-        arg = holderExpr.args.get(i).accept(this, generator);
+      for (int i = 0; i < op.args.size(); i++) {
+        arg = op.args.get(i).accept(this, generator);
         
         JBlock earlyExit = null;
         if (arg.isOptional()) {
@@ -665,10 +671,10 @@ public class EvaluationVisitor {
       return out;
     }
     
-    private HoldingContainer visitBooleanOr(FunctionHolderExpression holderExpr,
+    private HoldingContainer visitBooleanOr(BooleanOperator op,
         ClassGenerator<?> generator) {
       
-      HoldingContainer out = generator.declare(holderExpr.getMajorType());
+      HoldingContainer out = generator.declare(op.getMajorType());
       
       JLabel label = generator.getEvalBlockLabel("OrOP");
       JBlock eval = generator.getEvalBlock().block();
@@ -686,8 +692,8 @@ public class EvaluationVisitor {
       //    null    false    null
       //    null    null     null
       
-      for (int i = 0; i < holderExpr.args.size(); i++) {
-        arg = holderExpr.args.get(i).accept(this, generator);
+      for (int i = 0; i < op.args.size(); i++) {
+        arg = op.args.get(i).accept(this, generator);
         
         JBlock earlyExit = null;
         if (arg.isOptional()) {
@@ -761,6 +767,19 @@ public class EvaluationVisitor {
       }
     }
 
+    @Override
+    public HoldingContainer visitBooleanOperator(BooleanOperator e, ClassGenerator<?> generator)
+        throws RuntimeException {
+      if (constantBoundaries.contains(e)) {
+        generator.getMappingSet().enterConstant();
+        HoldingContainer c = super.visitBooleanOperator(e, generator);
+        return renderConstantExpression(generator, c);
+      } else if (generator.getMappingSet().isWithinConstant()) {
+        return super.visitBooleanOperator(e, generator).setConstant(true);
+      } else {
+        return super.visitBooleanOperator(e, generator);
+      }
+    }
     @Override
     public HoldingContainer visitIfExpression(IfExpression e, ClassGenerator<?> generator) throws RuntimeException {
       if (constantBoundaries.contains(e)) {

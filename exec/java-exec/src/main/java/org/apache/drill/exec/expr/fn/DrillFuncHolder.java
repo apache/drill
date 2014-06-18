@@ -31,6 +31,7 @@ import org.apache.drill.exec.expr.ClassGenerator.BlockType;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
+import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionCostCategory;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.vector.complex.impl.NullableBigIntSingularReaderImpl;
@@ -51,6 +52,7 @@ public abstract class DrillFuncHolder {
 
   protected final FunctionTemplate.FunctionScope scope;
   protected final FunctionTemplate.NullHandling nullHandling;
+  protected final FunctionTemplate.FunctionCostCategory costCategory;
   protected final boolean isBinaryCommutative;
   protected final boolean isRandom;
   protected final String[] registeredNames;
@@ -62,7 +64,7 @@ public abstract class DrillFuncHolder {
 
   public DrillFuncHolder(FunctionScope scope, NullHandling nullHandling, boolean isBinaryCommutative, boolean isRandom,
       String[] registeredNames, ValueReference[] parameters, ValueReference returnValue,
-      WorkspaceReference[] workspaceVars, Map<String, String> methods, List<String> imports) {
+      WorkspaceReference[] workspaceVars, Map<String, String> methods, List<String> imports, FunctionCostCategory costCategory) {
     super();
     this.scope = scope;
     this.nullHandling = nullHandling;
@@ -74,6 +76,7 @@ public abstract class DrillFuncHolder {
     this.parameters = parameters;
     this.returnValue = returnValue;
     this.imports = ImmutableList.copyOf(imports);
+    this.costCategory = costCategory;
   }
 
   public List<String> getImports() {
@@ -223,6 +226,10 @@ public abstract class DrillFuncHolder {
     return registeredNames;
   }
 
+  public int getCostCategory() {
+    return this.costCategory.getValue(); 
+  }
+  
   @Override
   public String toString() {
     final int maxLen = 10;

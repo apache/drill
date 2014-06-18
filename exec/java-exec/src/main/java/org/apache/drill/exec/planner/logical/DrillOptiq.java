@@ -98,13 +98,19 @@ public class DrillOptiq {
         for(RexNode r : call.getOperands()){
           args.add(r.accept(this));
         }
-        args = Lists.reverse(args);
-        LogicalExpression lastArg = args.get(0);
-        for(int i = 1; i < args.size(); i++){
-          lastArg = FunctionCallFactory.createExpression(funcName, Lists.newArrayList(args.get(i), lastArg));
-        }
 
-        return lastArg;
+        if (FunctionCallFactory.isBooleanOperator(funcName)) {
+          LogicalExpression func = FunctionCallFactory.createBooleanOperator(funcName, args);
+          return func;
+        } else { 
+          args = Lists.reverse(args);
+          LogicalExpression lastArg = args.get(0);
+          for(int i = 1; i < args.size(); i++){
+            lastArg = FunctionCallFactory.createExpression(funcName, Lists.newArrayList(args.get(i), lastArg));
+          }
+  
+          return lastArg;
+        }
       case FUNCTION:
       case FUNCTION_ID:
         logger.debug("Function");

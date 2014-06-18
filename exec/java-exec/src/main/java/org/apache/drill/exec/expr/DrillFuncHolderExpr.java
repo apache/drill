@@ -71,4 +71,27 @@ public class DrillFuncHolderExpr extends FunctionHolderExpression implements Ite
   public boolean isComplexWriterFuncHolder() {
     return holder instanceof DrillComplexWriterFuncHolder;
   }
+ 
+  @Override
+  public int getSelfCost() { 
+    return holder.getCostCategory();
+  }
+  
+  @Override
+  public int getCumulativeCost() { 
+    int cost = this.getSelfCost();
+    
+    for (LogicalExpression arg : this.args) {
+      cost += arg.getCumulativeCost();
+    }
+    
+    return cost;
+  }
+
+  @Override
+  public DrillFuncHolderExpr copy(List<LogicalExpression> args) {
+    return new DrillFuncHolderExpr(this.nameUsed, this.holder, args, this.getPosition());
+  }
+  
 }
+

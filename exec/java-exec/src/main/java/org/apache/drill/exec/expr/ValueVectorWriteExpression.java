@@ -78,5 +78,15 @@ public class ValueVectorWriteExpression implements LogicalExpression {
     return Iterators.singletonIterator(child);
   }
 
+  @Override
+  public int getSelfCost() { 
+    return 0;  // TODO 
+  }
   
+  @Override
+  public int getCumulativeCost() { 
+    return 0; // TODO
+  }
+  
+
 }

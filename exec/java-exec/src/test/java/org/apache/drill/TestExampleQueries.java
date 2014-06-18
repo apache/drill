@@ -23,11 +23,6 @@ import org.junit.Test;
 
 public class TestExampleQueries extends BaseTestQuery{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestExampleQueries.class);
-
-  @Test
-  public void testQ() throws Exception {
-    test("select * from cp.`customer.json` where 0 = 1");
-  }
   
   @Test // see DRILL-553
   public void testQueryWithNullValues() throws Exception {

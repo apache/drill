@@ -76,6 +76,11 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
     sb.append(") ");
     return null;
   }
+  
+  @Override
+  public Void visitBooleanOperator(BooleanOperator op, StringBuilder sb) throws RuntimeException {
+    return visitFunctionCall(op, sb);
+  }
 
   @Override
   public Void visitFunctionHolderExpression(FunctionHolderExpression holder, StringBuilder sb) throws RuntimeException {

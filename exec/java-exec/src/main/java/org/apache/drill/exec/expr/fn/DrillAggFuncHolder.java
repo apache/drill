@@ -25,6 +25,7 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.ClassGenerator.BlockType;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
+import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionCostCategory;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.record.TypedFieldId;
@@ -48,12 +49,18 @@ class DrillAggFuncHolder extends DrillFuncHolder{
   private final String add;
   private final String output;
   private final String cleanup;
-  
+
   public DrillAggFuncHolder(FunctionScope scope, NullHandling nullHandling, boolean isBinaryCommutative, boolean isRandom,
       String[] registeredNames, ValueReference[] parameters, ValueReference returnValue, WorkspaceReference[] workspaceVars,
       Map<String, String> methods, List<String> imports) {
+    this(scope, nullHandling, isBinaryCommutative, isRandom, registeredNames, parameters, returnValue, workspaceVars, methods, imports, FunctionCostCategory.getDefault());
+  }
+  
+  public DrillAggFuncHolder(FunctionScope scope, NullHandling nullHandling, boolean isBinaryCommutative, boolean isRandom,
+      String[] registeredNames, ValueReference[] parameters, ValueReference returnValue, WorkspaceReference[] workspaceVars,
+      Map<String, String> methods, List<String> imports, FunctionCostCategory costCategory) {
     super(scope, nullHandling, isBinaryCommutative, isRandom,
-      registeredNames, parameters, returnValue, workspaceVars, methods, imports);
+      registeredNames, parameters, returnValue, workspaceVars, methods, imports, costCategory);
     Preconditions.checkArgument(nullHandling == NullHandling.INTERNAL, "An aggregation function is required to do its own null handling.");
     setup = methods.get("setup");
     reset = methods.get("reset");

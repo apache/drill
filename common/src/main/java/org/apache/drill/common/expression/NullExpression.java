@@ -26,6 +26,7 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.Iterators;
 
 public class NullExpression implements LogicalExpression{
@@ -54,4 +55,9 @@ public class NullExpression implements LogicalExpression{
   public Iterator<LogicalExpression> iterator() {
     return Iterators.emptyIterator();
   }
+  
+  public int getSelfCost() { return 0 ; }
+  
+  public int getCumulativeCost() { return 0; }
+  
 }

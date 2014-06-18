@@ -141,6 +141,7 @@
             <exclude>*.patch</exclude>
             <exclude>**/*.pb.cc</exclude>
             <exclude>**/*.pb.h</exclude>
+            <exclude>**/*.linux</exclude>
           </excludes>
         </configuration>
       </plugin>

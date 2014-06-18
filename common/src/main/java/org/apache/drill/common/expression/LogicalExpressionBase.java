@@ -19,6 +19,7 @@ package org.apache.drill.common.expression;
 
 import org.apache.drill.common.types.TypeProtos.MajorType;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
@@ -54,7 +55,14 @@ public abstract class LogicalExpressionBase implements LogicalExpression{
 		return this.getClass().getSimpleName();
 	}
 	
-
-	
-
+  @JsonIgnore
+  public int getSelfCost() { 
+    throw new UnsupportedOperationException(String.format("The type of %s doesn't currently support LogicalExpression.getSelfCost().", this.getClass().getCanonicalName())); 
+  }
+  
+  @JsonIgnore
+  public int getCumulativeCost() { 
+    throw new UnsupportedOperationException(String.format("The type of %s doesn't currently support LogicalExpression.getCumulativeCost().", this.getClass().getCanonicalName())); 
+  }
+  	
 }

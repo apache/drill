@@ -17,6 +17,7 @@
  */
 package org.apache.drill.common.expression.visitors;
 
+import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.ConvertExpression;
 import org.apache.drill.common.expression.FunctionCall;
@@ -58,6 +59,11 @@ public abstract class AbstractExprVisitor<T, VAL, EXCEP extends Exception> imple
   @Override
   public T visitIfExpression(IfExpression ifExpr, VAL value) throws EXCEP {
     return visitUnknown(ifExpr, value);
+  }
+
+  @Override
+  public T visitBooleanOperator(BooleanOperator op, VAL value) throws EXCEP {
+    return visitUnknown(op, value);
   }
 
   @Override

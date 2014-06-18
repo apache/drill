@@ -17,6 +17,7 @@
  */
 package org.apache.drill.common.expression.visitors;
 
+import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.ConvertExpression;
 import org.apache.drill.common.expression.ErrorCollector;
@@ -78,6 +79,16 @@ public final class AggregateChecker implements ExprVisitor<Boolean, ErrorCollect
     }
   }
 
+  @Override
+  public Boolean visitBooleanOperator(BooleanOperator op, ErrorCollector errors){
+    for (LogicalExpression arg : op.args) {
+      if (arg.accept(this, errors))
+        return true;
+    }
+    
+    return false;
+  }
+  
   @Override
   public Boolean visitIfExpression(IfExpression ifExpr, ErrorCollector errors) {
     for(IfCondition c : ifExpr.conditions){

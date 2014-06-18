@@ -220,7 +220,7 @@ public class FunctionConverter {
       switch(template.scope()){
       case POINT_AGGREGATE:
         return new DrillAggFuncHolder(template.scope(), template.nulls(), template.isBinaryCommutative(),
-          template.isRandom(), registeredNames, ps, outputField, works, methods, imports);
+          template.isRandom(), registeredNames, ps, outputField, works, methods, imports, template.costCategory());
       case DECIMAL_AGGREGATE:
         return new DrillDecimalAggFuncHolder(template.scope(), template.nulls(), template.isBinaryCommutative(),
           template.isRandom(), registeredNames, ps, outputField, works, methods, imports);
@@ -234,9 +234,9 @@ public class FunctionConverter {
           return new DrillSimpleFuncHolder(template.scope(), template.nulls(), 
                                            template.isBinaryCommutative(),
                                            template.isRandom(), registeredNames, 
-                                           ps, outputField, works, methods, imports);
+                                           ps, outputField, works, methods, imports, template.costCategory());
       case SC_BOOLEAN_OPERATOR:
-        return new DrillSCBooleanOPHolder(template.scope(), template.nulls(), 
+        return new DrillBooleanOPHolder(template.scope(), template.nulls(), 
             template.isBinaryCommutative(),
             template.isRandom(), registeredNames, 
             ps, outputField, works, methods, imports);

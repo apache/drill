@@ -78,6 +78,15 @@ public class ValueVectorReadExpression implements LogicalExpression{
   public Iterator<LogicalExpression> iterator() {
     return Iterators.emptyIterator();
   }
-
-
+  
+  @Override
+  public int getSelfCost() { 
+    return 0;  // TODO 
+  }
+  
+  @Override
+  public int getCumulativeCost() { 
+    return 0; // TODO
+  }
+  
 }

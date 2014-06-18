@@ -31,6 +31,7 @@ public class Types {
   public static final MajorType NULL = required(MinorType.NULL);
   public static final MajorType LATE_BIND_TYPE = optional(MinorType.LATE);
   public static final MajorType REQUIRED_BIT = required(MinorType.BIT);
+  public static final MajorType OPTIONAL_BIT = optional(MinorType.BIT);
 
   public static enum Comparability{
     UNKNOWN, NONE, EQUAL, ORDERED;

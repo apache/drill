@@ -17,6 +17,7 @@
  */
 package org.apache.drill.common.expression.visitors;
 
+import org.apache.drill.common.expression.BooleanOperator;
 import org.apache.drill.common.expression.CastExpression;
 import org.apache.drill.common.expression.ConvertExpression;
 import org.apache.drill.common.expression.FunctionCall;
@@ -46,6 +47,7 @@ public interface ExprVisitor<T, VAL, EXCEP extends Exception> {
   public T visitFunctionCall(FunctionCall call, VAL value) throws EXCEP;
   public T visitFunctionHolderExpression(FunctionHolderExpression holder, VAL value) throws EXCEP;
   public T visitIfExpression(IfExpression ifExpr, VAL value) throws EXCEP;
+  public T visitBooleanOperator(BooleanOperator call, VAL value) throws EXCEP;
   public T visitSchemaPath(SchemaPath path, VAL value) throws EXCEP;
   public T visitIntConstant(IntExpression intExpr, VAL value) throws EXCEP;
   public T visitFloatConstant(FloatExpression fExpr, VAL value) throws EXCEP;

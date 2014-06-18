@@ -66,4 +66,10 @@ public class HiveFuncHolderExpr extends FunctionHolderExpression implements Iter
   public boolean isRandom() {
     return holder.isRandom();
   }
+  
+  @Override
+  public HiveFuncHolderExpr copy(List<LogicalExpression> args) {
+    return new HiveFuncHolderExpr(this.nameUsed, this.holder, args, this.getPosition());
+  }
+  
 }

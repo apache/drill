@@ -70,5 +70,12 @@ public class ReturnValueExpression implements LogicalExpression{
     return returnTrueOnOne;
   }
 
+  public int getSelfCost() { 
+    throw new UnsupportedOperationException(String.format("The type of %s doesn't currently support LogicalExpression.getSelfCost().", this.getClass().getCanonicalName())); 
+  }
+  
+  public int getCumulativeCost() { 
+    throw new UnsupportedOperationException(String.format("The type of %s doesn't currently support LogicalExpression.getCumulativeCost().", this.getClass().getCanonicalName())); 
+  }
   
 }

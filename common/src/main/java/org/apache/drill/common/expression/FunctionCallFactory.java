@@ -73,6 +73,11 @@ public class FunctionCallFactory {
     return (opToFuncTable.containsKey(op)) ? (opToFuncTable.get(op)) : op;
   }
 
+  public static boolean isBooleanOperator(String funcName) {
+    String opName  = replaceOpWithFuncName(funcName);
+    return opName.equals("booleanAnd") || opName.equals("booleanOr");
+  }
+  
   /*
    * create a cast function.
    * arguments : type -- targetType
@@ -92,11 +97,23 @@ public class FunctionCallFactory {
   }
 
   public static LogicalExpression createExpression(String functionName, ExpressionPosition ep, List<LogicalExpression> args){
-    return new FunctionCall(replaceOpWithFuncName(functionName), args, ep);
+    String name = replaceOpWithFuncName(functionName);
+    if (isBooleanOperator(name))
+      return new BooleanOperator(name, args, ep);
+    else
+      return new FunctionCall(name, args, ep);
   }
 
-  public static LogicalExpression createExpression(String unaryName, ExpressionPosition ep, LogicalExpression... e){
-    return new FunctionCall(replaceOpWithFuncName(unaryName), Lists.newArrayList(e), ep);
+  public static LogicalExpression createExpression(String functionName, ExpressionPosition ep, LogicalExpression... e){
+    return createExpression(functionName, ep, Lists.newArrayList(e));
+  }
+
+  public static LogicalExpression createBooleanOperator(String functionName, List<LogicalExpression> args){
+    return createBooleanOperator(functionName, ExpressionPosition.UNKNOWN, args);
+  }
+
+  public static LogicalExpression createBooleanOperator(String functionName, ExpressionPosition ep, List<LogicalExpression> args){
+    return new BooleanOperator(replaceOpWithFuncName(functionName), args, ep);
   }
 
   public static LogicalExpression createByOp(List<LogicalExpression> args, ExpressionPosition ep, List<String> opTypes) {

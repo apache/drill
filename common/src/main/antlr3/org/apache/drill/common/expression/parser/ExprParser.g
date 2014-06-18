@@ -204,7 +204,7 @@ orExpr returns [LogicalExpression e]
 	  if(exprs.size() == 1){
 	    $e = exprs.get(0);
 	  }else{
-	    $e = FunctionCallFactory.createExpression("||", p, exprs);
+	    $e = FunctionCallFactory.createBooleanOperator("||", p, exprs);
 	  }
 	}
   :  a1=andExpr { exprs.add($a1.e); p = pos( $a1.start );} (Or a2=andExpr { exprs.add($a2.e); })*
@@ -219,7 +219,7 @@ andExpr returns [LogicalExpression e]
 	  if(exprs.size() == 1){
 	    $e = exprs.get(0);
 	  }else{
-	    $e = FunctionCallFactory.createExpression("&&", p, exprs);
+	    $e = FunctionCallFactory.createBooleanOperator("&&", p, exprs);
 	  }
 	}
   :  e1=equExpr { exprs.add($e1.e); p = pos( $e1.start );  } ( And e2=equExpr { exprs.add($e2.e);  })*
