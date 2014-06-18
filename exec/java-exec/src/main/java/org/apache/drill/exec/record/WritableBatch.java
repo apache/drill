@@ -22,8 +22,6 @@ import io.netty.buffer.CompositeByteBuf;
 
 import java.util.List;
 
-import javax.jdo.metadata.FieldMetadata;
-
 import org.apache.drill.exec.proto.UserBitShared.RecordBatchDef;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;

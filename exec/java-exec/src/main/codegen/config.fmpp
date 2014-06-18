@@ -20,7 +20,6 @@ data: {
     cast: tdd(../data/Casts.tdd),
     MathFunctionTypes: tdd(../data/MathFunctionTypes.tdd),
     mathFunc:tdd(../data/MathFunc.tdd),
-    drillOI:tdd(../data/HiveTypes.tdd),
     aggrtypes1: tdd(../data/AggrTypes1.tdd),
     decimalaggrtypes1: tdd(../data/DecimalAggrTypes1.tdd),
     aggrtypes2: tdd(../data/AggrTypes2.tdd),

@@ -29,17 +29,6 @@
       <artifactId>sqlline</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.drill.contrib</groupId>
-      <artifactId>storage-hive</artifactId>
-      <version>${project.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.apache.hive</groupId>
-          <artifactId>hive-exec</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
       <groupId>org.apache.drill</groupId>
       <artifactId>drill-protocol</artifactId>
       <version>${project.version}</version>
@@ -80,6 +69,11 @@
     <dependency>
       <groupId>org.apache.drill.contrib</groupId>
       <artifactId>drill-storage-hbase</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.drill.contrib.storage-hive</groupId>
+      <artifactId>drill-storage-hive-core</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>

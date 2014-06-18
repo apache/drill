@@ -9,14 +9,11 @@
     graph:[
         {
             @id:1,
-            pop:"mock-sub-scan",
+            pop:"mock-scan",
             url: "http://apache.org",
             entries:[
                 {records: 100, types: [
                    {name: "str1", type: "VAR16CHAR", mode: "REQUIRED"},
-                   {name: "str2", type: "VAR16CHAR", mode: "REQUIRED"},
-                   {name: "str3", type: "VAR16CHAR", mode: "REQUIRED"},
-                   {name: "nullableStr1", type: "VAR16CHAR", mode: "OPTIONAL"},
                    {name: "flt1", type: "FLOAT4", mode: "REQUIRED"}
                 ]}
             ]
@@ -27,13 +24,10 @@
             pop:"project",
             exprs: [
                 { ref: "str1", expr: "str1" },
-                { ref: "upperStr1", expr: "ucase(str1)" },
-                { ref: "unix_timestamp", expr: "unix_timestamp()" },
-                { ref: "concat", expr: "concat_ws('-', str2, str3)" },
+                { ref: "str1Length", expr: "length(str1)" },
+                { ref: "str1Ascii", expr: "ascii(str1)" },
                 { ref: "flt1", expr: "flt1" },
-                { ref: "format_number", expr: "format_number(cast(flt1 as float8), cast(2 as int))" },
-                { ref: "nullableStr1", expr: "nullableStr1" },
-                { ref: "upperNulableStr1", expr: "upper(nullableStr1)" }
+                { ref: "pow", expr: "pow(cast(flt1 as float8), 2.0)" }
             ]
         },
         {
