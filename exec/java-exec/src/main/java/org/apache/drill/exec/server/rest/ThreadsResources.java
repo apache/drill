@@ -24,14 +24,14 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-@Path("/metrics")
-public class MetricsResources {
+@Path("/threads")
+public class ThreadsResources {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MetricsResources.class);
 
   @GET
   @Produces(MediaType.TEXT_HTML)
   public Viewable getMetrics() {
-    return new Viewable("/rest/metrics/metrics.ftl");
+    return new Viewable("/rest/threads/threads.ftl");
   }
 
 }

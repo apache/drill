@@ -17,10 +17,6 @@
  */
 package org.apache.drill.exec.server.rest;
 
-import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.exec.client.DrillClient;
-import org.apache.drill.exec.coord.ClusterCoordinator;
-import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.sys.PStoreProvider;
 import org.apache.drill.exec.work.WorkManager;
@@ -46,6 +42,8 @@ public class DrillRestServer extends ResourceConfig {
     register(StorageResources.class);
     register(ProfileResources.class);
     register(QueryResources.class);
+    register(MetricsResources.class);
+    register(ThreadsResources.class);
     register(FreemarkerMvcFeature.class);
     property(ServerProperties.METAINF_SERVICES_LOOKUP_DISABLE, true);
     register(MultiPartFeature.class);
