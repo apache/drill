@@ -559,4 +559,15 @@ public class TestFunctionsQuery {
         .sql(query)
         .returns("col1=2003-07-09; col2=2003-07-09; col3=2003-07-09");
   }
+
+  @Test
+  public void testDecimal18Decimal38Comparison() throws Exception {
+    String query = "select cast('999999999.999999999' as decimal(18, 9)) = cast('999999999.999999999' as decimal(38, 18)) as CMP " +
+        "from cp.`employee.json` where employee_id = 1";
+
+    JdbcAssert.withNoDefaultSchema()
+        .sql(query)
+        .returns(
+            "CMP=true\n");
+  }
 }

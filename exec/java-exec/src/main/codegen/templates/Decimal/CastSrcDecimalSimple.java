@@ -169,7 +169,6 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
 
         out.buffer = buffer;
         out.start = 0;
-        out.setSign((in.value < 0));
 
         /* Since we will be dividing the decimal value with base 1 billion
          * we don't want negative results if the decimal is negative.
@@ -213,6 +212,8 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
         if (in.scale != out.scale) {
           org.apache.drill.common.util.DecimalUtility.roundDecimal(out.buffer, out.start, out.nDecimalDigits, out.scale, in.scale);
         }
+        // Set the sign
+        out.setSign((in.value < 0));
     }
 }
 
