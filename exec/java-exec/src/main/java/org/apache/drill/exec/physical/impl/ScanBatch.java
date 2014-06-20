@@ -139,7 +139,6 @@ public class ScanBatch implements RecordBatch {
         try {
           if (!readers.hasNext()) {
             currentReader.cleanup();
-            releaseAssets();
             if (first) {
               first = false;
               done = true;
@@ -148,6 +147,7 @@ public class ScanBatch implements RecordBatch {
               schema = container.getSchema();
               return IterOutcome.OK_NEW_SCHEMA;
             }
+            releaseAssets();
             return IterOutcome.NONE;
           }
           oContext.getStats().startSetup();

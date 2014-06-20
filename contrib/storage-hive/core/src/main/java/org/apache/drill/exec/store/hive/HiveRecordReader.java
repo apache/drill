@@ -247,12 +247,12 @@ public class HiveRecordReader implements RecordReader {
 
   @Override
   public int next() {
-    if (empty) {
-      return 0;
-    }
-
     for (ValueVector vv : vectors) {
       VectorAllocator.getAllocator(vv, FIELD_SIZE).alloc(TARGET_RECORD_COUNT);
+    }
+    if (empty) {
+      setValueCountAndPopulatePartitionVectors(0);
+      return 0;
     }
 
     try {
