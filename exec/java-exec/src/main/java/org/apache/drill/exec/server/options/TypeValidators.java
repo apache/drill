@@ -49,7 +49,7 @@ public class TypeValidators {
     private final double min;
     private final double max;
 
-    public RangeDoubleValidator(String name, double def, double min, double max) {
+    public RangeDoubleValidator(String name, double min, double max, double def) {
       super(name, def);
       this.min = min;
       this.max = max;
