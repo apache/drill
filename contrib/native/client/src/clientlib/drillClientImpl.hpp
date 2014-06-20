@@ -120,7 +120,7 @@ class DrillClientQueryResult{
     const DrillClientError* getError(){ return m_pError;}
 
     private:
-    status_t setupColumnDefs(exec::user::QueryResult* pQueryResult);
+    status_t setupColumnDefs(exec::shared::QueryResult* pQueryResult);
     status_t defaultQueryResultsListener(void* ctx, RecordBatch* b, DrillClientError* err);
     // Construct a DrillClientError object, set the appropriate state and signal any listeners, condition variables.
     void signalError(DrillClientError* pErr);
@@ -247,7 +247,7 @@ class DrillClientImpl{
         status_t processQueryId(ByteBuf_t allocatedBuffer, InBoundRpcMessage& msg );
         void handleReadTimeout(const boost::system::error_code & err);
         void handleRead(ByteBuf_t _buf, const boost::system::error_code & err, size_t bytes_transferred) ;
-        status_t validateMessage(InBoundRpcMessage& msg, exec::user::QueryResult& qr, std::string& valError);
+        status_t validateMessage(InBoundRpcMessage& msg, exec::shared::QueryResult& qr, std::string& valError);
         connectionStatus_t handleConnError(connectionStatus_t status, std::string msg);
         status_t handleQryError(status_t status, std::string msg, DrillClientQueryResult* pQueryResult);
         status_t handleQryError(status_t status,

@@ -202,7 +202,7 @@ void protobuf_AddDesc_BitControl_2eproto() {
     "2 .exec.bit.control.FragmentStatus\"n\n\016Fr"
     "agmentStatus\0222\n\007profile\030\001 \001(\0132!.exec.sha"
     "red.MinorFragmentProfile\022(\n\006handle\030\002 \001(\013"
-    "2\030.exec.bit.FragmentHandle\"\276\003\n\014PlanFragm"
+    "2\030.exec.bit.FragmentHandle\"\275\003\n\014PlanFragm"
     "ent\022(\n\006handle\030\001 \001(\0132\030.exec.bit.FragmentH"
     "andle\022\024\n\014network_cost\030\004 \001(\002\022\020\n\010cpu_cost\030"
     "\005 \001(\002\022\021\n\tdisk_cost\030\006 \001(\002\022\023\n\013memory_cost\030"
@@ -210,20 +210,21 @@ void protobuf_AddDesc_BitControl_2eproto() {
     "nt\030\n \001(\0132\026.exec.DrillbitEndpoint\022\025\n\rleaf"
     "_fragment\030\t \001(\010\022\'\n\007foreman\030\013 \001(\0132\026.exec."
     "DrillbitEndpoint\022\035\n\013mem_initial\030\014 \001(\003:\0102"
-    "0000000\022\034\n\007mem_max\030\r \001(\003:\01320000000000\022\030\n"
-    "\020query_start_time\030\016 \001(\003\0221\n\013credentials\030\017"
-    " \001(\0132\034.exec.shared.UserCredentials\022\021\n\tti"
-    "me_zone\030\020 \001(\005\022\024\n\014options_json\030\021 \001(\t\"f\n\017W"
-    "orkQueueStatus\022(\n\010endpoint\030\001 \001(\0132\026.exec."
-    "DrillbitEndpoint\022\024\n\014queue_length\030\002 \001(\005\022\023"
-    "\n\013report_time\030\003 \001(\003*\332\001\n\007RpcType\022\r\n\tHANDS"
-    "HAKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\033\n\027REQ_INIA"
-    "TILIZE_FRAGMENT\020\003\022\027\n\023REQ_CANCEL_FRAGMENT"
-    "\020\006\022\027\n\023REQ_FRAGMENT_STATUS\020\007\022\022\n\016REQ_BIT_S"
-    "TATUS\020\010\022\030\n\024RESP_FRAGMENT_HANDLE\020\t\022\030\n\024RES"
-    "P_FRAGMENT_STATUS\020\n\022\023\n\017RESP_BIT_STATUS\020\013"
-    "B+\n\033org.apache.drill.exec.protoB\nBitCont"
-    "rolH\001", 1245);
+    "0000000\022\033\n\007mem_max\030\r \001(\003:\n2000000000\022\030\n\020"
+    "query_start_time\030\016 \001(\003\0221\n\013credentials\030\017 "
+    "\001(\0132\034.exec.shared.UserCredentials\022\021\n\ttim"
+    "e_zone\030\020 \001(\005\022\024\n\014options_json\030\021 \001(\t\"f\n\017Wo"
+    "rkQueueStatus\022(\n\010endpoint\030\001 \001(\0132\026.exec.D"
+    "rillbitEndpoint\022\024\n\014queue_length\030\002 \001(\005\022\023\n"
+    "\013report_time\030\003 \001(\003*\207\002\n\007RpcType\022\r\n\tHANDSH"
+    "AKE\020\000\022\007\n\003ACK\020\001\022\013\n\007GOODBYE\020\002\022\033\n\027REQ_INIAT"
+    "ILIZE_FRAGMENT\020\003\022\027\n\023REQ_CANCEL_FRAGMENT\020"
+    "\006\022\027\n\023REQ_FRAGMENT_STATUS\020\007\022\022\n\016REQ_BIT_ST"
+    "ATUS\020\010\022\024\n\020REQ_QUERY_STATUS\020\t\022\030\n\024RESP_FRA"
+    "GMENT_HANDLE\020\n\022\030\n\024RESP_FRAGMENT_STATUS\020\013"
+    "\022\023\n\017RESP_BIT_STATUS\020\014\022\025\n\021RESP_QUERY_STAT"
+    "US\020\rB+\n\033org.apache.drill.exec.protoB\nBit"
+    "ControlH\001", 1289);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "BitControl.proto", &protobuf_RegisterTypes);
   BitControlHandshake::default_instance_ = new BitControlHandshake();
@@ -261,6 +262,8 @@ bool RpcType_IsValid(int value) {
     case 9:
     case 10:
     case 11:
+    case 12:
+    case 13:
       return true;
     default:
       return false;
@@ -1078,7 +1081,7 @@ void PlanFragment::SharedCtor() {
   leaf_fragment_ = false;
   foreman_ = NULL;
   mem_initial_ = GOOGLE_LONGLONG(20000000);
-  mem_max_ = GOOGLE_LONGLONG(20000000000);
+  mem_max_ = GOOGLE_LONGLONG(2000000000);
   query_start_time_ = GOOGLE_LONGLONG(0);
   credentials_ = NULL;
   time_zone_ = 0;
@@ -1150,7 +1153,7 @@ void PlanFragment::Clear() {
       if (foreman_ != NULL) foreman_->::exec::DrillbitEndpoint::Clear();
     }
     mem_initial_ = GOOGLE_LONGLONG(20000000);
-    mem_max_ = GOOGLE_LONGLONG(20000000000);
+    mem_max_ = GOOGLE_LONGLONG(2000000000);
     query_start_time_ = GOOGLE_LONGLONG(0);
     if (has_credentials()) {
       if (credentials_ != NULL) credentials_->::exec::shared::UserCredentials::Clear();
@@ -1326,7 +1329,7 @@ bool PlanFragment::MergePartialFromCodedStream(
         break;
       }
 
-      // optional int64 mem_max = 13 [default = 20000000000];
+      // optional int64 mem_max = 13 [default = 2000000000];
       case 13: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
@@ -1480,7 +1483,7 @@ void PlanFragment::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::WriteInt64(12, this->mem_initial(), output);
   }
 
-  // optional int64 mem_max = 13 [default = 20000000000];
+  // optional int64 mem_max = 13 [default = 2000000000];
   if (has_mem_max()) {
     ::google::protobuf::internal::WireFormatLite::WriteInt64(13, this->mem_max(), output);
   }
@@ -1579,7 +1582,7 @@ void PlanFragment::SerializeWithCachedSizes(
     target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(12, this->mem_initial(), target);
   }
 
-  // optional int64 mem_max = 13 [default = 20000000000];
+  // optional int64 mem_max = 13 [default = 2000000000];
   if (has_mem_max()) {
     target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(13, this->mem_max(), target);
   }
@@ -1684,7 +1687,7 @@ int PlanFragment::ByteSize() const {
           this->mem_initial());
     }
 
-    // optional int64 mem_max = 13 [default = 20000000000];
+    // optional int64 mem_max = 13 [default = 2000000000];
     if (has_mem_max()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::Int64Size(

@@ -43,32 +43,7 @@ class UserToBitHandshake;
 class RequestResults;
 class RunQuery;
 class BitToUserHandshake;
-class NodeStatus;
-class QueryResult;
 
-enum QueryResult_QueryState {
-  QueryResult_QueryState_PENDING = 0,
-  QueryResult_QueryState_RUNNING = 1,
-  QueryResult_QueryState_COMPLETED = 2,
-  QueryResult_QueryState_CANCELED = 3,
-  QueryResult_QueryState_FAILED = 4,
-  QueryResult_QueryState_UNKNOWN_QUERY = 5
-};
-bool QueryResult_QueryState_IsValid(int value);
-const QueryResult_QueryState QueryResult_QueryState_QueryState_MIN = QueryResult_QueryState_PENDING;
-const QueryResult_QueryState QueryResult_QueryState_QueryState_MAX = QueryResult_QueryState_UNKNOWN_QUERY;
-const int QueryResult_QueryState_QueryState_ARRAYSIZE = QueryResult_QueryState_QueryState_MAX + 1;
-
-const ::google::protobuf::EnumDescriptor* QueryResult_QueryState_descriptor();
-inline const ::std::string& QueryResult_QueryState_Name(QueryResult_QueryState value) {
-  return ::google::protobuf::internal::NameOfEnum(
-    QueryResult_QueryState_descriptor(), value);
-}
-inline bool QueryResult_QueryState_Parse(
-    const ::std::string& name, QueryResult_QueryState* value) {
-  return ::google::protobuf::internal::ParseNamedEnum<QueryResult_QueryState>(
-    QueryResult_QueryState_descriptor(), name, value);
-}
 enum RpcType {
   HANDSHAKE = 0,
   ACK = 1,
@@ -396,6 +371,13 @@ class UserToBitHandshake : public ::google::protobuf::Message {
   inline ::exec::user::UserProperties* release_properties();
   inline void set_allocated_properties(::exec::user::UserProperties* properties);
 
+  // optional bool support_complex_types = 6 [default = false];
+  inline bool has_support_complex_types() const;
+  inline void clear_support_complex_types();
+  static const int kSupportComplexTypesFieldNumber = 6;
+  inline bool support_complex_types() const;
+  inline void set_support_complex_types(bool value);
+
   // @@protoc_insertion_point(class_scope:exec.user.UserToBitHandshake)
  private:
   inline void set_has_channel();
@@ -408,17 +390,20 @@ class UserToBitHandshake : public ::google::protobuf::Message {
   inline void clear_has_credentials();
   inline void set_has_properties();
   inline void clear_has_properties();
+  inline void set_has_support_complex_types();
+  inline void clear_has_support_complex_types();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
   int channel_;
-  bool support_listening_;
+  ::google::protobuf::int32 rpc_version_;
   ::exec::shared::UserCredentials* credentials_;
   ::exec::user::UserProperties* properties_;
-  ::google::protobuf::int32 rpc_version_;
+  bool support_listening_;
+  bool support_complex_types_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(6 + 31) / 32];
 
   friend void  protobuf_AddDesc_User_2eproto();
   friend void protobuf_AssignDesc_User_2eproto();
@@ -709,318 +694,6 @@ class BitToUserHandshake : public ::google::protobuf::Message {
 
   void InitAsDefaultInstance();
   static BitToUserHandshake* default_instance_;
-};
-// -------------------------------------------------------------------
-
-class NodeStatus : public ::google::protobuf::Message {
- public:
-  NodeStatus();
-  virtual ~NodeStatus();
-
-  NodeStatus(const NodeStatus& from);
-
-  inline NodeStatus& operator=(const NodeStatus& from) {
-    CopyFrom(from);
-    return *this;
-  }
-
-  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
-    return _unknown_fields_;
-  }
-
-  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
-    return &_unknown_fields_;
-  }
-
-  static const ::google::protobuf::Descriptor* descriptor();
-  static const NodeStatus& default_instance();
-
-  void Swap(NodeStatus* other);
-
-  // implements Message ----------------------------------------------
-
-  NodeStatus* New() const;
-  void CopyFrom(const ::google::protobuf::Message& from);
-  void MergeFrom(const ::google::protobuf::Message& from);
-  void CopyFrom(const NodeStatus& from);
-  void MergeFrom(const NodeStatus& from);
-  void Clear();
-  bool IsInitialized() const;
-
-  int ByteSize() const;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input);
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const;
-  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
-  int GetCachedSize() const { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  public:
-
-  ::google::protobuf::Metadata GetMetadata() const;
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  // optional int32 node_id = 1;
-  inline bool has_node_id() const;
-  inline void clear_node_id();
-  static const int kNodeIdFieldNumber = 1;
-  inline ::google::protobuf::int32 node_id() const;
-  inline void set_node_id(::google::protobuf::int32 value);
-
-  // optional int64 memory_footprint = 2;
-  inline bool has_memory_footprint() const;
-  inline void clear_memory_footprint();
-  static const int kMemoryFootprintFieldNumber = 2;
-  inline ::google::protobuf::int64 memory_footprint() const;
-  inline void set_memory_footprint(::google::protobuf::int64 value);
-
-  // @@protoc_insertion_point(class_scope:exec.user.NodeStatus)
- private:
-  inline void set_has_node_id();
-  inline void clear_has_node_id();
-  inline void set_has_memory_footprint();
-  inline void clear_has_memory_footprint();
-
-  ::google::protobuf::UnknownFieldSet _unknown_fields_;
-
-  ::google::protobuf::int64 memory_footprint_;
-  ::google::protobuf::int32 node_id_;
-
-  mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
-
-  friend void  protobuf_AddDesc_User_2eproto();
-  friend void protobuf_AssignDesc_User_2eproto();
-  friend void protobuf_ShutdownFile_User_2eproto();
-
-  void InitAsDefaultInstance();
-  static NodeStatus* default_instance_;
-};
-// -------------------------------------------------------------------
-
-class QueryResult : public ::google::protobuf::Message {
- public:
-  QueryResult();
-  virtual ~QueryResult();
-
-  QueryResult(const QueryResult& from);
-
-  inline QueryResult& operator=(const QueryResult& from) {
-    CopyFrom(from);
-    return *this;
-  }
-
-  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
-    return _unknown_fields_;
-  }
-
-  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
-    return &_unknown_fields_;
-  }
-
-  static const ::google::protobuf::Descriptor* descriptor();
-  static const QueryResult& default_instance();
-
-  void Swap(QueryResult* other);
-
-  // implements Message ----------------------------------------------
-
-  QueryResult* New() const;
-  void CopyFrom(const ::google::protobuf::Message& from);
-  void MergeFrom(const ::google::protobuf::Message& from);
-  void CopyFrom(const QueryResult& from);
-  void MergeFrom(const QueryResult& from);
-  void Clear();
-  bool IsInitialized() const;
-
-  int ByteSize() const;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input);
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const;
-  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
-  int GetCachedSize() const { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  public:
-
-  ::google::protobuf::Metadata GetMetadata() const;
-
-  // nested types ----------------------------------------------------
-
-  typedef QueryResult_QueryState QueryState;
-  static const QueryState PENDING = QueryResult_QueryState_PENDING;
-  static const QueryState RUNNING = QueryResult_QueryState_RUNNING;
-  static const QueryState COMPLETED = QueryResult_QueryState_COMPLETED;
-  static const QueryState CANCELED = QueryResult_QueryState_CANCELED;
-  static const QueryState FAILED = QueryResult_QueryState_FAILED;
-  static const QueryState UNKNOWN_QUERY = QueryResult_QueryState_UNKNOWN_QUERY;
-  static inline bool QueryState_IsValid(int value) {
-    return QueryResult_QueryState_IsValid(value);
-  }
-  static const QueryState QueryState_MIN =
-    QueryResult_QueryState_QueryState_MIN;
-  static const QueryState QueryState_MAX =
-    QueryResult_QueryState_QueryState_MAX;
-  static const int QueryState_ARRAYSIZE =
-    QueryResult_QueryState_QueryState_ARRAYSIZE;
-  static inline const ::google::protobuf::EnumDescriptor*
-  QueryState_descriptor() {
-    return QueryResult_QueryState_descriptor();
-  }
-  static inline const ::std::string& QueryState_Name(QueryState value) {
-    return QueryResult_QueryState_Name(value);
-  }
-  static inline bool QueryState_Parse(const ::std::string& name,
-      QueryState* value) {
-    return QueryResult_QueryState_Parse(name, value);
-  }
-
-  // accessors -------------------------------------------------------
-
-  // optional .exec.user.QueryResult.QueryState query_state = 1;
-  inline bool has_query_state() const;
-  inline void clear_query_state();
-  static const int kQueryStateFieldNumber = 1;
-  inline ::exec::user::QueryResult_QueryState query_state() const;
-  inline void set_query_state(::exec::user::QueryResult_QueryState value);
-
-  // optional .exec.shared.QueryId query_id = 2;
-  inline bool has_query_id() const;
-  inline void clear_query_id();
-  static const int kQueryIdFieldNumber = 2;
-  inline const ::exec::shared::QueryId& query_id() const;
-  inline ::exec::shared::QueryId* mutable_query_id();
-  inline ::exec::shared::QueryId* release_query_id();
-  inline void set_allocated_query_id(::exec::shared::QueryId* query_id);
-
-  // optional bool is_last_chunk = 3;
-  inline bool has_is_last_chunk() const;
-  inline void clear_is_last_chunk();
-  static const int kIsLastChunkFieldNumber = 3;
-  inline bool is_last_chunk() const;
-  inline void set_is_last_chunk(bool value);
-
-  // optional int32 row_count = 4;
-  inline bool has_row_count() const;
-  inline void clear_row_count();
-  static const int kRowCountFieldNumber = 4;
-  inline ::google::protobuf::int32 row_count() const;
-  inline void set_row_count(::google::protobuf::int32 value);
-
-  // optional int64 records_scan = 5;
-  inline bool has_records_scan() const;
-  inline void clear_records_scan();
-  static const int kRecordsScanFieldNumber = 5;
-  inline ::google::protobuf::int64 records_scan() const;
-  inline void set_records_scan(::google::protobuf::int64 value);
-
-  // optional int64 records_error = 6;
-  inline bool has_records_error() const;
-  inline void clear_records_error();
-  static const int kRecordsErrorFieldNumber = 6;
-  inline ::google::protobuf::int64 records_error() const;
-  inline void set_records_error(::google::protobuf::int64 value);
-
-  // optional int64 submission_time = 7;
-  inline bool has_submission_time() const;
-  inline void clear_submission_time();
-  static const int kSubmissionTimeFieldNumber = 7;
-  inline ::google::protobuf::int64 submission_time() const;
-  inline void set_submission_time(::google::protobuf::int64 value);
-
-  // repeated .exec.user.NodeStatus node_status = 8;
-  inline int node_status_size() const;
-  inline void clear_node_status();
-  static const int kNodeStatusFieldNumber = 8;
-  inline const ::exec::user::NodeStatus& node_status(int index) const;
-  inline ::exec::user::NodeStatus* mutable_node_status(int index);
-  inline ::exec::user::NodeStatus* add_node_status();
-  inline const ::google::protobuf::RepeatedPtrField< ::exec::user::NodeStatus >&
-      node_status() const;
-  inline ::google::protobuf::RepeatedPtrField< ::exec::user::NodeStatus >*
-      mutable_node_status();
-
-  // repeated .exec.shared.DrillPBError error = 9;
-  inline int error_size() const;
-  inline void clear_error();
-  static const int kErrorFieldNumber = 9;
-  inline const ::exec::shared::DrillPBError& error(int index) const;
-  inline ::exec::shared::DrillPBError* mutable_error(int index);
-  inline ::exec::shared::DrillPBError* add_error();
-  inline const ::google::protobuf::RepeatedPtrField< ::exec::shared::DrillPBError >&
-      error() const;
-  inline ::google::protobuf::RepeatedPtrField< ::exec::shared::DrillPBError >*
-      mutable_error();
-
-  // optional .exec.shared.RecordBatchDef def = 10;
-  inline bool has_def() const;
-  inline void clear_def();
-  static const int kDefFieldNumber = 10;
-  inline const ::exec::shared::RecordBatchDef& def() const;
-  inline ::exec::shared::RecordBatchDef* mutable_def();
-  inline ::exec::shared::RecordBatchDef* release_def();
-  inline void set_allocated_def(::exec::shared::RecordBatchDef* def);
-
-  // optional bool schema_changed = 11;
-  inline bool has_schema_changed() const;
-  inline void clear_schema_changed();
-  static const int kSchemaChangedFieldNumber = 11;
-  inline bool schema_changed() const;
-  inline void set_schema_changed(bool value);
-
-  // @@protoc_insertion_point(class_scope:exec.user.QueryResult)
- private:
-  inline void set_has_query_state();
-  inline void clear_has_query_state();
-  inline void set_has_query_id();
-  inline void clear_has_query_id();
-  inline void set_has_is_last_chunk();
-  inline void clear_has_is_last_chunk();
-  inline void set_has_row_count();
-  inline void clear_has_row_count();
-  inline void set_has_records_scan();
-  inline void clear_has_records_scan();
-  inline void set_has_records_error();
-  inline void clear_has_records_error();
-  inline void set_has_submission_time();
-  inline void clear_has_submission_time();
-  inline void set_has_def();
-  inline void clear_has_def();
-  inline void set_has_schema_changed();
-  inline void clear_has_schema_changed();
-
-  ::google::protobuf::UnknownFieldSet _unknown_fields_;
-
-  ::exec::shared::QueryId* query_id_;
-  int query_state_;
-  ::google::protobuf::int32 row_count_;
-  ::google::protobuf::int64 records_scan_;
-  ::google::protobuf::int64 records_error_;
-  ::google::protobuf::int64 submission_time_;
-  ::google::protobuf::RepeatedPtrField< ::exec::user::NodeStatus > node_status_;
-  ::google::protobuf::RepeatedPtrField< ::exec::shared::DrillPBError > error_;
-  ::exec::shared::RecordBatchDef* def_;
-  bool is_last_chunk_;
-  bool schema_changed_;
-
-  mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(11 + 31) / 32];
-
-  friend void  protobuf_AddDesc_User_2eproto();
-  friend void protobuf_AssignDesc_User_2eproto();
-  friend void protobuf_ShutdownFile_User_2eproto();
-
-  void InitAsDefaultInstance();
-  static QueryResult* default_instance_;
 };
 // ===================================================================
 
@@ -1345,6 +1018,28 @@ inline void UserToBitHandshake::set_allocated_properties(::exec::user::UserPrope
   }
 }
 
+// optional bool support_complex_types = 6 [default = false];
+inline bool UserToBitHandshake::has_support_complex_types() const {
+  return (_has_bits_[0] & 0x00000020u) != 0;
+}
+inline void UserToBitHandshake::set_has_support_complex_types() {
+  _has_bits_[0] |= 0x00000020u;
+}
+inline void UserToBitHandshake::clear_has_support_complex_types() {
+  _has_bits_[0] &= ~0x00000020u;
+}
+inline void UserToBitHandshake::clear_support_complex_types() {
+  support_complex_types_ = false;
+  clear_has_support_complex_types();
+}
+inline bool UserToBitHandshake::support_complex_types() const {
+  return support_complex_types_;
+}
+inline void UserToBitHandshake::set_support_complex_types(bool value) {
+  set_has_support_complex_types();
+  support_complex_types_ = value;
+}
+
 // -------------------------------------------------------------------
 
 // RequestResults
@@ -1555,339 +1250,6 @@ inline void BitToUserHandshake::set_rpc_version(::google::protobuf::int32 value)
   rpc_version_ = value;
 }
 
-// -------------------------------------------------------------------
-
-// NodeStatus
-
-// optional int32 node_id = 1;
-inline bool NodeStatus::has_node_id() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
-}
-inline void NodeStatus::set_has_node_id() {
-  _has_bits_[0] |= 0x00000001u;
-}
-inline void NodeStatus::clear_has_node_id() {
-  _has_bits_[0] &= ~0x00000001u;
-}
-inline void NodeStatus::clear_node_id() {
-  node_id_ = 0;
-  clear_has_node_id();
-}
-inline ::google::protobuf::int32 NodeStatus::node_id() const {
-  return node_id_;
-}
-inline void NodeStatus::set_node_id(::google::protobuf::int32 value) {
-  set_has_node_id();
-  node_id_ = value;
-}
-
-// optional int64 memory_footprint = 2;
-inline bool NodeStatus::has_memory_footprint() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
-}
-inline void NodeStatus::set_has_memory_footprint() {
-  _has_bits_[0] |= 0x00000002u;
-}
-inline void NodeStatus::clear_has_memory_footprint() {
-  _has_bits_[0] &= ~0x00000002u;
-}
-inline void NodeStatus::clear_memory_footprint() {
-  memory_footprint_ = GOOGLE_LONGLONG(0);
-  clear_has_memory_footprint();
-}
-inline ::google::protobuf::int64 NodeStatus::memory_footprint() const {
-  return memory_footprint_;
-}
-inline void NodeStatus::set_memory_footprint(::google::protobuf::int64 value) {
-  set_has_memory_footprint();
-  memory_footprint_ = value;
-}
-
-// -------------------------------------------------------------------
-
-// QueryResult
-
-// optional .exec.user.QueryResult.QueryState query_state = 1;
-inline bool QueryResult::has_query_state() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
-}
-inline void QueryResult::set_has_query_state() {
-  _has_bits_[0] |= 0x00000001u;
-}
-inline void QueryResult::clear_has_query_state() {
-  _has_bits_[0] &= ~0x00000001u;
-}
-inline void QueryResult::clear_query_state() {
-  query_state_ = 0;
-  clear_has_query_state();
-}
-inline ::exec::user::QueryResult_QueryState QueryResult::query_state() const {
-  return static_cast< ::exec::user::QueryResult_QueryState >(query_state_);
-}
-inline void QueryResult::set_query_state(::exec::user::QueryResult_QueryState value) {
-  assert(::exec::user::QueryResult_QueryState_IsValid(value));
-  set_has_query_state();
-  query_state_ = value;
-}
-
-// optional .exec.shared.QueryId query_id = 2;
-inline bool QueryResult::has_query_id() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
-}
-inline void QueryResult::set_has_query_id() {
-  _has_bits_[0] |= 0x00000002u;
-}
-inline void QueryResult::clear_has_query_id() {
-  _has_bits_[0] &= ~0x00000002u;
-}
-inline void QueryResult::clear_query_id() {
-  if (query_id_ != NULL) query_id_->::exec::shared::QueryId::Clear();
-  clear_has_query_id();
-}
-inline const ::exec::shared::QueryId& QueryResult::query_id() const {
-  return query_id_ != NULL ? *query_id_ : *default_instance_->query_id_;
-}
-inline ::exec::shared::QueryId* QueryResult::mutable_query_id() {
-  set_has_query_id();
-  if (query_id_ == NULL) query_id_ = new ::exec::shared::QueryId;
-  return query_id_;
-}
-inline ::exec::shared::QueryId* QueryResult::release_query_id() {
-  clear_has_query_id();
-  ::exec::shared::QueryId* temp = query_id_;
-  query_id_ = NULL;
-  return temp;
-}
-inline void QueryResult::set_allocated_query_id(::exec::shared::QueryId* query_id) {
-  delete query_id_;
-  query_id_ = query_id;
-  if (query_id) {
-    set_has_query_id();
-  } else {
-    clear_has_query_id();
-  }
-}
-
-// optional bool is_last_chunk = 3;
-inline bool QueryResult::has_is_last_chunk() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
-}
-inline void QueryResult::set_has_is_last_chunk() {
-  _has_bits_[0] |= 0x00000004u;
-}
-inline void QueryResult::clear_has_is_last_chunk() {
-  _has_bits_[0] &= ~0x00000004u;
-}
-inline void QueryResult::clear_is_last_chunk() {
-  is_last_chunk_ = false;
-  clear_has_is_last_chunk();
-}
-inline bool QueryResult::is_last_chunk() const {
-  return is_last_chunk_;
-}
-inline void QueryResult::set_is_last_chunk(bool value) {
-  set_has_is_last_chunk();
-  is_last_chunk_ = value;
-}
-
-// optional int32 row_count = 4;
-inline bool QueryResult::has_row_count() const {
-  return (_has_bits_[0] & 0x00000008u) != 0;
-}
-inline void QueryResult::set_has_row_count() {
-  _has_bits_[0] |= 0x00000008u;
-}
-inline void QueryResult::clear_has_row_count() {
-  _has_bits_[0] &= ~0x00000008u;
-}
-inline void QueryResult::clear_row_count() {
-  row_count_ = 0;
-  clear_has_row_count();
-}
-inline ::google::protobuf::int32 QueryResult::row_count() const {
-  return row_count_;
-}
-inline void QueryResult::set_row_count(::google::protobuf::int32 value) {
-  set_has_row_count();
-  row_count_ = value;
-}
-
-// optional int64 records_scan = 5;
-inline bool QueryResult::has_records_scan() const {
-  return (_has_bits_[0] & 0x00000010u) != 0;
-}
-inline void QueryResult::set_has_records_scan() {
-  _has_bits_[0] |= 0x00000010u;
-}
-inline void QueryResult::clear_has_records_scan() {
-  _has_bits_[0] &= ~0x00000010u;
-}
-inline void QueryResult::clear_records_scan() {
-  records_scan_ = GOOGLE_LONGLONG(0);
-  clear_has_records_scan();
-}
-inline ::google::protobuf::int64 QueryResult::records_scan() const {
-  return records_scan_;
-}
-inline void QueryResult::set_records_scan(::google::protobuf::int64 value) {
-  set_has_records_scan();
-  records_scan_ = value;
-}
-
-// optional int64 records_error = 6;
-inline bool QueryResult::has_records_error() const {
-  return (_has_bits_[0] & 0x00000020u) != 0;
-}
-inline void QueryResult::set_has_records_error() {
-  _has_bits_[0] |= 0x00000020u;
-}
-inline void QueryResult::clear_has_records_error() {
-  _has_bits_[0] &= ~0x00000020u;
-}
-inline void QueryResult::clear_records_error() {
-  records_error_ = GOOGLE_LONGLONG(0);
-  clear_has_records_error();
-}
-inline ::google::protobuf::int64 QueryResult::records_error() const {
-  return records_error_;
-}
-inline void QueryResult::set_records_error(::google::protobuf::int64 value) {
-  set_has_records_error();
-  records_error_ = value;
-}
-
-// optional int64 submission_time = 7;
-inline bool QueryResult::has_submission_time() const {
-  return (_has_bits_[0] & 0x00000040u) != 0;
-}
-inline void QueryResult::set_has_submission_time() {
-  _has_bits_[0] |= 0x00000040u;
-}
-inline void QueryResult::clear_has_submission_time() {
-  _has_bits_[0] &= ~0x00000040u;
-}
-inline void QueryResult::clear_submission_time() {
-  submission_time_ = GOOGLE_LONGLONG(0);
-  clear_has_submission_time();
-}
-inline ::google::protobuf::int64 QueryResult::submission_time() const {
-  return submission_time_;
-}
-inline void QueryResult::set_submission_time(::google::protobuf::int64 value) {
-  set_has_submission_time();
-  submission_time_ = value;
-}
-
-// repeated .exec.user.NodeStatus node_status = 8;
-inline int QueryResult::node_status_size() const {
-  return node_status_.size();
-}
-inline void QueryResult::clear_node_status() {
-  node_status_.Clear();
-}
-inline const ::exec::user::NodeStatus& QueryResult::node_status(int index) const {
-  return node_status_.Get(index);
-}
-inline ::exec::user::NodeStatus* QueryResult::mutable_node_status(int index) {
-  return node_status_.Mutable(index);
-}
-inline ::exec::user::NodeStatus* QueryResult::add_node_status() {
-  return node_status_.Add();
-}
-inline const ::google::protobuf::RepeatedPtrField< ::exec::user::NodeStatus >&
-QueryResult::node_status() const {
-  return node_status_;
-}
-inline ::google::protobuf::RepeatedPtrField< ::exec::user::NodeStatus >*
-QueryResult::mutable_node_status() {
-  return &node_status_;
-}
-
-// repeated .exec.shared.DrillPBError error = 9;
-inline int QueryResult::error_size() const {
-  return error_.size();
-}
-inline void QueryResult::clear_error() {
-  error_.Clear();
-}
-inline const ::exec::shared::DrillPBError& QueryResult::error(int index) const {
-  return error_.Get(index);
-}
-inline ::exec::shared::DrillPBError* QueryResult::mutable_error(int index) {
-  return error_.Mutable(index);
-}
-inline ::exec::shared::DrillPBError* QueryResult::add_error() {
-  return error_.Add();
-}
-inline const ::google::protobuf::RepeatedPtrField< ::exec::shared::DrillPBError >&
-QueryResult::error() const {
-  return error_;
-}
-inline ::google::protobuf::RepeatedPtrField< ::exec::shared::DrillPBError >*
-QueryResult::mutable_error() {
-  return &error_;
-}
-
-// optional .exec.shared.RecordBatchDef def = 10;
-inline bool QueryResult::has_def() const {
-  return (_has_bits_[0] & 0x00000200u) != 0;
-}
-inline void QueryResult::set_has_def() {
-  _has_bits_[0] |= 0x00000200u;
-}
-inline void QueryResult::clear_has_def() {
-  _has_bits_[0] &= ~0x00000200u;
-}
-inline void QueryResult::clear_def() {
-  if (def_ != NULL) def_->::exec::shared::RecordBatchDef::Clear();
-  clear_has_def();
-}
-inline const ::exec::shared::RecordBatchDef& QueryResult::def() const {
-  return def_ != NULL ? *def_ : *default_instance_->def_;
-}
-inline ::exec::shared::RecordBatchDef* QueryResult::mutable_def() {
-  set_has_def();
-  if (def_ == NULL) def_ = new ::exec::shared::RecordBatchDef;
-  return def_;
-}
-inline ::exec::shared::RecordBatchDef* QueryResult::release_def() {
-  clear_has_def();
-  ::exec::shared::RecordBatchDef* temp = def_;
-  def_ = NULL;
-  return temp;
-}
-inline void QueryResult::set_allocated_def(::exec::shared::RecordBatchDef* def) {
-  delete def_;
-  def_ = def;
-  if (def) {
-    set_has_def();
-  } else {
-    clear_has_def();
-  }
-}
-
-// optional bool schema_changed = 11;
-inline bool QueryResult::has_schema_changed() const {
-  return (_has_bits_[0] & 0x00000400u) != 0;
-}
-inline void QueryResult::set_has_schema_changed() {
-  _has_bits_[0] |= 0x00000400u;
-}
-inline void QueryResult::clear_has_schema_changed() {
-  _has_bits_[0] &= ~0x00000400u;
-}
-inline void QueryResult::clear_schema_changed() {
-  schema_changed_ = false;
-  clear_has_schema_changed();
-}
-inline bool QueryResult::schema_changed() const {
-  return schema_changed_;
-}
-inline void QueryResult::set_schema_changed(bool value) {
-  set_has_schema_changed();
-  schema_changed_ = value;
-}
-
 
 // @@protoc_insertion_point(namespace_scope)
 
@@ -1898,10 +1260,6 @@ inline void QueryResult::set_schema_changed(bool value) {
 namespace google {
 namespace protobuf {
 
-template <>
-inline const EnumDescriptor* GetEnumDescriptor< ::exec::user::QueryResult_QueryState>() {
-  return ::exec::user::QueryResult_QueryState_descriptor();
-}
 template <>
 inline const EnumDescriptor* GetEnumDescriptor< ::exec::user::RpcType>() {
   return ::exec::user::RpcType_descriptor();

@@ -53,13 +53,15 @@ enum RpcType {
   REQ_CANCEL_FRAGMENT = 6,
   REQ_FRAGMENT_STATUS = 7,
   REQ_BIT_STATUS = 8,
-  RESP_FRAGMENT_HANDLE = 9,
-  RESP_FRAGMENT_STATUS = 10,
-  RESP_BIT_STATUS = 11
+  REQ_QUERY_STATUS = 9,
+  RESP_FRAGMENT_HANDLE = 10,
+  RESP_FRAGMENT_STATUS = 11,
+  RESP_BIT_STATUS = 12,
+  RESP_QUERY_STATUS = 13
 };
 bool RpcType_IsValid(int value);
 const RpcType RpcType_MIN = HANDSHAKE;
-const RpcType RpcType_MAX = RESP_BIT_STATUS;
+const RpcType RpcType_MAX = RESP_QUERY_STATUS;
 const int RpcType_ARRAYSIZE = RpcType_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* RpcType_descriptor();
@@ -494,7 +496,7 @@ class PlanFragment : public ::google::protobuf::Message {
   inline ::google::protobuf::int64 mem_initial() const;
   inline void set_mem_initial(::google::protobuf::int64 value);
 
-  // optional int64 mem_max = 13 [default = 20000000000];
+  // optional int64 mem_max = 13 [default = 2000000000];
   inline bool has_mem_max() const;
   inline void clear_mem_max();
   static const int kMemMaxFieldNumber = 13;
@@ -580,9 +582,9 @@ class PlanFragment : public ::google::protobuf::Message {
   ::exec::DrillbitEndpoint* assignment_;
   ::exec::DrillbitEndpoint* foreman_;
   ::google::protobuf::int64 mem_initial_;
+  ::google::protobuf::int64 mem_max_;
   bool leaf_fragment_;
   ::google::protobuf::int32 time_zone_;
-  ::google::protobuf::int64 mem_max_;
   ::google::protobuf::int64 query_start_time_;
   ::exec::shared::UserCredentials* credentials_;
   ::std::string* options_json_;
@@ -1220,7 +1222,7 @@ inline void PlanFragment::set_mem_initial(::google::protobuf::int64 value) {
   mem_initial_ = value;
 }
 
-// optional int64 mem_max = 13 [default = 20000000000];
+// optional int64 mem_max = 13 [default = 2000000000];
 inline bool PlanFragment::has_mem_max() const {
   return (_has_bits_[0] & 0x00000400u) != 0;
 }
@@ -1231,7 +1233,7 @@ inline void PlanFragment::clear_has_mem_max() {
   _has_bits_[0] &= ~0x00000400u;
 }
 inline void PlanFragment::clear_mem_max() {
-  mem_max_ = GOOGLE_LONGLONG(20000000000);
+  mem_max_ = GOOGLE_LONGLONG(2000000000);
   clear_has_mem_max();
 }
 inline ::google::protobuf::int64 PlanFragment::mem_max() const {

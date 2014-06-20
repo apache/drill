@@ -413,7 +413,7 @@ status_t DrillClientImpl::processQueryResult(ByteBuf_t allocatedBuffer, InBoundR
     status_t ret=QRY_SUCCESS;
     {
         boost::lock_guard<boost::mutex> lock(this->m_dcMutex);
-        exec::user::QueryResult* qr = new exec::user::QueryResult; //Record Batch will own this object and free it up.
+        exec::shared::QueryResult* qr = new exec::shared::QueryResult; //Record Batch will own this object and free it up.
 
         DRILL_LOG(LOG_DEBUG) << "Processing Query Result " << std::endl;
         qr->ParseFromArray(msg.m_pbody.data(), msg.m_pbody.size());
@@ -438,7 +438,7 @@ status_t DrillClientImpl::processQueryResult(ByteBuf_t allocatedBuffer, InBoundR
             debugPrintQid(*pDrillClientQueryResult->m_pQueryId)
             << std::endl;
         //Check QueryResult.queryState. QueryResult could have an error.
-        if(qr->query_state() == exec::user::QueryResult_QueryState_FAILED){
+        if(qr->query_state() == exec::shared::QueryResult_QueryState_FAILED){
             status_t ret=handleQryError(QRY_FAILURE, qr->error(0), pDrillClientQueryResult);
             Utils::freeBuffer(allocatedBuffer);
             delete qr;
@@ -623,20 +623,20 @@ void DrillClientImpl::handleRead(ByteBuf_t _buf,
     return;
 }
 
-status_t DrillClientImpl::validateMessage(InBoundRpcMessage& msg, exec::user::QueryResult& qr, std::string& valErr){
+status_t DrillClientImpl::validateMessage(InBoundRpcMessage& msg, exec::shared::QueryResult& qr, std::string& valErr){
     if(msg.m_mode == exec::rpc::RESPONSE_FAILURE){
         valErr=getMessage(ERR_QRY_RESPFAIL);
         return QRY_FAILURE;
     }
-    if(qr.query_state()== exec::user::QueryResult_QueryState_UNKNOWN_QUERY){
+    if(qr.query_state()== exec::shared::QueryResult_QueryState_UNKNOWN_QUERY){
         valErr=getMessage(ERR_QRY_UNKQRY);
         return QRY_FAILURE;
     }
-    if(qr.query_state()== exec::user::QueryResult_QueryState_CANCELED){
+    if(qr.query_state()== exec::shared::QueryResult_QueryState_CANCELED){
         valErr=getMessage(ERR_QRY_CANCELED);
         return QRY_FAILURE;
     }
-    if(qr.def().is_selection_vector_2() == true){
+    if(qr.def().carries_two_byte_selection_vector() == true){
         valErr=getMessage(ERR_QRY_SELVEC2);
         return QRY_FAILURE;
     }
@@ -730,7 +730,7 @@ void DrillClientImpl::sendCancel(InBoundRpcMessage& msg){
 
 // This COPIES the FieldMetadata definition for the record batch.  ColumnDefs held by this
 // class are used by the async callbacks.
-status_t DrillClientQueryResult::setupColumnDefs(exec::user::QueryResult* pQueryResult) {
+status_t DrillClientQueryResult::setupColumnDefs(exec::shared::QueryResult* pQueryResult) {
     bool hasSchemaChanged=false;
     bool isFirstIter=false;
     boost::lock_guard<boost::mutex> schLock(this->m_schemaMutex);

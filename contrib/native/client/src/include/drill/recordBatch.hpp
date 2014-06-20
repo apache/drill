@@ -817,7 +817,7 @@ class DECLSPEC_DRILL_CLIENT RecordBatch{
         //m_allocatedBuffer is the memory block allocated to hold the incoming RPC message. Record BAtches operate on
         //slices of the allcoated buffer. The first slice (the first Field Batch), begins at m_buffer. Data in the
         //allocated buffer before m_buffer is mostly the RPC header, and the QueryResult object.
-        RecordBatch(exec::user::QueryResult* pResult, ByteBuf_t r, ByteBuf_t b)
+        RecordBatch(exec::shared::QueryResult* pResult, ByteBuf_t r, ByteBuf_t b)
                 :m_fieldDefs(new(std::vector<Drill::FieldMetadata*>)){
             m_pQueryResult=pResult;
             m_pRecordBatchDef=&pResult->def();
@@ -865,10 +865,10 @@ class DECLSPEC_DRILL_CLIENT RecordBatch{
         bool hasSchemaChanged(){ return m_bHasSchemaChanged;}
 
         #ifdef DEBUG
-        const exec::user::QueryResult* getQueryResult(){ return this->m_pQueryResult;}
+        const exec::shared::QueryResult* getQueryResult(){ return this->m_pQueryResult;}
         #endif
     private:
-        const exec::user::QueryResult* m_pQueryResult;
+        const exec::shared::QueryResult* m_pQueryResult;
         const exec::shared::RecordBatchDef* m_pRecordBatchDef;
         ByteBuf_t m_allocatedBuffer;
         ByteBuf_t m_buffer;

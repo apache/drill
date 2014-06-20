@@ -45,6 +45,8 @@ class ParsingError;
 class RecordBatchDef;
 class NamePart;
 class SerializedField;
+class NodeStatus;
+class QueryResult;
 class QueryProfile;
 class MajorFragmentProfile;
 class MinorFragmentProfile;
@@ -70,6 +72,29 @@ inline bool NamePart_Type_Parse(
     const ::std::string& name, NamePart_Type* value) {
   return ::google::protobuf::internal::ParseNamedEnum<NamePart_Type>(
     NamePart_Type_descriptor(), name, value);
+}
+enum QueryResult_QueryState {
+  QueryResult_QueryState_PENDING = 0,
+  QueryResult_QueryState_RUNNING = 1,
+  QueryResult_QueryState_COMPLETED = 2,
+  QueryResult_QueryState_CANCELED = 3,
+  QueryResult_QueryState_FAILED = 4,
+  QueryResult_QueryState_UNKNOWN_QUERY = 5
+};
+bool QueryResult_QueryState_IsValid(int value);
+const QueryResult_QueryState QueryResult_QueryState_QueryState_MIN = QueryResult_QueryState_PENDING;
+const QueryResult_QueryState QueryResult_QueryState_QueryState_MAX = QueryResult_QueryState_UNKNOWN_QUERY;
+const int QueryResult_QueryState_QueryState_ARRAYSIZE = QueryResult_QueryState_QueryState_MAX + 1;
+
+const ::google::protobuf::EnumDescriptor* QueryResult_QueryState_descriptor();
+inline const ::std::string& QueryResult_QueryState_Name(QueryResult_QueryState value) {
+  return ::google::protobuf::internal::NameOfEnum(
+    QueryResult_QueryState_descriptor(), value);
+}
+inline bool QueryResult_QueryState_Parse(
+    const ::std::string& name, QueryResult_QueryState* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<QueryResult_QueryState>(
+    QueryResult_QueryState_descriptor(), name, value);
 }
 enum RpcChannel {
   BIT_CONTROL = 0,
@@ -165,11 +190,12 @@ enum CoreOperatorType {
   TEXT_WRITER = 27,
   TEXT_SUB_SCAN = 28,
   JSON_SUB_SCAN = 29,
-  INFO_SCHEMA_SUB_SCAN = 30
+  INFO_SCHEMA_SUB_SCAN = 30,
+  COMPLEX_TO_JSON = 31
 };
 bool CoreOperatorType_IsValid(int value);
 const CoreOperatorType CoreOperatorType_MIN = SINGLE_SENDER;
-const CoreOperatorType CoreOperatorType_MAX = INFO_SCHEMA_SUB_SCAN;
+const CoreOperatorType CoreOperatorType_MAX = COMPLEX_TO_JSON;
 const int CoreOperatorType_ARRAYSIZE = CoreOperatorType_MAX + 1;
 
 const ::google::protobuf::EnumDescriptor* CoreOperatorType_descriptor();
@@ -685,25 +711,25 @@ class RecordBatchDef : public ::google::protobuf::Message {
   inline ::google::protobuf::RepeatedPtrField< ::exec::shared::SerializedField >*
       mutable_field();
 
-  // optional bool is_selection_vector_2 = 3;
-  inline bool has_is_selection_vector_2() const;
-  inline void clear_is_selection_vector_2();
-  static const int kIsSelectionVector2FieldNumber = 3;
-  inline bool is_selection_vector_2() const;
-  inline void set_is_selection_vector_2(bool value);
+  // optional bool carries_two_byte_selection_vector = 3;
+  inline bool has_carries_two_byte_selection_vector() const;
+  inline void clear_carries_two_byte_selection_vector();
+  static const int kCarriesTwoByteSelectionVectorFieldNumber = 3;
+  inline bool carries_two_byte_selection_vector() const;
+  inline void set_carries_two_byte_selection_vector(bool value);
 
   // @@protoc_insertion_point(class_scope:exec.shared.RecordBatchDef)
  private:
   inline void set_has_record_count();
   inline void clear_has_record_count();
-  inline void set_has_is_selection_vector_2();
-  inline void clear_has_is_selection_vector_2();
+  inline void set_has_carries_two_byte_selection_vector();
+  inline void clear_has_carries_two_byte_selection_vector();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
   ::google::protobuf::RepeatedPtrField< ::exec::shared::SerializedField > field_;
   ::google::protobuf::int32 record_count_;
-  bool is_selection_vector_2_;
+  bool carries_two_byte_selection_vector_;
 
   mutable int _cached_size_;
   ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
@@ -999,6 +1025,318 @@ class SerializedField : public ::google::protobuf::Message {
 };
 // -------------------------------------------------------------------
 
+class NodeStatus : public ::google::protobuf::Message {
+ public:
+  NodeStatus();
+  virtual ~NodeStatus();
+
+  NodeStatus(const NodeStatus& from);
+
+  inline NodeStatus& operator=(const NodeStatus& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const NodeStatus& default_instance();
+
+  void Swap(NodeStatus* other);
+
+  // implements Message ----------------------------------------------
+
+  NodeStatus* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const NodeStatus& from);
+  void MergeFrom(const NodeStatus& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional int32 node_id = 1;
+  inline bool has_node_id() const;
+  inline void clear_node_id();
+  static const int kNodeIdFieldNumber = 1;
+  inline ::google::protobuf::int32 node_id() const;
+  inline void set_node_id(::google::protobuf::int32 value);
+
+  // optional int64 memory_footprint = 2;
+  inline bool has_memory_footprint() const;
+  inline void clear_memory_footprint();
+  static const int kMemoryFootprintFieldNumber = 2;
+  inline ::google::protobuf::int64 memory_footprint() const;
+  inline void set_memory_footprint(::google::protobuf::int64 value);
+
+  // @@protoc_insertion_point(class_scope:exec.shared.NodeStatus)
+ private:
+  inline void set_has_node_id();
+  inline void clear_has_node_id();
+  inline void set_has_memory_footprint();
+  inline void clear_has_memory_footprint();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::google::protobuf::int64 memory_footprint_;
+  ::google::protobuf::int32 node_id_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(2 + 31) / 32];
+
+  friend void  protobuf_AddDesc_UserBitShared_2eproto();
+  friend void protobuf_AssignDesc_UserBitShared_2eproto();
+  friend void protobuf_ShutdownFile_UserBitShared_2eproto();
+
+  void InitAsDefaultInstance();
+  static NodeStatus* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class QueryResult : public ::google::protobuf::Message {
+ public:
+  QueryResult();
+  virtual ~QueryResult();
+
+  QueryResult(const QueryResult& from);
+
+  inline QueryResult& operator=(const QueryResult& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const QueryResult& default_instance();
+
+  void Swap(QueryResult* other);
+
+  // implements Message ----------------------------------------------
+
+  QueryResult* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const QueryResult& from);
+  void MergeFrom(const QueryResult& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  typedef QueryResult_QueryState QueryState;
+  static const QueryState PENDING = QueryResult_QueryState_PENDING;
+  static const QueryState RUNNING = QueryResult_QueryState_RUNNING;
+  static const QueryState COMPLETED = QueryResult_QueryState_COMPLETED;
+  static const QueryState CANCELED = QueryResult_QueryState_CANCELED;
+  static const QueryState FAILED = QueryResult_QueryState_FAILED;
+  static const QueryState UNKNOWN_QUERY = QueryResult_QueryState_UNKNOWN_QUERY;
+  static inline bool QueryState_IsValid(int value) {
+    return QueryResult_QueryState_IsValid(value);
+  }
+  static const QueryState QueryState_MIN =
+    QueryResult_QueryState_QueryState_MIN;
+  static const QueryState QueryState_MAX =
+    QueryResult_QueryState_QueryState_MAX;
+  static const int QueryState_ARRAYSIZE =
+    QueryResult_QueryState_QueryState_ARRAYSIZE;
+  static inline const ::google::protobuf::EnumDescriptor*
+  QueryState_descriptor() {
+    return QueryResult_QueryState_descriptor();
+  }
+  static inline const ::std::string& QueryState_Name(QueryState value) {
+    return QueryResult_QueryState_Name(value);
+  }
+  static inline bool QueryState_Parse(const ::std::string& name,
+      QueryState* value) {
+    return QueryResult_QueryState_Parse(name, value);
+  }
+
+  // accessors -------------------------------------------------------
+
+  // optional .exec.shared.QueryResult.QueryState query_state = 1;
+  inline bool has_query_state() const;
+  inline void clear_query_state();
+  static const int kQueryStateFieldNumber = 1;
+  inline ::exec::shared::QueryResult_QueryState query_state() const;
+  inline void set_query_state(::exec::shared::QueryResult_QueryState value);
+
+  // optional .exec.shared.QueryId query_id = 2;
+  inline bool has_query_id() const;
+  inline void clear_query_id();
+  static const int kQueryIdFieldNumber = 2;
+  inline const ::exec::shared::QueryId& query_id() const;
+  inline ::exec::shared::QueryId* mutable_query_id();
+  inline ::exec::shared::QueryId* release_query_id();
+  inline void set_allocated_query_id(::exec::shared::QueryId* query_id);
+
+  // optional bool is_last_chunk = 3;
+  inline bool has_is_last_chunk() const;
+  inline void clear_is_last_chunk();
+  static const int kIsLastChunkFieldNumber = 3;
+  inline bool is_last_chunk() const;
+  inline void set_is_last_chunk(bool value);
+
+  // optional int32 row_count = 4;
+  inline bool has_row_count() const;
+  inline void clear_row_count();
+  static const int kRowCountFieldNumber = 4;
+  inline ::google::protobuf::int32 row_count() const;
+  inline void set_row_count(::google::protobuf::int32 value);
+
+  // optional int64 records_scan = 5;
+  inline bool has_records_scan() const;
+  inline void clear_records_scan();
+  static const int kRecordsScanFieldNumber = 5;
+  inline ::google::protobuf::int64 records_scan() const;
+  inline void set_records_scan(::google::protobuf::int64 value);
+
+  // optional int64 records_error = 6;
+  inline bool has_records_error() const;
+  inline void clear_records_error();
+  static const int kRecordsErrorFieldNumber = 6;
+  inline ::google::protobuf::int64 records_error() const;
+  inline void set_records_error(::google::protobuf::int64 value);
+
+  // optional int64 submission_time = 7;
+  inline bool has_submission_time() const;
+  inline void clear_submission_time();
+  static const int kSubmissionTimeFieldNumber = 7;
+  inline ::google::protobuf::int64 submission_time() const;
+  inline void set_submission_time(::google::protobuf::int64 value);
+
+  // repeated .exec.shared.NodeStatus node_status = 8;
+  inline int node_status_size() const;
+  inline void clear_node_status();
+  static const int kNodeStatusFieldNumber = 8;
+  inline const ::exec::shared::NodeStatus& node_status(int index) const;
+  inline ::exec::shared::NodeStatus* mutable_node_status(int index);
+  inline ::exec::shared::NodeStatus* add_node_status();
+  inline const ::google::protobuf::RepeatedPtrField< ::exec::shared::NodeStatus >&
+      node_status() const;
+  inline ::google::protobuf::RepeatedPtrField< ::exec::shared::NodeStatus >*
+      mutable_node_status();
+
+  // repeated .exec.shared.DrillPBError error = 9;
+  inline int error_size() const;
+  inline void clear_error();
+  static const int kErrorFieldNumber = 9;
+  inline const ::exec::shared::DrillPBError& error(int index) const;
+  inline ::exec::shared::DrillPBError* mutable_error(int index);
+  inline ::exec::shared::DrillPBError* add_error();
+  inline const ::google::protobuf::RepeatedPtrField< ::exec::shared::DrillPBError >&
+      error() const;
+  inline ::google::protobuf::RepeatedPtrField< ::exec::shared::DrillPBError >*
+      mutable_error();
+
+  // optional .exec.shared.RecordBatchDef def = 10;
+  inline bool has_def() const;
+  inline void clear_def();
+  static const int kDefFieldNumber = 10;
+  inline const ::exec::shared::RecordBatchDef& def() const;
+  inline ::exec::shared::RecordBatchDef* mutable_def();
+  inline ::exec::shared::RecordBatchDef* release_def();
+  inline void set_allocated_def(::exec::shared::RecordBatchDef* def);
+
+  // optional bool schema_changed = 11;
+  inline bool has_schema_changed() const;
+  inline void clear_schema_changed();
+  static const int kSchemaChangedFieldNumber = 11;
+  inline bool schema_changed() const;
+  inline void set_schema_changed(bool value);
+
+  // @@protoc_insertion_point(class_scope:exec.shared.QueryResult)
+ private:
+  inline void set_has_query_state();
+  inline void clear_has_query_state();
+  inline void set_has_query_id();
+  inline void clear_has_query_id();
+  inline void set_has_is_last_chunk();
+  inline void clear_has_is_last_chunk();
+  inline void set_has_row_count();
+  inline void clear_has_row_count();
+  inline void set_has_records_scan();
+  inline void clear_has_records_scan();
+  inline void set_has_records_error();
+  inline void clear_has_records_error();
+  inline void set_has_submission_time();
+  inline void clear_has_submission_time();
+  inline void set_has_def();
+  inline void clear_has_def();
+  inline void set_has_schema_changed();
+  inline void clear_has_schema_changed();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::exec::shared::QueryId* query_id_;
+  int query_state_;
+  ::google::protobuf::int32 row_count_;
+  ::google::protobuf::int64 records_scan_;
+  ::google::protobuf::int64 records_error_;
+  ::google::protobuf::int64 submission_time_;
+  ::google::protobuf::RepeatedPtrField< ::exec::shared::NodeStatus > node_status_;
+  ::google::protobuf::RepeatedPtrField< ::exec::shared::DrillPBError > error_;
+  ::exec::shared::RecordBatchDef* def_;
+  bool is_last_chunk_;
+  bool schema_changed_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(11 + 31) / 32];
+
+  friend void  protobuf_AddDesc_UserBitShared_2eproto();
+  friend void protobuf_AssignDesc_UserBitShared_2eproto();
+  friend void protobuf_ShutdownFile_UserBitShared_2eproto();
+
+  void InitAsDefaultInstance();
+  static QueryResult* default_instance_;
+};
+// -------------------------------------------------------------------
+
 class QueryProfile : public ::google::protobuf::Message {
  public:
   QueryProfile();
@@ -1107,10 +1445,40 @@ class QueryProfile : public ::google::protobuf::Message {
   inline ::std::string* release_plan();
   inline void set_allocated_plan(::std::string* plan);
 
-  // repeated .exec.shared.MajorFragmentProfile fragment_profile = 7;
+  // optional .exec.DrillbitEndpoint foreman = 7;
+  inline bool has_foreman() const;
+  inline void clear_foreman();
+  static const int kForemanFieldNumber = 7;
+  inline const ::exec::DrillbitEndpoint& foreman() const;
+  inline ::exec::DrillbitEndpoint* mutable_foreman();
+  inline ::exec::DrillbitEndpoint* release_foreman();
+  inline void set_allocated_foreman(::exec::DrillbitEndpoint* foreman);
+
+  // optional .exec.shared.QueryResult.QueryState state = 8;
+  inline bool has_state() const;
+  inline void clear_state();
+  static const int kStateFieldNumber = 8;
+  inline ::exec::shared::QueryResult_QueryState state() const;
+  inline void set_state(::exec::shared::QueryResult_QueryState value);
+
+  // optional int32 total_fragments = 9;
+  inline bool has_total_fragments() const;
+  inline void clear_total_fragments();
+  static const int kTotalFragmentsFieldNumber = 9;
+  inline ::google::protobuf::int32 total_fragments() const;
+  inline void set_total_fragments(::google::protobuf::int32 value);
+
+  // optional int32 finished_fragments = 10;
+  inline bool has_finished_fragments() const;
+  inline void clear_finished_fragments();
+  static const int kFinishedFragmentsFieldNumber = 10;
+  inline ::google::protobuf::int32 finished_fragments() const;
+  inline void set_finished_fragments(::google::protobuf::int32 value);
+
+  // repeated .exec.shared.MajorFragmentProfile fragment_profile = 11;
   inline int fragment_profile_size() const;
   inline void clear_fragment_profile();
-  static const int kFragmentProfileFieldNumber = 7;
+  static const int kFragmentProfileFieldNumber = 11;
   inline const ::exec::shared::MajorFragmentProfile& fragment_profile(int index) const;
   inline ::exec::shared::MajorFragmentProfile* mutable_fragment_profile(int index);
   inline ::exec::shared::MajorFragmentProfile* add_fragment_profile();
@@ -1133,6 +1501,14 @@ class QueryProfile : public ::google::protobuf::Message {
   inline void clear_has_query();
   inline void set_has_plan();
   inline void clear_has_plan();
+  inline void set_has_foreman();
+  inline void clear_has_foreman();
+  inline void set_has_state();
+  inline void clear_has_state();
+  inline void set_has_total_fragments();
+  inline void clear_has_total_fragments();
+  inline void set_has_finished_fragments();
+  inline void clear_has_finished_fragments();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -1140,12 +1516,16 @@ class QueryProfile : public ::google::protobuf::Message {
   ::google::protobuf::int64 start_;
   ::google::protobuf::int64 end_;
   ::std::string* query_;
-  ::std::string* plan_;
-  ::google::protobuf::RepeatedPtrField< ::exec::shared::MajorFragmentProfile > fragment_profile_;
   int type_;
+  int state_;
+  ::std::string* plan_;
+  ::exec::DrillbitEndpoint* foreman_;
+  ::google::protobuf::int32 total_fragments_;
+  ::google::protobuf::int32 finished_fragments_;
+  ::google::protobuf::RepeatedPtrField< ::exec::shared::MajorFragmentProfile > fragment_profile_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(7 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(11 + 31) / 32];
 
   friend void  protobuf_AddDesc_UserBitShared_2eproto();
   friend void protobuf_AssignDesc_UserBitShared_2eproto();
@@ -1533,6 +1913,13 @@ class OperatorProfile : public ::google::protobuf::Message {
   inline ::google::protobuf::RepeatedPtrField< ::exec::shared::MetricValue >*
       mutable_metric();
 
+  // optional int64 wait_nanos = 9;
+  inline bool has_wait_nanos() const;
+  inline void clear_wait_nanos();
+  static const int kWaitNanosFieldNumber = 9;
+  inline ::google::protobuf::int64 wait_nanos() const;
+  inline void set_wait_nanos(::google::protobuf::int64 value);
+
   // @@protoc_insertion_point(class_scope:exec.shared.OperatorProfile)
  private:
   inline void set_has_operator_id();
@@ -1545,6 +1932,8 @@ class OperatorProfile : public ::google::protobuf::Message {
   inline void clear_has_process_nanos();
   inline void set_has_local_memory_allocated();
   inline void clear_has_local_memory_allocated();
+  inline void set_has_wait_nanos();
+  inline void clear_has_wait_nanos();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -1555,9 +1944,10 @@ class OperatorProfile : public ::google::protobuf::Message {
   ::google::protobuf::int64 process_nanos_;
   ::google::protobuf::int64 local_memory_allocated_;
   ::google::protobuf::RepeatedPtrField< ::exec::shared::MetricValue > metric_;
+  ::google::protobuf::int64 wait_nanos_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(7 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(8 + 31) / 32];
 
   friend void  protobuf_AddDesc_UserBitShared_2eproto();
   friend void protobuf_AssignDesc_UserBitShared_2eproto();
@@ -2267,26 +2657,26 @@ RecordBatchDef::mutable_field() {
   return &field_;
 }
 
-// optional bool is_selection_vector_2 = 3;
-inline bool RecordBatchDef::has_is_selection_vector_2() const {
+// optional bool carries_two_byte_selection_vector = 3;
+inline bool RecordBatchDef::has_carries_two_byte_selection_vector() const {
   return (_has_bits_[0] & 0x00000004u) != 0;
 }
-inline void RecordBatchDef::set_has_is_selection_vector_2() {
+inline void RecordBatchDef::set_has_carries_two_byte_selection_vector() {
   _has_bits_[0] |= 0x00000004u;
 }
-inline void RecordBatchDef::clear_has_is_selection_vector_2() {
+inline void RecordBatchDef::clear_has_carries_two_byte_selection_vector() {
   _has_bits_[0] &= ~0x00000004u;
 }
-inline void RecordBatchDef::clear_is_selection_vector_2() {
-  is_selection_vector_2_ = false;
-  clear_has_is_selection_vector_2();
+inline void RecordBatchDef::clear_carries_two_byte_selection_vector() {
+  carries_two_byte_selection_vector_ = false;
+  clear_has_carries_two_byte_selection_vector();
 }
-inline bool RecordBatchDef::is_selection_vector_2() const {
-  return is_selection_vector_2_;
+inline bool RecordBatchDef::carries_two_byte_selection_vector() const {
+  return carries_two_byte_selection_vector_;
 }
-inline void RecordBatchDef::set_is_selection_vector_2(bool value) {
-  set_has_is_selection_vector_2();
-  is_selection_vector_2_ = value;
+inline void RecordBatchDef::set_carries_two_byte_selection_vector(bool value) {
+  set_has_carries_two_byte_selection_vector();
+  carries_two_byte_selection_vector_ = value;
 }
 
 // -------------------------------------------------------------------
@@ -2619,6 +3009,339 @@ inline void SerializedField::set_buffer_length(::google::protobuf::int32 value) 
 
 // -------------------------------------------------------------------
 
+// NodeStatus
+
+// optional int32 node_id = 1;
+inline bool NodeStatus::has_node_id() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void NodeStatus::set_has_node_id() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void NodeStatus::clear_has_node_id() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void NodeStatus::clear_node_id() {
+  node_id_ = 0;
+  clear_has_node_id();
+}
+inline ::google::protobuf::int32 NodeStatus::node_id() const {
+  return node_id_;
+}
+inline void NodeStatus::set_node_id(::google::protobuf::int32 value) {
+  set_has_node_id();
+  node_id_ = value;
+}
+
+// optional int64 memory_footprint = 2;
+inline bool NodeStatus::has_memory_footprint() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void NodeStatus::set_has_memory_footprint() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void NodeStatus::clear_has_memory_footprint() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void NodeStatus::clear_memory_footprint() {
+  memory_footprint_ = GOOGLE_LONGLONG(0);
+  clear_has_memory_footprint();
+}
+inline ::google::protobuf::int64 NodeStatus::memory_footprint() const {
+  return memory_footprint_;
+}
+inline void NodeStatus::set_memory_footprint(::google::protobuf::int64 value) {
+  set_has_memory_footprint();
+  memory_footprint_ = value;
+}
+
+// -------------------------------------------------------------------
+
+// QueryResult
+
+// optional .exec.shared.QueryResult.QueryState query_state = 1;
+inline bool QueryResult::has_query_state() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void QueryResult::set_has_query_state() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void QueryResult::clear_has_query_state() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void QueryResult::clear_query_state() {
+  query_state_ = 0;
+  clear_has_query_state();
+}
+inline ::exec::shared::QueryResult_QueryState QueryResult::query_state() const {
+  return static_cast< ::exec::shared::QueryResult_QueryState >(query_state_);
+}
+inline void QueryResult::set_query_state(::exec::shared::QueryResult_QueryState value) {
+  assert(::exec::shared::QueryResult_QueryState_IsValid(value));
+  set_has_query_state();
+  query_state_ = value;
+}
+
+// optional .exec.shared.QueryId query_id = 2;
+inline bool QueryResult::has_query_id() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void QueryResult::set_has_query_id() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void QueryResult::clear_has_query_id() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void QueryResult::clear_query_id() {
+  if (query_id_ != NULL) query_id_->::exec::shared::QueryId::Clear();
+  clear_has_query_id();
+}
+inline const ::exec::shared::QueryId& QueryResult::query_id() const {
+  return query_id_ != NULL ? *query_id_ : *default_instance_->query_id_;
+}
+inline ::exec::shared::QueryId* QueryResult::mutable_query_id() {
+  set_has_query_id();
+  if (query_id_ == NULL) query_id_ = new ::exec::shared::QueryId;
+  return query_id_;
+}
+inline ::exec::shared::QueryId* QueryResult::release_query_id() {
+  clear_has_query_id();
+  ::exec::shared::QueryId* temp = query_id_;
+  query_id_ = NULL;
+  return temp;
+}
+inline void QueryResult::set_allocated_query_id(::exec::shared::QueryId* query_id) {
+  delete query_id_;
+  query_id_ = query_id;
+  if (query_id) {
+    set_has_query_id();
+  } else {
+    clear_has_query_id();
+  }
+}
+
+// optional bool is_last_chunk = 3;
+inline bool QueryResult::has_is_last_chunk() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void QueryResult::set_has_is_last_chunk() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void QueryResult::clear_has_is_last_chunk() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void QueryResult::clear_is_last_chunk() {
+  is_last_chunk_ = false;
+  clear_has_is_last_chunk();
+}
+inline bool QueryResult::is_last_chunk() const {
+  return is_last_chunk_;
+}
+inline void QueryResult::set_is_last_chunk(bool value) {
+  set_has_is_last_chunk();
+  is_last_chunk_ = value;
+}
+
+// optional int32 row_count = 4;
+inline bool QueryResult::has_row_count() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void QueryResult::set_has_row_count() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void QueryResult::clear_has_row_count() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void QueryResult::clear_row_count() {
+  row_count_ = 0;
+  clear_has_row_count();
+}
+inline ::google::protobuf::int32 QueryResult::row_count() const {
+  return row_count_;
+}
+inline void QueryResult::set_row_count(::google::protobuf::int32 value) {
+  set_has_row_count();
+  row_count_ = value;
+}
+
+// optional int64 records_scan = 5;
+inline bool QueryResult::has_records_scan() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
+}
+inline void QueryResult::set_has_records_scan() {
+  _has_bits_[0] |= 0x00000010u;
+}
+inline void QueryResult::clear_has_records_scan() {
+  _has_bits_[0] &= ~0x00000010u;
+}
+inline void QueryResult::clear_records_scan() {
+  records_scan_ = GOOGLE_LONGLONG(0);
+  clear_has_records_scan();
+}
+inline ::google::protobuf::int64 QueryResult::records_scan() const {
+  return records_scan_;
+}
+inline void QueryResult::set_records_scan(::google::protobuf::int64 value) {
+  set_has_records_scan();
+  records_scan_ = value;
+}
+
+// optional int64 records_error = 6;
+inline bool QueryResult::has_records_error() const {
+  return (_has_bits_[0] & 0x00000020u) != 0;
+}
+inline void QueryResult::set_has_records_error() {
+  _has_bits_[0] |= 0x00000020u;
+}
+inline void QueryResult::clear_has_records_error() {
+  _has_bits_[0] &= ~0x00000020u;
+}
+inline void QueryResult::clear_records_error() {
+  records_error_ = GOOGLE_LONGLONG(0);
+  clear_has_records_error();
+}
+inline ::google::protobuf::int64 QueryResult::records_error() const {
+  return records_error_;
+}
+inline void QueryResult::set_records_error(::google::protobuf::int64 value) {
+  set_has_records_error();
+  records_error_ = value;
+}
+
+// optional int64 submission_time = 7;
+inline bool QueryResult::has_submission_time() const {
+  return (_has_bits_[0] & 0x00000040u) != 0;
+}
+inline void QueryResult::set_has_submission_time() {
+  _has_bits_[0] |= 0x00000040u;
+}
+inline void QueryResult::clear_has_submission_time() {
+  _has_bits_[0] &= ~0x00000040u;
+}
+inline void QueryResult::clear_submission_time() {
+  submission_time_ = GOOGLE_LONGLONG(0);
+  clear_has_submission_time();
+}
+inline ::google::protobuf::int64 QueryResult::submission_time() const {
+  return submission_time_;
+}
+inline void QueryResult::set_submission_time(::google::protobuf::int64 value) {
+  set_has_submission_time();
+  submission_time_ = value;
+}
+
+// repeated .exec.shared.NodeStatus node_status = 8;
+inline int QueryResult::node_status_size() const {
+  return node_status_.size();
+}
+inline void QueryResult::clear_node_status() {
+  node_status_.Clear();
+}
+inline const ::exec::shared::NodeStatus& QueryResult::node_status(int index) const {
+  return node_status_.Get(index);
+}
+inline ::exec::shared::NodeStatus* QueryResult::mutable_node_status(int index) {
+  return node_status_.Mutable(index);
+}
+inline ::exec::shared::NodeStatus* QueryResult::add_node_status() {
+  return node_status_.Add();
+}
+inline const ::google::protobuf::RepeatedPtrField< ::exec::shared::NodeStatus >&
+QueryResult::node_status() const {
+  return node_status_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::exec::shared::NodeStatus >*
+QueryResult::mutable_node_status() {
+  return &node_status_;
+}
+
+// repeated .exec.shared.DrillPBError error = 9;
+inline int QueryResult::error_size() const {
+  return error_.size();
+}
+inline void QueryResult::clear_error() {
+  error_.Clear();
+}
+inline const ::exec::shared::DrillPBError& QueryResult::error(int index) const {
+  return error_.Get(index);
+}
+inline ::exec::shared::DrillPBError* QueryResult::mutable_error(int index) {
+  return error_.Mutable(index);
+}
+inline ::exec::shared::DrillPBError* QueryResult::add_error() {
+  return error_.Add();
+}
+inline const ::google::protobuf::RepeatedPtrField< ::exec::shared::DrillPBError >&
+QueryResult::error() const {
+  return error_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::exec::shared::DrillPBError >*
+QueryResult::mutable_error() {
+  return &error_;
+}
+
+// optional .exec.shared.RecordBatchDef def = 10;
+inline bool QueryResult::has_def() const {
+  return (_has_bits_[0] & 0x00000200u) != 0;
+}
+inline void QueryResult::set_has_def() {
+  _has_bits_[0] |= 0x00000200u;
+}
+inline void QueryResult::clear_has_def() {
+  _has_bits_[0] &= ~0x00000200u;
+}
+inline void QueryResult::clear_def() {
+  if (def_ != NULL) def_->::exec::shared::RecordBatchDef::Clear();
+  clear_has_def();
+}
+inline const ::exec::shared::RecordBatchDef& QueryResult::def() const {
+  return def_ != NULL ? *def_ : *default_instance_->def_;
+}
+inline ::exec::shared::RecordBatchDef* QueryResult::mutable_def() {
+  set_has_def();
+  if (def_ == NULL) def_ = new ::exec::shared::RecordBatchDef;
+  return def_;
+}
+inline ::exec::shared::RecordBatchDef* QueryResult::release_def() {
+  clear_has_def();
+  ::exec::shared::RecordBatchDef* temp = def_;
+  def_ = NULL;
+  return temp;
+}
+inline void QueryResult::set_allocated_def(::exec::shared::RecordBatchDef* def) {
+  delete def_;
+  def_ = def;
+  if (def) {
+    set_has_def();
+  } else {
+    clear_has_def();
+  }
+}
+
+// optional bool schema_changed = 11;
+inline bool QueryResult::has_schema_changed() const {
+  return (_has_bits_[0] & 0x00000400u) != 0;
+}
+inline void QueryResult::set_has_schema_changed() {
+  _has_bits_[0] |= 0x00000400u;
+}
+inline void QueryResult::clear_has_schema_changed() {
+  _has_bits_[0] &= ~0x00000400u;
+}
+inline void QueryResult::clear_schema_changed() {
+  schema_changed_ = false;
+  clear_has_schema_changed();
+}
+inline bool QueryResult::schema_changed() const {
+  return schema_changed_;
+}
+inline void QueryResult::set_schema_changed(bool value) {
+  set_has_schema_changed();
+  schema_changed_ = value;
+}
+
+// -------------------------------------------------------------------
+
 // QueryProfile
 
 // optional .exec.shared.QueryId id = 1;
@@ -2866,7 +3589,112 @@ inline void QueryProfile::set_allocated_plan(::std::string* plan) {
   }
 }
 
-// repeated .exec.shared.MajorFragmentProfile fragment_profile = 7;
+// optional .exec.DrillbitEndpoint foreman = 7;
+inline bool QueryProfile::has_foreman() const {
+  return (_has_bits_[0] & 0x00000040u) != 0;
+}
+inline void QueryProfile::set_has_foreman() {
+  _has_bits_[0] |= 0x00000040u;
+}
+inline void QueryProfile::clear_has_foreman() {
+  _has_bits_[0] &= ~0x00000040u;
+}
+inline void QueryProfile::clear_foreman() {
+  if (foreman_ != NULL) foreman_->::exec::DrillbitEndpoint::Clear();
+  clear_has_foreman();
+}
+inline const ::exec::DrillbitEndpoint& QueryProfile::foreman() const {
+  return foreman_ != NULL ? *foreman_ : *default_instance_->foreman_;
+}
+inline ::exec::DrillbitEndpoint* QueryProfile::mutable_foreman() {
+  set_has_foreman();
+  if (foreman_ == NULL) foreman_ = new ::exec::DrillbitEndpoint;
+  return foreman_;
+}
+inline ::exec::DrillbitEndpoint* QueryProfile::release_foreman() {
+  clear_has_foreman();
+  ::exec::DrillbitEndpoint* temp = foreman_;
+  foreman_ = NULL;
+  return temp;
+}
+inline void QueryProfile::set_allocated_foreman(::exec::DrillbitEndpoint* foreman) {
+  delete foreman_;
+  foreman_ = foreman;
+  if (foreman) {
+    set_has_foreman();
+  } else {
+    clear_has_foreman();
+  }
+}
+
+// optional .exec.shared.QueryResult.QueryState state = 8;
+inline bool QueryProfile::has_state() const {
+  return (_has_bits_[0] & 0x00000080u) != 0;
+}
+inline void QueryProfile::set_has_state() {
+  _has_bits_[0] |= 0x00000080u;
+}
+inline void QueryProfile::clear_has_state() {
+  _has_bits_[0] &= ~0x00000080u;
+}
+inline void QueryProfile::clear_state() {
+  state_ = 0;
+  clear_has_state();
+}
+inline ::exec::shared::QueryResult_QueryState QueryProfile::state() const {
+  return static_cast< ::exec::shared::QueryResult_QueryState >(state_);
+}
+inline void QueryProfile::set_state(::exec::shared::QueryResult_QueryState value) {
+  assert(::exec::shared::QueryResult_QueryState_IsValid(value));
+  set_has_state();
+  state_ = value;
+}
+
+// optional int32 total_fragments = 9;
+inline bool QueryProfile::has_total_fragments() const {
+  return (_has_bits_[0] & 0x00000100u) != 0;
+}
+inline void QueryProfile::set_has_total_fragments() {
+  _has_bits_[0] |= 0x00000100u;
+}
+inline void QueryProfile::clear_has_total_fragments() {
+  _has_bits_[0] &= ~0x00000100u;
+}
+inline void QueryProfile::clear_total_fragments() {
+  total_fragments_ = 0;
+  clear_has_total_fragments();
+}
+inline ::google::protobuf::int32 QueryProfile::total_fragments() const {
+  return total_fragments_;
+}
+inline void QueryProfile::set_total_fragments(::google::protobuf::int32 value) {
+  set_has_total_fragments();
+  total_fragments_ = value;
+}
+
+// optional int32 finished_fragments = 10;
+inline bool QueryProfile::has_finished_fragments() const {
+  return (_has_bits_[0] & 0x00000200u) != 0;
+}
+inline void QueryProfile::set_has_finished_fragments() {
+  _has_bits_[0] |= 0x00000200u;
+}
+inline void QueryProfile::clear_has_finished_fragments() {
+  _has_bits_[0] &= ~0x00000200u;
+}
+inline void QueryProfile::clear_finished_fragments() {
+  finished_fragments_ = 0;
+  clear_has_finished_fragments();
+}
+inline ::google::protobuf::int32 QueryProfile::finished_fragments() const {
+  return finished_fragments_;
+}
+inline void QueryProfile::set_finished_fragments(::google::protobuf::int32 value) {
+  set_has_finished_fragments();
+  finished_fragments_ = value;
+}
+
+// repeated .exec.shared.MajorFragmentProfile fragment_profile = 11;
 inline int QueryProfile::fragment_profile_size() const {
   return fragment_profile_.size();
 }
@@ -3344,6 +4172,28 @@ OperatorProfile::mutable_metric() {
   return &metric_;
 }
 
+// optional int64 wait_nanos = 9;
+inline bool OperatorProfile::has_wait_nanos() const {
+  return (_has_bits_[0] & 0x00000080u) != 0;
+}
+inline void OperatorProfile::set_has_wait_nanos() {
+  _has_bits_[0] |= 0x00000080u;
+}
+inline void OperatorProfile::clear_has_wait_nanos() {
+  _has_bits_[0] &= ~0x00000080u;
+}
+inline void OperatorProfile::clear_wait_nanos() {
+  wait_nanos_ = GOOGLE_LONGLONG(0);
+  clear_has_wait_nanos();
+}
+inline ::google::protobuf::int64 OperatorProfile::wait_nanos() const {
+  return wait_nanos_;
+}
+inline void OperatorProfile::set_wait_nanos(::google::protobuf::int64 value) {
+  set_has_wait_nanos();
+  wait_nanos_ = value;
+}
+
 // -------------------------------------------------------------------
 
 // StreamProfile
@@ -3497,6 +4347,10 @@ namespace protobuf {
 template <>
 inline const EnumDescriptor* GetEnumDescriptor< ::exec::shared::NamePart_Type>() {
   return ::exec::shared::NamePart_Type_descriptor();
+}
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::exec::shared::QueryResult_QueryState>() {
+  return ::exec::shared::QueryResult_QueryState_descriptor();
 }
 template <>
 inline const EnumDescriptor* GetEnumDescriptor< ::exec::shared::RpcChannel>() {
