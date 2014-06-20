@@ -38,9 +38,8 @@ import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.DefaultSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.ExplainHandler;
 import org.apache.drill.exec.planner.sql.handlers.SetOptionHandler;
-import org.apache.drill.exec.planner.sql.parser.CompoundIdentifierConverter;
 import org.apache.drill.exec.planner.sql.parser.DrillSqlCall;
-import org.apache.drill.exec.planner.sql.parser.impl.DrillParserImpl;
+import org.apache.drill.exec.planner.sql.parser.impl.DrillParserWithCompoundIdConverter;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.util.Pointer;
 import org.eigenbase.rel.RelCollationTraitDef;
@@ -72,7 +71,7 @@ public class DrillSqlWorker {
         null : new DrillCostBase.DrillCostFactory() ;
     StdFrameworkConfig config = StdFrameworkConfig.newBuilder() //
         .lex(Lex.MYSQL) //
-        .parserFactory(DrillParserImpl.FACTORY) //
+        .parserFactory(DrillParserWithCompoundIdConverter.FACTORY) //
         .defaultSchema(context.getNewDefaultSchema()) //
         .operatorTable(table) //
         .traitDefs(traitDefs) //
@@ -105,8 +104,7 @@ public class DrillSqlWorker {
   }
 
   public PhysicalPlan getPlan(String sql, Pointer<String> textPlan) throws SqlParseException, ValidationException, RelConversionException, IOException{
-    SqlNode originalNode = planner.parse(sql);
-    SqlNode sqlNode = originalNode.accept(new CompoundIdentifierConverter());
+    SqlNode sqlNode = planner.parse(sql);
 
     AbstractSqlHandler handler;
 

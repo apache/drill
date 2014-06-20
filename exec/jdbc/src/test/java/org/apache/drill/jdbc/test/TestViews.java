@@ -219,6 +219,22 @@ public class TestViews extends JdbcTestQueryBase {
   }
 
   @Test
+  public void testViewWithCompoundIdentifiersInSchema() throws Exception{
+    String query = String.format("CREATE VIEW nationview AS SELECT " +
+        "cast(columns[0] AS int) n_nationkey, " +
+        "cast(columns[1] AS CHAR(25)) n_name, " +
+        "cast(columns[2] AS INT) n_regionkey, " +
+        "cast(columns[3] AS VARCHAR(152)) n_comment " +
+        "FROM dfs.`%s/src/test/resources/nation`", WORKING_PATH);
+
+    testViewHelper(
+        query,
+        "nationview",
+        "SELECT * FROM nationview LIMIT 1",
+        "n_nationkey=0; n_name=ALGERIA; n_regionkey=0; n_comment= haggle. carefully final deposits detect slyly agai");
+  }
+
+  @Test
   public void testDropView() throws Exception{
     JdbcAssert.withNoDefaultSchema().withConnection(new Function<Connection, Void>() {
       public Void apply(Connection connection) {
