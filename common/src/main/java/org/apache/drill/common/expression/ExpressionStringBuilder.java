@@ -247,7 +247,9 @@ public class ExpressionStringBuilder extends AbstractExprVisitor<Void, StringBui
     switch(mt.getMinorType()){
     case FLOAT4:
     case FLOAT8:
+    case BIT:
     case INT:
+    case TINYINT:
     case SMALLINT:
     case BIGINT:
     case UINT1:

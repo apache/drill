@@ -510,22 +510,30 @@ public class ExpressionTreeMaterializer {
       case BIGINT:
       case BIT:
       case TINYINT:
+      case SMALLINT:
       case UINT1:
       case UINT2:
       case UINT4:
       case UINT8:
+      case TIME:
+      case TIMESTAMP:
+      case TIMESTAMPTZ:
+      case DATE:
+      case INTERVAL:
+      case INTERVALDAY:
+      case INTERVALYEAR:
         // nothing else matters.
         return true;
-    case DECIMAL9:
-    case DECIMAL18:
-    case DECIMAL28DENSE:
-    case DECIMAL28SPARSE:
-    case DECIMAL38DENSE:
-    case DECIMAL38SPARSE:
-      if (to.getScale() == from.getScale() && to.getPrecision() == from.getPrecision()) {
-        return true;
-      }
-      return false;
+      case DECIMAL9:
+      case DECIMAL18:
+      case DECIMAL28DENSE:
+      case DECIMAL28SPARSE:
+      case DECIMAL38DENSE:
+      case DECIMAL38SPARSE:
+        if (to.getScale() == from.getScale() && to.getPrecision() == from.getPrecision()) {
+          return true;
+        }
+        return false;
 
       case FIXED16CHAR:
       case FIXEDBINARY:
