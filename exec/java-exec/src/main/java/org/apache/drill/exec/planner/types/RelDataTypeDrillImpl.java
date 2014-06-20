@@ -84,4 +84,27 @@ public class RelDataTypeDrillImpl extends RelDataTypeImpl {
     public boolean isStruct() {
         return true;
     }
+
+    @Override
+    public int hashCode() {
+      return holder == null ? 0 : holder.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj)
+        return true;
+      if (!super.equals(obj))
+        return false;
+      if (getClass() != obj.getClass())
+        return false;
+      RelDataTypeDrillImpl other = (RelDataTypeDrillImpl) obj;
+      if (holder == null) {
+        if (other.holder != null)
+          return false;
+      } else if (!holder.equals(other.holder))
+        return false;
+      return true;
+    }
+
 }

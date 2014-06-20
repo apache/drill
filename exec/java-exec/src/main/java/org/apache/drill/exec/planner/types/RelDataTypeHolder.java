@@ -34,7 +34,6 @@ public class RelDataTypeHolder {
   private RelDataTypeFactory typeFactory;
 
   public List<RelDataTypeField> getFieldList(RelDataTypeFactory typeFactory) {
-
     addStarIfEmpty(typeFactory);
     return fields;
   }
@@ -79,6 +78,20 @@ public class RelDataTypeHolder {
 
   public void setRelDataTypeFactory(RelDataTypeFactory typeFactory) {
     this.typeFactory = typeFactory;
+  }
+
+  @Override
+  public int hashCode() {
+    return System.identityHashCode(this);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    return (this == obj);
+  }
+
+  private List<RelDataTypeField> getFieldList() {
+    return getFieldList(this.typeFactory);
   }
 
 }
