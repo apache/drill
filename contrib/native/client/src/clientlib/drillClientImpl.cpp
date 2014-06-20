@@ -229,6 +229,8 @@ void DrillClientImpl::handleHShakeReadTimeout(const boost::system::error_code & 
             // The deadline has passed.
             m_deadlineTimer.expires_at(boost::posix_time::pos_infin);
             DRILL_LOG(LOG_TRACE) << "Deadline timer expired."  << std::endl;
+            boost::system::error_code ignorederr;
+            m_socket.shutdown(boost::asio::ip::tcp::socket::shutdown_send, ignorederr);
             m_socket.close();
         }
     }

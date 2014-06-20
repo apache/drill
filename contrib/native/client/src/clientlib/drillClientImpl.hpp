@@ -194,6 +194,8 @@ class DrillClientImpl{
 
             m_deadlineTimer.cancel();
             m_io_service.stop();
+            boost::system::error_code ignorederr;
+            m_socket.shutdown(boost::asio::ip::tcp::socket::shutdown_send, ignorederr);
             m_socket.close();
             if(m_rbuf!=NULL){
                 Utils::freeBuffer(m_rbuf); m_rbuf=NULL;
@@ -304,6 +306,8 @@ inline bool DrillClientImpl::Active() {
 inline void DrillClientImpl::Close() {
     //TODO: cancel pending query
     if(this->m_bIsConnected){
+        boost::system::error_code ignorederr;
+        m_socket.shutdown(boost::asio::ip::tcp::socket::shutdown_send, ignorederr);
         m_socket.close();
         m_bIsConnected=false;
     }
