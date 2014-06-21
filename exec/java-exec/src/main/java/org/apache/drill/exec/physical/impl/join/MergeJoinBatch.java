@@ -499,40 +499,21 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
       cg.getSetupBlock().assign(JExpr._this().ref(incomingRecordBatch), JExpr._this().ref(incomingRightRecordBatch));
       ClassGenerator.HoldingContainer compareRightExprHolder = cg.addExpr(materializedRightExpr, false);
 
-      if (compareLeftExprHolder.isOptional() && compareRightExprHolder.isOptional()) {
-        // handle null == null
-        cg.getEvalBlock()._if(compareLeftExprHolder.getIsSet().eq(JExpr.lit(0))
-            .cand(compareRightExprHolder.getIsSet().eq(JExpr.lit(0))))
-            ._then()
-            ._return(JExpr.lit(0));
-
-        // handle null == !null
-        cg.getEvalBlock()._if(compareLeftExprHolder.getIsSet().eq(JExpr.lit(0))
-            .cor(compareRightExprHolder.getIsSet().eq(JExpr.lit(0))))
-            ._then()
-            ._return(JExpr.lit(1));
-
-      } else if (compareLeftExprHolder.isOptional()) {
-        // handle null == required (null is less than any value)
-        cg.getEvalBlock()._if(compareLeftExprHolder.getIsSet().eq(JExpr.lit(0)))
-            ._then()
-            ._return(JExpr.lit(-1));
-
-      } else if (compareRightExprHolder.isOptional()) {
-        // handle required == null (null is less than any value)
-        cg.getEvalBlock()._if(compareRightExprHolder.getIsSet().eq(JExpr.lit(0)))
-            ._then()
-            ._return(JExpr.lit(1));
-      }
-
       LogicalExpression fh = FunctionGenerationHelper.getComparator(compareLeftExprHolder,
         compareRightExprHolder,
         context.getFunctionRegistry());
       HoldingContainer out = cg.addExpr(fh, false);
 
-      //If not 0, it means not equal. We return this out value.
-      JConditional jc = cg.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)));
-      jc._then()._return(out.getValue());
+      // If not 0, it means not equal. We return this out value.
+      // Null compares to Null should returns null (unknown). In such case, we return 1 to indicate they are not equal. 
+      if (compareLeftExprHolder.isOptional() && compareRightExprHolder.isOptional()) {
+        JConditional jc = cg.getEvalBlock()._if(compareLeftExprHolder.getIsSet().eq(JExpr.lit(0)).
+                                    cand(compareRightExprHolder.getIsSet().eq(JExpr.lit(0))));
+        jc._then()._return(JExpr.lit(1));
+        jc._elseif(out.getValue().ne(JExpr.lit(0)))._then()._return(out.getValue());
+      } else {
+        cg.getEvalBlock()._if(out.getValue().ne(JExpr.lit(0)))._then()._return(out.getValue());
+      }
     }
 
     //Pass the equality check for all the join conditions. Finally, return 0.

@@ -37,7 +37,6 @@ import org.junit.rules.TestRule;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
-//@Ignore("Currently returns wrong result.  Stopped working when incoming became more than one result set.")
 public class TestMergeJoinMulCondition extends PopUnitTestBase {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestMergeJoinMulCondition.class);
 
@@ -72,4 +71,51 @@ public class TestMergeJoinMulCondition extends PopUnitTestBase {
     }
   }
 
+  @Test
+  // The physical plan is obtained through sql:
+  // alter session set `planner.enable_hashjoin`=false;
+  // select * from cp.`region.json` t1, cp.`region.json` t2 where t1.non_exist = t2.non_exist2 ;
+  public void testMergeJoinInnerNullKey() throws Exception {
+    RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
+
+    try(Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
+        DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
+
+      bit1.run();
+      client.connect();
+      List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
+          Files.toString(FileUtils.getResourceAsFile("/join/merge_join_nullkey.json"), Charsets.UTF_8).replace("${JOIN_TYPE}", "INNER"));
+      int count = 0;
+      for(QueryResultBatch b : results) {
+        if (b.getHeader().getRowCount() != 0)
+          count += b.getHeader().getRowCount();
+        b.release();
+      }
+      assertEquals(0, count);
+    }
+  }
+
+  @Test
+  // The physical plan is obtained through sql:
+  // alter session set `planner.enable_hashjoin`=false;
+  // select * from cp.`region.json` t1 left outer join cp.`region.json` t2 on  t1.non_exist = t2.non_exist2 ;
+  public void testMergeJoinLeftOuterNullKey() throws Exception {
+    RemoteServiceSet serviceSet = RemoteServiceSet.getLocalServiceSet();
+
+    try(Drillbit bit1 = new Drillbit(CONFIG, serviceSet);
+        DrillClient client = new DrillClient(CONFIG, serviceSet.getCoordinator());) {
+
+      bit1.run();
+      client.connect();
+      List<QueryResultBatch> results = client.runQuery(org.apache.drill.exec.proto.UserBitShared.QueryType.PHYSICAL,
+          Files.toString(FileUtils.getResourceAsFile("/join/merge_join_nullkey.json"), Charsets.UTF_8).replace("${JOIN_TYPE}", "LEFT"));
+      int count = 0;
+      for(QueryResultBatch b : results) {
+        if (b.getHeader().getRowCount() != 0)
+          count += b.getHeader().getRowCount();
+        b.release();
+      }
+      assertEquals(110, count);
+    }
+  }
 }
