@@ -17,12 +17,13 @@
  */
 package org.apache.drill.exec.ops;
 
-import org.apache.drill.exec.physical.base.PhysicalOperator;
-import org.apache.drill.exec.physical.impl.partitionsender.PartitionStatsBatch;
-import org.apache.drill.exec.physical.impl.partitionsender.PartitionSenderStats;
-import org.apache.drill.exec.proto.UserBitShared;
-
 import java.util.List;
+
+import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.physical.base.PhysicalOperator;
+import org.apache.drill.exec.physical.impl.partitionsender.PartitionSenderStats;
+import org.apache.drill.exec.physical.impl.partitionsender.PartitionStatsBatch;
+import org.apache.drill.exec.proto.UserBitShared;
 
 public class SenderStats extends OperatorStats {
 
@@ -30,8 +31,8 @@ public class SenderStats extends OperatorStats {
   long maxReceiverRecordCount = 0;
   int nSenders = 0;
 
-  public SenderStats(PhysicalOperator operator) {
-    super(new OpProfileDef(operator.getOperatorId(), operator.getOperatorType(), OperatorContext.getChildCount(operator)));
+  public SenderStats(PhysicalOperator operator, BufferAllocator allocator) {
+    super(new OpProfileDef(operator.getOperatorId(), operator.getOperatorType(), OperatorContext.getChildCount(operator)), allocator);
   }
 
   public void updatePartitionStats(List<? extends PartitionStatsBatch> outgoing) {

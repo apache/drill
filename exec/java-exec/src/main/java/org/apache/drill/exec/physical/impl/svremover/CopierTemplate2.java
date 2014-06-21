@@ -20,26 +20,21 @@ package org.apache.drill.exec.physical.impl.svremover;
 import javax.inject.Named;
 
 import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.selection.SelectionVector2;
-import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.allocator.VectorAllocator;
 
 
 public abstract class CopierTemplate2 implements Copier{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CopierTemplate2.class);
 
   private SelectionVector2 sv2;
-  private RecordBatch incoming;
   private RecordBatch outgoing;
 
   @Override
-  public void setupRemover(FragmentContext context, RecordBatch incoming, RecordBatch outgoing, VectorAllocator[] allocators) throws SchemaChangeException{
+  public void setupRemover(FragmentContext context, RecordBatch incoming, RecordBatch outgoing) throws SchemaChangeException{
     this.sv2 = incoming.getSelectionVector2();
-    this.incoming = incoming;
     this.outgoing = outgoing;
     doSetup(context, incoming, outgoing);
   }
@@ -47,7 +42,7 @@ public abstract class CopierTemplate2 implements Copier{
   @Override
   public int copyRecords(int index, int recordCount){
     for(VectorWrapper<?> out : outgoing){
-      out.getValueVector().allocateNewSafe();
+      out.getValueVector().allocateNew();
     }
 
     int outgoingPosition = 0;

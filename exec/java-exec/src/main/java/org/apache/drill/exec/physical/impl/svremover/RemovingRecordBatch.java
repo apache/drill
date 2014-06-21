@@ -195,7 +195,7 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
     private List<ValueVector> out = Lists.newArrayList();
 
     @Override
-    public void setupRemover(FragmentContext context, RecordBatch incoming, RecordBatch outgoing, VectorAllocator[] allocators){
+    public void setupRemover(FragmentContext context, RecordBatch incoming, RecordBatch outgoing){
       for(VectorWrapper<?> vv : incoming){
         TransferPair tp = vv.getValueVector().getTransferPair();
         pairs.add(tp);
@@ -220,7 +220,7 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
 
   private Copier getStraightCopier(){
     StraightCopier copier = new StraightCopier();
-    copier.setupRemover(context, incoming, this, null);
+    copier.setupRemover(context, incoming, this);
     container.addCollection(copier.getOut());
     return copier;
   }
@@ -237,7 +237,7 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
       final CodeGenerator<Copier> cg = CodeGenerator.get(Copier.TEMPLATE_DEFINITION2, context.getFunctionRegistry());
       CopyUtil.generateCopies(cg.getRoot(), incoming, false);
       Copier copier = context.getImplementationClass(cg);
-      copier.setupRemover(context, incoming, this, null);
+      copier.setupRemover(context, incoming, this);
 
       return copier;
     } catch (ClassTransformationException | IOException e) {
@@ -262,7 +262,7 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
       final CodeGenerator<Copier> cg = CodeGenerator.get(Copier.TEMPLATE_DEFINITION4, context.getFunctionRegistry());
       CopyUtil.generateCopies(cg.getRoot(), batch, true);
       Copier copier = context.getImplementationClass(cg);
-      copier.setupRemover(context, batch, outgoing, null);
+      copier.setupRemover(context, batch, outgoing);
 
       return copier;
     } catch (ClassTransformationException | IOException e) {
@@ -275,15 +275,6 @@ public class RemovingRecordBatch extends AbstractSingleRecordBatch<SelectionVect
     return WritableBatch.get(this);
   }
 
-  public static VectorAllocator getAllocator4(ValueVector outgoing){
-    if(outgoing instanceof FixedWidthVector){
-      return new FixedVectorAllocator((FixedWidthVector) outgoing);
-    }else if(outgoing instanceof VariableWidthVector ){
-      return new VariableEstimatedVector( (VariableWidthVector) outgoing, 250);
-    }else{
-      throw new UnsupportedOperationException();
-    }
-  }
 
 
 }

@@ -103,9 +103,6 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
     // Current batch index on the build side
     private int buildBatchIndex = 0;
 
-    // List of vector allocators
-    private List<VectorAllocator> allocators = null;
-
     // Schema of the build side
     private BatchSchema rightSchema = null;
 
@@ -261,8 +258,8 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
           }
         }
 
-        HashTableConfig htConfig = 
-            new HashTableConfig(context.getOptions().getOption(ExecConstants.MIN_HASH_TABLE_SIZE_KEY).num_val.intValue(), 
+        HashTableConfig htConfig =
+            new HashTableConfig(context.getOptions().getOption(ExecConstants.MIN_HASH_TABLE_SIZE_KEY).num_val.intValue(),
             HashTable.DEFAULT_LOAD_FACTOR, rightExpr, leftExpr);
 
         // Create the chained hash table
@@ -346,7 +343,7 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
 
     public HashJoinProbe setupHashJoinProbe() throws ClassTransformationException, IOException {
 
-        allocators = new ArrayList<>();
+
 
         final CodeGenerator<HashJoinProbe> cg = CodeGenerator.get(HashJoinProbe.TEMPLATE_DEFINITION, context.getFunctionRegistry());
         ClassGenerator<HashJoinProbe> g = cg.getRoot();
@@ -374,7 +371,6 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
                 // Add the vector to our output container
                 ValueVector v = TypeHelper.getNewVector(MaterializedField.create(vv.getField().getPath(), outputType), context.getAllocator());
                 container.add(v);
-                allocators.add(RemovingRecordBatch.getAllocator4(v));
 
                 JVar inVV = g.declareVectorValueSetupAndMember("buildBatch", new TypedFieldId(vv.getField().getType(), true, fieldId));
                 JVar outVV = g.declareVectorValueSetupAndMember("outgoing", new TypedFieldId(outputType, false, fieldId));
@@ -410,7 +406,6 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
 
                 ValueVector v = TypeHelper.getNewVector(MaterializedField.create(vv.getField().getPath(), outputType), oContext.getAllocator());
                 container.add(v);
-                allocators.add(RemovingRecordBatch.getAllocator4(v));
 
                 JVar inVV = g.declareVectorValueSetupAndMember("probeBatch", new TypedFieldId(inputType, false, fieldId));
                 JVar outVV = g.declareVectorValueSetupAndMember("outgoing", new TypedFieldId(outputType, false, outputFieldId));
@@ -432,9 +427,9 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
     }
 
     private void allocateVectors(){
-        for(VectorAllocator a : allocators){
-            a.alloc(RecordBatch.MAX_BATCH_SIZE);
-        }
+      for(VectorWrapper<?> v : container){
+        v.getValueVector().allocateNew();
+      }
     }
 
     public HashJoinBatch(HashJoinPOP popConfig, FragmentContext context, RecordBatch left, RecordBatch right) throws OutOfMemoryException {

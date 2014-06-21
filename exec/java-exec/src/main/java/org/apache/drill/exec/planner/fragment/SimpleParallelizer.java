@@ -60,7 +60,8 @@ public class SimpleParallelizer {
   private double affinityFactor;
 
   public SimpleParallelizer(QueryContext context){
-    this.parallelizationThreshold = context.getOptions().getOption(ExecConstants.SLICE_TARGET).num_val;
+    long sliceTarget = context.getOptions().getOption(ExecConstants.SLICE_TARGET).num_val;
+    this.parallelizationThreshold = sliceTarget > 0 ? sliceTarget : 1;
     this.maxWidthPerNode = context.getOptions().getOption(ExecConstants.MAX_WIDTH_PER_NODE_KEY).num_val.intValue();
     this.maxGlobalWidth = context.getOptions().getOption(ExecConstants.MAX_WIDTH_GLOBAL_KEY).num_val.intValue();
     this.affinityFactor = context.getOptions().getOption(ExecConstants.AFFINITY_FACTOR_KEY).float_val.intValue();

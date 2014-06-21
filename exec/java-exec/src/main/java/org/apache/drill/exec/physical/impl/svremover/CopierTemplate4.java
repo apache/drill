@@ -31,13 +31,11 @@ public abstract class CopierTemplate4 implements Copier{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CopierTemplate4.class);
 
   private SelectionVector4 sv4;
-  private RecordBatch incoming;
   private RecordBatch outgoing;
 
 
   @Override
-  public void setupRemover(FragmentContext context, RecordBatch incoming, RecordBatch outgoing, VectorAllocator[] allocators) throws SchemaChangeException{
-    this.incoming = incoming;
+  public void setupRemover(FragmentContext context, RecordBatch incoming, RecordBatch outgoing) throws SchemaChangeException{
     this.outgoing = outgoing;
     this.sv4 = incoming.getSelectionVector4();
     doSetup(context, incoming, outgoing);
@@ -46,9 +44,8 @@ public abstract class CopierTemplate4 implements Copier{
 
   @Override
   public int copyRecords(int index, int recordCount){
-//    logger.debug("Copying records.");
     for(VectorWrapper<?> out : outgoing){
-      out.getValueVector().allocateNewSafe();
+      out.getValueVector().allocateNew();
     }
 
     int outgoingPosition = 0;

@@ -219,14 +219,12 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
     if (copier == null) {
       copier = RemovingRecordBatch.getGenerated4Copier(batch, context, oContext.getAllocator(),  newContainer, newBatch);
     } else {
-      List<VectorAllocator> allocators = Lists.newArrayList();
       for(VectorWrapper<?> i : batch){
 
         ValueVector v = TypeHelper.getNewVector(i.getField(), oContext.getAllocator());
         newContainer.add(v);
-        allocators.add(RemovingRecordBatch.getAllocator4(v));
       }
-      copier.setupRemover(context, batch, newBatch, allocators.toArray(new VectorAllocator[allocators.size()]));
+      copier.setupRemover(context, batch, newBatch);
     }
     SortRecordBatchBuilder builder = new SortRecordBatchBuilder(oContext.getAllocator(), MAX_SORT_BYTES);
     do {
@@ -372,7 +370,7 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
     public Iterator<VectorWrapper<?>> iterator() {
       return container.iterator();
     }
-    
+
     @Override
     public VectorContainer getOutgoingContainer() {
       throw new UnsupportedOperationException(String.format(" You should not call getOutgoingContainer() for class %s", this.getClass().getCanonicalName()));

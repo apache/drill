@@ -19,7 +19,7 @@ package org.apache.drill.exec.ops;
 
 import java.util.List;
 
-import org.apache.drill.exec.proto.BitControl.FragmentStatus;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared.MinorFragmentProfile;
 
 import com.codahale.metrics.MetricRegistry;
@@ -46,8 +46,8 @@ public class FragmentStats {
     }
   }
 
-  public OperatorStats getOperatorStats(OpProfileDef profileDef){
-    OperatorStats stats = new OperatorStats(profileDef);
+  public OperatorStats getOperatorStats(OpProfileDef profileDef, BufferAllocator allocator){
+    OperatorStats stats = new OperatorStats(profileDef, allocator);
     if(profileDef.operatorType != -1){
       operators.add(stats);
     }

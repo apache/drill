@@ -37,7 +37,7 @@ public class OperatorContext implements Closeable {
     this.popConfig = popConfig;
 
     OpProfileDef def = new OpProfileDef(popConfig.getOperatorId(), popConfig.getOperatorType(), getChildCount(popConfig));
-    this.stats = context.getStats().getOperatorStats(def);
+    this.stats = context.getStats().getOperatorStats(def, allocator);
   }
 
   public OperatorContext(PhysicalOperator popConfig, FragmentContext context, OperatorStats stats) throws OutOfMemoryException {

@@ -212,8 +212,7 @@ public abstract class PartitionerTemplate implements Partitioner {
     private int recordCount;
     private int totalRecords;
     private OperatorStats stats;
-    private static final int DEFAULT_RECORD_BATCH_SIZE = 20000;
-    private static final int DEFAULT_VARIABLE_WIDTH_SIZE = 200;
+    private static final int DEFAULT_RECORD_BATCH_SIZE = 1000;
 
     private final StatusHandler statusHandler;
 
@@ -301,7 +300,7 @@ public abstract class PartitionerTemplate implements Partitioner {
       recordCount = 0;
       vectorContainer.zeroVectors();
       for (VectorWrapper<?> v : vectorContainer) {
-        VectorAllocator.getAllocator(v.getValueVector(), DEFAULT_VARIABLE_WIDTH_SIZE).alloc(DEFAULT_RECORD_BATCH_SIZE);
+        v.getValueVector().allocateNew();
       }
       if (!statusHandler.isOk()) {
         throw new IOException(statusHandler.getException());
@@ -320,7 +319,7 @@ public abstract class PartitionerTemplate implements Partitioner {
 
         // allocate a new value vector
         ValueVector outgoingVector = TypeHelper.getNewVector(v.getField(), allocator);
-        VectorAllocator.getAllocator(outgoingVector, DEFAULT_VARIABLE_WIDTH_SIZE).alloc(DEFAULT_RECORD_BATCH_SIZE);
+        outgoingVector.allocateNew();
         vectorContainer.add(outgoingVector);
       }
       outSchema = bldr.build();

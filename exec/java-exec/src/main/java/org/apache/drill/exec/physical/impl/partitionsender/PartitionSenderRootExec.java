@@ -139,7 +139,7 @@ public class PartitionSenderRootExec extends BaseRootExec {
           return false;
         }
         stats.updatePartitionStats(partitioner.getOutgoingBatches());
-        for (VectorWrapper v : incoming) {
+        for (VectorWrapper<?> v : incoming) {
           v.clear();
         }
         return true;
@@ -155,8 +155,6 @@ public class PartitionSenderRootExec extends BaseRootExec {
     final LogicalExpression expr = operator.getExpr();
     final ErrorCollector collector = new ErrorCollectorImpl();
     final ClassGenerator<Partitioner> cg ;
-
-    boolean hyper = false;
 
     cg = CodeGenerator.getRoot(Partitioner.TEMPLATE_DEFINITION, context.getFunctionRegistry());
     ClassGenerator<Partitioner> cgInner = cg.getInnerGenerator("OutgoingRecordBatch");

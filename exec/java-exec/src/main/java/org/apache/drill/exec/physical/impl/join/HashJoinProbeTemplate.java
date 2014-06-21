@@ -41,8 +41,10 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
 
   // Join type, INNER, LEFT, RIGHT or OUTER
   private JoinRelType joinType;
-  
+
   private HashJoinBatch outgoingJoinBatch = null;
+
+  private static final int TARGET_RECORDS_PER_BATCH = 4000;
 
   /* Helper class
    * Maintains linked list of build side records with the same key
@@ -91,14 +93,21 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
   }
 
   public void executeProjectRightPhase() {
-    while (outputRecords < RecordBatch.MAX_BATCH_SIZE && recordsProcessed < recordsToProcess) {
-      boolean success = projectBuildRecord(unmatchedBuildIndexes.get(recordsProcessed++), outputRecords++);
-      assert success;
+    boolean success = true;
+    while (outputRecords < TARGET_RECORDS_PER_BATCH && recordsProcessed < recordsToProcess) {
+      success = projectBuildRecord(unmatchedBuildIndexes.get(recordsProcessed), outputRecords);
+      if(success){
+        recordsProcessed++;
+        outputRecords++;
+      }else{
+        if(outputRecords == 0) throw new IllegalStateException("Too big to fail.");
+        break;
+      }
     }
   }
 
   public void executeProbePhase() throws SchemaChangeException {
-    while (outputRecords < RecordBatch.MAX_BATCH_SIZE && recordsToProcess > 0) {
+    while (outputRecords < TARGET_RECORDS_PER_BATCH && recordsToProcess > 0) {
 
       // Check if we have processed all records in this batch we need to invoke next
       if (recordsProcessed == recordsToProcess) {
@@ -157,31 +166,34 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
              */
             hjHelper.setRecordMatched(currentCompositeIdx);
 
-            boolean success = projectBuildRecord(currentCompositeIdx, outputRecords);
-            assert success;
-            success = projectProbeRecord(recordsProcessed, outputRecords);
-            assert success;
-            outputRecords++;
-
-            /* Projected single row from the build side with matching key but there
-             * may be more rows with the same key. Check if that's the case
-             */
-            currentCompositeIdx = hjHelper.getNextIndex(currentCompositeIdx);
-            if (currentCompositeIdx == -1) {
-              /* We only had one row in the build side that matched the current key
-               * from the probe side. Drain the next row in the probe side.
-               */
-              recordsProcessed++;
-            }
-            else {
-              /* There is more than one row with the same key on the build side
-               * don't drain more records from the probe side till we have projected
-               * all the rows with this key
-               */
+            boolean success = projectBuildRecord(currentCompositeIdx, outputRecords) //
+                &&  projectProbeRecord(recordsProcessed, outputRecords);
+            if(!success){
+              // we failed to project.  redo this record.
               getNextRecord = false;
+            }else{
+              outputRecords++;
+
+              /* Projected single row from the build side with matching key but there
+               * may be more rows with the same key. Check if that's the case
+               */
+              currentCompositeIdx = hjHelper.getNextIndex(currentCompositeIdx);
+              if (currentCompositeIdx == -1) {
+                /* We only had one row in the build side that matched the current key
+                 * from the probe side. Drain the next row in the probe side.
+                 */
+                recordsProcessed++;
+              }
+              else {
+                /* There is more than one row with the same key on the build side
+                 * don't drain more records from the probe side till we have projected
+                 * all the rows with this key
+                 */
+                getNextRecord = false;
+              }
             }
-        }
-          else { // No matching key
+
+        } else { // No matching key
 
             // If we have a left outer join, project the keys
             if (joinType == JoinRelType.LEFT || joinType == JoinRelType.FULL) {
@@ -190,12 +202,18 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
             }
             recordsProcessed++;
           }
-      }
-      else {
+      } else {
         hjHelper.setRecordMatched(currentCompositeIdx);
-        boolean success = projectBuildRecord(currentCompositeIdx, outputRecords);
-        assert success;
-        success = projectProbeRecord(recordsProcessed, outputRecords);
+        boolean success = projectBuildRecord(currentCompositeIdx, outputRecords) //
+            && projectProbeRecord(recordsProcessed, outputRecords);
+        if(!success){
+          if(outputRecords == 0){
+            throw new IllegalStateException("Record larger than single batch.");
+          }else{
+            // we've output some records but failed to output this one.  return and wait for next call.
+            return;
+          }
+        }
         assert success;
         outputRecords++;
 

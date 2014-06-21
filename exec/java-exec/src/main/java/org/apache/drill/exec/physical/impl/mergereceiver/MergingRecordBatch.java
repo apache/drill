@@ -90,14 +90,12 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
   private boolean hasRun = false;
   private boolean prevBatchWasFull = false;
   private boolean hasMoreIncoming = true;
-  private final int DEFAULT_ALLOC_RECORD_COUNT = 20000;
 
   private int outgoingPosition = 0;
   private int senderCount = 0;
   private RawFragmentBatch[] incomingBatches;
   private int[] batchOffsets;
   private PriorityQueue <Node> pqueue;
-  private List<VectorAllocator> allocators;
   private RawFragmentBatch emptyBatch = null;
   private boolean done = false;
 
@@ -117,7 +115,6 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
     super(config, context);
     this.fragProviders = fragProviders;
     this.context = context;
-    this.allocators = Lists.newArrayList();
     this.outgoingContainer = new VectorContainer();
   }
 
@@ -243,14 +240,11 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
 
         // allocate a new value vector
         ValueVector outgoingVector = TypeHelper.getNewVector(v.getField(), oContext.getAllocator());
-        VectorAllocator allocator = VectorAllocator.getAllocator(outgoingVector, 50);
-        allocator.alloc(DEFAULT_ALLOC_RECORD_COUNT);
-        allocators.add(allocator);
+        outgoingVector.allocateNew();
         outgoingContainer.add(outgoingVector);
         ++vectorCount;
       }
 
-      logger.debug("Allocating {} outgoing vectors with {} values", vectorCount, DEFAULT_ALLOC_RECORD_COUNT);
 
       schema = bldr.build();
       if (schema != null && !schema.equals(schema)) {
@@ -295,11 +289,11 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
       }
       pqueue.poll();
 
-      if (isOutgoingFull()) {
-        // set a flag so that we reallocate on the next iteration
-        logger.debug("Outgoing vectors record batch size reached; breaking");
-        prevBatchWasFull = true;
-      }
+//      if (isOutgoingFull()) {
+//        // set a flag so that we reallocate on the next iteration
+//        logger.debug("Outgoing vectors record batch size reached; breaking");
+//        prevBatchWasFull = true;
+//      }
 
       if (node.valueIndex == batchLoaders[node.batchId].getRecordCount() - 1) {
         // reached the end of an incoming record batch
@@ -443,14 +437,12 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
   }
 
   private void allocateOutgoing() {
-    for (VectorAllocator allocator : allocators) {
-      allocator.alloc(DEFAULT_ALLOC_RECORD_COUNT);
-    }
+    outgoingContainer.allocateNew();
   }
 
-  private boolean isOutgoingFull() {
-    return outgoingPosition == DEFAULT_ALLOC_RECORD_COUNT;
-  }
+//  private boolean isOutgoingFull() {
+//    return outgoingPosition == DEFAULT_ALLOC_RECORD_COUNT;
+//  }
 
   /**
    * Creates a generate class which implements the copy and compare methods.

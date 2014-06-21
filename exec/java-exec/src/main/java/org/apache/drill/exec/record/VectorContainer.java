@@ -42,7 +42,7 @@ public class VectorContainer extends AbstractMapVector implements Iterable<Vecto
   private BatchSchema schema;
   private int recordCount = -1;
   private final OperatorContext oContext;
-  
+
   public VectorContainer() {
     this.oContext = null;
   }
@@ -74,12 +74,12 @@ public class VectorContainer extends AbstractMapVector implements Iterable<Vecto
     add(vv, releasable);
   }
 
-  public <T extends ValueVector> T addOrGet(String name, MajorType type, Class<T> clazz){    
+  public <T extends ValueVector> T addOrGet(String name, MajorType type, Class<T> clazz){
     MaterializedField field = MaterializedField.create(name, type);
     ValueVector v = TypeHelper.getNewVector(field, this.oContext.getAllocator());
-    
+
     add(v);
-    
+
     if(clazz.isAssignableFrom(v.getClass())){
       return (T) v;
     }else{
@@ -252,5 +252,18 @@ public class VectorContainer extends AbstractMapVector implements Iterable<Vecto
     return this.wrappers.size();
   }
 
+  public void allocateNew(){
+    for (VectorWrapper<?> w : wrappers) {
+      w.getValueVector().allocateNew();
+    }
+  }
+
+  public boolean allocateNewSafe(){
+    for (VectorWrapper<?> w : wrappers) {
+      if(!w.getValueVector().allocateNewSafe()) return false;
+    }
+
+    return true;
+  }
 
 }

@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.ops;
 
-import org.apache.commons.collections.Buffer;
+import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared.MetricValue;
 import org.apache.drill.exec.proto.UserBitShared.OperatorProfile;
 import org.apache.drill.exec.proto.UserBitShared.StreamProfile;
@@ -30,6 +30,7 @@ public class OperatorStats {
 
   protected final int operatorId;
   protected final int operatorType;
+  private final BufferAllocator allocator;
 
   private IntLongOpenHashMap longMetrics = new IntLongOpenHashMap();
   private IntDoubleOpenHashMap doubleMetrics = new IntDoubleOpenHashMap();
@@ -53,12 +54,13 @@ public class OperatorStats {
 
   private long schemas;
 
-  public OperatorStats(OpProfileDef def){
-    this(def.getOperatorId(), def.getOperatorType(), def.getIncomingCount());
+  public OperatorStats(OpProfileDef def, BufferAllocator allocator){
+    this(def.getOperatorId(), def.getOperatorType(), def.getIncomingCount(), allocator);
   }
 
-  private OperatorStats(int operatorId, int operatorType, int inputCount) {
+  private OperatorStats(int operatorId, int operatorType, int inputCount, BufferAllocator allocator) {
     super();
+    this.allocator = allocator;
     this.operatorId = operatorId;
     this.operatorType = operatorType;
     this.recordsReceivedByInput = new long[inputCount];
@@ -125,6 +127,12 @@ public class OperatorStats {
         .setSetupNanos(setupNanos) //
         .setProcessNanos(processingNanos)
         .setWaitNanos(waitNanos);
+
+    if(allocator != null){
+      b.setLocalMemoryAllocated(allocator.getAllocatedMemory());
+    }
+
+
 
     addAllMetrics(b);
 

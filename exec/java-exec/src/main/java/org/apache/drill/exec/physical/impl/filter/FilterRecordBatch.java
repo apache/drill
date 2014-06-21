@@ -55,7 +55,7 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
   public FilterRecordBatch(Filter pop, RecordBatch incoming, FragmentContext context) throws OutOfMemoryException {
     super(pop, context, incoming);
   }
-  
+
   @Override
   public FragmentContext getContext() {
     return context;
@@ -85,8 +85,8 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
 //      m.setValueCount(recordCount);
 //    }
   }
-  
-  
+
+
   @Override
   public void cleanup() {
     if(sv2 != null) sv2.clear();
@@ -128,7 +128,6 @@ public class FilterRecordBatch extends AbstractSingleRecordBatch<Filter>{
   protected Filterer generateSV4Filterer() throws SchemaChangeException {
     final ErrorCollector collector = new ErrorCollectorImpl();
     final List<TransferPair> transfers = Lists.newArrayList();
-    final List<VectorAllocator> allocators = Lists.newArrayList();
     final ClassGenerator<Filterer> cg = CodeGenerator.getRoot(Filterer.TEMPLATE_DEFINITION4, context.getFunctionRegistry());
 
     final LogicalExpression expr = ExpressionTreeMaterializer.materialize(popConfig.getExpr(), incoming, collector, context.getFunctionRegistry());

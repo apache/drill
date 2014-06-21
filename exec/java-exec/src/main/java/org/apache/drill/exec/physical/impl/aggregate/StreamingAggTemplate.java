@@ -25,6 +25,7 @@ import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 import org.apache.drill.exec.record.VectorWrapper;
+import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.allocator.VectorAllocator;
 
 public abstract class StreamingAggTemplate implements StreamingAggregator {
@@ -44,18 +45,15 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
   private RecordBatch incoming;
   private BatchSchema schema;
   private StreamingAggBatch outgoing;
-  private VectorAllocator[] allocators;
   private FragmentContext context;
   private InternalBatch remainderBatch;
 
 
   @Override
-  public void setup(FragmentContext context, RecordBatch incoming, StreamingAggBatch outgoing, VectorAllocator[] allocators) throws SchemaChangeException {
-    this.allocators = allocators;
+  public void setup(FragmentContext context, RecordBatch incoming, StreamingAggBatch outgoing) throws SchemaChangeException {
     this.context = context;
     this.incoming = incoming;
     this.schema = incoming.getSchema();
-    this.allocators = allocators;
     this.outgoing = outgoing;
     setupInterior(incoming, outgoing);
     this.currentIndex = incoming.getRecordCount() == 0 ? 0 : this.getVectorIndex(underlyingIndex);
@@ -63,10 +61,8 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
 
 
   private void allocateOutgoing() {
-    for (VectorAllocator a : allocators) {
-      if(EXTRA_DEBUG) logger.debug("Allocating {} with {} records.", a, 20000);
-      a.alloc(20000);
-      if(EXTRA_DEBUG) logger.debug("Allocated {}", a);
+    for(VectorWrapper<?> w : outgoing){
+      w.getValueVector().allocateNew();
     }
   }
 
@@ -90,7 +86,7 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
   public AggOutcome doWork() {
     try{ // outside loop to ensure that first is set to false after the first run.
       outputCount = 0;
-      
+
       // if we're in the first state, allocate outgoing.
       if(first){
         allocateOutgoing();

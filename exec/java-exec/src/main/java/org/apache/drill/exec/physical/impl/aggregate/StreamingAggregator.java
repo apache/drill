@@ -31,9 +31,8 @@ public interface StreamingAggregator {
   public static enum AggOutcome {
 	    RETURN_OUTCOME, CLEANUP_AND_RETURN, UPDATE_AGGREGATOR;
 	  }
-  
-  public abstract void setup(FragmentContext context, RecordBatch incoming, StreamingAggBatch outgoing,
-      VectorAllocator[] allocators) throws SchemaChangeException;
+
+  public abstract void setup(FragmentContext context, RecordBatch incoming, StreamingAggBatch outgoing) throws SchemaChangeException;
 
   public abstract IterOutcome getOutcome();
 
