@@ -87,6 +87,11 @@ public class HiveTestDataGenerator {
 
     // create a table with no data
     executeQuery("CREATE TABLE IF NOT EXISTS default.empty_table(a INT, b STRING)");
+    // delete the table location of empty table
+    File emptyTableLocation = new File(WH_DIR + "/empty_table");
+    if (emptyTableLocation.exists()) {
+      FileUtils.forceDelete(emptyTableLocation);
+    }
 
     // create a Hive table that has columns with data types which are supported for reading in Drill.
     testDataFile = generateAllTypesDataFile();

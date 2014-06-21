@@ -39,7 +39,7 @@ import org.apache.drill.exec.physical.base.ScanStats.GroupScanProperty;
 import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.store.StoragePluginRegistry;
-import org.apache.drill.exec.store.schedule.CompleteFileWork;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.api.Partition;
@@ -140,10 +140,13 @@ public class HiveScan extends AbstractGroupScan {
         InputFormat<?, ?> format = (InputFormat<?, ?>) Class.forName(table.getSd().getInputFormat()).getConstructor().newInstance();
         job.setInputFormat(format.getClass());
         Path path = new Path(table.getSd().getLocation());
-        FileInputFormat.addInputPath(job, path);
-        format = job.getInputFormat();
-        for (InputSplit split : format.getSplits(job, 1)) {
-          inputSplits.add(split);
+        FileSystem fs = FileSystem.get(job);
+        if (fs.exists(path)) {
+          FileInputFormat.addInputPath(job, path);
+          format = job.getInputFormat();
+          for (InputSplit split : format.getSplits(job, 1)) {
+            inputSplits.add(split);
+          }
         }
         for (InputSplit split : inputSplits) {
           partitionMap.put(split, null);
@@ -157,12 +160,16 @@ public class HiveScan extends AbstractGroupScan {
           }
           InputFormat<?, ?> format = (InputFormat<?, ?>) Class.forName(partition.getSd().getInputFormat()).getConstructor().newInstance();
           job.setInputFormat(format.getClass());
-          FileInputFormat.addInputPath(job, new Path(partition.getSd().getLocation()));
-          format = job.getInputFormat();
-          InputSplit[] splits = format.getSplits(job,1);
-          for (InputSplit split : splits) {
-            inputSplits.add(split);
-            partitionMap.put(split, partition);
+          Path path = new Path(partition.getSd().getLocation());
+          FileSystem fs = FileSystem.get(job);
+          if (fs.exists(path)) {
+            FileInputFormat.addInputPath(job, path);
+            format = job.getInputFormat();
+            InputSplit[] splits = format.getSplits(job, 1);
+            for (InputSplit split : splits) {
+              inputSplits.add(split);
+              partitionMap.put(split, partition);
+            }
           }
         }
       }
