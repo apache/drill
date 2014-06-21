@@ -28,14 +28,14 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
-@JsonTypeName("random-receiver")
-public class RandomReceiver extends AbstractReceiver{
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RandomReceiver.class);
+@JsonTypeName("unordered-receiver")
+public class UnorderedReceiver extends AbstractReceiver{
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UnorderedReceiver.class);
 
   private List<DrillbitEndpoint> senders;
 
   @JsonCreator
-  public RandomReceiver(@JsonProperty("sender-major-fragment") int oppositeMajorFragmentId,
+  public UnorderedReceiver(@JsonProperty("sender-major-fragment") int oppositeMajorFragmentId,
                         @JsonProperty("senders") List<DrillbitEndpoint> senders) {
     super(oppositeMajorFragmentId);
     this.senders = senders;
@@ -54,7 +54,7 @@ public class RandomReceiver extends AbstractReceiver{
 
   @Override
   public <T, X, E extends Throwable> T accept(PhysicalVisitor<T, X, E> physicalVisitor, X value) throws E {
-    return physicalVisitor.visitRandomReceiver(this, value);
+    return physicalVisitor.visitUnorderedReceiver(this, value);
   }
 
   @Override

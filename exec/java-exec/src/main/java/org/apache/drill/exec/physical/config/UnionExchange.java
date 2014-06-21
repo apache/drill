@@ -59,7 +59,7 @@ public class UnionExchange extends AbstractExchange{
 
   @Override
   public Receiver getReceiver(int minorFragmentId) {
-    return new RandomReceiver(this.senderMajorFragmentId, senderLocations);
+    return new UnorderedReceiver(this.senderMajorFragmentId, senderLocations);
   }
 
   @Override

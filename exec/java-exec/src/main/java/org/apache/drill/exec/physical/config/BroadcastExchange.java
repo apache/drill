@@ -64,7 +64,7 @@ public class BroadcastExchange extends AbstractExchange {
 
   @Override
   public Receiver getReceiver(int minorFragmentId) {
-    return new RandomReceiver(senderMajorFragmentId, senderLocations);
+    return new UnorderedReceiver(senderMajorFragmentId, senderLocations);
   }
 
   @Override
