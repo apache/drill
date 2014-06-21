@@ -276,7 +276,7 @@ public class DecimalUtility {
         }
 
         // Truncate the input as per the scale provided
-        input = input.setScale(scale, BigDecimal.ROUND_DOWN);
+        input = input.setScale(scale, BigDecimal.ROUND_HALF_UP);
 
         // Separate out the integer part
         BigDecimal integerPart = input.setScale(0, BigDecimal.ROUND_DOWN);
@@ -329,14 +329,14 @@ public class DecimalUtility {
     }
     public static int getDecimal9FromBigDecimal(BigDecimal input, int scale, int precision) {
         // Truncate/ or pad to set the input to the correct scale
-        input = input.setScale(scale, BigDecimal.ROUND_DOWN);
+        input = input.setScale(scale, BigDecimal.ROUND_HALF_UP);
 
         return (input.unscaledValue().intValue());
     }
 
     public static long getDecimal18FromBigDecimal(BigDecimal input, int scale, int precision) {
         // Truncate or pad to set the input to the correct scale
-        input = input.setScale(scale, BigDecimal.ROUND_DOWN);
+        input = input.setScale(scale, BigDecimal.ROUND_HALF_UP);
 
         return (input.unscaledValue().longValue());
     }

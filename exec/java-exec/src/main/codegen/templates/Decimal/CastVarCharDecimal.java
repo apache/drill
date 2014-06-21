@@ -84,6 +84,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
         int integerStartIndex = readIndex;
         int integerEndIndex = endIndex;
         boolean leadingDigitFound = false;
+        boolean round = false;
 
         int radix = 10;
 
@@ -96,8 +97,10 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
                 // Integer end index is just before the scale part begins
                 integerEndIndex = scaleIndex - 1;
                 // If the number of fractional digits is > scale specified we might have to truncate
-                endIndex = (scaleIndex + out.scale) < endIndex ? (scaleIndex + out.scale) : endIndex;
-
+                if ((scaleIndex + out.scale) < endIndex ) {
+                    endIndex = scaleIndex + out.scale;
+                    round    = true;
+                }
                 continue;
             } else {
                 // If its not a '.' we expect only numbers
@@ -127,6 +130,21 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
             in.buffer.getBytes(in.start, buf, 0, in.end - in.start);
             throw new org.apache.drill.common.exceptions.DrillRuntimeException("Precision is insufficient for the provided input: " + new String(buf, com.google.common.base.Charsets.UTF_8) + " Precision: " + out.precision +
                                                                                " Total Digits: " + (out.scale + (integerEndIndex - integerStartIndex)));
+        }
+
+        // Check if we need to round up
+        if (round == true) {
+            next = in.buffer.getByte(endIndex);
+            next = (byte) Character.digit(next, radix);
+            if (next == -1) {
+                // not a valid digit
+                byte[] buf = new byte[in.end - in.start];
+                in.buffer.getBytes(in.start, buf, 0, in.end - in.start);
+                throw new org.apache.drill.common.exceptions.DrillRuntimeException(new String(buf, com.google.common.base.Charsets.UTF_8));
+            }
+            if (next > 4) {
+                out.value++;
+            }
         }
 
         // Number of fractional digits in the input
@@ -180,7 +198,6 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
     }
 
     public void eval() {
-
         out.buffer = buffer;
         out.start  = 0;
 
@@ -225,6 +242,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
         int radix = 10;
         boolean leadingDigitFound = false;
+        boolean round = false;
     
         /* This is the first pass, we get the number of integer digits and based on the provided scale
          * we compute which index into the ByteBuf we start storing the integer part of the Decimal
@@ -239,7 +257,10 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
                     // We have found the decimal point. we can compute the starting index into the Decimal's bytebuf
                     scaleIndex = readIndex;
                     // We may have to truncate fractional part if > scale
-                    scaleEndIndex = ((in.end - scaleIndex) <= out.scale) ? in.end : (scaleIndex + out.scale);
+                    if ((in.end - scaleIndex) > out.scale) {
+                      scaleEndIndex =  scaleIndex + out.scale;
+                      round = true;
+                    }
                     break;
                 }
 
@@ -337,9 +358,41 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
                 // added another digit to the current index
                 ndigits++;
             }
+
+            // round up the decimal if we had to chop off a part of it
+            if (round == true) {
+               next = in.buffer.getByte(scaleEndIndex);
+
+                // We expect only numbers beyond this
+                next = (byte) Character.digit(next, radix);
+
+                if (next == -1) {
+                    // not a valid digit
+                    byte[] buf = new byte[in.end - in.start];
+                    in.buffer.getBytes(in.start, buf, 0, in.end - in.start);
+                    throw new NumberFormatException(new String(buf, com.google.common.base.Charsets.UTF_8));
+                }
+                if (next > 4) {
+                    // Need to round up
+                    out.setInteger(decimalBufferIndex, out.getInteger(decimalBufferIndex)+1);
+                }
+            }
             // Pad zeroes in the fractional part so that number of digits = MAX_DIGITS
             int padding = (int) org.apache.drill.common.util.DecimalUtility.getPowerOfTen((int) (org.apache.drill.common.util.DecimalUtility.MAX_DIGITS - ndigits));
             out.setInteger(decimalBufferIndex, out.getInteger(decimalBufferIndex) * padding);
+
+            int carry = 0;
+            do {
+                // propogate the carry
+                int tempValue = out.getInteger(decimalBufferIndex) + carry;
+                if (tempValue >= org.apache.drill.common.util.DecimalUtility.DIGITS_BASE) {
+                    carry = tempValue / org.apache.drill.common.util.DecimalUtility.DIGITS_BASE;
+                    tempValue = (tempValue % org.apache.drill.common.util.DecimalUtility.DIGITS_BASE);
+                } else {
+                    carry = 0;
+                }
+                out.setInteger(decimalBufferIndex--, tempValue);
+            } while (carry > 0 && decimalBufferIndex >= 0);
         }
         out.setSign(sign);
     }
