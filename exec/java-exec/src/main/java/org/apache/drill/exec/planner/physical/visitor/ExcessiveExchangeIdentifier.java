@@ -45,6 +45,7 @@ public class ExcessiveExchangeIdentifier extends BasePrelVisitor<Prel, Excessive
 
   @Override
   public Prel visitExchange(ExchangePrel prel, MajorFragmentStat parent) throws RuntimeException {
+    parent.add(prel);
     MajorFragmentStat newFrag = new MajorFragmentStat();
     Prel newChild = ((Prel) prel.getChild()).accept(this, newFrag);
 
