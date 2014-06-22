@@ -77,6 +77,7 @@ import org.codehaus.janino.util.AutoIndentWriter;
 public class ModifiedUnparseVisitor implements ComprehensiveVisitor {
     protected final AutoIndentWriter aiw;
     protected final PrintWriter      pw;
+    private         String           returnLabel;
 
     /**
      * Testing of parsing/unparsing.
@@ -215,9 +216,15 @@ public class ModifiedUnparseVisitor implements ComprehensiveVisitor {
          } else
          {
          this.pw.println(' ');
+         // Add labels to handle return statements within function templates
+         String[] fQCN = md.getDeclaringType().getClassName().split("\\.");
+         returnLabel = fQCN[fQCN.length - 1] + "_" + md.name;
+
+         this.pw.println(returnLabel + ": {");
          this.pw.print(AutoIndentWriter.INDENT);
          this.unparseStatements(md.optionalStatements);
          this.pw.print(AutoIndentWriter.UNINDENT);
+         this.pw.println("}");
          this.pw.print(' ');
          }
 
@@ -342,7 +349,8 @@ public class ModifiedUnparseVisitor implements ComprehensiveVisitor {
         this.pw.print(';');
     }
     public void visitReturnStatement(Java.ReturnStatement rs) {
-        this.pw.print("return");
+        this.pw.print("break " + returnLabel);
+      
         if (rs.optionalReturnValue != null) {
             this.pw.print(' ');
             this.unparse(rs.optionalReturnValue);

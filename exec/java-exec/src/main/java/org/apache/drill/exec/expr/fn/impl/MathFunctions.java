@@ -50,6 +50,7 @@ public class MathFunctions{
     
     public void eval(){
       out.value = -input.value;
+      return;
     }
 
   }  
