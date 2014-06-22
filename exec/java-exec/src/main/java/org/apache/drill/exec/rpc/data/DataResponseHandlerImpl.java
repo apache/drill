@@ -26,6 +26,7 @@ import org.apache.drill.exec.record.RawFragmentBatch;
 import org.apache.drill.exec.rpc.Acks;
 import org.apache.drill.exec.rpc.RemoteConnection;
 import org.apache.drill.exec.rpc.Response;
+import org.apache.drill.exec.rpc.ResponseSender;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.work.WorkManager.WorkerBee;
 import org.apache.drill.exec.work.fragment.FragmentManager;
@@ -40,10 +41,17 @@ public class DataResponseHandlerImpl implements DataResponseHandler{
     this.bee = bee;
   }
 
-  public Response handle(RemoteConnection connection, FragmentManager manager, FragmentRecordBatch fragmentBatch, ByteBuf data) throws RpcException {
+
+  @Override
+  public void informOutOfMemory() {
+    logger.error("Out of memory outside any particular fragment.");
+  }
+
+
+  public void handle(RemoteConnection connection, FragmentManager manager, FragmentRecordBatch fragmentBatch, ByteBuf data, ResponseSender sender) throws RpcException {
 //    logger.debug("Fragment Batch received {}", fragmentBatch);
     try {
-      boolean canRun = manager.handle(new RawFragmentBatch(connection, fragmentBatch, data));
+      boolean canRun = manager.handle(new RawFragmentBatch(connection, fragmentBatch, data, sender));
       if (canRun) {
 //        logger.debug("Arriving batch means local batch can run, starting local batch.");
         // if we've reached the canRun threshold, we'll proceed. This expects handler.handle() to only return a single
@@ -56,9 +64,8 @@ public class DataResponseHandlerImpl implements DataResponseHandler{
         bee.getContext().getWorkBus().removeFragmentManager(manager.getHandle());
       }
 
-      return DataRpcConfig.OK;
     } catch (FragmentSetupException e) {
       logger.error("Failure while attempting to setup new fragment.", e);
-      return new Response(RpcType.ACK, Acks.FAIL);
+      sender.send(new Response(RpcType.ACK, Acks.FAIL));
     }
   }}

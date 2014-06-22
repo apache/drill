@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.memory;
 
+import io.netty.buffer.AccountingByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 
 import java.io.Closeable;
@@ -32,7 +33,7 @@ public interface BufferAllocator extends Closeable {
   /**
    * Allocate a new or reused buffer of the provided size. Note that the buffer may technically be larger than the
    * requested size for rounding purposes. However, the buffers capacity will be set to the configured size.
-   * 
+   *
    * @param size
    *          The size in bytes.
    * @return A new ByteBuf.
@@ -42,7 +43,7 @@ public interface BufferAllocator extends Closeable {
   /**
    * Allocate a new or reused buffer within provided range. Note that the buffer may technically be larger than the
    * requested size for rounding purposes. However, the buffers capacity will be set to the configured size.
-   * 
+   *
    * @param minSize The minimum size in bytes.
    * @param maxSize The maximum size in bytes.
    * @return A new ByteBuf.
@@ -53,6 +54,14 @@ public interface BufferAllocator extends Closeable {
 
   public abstract BufferAllocator getChildAllocator(FragmentHandle handle, long initialReservation,
       long maximumReservation) throws OutOfMemoryException;
+
+  /**
+   * Take over ownership of fragment accounting.  Always takes over ownership.
+   * @param buf
+   * @return false if over allocation.
+   */
+  public boolean takeOwnership(AccountingByteBuf buf) ;
+
 
   public PreAllocator getNewPreAllocator();
 
@@ -71,7 +80,7 @@ public interface BufferAllocator extends Closeable {
    */
 
   /**
-   * 
+   *
    */
 
   /**

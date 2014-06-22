@@ -18,6 +18,7 @@
 package org.apache.drill.exec.rpc.data;
 
 import java.io.Closeable;
+import java.util.concurrent.ConcurrentMap;
 
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
@@ -25,10 +26,11 @@ import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.rpc.control.WorkEventBus;
 import org.apache.drill.exec.server.BootStrapContext;
 
+import com.google.common.collect.Maps;
 import com.google.common.io.Closeables;
 
 /**
- * Manages a connection pool for each endpoint.
+ * Manages a connection for each endpoint.
  */
 public class DataConnectionCreator implements Closeable {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DataConnectionCreator.class);
@@ -38,6 +40,7 @@ public class DataConnectionCreator implements Closeable {
   private final WorkEventBus workBus;
   private final DataResponseHandler dataHandler;
   private final boolean allowPortHunting;
+  private ConcurrentMap<DrillbitEndpoint, DataConnectionManager> connectionManager = Maps.newConcurrentMap();
 
   public DataConnectionCreator(BootStrapContext context, WorkEventBus workBus, DataResponseHandler dataHandler, boolean allowPortHunting) {
     super();
@@ -55,7 +58,12 @@ public class DataConnectionCreator implements Closeable {
   }
 
   public DataTunnel getTunnel(DrillbitEndpoint endpoint, FragmentHandle handle) {
-    return new DataTunnel(new DataConnectionManager(handle, endpoint, context));
+    DataConnectionManager newManager = new DataConnectionManager(handle, endpoint, context);
+    DataConnectionManager oldManager = connectionManager.putIfAbsent(endpoint, newManager);
+    if(oldManager != null){
+      newManager = oldManager;
+    }
+    return new DataTunnel(newManager);
   }
 
   public void close() {

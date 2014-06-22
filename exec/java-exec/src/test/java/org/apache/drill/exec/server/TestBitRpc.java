@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import mockit.Injectable;
+import mockit.NonStrictExpectations;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.ExpressionPosition;
@@ -34,8 +35,8 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
+import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.BitData.FragmentRecordBatch;
-import org.apache.drill.exec.proto.BitData.RpcType;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
@@ -43,14 +44,14 @@ import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.record.FragmentWritableBatch;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.WritableBatch;
-import org.apache.drill.exec.rpc.Acks;
 import org.apache.drill.exec.rpc.RemoteConnection;
-import org.apache.drill.exec.rpc.Response;
+import org.apache.drill.exec.rpc.ResponseSender;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
 import org.apache.drill.exec.rpc.control.WorkEventBus;
 import org.apache.drill.exec.rpc.data.DataConnectionManager;
 import org.apache.drill.exec.rpc.data.DataResponseHandler;
+import org.apache.drill.exec.rpc.data.DataRpcConfig;
 import org.apache.drill.exec.rpc.data.DataServer;
 import org.apache.drill.exec.rpc.data.DataTunnel;
 import org.apache.drill.exec.vector.Float8Vector;
@@ -66,13 +67,25 @@ public class TestBitRpc extends ExecTest {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestBitRpc.class);
 
   @Test
-  public void testConnectionBackpressure(@Injectable WorkerBee bee, @Injectable WorkEventBus workBus) throws Exception {
-    int port = 1234;
-    BootStrapContext c = new BootStrapContext(DrillConfig.create());
+  public void testConnectionBackpressure(@Injectable WorkerBee bee, @Injectable final WorkEventBus workBus, @Injectable final FragmentManager fman, @Injectable final FragmentContext fcon) throws Exception {
+
+    final BootStrapContext c = new BootStrapContext(DrillConfig.create());
     BootStrapContext c2 = new BootStrapContext(DrillConfig.create());
+
+
+    new NonStrictExpectations(){{
+      workBus.getOrCreateFragmentManager((FragmentHandle) any); result = fman;
+      workBus.getFragmentManager( (FragmentHandle) any); result = fman;
+      fman.getFragmentContext(); result = fcon;
+      fcon.getAllocator(); result = c.getAllocator();
+  }};
+
+
+    int port = 1234;
 
     DataResponseHandler drp = new BitComTestHandler();
     DataServer server = new DataServer(c, workBus, drp);
+
 
     port = server.bind(port, false);
     DrillbitEndpoint ep = DrillbitEndpoint.newBuilder().setAddress("localhost").setDataPort(port).build();
@@ -140,7 +153,7 @@ public class TestBitRpc extends ExecTest {
     int v = 0;
 
     @Override
-    public Response handle(RemoteConnection connection, FragmentManager manager, FragmentRecordBatch fragmentBatch, ByteBuf data)
+    public void handle(RemoteConnection connection, FragmentManager manager, FragmentRecordBatch fragmentBatch, ByteBuf data, ResponseSender sender)
         throws RpcException {
       // System.out.println("Received.");
       try {
@@ -153,7 +166,11 @@ public class TestBitRpc extends ExecTest {
         // TODO Auto-generated catch block
         e.printStackTrace();
       }
-      return new Response(RpcType.ACK, Acks.OK);
+      sender.send(DataRpcConfig.OK);
+    }
+
+    @Override
+    public void informOutOfMemory() {
     }
 
   }

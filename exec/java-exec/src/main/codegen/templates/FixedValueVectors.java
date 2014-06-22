@@ -16,15 +16,6 @@
  * limitations under the License.
  */
 
-import java.lang.Long;
-import java.lang.Override;
-import java.sql.Time;
-import java.sql.Timestamp;
-import java.math.BigDecimal;
-import java.math.BigInteger;
-
-import org.joda.time.Period;
-
 <@pp.dropOutputFile />
 <#list vv.types as type>
 <#list type.minor as minor>
@@ -790,11 +781,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements F
      } else if (allocationMonitor > 0) {
        allocationMonitor = 0;
      }
-     data.writerIndex(idx);
-     if (data instanceof AccountingByteBuf) {
-       data.capacity(idx);
-       data.writerIndex(idx);
-     }
+     VectorTrimmer.trim(data, idx);
    }
 
 

@@ -28,6 +28,7 @@ import org.apache.drill.exec.physical.base.AbstractPhysicalVisitor;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.Receiver;
 import org.apache.drill.exec.record.RawFragmentBatch;
+import org.apache.drill.exec.rpc.ResponseSender;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -81,10 +82,12 @@ public class IncomingBuffers implements AutoCloseable {
     DataCollector fSet = fragCounts.get(sendMajorFragmentId);
     if (fSet == null) throw new FragmentSetupException(String.format("We received a major fragment id that we were not expecting.  The id was %d. %s", sendMajorFragmentId, Arrays.toString(fragCounts.values().toArray())));
     try {
-      boolean decremented = fSet.batchArrived(batch.getHeader().getSendingMinorFragmentId(), batch);
+      synchronized(this){
+        boolean decremented = fSet.batchArrived(batch.getHeader().getSendingMinorFragmentId(), batch);
 
-      // we should only return true if remaining required has been decremented and is currently equal to zero.
-      return decremented && remainingRequired.get() == 0;
+        // we should only return true if remaining required has been decremented and is currently equal to zero.
+        return decremented && remainingRequired.get() == 0;
+      }
     } catch (IOException e) {
       throw new FragmentSetupException(e);
     }

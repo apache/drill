@@ -17,10 +17,11 @@
  */
 package org.apache.drill.exec.memory;
 
+import io.netty.buffer.AccountingByteBuf;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
+import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.buffer.PooledByteBufAllocatorL;
-import io.netty.buffer.PooledUnsafeDirectByteBufL;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -37,7 +38,7 @@ public class TopLevelAllocator implements BufferAllocator {
 
   private static final boolean ENABLE_ACCOUNTING = AssertionUtil.isAssertionsEnabled();
   private final Set<ChildAllocator> children;
-  private final PooledByteBufAllocatorL innerAllocator = PooledByteBufAllocatorL.DEFAULT;
+  private final PooledByteBufAllocator innerAllocator = PooledByteBufAllocatorL.DEFAULT;
   private final Accountor acct;
   private final boolean errorOnLeak;
 
@@ -63,10 +64,15 @@ public class TopLevelAllocator implements BufferAllocator {
         );
   }
 
+  @Override
+  public boolean takeOwnership(AccountingByteBuf buf) {
+    return buf.transferAccounting(acct);
+  }
+
   public AccountingByteBuf buffer(int min, int max) {
     if(!acct.reserve(min)) return null;
     ByteBuf buffer = innerAllocator.directBuffer(min, max);
-    AccountingByteBuf wrapped = new AccountingByteBuf(acct, (PooledUnsafeDirectByteBufL) buffer);
+    AccountingByteBuf wrapped = new AccountingByteBuf(acct, buffer);
     acct.reserved(min, wrapped);
     return wrapped;
   }
@@ -124,6 +130,11 @@ public class TopLevelAllocator implements BufferAllocator {
     }
 
     @Override
+    public boolean takeOwnership(AccountingByteBuf buf) {
+      return buf.transferAccounting(childAcct);
+    }
+
+    @Override
     public AccountingByteBuf buffer(int size, int max) {
       if(!childAcct.reserve(size)){
         logger.warn("Unable to allocate buffer of size {} due to memory limit. Current allocation: {}", size, getAllocatedMemory());
@@ -131,7 +142,7 @@ public class TopLevelAllocator implements BufferAllocator {
       };
 
       ByteBuf buffer = innerAllocator.directBuffer(size, max);
-      AccountingByteBuf wrapped = new AccountingByteBuf(childAcct, (PooledUnsafeDirectByteBufL) buffer);
+      AccountingByteBuf wrapped = new AccountingByteBuf(childAcct, buffer);
       childAcct.reserved(buffer.capacity(), wrapped);
       return wrapped;
     }
@@ -227,7 +238,7 @@ public class TopLevelAllocator implements BufferAllocator {
 
 
     public AccountingByteBuf getAllocation(){
-      AccountingByteBuf b = new AccountingByteBuf(acct, (PooledUnsafeDirectByteBufL) innerAllocator.buffer(bytes));
+      AccountingByteBuf b = new AccountingByteBuf(acct, innerAllocator.buffer(bytes));
       acct.reserved(bytes, b);
       return b;
     }

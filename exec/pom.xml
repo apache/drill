@@ -31,9 +31,7 @@
   <dependencies>
   </dependencies>
   <modules>
-    <module>bufferl</module>
     <module>java-exec</module>
     <module>jdbc</module>
-    <!-- <module>jdbc-all</module> -->
   </modules>
 </project>

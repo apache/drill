@@ -37,7 +37,9 @@ import org.apache.drill.exec.proto.ExecProtos;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.record.RawFragmentBatch;
 import org.apache.drill.exec.rpc.RemoteConnection;
+import org.apache.drill.exec.rpc.ResponseSender;
 import org.apache.drill.exec.rpc.data.BitServerConnection;
+import org.apache.drill.exec.rpc.data.DataRpcConfig;
 import org.apache.drill.exec.store.LocalSyncableFileSystem;
 import org.apache.drill.exec.work.fragment.FragmentManager;
 import org.apache.hadoop.conf.Configuration;
@@ -77,7 +79,7 @@ public class SpoolingRawBatchBuffer implements RawBatchBuffer {
   private boolean closed = false;
   private FragmentManager fragmentManager;
 
-  public SpoolingRawBatchBuffer(FragmentContext context, ReadController readController, int fragmentCount) throws IOException, OutOfMemoryException {
+  public SpoolingRawBatchBuffer(FragmentContext context, int fragmentCount) throws IOException, OutOfMemoryException {
     this.context = context;
     this.allocator = context.getNewChildAllocator(ALLOCATOR_INITIAL_RESERVATION, ALLOCATOR_MAX_RESERVATION);
     this.threshold = context.getConfig().getLong(ExecConstants.SPOOLING_BUFFER_MEMORY);
@@ -99,7 +101,8 @@ public class SpoolingRawBatchBuffer implements RawBatchBuffer {
   public synchronized void enqueue(RawFragmentBatch batch) throws IOException {
     if (batch.getHeader().getIsOutOfMemory()) {
       if (fragmentManager == null) {
-        fragmentManager = ((BitServerConnection) batch.getConnection()).getFragmentManager();
+        throw new UnsupportedOperationException("Need to fix.");
+//        fragmentManager = ((BitServerConnection) batch.getConnection()).getFragmentManager();
       }
 //      fragmentManager.setAutoRead(false);
 //      logger.debug("Setting autoRead false");
@@ -109,6 +112,7 @@ public class SpoolingRawBatchBuffer implements RawBatchBuffer {
       } else {
         logger.debug("ignoring duplicate OOM message");
       }
+      batch.sendOk();
       return;
     }
     RawFragmentBatchWrapper wrapper;
@@ -270,7 +274,7 @@ public class SpoolingRawBatchBuffer implements RawBatchBuffer {
       BitData.FragmentRecordBatch header = BitData.FragmentRecordBatch.parseDelimitedFrom(stream);
       ByteBuf buf = allocator.buffer(bodyLength);
       buf.writeBytes(stream, bodyLength);
-      batch = new RawFragmentBatch(null, header, buf);
+      batch = new RawFragmentBatch(null, header, buf, null);
       buf.release();
       available = true;
       latch.countDown();

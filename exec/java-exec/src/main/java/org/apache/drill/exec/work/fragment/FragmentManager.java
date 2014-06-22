@@ -22,6 +22,7 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.record.RawFragmentBatch;
 import org.apache.drill.exec.rpc.RemoteConnection;
+import org.apache.drill.exec.rpc.ResponseSender;
 
 /**
  * The Fragment Manager is responsible managing incoming data and executing a fragment. Once enough data and resources
@@ -31,7 +32,7 @@ public interface FragmentManager {
 
   /**
    * Handle the next incoming record batch.
-   * 
+   *
    * @param batch
    * @return True if the fragment has enough incoming data to be able to be run.
    * @throws FragmentSetupException
@@ -40,7 +41,7 @@ public interface FragmentManager {
 
   /**
    * Get the fragment runner for this incoming fragment. Note, this can only be requested once.
-   * 
+   *
    * @return
    */
   public abstract FragmentExecutor getRunnable();
@@ -50,7 +51,7 @@ public interface FragmentManager {
   public boolean isWaiting();
 
   public abstract FragmentHandle getHandle();
-  
+
   public abstract FragmentContext getFragmentContext();
 
   public abstract void addConnection(RemoteConnection connection);

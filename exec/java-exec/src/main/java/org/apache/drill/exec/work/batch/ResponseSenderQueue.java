@@ -15,20 +15,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.netty.buffer;
+package org.apache.drill.exec.work.batch;
 
-import java.nio.ByteBuffer;
+import java.util.Queue;
 
-final class PoolThreadCacheL {
+import org.apache.drill.exec.rpc.ResponseSender;
+import org.apache.drill.exec.rpc.data.DataRpcConfig;
 
-    final PoolArenaL<byte[]> heapArena;
-    final PoolArenaL<ByteBuffer> directArena;
+import com.google.common.collect.Queues;
 
-    // TODO: Test if adding padding helps under contention
-    //private long pad0, pad1, pad2, pad3, pad4, pad5, pad6, pad7;
+public class ResponseSenderQueue {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ResponseSenderQueue.class);
 
-    PoolThreadCacheL(PoolArenaL<byte[]> heapArena, PoolArenaL<ByteBuffer> directArena) {
-        this.heapArena = heapArena;
-        this.directArena = directArena;
+  private Queue<ResponseSender> q = Queues.newConcurrentLinkedQueue();
+
+  public void enqueueResponse(ResponseSender sender){
+    q.add(sender);
+  }
+
+  public void flushResponses(){
+    while(!q.isEmpty()){
+      ResponseSender s = q.poll();
+      if(s != null){
+        s.send(DataRpcConfig.OK);
+      }
     }
+
+  }
 }

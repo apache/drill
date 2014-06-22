@@ -15,16 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.memory;
-
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufAllocator;
-import io.netty.buffer.ByteBufProcessor;
-import io.netty.buffer.DuplicatedByteBuf;
-import io.netty.buffer.PooledUnsafeDirectByteBufL;
-import io.netty.buffer.SlicedByteBuf;
-import io.netty.buffer.SwappedByteBuf;
-import io.netty.buffer.Unpooled;
+package io.netty.buffer;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,16 +26,18 @@ import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
 import java.nio.charset.Charset;
 
+import org.apache.drill.exec.memory.Accountor;
+
 public class AccountingByteBuf extends ByteBuf{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AccountingByteBuf.class);
-  
-  private final PooledUnsafeDirectByteBufL b;
-  private final Accountor acct;
+
+  private final UnsafeDirectLittleEndian b;
+  private volatile Accountor acct;
   private volatile int size;
-  
-  public AccountingByteBuf(Accountor a, PooledUnsafeDirectByteBufL b) {
+
+  public AccountingByteBuf(Accountor a, ByteBuf b) {
     super();
-    this.b = b;
+    this.b = (UnsafeDirectLittleEndian) b;
     this.acct = a;
     this.size = b.capacity();
   }
@@ -52,6 +45,12 @@ public class AccountingByteBuf extends ByteBuf{
   @Override
   public int refCnt() {
     return b.refCnt();
+  }
+
+  public boolean transferAccounting(Accountor target){
+    boolean outcome = acct.transferTo(target, this, size);
+    acct = target;
+    return outcome;
   }
 
   @Override
@@ -88,9 +87,9 @@ public class AccountingByteBuf extends ByteBuf{
       this.size = size - diff;
       return this;
     }else{
-      throw new UnsupportedOperationException("Accounting byte buf doesn't support increasing allocations.");  
+      throw new UnsupportedOperationException("Accounting byte buf doesn't support increasing allocations.");
     }
-    
+
   }
 
   @Override
@@ -110,7 +109,7 @@ public class AccountingByteBuf extends ByteBuf{
 
   @Override
   public ByteBuf order(ByteOrder endianness) {
-    if(endianness != ByteOrder.BIG_ENDIAN) throw new UnsupportedOperationException("Drill buffers only support big endian.");
+//    if(endianness != ByteOrder.LITTLE_ENDIAN) throw new UnsupportedOperationException("Drill buffers only support little endian.");
     return this;
   }
 
@@ -535,7 +534,7 @@ public class AccountingByteBuf extends ByteBuf{
       return slice;
   }
 
-  
+
   @Override
   public ByteBuf readBytes(ByteBuf dst) {
     b.readBytes(dst);
@@ -752,13 +751,13 @@ public class AccountingByteBuf extends ByteBuf{
 
   @Override
   public ByteBuf slice(int index, int length) {
-      if (length == 0) {
-          return Unpooled.EMPTY_BUFFER;
-      }
+//      if (length == 0) {
+//          return Unpooled.EMPTY_BUFFER;
+//      }
 
       return new SlicedByteBuf(this, index, length);
   }
-  
+
   @Override
   public ByteBuf duplicate() {
     return new DuplicatedByteBuf(this);
@@ -862,6 +861,6 @@ public class AccountingByteBuf extends ByteBuf{
     b.retain();
     return this;
   }
-  
-  
+
+
 }

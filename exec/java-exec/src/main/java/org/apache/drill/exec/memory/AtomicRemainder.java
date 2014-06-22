@@ -66,13 +66,14 @@ public class AtomicRemainder {
    *
    * @param size
    */
-  public void forceGet(long size) {
-    long newAvailableShared = availableShared.addAndGet(size);
-//    if (DEBUG)
-//      logger.info("Force get {}. a.s. {} a.p. {} hashcode: {}", size, availableShared, availablePrivate, hashCode(), new Exception());
-//    assert newAvailableShared <= initShared;
-    if (parent != null)
-      parent.forceGet(size);
+  public boolean forceGet(long size) {
+    if(get(size)){
+      return true;
+    }else{
+      availableShared.addAndGet(size);
+      if (parent != null) parent.forceGet(size);
+      return false;
+    }
   }
 
   public boolean get(long size) {

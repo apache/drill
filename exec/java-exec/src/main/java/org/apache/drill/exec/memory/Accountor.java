@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.memory;
 
+import io.netty.buffer.AccountingByteBuf;
 import io.netty.buffer.ByteBuf;
 
 import java.util.Arrays;
@@ -57,6 +58,17 @@ public class Accountor {
     }
   }
 
+  public boolean transferTo(Accountor target, AccountingByteBuf buf, long size){
+    boolean withinLimit = target.forceAdditionalReservation(size);
+    release(buf, size);
+
+    if (ENABLE_ACCOUNTING) {
+      target.buffers.put(buf, new DebugStackTrace(buf.capacity(), Thread.currentThread().getStackTrace()));
+    }
+
+    return withinLimit;
+  }
+
   public long getAvailable() {
     if (parent != null) {
       return Math.min(parent.getAvailable(), getCapacity() - getAllocation());
@@ -76,8 +88,12 @@ public class Accountor {
     return remainder.get(size);
   }
 
-  public void forceAdditionalReservation(long size) {
-    if(size > 0) remainder.forceGet(size);
+  public boolean forceAdditionalReservation(long size) {
+    if(size > 0){
+      return remainder.forceGet(size);
+    }else{
+      return true;
+    }
   }
 
   public void reserved(long expected, AccountingByteBuf buf){

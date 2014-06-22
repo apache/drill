@@ -23,6 +23,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.record.RawFragmentBatch;
+import org.apache.drill.exec.rpc.ResponseSender;
+import org.apache.drill.exec.rpc.data.DataRpcConfig;
 
 import com.google.common.collect.Queues;
 
@@ -35,32 +37,20 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
   private final int startlimit;
   private final AtomicBoolean overlimit = new AtomicBoolean(false);
   private final AtomicBoolean outOfMemory = new AtomicBoolean(false);
-  private final ReadController readController;
-  private final boolean multiFragment;
+  private final ResponseSenderQueue readController = new ResponseSenderQueue();
 
-  public UnlimitedRawBatchBuffer(FragmentContext context, ReadController readController, int fragmentCount) {
+  public UnlimitedRawBatchBuffer(FragmentContext context, int fragmentCount) {
     int bufferSizePerSocket = context.getConfig().getInt(ExecConstants.INCOMING_BUFFER_SIZE);
 
-    this.multiFragment = fragmentCount > 1;
-    this.readController = readController;
     this.softlimit = bufferSizePerSocket * fragmentCount;
     this.startlimit = Math.max(softlimit/2, 1);
     this.buffer = Queues.newLinkedBlockingDeque();
-  }
-
-  private void setRead(int minorFragmentId, boolean setting){
-    if(multiFragment){
-      readController.setAutoRead(setting);
-    }else{
-      readController.setAutoRead(minorFragmentId, setting);
-    }
   }
 
   @Override
   public void enqueue(RawFragmentBatch batch) {
     if (batch.getHeader().getIsOutOfMemory()) {
       logger.debug("Setting autoread false");
-      readController.setAutoRead(false);
       if (!outOfMemory.get() && !buffer.peekFirst().getHeader().getIsOutOfMemory()) {
         buffer.addFirst(batch);
       }
@@ -70,7 +60,9 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
     buffer.add(batch);
     if(buffer.size() == softlimit){
       overlimit.set(true);
-      setRead(batch.getHeader().getSendingMinorFragmentId(), false);
+      readController.enqueueResponse(batch.getSender());
+    }else{
+      batch.sendOk();
     }
   }
 
@@ -98,7 +90,7 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
     if (outOfMemory.get() && buffer.size() < 10) {
       logger.debug("Setting autoread true");
       outOfMemory.set(false);
-      readController.setAutoRead(true);
+      readController.flushResponses();
     }
 
     RawFragmentBatch b = null;
@@ -116,7 +108,6 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
 
     if (b != null && b.getHeader().getIsOutOfMemory()) {
       outOfMemory.set(true);
-      readController.setAutoRead(false);
       return b;
     }
 
@@ -125,8 +116,7 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
     if(!finished && overlimit.get()){
       if(buffer.size() == startlimit){
         overlimit.set(false);
-        setRead(b.getHeader().getSendingMinorFragmentId(), true);
-        readController.setAutoRead(true);
+        readController.flushResponses();
       }
     }
 

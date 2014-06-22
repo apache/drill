@@ -15,23 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.drill.exec.vector;
 
-package org.apache.drill.exec.proto.helper;
+import io.netty.buffer.AccountingByteBuf;
+import io.netty.buffer.ByteBuf;
 
-import java.util.UUID;
+public class VectorTrimmer {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(VectorTrimmer.class);
 
-import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
-import org.apache.drill.exec.proto.UserBitShared.QueryId;
-
-/* Helper class around the QueryId protobuf */
-public class QueryIdHelper {
-
-  /* Generate a UUID from the two parts of the queryid */
-  public static String getQueryId(QueryId queryId) {
-    return (new UUID(queryId.getPart1(), queryId.getPart2())).toString();
-  }
-
-  public static String getQueryIdentifier(FragmentHandle h) {
-    return getQueryId(h.getQueryId()) + ":" + h.getMajorFragmentId() + ":" + h.getMinorFragmentId();
+  public static void trim(ByteBuf data, int idx) {
+    data.writerIndex(idx);
+    if (data instanceof AccountingByteBuf) {
+      // data.capacity(idx);
+      data.writerIndex(idx);
+    }
   }
 }

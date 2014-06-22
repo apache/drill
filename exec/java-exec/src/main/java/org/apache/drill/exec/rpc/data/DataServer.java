@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.rpc.data;
 
+import io.netty.buffer.AccountingByteBuf;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -28,15 +29,19 @@ import org.apache.drill.exec.proto.BitData.BitClientHandshake;
 import org.apache.drill.exec.proto.BitData.BitServerHandshake;
 import org.apache.drill.exec.proto.BitData.FragmentRecordBatch;
 import org.apache.drill.exec.proto.BitData.RpcType;
+import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.UserBitShared.RpcChannel;
-import org.apache.drill.exec.record.RawFragmentBatch;
+import org.apache.drill.exec.proto.helper.QueryIdHelper;
+import org.apache.drill.exec.rpc.Acks;
 import org.apache.drill.exec.rpc.BasicServer;
 import org.apache.drill.exec.rpc.OutOfMemoryHandler;
 import org.apache.drill.exec.rpc.ProtobufLengthDecoder;
 import org.apache.drill.exec.rpc.Response;
+import org.apache.drill.exec.rpc.ResponseSender;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.control.WorkEventBus;
 import org.apache.drill.exec.server.BootStrapContext;
+import org.apache.drill.exec.work.fragment.FragmentManager;
 
 import com.google.protobuf.MessageLite;
 
@@ -47,7 +52,6 @@ public class DataServer extends BasicServer<RpcType, BitServerConnection> {
   private final BootStrapContext context;
   private final WorkEventBus workBus;
   private final DataResponseHandler dataHandler;
-  private BitServerConnection connection;
 
   public DataServer(BootStrapContext context, WorkEventBus workBus, DataResponseHandler dataHandler) {
     super(DataRpcConfig.MAPPING, context.getAllocator().getUnderlyingAllocator(), context.getBitLoopGroup());
@@ -69,7 +73,7 @@ public class DataServer extends BasicServer<RpcType, BitServerConnection> {
 
   @Override
   public BitServerConnection initRemoteConnection(Channel channel) {
-    return connection = new BitServerConnection(channel, context.getAllocator());
+    return new BitServerConnection(channel, context.getAllocator());
   }
 
   @Override
@@ -86,20 +90,35 @@ public class DataServer extends BasicServer<RpcType, BitServerConnection> {
           throw new RpcException(String.format("Invalid NodeMode.  Expected BIT_DATA but received %s.",
               inbound.getChannel()));
 
-        connection.setManager(workBus.getOrCreateFragmentManager(inbound.getHandle()));
         return BitServerHandshake.newBuilder().setRpcVersion(DataRpcConfig.RPC_VERSION).build();
       }
 
     };
   }
 
+  private final static FragmentRecordBatch OOM_FRAGMENT = FragmentRecordBatch.newBuilder().setIsOutOfMemory(true).build();
 
   @Override
-  protected Response handle(BitServerConnection connection, int rpcType, ByteBuf pBody, ByteBuf body) throws RpcException {
+  protected void handle(BitServerConnection connection, int rpcType, ByteBuf pBody, ByteBuf body, ResponseSender sender) throws RpcException {
     assert rpcType == RpcType.REQ_RECORD_BATCH_VALUE;
 
     FragmentRecordBatch fragmentBatch = get(pBody, FragmentRecordBatch.PARSER);
-    return dataHandler.handle(connection, connection.getFragmentManager(), fragmentBatch, body);
+    FragmentHandle handle = fragmentBatch.getHandle();
+
+    try {
+      FragmentManager manager = workBus.getOrCreateFragmentManager(fragmentBatch.getHandle());
+      BufferAllocator allocator = manager.getFragmentContext().getAllocator();
+      if(body != null){
+        if(!allocator.takeOwnership((AccountingByteBuf) body.unwrap())){
+          dataHandler.handle(connection, manager, OOM_FRAGMENT, null, null);
+        }
+      }
+      dataHandler.handle(connection, manager, fragmentBatch, body, sender);
+
+    } catch (FragmentSetupException e) {
+      logger.error("Failure while getting fragment manager. {}", QueryIdHelper.getQueryIdentifier(handle),  e);
+      sender.send(new Response(RpcType.ACK, Acks.FAIL));
+    }
   }
 
   private class ProxyCloseHandler implements GenericFutureListener<ChannelFuture> {
@@ -111,14 +130,6 @@ public class DataServer extends BasicServer<RpcType, BitServerConnection> {
       this.handler = handler;
     }
 
-    public GenericFutureListener<ChannelFuture> getHandler() {
-      return handler;
-    }
-
-    public void setHandler(GenericFutureListener<ChannelFuture> handler) {
-      this.handler = handler;
-    }
-
     @Override
     public void operationComplete(ChannelFuture future) throws Exception {
       handler.operationComplete(future);
@@ -126,20 +137,14 @@ public class DataServer extends BasicServer<RpcType, BitServerConnection> {
 
   }
 
-  private final static FragmentRecordBatch OOM_FRAGMENT = FragmentRecordBatch.newBuilder().setIsOutOfMemory(true).build();
+
 
   @Override
   public OutOfMemoryHandler getOutOfMemoryHandler() {
     return new OutOfMemoryHandler() {
       @Override
       public void handle() {
-        try {
-          logger.debug("Setting autoRead false");
-          connection.getFragmentManager().setAutoRead(false);
-          connection.getFragmentManager().handle(new RawFragmentBatch(connection, OOM_FRAGMENT, null));
-        } catch (FragmentSetupException e) {
-          throw new RuntimeException();
-        }
+        dataHandler.informOutOfMemory();
       }
     };
   }

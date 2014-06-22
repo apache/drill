@@ -497,10 +497,7 @@ public final class ${minor.class}Vector extends BaseDataValueVector implements V
       } else if (allocationMonitor > 0) {
         allocationMonitor = 0;
       }
-      if (data instanceof AccountingByteBuf) {
-        data.capacity(idx);
-        data.writerIndex(idx);
-      }
+      VectorTrimmer.trim(data, idx);
       offsetVector.getMutator().setValueCount(valueCount+1);
     }
 

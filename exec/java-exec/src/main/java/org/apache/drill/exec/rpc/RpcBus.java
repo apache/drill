@@ -18,6 +18,7 @@
 package org.apache.drill.exec.rpc;
 
 import com.google.common.base.Stopwatch;
+
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.channel.Channel;
@@ -45,7 +46,7 @@ import com.google.protobuf.Parser;
 /**
  * The Rpc Bus deals with incoming and outgoing communication and is used on both the server and the client side of a
  * system.
- * 
+ *
  * @param <T>
  */
 public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> implements Closeable {
@@ -54,6 +55,10 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
   protected final CoordinationQueue queue = new CoordinationQueue(16, 16);
 
   protected abstract MessageLite getResponseDefaultInstance(int rpcType) throws RpcException;
+
+  protected void handle(C connection, int rpcType, ByteBuf pBody, ByteBuf dBody, ResponseSender sender) throws RpcException{
+    sender.send(handle(connection, rpcType, pBody, dBody));
+  }
 
   protected abstract Response handle(C connection, int rpcType, ByteBuf pBody, ByteBuf dBody) throws RpcException;
 
@@ -70,19 +75,19 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
     DrillRpcFutureImpl<RECEIVE> rpcFuture = new DrillRpcFutureImpl<RECEIVE>();
     this.send(rpcFuture, connection, rpcType, protobufBody, clazz, dataBodies);
     return rpcFuture;
-  }  
-  
+  }
+
   public <SEND extends MessageLite, RECEIVE extends MessageLite> void send(RpcOutcomeListener<RECEIVE> listener, C connection, T rpcType,
       SEND protobufBody, Class<RECEIVE> clazz, ByteBuf... dataBodies) {
     send(listener, connection, rpcType, protobufBody, clazz, false, dataBodies);
   }
-  
+
   public <SEND extends MessageLite, RECEIVE extends MessageLite> void send(RpcOutcomeListener<RECEIVE> listener, C connection, T rpcType,
       SEND protobufBody, Class<RECEIVE> clazz, boolean allowInEventLoop, ByteBuf... dataBodies) {
-  
+
     if(!allowInEventLoop){
       if(connection.inEventLoop()) throw new IllegalStateException("You attempted to send while inside the rpc event thread.  This isn't allowed because sending will block if the channel is backed up.");
-      
+
       if(!connection.blockOnNotWritable(listener)) return;
     }
 
@@ -136,6 +141,27 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
     return new ChannelClosedHandler();
   }
 
+  private class ResponseSenderImpl implements ResponseSender {
+
+    RemoteConnection connection;
+    int coordinationId;
+
+    public ResponseSenderImpl(RemoteConnection connection, int coordinationId) {
+      super();
+      this.connection = connection;
+      this.coordinationId = coordinationId;
+    }
+
+    public void send(Response r){
+      assert rpcConfig.checkResponseSend(r.rpcType, r.pBody.getClass());
+      OutboundRpcMessage outMessage = new OutboundRpcMessage(RpcMode.RESPONSE, r.rpcType, coordinationId,
+          r.pBody, r.dBodies);
+      if (RpcConstants.EXTRA_DEBUGGING) logger.debug("Adding message to outbound buffer. {}", outMessage);
+      connection.getChannel().writeAndFlush(outMessage);
+    }
+
+  }
+
   protected class InboundHandler extends MessageToMessageDecoder<InboundRpcMessage> {
 
     private final C connection;
@@ -151,13 +177,9 @@ public abstract class RpcBus<T extends EnumLite, C extends RemoteConnection> imp
       switch (msg.mode) {
       case REQUEST: {
         // handle message and ack.
-        Response r = handle(connection, msg.rpcType, msg.pBody, msg.dBody);
+        ResponseSender sender = new ResponseSenderImpl(connection, msg.coordinationId);
+        handle(connection, msg.rpcType, msg.pBody, msg.dBody, sender);
         msg.release();  // we release our ownership.  Handle could have taken over ownership.
-        assert rpcConfig.checkResponseSend(r.rpcType, r.pBody.getClass());
-        OutboundRpcMessage outMessage = new OutboundRpcMessage(RpcMode.RESPONSE, r.rpcType, msg.coordinationId,
-            r.pBody, r.dBodies);
-        if (RpcConstants.EXTRA_DEBUGGING) logger.debug("Adding message to outbound buffer. {}", outMessage);
-        ctx.writeAndFlush(outMessage);
         break;
       }
 

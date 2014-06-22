@@ -34,6 +34,7 @@ import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.record.RawFragmentBatch;
 import org.apache.drill.exec.rpc.RemoteConnection;
+import org.apache.drill.exec.rpc.ResponseSender;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.work.batch.IncomingBuffers;
 
@@ -48,7 +49,6 @@ public class NonRootFragmentManager implements FragmentManager {
   private volatile FragmentExecutor runner;
   private volatile boolean cancel = false;
   private final FragmentContext context;
-  private final PhysicalPlanReader reader;
   private List<RemoteConnection> connections = new CopyOnWriteArrayList<>();
 
   public NonRootFragmentManager(PlanFragment fragment, DrillbitContext context) throws FragmentSetupException{
@@ -59,7 +59,6 @@ public class NonRootFragmentManager implements FragmentManager {
       this.buffers = new IncomingBuffers(root, this.context);
       this.context.setBuffers(buffers);
       this.runnerListener = new NonRootStatusReporter(this.context, context.getController().getTunnel(fragment.getForeman()));
-      this.reader = context.getPlanReader();
 
     }catch(ExecutionSetupException | IOException e){
       throw new FragmentSetupException("Failure while decoding fragment.", e);

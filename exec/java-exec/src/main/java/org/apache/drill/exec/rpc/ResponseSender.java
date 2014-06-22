@@ -15,9 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.work.batch;
+package org.apache.drill.exec.rpc;
 
-public interface ReadController {
-  public void setAutoRead(boolean enabled);
-  public void setAutoRead(int minorFragmentId, boolean enabled);
+
+public interface ResponseSender {
+  public void send(Response r);
+
 }

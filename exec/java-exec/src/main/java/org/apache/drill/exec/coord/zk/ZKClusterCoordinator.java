@@ -148,7 +148,7 @@ public class ZKClusterCoordinator extends ClusterCoordinator {
 
   @Override
   public void unregister(RegistrationHandle handle) {
-    if (!(handle instanceof ZKRegistrationHandle)) throw new UnsupportedOperationException("Unknown handle type");
+    if (!(handle instanceof ZKRegistrationHandle)) throw new UnsupportedOperationException("Unknown handle type: " + handle.getClass().getName());
 
     ZKRegistrationHandle h = (ZKRegistrationHandle) handle;
     try {

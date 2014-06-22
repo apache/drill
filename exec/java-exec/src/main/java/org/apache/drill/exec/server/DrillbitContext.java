@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.server;
 
-import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.EventLoopGroup;
 
 import java.util.Collection;
 
@@ -117,7 +117,7 @@ public class DrillbitContext {
     return this.storagePlugins;
   }
 
-  public NioEventLoopGroup getBitLoopGroup(){
+  public EventLoopGroup getBitLoopGroup(){
     return context.getBitLoopGroup();
   }
 
