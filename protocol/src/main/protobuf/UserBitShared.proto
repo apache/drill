@@ -199,4 +199,5 @@ enum CoreOperatorType {
   JSON_SUB_SCAN = 29;
   INFO_SCHEMA_SUB_SCAN = 30;
   COMPLEX_TO_JSON = 31;
+  PRODUCER_CONSUMER = 32;
 }

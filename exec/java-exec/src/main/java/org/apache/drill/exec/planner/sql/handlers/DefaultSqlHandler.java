@@ -40,12 +40,14 @@ import org.apache.drill.exec.planner.logical.DrillScreenRel;
 import org.apache.drill.exec.planner.logical.DrillStoreRel;
 import org.apache.drill.exec.planner.physical.DrillDistributionTrait;
 import org.apache.drill.exec.planner.physical.PhysicalPlanCreator;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.planner.physical.Prel;
 import org.apache.drill.exec.planner.physical.explain.PrelSequencer;
 import org.apache.drill.exec.planner.physical.visitor.ExcessiveExchangeIdentifier;
 import org.apache.drill.exec.planner.physical.visitor.FinalColumnReorderer;
 import org.apache.drill.exec.planner.physical.visitor.ComplexToJsonPrelVisitor;
 import org.apache.drill.exec.planner.physical.visitor.JoinPrelRenameVisitor;
+import org.apache.drill.exec.planner.physical.visitor.ProducerConsumerPrelVisitor;
 import org.apache.drill.exec.planner.physical.visitor.RelUniqifier;
 import org.apache.drill.exec.planner.physical.visitor.SelectionVectorPrelVisitor;
 import org.apache.drill.exec.planner.sql.DrillSqlWorker;
@@ -178,6 +180,15 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     phyRelNode = SelectionVectorPrelVisitor.addSelectionRemoversWhereNecessary(phyRelNode);
 
     /* 5.)
+     * Add ProducerConsumer after each scan if the option is set
+     * Use the configured queueSize
+     */
+    if (context.getOptions().getOption(PlannerSettings.PRODUCER_CONSUMER.getOptionName()).bool_val) {
+      long queueSize = context.getOptions().getOption(PlannerSettings.PRODUCER_CONSUMER_QUEUE_SIZE.getOptionName()).num_val;
+      phyRelNode = ProducerConsumerPrelVisitor.addProducerConsumerToScans(phyRelNode, (int) queueSize);
+    }
+
+    /* 6.)
      * if the client does not support complex types (Map, Repeated)
      * insert a project which which would convert
      */
@@ -186,7 +197,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
       phyRelNode = ComplexToJsonPrelVisitor.addComplexToJsonPrel(phyRelNode);
     }
 
-    /* 6.)
+    /* 7.)
      * Finally, Make sure that the no rels are repeats.
      * This could happen in the case of querying the same table twice as Optiq may canonicalize these.
      */
