@@ -119,10 +119,16 @@ public class ProfileWrapper {
       ArrayList<OperatorProfile> ops = new ArrayList<OperatorProfile>(m.getOperatorProfileList());
       long biggestIncomingRecords = 0;
       long biggestBatches = 0;
-      
-      for (StreamProfile sp : ops.get(0).getInputProfileList()) {
-        biggestIncomingRecords += sp.getRecords();
-        biggestBatches += sp.getBatches();
+
+      for (OperatorProfile op : ops) {
+        long incomingRecords = 0;
+        long batches = 0;
+        for (StreamProfile sp : op.getInputProfileList()) {
+          incomingRecords += sp.getRecords();
+          batches += sp.getBatches();
+        }
+        biggestIncomingRecords = Math.max(biggestIncomingRecords, incomingRecords);
+        biggestBatches = Math.max(biggestBatches, batches);
       }
       
       builder.appendInteger(m.getMinorFragmentId(), null);
