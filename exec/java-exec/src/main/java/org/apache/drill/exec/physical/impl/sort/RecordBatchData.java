@@ -60,6 +60,12 @@ public class RecordBatchData {
     container.setRecordCount(recordCount);
     container.buildSchema(batch.getSchema().getSelectionVectorMode());
   }
+
+  public void canonicalize() {
+    SelectionVectorMode mode = container.getSchema().getSelectionVectorMode();
+    container = VectorContainer.canonicalize(container);
+    container.buildSchema(mode);
+  }
   
   public int getRecordCount(){
     return recordCount;

@@ -112,6 +112,12 @@ public class SortRecordBatchBuilder {
     return true;
   }
 
+  public void canonicalize() {
+    for (RecordBatchData batch : batches.values()) {
+      batch.canonicalize();
+    }
+  }
+
   public boolean isEmpty(){
     return batches.isEmpty();
   }
@@ -165,7 +171,7 @@ public class SortRecordBatchBuilder {
       }
     }
 
-    for(MaterializedField f : vectors.keySet()){
+    for(MaterializedField f : schema){
       List<ValueVector> v = vectors.get(f);
       outputContainer.addHyperList(v, false);
     }

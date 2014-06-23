@@ -170,10 +170,12 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
         case OK:
           countSincePurge += incoming.getRecordCount();
           batchCount++;
+          RecordBatchData batch = new RecordBatchData(incoming);
+          batch.canonicalize();
           if (priorityQueue == null) {
-            priorityQueue = createNewPriorityQueue(context, config.getOrderings(), new ExpandableHyperContainer(incoming), MAIN_MAPPING, LEFT_MAPPING, RIGHT_MAPPING);
+            priorityQueue = createNewPriorityQueue(context, config.getOrderings(), new ExpandableHyperContainer(batch.getContainer()), MAIN_MAPPING, LEFT_MAPPING, RIGHT_MAPPING);
           }
-          priorityQueue.add(context, new RecordBatchData(incoming));
+          priorityQueue.add(context, batch);
           if (countSincePurge > config.getLimit() && batchCount > batchPurgeThreshold) {
             purge();
             countSincePurge = 0;
@@ -242,6 +244,7 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
     selectionVector4.clear();
     c.clear();
     VectorContainer newQueue = new VectorContainer();
+    builder.canonicalize();
     builder.build(context, newQueue);
     priorityQueue.resetQueue(newQueue, builder.getSv4().createNewWrapperCurrent());
     builder.getSv4().clear();
