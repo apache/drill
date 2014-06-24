@@ -87,9 +87,9 @@ public abstract class BasicServer<T extends EnumLite, C extends RemoteConnection
           }
         });
 
-     if(TransportCheck.SUPPORTS_EPOLL){
-       b.option(EpollChannelOption.SO_REUSEPORT, true); //
-     }
+//     if(TransportCheck.SUPPORTS_EPOLL){
+//       b.option(EpollChannelOption.SO_REUSEPORT, true); //
+//     }
   }
 
   public OutOfMemoryHandler getOutOfMemoryHandler() {

@@ -29,6 +29,7 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.DrillbitStartupException;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.rpc.NamedThreadFactory;
+import org.apache.drill.exec.rpc.TransportCheck;
 import org.apache.drill.exec.rpc.control.Controller;
 import org.apache.drill.exec.rpc.control.ControllerImpl;
 import org.apache.drill.exec.rpc.control.WorkEventBus;
@@ -52,8 +53,7 @@ public class ServiceEngine implements Closeable{
   private final boolean allowPortHunting;
 
   public ServiceEngine(ControlMessageHandler controlMessageHandler, UserWorker userWorker, BootStrapContext context, WorkEventBus workBus, DataResponseHandler dataHandler, boolean allowPortHunting){
-    this.userServer = new UserServer(context.getAllocator(), new NioEventLoopGroup(context.getConfig().getInt(ExecConstants.USER_SERVER_RPC_THREADS),
-            new NamedThreadFactory("UserServer-")), userWorker);
+    this.userServer = new UserServer(context.getAllocator(), TransportCheck.createEventLoopGroup(context.getConfig().getInt(ExecConstants.USER_SERVER_RPC_THREADS), "UserServer-"), userWorker);
     this.controller = new ControllerImpl(context, controlMessageHandler, allowPortHunting);
     this.dataPool = new DataConnectionCreator(context, workBus, dataHandler, allowPortHunting);
     this.config = context.getConfig();

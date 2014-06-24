@@ -87,9 +87,9 @@ public abstract class BasicClient<T extends EnumLite, R extends RemoteConnection
           }
         }); //
 
-    if(TransportCheck.SUPPORTS_EPOLL){
-      b.option(EpollChannelOption.SO_REUSEPORT, true); //
-    }
+//    if(TransportCheck.SUPPORTS_EPOLL){
+//      b.option(EpollChannelOption.SO_REUSEPORT, true); //
+//    }
   }
 
   public abstract ProtobufLengthDecoder getDecoder(BufferAllocator allocator);

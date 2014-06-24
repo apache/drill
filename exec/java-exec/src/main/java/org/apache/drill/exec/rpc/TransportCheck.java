@@ -44,7 +44,7 @@ public class TransportCheck {
     String name = SystemPropertyUtil.get("os.name").toLowerCase(Locale.US).trim();
 
     if (!name.startsWith("linux") || SystemPropertyUtil.getBoolean("drill.exec.disable-linux-epoll", false) //
-//        /* disable epoll */  || true //
+        /* disable epoll */  || true //
         ) {
       SUPPORTS_EPOLL = false;
     }else{

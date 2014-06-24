@@ -17,8 +17,10 @@
  */
 package org.apache.drill.exec.physical.impl.xsort;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.util.List;
 
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.common.config.DrillConfig;
@@ -37,12 +39,10 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
 
-import java.util.List;
+import com.google.common.base.Charsets;
+import com.google.common.io.Files;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-
+@Ignore
 public class TestSimpleExternalSort extends BaseTestQuery {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestSimpleExternalSort.class);
   DrillConfig c = DrillConfig.create();
