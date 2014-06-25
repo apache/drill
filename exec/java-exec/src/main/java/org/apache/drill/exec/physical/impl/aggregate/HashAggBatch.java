@@ -193,8 +193,6 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
     ClassGenerator<HashAggregator> cgInner = cg.getInnerGenerator("BatchHolder");
 
     container.clear();
-    List<VectorAllocator> keyAllocators = Lists.newArrayList();
-    List<VectorAllocator> valueAllocators = Lists.newArrayList();
 
     int numGroupByExprs = (popConfig.getGroupByExprs() != null) ? popConfig.getGroupByExprs().length : 0;
     int numAggrExprs = (popConfig.getAggrExprs() != null) ? popConfig.getAggrExprs().length : 0;
@@ -213,7 +211,6 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
 
       final MaterializedField outputField = MaterializedField.create(ne.getRef(), expr.getMajorType());
       ValueVector vv = TypeHelper.getNewVector(outputField, oContext.getAllocator());
-      keyAllocators.add(VectorAllocator.getAllocator(vv, 200));
 
       // add this group-by vector to the output container
       groupByOutFieldIds[i] = container.add(vv);
@@ -229,7 +226,6 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
 
       final MaterializedField outputField = MaterializedField.create(ne.getRef(), expr.getMajorType());
       ValueVector vv = TypeHelper.getNewVector(outputField, oContext.getAllocator());
-      valueAllocators.add(VectorAllocator.getAllocator(vv, 200));
       aggrOutFieldIds[i] = container.add(vv);
 
       aggrExprs[i] = new ValueVectorWriteExpression(aggrOutFieldIds[i], expr, true);
@@ -251,9 +247,8 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
               oContext.getAllocator(), incoming, this,
               aggrExprs,
               cgInner.getWorkspaceTypes(),
-              groupByOutFieldIds,
-              keyAllocators.toArray(new VectorAllocator[keyAllocators.size()]),
-              valueAllocators.toArray(new VectorAllocator[valueAllocators.size()]));
+              groupByOutFieldIds, 
+              this.container); 
 
     return agg;
   }

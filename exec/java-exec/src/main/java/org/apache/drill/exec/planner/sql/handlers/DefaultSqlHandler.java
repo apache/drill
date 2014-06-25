@@ -201,7 +201,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
      * Finally, Make sure that the no rels are repeats.
      * This could happen in the case of querying the same table twice as Optiq may canonicalize these.
      */
-    phyRelNode = ExcessiveExchangeIdentifier.removeExcessiveEchanges(phyRelNode, targetSliceSize);
+    phyRelNode = RelUniqifier.uniqifyGraph(phyRelNode);
 
     return phyRelNode;
   }
