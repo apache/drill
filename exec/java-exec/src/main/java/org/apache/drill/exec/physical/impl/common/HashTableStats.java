@@ -22,6 +22,7 @@ public class HashTableStats {
   public int numBuckets;
   public int numEntries;
   public int numResizing;
+  public int resizingTime;
 
   public HashTableStats() {
   }

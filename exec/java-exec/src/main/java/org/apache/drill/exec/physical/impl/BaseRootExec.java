@@ -19,21 +19,23 @@ package org.apache.drill.exec.physical.impl;
 
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.OpProfileDef;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.ops.OperatorStats;
-import org.apache.drill.exec.ops.SenderStats;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 
 public abstract class BaseRootExec implements RootExec {
 
-  protected SenderStats stats = null;
+  protected OperatorStats stats = null;
   protected OperatorContext oContext = null;
 
   public BaseRootExec(FragmentContext context, PhysicalOperator config) throws OutOfMemoryException {
     this.oContext = new OperatorContext(config, context, stats);
-    this.stats = new SenderStats(config, oContext.getAllocator());
+    stats = new OperatorStats(new OpProfileDef(config.getOperatorId(),
+        config.getOperatorType(), OperatorContext.getChildCount(config)),
+        oContext.getAllocator());
     context.getStats().addOperatorStats(this.stats);
   }
 

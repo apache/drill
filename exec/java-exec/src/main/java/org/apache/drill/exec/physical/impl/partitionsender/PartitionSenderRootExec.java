@@ -18,6 +18,7 @@
 package org.apache.drill.exec.physical.impl.partitionsender;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
@@ -29,13 +30,17 @@ import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.ExpressionTreeMaterializer;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.MetricDef;
 import org.apache.drill.exec.ops.OperatorContext;
-import org.apache.drill.exec.ops.SenderStats;
+import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.config.HashPartitionSender;
 import org.apache.drill.exec.physical.impl.BaseRootExec;
 import org.apache.drill.exec.physical.impl.SendingAccountor;
+import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
+import org.apache.drill.exec.proto.UserBitShared.MetricValue;
+import org.apache.drill.exec.proto.UserBitShared.OperatorProfile;
 import org.apache.drill.exec.record.BatchSchema.SelectionVectorMode;
 import org.apache.drill.exec.record.FragmentWritableBatch;
 import org.apache.drill.exec.record.RecordBatch;
@@ -61,6 +66,23 @@ public class PartitionSenderRootExec extends BaseRootExec {
   private final int outGoingBatchCount;
   private final HashPartitionSender popConfig;
   private final StatusHandler statusHandler;
+  
+  long minReceiverRecordCount = Long.MAX_VALUE;
+  long maxReceiverRecordCount = Long.MIN_VALUE;
+  
+  public enum Metric implements MetricDef {
+    BATCHES_SENT,
+    RECORDS_SENT,
+    MIN_RECORDS,
+    MAX_RECORDS,
+    N_RECEIVERS,
+    BYTES_SENT;
+
+    @Override
+    public int metricId() {
+      return ordinal();
+    }
+  }
 
   public PartitionSenderRootExec(FragmentContext context,
                                  RecordBatch incoming,
@@ -138,7 +160,7 @@ public class PartitionSenderRootExec extends BaseRootExec {
           context.fail(e);
           return false;
         }
-        stats.updatePartitionStats(partitioner.getOutgoingBatches());
+        updateStats(partitioner.getOutgoingBatches());
         for (VectorWrapper<?> v : incoming) {
           v.clear();
         }
@@ -187,6 +209,21 @@ public class PartitionSenderRootExec extends BaseRootExec {
     }
   }
 
+  public void updateStats(List<? extends PartitionStatsBatch> outgoing) {
+    long records = 0;
+    for (PartitionStatsBatch o : outgoing) {
+      long totalRecords = o.getTotalRecords();
+      minReceiverRecordCount = Math.min(minReceiverRecordCount, totalRecords);
+      maxReceiverRecordCount = Math.max(maxReceiverRecordCount, totalRecords);
+      records += totalRecords;
+    }
+    stats.addLongStat(Metric.BATCHES_SENT, 1);
+    stats.addLongStat(Metric.RECORDS_SENT, records);
+    stats.setLongStat(Metric.MIN_RECORDS, minReceiverRecordCount);
+    stats.setLongStat(Metric.MAX_RECORDS, maxReceiverRecordCount);
+    stats.setLongStat(Metric.N_RECEIVERS, outgoing.size());
+  }
+  
   public void stop() {
     logger.debug("Partition sender stopping.");
     ok = false;

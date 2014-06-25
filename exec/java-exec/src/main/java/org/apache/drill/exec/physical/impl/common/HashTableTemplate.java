@@ -92,6 +92,8 @@ public abstract class HashTableTemplate implements HashTable {
 
   private int numResizing = 0;
   
+  private int resizingTime = 0;
+  
   // This class encapsulates the links, keys and values for up to BATCH_SIZE
   // *unique* records. Thus, suppose there are N incoming record batches, each
   // of size BATCH_SIZE..but they have M unique keys altogether, the number of
@@ -408,6 +410,7 @@ public abstract class HashTableTemplate implements HashTable {
     stats.numBuckets = numBuckets();
     stats.numEntries = numEntries;
     stats.numResizing = numResizing;
+    stats.resizingTime = resizingTime;
   }
 
   public boolean isEmpty() {
@@ -599,6 +602,8 @@ public abstract class HashTableTemplate implements HashTable {
   private void resizeAndRehashIfNeeded() {
     if (numEntries < threshold)
       return;
+    
+    long t0 = System.currentTimeMillis();
 
     if (EXTRA_DEBUG) logger.debug("Hash table numEntries = {}, threshold = {}; resizing the table...", numEntries, threshold);
 
@@ -640,7 +645,7 @@ public abstract class HashTableTemplate implements HashTable {
         bh.dump(idx);
       }
     }
-
+    resizingTime += System.currentTimeMillis() - t0;
     numResizing++;
   }
 

@@ -38,11 +38,11 @@ import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.holders.IntHolder;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.MetricDef;
 import org.apache.drill.exec.physical.config.HashJoinPOP;
 import org.apache.drill.exec.physical.impl.common.ChainedHashTable;
 import org.apache.drill.exec.physical.impl.common.HashTable;
 import org.apache.drill.exec.physical.impl.common.HashTableConfig;
-import org.apache.drill.exec.physical.impl.common.HashTableMetrics;
 import org.apache.drill.exec.physical.impl.common.HashTableStats;
 import org.apache.drill.exec.physical.impl.sort.RecordBatchData;
 import org.apache.drill.exec.physical.impl.svremover.RemovingRecordBatch;
@@ -137,6 +137,21 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
 
     private final HashTableStats htStats = new HashTableStats();
 
+    public enum Metric implements MetricDef {
+
+      NUM_BUCKETS,
+      NUM_ENTRIES,
+      NUM_RESIZING,
+      RESIZING_TIME;
+      
+      // duplicate for hash ag
+
+      @Override
+      public int metricId() {
+        return ordinal();
+      }
+    }
+    
     @Override
     public int getRecordCount() {
         return outputRecords;
@@ -443,9 +458,10 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
     private void updateStats(HashTable htable) {
       if(htable == null) return;
       htable.getStats(htStats);
-      this.stats.addLongStat(HashTableMetrics.HTABLE_NUM_BUCKETS, htStats.numBuckets);
-      this.stats.addLongStat(HashTableMetrics.HTABLE_NUM_ENTRIES, htStats.numEntries);
-      this.stats.addLongStat(HashTableMetrics.HTABLE_NUM_RESIZING, htStats.numResizing);
+      this.stats.setLongStat(Metric.NUM_BUCKETS, htStats.numBuckets);
+      this.stats.setLongStat(Metric.NUM_ENTRIES, htStats.numEntries);
+      this.stats.setLongStat(Metric.NUM_RESIZING, htStats.numResizing);
+      this.stats.setLongStat(Metric.RESIZING_TIME, htStats.resizingTime);
     }
 
     @Override

@@ -33,6 +33,7 @@ import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.config.HashPartitionSender;
 import org.apache.drill.exec.physical.impl.SendingAccountor;
+import org.apache.drill.exec.physical.impl.partitionsender.PartitionSenderRootExec.Metric;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.ExecProtos;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
@@ -264,6 +265,7 @@ public abstract class PartitionerTemplate implements Partitioner {
                 oppositeMinorFragmentId,
                 getWritableBatch());
 
+        updateStats(writableBatch);
         stats.startWait();
         try {
           tunnel.sendRecordBatch(statusHandler, writableBatch);
@@ -305,6 +307,10 @@ public abstract class PartitionerTemplate implements Partitioner {
       if (!statusHandler.isOk()) {
         throw new IOException(statusHandler.getException());
       }
+    }
+    
+    public void updateStats(FragmentWritableBatch writableBatch) {
+      stats.addLongStat(Metric.BYTES_SENT, writableBatch.getByteCount());
     }
 
     public void initializeBatch() {

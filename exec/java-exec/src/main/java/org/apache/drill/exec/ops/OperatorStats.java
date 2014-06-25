@@ -174,5 +174,13 @@ public class OperatorStats {
   public void addDoubleStat(MetricDef metric, double value){
     doubleMetrics.putOrAdd(metric.metricId(), value, value);
   }
+  
+  public void setLongStat(MetricDef metric, long value){
+    longMetrics.put(metric.metricId(), value);
+  }
+
+  public void setDoubleStat(MetricDef metric, double value){
+    doubleMetrics.put(metric.metricId(), value);
+  }
 
 }

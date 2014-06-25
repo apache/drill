@@ -24,6 +24,7 @@ import java.util.List;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.MetricDef;
 import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.config.Screen;
 import org.apache.drill.exec.physical.impl.materialize.QueryWritableBatch;
@@ -66,6 +67,15 @@ public class ScreenCreator implements RootCreator<Screen>{
     private RecordMaterializer materializer;
     private boolean first = true;
 
+    public enum Metric implements MetricDef {
+      BYTES_SENT;
+      
+      @Override
+      public int metricId() {
+        return ordinal();
+      }
+    }
+    
     public ScreenRoot(FragmentContext context, RecordBatch incoming, Screen config) throws OutOfMemoryException {
       super(context, config);
       assert context.getConnection() != null : "A screen root should only be run on the driving node which is connected directly to the client.  As such, this should always be true.";
@@ -138,6 +148,7 @@ public class ScreenCreator implements RootCreator<Screen>{
 //        context.getStats().batchesCompleted.inc(1);
 //        context.getStats().recordsCompleted.inc(incoming.getRecordCount());
         QueryWritableBatch batch = materializer.convertNext(false);
+        updateStats(batch);
         stats.startWait();
         try {
           connection.sendResult(listener, batch);
@@ -151,6 +162,10 @@ public class ScreenCreator implements RootCreator<Screen>{
       default:
         throw new UnsupportedOperationException();
       }
+    }
+    
+    public void updateStats(QueryWritableBatch queryBatch) {
+      stats.addLongStat(Metric.BYTES_SENT, queryBatch.getByteCount());
     }
 
     @Override

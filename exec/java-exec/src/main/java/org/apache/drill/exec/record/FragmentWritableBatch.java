@@ -78,6 +78,14 @@ public class FragmentWritableBatch{
   public ByteBuf[] getBuffers(){
     return buffers;
   }
+  
+  public long getByteCount() {
+    long n = 0;
+    for (ByteBuf buf : buffers) {
+      n += buf.readableBytes();
+    }
+    return n;
+  }
 
   public FragmentRecordBatch getHeader() {
     return header;

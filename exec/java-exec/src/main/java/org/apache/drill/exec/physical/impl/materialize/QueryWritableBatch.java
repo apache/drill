@@ -48,6 +48,14 @@ public class QueryWritableBatch {
     return buffers;
   }
 
+  public long getByteCount() {
+    long n = 0;
+    for (ByteBuf buf : buffers) {
+      n += buf.readableBytes();
+    }
+    return n;
+  }
+  
   public QueryResult getHeader() {
     return header;
   }

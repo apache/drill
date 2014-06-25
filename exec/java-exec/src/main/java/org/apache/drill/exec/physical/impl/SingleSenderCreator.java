@@ -24,8 +24,9 @@ import java.util.List;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.MetricDef;
 import org.apache.drill.exec.ops.OperatorContext;
-import org.apache.drill.exec.ops.SenderStats;
+import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.config.SingleSender;
 import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
@@ -57,6 +58,15 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
     private volatile boolean ok = true;
     private final SendingAccountor sendCount = new SendingAccountor();
 
+    public enum Metric implements MetricDef {
+      BYTES_SENT;
+      
+      @Override
+      public int metricId() {
+        return ordinal();
+      }
+    }
+    
     public SingleSenderRootExec(FragmentContext context, RecordBatch batch, SingleSender config) throws OutOfMemoryException {
       super(context, config);
       this.incoming = batch;
@@ -95,6 +105,7 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
       case OK:
         FragmentWritableBatch batch = new FragmentWritableBatch(false, handle.getQueryId(), handle.getMajorFragmentId(),
                 handle.getMinorFragmentId(), recMajor, 0, incoming.getWritableBatch());
+        updateStats(batch);
         sendCount.increment();
         stats.startWait();
         try {
@@ -108,6 +119,10 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
       default:
         throw new IllegalStateException();
       }
+    }
+    
+    public void updateStats(FragmentWritableBatch writableBatch) {
+      stats.addLongStat(Metric.BYTES_SENT, writableBatch.getByteCount()); 
     }
 
     @Override

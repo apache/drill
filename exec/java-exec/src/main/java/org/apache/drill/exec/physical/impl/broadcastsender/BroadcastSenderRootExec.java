@@ -23,8 +23,9 @@ import java.util.List;
 
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.MetricDef;
 import org.apache.drill.exec.ops.OperatorContext;
-import org.apache.drill.exec.ops.SenderStats;
+import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.config.BroadcastSender;
 import org.apache.drill.exec.physical.impl.BaseRootExec;
 import org.apache.drill.exec.physical.impl.RootExec;
@@ -55,6 +56,15 @@ public class BroadcastSenderRootExec extends BaseRootExec {
   private final ExecProtos.FragmentHandle handle;
   private volatile boolean ok;
   private final RecordBatch incoming;
+  
+  public enum Metric implements MetricDef {
+    N_RECEIVERS,
+    BYTES_SENT;
+    @Override
+    public int metricId() {
+      return ordinal();
+    }
+  }
 
   public BroadcastSenderRootExec(FragmentContext context,
                                  RecordBatch incoming,
@@ -106,6 +116,7 @@ public class BroadcastSenderRootExec extends BaseRootExec {
         }
         for (int i = 0; i < tunnels.length; ++i) {
           FragmentWritableBatch batch = new FragmentWritableBatch(false, handle.getQueryId(), handle.getMajorFragmentId(), handle.getMinorFragmentId(), config.getOppositeMajorFragmentId(), i, writableBatch);
+          updateStats(batch);
           stats.startWait();
           try {
             tunnels[i].sendRecordBatch(this.statusHandler, batch);
@@ -121,6 +132,11 @@ public class BroadcastSenderRootExec extends BaseRootExec {
       default:
         throw new IllegalStateException();
     }
+  }
+  
+  public void updateStats(FragmentWritableBatch writableBatch) {
+    stats.setLongStat(Metric.N_RECEIVERS, tunnels.length);
+    stats.addLongStat(Metric.BYTES_SENT, writableBatch.getByteCount()); 
   }
 
   /*

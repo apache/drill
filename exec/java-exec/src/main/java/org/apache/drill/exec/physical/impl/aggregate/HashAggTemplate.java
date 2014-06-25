@@ -36,12 +36,12 @@ import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.expr.holders.IntHolder;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.MetricDef;
 import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.config.HashAggregate;
 import org.apache.drill.exec.physical.impl.common.ChainedHashTable;
 import org.apache.drill.exec.physical.impl.common.HashTable;
 import org.apache.drill.exec.physical.impl.common.HashTableConfig;
-import org.apache.drill.exec.physical.impl.common.HashTableMetrics;
 import org.apache.drill.exec.physical.impl.common.HashTableStats;
 import org.apache.drill.exec.physical.impl.common.HashTableTemplate.BatchHolder;
 import org.apache.drill.exec.record.BatchSchema;
@@ -99,6 +99,22 @@ public abstract class HashAggTemplate implements HashAggregator {
 
   private OperatorStats stats = null;
   private HashTableStats htStats = new HashTableStats();
+  
+  public enum Metric implements MetricDef {
+
+    NUM_BUCKETS,
+    NUM_ENTRIES,
+    NUM_RESIZING,
+    RESIZING_TIME;
+    
+    // duplicate for hash ag
+
+    @Override
+    public int metricId() {
+      return ordinal();
+    }
+  }
+
 
   public class BatchHolder {
 
@@ -550,9 +566,10 @@ public abstract class HashAggTemplate implements HashAggregator {
 
   private void updateStats(HashTable htable) {
     htable.getStats(htStats);
-    this.stats.addLongStat(HashTableMetrics.HTABLE_NUM_BUCKETS, htStats.numBuckets);
-    this.stats.addLongStat(HashTableMetrics.HTABLE_NUM_ENTRIES, htStats.numEntries);
-    this.stats.addLongStat(HashTableMetrics.HTABLE_NUM_RESIZING, htStats.numResizing);
+    this.stats.setLongStat(Metric.NUM_BUCKETS, htStats.numBuckets);
+    this.stats.setLongStat(Metric.NUM_ENTRIES, htStats.numEntries);
+    this.stats.setLongStat(Metric.NUM_RESIZING, htStats.numResizing);
+    this.stats.setLongStat(Metric.RESIZING_TIME, htStats.resizingTime);
   }
 
   // Code-generated methods (implemented in HashAggBatch)
