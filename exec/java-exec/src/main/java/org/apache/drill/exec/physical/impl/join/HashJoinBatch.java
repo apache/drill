@@ -111,26 +111,36 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
     private boolean done = false;
 
     // Generator mapping for the build side
+    // Generator mapping for the build side : scalar
     private static final GeneratorMapping PROJECT_BUILD = GeneratorMapping.create("doSetup"/* setup method */,
                                                                                   "projectBuildRecord" /* eval method */,
                                                                                   null /* reset */, null /* cleanup */);
+    // Generator mapping for the build side : constant
+    private static final GeneratorMapping PROJECT_BUILD_CONSTANT = GeneratorMapping.create("doSetup"/* setup method */,
+                                                                                  "doSetup" /* eval method */,
+                                                                                   null /* reset */, null /* cleanup */);
 
-    // Generator mapping for the probe side
+    // Generator mapping for the probe side : scalar
     private static final GeneratorMapping PROJECT_PROBE = GeneratorMapping.create("doSetup" /* setup method */,
                                                                                   "projectProbeRecord" /* eval method */,
                                                                                   null /* reset */, null /* cleanup */);
+    // Generator mapping for the probe side : constant
+    private static final GeneratorMapping PROJECT_PROBE_CONSTANT = GeneratorMapping.create("doSetup" /* setup method */,
+                                                                                  "doSetup" /* eval method */,
+                                                                                  null /* reset */, null /* cleanup */);
+
 
     // Mapping set for the build side
     private final MappingSet projectBuildMapping = new MappingSet("buildIndex" /* read index */, "outIndex" /* write index */,
                                                                   "buildBatch" /* read container */,
                                                                   "outgoing" /* write container */,
-                                                                  PROJECT_BUILD, PROJECT_BUILD);
+                                                                  PROJECT_BUILD_CONSTANT, PROJECT_BUILD);
 
     // Mapping set for the probe side
     private final MappingSet projectProbeMapping = new MappingSet("probeIndex" /* read index */, "outIndex" /* write index */,
                                                                   "probeBatch" /* read container */,
                                                                   "outgoing" /* write container */,
-                                                                  PROJECT_PROBE, PROJECT_PROBE);
+                                                                  PROJECT_PROBE_CONSTANT, PROJECT_PROBE);
 
     // indicates if we have previously returned an output batch
     boolean firstOutputBatch = true;

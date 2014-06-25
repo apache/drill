@@ -79,27 +79,27 @@ public class MergeJoinBatch extends AbstractRecordBatch<MergeJoinPOP> {
                      GM("doSetup", "doSetup", null, null));
   public final MappingSet copyLeftMapping =
       new MappingSet("leftIndex", "outIndex",
-                     GM("doSetup", "doCopyLeft", null, null),
+                     GM("doSetup", "doSetup", null, null),
                      GM("doSetup", "doCopyLeft", null, null));
   public final MappingSet copyRightMappping =
       new MappingSet("rightIndex", "outIndex",
-                     GM("doSetup", "doCopyRight", null, null),
+                     GM("doSetup", "doSetup", null, null),
                      GM("doSetup", "doCopyRight", null, null));
   public final MappingSet compareMapping =
       new MappingSet("leftIndex", "rightIndex",
-                     GM("doSetup", "doCompare", null, null),
+                     GM("doSetup", "doSetup", null, null),
                      GM("doSetup", "doCompare", null, null));
   public final MappingSet compareRightMapping =
       new MappingSet("rightIndex", "null",
-                     GM("doSetup", "doCompare", null, null),
+                     GM("doSetup", "doSetup", null, null),
                      GM("doSetup", "doCompare", null, null));
   public final MappingSet compareLeftMapping =
       new MappingSet("leftIndex", "null",
-                     GM("doSetup", "doCompareNextLeftKey", null, null),
+                     GM("doSetup", "doSetup", null, null),
                      GM("doSetup", "doCompareNextLeftKey", null, null));
   public final MappingSet compareNextLeftMapping =
       new MappingSet("nextLeftIndex", "null",
-                     GM("doSetup", "doCompareNextLeftKey", null, null),
+                     GM("doSetup", "doSetup", null, null),
                      GM("doSetup", "doCompareNextLeftKey", null, null));
 
 
