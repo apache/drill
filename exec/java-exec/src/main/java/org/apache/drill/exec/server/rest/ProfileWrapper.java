@@ -26,12 +26,19 @@ import org.apache.drill.exec.proto.UserBitShared.OperatorProfile;
 import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
 import org.apache.drill.exec.proto.UserBitShared.StreamProfile;
 
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
+import com.google.common.collect.Collections2;
+
 import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 import java.util.TreeMap;
 
@@ -60,7 +67,8 @@ public class ProfileWrapper {
       builder.append(majorFragmentTimingProfile(m));
     }
     for (MajorFragmentProfile m : majors) {
-      for (MinorFragmentProfile mi : m.getMinorFragmentProfileList()) {
+      Collection<MinorFragmentProfile> minors = Collections2.filter(m.getMinorFragmentProfileList(), Filters.hasOperators);
+      for (MinorFragmentProfile mi : minors) {
         builder.append(minorFragmentOperatorProfile(m.getMajorFragmentId(), mi));
       }
     }
@@ -68,55 +76,67 @@ public class ProfileWrapper {
   }
 
   public String queryTimingProfile(ArrayList<MajorFragmentProfile> majors) {
-    final String[] columns = {"id", "minors", "first start", "last start", "first end", "last end", "tmin", "tavg", "tmax"};
+    final String[] columns = {"major id", "fragments reporting", "first start", "last start", "first end", "last end", "tmin", "tavg", "tmax"};
     TableBuilder builder = new TableBuilder("Query Timing Profile", "QueryTimingProfile", columns);
 
     
-    long t0 = 0;
+    long t0 = profile.getStart();
     for (MajorFragmentProfile m : majors) {
-      ArrayList<MinorFragmentProfile> minors = new ArrayList<MinorFragmentProfile>(m.getMinorFragmentProfileList());
       final String fmt = " (<a href=\"#MinorFragment" + m.getMajorFragmentId() + "_%1$dOperatorProfile\">%1$d</a>)";
-      int li = minors.size() - 1;
-      double total = 0;
       
-      for (MinorFragmentProfile p : minors) {
+      ArrayList<MinorFragmentProfile> complete = new ArrayList<MinorFragmentProfile>(
+          Collections2.filter(m.getMinorFragmentProfileList(), Filters.hasOperatorsAndTimes));
+
+      builder.appendInteger(m.getMajorFragmentId(), null);
+      builder.appendCell(complete.size() + " / " + m.getMinorFragmentProfileCount(), null);
+      
+      if (complete.size() < 1) {
+        builder.appendRepeated("", null, 7);
+        continue;
+      }
+
+      int li = complete.size() - 1;
+
+      Collections.sort(complete, Comparators.startTimeCompare);
+      builder.appendMillis(complete.get(0).getStartTime() - t0, String.format(fmt, complete.get(0).getMinorFragmentId()));
+      builder.appendMillis(complete.get(li).getStartTime() - t0, String.format(fmt, complete.get(li).getMinorFragmentId()));
+
+      Collections.sort(complete, Comparators.endTimeCompare);
+      builder.appendMillis(complete.get(0).getEndTime() - t0, String.format(fmt, complete.get(0).getMinorFragmentId()));
+      builder.appendMillis(complete.get(li).getEndTime() - t0, String.format(fmt, complete.get(li).getMinorFragmentId()));
+      
+      long total = 0;
+      for (MinorFragmentProfile p : complete) {
         total += p.getEndTime() - p.getStartTime();
       }
-      
-      builder.appendInteger(m.getMajorFragmentId(), null);
-      builder.appendInteger(minors.size(), null);
-      
-      Collections.sort(minors, Comparators.startTimeCompare);
-      if (t0 == 0) {
-        t0 = minors.get(0).getStartTime();
-      }
-      builder.appendMillis(minors.get(0).getStartTime() - t0, String.format(fmt, minors.get(0).getMinorFragmentId()));
-      builder.appendMillis(minors.get(li).getStartTime() - t0,String.format(fmt, minors.get(li).getMinorFragmentId()));
-
-      Collections.sort(minors, Comparators.endTimeCompare);
-      builder.appendMillis(minors.get(0).getEndTime() - t0,String.format(fmt, minors.get(0).getMinorFragmentId()));
-      builder.appendMillis(minors.get(li).getEndTime() - t0, String.format(fmt, minors.get(li).getMinorFragmentId()));
-      
-      Collections.sort(minors, Comparators.runTimeCompare);
-      builder.appendMillis(minors.get(0).getEndTime() - minors.get(0).getStartTime(), String.format(fmt, minors.get(0).getMinorFragmentId()));
-      builder.appendMillis((long) (total / minors.size()), null);
-      builder.appendMillis(minors.get(li).getEndTime() - minors.get(li).getStartTime(), String.format(fmt, minors.get(li).getMinorFragmentId()));
+      Collections.sort(complete, Comparators.runTimeCompare);
+      builder.appendMillis(complete.get(0).getEndTime() - complete.get(0).getStartTime(),
+          String.format(fmt, complete.get(0).getMinorFragmentId()));
+      builder.appendMillis((long) (total / complete.size()), null);
+      builder.appendMillis(complete.get(li).getEndTime() - complete.get(li).getStartTime(),
+          String.format(fmt, complete.get(li).getMinorFragmentId()));
     }
     return builder.toString();
   }
 
   public String majorFragmentTimingProfile(MajorFragmentProfile majorFragmentProfile) {
-    ArrayList<MinorFragmentProfile> minors = new ArrayList<MinorFragmentProfile>(majorFragmentProfile.getMinorFragmentProfileList());
-    
     final String[] columns = {"id", "start", "end", "total time", "max records", "max batches"};
     TableBuilder builder = new TableBuilder(
         "Major Fragment #" + majorFragmentProfile.getMajorFragmentId() + " Timing Profile",
         "MajorFragment" + majorFragmentProfile.getMajorFragmentId() + "TimingProfile",
         columns);
 
-    Collections.sort(minors, Comparators.minorIdCompare);
-    for (MinorFragmentProfile m : minors) {
+    ArrayList<MinorFragmentProfile> complete, incomplete;
+    complete = new ArrayList<MinorFragmentProfile>(Collections2.filter(
+        majorFragmentProfile.getMinorFragmentProfileList(), Filters.hasOperatorsAndTimes));
+    incomplete = new ArrayList<MinorFragmentProfile>(Collections2.filter(
+        majorFragmentProfile.getMinorFragmentProfileList(), Filters.missingOperatorsOrTimes));
+
+    Collections.sort(complete, Comparators.minorIdCompare);
+    for (MinorFragmentProfile m : complete) {
       ArrayList<OperatorProfile> ops = new ArrayList<OperatorProfile>(m.getOperatorProfileList());
+
+      long t0 = profile.getStart();
       long biggestIncomingRecords = 0;
       long biggestBatches = 0;
 
@@ -130,15 +150,23 @@ public class ProfileWrapper {
         biggestIncomingRecords = Math.max(biggestIncomingRecords, incomingRecords);
         biggestBatches = Math.max(biggestBatches, batches);
       }
-      
-      builder.appendInteger(m.getMinorFragmentId(), null);
-      builder.appendTime(m.getStartTime(), null);
-      builder.appendTime(m.getEndTime(), null);
+
+      builder.appendCell(
+          majorFragmentProfile.getMajorFragmentId() + "-"
+              + m.getMinorFragmentId(), null);
+      builder.appendMillis(m.getStartTime() - t0, null);
+      builder.appendMillis(m.getEndTime() - t0, null);
       builder.appendMillis(m.getEndTime() - m.getStartTime(), null);
       
       Collections.sort(ops, Comparators.incomingRecordCompare);
       builder.appendInteger(biggestIncomingRecords, null);
       builder.appendInteger(biggestBatches, null);
+    }
+    for (MinorFragmentProfile m : incomplete) {
+      builder.appendCell(
+          majorFragmentProfile.getMajorFragmentId() + "-"
+              + m.getMinorFragmentId(), null);
+      builder.appendRepeated(m.getState().toString(), null, 5);
     }
     return builder.toString();
   }
@@ -294,6 +322,24 @@ public class ProfileWrapper {
       }
     };
   }
+
+  private static class Filters {
+    final static Predicate<MinorFragmentProfile> hasOperators = new Predicate<MinorFragmentProfile>() {
+      public boolean apply(MinorFragmentProfile arg0) {
+        return arg0.getOperatorProfileCount() != 0;
+      }
+    };
+
+    final static Predicate<MinorFragmentProfile> hasTimes = new Predicate<MinorFragmentProfile>() {
+      public boolean apply(MinorFragmentProfile arg0) {
+        return arg0.hasStartTime() && arg0.hasEndTime();
+      }
+    };
+
+    final static Predicate<MinorFragmentProfile> hasOperatorsAndTimes = Predicates.and(Filters.hasOperators, Filters.hasTimes);
+
+    final static Predicate<MinorFragmentProfile> missingOperatorsOrTimes = Predicates.not(hasOperatorsAndTimes);
+  }
   
   class TableBuilder {
     NumberFormat format = NumberFormat.getInstance(Locale.US);
@@ -329,6 +375,12 @@ public class ProfileWrapper {
       }
     }
     
+    public void appendRepeated(String s, String link, int n) {
+      for (int i = 0; i < n; i++) {
+        appendCell(s, link);
+      }
+    }
+
     public void appendTime(long d, String link) {
       appendCell(dateFormat.format(d), link);
     }
