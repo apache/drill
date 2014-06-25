@@ -86,7 +86,7 @@ public class QueryManager implements FragmentStatusListener{
                            UserClientConnection rootClient, List<PlanFragment> leafFragments,
                            List<PlanFragment> intermediateFragments) throws ExecutionSetupException{
     logger.debug("Setting up fragment runs.");
-    remainingFragmentCount.set(leafFragments.size()+1);
+    remainingFragmentCount.set(intermediateFragments.size() + leafFragments.size() + 1);
     assert queryId == rootFragment.getHandle().getQueryId();
     workBus = bee.getContext().getWorkBus();
 

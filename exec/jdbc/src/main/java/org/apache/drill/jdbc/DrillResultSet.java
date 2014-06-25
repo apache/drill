@@ -31,6 +31,7 @@ import net.hydromatic.avatica.AvaticaStatement;
 
 import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
+import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.rpc.RpcException;
@@ -128,6 +129,11 @@ public class DrillResultSet extends AvaticaResultSet {
     @Override
     public void resultArrived(QueryResultBatch result, ConnectionThrottle throttle) {
       logger.debug("Result arrived {}", result);
+
+      if (result.getHeader().hasQueryState() && result.getHeader().getQueryState() == QueryState.COMPLETED && result.getHeader().getRowCount() == 0) {
+        result.release();
+        return;
+      }
 
       // if we're in a closed state, just release the message.
       if (closed) {
