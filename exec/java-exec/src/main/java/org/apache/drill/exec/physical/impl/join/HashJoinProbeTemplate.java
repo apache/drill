@@ -171,6 +171,7 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
             if(!success){
               // we failed to project.  redo this record.
               getNextRecord = false;
+              return;
             }else{
               outputRecords++;
 
@@ -197,8 +198,17 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
 
             // If we have a left outer join, project the keys
             if (joinType == JoinRelType.LEFT || joinType == JoinRelType.FULL) {
-              boolean success = projectProbeRecord(recordsProcessed, outputRecords++);
+              boolean success = projectProbeRecord(recordsProcessed, outputRecords);
+              if(!success){
+                if(outputRecords == 0){
+                  throw new IllegalStateException("Record larger than single batch.");
+                }else{
+                  // we've output some records but failed to output this one.  return and wait for next call.
+                  return;
+                }
+              }
               assert success;
+              outputRecords++;
             }
             recordsProcessed++;
           }
