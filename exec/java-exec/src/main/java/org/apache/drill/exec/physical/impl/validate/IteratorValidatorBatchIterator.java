@@ -21,6 +21,7 @@ import java.util.Iterator;
 
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.record.AbstractRecordBatch;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TypedFieldId;
@@ -112,6 +113,9 @@ public class IteratorValidatorBatchIterator implements RecordBatch {
     state = incoming.next();
     if (first && state == IterOutcome.NONE) {
       throw new IllegalStateException("The incoming iterator returned a state of NONE on the first batch. There should always be at least one batch output before returning NONE");
+    }
+    if (first && state == IterOutcome.OK) {
+      throw new IllegalStateException("The incoming iterator returned a state of OK on the first batch. There should always be a new schema on the first batch. Incoming: " + incoming.getClass().getName());
     }
     if (first) first = !first;
 

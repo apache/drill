@@ -170,6 +170,9 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
                 if(EXTRA_DEBUG) logger.debug("Received no more batches, returning.");
                 return setOkAndReturn();
               }else{
+                if (first && out == IterOutcome.OK) {
+                  out = IterOutcome.OK_NEW_SCHEMA;
+                }
                 outcome = out;
                 return AggOutcome.CLEANUP_AND_RETURN;
               }
@@ -195,7 +198,7 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
               if(incoming.getRecordCount() == 0){
                 continue;
               }else{
-                if(isSamePrev(previousIndex , previous, currentIndex)){
+                if(previousIndex != -1 && isSamePrev(previousIndex , previous, currentIndex)){
                   if(EXTRA_DEBUG) logger.debug("New value was same as last value of previous batch, adding.");
                   addRecordInc(currentIndex);
                   previousIndex = currentIndex;

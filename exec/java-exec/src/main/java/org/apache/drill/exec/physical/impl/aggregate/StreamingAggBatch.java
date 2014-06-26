@@ -122,6 +122,8 @@ public class StreamingAggBatch extends AbstractRecordBatch<StreamingAggregate> {
           first = false;
           done = true;
           return IterOutcome.OK_NEW_SCHEMA;
+        } else if (outcome == IterOutcome.OK && first) {
+          outcome = IterOutcome.OK_NEW_SCHEMA;
         }
         first = false;
         return outcome;
