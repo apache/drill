@@ -716,32 +716,16 @@ public class StringFunctions{
       out.buffer = text.buffer;
       out.start = out.end = text.end;
 
-      byte currentByte = 0;
-      int id = 0;
       int bytePerChar = 0;
       //Scan from left of "text", stop until find a char not in "from"
-      for (id = text.start; id < text.end; ) {
-        currentByte = text.buffer.getByte(id);
-
-        bytePerChar = 0;
-
-        if (currentByte < 0x128)                 // 1-byte char. First byte is 0xxxxxxx.
-          bytePerChar = 1;
-        else if ((currentByte & 0xE0) == 0xC0 )   // 2-byte char. First byte is 110xxxxx
-          bytePerChar = 2;
-        else if ((currentByte & 0xF0) == 0xE0 )   // 3-byte char. First byte is 1110xxxx
-          bytePerChar = 3;
-        else if ((currentByte & 0xF8) == 0xF0)    //4-byte char. First byte is 11110xxx
-          bytePerChar = 4;
-
-        //Scan to check if "from" contains the character of "byterPerChar" bytes.
+      for (int id = text.start; id < text.end; id += bytePerChar) {
+        bytePerChar = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.utf8CharLen(text.buffer, id);
         int pos = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.stringLeftMatchUTF8(from.buffer, from.start, from.end,
                                                                                             text.buffer, id, id + bytePerChar);
         if (pos < 0) { // Found the 1st char not in "from", stop
           out.start = id;
           break;
         }
-        id += bytePerChar; //Advance to next character.
       }
     } // end of eval
 
@@ -765,37 +749,61 @@ public class StringFunctions{
       out.buffer = text.buffer;
       out.start = out.end = text.start;
 
-      byte currentByte = 0;
-      int id = 0;
       int bytePerChar = 0;
       //Scan from right of "text", stop until find a char not in "from"
-      for (id = text.end-1; id>=  text.start; ) {
-        currentByte = text.buffer.getByte(id);
-
-        bytePerChar = 0;
-        //In UTF-8 encoding, the continuation byte for a multi-byte char is 10xxxxxx.
-        //Continue back-off to prior byte if it's continuation byte
-        if ( (currentByte & 0xC0) == 0x80) {
-          id --;
-          continue;
-        } else if (currentByte < 0x128)                 // 1-byte char. First byte is 0xxxxxxx.
-          bytePerChar = 1;
-        else if ((currentByte & 0xE0) == 0xC0 )   // 2-byte char. First byte is 110xxxxx
-          bytePerChar = 2;
-        else if ((currentByte & 0xF0) == 0xE0 )   // 3-byte char. First byte is 1110xxxx
-          bytePerChar = 3;
-        else if ((currentByte & 0xF8) == 0xF0)    //4-byte char. First byte is 11110xxx
-          bytePerChar = 4;
-
-        //Scan to check if "from" contains the character of "byterPerChar" bytes. The lead byte starts at id.
+      for (int id = text.end - 1; id >= text.start; id -= bytePerChar) {
+        while ((text.buffer.getByte(id) & 0xC0) == 0x80 && id >= text.start) id--;
+        bytePerChar = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.utf8CharLen(text.buffer, id);
         int pos = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.stringLeftMatchUTF8(from.buffer, from.start, from.end,
                                                                                             text.buffer, id, id + bytePerChar);
         if (pos < 0) { // Found the 1st char not in "from", stop
           out.end = id+ bytePerChar;
           break;
         }
+      }
+    } // end of eval
+  }
 
-        id --; // back-off to prior character.
+  /**
+   * Remove the longest string containing only characters from "from"  from the start of "text"
+   */
+  @FunctionTemplate(name = "btrim", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  public static class Btrim implements DrillSimpleFunc{
+    
+    @Param  VarCharHolder text;
+    @Param  VarCharHolder from;
+    
+    @Output VarCharHolder out;
+
+    public void setup(RecordBatch incoming){
+    }
+
+    public void eval() {
+      out.buffer = text.buffer;
+      out.start = out.end = text.start;
+      int bytePerChar = 0;
+      
+      //Scan from left of "text", stop until find a char not in "from"
+      for (int id = text.start; id < text.end; id += bytePerChar) {
+        bytePerChar = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.utf8CharLen(text.buffer, id);
+        int pos = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.stringLeftMatchUTF8(from.buffer, from.start, from.end,
+                                                                                            text.buffer, id, id + bytePerChar);
+        if (pos < 0) { // Found the 1st char not in "from", stop
+          out.start = id; 
+          break;
+        }
+      }
+
+      //Scan from right of "text", stop until find a char not in "from"
+      for (int id = text.end - 1; id >= text.start; id -= bytePerChar) {
+        while ((text.buffer.getByte(id) & 0xC0) == 0x80 && id >= text.start) id--;
+        bytePerChar = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.utf8CharLen(text.buffer, id);
+        int pos = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.stringLeftMatchUTF8(from.buffer, from.start, from.end,
+                                                                                            text.buffer, id, id + bytePerChar);
+        if (pos < 0) { // Found the 1st char not in "from", stop
+          out.end = id+ bytePerChar; 
+          break;
+        }
       }
     } // end of eval
   }

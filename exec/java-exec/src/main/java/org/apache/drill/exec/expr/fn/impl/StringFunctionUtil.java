@@ -72,7 +72,7 @@ public class StringFunctionUtil {
     return -1;
   }
 
-  private static int utf8CharLen(ByteBuf buffer, int idx) {
+  public static int utf8CharLen(ByteBuf buffer, int idx) {
     byte firstByte = buffer.getByte(idx);
     if (firstByte >= 0) { // 1-byte char. First byte is 0xxxxxxx.
       return 1;

@@ -138,6 +138,14 @@ public class TestStringFunctions extends ExecTest {
   }
 
   @Test
+  public void testTrim(@Injectable final DrillbitContext bitContext,
+                           @Injectable UserServer.UserClientConnection connection) throws Throwable{
+    Object [] expected = new Object[] {"fghI", "", "", "!", " aaa "};
+
+    runTest(bitContext, connection, expected, "functions/string/testTrim.json");
+  }
+
+  @Test
   public void testReplace(@Injectable final DrillbitContext bitContext,
                            @Injectable UserServer.UserClientConnection connection) throws Throwable{
     Object [] expected = new Object[] {"aABABcdf", "ABABbABbcdf", "aababcdf", "acdf", "ABCD", "abc"};

@@ -289,6 +289,29 @@ public class DrillOptiq {
           default:
             throw new UnsupportedOperationException("extract function supports the following time units: YEAR, MONTH, DAY, HOUR, MINUTE, SECOND");
         }
+      } else if (functionName.equals("trim")) {
+        String trimFunc = null;
+        List<LogicalExpression> trimArgs = Lists.newArrayList();
+
+        assert args.get(0) instanceof ValueExpressions.QuotedString;
+        switch (((ValueExpressions.QuotedString)args.get(0)).value.toUpperCase()) {
+        case "LEADING":
+          trimFunc = "ltrim";
+          break;
+        case "TRAILING":
+          trimFunc = "rtrim";
+          break;
+        case "BOTH":
+          trimFunc = "btrim";
+          break;
+        default:
+          assert 1 == 0;
+        }
+
+        trimArgs.add(args.get(2));
+        trimArgs.add(args.get(1));
+
+        return FunctionCallFactory.createExpression(trimFunc, trimArgs);
       } else if (functionName.equals("date_part")) {
         // Rewrite DATE_PART functions as extract functions
         // assert that the function has exactly two arguments
