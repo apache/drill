@@ -22,7 +22,7 @@ import org.apache.drill.exec.expr.annotations.Workspace;
 
 <#list dateIntervalFunc.dates as type>
 
-<@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/G${type}Difference.java" />
+<@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/G${type}Arithmetic.java" />
 
 <#include "/@includes/license.ftl" />
 
@@ -40,8 +40,11 @@ import org.apache.drill.exec.record.RecordBatch;
 import io.netty.buffer.ByteBuf;
 
 @SuppressWarnings("unused")
+public class G${type}Arithmetic {
+@SuppressWarnings("unused")
+
 @FunctionTemplate(names = {"date_diff", "subtract", "date_sub"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
-public class G${type}Difference implements DrillSimpleFunc {
+public static class G${type}Difference implements DrillSimpleFunc {
 
     @Param  ${type}Holder left;
     @Param  ${type}Holder right;
@@ -71,5 +74,46 @@ public class G${type}Difference implements DrillSimpleFunc {
         out.days = (int) (difference / org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
         </#if>
     }
+}
+
+@SuppressWarnings("unused")
+@FunctionTemplate(names = "date_trunc", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+public static class G${type}DateTrunc implements DrillSimpleFunc {
+
+    @Param  VarCharHolder left;
+    @Param  ${type}Holder right;
+    @Output ${type}Holder out;
+    @Workspace org.joda.time.MutableDateTime dateTime;
+
+    public void setup(RecordBatch incoming) {
+      dateTime = new org.joda.time.MutableDateTime(org.joda.time.DateTimeZone.UTC);
+    }
+
+    public void eval() {
+        dateTime.setMillis(right.value);
+        <#if type != "Time">
+        if (left.toString().equalsIgnoreCase("YEAR")) dateTime.setRounding(dateTime.getChronology().year());
+        else if (left.toString().equalsIgnoreCase("MONTH")) dateTime.setRounding(dateTime.getChronology().monthOfYear());
+        else if (left.toString().equalsIgnoreCase("DAY")) dateTime.setRounding(dateTime.getChronology().dayOfMonth());
+        else
+        </#if>
+        <#if type != "Date">
+        if (left.toString().equalsIgnoreCase("HOUR")) dateTime.setRounding(dateTime.getChronology().hourOfDay());
+        else if (left.toString().equalsIgnoreCase("MINUTE")) dateTime.setRounding(dateTime.getChronology().minuteOfHour());
+        else if (left.toString().equalsIgnoreCase("SECOND")) dateTime.setRounding(dateTime.getChronology().secondOfMinute());
+        else
+        </#if>
+        <#if type == "TimeStamp" || type == "TimeStampTZ">
+            throw new UnsupportedOperationException("date_trunc function supports the following time units for TimeStamp(TZ): YEAR, MONTH, DAY, HOUR, MINUTE, SECOND");
+        out.value = dateTime.getMillis();
+        <#elseif type == "Date">
+            throw new UnsupportedOperationException("date_trunc function supports the following time units for Date: YEAR, MONTH, DAY");
+        out.value = dateTime.getMillis();
+        <#elseif type == "Time">
+            throw new UnsupportedOperationException("date_trunc function supports the following time units for Time: HOUR, MINUTE, SECOND");
+        out.value = (int) dateTime.getMillis();
+        </#if>
+    }
+}
 }
 </#list>

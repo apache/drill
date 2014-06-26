@@ -529,6 +529,27 @@ public class TestFunctionsQuery {
   }
 
   @Test
+  public void testDateTrunc() throws Exception {
+    String query = "select "
+        + "date_trunc('MINUTE', time '2:30:21.5') as TIME1, "
+        + "date_trunc('SECOND', time '2:30:21.5') as TIME2, "
+        + "date_trunc('HOUR', timestamp '1991-05-05 10:11:12.100') as TS1, "
+        + "date_trunc('SECOND', timestamp '1991-05-05 10:11:12.100') as TS2, "
+        + "date_trunc('MONTH', date '2011-2-2') as DATE1, "
+        + "date_trunc('YEAR', date '2011-2-2') as DATE2 "
+        + "from cp.`employee.json` where employee_id < 2";
+    JdbcAssert.withNoDefaultSchema()
+    .sql(query)
+    .returns(
+        "TIME1=02:30:00; " +
+        "TIME2=02:30:21; " +
+        "TS1=1991-05-05 10:00:00.0; " +
+        "TS2=1991-05-05 10:11:12.0; " +
+        "DATE1=2011-02-01; " +
+        "DATE2=2011-01-01\n");
+  }
+  
+  @Test
   @Ignore
   public void testToTimeStamp() throws Exception {
     String query = "select to_timestamp(cast('800120400.12312' as decimal(38, 5))) as DEC38_TS, to_timestamp(200120400) as INT_TS " +
