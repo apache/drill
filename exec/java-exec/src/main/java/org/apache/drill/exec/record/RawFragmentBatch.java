@@ -70,4 +70,8 @@ public class RawFragmentBatch {
     sender.send(DataRpcConfig.OK);
   }
 
+  public long getByteCount() {
+    return body == null ? 0 : body.readableBytes();
+  }
+
 }

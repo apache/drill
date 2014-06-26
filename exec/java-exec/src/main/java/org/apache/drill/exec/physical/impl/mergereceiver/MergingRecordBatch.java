@@ -100,6 +100,8 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
   private boolean done = false;
 
   public static enum Metric implements MetricDef{
+    BYTES_RECEIVED,
+    NUM_SENDERS,
     NEXT_WAIT_NANOS;
 
     @Override
@@ -116,6 +118,7 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
     this.fragProviders = fragProviders;
     this.context = context;
     this.outgoingContainer = new VectorContainer();
+    this.stats.setLongStat(Metric.NUM_SENDERS, config.getNumSenders());
   }
 
   private RawFragmentBatch getNext(RawFragmentBatchProvider provider) throws IOException{
@@ -123,6 +126,7 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
     try {
       RawFragmentBatch b = provider.getNext();
       if(b != null){
+        stats.addLongStat(Metric.BYTES_RECEIVED, b.getByteCount());
         stats.batchReceived(0, b.getHeader().getDef().getRecordCount(), false);
       }
       return b;

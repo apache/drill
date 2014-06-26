@@ -19,6 +19,7 @@ package org.apache.drill.exec.physical.config;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.drill.exec.physical.base.AbstractReceiver;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
@@ -59,6 +60,11 @@ public class UnorderedReceiver extends AbstractReceiver{
 
   @Override
   public int getOperatorType() {
-    return CoreOperatorType.RANDOM_RECEIVER_VALUE;
+    return CoreOperatorType.UNORDERED_RECEIVER_VALUE;
+  }
+
+  @JsonIgnore
+  public int getNumSenders() {
+    return senders.size();
   }
 }

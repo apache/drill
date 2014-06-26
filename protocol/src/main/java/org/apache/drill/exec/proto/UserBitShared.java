@@ -375,9 +375,9 @@ public final class UserBitShared {
      */
     PROJECT(10, 10),
     /**
-     * <code>RANDOM_RECEIVER = 11;</code>
+     * <code>UNORDERED_RECEIVER = 11;</code>
      */
-    RANDOM_RECEIVER(11, 11),
+    UNORDERED_RECEIVER(11, 11),
     /**
      * <code>RANGE_SENDER = 12;</code>
      */
@@ -509,9 +509,9 @@ public final class UserBitShared {
      */
     public static final int PROJECT_VALUE = 10;
     /**
-     * <code>RANDOM_RECEIVER = 11;</code>
+     * <code>UNORDERED_RECEIVER = 11;</code>
      */
-    public static final int RANDOM_RECEIVER_VALUE = 11;
+    public static final int UNORDERED_RECEIVER_VALUE = 11;
     /**
      * <code>RANGE_SENDER = 12;</code>
      */
@@ -613,7 +613,7 @@ public final class UserBitShared {
         case 8: return MERGING_RECEIVER;
         case 9: return ORDERED_PARTITION_SENDER;
         case 10: return PROJECT;
-        case 11: return RANDOM_RECEIVER;
+        case 11: return UNORDERED_RECEIVER;
         case 12: return RANGE_SENDER;
         case 13: return SCREEN;
         case 14: return SELECTION_VECTOR_REMOVER;
@@ -16539,25 +16539,25 @@ public final class UserBitShared {
       "\020\001\022\013\n\007LOGICAL\020\002\022\014\n\010PHYSICAL\020\003*k\n\rFragmen" +
       "tState\022\013\n\007SENDING\020\000\022\027\n\023AWAITING_ALLOCATI",
       "ON\020\001\022\013\n\007RUNNING\020\002\022\014\n\010FINISHED\020\003\022\r\n\tCANCE" +
-      "LLED\020\004\022\n\n\006FAILED\020\005*\221\005\n\020CoreOperatorType\022" +
+      "LLED\020\004\022\n\n\006FAILED\020\005*\224\005\n\020CoreOperatorType\022" +
       "\021\n\rSINGLE_SENDER\020\000\022\024\n\020BROADCAST_SENDER\020\001" +
       "\022\n\n\006FILTER\020\002\022\022\n\016HASH_AGGREGATE\020\003\022\r\n\tHASH" +
       "_JOIN\020\004\022\016\n\nMERGE_JOIN\020\005\022\031\n\025HASH_PARTITIO" +
       "N_SENDER\020\006\022\t\n\005LIMIT\020\007\022\024\n\020MERGING_RECEIVE" +
       "R\020\010\022\034\n\030ORDERED_PARTITION_SENDER\020\t\022\013\n\007PRO" +
-      "JECT\020\n\022\023\n\017RANDOM_RECEIVER\020\013\022\020\n\014RANGE_SEN" +
-      "DER\020\014\022\n\n\006SCREEN\020\r\022\034\n\030SELECTION_VECTOR_RE" +
-      "MOVER\020\016\022\027\n\023STREAMING_AGGREGATE\020\017\022\016\n\nTOP_",
-      "N_SORT\020\020\022\021\n\rEXTERNAL_SORT\020\021\022\t\n\005TRACE\020\022\022\t" +
-      "\n\005UNION\020\023\022\014\n\010OLD_SORT\020\024\022\032\n\026PARQUET_ROW_G" +
-      "ROUP_SCAN\020\025\022\021\n\rHIVE_SUB_SCAN\020\026\022\025\n\021SYSTEM" +
-      "_TABLE_SCAN\020\027\022\021\n\rMOCK_SUB_SCAN\020\030\022\022\n\016PARQ" +
-      "UET_WRITER\020\031\022\023\n\017DIRECT_SUB_SCAN\020\032\022\017\n\013TEX" +
-      "T_WRITER\020\033\022\021\n\rTEXT_SUB_SCAN\020\034\022\021\n\rJSON_SU" +
-      "B_SCAN\020\035\022\030\n\024INFO_SCHEMA_SUB_SCAN\020\036\022\023\n\017CO" +
-      "MPLEX_TO_JSON\020\037\022\025\n\021PRODUCER_CONSUMER\020 B." +
-      "\n\033org.apache.drill.exec.protoB\rUserBitSh" +
-      "aredH\001"
+      "JECT\020\n\022\026\n\022UNORDERED_RECEIVER\020\013\022\020\n\014RANGE_" +
+      "SENDER\020\014\022\n\n\006SCREEN\020\r\022\034\n\030SELECTION_VECTOR" +
+      "_REMOVER\020\016\022\027\n\023STREAMING_AGGREGATE\020\017\022\016\n\nT",
+      "OP_N_SORT\020\020\022\021\n\rEXTERNAL_SORT\020\021\022\t\n\005TRACE\020" +
+      "\022\022\t\n\005UNION\020\023\022\014\n\010OLD_SORT\020\024\022\032\n\026PARQUET_RO" +
+      "W_GROUP_SCAN\020\025\022\021\n\rHIVE_SUB_SCAN\020\026\022\025\n\021SYS" +
+      "TEM_TABLE_SCAN\020\027\022\021\n\rMOCK_SUB_SCAN\020\030\022\022\n\016P" +
+      "ARQUET_WRITER\020\031\022\023\n\017DIRECT_SUB_SCAN\020\032\022\017\n\013" +
+      "TEXT_WRITER\020\033\022\021\n\rTEXT_SUB_SCAN\020\034\022\021\n\rJSON" +
+      "_SUB_SCAN\020\035\022\030\n\024INFO_SCHEMA_SUB_SCAN\020\036\022\023\n" +
+      "\017COMPLEX_TO_JSON\020\037\022\025\n\021PRODUCER_CONSUMER\020" +
+      " B.\n\033org.apache.drill.exec.protoB\rUserBi" +
+      "tSharedH\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {

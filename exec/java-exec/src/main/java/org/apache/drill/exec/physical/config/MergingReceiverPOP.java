@@ -19,6 +19,7 @@ package org.apache.drill.exec.physical.config;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.drill.common.logical.data.Order.Ordering;
 import org.apache.drill.exec.physical.base.AbstractReceiver;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
@@ -72,5 +73,10 @@ public class MergingReceiverPOP extends AbstractReceiver{
   @Override
   public int getOperatorType() {
     return CoreOperatorType.MERGING_RECEIVER_VALUE;
+  }
+
+  @JsonIgnore
+  public int getNumSenders() {
+    return senders.size();
   }
 }

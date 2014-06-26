@@ -24,6 +24,7 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.MetricDef;
 import org.apache.drill.exec.ops.OpProfileDef;
 import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.config.UnorderedReceiver;
@@ -50,6 +51,15 @@ public class UnorderedReceiverBatch implements RecordBatch {
   private OperatorStats stats;
   private boolean first = true;
 
+  public enum Metric implements MetricDef {
+    BYTES_RECEIVED,
+    NUM_SENDERS;
+
+    @Override
+    public int metricId() {
+      return ordinal();
+    }
+  }
 
   public UnorderedReceiverBatch(FragmentContext context, RawFragmentBatchProvider fragProvider, UnorderedReceiver config) throws OutOfMemoryException {
     this.fragProvider = fragProvider;
@@ -57,7 +67,9 @@ public class UnorderedReceiverBatch implements RecordBatch {
     // In normal case, batchLoader does not require an allocator. However, in case of splitAndTransfer of a value vector,
     // we may need an allocator for the new offset vector. Therefore, here we pass the context's allocator to batchLoader.
     this.batchLoader = new RecordBatchLoader(context.getAllocator());
-    this.stats = context.getStats().getOperatorStats(new OpProfileDef(config.getOperatorId(), config.getOperatorType(), 0), null);
+
+    this.stats = context.getStats().getOperatorStats(new OpProfileDef(config.getOperatorId(), config.getOperatorType(), 1), null);
+    this.stats.setLongStat(Metric.NUM_SENDERS, config.getNumSenders());
   }
 
   @Override
@@ -115,15 +127,7 @@ public class UnorderedReceiverBatch implements RecordBatch {
         batch = fragProvider.getNext();
 
         // skip over empty batches. we do this since these are basically control messages.
-        while(batch != null && !batch.getHeader().getIsOutOfMemory() && batch.getHeader().getDef().getRecordCount() == 0 && !first){
-          if (first) {
-            first = false;
-            RecordBatchDef rbd = batch.getHeader().getDef();
-            batchLoader.load(rbd, batch.getBody());
-            batch.release();
-            schema = batchLoader.getSchema().clone();
-            batchLoader.clear();
-          }
+        while (batch != null && !batch.getHeader().getIsOutOfMemory() && batch.getHeader().getDef().getRecordCount() == 0 && !first) {
           batch = fragProvider.getNext();
         }
       } finally {
@@ -132,7 +136,7 @@ public class UnorderedReceiverBatch implements RecordBatch {
 
       first = false;
 
-      if (batch == null){
+      if (batch == null) {
         batchLoader.clear();
         return IterOutcome.NONE;
       }
@@ -146,15 +150,18 @@ public class UnorderedReceiverBatch implements RecordBatch {
 
       RecordBatchDef rbd = batch.getHeader().getDef();
       boolean schemaChanged = batchLoader.load(rbd, batch.getBody());
-//      System.out.println(rbd.getRecordCount());
+      stats.addLongStat(Metric.BYTES_RECEIVED, batch.getByteCount());
+
       batch.release();
-      if(schemaChanged){
+      if(schemaChanged) {
         this.schema = batchLoader.getSchema();
+        stats.batchReceived(0, rbd.getRecordCount(), true);
         return IterOutcome.OK_NEW_SCHEMA;
-      }else{
+      } else {
+        stats.batchReceived(0, rbd.getRecordCount(), false);
         return IterOutcome.OK;
       }
-    }catch(SchemaChangeException | IOException ex){
+    } catch(SchemaChangeException | IOException ex) {
       context.fail(ex);
       return IterOutcome.STOP;
     } finally {
