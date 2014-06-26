@@ -30,9 +30,12 @@ import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
+import org.apache.drill.exec.vector.VectorValidator;
 
 public class IteratorValidatorBatchIterator implements RecordBatch {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(IteratorValidatorBatchIterator.class);
+
+  static final boolean VALIDATE_VECTORS = false;
 
   private IterOutcome state = IterOutcome.NOT_YET;
   private final RecordBatch incoming;
@@ -126,6 +129,10 @@ public class IteratorValidatorBatchIterator implements RecordBatch {
       }
       if(incoming.getRecordCount() > MAX_BATCH_SIZE){
         throw new IllegalStateException (String.format("Incoming batch of %s has size %d, which is beyond the limit of %d",  incoming.getClass().getName(), incoming.getRecordCount(), MAX_BATCH_SIZE));
+      }
+
+      if (VALIDATE_VECTORS) {
+        VectorValidator.validate(incoming);
       }
 //      int valueCount = incoming.getRecordCount();
 //      for (VectorWrapper vw : incoming) {
