@@ -328,8 +328,24 @@
         <artifactId>maven-resources-plugin</artifactId>
         <executions>
           <execution>
-            <id>copy-resources</id>
-            <phase>generate-sources</phase>
+            <id>copy-fmpp-resources</id>
+            <phase>initialize</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}/codegen</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>src/main/codegen</directory>
+                  <filtering>false</filtering>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+          <execution>
+            <id>copy-java-sources</id>
+            <phase>process-sources</phase>
             <goals>
               <goal>copy-resources</goal>
             </goals>
@@ -367,26 +383,6 @@
         </executions>
       </plugin>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-antrun-plugin</artifactId>
-        <version>1.7</version>
-        <executions>
-          <execution>
-            <phase>validate</phase>
-            <goals>
-              <goal>run</goal>
-            </goals>
-            <configuration>
-              <tasks>
-                <copy todir="${project.build.directory}/codegen">
-                  <fileset dir="src/main/codegen" />
-                </copy>
-              </tasks>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
         <!-- Extract parser grammar template from optiq-core.jar and put 
           it under ${project.build.directory} where all freemarker templates are. -->
         <groupId>org.apache.maven.plugins</groupId>
@@ -395,7 +391,7 @@
         <executions>
           <execution>
             <id>unpack-parser-template</id>
-            <phase>validate</phase>
+            <phase>initialize</phase>
             <goals>
               <goal>unpack</goal>
             </goals>
@@ -418,18 +414,18 @@
         <groupId>com.googlecode.fmpp-maven-plugin</groupId>
         <artifactId>fmpp-maven-plugin</artifactId>
         <version>1.0</version>
-        <configuration>
-          <cfgFile>${project.build.directory}/codegen/config.fmpp</cfgFile>
-          <outputDirectory>target/generated-sources</outputDirectory>
-          <templateDirectory>${project.build.directory}/codegen/templates</templateDirectory>
-        </configuration>
         <executions>
           <execution>
             <id>generate-fmpp-sources</id>
-            <phase>initialize</phase>
+            <phase>generate-sources</phase>
             <goals>
               <goal>generate</goal>
             </goals>
+            <configuration>
+              <cfgFile>${project.build.directory}/codegen/config.fmpp</cfgFile>
+              <outputDirectory>target/generated-sources</outputDirectory>
+              <templateDirectory>${project.build.directory}/codegen/templates</templateDirectory>
+            </configuration>
           </execution>
         </executions>
       </plugin>
@@ -439,8 +435,8 @@
         <version>1.5</version>
         <executions>
           <execution>
-            <id>add-fmpp-sources</id>
-            <phase>validate</phase>
+            <id>add-generated-sources</id>
+            <phase>process-sources</phase>
             <goals>
               <goal>add-source</goal>
             </goals>
@@ -494,6 +490,7 @@
         <version>2.4</version>
         <executions>
           <execution>
+            <phase>generate-sources</phase>
             <id>javacc</id>
             <goals>
               <goal>javacc</goal>
