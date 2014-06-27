@@ -138,7 +138,6 @@ public class TestTpchSingleMode extends BaseTestQuery{
   }
 
   @Test
-  @Ignore // DRILL-519
   public void tpch21() throws Exception{
     testSingleMode("queries/tpch/21.sql");
   }

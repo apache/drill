@@ -138,7 +138,6 @@ public class TestTpchExplain extends BaseTestQuery{
   }
 
   @Test
-  @Ignore // DRILL-519
   public void tpch21() throws Exception{
     doExplain("queries/tpch/21.sql");
   }
