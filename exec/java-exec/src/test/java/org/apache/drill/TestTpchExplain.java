@@ -138,6 +138,7 @@ public class TestTpchExplain extends BaseTestQuery{
   }
 
   @Test
+  @Ignore
   public void tpch21() throws Exception{
     doExplain("queries/tpch/21.sql");
   }

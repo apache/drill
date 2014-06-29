@@ -20,7 +20,6 @@ package org.apache.drill.exec.planner.physical;
 import java.util.logging.Logger;
 
 import org.apache.drill.exec.planner.logical.DrillAggregateRel;
-import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.apache.drill.exec.planner.physical.AggPrelBase.OperatorPhase;
 import org.eigenbase.rel.InvalidRelException;
@@ -38,7 +37,7 @@ public class HashAggPrule extends AggPruleBase {
   protected static final Logger tracer = EigenbaseTrace.getPlannerTracer();
 
   private HashAggPrule() {
-    super(RelOptHelper.some(DrillAggregateRel.class, RelOptHelper.any(DrillRel.class)), "Prel.HashAggPrule");
+    super(RelOptHelper.some(DrillAggregateRel.class, RelOptHelper.any(RelNode.class)), "HashAggPrule");
   }
 
   @Override

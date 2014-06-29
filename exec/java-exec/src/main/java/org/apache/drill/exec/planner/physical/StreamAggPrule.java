@@ -23,11 +23,8 @@ import java.util.logging.Logger;
 import net.hydromatic.optiq.util.BitSets;
 
 import org.apache.drill.exec.planner.logical.DrillAggregateRel;
-import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
 import org.apache.drill.exec.planner.physical.AggPrelBase.OperatorPhase;
-import org.apache.drill.exec.planner.physical.DrillDistributionTrait.DistributionField;
-import org.eigenbase.rel.AggregateCall;
 import org.eigenbase.rel.InvalidRelException;
 import org.eigenbase.rel.RelCollation;
 import org.eigenbase.rel.RelCollationImpl;
@@ -47,7 +44,7 @@ public class StreamAggPrule extends AggPruleBase {
   protected static final Logger tracer = EigenbaseTrace.getPlannerTracer();
 
   private StreamAggPrule() {
-    super(RelOptHelper.any(DrillAggregateRel.class), "Prel.StreamAggPrule");
+    super(RelOptHelper.some(DrillAggregateRel.class, RelOptHelper.any(RelNode.class)), "StreamAggPrule");
   }
 
   @Override

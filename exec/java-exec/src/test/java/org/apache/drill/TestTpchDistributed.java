@@ -129,6 +129,11 @@ public class TestTpchDistributed extends BaseTestQuery{
   }
 
   @Test
+  public void tpch19_1() throws Exception{
+    testDistributed("queries/tpch/19_1.sql");
+  }
+  
+  @Test
   public void tpch20() throws Exception{
     testDistributed("queries/tpch/20.sql");
   }

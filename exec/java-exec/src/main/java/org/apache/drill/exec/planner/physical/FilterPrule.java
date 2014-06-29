@@ -17,13 +17,11 @@
  */
 package org.apache.drill.exec.planner.physical;
 
-import org.apache.drill.exec.planner.common.DrillProjectRelBase;
 import org.apache.drill.exec.planner.logical.DrillFilterRel;
-import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
-import org.eigenbase.rel.ProjectRel;
+import org.eigenbase.rel.RelCollation;
+import org.eigenbase.rel.RelCollationTraitDef;
 import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.Convention;
 import org.eigenbase.relopt.RelOptRule;
 import org.eigenbase.relopt.RelOptRuleCall;
 import org.eigenbase.relopt.RelTraitSet;
@@ -43,16 +41,19 @@ public class FilterPrule extends Prule {
 
     RelTraitSet traits = input.getTraitSet().plus(Prel.DRILL_PHYSICAL);
     RelNode convertedInput = convert(input, traits);
-
+    boolean transform = false;
+    
     if (convertedInput instanceof RelSubset) {
       RelSubset subset = (RelSubset) convertedInput;
-      for (RelNode rel : subset.getRelList()) {
-        if (!rel.getTraitSet().getTrait(DrillDistributionTraitDef.INSTANCE).equals(DrillDistributionTrait.DEFAULT)) {
-          call.transformTo(new FilterPrel(filter.getCluster(), rel.getTraitSet(), convertedInput, filter.getCondition()));
-        }
-      }
-    } else{
+      RelNode bestRel = null;
+      if ((bestRel = subset.getBest()) != null) {
+        call.transformTo(new FilterPrel(filter.getCluster(), bestRel.getTraitSet(), convertedInput, filter.getCondition()));  
+        transform = true;
+      } 
+    }
+    if (!transform) {
       call.transformTo(new FilterPrel(filter.getCluster(), convertedInput.getTraitSet(), convertedInput, filter.getCondition()));
     }
   }
+  
 }
