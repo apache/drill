@@ -47,6 +47,7 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
   private StreamingAggBatch outgoing;
   private FragmentContext context;
   private InternalBatch remainderBatch;
+  private boolean done = false;
 
 
   @Override
@@ -84,12 +85,39 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
 
   @Override
   public AggOutcome doWork() {
+    if (done) {
+      outcome = IterOutcome.NONE;
+      return AggOutcome.CLEANUP_AND_RETURN;
+    }
     try{ // outside loop to ensure that first is set to false after the first run.
       outputCount = 0;
 
       // if we're in the first state, allocate outgoing.
       if(first){
         allocateOutgoing();
+      }
+
+      if (incoming.getRecordCount() == 0) {
+        outer: while (true) {
+          IterOutcome out = outgoing.next(0, incoming);
+          switch (out) {
+            case OK_NEW_SCHEMA:
+            case OK:
+              if (incoming.getRecordCount() == 0) {
+                continue;
+              } else {
+                break outer;
+              }
+            case NONE:
+              out = IterOutcome.OK_NEW_SCHEMA;
+            case STOP:
+            default:
+              lastOutcome = out;
+              outcome = out;
+              done = true;
+              return AggOutcome.CLEANUP_AND_RETURN;
+          }
+        }
       }
 
       // pick up a remainder batch if we have one.
@@ -162,6 +190,7 @@ public abstract class StreamingAggTemplate implements StreamingAggregator {
             if(EXTRA_DEBUG) logger.debug("Received IterOutcome of {}", out);
             switch(out){
             case NONE:
+              done = true;
               lastOutcome = out;
               if (first && addedRecordCount == 0) {
                 return setOkAndReturn();
