@@ -268,16 +268,16 @@ public class TestFunctionsQuery {
     JdbcAssert.withNoDefaultSchema()
       .sql(query)
       .returns(
-        "T_1=1234.45; " +
-          "T_2=-1234.45; " +
-          "T_3=1200.0; " +
-          "T_4=-1200.0; " +
-          "T_5=1234.0; " +
-          "T_6=-1234.0; " +
-          "T_7=0.0; " +
-          "T_8=0.0; " +
-          "T_9=8.1246744073695232E18; " +
-          "T_10=8.12467440736953E13\n"
+          "T_1=1234.45; " +
+              "T_2=-1234.45; " +
+              "T_3=1200.0; " +
+              "T_4=-1200.0; " +
+              "T_5=1234.0; " +
+              "T_6=-1234.0; " +
+              "T_7=0.0; " +
+              "T_8=0.0; " +
+              "T_9=8.1246744073695232E18; " +
+              "T_10=8.12467440736953E13\n"
       );
   }
 
@@ -401,16 +401,16 @@ public class TestFunctionsQuery {
     JdbcAssert.withNoDefaultSchema()
       .sql(query)
       .returns(
-        "T_1=1234.46; " +
-          "T_2=-1234.46; " +
-          "T_3=1200.0; " +
-          "T_4=-1200.0; " +
-          "T_5=1234.0; " +
-          "T_6=-1234.0; " +
-          "T_7=0.0; " +
-          "T_8=0.0; " +
-          "T_9=8.1246744073695201E18; " +
-          "T_10=8.12467440736954E13\n"
+          "T_1=1234.46; " +
+              "T_2=-1234.46; " +
+              "T_3=1200.0; " +
+              "T_4=-1200.0; " +
+              "T_5=1234.0; " +
+              "T_6=-1234.0; " +
+              "T_7=0.0; " +
+              "T_8=0.0; " +
+              "T_9=8.1246744073695201E18; " +
+              "T_10=8.12467440736954E13\n"
       );
   }
 
@@ -589,13 +589,15 @@ public class TestFunctionsQuery {
   @Test
   public void testCastDecimalDivide() throws Exception {
     String query = "select  (cast('9' as decimal(9, 1)) / cast('2' as decimal(4, 1))) as DEC9_DIV, " +
+        "cast('999999999' as decimal(9,0)) / cast('0.000000000000000000000000001' as decimal(28,28)) as DEC38_DIV, " +
         "cast('123456789.123456789' as decimal(18, 9)) * cast('123456789.123456789' as decimal(18, 9)) as DEC18_MUL " +
         "from cp.`employee.json` where employee_id = 1";
 
     JdbcAssert.withNoDefaultSchema()
         .sql(query)
         .returns(
-            "DEC9_DIV=4.5000000; " +
+            "DEC9_DIV=4.500000000; " +
+            "DEC38_DIV=999999999000000000000000000000000000.0; " +
             "DEC18_MUL=15241578780673678.515622620750190521\n");
   }
 
