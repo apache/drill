@@ -88,16 +88,54 @@ public abstract class JoinPruleBase extends Prule {
     return false;
   }
 
-  // Create join plan with both left and right children hash distributed. If the physical join type
-  // is MergeJoin, a collation must be provided for both left and right child and the plan will contain
-  // sort converter if necessary to provide the collation.
   protected void createDistBothPlan(RelOptRuleCall call, DrillJoinRel join,
       PhysicalJoinType physicalJoinType,
       RelNode left, RelNode right,
-      RelCollation collationLeft, RelCollation collationRight) throws InvalidRelException {
-
+      RelCollation collationLeft, RelCollation collationRight, boolean hashSingleKey)throws InvalidRelException {
+    
+    /* If join keys are  l1 = r1 and l2 = r2 and ... l_k = r_k, then consider the following options of plan:  
+     *   1) Plan1: distributed by (l1, l2, ..., l_k) for left side and by (r1, r2, ..., r_k) for right side.
+     *   2) Plan2: distributed by l1 for left side, by r1 for right side.
+     *   3) Plan3: distributed by l2 for left side, by r2 for right side.
+     *   ...
+     *      Plan_(k+1): distributed by l_k for left side, by r_k by right side.
+     *   
+     *   Whether enumerate plan 2, .., Plan_(k+1) depends on option : hashSingleKey. 
+     */
+         
     DrillDistributionTrait hashLeftPartition = new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED, ImmutableList.copyOf(getDistributionField(join.getLeftKeys())));
     DrillDistributionTrait hashRightPartition = new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED, ImmutableList.copyOf(getDistributionField(join.getRightKeys())));
+ 
+    createDistBothPlan(call, join, physicalJoinType, left, right, collationLeft, collationRight, hashLeftPartition, hashRightPartition);
+    
+    assert (join.getLeftKeys().size() == join.getRightKeys().size());
+    
+    if (!hashSingleKey)
+      return;
+    
+    int numJoinKeys = join.getLeftKeys().size();
+    if (numJoinKeys > 1) {
+      for (int i = 0; i< numJoinKeys; i++) {
+        hashLeftPartition = new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED, ImmutableList.copyOf(getDistributionField(join.getLeftKeys().subList(i, i+1))));
+        hashRightPartition = new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED, ImmutableList.copyOf(getDistributionField(join.getRightKeys().subList(i, i+1))));
+        
+        createDistBothPlan(call, join, physicalJoinType, left, right, collationLeft, collationRight, hashLeftPartition, hashRightPartition);
+      }
+    }
+  }
+
+      
+  // Create join plan with both left and right children hash distributed. If the physical join type
+  // is MergeJoin, a collation must be provided for both left and right child and the plan will contain
+  // sort converter if necessary to provide the collation.
+  private void createDistBothPlan(RelOptRuleCall call, DrillJoinRel join,
+      PhysicalJoinType physicalJoinType,
+      RelNode left, RelNode right,
+      RelCollation collationLeft, RelCollation collationRight,
+      DrillDistributionTrait hashLeftPartition, DrillDistributionTrait hashRightPartition) throws InvalidRelException {
+
+    //DrillDistributionTrait hashLeftPartition = new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED, ImmutableList.copyOf(getDistributionField(join.getLeftKeys())));
+    //DrillDistributionTrait hashRightPartition = new DrillDistributionTrait(DrillDistributionTrait.DistributionType.HASH_DISTRIBUTED, ImmutableList.copyOf(getDistributionField(join.getRightKeys())));
     RelTraitSet traitsLeft = null;
     RelTraitSet traitsRight = null;
 

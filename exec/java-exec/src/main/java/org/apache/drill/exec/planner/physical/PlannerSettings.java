@@ -46,6 +46,7 @@ public class PlannerSettings implements FrameworkContext{
   public static final OptionValidator JOIN_ROW_COUNT_ESTIMATE_FACTOR = new RangeDoubleValidator("planner.join.row_count_estimate_factor", 0, 100, 1.0d);
   public static final OptionValidator PRODUCER_CONSUMER = new BooleanValidator("planner.add_producer_consumer", true);
   public static final OptionValidator PRODUCER_CONSUMER_QUEUE_SIZE = new LongValidator("planner.producer_consumer_queue_size", 10);
+  public static final OptionValidator HASH_SINGLE_KEY = new BooleanValidator("planner.enable_hash_single_key", true);
 
   public OptionManager options = null;
 
@@ -99,6 +100,10 @@ public class PlannerSettings implements FrameworkContext{
 
   public boolean isBroadcastJoinEnabled() {
     return options.getOption(BROADCAST.getOptionName()).bool_val;
+  }
+  
+  public boolean isHashSingleKey() {
+    return options.getOption(HASH_SINGLE_KEY.getOptionName()).bool_val;
   }
 
   public long getBroadcastThreshold() {

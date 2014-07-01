@@ -57,10 +57,12 @@ public class HashToRandomExchangePrel extends ExchangePrel {
    * If there are N nodes (endpoints), we can assume for costing purposes
    * on average each sender will send M/N rows to 1 destination endpoint.
    * (See DrillCostBase for symbol notations)
+   * Include impact of skewness of distribution : the more keys used, the less likely the distribution will be skewed. 
+   * The hash cpu cost will be proportional to 1 / #_keys. 
    * C =  CPU cost of hashing k fields of M/N rows
    *      + CPU cost of SV remover for M/N rows
    *      + Network cost of sending M/N rows to 1 destination.
-   * So, C = (h * k * M/N) + (s * M/N) + (w * M/N)
+   * So, C = (h * 1/k * M/N) + (s * M/N) + (w * M/N)
    * Total cost = N * C
    */
   @Override
@@ -74,7 +76,7 @@ public class HashToRandomExchangePrel extends ExchangePrel {
 
     int  rowWidth = child.getRowType().getFieldCount() * DrillCostBase.AVG_FIELD_WIDTH;
 
-    double hashCpuCost = DrillCostBase.HASH_CPU_COST * inputRows * fields.size();
+    double hashCpuCost = DrillCostBase.HASH_CPU_COST * inputRows / fields.size();
     double svrCpuCost = DrillCostBase.SVR_CPU_COST * inputRows;
     double networkCost = DrillCostBase.BYTE_NETWORK_COST * inputRows * rowWidth;
     DrillCostFactory costFactory = (DrillCostFactory)planner.getCostFactory();

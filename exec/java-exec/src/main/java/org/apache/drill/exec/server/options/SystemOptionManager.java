@@ -56,6 +56,7 @@ public class SystemOptionManager implements OptionManager{
       PlannerSettings.JOIN_ROW_COUNT_ESTIMATE_FACTOR,
       PlannerSettings.PRODUCER_CONSUMER,
       PlannerSettings.PRODUCER_CONSUMER_QUEUE_SIZE,
+      PlannerSettings.HASH_SINGLE_KEY,
       ExecConstants.OUTPUT_FORMAT_VALIDATOR,
       ExecConstants.PARQUET_BLOCK_SIZE_VALIDATOR,
       ExecConstants.SLICE_TARGET_OPTION,
