@@ -307,7 +307,7 @@ public class ProjectRecordBatch extends AbstractSingleRecordBatch<Project>{
 
     List<NamedExpression> exprs = Lists.newArrayList();
     for (MaterializedField field : incoming.getSchema()) {
-      if (Types.isComplex(field.getType())) {
+      if (Types.isComplex(field.getType()) || Types.isRepeated(field.getType())) {
         LogicalExpression convertToJson = FunctionCallFactory.createConvert(ConvertExpression.CONVERT_TO, "JSON", field.getPath(), ExpressionPosition.UNKNOWN);
         String castFuncName = CastFunctions.getCastFunc(MinorType.VARCHAR);
         List<LogicalExpression> castArgs = Lists.newArrayList();

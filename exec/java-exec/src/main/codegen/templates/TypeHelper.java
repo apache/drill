@@ -205,16 +205,18 @@ public class TypeHelper {
       throw new UnsupportedOperationException();    
   }
 
-  public static Class<?> getSingularReaderImpl( MinorType type, DataMode mode){
+  public static Class<?> getHolderReaderImpl( MinorType type, DataMode mode){
     switch (type) {      
 <#list vv.types as type>
   <#list type.minor as minor>
       case ${minor.class?upper_case}:
         switch (mode) {
           case REQUIRED:
-            return ${minor.class}SingularReaderImpl.class;
+            return ${minor.class}HolderReaderImpl.class;
           case OPTIONAL:
-            return Nullable${minor.class}SingularReaderImpl.class;
+            return Nullable${minor.class}HolderReaderImpl.class;
+          case REPEATED:
+            return Repeated${minor.class}HolderReaderImpl.class;
         }
   </#list>
 </#list>

@@ -448,7 +448,7 @@ public class EvaluationVisitor {
           jc._then().assign(complexReader, expr);
           jc._else().assign(complexReader, nullReader);
 
-          HoldingContainer hc = new HoldingContainer(e.getMajorType(), complexReader, null, null, false);
+          HoldingContainer hc = new HoldingContainer(e.getMajorType(), complexReader, null, null, false, true);
           return hc;
           // //eval.assign(out.getHolder().ref("reader"), expr);
         } else {

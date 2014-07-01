@@ -87,7 +87,7 @@ public class VectorUtil {
       width += columnWidth + 2;
       formats.add("| %-" + columnWidth + "s");
       MaterializedField field = vw.getValueVector().getField();
-      columns.add(field.getPath().getAsUnescapedPath() + "<" + field.getType().getMinorType() + ">");
+      columns.add(field.getPath().getAsUnescapedPath() + "<" + field.getType().getMinorType() + "(" + field.getType().getMode() + ")" + ">");
       columnIndex++;
     }
 

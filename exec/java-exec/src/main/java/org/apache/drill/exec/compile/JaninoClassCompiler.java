@@ -45,7 +45,7 @@ public class JaninoClassCompiler implements ClassCompiler{
 
   public byte[][] getClassByteCode(final String className, final String code) throws CompileException, IOException, ClassNotFoundException, ClassTransformationException {
     if(logger.isDebugEnabled()){
-      logger.debug("Compiling:\n {}", prefixLineNumbers(code));
+      logger.debug("Compiling:\n{}", prefixLineNumbers(code));
     }
     StringReader reader = new StringReader(code);
     Scanner scanner = new Scanner((String) null, reader);
