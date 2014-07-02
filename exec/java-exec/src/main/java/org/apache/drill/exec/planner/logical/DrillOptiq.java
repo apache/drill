@@ -382,7 +382,7 @@ public class DrillOptiq {
         if (isLiteralNull(literal)) {
           return createNullExpr(MinorType.BIGINT);
         }
-        long l = ((BigDecimal) literal.getValue()).longValue();
+        long l = (((BigDecimal) literal.getValue()).setScale(0, BigDecimal.ROUND_HALF_UP)).longValue();
         return ValueExpressions.getBigInt(l);
       case BOOLEAN:
         if (isLiteralNull(literal)) {
@@ -410,7 +410,7 @@ public class DrillOptiq {
         if (isLiteralNull(literal)) {
           return createNullExpr(MinorType.INT);
         }
-        int a = ((BigDecimal) literal.getValue()).intValue();
+        int a = (((BigDecimal) literal.getValue()).setScale(0, BigDecimal.ROUND_HALF_UP)).intValue();
         return ValueExpressions.getInt(a);
 
       case DECIMAL:

@@ -684,5 +684,30 @@ public class DecimalUtility {
   public static int getPrecisionRange(int precision) {
     return getMaxPrecision(getDecimalDataType(precision));
   }
+
+  public static int getFirstFractionalDigit(int decimal, int scale) {
+    if (scale == 0) {
+      return 0;
+    }
+    int temp = (int) adjustScaleDivide(decimal, scale - 1);
+    return Math.abs(temp % 10);
+  }
+
+  public static int getFirstFractionalDigit(long decimal, int scale) {
+    if (scale == 0) {
+      return 0;
+    }
+    long temp = adjustScaleDivide(decimal, scale - 1);
+    return (int) (Math.abs(temp % 10));
+  }
+
+  public static int getFirstFractionalDigit(ByteBuf data, int scale, int start, int nDecimalDigits) {
+    if (scale == 0) {
+      return 0;
+    }
+
+    int index = nDecimalDigits - roundUp(scale);
+    return (int) (adjustScaleDivide(data.getInt(start + (index * integerSize)), MAX_DIGITS - 1));
+  }
 }
 
