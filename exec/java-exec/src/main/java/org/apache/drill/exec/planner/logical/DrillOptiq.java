@@ -312,6 +312,11 @@ public class DrillOptiq {
         trimArgs.add(args.get(1));
 
         return FunctionCallFactory.createExpression(trimFunc, trimArgs);
+      } else if (functionName.equals("ltrim") || functionName.equals("rtrim") || functionName.equals("btrim")) {
+        if (args.size() == 1) {
+          args.add(ValueExpressions.getChar(" "));
+        }
+        return FunctionCallFactory.createExpression(functionName, args);
       } else if (functionName.equals("date_part")) {
         // Rewrite DATE_PART functions as extract functions
         // assert that the function has exactly two arguments
