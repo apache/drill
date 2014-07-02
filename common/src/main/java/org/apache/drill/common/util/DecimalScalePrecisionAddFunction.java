@@ -15,33 +15,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.drill.common.util;
 
-/*
- * Here we compute the output scale and precision of the multiply function.
- * We simply add the input scale and precision to determine the output's scale
- * and precision
- */
-public class DecimalScalePrecisionMulFunction extends DrillBaseComputeScalePrecision {
+public class DecimalScalePrecisionAddFunction extends DrillBaseComputeScalePrecision {
 
-  public DecimalScalePrecisionMulFunction(int leftPrecision, int leftScale, int rightPrecision, int rightScale) {
+  public DecimalScalePrecisionAddFunction(int leftPrecision, int leftScale, int rightPrecision, int rightScale) {
     super(leftPrecision, leftScale, rightPrecision, rightScale);
   }
 
   @Override
   public void computeScalePrecision(int leftPrecision, int leftScale, int rightPrecision, int rightScale) {
     // compute the output scale and precision here
-    outputScale = leftScale + rightScale;
-    int integerDigits = (leftPrecision - leftScale) + (rightPrecision - rightScale);
+    outputScale = Math.max(leftScale, rightScale);
+    int maxResultIntegerDigits = Math.max((leftPrecision - leftScale), (rightPrecision - rightScale)) + 1;
 
-    outputPrecision = integerDigits + outputScale;
+    outputPrecision = (outputScale + maxResultIntegerDigits);
 
     // If we are beyond the maximum precision range, cut down the fractional part
     if (outputPrecision > 38) {
       outputPrecision = 38;
-      outputScale = (outputPrecision - integerDigits >= 0) ? (outputPrecision - integerDigits) : 0;
+      outputScale = (outputPrecision - maxResultIntegerDigits >= 0) ? (outputPrecision - maxResultIntegerDigits) : 0;
     }
   }
 }
-

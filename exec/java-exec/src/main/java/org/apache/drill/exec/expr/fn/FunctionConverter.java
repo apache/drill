@@ -244,8 +244,11 @@ public class FunctionConverter {
       case DECIMAL_MAX_SCALE:
           return new DrillDecimalMaxScaleFuncHolder(template.scope(), template.nulls(), template.isBinaryCommutative(),
                   template.isRandom(), registeredNames, ps, outputField, works, methods, imports);
-      case DECIMAL_SUM_SCALE:
+      case DECIMAL_MUL_SCALE:
           return new DrillDecimalSumScaleFuncHolder(template.scope(), template.nulls(), template.isBinaryCommutative(),
+                  template.isRandom(), registeredNames, ps, outputField, works, methods, imports);
+      case DECIMAL_ADD_SCALE:
+          return new DrillDecimalAddFuncHolder(template.scope(), template.nulls(), template.isBinaryCommutative(),
                   template.isRandom(), registeredNames, ps, outputField, works, methods, imports);
       case DECIMAL_CAST:
           return new DrillDecimalCastFuncHolder(template.scope(), template.nulls(), template.isBinaryCommutative(),

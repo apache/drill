@@ -40,12 +40,16 @@ package org.apache.drill.common.util;
  *    output scale      ==> 7 + (18 - 12) = 13
  *    output precision  ==> 18
  */
-public class DecimalScalePrecisionDivideFunction {
-  private int outputScale = 0;
-  private int outputPrecision = 0;
+public class DecimalScalePrecisionDivideFunction extends DrillBaseComputeScalePrecision {
 
   public DecimalScalePrecisionDivideFunction(int leftPrecision, int leftScale, int rightPrecision, int rightScale) {
-    // compute the output scale and precision here
+    super(leftPrecision, leftScale, rightPrecision, rightScale);
+  }
+
+  @Override
+  public void computeScalePrecision(int leftPrecision, int leftScale, int rightPrecision, int rightScale) {
+
+  // compute the output scale and precision here
     outputScale = leftScale + rightScale;
     int integerDigits = (leftPrecision - leftScale) + (rightPrecision - rightScale);
 
@@ -53,13 +57,5 @@ public class DecimalScalePrecisionDivideFunction {
 
     // Try and increase the scale if we have any room
     outputScale = (outputPrecision - integerDigits >= 0) ? (outputPrecision - integerDigits) : 0;
-  }
-
-  public int getOutputScale() {
-    return outputScale;
-  }
-
-  public int getOutputPrecision() {
-    return outputPrecision;
   }
 }

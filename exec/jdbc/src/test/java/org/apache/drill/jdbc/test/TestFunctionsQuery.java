@@ -490,7 +490,7 @@ public class TestFunctionsQuery {
 
   @Test
   public void testDecimalAddConstant() throws Exception {
-    String query = "select (cast('-1' as decimal(38, 3)) + cast (employee_id as decimal(38, 3))) as CNT " +
+    String query = "select (cast('-1' as decimal(37, 3)) + cast (employee_id as decimal(37, 3))) as CNT " +
         "from cp.`employee.json` where employee_id <= 4";
 
     JdbcAssert.withNoDefaultSchema()
@@ -503,7 +503,7 @@ public class TestFunctionsQuery {
 
   @Test
   public void testDecimalAddIntConstant() throws Exception {
-    String query = "select 1 + cast(employee_id as decimal(9, 3)) as DEC_9 , 1 + cast(employee_id as decimal(38, 5)) as DEC_38 " +
+    String query = "select 1 + cast(employee_id as decimal(9, 3)) as DEC_9 , 1 + cast(employee_id as decimal(37, 5)) as DEC_38 " +
         "from cp.`employee.json` where employee_id <= 2";
 
     JdbcAssert.withNoDefaultSchema()
