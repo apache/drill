@@ -137,8 +137,12 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
 
   @Override
   public IterOutcome innerNext() {
-    if (fragProviders.length == 0) return IterOutcome.NONE;
-    if (done) return IterOutcome.NONE;
+    if (fragProviders.length == 0) {
+      return IterOutcome.NONE;
+    }
+    if (done) {
+      return IterOutcome.NONE;
+    }
     boolean schemaChanged = false;
 
     if (prevBatchWasFull) {
@@ -171,11 +175,19 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
         }
         if (rawBatch.getHeader().getDef().getRecordCount() != 0) {
           rawBatches.add(rawBatch);
-        } else if (emptyBatch == null) {
-          emptyBatch = rawBatch;
-        }
-        if (firstBatch) {
-          schema = BatchSchema.newBuilder().addSerializedFields(rawBatch.getHeader().getDef().getFieldList()).build();
+        } else {
+          if (emptyBatch == null) {
+            emptyBatch = rawBatch;
+          }
+          try {
+            while ((rawBatch = getNext(provider)) != null && rawBatch.getHeader().getDef().getRecordCount() == 0);
+          } catch (IOException e) {
+            context.fail(e);
+            return IterOutcome.STOP;
+          }
+          if (rawBatch != null) {
+            rawBatches.add(rawBatch);
+          }
         }
       }
 
@@ -375,7 +387,7 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
 
   @Override
   public BatchSchema getSchema() {
-    return schema;
+    return outgoingContainer.getSchema();
   }
 
   @Override

@@ -77,7 +77,9 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
   @Override
   public void cleanup() {
     if (!finished) {
-      context.fail(new IllegalStateException("Cleanup before finished"));
+      IllegalStateException e = new IllegalStateException("Cleanup before finished");
+      context.fail(e);
+      throw e;
     }
 
     if (!buffer.isEmpty()) {
@@ -157,6 +159,9 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
 
     if (b == null && buffer.size() > 0) {
       throw new IllegalStateException("Returning null when there are batches left in queue");
+    }
+    if (b == null && !finished) {
+      throw new IllegalStateException("Returning null when not finished");
     }
     return b;
 

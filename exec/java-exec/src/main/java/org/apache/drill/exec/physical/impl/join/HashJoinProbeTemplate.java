@@ -107,7 +107,7 @@ public abstract class HashJoinProbeTemplate implements HashJoinProbe {
   }
 
   public void executeProbePhase() throws SchemaChangeException {
-    while (outputRecords < TARGET_RECORDS_PER_BATCH && recordsToProcess > 0) {
+    while (outputRecords < TARGET_RECORDS_PER_BATCH && probeState != ProbeState.DONE && probeState != ProbeState.PROJECT_RIGHT) {
 
       // Check if we have processed all records in this batch we need to invoke next
       if (recordsProcessed == recordsToProcess) {

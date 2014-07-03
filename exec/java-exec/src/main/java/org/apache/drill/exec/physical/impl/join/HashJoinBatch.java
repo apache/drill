@@ -108,6 +108,8 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
 
     private boolean first = true;
 
+    private boolean done = false;
+
     // Generator mapping for the build side
     private static final GeneratorMapping PROJECT_BUILD = GeneratorMapping.create("doSetup"/* setup method */,
                                                                                   "projectBuildRecord" /* eval method */,
@@ -160,6 +162,9 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
 
     @Override
     public IterOutcome innerNext() {
+        if (done) {
+          return IterOutcome.NONE;
+        }
         try {
             /* If we are here for the first time, execute the build phase of the
              * hash join and setup the run time generated class for the probe side
@@ -238,8 +243,11 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
             }
 
             // No more output records, clean up and return
+            done = true;
+            if (first) {
+              return IterOutcome.OK_NEW_SCHEMA;
+            }
             return IterOutcome.NONE;
-
         } catch (ClassTransformationException | SchemaChangeException | IOException e) {
             context.fail(e);
             killIncoming();
