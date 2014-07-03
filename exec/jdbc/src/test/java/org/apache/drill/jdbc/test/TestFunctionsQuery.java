@@ -690,4 +690,15 @@ public class TestFunctionsQuery {
         .returns(
             "NEG=-2\n");
   }
+
+  @Test
+  public void testOptiqValidationFunctions() throws Exception {
+    String query = "select trim(first_name) as TRIM_STR, substring(first_name, 2) as SUB_STR " +
+                   "from cp.`employee.json` where employee_id = 1";
+
+    JdbcAssert.withNoDefaultSchema()
+        .sql(query)
+        .returns("TRIM_STR=Sheri; "+
+                 "SUB_STR=heri\n");
+  }
 }
