@@ -32,13 +32,4 @@ public class PartitionedCollector extends AbstractDataCollector{
   protected RawBatchBuffer getBuffer(int minorFragmentId) {
     return buffers[minorFragmentId];
   }
-
-  @Override
-  public void streamFinished(int minorFragmentId) {
-    buffers[minorFragmentId].finished();
-  }
-
-  
-  
-
 }

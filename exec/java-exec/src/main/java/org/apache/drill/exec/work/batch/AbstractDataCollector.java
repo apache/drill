@@ -42,6 +42,7 @@ public abstract class AbstractDataCollector implements DataCollector{
   protected final RawBatchBuffer[] buffers;
   private final AtomicInteger parentAccounter;
   private final AtomicInteger finishedStreams = new AtomicInteger();
+  private final FragmentContext context;
 
   public AbstractDataCollector(AtomicInteger parentAccounter, Receiver receiver, int minInputsRequired, FragmentContext context) {
     Preconditions.checkArgument(minInputsRequired > 0);
@@ -53,11 +54,12 @@ public abstract class AbstractDataCollector implements DataCollector{
     this.remainders = new AtomicIntegerArray(incoming.size());
     this.oppositeMajorFragmentId = receiver.getOppositeMajorFragmentId();
     this.buffers = new RawBatchBuffer[minInputsRequired];
+    this.context = context;
     try {
       String bufferClassName = context.getConfig().getString(ExecConstants.INCOMING_BUFFER_IMPL);
       Constructor<?> bufferConstructor = Class.forName(bufferClassName).getConstructor(FragmentContext.class, int.class);
       for(int i = 0; i < buffers.length; i++) {
-          buffers[i] = (RawBatchBuffer) bufferConstructor.newInstance(context, incoming.size());
+          buffers[i] = (RawBatchBuffer) bufferConstructor.newInstance(context, receiver.supportsOutOfOrderExchange() ? incoming.size() : 1);
       }
     } catch (InstantiationException | IllegalAccessException | InvocationTargetException |
             NoSuchMethodException | ClassNotFoundException e) {
@@ -79,8 +81,6 @@ public abstract class AbstractDataCollector implements DataCollector{
   }
 
 
-  public abstract void streamFinished(int minorFragmentId);
-
   public boolean batchArrived(int minorFragmentId, RawFragmentBatch batch)  throws IOException {
 
     // if we received an out of memory, add an item to all the buffer queues.
@@ -100,13 +100,8 @@ public abstract class AbstractDataCollector implements DataCollector{
       }
     }
 
-    // mark stream finished if we got the last batch.
-    if(batch.getHeader().getIsLastBatch()){
-      streamFinished(minorFragmentId);
-    }
-
-
     getBuffer(minorFragmentId).enqueue(batch);
+
     return decremented;
   }
 

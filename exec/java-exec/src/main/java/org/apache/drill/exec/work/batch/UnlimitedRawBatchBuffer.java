@@ -19,6 +19,7 @@ package org.apache.drill.exec.work.batch;
 
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -38,6 +39,8 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
   private final AtomicBoolean overlimit = new AtomicBoolean(false);
   private final AtomicBoolean outOfMemory = new AtomicBoolean(false);
   private final ResponseSenderQueue readController = new ResponseSenderQueue();
+  private int streamCounter;
+  private FragmentContext context;
 
   public UnlimitedRawBatchBuffer(FragmentContext context, int fragmentCount) {
     int bufferSizePerSocket = context.getConfig().getInt(ExecConstants.INCOMING_BUFFER_SIZE);
@@ -45,10 +48,15 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
     this.softlimit = bufferSizePerSocket * fragmentCount;
     this.startlimit = Math.max(softlimit/2, 1);
     this.buffer = Queues.newLinkedBlockingDeque();
+    this.streamCounter = fragmentCount;
+    this.context = context;
   }
 
   @Override
   public void enqueue(RawFragmentBatch batch) {
+    if (finished) {
+      throw new RuntimeException("Attempted to enqueue batch after finished");
+    }
     if (batch.getHeader().getIsOutOfMemory()) {
       logger.debug("Setting autoread false");
       if (!outOfMemory.get() && !buffer.peekFirst().getHeader().getIsOutOfMemory()) {
@@ -68,7 +76,24 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
 
   @Override
   public void cleanup() {
+    if (!finished) {
+      context.fail(new IllegalStateException("Cleanup before finished"));
+    }
 
+    if (!buffer.isEmpty()) {
+      if (!context.isFailed()) {
+        context.fail(new IllegalStateException("Batches still in queue during cleanup"));
+        logger.error("{} Batches in queue.", buffer.size());
+        RawFragmentBatch batch;
+        while ((batch = buffer.poll()) != null) {
+          logger.error("Batch left in queue: {}", batch);
+        }
+      }
+      RawFragmentBatch batch;
+      while ((batch = buffer.poll()) != null) {
+        if (batch.getBody() != null) batch.getBody().release();
+      }
+    }
   }
 
   @Override
@@ -82,6 +107,9 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
   @Override
   public void finished() {
     finished = true;
+    if (!buffer.isEmpty()) {
+      throw new IllegalStateException("buffer not empty when finished");
+    }
   }
 
   @Override
@@ -98,7 +126,7 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
     b = buffer.poll();
 
     // if we didn't get a buffer, block on waiting for buffer.
-    if(b == null && !finished){
+    if(b == null && (!finished || !buffer.isEmpty())){
       try {
         b = buffer.take();
       } catch (InterruptedException e) {
@@ -120,6 +148,16 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
       }
     }
 
+    if (b != null && b.getHeader().getIsLastBatch()) {
+      streamCounter--;
+      if (streamCounter == 0) {
+        finished();
+      }
+    }
+
+    if (b == null && buffer.size() > 0) {
+      throw new IllegalStateException("Returning null when there are batches left in queue");
+    }
     return b;
 
   }

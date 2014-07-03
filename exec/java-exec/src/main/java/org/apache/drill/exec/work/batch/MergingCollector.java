@@ -35,13 +35,4 @@ public class MergingCollector extends AbstractDataCollector{
   protected RawBatchBuffer getBuffer(int minorFragmentId) {
     return buffers[0];
   }
-
-  
-  public void streamFinished(int minorFragmentId) {
-    if(streamsRunning.decrementAndGet() == 0) buffers[0].finished();
-  }
-
-  
-  
-
 }
