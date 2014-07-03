@@ -15,6 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+import org.apache.drill.exec.expr.annotations.Workspace;
+
 <@pp.dropOutputFile />
 
 
@@ -50,19 +53,25 @@ public class Decimal${aggrtype.className}Functions {
 
 <#list aggrtype.types as type>
 
-@FunctionTemplate(name = "${aggrtype.funcName}", scope = FunctionTemplate.FunctionScope.DECIMAL_AGGREGATE)
+@FunctionTemplate(name = "${aggrtype.funcName}", <#if aggrtype.funcName == "sum"> scope = FunctionTemplate.FunctionScope.DECIMAL_SUM_AGGREGATE <#else>scope = FunctionTemplate.FunctionScope.DECIMAL_AGGREGATE</#if>)
 public static class ${type.inputType}${aggrtype.className} implements DrillAggFunc{
 
   @Param ${type.inputType}Holder in;
+  <#if aggrtype.funcName == "sum">
+  @Workspace java.math.BigDecimal value;
+  @Workspace int outputScale;
+  <#else>
   @Workspace ${type.runningType}Holder value;
+  </#if>
   @Workspace ByteBuf buffer;
   @Output ${type.outputType}Holder out;
 
   public void setup(RecordBatch b) {
-	value = new ${type.runningType}Holder();
 	<#if aggrtype.funcName == "count">
+  	value = new ${type.runningType}Holder();
     value.value = 0;
 	<#elseif aggrtype.funcName == "max" || aggrtype.funcName == "min">
+  	value = new ${type.runningType}Holder();
     <#if type.outputType.endsWith("Dense") || type.outputType.endsWith("Sparse")>
     buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte[value.WIDTH]);
     buffer = new io.netty.buffer.SwappedByteBuf(buffer);
@@ -84,6 +93,9 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     <#elseif type.outputType == "Decimal9" || type.outputType == "Decimal18">
     value.value = ${type.initValue};
     </#if>
+  <#elseif aggrtype.funcName == "sum">
+    value = java.math.BigDecimal.ZERO;
+    outputScale = Integer.MIN_VALUE;
 	</#if>
 
   }
@@ -145,6 +157,16 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     <#elseif type.outputType == "Decimal9" || type.outputType == "Decimal18">
     value.value = Math.min(value.value, in.value);
     </#if>
+    <#elseif aggrtype.funcName == "sum">
+   <#if type.inputType.endsWith("Decimal9") || type.inputType.endsWith("Decimal18")>
+    java.math.BigDecimal currentValue = org.apache.drill.common.util.DecimalUtility.getBigDecimalFromPrimitiveTypes(in.value, in.scale, in.precision);
+    <#else>
+    java.math.BigDecimal currentValue = org.apache.drill.common.util.DecimalUtility.getBigDecimalFromSparse(in.buffer, in.start, in.nDecimalDigits, in.scale);
+    </#if>
+    value = value.add(currentValue);
+    if (outputScale == Integer.MIN_VALUE) {
+      outputScale = in.scale;
+    }
     </#if>
 	<#if type.inputType?starts_with("Nullable")>
     } // end of sout block
@@ -155,8 +177,20 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
   public void output() {
     <#if aggrtype.funcName == "count">
     out.value = value.value;
+    <#elseif aggrtype.funcName == "sum">
+    buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte[out.WIDTH]);
+    buffer = new io.netty.buffer.SwappedByteBuf(buffer);
+    out.buffer = buffer;
+    out.start  = 0;
+    out.scale = outputScale;
+    out.precision = 38;
+    for (int i = 0; i < out.nDecimalDigits; i++) {
+      out.setInteger(i, 0);
+    }
+    value = value.setScale(out.scale, java.math.BigDecimal.ROUND_HALF_UP);
+    org.apache.drill.common.util.DecimalUtility.getSparseFromBigDecimal(value, out.buffer, out.start, out.scale, out.precision, out.nDecimalDigits);
     <#else>
-    <#if type.outputType.endsWith("Dense") || type.outputType.endsWith("Sparse")>
+    <#if type.outputType.endsWith("Dense") || type.outputType.endsWith("Sparse") || aggrtype.funcName == "sum">
     out.buffer = value.buffer;
     out.start = value.start;
     out.setSign(value.getSign());
@@ -191,6 +225,8 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     <#elseif type.outputType == "Decimal9" || type.outputType == "Decimal18">
     value.value = ${type.initValue};
     </#if>
+  <#elseif aggrtype.funcName == "sum">
+    value = java.math.BigDecimal.ZERO;
 	</#if>
 
   }

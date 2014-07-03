@@ -60,6 +60,17 @@
          {inputType: "Decimal38Dense", outputType: "BigInt", runningType: "BigInt", major: "Numeric"},
          {inputType: "NullableDecimal38Dense", outputType: "BigInt", runningType: "BigInt", major: "Numeric"}
         ]
+      },
+      {className: "Sum", funcName: "sum", types: [
+        {inputType: "Decimal9", outputType: "Decimal38Sparse", major: "Numeric"},
+        {inputType: "NullableDecimal9", outputType: "Decimal38Sparse", major: "Numeric"},
+        {inputType: "Decimal18", outputType: "Decimal38Sparse", major: "Numeric"},
+        {inputType: "NullableDecimal18", outputType: "Decimal38Sparse", major: "Numeric"},
+        {inputType: "Decimal28Sparse", outputType: "Decimal38Sparse", major: "Numeric"},
+        {inputType: "NullableDecimal28Sparse", outputType: "Decimal38Sparse", major: "Numeric"},
+        {inputType: "Decimal38Sparse", outputType: "Decimal38Sparse", major: "Numeric"},
+        {inputType: "NullableDecimal38Sparse", outputType: "Decimal38Sparse", major: "Numeric"}
+        ]
       }
-  ]
+   ]
 }

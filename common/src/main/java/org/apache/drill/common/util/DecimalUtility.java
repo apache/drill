@@ -23,6 +23,7 @@ import org.apache.drill.common.types.TypeProtos;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.util.Arrays;
 
 public class DecimalUtility {
@@ -340,6 +341,15 @@ public class DecimalUtility {
 
         return (input.unscaledValue().longValue());
     }
+
+    public static BigDecimal getBigDecimalFromPrimitiveTypes(int input, int scale, int precision) {
+      return BigDecimal.valueOf(input, scale);
+    }
+
+    public static BigDecimal getBigDecimalFromPrimitiveTypes(long input, int scale, int precision) {
+      return BigDecimal.valueOf(input, scale);
+    }
+
 
     public static int compareDenseBytes(ByteBuf left, int leftStart, boolean leftSign, ByteBuf right, int rightStart, boolean rightSign, int width) {
 
