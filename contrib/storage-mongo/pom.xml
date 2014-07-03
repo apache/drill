@@ -35,7 +35,7 @@
       <version>${project.version}</version>
     </dependency>
 
-    <!-- Test dependencies -->
+    <!-- Test dependencie -->
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
       <artifactId>drill-java-exec</artifactId>
