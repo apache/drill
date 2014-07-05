@@ -22,11 +22,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.hydromatic.optiq.config.Lex;
+import net.hydromatic.optiq.tools.FrameworkConfig;
 import net.hydromatic.optiq.tools.Frameworks;
 import net.hydromatic.optiq.tools.Planner;
 import net.hydromatic.optiq.tools.RelConversionException;
 import net.hydromatic.optiq.tools.RuleSet;
-import net.hydromatic.optiq.tools.StdFrameworkConfig;
 import net.hydromatic.optiq.tools.ValidationException;
 
 import org.apache.drill.exec.ops.QueryContext;
@@ -68,7 +68,7 @@ public class DrillSqlWorker {
     this.context = context;
     RelOptCostFactory costFactory = (context.getPlannerSettings().useDefaultCosting()) ?
         null : new DrillCostBase.DrillCostFactory() ;
-    StdFrameworkConfig config = StdFrameworkConfig.newBuilder() //
+    FrameworkConfig config = Frameworks.newConfigBuilder() //
         .lex(Lex.MYSQL) //
         .parserFactory(DrillParserWithCompoundIdConverter.FACTORY) //
         .defaultSchema(context.getNewDefaultSchema()) //

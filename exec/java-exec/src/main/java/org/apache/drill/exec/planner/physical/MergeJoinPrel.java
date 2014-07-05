@@ -61,7 +61,7 @@ public class MergeJoinPrel  extends JoinPrel {
 
 
   @Override
-  public JoinRelBase copy(RelTraitSet traitSet, RexNode conditionExpr, RelNode left, RelNode right, JoinRelType joinType) {
+  public JoinRelBase copy(RelTraitSet traitSet, RexNode conditionExpr, RelNode left, RelNode right, JoinRelType joinType, boolean semiJoinDone) {
     try {
       return new MergeJoinPrel(this.getCluster(), traitSet, left, right, conditionExpr, joinType);
     }catch (InvalidRelException e) {

@@ -102,13 +102,13 @@ public class DrillOptiq {
         if (FunctionCallFactory.isBooleanOperator(funcName)) {
           LogicalExpression func = FunctionCallFactory.createBooleanOperator(funcName, args);
           return func;
-        } else { 
+        } else {
           args = Lists.reverse(args);
           LogicalExpression lastArg = args.get(0);
           for(int i = 1; i < args.size(); i++){
             lastArg = FunctionCallFactory.createExpression(funcName, Lists.newArrayList(args.get(i), lastArg));
           }
-  
+
           return lastArg;
         }
       case FUNCTION:
@@ -118,6 +118,9 @@ public class DrillOptiq {
       case POSTFIX:
         logger.debug("Postfix");
         switch(call.getKind()){
+        case IS_NOT_NULL:
+        case IS_NOT_TRUE:
+        case IS_NOT_FALSE:
         case IS_NULL:
         case IS_TRUE:
         case IS_FALSE:

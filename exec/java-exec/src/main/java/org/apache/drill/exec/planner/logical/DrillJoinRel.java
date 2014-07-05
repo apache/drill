@@ -30,6 +30,7 @@ import org.apache.drill.common.logical.data.Project;
 import org.apache.drill.exec.planner.common.DrillJoinRelBase;
 import org.apache.drill.exec.planner.torel.ConversionContext;
 import org.eigenbase.rel.InvalidRelException;
+import org.eigenbase.rel.JoinRelBase;
 import org.eigenbase.rel.JoinRelType;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptCluster;
@@ -78,8 +79,9 @@ public class DrillJoinRel extends DrillJoinRelBase implements DrillRel {
     this.rightKeys = rightKeys;
   }
 
+
   @Override
-  public DrillJoinRel copy(RelTraitSet traitSet, RexNode condition, RelNode left, RelNode right, JoinRelType joinType) {
+  public DrillJoinRel copy(RelTraitSet traitSet, RexNode condition, RelNode left, RelNode right, JoinRelType joinType, boolean semiJoinDone) {
     try {
       return new DrillJoinRel(getCluster(), traitSet, left, right, condition, joinType);
     } catch (InvalidRelException e) {

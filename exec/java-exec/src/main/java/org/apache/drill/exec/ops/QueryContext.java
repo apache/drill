@@ -20,7 +20,7 @@ package org.apache.drill.exec.ops;
 import java.util.Collection;
 
 import net.hydromatic.optiq.SchemaPlus;
-import net.hydromatic.optiq.tools.Frameworks;
+import net.hydromatic.optiq.jdbc.SimpleOptiqSchema;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.cache.DistributedCache;
@@ -84,7 +84,7 @@ public class QueryContext{
   }
 
   public SchemaPlus getRootSchema(){
-    SchemaPlus rootSchema = Frameworks.createRootSchema(false);
+    SchemaPlus rootSchema = SimpleOptiqSchema.createRootSchema(false);
     drillbitContext.getSchemaFactory().registerSchemas(session, rootSchema);
     return rootSchema;
   }

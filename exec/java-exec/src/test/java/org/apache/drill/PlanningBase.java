@@ -23,6 +23,7 @@ import java.net.URL;
 import mockit.Mocked;
 import mockit.NonStrictExpectations;
 import net.hydromatic.optiq.SchemaPlus;
+import net.hydromatic.optiq.jdbc.SimpleOptiqSchema;
 import net.hydromatic.optiq.tools.Frameworks;
 
 import org.apache.drill.common.config.DrillConfig;
@@ -101,7 +102,7 @@ public class PlanningBase extends ExecTest{
     registry.init();
     final FunctionImplementationRegistry functionRegistry = new FunctionImplementationRegistry(config);
     final DrillOperatorTable table = new DrillOperatorTable(functionRegistry);
-    final SchemaPlus root = Frameworks.createRootSchema(false);
+    final SchemaPlus root = SimpleOptiqSchema.createRootSchema(false);
     registry.getSchemaFactory().registerSchemas(UserSession.Builder.newBuilder().setSupportComplexTypes(true).build(), root);
 
 

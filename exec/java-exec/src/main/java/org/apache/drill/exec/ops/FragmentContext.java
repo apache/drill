@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import net.hydromatic.optiq.SchemaPlus;
-import net.hydromatic.optiq.tools.Frameworks;
+import net.hydromatic.optiq.jdbc.SimpleOptiqSchema;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -132,7 +132,7 @@ public class FragmentContext implements Closeable {
           "This is a non-root fragment."));
       return null;
     } else {
-      SchemaPlus root = Frameworks.createRootSchema(false);
+      SchemaPlus root = SimpleOptiqSchema.createRootSchema(false);
       context.getStorage().getSchemaFactory().registerSchemas(connection.getSession(), root);
       return root;
     }

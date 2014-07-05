@@ -95,17 +95,17 @@ public class PrelUtil {
   public static Iterator<Prel> iter(RelNode... nodes){
     return (Iterator<Prel>) (Object) Arrays.asList(nodes).iterator();
   }
-  
+
   public static Iterator<Prel> iter(List<RelNode> nodes) {
     return (Iterator<Prel>) (Object) nodes.iterator();
   }
 
   public static PlannerSettings getSettings(RelOptCluster cluster){
-    return cluster.getPlanner().getFrameworkContext().unwrap(PlannerSettings.class);
+    return cluster.getPlanner().getContext().unwrap(PlannerSettings.class);
   }
 
   public static PlannerSettings getPlannerSettings(RelOptPlanner planner) {
-    return planner.getFrameworkContext().unwrap(PlannerSettings.class);
+    return planner.getContext().unwrap(PlannerSettings.class);
   }
 
   public static Prel removeSvIfRequired(Prel prel, SelectionVectorMode... allowed){

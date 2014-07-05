@@ -658,7 +658,7 @@
           <dependency>
             <groupId>net.hydromatic</groupId>
             <artifactId>optiq-core</artifactId>
-            <version>0.7-SNAPSHOT</version>
+            <version>0.9-SNAPSHOT</version>
             <exclusions>
               <exclusion>
                 <groupId>org.jgrapht</groupId>

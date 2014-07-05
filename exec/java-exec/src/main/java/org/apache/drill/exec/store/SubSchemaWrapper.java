@@ -89,4 +89,5 @@ public class SubSchemaWrapper extends AbstractSchema {
   public String getTypeName() {
     return innerSchema.getTypeName();
   }
+
 }

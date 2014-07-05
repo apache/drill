@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.planner.physical;
 
-import net.hydromatic.optiq.tools.FrameworkContext;
-
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionValidator;
@@ -26,8 +24,9 @@ import org.apache.drill.exec.server.options.TypeValidators.BooleanValidator;
 import org.apache.drill.exec.server.options.TypeValidators.LongValidator;
 import org.apache.drill.exec.server.options.TypeValidators.PositiveLongValidator;
 import org.apache.drill.exec.server.options.TypeValidators.RangeDoubleValidator;
+import org.eigenbase.relopt.Context;
 
-public class PlannerSettings implements FrameworkContext{
+public class PlannerSettings implements Context{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PlannerSettings.class);
 
   private int numEndPoints = 0;
@@ -101,7 +100,7 @@ public class PlannerSettings implements FrameworkContext{
   public boolean isBroadcastJoinEnabled() {
     return options.getOption(BROADCAST.getOptionName()).bool_val;
   }
-  
+
   public boolean isHashSingleKey() {
     return options.getOption(HASH_SINGLE_KEY.getOptionName()).bool_val;
   }
