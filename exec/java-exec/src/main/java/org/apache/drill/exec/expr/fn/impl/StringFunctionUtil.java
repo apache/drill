@@ -87,4 +87,19 @@ public class StringFunctionUtil {
         + " at position " + idx + " encountered while decoding UTF8 string.");
   }
 
+  public static int utf8CharLen(byte currentByte) {
+    if (currentByte >= 0){                 // 1-byte char. First byte is 0xxxxxxx.
+        return 1;
+    }
+    else if ((currentByte & 0xE0) == 0xC0 ){   // 2-byte char. First byte is 110xxxxx
+        return 2;
+    }
+    else if ((currentByte & 0xF0) == 0xE0 ){   // 3-byte char. First byte is 1110xxxx
+        return 3;
+    }
+    else if ((currentByte & 0xF8) == 0xF0){    //4-byte char. First byte is 11110xxx
+        return 4;
+    }
+    throw new DrillRuntimeException("Unexpected byte 0x" + Integer.toString((int)currentByte & 0xff, 16) + " encountered while decoding UTF8 string.");
+  }
 }

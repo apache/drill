@@ -33,6 +33,8 @@ import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
 import org.apache.drill.exec.record.RecordBatch;
+import java.nio.charset.Charset;
+import org.apache.drill.exec.expr.holders.IntHolder;
 
 public class StringFunctions{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StringFunctions.class);
@@ -942,4 +944,136 @@ public class StringFunctions{
     }
   }
 
+
+  /**
+  * Returns the ASCII code of the first character of input string
+  */
+  @FunctionTemplate(name = "ascii", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  public static class AsciiString implements DrillSimpleFunc {
+
+    @Param  VarCharHolder in;
+    @Output IntHolder out;
+
+    public void setup(RecordBatch incoming) { }
+
+    public void eval() {
+      out.value = in.buffer.getByte(in.start);
+    }
+  }
+
+  /**
+  * Returns the char corresponding to ASCII code input.
+  */
+  @FunctionTemplate(name = "chr", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  public static class AsciiToChar implements DrillSimpleFunc {
+
+    @Param  IntHolder in;
+    @Output VarCharHolder out;
+    @Workspace ByteBuf buffer;
+
+    public void setup(RecordBatch incoming) {
+      buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte [1]);
+    }
+
+    public void eval() {
+      out.buffer = buffer;
+      out.start = out.end = 0;
+      out.buffer.setByte(0, in.value);
+      ++out.end;
+    }
+  }
+
+  /**
+  * Returns the input char sequences repeated nTimes.
+  */
+  @FunctionTemplate(names = {"repeat", "repeatstr"}, scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  public static class RepeatString implements DrillSimpleFunc {
+
+    @Param  VarCharHolder in;
+    @Param IntHolder nTimes;
+    @Output VarCharHolder out;
+    @Workspace ByteBuf buffer;
+
+    public void setup(RecordBatch incoming) {
+    }
+
+    public void eval() {
+      int num = nTimes.value;
+      byte[] bytea = new byte [(in.end - in.start)*num];
+      int index = 0;
+      while(num > 0){
+        for (int id = in.start; id < in.end; id++){
+        bytea[index++] = in.buffer.getByte(id);
+        }
+        num--;
+      }
+      out.buffer = io.netty.buffer.Unpooled.wrappedBuffer(bytea);
+      out.start = 0;
+      out.end = bytea.length;
+    }
+  }
+
+  /**
+  * Convert string to ASCII from another encoding input.
+  */
+  @FunctionTemplate(name = "toascii", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  public static class AsciiEndode implements DrillSimpleFunc {
+
+    @Param  VarCharHolder in;
+    @Param  VarCharHolder enc;
+    @Output VarCharHolder out;
+    @Workspace Charset inCharset;
+
+    public void setup(RecordBatch incoming) {
+      inCharset = java.nio.charset.Charset.forName(enc.toString());
+    }
+
+    public void eval() {
+      byte[] bytea = new byte[in.end - in.start];
+      int index =0;
+      for(int i = in.start; i<in.end; i++, index++){
+      bytea[index]=in.buffer.getByte(i);
+      }
+      byte[] outBytea = new String(bytea, inCharset).getBytes(com.google.common.base.Charsets.UTF_8);
+      out.buffer = io.netty.buffer.Unpooled.wrappedBuffer(outBytea);
+      out.start = 0;
+      out.end = outBytea.length;
+    }
+  }
+
+  /**
+  * Returns the reverse string for given input.
+  */
+  @FunctionTemplate(name = "reverse", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+  public static class ReverseString implements DrillSimpleFunc {
+
+    @Param  VarCharHolder in;
+    @Output VarCharHolder out;
+    @Workspace ByteBuf buffer;
+
+    public void setup(RecordBatch incoming) {
+    }
+
+    public void eval() {
+        int charlen = 0;
+
+        byte[] bytea = new byte [in.end - in.start];
+        int index = in.end;
+        int innerindex = 0;
+
+        for (int id = in.start; id < in.end; id+=charlen){
+	 innerindex = charlen = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.utf8CharLen(in.buffer, id);
+
+        while(innerindex > 0){
+          bytea[index - innerindex] = in.buffer.getByte(id + (charlen - innerindex));
+          innerindex-- ;
+        }
+
+        index -= charlen;
+        }
+        out.buffer = io.netty.buffer.Unpooled.wrappedBuffer(bytea);
+        out.start = 0;
+        out.end = bytea.length;
+      }
+  }
 }
