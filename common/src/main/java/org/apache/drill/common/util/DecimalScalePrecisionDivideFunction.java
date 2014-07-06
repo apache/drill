@@ -45,13 +45,16 @@ public class DecimalScalePrecisionDivideFunction extends DrillBaseComputeScalePr
   @Override
   public void computeScalePrecision(int leftPrecision, int leftScale, int rightPrecision, int rightScale) {
 
-  // compute the output scale and precision here
+    // compute the output scale and precision here
     outputScale = leftScale + rightScale;
     int leftIntegerDigits = leftPrecision - leftScale;
     int maxResultIntegerDigits = leftIntegerDigits + rightScale;
 
 
     outputPrecision = DecimalUtility.getPrecisionRange(outputScale + maxResultIntegerDigits);
+
+    // Output precision should be greater or equal to the input precision
+    outputPrecision = Math.max(outputPrecision, Math.max(leftPrecision, rightPrecision));
 
     // Try and increase the scale if we have any room
     outputScale = (outputPrecision - maxResultIntegerDigits >= 0) ? (outputPrecision - maxResultIntegerDigits) : 0;

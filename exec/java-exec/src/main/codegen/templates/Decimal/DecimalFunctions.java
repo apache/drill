@@ -556,7 +556,7 @@ public class ${type.name}Functions {
         }
     }
 
-    @FunctionTemplate(name = "mod", scope = FunctionTemplate.FunctionScope.DECIMAL_DIV_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    @FunctionTemplate(name = "mod", scope = FunctionTemplate.FunctionScope.DECIMAL_MOD_SCALE, nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}ModFunction implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -1355,7 +1355,7 @@ public class ${type.name}Functions {
         }
     }
 
-    @FunctionTemplate(name = "mod", scope = FunctionTemplate.FunctionScope.DECIMAL_DIV_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    @FunctionTemplate(name = "mod", scope = FunctionTemplate.FunctionScope.DECIMAL_MOD_SCALE, nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}ModFunction implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
