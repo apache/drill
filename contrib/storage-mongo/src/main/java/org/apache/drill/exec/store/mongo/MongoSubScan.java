@@ -27,6 +27,7 @@ import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.SubScan;
 
 import com.mongodb.MongoClient;
+import com.mongodb.WriteConcern;
 
 public class MongoSubScan extends AbstractBase implements SubScan {
 
@@ -54,6 +55,9 @@ public class MongoSubScan extends AbstractBase implements SubScan {
 
   public static class MongoSubScanSpec {
     protected MongoClient mongoClient;
+    protected String dbName;
+    protected String collectionName;
+    protected WriteConcern writeConcern;
 
     public MongoClient getMongoClient() {
       return mongoClient;
@@ -61,6 +65,30 @@ public class MongoSubScan extends AbstractBase implements SubScan {
 
     public void setMongoClient(MongoClient mongoClient) {
       this.mongoClient = mongoClient;
+    }
+
+    public String getDbName() {
+      return dbName;
+    }
+
+    public void setDbName(String dbName) {
+      this.dbName = dbName;
+    }
+
+    public String getCollectionName() {
+      return collectionName;
+    }
+
+    public void setCollectionName(String collectionName) {
+      this.collectionName = collectionName;
+    }
+
+    public WriteConcern getWriteConcern() {
+      return writeConcern;
+    }
+
+    public void setWriteConcern(WriteConcern writeConcern) {
+      this.writeConcern = writeConcern;
     }
   }
 
