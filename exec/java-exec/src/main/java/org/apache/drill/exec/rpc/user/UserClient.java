@@ -46,8 +46,9 @@ public class UserClient extends BasicClientWithConnection<RpcType, UserToBitHand
 
   private boolean supportComplexTypes = true;
 
-  public UserClient(BufferAllocator alloc, EventLoopGroup eventLoopGroup) {
+  public UserClient(boolean supportComplexTypes, BufferAllocator alloc, EventLoopGroup eventLoopGroup) {
     super(UserRpcConfig.MAPPING, alloc, eventLoopGroup, RpcType.HANDSHAKE, BitToUserHandshake.class, BitToUserHandshake.PARSER);
+    this.supportComplexTypes = supportComplexTypes;
   }
 
   public void submitQuery(UserResultsListener resultsListener, RunQuery query) {
@@ -110,20 +111,6 @@ public class UserClient extends BasicClientWithConnection<RpcType, UserToBitHand
   @Override
   public ProtobufLengthDecoder getDecoder(BufferAllocator allocator) {
     return new UserProtobufLengthDecoder(allocator, OutOfMemoryHandler.DEFAULT_INSTANCE);
-  }
-
-  /**
-   * Sets whether the application is willing to accept complex types (Map, Arrays) in the returned result set.
-   * Default is {@code true}. If set to {@code false}, the complex types are returned as JSON encoded VARCHAR type.
-   *
-   * @throws IllegalStateException if called after a connection has been established.
-   */
-  public UserClient setSupportComplexTypes(boolean supportComplexTypes) {
-    if (isActive()) {
-      throw new IllegalStateException("Attempted to modify connection property after connection has been established.");
-    }
-    this.supportComplexTypes = supportComplexTypes;
-    return this;
   }
 
 }

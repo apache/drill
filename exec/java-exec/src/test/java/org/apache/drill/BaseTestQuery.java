@@ -32,10 +32,12 @@ import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.client.PrintingResultsListener;
 import org.apache.drill.exec.client.QuerySubmitter;
 import org.apache.drill.exec.client.QuerySubmitter.Format;
+import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryType;
+import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.user.ConnectionThrottle;
 import org.apache.drill.exec.rpc.user.QueryResultBatch;
@@ -54,6 +56,8 @@ import com.google.common.io.Resources;
 
 public class BaseTestQuery extends ExecTest{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BaseTestQuery.class);
+
+  private int[] columnWidths = new int[] { 8 };
 
   private static final String ENABLE_FULL_CACHE = "drill.exec.test.use-full-cache";
 
@@ -225,6 +229,31 @@ public class BaseTestQuery extends ExecTest{
       if(exception != null) throw exception;
       return count.get();
     }
+  }
+
+  protected void setColumnWidth(int columnWidth) {
+    this.columnWidths = new int[] { columnWidth };
+  }
+
+  protected void setColumnWidths(int[] columnWidths) {
+    this.columnWidths = columnWidths;
+  }
+
+  protected int printResult(List<QueryResultBatch> results) throws SchemaChangeException {
+    int rowCount = 0;
+    RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
+    for(QueryResultBatch result : results){
+      rowCount += result.getHeader().getRowCount();
+      loader.load(result.getHeader().getDef(), result.getData());
+      if (loader.getRecordCount() <= 0) {
+        break;
+      }
+      VectorUtil.showVectorAccessibleContent(loader, columnWidths);
+      loader.clear();
+      result.release();
+    }
+    System.out.println("Total record count: " + rowCount);
+    return rowCount;
   }
 
 }
