@@ -187,6 +187,8 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
           }
           if (rawBatch != null) {
             rawBatches.add(rawBatch);
+          } else {
+            rawBatches.add(emptyBatch);
           }
         }
       }
@@ -288,8 +290,26 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
       });
 
       // populate the priority queue with initial values
-      for (int b = 0; b < senderCount; ++b)
-        pqueue.add(new Node(b, 0));
+      for (int b = 0; b < senderCount; ++b) {
+        while (batchLoaders[b] != null && batchLoaders[b].getRecordCount() == 0) {
+          try {
+            RawFragmentBatch batch = getNext(fragProviders[b]);
+            incomingBatches[b] = batch;
+            if (batch != null) {
+              batchLoaders[b].load(batch.getHeader().getDef(), batch.getBody());
+            } else {
+              batchLoaders[b].clear();
+              batchLoaders[b] = null;
+            }
+          } catch (IOException | SchemaChangeException e) {
+            context.fail(e);
+            return IterOutcome.STOP;
+          }
+        }
+        if (batchLoaders[b] != null) {
+          pqueue.add(new Node(b, 0));
+        }
+      }
 
       hasRun = true;
       // finished lazy initialization
@@ -566,7 +586,9 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
     outgoingContainer.clear();
     if (batchLoaders != null) {
       for(RecordBatchLoader rbl : batchLoaders){
-        rbl.clear();
+        if (rbl != null) {
+          rbl.clear();
+        }
       }
     }
     oContext.close();
