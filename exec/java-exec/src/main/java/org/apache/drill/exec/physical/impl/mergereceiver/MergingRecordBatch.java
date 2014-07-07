@@ -391,13 +391,22 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
     }
 
     // set the value counts in the outgoing vectors
-    for (VectorWrapper vw : outgoingContainer)
+    for (VectorWrapper vw : outgoingContainer) {
       vw.getValueVector().getMutator().setValueCount(outgoingPosition);
+    }
 
-    if (schemaChanged)
+    if (pqueue.isEmpty()) {
+      if (!done) {
+        done = !done;
+      }
+    }
+
+    if (schemaChanged) {
       return IterOutcome.OK_NEW_SCHEMA;
-    else
+    }
+    else {
       return IterOutcome.OK;
+    }
   }
 
   @Override
