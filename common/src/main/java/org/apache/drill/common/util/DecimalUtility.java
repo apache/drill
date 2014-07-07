@@ -268,6 +268,11 @@ public class DecimalUtility {
      */
     public static void getSparseFromBigDecimal(BigDecimal input, ByteBuf data, int startIndex, int scale, int precision, int nDecimalDigits) {
 
+        // Initialize the buffer
+        for (int i = 0; i < nDecimalDigits; i++) {
+          data.setInt(startIndex + (i * integerSize), 0);
+        }
+
         boolean sign = false;
 
         if (input.signum() == -1) {

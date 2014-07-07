@@ -100,9 +100,6 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     out.start  = 0;
     out.scale = outputScale;
     out.precision = 38;
-    for (int i = 0; i < out.nDecimalDigits; i++) {
-      out.setInteger(i, 0);
-    }
     java.math.BigDecimal average = value.divide(java.math.BigDecimal.valueOf(count.value, 0), out.scale, java.math.BigDecimal.ROUND_HALF_UP);
     org.apache.drill.common.util.DecimalUtility.getSparseFromBigDecimal(average, out.buffer, out.start, out.scale, out.precision, out.nDecimalDigits);
   }

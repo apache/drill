@@ -287,10 +287,6 @@ public class ${type.name}Functions {
             result.buffer = buffer;
             result.start = 0;
 
-            // Re initialize the buffer everytime
-            for (int i = 0; i < ${type.storage}; i++) {
-                result.setInteger(i, 0);
-            }
             java.math.BigDecimal leftInput = org.apache.drill.common.util.DecimalUtility.getBigDecimalFromSparse(left.buffer, left.start, left.nDecimalDigits, left.scale);
             java.math.BigDecimal rightInput = org.apache.drill.common.util.DecimalUtility.getBigDecimalFromSparse(right.buffer, right.start, right.nDecimalDigits, right.scale);
             java.math.BigDecimal addResult = leftInput.subtract(rightInput);
@@ -330,10 +326,6 @@ public class ${type.name}Functions {
             result.buffer = buffer;
             result.start = 0;
 
-            // Re initialize the buffer everytime
-            for (int i = 0; i < ${type.storage}; i++) {
-                result.setInteger(i, 0);
-            }
             java.math.BigDecimal leftInput = org.apache.drill.common.util.DecimalUtility.getBigDecimalFromSparse(left.buffer, left.start, left.nDecimalDigits, left.scale);
             java.math.BigDecimal rightInput = org.apache.drill.common.util.DecimalUtility.getBigDecimalFromSparse(right.buffer, right.start, right.nDecimalDigits, right.scale);
             java.math.BigDecimal addResult = leftInput.add(rightInput);
@@ -547,11 +539,6 @@ public class ${type.name}Functions {
 
             java.math.BigDecimal output = numerator.divide(denominator, (int) result.scale, java.math.BigDecimal.ROUND_DOWN);
 
-            // Initialize the result buffer
-            for (int i = 0; i < ${type.storage}; i++) {
-                result.setInteger(i, 0);
-            }
-
             org.apache.drill.common.util.DecimalUtility.getSparseFromBigDecimal(output, result.buffer, result.start, result.scale, result.precision, result.nDecimalDigits);
         }
     }
@@ -590,11 +577,6 @@ public class ${type.name}Functions {
 
             java.math.BigDecimal output = numerator.remainder(denominator);
             output.setScale(result.scale, java.math.BigDecimal.ROUND_DOWN);
-
-            // Initialize the result buffer
-            for (int i = 0; i < ${type.storage}; i++) {
-                result.setInteger(i, 0);
-            }
 
             org.apache.drill.common.util.DecimalUtility.getSparseFromBigDecimal(output, result.buffer, result.start, result.scale, result.precision, result.nDecimalDigits);
         }
