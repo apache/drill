@@ -157,6 +157,16 @@
     {from: "Decimal9", to: "VarChar", major: "DecimalSimpleVarChar", bufferSize: "11", javatype: "int"},
     {from: "Decimal18", to: "VarChar", major: "DecimalSimpleVarChar", bufferSize: "20", javatype: "long"},
     {from: "Decimal28Sparse", to: "VarChar", major: "DecimalComplexVarChar", bufferSize: "30", arraySize: "5"},
-    {from: "Decimal38Sparse", to: "VarChar", major: "DecimalComplexVarChar", bufferSize: "40", arraySize: "6"}
+    {from: "Decimal38Sparse", to: "VarChar", major: "DecimalComplexVarChar", bufferSize: "40", arraySize: "6"},
+
+    {from: "Decimal18", to: "Decimal9", major: "DownwardDecimalSimpleDecimalSimple", javatype: "int"},
+
+    {from: "Decimal28Sparse", to: "Decimal18", major: "DownwardDecimalSimpleDecimalComplex", javatype: "long"},
+    {from: "Decimal28Sparse", to: "Decimal9", major: "DownwardDecimalSimpleDecimalComplex", javatype: "int"},
+
+    {from: "Decimal38Sparse", to: "Decimal28Sparse", major: "DownwardDecimalComplexDecimalComplex", arraySize: "5"},
+    {from: "Decimal38Sparse", to: "Decimal18", major: "DownwardDecimalComplexDecimalSimple", javatype: "long"},
+    {from: "Decimal38Sparse", to: "Decimal9", major: "DownwardDecimalComplexDecimalSimple", javatype: "int"}
+
   ]
 } 

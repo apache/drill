@@ -701,4 +701,25 @@ public class TestFunctionsQuery {
         .returns("TRIM_STR=Sheri; "+
                  "SUB_STR=heri\n");
   }
+  @Test
+  public void testDecimalDownwardCast() throws Exception {
+    String query = "select cast((cast('12345.6789' as decimal(18, 4))) as decimal(9, 4)) as DEC18_DEC9_1, " +
+                   "cast((cast('12345.6789' as decimal(18, 4))) as decimal(9, 2)) as DEC18_DEC9_2, " +
+                   "cast((cast('-12345.6789' as decimal(18, 4))) as decimal(9, 0)) as DEC18_DEC9_3, " +
+                   "cast((cast('999999999.6789' as decimal(38, 4))) as decimal(9, 0)) as DEC38_DEC19_1, " +
+                   "cast((cast('-999999999999999.6789' as decimal(38, 4))) as decimal(18, 2)) as DEC38_DEC18_1, " +
+                   "cast((cast('-999999999999999.6789' as decimal(38, 4))) as decimal(18, 0)) as DEC38_DEC18_2, " +
+                   "cast((cast('100000000999999999.6789' as decimal(38, 4))) as decimal(28, 0)) as DEC38_DEC28_1 " +
+                   "from cp.`employee.json` where employee_id = 1";
+
+    JdbcAssert.withNoDefaultSchema()
+        .sql(query)
+        .returns("DEC18_DEC9_1=12345.6789; "+
+                 "DEC18_DEC9_2=12345.68; " +
+                 "DEC18_DEC9_3=-12346; " +
+                 "DEC38_DEC19_1=1000000000; " +
+                 "DEC38_DEC18_1=-999999999999999.68; " +
+                 "DEC38_DEC18_2=-1000000000000000; " +
+                 "DEC38_DEC28_1=100000001000000000\n");
+  }
 }
