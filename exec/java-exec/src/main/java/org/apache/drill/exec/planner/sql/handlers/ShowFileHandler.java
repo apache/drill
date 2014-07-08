@@ -57,11 +57,21 @@ public class ShowFileHandler extends DefaultSqlHandler {
 
     DrillFileSystem fs = null;
     String defaultLocation = null;
+    String fromDir = "./";
 
     try {
+      SchemaPlus defaultSchema = context.getNewDefaultSchema();
+      SchemaPlus drillSchema = defaultSchema;
 
-      // Traverse and find the schema
-      SchemaPlus drillSchema = findSchema(context.getRootSchema(), context.getNewDefaultSchema(), from.names.subList(0, from.names.size() - 1));
+      // We are not sure if the full from clause is just the schema or includes table name, first try to see if the full path specified is a schema
+      try {
+        drillSchema = findSchema(context.getRootSchema(), defaultSchema, from.names);
+      } catch (Exception e) {
+          // Entire from clause is not a schema, try to obtain the schema without the last part of the specified clause.
+          drillSchema = findSchema(context.getRootSchema(), defaultSchema, from.names.subList(0, from.names.size() - 1));
+          fromDir = fromDir + from.names.get((from.names.size() - 1));
+      }
+
       AbstractSchema tempSchema = getDrillSchema(drillSchema);
       WorkspaceSchema schema = null;
       if (tempSchema instanceof WorkspaceSchema) {
@@ -81,7 +91,6 @@ public class ShowFileHandler extends DefaultSqlHandler {
     }
 
     List<ShowFilesCommandResult> rows = new ArrayList<>();
-    String fromDir = from.names.get((from.names.size() - 1));
 
     for (FileStatus fileStatus : fs.list(false, new Path(defaultLocation, fromDir))) {
       ShowFilesCommandResult result = new ShowFilesCommandResult(fileStatus.getPath().getName(), fileStatus.isDir(),
