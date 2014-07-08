@@ -17,31 +17,63 @@
  */
 package org.apache.drill.exec.store.mongo;
 
-import java.util.Map;
+import org.apache.drill.common.logical.StoragePluginConfig;
 
-import org.apache.drill.common.logical.StoragePluginConfigBase;
-import org.apache.hadoop.conf.Configuration;
-
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.google.common.annotations.VisibleForTesting;
+import com.mongodb.MongoClientOptions;
+import com.mongodb.MongoClientURI;
 
 @JsonTypeName(MongoStoragePluginConfig.NAME)
-public class MongoStoragePluginConfig extends StoragePluginConfigBase implements
-    DrillMongoConstants {
-
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory
-      .getLogger(MongoStoragePluginConfig.class);
-
-  private Map<String, String> config;
-
-  @JsonIgnore
-  private Configuration hbaseConf;
-
+public class MongoStoragePluginConfig extends StoragePluginConfig {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MongoStoragePluginConfig.class);
   public static final String NAME = "mongo";
-
-  @Override
-  public boolean equals(Object arg0) {
-    return false;
+  private String connection;
+  
+  @JsonIgnore
+  private MongoClientURI clientURI; 
+  
+  @JsonCreator
+  public MongoStoragePluginConfig(@JsonProperty("connection") String connection) {
+    this.connection = connection;
   }
 
+
+  @Override
+  public boolean equals(Object that) {
+    if (this == that) {
+      return true;
+    } else if (that == null || getClass() != that.getClass()) {
+      return false;
+    }
+    MongoStoragePluginConfig thatConfig = (MongoStoragePluginConfig) that;
+    return this.connection.equals(thatConfig.connection);
+
+  }
+  
+  @Override
+  public int hashCode() {
+    return this.connection != null ? this.connection.hashCode() : 0;
+  }
+  
+  @JsonIgnore
+  public MongoClientOptions getMongoOptions() {
+    MongoClientURI clientURI = new MongoClientURI(connection);
+    return clientURI.getOptions();
+  }
+  
+  @JsonProperty
+  public String getMongoCnxnURL() {
+    return connection;
+  }
+  
+  @JsonIgnore
+  @VisibleForTesting
+  public void setConnectionURI(String connection) {
+    this.connection = connection;
+  }
+  
 }

@@ -17,6 +17,24 @@
  */
 package org.apache.drill.exec.store.mongo;
 
-public class MongoSchemaFactory {
+import net.hydromatic.optiq.SchemaPlus;
+
+import org.apache.drill.exec.rpc.user.UserSession;
+import org.apache.drill.exec.store.SchemaFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class MongoSchemaFactory implements SchemaFactory {
+  
+  static final Logger logger = LoggerFactory.getLogger(MongoSchemaFactory.class);
+  
+  public MongoSchemaFactory(MongoStoragePlugin schema, String name) {
+    
+  }
+
+  @Override
+  public void registerSchemas(UserSession session, SchemaPlus parent) {
+    
+  }
 
 }

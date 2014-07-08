@@ -138,7 +138,7 @@ public class StorageResources {
   @Consumes("application/x-www-form-urlencoded")
   public Viewable createTrackInJSON(@FormParam("name") String name, @FormParam("config") String storagePluginConfig)
       throws ExecutionSetupException, JsonParseException, JsonMappingException, IOException {
-    StoragePluginConfig config = mapper.readValue(new StringReader(storagePluginConfig), StoragePluginConfig.class);
+	StoragePluginConfig config = mapper.readValue(new StringReader(storagePluginConfig), StoragePluginConfig.class);
     storage.createOrUpdate(name, config, true);
     return new Viewable("/rest/status.ftl", "Updated " + name);
   }

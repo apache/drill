@@ -17,29 +17,54 @@
  */
 package org.apache.drill.exec.store.mongo;
 
+import java.io.IOException;
+
 import net.hydromatic.optiq.SchemaPlus;
 
+import org.apache.drill.common.JSONOptions;
 import org.apache.drill.common.logical.StoragePluginConfig;
+import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 
-public class MongoStoragePlugin extends AbstractStoragePlugin{
-    static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MongoStoragePlugin.class);
-	
-    private DrillbitContext drillContext;
-    private MongoStoragePluginConfig engineConfig;
-    private MongoSchemaFactory schemaFactory;
-    
-    
-	@Override
-	public StoragePluginConfig getConfig() {
-		return null;
-	}
+public class MongoStoragePlugin extends AbstractStoragePlugin {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MongoStoragePlugin.class);
 
-	@Override
-	public void registerSchemas(UserSession session, SchemaPlus parent) {
-		
-	}
+  private DrillbitContext context;
+  private MongoStoragePluginConfig mongoConfig;
+  private MongoSchemaFactory schemaFactory;
+
+  public MongoStoragePlugin(MongoStoragePluginConfig mongoConfig, DrillbitContext context, String name)
+      throws IOException {
+    this.context = context;
+    this.schemaFactory = new MongoSchemaFactory(this, name);
+    this.mongoConfig = mongoConfig;
+  }
+  
+  public DrillbitContext getContext() {
+    return this.context;
+  }
+  
+  @Override
+  public StoragePluginConfig getConfig() {
+    return mongoConfig;
+  }
+
+  @Override
+  public void registerSchemas(UserSession session, SchemaPlus parent) {
+    schemaFactory.registerSchemas(session, parent);
+  }
+  
+  @Override
+  public boolean supportsRead() {
+    return true;
+  }
+  
+  @Override
+  public AbstractGroupScan getPhysicalScan(JSONOptions selection)
+      throws IOException {
+    return super.getPhysicalScan(selection);
+  }
 
 }

@@ -24,7 +24,7 @@
     <version>1.0.0-m2-incubating-SNAPSHOT</version>
   </parent>
 
-  <artifactId>drill-storage-mongo</artifactId>
+  <artifactId>drill-mongo-storage</artifactId>
 
   <name>contrib/mongo-storage-plugin</name>
 
@@ -33,6 +33,13 @@
       <groupId>org.apache.drill.exec</groupId>
       <artifactId>drill-java-exec</artifactId>
       <version>${project.version}</version>
+    </dependency>
+    
+    <dependency>
+	  <groupId>org.mongodb</groupId>
+	  <artifactId>mongo-java-driver</artifactId>
+	  <version>2.12.2</version>
+	  <scope>compile</scope>
     </dependency>
 
     <!-- Test dependencie -->
@@ -58,20 +65,7 @@
     </dependency>
   </dependencies>
 
-<repositories>
-    <repository>
-      <id>clojars</id>
-      <url>https://clojars.org/repo/</url>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-    </repository>
-  </repositories>
-
-<build>
+  <build>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -87,63 +81,5 @@
       </plugin>
     </plugins>
   </build>
-  <profiles>
-    <profile>
-      <id>default-hadoop</id>
-      <activation>
-        <property>
-          <name>!alt-hadoop</name>
-        </property>
-      </activation>
-      <dependencies>
-        <dependency>
-      <groupId>org.mongodb</groupId>
-      <artifactId>mongo-java-driver</artifactId>
-      <version>2.11.4</version>
-          <exclusions>
-            <exclusion>
-              <groupId>org.mortbay.jetty</groupId>
-              <artifactId>servlet-api-2.5</artifactId>
-            </exclusion>
-            <exclusion>
-              <artifactId>commons-logging</artifactId>
-              <groupId>commons-logging</groupId>
-            </exclusion>
-            <exclusion>
-              <artifactId>slf4j-log4j12</artifactId>
-              <groupId>org.slf4j</groupId>
-            </exclusion>
-            <exclusion>
-              <artifactId>slf4j-log4j12</artifactId>
-              <groupId>org.slf4j</groupId>
-            </exclusion>
-            <exclusion>
-              <groupId>com.sun.jersey</groupId>
-              <artifactId>jersey-core</artifactId>
-            </exclusion>
-            <exclusion>
-              <groupId>com.sun.jersey</groupId>
-              <artifactId>jersey-server</artifactId>
-            </exclusion>
-            <exclusion>
-              <groupId>com.sun.jersey</groupId>
-              <artifactId>jersey-json</artifactId>
-            </exclusion>
-            <exclusion>
-              <groupId>com.sun.jersey</groupId>
-              <artifactId>jersey-client</artifactId>
-            </exclusion>
-            <exclusion>
-              <artifactId>asm</artifactId>
-              <groupId>asm</groupId>
-            </exclusion>
-            <exclusion>
-              <artifactId>jruby-complete</artifactId>
-              <groupId>org.jruby</groupId>
-            </exclusion>
-          </exclusions>
-        </dependency>
-      </dependencies>
-   </profile>
-  </profiles>
+  
 </project>
