@@ -289,9 +289,6 @@ public class DrillClient implements Closeable, ConnectionThrottle{
     @Override
     public void resultArrived(QueryResultBatch result, ConnectionThrottle throttle) {
 //      logger.debug("Result arrived.  Is Last Chunk: {}.  Full Result: {}", result.getHeader().getIsLastChunk(), result);
-      if (result.getHeader().getErrorCount() > 0) {
-        fail(new Exception(result.getHeader().getError(0).getMessage()));
-      }
       results.add(result);
       if(result.getHeader().getIsLastChunk()){
         future.set(results);

@@ -163,7 +163,9 @@ public class ProducerConsumerBatch extends AbstractRecordBatch {
   private void clearQueue() {
     RecordBatchDataWrapper wrapper;
     while ((wrapper = queue.poll()) != null) {
-      wrapper.batch.getContainer().clear();
+      if (wrapper.batch != null) {
+        wrapper.batch.getContainer().clear();
+      }
     }
   }
 
