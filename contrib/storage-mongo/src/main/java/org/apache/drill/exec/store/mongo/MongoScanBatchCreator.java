@@ -22,14 +22,26 @@ import java.util.List;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.BatchCreator;
+import org.apache.drill.exec.physical.impl.ScanBatch;
 import org.apache.drill.exec.record.RecordBatch;
+import org.apache.drill.exec.store.RecordReader;
+import org.apache.drill.exec.store.mongo.MongoSubScan.MongoSubScanSpec;
 
-public class MongoScanBatchCreator implements BatchCreator<MongoSubScan>{
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+
+public class MongoScanBatchCreator implements BatchCreator<MongoSubScan> {
 
   @Override
-  public RecordBatch getBatch(FragmentContext context, MongoSubScan config,
+  public RecordBatch getBatch(FragmentContext context, MongoSubScan subScan,
       List<RecordBatch> children) throws ExecutionSetupException {
-    return null;
+    Preconditions.checkArgument(children.isEmpty());
+    List<RecordReader> readers = Lists.newArrayList();
+    for (MongoSubScanSpec mongoSubScanSpec : subScan.getShardList()) {
+      readers.add(new MongoRecordReader(mongoSubScanSpec, subScan
+          .getColumnSchemas(), context));
+    }
+    return new ScanBatch(subScan, context, readers.iterator());
   }
 
 }
