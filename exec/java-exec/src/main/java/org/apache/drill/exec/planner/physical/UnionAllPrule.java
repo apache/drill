@@ -43,7 +43,7 @@ public class UnionAllPrule extends Prule {
   @Override
   public boolean matches(RelOptRuleCall call) {
     DrillUnionRel union = (DrillUnionRel) call.rel(0);
-    return ((! union.isDistinct()) && union.isHomogeneous(false /* don't compare names */)); 
+    return (! union.isDistinct()); 
   }
   
   @Override

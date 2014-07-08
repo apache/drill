@@ -23,7 +23,12 @@ import org.eigenbase.rel.InvalidRelException;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.UnionRelBase;
 import org.eigenbase.relopt.RelOptCluster;
+import org.eigenbase.relopt.RelOptUtil;
 import org.eigenbase.relopt.RelTraitSet;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypeField;
+import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.util.Pair;
 
 /**
  * Base class for logical and physical Union implemented in Drill
@@ -33,8 +38,20 @@ public abstract class DrillUnionRelBase extends UnionRelBase implements DrillRel
   public DrillUnionRelBase(RelOptCluster cluster, RelTraitSet traits,
       List<RelNode> inputs, boolean all) throws InvalidRelException {
     super(cluster, traits, inputs, all);
-    if (! this.isHomogeneous(false /* don't compare names */)) {
+    // if (! this.isHomogeneous(false /* don't compare names */)) {
+    if (! this.isCompatible(false /* don't compare names */, true /* allow substrings */)) {
       throw new InvalidRelException("Input row types of the Union are not compatible.");
     }
+  }
+  
+  public boolean isCompatible(boolean compareNames, boolean allowSubstring) {
+    RelDataType unionType = getRowType();
+    for (RelNode input : getInputs()) {
+      if (! DrillRelOptUtil.areRowTypesEqual(
+          input.getRowType(), unionType, compareNames, allowSubstring)) {
+        return false;
+      }
+    }
+    return true;
   }
 }
