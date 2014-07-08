@@ -65,7 +65,9 @@ SqlNode SqlShowFiles() :
 {
     <SHOW> { pos = getPos(); }
     <FILES>
-    (<FROM> | <IN>) { db = CompoundIdentifier(); }
+    [
+        (<FROM> | <IN>) { db = CompoundIdentifier(); }
+    ]
     {
         return new SqlShowFiles(pos, db);
     }
