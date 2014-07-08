@@ -152,6 +152,7 @@ public abstract class PartitionerTemplate implements Partitioner {
             outgoingBatch.flush();
             if (!outgoingBatch.copy(recordId)) {
               logger.debug(RECORD_TOO_BIG_MSG, recordId);
+              throw new IOException(RECORD_TOO_BIG_MSG);
             }
           }
         }
@@ -163,8 +164,10 @@ public abstract class PartitionerTemplate implements Partitioner {
           OutgoingRecordBatch outgoingBatch = outgoingBatches.get(doEval(svIndex));
           if (!outgoingBatch.copy(svIndex)) {
             logger.trace(REWRITE_MSG, svIndex);
+            outgoingBatch.flush();
             if (!outgoingBatch.copy(svIndex)) {
               logger.debug(RECORD_TOO_BIG_MSG, recordId);
+              throw new IOException(RECORD_TOO_BIG_MSG);
             }
           }
         }
@@ -176,8 +179,10 @@ public abstract class PartitionerTemplate implements Partitioner {
           OutgoingRecordBatch outgoingBatch = outgoingBatches.get(doEval(svIndex));
           if (!outgoingBatch.copy(svIndex)) {
             logger.trace(REWRITE_MSG, svIndex);
+            outgoingBatch.flush();
             if (!outgoingBatch.copy(svIndex)) {
               logger.debug(RECORD_TOO_BIG_MSG, recordId);
+              throw new IOException(RECORD_TOO_BIG_MSG);
             }
           }
         }
