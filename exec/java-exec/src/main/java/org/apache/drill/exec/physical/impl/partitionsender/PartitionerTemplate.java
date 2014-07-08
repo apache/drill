@@ -316,6 +316,8 @@ public abstract class PartitionerTemplate implements Partitioner {
     
     public void updateStats(FragmentWritableBatch writableBatch) {
       stats.addLongStat(Metric.BYTES_SENT, writableBatch.getByteCount());
+      stats.addLongStat(Metric.BATCHES_SENT, 1);
+      stats.addLongStat(Metric.RECORDS_SENT, writableBatch.getHeader().getDef().getRecordCount());
     }
 
     public void initializeBatch() {

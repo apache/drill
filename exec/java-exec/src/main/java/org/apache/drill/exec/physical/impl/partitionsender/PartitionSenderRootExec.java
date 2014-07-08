@@ -132,7 +132,6 @@ public class PartitionSenderRootExec extends BaseRootExec {
         return false;
 
       case OK_NEW_SCHEMA:
-        newSchema = true;
         try {
           // send all existing batches
           if (partitioner != null) {
@@ -152,7 +151,6 @@ public class PartitionSenderRootExec extends BaseRootExec {
           return false;
         }
       case OK:
-        stats.batchReceived(0, incoming.getRecordCount(), newSchema);
         try {
           partitioner.partitionBatch(incoming);
         } catch (IOException e) {
@@ -160,7 +158,6 @@ public class PartitionSenderRootExec extends BaseRootExec {
           context.fail(e);
           return false;
         }
-        updateStats(partitioner.getOutgoingBatches());
         for (VectorWrapper<?> v : incoming) {
           v.clear();
         }
