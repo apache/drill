@@ -17,10 +17,9 @@
  */
 package org.apache.drill.exec.server.rest;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Map;
 
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
@@ -30,24 +29,15 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.drill.common.config.DrillConfig;
-import org.apache.drill.exec.client.DrillClient;
 import org.apache.drill.exec.coord.ClusterCoordinator;
-import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.proto.UserBitShared;
-import org.apache.drill.exec.record.RecordBatchLoader;
-import org.apache.drill.exec.record.VectorWrapper;
-import org.apache.drill.exec.rpc.RpcException;
-import org.apache.drill.exec.rpc.user.ConnectionThrottle;
-import org.apache.drill.exec.rpc.user.QueryResultBatch;
-import org.apache.drill.exec.rpc.user.UserResultsListener;
-import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.work.WorkManager;
 import org.glassfish.jersey.server.mvc.Viewable;
 
-@Path("/query")
+@Path("/")
 public class QueryResources {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryResources.class);
 
@@ -55,92 +45,55 @@ public class QueryResources {
   WorkManager work;
 
   @GET
+  @Path("/query")
   @Produces(MediaType.TEXT_HTML)
   public Viewable getQuery() {
     return new Viewable("/rest/query/query.ftl");
   }
 
   @POST
-  @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-  @Produces(MediaType.TEXT_HTML)
-  public Viewable submitQuery(@FormParam("query") String query, @FormParam("queryType") String queryType) throws Exception {
+  @Path("/query.json")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  public List<Map<String, Object>> submitQueryJSON(QueryWrapper query) throws Exception {
     final DrillConfig config = work.getContext().getConfig();
     final ClusterCoordinator coordinator = work.getContext().getClusterCoordinator();
     final BufferAllocator allocator = work.getContext().getAllocator();
-    DrillClient client = new DrillClient(config, coordinator, allocator);
-
-    UserBitShared.QueryType type = UserBitShared.QueryType.SQL;
-    switch (queryType){
-      case "SQL" : type = UserBitShared.QueryType.SQL; break;
-      case "LOGICAL" : type = UserBitShared.QueryType.LOGICAL; break;
-      case "PHYSICAL" : type = UserBitShared.QueryType.PHYSICAL; break;
-    }
-
-    client.connect();
-    Listener listener = new Listener(new RecordBatchLoader(work.getContext().getAllocator()));
-    client.runQuery(type, query, listener);
-    List<LinkedList<String>> result = listener.waitForCompletion();
-    client.close();
-
-    return new Viewable("/rest/query/result.ftl", result);
+    return query.run(config, coordinator, allocator);
   }
 
-  private static class Listener implements UserResultsListener {
-    private volatile Exception exception;
-    private AtomicInteger count = new AtomicInteger();
-    private CountDownLatch latch = new CountDownLatch(1);
-    private LinkedList<LinkedList<String>> output = new LinkedList<>();
-    private RecordBatchLoader loader;
+  @POST
+  @Path("/query")
+  @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+  @Produces(MediaType.TEXT_HTML)
+  public Viewable submitQuery(@FormParam("query") String query, @FormParam("queryType") String queryType) throws Exception {
+    List<Map<String, Object>> result = submitQueryJSON(new QueryWrapper(query, queryType));
 
-    Listener(RecordBatchLoader loader) {
-      this.loader = loader;
+    List<String> columnNames = new ArrayList<>(result.get(0).keySet());
+    List<List<Object>> records = new ArrayList<>();
+    for(Map m : result) {
+      records.add(new ArrayList<Object>(m.values()));
+    }
+    Table table = new Table(columnNames, records);
+
+    return new Viewable("/rest/query/result.ftl", table);
+  }
+
+  public class Table {
+    private List<String> columnNames;
+    private List<List<Object>> records;
+
+    public Table(List<String> columnNames, List<List<Object>> records) {
+      this.columnNames = columnNames;
+      this.records = records;
     }
 
-    @Override
-    public void submissionFailed(RpcException ex) {
-      exception = ex;
-      System.out.println("Query failed: " + ex.getMessage());
-      latch.countDown();
+    public List<String> getColumnNames() {
+      return columnNames;
     }
 
-    @Override
-    public void resultArrived(QueryResultBatch result, ConnectionThrottle throttle) {
-      int rows = result.getHeader().getRowCount();
-      if (result.getData() != null) {
-        count.addAndGet(rows);
-        try {
-          loader.load(result.getHeader().getDef(), result.getData());
-          output.add(new LinkedList<String>());
-          for (int i = 0; i < loader.getSchema().getFieldCount(); ++i) {
-            output.getLast().add(loader.getSchema().getColumn(i).getPath().getAsUnescapedPath());
-          }
-        } catch (SchemaChangeException e) {
-          throw new RuntimeException(e);
-        }
-        for (int i = 0; i < rows; ++i) {
-          output.add(new LinkedList<String>());
-          for (VectorWrapper<?> vw : loader) {
-            ValueVector.Accessor accessor = vw.getValueVector().getAccessor();
-            output.getLast().add(accessor.getObject(i).toString());
-          }
-        }
-      }
-      result.release();
-      if (result.getHeader().getIsLastChunk()) {
-        latch.countDown();
-      }
-    }
-
-    @Override
-    public void queryIdArrived(UserBitShared.QueryId queryId) {
-    }
-
-    public List<LinkedList<String>> waitForCompletion() throws Exception {
-      latch.await();
-      if (exception != null) {
-        throw exception;
-      }
-      return output;
+    public List<List<Object>> getRecords() {
+      return records;
     }
   }
 }

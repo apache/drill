@@ -17,58 +17,72 @@
   <a href="/queries">back</a><br/>
   <div class="page-header">
   </div>
-  <h3>Registered Storage Plugins</h3>
+  <h4>Enabled Storage Plugins</h4>
   <div class="table-responsive">
     <table class="table">
       <tbody>
-        <tr><th colspan="2" style="border:none;">Enabled Plugins</th></tr>
         <#list model as plugin>
-        <#if plugin.enabled == true>
-          <tr>
-            <td style="border:none;">
-              ${plugin.name}
-            </td>
-            <td style="border:none;">
-              <a class="btn btn-default" href="/storage/${plugin.name}/config/update">Update</a>
-              <a class="btn btn-default" href="/storage/${plugin.name}/config/enable/false">Disable</a>
-            </td>
-          </tr>
-        </#if>
-        </#list>
-        <tr><th colspan="2" style="border:none;">Disabled Plugins</th></tr>
-        <#list model as plugin>
-        <#if plugin.enabled == false>
-          <tr>
-            <td style="border:none;">
-              ${plugin.name}
-            </td>
-            <td style="border:none;">
-              <a class="btn btn-default" href="/storage/${plugin.name}/config/update">Update</a>
-              <a class="btn btn-default" href="/storage/${plugin.name}/config/enable/true">Enable</a>
-            </td>
-          </tr>
-        </#if>
+          <#if plugin.enabled() == true>
+            <tr>
+              <td style="border:none; width:200px;">
+                ${plugin.getName()}
+              </td>
+              <td style="border:none;">
+                <a class="btn btn-primary" href="/storage/${plugin.getName()}">Update</a>
+                <a class="btn btn-default" onclick="doEnable('${plugin.getName()}', false)">Disable</a>
+              </td>
+            </tr>
+          </#if>
         </#list>
       </tbody>
     </table>
   </div>
+  <div class="page-header">
+  </div>
+  <h4>Disabled Storage Plugins</h4>
+  <div class="table-responsive">
+    <table class="table">
+      <tbody>
+        <#list model as plugin>
+          <#if plugin.enabled() == false>
+            <tr>
+              <td style="border:none; width:200px;">
+                ${plugin.getName()}
+              </td>
+              <td style="border:none;">
+                <a class="btn btn-primary" href="/storage/${plugin.getName()}">Update</a>
+                <a class="btn btn-primary" onclick="doEnable('${plugin.getName()}', true)">Enable</a>
+              </td>
+            </tr>
+          </#if>
+        </#list>
+      </tbody>
+    </table>
+  </div>
+  <div class="page-header">
+  </div>
   <div>
-    <h4>Create new storage configuration</h4>
+    <h4>New Storage Plugin</h4>
     <form class="form-inline" id="newStorage" role="form" action="/" method="GET">
       <div class="form-group">
         <input type="text" class="form-control" id="storageName" placeholder="Storage Name">
       </div>
-      <script>
-        function doSubmit() {
-          var name = document.getElementById("storageName");
-          var form = document.getElementById("newStorage");
-          form.action = "/storage/" + name.value + "/config/update";
-          form.submit();
-        }
-      </script>
-      <button type="submit" class="btn btn-default" onclick="javascript:doSubmit();">Create</button>
+      <button type="submit" class="btn btn-default" onclick="doSubmit()">Create</button>
     </form>
   </div>
+  <script>
+    function doSubmit() {
+      var name = document.getElementById("storageName");
+      var form = document.getElementById("newStorage");
+      form.action = "/storage/" + name.value;
+      form.submit();
+    };
+    function doEnable(name, flag) {
+      $.get("/storage/" + name + "/enable/" + flag, function(data) {
+        location.reload();
+      });
+    };
+  </script>
 </#macro>
 
 <@page_html/>

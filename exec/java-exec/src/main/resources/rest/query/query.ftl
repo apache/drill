@@ -17,6 +17,10 @@
   <a href="/queries">back</a><br/>
   <div class="page-header">
   </div>
+  <div id="message" class="alert alert-info alert-dismissable" style="font-family: Courier;">
+    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    Sample SQL query: <strong>SELECT * FROM cp.`employee.json` LIMIT 20</strong>
+  </div>
   <form role="form" action="/query" method="POST">
     <div class="form-group">
       <label for="queryType">Query Type</label>
@@ -41,7 +45,7 @@
     </div>
     <div class="form-group">
       <label for="query">Query</label>
-      <textarea class="form-control" id="query" rows="5" name="query"></textarea>
+      <textarea class="form-control" id="query" rows="5" name="query" style="font-family: Courier;"></textarea>
     </div>
     <button type="submit" class="btn btn-default">Submit</button>
   </form>

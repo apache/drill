@@ -11,16 +11,21 @@
 
 <#include "*/generic.ftl">
 <#macro page_head>
+<link href="/www/style.css" rel="stylesheet">
+
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="http://cpettitt.github.io/project/dagre-d3/latest/dagre-d3.js"></script>
+<script src="/www/graph.js"></script>
 </#macro>
 
 <#macro page_body>
   <a href="/queries">back</a><br/>
   <div class="page-header">
   </div>
-  <h2>Query</h2>
+  <h3>Query</h3>
   <form role="form" action="/query" method="POST">
     <div class="form-group">
-      <textarea class="form-control" id="query" name="query">${model.getProfile().query}</textarea>
+      <textarea class="form-control" id="query" name="query" style="font-family: Courier;">${model.getProfile().query}</textarea>
     </div>
     <div class="form-group">
       <div class="radio-inline">
@@ -45,17 +50,29 @@
     <button type="submit" class="btn btn-default">Re-run query</button>
   </form>
   <div class="page-header">
-    <h2>Physical Plan</h2>
   </div>
-    <p><pre>${model.profile.plan}</pre></p>
+  <h3>Visualized Plan</h3>
+  <button id="renderbutton" class="btn btn-default">Generate</button>
+  <svg id="svg-canvas" style="margin: auto; display: block;">
+    <g transform="translate(20, 20)"/>
+  </svg>
   <div class="page-header">
-    <h2>Profile Summary</h2>
   </div>
-    <p>${model.toString()}</p>
+  <h3>Physical Plan</h3>
+  <p><pre>${model.profile.plan}</pre></p>
   <div class="page-header">
-    <h2>Complete Profile</h2>
   </div>
-    <p><pre>${model.profile.toString()}</pre></p>
+  <h3>Profile Summary</h3>
+  <p>${model.toString()}</p>
+  <div class="page-header">
+  </div>
+  <div class="span4 collapse-group">
+    <a class="btn btn-default" data-toggle="collapse" data-target="#viewdetails">View complete profile</a>
+    <br> <br>
+    <pre class="collapse" id="viewdetails">${model.profile.toString()}</pre>
+  </div>
+  <div class="page-header">
+  </div> <br>
 </#macro>
 
 <@page_html/>

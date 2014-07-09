@@ -11,6 +11,7 @@
 
 <#include "*/generic.ftl">
 <#macro page_head>
+  <script src="http://malsup.github.com/jquery.form.js"></script>
 </#macro>
 
 <#macro page_body>
@@ -18,24 +19,53 @@
   <div class="page-header">
   </div>
   <h3>Configuration</h3>
-  <form role="form" action="/storage/config/update" method="POST">
-    <input type="hidden" name="name" value="${model.name}" />
+  <form id="updateForm" role="form" action="/storage/${model.getName()}" method="POST">
+    <input type="hidden" name="name" value="${model.getName()}" />
     <div class="form-group">
-      <textarea class="form-control" id="config" rows="20" cols="50" name="config" style="font-family: Courier;">${model.config}</textarea>
+      <textarea class="form-control" id="config" rows="20" cols="50" name="config" style="font-family: Courier;">
+      </textarea>
     </div>
     <a class="btn btn-default" href="/storage">Back</a>
-    <button class="btn btn-default" type="submit">
-      <#if model.exists >Update<#else>Create</#if>
+    <button class="btn btn-default" type="submit" onclick="doUpdate();">
+      <#if model.exists()>Update<#else>Create</#if>
     </button>
-    <#if model.enabled>
-      <a class="btn btn-default" href="/storage/${model.name}/config/enable/false">Disable</a>
-    <#else>
-      <a class="btn btn-default" href="/storage/${model.name}/config/enable/true">Enable</a>
-    </#if>
-    <#if model.exists>
-      <a class="btn btn-danger" href="/storage/${model.name}/config/delete">Delete</a>
+    <#if model.exists()>
+      <#if model.enabled()>
+        <a id="enabled" class="btn btn-default">Disable</a>
+      <#else>
+        <a id="enabled" class="btn btn-primary">Enable</a>
+      </#if>
+      <a id="del" class="btn btn-danger" onclick="deleteFunction()">Delete</a>
     </#if>
   </form>
+  <br>
+  <div id="message" class="hidden alert alert-info">
+  </div>
+  <script>
+    $.get("/storage/${model.getName()}.json", function(data) {
+      $("#config").val(JSON.stringify(data.config, null, 2));
+    });
+    $("#enabled").click(function() {
+      $.get("/storage/${model.getName()}/enable/<#if model.enabled()>false<#else>true</#if>", function(data) {
+        $("#message").removeClass("hidden").text(data.result).alert();
+        setTimeout(function() { location.reload(); }, 800);
+      });
+    });
+    function doUpdate() {
+      $("#updateForm").ajaxForm(function(data) {
+        $("#message").removeClass("hidden").text(data.result).alert();
+        setTimeout(function() { location.reload(); }, 800);
+      });
+    };
+    function deleteFunction() {
+      var temp = confirm("Are you sure?");
+      if (temp == true) {
+        $.get("/storage/${model.getName()}/delete", function(data) {
+          window.location.href = "/storage";
+        });
+      }
+    };
+  </script>
 </#macro>
 
 <@page_html/>

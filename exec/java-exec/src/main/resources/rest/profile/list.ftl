@@ -17,29 +17,38 @@
   <a href="/queries">back</a><br/>
   <div class="page-header">
   </div>
-  <h3>Running Queries</h3>
-  <div class="table-responsive">
-    <table class="table table-hover">
-      <thead>
-         <td>Time</td>
-         <td>Query</td>
-      </thead>
-      <tbody>
-        <#list model.getRunningQueries() as query>
-        <tr>
-          <td>${query.getValue()}</td>
-          <td>
-            <a href="/profiles/${query.getKey()}">
-              <div style="height:100%;width:100%">
-                ${query.getKey()}
-              </div>
-            </a>
-          </td>
-        </tr>
-        </#list>
-      </tbody>
-    </table>
-  </div>
+  <#if (model.getRunningQueries()?size > 0) >
+    <h3>Running Queries</h3>
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead>
+           <td>Time</td>
+           <td>Query</td>
+        </thead>
+        <tbody>
+          <#list model.getRunningQueries() as query>
+          <tr>
+            <td>${query.getTime()}</td>
+            <td>
+              <a href="/profiles/${query.getQueryId()}">
+                <div style="height:100%;width:100%">
+                  ${query.getQueryId()}
+                </div>
+              </a>
+            </td>
+          </tr>
+          </#list>
+        </tbody>
+      </table>
+    </div>
+    <div class="page-header">
+    </div>
+  <#else>
+    <div id="message" class="alert alert-info alert-dismissable">
+      <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+      <strong>No running queries.</strong>
+    </div>
+  </#if>
   <h3>Completed Queries</h3>
   <div class="table-responsive">
     <table class="table table-hover">
@@ -48,13 +57,13 @@
          <td>Query</td>
       </thead>
       <tbody>
-        <#list model.getOldQueries() as query>
+        <#list model.getFinishedQueries() as query>
         <tr>
-          <td>${query.getValue()}</td>
+          <td>${query.getTime()}</td>
           <td>
-            <a href="/profiles/${query.getKey()}">
+            <a href="/profiles/${query.getQueryId()}">
               <div style="height:100%;width:100%">
-                ${query.getKey()}
+                ${query.getQueryId()}
               </div>
             </a>
           </td>
