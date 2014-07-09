@@ -49,15 +49,15 @@ public class ${className} implements DrillSimpleFunc {
   <#elseif (minor.class == "Interval")>
     output.months = input.months;
     output.days = input.days;
-    output.milliSeconds = input.milliSeconds;
+    output.milliseconds = input.milliseconds;
   <#elseif (minor.class == "IntervalDay")>
     output.days = input.days;
-    output.milliSeconds = input.milliSeconds;
+    output.milliseconds = input.milliseconds;
   <#elseif minor.class.startsWith("Decimal")>
     output.scale = input.scale;
     output.precision = input.precision;
     <#if minor.class.startsWith("Decimal28") || minor.class.startsWith("Decimal38")>
-    output.setSign(input.getSign());
+    output.setSign(input.getSign(input.start, input.buffer), output.start, output.buffer);
     output.start = input.start;
     output.buffer = input.buffer;
     <#else>

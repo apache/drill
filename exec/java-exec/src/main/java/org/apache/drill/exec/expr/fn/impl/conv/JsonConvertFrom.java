@@ -22,7 +22,10 @@ package org.apache.drill.exec.expr.fn.impl.conv;
 import java.io.ByteArrayOutputStream;
 import java.io.StringReader;
 
+import javax.inject.Inject;
+
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
 
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
@@ -50,6 +53,8 @@ public class JsonConvertFrom {
   public static class ConvertFromJson implements DrillSimpleFunc{
 
     @Param VarBinaryHolder in;
+    @Inject DrillBuf buffer;
+
     @Output ComplexWriter writer;
 
     public void setup(RecordBatch incoming){
@@ -60,23 +65,24 @@ public class JsonConvertFrom {
       byte[] buf = new byte[in.end - in.start];
       in.buffer.getBytes(in.start, buf, 0, in.end - in.start);
       String input = new String(buf, com.google.common.base.Charsets.UTF_8);
-     
+
       try {
-        org.apache.drill.exec.vector.complex.fn.JsonReader jsonReader = new org.apache.drill.exec.vector.complex.fn.JsonReader();
+        org.apache.drill.exec.vector.complex.fn.JsonReader jsonReader = new org.apache.drill.exec.vector.complex.fn.JsonReader(buffer);
 
         jsonReader.write(new java.io.StringReader(input), writer);
-        
+
       } catch (Exception e) {
         System.out.println(" msg = " + e.getMessage() + " trace : " + e.getStackTrace());
       }
     }
   }
-  
+
   @FunctionTemplate(name = "convert_fromJSON", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL, isRandom = true)
   public static class ConvertFromJsonVarchar implements DrillSimpleFunc{
 
     @Param VarCharHolder in;
     @Output ComplexWriter writer;
+    @Inject DrillBuf buffer;
 
     public void setup(RecordBatch incoming){
     }
@@ -86,12 +92,12 @@ public class JsonConvertFrom {
       byte[] buf = new byte[in.end - in.start];
       in.buffer.getBytes(in.start, buf, 0, in.end - in.start);
       String input = new String(buf, com.google.common.base.Charsets.UTF_8);
-     
+
       try {
-        org.apache.drill.exec.vector.complex.fn.JsonReader jsonReader = new org.apache.drill.exec.vector.complex.fn.JsonReader();
+        org.apache.drill.exec.vector.complex.fn.JsonReader jsonReader = new org.apache.drill.exec.vector.complex.fn.JsonReader(buffer);
 
         jsonReader.write(new java.io.StringReader(input), writer);
-        
+
       } catch (Exception e) {
         System.out.println(" msg = " + e.getMessage() + " trace : " + e.getStackTrace());
       }

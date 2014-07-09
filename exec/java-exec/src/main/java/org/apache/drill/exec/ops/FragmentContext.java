@@ -17,8 +17,13 @@
  */
 package org.apache.drill.exec.ops;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import io.netty.buffer.DrillBuf;
+
+import java.io.Closeable;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+
 import net.hydromatic.optiq.SchemaPlus;
 import net.hydromatic.optiq.jdbc.SimpleOptiqSchema;
 import org.apache.drill.common.config.DrillConfig;
@@ -47,6 +52,9 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import com.carrotsearch.hppc.LongObjectOpenHashMap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 /**
  * Contextual objects required for execution of a particular fragment.
@@ -70,6 +78,7 @@ public class FragmentContext implements Closeable {
   private final long queryStartTime;
   private final int rootFragmentTimeZone;
   private final OptionManager fragmentOptions;
+  private LongObjectOpenHashMap<DrillBuf> managedBuffers = new LongObjectOpenHashMap<>();
 
   private volatile Throwable failureCause;
   private volatile boolean failed = false;
@@ -77,7 +86,7 @@ public class FragmentContext implements Closeable {
 
   public FragmentContext(DrillbitContext dbContext, PlanFragment fragment, UserClientConnection connection,
       FunctionImplementationRegistry funcRegistry) throws OutOfMemoryException, ExecutionSetupException {
-    this.transformer = new ClassTransformer();
+    this.transformer = new ClassTransformer(dbContext.getCache());
     this.stats = new FragmentStats(dbContext.getMetrics());
     this.context = dbContext;
     this.connection = connection;
@@ -182,7 +191,7 @@ public class FragmentContext implements Closeable {
   }
 
   public <T> T getImplementationClass(CodeGenerator<T> cg) throws ClassTransformationException, IOException {
-    return transformer.getImplementationClass(this.loader, cg.getDefinition(), cg.generate(), cg.getMaterializedClassName());
+    return context.getCompiler().getImplementationClass(cg);
   }
 
   /**
@@ -251,10 +260,32 @@ public class FragmentContext implements Closeable {
     for(Thread thread: daemonThreads){
      thread.interrupt();
     }
+    Object[] mbuffers = ((LongObjectOpenHashMap<Object>)(Object)managedBuffers).values;
+    for(int i =0; i < mbuffers.length; i++){
+      if(managedBuffers.allocated[i]) ((DrillBuf)mbuffers[i]).release();
+    }
+
     if (buffers != null) {
       buffers.close();
     }
     allocator.close();
+  }
+
+  public DrillBuf replace(DrillBuf old, int newSize){
+    if(managedBuffers.remove(old.memoryAddress()) == null) throw new IllegalStateException("Tried to remove unmanaged buffer.");
+    old.release();
+    return getManagedBuffer(newSize);
+  }
+
+  public DrillBuf getManagedBuffer(){
+    return getManagedBuffer(256);
+  }
+
+  public DrillBuf getManagedBuffer(int size){
+    DrillBuf newBuf = allocator.buffer(size);
+    managedBuffers.put(newBuf.memoryAddress(), newBuf);
+    newBuf.setFragmentContext(this);
+    return newBuf;
   }
 
 }

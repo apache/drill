@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.vector;
 
-import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
 
 public interface RepeatedVariableWidthVector extends ValueVector{
   /**
@@ -45,5 +45,5 @@ public interface RepeatedVariableWidthVector extends ValueVector{
    * @param buf Incoming buffer.
    * @return The number of bytes of the buffer that were consumed.
    */
-  public int load(int dataBytes, int parentValueCount, int childValueCount, ByteBuf buf);
+  public int load(int dataBytes, int parentValueCount, int childValueCount, DrillBuf buf);
 }

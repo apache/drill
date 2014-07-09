@@ -22,7 +22,9 @@ import io.netty.util.internal.PlatformDependent;
 
 import java.nio.ByteOrder;
 
-final class UnsafeDirectLittleEndian extends WrappedByteBuf {
+import org.apache.drill.exec.memory.BufferAllocator;
+
+public final class UnsafeDirectLittleEndian extends WrappedByteBuf {
     private static final boolean NATIVE_ORDER = ByteOrder.nativeOrder() == ByteOrder.LITTLE_ENDIAN;
     private final PooledUnsafeDirectByteBuf wrapped;
     private final long memoryAddress;
@@ -40,7 +42,7 @@ final class UnsafeDirectLittleEndian extends WrappedByteBuf {
 
     @Override
     public long getLong(int index) {
-        wrapped.checkIndex(index, 8);
+//        wrapped.checkIndex(index, 8);
         long v = PlatformDependent.getLong(addr(index));
         return v;
     }
@@ -67,7 +69,7 @@ final class UnsafeDirectLittleEndian extends WrappedByteBuf {
 
     @Override
     public int getInt(int index) {
-        wrapped.checkIndex(index, 4);
+//        wrapped.checkIndex(index, 4);
         int v = PlatformDependent.getInt(addr(index));
         return v;
     }
@@ -79,7 +81,7 @@ final class UnsafeDirectLittleEndian extends WrappedByteBuf {
 
     @Override
     public short getShort(int index) {
-        wrapped.checkIndex(index, 2);
+//        wrapped.checkIndex(index, 2);
         short v = PlatformDependent.getShort(addr(index));
         return v;
     }
@@ -176,4 +178,18 @@ final class UnsafeDirectLittleEndian extends WrappedByteBuf {
     private void _setLong(int index, long value) {
         PlatformDependent.putLong(addr(index), value);
     }
+
+    @Override
+    public byte getByte(int index) {
+      return PlatformDependent.getByte(addr(index));
+    }
+
+    @Override
+    public ByteBuf setByte(int index, int value) {
+      PlatformDependent.putByte(addr(index), (byte) value);
+      return this;
+    }
+
+
+
 }

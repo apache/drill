@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.physical.impl;
 
-import io.netty.buffer.Unpooled;
+import io.netty.buffer.DrillBuf;
 
 import java.util.Collections;
 import java.util.Iterator;
@@ -47,17 +47,12 @@ import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.store.RecordReader;
-import org.apache.drill.exec.util.BatchPrinter;
-import org.apache.drill.exec.util.VectorUtil;
 import org.apache.drill.exec.vector.AllocationHelper;
 import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.ValueVector;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import org.apache.drill.exec.vector.complex.MapVector;
-import org.apache.drill.exec.vector.complex.impl.ComplexWriterImpl;
-import org.apache.drill.exec.vector.complex.writer.BaseWriter.ComplexWriter;
 
 /**
  * Record batch used for a particular scan. Operators against one or more
@@ -212,6 +207,11 @@ public class ScanBatch implements RecordBatch {
 
   private void addPartitionVectors() throws ExecutionSetupException{
     try {
+      if(partitionVectors != null){
+        for(ValueVector v : partitionVectors){
+          v.clear();
+        }
+      }
       partitionVectors = Lists.newArrayList();
       for (int i : selectedPartitionColumns) {
         MaterializedField field = MaterializedField.create(SchemaPath.getSimplePath(partitionColumnDesignator + i), Types.optional(MinorType.VARCHAR));
@@ -230,15 +230,9 @@ public class ScanBatch implements RecordBatch {
       if (partitionValues.length > i) {
         String val = partitionValues[i];
         AllocationHelper.allocate(v, recordCount, val.length());
-        NullableVarCharHolder h = new NullableVarCharHolder();
         byte[] bytes = val.getBytes();
-        h.buffer = Unpooled.buffer(bytes.length);
-        h.buffer.writeBytes(bytes);
-        h.start = 0;
-        h.isSet = 1;
-        h.end = bytes.length;
         for (int j = 0; j < recordCount; j++) {
-          v.getMutator().setSafe(j, h);
+          v.getMutator().setSafe(j, bytes, 0, bytes.length);
         }
         v.getMutator().setValueCount(recordCount);
       } else {
@@ -318,6 +312,11 @@ public class ScanBatch implements RecordBatch {
       }
       return false;
     }
+
+    @Override
+    public DrillBuf getManagedBuffer() {
+      return oContext.getManagedBuffer();
+    }
   }
 
   @Override
@@ -332,6 +331,9 @@ public class ScanBatch implements RecordBatch {
 
   public void cleanup(){
     container.clear();
+    for(ValueVector v : partitionVectors){
+      v.clear();
+    }
     fieldVectorMap.clear();
     oContext.close();
   }
@@ -340,5 +342,5 @@ public class ScanBatch implements RecordBatch {
   public VectorContainer getOutgoingContainer() {
     throw new UnsupportedOperationException(String.format(" You should not call getOutgoingContainer() for class %s", this.getClass().getCanonicalName()));
   }
-  
+
 }

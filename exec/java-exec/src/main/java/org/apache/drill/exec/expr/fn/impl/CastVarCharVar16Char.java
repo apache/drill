@@ -17,7 +17,12 @@
  */
 package org.apache.drill.exec.expr.fn.impl;
 
-import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
+
+import java.nio.charset.Charset;
+
+import javax.inject.Inject;
+
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
@@ -29,8 +34,6 @@ import org.apache.drill.exec.expr.holders.Var16CharHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
 import org.apache.drill.exec.record.RecordBatch;
 
-import java.nio.charset.Charset;
-
 @SuppressWarnings("unused")
 @FunctionTemplate(names = {"castVAR16CHAR", "to_var16char", "to_string"}, scope = FunctionTemplate.FunctionScope.SIMPLE, nulls= NullHandling.NULL_IF_NULL)
 public class CastVarCharVar16Char implements DrillSimpleFunc {
@@ -38,19 +41,18 @@ public class CastVarCharVar16Char implements DrillSimpleFunc {
   @Param BigIntHolder length;
   @Output Var16CharHolder out;
   @Workspace Charset charset;
-  @Workspace ByteBuf buffer;
+  @Inject DrillBuf buffer;
 
   @Override
   public void setup(RecordBatch incoming) {
     charset = java.nio.charset.Charset.forName("UTF-16");
-    buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte[65536]);
   }
 
   @Override
   public void eval() {
     //if input length <= target_type length, do nothing
     //else truncate based on target_type length
-    byte[] buf = in.toString().getBytes(charset);
+    byte[] buf = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(in.start, in.end, in.buffer).getBytes(charset);
     buffer.setBytes(0, buf);
 
     out.start = 0;

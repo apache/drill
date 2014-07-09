@@ -17,9 +17,10 @@
  */
 package org.apache.drill.exec.vector;
 
-import java.util.Iterator;
+import io.netty.buffer.DrillBuf;
+import io.netty.buffer.DrillBuf;
 
-import io.netty.buffer.ByteBuf;
+import java.util.Iterator;
 
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.proto.UserBitShared.SerializedField;
@@ -30,7 +31,7 @@ import com.google.common.collect.Iterators;
 
 public abstract class BaseDataValueVector extends BaseValueVector{
 
-  protected ByteBuf data = DeadBuf.DEAD_BUFFER;
+  protected DrillBuf data;
   protected int valueCount;
   protected int currentValueCount;
 
@@ -40,13 +41,13 @@ public abstract class BaseDataValueVector extends BaseValueVector{
   }
 
   /**
-   * Release the underlying ByteBuf and reset the ValueVector
+   * Release the underlying DrillBuf and reset the ValueVector
    */
   @Override
   public void clear() {
-    if (data != DeadBuf.DEAD_BUFFER) {
+    if (data != null) {
       data.release();
-      data = DeadBuf.DEAD_BUFFER;
+      data = data.getAllocator().getEmpty();
       valueCount = 0;
     }
   }
@@ -61,12 +62,12 @@ public abstract class BaseDataValueVector extends BaseValueVector{
 
 
   @Override
-  public ByteBuf[] getBuffers(){
-    ByteBuf[] out;
+  public DrillBuf[] getBuffers(){
+    DrillBuf[] out;
     if(valueCount == 0){
-      out = new ByteBuf[0];
+      out = new DrillBuf[0];
     }else{
-      out = new ByteBuf[]{data};
+      out = new DrillBuf[]{data};
       data.readerIndex(0);
       data.retain();
     }
@@ -82,8 +83,12 @@ public abstract class BaseDataValueVector extends BaseValueVector{
   @Override
   public abstract SerializedField getMetadata();
 
-  public ByteBuf getData(){
+  public DrillBuf getData(){
     return data;
+  }
+
+  public long getDataAddr(){
+    return data.memoryAddress();
   }
 
   @Override

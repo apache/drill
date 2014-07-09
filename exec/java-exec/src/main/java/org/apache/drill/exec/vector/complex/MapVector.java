@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.vector.complex;
 
-import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -276,18 +276,18 @@ public class MapVector extends AbstractContainerVector {
   }
 
   @Override
-  public ByteBuf[] getBuffers() {
-    List<ByteBuf> bufs = Lists.newArrayList();
+  public DrillBuf[] getBuffers() {
+    List<DrillBuf> bufs = Lists.newArrayList();
     for(ValueVector v : vectors.values()){
-      for(ByteBuf b : v.getBuffers()){
+      for(DrillBuf b : v.getBuffers()){
         bufs.add(b);
       }
     }
-    return bufs.toArray(new ByteBuf[bufs.size()]);
+    return bufs.toArray(new DrillBuf[bufs.size()]);
   }
 
   @Override
-  public void load(SerializedField metadata, ByteBuf buf) {
+  public void load(SerializedField metadata, DrillBuf buf) {
     List<SerializedField> fields = metadata.getChildList();
     valueCount = metadata.getValueCount();
 

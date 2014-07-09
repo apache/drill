@@ -17,9 +17,7 @@
  */
 package org.apache.drill.exec.vector.complex.fn;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufInputStream;
-import io.netty.buffer.UnpooledByteBufAllocator;
+import io.netty.buffer.DrillBuf;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -33,11 +31,10 @@ import org.apache.drill.exec.vector.complex.writer.BaseWriter.ListWriter;
 import org.apache.drill.exec.vector.complex.writer.BaseWriter.MapWriter;
 
 import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.core.JsonParser.Feature;
+import com.fasterxml.jackson.core.JsonToken;
 import com.google.common.base.Charsets;
 
 public class JsonReader {
@@ -48,10 +45,12 @@ public class JsonReader {
 
   private final JsonFactory factory = new JsonFactory();
   private JsonParser parser;
+  private DrillBuf workBuf;
 
-  public JsonReader() throws JsonParseException, IOException {
+  public JsonReader(DrillBuf managedBuf) throws JsonParseException, IOException {
     factory.configure(Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
     factory.configure(Feature.ALLOW_COMMENTS, true);
+    this.workBuf = managedBuf;
   }
 
   public boolean write(Reader reader, ComplexWriter writer) throws JsonParseException, IOException {
@@ -134,9 +133,9 @@ public class JsonReader {
         VarCharHolder vh = new VarCharHolder();
         String value = parser.getText();
         byte[] b = value.getBytes(Charsets.UTF_8);
-        ByteBuf d = UnpooledByteBufAllocator.DEFAULT.buffer(b.length);
-        d.setBytes(0, b);
-        vh.buffer = d;
+        ensure(b.length);
+        workBuf.setBytes(0, b);
+        vh.buffer = workBuf;
         vh.start = 0;
         vh.end = b.length;
         map.varChar(fieldName).write(vh);
@@ -150,6 +149,10 @@ public class JsonReader {
     }
     map.end();
 
+  }
+
+  private void ensure(int length){
+    workBuf = workBuf.reallocIfNeeded(length);
   }
 
   private void writeData(ListWriter list) throws JsonParseException, IOException {
@@ -197,9 +200,9 @@ public class JsonReader {
         VarCharHolder vh = new VarCharHolder();
         String value = parser.getText();
         byte[] b = value.getBytes(Charsets.UTF_8);
-        ByteBuf d = UnpooledByteBufAllocator.DEFAULT.buffer(b.length);
-        d.setBytes(0, b);
-        vh.buffer = d;
+        ensure(b.length);
+        workBuf.setBytes(0, b);
+        vh.buffer = workBuf;
         vh.start = 0;
         vh.end = b.length;
         list.varChar().write(vh);
@@ -209,7 +212,7 @@ public class JsonReader {
       }
     }
     list.end();
-    
-    
+
+
   }
 }

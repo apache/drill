@@ -69,7 +69,7 @@ public class ${name}Accessor extends AbstractSqlAccessor{
     <#case "VarBinary">
     public String getString(int index) {
       byte [] b = ac.get(index);
-      return DrillStringUtils.toBinaryString(io.netty.buffer.Unpooled.wrappedBuffer(b), 0, b.length);
+      return DrillStringUtils.toBinaryString(b);
     }
       <#break>
     <#case "VarChar">

@@ -99,9 +99,10 @@ public class SystemOptionManager implements OptionManager{
         .build();
   }
 
-  public void init() throws IOException{
+  public SystemOptionManager init() throws IOException{
     this.options = provider.getPStore(config);
     this.admin = new SystemOptionAdmin();
+    return this;
   }
 
   private class Iter implements Iterator<OptionValue>{

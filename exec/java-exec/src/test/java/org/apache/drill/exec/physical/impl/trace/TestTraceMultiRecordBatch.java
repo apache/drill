@@ -24,6 +24,7 @@ import mockit.NonStrictExpectations;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.ExecTest;
+import org.apache.drill.exec.compile.CodeCompiler;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -37,6 +38,7 @@ import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
 import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.exec.vector.ValueVector;
 import org.junit.Test;
 
 import com.codahale.metrics.MetricRegistry;
@@ -65,6 +67,7 @@ public class TestTraceMultiRecordBatch extends ExecTest {
             bitContext.getAllocator(); result = new TopLevelAllocator();
             bitContext.getConfig(); result = c;
             bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
+            bitContext.getCompiler(); result = CodeCompiler.getTestCompiler(c);
         }};
 
         PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());
@@ -74,6 +77,9 @@ public class TestTraceMultiRecordBatch extends ExecTest {
         SimpleRootExec exec = new SimpleRootExec(ImplCreator.getExec(context, (FragmentRoot) plan.getSortedOperators(false).iterator().next()));
 
         while(exec.next()) {
+          for(ValueVector vv: exec){
+            vv.clear();
+          }
         }
 
         exec.stop();

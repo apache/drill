@@ -55,12 +55,12 @@ public static class G${type}Difference implements DrillSimpleFunc {
 
     public void eval() {
         <#if type == "Time">
-        out.milliSeconds = left.value - right.value;
+        out.milliseconds = left.value - right.value;
         <#elseif type == "Date">
         out.days = (int) ((left.value - right.value) / org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
         <#elseif type == "TimeStamp">
         long difference = (left.value - right.value);
-        out.milliSeconds = (int) (difference % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
+        out.milliseconds = (int) (difference % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
         out.days = (int) (difference / org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
         <#elseif type == "TimeStampTZ">
         if (left.index != right.index) {
@@ -70,7 +70,7 @@ public static class G${type}Difference implements DrillSimpleFunc {
             left.value = (leftInput.withZone(org.joda.time.DateTimeZone.forID(org.apache.drill.exec.expr.fn.impl.DateUtility.timezoneList[right.index]))).getMillis();
         }
         long difference = (left.value - right.value);
-        out.milliSeconds = (int) (difference % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
+        out.milliseconds = (int) (difference % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
         out.days = (int) (difference / org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
         </#if>
     }

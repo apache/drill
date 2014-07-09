@@ -18,8 +18,10 @@
 package org.apache.drill.exec.store.parquet.columnreaders;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
+
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.common.util.DecimalUtility;
+import org.apache.drill.exec.util.DecimalUtility;
 import org.apache.drill.exec.vector.NullableBigIntVector;
 import org.apache.drill.exec.vector.NullableFloat4Vector;
 import org.apache.drill.exec.vector.NullableFloat8Vector;
@@ -31,8 +33,8 @@ import org.apache.drill.exec.store.ParquetOutputRecordWriter;
 import org.apache.drill.exec.vector.NullableDateVector;
 import org.apache.drill.exec.vector.NullableDecimal28SparseVector;
 import org.apache.drill.exec.vector.NullableDecimal38SparseVector;
-
 import org.joda.time.DateTimeUtils;
+
 import parquet.column.ColumnDescriptor;
 import parquet.format.SchemaElement;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
@@ -42,7 +44,7 @@ import java.math.BigDecimal;
 public class NullableFixedByteAlignedReaders {
 
   static class NullableFixedByteAlignedReader extends NullableColumnReader {
-    protected ByteBuf bytebuf;
+    protected DrillBuf bytebuf;
 
     NullableFixedByteAlignedReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
                       ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, ValueVector v, SchemaElement schemaElement) throws ExecutionSetupException {
@@ -67,8 +69,6 @@ public class NullableFixedByteAlignedReaders {
 
   static class NullableDictionaryIntReader extends NullableColumnReader<NullableIntVector> {
 
-    private ByteBuf bytebuf;
-
     NullableDictionaryIntReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
                                 ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, NullableIntVector v,
                                 SchemaElement schemaElement) throws ExecutionSetupException {
@@ -88,8 +88,6 @@ public class NullableFixedByteAlignedReaders {
 
   static class NullableDictionaryBigIntReader extends NullableColumnReader<NullableBigIntVector> {
 
-    private ByteBuf bytebuf;
-
     NullableDictionaryBigIntReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
                                    ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, NullableBigIntVector v,
                                    SchemaElement schemaElement) throws ExecutionSetupException {
@@ -107,8 +105,6 @@ public class NullableFixedByteAlignedReaders {
 
   static class NullableDictionaryFloat4Reader extends NullableColumnReader<NullableFloat4Vector> {
 
-    private ByteBuf bytebuf;
-
     NullableDictionaryFloat4Reader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
                                    ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, NullableFloat4Vector v,
                                    SchemaElement schemaElement) throws ExecutionSetupException {
@@ -125,8 +121,6 @@ public class NullableFixedByteAlignedReaders {
   }
 
   static class NullableDictionaryFloat8Reader extends NullableColumnReader<NullableFloat8Vector> {
-
-    private ByteBuf bytebuf;
 
     NullableDictionaryFloat8Reader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
                                   ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, NullableFloat8Vector v,
@@ -211,7 +205,7 @@ public class NullableFixedByteAlignedReaders {
     @Override
     void addNext(int start, int index) {
       int width = NullableDecimal28SparseHolder.WIDTH;
-      BigDecimal intermediate = DecimalUtility.getBigDecimalFromByteBuf(bytebuf, start, dataTypeLengthInBytes, schemaElement.getScale());
+      BigDecimal intermediate = DecimalUtility.getBigDecimalFromDrillBuf(bytebuf, start, dataTypeLengthInBytes, schemaElement.getScale());
       DecimalUtility.getSparseFromBigDecimal(intermediate, decimal28Vector.getData(), index * width, schemaElement.getScale(),
           schemaElement.getPrecision(), NullableDecimal28SparseHolder.nDecimalDigits);
     }
@@ -230,7 +224,7 @@ public class NullableFixedByteAlignedReaders {
     @Override
     void addNext(int start, int index) {
       int width = NullableDecimal38SparseHolder.WIDTH;
-      BigDecimal intermediate = DecimalUtility.getBigDecimalFromByteBuf(bytebuf, start, dataTypeLengthInBytes, schemaElement.getScale());
+      BigDecimal intermediate = DecimalUtility.getBigDecimalFromDrillBuf(bytebuf, start, dataTypeLengthInBytes, schemaElement.getScale());
       DecimalUtility.getSparseFromBigDecimal(intermediate, decimal38Vector.getData(), index * width, schemaElement.getScale(),
           schemaElement.getPrecision(), NullableDecimal38SparseHolder.nDecimalDigits);
     }

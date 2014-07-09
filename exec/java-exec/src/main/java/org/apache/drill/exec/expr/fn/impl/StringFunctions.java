@@ -19,6 +19,11 @@ package org.apache.drill.exec.expr.fn.impl;
 
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
+
+import java.nio.charset.Charset;
+
+import javax.inject.Inject;
 
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
@@ -29,12 +34,11 @@ import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.BitHolder;
+import org.apache.drill.exec.expr.holders.IntHolder;
+import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.expr.holders.VarCharHolder;
-import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
 import org.apache.drill.exec.record.RecordBatch;
-import java.nio.charset.Charset;
-import org.apache.drill.exec.expr.holders.IntHolder;
 
 public class StringFunctions{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StringFunctions.class);
@@ -51,14 +55,17 @@ public class StringFunctions{
     @Param VarCharHolder input;
     @Param(constant=true) VarCharHolder pattern;
     @Output BitHolder out;
-    @Workspace java.util.regex.Pattern regPattern;
+    @Workspace java.util.regex.Matcher matcher;
 
     public void setup(RecordBatch incoming){
-      regPattern = java.util.regex.Pattern.compile(org.apache.drill.exec.expr.fn.impl.RegexpUtil.sqlToRegexLike(pattern.toString()));
+      matcher = java.util.regex.Pattern.compile(org.apache.drill.exec.expr.fn.impl.RegexpUtil.sqlToRegexLike( //
+          org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(pattern.start,  pattern.end,  pattern.buffer))).matcher("");
     }
 
     public void eval(){
-      out.value = regPattern.matcher(input.toString()).matches()? 1:0;
+      String i = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(input.start, input.end, input.buffer);
+      matcher.reset(i);
+      out.value = matcher.matches()? 1:0;
     }
   }
 
@@ -67,14 +74,17 @@ public class StringFunctions{
     @Param VarCharHolder input;
     @Param(constant=true) VarCharHolder pattern;
     @Output BitHolder out;
-    @Workspace java.util.regex.Pattern regPattern;
+    @Workspace java.util.regex.Matcher matcher;
 
     public void setup(RecordBatch incoming){
-      regPattern = java.util.regex.Pattern.compile(org.apache.drill.exec.expr.fn.impl.RegexpUtil.sqlToRegexSimilar(pattern.toString()));
+
+      matcher = java.util.regex.Pattern.compile(org.apache.drill.exec.expr.fn.impl.RegexpUtil.sqlToRegexSimilar(org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(pattern.start,  pattern.end,  pattern.buffer))).matcher("");
     }
 
     public void eval(){
-      out.value = regPattern.matcher(input.toString()).matches()? 1:0;
+      String i = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(input.start, input.end, input.buffer);
+      matcher.reset(i);
+      out.value = matcher.matches()? 1:0;
     }
   }
 
@@ -87,20 +97,21 @@ public class StringFunctions{
     @Param VarCharHolder input;
     @Param(constant=true) VarCharHolder pattern;
     @Param VarCharHolder replacement;
-    @Workspace ByteBuf buffer;
-    @Workspace java.util.regex.Pattern regPattern;
+    @Inject DrillBuf buffer;
+    @Workspace java.util.regex.Matcher matcher;
     @Output VarCharHolder out;
 
     public void setup(RecordBatch incoming){
-      buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte [8000]);
-      regPattern = java.util.regex.Pattern.compile(pattern.toString());
+      matcher = java.util.regex.Pattern.compile(org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(pattern.start,  pattern.end,  pattern.buffer)).matcher("");
     }
 
     public void eval(){
-      out.buffer = buffer;
-      out.start = 0;
 
-      byte [] bytea = regPattern.matcher(input.toString()).replaceAll(replacement.toString()).getBytes(java.nio.charset.Charset.forName("UTF-8"));
+      out.start = 0;
+      String i = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(input.start, input.end, input.buffer);
+      String r = org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(replacement.start, replacement.end, replacement.buffer);
+      byte [] bytea = matcher.reset(i).replaceAll(r).getBytes(java.nio.charset.Charset.forName("UTF-8"));
+      out.buffer = buffer = buffer.reallocIfNeeded(bytea.length);
       out.buffer.setBytes(out.start, bytea);
       out.end = bytea.length;
     }
@@ -224,14 +235,13 @@ public class StringFunctions{
 
     @Param VarCharHolder input;
     @Output VarCharHolder out;
-    @Workspace ByteBuf buffer;
+    @Inject DrillBuf buffer;
 
     public void setup(RecordBatch incoming){
-      buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte [8000]);
     }
 
     public void eval(){
-      out.buffer = buffer;
+      out.buffer = buffer = buffer.reallocIfNeeded(input.end- input.start);
       out.start = 0;
       out.end = input.end - input.start;
 
@@ -256,14 +266,13 @@ public class StringFunctions{
 
     @Param VarCharHolder input;
     @Output VarCharHolder out;
-    @Workspace ByteBuf buffer;
+    @Inject DrillBuf buffer;
 
     public void setup(RecordBatch incoming){
-      buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte [8000]);
     }
 
     public void eval() {
-      out.buffer = buffer;
+      out.buffer = buffer = buffer.reallocIfNeeded(input.end- input.start);
       out.start = 0;
       out.end = input.end - input.start;
 
@@ -446,51 +455,16 @@ public class StringFunctions{
 
     @Param VarCharHolder input;
     @Output VarCharHolder out;
-    @Workspace ByteBuf buffer;
+    @Inject DrillBuf buffer;
 
     public void setup(RecordBatch incoming){
-      buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte [8000]);
     }
 
     public void eval() {
-      out.buffer = buffer;
+      out.buffer = buffer = buffer.reallocIfNeeded(input.end - input.start);
       out.start = 0;
       out.end = input.end - input.start;
-
-      // Assumes Alpha as [A-Za-z0-9]
-      // white space is treated as everything else.
-      boolean capNext = true;
-      for (int id = input.start; id < input.end; id++) {
-        byte  currentByte = input.buffer.getByte(id);
-
-        // 'A - Z' : 0x41 - 0x5A
-        // 'a - z' : 0x61 - 0x7A
-        // '0-9'   : 0x30 - 0x39
-        if (capNext) {  // curCh is whitespace or first character of word.
-          if (currentByte >= 0x30 && currentByte <= 0x39) { // 0-9
-            capNext = false;
-          } else if (currentByte >=0x41 && currentByte <= 0x5A) {  // A-Z
-            capNext = false;
-          } else if (currentByte >= 0x61 && currentByte <= 0x7A) {  // a-z
-            capNext = false;
-            currentByte -= 0x20; // Uppercase this character
-          }
-          // else {} whitespace
-        } else {  // Inside of a word or white space after end of word.
-          if (currentByte >= 0x30 && currentByte <= 0x39) { // 0-9
-            // noop
-          } else if (currentByte >=0x41 && currentByte <= 0x5A) {  // A-Z
-            currentByte -= 0x20 ; // Lowercase this character
-          } else if (currentByte >= 0x61 && currentByte <= 0x7A) {  // a-z
-            // noop
-          } else { // whitespace
-            capNext = true;
-          }
-        }
-
-        out.buffer.setByte(id - input.start, currentByte) ;
-      } //end of for_loop
-
+      org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.initCap(input.start, input.end, input.buffer, out.buffer);
     }
 
   }
@@ -502,11 +476,11 @@ public class StringFunctions{
     @Param  VarCharHolder text;
     @Param  VarCharHolder from;
     @Param  VarCharHolder to;
-    @Workspace ByteBuf buffer;
+    @Inject DrillBuf buffer;
     @Output VarCharHolder out;
 
     public void setup(RecordBatch incoming){
-      buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte [8000]);
+      buffer = buffer.reallocIfNeeded(8000);
     }
 
     public void eval(){
@@ -566,15 +540,15 @@ public class StringFunctions{
     @Param  VarCharHolder text;
     @Param  BigIntHolder length;
     @Param  VarCharHolder fill;
-    @Workspace ByteBuf buffer;
+    @Inject DrillBuf buffer;
 
     @Output VarCharHolder out;
 
     public void setup(RecordBatch incoming){
-      buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte [8000]);
     }
 
     public void eval() {
+      buffer = buffer.reallocIfNeeded((int) length.value*2);
       byte currentByte = 0;
       int id = 0;
       //get the char length of text.
@@ -637,15 +611,16 @@ public class StringFunctions{
     @Param  VarCharHolder text;
     @Param  BigIntHolder length;
     @Param  VarCharHolder fill;
-    @Workspace ByteBuf buffer;
+    @Inject DrillBuf buffer;
 
     @Output VarCharHolder out;
 
     public void setup(RecordBatch incoming){
-      buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte [8000]);
     }
 
     public void eval() {
+      buffer = buffer.reallocIfNeeded((int) length.value*2);
+
       byte currentByte = 0;
       int id = 0;
       //get the char length of text.
@@ -771,10 +746,10 @@ public class StringFunctions{
    */
   @FunctionTemplate(name = "btrim", scope = FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
   public static class Btrim implements DrillSimpleFunc{
-    
+
     @Param  VarCharHolder text;
     @Param  VarCharHolder from;
-    
+
     @Output VarCharHolder out;
 
     public void setup(RecordBatch incoming){
@@ -784,14 +759,14 @@ public class StringFunctions{
       out.buffer = text.buffer;
       out.start = out.end = text.start;
       int bytePerChar = 0;
-      
+
       //Scan from left of "text", stop until find a char not in "from"
       for (int id = text.start; id < text.end; id += bytePerChar) {
         bytePerChar = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.utf8CharLen(text.buffer, id);
         int pos = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.stringLeftMatchUTF8(from.buffer, from.start, from.end,
                                                                                             text.buffer, id, id + bytePerChar);
         if (pos < 0) { // Found the 1st char not in "from", stop
-          out.start = id; 
+          out.start = id;
           break;
         }
       }
@@ -803,7 +778,7 @@ public class StringFunctions{
         int pos = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.stringLeftMatchUTF8(from.buffer, from.start, from.end,
                                                                                             text.buffer, id, id + bytePerChar);
         if (pos < 0) { // Found the 1st char not in "from", stop
-          out.end = id+ bytePerChar; 
+          out.end = id+ bytePerChar;
           break;
         }
       }
@@ -818,15 +793,14 @@ public class StringFunctions{
     @Param  VarCharHolder left;
     @Param  VarCharHolder right;
     @Output VarCharHolder out;
-    @Workspace ByteBuf buffer;
+    @Inject DrillBuf buffer;
 
 
     public void setup(RecordBatch incoming){
-      buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte [8000]);
     }
 
     public void eval(){
-      out.buffer = buffer;
+      out.buffer = buffer = buffer.reallocIfNeeded( (left.end - left.start) + (right.end - right.start));
       out.start = out.end = 0;
 
       int id = 0;
@@ -845,15 +819,14 @@ public class StringFunctions{
     @Param  VarCharHolder left;
     @Param  NullableVarCharHolder right;
     @Output VarCharHolder out;
-    @Workspace ByteBuf buffer;
+    @Inject DrillBuf buffer;
 
 
     public void setup(RecordBatch incoming){
-      buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte [8000]);
     }
 
     public void eval(){
-      out.buffer = buffer;
+      out.buffer = buffer = buffer.reallocIfNeeded( (left.end - left.start) + (right.end - right.start));;
       out.start = out.end = 0;
 
       int id = 0;
@@ -873,15 +846,14 @@ public class StringFunctions{
     @Param  NullableVarCharHolder left;
     @Param  VarCharHolder right;
     @Output VarCharHolder out;
-    @Workspace ByteBuf buffer;
+    @Inject DrillBuf buffer;
 
 
     public void setup(RecordBatch incoming){
-      buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte [8000]);
     }
 
     public void eval(){
-      out.buffer = buffer;
+      out.buffer = buffer.reallocIfNeeded( (left.end - left.start) + (right.end - right.start));
       out.start = out.end = 0;
 
       int id = 0;
@@ -901,15 +873,14 @@ public class StringFunctions{
     @Param  NullableVarCharHolder left;
     @Param  NullableVarCharHolder right;
     @Output VarCharHolder out;
-    @Workspace ByteBuf buffer;
+    @Inject DrillBuf buffer;
 
 
     public void setup(RecordBatch incoming){
-      buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte [8000]);
     }
 
     public void eval(){
-      out.buffer = buffer;
+      out.buffer = buffer.reallocIfNeeded( (left.end - left.start) + (right.end - right.start));
       out.start = out.end = 0;
 
       int id = 0;
@@ -969,14 +940,14 @@ public class StringFunctions{
 
     @Param  IntHolder in;
     @Output VarCharHolder out;
-    @Workspace ByteBuf buffer;
+    @Inject DrillBuf buf;
 
     public void setup(RecordBatch incoming) {
-      buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte [1]);
+      buf = buf.reallocIfNeeded(1);
     }
 
     public void eval() {
-      out.buffer = buffer;
+      out.buffer = buf;
       out.start = out.end = 0;
       out.buffer.setByte(0, in.value);
       ++out.end;
@@ -992,24 +963,22 @@ public class StringFunctions{
     @Param  VarCharHolder in;
     @Param IntHolder nTimes;
     @Output VarCharHolder out;
-    @Workspace ByteBuf buffer;
+    @Inject DrillBuf buffer;
 
     public void setup(RecordBatch incoming) {
     }
 
     public void eval() {
+      final int len = in.end - in.start;
       int num = nTimes.value;
-      byte[] bytea = new byte [(in.end - in.start)*num];
-      int index = 0;
-      while(num > 0){
-        for (int id = in.start; id < in.end; id++){
-        bytea[index++] = in.buffer.getByte(id);
-        }
-        num--;
-      }
-      out.buffer = io.netty.buffer.Unpooled.wrappedBuffer(bytea);
+      System.out.println(len + ":" + num);
       out.start = 0;
-      out.end = bytea.length;
+      out.buffer = buffer = buffer.reallocIfNeeded( len * num );
+      for(int i =0; i < num; i++){
+        in.buffer.getBytes(in.start, out.buffer, i * len, len);
+      }
+      out.end = len * num;
+      System.out.println(out.end);
     }
   }
 
@@ -1023,9 +992,10 @@ public class StringFunctions{
     @Param  VarCharHolder enc;
     @Output VarCharHolder out;
     @Workspace Charset inCharset;
+    @Inject DrillBuf buffer;
 
     public void setup(RecordBatch incoming) {
-      inCharset = java.nio.charset.Charset.forName(enc.toString());
+      inCharset = java.nio.charset.Charset.forName(org.apache.drill.exec.expr.fn.impl.StringFunctionHelpers.toStringFromUTF8(enc.start, enc.end, enc.buffer));
     }
 
     public void eval() {
@@ -1035,7 +1005,8 @@ public class StringFunctions{
       bytea[index]=in.buffer.getByte(i);
       }
       byte[] outBytea = new String(bytea, inCharset).getBytes(com.google.common.base.Charsets.UTF_8);
-      out.buffer = io.netty.buffer.Unpooled.wrappedBuffer(outBytea);
+      out.buffer = buffer = buffer.reallocIfNeeded(outBytea.length);
+      out.buffer.setBytes(0, outBytea);
       out.start = 0;
       out.end = outBytea.length;
     }
@@ -1049,31 +1020,31 @@ public class StringFunctions{
 
     @Param  VarCharHolder in;
     @Output VarCharHolder out;
-    @Workspace ByteBuf buffer;
+    @Inject DrillBuf buffer;
 
     public void setup(RecordBatch incoming) {
     }
 
     public void eval() {
-        int charlen = 0;
+      final int len = in.end - in.start;
+      out.start = 0;
+      out.end = len;
+      out.buffer = buffer = buffer.reallocIfNeeded(len);
+      int charlen = 0;
 
-        byte[] bytea = new byte [in.end - in.start];
-        int index = in.end;
-        int innerindex = 0;
+      int index = in.end;
+      int innerindex = 0;
 
-        for (int id = in.start; id < in.end; id+=charlen){
-	 innerindex = charlen = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.utf8CharLen(in.buffer, id);
+      for (int id = in.start; id < in.end; id+=charlen){
+        innerindex = charlen = org.apache.drill.exec.expr.fn.impl.StringFunctionUtil.utf8CharLen(in.buffer, id);
 
         while(innerindex > 0){
-          bytea[index - innerindex] = in.buffer.getByte(id + (charlen - innerindex));
+          out.buffer.setByte(index - innerindex, in.buffer.getByte(id + (charlen - innerindex)));
           innerindex-- ;
         }
 
         index -= charlen;
-        }
-        out.buffer = io.netty.buffer.Unpooled.wrappedBuffer(bytea);
-        out.start = 0;
-        out.end = bytea.length;
       }
+    }
   }
 }

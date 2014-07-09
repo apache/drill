@@ -156,7 +156,7 @@ public class DrillParquetReader implements RecordReader {
       }
 
       writer = new VectorContainerWriter(output);
-      recordMaterializer = new DrillParquetRecordMaterializer(writer, projection);
+      recordMaterializer = new DrillParquetRecordMaterializer(output, writer, projection);
       primitiveVectors = writer.getMapVector().getPrimitiveVectors();
       recordReader = columnIO.getRecordReader(pageReadStore, recordMaterializer);
     } catch (Exception e) {

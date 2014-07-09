@@ -17,8 +17,8 @@
  */
 package org.apache.drill.common.expression;
 
-import java.util.GregorianCalendar;
 import java.math.BigDecimal;
+import java.util.GregorianCalendar;
 import java.util.Iterator;
 
 import org.apache.drill.common.expression.visitors.ExprVisitor;
@@ -26,7 +26,7 @@ import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
-import org.apache.drill.common.util.DecimalUtility;
+import org.apache.drill.common.util.CoreDecimalUtility;
 
 import com.google.common.collect.Iterators;
 
@@ -96,7 +96,7 @@ public class ValueExpressions {
   }
 
   public static LogicalExpression getNumericExpression(String sign, String s, ExpressionPosition ep) {
-    String numStr = (sign == null) ? s : sign+s; 
+    String numStr = (sign == null) ? s : sign+s;
     try {
         int a = Integer.parseInt(numStr);
         return new IntExpression(a, ep);
@@ -138,12 +138,12 @@ public class ValueExpressions {
     }
 
     @Override
-    public int getSelfCost() { 
-      return 0;  // TODO 
+    public int getSelfCost() {
+      return 0;  // TODO
     }
-    
+
     @Override
-    public int getCumulativeCost() { 
+    public int getCumulativeCost() {
       return 0; // TODO
     }
 
@@ -208,12 +208,12 @@ public class ValueExpressions {
     }
 
     @Override
-    public int getSelfCost() { 
-      return 0;  // TODO 
+    public int getSelfCost() {
+      return 0;  // TODO
     }
-    
+
     @Override
-    public int getCumulativeCost() { 
+    public int getCumulativeCost() {
       return 0; // TODO
     }
 
@@ -248,17 +248,17 @@ public class ValueExpressions {
     public Iterator<LogicalExpression> iterator() {
       return Iterators.emptyIterator();
     }
-    
+
     @Override
-    public int getSelfCost() { 
-      return 0;  // TODO 
+    public int getSelfCost() {
+      return 0;  // TODO
     }
-    
+
     @Override
-    public int getCumulativeCost() { 
+    public int getCumulativeCost() {
       return 0; // TODO
     }
-    
+
 
   }
 
@@ -272,7 +272,7 @@ public class ValueExpressions {
       super(pos);
       this.scale = input.scale();
       this.precision = input.precision();
-      this.decimal = DecimalUtility.getDecimal9FromBigDecimal(input, scale, precision);
+      this.decimal = CoreDecimalUtility.getDecimal9FromBigDecimal(input, scale, precision);
     }
 
 
@@ -302,17 +302,17 @@ public class ValueExpressions {
     public Iterator<LogicalExpression> iterator() {
       return Iterators.emptyIterator();
     }
-    
+
     @Override
-    public int getSelfCost() { 
-      return 0;  // TODO 
+    public int getSelfCost() {
+      return 0;  // TODO
     }
-    
+
     @Override
-    public int getCumulativeCost() { 
+    public int getCumulativeCost() {
       return 0; // TODO
     }
-    
+
 
   }
 
@@ -326,7 +326,7 @@ public class ValueExpressions {
       super(pos);
       this.scale = input.scale();
       this.precision = input.precision();
-      this.decimal = DecimalUtility.getDecimal18FromBigDecimal(input, scale, precision);
+      this.decimal = CoreDecimalUtility.getDecimal18FromBigDecimal(input, scale, precision);
     }
 
 
@@ -356,14 +356,14 @@ public class ValueExpressions {
     public Iterator<LogicalExpression> iterator() {
       return Iterators.emptyIterator();
     }
-    
+
     @Override
-    public int getSelfCost() { 
-      return 0;  // TODO 
+    public int getSelfCost() {
+      return 0;  // TODO
     }
-    
+
     @Override
-    public int getCumulativeCost() { 
+    public int getCumulativeCost() {
       return 0; // TODO
     }
 
@@ -397,14 +397,14 @@ public class ValueExpressions {
     public Iterator<LogicalExpression> iterator() {
       return Iterators.emptyIterator();
     }
-    
+
     @Override
-    public int getSelfCost() { 
-      return 0;  // TODO 
+    public int getSelfCost() {
+      return 0;  // TODO
     }
-    
+
     @Override
-    public int getCumulativeCost() { 
+    public int getCumulativeCost() {
       return 0; // TODO
     }
   }
@@ -438,15 +438,15 @@ public class ValueExpressions {
     }
 
     @Override
-    public int getSelfCost() { 
-      return 0;  // TODO 
+    public int getSelfCost() {
+      return 0;  // TODO
     }
-    
+
     @Override
-    public int getCumulativeCost() { 
+    public int getCumulativeCost() {
       return 0; // TODO
     }
-    
+
   }
 
 
@@ -478,17 +478,17 @@ public class ValueExpressions {
     public Iterator<LogicalExpression> iterator() {
       return Iterators.emptyIterator();
     }
-    
+
     @Override
-    public int getSelfCost() { 
-      return 0;  // TODO 
+    public int getSelfCost() {
+      return 0;  // TODO
     }
-    
+
     @Override
-    public int getCumulativeCost() { 
+    public int getCumulativeCost() {
       return 0; // TODO
     }
-    
+
   }
 
   public static class LongExpression extends LogicalExpressionBase {
@@ -526,15 +526,15 @@ public class ValueExpressions {
     }
 
     @Override
-    public int getSelfCost() { 
-      return 0;  // TODO 
+    public int getSelfCost() {
+      return 0;  // TODO
     }
-    
+
     @Override
-    public int getCumulativeCost() { 
+    public int getCumulativeCost() {
       return 0; // TODO
     }
-    
+
 
   }
 
@@ -572,14 +572,14 @@ public class ValueExpressions {
     public Iterator<LogicalExpression> iterator() {
       return Iterators.emptyIterator();
     }
-    
+
     @Override
-    public int getSelfCost() { 
-      return 0;  // TODO 
+    public int getSelfCost() {
+      return 0;  // TODO
     }
-    
+
     @Override
-    public int getCumulativeCost() { 
+    public int getCumulativeCost() {
       return 0; // TODO
     }
 
@@ -621,15 +621,15 @@ public class ValueExpressions {
     }
 
     @Override
-    public int getSelfCost() { 
-      return 0;  // TODO 
+    public int getSelfCost() {
+      return 0;  // TODO
     }
-    
+
     @Override
-    public int getCumulativeCost() { 
+    public int getCumulativeCost() {
       return 0; // TODO
     }
-    
+
   }
 
   public static class TimeStampExpression extends LogicalExpressionBase {
@@ -665,14 +665,14 @@ public class ValueExpressions {
     public Iterator<LogicalExpression> iterator() {
       return Iterators.emptyIterator();
     }
-    
+
     @Override
-    public int getSelfCost() { 
-      return 0;  // TODO 
+    public int getSelfCost() {
+      return 0;  // TODO
     }
-    
+
     @Override
-    public int getCumulativeCost() { 
+    public int getCumulativeCost() {
       return 0; // TODO
     }
 
@@ -711,14 +711,14 @@ public class ValueExpressions {
     public Iterator<LogicalExpression> iterator() {
       return Iterators.emptyIterator();
     }
-    
+
     @Override
-    public int getSelfCost() { 
-      return 0;  // TODO 
+    public int getSelfCost() {
+      return 0;  // TODO
     }
-    
+
     @Override
-    public int getCumulativeCost() { 
+    public int getCumulativeCost() {
       return 0; // TODO
     }
 
@@ -766,15 +766,15 @@ public class ValueExpressions {
     }
 
     @Override
-    public int getSelfCost() { 
-      return 0;  // TODO 
+    public int getSelfCost() {
+      return 0;  // TODO
     }
-    
+
     @Override
-    public int getCumulativeCost() { 
+    public int getCumulativeCost() {
       return 0; // TODO
     }
-    
+
   }
 
   public static class QuotedString extends ValueExpression<String> {

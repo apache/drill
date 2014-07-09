@@ -63,7 +63,7 @@ public abstract class BaseValueVector implements ValueVector{
 
   abstract public ByteBuf getData();
 
-  abstract class BaseAccessor implements ValueVector.Accessor{
+  abstract static class BaseAccessor implements ValueVector.Accessor{
     public abstract int getValueCount();
     public void reset(){}
   }

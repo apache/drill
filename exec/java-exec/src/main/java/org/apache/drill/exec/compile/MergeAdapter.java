@@ -17,15 +17,17 @@
  */
 package org.apache.drill.exec.compile;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.apache.drill.exec.compile.ClassTransformer.ClassNames;
 import org.apache.drill.exec.compile.ClassTransformer.ClassSet;
+import org.apache.drill.exec.compile.bytecode.ValueHolderReplacementVisitor;
+import org.apache.drill.exec.compile.sig.SignatureHolder;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
@@ -40,10 +42,10 @@ import org.objectweb.asm.commons.SimpleRemapper;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
+import org.objectweb.asm.util.CheckClassAdapter;
+import org.objectweb.asm.util.TraceClassVisitor;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
-import com.google.common.io.Files;
 
 /**
  * Serves two purposes. Renames all inner classes references to the outer class to the new name. Also adds all the
@@ -55,8 +57,9 @@ class MergeAdapter extends ClassVisitor {
 
   private ClassNode classToMerge;
   private ClassSet set;
-
   private Set<String> mergingNames = Sets.newHashSet();
+  private boolean hasInit;
+  private String name;
 
   private MergeAdapter(ClassSet set, ClassVisitor cv, ClassNode cn) {
     super(Opcodes.ASM4, cv);
@@ -65,6 +68,7 @@ class MergeAdapter extends ClassVisitor {
     for(Object o  : classToMerge.methods){
       String name = ((MethodNode)o).name;
       if(name.equals("<init>")) continue;
+      if(name.equals(SignatureHolder.DRILL_INIT_METHOD)) hasInit = true;
       mergingNames.add( name);
     }
   }
@@ -73,6 +77,7 @@ class MergeAdapter extends ClassVisitor {
   public void visitInnerClass(String name, String outerName, String innerName, int access) {
     // logger.debug(String.format("[Inner Class] Name: %s, outerName: %s, innerName: %s, templateName: %s, newName: %s.",
     // name, outerName, innerName, templateName, newName));
+
     if (name.startsWith(set.precompiled.slash)) {
 //      outerName = outerName.replace(precompiled.slash, generated.slash);
       name = name.replace(set.precompiled.slash, set.generated.slash);
@@ -92,6 +97,7 @@ class MergeAdapter extends ClassVisitor {
   // visit the class
   public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
     // use the access and names of the impl class.
+    this.name = name;
     if(name.contains("$")){
       super.visit(version, access, name, signature, superName, interfaces);
     }else{
@@ -102,25 +108,32 @@ class MergeAdapter extends ClassVisitor {
   }
 
   @Override
-  public MethodVisitor visitMethod(int access, String arg1, String arg2, String arg3, String[] arg4) {
+  public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
+
+
     // finalize all methods.
 
     // skip all abstract methods as they should have implementations.
-    if ((access & Modifier.ABSTRACT) != 0 || mergingNames.contains(arg1)) {
+    if ((access & Modifier.ABSTRACT) != 0 || mergingNames.contains(name)) {
 
 //      logger.debug("Skipping copy of '{}()' since it is abstract or listed elsewhere.", arg1);
       return null;
     }
-    if(arg3 != null){
-      arg3 = arg3.replace(set.precompiled.slash, set.generated.slash);
+    if(signature != null){
+      signature = signature.replace(set.precompiled.slash, set.generated.slash);
     }
     // if( (access & Modifier.PUBLIC) == 0){
     // access = access ^ Modifier.PUBLIC ^ Modifier.PROTECTED | Modifier.PRIVATE;
     // }
-    if (!arg1.equals("<init>")) {
+    MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
+    if (!name.equals("<init>")) {
       access = access | Modifier.FINAL;
+    }else{
+      if(hasInit){
+        return new DrillInitMethodVisitor(this.name, mv);
+      }
     }
-    return super.visitMethod(access, arg1, arg2, arg3, arg4);
+    return mv;
   }
 
   @SuppressWarnings("unchecked")
@@ -135,19 +148,20 @@ class MergeAdapter extends ClassVisitor {
     for (Iterator<?> it = classToMerge.methods.iterator(); it.hasNext();) {
       MethodNode mn = (MethodNode) it.next();
 
-      // skip the init.
-      if (mn.name.equals("<init>"))
-        continue;
+      if (mn.name.equals("<init>")) continue;
 
       String[] exceptions = new String[mn.exceptions.size()];
       mn.exceptions.toArray(exceptions);
-      MethodVisitor mv = cv.visitMethod(mn.access | Modifier.FINAL, mn.name, mn.desc, mn.signature, exceptions);
+      MethodVisitor   mv = cv.visitMethod(mn.access | Modifier.FINAL, mn.name, mn.desc, mn.signature, exceptions);
+
       mn.instructions.resetLabels();
+
       // mn.accept(new RemappingMethodAdapter(mn.access, mn.desc, mv, new
       // SimpleRemapper("org.apache.drill.exec.compile.ExampleTemplate", "Bunky")));
       ClassSet top = set;
       while(top.parent != null) top = top.parent;
       mn.accept(new RemappingMethodAdapter(mn.access, mn.desc, mv, new SimpleRemapper(top.precompiled.slash, top.generated.slash)));
+
     }
     super.visitEnd();
   }
@@ -175,21 +189,31 @@ class MergeAdapter extends ClassVisitor {
     // Setup adapters for merging, remapping class names and class writing. This is done in reverse order of how they
     // will be evaluated.
 
-    ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
+    ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
     RemapClasses re = new RemapClasses(set);
-    ClassVisitor remappingAdapter = new RemappingClassAdapter(cw, re);
-    ClassVisitor visitor = remappingAdapter;
-    if(generatedClass != null){
-      visitor = new MergeAdapter(set, remappingAdapter, generatedClass);
+    try{
+//      if(generatedClass != null){
+//        ClassNode generatedMerged = new ClassNode();
+//        generatedClass.accept(new ValueHolderReplacementVisitor(generatedMerged));
+//        generatedClass = generatedMerged;
+//      }
+      ClassVisitor remappingAdapter = new RemappingClassAdapter(writer, re);
+      ClassVisitor visitor = remappingAdapter;
+      if(generatedClass != null){
+        visitor = new MergeAdapter(set, remappingAdapter, generatedClass);
+      }
+      ClassReader tReader = new ClassReader(precompiledClass);
+      tReader.accept(visitor, ClassReader.SKIP_FRAMES);
+      byte[] outputClass = writer.toByteArray();
+
+      // enable when you want all the generated merged class files to also be written to disk.
+//      Files.write(outputClass, new File(String.format("/src/scratch/drill-generated-classes/%s-output.class", set.generated.dot)));
+
+      return new MergedClassResult(outputClass, re.getInnerClasses());
+    }catch(Error | RuntimeException e){
+      logger.error("Failure while merging classes.", e);
+      throw e;
     }
-    ClassReader tReader = new ClassReader(precompiledClass);
-    tReader.accept(visitor, ClassReader.EXPAND_FRAMES);
-    byte[] outputClass = cw.toByteArray();
-
-    // enable when you want all the generated merged class files to also be written to disk.
-    //Files.write(outputClass, new File(String.format("/tmp/drill-generated-classes/%s-output.class", set.generated.dot)));
-
-    return new MergedClassResult(outputClass, re.getInnerClasses());
   }
 
 
@@ -226,5 +250,37 @@ class MergeAdapter extends ClassVisitor {
       return innerClasses;
     }
 
+  }
+
+  private static final void check(ClassNode node) {
+    Exception e = null;
+    String error = "";
+
+    try{
+    ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
+    ClassVisitor cv = new CheckClassAdapter(cw, true);
+    node.accept(cv);
+
+    StringWriter sw = new StringWriter();
+    PrintWriter pw = new PrintWriter(sw);
+    CheckClassAdapter.verify(new ClassReader(cw.toByteArray()), false, pw);
+
+    error = sw.toString();
+    }catch(Exception ex){
+      e = ex;
+    }
+
+    if(!error.isEmpty() || e != null){
+      StringWriter sw2 = new StringWriter();
+      PrintWriter pw2 = new PrintWriter(sw2);
+      TraceClassVisitor v = new TraceClassVisitor(pw2);
+      node.accept(v);
+      if(e != null){
+        throw new RuntimeException("Failure validating class.  ByteCode: \n" + sw2.toString() + "\n\n====ERRROR====\n" + error, e);
+      }else{
+        throw new RuntimeException("Failure validating class.  ByteCode: \n" + sw2.toString() + "\n\n====ERRROR====\n" + error);
+      }
+
+    }
   }
 }

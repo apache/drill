@@ -17,8 +17,7 @@
  */
 package org.apache.drill.exec.vector;
 
-import io.netty.buffer.AccountingByteBuf;
-import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
 
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.exec.expr.holders.BitHolder;
@@ -113,11 +112,11 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
   }
 
   @Override
-  public int load(int valueCount, ByteBuf buf) {
+  public int load(int valueCount, DrillBuf buf) {
     clear();
     this.valueCount = valueCount;
     int len = getSizeFromCount(valueCount);
-    data = buf.slice(0, len);
+    data = (DrillBuf) buf.slice(0, len);
     data.retain();
     return len;
   }
@@ -136,7 +135,7 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
   }
 
   @Override
-  public void load(SerializedField metadata, ByteBuf buffer) {
+  public void load(SerializedField metadata, DrillBuf buffer) {
     assert this.field.matches(metadata);
     int loaded = load(metadata.getValueCount(), buffer);
     assert metadata.getBufferLength() == loaded;
@@ -181,7 +180,7 @@ public final class BitVector extends BaseDataValueVector implements FixedWidthVe
     int offset = startIndex % 8;
     if (offset == 0) {
       // slice
-      target.data = this.data.slice(firstByte, byteSize);
+      target.data = (DrillBuf) this.data.slice(firstByte, byteSize);
       target.data.retain();
     } else {
       // Copy data

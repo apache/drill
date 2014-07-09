@@ -26,6 +26,7 @@ import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.ExecTest;
 import org.apache.drill.exec.cache.VectorAccessibleSerializable;
+import org.apache.drill.exec.compile.CodeCompiler;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -80,6 +81,7 @@ public class TestTraceOutputDump extends ExecTest {
             bitContext.getAllocator(); result = new TopLevelAllocator();
             bitContext.getConfig(); result = c;
             bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
+            bitContext.getCompiler(); result = CodeCompiler.getTestCompiler(c);
         }};
 
         PhysicalPlanReader reader = new PhysicalPlanReader(c, c.getMapper(), CoordinationProtos.DrillbitEndpoint.getDefaultInstance());

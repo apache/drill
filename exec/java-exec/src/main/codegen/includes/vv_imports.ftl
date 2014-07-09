@@ -45,6 +45,8 @@ import org.apache.drill.exec.memory.OutOfMemoryRuntimeException;
 import com.sun.codemodel.JType;
 import com.sun.codemodel.JCodeModel;
 
+import javax.inject.Inject;
+
 import java.util.Arrays;
 import java.util.Random;
 import java.util.List;
@@ -65,7 +67,7 @@ import org.joda.time.Period;
 import org.apache.hadoop.io.Text;
 
 import org.apache.drill.exec.vector.accessor.sql.TimePrintMillis;
-
+import javax.inject.Inject;
 
 
 

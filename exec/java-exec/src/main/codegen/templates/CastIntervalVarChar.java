@@ -27,7 +27,10 @@
 
 package org.apache.drill.exec.expr.fn.impl.gcast;
 
+<#include "/@includes/vv_imports.ftl" />
+
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
 
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
@@ -49,11 +52,11 @@ public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
 
   @Param ${type.from}Holder in;
   @Param BigIntHolder len;
-  @Workspace ByteBuf buffer;
+  @Inject DrillBuf buffer;
   @Output ${type.to}Holder out;
 
   public void setup(RecordBatch incoming) {
-      buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte[${type.bufferLength}]);
+    buffer.reallocIfNeeded(${type.bufferLength});
   }
 
   public void eval() {
@@ -61,7 +64,7 @@ public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
       int years  = (in.months / org.apache.drill.exec.expr.fn.impl.DateUtility.yearsToMonths);
       int months = (in.months % org.apache.drill.exec.expr.fn.impl.DateUtility.yearsToMonths);
 
-      long millis = in.milliSeconds;
+      long millis = in.milliseconds;
 
       long hours  = millis / (org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis);
       millis     = millis % (org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis);
@@ -99,6 +102,7 @@ public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
 
 package org.apache.drill.exec.expr.fn.impl.gcast;
 
+<#include "/@includes/vv_imports.ftl" />
 
 import io.netty.buffer.ByteBuf;
 
@@ -122,11 +126,11 @@ public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
 
   @Param ${type.from}Holder in;
   @Param BigIntHolder len;
-  @Workspace ByteBuf buffer;
+  @Inject DrillBuf buffer;
   @Output ${type.to}Holder out;
 
   public void setup(RecordBatch incoming) {
-      buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte[${type.bufferLength}]);
+    buffer = buffer.reallocIfNeeded((int) len.value);
   }
 
   public void eval() {
@@ -154,6 +158,9 @@ public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
 package org.apache.drill.exec.expr.fn.impl.gcast;
 
 
+
+
+
 import io.netty.buffer.ByteBuf;
 
 import org.apache.drill.exec.expr.DrillSimpleFunc;
@@ -169,6 +176,8 @@ import org.joda.time.MutableDateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.DateMidnight;
 import org.apache.drill.exec.expr.fn.impl.DateUtility;
+import javax.inject.Inject;
+import io.netty.buffer.DrillBuf;
 
 @SuppressWarnings("unused")
 @FunctionTemplate(name = "cast${type.to?upper_case}", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls=NullHandling.NULL_IF_NULL, 
@@ -177,16 +186,15 @@ public class Cast${type.from}To${type.to} implements DrillSimpleFunc {
 
   @Param ${type.from}Holder in;
   @Param BigIntHolder len;
-  @Workspace ByteBuf buffer;
+  @Inject DrillBuf buffer;
   @Output ${type.to}Holder out;
 
   public void setup(RecordBatch incoming) {
-      buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte[${type.bufferLength}]);
+    buffer = buffer.reallocIfNeeded((int) len.value);
   }
 
   public void eval() {
-
-      long millis = in.milliSeconds;
+      long millis = in.milliseconds;
 
       long hours  = millis / (org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis);
       millis     = millis % (org.apache.drill.exec.expr.fn.impl.DateUtility.hoursToMillis);

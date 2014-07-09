@@ -17,12 +17,13 @@
  */
 package org.apache.drill.exec.physical.impl;
 
-import org.apache.drill.exec.exception.SchemaChangeException;
-import org.apache.drill.exec.memory.BufferAllocator;
-import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.vector.ValueVector;
+import io.netty.buffer.DrillBuf;
 
 import java.util.List;
+
+import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.record.MaterializedField;
+import org.apache.drill.exec.vector.ValueVector;
 
 public interface OutputMutator {
   public <T extends ValueVector> T addField(MaterializedField field, Class<T> clazz) throws SchemaChangeException ;
@@ -34,4 +35,5 @@ public interface OutputMutator {
    * One to many layers to rip out, address it as a separate JIRA.
    */
   public void addFields(List<ValueVector> vvList);
+  public DrillBuf getManagedBuffer();
 }

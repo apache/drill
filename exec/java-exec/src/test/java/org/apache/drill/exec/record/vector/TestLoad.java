@@ -19,6 +19,7 @@ package org.apache.drill.exec.record.vector;
 
 import static org.junit.Assert.assertEquals;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
 
 import java.util.List;
 
@@ -68,7 +69,7 @@ public class TestLoad extends ExecTest {
     for (int i = 0; i < byteBufs.length; i++) {
       bytes += byteBufs[i].writerIndex();
     }
-    ByteBuf byteBuf = allocator.buffer(bytes);
+    DrillBuf byteBuf = allocator.buffer(bytes);
     int index = 0;
     for (int i = 0; i < byteBufs.length; i++) {
       byteBufs[i].readBytes(byteBuf, index, byteBufs[i].writerIndex());

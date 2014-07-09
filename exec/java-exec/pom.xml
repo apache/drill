@@ -21,10 +21,16 @@
   <name>exec/Java Execution Engine</name>
 
   <dependencies>
+<!--     <dependency> -->
+<!--       <groupId>org.ow2.asm</groupId> -->
+<!--       <artifactId>asm-util</artifactId> -->
+<!--       <version>4.1</version> -->
+<!--     </dependency> -->
     <dependency>
       <groupId>org.ow2.asm</groupId>
-      <artifactId>asm-util</artifactId>
+      <artifactId>asm-debug-all</artifactId>
       <version>4.1</version>
+<!--       <scope>test</scope> -->
     </dependency>
     <dependency>
       <groupId>pentaho</groupId>
@@ -38,11 +44,11 @@
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>org.ow2.asm</groupId>
-      <artifactId>asm-commons</artifactId>
-      <version>4.1</version>
-    </dependency>
+<!--     <dependency> -->
+<!--       <groupId>org.ow2.asm</groupId> -->
+<!--       <artifactId>asm-commons</artifactId> -->
+<!--       <version>4.1</version> -->
+<!--     </dependency> -->
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-pool2</artifactId>

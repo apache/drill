@@ -31,13 +31,15 @@ import com.google.common.collect.Maps;
 
 public class SignatureHolder implements Iterable<CodeGeneratorMethod>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SignatureHolder.class);
-  
+
   private final Class<?> signature;
   private final CodeGeneratorMethod[] methods;
   private final Map<String, Integer> methodMap;
   private final SignatureHolder[] childHolders;
-  
-  
+
+  public static final String DRILL_INIT_METHOD = "__DRILL_INIT__";
+  public static final CodeGeneratorMethod DRILL_INIT = new CodeGeneratorMethod(DRILL_INIT_METHOD, void.class);
+
   public static SignatureHolder getHolder(Class<?> signature){
     List<SignatureHolder> innerClasses = Lists.newArrayList();
     for(Class<?> inner : signature.getClasses()){
@@ -46,36 +48,39 @@ public class SignatureHolder implements Iterable<CodeGeneratorMethod>{
     }
     return new SignatureHolder(signature, innerClasses.toArray(new SignatureHolder[innerClasses.size()]));
   }
-  
+
 
   private SignatureHolder(Class<?> signature, SignatureHolder[] childHolders){
     this.childHolders = childHolders;
     this.signature = signature;
-    Map<String, Integer> newMap = Maps.newHashMap(); 
-    
+    Map<String, Integer> newMap = Maps.newHashMap();
+
     List<CodeGeneratorMethod> methodHolders = Lists.newArrayList();
     Method[] reflectMethods = signature.getDeclaredMethods();
-    
+
     for(Method m : reflectMethods){
       if( (m.getModifiers() & Modifier.ABSTRACT) == 0 && m.getAnnotation(RuntimeOverridden.class) == null) continue;
       methodHolders.add(new CodeGeneratorMethod(m));
     }
-    
-    methods = new CodeGeneratorMethod[methodHolders.size()];
+
+    methods = new CodeGeneratorMethod[methodHolders.size()+1];
     for(int i =0; i < methodHolders.size(); i++){
       methods[i] = methodHolders.get(i);
       Integer old = newMap.put(methods[i].getMethodName(), i);
       if(old != null) throw new IllegalStateException(String.format("Attempting to add a method with name %s when there is already one method of that name in this class that is set to be runtime generated.", methods[i].getMethodName()));
-      
+
     }
+    methods[methodHolders.size()] = DRILL_INIT;
+    newMap.put(DRILL_INIT.getMethodName(), methodHolders.size());
+
     methodMap = ImmutableMap.copyOf(newMap);
 
   }
-  
+
   public Class<?> getSignatureClass(){
     return signature;
   }
-  
+
   public CodeGeneratorMethod get(int i){
     return methods[i];
   }
@@ -84,12 +89,12 @@ public class SignatureHolder implements Iterable<CodeGeneratorMethod>{
   public Iterator<CodeGeneratorMethod> iterator() {
     return Iterators.forArray(methods);
   }
-  
+
   public int size(){
     return methods.length;
   }
-  
-  
+
+
   public SignatureHolder[] getChildHolders() {
     return childHolders;
   }
@@ -109,6 +114,6 @@ public class SignatureHolder implements Iterable<CodeGeneratorMethod>{
     return "SignatureHolder [methods="
         + (methods != null ? Arrays.asList(methods).subList(0, Math.min(methods.length, maxLen)) : null) + "]";
   }
-  
-  
+
+
 }

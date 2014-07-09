@@ -17,7 +17,10 @@
  */
 package org.apache.drill.exec.expr.fn.impl.conv;
 
+import javax.inject.Inject;
+
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
 
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
@@ -35,11 +38,12 @@ public class TimeEpochBEConvertTo implements DrillSimpleFunc {
 
   @Param TimeHolder in;
   @Output VarBinaryHolder out;
-  @Workspace ByteBuf buffer;
+  @Inject DrillBuf buffer;
+
 
   @Override
   public void setup(RecordBatch incoming) {
-    buffer = org.apache.drill.exec.util.ByteBufUtil.createBuffer(8);
+    buffer = buffer.reallocIfNeeded(8);
   }
 
   @Override

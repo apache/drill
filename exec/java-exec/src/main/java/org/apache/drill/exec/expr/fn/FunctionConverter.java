@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.expr.fn;
 
+import io.netty.buffer.DrillBuf;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
@@ -24,6 +26,8 @@ import java.lang.reflect.Field;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
+
+import javax.inject.Inject;
 
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.util.FileUtils;
@@ -111,15 +115,17 @@ public class FunctionConverter {
       Param param = field.getAnnotation(Param.class);
       Output output = field.getAnnotation(Output.class);
       Workspace workspace = field.getAnnotation(Workspace.class);
+      Inject inject = field.getAnnotation(Inject.class);
 
       int i =0;
       if(param != null) i++;
       if(output != null) i++;
       if(workspace != null) i++;
+      if(inject != null) i++;
       if(i == 0){
-        return failure("The field must be either a @Param, @Output or @Workspace field.", clazz, field);
+        return failure("The field must be either a @Param, @Output, @Inject or @Workspace field.", clazz, field);
       }else if(i > 1){
-        return failure("The field must be only one of @Param, @Output or @Workspace.  It currently has more than one of these annotations.", clazz, field);
+        return failure("The field must be only one of @Param, @Output, @Inject or @Workspace.  It currently has more than one of these annotations.", clazz, field);
       }
 
       if(param != null || output != null){
@@ -132,7 +138,7 @@ public class FunctionConverter {
 
         // Special processing for @Output ComplexWriter
         if (output != null && ComplexWriter.class.isAssignableFrom(field.getType())) {
-          
+
           if(outputField != null){
             return failure("You've declared more than one @Output field.  You must declare one and only @Output field per Function class.", clazz, field);
           }else{
@@ -140,7 +146,7 @@ public class FunctionConverter {
           }
           continue;
         }
-        
+
         // check that param and output are value holders.
         if(!ValueHolder.class.isAssignableFrom(field.getType())){
           return failure(String.format("The field doesn't holds value of type %s which does not implement the ValueHolder interface.  All fields of type @Param or @Output must extend this interface..", field.getType()), clazz, field);
@@ -168,12 +174,14 @@ public class FunctionConverter {
             outputField = p;
           }
         }
-        
+
       }else{
         // workspace work.
-        WorkspaceReference wsReference = new WorkspaceReference(field.getType(), field.getName());
+        boolean isInject = inject != null;
+        if(isInject && !field.getType().equals(DrillBuf.class)) return failure(String.format("Only DrillBuf is allowed to be injected.  You attempted to inject %s.", field.getType()), clazz, field);
+        WorkspaceReference wsReference = new WorkspaceReference(field.getType(), field.getName(), isInject);
 
-        if (template.scope() == FunctionScope.POINT_AGGREGATE && !ValueHolder.class.isAssignableFrom(field.getType()) ) {
+        if (!isInject && template.scope() == FunctionScope.POINT_AGGREGATE && !ValueHolder.class.isAssignableFrom(field.getType()) ) {
           return failure(String.format("Aggregate function '%s' workspace variable '%s' is of type '%s'. Please change it to Holder type.", template.name(), field.getName(), field.getType()), clazz, field);
         }
 
@@ -229,21 +237,21 @@ public class FunctionConverter {
           template.isRandom(), registeredNames, ps, outputField, works, methods, imports);
       case SIMPLE:
         if (outputField.isComplexWriter)
-          return new DrillComplexWriterFuncHolder(template.scope(), template.nulls(), 
+          return new DrillComplexWriterFuncHolder(template.scope(), template.nulls(),
               template.isBinaryCommutative(),
-              template.isRandom(), registeredNames, 
+              template.isRandom(), registeredNames,
               ps, outputField, works, methods, imports);
         else
-          return new DrillSimpleFuncHolder(template.scope(), template.nulls(), 
+          return new DrillSimpleFuncHolder(template.scope(), template.nulls(),
                                            template.isBinaryCommutative(),
-                                           template.isRandom(), registeredNames, 
+                                           template.isRandom(), registeredNames,
                                            ps, outputField, works, methods, imports, template.costCategory());
       case SC_BOOLEAN_OPERATOR:
-        return new DrillBooleanOPHolder(template.scope(), template.nulls(), 
+        return new DrillBooleanOPHolder(template.scope(), template.nulls(),
             template.isBinaryCommutative(),
-            template.isRandom(), registeredNames, 
+            template.isRandom(), registeredNames,
             ps, outputField, works, methods, imports);
-        
+
       case DECIMAL_MAX_SCALE:
           return new DrillDecimalMaxScaleFuncHolder(template.scope(), template.nulls(), template.isBinaryCommutative(),
                   template.isRandom(), registeredNames, ps, outputField, works, methods, imports);

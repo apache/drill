@@ -58,12 +58,12 @@ public class ${intervaltype}Functions {
             <#if intervaltype == "Interval">
             out.months = left.months + right.months;
             out.days = left.days + right.days;
-            out.milliSeconds = left.milliSeconds + right.milliSeconds;
+            out.milliseconds = left.milliseconds + right.milliseconds;
             <#elseif intervaltype == "IntervalYear">
             out.value = left.value + right.value;
             <#elseif intervaltype == "IntervalDay">
             out.days = left.days + right.days;
-            out.milliSeconds = left.milliSeconds + right.milliSeconds;
+            out.milliseconds = left.milliseconds + right.milliseconds;
             </#if>
         }
     }
@@ -82,12 +82,12 @@ public class ${intervaltype}Functions {
             <#if intervaltype == "Interval">
             out.months = left.months - right.months;
             out.days = left.days - right.days;
-            out.milliSeconds = left.milliSeconds - right.milliSeconds;
+            out.milliseconds = left.milliseconds - right.milliseconds;
             <#elseif intervaltype == "IntervalYear">
             out.value = left.value - right.value;
             <#elseif intervaltype == "IntervalDay">
             out.days = left.days - right.days;
-            out.milliSeconds = left.milliSeconds - right.milliSeconds;
+            out.milliseconds = left.milliseconds - right.milliseconds;
             </#if>
         }
     }
@@ -104,12 +104,12 @@ public class ${intervaltype}Functions {
             <#if intervaltype == "Interval">
             out.months = -left.months;
             out.days = -left.days;
-            out.milliSeconds = -left.milliSeconds;
+            out.milliseconds = -left.milliseconds;
             <#elseif intervaltype == "IntervalYear">
             out.value = -left.value;
             <#elseif intervaltype == "IntervalDay">
             out.days = -left.days;
-            out.milliSeconds = -left.milliSeconds;
+            out.milliseconds = -left.milliseconds;
             </#if>
         }
     }

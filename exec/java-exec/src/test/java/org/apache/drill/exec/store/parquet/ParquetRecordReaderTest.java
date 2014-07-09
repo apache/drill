@@ -21,6 +21,7 @@ import static org.apache.drill.exec.store.parquet.TestFileGenerator.populateFiel
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import io.netty.buffer.DrillBuf;
 
 import java.io.File;
 import java.io.IOException;
@@ -148,16 +149,19 @@ public class ParquetRecordReaderTest extends BaseTestQuery{
 
 
   @Test
+  @Ignore
   public void testNonExistentColumnLargeFile() throws Exception {
     testFull(QueryType.SQL, "select non_existent_column, non_existent_col_2 from dfs.`/tmp/customer.dict.parquet`", "", 1, 1, 150000, false);
   }
 
   @Test
+  @Ignore
   public void testNonExistentColumnsSomePresentColumnsLargeFile() throws Exception {
     testFull(QueryType.SQL, "select cust_key, address,  non_existent_column, non_existent_col_2 from dfs.`/tmp/customer.dict.parquet`", "", 1, 1, 150000, false);
   }
 
   @Test
+  @Ignore
   public void testTPCHPerformace_SF1() throws Exception {
     testFull(QueryType.SQL, "select * from dfs.`/tmp/orders_part-m-00001.parquet`", "", 1, 1, 150000, false);
   }
@@ -265,6 +269,11 @@ public class ParquetRecordReaderTest extends BaseTestQuery{
     @Override
     public boolean isNewSchema() {
       return false;
+    }
+
+    @Override
+    public DrillBuf getManagedBuffer() {
+      return allocator.buffer(255);
     }
   }
 

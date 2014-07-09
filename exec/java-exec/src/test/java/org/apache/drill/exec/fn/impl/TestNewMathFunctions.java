@@ -27,6 +27,7 @@ import mockit.Injectable;
 import mockit.NonStrictExpectations;
 
 import org.apache.drill.common.config.DrillConfig;
+import org.apache.drill.exec.compile.CodeCompiler;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.ops.FragmentContext;
@@ -83,6 +84,7 @@ public class TestNewMathFunctions {
 	      bitContext.getAllocator(); result = new TopLevelAllocator();
 	      bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
 	      bitContext.getConfig(); result = c;
+	      bitContext.getCompiler(); result = CodeCompiler.getTestCompiler(c);
 	    }};
 
 	    String planString = Resources.toString(Resources.getResource(planPath), Charsets.UTF_8);

@@ -28,7 +28,7 @@ public class GeneratorMapping {
   private String eval;
   private String reset;
   private String cleanup;
-  
+
 
   public GeneratorMapping(String setup, String eval, String reset, String cleanup) {
     super();
@@ -49,15 +49,15 @@ public class GeneratorMapping {
   public static GeneratorMapping GM(String setup, String eval){
     return create(setup, eval, null, null);
   }
-  
+
   public static GeneratorMapping GM(String setup, String eval, String reset, String cleanup){
     return create(setup, eval, reset, cleanup);
   }
 
-  public static GeneratorMapping create(String setup, String eval, String reset, String cleanup){   
+  public static GeneratorMapping create(String setup, String eval, String reset, String cleanup){
     return new GeneratorMapping(setup, eval, reset, cleanup);
   }
-  
+
   public String getMethodName(BlockType type){
     switch(type){
     case CLEANUP:
@@ -76,6 +76,6 @@ public class GeneratorMapping {
       throw new IllegalStateException();
     }
   }
-  
-  
+
+
 }

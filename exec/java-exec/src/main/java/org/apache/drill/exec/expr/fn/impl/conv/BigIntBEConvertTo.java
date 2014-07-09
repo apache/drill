@@ -17,7 +17,9 @@
  */
 package org.apache.drill.exec.expr.fn.impl.conv;
 
-import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
+
+import javax.inject.Inject;
 
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
@@ -25,7 +27,6 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
-import org.apache.drill.exec.expr.annotations.Workspace;
 import org.apache.drill.exec.expr.holders.BigIntHolder;
 import org.apache.drill.exec.expr.holders.VarBinaryHolder;
 import org.apache.drill.exec.record.RecordBatch;
@@ -35,11 +36,11 @@ public class BigIntBEConvertTo implements DrillSimpleFunc {
 
   @Param BigIntHolder in;
   @Output VarBinaryHolder out;
-  @Workspace ByteBuf buffer;
+  @Inject DrillBuf buffer;
 
   @Override
   public void setup(RecordBatch incoming) {
-    buffer = org.apache.drill.exec.util.ByteBufUtil.createBuffer(8);
+    buffer = buffer.reallocIfNeeded(8);
   }
 
   @Override

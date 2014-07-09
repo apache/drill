@@ -32,10 +32,10 @@ import com.sun.codemodel.JDefinedClass;
  * A code generator is responsible for generating the Java source code required to complete the implementation of an
  * abstract template. It is used with a class transformer to merge precompiled template code with runtime generated and
  * compiled query specific code to create a runtime instance.
- * 
+ *
  * A code generator can contain one or more ClassGenerators that implement outer and inner classes associated with a
  * particular runtime generated instance.
- * 
+ *
  * @param <T>
  *          The interface that results from compiling and merging the runtime code that is generated.
  */
@@ -46,8 +46,11 @@ public class CodeGenerator<T> {
   private final TemplateClassDefinition<T> definition;
   private final String className;
   private final String fqcn;
+
   private final JCodeModel model;
   private final ClassGenerator<T> rootGenerator;
+  private String generatedCode;
+  private String generifiedCode;
 
   CodeGenerator(TemplateClassDefinition<T> definition, FunctionImplementationRegistry funcRegistry) {
     this(ClassGenerator.getDefaultMapping(), definition, funcRegistry);
@@ -74,12 +77,24 @@ public class CodeGenerator<T> {
     return rootGenerator;
   }
 
-  public String generate() throws IOException {
+  public void generate() throws IOException {
     rootGenerator.flushCode();
 
     SingleClassStringWriter w = new SingleClassStringWriter();
     model.build(w);
-    return w.getCode().toString();
+
+    this.generatedCode = w.getCode().toString();
+    this.generifiedCode = generatedCode.replaceAll(this.className, "GenericGenerated");
+
+  }
+
+  public String generateAndGet() throws IOException {
+    generate();
+    return generatedCode;
+  }
+
+  public String getGeneratedCode(){
+    return generatedCode;
   }
 
   public TemplateClassDefinition<T> getDefinition() {
@@ -99,15 +114,49 @@ public class CodeGenerator<T> {
       FunctionImplementationRegistry funcRegistry){
     return get(definition, funcRegistry).getRoot();
   }
-  
+
   public static <T> ClassGenerator<T> getRoot(MappingSet mappingSet, TemplateClassDefinition<T> definition,
       FunctionImplementationRegistry funcRegistry){
     return get(mappingSet, definition, funcRegistry).getRoot();
   }
-  
+
   public static <T> CodeGenerator<T> get(MappingSet mappingSet, TemplateClassDefinition<T> definition,
       FunctionImplementationRegistry funcRegistry) {
     return new CodeGenerator<T>(mappingSet, definition, funcRegistry);
   }
+
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + ((definition == null) ? 0 : definition.hashCode());
+    result = prime * result + ((generatedCode == null) ? 0 : generatedCode.hashCode());
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj)
+      return true;
+    if (obj == null)
+      return false;
+    if (getClass() != obj.getClass())
+      return false;
+    CodeGenerator other = (CodeGenerator) obj;
+    if (definition == null) {
+      if (other.definition != null)
+        return false;
+    } else if (!definition.equals(other.definition))
+      return false;
+    if (generatedCode == null) {
+      if (other.generatedCode != null)
+        return false;
+    } else if (!generatedCode.equals(other.generatedCode))
+      return false;
+    return true;
+  }
+
+
+
 
 }

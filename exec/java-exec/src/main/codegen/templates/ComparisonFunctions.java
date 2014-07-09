@@ -53,27 +53,7 @@ outside:{
     </#if>
     
     <#if mode == "var">
-    
-    for (int l = left.start, r = right.start; l < left.end && r < right.end; l++, r++) {
-      byte leftByte = left.buffer.getByte(l);
-      byte rightByte = right.buffer.getByte(r);
-      if (leftByte != rightByte) {
-        ${output} = ((leftByte & 0xFF) - (rightByte & 0xFF)) > 0 ? 1 : -1;
-        break outside;
-      }
-    }
-    
-    int l = (left.end - left.start) - (right.end - right.start);
-    if (l > 0) {
-      ${output} = 1;
-      break outside;
-    } else if (l == 0) {
-      ${output} = 0;
-      break outside;
-    } else {
-      ${output} = -1;
-      break outside;
-    }
+      ${output} = org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers.compare(left.buffer.memoryAddress(), left.start, left.end, right.buffer.memoryAddress(), right.start, right.end);
     <#elseif mode == "fixed">
       ${output} = left.value < right.value ? -1 : ((left.value == right.value)? 0 : 1);
     </#if>    
@@ -99,8 +79,11 @@ import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
+import org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers;
 import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
+import javax.inject.Inject;
+import io.netty.buffer.DrillBuf;
 
 @SuppressWarnings("unused")
 public class GCompare${left}${right}{
@@ -219,27 +202,8 @@ public class GCompare${left}${right}{
       public void setup(RecordBatch b) {}
 
       public void eval() {
-        
           <#if type.mode == "var" >
-outside: 
-        {          
-          if (left.end - left.start == right.end - right.start) {
-            int n = left.end - left.start;
-            int l = left.start;
-            int r = right.start;
-            while (n-- !=0) {
-              byte leftByte = left.buffer.getByte(l++);
-              byte rightByte = right.buffer.getByte(r++);
-              if (leftByte != rightByte) {
-                out.value = 0;
-                break outside;
-              }
-            }
-            out.value = 1;
-          } else {
-            out.value = 0;
-          }
-        } 
+          out.value = org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers.equal(left.buffer.memoryAddress(), left.start, left.end, right.buffer.memoryAddress(), right.start, right.end);
           <#else>
           out.value = left.value == right.value ? 1 : 0;
           </#if>

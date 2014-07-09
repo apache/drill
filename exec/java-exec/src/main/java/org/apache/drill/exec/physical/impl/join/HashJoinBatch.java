@@ -18,7 +18,6 @@
 package org.apache.drill.exec.physical.impl.join;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.drill.common.expression.FieldReference;
@@ -35,7 +34,6 @@ import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.CodeGenerator;
 import org.apache.drill.exec.expr.TypeHelper;
-import org.apache.drill.exec.expr.holders.IntHolder;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.MetricDef;
@@ -44,8 +42,8 @@ import org.apache.drill.exec.physical.impl.common.ChainedHashTable;
 import org.apache.drill.exec.physical.impl.common.HashTable;
 import org.apache.drill.exec.physical.impl.common.HashTableConfig;
 import org.apache.drill.exec.physical.impl.common.HashTableStats;
+import org.apache.drill.exec.physical.impl.common.IndexPointer;
 import org.apache.drill.exec.physical.impl.sort.RecordBatchData;
-import org.apache.drill.exec.physical.impl.svremover.RemovingRecordBatch;
 import org.apache.drill.exec.record.AbstractRecordBatch;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.ExpandableHyperContainer;
@@ -54,7 +52,6 @@ import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.TypedFieldId;
 import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.allocator.VectorAllocator;
 import org.eigenbase.rel.JoinRelType;
 
 import com.sun.codemodel.JExpr;
@@ -155,7 +152,7 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
       NUM_ENTRIES,
       NUM_RESIZING,
       RESIZING_TIME;
-      
+
       // duplicate for hash ag
 
       @Override
@@ -163,7 +160,7 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
         return ordinal();
       }
     }
-    
+
     @Override
     public int getRecordCount() {
         return outputRecords;
@@ -339,7 +336,7 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
                     hjHelper.addNewBatch(currentRecordCount);
 
                     // Holder contains the global index where the key is hashed into using the hash table
-                    IntHolder htIndex = new IntHolder();
+                    IndexPointer htIndex = new IndexPointer();
 
                     // For every record in the build batch , hash the key columns
                     for (int i = 0; i < currentRecordCount; i++) {
@@ -491,7 +488,9 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
 
     @Override
     public void cleanup() {
-        hjHelper.clear();
+        if(hjHelper != null){
+          hjHelper.clear();
+        }
 
         // If we didn't receive any data, hyperContainer may be null, check before clearing
         if (hyperContainer != null) {

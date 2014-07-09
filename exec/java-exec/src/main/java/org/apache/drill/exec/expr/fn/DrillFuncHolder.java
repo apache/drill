@@ -28,6 +28,8 @@ import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
+import org.apache.drill.exec.compile.bytecode.ScalarReplacementTypes;
+import org.apache.drill.exec.compile.sig.SignatureHolder;
 import org.apache.drill.exec.expr.ClassGenerator;
 import org.apache.drill.exec.expr.ClassGenerator.BlockType;
 import org.apache.drill.exec.expr.ClassGenerator.HoldingContainer;
@@ -114,10 +116,26 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
     return isRandom;
   }
 
+
   protected JVar[] declareWorkspaceVariables(ClassGenerator<?> g) {
     JVar[] workspaceJVars = new JVar[workspaceVars.length];
     for (int i = 0; i < workspaceVars.length; i++) {
-      workspaceJVars[i] = g.declareClassField("work", g.getModel()._ref(workspaceVars[i].type));
+      WorkspaceReference ref = workspaceVars[i];
+      JType jtype = g.getModel()._ref(ref.type);
+
+      if(ScalarReplacementTypes.CLASSES.contains(ref.type)){
+        workspaceJVars[i] = g.declareClassField("work", jtype);
+        JBlock b = g.getBlock(SignatureHolder.DRILL_INIT_METHOD);
+        b.assign(workspaceJVars[i], JExpr._new(jtype));
+      }else{
+        workspaceJVars[i] = g.declareClassField("work", jtype);
+      }
+
+      if(ref.isInject()){
+        g.getBlock(BlockType.SETUP).assign(workspaceJVars[i], g.getMappingSet().getIncoming().invoke("getContext").invoke("getManagedBuffer"));
+      }else{
+        //g.getBlock(BlockType.SETUP).assign(workspaceJVars[i], JExpr._new(jtype));
+      }
     }
     return workspaceJVars;
   }
@@ -159,7 +177,13 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
 
     JVar[] internalVars = new JVar[workspaceJVars.length];
     for (int i = 0; i < workspaceJVars.length; i++) {
-      internalVars[i] = sub.decl(g.getModel()._ref(workspaceVars[i].type), workspaceVars[i].name, workspaceJVars[i]);
+      if(decConstInputOnly){
+        internalVars[i] = sub.decl(g.getModel()._ref(workspaceVars[i].type), workspaceVars[i].name, workspaceJVars[i]);
+      }else{
+
+        internalVars[i] = sub.decl(g.getModel()._ref(workspaceVars[i].type), workspaceVars[i].name, workspaceJVars[i]);
+      }
+
     }
 
     Preconditions.checkNotNull(body);
@@ -303,19 +327,24 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
     Class<?> type;
     String name;
     MajorType majorType;
+    boolean inject;
 
-    public WorkspaceReference(Class<?> type, String name) {
+    public WorkspaceReference(Class<?> type, String name, boolean inject) {
       super();
       Preconditions.checkNotNull(type);
       Preconditions.checkNotNull(name);
       this.type = type;
       this.name = name;
+      this.inject = inject;
     }
 
     void setMajorType(MajorType majorType) {
       this.majorType = majorType;
     }
 
+    public boolean isInject(){
+      return inject;
+    }
   }
 
   public boolean checkPrecisionRange() {

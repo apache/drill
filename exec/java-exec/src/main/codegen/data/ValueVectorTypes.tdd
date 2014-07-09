@@ -26,9 +26,10 @@
       width: 1,
       javaType: "byte",
       boxedType: "Byte",
+      fields: [{name: "value", type: "byte"}],
       minor: [
-        { class: "TinyInt", valueHolder: "IntHolder"},
-        { class: "UInt1", valueHolder: "UInt1Holder"}
+        { class: "TinyInt", valueHolder: "IntHolder" },
+        { class: "UInt1", valueHolder: "UInt1Holder" }
       ]
     },
     {
@@ -36,6 +37,7 @@
       width: 2,
       javaType: "char",
       boxedType: "Character",
+      fields: [{name: "value", type: "char"}],
       minor: [
         { class: "UInt2", valueHolder: "UInt2Holder"}
       ]
@@ -44,6 +46,7 @@
       width: 2,
       javaType: "short",
       boxedType: "Short",
+      fields: [{name: "value", type: "short"}],
       minor: [
         { class: "SmallInt", valueHolder: "Int2Holder"},
       ]
@@ -53,13 +56,14 @@
       width: 4,
       javaType: "int",
       boxedType: "Integer",
+      fields: [{name: "value", type: "int"}],
       minor: [
-        { class: "Int", valueHolder: "IntHolder" },
+        { class: "Int", valueHolder: "IntHolder"},
         { class: "UInt4", valueHolder: "UInt4Holder" },
-        { class: "Float4", javaType: "float" , boxedType: "Float" },
+        { class: "Float4", javaType: "float" , boxedType: "Float", fields: [{name: "value", type: "float"}]},
         { class: "Time", javaType: "int", friendlyType: "DateTime" },
         { class: "IntervalYear", javaType: "int", friendlyType: "Period" }
-        { class: "Decimal9", maxPrecisionDigits: 9, friendlyType: "BigDecimal" },
+        { class: "Decimal9", maxPrecisionDigits: 9, friendlyType: "BigDecimal", fields: [{name:"value", type:"int"}, {name: "scale", type: "int", include: false}, {name: "precision", type: "int", include: false}] },
       ]
     },
     {
@@ -67,13 +71,14 @@
       width: 8,
       javaType: "long",
       boxedType: "Long",
+      fields: [{name: "value", type: "long"}],
       minor: [
-        { class: "BigInt" },
+        { class: "BigInt"},
         { class: "UInt8" },
-        { class: "Float8", javaType: "double" , boxedType: "Double" },
+        { class: "Float8", javaType: "double" , boxedType: "Double", fields: [{name: "value", type: "double"}], },
         { class: "Date", javaType: "long", friendlyType: "DateTime" },
         { class: "TimeStamp", javaType: "long", friendlyType: "DateTime" }
-        { class: "Decimal18", maxPrecisionDigits: 18, friendlyType: "BigDecimal" },
+        { class: "Decimal18", maxPrecisionDigits: 18, friendlyType: "BigDecimal", fields: [{name:"value", type:"long"}, {name: "scale", type: "int", include: false}, {name: "precision", type: "int", include: false}] },
         <#--
         { class: "Money", maxPrecisionDigits: 2, scale: 1, },
         -->
@@ -82,68 +87,69 @@
     {
       major: "Fixed",
       width: 12,
-      javaType: "ByteBuf",
-      boxedType: "ByteBuf",
+      javaType: "DrillBuf",
+      boxedType: "DrillBuf",
       minor: [
-        { class: "TimeStampTZ", milliSecondsSize: 8, friendlyType: "DateTime" },
-        { class: "IntervalDay", milliSecondsOffset: 4, friendlyType: "Period" }
+        { class: "TimeStampTZ", millisecondsSize: 8, friendlyType: "DateTime", fields: [ {name: "value", type:"long"}, {name: "index", type: "int"}] },
+        { class: "IntervalDay", millisecondsOffset: 4, friendlyType: "Period", fields: [ {name: "days", type:"int"}, {name: "milliseconds", type:"int"}] }
       ]
     },
     {
       major: "Fixed",
       width: 16,
-      javaType: "ByteBuf"
-      boxedType: "ByteBuf",      
+      javaType: "DrillBuf"
+      boxedType: "DrillBuf",      
       minor: [
-        { class: "Interval", daysOffset: 4, milliSecondsOffset: 8, friendlyType: "Period" }
+        { class: "Interval", daysOffset: 4, millisecondsOffset: 8, friendlyType: "Period", fields: [ {name: "months", type: "int"}, {name: "days", type:"int"}, {name: "milliseconds", type:"int"}] }
       ]
     },
     {
       major: "Fixed",
       width: 12,
-      javaType: "ByteBuf",
-      boxedType: "ByteBuf",
+      javaType: "DrillBuf",
+      boxedType: "DrillBuf",
       minor: [
         <#--
         { class: "TimeTZ" },
         { class: "Interval" }
         -->
-        { class: "Decimal28Dense", maxPrecisionDigits: 28, nDecimalDigits: 3, friendlyType: "BigDecimal" }
+        { class: "Decimal28Dense", maxPrecisionDigits: 28, nDecimalDigits: 3, friendlyType: "BigDecimal", fields: [{name: "start", type: "int"}, {name: "buffer", type: "DrillBuf"}, {name: "scale", type: "int", include: false}, {name: "precision", type: "int", include: false}] }
       ]
     },
     {
       major: "Fixed",
       width: 16,
-      javaType: "ByteBuf",
-      boxedType: "ByteBuf",
+      javaType: "DrillBuf",
+      boxedType: "DrillBuf",
       
       minor: [
-        { class: "Decimal38Dense", maxPrecisionDigits: 38, nDecimalDigits: 4, friendlyType: "BigDecimal" }
+        { class: "Decimal38Dense", maxPrecisionDigits: 38, nDecimalDigits: 4, friendlyType: "BigDecimal", fields: [{name: "start", type: "int"}, {name: "buffer", type: "DrillBuf"}, {name: "scale", type: "int", include: false}, {name: "precision", type: "int", include: false}] }
       ]
     },
     {
       major: "Fixed",
       width: 24,
-      javaType: "ByteBuf",
-      boxedType: "ByteBuf",
+      javaType: "DrillBuf",
+      boxedType: "DrillBuf",
       minor: [
-        { class: "Decimal38Sparse", maxPrecisionDigits: 38, nDecimalDigits: 6, friendlyType: "BigDecimal" }
+        { class: "Decimal38Sparse", maxPrecisionDigits: 38, nDecimalDigits: 6, friendlyType: "BigDecimal", fields: [{name: "start", type: "int"}, {name: "buffer", type: "DrillBuf"}, {name: "scale", type: "int", include: false}, {name: "precision", type: "int", include: false}] }
       ]
     },
     {
       major: "Fixed",
       width: 20,
-      javaType: "ByteBuf",
-      boxedType: "ByteBuf",
+      javaType: "DrillBuf",
+      boxedType: "DrillBuf",
       minor: [
-        { class: "Decimal28Sparse", maxPrecisionDigits: 28, nDecimalDigits: 5, friendlyType: "BigDecimal" }
+        { class: "Decimal28Sparse", maxPrecisionDigits: 28, nDecimalDigits: 5, friendlyType: "BigDecimal", fields: [{name: "start", type: "int"}, {name: "buffer", type: "DrillBuf"}, {name: "scale", type: "int", include: false}, {name: "precision", type: "int", include: false}] }
       ]
     },
     {
       major: "VarLen",
       width: 4,
       javaType: "int",
-      boxedType: "ByteBuf",
+      boxedType: "DrillBuf",
+      fields: [{name: "start", type: "int"}, {name: "end", type: "int"}, {name: "buffer", type: "DrillBuf"}],
       minor: [
         { class: "VarBinary" , friendlyType: "byte[]" },
         { class: "VarChar" , friendlyType: "Text" }
@@ -154,9 +160,9 @@
       major: "Bit",
       width: 1,
       javaType: "int",
-      boxedType: "ByteBuf",
+      boxedType: "Integer",
       minor: [
-        { class: "Bit" , friendlyType: "Boolean" }
+        { class: "Bit" , friendlyType: "Boolean", fields: [{name: "value", type: "int"}] }
       ]
     }
   ]

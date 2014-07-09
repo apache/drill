@@ -33,14 +33,19 @@
 
 package org.apache.drill.exec.expr.fn.impl.gaggr;
 
+<#include "/@includes/vv_imports.ftl" />
+
 import org.apache.drill.exec.expr.DrillAggFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.FunctionScope;
 import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.annotations.Workspace;
+import org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers;
 import org.apache.drill.exec.expr.holders.*;
+import javax.inject.Inject;
 import org.apache.drill.exec.record.RecordBatch;
+
 import io.netty.buffer.ByteBuf;
 
 @SuppressWarnings("unused")
@@ -57,6 +62,8 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
   @Param ${type.inputType}Holder in;
   <#if aggrtype.funcName == "max" || aggrtype.funcName == "min">
   @Workspace ObjectHolder value;
+  @Workspace UInt1Holder init; 
+  @Inject DrillBuf buf;
   <#else>
   @Workspace  ${type.runningType}Holder value;
   </#if>
@@ -64,6 +71,8 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 
   public void setup(RecordBatch b) {
     <#if aggrtype.funcName == "max" || aggrtype.funcName == "min">
+    init = new UInt1Holder();
+    init.value = 0;
     value = new ObjectHolder();
     ${type.runningType}Holder tmp = new ${type.runningType}Holder();
     tmp.start = 0;
@@ -81,10 +90,10 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
   public void add() {
 	  <#if type.inputType?starts_with("Nullable")>
     sout: {
-    if (in.isSet == 0) {
-      // processing nullable input and the value is null, so don't do anything...
-      break sout;
-    }
+      if (in.isSet == 0) {
+        // processing nullable input and the value is null, so don't do anything...
+        break sout;
+      }
     </#if>
     <#if aggrtype.funcName == "max" || aggrtype.funcName == "min">
     ${type.runningType}Holder tmp = (${type.runningType}Holder)value.obj;
@@ -92,27 +101,12 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     boolean swap = false;
 
     // if buffer is null then swap
-    if (tmp.buffer == null) {
+    if (init.value == 0) {
+      init.value = 1;
       swap = true;
     } else {
       // Compare the bytes
-      for (int l = in.start, r = tmp.start; l < in.end && r < tmp.end; l++, r++) {
-        byte leftByte = in.buffer.getByte(l);
-        byte rightByte = tmp.buffer.getByte(r);
-        if (leftByte != rightByte) {
-          cmp = ((leftByte & 0xFF) - (rightByte & 0xFF)) > 0 ? 1 : -1;
-          break;
-        }
-      }
-
-      if (cmp == 0) {
-        int l = (in.end - in.start) - (tmp.end - tmp.start);
-        if (l > 0) {
-          cmp = 1;
-        } else {
-          cmp = -1;
-        }
-      }
+      int compare = org.apache.drill.exec.expr.fn.impl.ByteFunctionHelpers.compare(in.buffer.memoryAddress(), in.start, in.end, tmp.buffer.memoryAddress(), tmp.start, tmp.end);
 
       <#if aggrtype.className == "Min">
       swap = (cmp == -1);
@@ -122,15 +116,10 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     }
     if (swap) {
       int length = in.end - in.start;
-      if (length > (tmp.end - tmp.start)) {
-        // if workspace buffer is smaller, release and allocate a new one
-        if (tmp.buffer != null) {
-          tmp.buffer.release();
-        }
-        tmp.buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte [length]);
-      }
+      this.buf = tmp.buffer = buf.reallocIfNeeded(in.end - in.start);
       in.buffer.getBytes(in.start, tmp.buffer, 0, length);
       tmp.end = length;
+      
     }
     <#else>
     value.value++;
@@ -156,14 +145,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
   public void reset() {
     <#if aggrtype.funcName == "max" || aggrtype.funcName == "min">
     value = new ObjectHolder();
-    ${type.runningType}Holder tmp = new ${type.runningType}Holder();
-    tmp.start = 0;
-    tmp.end = 0;
-    if (tmp.buffer != null) {
-      tmp.buffer.release();
-      tmp.buffer = null;
-    }
-    value.obj = tmp;
+    init.value = 0;
     <#else>
     value = new ${type.runningType}Holder();
     value.value = 0;

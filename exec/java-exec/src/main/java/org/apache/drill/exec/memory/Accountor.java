@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.memory;
 
-import io.netty.buffer.AccountingByteBuf;
+import io.netty.buffer.DrillBuf;
 import io.netty.buffer.ByteBuf;
 
 import java.util.Arrays;
@@ -58,7 +58,7 @@ public class Accountor {
     }
   }
 
-  public boolean transferTo(Accountor target, AccountingByteBuf buf, long size){
+  public boolean transferTo(Accountor target, DrillBuf buf, long size){
     boolean withinLimit = target.forceAdditionalReservation(size);
     release(buf, size);
 
@@ -96,7 +96,7 @@ public class Accountor {
     }
   }
 
-  public void reserved(long expected, AccountingByteBuf buf){
+  public void reserved(long expected, DrillBuf buf){
     // make sure to take away the additional memory that happened due to rounding.
 
     long additional = buf.capacity() - expected;
@@ -108,7 +108,7 @@ public class Accountor {
   }
 
 
-  public void releasePartial(AccountingByteBuf buf, long size){
+  public void releasePartial(DrillBuf buf, long size){
     remainder.returnAllocation(size);
     if (ENABLE_ACCOUNTING) {
       if(buf != null){
@@ -122,7 +122,7 @@ public class Accountor {
     }
   }
 
-  public void release(AccountingByteBuf buf, long size) {
+  public void release(DrillBuf buf, long size) {
     remainder.returnAllocation(size);
     if (ENABLE_ACCOUNTING) {
       if(buf != null && buffers.remove(buf) == null) throw new IllegalStateException("Releasing a buffer that has already been released. Buffer: " + buf);

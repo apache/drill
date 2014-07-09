@@ -219,6 +219,7 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
       phyRelNode = ProducerConsumerPrelVisitor.addProducerConsumerToScans(phyRelNode, (int) queueSize);
     }
 
+
     /* 6.)
      * if the client does not support complex types (Map, Repeated)
      * insert a project which which would convert

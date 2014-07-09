@@ -17,7 +17,10 @@
  */
 package org.apache.drill.exec.expr.fn.impl.conv;
 
+import javax.inject.Inject;
+
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
 
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
@@ -35,14 +38,15 @@ public class BigIntVLongConvertTo implements DrillSimpleFunc {
 
   @Param BigIntHolder in;
   @Output VarBinaryHolder out;
-  @Workspace ByteBuf buffer;
+  @Inject DrillBuf buffer;
+
 
   @Override
   public void setup(RecordBatch incoming) {
     /* Hadoop Variable length integer (represented in the same way as a long)
      * occupies between 1-9 bytes.
      */
-    buffer = org.apache.drill.exec.util.ByteBufUtil.createBuffer(9);
+    buffer = buffer.reallocIfNeeded(9);
   }
 
   @Override

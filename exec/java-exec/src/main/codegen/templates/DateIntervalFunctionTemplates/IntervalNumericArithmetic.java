@@ -49,12 +49,12 @@ public class ${intervaltype}${numerictype}Functions {
     <#if intervaltype == "Interval">
     ${out}.months = (int) (${left}.months * ${right}.value);
     ${out}.days = (int) (${left}.days * ${right}.value);
-    ${out}.milliSeconds = (int) (${left}.milliSeconds * ${right}.value);
+    ${out}.milliseconds = (int) (${left}.milliseconds * ${right}.value);
     <#elseif intervaltype == "IntervalYear">
     ${out}.months = (int) (${left}.value * ${right}.value);
     <#elseif intervaltype == "IntervalDay">
     ${out}.days = (int) (${left}.days * ${right}.value);
-    ${out}.milliSeconds = (int) (${left}.milliSeconds * ${right}.value);
+    ${out}.milliseconds = (int) (${left}.milliseconds * ${right}.value);
     </#if>
 </#macro>
 
@@ -67,12 +67,12 @@ public class ${intervaltype}${numerictype}Functions {
     <#if intervaltype == "Interval">
     fractionalMonths = (${left}.months ${op} (double) ${right}.value);
     fractionalDays = (${left}.days ${op} (double) ${right}.value);
-    fractionalMillis = (${left}.milliSeconds ${op} (double) ${right}.value);
+    fractionalMillis = (${left}.milliseconds ${op} (double) ${right}.value);
     <#elseif intervaltype == "IntervalYear">
     fractionalMonths = (${left}.value ${op} (double) ${right}.value);
     <#elseif intervaltype == "IntervalDay">
     fractionalDays = (${left}.days ${op} ${right}.value);
-    fractionalMillis = (${left}.milliSeconds ${op} (double) ${right}.value);
+    fractionalMillis = (${left}.milliseconds ${op} (double) ${right}.value);
     </#if>
 
     ${out}.months = (int) fractionalMonths;
@@ -86,7 +86,7 @@ public class ${intervaltype}${numerictype}Functions {
     fractionalDays = fractionalDays - (long) fractionalDays;
     fractionalMillis += fractionalDays * org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis;
 
-    ${out}.milliSeconds = (int) fractionalMillis;
+    ${out}.milliseconds = (int) fractionalMillis;
 </#macro>
 
     @SuppressWarnings("unused")

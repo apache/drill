@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.rpc.data;
 
-import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
 
 import org.apache.drill.exec.exception.FragmentSetupException;
 import org.apache.drill.exec.proto.BitData.FragmentRecordBatch;
@@ -48,7 +48,7 @@ public class DataResponseHandlerImpl implements DataResponseHandler{
   }
 
 
-  public void handle(RemoteConnection connection, FragmentManager manager, FragmentRecordBatch fragmentBatch, ByteBuf data, ResponseSender sender) throws RpcException {
+  public void handle(RemoteConnection connection, FragmentManager manager, FragmentRecordBatch fragmentBatch, DrillBuf data, ResponseSender sender) throws RpcException {
 //    logger.debug("Fragment Batch received {}", fragmentBatch);
     try {
       boolean canRun = manager.handle(new RawFragmentBatch(connection, fragmentBatch, data, sender));

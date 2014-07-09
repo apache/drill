@@ -96,15 +96,20 @@ public class ${holderMode}${name}HolderReaderImpl extends AbstractFieldReader {
   @Override
   public MajorType getType() {
 <#if holderMode == "Repeated">
-    return this.repeatedHolder.getType();
+    return this.repeatedHolder.TYPE;
 <#else>
-    return this.holder.getType();
+    return this.holder.TYPE;
 </#if>
   }
 
   @Override
   public boolean isSet() {
-    return this.holder.isSet();
+    <#if nullMode == "Nullable">
+    return this.holder.isSet == 1;
+    <#else>
+    return true;
+    </#if>
+    
   }
 
 <#if holderMode == "Repeated">
@@ -122,7 +127,7 @@ public class ${holderMode}${name}HolderReaderImpl extends AbstractFieldReader {
   @Override
   public ${friendlyType} read${safeType}(){
 <#if nullMode == "Nullable">
-    if (!holder.isSet()) {
+    if (!isSet()) {
       return null;
     }
 </#if>
@@ -145,11 +150,11 @@ public class ${holderMode}${name}HolderReaderImpl extends AbstractFieldReader {
 
 <#elseif minor.class == "Interval">
       Period p = new Period();
-      return p.plusMonths(holder.months).plusDays(holder.days).plusMillis(holder.milliSeconds);
+      return p.plusMonths(holder.months).plusDays(holder.days).plusMillis(holder.milliseconds);
 
 <#elseif minor.class == "IntervalDay">
       Period p = new Period();
-      return p.plusDays(holder.days).plusMillis(holder.milliSeconds);
+      return p.plusDays(holder.days).plusMillis(holder.milliseconds);
 
 <#elseif minor.class == "Decimal9" ||
          minor.class == "Decimal18" >
@@ -158,7 +163,7 @@ public class ${holderMode}${name}HolderReaderImpl extends AbstractFieldReader {
 
 <#elseif minor.class == "Decimal28Dense" ||
          minor.class == "Decimal38Dense">
-      return org.apache.drill.common.util.DecimalUtility.getBigDecimalFromDense(holder.buffer,
+      return org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromDense(holder.buffer,
                                                                                 holder.start,
                                                                                 holder.nDecimalDigits,
                                                                                 holder.scale,
@@ -167,7 +172,7 @@ public class ${holderMode}${name}HolderReaderImpl extends AbstractFieldReader {
 
 <#elseif minor.class == "Decimal28Sparse" ||
          minor.class == "Decimal38Sparse">
-      return org.apache.drill.common.util.DecimalUtility.getBigDecimalFromSparse(holder.buffer,
+      return org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromSparse(holder.buffer,
                                                                                  holder.start,
                                                                                  holder.nDecimalDigits,
                                                                                  holder.scale);
@@ -196,7 +201,7 @@ public class ${holderMode}${name}HolderReaderImpl extends AbstractFieldReader {
 
   private Object readSingleObject() {
 <#if nullMode == "Nullable">
-    if (!holder.isSet()) {
+    if (!isSet()) {
       return null;
     }
 </#if>
@@ -218,11 +223,11 @@ public class ${holderMode}${name}HolderReaderImpl extends AbstractFieldReader {
 
 <#elseif minor.class == "Interval">
       Period p = new Period();
-      return p.plusMonths(holder.months).plusDays(holder.days).plusMillis(holder.milliSeconds);
+      return p.plusMonths(holder.months).plusDays(holder.days).plusMillis(holder.milliseconds);
 
 <#elseif minor.class == "IntervalDay">
       Period p = new Period();
-      return p.plusDays(holder.days).plusMillis(holder.milliSeconds);
+      return p.plusDays(holder.days).plusMillis(holder.milliseconds);
 
 <#elseif minor.class == "Decimal9" ||
          minor.class == "Decimal18" >
@@ -231,7 +236,7 @@ public class ${holderMode}${name}HolderReaderImpl extends AbstractFieldReader {
 
 <#elseif minor.class == "Decimal28Dense" ||
          minor.class == "Decimal38Dense">
-      return org.apache.drill.common.util.DecimalUtility.getBigDecimalFromDense(holder.buffer,
+      return org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromDense(holder.buffer,
                                                                                 holder.start,
                                                                                 holder.nDecimalDigits,
                                                                                 holder.scale,
@@ -240,7 +245,7 @@ public class ${holderMode}${name}HolderReaderImpl extends AbstractFieldReader {
 
 <#elseif minor.class == "Decimal28Sparse" ||
          minor.class == "Decimal38Sparse">
-      return org.apache.drill.common.util.DecimalUtility.getBigDecimalFromSparse(holder.buffer,
+      return org.apache.drill.exec.util.DecimalUtility.getBigDecimalFromSparse(holder.buffer,
                                                                                  holder.start,
                                                                                  holder.nDecimalDigits,
                                                                                  holder.scale);

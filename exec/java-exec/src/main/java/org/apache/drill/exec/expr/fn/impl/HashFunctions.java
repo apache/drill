@@ -460,7 +460,7 @@ public class HashFunctions {
 
       int xor = 0;
       for (int i = 0; i < in.nDecimalDigits; i++) {
-        xor = xor ^ in.getInteger(i);
+        xor = xor ^ Decimal28SparseHolder.getInteger(i, in.start, in.buffer);
       }
       out.value = com.google.common.hash.Hashing.murmur3_128().hashInt(xor).asInt();
     }
@@ -480,7 +480,7 @@ public class HashFunctions {
       else {
         int xor = 0;
         for (int i = 0; i < in.nDecimalDigits; i++) {
-          xor = xor ^ in.getInteger(i);
+          xor = xor ^ NullableDecimal28SparseHolder.getInteger(i, in.start, in.buffer);
         }
         out.value = com.google.common.hash.Hashing.murmur3_128().hashInt(xor).asInt();
       }
@@ -499,7 +499,7 @@ public class HashFunctions {
 
       int xor = 0;
       for (int i = 0; i < in.nDecimalDigits; i++) {
-        xor = xor ^ in.getInteger(i);
+        xor = xor ^ Decimal38SparseHolder.getInteger(i, in.start, in.buffer);
       }
       out.value = com.google.common.hash.Hashing.murmur3_128().hashInt(xor).asInt();
     }
@@ -519,7 +519,7 @@ public class HashFunctions {
       else {
         int xor = 0;
         for (int i = 0; i < in.nDecimalDigits; i++) {
-          xor = xor ^ in.getInteger(i);
+          xor = xor ^ NullableDecimal38SparseHolder.getInteger(i, in.start, in.buffer);
         }
         out.value = com.google.common.hash.Hashing.murmur3_128().hashInt(xor).asInt();
       }

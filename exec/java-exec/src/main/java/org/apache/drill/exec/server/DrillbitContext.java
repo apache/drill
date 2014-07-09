@@ -23,6 +23,7 @@ import java.util.Collection;
 
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.cache.DistributedCache;
+import org.apache.drill.exec.compile.CodeCompiler;
 import org.apache.drill.exec.coord.ClusterCoordinator;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -57,6 +58,7 @@ public class DrillbitContext {
   private final FunctionImplementationRegistry functionRegistry;
   private final SystemOptionManager systemOptions;
   private final PStoreProvider provider;
+  private final CodeCompiler compiler;
 
   public DrillbitContext(DrillbitEndpoint endpoint, BootStrapContext context, ClusterCoordinator coord, Controller controller, DataConnectionCreator connectionsPool, DistributedCache cache, WorkEventBus workBus, PStoreProvider provider) {
     super();
@@ -77,8 +79,7 @@ public class DrillbitContext {
     this.operatorCreatorRegistry = new OperatorCreatorRegistry(context.getConfig());
     this.functionRegistry = new FunctionImplementationRegistry(context.getConfig());
     this.systemOptions = new SystemOptionManager(context.getConfig(), provider);
-
-//    this.globalDrillOptions = new DistributedGlobalOptions(this.cache);
+    this.compiler = new CodeCompiler(context.getConfig(), cache, systemOptions);
   }
 
   public FunctionImplementationRegistry getFunctionImplementationRegistry() {
@@ -152,5 +153,11 @@ public class DrillbitContext {
   public ClusterCoordinator getClusterCoordinator() {
     return coord;
   }
+
+  public CodeCompiler getCompiler() {
+    return compiler;
+  }
+
+
 
 }

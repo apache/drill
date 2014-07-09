@@ -18,6 +18,7 @@
 package org.apache.drill.exec.vector.complex.writer;
 
 import static org.junit.Assert.assertEquals;
+import io.netty.buffer.DrillBuf;
 
 import java.io.ByteArrayOutputStream;
 import java.util.List;
@@ -87,8 +88,8 @@ public class TestJsonReader {
     ComplexWriterImpl writer = new ComplexWriterImpl("col", v);
     writer.allocate();
 
-
-    JsonReaderWithState jsonReader = new JsonReaderWithState(new ReaderJSONRecordSplitter(compound));
+    DrillBuf buffer = allocator.buffer(255);
+    JsonReaderWithState jsonReader = new JsonReaderWithState(new ReaderJSONRecordSplitter(compound), buffer);
     int i =0;
     List<Integer> batchSizes = Lists.newArrayList();
 
@@ -158,6 +159,6 @@ public class TestJsonReader {
     assertEquals((repeatSize+1) * 2, total);
 
     writer.clear();
-
+    buffer.release();
   }
 }

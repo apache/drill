@@ -58,7 +58,7 @@ public class PooledByteBufAllocatorL extends PooledByteBufAllocator{
 
 
   @Override
-  public ByteBuf directBuffer(int initialCapacity, int maxCapacity) {
+  public UnsafeDirectLittleEndian directBuffer(int initialCapacity, int maxCapacity) {
       if (initialCapacity == 0 && maxCapacity == 0) {
           newDirectBuffer(initialCapacity, maxCapacity);
       }

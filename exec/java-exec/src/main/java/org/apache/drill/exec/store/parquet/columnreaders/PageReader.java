@@ -22,7 +22,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
 import io.netty.buffer.Unpooled;
+
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.store.parquet.ColumnDataReader;
@@ -54,7 +56,7 @@ final class PageReader {
   // store references to the pages that have been uncompressed, but not copied to ValueVectors yet
   Page currentPage;
   // buffer to store bytes of current page
-  ByteBuf pageDataByteArray;
+  DrillBuf pageDataByteArray;
 
   // for variable length data we need to keep track of our current position in the page data
   // as the values and lengths are intermixed, making random access to the length data impossible
@@ -134,10 +136,10 @@ final class PageReader {
       throw new ExecutionSetupException("Error opening or reading metadata for parquet file at location: "
         + path.getName(), e);
     }
-    
+
   }
 
-  
+
   /**
    * Grab the next page.
    *
@@ -226,7 +228,7 @@ final class PageReader {
       return false;
     }
 
-    pageDataByteArray = Unpooled.wrappedBuffer(currentPage.getBytes().toByteBuffer());
+    pageDataByteArray = DrillBuf.wrapByteBuffer(currentPage.getBytes().toByteBuffer());
 
     readPosInBytes = 0;
     if (parentColumnReader.getColumnDescriptor().getMaxRepetitionLevel() > 0) {
@@ -272,7 +274,7 @@ final class PageReader {
     readyToReadPosInBytes = readPosInBytes;
     return true;
   }
-  
+
   public void clear(){
     this.dataReader.clear();
     // Free all memory, including fixed length types. (Data is being copied for all types not just var length types)

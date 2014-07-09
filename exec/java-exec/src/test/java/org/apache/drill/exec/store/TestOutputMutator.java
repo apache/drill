@@ -17,6 +17,8 @@
  */
 package org.apache.drill.exec.store;
 
+import io.netty.buffer.DrillBuf;
+
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -85,5 +87,10 @@ public class TestOutputMutator implements OutputMutator, Iterable<VectorWrapper<
     if(!clazz.isAssignableFrom(v.getClass())) throw new SchemaChangeException(String.format("The class that was provided %s does not correspond to the expected vector type of %s.", clazz.getSimpleName(), v.getClass().getSimpleName()));
     addField(v);
     return (T) v;
+  }
+
+  @Override
+  public DrillBuf getManagedBuffer() {
+    return allocator.buffer(255);
   }
 }

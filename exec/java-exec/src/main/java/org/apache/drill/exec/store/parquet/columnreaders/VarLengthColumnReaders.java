@@ -17,18 +17,20 @@
  ******************************************************************************/
 package org.apache.drill.exec.store.parquet.columnreaders;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
+import io.netty.buffer.Unpooled;
+
 import java.math.BigDecimal;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.common.util.DecimalUtility;
-import org.apache.drill.exec.expr.holders.VarCharHolder;
-import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
-import org.apache.drill.exec.expr.holders.VarBinaryHolder;
-import org.apache.drill.exec.expr.holders.NullableVarBinaryHolder;
 import org.apache.drill.exec.expr.holders.Decimal28SparseHolder;
 import org.apache.drill.exec.expr.holders.Decimal38SparseHolder;
+import org.apache.drill.exec.expr.holders.NullableVarBinaryHolder;
+import org.apache.drill.exec.expr.holders.NullableVarCharHolder;
+import org.apache.drill.exec.expr.holders.VarBinaryHolder;
+import org.apache.drill.exec.expr.holders.VarCharHolder;
+import org.apache.drill.exec.util.DecimalUtility;
 import org.apache.drill.exec.vector.Decimal28SparseVector;
 import org.apache.drill.exec.vector.Decimal38SparseVector;
 import org.apache.drill.exec.vector.NullableDecimal28SparseVector;
@@ -37,6 +39,7 @@ import org.apache.drill.exec.vector.NullableVarBinaryVector;
 import org.apache.drill.exec.vector.NullableVarCharVector;
 import org.apache.drill.exec.vector.VarBinaryVector;
 import org.apache.drill.exec.vector.VarCharVector;
+
 import parquet.column.ColumnDescriptor;
 import parquet.format.SchemaElement;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
@@ -56,9 +59,9 @@ public class VarLengthColumnReaders {
     }
 
     @Override
-    public boolean setSafe(int index, ByteBuf bytebuf, int start, int length) {
+    public boolean setSafe(int index, DrillBuf bytebuf, int start, int length) {
       int width = Decimal28SparseHolder.WIDTH;
-      BigDecimal intermediate = DecimalUtility.getBigDecimalFromByteBuf(bytebuf, start, length, schemaElement.getScale());
+      BigDecimal intermediate = DecimalUtility.getBigDecimalFromDrillBuf(bytebuf, start, length, schemaElement.getScale());
       if (index >= decimal28Vector.getValueCapacity()) {
         return false;
       }
@@ -85,9 +88,9 @@ public class VarLengthColumnReaders {
     }
 
     @Override
-    public boolean setSafe(int index, ByteBuf bytebuf, int start, int length) {
+    public boolean setSafe(int index, DrillBuf bytebuf, int start, int length) {
       int width = Decimal28SparseHolder.WIDTH;
-      BigDecimal intermediate = DecimalUtility.getBigDecimalFromByteBuf(bytebuf, start, length, schemaElement.getScale());
+      BigDecimal intermediate = DecimalUtility.getBigDecimalFromDrillBuf(bytebuf, start, length, schemaElement.getScale());
       if (index >= nullableDecimal28Vector.getValueCapacity()) {
         return false;
       }
@@ -115,9 +118,9 @@ public class VarLengthColumnReaders {
     }
 
     @Override
-    public boolean setSafe(int index, ByteBuf bytebuf, int start, int length) {
+    public boolean setSafe(int index, DrillBuf bytebuf, int start, int length) {
       int width = Decimal38SparseHolder.WIDTH;
-      BigDecimal intermediate = DecimalUtility.getBigDecimalFromByteBuf(bytebuf, start, length, schemaElement.getScale());
+      BigDecimal intermediate = DecimalUtility.getBigDecimalFromDrillBuf(bytebuf, start, length, schemaElement.getScale());
       if (index >= decimal28Vector.getValueCapacity()) {
         return false;
       }
@@ -144,9 +147,9 @@ public class VarLengthColumnReaders {
     }
 
     @Override
-    public boolean setSafe(int index, ByteBuf bytebuf, int start, int length) {
+    public boolean setSafe(int index, DrillBuf bytebuf, int start, int length) {
       int width = Decimal38SparseHolder.WIDTH;
-      BigDecimal intermediate = DecimalUtility.getBigDecimalFromByteBuf(bytebuf, start, length, schemaElement.getScale());
+      BigDecimal intermediate = DecimalUtility.getBigDecimalFromDrillBuf(bytebuf, start, length, schemaElement.getScale());
       if (index >= nullableDecimal38Vector.getValueCapacity()) {
         return false;
       }
@@ -176,12 +179,12 @@ public class VarLengthColumnReaders {
     }
 
     @Override
-    public boolean setSafe(int index, ByteBuf bytebuf, int start, int length) {
+    public boolean setSafe(int index, DrillBuf bytebuf, int start, int length) {
       boolean success;
       if(index >= varCharVector.getValueCapacity()) return false;
 
       if (usingDictionary) {
-        ByteBuf b = Unpooled.wrappedBuffer(currDictVal.toByteBuffer());
+        DrillBuf b = DrillBuf.wrapByteBuffer(currDictVal.toByteBuffer());
         int st=0;
         int len=currDictVal.length();
         VarCharHolder holder = new VarCharHolder();
@@ -211,44 +214,34 @@ public class VarLengthColumnReaders {
     int nullsRead;
     boolean currentValNull = false;
     // store a hard reference to the vector (which is also stored in the superclass) to prevent repetitive casting
-    protected NullableVarCharVector nullableVarCharVector;
+    protected final NullableVarCharVector.Mutator mutator;
+    private final NullableVarCharVector vector;
 
     NullableVarCharColumn(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
                           ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, NullableVarCharVector v,
                           SchemaElement schemaElement) throws ExecutionSetupException {
       super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
-      nullableVarCharVector = v;
+      vector = v;
+      this.mutator = vector.getMutator();
     }
 
-    public boolean setSafe(int index, ByteBuf value, int start, int length) {
+    public boolean setSafe(int index, DrillBuf value, int start, int length) {
       boolean success;
-      if(index >= nullableVarCharVector.getValueCapacity()) return false;
+      if(index >= vector.getValueCapacity()) return false;
 
       if (usingDictionary) {
-        ByteBuf b = Unpooled.wrappedBuffer(currDictVal.toByteBuffer());
-        int st=0;
-        int len=currDictVal.length();
-        NullableVarCharHolder holder = new NullableVarCharHolder();
-        holder.buffer=b;
-        holder.start=0;
-        holder.end=currDictVal.length();
-        success = nullableVarCharVector.getMutator().setSafe(index, holder);
-        holder.isSet=1;
+        DrillBuf b = DrillBuf.wrapByteBuffer(currDictVal.toByteBuffer());
+        success = mutator.setSafe(index, 1, 0, currDictVal.length(), b);
       }
       else {
-        NullableVarCharHolder holder = new NullableVarCharHolder();
-        holder.buffer=value;
-        holder.start=start;
-        holder.end=start+length;
-        holder.isSet=1;
-        success = nullableVarCharVector.getMutator().setSafe(index, holder);
+        success = mutator.setSafe(index, 1, start, start+length, value);
       }
       return success;
     }
 
     @Override
     public int capacity() {
-      return nullableVarCharVector.getData().capacity();
+      return vector.getData().capacity();
     }
   }
 
@@ -265,12 +258,12 @@ public class VarLengthColumnReaders {
     }
 
     @Override
-    public boolean setSafe(int index, ByteBuf value, int start, int length) {
+    public boolean setSafe(int index, DrillBuf value, int start, int length) {
       boolean success;
       if(index >= varBinaryVector.getValueCapacity()) return false;
 
       if (usingDictionary) {
-        ByteBuf b = Unpooled.wrappedBuffer(currDictVal.toByteBuffer());
+        DrillBuf b = DrillBuf.wrapByteBuffer(currDictVal.toByteBuffer());
         int st=0;
         int len=currDictVal.length();
         VarBinaryHolder holder = new VarBinaryHolder();
@@ -309,14 +302,12 @@ public class VarLengthColumnReaders {
       nullableVarBinaryVector = v;
     }
 
-    public boolean setSafe(int index, ByteBuf value, int start, int length) {
+    public boolean setSafe(int index, DrillBuf value, int start, int length) {
       boolean success;
       if(index >= nullableVarBinaryVector.getValueCapacity()) return false;
 
       if (usingDictionary) {
-        ByteBuf b = Unpooled.wrappedBuffer(currDictVal.toByteBuffer());
-        int st=0;
-        int len=currDictVal.length();
+        DrillBuf b = DrillBuf.wrapByteBuffer(currDictVal.toByteBuffer());
         NullableVarBinaryHolder holder = new NullableVarBinaryHolder();
         holder.buffer=b;
         holder.start=0;

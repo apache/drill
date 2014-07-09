@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.record.selection;
 
-import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -33,7 +33,7 @@ public class SelectionVector2 implements Closeable{
 
   private final BufferAllocator allocator;
   private int recordCount;
-  private ByteBuf buffer = DeadBuf.DEAD_BUFFER;
+  private DrillBuf buffer = DeadBuf.DEAD_BUFFER;
 
   public static final int RECORD_SIZE = 2;
 
@@ -45,9 +45,9 @@ public class SelectionVector2 implements Closeable{
     return recordCount;
   }
 
-  public ByteBuf getBuffer()
+  public DrillBuf getBuffer()
   {
-      ByteBuf bufferHandle = this.buffer;
+      DrillBuf bufferHandle = this.buffer;
 
       /* Increment the ref count for this buffer */
       bufferHandle.retain();
@@ -60,7 +60,7 @@ public class SelectionVector2 implements Closeable{
       return bufferHandle;
   }
 
-  public void setBuffer(ByteBuf bufferHandle)
+  public void setBuffer(DrillBuf bufferHandle)
   {
       /* clear the existing buffer */
       clear();
@@ -70,12 +70,19 @@ public class SelectionVector2 implements Closeable{
   }
 
   public char getIndex(int index){
-    
     return buffer.getChar(index * RECORD_SIZE);
   }
 
   public void setIndex(int index, char value){
     buffer.setChar(index * RECORD_SIZE, value);
+  }
+
+  public long getDataAddr(){
+    return buffer.memoryAddress();
+  }
+
+  public void setIndex(int index, int value){
+    buffer.setChar(index, value);
   }
 
   public boolean allocateNew(int size){
@@ -100,7 +107,7 @@ public class SelectionVector2 implements Closeable{
     clear();
     return newSV;
   }
-  
+
   public void clear() {
     if (buffer != null && buffer != DeadBuf.DEAD_BUFFER) {
       buffer.release();
@@ -108,7 +115,7 @@ public class SelectionVector2 implements Closeable{
       recordCount = 0;
     }
   }
-  
+
   public void setRecordCount(int recordCount){
 //    logger.debug("Seting record count to {}", recordCount);
     this.recordCount = recordCount;

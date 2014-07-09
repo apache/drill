@@ -28,6 +28,8 @@
 
 package org.apache.drill.exec.expr.fn.impl.gcast;
 
+<#include "/@includes/vv_imports.ftl" />
+
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
@@ -35,10 +37,13 @@ import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.common.util.DecimalUtility;
+import org.apache.drill.exec.util.DecimalUtility;
 import org.apache.drill.exec.expr.annotations.Workspace;
+
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
 import io.netty.buffer.SwappedByteBuf;
+
 import java.nio.ByteBuffer;
 
 @SuppressWarnings("unused")
@@ -47,12 +52,11 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
     @Param ${type.from}Holder in;
     @Param BigIntHolder len;
-    @Workspace ByteBuf buffer;
+    @Inject DrillBuf buffer;
     @Output ${type.to}Holder out;
 
     public void setup(RecordBatch incoming) {
-        buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte[${type.bufferSize}]);
-        buffer = new io.netty.buffer.SwappedByteBuf(buffer);
+        buffer = buffer.reallocIfNeeded(${type.bufferSize});
     }
 
     public void eval() {
@@ -67,7 +71,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
             in.value *= -1;
         }
 
-        ${type.javatype} separator = (${type.javatype}) org.apache.drill.common.util.DecimalUtility.getPowerOfTen((int) in.scale);
+        ${type.javatype} separator = (${type.javatype}) org.apache.drill.exec.util.DecimalUtility.getPowerOfTen((int) in.scale);
 
         str.append(in.value / separator);
 
@@ -90,7 +94,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
              *
              * We missed the initial zeroes in the fractional part. Below logic accounts for this case
              */
-            str.append(org.apache.drill.common.util.DecimalUtility.toStringWithZeroes((in.value % separator), in.scale));
+            str.append(org.apache.drill.exec.util.DecimalUtility.toStringWithZeroes((in.value % separator), in.scale));
         }
 
         out.buffer = buffer;
@@ -107,6 +111,8 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
 package org.apache.drill.exec.expr.fn.impl.gcast;
 
+<#include "/@includes/vv_imports.ftl" />
+
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
@@ -114,9 +120,11 @@ import org.apache.drill.exec.expr.annotations.Output;
 import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.common.util.DecimalUtility;
+import org.apache.drill.exec.util.DecimalUtility;
 import org.apache.drill.exec.expr.annotations.Workspace;
+
 import io.netty.buffer.ByteBuf;
+
 import java.nio.ByteBuffer;
 
 @SuppressWarnings("unused")
@@ -125,28 +133,27 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
     @Param ${type.from}Holder in;
     @Param BigIntHolder len;
-    @Workspace ByteBuf buffer;
+    @Inject DrillBuf buffer;
     @Output ${type.to}Holder out;
 
     public void setup(RecordBatch incoming) {
-        buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte[${type.bufferSize}]);
-        buffer = new io.netty.buffer.SwappedByteBuf(buffer);
+        buffer = buffer.reallocIfNeeded((int) len.value);
     }
 
     public void eval() {
 
         StringBuilder str = new StringBuilder();
         int index = 0;
-        int fractionalStartIndex = ${type.arraySize} - org.apache.drill.common.util.DecimalUtility.roundUp(in.scale);
+        int fractionalStartIndex = ${type.arraySize} - org.apache.drill.exec.util.DecimalUtility.roundUp(in.scale);
 
         // Find the first non-zero value in the integer part of the decimal
-        while (index < fractionalStartIndex && in.getInteger(index) == 0)  {
+        while (index < fractionalStartIndex && in.getInteger(index, in.start, in.buffer) == 0)  {
             index++;
         }
 
 
         // If we have valid digits print '-' sign
-        if ((in.getSign() == true) && index < ${type.arraySize}) {
+        if ((in.getSign(in.start, in.buffer) == true) && index < ${type.arraySize}) {
             str.append("-");
         }
 
@@ -159,10 +166,10 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
 
         // convert the integer part
         while (index < fractionalStartIndex) {
-            int value =  in.getInteger(index++);
+            int value =  in.getInteger(index++, in.start, in.buffer);
 
             if (fillZeroes == true) {
-                str.append(org.apache.drill.common.util.DecimalUtility.toStringWithZeroes(value, org.apache.drill.common.util.DecimalUtility.MAX_DIGITS));
+                str.append(org.apache.drill.exec.util.DecimalUtility.toStringWithZeroes(value, org.apache.drill.exec.util.DecimalUtility.MAX_DIGITS));
             } else {
                 str.append(value);
                 fillZeroes = true;
@@ -178,25 +185,25 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc {
              * as it might have padding that needs to be stripped
              */
             while (fractionalStartIndex < ${type.arraySize} - 1) {
-                int value = in.getInteger(fractionalStartIndex++);
+                int value = in.getInteger(fractionalStartIndex++, in.start, in.buffer);
 
                 // Fill zeroes at the beginning of the decimal digit
-                str.append(org.apache.drill.common.util.DecimalUtility.toStringWithZeroes(value, org.apache.drill.common.util.DecimalUtility.MAX_DIGITS));
+                str.append(org.apache.drill.exec.util.DecimalUtility.toStringWithZeroes(value, org.apache.drill.exec.util.DecimalUtility.MAX_DIGITS));
             }
 
             // Last decimal digit, strip the extra zeroes we may have padded
-            int actualDigits = in.scale % org.apache.drill.common.util.DecimalUtility.MAX_DIGITS;
+            int actualDigits = in.scale % org.apache.drill.exec.util.DecimalUtility.MAX_DIGITS;
 
-            int lastFractionalDigit = in.getInteger(${type.arraySize} - 1);
+            int lastFractionalDigit = in.getInteger(${type.arraySize} - 1, in.start, in.buffer);
 
             if (actualDigits != 0) {
 
                 // Strip padded zeroes at the end that is not part of the scale
-                lastFractionalDigit /= (int) (org.apache.drill.common.util.DecimalUtility.getPowerOfTen((int) (org.apache.drill.common.util.DecimalUtility.MAX_DIGITS - actualDigits)));
-                str.append(org.apache.drill.common.util.DecimalUtility.toStringWithZeroes(lastFractionalDigit, actualDigits));
+                lastFractionalDigit /= (int) (org.apache.drill.exec.util.DecimalUtility.getPowerOfTen((int) (org.apache.drill.exec.util.DecimalUtility.MAX_DIGITS - actualDigits)));
+                str.append(org.apache.drill.exec.util.DecimalUtility.toStringWithZeroes(lastFractionalDigit, actualDigits));
             } else {
                 // Last digit does not have any padding print as is
-                str.append(org.apache.drill.common.util.DecimalUtility.toStringWithZeroes(lastFractionalDigit, org.apache.drill.common.util.DecimalUtility.MAX_DIGITS));
+                str.append(org.apache.drill.exec.util.DecimalUtility.toStringWithZeroes(lastFractionalDigit, org.apache.drill.exec.util.DecimalUtility.MAX_DIGITS));
             }
 
 

@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.memory;
 
-import io.netty.buffer.AccountingByteBuf;
+import io.netty.buffer.DrillBuf;
 import io.netty.buffer.ByteBufAllocator;
 
 import java.io.Closeable;
@@ -38,7 +38,7 @@ public interface BufferAllocator extends Closeable {
    *          The size in bytes.
    * @return A new ByteBuf.
    */
-  public abstract AccountingByteBuf buffer(int size);
+  public abstract DrillBuf buffer(int size);
 
   /**
    * Allocate a new or reused buffer within provided range. Note that the buffer may technically be larger than the
@@ -48,7 +48,7 @@ public interface BufferAllocator extends Closeable {
    * @param maxSize The maximum size in bytes.
    * @return A new ByteBuf.
    */
-  public abstract AccountingByteBuf buffer(int minSize, int maxSize);
+  public abstract DrillBuf buffer(int minSize, int maxSize);
 
   public abstract ByteBufAllocator getUnderlyingAllocator();
 
@@ -60,7 +60,7 @@ public interface BufferAllocator extends Closeable {
    * @param buf
    * @return false if over allocation.
    */
-  public boolean takeOwnership(AccountingByteBuf buf) ;
+  public boolean takeOwnership(DrillBuf buf) ;
 
 
   public PreAllocator getNewPreAllocator();
@@ -71,7 +71,7 @@ public interface BufferAllocator extends Closeable {
   public interface PreAllocator {
     public boolean preAllocate(int bytes);
 
-    public AccountingByteBuf getAllocation();
+    public DrillBuf getAllocation();
   }
 
   /**
@@ -91,4 +91,5 @@ public interface BufferAllocator extends Closeable {
 
   public abstract long getAllocatedMemory();
 
+  public DrillBuf getEmpty();
 }

@@ -15,18 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.common.util;
+package org.apache.drill.exec.util;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
-import org.apache.drill.common.types.TypeProtos;
+import io.netty.buffer.DrillBuf;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.math.RoundingMode;
 import java.util.Arrays;
 
-public class DecimalUtility {
+import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.util.CoreDecimalUtility;
+
+public class DecimalUtility extends CoreDecimalUtility{
 
     public final static int MAX_DIGITS = 9;
     public final static int DIGITS_BASE = 1000000000;
@@ -140,29 +140,35 @@ public class DecimalUtility {
         return str;
     }
 
-    public static BigDecimal getBigDecimalFromIntermediate(ByteBuf data, int startIndex, int nDecimalDigits, int scale) {
+    public static BigDecimal getBigDecimalFromIntermediate(DrillBuf data, int startIndex, int nDecimalDigits, int scale) {
 
         // In the intermediate representation we don't pad the scale with zeroes, so set truncate = false
-        return getBigDecimalFromByteBuf(data, startIndex, nDecimalDigits, scale, false);
+        return getBigDecimalFromDrillBuf(data, startIndex, nDecimalDigits, scale, false);
     }
 
-    public static BigDecimal getBigDecimalFromSparse(ByteBuf data, int startIndex, int nDecimalDigits, int scale) {
+    public static BigDecimal getBigDecimalFromSparse(DrillBuf data, int startIndex, int nDecimalDigits, int scale) {
 
         // In the sparse representation we pad the scale with zeroes for ease of arithmetic, need to truncate
-        return getBigDecimalFromByteBuf(data, startIndex, nDecimalDigits, scale, true);
+        return getBigDecimalFromDrillBuf(data, startIndex, nDecimalDigits, scale, true);
     }
 
+    public static BigDecimal getBigDecimalFromDrillBuf(DrillBuf bytebuf, int start, int length, int scale) {
+      byte[] value = new byte[length];
+      bytebuf.getBytes(start, value, 0, length);
+      BigInteger unscaledValue = new BigInteger(value);
+      return new BigDecimal(unscaledValue, scale);
+    }
 
-    /* Create a BigDecimal object using the data in the ByteBuf.
+    /* Create a BigDecimal object using the data in the DrillBuf.
      * This function assumes that data is provided in a non-dense format
      * It works on both sparse and intermediate representations.
      */
-    public static BigDecimal getBigDecimalFromByteBuf(ByteBuf data, int startIndex, int nDecimalDigits, int scale, boolean truncateScale) {
+    public static BigDecimal getBigDecimalFromDrillBuf(DrillBuf data, int startIndex, int nDecimalDigits, int scale, boolean truncateScale) {
 
         // For sparse decimal type we have padded zeroes at the end, strip them while converting to BigDecimal.
         int actualDigits;
 
-        // Initialize the BigDecimal, first digit in the ByteBuf has the sign so mask it out
+        // Initialize the BigDecimal, first digit in the DrillBuf has the sign so mask it out
         BigInteger decimalDigits = BigInteger.valueOf((data.getInt(startIndex)) & 0x7FFFFFFF);
 
         BigInteger base = BigInteger.valueOf(DIGITS_BASE);
@@ -192,9 +198,9 @@ public class DecimalUtility {
 
     /* This function returns a BigDecimal object from the dense decimal representation.
      * First step is to convert the dense representation into an intermediate representation
-     * and then invoke getBigDecimalFromByteBuf() to get the BigDecimal object
+     * and then invoke getBigDecimalFromDrillBuf() to get the BigDecimal object
      */
-    public static BigDecimal getBigDecimalFromDense(ByteBuf data, int startIndex, int nDecimalDigits, int scale, int maxPrecision, int width) {
+    public static BigDecimal getBigDecimalFromDense(DrillBuf data, int startIndex, int nDecimalDigits, int scale, int maxPrecision, int width) {
 
         /* This method converts the dense representation to
          * an intermediate representation. The intermediate
@@ -257,16 +263,18 @@ public class DecimalUtility {
         if (sign == true) {
             intermediateBytes[0] = (byte) (intermediateBytes[0] | 0x80);
         }
+        DrillBuf intermediate = data.getAllocator().buffer(intermediateBytes.length);
+        intermediate.setBytes(0, intermediateBytes);
 
-        ByteBuf intermediateData = Unpooled.wrappedBuffer(intermediateBytes);
-
-        return getBigDecimalFromIntermediate(intermediateData, 0, nDecimalDigits + 1, scale);
+        BigDecimal ret = getBigDecimalFromIntermediate(intermediate, 0, nDecimalDigits + 1, scale);
+        intermediate.release();
+        return ret;
     }
 
     /*
      * Function converts the BigDecimal and stores it in out internal sparse representation
      */
-    public static void getSparseFromBigDecimal(BigDecimal input, ByteBuf data, int startIndex, int scale, int precision, int nDecimalDigits) {
+    public static void getSparseFromBigDecimal(BigDecimal input, DrillBuf data, int startIndex, int scale, int precision, int nDecimalDigits) {
 
         // Initialize the buffer
         for (int i = 0; i < nDecimalDigits; i++) {
@@ -316,7 +324,7 @@ public class DecimalUtility {
         destIndex = nDecimalDigits - 1;
 
         while (scale > 0) {
-            // Get next set of MAX_DIGITS (9) store it in the ByteBuf
+            // Get next set of MAX_DIGITS (9) store it in the DrillBuf
             fractionalPart = fractionalPart.movePointLeft(MAX_DIGITS);
             BigDecimal temp = fractionalPart.remainder(BigDecimal.ONE);
 
@@ -333,12 +341,7 @@ public class DecimalUtility {
         }
 
     }
-    public static int getDecimal9FromBigDecimal(BigDecimal input, int scale, int precision) {
-        // Truncate/ or pad to set the input to the correct scale
-        input = input.setScale(scale, BigDecimal.ROUND_HALF_UP);
 
-        return (input.unscaledValue().intValue());
-    }
 
     public static long getDecimal18FromBigDecimal(BigDecimal input, int scale, int precision) {
         // Truncate or pad to set the input to the correct scale
@@ -356,7 +359,7 @@ public class DecimalUtility {
     }
 
 
-    public static int compareDenseBytes(ByteBuf left, int leftStart, boolean leftSign, ByteBuf right, int rightStart, boolean rightSign, int width) {
+    public static int compareDenseBytes(DrillBuf left, int leftStart, boolean leftSign, DrillBuf right, int rightStart, boolean rightSign, int width) {
 
       int invert = 1;
 
@@ -392,7 +395,7 @@ public class DecimalUtility {
       return cmp;
     }
 
-    public static int getIntegerFromSparseBuffer(ByteBuf buffer, int start, int index) {
+    public static int getIntegerFromSparseBuffer(DrillBuf buffer, int start, int index) {
       int value = buffer.getInt(start + (index * 4));
 
       if (index == 0) {
@@ -402,11 +405,11 @@ public class DecimalUtility {
       return value;
     }
 
-    public static void setInteger(ByteBuf buffer, int start, int index, int value) {
+    public static void setInteger(DrillBuf buffer, int start, int index, int value) {
       buffer.setInt(start + (index * 4), value);
     }
 
-    public static int compareSparseBytes(ByteBuf left, int leftStart, boolean leftSign, int leftScale, int leftPrecision, ByteBuf right, int rightStart, boolean rightSign, int rightPrecision, int rightScale, int width, int nDecimalDigits, boolean absCompare) {
+    public static int compareSparseBytes(DrillBuf left, int leftStart, boolean leftSign, int leftScale, int leftPrecision, DrillBuf right, int rightStart, boolean rightSign, int rightPrecision, int rightScale, int width, int nDecimalDigits, boolean absCompare) {
 
       int invert = 1;
 
@@ -424,18 +427,18 @@ public class DecimalUtility {
       int cmp = compareSparseBytesInner(left, leftStart, leftSign, leftScale, leftPrecision, right, rightStart, rightSign, rightPrecision, rightScale, width, nDecimalDigits);
       return cmp * invert;
     }
-    public static int compareSparseBytesInner(ByteBuf left, int leftStart, boolean leftSign, int leftScale, int leftPrecision, ByteBuf right, int rightStart, boolean rightSign, int rightPrecision, int rightScale, int width, int nDecimalDigits) {
+    public static int compareSparseBytesInner(DrillBuf left, int leftStart, boolean leftSign, int leftScale, int leftPrecision, DrillBuf right, int rightStart, boolean rightSign, int rightPrecision, int rightScale, int width, int nDecimalDigits) {
       /* compute the number of integer digits in each decimal */
       int leftInt  = leftPrecision - leftScale;
       int rightInt = rightPrecision - rightScale;
 
       /* compute the number of indexes required for storing integer digits */
-      int leftIntRoundedUp = org.apache.drill.common.util.DecimalUtility.roundUp(leftInt);
-      int rightIntRoundedUp = org.apache.drill.common.util.DecimalUtility.roundUp(rightInt);
+      int leftIntRoundedUp = org.apache.drill.exec.util.DecimalUtility.roundUp(leftInt);
+      int rightIntRoundedUp = org.apache.drill.exec.util.DecimalUtility.roundUp(rightInt);
 
       /* compute number of indexes required for storing scale */
-      int leftScaleRoundedUp = org.apache.drill.common.util.DecimalUtility.roundUp(leftScale);
-      int rightScaleRoundedUp = org.apache.drill.common.util.DecimalUtility.roundUp(rightScale);
+      int leftScaleRoundedUp = org.apache.drill.exec.util.DecimalUtility.roundUp(leftScale);
+      int rightScaleRoundedUp = org.apache.drill.exec.util.DecimalUtility.roundUp(rightScale);
 
       /* compute index of the most significant integer digits */
       int leftIndex1 = nDecimalDigits - leftScaleRoundedUp - leftIntRoundedUp;
@@ -559,17 +562,9 @@ public class DecimalUtility {
       return new BigDecimal(unscaledValue, scale);
     }
 
-
-    public static BigDecimal getBigDecimalFromByteBuf(ByteBuf bytebuf, int start, int length, int scale) {
-      byte[] value = new byte[length];
-      bytebuf.getBytes(start, value, 0, length);
-      BigInteger unscaledValue = new BigInteger(value);
-      return new BigDecimal(unscaledValue, scale);
-    }
-
-  public static void roundDecimal(ByteBuf result, int start, int nDecimalDigits, int desiredScale, int currentScale) {
-    int newScaleRoundedUp  = org.apache.drill.common.util.DecimalUtility.roundUp(desiredScale);
-    int origScaleRoundedUp = org.apache.drill.common.util.DecimalUtility.roundUp(currentScale);
+  public static void roundDecimal(DrillBuf result, int start, int nDecimalDigits, int desiredScale, int currentScale) {
+    int newScaleRoundedUp  = org.apache.drill.exec.util.DecimalUtility.roundUp(desiredScale);
+    int origScaleRoundedUp = org.apache.drill.exec.util.DecimalUtility.roundUp(currentScale);
 
     if (desiredScale < currentScale) {
 
@@ -579,9 +574,9 @@ public class DecimalUtility {
       int truncatedScaleIndex = desiredScale + 1;
       if (truncatedScaleIndex <= currentScale) {
         int extractDigitIndex = nDecimalDigits - origScaleRoundedUp -1;
-        extractDigitIndex += org.apache.drill.common.util.DecimalUtility.roundUp(truncatedScaleIndex);
+        extractDigitIndex += org.apache.drill.exec.util.DecimalUtility.roundUp(truncatedScaleIndex);
         int extractDigit = getIntegerFromSparseBuffer(result, start, extractDigitIndex);
-        int temp = org.apache.drill.common.util.DecimalUtility.MAX_DIGITS - (truncatedScaleIndex % org.apache.drill.common.util.DecimalUtility.MAX_DIGITS);
+        int temp = org.apache.drill.exec.util.DecimalUtility.MAX_DIGITS - (truncatedScaleIndex % org.apache.drill.exec.util.DecimalUtility.MAX_DIGITS);
         if (temp != 0) {
           extractDigit = extractDigit / (int) (Math.pow(10, temp));
         }
@@ -609,8 +604,8 @@ public class DecimalUtility {
       }
 
       // We truncated the decimal digit. Now we need to truncate within the base 1 billion fractional digit
-      int truncateFactor = org.apache.drill.common.util.DecimalUtility.MAX_DIGITS - (desiredScale % org.apache.drill.common.util.DecimalUtility.MAX_DIGITS);
-      if (truncateFactor != org.apache.drill.common.util.DecimalUtility.MAX_DIGITS) {
+      int truncateFactor = org.apache.drill.exec.util.DecimalUtility.MAX_DIGITS - (desiredScale % org.apache.drill.exec.util.DecimalUtility.MAX_DIGITS);
+      if (truncateFactor != org.apache.drill.exec.util.DecimalUtility.MAX_DIGITS) {
         truncateFactor = (int) Math.pow(10, truncateFactor);
         int fractionalDigits = getIntegerFromSparseBuffer(result, start, nDecimalDigits - 1);
         fractionalDigits /= truncateFactor;
@@ -621,7 +616,7 @@ public class DecimalUtility {
       if (roundUp == true) {
         srcIndex = nDecimalDigits - 1;
         int carry;
-        if (truncateFactor != org.apache.drill.common.util.DecimalUtility.MAX_DIGITS) {
+        if (truncateFactor != org.apache.drill.exec.util.DecimalUtility.MAX_DIGITS) {
           carry = truncateFactor;
         } else {
           carry = 1;
@@ -631,9 +626,9 @@ public class DecimalUtility {
           int value = getIntegerFromSparseBuffer(result, start, srcIndex);
           value += carry;
 
-          if (value >= org.apache.drill.common.util.DecimalUtility.DIGITS_BASE) {
-            setInteger(result, start, srcIndex--, value % org.apache.drill.common.util.DecimalUtility.DIGITS_BASE);
-            carry = value / org.apache.drill.common.util.DecimalUtility.DIGITS_BASE;
+          if (value >= org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE) {
+            setInteger(result, start, srcIndex--, value % org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE);
+            carry = value / org.apache.drill.exec.util.DecimalUtility.DIGITS_BASE;
           } else {
             setInteger(result, start, srcIndex--, value);
             carry = 0;
@@ -669,44 +664,6 @@ public class DecimalUtility {
     }
   }
 
-  /*
-   * Function returns the Minor decimal type given the precision
-   */
-  public static TypeProtos.MinorType getDecimalDataType(int precision) {
-    if (precision <= 9) {
-      return TypeProtos.MinorType.DECIMAL9;
-    } else if (precision <= 18) {
-      return TypeProtos.MinorType.DECIMAL18;
-    } else if (precision <= 28) {
-      return TypeProtos.MinorType.DECIMAL28SPARSE;
-    } else {
-      return TypeProtos.MinorType.DECIMAL38SPARSE;
-    }
-  }
-
-  public static int getMaxPrecision(TypeProtos.MinorType decimalType) {
-    if (decimalType == TypeProtos.MinorType.DECIMAL9) {
-      return 9;
-    } else if (decimalType == TypeProtos.MinorType.DECIMAL18) {
-      return 18;
-    } else if (decimalType == TypeProtos.MinorType.DECIMAL28SPARSE) {
-      return 28;
-    } else if (decimalType == TypeProtos.MinorType.DECIMAL38SPARSE) {
-      return 38;
-    }
-    return 0;
-  }
-
-
-  /*
-   * Given a precision it provides the max precision of that decimal data type;
-   * For eg: given the precision 12, we would use DECIMAL18 to store the data
-   * which has a max precision range of 18 digits
-   */
-  public static int getPrecisionRange(int precision) {
-    return getMaxPrecision(getDecimalDataType(precision));
-  }
-
   public static int getFirstFractionalDigit(int decimal, int scale) {
     if (scale == 0) {
       return 0;
@@ -723,7 +680,7 @@ public class DecimalUtility {
     return (int) (Math.abs(temp % 10));
   }
 
-  public static int getFirstFractionalDigit(ByteBuf data, int scale, int start, int nDecimalDigits) {
+  public static int getFirstFractionalDigit(DrillBuf data, int scale, int start, int nDecimalDigits) {
     if (scale == 0) {
       return 0;
     }

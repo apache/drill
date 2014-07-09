@@ -20,6 +20,7 @@ package org.apache.drill.exec.record;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.ByteBufProcessor;
+import io.netty.buffer.DrillBuf;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,14 +33,14 @@ import java.nio.charset.Charset;
 
 public class DeadBuf extends ByteBuf {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DeadBuf.class);
-  
+
   private static final String ERROR_MESSAGE = "Attemped to access a DeadBuf. This would happen if you attempted to interact with a buffer that has been moved or not yet initialized.";
-  
-  public static final DeadBuf DEAD_BUFFER = new DeadBuf();
+
+  public static final DrillBuf DEAD_BUFFER = null;
 
   private DeadBuf(){}
 
-  
+
   @Override
   public boolean isReadable(int size) {
     throw new UnsupportedOperationException(ERROR_MESSAGE);
@@ -654,7 +655,7 @@ public class DeadBuf extends ByteBuf {
 
   }
 
-  
+
   @Override
   public int bytesBefore(byte value) {
     throw new UnsupportedOperationException(ERROR_MESSAGE);
@@ -667,14 +668,14 @@ public class DeadBuf extends ByteBuf {
 
   }
 
-  
+
   @Override
   public int bytesBefore(int index, int length, byte value) {
     throw new UnsupportedOperationException(ERROR_MESSAGE);
 
   }
 
-  
+
   @Override
   public ByteBuf copy() {
     throw new UnsupportedOperationException(ERROR_MESSAGE);
@@ -839,6 +840,6 @@ public class DeadBuf extends ByteBuf {
   public String toString() {
     return null;
   }
-  
-  
+
+
 }

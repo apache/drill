@@ -59,7 +59,7 @@ public class JSONRecordReader2 implements RecordReader{
                           List<SchemaPath> columns) throws OutOfMemoryException {
     this.hadoopPath = new Path(inputPath);
     this.fileSystem = fileSystem;
-    this.fragmentContext=fragmentContext;
+    this.fragmentContext = fragmentContext;
   }
 
   @Override
@@ -69,9 +69,9 @@ public class JSONRecordReader2 implements RecordReader{
       JsonRecordSplitter splitter = new UTF8JsonRecordSplitter(stream);
       this.writer = new VectorContainerWriter(output);
       this.mutator = output;
-      jsonReader = new JsonReaderWithState(splitter);
+      jsonReader = new JsonReaderWithState(splitter, fragmentContext.getManagedBuffer());
     }catch(Exception e){
-      handleAndRaise("Failure reading JSON file.", e);
+      throw new ExecutionSetupException("Failure reading JSON file.", e);
     }
   }
 

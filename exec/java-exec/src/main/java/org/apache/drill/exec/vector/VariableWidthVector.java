@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.vector;
 
-import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
 
 public interface VariableWidthVector extends ValueVector{
 
@@ -28,15 +28,13 @@ public interface VariableWidthVector extends ValueVector{
    * @param valueCount   Number of values in the vector.
    */
   public void allocateNew(int totalBytes, int valueCount);
-  
+
   /**
    * Provide the maximum amount of variable width bytes that can be stored int his vector.
    * @return
    */
   public int getByteCapacity();
 
-  public int getCurrentSizeInBytes();
-  
   /**
    * Load the records in the provided buffer based on the given number of values.
    * @param dataBytes   The number of bytes associated with the data array.
@@ -44,8 +42,8 @@ public interface VariableWidthVector extends ValueVector{
    * @param buf Incoming buffer.
    * @return The number of bytes of the buffer that were consumed.
    */
-  public int load(int dataBytes, int valueCount, ByteBuf buf);
-  
+  public int load(int dataBytes, int valueCount, DrillBuf buf);
+
   public abstract VariableWidthMutator getMutator();
 
   public abstract VariableWidthAccessor getAccessor();
@@ -53,6 +51,8 @@ public interface VariableWidthVector extends ValueVector{
   public interface VariableWidthAccessor extends Accessor {
     public int getValueLength(int index);
   }
+
+  public int getCurrentSizeInBytes();
 
   public interface VariableWidthMutator extends Mutator {
     public boolean setValueLengthSafe(int index, int length);

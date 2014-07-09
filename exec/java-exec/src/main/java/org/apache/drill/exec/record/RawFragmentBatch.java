@@ -18,6 +18,7 @@
 package org.apache.drill.exec.record;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
 
 import org.apache.drill.exec.proto.BitData.FragmentRecordBatch;
 import org.apache.drill.exec.rpc.RemoteConnection;
@@ -29,10 +30,10 @@ public class RawFragmentBatch {
 
   final RemoteConnection connection;
   final FragmentRecordBatch header;
-  final ByteBuf body;
+  final DrillBuf body;
   final ResponseSender sender;
 
-  public RawFragmentBatch(RemoteConnection connection, FragmentRecordBatch header, ByteBuf body, ResponseSender sender) {
+  public RawFragmentBatch(RemoteConnection connection, FragmentRecordBatch header, DrillBuf body, ResponseSender sender) {
     super();
     this.header = header;
     this.body = body;
@@ -45,7 +46,7 @@ public class RawFragmentBatch {
     return header;
   }
 
-  public ByteBuf getBody() {
+  public DrillBuf getBody() {
     return body;
   }
 

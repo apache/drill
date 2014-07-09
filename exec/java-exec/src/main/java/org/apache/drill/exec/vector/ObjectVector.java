@@ -18,6 +18,8 @@
 package org.apache.drill.exec.vector;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
+
 import org.apache.drill.common.expression.FieldReference;
 import org.apache.drill.exec.expr.holders.ObjectHolder;
 import org.apache.drill.exec.memory.BufferAllocator;
@@ -164,12 +166,12 @@ public class ObjectVector extends BaseValueVector{
   }
 
   @Override
-  public ByteBuf[] getBuffers() {
+  public DrillBuf[] getBuffers() {
     throw new UnsupportedOperationException("ObjectVector does not support this");
   }
 
   @Override
-  public void load(UserBitShared.SerializedField metadata, ByteBuf buffer) {
+  public void load(UserBitShared.SerializedField metadata, DrillBuf buffer) {
     throw new UnsupportedOperationException("ObjectVector does not support this");
   }
 

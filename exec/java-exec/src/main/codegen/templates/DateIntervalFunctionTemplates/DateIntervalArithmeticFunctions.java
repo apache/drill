@@ -63,12 +63,12 @@ public class ${datetype}${intervaltype}Functions {
     <#if intervaltype == "Interval">
     ${temp}.addMonths(${right}.months <#if op == '-'> * -1 </#if>);
     ${temp}.addDays(${right}.days <#if op == '-'> * -1 </#if>);
-    ${temp}.add(${right}.milliSeconds <#if op == '-'> * -1 </#if>);
+    ${temp}.add(${right}.milliseconds <#if op == '-'> * -1 </#if>);
     <#elseif intervaltype == "IntervalYear">
     ${temp}.addMonths(${right}.value <#if op == '-'> * -1 </#if>);
     <#elseif intervaltype == "IntervalDay">
     ${temp}.addDays(${right}.days <#if op == '-'> * -1 </#if>);
-    ${temp}.add(${right}.milliSeconds <#if op == '-'> * -1 </#if>);
+    ${temp}.add(${right}.milliseconds <#if op == '-'> * -1 </#if>);
     <#elseif intervaltype == "Int" || intervaltype == "BigInt">
     ${temp}.addDays((int) ${right}.value <#if op == '-'> * -1 </#if>);
     </#if>
@@ -184,7 +184,7 @@ public class ${datetype}${intervaltype}Functions {
     // Needn't add anything to time from interval year data type. Output is same as input
     ${output} = ${left}.value;
     <#else>
-    ${output} = ${left}.value ${op} ${right}.milliSeconds;
+    ${output} = ${left}.value ${op} ${right}.milliseconds;
     // Wrap around 24 hour clock if we exceeded it while adding the time component
     ${output} = ${output} % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis;
     </#if>

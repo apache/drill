@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.expr;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -80,7 +81,13 @@ public class EvaluationVisitor {
   }
 
   public HoldingContainer addExpr(LogicalExpression e, ClassGenerator<?> generator) {
-    Set<LogicalExpression> constantBoundaries = ConstantExpressionIdentifier.getConstantExpressionSet(e);
+
+    Set<LogicalExpression> constantBoundaries;
+    if(generator.getMappingSet().hasEmbeddedConstant()){
+      constantBoundaries = Collections.emptySet();
+    }else{
+      constantBoundaries = ConstantExpressionIdentifier.getConstantExpressionSet(e);
+    }
     return e.accept(new ConstantFilter(constantBoundaries), generator);
   }
 
@@ -93,17 +100,17 @@ public class EvaluationVisitor {
     }
 
     @Override
-    public HoldingContainer visitBooleanOperator(BooleanOperator op,         
+    public HoldingContainer visitBooleanOperator(BooleanOperator op,
         ClassGenerator<?> generator) throws RuntimeException {
       if (op.getName().equals("booleanAnd")) {
         return visitBooleanAnd(op, generator);
       }else if(op.getName().equals("booleanOr")) {
-        return visitBooleanOr(op, generator);       
+        return visitBooleanOr(op, generator);
       } else {
         throw new UnsupportedOperationException("BooleanOperator can only be booleanAnd, booleanOr. You are using " + op.getName());
       }
     }
-    
+
     @Override
     public HoldingContainer visitFunctionHolderExpression(FunctionHolderExpression holderExpr,
         ClassGenerator<?> generator) throws RuntimeException {
@@ -290,16 +297,9 @@ public class EvaluationVisitor {
           return outputContainer;
         }
       } else {
-        String setMethod = e.isSafe() ? "setSafe" : "set";
 
-        String isSafeMethod = "isSafe";
-
-        JInvocation setMeth;
-        if (Types.usesHolderForGet(inputContainer.getMajorType())) {
-          setMeth = vv.invoke("getMutator").invoke(setMethod).arg(outIndex).arg(inputContainer.getHolder());
-        } else {
-          setMeth = vv.invoke("getMutator").invoke(setMethod).arg(outIndex).arg(inputContainer.getValue());
-        }
+        final JInvocation setMeth = GetSetVectorHelper.write(e.getChild().getMajorType(), vv, inputContainer, outIndex, e.isSafe() ? "setSafe" : "set");
+        final String isSafeMethod = "isSafe";
 
         if (e.isSafe()) {
           HoldingContainer outputContainer = generator.declare(Types.REQUIRED_BIT);
@@ -356,24 +356,9 @@ public class EvaluationVisitor {
       }
 
       if (!hasReadPath && !complex) {
-        JInvocation getValueAccessor = vv1.invoke("getAccessor").invoke("get");
-        JInvocation getValueAccessor2 = vv1.invoke("getAccessor");
         JBlock eval = new JBlock();
-
-        if (primitive) {
-          eval.assign(out.getValue(), getValueAccessor.arg(indexVariable));
-        } else {
-          eval.add(getValueAccessor.arg(indexVariable).arg(out.getHolder()));
-        }
-
-        if (out.isOptional()) {
-          JBlock blk = generator.getEvalBlock();
-          blk.assign(out.getIsSet(), getValueAccessor2.invoke("isSet").arg(indexVariable));
-          JConditional jc = blk._if(out.getIsSet().eq(JExpr.lit(1)));
-          jc._then().add(eval);
-        } else {
-          generator.getEvalBlock().add(eval);
-        }
+        GetSetVectorHelper.read(e.getMajorType(),  vv1, eval, out, generator.getModel(), indexVariable);
+        generator.getEvalBlock().add(eval);
 
       } else {
         JExpression vector = e.isSuperReader() ? vv1.component(componentVariable) : vv1;
@@ -419,7 +404,7 @@ public class EvaluationVisitor {
             JBlock ifNoVal = eval._if(desiredIndex.ne(currentIndex))._then().block();
             if (out.isOptional()) {
               ifNoVal.assign(out.getIsSet(), JExpr.lit(0));
-            }            
+            }
             ifNoVal.assign(isNull,  JExpr.lit(1));
             ifNoVal._break(label);
 
@@ -503,8 +488,9 @@ public class EvaluationVisitor {
       JType holderType = generator.getHolderType(majorType);
       JVar var = generator.declareClassField("string", holderType);
       JExpression stringLiteral = JExpr.lit(e.value);
+      JExpression buffer = generator.getMappingSet().getIncoming().invoke("getContext").invoke("getManagedBuffer");
       setup.assign(var,
-          generator.getModel().ref(ValueHolderHelper.class).staticInvoke("getVarCharHolder").arg(stringLiteral));
+          generator.getModel().ref(ValueHolderHelper.class).staticInvoke("getVarCharHolder").arg(buffer).arg(stringLiteral));
       return new HoldingContainer(majorType, var, null, null);
     }
 
@@ -601,20 +587,20 @@ public class EvaluationVisitor {
       FunctionCall fc = new FunctionCall(convertFunctionName, newArgs, e.getPosition());
       return fc.accept(this, value);
     }
-    
+
     private HoldingContainer visitBooleanAnd(BooleanOperator op,
         ClassGenerator<?> generator) {
-      
+
       HoldingContainer out = generator.declare(op.getMajorType());
-      
+
       JLabel label = generator.getEvalBlockLabel("AndOP");
       JBlock eval = generator.getEvalBlock().block();  // enter into nested block
       generator.nestEvalBlock(eval);
 
       HoldingContainer arg = null;
-      
+
       JExpression e = null;
-      
+
       //  value of boolean "and" when one side is null
       //    p       q     p and q
       //    true    null     null
@@ -624,57 +610,57 @@ public class EvaluationVisitor {
       //    null    null     null
       for (int i = 0; i < op.args.size(); i++) {
         arg = op.args.get(i).accept(this, generator);
-        
+
         JBlock earlyExit = null;
         if (arg.isOptional()) {
-          earlyExit = eval._if(arg.getIsSet().eq(JExpr.lit(1)).cand(arg.getValue().ne(JExpr.lit(1))))._then();          
+          earlyExit = eval._if(arg.getIsSet().eq(JExpr.lit(1)).cand(arg.getValue().ne(JExpr.lit(1))))._then();
           if(e == null){
             e = arg.getIsSet();
           }else{
             e = e.mul(arg.getIsSet());
-          }            
+          }
         } else {
-          earlyExit = eval._if(arg.getValue().ne(JExpr.lit(1)))._then();               
+          earlyExit = eval._if(arg.getValue().ne(JExpr.lit(1)))._then();
         }
-        
+
         if (out.isOptional()) {
           earlyExit.assign(out.getIsSet(), JExpr.lit(1));
-        } 
-        
-        earlyExit.assign(out.getValue(),  JExpr.lit(0));             
-        earlyExit._break(label);            
+        }
+
+        earlyExit.assign(out.getValue(),  JExpr.lit(0));
+        earlyExit._break(label);
       }
-      
+
       if (out.isOptional()) {
         assert (e != null);
-        
+
         JConditional notSetJC = eval._if(e.eq(JExpr.lit(0)));
         notSetJC._then().assign(out.getIsSet(), JExpr.lit(0));
-        
+
         JBlock setBlock = notSetJC._else().block();
         setBlock.assign(out.getIsSet(), JExpr.lit(1));
         setBlock.assign(out.getValue(), JExpr.lit(1));
       } else {
-        assert (e == null);            
+        assert (e == null);
         eval.assign(out.getValue(), JExpr.lit(1)) ;
       }
-      
-      generator.unNestEvalBlock();     // exit from nested block 
-      
+
+      generator.unNestEvalBlock();     // exit from nested block
+
       return out;
     }
-    
+
     private HoldingContainer visitBooleanOr(BooleanOperator op,
         ClassGenerator<?> generator) {
-      
+
       HoldingContainer out = generator.declare(op.getMajorType());
-      
+
       JLabel label = generator.getEvalBlockLabel("OrOP");
       JBlock eval = generator.getEvalBlock().block();
-      generator.nestEvalBlock(eval);   // enter into nested block. 
+      generator.nestEvalBlock(eval);   // enter into nested block.
 
       HoldingContainer arg = null;
-      
+
       JExpression e = null;
 
       //  value of boolean "or" when one side is null
@@ -684,49 +670,49 @@ public class EvaluationVisitor {
       //    null    true     true
       //    null    false    null
       //    null    null     null
-      
+
       for (int i = 0; i < op.args.size(); i++) {
         arg = op.args.get(i).accept(this, generator);
-        
+
         JBlock earlyExit = null;
         if (arg.isOptional()) {
-          earlyExit = eval._if(arg.getIsSet().eq(JExpr.lit(1)).cand(arg.getValue().eq(JExpr.lit(1))))._then();          
+          earlyExit = eval._if(arg.getIsSet().eq(JExpr.lit(1)).cand(arg.getValue().eq(JExpr.lit(1))))._then();
           if(e == null){
             e = arg.getIsSet();
           }else{
             e = e.mul(arg.getIsSet());
-          }            
+          }
         } else {
-          earlyExit = eval._if(arg.getValue().eq(JExpr.lit(1)))._then();               
+          earlyExit = eval._if(arg.getValue().eq(JExpr.lit(1)))._then();
         }
-        
+
         if (out.isOptional()) {
           earlyExit.assign(out.getIsSet(), JExpr.lit(1));
-        } 
-        
-        earlyExit.assign(out.getValue(),  JExpr.lit(1));             
-        earlyExit._break(label);            
+        }
+
+        earlyExit.assign(out.getValue(),  JExpr.lit(1));
+        earlyExit._break(label);
       }
-      
+
       if (out.isOptional()) {
         assert (e != null);
-        
+
         JConditional notSetJC = eval._if(e.eq(JExpr.lit(0)));
         notSetJC._then().assign(out.getIsSet(), JExpr.lit(0));
-        
+
         JBlock setBlock = notSetJC._else().block();
         setBlock.assign(out.getIsSet(), JExpr.lit(1));
         setBlock.assign(out.getValue(), JExpr.lit(0));
       } else {
-        assert (e == null);            
+        assert (e == null);
         eval.assign(out.getValue(), JExpr.lit(0)) ;
       }
-      
-      generator.unNestEvalBlock();   // exit from nested block. 
-      
+
+      generator.unNestEvalBlock();   // exit from nested block.
+
       return out;
     }
-    
+
   }
 
   private class ConstantFilter extends EvalVisitor {

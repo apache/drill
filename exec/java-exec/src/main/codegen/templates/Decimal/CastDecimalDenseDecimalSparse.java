@@ -26,6 +26,8 @@
 
 package org.apache.drill.exec.expr.fn.impl.gcast;
 
+<#include "/@includes/vv_imports.ftl" />
+
 import org.apache.drill.exec.expr.DrillSimpleFunc;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate;
 import org.apache.drill.exec.expr.annotations.FunctionTemplate.NullHandling;
@@ -34,7 +36,10 @@ import org.apache.drill.exec.expr.annotations.Param;
 import org.apache.drill.exec.expr.holders.*;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.expr.annotations.Workspace;
+
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
+
 import java.nio.ByteBuffer;
 
 @SuppressWarnings("unused")
@@ -42,15 +47,14 @@ import java.nio.ByteBuffer;
 public class Cast${type.from}${type.to} implements DrillSimpleFunc{
 
     @Param ${type.from}Holder in;
-    @Workspace ByteBuf buffer;
+    @Inject DrillBuf buffer;
     @Param BigIntHolder precision;
     @Param BigIntHolder scale;
     @Output ${type.to}Holder out;
 
     public void setup(RecordBatch incoming) {
-        int size = (${type.arraySize} * (org.apache.drill.common.util.DecimalUtility.integerSize));
-        buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte[size]);
-        buffer = new io.netty.buffer.SwappedByteBuf(buffer);
+        int size = (${type.arraySize} * (org.apache.drill.exec.util.DecimalUtility.integerSize));
+        buffer = buffer.reallocIfNeeded(size);
     }
 
     public void eval() {
@@ -59,11 +63,11 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
 
         // Re initialize the buffer everytime
         for (int i = 0; i < ${type.arraySize}; i++) {
-            out.setInteger(i, 0);
+            out.setInteger(i, 0, out.start, out.buffer);
         }
         out.scale = (int) scale.value;
         out.precision = (int) precision.value;
-        out.setSign(in.getSign());
+        out.setSign(in.getSign(in.start, in.buffer), out.start, out.buffer);
 
         /* We store base 1 Billion integers in our representation, which requires
          * 30 bits, but a typical integer requires 32 bits. In our dense representation
@@ -71,7 +75,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
          * representation rearrange the bits so that we use 32 bits represent the digits.
          */
 
-        byte[] intermediateBytes = new byte[(in.nDecimalDigits * org.apache.drill.common.util.DecimalUtility.integerSize) + 1];
+        byte[] intermediateBytes = new byte[(in.nDecimalDigits * org.apache.drill.exec.util.DecimalUtility.integerSize) + 1];
 
         int[] mask = {0x03, 0x0F, 0x3F, 0xFF};
         int[] reverseMask = {0xFC, 0xF0, 0xC0, 0x00};
@@ -100,7 +104,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
             inputIndex++;
             intermediateIndex++;
 
-            if (((intermediateIndex - 1) % org.apache.drill.common.util.DecimalUtility.integerSize) == 0) {
+            if (((intermediateIndex - 1) % org.apache.drill.exec.util.DecimalUtility.integerSize) == 0) {
                 shiftBits = (byte) ((shiftBits & 0xFF) >>> 2);
                 maskIndex++;
                 shiftOrder -= 2;
@@ -115,7 +119,7 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
          * Now we transfer the bytes into a integer array and separate out the scale and
          * integer part of the decimal. Also pad the scale part with zeroes if needed
          */
-        int[] intermediate = new int[(intermediateBytes.length/org.apache.drill.common.util.DecimalUtility.integerSize) + 1];
+        int[] intermediate = new int[(intermediateBytes.length/org.apache.drill.exec.util.DecimalUtility.integerSize) + 1];
 
         java.nio.ByteBuffer wrapper = java.nio.ByteBuffer.wrap(intermediateBytes);
         intermediate[0] = wrapper.get(0);
@@ -132,27 +136,27 @@ public class Cast${type.from}${type.to} implements DrillSimpleFunc{
         int dstIndex = out.nDecimalDigits - 1;
 
         // break the scale and integer part and pad zeroes
-        if (in.scale > 0 && (actualDigits = (in.scale % org.apache.drill.common.util.DecimalUtility.MAX_DIGITS)) > 0) {
+        if (in.scale > 0 && (actualDigits = (in.scale % org.apache.drill.exec.util.DecimalUtility.MAX_DIGITS)) > 0) {
 
-            int paddedDigits = org.apache.drill.common.util.DecimalUtility.MAX_DIGITS - actualDigits;
+            int paddedDigits = org.apache.drill.exec.util.DecimalUtility.MAX_DIGITS - actualDigits;
             int padding = (int) (Math.pow(10, paddedDigits));
             int transferDigitMask = (int) (Math.pow(10, actualDigits));
 
             /* copy the remaining scale over to the last deciml digit */
-            out.setInteger(dstIndex, ((intermediate[srcIndex] % transferDigitMask) * (padding)));
+            out.setInteger(dstIndex, ((intermediate[srcIndex] % transferDigitMask) * (padding)), out.start, out.buffer);
             dstIndex--;
 
             while (srcIndex > 0) {
-                out.setInteger(dstIndex, ((intermediate[srcIndex]/transferDigitMask) + ((intermediate[srcIndex - 1] % transferDigitMask) * padding)));
+                out.setInteger(dstIndex, ((intermediate[srcIndex]/transferDigitMask) + ((intermediate[srcIndex - 1] % transferDigitMask) * padding)), out.start, out.buffer);
 
                 dstIndex--;
                 srcIndex--;
             }
 
-            out.setInteger(dstIndex, (intermediate[0]/transferDigitMask));
+            out.setInteger(dstIndex, (intermediate[0]/transferDigitMask), out.start, out.buffer);
         } else {
             for (; srcIndex >= 0; srcIndex--, dstIndex--)
-                out.setInteger(dstIndex, intermediate[srcIndex]);
+                out.setInteger(dstIndex, intermediate[srcIndex], out.start, out.buffer);
         }
     }
 }

@@ -35,134 +35,76 @@ public final class ${className} implements ValueHolder{
   
   public MajorType getType() {return TYPE;}
   
-    <#if mode.name != "Repeated">
-      
-    public static final int WIDTH = ${type.width};
-      <#if mode.name == "Optional">
-      /** Whether the given holder holds a valid value.  1 means non-null.  0 means null. **/
-      public int isSet;
-      
-      public boolean isSet() {
-        return isSet == 1;
-      }
-      <#else>
+    <#if mode.name == "Repeated">
     
-      public boolean isSet() {
-        return true;
-      }
-      
-      </#if>
-     
-  
-      
-      <#if type.major != "VarLen">
-
-      <#if (minor.class == "TimeStampTZ")>
-      public long value;
-      public int index;
-      <#elseif (minor.class == "Interval")>
-      public int months;
-      public int days;
-      public int milliSeconds;
-      <#elseif (minor.class == "IntervalDay")>
-      public int days;
-      public int milliSeconds;
-    <#elseif minor.class.startsWith("Decimal")>
-    public int scale;
-    public int precision;
+    /** The first index (inclusive) into the Vector. **/
+    public int start;
+    
+    /** The last index (exclusive) into the Vector. **/
+    public int end;
+    
+    /** The Vector holding the actual values. **/
+    public ${minor.class}Vector vector;
+    
+    <#else>
+    public static final int WIDTH = ${type.width};
+    
+    <#if mode.name == "Optional">public int isSet;</#if>
+    <#assign fields = minor.fields!type.fields />
+    <#list fields as field>
+    public ${field.type} ${field.name};
+    </#list>
+    
+    <#if minor.class.startsWith("Decimal")>
     public static final int maxPrecision = ${minor.maxPrecisionDigits};
     <#if minor.class.startsWith("Decimal28") || minor.class.startsWith("Decimal38")>
-    public int start;
-    public ByteBuf buffer;
     public static final int nDecimalDigits = ${minor.nDecimalDigits};
+    
+    public static int getInteger(int index, int start, DrillBuf buffer) {
+      int value = buffer.getInt(start + (index * 4));
 
-
-    public int getInteger(int index) {
-        int value = buffer.getInt(start + (index * 4));
-
-        if (index == 0) {
-            /* the first byte contains sign bit, return value without it */
-            <#if minor.class.endsWith("Sparse")>
-            value = (value & 0x7FFFFFFF);
-            <#elseif minor.class.endsWith("Dense")>
-            value = (value & 0x0000007F);
-            </#if>
-        }
-        return value;
+      if (index == 0) {
+          /* the first byte contains sign bit, return value without it */
+          <#if minor.class.endsWith("Sparse")>
+          value = (value & 0x7FFFFFFF);
+          <#elseif minor.class.endsWith("Dense")>
+          value = (value & 0x0000007F);
+          </#if>
+      }
+      return value;
     }
 
-    public void setInteger(int index, int value) {
+    public static void setInteger(int index, int value, int start, DrillBuf buffer) {
         buffer.setInt(start + (index * 4), value);
     }
-
-    public void setSign(boolean sign) {
+  
+    public static void setSign(boolean sign, int start, DrillBuf buffer) {
       // Set MSB to 1 if sign is negative
       if (sign == true) {
-        int value = getInteger(0);
-        setInteger(0, (value | 0x80000000));
+        int value = getInteger(0, start, buffer);
+        setInteger(0, (value | 0x80000000), start, buffer);
       }
     }
-
-    public boolean getSign() {
+  
+    public static boolean getSign(int start, DrillBuf buffer) {
       return ((buffer.getInt(start) & 0x80000000) != 0);
     }
-
-    <#else>
-    public ${minor.javaType!type.javaType} value;
-    </#if>
-
-      <#elseif (type.width > 8)>
-      public int start;
-      public ByteBuf buffer;
-      <#else>
-        public ${minor.javaType!type.javaType} value;
-      </#if>
-      <#else>
-      /** The first offset (inclusive) into the buffer. **/
-      public int start;
-      
-  /** The last offset (exclusive) into the buffer. **/
-      public int end;
-      
-      /** The buffer holding actual values. **/
-      public ByteBuf buffer;
-
-      public String toString() {
-      <#if mode.name == "Optional">
-        if (isSet == 0)
-          return "<NULL>";
-      </#if>
-        byte[] buf = new byte[end-start];
-        buffer.getBytes(start, buf, 0, end-start);
-
-        <#switch minor.class>
-        <#case "Var16Char">
-        return new String(buf, com.google.common.base.Charsets.UTF_16);
-        <#break>
-        <#case "VarChar">
-        <#default>
-        return new String(buf, com.google.common.base.Charsets.UTF_8);
-        </#switch>
-      }
-
-      </#if>
-
-    <#else> 
+    </#if></#if>
     
-      /** The first index (inclusive) into the Vector. **/
-      public int start;
-      
-      /** The last index (exclusive) into the Vector. **/
-      public int end;
-      
-      /** The Vector holding the actual values. **/
-      public ${minor.class}Vector vector;
-      
-      public boolean isSet() {
-        return true;
-      }
-
+    @Deprecated
+    public int hashCode(){
+      throw new UnsupportedOperationException();
+    }
+    
+    @Deprecated
+    public String toString(){
+      throw new UnsupportedOperationException();
+    }
     </#if>
+    
+    
+    
+    
 }
 
 </#list>

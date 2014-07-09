@@ -18,6 +18,8 @@
 
 package org.apache.drill.exec.vector.complex.fn;
 
+import io.netty.buffer.DrillBuf;
+
 import java.io.IOException;
 import java.io.Reader;
 
@@ -35,10 +37,10 @@ public class JsonReaderWithState {
   private JsonRecordSplitter splitter;
   private JsonReader jsonReader;
 
-  public JsonReaderWithState(JsonRecordSplitter splitter) throws IOException{
+  public JsonReaderWithState(JsonRecordSplitter splitter, DrillBuf workspace) throws IOException{
     this.splitter = splitter;
     reader = splitter.getNextReader();
-    jsonReader = new JsonReader();
+    jsonReader = new JsonReader(workspace);
   }
 
   public WriteState write(ComplexWriter writer) throws JsonParseException, IOException {
@@ -50,7 +52,7 @@ public class JsonReaderWithState {
     }
 
     jsonReader.write(reader, writer);
-    
+
     if (!writer.ok()) {
       reader.reset();
       return WriteState.WRITE_FAILED;

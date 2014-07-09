@@ -18,6 +18,7 @@
 
 package org.apache.drill.common.util;
 
+
 /*
  * Here we compute the scale and precision of the output decimal data type
  * based on the input scale and precision. Since division operation can be
@@ -51,7 +52,7 @@ public class DecimalScalePrecisionDivideFunction extends DrillBaseComputeScalePr
     int maxResultIntegerDigits = leftIntegerDigits + rightScale;
 
 
-    outputPrecision = DecimalUtility.getPrecisionRange(outputScale + maxResultIntegerDigits);
+    outputPrecision = CoreDecimalUtility.getPrecisionRange(outputScale + maxResultIntegerDigits);
 
     // Output precision should be greater or equal to the input precision
     outputPrecision = Math.max(outputPrecision, Math.max(leftPrecision, rightPrecision));

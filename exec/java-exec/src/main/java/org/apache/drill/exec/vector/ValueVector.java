@@ -17,7 +17,7 @@
  */
 package org.apache.drill.exec.vector;
 
-import io.netty.buffer.ByteBuf;
+import io.netty.buffer.DrillBuf;
 
 import java.io.Closeable;
 
@@ -56,7 +56,7 @@ public interface ValueVector extends Closeable, Iterable<ValueVector> {
   public void close();
 
   /**
-   * Release the underlying ByteBuf and reset the ValueVector to empty.
+   * Release the underlying DrillBuf and reset the ValueVector to empty.
    */
   public void clear();
 
@@ -99,9 +99,9 @@ public interface ValueVector extends Closeable, Iterable<ValueVector> {
    * this buffer so it only should be used for in-context access. Also note that this buffer changes regularly thus
    * external classes shouldn't hold a reference to it (unless they change it).
    *
-   * @return The underlying ByteBuf.
+   * @return The underlying DrillBuf.
    */
-  public abstract ByteBuf[] getBuffers();
+  public abstract DrillBuf[] getBuffers();
 
   /**
    * Load the data provided in the buffer. Typically used when deserializing from the wire.
@@ -111,7 +111,7 @@ public interface ValueVector extends Closeable, Iterable<ValueVector> {
    * @param buffer
    *          The buffer that contains the ValueVector.
    */
-  public void load(SerializedField metadata, ByteBuf buffer);
+  public void load(SerializedField metadata, DrillBuf buffer);
 
   /**
    * Get the metadata for this field. Used in serialization
