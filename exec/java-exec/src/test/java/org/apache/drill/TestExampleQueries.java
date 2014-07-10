@@ -38,7 +38,17 @@ public class TestExampleQueries extends BaseTestQuery{
     test("select count(*) from cp.`customer.json` limit 1");
     test("select count(*) from cp.`customer.json` limit 1");
   }
- 
+
+  @Test
+  public void testJoinExpOn() throws Exception{
+    test("select a.n_nationkey from cp.`tpch/nation.parquet` a join cp.`tpch/region.parquet` b on a.n_regionkey + 1 = b.r_regionkey and a.n_regionkey + 1 = b.r_regionkey;");
+  }
+
+  @Test
+  public void testJoinExpWhere() throws Exception{
+    test("select a.n_nationkey from cp.`tpch/nation.parquet` a , cp.`tpch/region.parquet` b where a.n_regionkey + 1 = b.r_regionkey and a.n_regionkey + 1 = b.r_regionkey;");
+  }
+
   @Test
   public void testCaseReturnValueVarChar() throws Exception{
     test("select case when employee_id < 1000 then 'ABC' else 'DEF' end from cp.`employee.json` limit 5");
