@@ -30,8 +30,11 @@ import com.mongodb.MongoClientURI;
 @JsonTypeName(MongoStoragePluginConfig.NAME)
 public class MongoStoragePluginConfig extends StoragePluginConfig {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MongoStoragePluginConfig.class);
+  
   public static final String NAME = "mongo";
-  private String connection;
+  
+  @JsonProperty
+  public String connection;
   
   @JsonIgnore
   private MongoClientURI clientURI; 
@@ -66,14 +69,13 @@ public class MongoStoragePluginConfig extends StoragePluginConfig {
   }
   
   @JsonProperty
-  public String getMongoCnxnURL() {
+  public String getConnection() {
     return connection;
   }
-  
-  @JsonIgnore
+
   @VisibleForTesting
-  public void setConnectionURI(String connection) {
+  @JsonIgnore
+  public void setConnection(String connection) {
     this.connection = connection;
   }
-  
 }
