@@ -22,6 +22,7 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.util.List;
 
+import org.apache.drill.common.util.DrillStringUtils;
 import org.apache.drill.common.util.TestTools;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -84,9 +85,9 @@ public class DrillTest {
       long endHeap = manager.getMemHeap();
       long endNonHeap = manager.getMemNonHeap();
       return String.format("d: %s(%s), h: %s(%s), nh: %s(%s)", //
-          readable(endDirect - startDirect), readable(endDirect), //
-          readable(endHeap - startHeap), readable(endHeap), //
-          readable(endNonHeap - startNonHeap), readable(endNonHeap) //
+          DrillStringUtils.readable(endDirect - startDirect), DrillStringUtils.readable(endDirect), //
+          DrillStringUtils.readable(endHeap - startHeap), DrillStringUtils.readable(endHeap), //
+          DrillStringUtils.readable(endNonHeap - startNonHeap), DrillStringUtils.readable(endNonHeap) //
        );
     }
 
@@ -133,15 +134,6 @@ public class DrillTest {
     } catch (JsonProcessingException e) {
       return original;
     }
-  }
-
-  public static String readable(long bytes) {
-    int unit = 1024;
-    long absBytes = Math.abs(bytes);
-    if (absBytes < unit) return bytes + " B";
-    int exp = (int) (Math.log(absBytes) / Math.log(unit));
-    char pre = ("KMGTPE").charAt(exp-1);
-    return String.format("%s%.1f %ciB", (bytes == absBytes ? "" : "-"), absBytes / Math.pow(unit, exp), pre);
   }
 
   private static class SystemManager {

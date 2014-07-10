@@ -78,7 +78,6 @@ public class FragmentContext implements Closeable {
 
   public FragmentContext(DrillbitContext dbContext, PlanFragment fragment, UserClientConnection connection,
       FunctionImplementationRegistry funcRegistry) throws OutOfMemoryException, ExecutionSetupException {
-    this.loader = new QueryClassLoader(true);
     this.transformer = new ClassTransformer();
     this.stats = new FragmentStats(dbContext.getMetrics());
     this.context = dbContext;
@@ -101,6 +100,7 @@ public class FragmentContext implements Closeable {
       throw new ExecutionSetupException("Failure while reading plan options.", e);
     }
     this.allocator = context.getAllocator().getChildAllocator(fragment.getHandle(), fragment.getMemInitial(), fragment.getMemMax());
+    this.loader = new QueryClassLoader(sessionOptions);
   }
 
   public OptionManager getOptions(){
@@ -179,13 +179,7 @@ public class FragmentContext implements Closeable {
   }
 
   public <T> T getImplementationClass(CodeGenerator<T> cg) throws ClassTransformationException, IOException {
-    long t1 = System.nanoTime();
-
-    T t = transformer.getImplementationClass(this.loader, cg.getDefinition(), cg.generate(),
-        cg.getMaterializedClassName());
-    logger.debug("Compile time: {} millis.", (System.nanoTime() - t1) / 1000 / 1000);
-    return t;
-
+    return transformer.getImplementationClass(this.loader, cg.getDefinition(), cg.generate(), cg.getMaterializedClassName());
   }
 
   /**

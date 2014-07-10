@@ -25,6 +25,7 @@ import java.util.concurrent.ConcurrentMap;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.cache.DistributedCache.CacheConfig;
+import org.apache.drill.exec.compile.QueryClassLoader;
 import org.apache.drill.exec.planner.fragment.SimpleParallelizer;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.server.options.OptionValue.OptionType;
@@ -69,7 +70,9 @@ public class SystemOptionManager implements OptionManager{
       ExecConstants.QUEUE_TIMEOUT,
       ExecConstants.SMALL_QUEUE_SIZE, 
       ExecConstants.MIN_HASH_TABLE_SIZE,
-      ExecConstants.MAX_HASH_TABLE_SIZE
+      ExecConstants.MAX_HASH_TABLE_SIZE,
+      QueryClassLoader.JAVA_COMPILER_VALIDATOR,
+      QueryClassLoader.JAVA_COMPILER_JANINO_MAXSIZE
   };
 
   public final PStoreConfig<OptionValue> config;

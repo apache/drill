@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.drill.common.util.DrillStringUtils;
 import org.apache.drill.common.util.FileUtils;
 import org.apache.drill.exec.compile.MergeAdapter.MergedClassResult;
 import org.apache.drill.exec.exception.ClassTransformationException;
@@ -61,27 +62,27 @@ public class ClassTransformer {
 //
 //  }
 
-  
-  
+
+
   public static class ClassSet{
     public final ClassSet parent;
     public final ClassNames precompiled;
     public final ClassNames generated;
-    
+
     public ClassSet(ClassSet parent, String precompiled, String generated) {
       super();
       this.parent = parent;
-      
+
       this.precompiled = new ClassNames(precompiled);
       this.generated = new ClassNames(generated);
-      Preconditions.checkArgument(!generated.startsWith(precompiled), 
+      Preconditions.checkArgument(!generated.startsWith(precompiled),
           String.format("The new name of a class cannot start with the old name of a class, otherwise class renaming will cause problems.  Precompiled class name %s.  Generated class name %s", precompiled, generated));
     }
-    
+
     public ClassSet getChild(String precompiled, String generated){
       return new ClassSet(this, precompiled, generated);
     }
-    
+
     public ClassSet getChild(String precompiled){
       return new ClassSet(this, precompiled, precompiled.replace(this.precompiled.dot, this.generated.dot));
     }
@@ -122,16 +123,16 @@ public class ClassTransformer {
         return false;
       return true;
     }
-    
-    
+
+
   }
-  
+
   public static class ClassNames{
-    
+
     public final String dot;
     public final String slash;
     public final String clazz;
-    
+
     public ClassNames(String className){
       dot = className;
       slash = className.replace('.', FileUtils.separatorChar);
@@ -174,16 +175,16 @@ public class ClassTransformer {
         return false;
       return true;
     }
-    
-    
-//    
+
+
+//
 //    public ClassNames getFixed(ClassNames precompiled, ClassNames generated){
 //      if(!dot.startsWith(precompiled.dot)) throw new IllegalStateException(String.format("Expected a class that starts with %s.  However the class %s does not start with this string.", precompiled.dot, dot));
 //      return new ClassNames(dot.replace(precompiled.dot, generated.dot));
 //    }
   }
-  
-//  
+
+//
 //  private void mergeAndInjectClass(QueryClassLoader classLoader, byte[] implementationClass, ClassNames precompiled, ClassNames generated){
 //    // Get Template Class
 //    final byte[] templateClass = byteCodeLoader.getClassByteCodeFromPath(precompiled.clazz);
@@ -193,11 +194,11 @@ public class ClassTransformer {
 //
 //    // Setup adapters for merging, remapping class names and class writing. This is done in reverse order of how they
 //    // will be evaluated.
-//    
+//
 //    Stopwatch t3;
 //    {
 //
-//      // 
+//      //
 //      ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
 //
 //      ClassVisitor remappingAdapter = new RemappingClassAdapter(cw, remapper);
@@ -232,15 +233,14 @@ public class ClassTransformer {
 //      i++;
 //    }
 //  }
-//  
+//
   private static ClassNode getClassNodeFromByteCode(byte[] bytes) {
     ClassReader iReader = new ClassReader(bytes);
     ClassNode impl = new ClassNode();
-    iReader.accept(impl, 0);
+    iReader.accept(impl, ClassReader.EXPAND_FRAMES);
     return impl;
   }
 
-  
   @SuppressWarnings("unchecked")
   public <T, I> T getImplementationClass( //
       QueryClassLoader classLoader, //
@@ -248,71 +248,53 @@ public class ClassTransformer {
       String entireClass, //
       String materializedClassName) throws ClassTransformationException {
 
-    final ClassSet set = new ClassSet(null, templateDefinition.getTemplateClassName(), materializedClassName);
-
-      
-
     try {
-      final byte[][] implementationClasses = classLoader.getClassByteCode(set.generated.clazz, entireClass);
-      
-      
+      long t1 = System.nanoTime();
+      final ClassSet set = new ClassSet(null, templateDefinition.getTemplateClassName(), materializedClassName);
+      final byte[][] implementationClasses = classLoader.getClassByteCode(set.generated, entireClass);
+
+      long totalBytecodeSize = 0;
       Map<String, ClassNode> classesToMerge = Maps.newHashMap();
-      for(byte[] clazz : implementationClasses){
+      for(byte[] clazz : implementationClasses) {
+        totalBytecodeSize += clazz.length;
         ClassNode node = getClassNodeFromByteCode(clazz);
         classesToMerge.put(node.name, node);
       }
-      
+
       LinkedList<ClassSet> names = Lists.newLinkedList();
       Set<ClassSet> namesCompleted = Sets.newHashSet();
       names.add(set);
-      
-      while( !names.isEmpty() ){
+
+      while ( !names.isEmpty() ) {
         final ClassSet nextSet = names.removeFirst();
-        if(namesCompleted.contains(nextSet)) continue;
+        if (namesCompleted.contains(nextSet)) continue;
         final ClassNames nextPrecompiled = nextSet.precompiled;
         final byte[] precompiledBytes = byteCodeLoader.getClassByteCodeFromPath(nextPrecompiled.clazz);
         ClassNames nextGenerated = nextSet.generated;
         ClassNode generatedNode = classesToMerge.get(nextGenerated.slash);
         MergedClassResult result = MergeAdapter.getMergedClass(nextSet, precompiledBytes, generatedNode);
-        
-        for(String s : result.innerClasses){
+
+        for(String s : result.innerClasses) {
           s = s.replace(FileUtils.separatorChar, '.');
           names.add(nextSet.getChild(s));
         }
         classLoader.injectByteCode(nextGenerated.dot, result.bytes);
         namesCompleted.add(nextSet);
-        
       }
-      
 
-      
-      
-//      logger.debug(String.format("[Compile Time] Janino: %dms, Bytecode load and parse: %dms, Class Merge: %dms, Subclass remap and load: %dms.", t1.elapsed(TimeUnit.MILLISECONDS), t2.elapsed(TimeUnit.MILLISECONDS), t3.elapsed(TimeUnit.MILLISECONDS), t4.elapsed(TimeUnit.MILLISECONDS)));
-      
-      
-      
       Class<?> c = classLoader.findClass(set.generated.dot);
       if (templateDefinition.getExternalInterface().isAssignableFrom(c)) {
-        return (T) c.newInstance();
+        T instance = (T) c.newInstance();
+        logger.debug("Done compiling (bytecode size={}, time:{} millis).",
+            DrillStringUtils.readable(totalBytecodeSize), (System.nanoTime() - t1) / 1000000);
+        return instance;
       } else {
         throw new ClassTransformationException("The requested class did not implement the expected interface.");
       }
-      
     } catch (CompileException | IOException | ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-      throw new ClassTransformationException(String.format(
-          "Failure generating transformation classes for value: \n %s", entireClass), e);
+      throw new ClassTransformationException(String.format("Failure generating transformation classes for value: \n %s", entireClass), e);
     }
 
   }
-
-
-
-  // private void traceClassToSystemOut(byte[] bytecode) {
-  // TraceClassVisitor tcv = new TraceClassVisitor(new EmptyVisitor(), new PrintWriter(System.out));
-  // ClassReader cr = new ClassReader(bytecode);
-  // cr.accept(tcv, 0);
-  // }
-
-
 
 }

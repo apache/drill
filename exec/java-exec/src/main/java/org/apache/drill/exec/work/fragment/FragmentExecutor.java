@@ -122,6 +122,7 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
       Thread.currentThread().setName(originalThread);
       if(!closed) {
         try {
+          root.stop();
           if(context.isFailed()) {
             internalFail(context.getFailureCause());
           }
