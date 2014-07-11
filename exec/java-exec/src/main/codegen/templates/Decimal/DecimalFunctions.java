@@ -562,8 +562,8 @@ public class ${type.name}Functions {
 
         public void eval() {
             if (outputPrecision == Integer.MIN_VALUE) {
-                org.apache.drill.common.util.DecimalScalePrecisionDivideFunction resultScalePrec =
-                new org.apache.drill.common.util.DecimalScalePrecisionDivideFunction((int) left.precision, (int) left.scale, (int) right.precision, (int) right.scale);
+                org.apache.drill.common.util.DecimalScalePrecisionModFunction resultScalePrec =
+                new org.apache.drill.common.util.DecimalScalePrecisionModFunction((int) left.precision, (int) left.scale, (int) right.precision, (int) right.scale);
                 outputScale = resultScalePrec.getOutputScale();
                 outputPrecision = resultScalePrec.getOutputPrecision();
             }
@@ -1352,8 +1352,8 @@ public class ${type.name}Functions {
 
         public void eval() {
             if (outputPrecision == Integer.MIN_VALUE) {
-                org.apache.drill.common.util.DecimalScalePrecisionDivideFunction resultScalePrec =
-                new org.apache.drill.common.util.DecimalScalePrecisionDivideFunction((int) left.precision, (int) left.scale, (int) right.precision, (int) right.scale);
+                org.apache.drill.common.util.DecimalScalePrecisionModFunction resultScalePrec =
+                new org.apache.drill.common.util.DecimalScalePrecisionModFunction((int) left.precision, (int) left.scale, (int) right.precision, (int) right.scale);
                 outputScale = resultScalePrec.getOutputScale();
                 outputPrecision = resultScalePrec.getOutputPrecision();
             }
