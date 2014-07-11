@@ -237,11 +237,22 @@ void DrillClientImpl::handleHShakeReadTimeout(const boost::system::error_code & 
     return;
 }
 
-bool DrillClientImpl::validateHandShake(){
+bool DrillClientImpl::validateHandShake(const char* defaultSchema){
+
+    DRILL_LOG(LOG_TRACE) << "validateHandShake\n";
+
     exec::user::UserToBitHandshake u2b;
     u2b.set_channel(exec::shared::USER);
     u2b.set_rpc_version(DRILL_RPC_VERSION);
     u2b.set_support_listening(true);
+
+    if ( defaultSchema != NULL ){
+        DRILL_LOG(LOG_TRACE) << "defaultSchema = " << defaultSchema << "\n";
+        exec::user::UserProperties* userProperties = u2b.mutable_properties();
+        exec::user::Property* connSchema = userProperties->add_properties();
+        connSchema->set_key("schema");
+        connSchema->set_value(defaultSchema);
+    }
     {
         boost::lock_guard<boost::mutex> lock(this->m_dcMutex);
         uint64_t coordId = this->getNextCoordinationId();

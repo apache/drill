@@ -185,8 +185,35 @@ class DECLSPEC_DRILL_CLIENT DrillClient{
         // change the logging level
         static void initLogging(const char* path, logLevel_t l);
 
-        /* connects the client to a Drillbit UserServer. */
-        connectionStatus_t connect(const char* connectStr);
+        /**
+         * Connect the client to a Drillbit using connection string and default schema.
+         *
+         * The connection string format can be found in comments of
+         * [DRILL-780](https://issues.apache.org/jira/browse/DRILL-780)
+         *
+         * To connect via zookeeper, use the format:
+         * "zk=zk1:port[,zk2:p2,...][/<path_to_drill_root>/<cluster_id>]".
+         *
+         * e.g.
+         * ```
+         * zk=localhost:2181
+         * zk=localhost:2181/drill/drillbits1
+         * zk=localhost:2181,zk2:2181/drill/drillbits1
+         * ```
+         *
+         * To connect directly to a drillbit, use the format "local=host:port".
+         *
+         * e.g.
+         * ```
+         * local=127.0.0.1:31010
+         * ```
+         *
+         * @param[in] connectStr: connection string
+         * @param[in] defaultSchema: default schema (set to NULL and ignore it
+         * if not specified)
+         * @return    connection status
+         */
+        connectionStatus_t connect(const char* connectStr, const char* defaultSchema=NULL);
 
         /* test whether the client is active */
         bool isActive();

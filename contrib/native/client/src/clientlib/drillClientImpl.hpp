@@ -159,7 +159,7 @@ class DrillClientQueryResult{
 
     exec::shared::QueryId* m_pQueryId;
 
-    //Schema change listener
+    // Schema change listener
     pfnSchemaListener m_pSchemaListener;
     // Results callback
     pfnQueryResultsListener m_pResultsListener;
@@ -219,7 +219,7 @@ class DrillClientImpl{
         DrillClientError* getError(){ return m_pError;}
         DrillClientQueryResult* SubmitQuery(::exec::shared::QueryType t, const std::string& plan, pfnQueryResultsListener listener, void* listenerCtx);
         void waitForResults();
-        bool validateHandShake();
+        bool validateHandShake(const char* defaultSchema);
 
     private:
         friend class DrillClientQueryResult;
