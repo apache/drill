@@ -537,7 +537,7 @@ public class ${type.name}Functions {
             java.math.BigDecimal numerator = org.apache.drill.common.util.DecimalUtility.getBigDecimalFromByteBuf(left.buffer, left.start, left.nDecimalDigits, left.scale, true);
             java.math.BigDecimal denominator = org.apache.drill.common.util.DecimalUtility.getBigDecimalFromByteBuf(right.buffer, right.start, right.nDecimalDigits, right.scale, true);
 
-            java.math.BigDecimal output = numerator.divide(denominator, (int) result.scale, java.math.BigDecimal.ROUND_DOWN);
+            java.math.BigDecimal output = numerator.divide(denominator, (int) result.scale, java.math.BigDecimal.ROUND_HALF_UP);
 
             org.apache.drill.common.util.DecimalUtility.getSparseFromBigDecimal(output, result.buffer, result.start, result.scale, result.precision, result.nDecimalDigits);
         }
@@ -576,7 +576,7 @@ public class ${type.name}Functions {
             java.math.BigDecimal denominator = org.apache.drill.common.util.DecimalUtility.getBigDecimalFromByteBuf(right.buffer, right.start, right.nDecimalDigits, right.scale, true);
 
             java.math.BigDecimal output = numerator.remainder(denominator);
-            output.setScale(result.scale, java.math.BigDecimal.ROUND_DOWN);
+            output.setScale(result.scale, java.math.BigDecimal.ROUND_HALF_UP);
 
             org.apache.drill.common.util.DecimalUtility.getSparseFromBigDecimal(output, result.buffer, result.start, result.scale, result.precision, result.nDecimalDigits);
         }
@@ -1331,7 +1331,7 @@ public class ${type.name}Functions {
             java.math.BigDecimal numerator = new java.math.BigDecimal(java.math.BigInteger.valueOf(left.value), left.scale);
             java.math.BigDecimal denominator = new java.math.BigDecimal(java.math.BigInteger.valueOf(right.value), right.scale);
 
-            java.math.BigDecimal output = numerator.divide(denominator, (int) result.scale, java.math.BigDecimal.ROUND_DOWN);
+            java.math.BigDecimal output = numerator.divide(denominator, (int) result.scale, java.math.BigDecimal.ROUND_HALF_UP);
 
             result.value = output.unscaledValue().${type.storage}Value();
         }
@@ -1363,7 +1363,7 @@ public class ${type.name}Functions {
             java.math.BigDecimal denominator = new java.math.BigDecimal(java.math.BigInteger.valueOf(right.value), right.scale);
 
             java.math.BigDecimal output = numerator.remainder(denominator);
-            output.setScale(result.scale, java.math.BigDecimal.ROUND_DOWN);
+            output.setScale(result.scale, java.math.BigDecimal.ROUND_HALF_UP);
 
             result.value = output.unscaledValue().${type.storage}Value();
         }
