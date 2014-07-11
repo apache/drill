@@ -607,6 +607,7 @@ public class TestFunctionsQuery {
             "DECIMAL_DOUBLE_CAST=1.0001\n");
   }
 
+  @Ignore("we don't have decimal division")
   @Test
   public void testCastDecimalDivide() throws Exception {
     String query = "select  (cast('9' as decimal(9, 1)) / cast('2' as decimal(4, 1))) as DEC9_DIV, " +

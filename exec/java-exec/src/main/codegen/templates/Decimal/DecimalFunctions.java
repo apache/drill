@@ -505,7 +505,7 @@ public class ${type.name}Functions {
         }
     }
 
-    @FunctionTemplate(name = "divide", scope = FunctionTemplate.FunctionScope.DECIMAL_DIV_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    @FunctionTemplate(name = "exact_divide", scope = FunctionTemplate.FunctionScope.DECIMAL_DIV_SCALE, nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}DivideFunction implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
@@ -1304,7 +1304,7 @@ public class ${type.name}Functions {
         }
     }
 
-    @FunctionTemplate(name = "divide", scope = FunctionTemplate.FunctionScope.DECIMAL_DIV_SCALE, nulls = NullHandling.NULL_IF_NULL)
+    @FunctionTemplate(name = "exact_divide", scope = FunctionTemplate.FunctionScope.DECIMAL_DIV_SCALE, nulls = NullHandling.NULL_IF_NULL)
     public static class ${type.name}DivideFunction implements DrillSimpleFunc {
 
         @Param ${type.name}Holder left;
