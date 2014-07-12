@@ -21,20 +21,33 @@
   <div class="table-responsive">
     <table class="table">
       <tbody>
+        <tr><th colspan="2" style="border:none;">Enabled Plugins</th></tr>
         <#list model as plugin>
-        <tr>
-          <td style="border:none;">
-            ${plugin.name}
-          </td>
-          <td style="border:none;">
-            <a class="btn btn-primary" href="/storage/${plugin.name}/config/update">Update</a>
-            <#if plugin.enabled>
+        <#if plugin.enabled == true>
+          <tr>
+            <td style="border:none;">
+              ${plugin.name}
+            </td>
+            <td style="border:none;">
+              <a class="btn btn-default" href="/storage/${plugin.name}/config/update">Update</a>
               <a class="btn btn-default" href="/storage/${plugin.name}/config/enable/false">Disable</a>
-            <#else>
-              <a class="btn btn-primary" href="/storage/${plugin.name}/config/enable/true">Enable</a>
-            </#if>
-          </td>
-        </tr>
+            </td>
+          </tr>
+        </#if>
+        </#list>
+        <tr><th colspan="2" style="border:none;">Disabled Plugins</th></tr>
+        <#list model as plugin>
+        <#if plugin.enabled == false>
+          <tr>
+            <td style="border:none;">
+              ${plugin.name}
+            </td>
+            <td style="border:none;">
+              <a class="btn btn-default" href="/storage/${plugin.name}/config/update">Update</a>
+              <a class="btn btn-default" href="/storage/${plugin.name}/config/enable/true">Enable</a>
+            </td>
+          </tr>
+        </#if>
         </#list>
       </tbody>
     </table>

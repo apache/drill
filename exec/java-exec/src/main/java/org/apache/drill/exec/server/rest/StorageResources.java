@@ -20,7 +20,8 @@ package org.apache.drill.exec.server.rest;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.URI;
-import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -37,6 +38,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.StoragePluginConfig;
 import org.apache.drill.exec.store.StoragePlugin;
@@ -55,6 +58,13 @@ import freemarker.template.SimpleHash;
 @Path("/storage")
 public class StorageResources {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StorageResources.class);
+  
+  static final Comparator<Pair<String, Boolean>> PLUGIN_NAME_COMPARATOR = new Comparator<Pair<String, Boolean>>() {
+    @Override
+    public int compare(Pair<String, Boolean> o1, Pair<String, Boolean> o2) {
+      return o1.getKey().compareTo(o2.getKey());
+    }
+  };
 
   @Inject StoragePluginRegistry storage;
   @Inject PStoreProvider storeProvider;
@@ -62,17 +72,24 @@ public class StorageResources {
 
   @GET
   @Produces(MediaType.TEXT_HTML)
-  public Viewable getQueries() {
-
-    List<SimpleHash> list = Lists.newArrayList();
+  public Viewable listPlugins() {
+    // build a list and sort by plugin instance name
+    List<Pair<String, Boolean>> pluginList = Lists.newArrayList();
     for (Map.Entry<String, StoragePluginConfig> config : storage.getStore()) {
+      pluginList.add(ImmutablePair.of(config.getKey(), config.getValue().isEnabled()));
+    }
+    Collections.sort(pluginList, PLUGIN_NAME_COMPARATOR);
+
+    // now use the sorted list to build the freemarker model
+    List<SimpleHash> modelList = Lists.newArrayList();
+    for (Pair<String, Boolean> plugin : pluginList) {
       SimpleHash map = new SimpleHash();
-      map.put("name", config.getKey());
-      map.put("enabled", config.getValue().isEnabled());
-      list.add(map);
+      map.put("name", plugin.getLeft());
+      map.put("enabled", plugin.getRight());
+      modelList.add(map);
     }
 
-    return new Viewable("/rest/storage/list.ftl", list);
+    return new Viewable("/rest/storage/list.ftl", modelList);
   }
 
   @GET

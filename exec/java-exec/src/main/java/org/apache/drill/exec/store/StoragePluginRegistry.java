@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 
 import net.hydromatic.optiq.SchemaPlus;
 import net.hydromatic.optiq.tools.RuleSet;
@@ -56,14 +57,20 @@ import org.apache.drill.exec.store.sys.SystemTablePluginConfig;
 import org.eigenbase.relopt.RelOptRule;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSet.Builder;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
 
 public class StoragePluginRegistry implements Iterable<Map.Entry<String, StoragePlugin>> {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StoragePluginRegistry.class);
+
+  public static final String SYS_PLUGIN = "sys";
+
+  public static final String INFORMATION_SCHEMA_PLUGIN = "INFORMATION_SCHEMA";
 
   private Map<Object, Constructor<? extends StoragePlugin>> availablePlugins = new HashMap<Object, Constructor<? extends StoragePlugin>>();
   private ConcurrentMap<String, StoragePlugin> plugins;
@@ -175,8 +182,8 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
       throw new IllegalStateException(e);
     }
 
-    activePlugins.put("INFORMATION_SCHEMA", new InfoSchemaStoragePlugin(new InfoSchemaConfig(), context, "INFORMATION_SCHEMA"));
-    activePlugins.put("sys", new SystemTablePlugin(SystemTablePluginConfig.INSTANCE, context, "sys"));
+    activePlugins.put(INFORMATION_SCHEMA_PLUGIN, new InfoSchemaStoragePlugin(new InfoSchemaConfig(), context, INFORMATION_SCHEMA_PLUGIN));
+    activePlugins.put(SYS_PLUGIN, new SystemTablePlugin(SystemTablePluginConfig.INSTANCE, context, SYS_PLUGIN));
 
     return activePlugins;
   }
@@ -212,12 +219,10 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
 
   public StoragePlugin getPlugin(String name) throws ExecutionSetupException {
     StoragePlugin plugin = plugins.get(name);
-    if(name.equals("sys") || name.equals("INFORMATION_SCHEMA")) return plugin;
-
-    StoragePluginConfig config = this.pluginSystemTable.get(name);
+    if(name.equals(SYS_PLUGIN) || name.equals(INFORMATION_SCHEMA_PLUGIN)) return plugin;
 
     // since we lazily manage the list of plugins per server, we need to update this once we know that it is time.
-
+    StoragePluginConfig config = this.pluginSystemTable.get(name);
     if (config == null) {
       if(plugin != null) plugins.remove(name);
       return null;
@@ -227,7 +232,6 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
       }
       return plugin;
     }
-
   }
 
   public StoragePlugin getPlugin(StoragePluginConfig config) throws ExecutionSetupException {
@@ -249,9 +253,10 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
   private StoragePlugin create(String name, StoragePluginConfig pluginConfig) throws ExecutionSetupException {
     StoragePlugin plugin = null;
     Constructor<? extends StoragePlugin> c = availablePlugins.get(pluginConfig.getClass());
-    if (c == null)
+    if (c == null) {
       throw new ExecutionSetupException(String.format("Failure finding StoragePlugin constructor for config %s",
           pluginConfig));
+    }
     try {
       plugin = c.newInstance(pluginConfig, context, name);
       return plugin;
@@ -281,14 +286,29 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
 
     @Override
     public void registerSchemas(UserSession session, SchemaPlus parent) {
+      Stopwatch watch = new Stopwatch();
+      watch.start();
+
       try {
+        Set<String> currentPluginNames = Sets.newHashSet(plugins.keySet());
+        // iterate through the plugin instances in the persistence store adding
+        // any new ones and refreshing those whose configuration has changed
+        for (Map.Entry<String, StoragePluginConfig> config : pluginSystemTable) {
+          if (config.getValue().isEnabled()) {
+            getPlugin(config.getKey());
+            currentPluginNames.remove(config.getKey());
+          }
+        }
+        // remove those which are no longer in the registry
+        for (String pluginName : currentPluginNames) {
+          if(pluginName.equals(SYS_PLUGIN) || pluginName.equals(INFORMATION_SCHEMA_PLUGIN)) continue;
+          plugins.remove(pluginName);
+        }
+
+        // finally register schemas with the refreshed plugins
         for (StoragePlugin plugin : plugins.values()) {
           plugin.registerSchemas(session, parent);
         }
-
-        getPlugin("sys").registerSchemas(session, parent);
-        getPlugin("INFORMATION_SCHEMA").registerSchemas(session, parent);
-
       } catch (ExecutionSetupException e) {
         throw new DrillRuntimeException("Failure while updating storage plugins", e);
       }
@@ -333,10 +353,11 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
         } catch (ClassCastException e) {
           throw new RuntimeException(String.format("Schema '%s' is not expected under root schema", schema.getName()));
         }
-
         SubSchemaWrapper wrapper = new SubSchemaWrapper(drillSchema);
         parent.add(wrapper.getName(), wrapper);
       }
+
+      logger.debug("Took {} ms to register schemas.", watch.elapsed(TimeUnit.MILLISECONDS));
     }
 
   }

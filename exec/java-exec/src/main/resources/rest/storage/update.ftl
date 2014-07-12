@@ -30,7 +30,7 @@
     <#if model.enabled>
       <a class="btn btn-default" href="/storage/${model.name}/config/enable/false">Disable</a>
     <#else>
-      <a class="btn btn-primary" href="/storage/${model.name}/config/enable/true">Enable</a>
+      <a class="btn btn-default" href="/storage/${model.name}/config/enable/true">Enable</a>
     </#if>
     <#if model.exists>
       <a class="btn btn-danger" href="/storage/${model.name}/config/delete">Delete</a>

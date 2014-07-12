@@ -123,6 +123,7 @@
     </file>
     <file>
       <source>src/resources/runbit</source>
+      <fileMode>0755</fileMode>
       <outputDirectory>bin</outputDirectory>
     </file>
     <file>
@@ -131,14 +132,17 @@
     </file>
     <file>
       <source>src/resources/drillbit.sh</source>
+      <fileMode>0755</fileMode>
       <outputDirectory>bin</outputDirectory>
     </file>
     <file>
       <source>src/resources/drill-config.sh</source>
+      <fileMode>0755</fileMode>
       <outputDirectory>bin</outputDirectory>
     </file>
     <file>
       <source>src/resources/sqlline</source>
+      <fileMode>0755</fileMode>
       <outputDirectory>bin</outputDirectory>
     </file>
     <file>
@@ -147,10 +151,12 @@
     </file>
     <file>
       <source>src/resources/submit_plan</source>
+      <fileMode>0755</fileMode>
       <outputDirectory>bin</outputDirectory>
     </file>
     <file>
       <source>src/resources/drill_dumpcat</source>
+      <fileMode>0755</fileMode>
       <outputDirectory>bin</outputDirectory>
     </file>
     <file>
@@ -163,6 +169,7 @@
     </file>
     <file>
       <source>src/resources/drill-env.sh</source>
+      <fileMode>0755</fileMode>
       <outputDirectory>conf</outputDirectory>
     </file>
     <file>
