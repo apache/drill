@@ -41,29 +41,15 @@
 
     cp: {
       type: "file",
-      connection: "classpath:///"
-    },
-
-    hive : {
-      type:"hive",
-      enabled: false,
-      config : {
-        "hive.metastore.uris" : "",
-        "javax.jdo.option.ConnectionURL" : "jdbc:derby:;databaseName=../../sample-data/drill_hive_db;create=true",
-        "hive.metastore.warehouse.dir" : "/tmp/drill_hive_wh",
-        "fs.default.name" : "file:///",
-        "hive.metastore.sasl.enabled" : "false"
-      }
-    },
-
-    hbase : {
-      type:"hbase",
-      enabled: false,
-      config : {
-        "hbase.zookeeper.quorum" : "localhost",
-        "hbase.zookeeper.property.clientPort" : 2181
+      connection: "classpath:///",
+      formats: {
+        "json" : {
+          type: "json"
+        },
+        "parquet" : {
+          type: "parquet"
+        }
       }
     }
-
   }
 }

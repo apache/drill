@@ -42,7 +42,7 @@ public class TestComplexToJson extends BaseTestQuery {
     client = new DrillClient(config, serviceSet.getCoordinator());
     client.setSupportComplexTypes(false);
     client.connect();
-    results = testSqlWithResults("select * from dfs.`[WORKING_PATH]/src/test/resources/store/text/data/regions.csv`");
+    results = testSqlWithResults("select * from dfs_test.`[WORKING_PATH]/src/test/resources/store/text/data/regions.csv`");
     loader.load(results.get(0).getHeader().getDef(), results.get(0).getData());
     RecordBatchDef def = results.get(0).getHeader().getDef();
     // the entire row is returned as a single column
@@ -58,7 +58,7 @@ public class TestComplexToJson extends BaseTestQuery {
     client = new DrillClient(config, serviceSet.getCoordinator());
     client.setSupportComplexTypes(true);
     client.connect();
-    results = testSqlWithResults("select * from dfs.`[WORKING_PATH]/src/test/resources/store/text/data/regions.csv`");
+    results = testSqlWithResults("select * from dfs_test.`[WORKING_PATH]/src/test/resources/store/text/data/regions.csv`");
     loader.load(results.get(0).getHeader().getDef(), results.get(0).getData());
     def = results.get(0).getHeader().getDef();
     // the entire row is returned as a single column

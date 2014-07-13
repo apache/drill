@@ -94,7 +94,7 @@ public class TestWriter extends BaseTestQuery {
 
   @Test
   public void simpleCTAS() throws Exception {
-    runSQL("Use dfs.tmp");
+    runSQL("Use dfs_test.tmp");
     runSQL(ALTER_SESSION);
 
     String testQuery = "CREATE TABLE simplectas AS SELECT * FROM cp.`employee.json`";
@@ -104,7 +104,7 @@ public class TestWriter extends BaseTestQuery {
 
   @Test
   public void complex1CTAS() throws Exception {
-    runSQL("Use dfs.tmp");
+    runSQL("Use dfs_test.tmp");
     runSQL(ALTER_SESSION);
     String testQuery = "CREATE TABLE complex1ctas AS SELECT first_name, last_name, position_id FROM cp.`employee.json`";
 
@@ -113,7 +113,7 @@ public class TestWriter extends BaseTestQuery {
 
   @Test
   public void complex2CTAS() throws Exception {
-    runSQL("Use dfs.tmp");
+    runSQL("Use dfs_test.tmp");
     runSQL(ALTER_SESSION);
     String testQuery = "CREATE TABLE complex2ctas AS SELECT CAST(`birth_date` as Timestamp) FROM cp.`employee.json` GROUP BY birth_date";
 
@@ -123,16 +123,16 @@ public class TestWriter extends BaseTestQuery {
   @Test
   public void simpleCTASWithSchemaInTableName() throws Exception {
     runSQL(ALTER_SESSION);
-    String testQuery = "CREATE TABLE dfs.tmp.`/test/simplectas2` AS SELECT * FROM cp.`employee.json`";
+    String testQuery = "CREATE TABLE dfs_test.tmp.`/test/simplectas2` AS SELECT * FROM cp.`employee.json`";
 
     ctasHelper("/tmp/drilltest/test/simplectas2", testQuery, 1155);
   }
 
   @Test
   public void simpleParquetDecimal() throws Exception {
-//    String testQuery = "CREATE TABLE dfs.tmp.`simpleparquetdecimal` AS SELECT full_name FROM cp.`employee.json`";
-    String testQuery = "CREATE TABLE dfs.tmp.`simpleparquetdecimal` AS SELECT cast(salary as decimal(30,2)) * -1 as salary FROM cp.`employee.json`";
-//    String testQuery = "select * from dfs.tmp.`simpleparquetdecimal`";
+//    String testQuery = "CREATE TABLE dfs_test.tmp.`simpleparquetdecimal` AS SELECT full_name FROM cp.`employee.json`";
+    String testQuery = "CREATE TABLE dfs_test.tmp.`simpleparquetdecimal` AS SELECT cast(salary as decimal(30,2)) * -1 as salary FROM cp.`employee.json`";
+//    String testQuery = "select * from dfs_test.tmp.`simpleparquetdecimal`";
     ctasHelper("/tmp/drilltest/simpleparquetdecimal", testQuery, 1155);
   }
 

@@ -30,29 +30,29 @@ public class TestHiveStorage extends JdbcTestQueryBase{
 
   @Test
   public void testHiveReadWithDb() throws Exception{
-    testQuery("select * from hive.`default`.kv");
-    testQuery("select key from hive.`default`.kv group by key");
+    testQuery("select * from hive_test.`default`.kv");
+    testQuery("select key from hive_test.`default`.kv group by key");
   }
 
   @Test
   public void testHiveWithDate() throws Exception {
-    testQuery("select * from hive.`default`.foodate");
-    testQuery("select date_add(a, time '12:23:33'), b from hive.`default`.foodate");
+    testQuery("select * from hive_test.`default`.foodate");
+    testQuery("select date_add(a, time '12:23:33'), b from hive_test.`default`.foodate");
   }
 
   @Test
   public void testQueryEmptyHiveTable() throws Exception {
-    testQuery("SELECT * FROM hive.`default`.empty_table");
+    testQuery("SELECT * FROM hive_test.`default`.empty_table");
   }
 
   @Test
   public void testReadAllSupportedHiveDataTypes() throws Exception {
     // There are known issues with displaying VarBinary in JDBC. So for now just execute the query and do not
     // verify the results until display issues with VarBinary are resolved.
-    testQuery("SELECT * FROM hive.`default`.readtest");
+    testQuery("SELECT * FROM hive_test.`default`.readtest");
 
     /*
-    JdbcAssert.withFull("hive.default")
+    JdbcAssert.withFull("hive_test.default")
         .sql("SELECT * FROM readtest")
         .returns(
             "binary_field=[B@7005f08f; " + // know issues with binary display
@@ -86,7 +86,7 @@ public class TestHiveStorage extends JdbcTestQueryBase{
 
   @Test
   public void testOrderByOnHiveTable() throws Exception {
-    JdbcAssert.withFull("hive.default")
+    JdbcAssert.withFull("hive_test.default")
         .sql("SELECT * FROM kv ORDER BY `value` DESC")
         .returns(
             "key=5; value= key_5\n" +

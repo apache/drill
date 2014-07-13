@@ -131,4 +131,5 @@ public interface ExecConstants {
   public static final String QUEUE_TIMEOUT_KEY = "exec.queue.timeout_millis";
   public static final OptionValidator QUEUE_TIMEOUT = new PositiveLongValidator(QUEUE_TIMEOUT_KEY, Long.MAX_VALUE, 60*1000*5);
 
+  public static final String BOOTSTRAP_STORAGE_PLUGINS_FILE = "bootstrap-storage-plugins.json";
 }

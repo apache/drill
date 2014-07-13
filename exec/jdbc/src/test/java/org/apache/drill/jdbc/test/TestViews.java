@@ -57,13 +57,13 @@ public class TestViews extends JdbcTestQueryBase {
           Statement statement = connection.createStatement();
 
           // change default schema
-          statement.executeQuery("USE dfs.tmp");
+          statement.executeQuery("USE dfs_test.tmp");
 
           // create view
           ResultSet resultSet = statement.executeQuery(viewCreate);
           String result = JdbcAssert.toString(resultSet).trim();
           resultSet.close();
-          String viewCreateResult = "ok=true; summary=View '" + viewName + "' created successfully in 'dfs.tmp' schema";
+          String viewCreateResult = "ok=true; summary=View '" + viewName + "' created successfully in 'dfs_test.tmp' schema";
           assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, viewCreateResult),
               viewCreateResult.equals(result));
 
@@ -176,7 +176,7 @@ public class TestViews extends JdbcTestQueryBase {
   @Test
   public void testViewOnHiveTable1() throws Exception{
     testViewHelper(
-        "CREATE VIEW hiveview AS SELECT * FROM hive.kv",
+        "CREATE VIEW hiveview AS SELECT * FROM hive_test.kv",
         "hiveview",
         "SELECT * FROM hiveview LIMIT 1",
         "key=1; value= key_1");
@@ -185,7 +185,7 @@ public class TestViews extends JdbcTestQueryBase {
   @Test
   public void testViewOnHiveTable2() throws Exception{
     testViewHelper(
-        "CREATE VIEW hiveview AS SELECT * FROM hive.kv",
+        "CREATE VIEW hiveview AS SELECT * FROM hive_test.kv",
         "hiveview",
         "SELECT key, `value` FROM hiveview LIMIT 1",
         "key=1; value= key_1");
@@ -194,7 +194,7 @@ public class TestViews extends JdbcTestQueryBase {
   @Test
   public void testViewOnHiveTable3() throws Exception{
     testViewHelper(
-        "CREATE VIEW hiveview AS SELECT * FROM hive.kv",
+        "CREATE VIEW hiveview AS SELECT * FROM hive_test.kv",
         "hiveview",
         "SELECT `value` FROM hiveview LIMIT 1",
         "value= key_1");
@@ -203,7 +203,7 @@ public class TestViews extends JdbcTestQueryBase {
   @Test
   public void testViewOnHiveTable4() throws Exception{
     testViewHelper(
-        "CREATE VIEW hiveview AS SELECT key, `value` FROM hive.kv",
+        "CREATE VIEW hiveview AS SELECT key, `value` FROM hive_test.kv",
         "hiveview",
         "SELECT * FROM hiveview LIMIT 1",
         "key=1; value= key_1");
@@ -212,7 +212,7 @@ public class TestViews extends JdbcTestQueryBase {
   @Test
   public void testViewOnHiveTable5() throws Exception{
     testViewHelper(
-        "CREATE VIEW hiveview AS SELECT key, `value` FROM hive.kv",
+        "CREATE VIEW hiveview AS SELECT key, `value` FROM hive_test.kv",
         "hiveview",
         "SELECT key, `value` FROM hiveview LIMIT 1",
         "key=1; value= key_1");
@@ -225,7 +225,7 @@ public class TestViews extends JdbcTestQueryBase {
         "cast(columns[1] AS CHAR(25)) n_name, " +
         "cast(columns[2] AS INT) n_regionkey, " +
         "cast(columns[3] AS VARCHAR(152)) n_comment " +
-        "FROM dfs.`%s/src/test/resources/nation`", WORKING_PATH);
+        "FROM dfs_test.`%s/src/test/resources/nation`", WORKING_PATH);
 
     testViewHelper(
         query,
@@ -242,7 +242,7 @@ public class TestViews extends JdbcTestQueryBase {
           Statement statement = connection.createStatement();
 
           // change default schema
-          statement.executeQuery("USE dfs.tmp");
+          statement.executeQuery("USE dfs_test.tmp");
 
           // create view
           statement.executeQuery(
@@ -259,7 +259,7 @@ public class TestViews extends JdbcTestQueryBase {
           resultSet = statement.executeQuery("DROP VIEW testview3");
           result = JdbcAssert.toString(resultSet).trim();
           resultSet.close();
-          expected = "ok=true; summary=View 'testview3' deleted successfully from 'dfs.tmp' schema";
+          expected = "ok=true; summary=View 'testview3' deleted successfully from 'dfs_test.tmp' schema";
           assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected),
               expected.equals(result));
 
@@ -280,17 +280,17 @@ public class TestViews extends JdbcTestQueryBase {
           Statement statement = connection.createStatement();
 
           // change default schema
-          statement.executeQuery("USE dfs.tmp");
+          statement.executeQuery("USE dfs_test.tmp");
 
           // create view
           statement.executeQuery(
-              "CREATE VIEW testview3 AS SELECT * FROM hive.kv");
+              "CREATE VIEW testview3 AS SELECT * FROM hive_test.kv");
 
           // show tables on view
           ResultSet resultSet = statement.executeQuery("SHOW TABLES like 'testview3'");
           String result = JdbcAssert.toString(resultSet).trim();
           resultSet.close();
-          String expected = "TABLE_SCHEMA=dfs.tmp; TABLE_NAME=testview3";
+          String expected = "TABLE_SCHEMA=dfs_test.tmp; TABLE_NAME=testview3";
           assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected),
               expected.equals(result));
 
@@ -299,7 +299,7 @@ public class TestViews extends JdbcTestQueryBase {
               "WHERE TABLE_NAME = 'testview3'");
           result = JdbcAssert.toString(resultSet).trim();
           resultSet.close();
-          expected = "TABLE_CATALOG=DRILL; TABLE_SCHEMA=dfs.tmp; TABLE_NAME=testview3; VIEW_DEFINITION=SELECT *\nFROM `hive`.`kv`";
+          expected = "TABLE_CATALOG=DRILL; TABLE_SCHEMA=dfs_test.tmp; TABLE_NAME=testview3; VIEW_DEFINITION=SELECT *\nFROM `hive_test`.`kv`";
           DrillAssert.assertMultiLineStringEquals(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected),
               expected, result);
 
@@ -308,12 +308,12 @@ public class TestViews extends JdbcTestQueryBase {
               "WHERE TABLE_NAME = 'testview3'");
           result = JdbcAssert.toString(resultSet).trim();
           resultSet.close();
-          expected = "TABLE_CATALOG=DRILL; TABLE_SCHEMA=dfs.tmp; TABLE_NAME=testview3; TABLE_TYPE=VIEW";
+          expected = "TABLE_CATALOG=DRILL; TABLE_SCHEMA=dfs_test.tmp; TABLE_NAME=testview3; TABLE_TYPE=VIEW";
           assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected),
               expected.equals(result));
 
           // describe a view
-          resultSet = statement.executeQuery("DESCRIBE dfs.tmp.testview3");
+          resultSet = statement.executeQuery("DESCRIBE dfs_test.tmp.testview3");
           result = JdbcAssert.toString(resultSet).trim();
           resultSet.close();
           expected =
@@ -335,9 +335,9 @@ public class TestViews extends JdbcTestQueryBase {
 
   @Test
   public void testInfoSchemaWithHiveView() throws Exception {
-    JdbcAssert.withFull("hive.default")
+    JdbcAssert.withFull("hive_test.default")
         .sql("SELECT * FROM INFORMATION_SCHEMA.VIEWS WHERE TABLE_NAME = 'hiveview'")
-        .returns("TABLE_CATALOG=DRILL; TABLE_SCHEMA=hive.default; TABLE_NAME=hiveview; " +
+        .returns("TABLE_CATALOG=DRILL; TABLE_SCHEMA=hive_test.default; TABLE_NAME=hiveview; " +
             "VIEW_DEFINITION=SELECT `kv`.`key`, `kv`.`value` FROM `default`.`kv`");
   }
 
@@ -352,24 +352,24 @@ public class TestViews extends JdbcTestQueryBase {
           statement.executeQuery("USE cp");
 
           // create a view with full schema identifier
-          ResultSet resultSet =  statement.executeQuery("CREATE VIEW dfs.tmp.testview AS SELECT * FROM hive.kv");
+          ResultSet resultSet =  statement.executeQuery("CREATE VIEW dfs_test.tmp.testview AS SELECT * FROM hive_test.kv");
           String result = JdbcAssert.toString(resultSet).trim();
           resultSet.close();
-          String expected = "ok=true; summary=View 'testview' created successfully in 'dfs.tmp' schema";
+          String expected = "ok=true; summary=View 'testview' created successfully in 'dfs_test.tmp' schema";
           assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected),
               expected.equals(result));
 
           // query from view
-          resultSet = statement.executeQuery("SELECT key FROM dfs.tmp.testview LIMIT 1");
+          resultSet = statement.executeQuery("SELECT key FROM dfs_test.tmp.testview LIMIT 1");
           result = JdbcAssert.toString(resultSet).trim();
           resultSet.close();
           expected = "key=1";
           assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected),
               expected.equals(result));
 
-          statement.executeQuery("drop view dfs.tmp.testview").close();
+          statement.executeQuery("drop view dfs_test.tmp.testview").close();
 
-          statement.executeQuery("drop view dfs.tmp.testview").close();
+          statement.executeQuery("drop view dfs_test.tmp.testview").close();
 
           statement.close();
           return null;
@@ -388,13 +388,13 @@ public class TestViews extends JdbcTestQueryBase {
           Statement statement = connection.createStatement();
 
           // change default schema
-          statement.executeQuery("USE dfs");
+          statement.executeQuery("USE dfs_test");
 
           // create a view with partial schema identifier
-          ResultSet resultSet =  statement.executeQuery("CREATE VIEW tmp.testview AS SELECT * FROM hive.kv");
+          ResultSet resultSet =  statement.executeQuery("CREATE VIEW tmp.testview AS SELECT * FROM hive_test.kv");
           String result = JdbcAssert.toString(resultSet).trim();
           resultSet.close();
-          String expected = "ok=true; summary=View 'testview' created successfully in 'dfs.tmp' schema";
+          String expected = "ok=true; summary=View 'testview' created successfully in 'dfs_test.tmp' schema";
           assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected),
               expected.equals(result));
 
@@ -407,7 +407,7 @@ public class TestViews extends JdbcTestQueryBase {
               expected.equals(result));
 
           // change the default schema and query
-          statement.executeQuery("USE dfs.tmp");
+          statement.executeQuery("USE dfs_test.tmp");
           resultSet = statement.executeQuery("SELECT key FROM testview LIMIT 1");
           result = JdbcAssert.toString(resultSet).trim();
           resultSet.close();

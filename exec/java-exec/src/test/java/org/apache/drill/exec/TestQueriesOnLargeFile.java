@@ -72,7 +72,7 @@ public class TestQueriesOnLargeFile extends BaseTestQuery {
   @Test
   public void testRead() throws Exception {
     List<QueryResultBatch> results = testSqlWithResults(
-        String.format("SELECT count(*) FROM dfs.`default`.`%s`", dataFile.getPath()));
+        String.format("SELECT count(*) FROM dfs_test.`default`.`%s`", dataFile.getPath()));
 
     RecordBatchLoader batchLoader = new RecordBatchLoader(getAllocator());
 

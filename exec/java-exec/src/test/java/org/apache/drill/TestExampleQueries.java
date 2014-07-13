@@ -98,14 +98,14 @@ public class TestExampleQueries extends BaseTestQuery{
   @Test
   public void testText() throws Exception {
     String root = FileUtils.getResourceAsFile("/store/text/data/regions.csv").toURI().toString();
-    String query = String.format("select * from dfs.`%s`", root);
+    String query = String.format("select * from dfs_test.`%s`", root);
     test(query);
   }
 
   @Test
   public void testTextPartitions() throws Exception {
     String root = FileUtils.getResourceAsFile("/store/text/data/").toURI().toString();
-    String query = String.format("select * from dfs.`%s`", root);
+    String query = String.format("select * from dfs_test.`%s`", root);
     test(query);
   }
 
@@ -116,9 +116,9 @@ public class TestExampleQueries extends BaseTestQuery{
         "  nations.N_NAME,\n" +
         "  regions.R_NAME\n" +
         "FROM\n" +
-        "  dfs.`[WORKING_PATH]/../../sample-data/nation.parquet` nations\n" +
+        "  dfs_test.`[WORKING_PATH]/../../sample-data/nation.parquet` nations\n" +
         "JOIN\n" +
-        "  dfs.`[WORKING_PATH]/../../sample-data/region.parquet` regions\n" +
+        "  dfs_test.`[WORKING_PATH]/../../sample-data/region.parquet` regions\n" +
         "  on nations.N_REGIONKEY = regions.R_REGIONKEY where 1 = 0");
   }
 

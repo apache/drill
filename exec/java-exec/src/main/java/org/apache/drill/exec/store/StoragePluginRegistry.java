@@ -142,30 +142,35 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
   }
 
   private Map<String, StoragePlugin> createPlugins() throws DrillbitStartupException {
-    /*
-     * Check if the storage plugins system table has any entries.  If not, load the boostrap-storage-plugin file into the system table.
-     */
-    Map<String, StoragePlugin> activePlugins = new HashMap<String, StoragePlugin>();
-
     try {
-
+      /*
+       * Check if the storage plugins system table has any entries.  If not, load the boostrap-storage-plugin file into the system table.
+       */
       if (!pluginSystemTable.iterator().hasNext()) {
         // bootstrap load the config since no plugins are stored.
-        URL url = Resources.class.getClassLoader().getResource("bootstrap-storage-plugins.json");
-        logger.info("Bootstrap loading the storage plugin configs from URL {}.", url);
-        if (url != null) {
-          String pluginsData = Resources.toString(url, Charsets.UTF_8);
-          StoragePlugins plugins = context.getConfig().getMapper().readValue(pluginsData, StoragePlugins.class);
-
-          for (Map.Entry<String, StoragePluginConfig> config : plugins) {
-            pluginSystemTable.put(config.getKey(), config.getValue());
+        logger.info("No storage plugin instances configured in persistent store, loading bootstrap configuration.");
+        Collection<URL> urls = PathScanner.forResource(ExecConstants.BOOTSTRAP_STORAGE_PLUGINS_FILE, false, Resources.class.getClassLoader());
+        if (urls != null && ! urls.isEmpty()) {
+          logger.info("Loading the storage plugin configs from URLs {}.", urls);
+          Map<String, URL> pluginURLMap = Maps.newHashMap();
+          for (URL url :urls) {
+            String pluginsData = Resources.toString(url, Charsets.UTF_8);
+            StoragePlugins plugins = context.getConfig().getMapper().readValue(pluginsData, StoragePlugins.class);
+            for (Map.Entry<String, StoragePluginConfig> config : plugins) {
+              if (!pluginSystemTable.putIfAbsent(config.getKey(), config.getValue())) {
+                logger.warn("Duplicate plugin instance '{}' defined in [{}, {}], ignoring the later one.",
+                            config.getKey(), pluginURLMap.get(config.getKey()), url);
+                continue;
+              }
+              pluginURLMap.put(config.getKey(), url);
+            }
           }
-
         } else {
-          throw new IOException("Failure finding bootstrap-storage-plugins.json");
+          throw new IOException("Failure finding " + ExecConstants.BOOTSTRAP_STORAGE_PLUGINS_FILE);
         }
       }
 
+      Map<String, StoragePlugin> activePlugins = new HashMap<String, StoragePlugin>();
       for (Map.Entry<String, StoragePluginConfig> config : pluginSystemTable) {
         try {
           if (config.getValue().isEnabled()) {
@@ -177,15 +182,14 @@ public class StoragePluginRegistry implements Iterable<Map.Entry<String, Storage
         }
       }
 
+      activePlugins.put(INFORMATION_SCHEMA_PLUGIN, new InfoSchemaStoragePlugin(new InfoSchemaConfig(), context, INFORMATION_SCHEMA_PLUGIN));
+      activePlugins.put(SYS_PLUGIN, new SystemTablePlugin(SystemTablePluginConfig.INSTANCE, context, SYS_PLUGIN));
+
+      return activePlugins;
     } catch (IOException e) {
       logger.error("Failure setting up storage plugins.  Drillbit exiting.", e);
       throw new IllegalStateException(e);
     }
-
-    activePlugins.put(INFORMATION_SCHEMA_PLUGIN, new InfoSchemaStoragePlugin(new InfoSchemaConfig(), context, INFORMATION_SCHEMA_PLUGIN));
-    activePlugins.put(SYS_PLUGIN, new SystemTablePlugin(SystemTablePluginConfig.INSTANCE, context, SYS_PLUGIN));
-
-    return activePlugins;
   }
 
   public void deletePlugin(String name) {

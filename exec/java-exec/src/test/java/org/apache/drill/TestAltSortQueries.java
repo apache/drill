@@ -30,14 +30,14 @@ public class TestAltSortQueries extends BaseTestQuery{
   @Test
   public void testOrderBy() throws Exception{
     test("select R_REGIONKEY " +
-         "from dfs.`[WORKING_PATH]/../../sample-data/region.parquet` " +
+         "from dfs_test.`[WORKING_PATH]/../../sample-data/region.parquet` " +
          "order by R_REGIONKEY");
   }
 
   @Test
   public void testOrderBySingleFile() throws Exception{
     test("select R_REGIONKEY " +
-         "from dfs.`[WORKING_PATH]/../../sample-data/regionsSF/` " +
+         "from dfs_test.`[WORKING_PATH]/../../sample-data/regionsSF/` " +
          "order by R_REGIONKEY");
   }
 
@@ -57,9 +57,9 @@ public class TestAltSortQueries extends BaseTestQuery{
         "  nations.N_NAME,\n" +
         "  regions.R_NAME\n" +
         "FROM\n" +
-        "  dfs.`[WORKING_PATH]/../../sample-data/nation.parquet` nations\n" +
+        "  dfs_test.`[WORKING_PATH]/../../sample-data/nation.parquet` nations\n" +
         "JOIN\n" +
-        "  dfs.`[WORKING_PATH]/../../sample-data/region.parquet` regions\n" +
+        "  dfs_test.`[WORKING_PATH]/../../sample-data/region.parquet` regions\n" +
         "  on nations.N_REGIONKEY = regions.R_REGIONKEY" +
         " order by regions.R_NAME, nations.N_NAME " +
         " limit 5");

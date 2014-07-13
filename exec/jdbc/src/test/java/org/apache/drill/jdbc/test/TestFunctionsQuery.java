@@ -44,7 +44,7 @@ public class TestFunctionsQuery {
         "abs(cast('-12345678912345678912.4567' as decimal(28, 5))) DEC28_ABS_2, " +
         "abs(cast('1234567891234567891234567891234567891.4' as decimal(38, 1))) DEC38_ABS_1, " +
         "abs(cast('-1234567891234567891234567891234567891.4' as decimal(38, 1))) DEC38_ABS_2 " +
-        "FROM dfs.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
+        "FROM dfs_test.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
 
     JdbcAssert.withNoDefaultSchema()
         .sql(query)
@@ -82,7 +82,7 @@ public class TestFunctionsQuery {
         "ceil(cast('1234567891234567891234567891234567891.0' as decimal(38, 1))) DEC38_3, " +
         "ceil(cast('-1234567891234567891234567891234567891.4' as decimal(38, 1))) DEC38_4, " +
         "ceil(cast('-1234567891234567891234567891234567891.0' as decimal(38, 1))) DEC38_5 " +
-        "FROM dfs.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
+        "FROM dfs_test.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
 
     JdbcAssert.withNoDefaultSchema()
         .sql(query)
@@ -130,7 +130,7 @@ public class TestFunctionsQuery {
         "floor(cast('1234567891234567891234567891234567891.0' as decimal(38, 1))) DEC38_3, " +
         "floor(cast('-1234567891234567891234567891234567891.4' as decimal(38, 1))) DEC38_4, " +
         "floor(cast('-999999999999999999999999999999999999.4' as decimal(38, 1))) DEC38_5 " +
-        "FROM dfs.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
+        "FROM dfs_test.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
 
     JdbcAssert.withNoDefaultSchema()
         .sql(query)
@@ -177,7 +177,7 @@ public class TestFunctionsQuery {
         "trunc(cast('1234567891234567891234567891234567891.0' as decimal(38, 1))) DEC38_3, " +
         "trunc(cast('-1234567891234567891234567891234567891.4' as decimal(38, 1))) DEC38_4, " +
         "trunc(cast('-999999999999999999999999999999999999.4' as decimal(38, 1))) DEC38_5 " +
-        "FROM dfs.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
+        "FROM dfs_test.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
 
     JdbcAssert.withNoDefaultSchema()
         .sql(query)
@@ -224,7 +224,7 @@ public class TestFunctionsQuery {
         "trunc(cast('999999999.1234' as decimal(38, 4)), 12) DEC38_3, " +
         "trunc(cast('-123456789123456789.4' as decimal(38, 1)), 10) DEC38_4, " +
         "trunc(cast('-999999999999999999999999999999999999.4' as decimal(38, 1)), 1) DEC38_5 " +
-        "FROM dfs.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
+        "FROM dfs_test.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
 
     JdbcAssert.withNoDefaultSchema()
         .sql(query)
@@ -263,7 +263,7 @@ public class TestFunctionsQuery {
       "trunc(-1234, -4) as T_8, " +
       "trunc(8124674407369523212, 0) as T_9, " +
       "trunc(81246744073695.395, 1) as T_10 " +
-      "FROM dfs.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
+      "FROM dfs_test.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
 
     JdbcAssert.withNoDefaultSchema()
       .sql(query)
@@ -303,7 +303,7 @@ public class TestFunctionsQuery {
         "round(cast('1234567891234567891234567891234567891.2' as decimal(38, 1))) DEC38_4, " +
         "round(cast('-1234567891234567891234567891234567891.4' as decimal(38, 1))) DEC38_5, " +
         "round(cast('-999999999999999999999999999999999999.9' as decimal(38, 1))) DEC38_6 " +
-        "FROM dfs.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
+        "FROM dfs_test.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
 
     JdbcAssert.withNoDefaultSchema()
         .sql(query)
@@ -354,7 +354,7 @@ public class TestFunctionsQuery {
         "round(cast('999999999.9999999995678' as decimal(38, 18)), 21) DEC38_5, " +
         "round(cast('-1234567891234567891234567891234567891.4' as decimal(38, 1)), 1) DEC38_6, " +
         "round(cast('-999999999999999999999999999999999999.9' as decimal(38, 1)), 0) DEC38_7 " +
-        "FROM dfs.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
+        "FROM dfs_test.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
 
     JdbcAssert.withNoDefaultSchema()
         .sql(query)
@@ -396,7 +396,7 @@ public class TestFunctionsQuery {
       "round(-1234, -4) as T_8, " +
       "round(8124674407369523212, -4) as T_9, " +
       "round(81246744073695.395, 1) as T_10 " +
-      "FROM dfs.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
+      "FROM dfs_test.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
 
     JdbcAssert.withNoDefaultSchema()
       .sql(query)
@@ -423,7 +423,7 @@ public class TestFunctionsQuery {
         "to_char(cast('99999912399.9567' as decimal(18, 5)), '#.#####') DEC18_1, " +
         "to_char(cast('12345678912345678912.5567' as decimal(28, 5)), '#,###.#####') DEC28_1, " +
         "to_char(cast('999999999999999999999999999.5' as decimal(38, 1)), '#.#') DEC38_1 " +
-        "FROM dfs.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
+        "FROM dfs_test.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
 
     JdbcAssert.withNoDefaultSchema()
         .sql(query)
@@ -442,7 +442,7 @@ public class TestFunctionsQuery {
   public void testConcatFunction() throws Exception {
     String query = String.format("SELECT " +
         "concat('1234', ' COL_VALUE ', R_REGIONKEY, ' - STRING') as STR_1 " +
-        "FROM dfs.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
+        "FROM dfs_test.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
 
     JdbcAssert.withNoDefaultSchema()
         .sql(query)
@@ -456,7 +456,7 @@ public class TestFunctionsQuery {
   public void testTimeStampConstant() throws Exception {
     String query = String.format("SELECT " +
         "timestamp '2008-2-23 12:23:23' as TS " +
-        "FROM dfs.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
+        "FROM dfs_test.`%s/../../sample-data/region.parquet` limit 1", WORKING_PATH);
 
     JdbcAssert.withNoDefaultSchema()
         .sql(query)

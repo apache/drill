@@ -193,7 +193,7 @@ public class TestParquetWriter extends BaseTestQuery {
       fs.delete(path, true);
     }
 
-    test("use dfs.tmp");
+    test("use dfs_test.tmp");
     String query = String.format("SELECT %s FROM %s", selection, inputTable);
     String create = "CREATE TABLE " + outputFile + " AS " + query;
     String validateQuery = String.format("SELECT %s FROM " + outputFile, validationSelection);

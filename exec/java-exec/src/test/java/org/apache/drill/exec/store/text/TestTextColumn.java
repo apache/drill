@@ -36,13 +36,13 @@ public class TestTextColumn extends BaseTestQuery{
 
   @Test
   public void testCsvColumnSelection() throws Exception{
-    test("select columns[0] as region_id, columns[1] as country from dfs.`[WORKING_PATH]/src/test/resources/store/text/data/regions.csv`");
+    test("select columns[0] as region_id, columns[1] as country from dfs_test.`[WORKING_PATH]/src/test/resources/store/text/data/regions.csv`");
   }
 
   @Test
   public void testDefaultDelimiterColumnSelection() throws Exception {
     List<QueryResultBatch> batches = testSqlWithResults("SELECT columns[0] as entire_row " +
-      "from dfs.`[WORKING_PATH]/src/test/resources/store/text/data/letters.txt`");
+      "from dfs_test.`[WORKING_PATH]/src/test/resources/store/text/data/letters.txt`");
 
     List<List<String>> expectedOutput = Arrays.asList(
       Arrays.asList("\"a, b,\",\"c\",\"d,, \\n e\""),
@@ -56,7 +56,7 @@ public class TestTextColumn extends BaseTestQuery{
   @Test
   public void testCsvColumnSelectionCommasInsideQuotes() throws Exception {
     List<QueryResultBatch> batches = testSqlWithResults("SELECT columns[0] as col1, columns[1] as col2, columns[2] as col3," +
-      "columns[3] as col4 from dfs.`[WORKING_PATH]/src/test/resources/store/text/data/letters.csv`");
+      "columns[3] as col4 from dfs_test.`[WORKING_PATH]/src/test/resources/store/text/data/letters.csv`");
 
     List<List<String>> expectedOutput = Arrays.asList(
       Arrays.asList("\"a, b,\"", "\"c\"", "\"d,, \\n e\"","\"f\\\"g\""),
