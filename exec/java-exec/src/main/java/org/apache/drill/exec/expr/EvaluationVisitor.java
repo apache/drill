@@ -379,27 +379,30 @@ public class EvaluationVisitor {
       } else {
         JExpression vector = e.isSuperReader() ? vv1.component(componentVariable) : vv1;
         JExpression expr = vector.invoke("getAccessor").invoke("getReader");
-        JVar isNull = generator.getEvalBlock().decl(generator.getModel().INT, "isNull", JExpr.lit(0));
+        PathSegment seg = e.getReadPath();
+
+        JVar isNull = null;
+        boolean isNullReaderLikely = isNullReaderLikely(seg, complex || repeated);
+        if (isNullReaderLikely) {
+          isNull = generator.getEvalBlock().decl(generator.getModel().INT, generator.getNextVar("isNull"), JExpr.lit(0));
+        }
 
         JLabel label = generator.getEvalBlock().label("complex");
         JBlock eval = generator.getEvalBlock().block();
 
         // position to the correct value.
         eval.add(expr.invoke("setPosition").arg(indexVariable));
-        PathSegment seg = e.getReadPath();
         int listNum = 0;
-        boolean lastWasArray = false;
 
         while (seg != null) {
           if (seg.isArray()) {
-            lastWasArray = true;
-
+            // stop once we get to the last segment and the final type is neither complex nor repeated (map, list, repeated list).
+            // In case of non-complex and non-repeated type, we return Holder, in stead of FieldReader.
             if (seg.isLastPath() && !complex && !repeated)
               break;
 
             JVar list = generator.declareClassField("list", generator.getModel()._ref(FieldReader.class));
             eval.assign(list, expr);
-            expr = list;
 
             // if this is an array, set a single position for the expression to
             // allow us to read the right data lower down.
@@ -413,7 +416,6 @@ public class EvaluationVisitor {
                 currentIndex.lt(desiredIndex) //
                     .cand(list.invoke("next"))).body().assign(currentIndex, currentIndex.plus(JExpr.lit(1)));
 
-            expr = list.invoke("reader");
 
             JBlock ifNoVal = eval._if(desiredIndex.ne(currentIndex))._then().block();
             if (out.isOptional()) {
@@ -422,17 +424,13 @@ public class EvaluationVisitor {
             ifNoVal.assign(isNull,  JExpr.lit(1));
             ifNoVal._break(label);
 
+            expr = list.invoke("reader");
             listNum++;
           } else {
-            lastWasArray = false;
             JExpression fieldName = JExpr.lit(seg.getNameSegment().getPath());
             expr = expr.invoke("reader").arg(fieldName);
           }
           seg = seg.getChild();
-
-          // stop once we get to last column or when the segment is an array at
-          // the end of the reference.
-          // if(seg == null || seg.isLastPath() && seg.isArray()) break;
         }
 
         if (complex || repeated) {
@@ -440,17 +438,20 @@ public class EvaluationVisitor {
           // //
           JVar complexReader = generator.declareClassField("reader", generator.getModel()._ref(FieldReader.class));
 
-          JConditional jc = generator.getEvalBlock()._if(isNull.eq(JExpr.lit(0)));
+          if (isNullReaderLikely) {
+            JConditional jc = generator.getEvalBlock()._if(isNull.eq(JExpr.lit(0)));
 
-          JClass nrClass = generator.getModel().ref(org.apache.drill.exec.vector.complex.impl.NullReader.class);
-          JExpression nullReader = nrClass.staticRef("INSTANCE");
+            JClass nrClass = generator.getModel().ref(org.apache.drill.exec.vector.complex.impl.NullReader.class);
+            JExpression nullReader = nrClass.staticRef("INSTANCE");
 
-          jc._then().assign(complexReader, expr);
-          jc._else().assign(complexReader, nullReader);
+            jc._then().assign(complexReader, expr);
+            jc._else().assign(complexReader, nullReader);
+          } else {
+            eval.assign(complexReader, expr);
+          }
 
           HoldingContainer hc = new HoldingContainer(e.getMajorType(), complexReader, null, null, false, true);
           return hc;
-          // //eval.assign(out.getHolder().ref("reader"), expr);
         } else {
           if (seg != null) {
             eval.add(expr.invoke("read").arg(JExpr.lit(seg.getArraySegment().getIndex())).arg(out.getHolder()));
@@ -462,6 +463,24 @@ public class EvaluationVisitor {
       }
 
       return out;
+    }
+
+    /*  Check if a Path expression could produce a NullReader. A path expression will produce a null reader, when:
+     *   1) It contains an array segment as non-leaf segment :  a.b[2].c.  segment [2] might produce null reader.
+     *   2) It contains an array segment as leaf segment, AND the final output is complex or repeated : a.b[2], when
+     *     the final type of this expression is a map, or releated list, or repeated map.
+     */
+    private boolean isNullReaderLikely(PathSegment seg, boolean complexOrRepeated) {
+      while (seg != null) {
+        if (seg.isArray() && !seg.isLastPath())
+          return true;
+
+        if (seg.isLastPath() && complexOrRepeated)
+          return true;
+
+        seg = seg.getChild();
+      }
+      return false;
     }
 
     private HoldingContainer visitReturnValueExpression(ReturnValueExpression e, ClassGenerator<?> generator) {

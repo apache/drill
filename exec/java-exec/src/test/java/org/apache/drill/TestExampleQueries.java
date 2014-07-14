@@ -103,6 +103,14 @@ public class TestExampleQueries extends BaseTestQuery{
   }
 
   @Test
+  public void testFilterOnArrayTypes() throws Exception {
+    String root = FileUtils.getResourceAsFile("/store/text/data/regions.csv").toURI().toString();
+    String query = String.format("select columns[0] from dfs_test.`%s` " +
+        " where cast(columns[0] as int) > 1 and cast(columns[1] as varchar(20))='ASIA'", root);
+    test(query);
+  }
+
+  @Test
   public void testTextPartitions() throws Exception {
     String root = FileUtils.getResourceAsFile("/store/text/data/").toURI().toString();
     String query = String.format("select * from dfs_test.`%s`", root);
@@ -116,9 +124,9 @@ public class TestExampleQueries extends BaseTestQuery{
         "  nations.N_NAME,\n" +
         "  regions.R_NAME\n" +
         "FROM\n" +
-        "  dfs_test.`[WORKING_PATH]/../../sample-data/nation.parquet` nations\n" +
+        "  cp.`tpch/nation.parquet` nations\n" +
         "JOIN\n" +
-        "  dfs_test.`[WORKING_PATH]/../../sample-data/region.parquet` regions\n" +
+        "  cp.`tpch/region.parquet` regions\n" +
         "  on nations.N_REGIONKEY = regions.R_REGIONKEY where 1 = 0");
   }
 
