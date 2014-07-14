@@ -48,4 +48,8 @@ public abstract class SinglePrel extends SingleRel implements Prel{
     return SelectionVectorMode.DEFAULT;
   }
 
+  @Override
+  public boolean needsFinalColumnReordering() {
+    return true;
+  }
 }

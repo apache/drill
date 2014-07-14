@@ -81,5 +81,9 @@ public class ProjectPrel extends DrillProjectRelBase implements Prel{
     return SelectionVectorMode.NONE;
   }
 
-
+  @Override
+  public boolean needsFinalColumnReordering() {
+    return false;
+  }
+  
 }

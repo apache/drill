@@ -23,11 +23,6 @@ import org.junit.Test;
 public class TestUnionAll extends BaseTestQuery{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestUnionAll.class);
   
-  @Test
-  public void testQuery1() throws Exception {
-    test("select c_name from cp.`tpch/customer.parquet` union all select c_acctbal from cp.`tpch/customer.parquet`"); 
-  }
-
   @Test    // Simple Union-All over two scans
   public void testUnionAll1() throws Exception {
     test("select n_regionkey from cp.`tpch/nation.parquet` union all select r_regionkey from cp.`tpch/region.parquet`");  
@@ -53,11 +48,15 @@ public class TestUnionAll extends BaseTestQuery{
     test("select * from cp.`tpch/region.parquet` r1 union all select * from cp.`tpch/region.parquet` r2");
   }
   
-  @Test
-  @Ignore // Produces wrong result
+  @Test // Union-All where same column is projected twice in right child
   public void testUnionAll6() throws Exception {
     test("select n_nationkey, n_regionkey from cp.`tpch/nation.parquet` where n_regionkey = 1 union all select r_regionkey, r_regionkey from cp.`tpch/region.parquet` where r_regionkey = 2");
-  }  
+  } 
+  
+  @Test // Union-All where same column is projected twice in left and right child
+  public void testUnionAll6_1() throws Exception {
+    test("select n_nationkey, n_nationkey from cp.`tpch/nation.parquet` union all select r_regionkey, r_regionkey from cp.`tpch/region.parquet`");
+  } 
 
   @Test  // Union-all of two string literals of different lengths
   public void testUnionAll7() throws Exception {

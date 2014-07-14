@@ -89,6 +89,11 @@ public class LimitPrel extends DrillLimitRelBase implements Prel {
     return SelectionVectorMode.TWO_BYTE;
   }
 
+  @Override
+  public boolean needsFinalColumnReordering() {
+    return true;
+  }
+  
 //  @Override
 //  public LogicalOperator implement(DrillImplementor implementor) {
 //    LogicalOperator inputOp = implementor.visitChild(this, 0, getChild());

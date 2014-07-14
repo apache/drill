@@ -36,5 +36,6 @@ public interface Prel extends DrillRelNode, Iterable<Prel>{
 
   public SelectionVectorMode[] getSupportedEncodings();
   public SelectionVectorMode getEncoding();
+  boolean needsFinalColumnReordering();
 
 }

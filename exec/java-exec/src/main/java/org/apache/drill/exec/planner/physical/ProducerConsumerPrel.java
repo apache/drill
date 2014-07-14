@@ -75,4 +75,10 @@ public class ProducerConsumerPrel extends SingleRel implements DrillRelNode, Pre
   public SelectionVectorMode getEncoding() {
     return SelectionVectorMode.NONE;
   }
+  
+  @Override
+  public boolean needsFinalColumnReordering() {
+    return true;
+  }
+  
 }

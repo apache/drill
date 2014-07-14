@@ -47,6 +47,11 @@ public class FinalColumnReorderer extends BasePrelVisitor<Prel, Void, RuntimeExc
   }
 
   private Prel addTrivialOrderedProjectPrel(Prel prel){
+    
+    if ( !prel.needsFinalColumnReordering()) {
+      return prel;
+    }
+    
     RelDataType t = prel.getRowType();
 
     RexBuilder b = prel.getCluster().getRexBuilder();

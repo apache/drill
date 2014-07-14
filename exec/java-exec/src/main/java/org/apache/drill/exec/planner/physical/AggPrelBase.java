@@ -185,5 +185,10 @@ public abstract class AggPrelBase extends AggregateRelBase implements Prel{
   public <T, X, E extends Throwable> T accept(PrelVisitor<T, X, E> logicalVisitor, X value) throws E {
     return logicalVisitor.visitPrel(this, value);
   }
+  
+  @Override
+  public boolean needsFinalColumnReordering() {
+    return true;
+  }
 
 }
