@@ -194,6 +194,11 @@ public class HiveSchemaFactory implements SchemaFactory {
     public Schema getSubSchema(String name) {
       List<String> tables;
       try {
+        List<String> dbs = databases.get(DATABASES);
+        if (!dbs.contains(name)) {
+          logger.debug(String.format("Database '%s' doesn't exists in Hive storage '%s'", name, schemaName));
+          return null;
+        }
         tables = tableNameLoader.get(name);
         HiveDatabaseSchema schema = new HiveDatabaseSchema(tables, this, name);
         if(name.equals("default")){
