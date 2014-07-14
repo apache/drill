@@ -42,13 +42,13 @@ public class IntVIntConvertTo implements DrillSimpleFunc {
     /* Hadoop Variable length integer (represented in the same way as a long)
      * occupies between 1-9 bytes.
      */
-    buffer = org.apache.drill.exec.util.ConvertUtil.createBuffer(9);
+    buffer = org.apache.drill.exec.util.ByteBufUtil.createBuffer(9);
   }
 
   @Override
   public void eval() {
     buffer.clear();
-    org.apache.drill.exec.util.ConvertUtil.HadoopWritables.writeVLong(buffer, 0, 9, in.value);
+    org.apache.drill.exec.util.ByteBufUtil.HadoopWritables.writeVLong(buffer, 0, 9, in.value);
     out.buffer = buffer;
     out.start = 0;
     out.end = buffer.readableBytes();

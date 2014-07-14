@@ -38,6 +38,6 @@ public class IntVIntConvertFrom implements DrillSimpleFunc {
 
   @Override
   public void eval() {
-    out.value = org.apache.drill.exec.util.ConvertUtil.HadoopWritables.readVInt(in.buffer, in.start, in.end);
+    out.value = org.apache.drill.exec.util.ByteBufUtil.HadoopWritables.readVInt(in.buffer, in.start, in.end);
   }
 }

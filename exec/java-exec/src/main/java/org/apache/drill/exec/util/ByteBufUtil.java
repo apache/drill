@@ -24,9 +24,8 @@ import io.netty.buffer.Unpooled;
 import java.io.DataInput;
 
 import org.apache.drill.common.util.DrillStringUtils;
-import org.apache.drill.exec.expr.fn.impl.StringFunctionUtil;
 
-public class ConvertUtil {
+public class ByteBufUtil {
   /**
    * Creates a wrapped {@link ByteBuf} of {@code size} number of bytes with
    * the Drill's default endianness(LITTLE_ENDIAN).
@@ -36,6 +35,17 @@ public class ConvertUtil {
    */
   public static ByteBuf createBuffer(int size) {
     return Unpooled.wrappedBuffer(new byte[size]).order(LITTLE_ENDIAN);
+  }
+
+  /**
+   * Creates a {@link ByteBuf} which wraps the provided byte array with
+   * the Drill's default endianness(LITTLE_ENDIAN).
+   *
+   * @param size
+   * @return
+   */
+  public static ByteBuf createBuffer(byte[] source) {
+    return Unpooled.wrappedBuffer(source).order(LITTLE_ENDIAN);
   }
 
   /**

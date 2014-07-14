@@ -40,7 +40,7 @@ public class UInt8ConvertTo implements DrillSimpleFunc {
 
   @Override
   public void setup(RecordBatch incoming) {
-    buffer = org.apache.drill.exec.util.ConvertUtil.createBuffer(8);
+    buffer = org.apache.drill.exec.util.ByteBufUtil.createBuffer(8);
   }
 
   @Override

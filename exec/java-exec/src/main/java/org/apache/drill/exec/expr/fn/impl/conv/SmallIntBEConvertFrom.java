@@ -39,7 +39,7 @@ public class SmallIntBEConvertFrom implements DrillSimpleFunc {
 
   @Override
   public void eval() {
-    org.apache.drill.exec.util.ConvertUtil.checkBufferLength(in.buffer, in.start, in.end, 2);
+    org.apache.drill.exec.util.ByteBufUtil.checkBufferLength(in.buffer, in.start, in.end, 2);
 
     in.buffer.readerIndex(in.start);
     out.value = Short.reverseBytes(in.buffer.readShort());

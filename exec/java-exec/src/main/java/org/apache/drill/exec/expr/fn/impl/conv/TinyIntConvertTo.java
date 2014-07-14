@@ -41,7 +41,7 @@ public class TinyIntConvertTo implements DrillSimpleFunc {
 
   @Override
   public void setup(RecordBatch incoming) {
-    buffer = org.apache.drill.exec.util.ConvertUtil.createBuffer(1);
+    buffer = org.apache.drill.exec.util.ByteBufUtil.createBuffer(1);
   }
 
   @Override

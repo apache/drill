@@ -29,6 +29,7 @@ public class CastFunctions {
   static {
     TYPE2FUNC.put(MinorType.BIGINT, "castBIGINT");
     TYPE2FUNC.put(MinorType.INT, "castINT");
+    TYPE2FUNC.put(MinorType.BIT, "castBIT");
     TYPE2FUNC.put(MinorType.TINYINT, "castTINYINT");
     TYPE2FUNC.put(MinorType.FLOAT4, "castFLOAT4");
     TYPE2FUNC.put(MinorType.FLOAT8, "castFLOAT8");

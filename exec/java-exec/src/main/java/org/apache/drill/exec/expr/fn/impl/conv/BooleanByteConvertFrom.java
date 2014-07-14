@@ -39,7 +39,7 @@ public class BooleanByteConvertFrom implements DrillSimpleFunc {
 
   @Override
   public void eval() {
-    org.apache.drill.exec.util.ConvertUtil.checkBufferLength(in.buffer, in.start, in.end, 1);
+    org.apache.drill.exec.util.ByteBufUtil.checkBufferLength(in.buffer, in.start, in.end, 1);
 
     in.buffer.readerIndex(in.start);
     out.value = in.buffer.readByte()==0 ? 0 : 1;

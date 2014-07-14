@@ -36,8 +36,8 @@ import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.rpc.user.QueryResultBatch;
 import org.apache.drill.exec.rpc.user.UserServer;
 import org.apache.drill.exec.server.DrillbitContext;
-import org.apache.drill.exec.util.ConvertUtil;
-import org.apache.drill.exec.util.ConvertUtil.HadoopWritables;
+import org.apache.drill.exec.util.ByteBufUtil;
+import org.apache.drill.exec.util.ByteBufUtil.HadoopWritables;
 import org.apache.drill.exec.util.VectorUtil;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.VarCharVector;
@@ -323,7 +323,7 @@ public class TestConvertFunctions extends BaseTestQuery {
   public void testHadooopVInt() throws Exception {
     final int _0 = 0;
     final int _9 = 9;
-    final ByteBuf buffer = ConvertUtil.createBuffer(_9);
+    final ByteBuf buffer = ByteBufUtil.createBuffer(_9);
 
     long longVal = 0;
     buffer.clear();
