@@ -20,6 +20,8 @@ package org.apache.drill.exec.planner.sql.handlers;
 import java.io.IOException;
 import java.util.List;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import net.hydromatic.optiq.SchemaPlus;
 import net.hydromatic.optiq.Table;
 import net.hydromatic.optiq.impl.ViewTable;
@@ -64,13 +66,20 @@ public abstract class ViewHandler extends AbstractSqlHandler{
       SqlCreateView createView = unwrap(sqlNode, SqlCreateView.class);
 
       try {
-        SchemaPlus schema = findSchema(context.getRootSchema(), context.getNewDefaultSchema(), createView.getSchemaPath());
+        SchemaPlus defaultSchema = context.getNewDefaultSchema();
+        SchemaPlus schema = findSchema(context.getRootSchema(), defaultSchema, createView.getSchemaPath());
         AbstractSchema drillSchema = getDrillSchema(schema);
 
         String schemaPath = drillSchema.getFullSchemaName();
         if (!drillSchema.isMutable())
           return DirectPlan.createDirectPlan(context, false, String.format("Current schema '%s' is not a mutable schema. " +
               "Can't create views in this schema.", schemaPath));
+
+        // find current workspace schema path
+        List<String> workspaceSchemaPath = ImmutableList.of();
+        if (!isRootSchema(defaultSchema)) {
+          workspaceSchemaPath = getDrillSchema(defaultSchema).getSchemaPath();
+        }
 
         String viewSql = createView.getQuery().toString();
 
@@ -97,7 +106,7 @@ public abstract class ViewHandler extends AbstractSqlHandler{
           queryRowType = new DrillFixedRelDataTypeImpl(planner.getTypeFactory(), viewFieldNames);
         }
 
-        View view = new View(createView.getName(), viewSql, queryRowType);
+        View view = new View(createView.getName(), viewSql, queryRowType, workspaceSchemaPath);
 
         boolean replaced;
         if (drillSchema instanceof WorkspaceSchema) {

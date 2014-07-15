@@ -19,6 +19,7 @@ package org.apache.drill.exec.dotdrill;
 
 import java.util.List;
 
+import com.google.common.collect.ImmutableList;
 import org.apache.drill.exec.planner.types.RelDataTypeDrillImpl;
 import org.apache.drill.exec.planner.types.RelDataTypeHolder;
 import org.eigenbase.reltype.RelDataType;
@@ -40,6 +41,9 @@ public class View {
   private final String name;
   private String sql;
   private List<FieldType> fields;
+
+  /* Current schema when view is created (not the schema to which view belongs to) */
+  private List<String> workspaceSchemaPath;
 
   @JsonInclude(Include.NON_NULL)
   public static class FieldType {
@@ -80,20 +84,27 @@ public class View {
     }
   }
 
-  public View(String name, String sql, RelDataType rowType){
+  public View(String name, String sql, RelDataType rowType, List<String> workspaceSchemaPath){
     this.name = name;
     this.sql = sql;
     fields = Lists.newArrayList();
     for(RelDataTypeField f : rowType.getFieldList()){
       fields.add(new FieldType(f.getName(), f.getType()));
     }
+    this.workspaceSchemaPath =
+        workspaceSchemaPath == null ? ImmutableList.<String>of() : ImmutableList.copyOf(workspaceSchemaPath);
   }
 
   @JsonCreator
-  public View(@JsonProperty("name") String name, @JsonProperty("sql") String sql, @JsonProperty("fields") List<FieldType> fields){
+  public View(@JsonProperty("name") String name,
+              @JsonProperty("sql") String sql,
+              @JsonProperty("fields") List<FieldType> fields,
+              @JsonProperty("workspaceSchemaPath") List<String> workspaceSchemaPath){
     this.name = name;
     this.sql = sql;
     this.fields = fields;
+    this.workspaceSchemaPath =
+        workspaceSchemaPath == null ? ImmutableList.<String>of() : ImmutableList.copyOf(workspaceSchemaPath);
   }
 
   public RelDataType getRowType(RelDataTypeFactory factory){
@@ -140,6 +151,9 @@ public class View {
     return fields;
   }
 
+  public List<String> getWorkspaceSchemaPath() {
+    return workspaceSchemaPath;
+  }
 
 
 

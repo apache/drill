@@ -369,8 +369,6 @@ public class TestViews extends JdbcTestQueryBase {
 
           statement.executeQuery("drop view dfs_test.tmp.testview").close();
 
-          statement.executeQuery("drop view dfs_test.tmp.testview").close();
-
           statement.close();
           return null;
         } catch (Exception e) {
@@ -415,6 +413,47 @@ public class TestViews extends JdbcTestQueryBase {
               expected.equals(result));
 
           statement.executeQuery("drop view tmp.testview").close();
+
+          statement.close();
+          return null;
+        } catch (Exception e) {
+          throw new RuntimeException(e);
+        }
+      }
+    });
+  }
+
+  @Test
+  public void testViewResolvingTablesInWorkspaceSchema() throws Exception{
+    JdbcAssert.withNoDefaultSchema().withConnection(new Function<Connection, Void>() {
+      public Void apply(Connection connection) {
+        try {
+          Statement statement = connection.createStatement();
+
+          // change default schema
+          statement.executeQuery("USE cp");
+
+          // create a view with full schema identifier
+          ResultSet resultSet =  statement.executeQuery(
+              "CREATE VIEW dfs_test.tmp.testViewResolvingTablesInWorkspaceSchema AS " +
+              "SELECT region_id, sales_city FROM `region.json`");
+          String result = JdbcAssert.toString(resultSet).trim();
+          resultSet.close();
+          String expected = "ok=true; summary=View 'testViewResolvingTablesInWorkspaceSchema' " +
+              "created successfully in 'dfs_test.tmp' schema";
+          assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected),
+              expected.equals(result));
+
+          // query from view
+          resultSet = statement.executeQuery(
+              "SELECT region_id FROM dfs_test.tmp.testViewResolvingTablesInWorkspaceSchema LIMIT 1");
+          result = JdbcAssert.toString(resultSet).trim();
+          resultSet.close();
+          expected = "region_id=0";
+          assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected),
+              expected.equals(result));
+
+          statement.executeQuery("drop view dfs_test.tmp.testViewResolvingTablesInWorkspaceSchema").close();
 
           statement.close();
           return null;
