@@ -54,6 +54,25 @@ public class TestMetadataDDL extends JdbcTestQueryBase {
   }
 
   @Test
+  public void testSchemata() throws Exception{
+    JdbcAssert.withNoDefaultSchema()
+        .sql("SELECT * FROM INFORMATION_SCHEMA.SCHEMATA")
+        .returns(
+            "CATALOG_NAME=DRILL; SCHEMA_NAME=dfs.default; SCHEMA_OWNER=<owner>; TYPE=file; IS_MUTABLE=NO\n" +
+            "CATALOG_NAME=DRILL; SCHEMA_NAME=dfs.root; SCHEMA_OWNER=<owner>; TYPE=file; IS_MUTABLE=NO\n" +
+            "CATALOG_NAME=DRILL; SCHEMA_NAME=dfs.tmp; SCHEMA_OWNER=<owner>; TYPE=file; IS_MUTABLE=YES\n" +
+            "CATALOG_NAME=DRILL; SCHEMA_NAME=sys; SCHEMA_OWNER=<owner>; TYPE=system-tables; IS_MUTABLE=NO\n" +
+            "CATALOG_NAME=DRILL; SCHEMA_NAME=dfs_test.home; SCHEMA_OWNER=<owner>; TYPE=file; IS_MUTABLE=NO\n" +
+            "CATALOG_NAME=DRILL; SCHEMA_NAME=dfs_test.default; SCHEMA_OWNER=<owner>; TYPE=file; IS_MUTABLE=NO\n" +
+            "CATALOG_NAME=DRILL; SCHEMA_NAME=dfs_test.tmp; SCHEMA_OWNER=<owner>; TYPE=file; IS_MUTABLE=YES\n" +
+            "CATALOG_NAME=DRILL; SCHEMA_NAME=cp.default; SCHEMA_OWNER=<owner>; TYPE=file; IS_MUTABLE=NO\n" +
+            "CATALOG_NAME=DRILL; SCHEMA_NAME=hive_test.default; SCHEMA_OWNER=<owner>; TYPE=hive; IS_MUTABLE=NO\n" +
+            "CATALOG_NAME=DRILL; SCHEMA_NAME=hive_test.db1; SCHEMA_OWNER=<owner>; TYPE=hive; IS_MUTABLE=NO\n" +
+            "CATALOG_NAME=DRILL; SCHEMA_NAME=INFORMATION_SCHEMA; SCHEMA_OWNER=<owner>; TYPE=ischema; IS_MUTABLE=NO\n"
+        );
+  }
+
+  @Test
   public void testShowTables() throws Exception{
     JdbcAssert.withFull("hive_test.default")
         .sql("SHOW TABLES")
