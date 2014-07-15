@@ -456,4 +456,19 @@ public class DateTypeFunctions {
             out.milliSeconds = (int) (diff % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
         }
     }
+
+    @FunctionTemplate(name = "castTIME", scope = FunctionTemplate.FunctionScope.SIMPLE, nulls = NullHandling.NULL_IF_NULL)
+    public static class CastTimeStampToTime implements DrillSimpleFunc {
+        @Param TimeStampHolder in;
+        @Output TimeHolder out;
+
+        @Override
+        public void setup(RecordBatch incoming) {
+        }
+
+        @Override
+        public void eval() {
+            out.value = (int) (in.value % org.apache.drill.exec.expr.fn.impl.DateUtility.daysToStandardMillis);
+        }
+    }
 }
