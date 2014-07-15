@@ -110,6 +110,10 @@ public abstract class ViewHandler extends AbstractSqlHandler{
 
         boolean replaced;
         if (drillSchema instanceof WorkspaceSchema) {
+          WorkspaceSchema workspaceSchema = (WorkspaceSchema) drillSchema;
+          if (!createView.getReplace() && workspaceSchema.viewExists(view.getName())) {
+            return DirectPlan.createDirectPlan(context, false, "View with given name already exists in current schema");
+          }
           replaced = ((WorkspaceSchema) drillSchema).createView(view);
         }else{
           return DirectPlan.createDirectPlan(context, false, "Schema provided was not a workspace schema.");

@@ -174,6 +174,11 @@ public class WorkspaceSchemaFactory implements ExpandingConcurrentMap.MapValueFa
       return replaced;
     }
 
+    public boolean viewExists(String viewName) throws Exception {
+      Path viewPath = getViewPath(viewName);
+      return fs.getUnderlying().exists(viewPath);
+    }
+
     public void dropView(String viewName) throws IOException {
       fs.getUnderlying().delete(getViewPath(viewName), false);
       if(knownViews != null) knownViews.delete(viewName);

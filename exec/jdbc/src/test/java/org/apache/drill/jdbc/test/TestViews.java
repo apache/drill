@@ -463,4 +463,51 @@ public class TestViews extends JdbcTestQueryBase {
       }
     });
   }
+
+  @Test
+  public void testCreateViewWhenViewAlreadyExists() throws Exception{
+    JdbcAssert.withFull("dfs_test.tmp").withConnection(new Function<Connection, Void>() {
+      public Void apply(Connection connection) {
+        try {
+          Statement statement = connection.createStatement();
+
+          // create a view
+          ResultSet resultSet =  statement.executeQuery(
+              "CREATE VIEW testCreateViewWhenViewAlreadyExists AS SELECT region_id, sales_city FROM cp.`region.json`");
+          String result = JdbcAssert.toString(resultSet).trim();
+          resultSet.close();
+          String expected = "ok=true; summary=View 'testCreateViewWhenViewAlreadyExists' " +
+              "created successfully in 'dfs_test.tmp' schema";
+          assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected),
+              expected.equals(result));
+
+          // try to create the view with same name
+          resultSet =  statement.executeQuery(
+              "CREATE VIEW testCreateViewWhenViewAlreadyExists AS SELECT region_id FROM cp.`region.json`");
+          result = JdbcAssert.toString(resultSet).trim();
+          resultSet.close();
+          expected = "ok=false; summary=View with given name already exists in current schema";
+          assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected),
+              expected.equals(result));
+
+          // try creating the view with same name but with a OR REPLACE clause
+          resultSet =  statement.executeQuery(
+              "CREATE OR REPLACE VIEW testCreateViewWhenViewAlreadyExists AS SELECT region_id FROM cp.`region.json`");
+          result = JdbcAssert.toString(resultSet).trim();
+          resultSet.close();
+          expected = "ok=true; summary=View 'testCreateViewWhenViewAlreadyExists' " +
+              "replaced successfully in 'dfs_test.tmp' schema";
+          assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected),
+              expected.equals(result));
+
+          statement.executeQuery("drop view dfs_test.tmp.testCreateViewWhenViewAlreadyExists").close();
+
+          statement.close();
+          return null;
+        } catch (Exception e) {
+          throw new RuntimeException(e);
+        }
+      }
+    });
+  }
 }
