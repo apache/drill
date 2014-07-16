@@ -510,4 +510,62 @@ public class TestViews extends JdbcTestQueryBase {
       }
     });
   }
+
+  private void createViewHelper(Statement statement, String schema, String viewName, String query) throws Exception {
+    ResultSet resultSet =  statement.executeQuery(query);
+    String result = JdbcAssert.toString(resultSet).trim();
+    resultSet.close();
+    String expected = String.format("ok=true; summary=View '%s' created successfully in '%s' schema", viewName, schema);
+    assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", result, expected), expected.equals(result));
+  }
+
+  private void queryView(Statement statement, String query, String expectedResult) throws Exception {
+    ResultSet resultSet = statement.executeQuery(query);
+    String actualResult = JdbcAssert.toString(resultSet).trim();
+    resultSet.close();
+    assertTrue(String.format("Generated string:\n%s\ndoes not match:\n%s", actualResult, expectedResult),
+        expectedResult.equals(actualResult));
+  }
+
+  private void dropView(Statement statement, String schema, String viewName) throws Exception {
+    if (schema != null && !schema.isEmpty()) {
+      viewName = schema + "." + viewName;
+    }
+    statement.executeQuery("drop view innerView").close();
+  }
+
+  @Test
+  public void testViewCreatedFromView() throws Exception {
+    final String schema = "dfs_test.tmp";
+    JdbcAssert.withFull(schema).withConnection(new Function<Connection, Void>() {
+      public Void apply(Connection connection) {
+        try {
+          Statement statement = connection.createStatement();
+
+          // create a view
+          String createInnerView = "CREATE VIEW innerView AS SELECT region_id, sales_city FROM cp.`region.json`";
+          String innerViewName = "innerView";
+          createViewHelper(statement, schema, "innerView", createInnerView);
+
+          // create another view from above created view
+          String createOuterView = "CREATE VIEW outerView AS SELECT region_id FROM innerView";
+          String outerViewName = "outerView";
+          createViewHelper(statement, schema, outerViewName, createOuterView);
+
+          // query on outer view
+          String queryView = "SELECT region_id FROM outerView LIMIT 1";
+          String expectedResult = "region_id=0";
+          queryView(statement, queryView, expectedResult);
+
+          dropView(statement, schema, outerViewName);
+          dropView(statement, schema, innerViewName);
+
+          statement.close();
+          return null;
+        } catch (Exception e) {
+          throw new RuntimeException(e);
+        }
+      }
+    });
+  }
 }
