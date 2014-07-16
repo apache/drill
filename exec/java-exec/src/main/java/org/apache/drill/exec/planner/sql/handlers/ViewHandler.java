@@ -72,8 +72,8 @@ public abstract class ViewHandler extends AbstractSqlHandler{
 
         String schemaPath = drillSchema.getFullSchemaName();
         if (!drillSchema.isMutable())
-          return DirectPlan.createDirectPlan(context, false, String.format("Current schema '%s' is not a mutable schema. " +
-              "Can't create views in this schema.", schemaPath));
+          return DirectPlan.createDirectPlan(context, false, String.format("Unable to create view. " +
+            "Schema [%s] is immutable. ", schemaPath));
 
         // find current workspace schema path
         List<String> workspaceSchemaPath = ImmutableList.of();
