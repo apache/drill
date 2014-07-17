@@ -27,6 +27,7 @@ import org.apache.drill.exec.cache.DistributedCache;
 import org.apache.drill.exec.expr.fn.FunctionImplementationRegistry;
 import org.apache.drill.exec.planner.PhysicalPlanReader;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.exec.planner.sql.DrillOperatorTable;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.rpc.control.WorkEventBus;
@@ -46,6 +47,7 @@ public class QueryContext{
   private UserSession session;
   public final Multitimer<QuerySetup> timer;
   private final PlannerSettings plannerSettings;
+  private final DrillOperatorTable table;
 
   public QueryContext(UserSession session, QueryId queryId, DrillbitContext drllbitContext) {
     super();
@@ -56,6 +58,7 @@ public class QueryContext{
     this.timer = new Multitimer<>(QuerySetup.class);
     this.plannerSettings = new PlannerSettings(session.getOptions());
     this.plannerSettings.setNumEndPoints(this.getActiveEndpoints().size());
+    this.table = new DrillOperatorTable(getFunctionRegistry());
   }
 
   public PStoreProvider getPersistentStoreProvider(){
@@ -128,6 +131,10 @@ public class QueryContext{
 
   public FunctionImplementationRegistry getFunctionRegistry(){
     return drillbitContext.getFunctionImplementationRegistry();
+  }
+
+  public DrillOperatorTable getDrillOperatorTable() {
+    return table;
   }
 
 }

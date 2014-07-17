@@ -35,6 +35,7 @@ import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.physical.PhysicalPlan;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
+import org.apache.drill.exec.planner.sql.DrillOperatorTable;
 import org.apache.drill.exec.planner.sql.DrillSqlWorker;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.rpc.user.UserSession;
@@ -99,6 +100,7 @@ public class PlanningBase extends ExecTest{
     final StoragePluginRegistry registry = new StoragePluginRegistry(dbContext);
     registry.init();
     final FunctionImplementationRegistry functionRegistry = new FunctionImplementationRegistry(config);
+    final DrillOperatorTable table = new DrillOperatorTable(functionRegistry);
     final SchemaPlus root = Frameworks.createRootSchema(false);
     registry.getSchemaFactory().registerSchemas(UserSession.Builder.newBuilder().setSupportComplexTypes(true).build(), root);
 
@@ -125,6 +127,8 @@ public class PlanningBase extends ExecTest{
         result = config;
         context.getCache();
         result = cache;
+        context.getDrillOperatorTable();
+        result = table;
       }
     };
 

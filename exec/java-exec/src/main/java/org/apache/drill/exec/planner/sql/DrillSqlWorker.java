@@ -66,14 +66,13 @@ public class DrillSqlWorker {
     traitDefs.add(DrillDistributionTraitDef.INSTANCE);
     traitDefs.add(RelCollationTraitDef.INSTANCE);
     this.context = context;
-    DrillOperatorTable table = new DrillOperatorTable(context.getFunctionRegistry());
     RelOptCostFactory costFactory = (context.getPlannerSettings().useDefaultCosting()) ?
         null : new DrillCostBase.DrillCostFactory() ;
     StdFrameworkConfig config = StdFrameworkConfig.newBuilder() //
         .lex(Lex.MYSQL) //
         .parserFactory(DrillParserWithCompoundIdConverter.FACTORY) //
         .defaultSchema(context.getNewDefaultSchema()) //
-        .operatorTable(table) //
+        .operatorTable(context.getDrillOperatorTable()) //
         .traitDefs(traitDefs) //
         .convertletTable(new DrillConvertletTable()) //
         .context(context.getPlannerSettings()) //

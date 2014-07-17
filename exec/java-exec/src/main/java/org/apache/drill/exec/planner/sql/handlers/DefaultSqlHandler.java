@@ -38,6 +38,7 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.planner.logical.DrillRel;
 import org.apache.drill.exec.planner.logical.DrillScreenRel;
 import org.apache.drill.exec.planner.logical.DrillStoreRel;
+import org.apache.drill.exec.planner.logical.RewriteProjectRel;
 import org.apache.drill.exec.planner.physical.DrillDistributionTrait;
 import org.apache.drill.exec.planner.physical.PhysicalPlanCreator;
 import org.apache.drill.exec.planner.physical.PlannerSettings;
@@ -50,11 +51,13 @@ import org.apache.drill.exec.planner.physical.visitor.JoinPrelRenameVisitor;
 import org.apache.drill.exec.planner.physical.visitor.ProducerConsumerPrelVisitor;
 import org.apache.drill.exec.planner.physical.visitor.RelUniqifier;
 import org.apache.drill.exec.planner.physical.visitor.SelectionVectorPrelVisitor;
+import org.apache.drill.exec.planner.sql.DrillOperatorTable;
 import org.apache.drill.exec.planner.sql.DrillSqlWorker;
 import org.apache.drill.exec.util.Pointer;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptUtil;
 import org.eigenbase.relopt.RelTraitSet;
+import org.eigenbase.rex.RexBuilder;
 import org.eigenbase.sql.SqlExplainLevel;
 import org.eigenbase.sql.SqlNode;
 
@@ -112,6 +115,12 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     SqlNode rewrittenSqlNode = rewrite(sqlNode);
     SqlNode validated = validateNode(rewrittenSqlNode);
     RelNode rel = convertToRel(validated);
+
+    /* Traverse the tree and replace the convert_from, convert_to function to actual implementations
+     * Eg: convert_from(EXPR, 'JSON') be converted to convert_fromjson(EXPR);
+     * TODO: Ideally all function rewrites would move here instead of DrillOptiq
+     */
+    rel = rel.accept(new RewriteProjectRel(planner.getTypeFactory(), context.getDrillOperatorTable()));
     log("Optiq Logical", rel);
     DrillRel drel = convertToDrel(rel);
     log("Drill Logical", drel);
@@ -120,7 +129,6 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
     PhysicalOperator pop = convertToPop(prel);
     PhysicalPlan plan = convertToPlan(pop);
     log("Drill Plan", plan);
-
     return plan;
   }
 

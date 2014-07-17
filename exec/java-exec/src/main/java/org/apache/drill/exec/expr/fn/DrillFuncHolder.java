@@ -291,6 +291,10 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
       return ref;
     }
 
+    public boolean isComplexWriter() {
+      return isComplexWriter;
+    }
+
   }
 
   public static class WorkspaceReference {
@@ -318,5 +322,9 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
 
   public MajorType getReturnType() {
     return returnValue.type;
+  }
+
+  public ValueReference getReturnValue() {
+    return returnValue;
   }
 }
