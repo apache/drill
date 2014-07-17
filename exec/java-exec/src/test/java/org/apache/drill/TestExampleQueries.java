@@ -50,6 +50,42 @@ public class TestExampleQueries extends BaseTestQuery{
   }
 
   @Test
+  public void testPushExpInJoinConditionInnerJoin() throws Exception {
+    test("select a.n_nationkey from cp.`tpch/nation.parquet` a join cp.`tpch/region.parquet` b " + "" +
+        " on a.n_regionkey + 100  = b.r_regionkey + 200" +      // expressions in both sides of equal join filter
+        "   and (substr(a.n_name,1,3)= 'L1' or substr(a.n_name,2,2) = 'L2') " +  // left filter
+        "   and (substr(b.r_name,1,3)= 'R1' or substr(b.r_name,2,2) = 'R2') " +  // right filter
+        "   and (substr(a.n_name,2,3)= 'L3' or substr(b.r_name,3,2) = 'R3');");  // non-equal join filter
+  }
+
+  @Test
+  public void testPushExpInJoinConditionWhere() throws Exception {
+    test("select a.n_nationkey from cp.`tpch/nation.parquet` a , cp.`tpch/region.parquet` b " + "" +
+        " where a.n_regionkey + 100  = b.r_regionkey + 200" +      // expressions in both sides of equal join filter
+        "   and (substr(a.n_name,1,3)= 'L1' or substr(a.n_name,2,2) = 'L2') " +  // left filter
+        "   and (substr(b.r_name,1,3)= 'R1' or substr(b.r_name,2,2) = 'R2') " +  // right filter
+        "   and (substr(a.n_name,2,3)= 'L3' or substr(b.r_name,3,2) = 'R3');");  // non-equal join filter
+  }
+
+  @Test
+  public void testPushExpInJoinConditionLeftJoin() throws Exception {
+    test("select a.n_nationkey from cp.`tpch/nation.parquet` a left join cp.`tpch/region.parquet` b " + "" +
+        " on a.n_regionkey +100 = b.r_regionkey +200 " +        // expressions in both sides of equal join filter
+        "   and (substr(a.n_name,1,3)= 'L1' or substr(a.n_name,2,2) = 'L2') " +  // left filter
+        "   and (substr(b.r_name,1,3)= 'R1' or substr(b.r_name,2,2) = 'R2') " +  // right filter
+        "   and (substr(a.n_name,2,3)= 'L3' or substr(b.r_name,3,2) = 'R3');");  // non-equal join filter
+  }
+
+  @Test
+  public void testPushExpInJoinConditionRightJoin() throws Exception {
+    test("select a.n_nationkey from cp.`tpch/nation.parquet` a right join cp.`tpch/region.parquet` b " + "" +
+        " on a.n_regionkey +100 = b.r_regionkey +200 " +        // expressions in both sides of equal join filter
+        "   and (substr(a.n_name,1,3)= 'L1' or substr(a.n_name,2,2) = 'L2') " +  // left filter
+        "   and (substr(b.r_name,1,3)= 'R1' or substr(b.r_name,2,2) = 'R2') " +  // right filter
+        "   and (substr(a.n_name,2,3)= 'L3' or substr(b.r_name,3,2) = 'R3');");  // non-equal join filter
+  }
+
+  @Test
   public void testCaseReturnValueVarChar() throws Exception{
     test("select case when employee_id < 1000 then 'ABC' else 'DEF' end from cp.`employee.json` limit 5");
   }
