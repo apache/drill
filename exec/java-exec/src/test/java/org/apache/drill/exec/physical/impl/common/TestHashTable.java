@@ -50,6 +50,7 @@ private SimpleRootExec doTest(final DrillbitContext bitContext, UserClientConnec
       bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = new TopLevelAllocator();
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
+      bitContext.getConfig(); result = c;
     }};
 
 

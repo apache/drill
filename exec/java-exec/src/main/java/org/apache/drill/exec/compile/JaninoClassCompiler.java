@@ -36,7 +36,8 @@ public class JaninoClassCompiler extends AbstractClassCompiler {
 
   private IClassLoader compilationClassLoader;
 
-  public JaninoClassCompiler(ClassLoader parentClassLoader) {
+  public JaninoClassCompiler(ClassLoader parentClassLoader, boolean debug) {
+    super(debug);
     this.compilationClassLoader = new ClassLoaderIClassLoader(parentClassLoader);
   }
 
@@ -46,7 +47,7 @@ public class JaninoClassCompiler extends AbstractClassCompiler {
     Scanner scanner = new Scanner((String) null, reader);
     Java.CompilationUnit compilationUnit = new Parser(scanner).parseCompilationUnit();
     ClassFile[] classFiles = new UnitCompiler(compilationUnit, compilationClassLoader)
-                                  .compileUnit(this.debugSource, this.debugLines, this.debugVars);
+                                  .compileUnit(this.debug, this.debug, this.debug);
 
     byte[][] byteCodes = new byte[classFiles.length][];
     for(int i = 0; i < classFiles.length; i++){

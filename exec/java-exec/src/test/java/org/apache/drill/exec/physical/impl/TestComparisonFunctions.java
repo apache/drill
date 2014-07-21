@@ -61,6 +61,7 @@ public class TestComparisonFunctions extends ExecTest {
       bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = new TopLevelAllocator();
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
+      bitContext.getConfig(); result = c;
     }};
 
     String planString = Resources.toString(Resources.getResource(COMPARISON_TEST_PHYSICAL_PLAN), Charsets.UTF_8).replaceAll("EXPRESSION", expression);

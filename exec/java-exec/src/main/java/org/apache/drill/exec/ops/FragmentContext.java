@@ -100,7 +100,7 @@ public class FragmentContext implements Closeable {
       throw new ExecutionSetupException("Failure while reading plan options.", e);
     }
     this.allocator = context.getAllocator().getChildAllocator(fragment.getHandle(), fragment.getMemInitial(), fragment.getMemMax());
-    this.loader = new QueryClassLoader(sessionOptions);
+    this.loader = new QueryClassLoader(dbContext.getConfig(), sessionOptions);
   }
 
   public OptionManager getOptions(){

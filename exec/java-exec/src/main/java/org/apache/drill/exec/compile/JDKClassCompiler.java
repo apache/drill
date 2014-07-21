@@ -36,19 +36,20 @@ import com.google.common.collect.Lists;
 class JDKClassCompiler extends AbstractClassCompiler {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(JDKClassCompiler.class);
 
-  private Collection<String> compilerOptions;
-  private DiagnosticListener<JavaFileObject> listener;
+  private final Collection<String> compilerOptions;
+  private final DiagnosticListener<JavaFileObject> listener;
   private final JavaCompiler compiler;
   private final DrillJavaFileManager fileManager;
 
-  public JDKClassCompiler(ClassLoader classLoader) {
+  public JDKClassCompiler(ClassLoader classLoader, boolean debug) {
+    super(debug);
     this.compiler = ToolProvider.getSystemJavaCompiler();
     if (compiler == null) {
       throw new UnsupportedOperationException("JDK Java compiler not available - probably you're running a JRE, not a JDK");
     }
     this.listener = new DrillDiagnosticListener();
     this.fileManager = new DrillJavaFileManager(compiler.getStandardFileManager(listener, null, Charsets.UTF_8), classLoader);
-    updateDebugOptions();
+    this.compilerOptions = Lists.newArrayList(this.debug ? "-g:source,lines,vars" : "-g:none");
   }
 
   @Override
@@ -78,17 +79,6 @@ class JDKClassCompiler extends AbstractClassCompiler {
       }
       throw rte;
     }
-  }
-
-  protected void updateDebugOptions() {
-    StringBuilder sb = new StringBuilder("-g:");
-    if (this.debugSource) sb.append("source,");
-    if (this.debugLines) sb.append("lines,");
-    if (this.debugVars) sb.append("vars,");
-    if (sb.length() == 3) { // "-g:"
-      sb.append("none,");
-    }
-    compilerOptions = Lists.newArrayList(sb.substring(0, sb.length()-1));
   }
 
   protected org.slf4j.Logger getLogger() { return logger; }

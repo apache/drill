@@ -24,12 +24,14 @@ import java.util.Arrays;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.exceptions.ExpressionParsingException;
 import org.apache.drill.exec.compile.ClassTransformer.ClassNames;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.server.options.OptionValidator;
 import org.apache.drill.exec.server.options.OptionValue;
+import org.apache.drill.exec.server.options.TypeValidators.BooleanValidator;
 import org.apache.drill.exec.server.options.TypeValidators.LongValidator;
 import org.apache.drill.exec.server.options.TypeValidators.StringValidator;
 import org.codehaus.commons.compiler.CompileException;
@@ -55,8 +57,15 @@ public class QueryClassLoader extends URLClassLoader {
     }
   };
 
+  public static final String JAVA_COMPILER_DEBUG_OPTION = "exec.java_compiler_debug";
+  public static final OptionValidator JAVA_COMPILER_DEBUG = new BooleanValidator(JAVA_COMPILER_DEBUG_OPTION, true);
+
   public static final String JAVA_COMPILER_JANINO_MAXSIZE_OPTION = "exec.java_compiler_janino_maxsize";
   public static final OptionValidator JAVA_COMPILER_JANINO_MAXSIZE = new LongValidator(JAVA_COMPILER_JANINO_MAXSIZE_OPTION, 256*1024);
+  
+  public static final String JAVA_COMPILER_CONFIG = "drill.exec.compile.compiler";
+  public static final String JAVA_COMPILER_DEBUG_CONFIG = "drill.exec.compile.debug";
+  public static final String JAVA_COMPILER_JANINO_MAXSIZE_CONFIG = "drill.exec.compile.janino_maxsize";
 
   private ClassCompilerSelector compilerSelector;
 
@@ -64,9 +73,9 @@ public class QueryClassLoader extends URLClassLoader {
   
   private ConcurrentMap<String, byte[]> customClasses = new MapMaker().concurrencyLevel(4).makeMap();
 
-  public QueryClassLoader(OptionManager sessionOptions) {
+  public QueryClassLoader(DrillConfig config, OptionManager sessionOptions) {
     super(new URL[0]);
-    compilerSelector = new ClassCompilerSelector(sessionOptions);
+    compilerSelector = new ClassCompilerSelector(config, sessionOptions);
   }
 
   public long getNextClassIndex(){
@@ -101,23 +110,27 @@ public class QueryClassLoader extends URLClassLoader {
     private final CompilerPolicy policy;
     private final long janinoThreshold;
 
-    private ClassCompiler jdkClassCompiler;
-    private ClassCompiler janinoClassCompiler;
+    private final AbstractClassCompiler jdkClassCompiler;
+    private final AbstractClassCompiler janinoClassCompiler;
 
 
-    ClassCompilerSelector(OptionManager sessionOptions) {
+    ClassCompilerSelector(DrillConfig config, OptionManager sessionOptions) {
       OptionValue value = sessionOptions.getOption(JAVA_COMPILER_OPTION);
-      this.policy = (value != null) ? CompilerPolicy.valueOf(value.string_val.toUpperCase()) : CompilerPolicy.DEFAULT;
-      value = sessionOptions.getOption(JAVA_COMPILER_JANINO_MAXSIZE_OPTION);
-      this.janinoThreshold = (value != null) ? value.num_val : JAVA_COMPILER_JANINO_MAXSIZE.getDefault().num_val;
+      this.policy = CompilerPolicy.valueOf((value != null) ? value.string_val.toUpperCase() : config.getString(JAVA_COMPILER_CONFIG).toUpperCase());
 
-      this.janinoClassCompiler = new JaninoClassCompiler(QueryClassLoader.this);
-      this.jdkClassCompiler = new JDKClassCompiler(QueryClassLoader.this);
+      value = sessionOptions.getOption(JAVA_COMPILER_JANINO_MAXSIZE_OPTION);
+      this.janinoThreshold = (value != null) ? value.num_val : config.getLong(JAVA_COMPILER_JANINO_MAXSIZE_CONFIG);
+
+      value = sessionOptions.getOption(JAVA_COMPILER_DEBUG_OPTION);
+      boolean debug = (value != null) ? value.bool_val : config.getBoolean(JAVA_COMPILER_DEBUG_CONFIG);
+
+      this.janinoClassCompiler = (policy == CompilerPolicy.JANINO || policy == CompilerPolicy.DEFAULT) ? new JaninoClassCompiler(QueryClassLoader.this, debug) : null;
+      this.jdkClassCompiler = (policy == CompilerPolicy.JDK || policy == CompilerPolicy.DEFAULT) ? new JDKClassCompiler(QueryClassLoader.this, debug) : null;
     }
 
     private byte[][] getClassByteCode(ClassNames className, String sourceCode)
         throws CompileException, ClassNotFoundException, ClassTransformationException, IOException {
-      ClassCompiler classCompiler;
+      AbstractClassCompiler classCompiler;
       if (policy == CompilerPolicy.JDK || (policy == CompilerPolicy.DEFAULT && sourceCode.length() > janinoThreshold)) {
         classCompiler = jdkClassCompiler;
       } else {

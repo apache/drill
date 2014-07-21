@@ -74,6 +74,7 @@ public class TestStringFunctions extends ExecTest {
       bitContext.getMetrics(); result = new MetricRegistry();
       bitContext.getAllocator(); result = new TopLevelAllocator();
       bitContext.getOperatorCreatorRegistry(); result = new OperatorCreatorRegistry(c);
+      bitContext.getConfig(); result = c;
     }};
 
     String planString = Resources.toString(Resources.getResource(planPath), Charsets.UTF_8);

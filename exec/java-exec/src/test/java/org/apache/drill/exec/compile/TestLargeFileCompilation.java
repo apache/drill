@@ -28,7 +28,7 @@ public class TestLargeFileCompilation extends BaseTestQuery {
 
   private static final String LARGE_QUERY;
 
-  private static final int ITERATION_COUNT = 1;
+  private static final int ITERATION_COUNT = Integer.valueOf(System.getProperty("TestLargeFileCompilation.iteration", "1"));
 
   static {
     StringBuilder sb = new StringBuilder("select \n");
@@ -42,6 +42,12 @@ public class TestLargeFileCompilation extends BaseTestQuery {
   @Test
   public void testWithJDK() throws Exception {
     test(String.format("alter session set `%s`='JDK'", QueryClassLoader.JAVA_COMPILER_OPTION));
+    runTest();
+  }
+
+  @Test
+  public void testWithDEFAULT() throws Exception {
+    test(String.format("alter session set `%s`='DEFAULT'", QueryClassLoader.JAVA_COMPILER_OPTION));
     runTest();
   }
 

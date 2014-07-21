@@ -24,17 +24,13 @@ import org.apache.drill.exec.compile.ClassTransformer.ClassNames;
 import org.apache.drill.exec.exception.ClassTransformationException;
 import org.codehaus.commons.compiler.CompileException;
 
-public abstract class AbstractClassCompiler implements ClassCompiler {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractClassCompiler.class);
+public abstract class AbstractClassCompiler {
+  protected boolean debug = false;
 
-  protected boolean debugLines = true;
-  protected boolean debugVars = true;
-  protected boolean debugSource = true;
+  AbstractClassCompiler(boolean debug) {
+    this.debug = debug;
+  }
 
-  protected abstract byte[][] getByteCode(ClassNames className, String sourcecode)
-      throws CompileException, IOException, ClassNotFoundException, ClassTransformationException;
-
-  @Override
   public byte[][] getClassByteCode(ClassNames className, String sourceCode)
       throws CompileException, IOException, ClassNotFoundException, ClassTransformationException {
     if(getLogger().isDebugEnabled()){
@@ -43,15 +39,9 @@ public abstract class AbstractClassCompiler implements ClassCompiler {
     return getByteCode(className, sourceCode);
   }
 
-  public void setDebuggingOptions(boolean debugSource, boolean debugLines, boolean debugVars) {
-    this.debugSource = debugSource;
-    this.debugLines = debugLines;
-    this.debugVars = debugVars;
-    updateDebugOptions();
-  }
-
   protected String prefixLineNumbers(String code) {
-    if (!debugLines) return code;
+    if (!debug) return code;
+
     StringBuilder out = new StringBuilder();
     int i = 1;
     for (String line : code.split("\n")) {
@@ -68,8 +58,9 @@ public abstract class AbstractClassCompiler implements ClassCompiler {
     return out.toString();
   }
 
-  protected void updateDebugOptions() { } // default no-op implementation
+  protected abstract byte[][] getByteCode(ClassNames className, String sourcecode)
+      throws CompileException, IOException, ClassNotFoundException, ClassTransformationException;
 
-  protected org.slf4j.Logger getLogger() { return logger; }
+  protected abstract org.slf4j.Logger getLogger();
 
 }
