@@ -73,6 +73,7 @@ public class Drillbit implements Closeable{
       logger.debug("Starting Drillbit.");
       bit.run();
     } catch (Exception e) {
+      bit.close();
       throw new DrillbitStartupException("Failure during initial startup of Drillbit.", e);
     }
     return bit;
@@ -156,7 +157,7 @@ public class Drillbit implements Closeable{
   }
 
   public void close() {
-    if (coord != null) coord.unregister(handle);
+    if (coord != null && handle != null) coord.unregister(handle);
 
     try {
       Thread.sleep(context.getConfig().getInt(ExecConstants.ZK_REFRESH) * 2);
@@ -167,6 +168,11 @@ public class Drillbit implements Closeable{
       if(embeddedJetty != null) embeddedJetty.stop();
     } catch (Exception e) {
       logger.warn("Failure while shutting down embedded jetty server.");
+    }
+    try {
+      cache.close();
+    } catch (Exception e) {
+      e.printStackTrace();
     }
     Closeables.closeQuietly(engine);
     Closeables.closeQuietly(storeProvider);
