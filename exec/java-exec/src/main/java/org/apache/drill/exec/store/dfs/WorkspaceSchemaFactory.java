@@ -193,14 +193,35 @@ public class WorkspaceSchemaFactory implements ExpandingConcurrentMap.MapValueFa
       this.session = session;
     }
 
-    private Set<String> getViews(){
+    private Set<String> getViews() {
       Set<String> viewSet = Sets.newHashSet();
       if(knownViews != null) {
-        for(Map.Entry<String, String> e : knownViews){
-          viewSet.add(e.getKey());
+        String viewName;
+        for(Map.Entry<String, String> e : knownViews) {
+          viewName = e.getKey();
+          if (hasView(viewName)) {
+            viewSet.add(viewName);
+          } else if (knownViews != null) {
+            knownViews.delete(viewName);
+          }
         }
       }
       return viewSet;
+    }
+
+    /**
+     * Checks whether underlying filesystem has the view.
+     * @param viewName view name
+     * @return true if storage has the view, false otherwise.
+     */
+    public boolean hasView(String viewName) {
+      List<DotDrillFile> files = null;
+      try {
+        files = DotDrillUtil.getDotDrills(fs, new Path(config.getLocation()), viewName, DotDrillType.VIEW);
+      } catch (Exception e) {
+        logger.warn("Failure while trying to check view[{}].", viewName,  e);
+      }
+      return files!=null && files.size()>0;
     }
 
     @Override
