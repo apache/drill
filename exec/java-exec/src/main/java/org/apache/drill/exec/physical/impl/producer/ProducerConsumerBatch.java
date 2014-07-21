@@ -78,6 +78,8 @@ public class ProducerConsumerBatch extends AbstractRecordBatch {
     }
     if (wrapper.finished) {
       return IterOutcome.NONE;
+    } else if (wrapper.failed) {
+      return IterOutcome.STOP;
     }
 
     recordCount = wrapper.batch.getRecordCount();
@@ -129,6 +131,7 @@ public class ProducerConsumerBatch extends AbstractRecordBatch {
             } catch (InterruptedException e) {
               throw new RuntimeException(e);
             }
+            return;
           case OK_NEW_SCHEMA:
           case OK:
             try {

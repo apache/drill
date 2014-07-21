@@ -177,6 +177,10 @@ public class ScanBatch implements RecordBatch {
       } else {
         return IterOutcome.OK;
       }
+    } catch (Exception ex) {
+      logger.debug("Failed to read the batch. Stopping...", ex);
+      context.fail(ex);
+      return IterOutcome.STOP;
     } finally {
       oContext.getStats().stopProcessing();
     }
