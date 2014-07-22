@@ -63,6 +63,8 @@ public class ClassGenerator<T>{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ClassGenerator.class);
   public static enum BlockType {SETUP, EVAL, RESET, CLEANUP};
 
+  private static final int MAX_BLOCKS_IN_FUNCTION = 50;
+
   private final SignatureHolder sig;
   private final EvaluationVisitor evaluationVisitor;
   private final Map<ValueVectorSetup, JVar> vvDeclaration = Maps.newHashMap();
@@ -227,26 +229,53 @@ public class ClassGenerator<T>{
     }
   }
 
-  void flushCode(){
-    int i =0;
-    for(CodeGeneratorMethod method : sig){
-      JMethod m = clazz.method(JMod.PUBLIC, model._ref(method.getReturnType()), method.getMethodName());
-      for(CodeGeneratorArgument arg : method){
-        m.param(arg.getType(), arg.getName());
+  void flushCode() {
+    int i = 0;
+    for(CodeGeneratorMethod method : sig) {
+      JMethod outer = clazz.method(JMod.PUBLIC, model._ref(method.getReturnType()), method.getMethodName());
+      for(CodeGeneratorArgument arg : method) {
+        outer.param(arg.getType(), arg.getName());
       }
-      for(Class<?> c : method.getThrowsIterable()){
-        m._throws(model.ref(c));
+      for(Class<?> c : method.getThrowsIterable()) {
+        outer._throws(model.ref(c));
       }
-      m._throws(SchemaChangeException.class);
+      outer._throws(SchemaChangeException.class);
 
-      for(JBlock b : blocks[i++]){
-        if(!b.isEmpty()) m.body().add(b);
+      int methodIndex = 0;
+      int blocksInMethod = 0;
+      boolean isVoidMethod = method.getReturnType() == void.class;
+      for(JBlock b : blocks[i++]) {
+        if(!b.isEmpty()) {
+          if (blocksInMethod > MAX_BLOCKS_IN_FUNCTION) {
+            JMethod inner = clazz.method(JMod.PRIVATE, model._ref(method.getReturnType()), method.getMethodName() + methodIndex);
+            JInvocation methodCall = JExpr.invoke(inner);
+            for(CodeGeneratorArgument arg : method){
+              inner.param(arg.getType(), arg.getName());
+              methodCall.arg(JExpr.direct(arg.getName()));
+            }
+            for(Class<?> c : method.getThrowsIterable()){
+              inner._throws(model.ref(c));
+            }
+            inner._throws(SchemaChangeException.class);
+
+            if (isVoidMethod) {
+              outer.body().add(methodCall);
+            } else {
+              outer.body()._return(methodCall);
+            }
+            outer = inner;
+            blocksInMethod = 0;
+            ++methodIndex;
+          }
+          outer.body().add(b);
+          ++blocksInMethod;
+        }
       }
     }
 
-    for(ClassGenerator<T> child : innerClasses.values()){
+    for(ClassGenerator<T> child : innerClasses.values()) {
       child.flushCode();
-    }
+    } 
   }
 
   public JCodeModel getModel() {

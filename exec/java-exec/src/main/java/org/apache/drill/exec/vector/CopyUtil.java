@@ -32,8 +32,8 @@ public class CopyUtil {
 
     JExpression inIndex = JExpr.direct("inIndex");
     JExpression outIndex = JExpr.direct("outIndex");
-    g.rotateBlock();
-    for(VectorWrapper<?> vv : batch){
+    for(VectorWrapper<?> vv : batch) {
+      g.rotateBlock();
       JVar inVV = g.declareVectorValueSetupAndMember("incoming", new TypedFieldId(vv.getField().getType(), vv.isHyper(), fieldId));
       JVar outVV = g.declareVectorValueSetupAndMember("outgoing", new TypedFieldId(vv.getField().getType(), false, fieldId));
 
@@ -55,10 +55,9 @@ public class CopyUtil {
         g.getEvalBlock()._if(outVV.invoke("copyFromSafe").arg(inIndex).arg(outIndex).arg(inVV).not())._then()._return(JExpr.FALSE);
       }
 
-
+      g.rotateBlock();
       fieldId++;
     }
-    g.rotateBlock();
     g.getEvalBlock()._return(JExpr.TRUE);
   }
 

@@ -280,8 +280,10 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
       }else{
         jc._then()._return(out.getValue().minus());
       }
+      g.rotateBlock();
     }
 
+    g.rotateBlock();
     g.getEvalBlock()._return(JExpr.lit(0));
 
     PriorityQueue q = context.getImplementationClass(cg);

@@ -474,8 +474,10 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
       }else{
         jc._then()._return(out.getValue().minus());
       }
+      g.rotateBlock();
     }
 
+    g.rotateBlock();
     g.getEvalBlock()._return(JExpr.lit(0));
 
     return context.getImplementationClass(cg);
@@ -517,8 +519,10 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
       }else{
         jc._then()._return(out.getValue().minus());
       }
+      g.rotateBlock();
     }
 
+    g.rotateBlock();
     g.getEvalBlock()._return(JExpr.lit(0));
   }
 

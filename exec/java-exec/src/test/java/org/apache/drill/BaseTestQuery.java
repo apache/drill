@@ -159,6 +159,21 @@ public class BaseTestQuery extends ExecTest{
     client.runQuery(type, query, resultListener);
   }
 
+  protected void testNoResult(String query, Object... args) throws Exception {
+    testNoResult(1, query, args);
+  }
+
+  protected void testNoResult(int interation, String query, Object... args) throws Exception {
+    query = String.format(query, args);
+    logger.debug("Running query:\n--------------\n"+query);
+    for (int i = 0; i < interation; i++) {
+      List<QueryResultBatch> results = client.runQuery(QueryType.SQL, query);
+      for (QueryResultBatch queryResultBatch : results) {
+        queryResultBatch.release();
+      }
+    }
+  }
+
   protected void test(String query) throws Exception{
     String[] queries = query.split(";");
     for(String q : queries){

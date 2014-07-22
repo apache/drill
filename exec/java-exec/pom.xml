@@ -325,6 +325,32 @@
         </dependency>
       </dependencies>
     </profile>
+    <profile>
+      <id>largeTests</id>
+      <activation><activeByDefault>false</activeByDefault></activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>include-large-tests</id>
+                <phase>test</phase>
+                <goals>
+                  <goal>test</goal>
+                </goals>
+                <configuration>
+                  <includes>
+                    <include>**/TestLargeFileCompilation.java</include>
+                  </includes>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
   </profiles>
 
   <build>
@@ -508,6 +534,26 @@
               <lookAhead>2</lookAhead>
               <isStatic>false</isStatic>
               <outputDirectory>${project.build.directory}/generated-sources/</outputDirectory>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <executions>
+          <execution>
+            <!-- we override the default test execution to exclude tests that would
+                take unusually long time to run (> 1 minute) and run such tests in a different profile -->
+            <id>default-test</id>
+            <phase>test</phase>
+            <goals>
+              <goal>test</goal>
+            </goals>
+            <configuration>
+              <excludes>
+                <exclude>**/TestLargeFileCompilation.java</exclude>
+              </excludes>
             </configuration>
           </execution>
         </executions>
