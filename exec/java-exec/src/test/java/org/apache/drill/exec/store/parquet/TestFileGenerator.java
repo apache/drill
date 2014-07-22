@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.parquet;
 
 import static parquet.column.Encoding.PLAIN;
+import static parquet.column.Encoding.RLE;
 
 import java.util.HashMap;
 
@@ -29,6 +30,7 @@ import org.apache.hadoop.fs.Path;
 
 import parquet.bytes.BytesInput;
 import parquet.column.ColumnDescriptor;
+import parquet.column.values.rle.RunLengthBitPackingHybridValuesWriter;
 import parquet.hadoop.ParquetFileWriter;
 import parquet.hadoop.metadata.CompressionCodecName;
 import parquet.schema.MessageType;
@@ -36,8 +38,6 @@ import parquet.schema.MessageTypeParser;
 
 public class TestFileGenerator {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestFileGenerator.class);
-
-  
 
   // 10 mb per page
   static int bytesPerPage = 1024 * 1024 * 1;
@@ -56,6 +56,9 @@ public class TestFileGenerator {
   static final Object[] boolVals = { false, false, true };
   static final Object[] binVals = { varLen1, varLen2, varLen3 };
   static final Object[] bin2Vals = { varLen3, varLen2, varLen1 };
+
+  // TODO - figure out what this should be set at, it should be based on the max nesting level
+  public static final int MAX_EXPECTED_BIT_WIDTH_FOR_DEFINITION_LEVELS = 16;
 
   static void populateDrill_418_fields(ParquetTestProperties props){
 
@@ -102,6 +105,34 @@ public class TestFileGenerator {
     props.fields.put("S_COMMENT", new FieldInfo("binary", "bin2", -1, bin2Vals, TypeProtos.MinorType.VARBINARY, props));
   }
 
+  private static abstract class ValueProducer {
+
+    public abstract void reset();
+    public abstract Object getValue();
+  }
+
+  private static class ValueRepeaterProducer extends ValueProducer {
+
+    WrapAroundCounter position;
+    Object[] values;
+
+    public ValueRepeaterProducer(Object[] values) {
+      this.values = values;
+      position = new WrapAroundCounter(values.length);
+    }
+
+    @Override
+    public void reset() {
+      position.reset();
+    }
+
+    public Object getValue() {
+      Object ret = values[position.val];
+      position.increment();
+      return ret;
+    }
+  }
+
   public static void generateParquetFile(String filename, ParquetTestProperties props) throws Exception {
 
     int currentBooleanByte = 0;
@@ -133,7 +164,7 @@ public class TestFileGenerator {
     HashMap<String, Integer> columnValuesWritten = new HashMap();
     int valsWritten;
     for (int k = 0; k < props.numberRowGroups; k++){
-      w.startBlock(1);
+      w.startBlock(props.recordsPerRowGroup);
       currentBooleanByte = 0;
       booleanBitCounter.reset();
 
@@ -152,6 +183,8 @@ public class TestFileGenerator {
         w.startColumn(c1, props.recordsPerRowGroup, codec);
         int valsPerPage = (int) Math.ceil(props.recordsPerRowGroup / (float) fieldInfo.numberOfPages);
         byte[] bytes;
+        RunLengthBitPackingHybridValuesWriter defLevels = new RunLengthBitPackingHybridValuesWriter(MAX_EXPECTED_BIT_WIDTH_FOR_DEFINITION_LEVELS, valsPerPage);
+        RunLengthBitPackingHybridValuesWriter repLevels = new RunLengthBitPackingHybridValuesWriter(MAX_EXPECTED_BIT_WIDTH_FOR_DEFINITION_LEVELS, valsPerPage);
         // for variable length binary fields
         int bytesNeededToEncodeLength = 4;
         if ((int) fieldInfo.bitLength > 0) {
@@ -169,6 +202,8 @@ public class TestFileGenerator {
         int bytesWritten = 0;
         for (int z = 0; z < (int) fieldInfo.numberOfPages; z++, bytesWritten = 0) {
           for (int i = 0; i < valsPerPage; i++) {
+            repLevels.writeInteger(0);
+            defLevels.writeInteger(1);
             //System.out.print(i + ", " + (i % 25 == 0 ? "\n gen " + fieldInfo.name + ": " : ""));
             if (fieldInfo.values[0] instanceof Boolean) {
 
@@ -195,7 +230,13 @@ public class TestFileGenerator {
             }
 
           }
-          w.writeDataPage((int) (props.recordsPerRowGroup / (int) fieldInfo.numberOfPages), bytes.length, BytesInput.from(bytes), PLAIN, PLAIN, PLAIN);
+          byte[] fullPage = new byte[2 * 4 * valsPerPage + bytes.length];
+          byte[] repLevelBytes = repLevels.getBytes().toByteArray();
+          byte[] defLevelBytes = defLevels.getBytes().toByteArray();
+          System.arraycopy(bytes, 0, fullPage, 0, bytes.length);
+          System.arraycopy(repLevelBytes, 0, fullPage, bytes.length, repLevelBytes.length);
+          System.arraycopy(defLevelBytes, 0, fullPage, bytes.length + repLevelBytes.length, defLevelBytes.length);
+          w.writeDataPage( (props.recordsPerRowGroup / fieldInfo.numberOfPages), fullPage.length, BytesInput.from(fullPage), RLE, RLE, PLAIN);
           currentBooleanByte = 0;
         }
         w.endColumn();

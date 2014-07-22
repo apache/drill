@@ -26,6 +26,7 @@ import java.util.Map;
 import org.apache.drill.BaseTestQuery;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.memory.TopLevelAllocator;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
@@ -39,13 +40,12 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
-@Ignore
+import java.io.UnsupportedEncodingException;
+
 public class TestParquetWriter extends BaseTestQuery {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestParquetWriter.class);
 
   static FileSystem fs;
-
-  private static final String EMPLOYEE_PARQUET_PATH = "employee_parquet";
 
   @BeforeClass
   public static void initFs() throws Exception {
@@ -59,7 +59,7 @@ public class TestParquetWriter extends BaseTestQuery {
   public void testSimple() throws Exception {
     String selection = "*";
     String inputTable = "cp.`employee.json`";
-    runTestAndValidate(selection, selection, inputTable, EMPLOYEE_PARQUET_PATH);
+    runTestAndValidate(selection, selection, inputTable, "employee_parquet");
   }
 
   @Test
@@ -90,24 +90,13 @@ public class TestParquetWriter extends BaseTestQuery {
   @Test
   public void testTPCHReadWrite1_date_convertedType() throws Exception {
     String selection = "L_ORDERKEY, L_PARTKEY, L_SUPPKEY, L_LINENUMBER, L_QUANTITY, L_EXTENDEDPRICE, L_DISCOUNT, L_TAX, " +
-        "L_RETURNFLAG, L_LINESTATUS, L_SHIPDATE, cast(L_COMMITDATE as DATE) as COMMITDATE, cast(L_RECEIPTDATE as DATE) AS RECEIPTDATE, L_SHIPINSTRUCT, L_SHIPMODE, L_COMMENT";
+        "L_RETURNFLAG, L_LINESTATUS, L_SHIPDATE, cast(L_COMMITDATE as DATE) as L_COMMITDATE, cast(L_RECEIPTDATE as DATE) AS L_RECEIPTDATE, L_SHIPINSTRUCT, L_SHIPMODE, L_COMMENT";
     String validationSelection = "L_ORDERKEY, L_PARTKEY, L_SUPPKEY, L_LINENUMBER, L_QUANTITY, L_EXTENDEDPRICE, L_DISCOUNT, L_TAX, " +
-        "L_RETURNFLAG, L_LINESTATUS, L_SHIPDATE,COMMITDATE ,RECEIPTDATE, L_SHIPINSTRUCT, L_SHIPMODE, L_COMMENT";
+        "L_RETURNFLAG, L_LINESTATUS, L_SHIPDATE,L_COMMITDATE ,L_RECEIPTDATE, L_SHIPINSTRUCT, L_SHIPMODE, L_COMMENT";
     String inputTable = "cp.`tpch/lineitem.parquet`";
     runTestAndValidate(selection, validationSelection, inputTable, "lineitem_parquet");
   }
 
-  // TODO file a JIRA for running this query with the projected column names the same as the originals, it failed with a deadbuf
-  // on the client, it appeared that the projection was sending batches out with a record count but a deadbuf
-  /*
-  String selection = "L_ORDERKEY, L_PARTKEY, L_SUPPKEY, L_LINENUMBER, L_QUANTITY, L_EXTENDEDPRICE, L_DISCOUNT, L_TAX, " +
-      "L_RETURNFLAG, L_LINESTATUS, L_SHIPDATE, cast(L_COMMITDATE as DATE) as L_COMMITDATE, cast(L_RECEIPTDATE as DATE) AS L_RECEIPTDATE, L_SHIPINSTRUCT, L_SHIPMODE, L_COMMENT";
-  String validationSelection = "L_ORDERKEY, L_PARTKEY, L_SUPPKEY, L_LINENUMBER, L_QUANTITY, L_EXTENDEDPRICE, L_DISCOUNT, L_TAX, " +
-      "L_RETURNFLAG, L_LINESTATUS, L_SHIPDATE,COMMITDATE ,RECEIPTDATE, L_SHIPINSTRUCT, L_SHIPMODE, L_COMMENT";
-      */
-  // this is rather odd, I can select the data out fo parquet and project it to cast the date fields
-  // this stores all of the data correctly, but when I got to read it out again with the query that created it (with redudant casts I beleive) it has
-  // everything but the cast date columns as nulls
   @Test
   public void testTPCHReadWrite2() throws Exception {
     String inputTable = "cp.`tpch/customer.parquet`";
@@ -144,34 +133,65 @@ public class TestParquetWriter extends BaseTestQuery {
     runTestAndValidate("*", "*", inputTable, "region_parquet");
   }
 
-  // This test fails an asset in OperatorStats intermittently
   @Test
   public void testTPCHReadWrite8() throws Exception {
     String inputTable = "cp.`tpch/supplier.parquet`";
     runTestAndValidate("*", "*", inputTable, "supplier_parquet");
   }
 
+  // working to create an exhaustive test of the format for this one. including all convertedTypes
+  // will not be supporting interval for Beta as of current schedule
+  // Types left out:
+  // "TIMESTAMPTZ_col"
   @Test
-  @Ignore
+  public void testRepeated() throws Exception {
+    String inputTable = "cp.`parquet/basic_repeated.json`";
+    runTestAndValidate("*", "*", inputTable, "basic_repeated");
+  }
+
+  // TODO - this is failing due to the parquet behavior of allowing repeated values to reach across
+  // pages. This broke our reading model a bit, but it is possible to work around.
+  @Test
+  public void testRepeatedDouble() throws Exception {
+    String inputTable = "cp.`parquet/repeated_double_data.json`";
+    runTestAndValidate("*", "*", inputTable, "repeated_double_parquet");
+  }
+
+  @Test
+  public void testRepeatedLong() throws Exception {
+    String inputTable = "cp.`parquet/repeated_integer_data.json`";
+    runTestAndValidate("*", "*", inputTable, "repeated_int_parquet");
+  }
+
+  @Test
+  public void testRepeatedBool() throws Exception {
+    String inputTable = "cp.`parquet/repeated_bool_data.json`";
+    runTestAndValidate("*", "*", inputTable, "repeated_bool_parquet");
+  }
+
+  @Test
+  public void testNullReadWrite() throws Exception {
+    String inputTable = "cp.`parquet/null_test_data.json`";
+    runTestAndValidate("*", "*", inputTable, "nullable_test");
+  }
+
+  @Ignore // fails intermittenly when being run with other tests, a patch in DRILL
+  @Test
   public void testDecimal() throws Exception {
     String selection = "cast(salary as decimal(8,2)) as decimal8, cast(salary as decimal(15,2)) as decimal15, " +
         "cast(salary as decimal(24,2)) as decimal24, cast(salary as decimal(38,2)) as decimal38";
     String validateSelection = "decimal8, decimal15, decimal24, decimal38";
     String inputTable = "cp.`employee.json`";
-    runTestAndValidate(selection, validateSelection, inputTable, EMPLOYEE_PARQUET_PATH);
+    runTestAndValidate(selection, validateSelection, inputTable, "parquet_decimal");
   }
 
-  // TODO - ask jacques about OperatorStats
-  // this is also experiencing the same failure as the 8th tpch dataset test above when run with the rest of the tests
-  // in this class all at once, not sure if this is IDE related for resorce management or something that should be looked
-  // at.
   @Test
   public void testMulipleRowGroups() throws Exception {
     try {
       //test(String.format("ALTER SESSION SET `%s` = %d", ExecConstants.PARQUET_BLOCK_SIZE, 1*1024*1024));
-      String selection = "*";
+      String selection = "mi";
       String inputTable = "cp.`customer.json`";
-      runTestAndValidate(selection, selection, inputTable, EMPLOYEE_PARQUET_PATH);
+      runTestAndValidate(selection, selection, inputTable, "foodmart_customer_parquet");
     } finally {
       test(String.format("ALTER SESSION SET `%s` = %d", ExecConstants.PARQUET_BLOCK_SIZE, 512*1024*1024));
     }
@@ -183,7 +203,7 @@ public class TestParquetWriter extends BaseTestQuery {
     String selection = "cast(hire_date as DATE) as hire_date";
     String validateSelection = "hire_date";
     String inputTable = "cp.`employee.json`";
-    runTestAndValidate(selection, validateSelection, inputTable, EMPLOYEE_PARQUET_PATH);
+    runTestAndValidate(selection, validateSelection, inputTable, "foodmart_employee_parquet");
   }
 
   public void runTestAndValidate(String selection, String validationSelection, String inputTable, String outputFile) throws Exception {
@@ -219,12 +239,7 @@ public class TestParquetWriter extends BaseTestQuery {
       for (int i = 0; i < loader.getRecordCount(); i++) {
         HashMap<String, Object> record = new HashMap<>();
         for (VectorWrapper w : loader) {
-          Object obj = null;
-          try {
-            obj = w.getValueVector().getAccessor().getObject(i);
-          } catch (Exception ex) {
-            throw ex;
-          }
+          Object obj = w.getValueVector().getAccessor().getObject(i);
           if (obj != null) {
             if (obj instanceof Text) {
               obj = obj.toString();
@@ -235,6 +250,7 @@ public class TestParquetWriter extends BaseTestQuery {
             else if (obj instanceof byte[]) {
               obj = new String((byte[]) obj, "UTF-8");
             }
+            record.put(w.getField().toExpr(), obj);
           }
           record.put(w.getField().toExpr(), obj);
         }
@@ -252,13 +268,15 @@ public class TestParquetWriter extends BaseTestQuery {
     RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
     addToMaterializedResults(expectedRecords, expected, loader, schema);
     addToMaterializedResults(actualRecords, result, loader, schema);
-    Assert.assertEquals("Different number of objects returned", expectedRecords.size(), actualRecords.size());
+    Assert.assertEquals("Different number of records returned", expectedRecords.size(), actualRecords.size());
 
     String missing = "";
     int i = 0;
+    int counter = 0;
     int missmatch;
     for (Map<String, Object> record : expectedRecords) {
       missmatch = 0;
+      counter++;
       for (String column : record.keySet()) {
         if (  actualRecords.get(i).get(column) == null && expectedRecords.get(i).get(column) == null ) {
           continue;
@@ -267,7 +285,7 @@ public class TestParquetWriter extends BaseTestQuery {
           continue;
         if ( (actualRecords.get(i).get(column) == null && record.get(column) == null) || ! actualRecords.get(i).get(column).equals(record.get(column))) {
           missmatch++;
-          System.out.println( i + " " + column + "[ex: " + record.get(column) + ", actual:" + actualRecords.get(i).get(column) + "]");
+          System.out.println( counter + " " + column + "[ex: " + record.get(column) + ", actual:" + actualRecords.get(i).get(column) + "]");
         }
       }
       if ( ! actualRecords.remove(record)) {

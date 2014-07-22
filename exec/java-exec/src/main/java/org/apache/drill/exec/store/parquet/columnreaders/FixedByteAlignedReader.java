@@ -15,11 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.parquet;
+package org.apache.drill.exec.store.parquet.columnreaders;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.util.DecimalUtility;
-import org.apache.drill.exec.expr.holders.DateHolder;
 import org.apache.drill.exec.expr.holders.Decimal28SparseHolder;
 import org.apache.drill.exec.expr.holders.Decimal38SparseHolder;
 import org.apache.drill.exec.store.ParquetOutputRecordWriter;
@@ -29,7 +28,6 @@ import org.apache.drill.exec.vector.Decimal38SparseVector;
 import org.apache.drill.exec.vector.ValueVector;
 import org.joda.time.DateTimeUtils;
 import parquet.column.ColumnDescriptor;
-import parquet.format.ConvertedType;
 import parquet.format.SchemaElement;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
 
@@ -47,17 +45,21 @@ class FixedByteAlignedReader extends ColumnReader {
 
   // this method is called by its superclass during a read loop
   @Override
-  protected void readField(long recordsToReadInThisPass, ColumnReader firstColumnStatus) {
+  protected void readField(long recordsToReadInThisPass) {
 
-    recordsReadInThisIteration = Math.min(pageReadStatus.currentPage.getValueCount()
-        - pageReadStatus.valuesRead, recordsToReadInThisPass - valuesReadInCurrentPass);
+    recordsReadInThisIteration = Math.min(pageReader.currentPage.getValueCount()
+        - pageReader.valuesRead, recordsToReadInThisPass - valuesReadInCurrentPass);
 
-    readStartInBytes = pageReadStatus.readPosInBytes;
+    readStartInBytes = pageReader.readPosInBytes;
     readLengthInBits = recordsReadInThisIteration * dataTypeLengthInBits;
     readLength = (int) Math.ceil(readLengthInBits / 8.0);
 
-    bytes = pageReadStatus.pageDataByteArray;
+    bytes = pageReader.pageDataByteArray;
     // vectorData is assigned by the superclass read loop method
+    writeData();
+  }
+
+  protected void writeData() {
     vectorData.writeBytes(bytes,
         (int) readStartInBytes, (int) readLength);
   }
@@ -71,17 +73,7 @@ class FixedByteAlignedReader extends ColumnReader {
       super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
     }
 
-    @Override
-    protected void readField(long recordsToReadInThisPass, ColumnReader firstColumnStatus) {
-      recordsReadInThisIteration = Math.min(pageReadStatus.currentPage.getValueCount()
-              - pageReadStatus.valuesRead, recordsToReadInThisPass - valuesReadInCurrentPass);
-
-      readStartInBytes = pageReadStatus.readPosInBytes;
-      readLengthInBits = recordsReadInThisIteration * dataTypeLengthInBits;
-      readLength = (int) Math.ceil(readLengthInBits / 8.0);
-
-      bytes = pageReadStatus.pageDataByteArray;
-
+    public void writeData() {
       dataTypeLengthInBytes = (int) Math.ceil(dataTypeLengthInBits / 8.0);
       for (int i = 0; i < recordsReadInThisIteration; i++) {
         addNext((int)readStartInBytes + i * dataTypeLengthInBytes, i + valuesReadInCurrentPass);
@@ -109,7 +101,7 @@ class FixedByteAlignedReader extends ColumnReader {
     @Override
     void addNext(int start, int index) {
       dateVector.getMutator().set(index, DateTimeUtils.fromJulianDay(
-          NullableFixedByteAlignedReader.NullableDateReader.readIntLittleEndian(bytes, start)
+          NullableFixedByteAlignedReaders.NullableDateReader.readIntLittleEndian(bytes, start)
               - ParquetOutputRecordWriter.JULIAN_DAY_EPOC - 0.5));
     }
   }

@@ -15,13 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-package org.apache.drill.exec.store.parquet;
+package org.apache.drill.exec.store.parquet.columnreaders;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.vector.BigIntVector;
 import org.apache.drill.exec.vector.ValueVector;
 import parquet.column.ColumnDescriptor;
-import parquet.format.ConvertedType;
 import parquet.format.SchemaElement;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
 import parquet.schema.PrimitiveType;
@@ -35,18 +34,18 @@ public class ParquetFixedWidthDictionaryReader extends ColumnReader{
   }
 
   @Override
-  public void readField(long recordsToReadInThisPass, ColumnReader firstColumnStatus) {
+  public void readField(long recordsToReadInThisPass) {
 
-    recordsReadInThisIteration = Math.min(pageReadStatus.currentPage.getValueCount()
-        - pageReadStatus.valuesRead, recordsToReadInThisPass - valuesReadInCurrentPass);
+    recordsReadInThisIteration = Math.min(pageReader.currentPage.getValueCount()
+        - pageReader.valuesRead, recordsToReadInThisPass - valuesReadInCurrentPass);
     int defLevel;
     for (int i = 0; i < recordsReadInThisIteration; i++){
-      defLevel = pageReadStatus.definitionLevels.readInteger();
+      defLevel = pageReader.definitionLevels.readInteger();
       // if the value is defined
       if (defLevel == columnDescriptor.getMaxDefinitionLevel()){
         if (columnDescriptor.getType() == PrimitiveType.PrimitiveTypeName.INT64)
           ((BigIntVector)valueVec).getMutator().set(i + valuesReadInCurrentPass,
-              pageReadStatus.valueReader.readLong() );
+              pageReader.valueReader.readLong() );
       }
       // otherwise the value is skipped, because the bit vector indicating nullability is zero filled
     }

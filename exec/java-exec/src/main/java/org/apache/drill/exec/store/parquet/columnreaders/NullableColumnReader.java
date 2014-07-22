@@ -15,14 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.parquet;
+package org.apache.drill.exec.store.parquet.columnreaders;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.vector.BaseValueVector;
 import org.apache.drill.exec.vector.NullableVectorDefinitionSetter;
 import org.apache.drill.exec.vector.ValueVector;
 import parquet.column.ColumnDescriptor;
-import parquet.format.ConvertedType;
 import parquet.format.SchemaElement;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
 
@@ -35,24 +34,28 @@ abstract class NullableColumnReader<V extends ValueVector> extends ColumnReader<
   int rightBitShift;
   // used when copying less than a byte worth of data at a time, to indicate the number of used bits in the current byte
   int bitsUsed;
+  BaseValueVector castedBaseVector;
+  NullableVectorDefinitionSetter castedVectorMutator;
 
   NullableColumnReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
                boolean fixedLength, V v, SchemaElement schemaElement) throws ExecutionSetupException {
     super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+    castedBaseVector = (BaseValueVector) v;
+    castedVectorMutator = (NullableVectorDefinitionSetter) v.getMutator();
   }
 
-  public void readAllFixedFields(long recordsToReadInThisPass, ColumnReader firstColumnStatus) throws IOException {
+  public void processPages(long recordsToReadInThisPass) throws IOException {
     readStartInBytes = 0;
     readLength = 0;
     readLengthInBits = 0;
     recordsReadInThisIteration = 0;
-    vectorData = ((BaseValueVector)valueVec).getData();
+    vectorData = castedBaseVector.getData();
 
     do {
       // if no page has been read, or all of the records have been read out of a page, read the next one
-      if (pageReadStatus.currentPage == null
-          || pageReadStatus.valuesRead == pageReadStatus.currentPage.getValueCount()) {
-        if (!pageReadStatus.next()) {
+      if (pageReader.currentPage == null
+          || pageReader.valuesRead == pageReader.currentPage.getValueCount()) {
+        if (!pageReader.next()) {
           break;
         }
       }
@@ -62,11 +65,11 @@ abstract class NullableColumnReader<V extends ValueVector> extends ColumnReader<
       // to optimize copying data out of the buffered disk stream, runs of defined values
       // are located and copied together, rather than copying individual values
 
-      long runStart = pageReadStatus.readPosInBytes;
+      long runStart = pageReader.readPosInBytes;
       int runLength;
-      int currentDefinitionLevel = 0;
+      int currentDefinitionLevel;
       int currentValueIndexInVector = (int) recordsReadInThisIteration;
-      boolean lastValueWasNull = true;
+      boolean lastValueWasNull;
       int definitionLevelsRead;
       // loop to find the longest run of defined values available, can be preceded by several nulls
       while (true){
@@ -80,8 +83,8 @@ abstract class NullableColumnReader<V extends ValueVector> extends ColumnReader<
         }
         while(currentValueIndexInVector < recordsToReadInThisPass
             && currentValueIndexInVector < valueVec.getValueCapacity()
-            && pageReadStatus.valuesRead + definitionLevelsRead < pageReadStatus.currentPage.getValueCount()){
-          currentDefinitionLevel = pageReadStatus.definitionLevels.readInteger();
+            && pageReader.valuesRead + definitionLevelsRead < pageReader.currentPage.getValueCount()){
+          currentDefinitionLevel = pageReader.definitionLevels.readInteger();
           definitionLevelsRead++;
           if ( currentDefinitionLevel < columnDescriptor.getMaxDefinitionLevel()){
             // a run of non-null values was found, break out of this loop to do a read in the outer loop
@@ -94,22 +97,22 @@ abstract class NullableColumnReader<V extends ValueVector> extends ColumnReader<
           }
           else{
             if (lastValueWasNull){
-              runStart = pageReadStatus.readPosInBytes;
+              runStart = pageReader.readPosInBytes;
               runLength = 0;
               lastValueWasNull = false;
             }
             runLength++;
-            ((NullableVectorDefinitionSetter)valueVec.getMutator()).setIndexDefined(currentValueIndexInVector);
+            castedVectorMutator.setIndexDefined(currentValueIndexInVector);
           }
           currentValueIndexInVector++;
         }
-        pageReadStatus.readPosInBytes = runStart;
+        pageReader.readPosInBytes = runStart;
         recordsReadInThisIteration = runLength;
 
-        readField( runLength, firstColumnStatus);
+        readField( runLength);
         int writerIndex = ((BaseValueVector) valueVec).getData().writerIndex();
         if ( dataTypeLengthInBits > 8  || (dataTypeLengthInBits < 8 && totalValuesRead + runLength % 8 == 0)){
-          ((BaseValueVector) valueVec).getData().setIndex(0, writerIndex + (int) Math.ceil( nullsFound * dataTypeLengthInBits / 8.0));
+          castedBaseVector.getData().setIndex(0, writerIndex + (int) Math.ceil( nullsFound * dataTypeLengthInBits / 8.0));
         }
         else if (dataTypeLengthInBits < 8){
           rightBitShift += dataTypeLengthInBits * nullsFound;
@@ -117,20 +120,20 @@ abstract class NullableColumnReader<V extends ValueVector> extends ColumnReader<
         recordsReadInThisIteration += nullsFound;
         valuesReadInCurrentPass += recordsReadInThisIteration;
         totalValuesRead += recordsReadInThisIteration;
-        pageReadStatus.valuesRead += recordsReadInThisIteration;
-        if ( (readStartInBytes + readLength >= pageReadStatus.byteLength && bitsUsed == 0)
-            || pageReadStatus.valuesRead == pageReadStatus.currentPage.getValueCount()) {
-          if (!pageReadStatus.next()) {
+        pageReader.valuesRead += recordsReadInThisIteration;
+        if ( (readStartInBytes + readLength >= pageReader.byteLength && bitsUsed == 0)
+            || pageReader.valuesRead == pageReader.currentPage.getValueCount()) {
+          if (!pageReader.next()) {
             break;
           }
         } else {
-          pageReadStatus.readPosInBytes = readStartInBytes + readLength;
+          pageReader.readPosInBytes = readStartInBytes + readLength;
         }
       }
-    } while (valuesReadInCurrentPass < recordsToReadInThisPass && pageReadStatus.currentPage != null);
+    } while (valuesReadInCurrentPass < recordsToReadInThisPass && pageReader.currentPage != null);
     valueVec.getMutator().setValueCount(
         valuesReadInCurrentPass);
   }
 
-  protected abstract void readField(long recordsToRead, ColumnReader firstColumnStatus);
+  protected abstract void readField(long recordsToRead);
 }

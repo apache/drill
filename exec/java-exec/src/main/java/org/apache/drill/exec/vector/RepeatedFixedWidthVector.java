@@ -36,4 +36,17 @@ public interface RepeatedFixedWidthVector extends ValueVector{
    * @return The number of bytes of the buffer that were consumed.
    */
   public int load(int parentValueCount, int childValueCount, ByteBuf buf);
+
+  public abstract RepeatedAccessor getAccessor();
+
+  public abstract RepeatedMutator getMutator();
+
+  public interface RepeatedAccessor extends Accessor {
+    public int getGroupCount();
+  }
+  public interface RepeatedMutator extends Mutator {
+    public void setValueCounts(int parentValueCount, int childValueCount);
+    public boolean setRepetitionAtIndexSafe(int index, int repetitionCount);
+    public BaseDataValueVector getDataVector();
+  }
 }

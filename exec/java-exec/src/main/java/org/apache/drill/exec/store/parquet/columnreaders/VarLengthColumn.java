@@ -1,0 +1,60 @@
+/*******************************************************************************
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ******************************************************************************/
+package org.apache.drill.exec.store.parquet.columnreaders;
+
+import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.exec.vector.ValueVector;
+import parquet.column.ColumnDescriptor;
+import parquet.format.Encoding;
+import parquet.format.SchemaElement;
+import parquet.hadoop.metadata.ColumnChunkMetaData;
+import parquet.io.api.Binary;
+
+import java.io.IOException;
+
+public abstract class VarLengthColumn<V extends ValueVector> extends ColumnReader {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(VarLengthColumn.class);
+
+  Binary currDictVal;
+
+  VarLengthColumn(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor,
+                  ColumnChunkMetaData columnChunkMetaData, boolean fixedLength, V v,
+                  SchemaElement schemaElement) throws ExecutionSetupException {
+    super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
+      if (columnChunkMetaData.getEncodings().contains(Encoding.PLAIN_DICTIONARY)) {
+        usingDictionary = true;
+      }
+      else {
+        usingDictionary = false;
+      }
+  }
+
+  protected boolean processPageData(int recordsToReadInThisPass) throws IOException {
+    return readAndStoreValueSizeInformation();
+  }
+
+  public void reset() {
+    super.reset();
+    pageReader.valuesReadyToRead = 0;
+  }
+
+  protected abstract boolean readAndStoreValueSizeInformation() throws IOException;
+
+  public abstract boolean skipReadyToReadPositionUpdate();
+
+}

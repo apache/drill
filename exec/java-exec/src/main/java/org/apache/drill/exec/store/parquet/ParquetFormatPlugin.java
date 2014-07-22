@@ -64,7 +64,7 @@ public class ParquetFormatPlugin implements FormatPlugin{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MockStorageEngine.class);
 
   private final DrillbitContext context;
-  static final ParquetMetadataConverter parquetMetadataConverter = new ParquetMetadataConverter();
+  public static final ParquetMetadataConverter parquetMetadataConverter = new ParquetMetadataConverter();
   private CodecFactoryExposer codecFactoryExposer;
   private final DrillFileSystem fs;
   private final ParquetFormatMatcher formatMatcher;

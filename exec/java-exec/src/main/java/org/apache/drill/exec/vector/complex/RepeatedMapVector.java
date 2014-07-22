@@ -37,6 +37,7 @@ import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.util.JsonStringArrayList;
+import org.apache.drill.exec.vector.BaseDataValueVector;
 import org.apache.drill.exec.vector.RepeatedFixedWidthVector;
 import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.ValueVector;
@@ -50,6 +51,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 public class RepeatedMapVector extends AbstractContainerVector implements RepeatedFixedWidthVector {
+
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RepeatedMapVector.class);
 
   public final static MajorType TYPE = MajorType.newBuilder().setMinorType(MinorType.MAP).setMode(DataMode.REPEATED).build();
@@ -59,7 +61,7 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
   private final Map<String, VectorWithOrdinal> vectorIds = Maps.newHashMap();
   private final RepeatedMapReaderImpl reader = new RepeatedMapReaderImpl(RepeatedMapVector.this);
   private final IntObjectOpenHashMap<ValueVector> vectorsById = new IntObjectOpenHashMap<>();
-  private final Accessor accessor = new Accessor();
+  private final RepeatedMapAccessor accessor = new RepeatedMapAccessor();
   private final Mutator mutator = new Mutator();
   private final BufferAllocator allocator;
   private final MaterializedField field;
@@ -278,7 +280,7 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
   }
 
   @Override
-  public Accessor getAccessor() {
+  public RepeatedMapAccessor getAccessor() {
     return accessor;
   }
 
@@ -349,7 +351,7 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
     return mutator;
   }
 
-  public class Accessor implements ValueVector.Accessor{
+  public class RepeatedMapAccessor implements RepeatedAccessor {
 
     @Override
     public Object getObject(int index) {
@@ -414,6 +416,10 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
       return reader;
     }
 
+    @Override
+    public int getGroupCount() {
+      return size();
+    }
   }
 
   private void populateEmpties(int groupCount){
@@ -424,7 +430,7 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
     lastSet = groupCount - 1;
   }
 
-  public class Mutator implements ValueVector.Mutator{
+  public class Mutator implements ValueVector.Mutator, RepeatedMutator {
 
     public void startNewGroup(int index) {
       populateEmpties(index);
@@ -458,6 +464,21 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
     public void generateTestData(int values) {
     }
 
+    @Override
+    public void setValueCounts(int parentValueCount, int childValueCount) {
+      // TODO - determine if this should be implemented for this class
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean setRepetitionAtIndexSafe(int index, int repetitionCount) {
+      return false;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public BaseDataValueVector getDataVector() {
+      return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
   }
 
   @Override

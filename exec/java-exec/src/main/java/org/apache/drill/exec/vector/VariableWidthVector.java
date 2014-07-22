@@ -44,5 +44,15 @@ public interface VariableWidthVector extends ValueVector{
    */
   public int load(int dataBytes, int valueCount, ByteBuf buf);
   
-  public abstract Mutator getMutator();
+  public abstract VariableWidthMutator getMutator();
+
+  public abstract VariableWidthAccessor getAccessor();
+
+  public interface VariableWidthAccessor extends Accessor {
+    public int getValueLength(int index);
+  }
+
+  public interface VariableWidthMutator extends Mutator {
+    public boolean setValueLengthSafe(int index, int length);
+  }
 }

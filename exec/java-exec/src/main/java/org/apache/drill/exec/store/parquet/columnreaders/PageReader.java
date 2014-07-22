@@ -15,23 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.drill.exec.store.parquet;
+package org.apache.drill.exec.store.parquet.columnreaders;
 
 import java.io.IOException;
-import java.util.ArrayList;
 
-import com.google.common.base.Preconditions;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
-import org.apache.drill.exec.proto.SchemaDefProtos;
-import org.apache.drill.exec.record.MaterializedField;
-import org.apache.drill.exec.vector.VarBinaryVector;
+import org.apache.drill.exec.store.parquet.ColumnDataReader;
+import org.apache.drill.exec.store.parquet.ParquetFormatPlugin;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
 import parquet.bytes.BytesInput;
 import parquet.column.Dictionary;
-import parquet.column.Encoding;
 import parquet.column.ValuesType;
 import parquet.column.page.DictionaryPage;
 import parquet.column.page.Page;
@@ -44,8 +40,8 @@ import parquet.hadoop.metadata.ColumnChunkMetaData;
 import parquet.schema.PrimitiveType;
 
 // class to keep track of the read position of variable length columns
-final class PageReadStatus {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PageReadStatus.class);
+final class PageReader {
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PageReader.class);
 
   private final ColumnReader parentColumnReader;
   private final ColumnDataReader dataReader;
@@ -53,6 +49,10 @@ final class PageReadStatus {
   Page currentPage;
   // buffer to store bytes of current page
   byte[] pageDataByteArray;
+
+  // for variable length data we need to keep track of our current position in the page data
+  // as the values and lengths are intermixed, making random access to the length data impossible
+  long readyToReadPosInBytes;
   // read position in the current page, stored in the ByteBuf in ParquetRecordReader called bufferWithAllData
   long readPosInBytes;
   // bit shift needed for the next page if the last one did not line up with a byte boundary
@@ -60,16 +60,28 @@ final class PageReadStatus {
   // storage space for extra bits at the end of a page if they did not line up with a byte boundary
   // prevents the need to keep the entire last page, as these pageDataByteArray need to be added to the next batch
   //byte extraBits;
+
+  // used for columns where the number of values that will fit in a vector is unknown
+  // currently used for variable length
+  // TODO - reuse this when compressed vectors are added, where fixed length values will take up a
+  // variable amount of space
+  // For example: if nulls are stored without extra space left in the data vector
+  // (this is currently simplifying random access to the data during processing, but increases the size of the vectors)
+  int valuesReadyToRead;
+
   // the number of values read out of the last page
   int valuesRead;
   int byteLength;
   //int rowGroupIndex;
   ValuesReader definitionLevels;
+  ValuesReader repetitionLevels;
   ValuesReader valueReader;
+  ValuesReader dictionaryLengthDeterminingReader;
+  ValuesReader dictionaryValueReader;
   Dictionary dictionary;
   PageHeader pageHeader = null;
 
-  PageReadStatus(ColumnReader parentStatus, FileSystem fs, Path path, ColumnChunkMetaData columnChunkMetaData) throws ExecutionSetupException{
+  PageReader(ColumnReader parentStatus, FileSystem fs, Path path, ColumnChunkMetaData columnChunkMetaData) throws ExecutionSetupException{
     this.parentColumnReader = parentStatus;
 
     long totalByteLength = columnChunkMetaData.getTotalUncompressedSize();
@@ -111,6 +123,7 @@ final class PageReadStatus {
 
     currentPage = null;
     valuesRead = 0;
+    valuesReadyToRead = 0;
 
     // TODO - the metatdata for total size appears to be incorrect for impala generated files, need to find cause
     // and submit a bug report
@@ -124,7 +137,6 @@ final class PageReadStatus {
     do {
       pageHeader = dataReader.readPageHeader();
       if (pageHeader.getType() == PageType.DICTIONARY_PAGE) {
-        System.out.println(pageHeader.dictionary_page_header.getEncoding());
         BytesInput bytesIn = parentColumnReader.parentReader.getCodecFactoryExposer()
             .decompress( //
                 dataReader.getPageAsBytesInput(pageHeader.compressed_page_size), //
@@ -163,25 +175,47 @@ final class PageReadStatus {
     pageDataByteArray = currentPage.getBytes().toByteArray();
 
     readPosInBytes = 0;
+    if (parentColumnReader.getColumnDescriptor().getMaxRepetitionLevel() > 0) {
+      repetitionLevels = currentPage.getRlEncoding().getValuesReader(parentColumnReader.columnDescriptor, ValuesType.REPETITION_LEVEL);
+      repetitionLevels.initFromPage(currentPage.getValueCount(), pageDataByteArray, (int) readPosInBytes);
+      // we know that the first value will be a 0, at the end of each list of repeated values we will hit another 0 indicating
+      // a new record, although we don't know the length until we hit it (and this is a one way stream of integers) so we
+      // read the first zero here to simplify the reading processes, and start reading the first value the same as all
+      // of the rest. Effectively we are 'reading' the non-existent value in front of the first allowing direct access to
+      // the first list of repetition levels
+      readPosInBytes = repetitionLevels.getNextOffset();
+      repetitionLevels.readInteger();
+    }
     if (parentColumnReader.columnDescriptor.getMaxDefinitionLevel() != 0){
       parentColumnReader.currDefLevel = -1;
       if (!currentPage.getValueEncoding().usesDictionary()) {
+        parentColumnReader.usingDictionary = false;
         definitionLevels = currentPage.getDlEncoding().getValuesReader(parentColumnReader.columnDescriptor, ValuesType.DEFINITION_LEVEL);
-        definitionLevels.initFromPage(currentPage.getValueCount(), pageDataByteArray, 0);
+        definitionLevels.initFromPage(currentPage.getValueCount(), pageDataByteArray, (int) readPosInBytes);
         readPosInBytes = definitionLevels.getNextOffset();
         if (parentColumnReader.columnDescriptor.getType() == PrimitiveType.PrimitiveTypeName.BOOLEAN) {
           valueReader = currentPage.getValueEncoding().getValuesReader(parentColumnReader.columnDescriptor, ValuesType.VALUES);
           valueReader.initFromPage(currentPage.getValueCount(), pageDataByteArray, (int) readPosInBytes);
         }
       } else {
+        parentColumnReader.usingDictionary = true;
         definitionLevels = currentPage.getDlEncoding().getValuesReader(parentColumnReader.columnDescriptor, ValuesType.DEFINITION_LEVEL);
-        definitionLevels.initFromPage(currentPage.getValueCount(), pageDataByteArray, 0);
+        definitionLevels.initFromPage(currentPage.getValueCount(), pageDataByteArray, (int) readPosInBytes);
         readPosInBytes = definitionLevels.getNextOffset();
-        valueReader = new DictionaryValuesReader(dictionary);
-        valueReader.initFromPage(currentPage.getValueCount(), pageDataByteArray, (int) readPosInBytes);
+        // initialize two of the dictionary readers, one is for determining the lengths of each value, the second is for
+        // actually copying the values out into the vectors
+        dictionaryLengthDeterminingReader = new DictionaryValuesReader(dictionary);
+        dictionaryLengthDeterminingReader.initFromPage(currentPage.getValueCount(), pageDataByteArray, (int) readPosInBytes);
+        dictionaryValueReader = new DictionaryValuesReader(dictionary);
+        dictionaryValueReader.initFromPage(currentPage.getValueCount(), pageDataByteArray, (int) readPosInBytes);
         this.parentColumnReader.usingDictionary = true;
       }
     }
+    // readPosInBytes is used for actually reading the values after we determine how many will fit in the vector
+    // readyToReadPosInBytes serves a similar purpose for the vector types where we must count up the values that will
+    // fit one record at a time, such as for variable length data. Both operations must start in the same location after the
+    // definition and repetition level data which is stored alongside the page data itself
+    readyToReadPosInBytes = readPosInBytes;
     return true;
   }
   

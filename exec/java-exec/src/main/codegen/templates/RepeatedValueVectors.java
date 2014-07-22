@@ -18,6 +18,7 @@
 
 import java.lang.Override;
 
+import org.apache.drill.exec.vector.RepeatedFixedWidthVector;
 import org.apache.drill.exec.vector.UInt4Vector;
 import org.mortbay.jetty.servlet.Holder;
 
@@ -63,9 +64,9 @@ package org.apache.drill.exec.vector;
   }
 
   public int getValueCapacity(){
-    return Math.min(values.getValueCapacity(), offsets.getValueCapacity());
+    return Math.min(values.getValueCapacity(), offsets.getValueCapacity() - 1);
   }
-  
+
   public int getBufferSize(){
     return offsets.getBufferSize() + values.getBufferSize();
   }
@@ -271,8 +272,12 @@ package org.apache.drill.exec.vector;
   public Accessor getAccessor(){
     return accessor;
   }
-  
-  public final class Accessor implements ValueVector.Accessor{
+
+  // This is declared a subclass of the accessor declared inside of FixedWidthVector, this is also used for
+  // variable length vectors, as they should ahve consistent interface as much as possible, if they need to diverge
+  // in the future, the interface shold be declared in the respective value vector superclasses for fixed and variable
+  // and we should refer to each in the generation template
+  public final class Accessor implements RepeatedFixedWidthVector.RepeatedAccessor{
     
     final FieldReader reader = new Repeated${minor.class}ReaderImpl(Repeated${minor.class}Vector.this);
     
@@ -365,6 +370,21 @@ package org.apache.drill.exec.vector;
 
     
     private Mutator(){
+    }
+
+    public boolean setRepetitionAtIndexSafe(int index, int repetitionCount) {
+      return offsets.getMutator().setSafe(index+1, offsets.getAccessor().get(index) + repetitionCount);
+    }
+
+    public BaseDataValueVector getDataVector() {
+      return values;
+    }
+
+    public void setValueCounts(int parentValueCount, int childValueCount){
+      Repeated${minor.class}Vector.this.parentValueCount = parentValueCount;
+      Repeated${minor.class}Vector.this.childValueCount = childValueCount;
+      values.getMutator().setValueCount(childValueCount);
+      offsets.getMutator().setValueCount(childValueCount + 1);
     }
 
     public boolean startNewGroup(int index) {

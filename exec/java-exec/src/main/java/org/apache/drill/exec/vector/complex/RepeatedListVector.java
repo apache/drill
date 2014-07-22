@@ -38,6 +38,7 @@ import org.apache.drill.exec.proto.UserBitShared.SerializedField;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.record.TransferPair;
 import org.apache.drill.exec.util.JsonStringArrayList;
+import org.apache.drill.exec.vector.BaseDataValueVector;
 import org.apache.drill.exec.vector.RepeatedFixedWidthVector;
 import org.apache.drill.exec.vector.UInt4Vector;
 import org.apache.drill.exec.vector.ValueVector;
@@ -54,7 +55,7 @@ public class RepeatedListVector extends AbstractContainerVector implements Repea
   private final UInt4Vector offsets;   // offsets to start of each record
   private final BufferAllocator allocator;
   private final Mutator mutator = new Mutator();
-  private final Accessor accessor = new Accessor();
+  private final RepeatedListAccessor accessor = new RepeatedListAccessor();
   private ValueVector vector;
   private final MaterializedField field;
   private final RepeatedListReaderImpl reader = new RepeatedListReaderImpl(null, this);
@@ -112,7 +113,7 @@ public class RepeatedListVector extends AbstractContainerVector implements Repea
 
   }
 
-  public class Mutator implements ValueVector.Mutator{
+  public class Mutator implements ValueVector.Mutator, RepeatedMutator{
 
     public void startNewGroup(int index) {
       offsets.getMutator().set(index+1, offsets.getAccessor().get(index));
@@ -151,9 +152,24 @@ public class RepeatedListVector extends AbstractContainerVector implements Repea
     public void generateTestData(int values) {
     }
 
+    @Override
+    public void setValueCounts(int parentValueCount, int childValueCount) {
+      // TODO - determine if this should be implemented for this class
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean setRepetitionAtIndexSafe(int index, int repetitionCount) {
+      return false;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public BaseDataValueVector getDataVector() {
+      return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
   }
 
-  public class Accessor implements ValueVector.Accessor {
+  public class RepeatedListAccessor implements RepeatedAccessor{
 
     @Override
     public Object getObject(int index) {
@@ -211,6 +227,10 @@ public class RepeatedListVector extends AbstractContainerVector implements Repea
       return reader;
     }
 
+    @Override
+    public int getGroupCount() {
+      return size();
+    }
   }
 
   @Override
@@ -315,7 +335,7 @@ public class RepeatedListVector extends AbstractContainerVector implements Repea
   }
 
   @Override
-  public Accessor getAccessor() {
+  public RepeatedListAccessor getAccessor() {
     return accessor;
   }
 
