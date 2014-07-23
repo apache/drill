@@ -20,6 +20,8 @@ package org.apache.drill.exec.expr.fn;
 import java.util.List;
 import java.util.Map;
 
+import com.sun.codemodel.JType;
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.expr.ClassGenerator;
@@ -105,7 +107,7 @@ class DrillAggFuncHolder extends DrillFuncHolder{
         
         //Use for loop to initialize entries in the workspace vectors. 
         JForLoop forLoop = setupBlock._for();
-        JVar ivar = forLoop.init(g.getModel().INT, "i", JExpr.lit(0));
+        JVar ivar = forLoop.init(g.getModel().INT, "drill_internal_i", JExpr.lit(0));
         forLoop.test(ivar.lt(sizeVar));
         forLoop.update(ivar.assignPlus(JExpr.lit(1)));
         
@@ -211,6 +213,7 @@ class DrillAggFuncHolder extends DrillFuncHolder{
     
     Preconditions.checkNotNull(body);
     sub.directStatement(body);
+    JVar successVar = sub.decl(JType.parse(g.getModel(), "boolean"), "success", JExpr.lit(false));
     
     // reassign workspace variables back.
     for(int i =0; i < workspaceJVars.length; i++){
@@ -223,8 +226,12 @@ class DrillAggFuncHolder extends DrillFuncHolder{
       }else{
         setMeth = g.getWorkspaceVectors().get(workspaceVars[i]).invoke("getMutator").invoke("setSafe").arg(wsIndexVariable).arg(workspaceJVars[i].ref("value"));
       }
-       
-      sub.add(setMeth);                     
+
+      sub.assign(successVar, setMeth);
+
+      JClass drillRunTimeException = g.getModel().ref(DrillRuntimeException.class);
+
+      sub._if(successVar.eq(JExpr.lit(false)))._then()._throw(JExpr._new(drillRunTimeException).arg(JExpr.lit("setsafe() failed; cannot set holder value into the vector")));
     }
     
   }
