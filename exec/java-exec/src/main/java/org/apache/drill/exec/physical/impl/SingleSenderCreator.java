@@ -139,7 +139,9 @@ public class SingleSenderCreator implements RootCreator<SingleSender>{
       @Override
       public void failed(RpcException ex) {
         sendCount.decrement();
-        context.fail(ex);
+        if (!context.isCancelled() && !context.isFailed()) {
+          context.fail(ex);
+        }
         stop();
       }
 

@@ -71,7 +71,9 @@ public class ProducerConsumerBatch extends AbstractRecordBatch {
       wrapper = queue.take();
       logger.debug("Got batch from queue");
     } catch (InterruptedException e) {
-      context.fail(e);
+      if (!(context.isCancelled() || context.isFailed())) {
+        context.fail(e);
+      }
       return IterOutcome.STOP;
     } finally {
       stats.stopWait();
@@ -117,8 +119,11 @@ public class ProducerConsumerBatch extends AbstractRecordBatch {
 
   private class Producer implements Runnable {
 
+    RecordBatchDataWrapper wrapper;
+
     @Override
     public void run() {
+      try {
       if (stop) return;
       outer: while (true) {
         IterOutcome upstream = incoming.next();
@@ -135,14 +140,17 @@ public class ProducerConsumerBatch extends AbstractRecordBatch {
           case OK_NEW_SCHEMA:
           case OK:
             try {
-              if (!stop) queue.put(new RecordBatchDataWrapper(new RecordBatchData(incoming), false, false));
-            } catch (InterruptedException e) {
-              context.fail(e);
-              try {
-                queue.putFirst(new RecordBatchDataWrapper(null, false, true));
-              } catch (InterruptedException e1) {
-                throw new RuntimeException(e1);
+              if (!stop) {
+                wrapper = new RecordBatchDataWrapper(new RecordBatchData(incoming), false, false);
+                queue.put(wrapper);
               }
+            } catch (InterruptedException e) {
+              if (!(context.isCancelled() || context.isFailed())) {
+                context.fail(e);
+              }
+              wrapper.batch.getContainer().zeroVectors();
+              incoming.cleanup();
+              break outer;
             }
             break;
           default:
@@ -152,14 +160,15 @@ public class ProducerConsumerBatch extends AbstractRecordBatch {
       try {
         queue.put(new RecordBatchDataWrapper(null, true, false));
       } catch (InterruptedException e) {
-        context.fail(e);
-        try {
-          queue.putFirst(new RecordBatchDataWrapper(null, false, true));
-        } catch (InterruptedException e1) {
-          throw new RuntimeException(e1);
+        if (!(context.isCancelled() || context.isFailed())) {
+          context.fail(e);
         }
+
       }
-      logger.debug("Producer thread finished");
+      } finally {
+        incoming.cleanup();
+        logger.debug("Producer thread finished");
+      }
     }
   }
 
@@ -174,7 +183,13 @@ public class ProducerConsumerBatch extends AbstractRecordBatch {
 
   @Override
   protected void killIncoming() {
-    incoming.kill();
+    producer.interrupt();
+    stop = true;
+    try {
+      producer.join();
+    } catch (InterruptedException e) {
+      logger.warn("Interrupted while waiting for producer thread");
+    }
   }
 
   @Override
@@ -182,7 +197,6 @@ public class ProducerConsumerBatch extends AbstractRecordBatch {
     stop = true;
     clearQueue();
     super.cleanup();
-    incoming.cleanup();
   }
 
   @Override

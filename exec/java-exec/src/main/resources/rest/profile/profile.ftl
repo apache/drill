@@ -49,6 +49,9 @@
     </div>
     <button type="submit" class="btn btn-default">Re-run query</button>
   </form>
+  <form action="/profiles/cancel/${model.id}" method="GET">
+    <button type="link" class="btn btn-default">Cancel query</button>
+  </form>
   <div class="page-header">
   </div>
   <h3>Visualized Plan</h3>

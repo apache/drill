@@ -43,6 +43,7 @@ import org.apache.drill.exec.proto.UserProtos;
 import org.apache.drill.exec.proto.UserProtos.Property;
 import org.apache.drill.exec.proto.UserProtos.RpcType;
 import org.apache.drill.exec.proto.UserProtos.UserProperties;
+import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.rpc.BasicClientWithConnection.ServerConnection;
 import org.apache.drill.exec.rpc.ChannelClosedException;
 import org.apache.drill.exec.rpc.DrillRpcFuture;
@@ -239,8 +240,9 @@ public class DrillClient implements Closeable, ConnectionThrottle{
     return listener.getResults();
   }
 
-  public void cancelQuery(QueryId id){
-    client.send(RpcType.CANCEL_QUERY, id, Ack.class);
+  public DrillRpcFuture<Ack> cancelQuery(QueryId id){
+    logger.debug("Cancelling query {}", QueryIdHelper.getQueryId(id));
+    return client.send(RpcType.CANCEL_QUERY, id, Ack.class);
   }
 
 

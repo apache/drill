@@ -76,14 +76,14 @@ public class UnlimitedRawBatchBuffer implements RawBatchBuffer{
 
   @Override
   public void cleanup() {
-    if (!finished) {
+    if (!finished && !context.isCancelled()) {
       IllegalStateException e = new IllegalStateException("Cleanup before finished");
       context.fail(e);
       throw e;
     }
 
     if (!buffer.isEmpty()) {
-      if (!context.isFailed()) {
+      if (!context.isFailed() && !context.isCancelled()) {
         context.fail(new IllegalStateException("Batches still in queue during cleanup"));
         logger.error("{} Batches in queue.", buffer.size());
         RawFragmentBatch batch;

@@ -75,6 +75,7 @@ public class FragmentContext implements Closeable {
 
   private volatile Throwable failureCause;
   private volatile boolean failed = false;
+  private volatile boolean cancelled = false;
 
   public FragmentContext(DrillbitContext dbContext, PlanFragment fragment, UserClientConnection connection,
       FunctionImplementationRegistry funcRegistry) throws OutOfMemoryException, ExecutionSetupException {
@@ -115,6 +116,10 @@ public class FragmentContext implements Closeable {
     logger.error("Fragment Context received failure. {}", cause);
     failed = true;
     failureCause = cause;
+  }
+
+  public void cancel() {
+    cancelled = true;
   }
 
   public DrillbitContext getDrillbitContext() {
@@ -225,6 +230,10 @@ public class FragmentContext implements Closeable {
 
   public boolean isFailed() {
     return failed;
+  }
+
+  public boolean isCancelled() {
+    return cancelled;
   }
 
   public FunctionImplementationRegistry getFunctionRegistry() {

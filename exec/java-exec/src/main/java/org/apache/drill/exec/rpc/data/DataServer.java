@@ -107,6 +107,11 @@ public class DataServer extends BasicServer<RpcType, BitServerConnection> {
 
     try {
       FragmentManager manager = workBus.getOrCreateFragmentManager(fragmentBatch.getHandle());
+      if (manager == null) {
+        if (body != null) {
+          body.release();
+        }
+      }
       BufferAllocator allocator = manager.getFragmentContext().getAllocator();
       if(body != null){
         if(!allocator.takeOwnership((AccountingByteBuf) body.unwrap())){

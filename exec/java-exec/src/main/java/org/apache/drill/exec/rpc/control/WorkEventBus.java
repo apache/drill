@@ -20,7 +20,11 @@ package org.apache.drill.exec.rpc.control;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.LoadingCache;
 import org.apache.drill.exec.cache.DistributedMap;
 import org.apache.drill.exec.exception.FragmentSetupException;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
@@ -44,6 +48,10 @@ public class WorkEventBus {
   private final ConcurrentMap<QueryId, FragmentStatusListener> listeners = new ConcurrentHashMap<QueryId, FragmentStatusListener>(
       16, 0.75f, 16);
   private final WorkerBee bee;
+  private final Cache<FragmentHandle,Void> cancelledFragments = CacheBuilder.newBuilder()
+          .maximumSize(10000)
+          .expireAfterWrite(10, TimeUnit.MINUTES)
+          .build();
 
   public WorkEventBus(WorkerBee bee) {
     this.bee = bee;
@@ -85,7 +93,16 @@ public class WorkEventBus {
     return managers.get(handle);
   }
 
+  public void cancelFragment(FragmentHandle handle) {
+    cancelledFragments.put(handle, null);
+    removeFragmentManager(handle);
+  }
+
   public FragmentManager getOrCreateFragmentManager(FragmentHandle handle) throws FragmentSetupException{
+    if (cancelledFragments.asMap().containsKey(handle)) {
+      logger.debug("Fragment: {} was cancelled. Ignoring fragment handle", handle);
+      return null;
+    }
     FragmentManager manager = managers.get(handle);
     if (manager != null) return manager;
     DistributedMap<FragmentHandle, PlanFragment> planCache = bee.getContext().getCache().getMap(Foreman.FRAGMENT_CACHE);
@@ -99,7 +116,7 @@ public class WorkEventBus {
       throw new FragmentSetupException("Received batch where fragment was not in cache.");
     }
 
-    FragmentManager newManager = new NonRootFragmentManager(fragment, bee.getContext());
+    FragmentManager newManager = new NonRootFragmentManager(fragment, bee);
 
     // since their could be a race condition on the check, we'll use putIfAbsent so we don't have two competing
     // handlers.

@@ -19,6 +19,8 @@ package org.apache.drill.exec.work.foreman;
 
 import io.netty.buffer.ByteBuf;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -37,6 +39,7 @@ import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
 import org.apache.drill.exec.proto.UserProtos.RunQuery;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
+import org.apache.drill.exec.rpc.control.ControlTunnel;
 import org.apache.drill.exec.rpc.control.Controller;
 import org.apache.drill.exec.rpc.control.WorkEventBus;
 import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
@@ -63,6 +66,9 @@ public class QueryManager implements FragmentStatusListener{
   private QueryId queryId;
   private FragmentExecutor rootRunner;
   private RunQuery query;
+  private volatile boolean running = false;
+  private volatile boolean cancelled = false;
+  private volatile boolean stopped = false;
 
   public QueryManager(QueryId id, RunQuery query, PStoreProvider pStoreProvider, ForemanManagerListener foremanManagerListener, Controller controller, Foreman foreman) {
     super();
@@ -101,7 +107,7 @@ public class QueryManager implements FragmentStatusListener{
       // add fragment to local node.
       status.add(new FragmentData(rootFragment.getHandle(), null, true));
       logger.debug("Fragment added to local node.");
-      rootRunner = new FragmentExecutor(rootContext, rootOperator, new RootStatusHandler(rootContext, rootFragment));
+      rootRunner = new FragmentExecutor(rootContext, bee, rootOperator, new RootStatusHandler(rootContext, rootFragment));
       RootFragmentManager fragmentManager = new RootFragmentManager(rootFragment.getHandle(), buffers, rootRunner);
 
       if(buffers.isDone()){
@@ -127,6 +133,10 @@ public class QueryManager implements FragmentStatusListener{
     }
 
     logger.debug("Fragment runs setup is complete.");
+    running = true;
+    if (cancelled && !stopped) {
+      stopQuery();
+    }
   }
 
   private void sendRemoteFragment(PlanFragment fragment){
@@ -193,26 +203,37 @@ public class QueryManager implements FragmentStatusListener{
   private void stopQuery(){
     workBus.removeFragmentStatusListener(queryId);
     // Stop all queries with a currently active status.
-//    for(FragmentData data: map.values()){
-//      FragmentHandle handle = data.getStatus().getHandle();
-//      switch(data.getStatus().getState()){
-//      case SENDING:
-//      case AWAITING_ALLOCATION:
-//      case RUNNING:
-//        if(data.isLocal()){
-//          rootRunner.cancel();
-//        }else{
-//          tun.get(data.getEndpoint()).cancelFragment(handle).addLightListener(new CancelListener(data.endpoint, handle));
-//        }
-//        break;
-//      default:
-//        break;
-//      }
-//    }
+    List<FragmentData> fragments = status.getFragmentData();
+    Collections.sort(fragments, new Comparator<FragmentData>() {
+      @Override
+      public int compare(FragmentData o1, FragmentData o2) {
+        return o2.getHandle().getMajorFragmentId() - o1.getHandle().getMajorFragmentId();
+      }
+    });
+    for(FragmentData data: fragments){
+      FragmentHandle handle = data.getStatus().getHandle();
+      switch(data.getStatus().getProfile().getState()){
+      case SENDING:
+      case AWAITING_ALLOCATION:
+      case RUNNING:
+        if(data.isLocal()){
+          rootRunner.cancel();
+        }else{
+          controller.getTunnel(data.getEndpoint()).cancelFragment(new CancelListener(data.getEndpoint(), handle), handle);
+        }
+        break;
+      default:
+        break;
+      }
+    }
   }
 
   public void cancel(){
-    stopQuery();
+    cancelled = true;
+    if (running) {
+      stopQuery();
+      stopped = true;
+    }
   }
 
   private class CancelListener extends EndpointListener<Ack, FragmentHandle>{
@@ -234,7 +255,7 @@ public class QueryManager implements FragmentStatusListener{
       // do nothing.
     }
 
-  };
+  }
 
   public RpcOutcomeListener<Ack> getSubmitListener(DrillbitEndpoint endpoint, PlanFragment value){
     return new FragmentSubmitListener(endpoint, value);

@@ -169,6 +169,9 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
         RawFragmentBatch rawBatch = null;
         try {
           rawBatch = getNext(provider);
+          if (rawBatch == null && context.isCancelled()) {
+            return IterOutcome.STOP;
+          }
         } catch (IOException e) {
           context.fail(e);
           return IterOutcome.STOP;
@@ -181,6 +184,9 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
           }
           try {
             while ((rawBatch = getNext(provider)) != null && rawBatch.getHeader().getDef().getRecordCount() == 0);
+            if (rawBatch == null && context.isCancelled()) {
+              return IterOutcome.STOP;
+            }
           } catch (IOException e) {
             context.fail(e);
             return IterOutcome.STOP;
@@ -300,6 +306,9 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
             } else {
               batchLoaders[b].clear();
               batchLoaders[b] = null;
+              if (context.isCancelled()) {
+                return IterOutcome.STOP;
+              }
             }
           } catch (IOException | SchemaChangeException e) {
             context.fail(e);
@@ -339,6 +348,9 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
 
           while (nextBatch != null && nextBatch.getHeader().getDef().getRecordCount() == 0) {
             nextBatch = getNext(fragProviders[node.batchId]);
+          }
+          if (nextBatch == null && context.isCancelled()) {
+            return IterOutcome.STOP;
           }
         } catch (IOException e) {
           context.fail(e);

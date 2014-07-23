@@ -125,7 +125,7 @@ public class ControlHandlerImpl implements ControlMessageHandler {
     NonRootStatusReporter listener = new NonRootStatusReporter(context, tunnel);
     try{
       FragmentRoot rootOperator = bee.getContext().getPlanReader().readFragmentOperator(fragment.getFragmentJson());
-      FragmentExecutor fr = new FragmentExecutor(context, rootOperator, listener);
+      FragmentExecutor fr = new FragmentExecutor(context, bee, rootOperator, listener);
       bee.addFragmentRunner(fr);
     } catch (Exception e) {
       listener.fail(fragment.getHandle(), "Failure due to uncaught exception", e);

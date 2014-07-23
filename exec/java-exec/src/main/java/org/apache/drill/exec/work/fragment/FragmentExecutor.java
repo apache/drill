@@ -32,6 +32,7 @@ import org.apache.drill.exec.work.CancelableQuery;
 import org.apache.drill.exec.work.StatusProvider;
 
 import com.codahale.metrics.Timer;
+import org.apache.drill.exec.work.WorkManager.WorkerBee;
 
 /**
  * Responsible for running a single fragment on a single Drillbit. Listens/responds to status request and cancellation
@@ -44,10 +45,13 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
   private final FragmentRoot rootOperator;
   private RootExec root;
   private final FragmentContext context;
+  private final WorkerBee bee;
   private final StatusReporter listener;
+  private Thread executionThread;
 
-  public FragmentExecutor(FragmentContext context, FragmentRoot rootOperator, StatusReporter listener){
+  public FragmentExecutor(FragmentContext context, WorkerBee bee, FragmentRoot rootOperator, StatusReporter listener){
     this.context = context;
+    this.bee = bee;
     this.rootOperator = rootOperator;
     this.listener = listener;
   }
@@ -60,6 +64,11 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
   @Override
   public void cancel() {
     updateState(FragmentState.CANCELLED);
+    logger.debug("Cancelled Fragment {}", context.getHandle());
+    context.cancel();
+    if (executionThread != null) {
+      executionThread.interrupt();
+    }
   }
 
   public UserClientConnection getClient(){
@@ -68,71 +77,75 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
 
   @Override
   public void run() {
-    final String originalThread = Thread.currentThread().getName();
-    String newThreadName = String.format("%s:frag:%s:%s", //
-        QueryIdHelper.getQueryId(context.getHandle().getQueryId()), //
-        context.getHandle().getMajorFragmentId(),
-        context.getHandle().getMinorFragmentId()
-        );
-    Thread.currentThread().setName(newThreadName);
-
-    boolean closed = false;
     try {
-      root = ImplCreator.getExec(context, rootOperator);
-    } catch (AssertionError | Exception e) {
-      context.fail(e);
-      logger.debug("Failure while initializing operator tree", e);
-      internalFail(e);
-      return;
-    }
+      final String originalThread = Thread.currentThread().getName();
+      String newThreadName = String.format("%s:frag:%s:%s", //
+          QueryIdHelper.getQueryId(context.getHandle().getQueryId()), //
+          context.getHandle().getMajorFragmentId(),
+          context.getHandle().getMinorFragmentId()
+          );
+      Thread.currentThread().setName(newThreadName);
+      executionThread = Thread.currentThread();
 
-    logger.debug("Starting fragment runner. {}:{}", context.getHandle().getMajorFragmentId(), context.getHandle().getMinorFragmentId());
-    if(!updateState(FragmentState.AWAITING_ALLOCATION, FragmentState.RUNNING, false)){
-      internalFail(new RuntimeException(String.format("Run was called when fragment was in %s state.  FragmentRunnables should only be started when they are currently in awaiting allocation state.", FragmentState.valueOf(state.get()))));
-      return;
-    }
+      boolean closed = false;
+      try {
+        root = ImplCreator.getExec(context, rootOperator);
+      } catch (AssertionError | Exception e) {
+        context.fail(e);
+        logger.debug("Failure while initializing operator tree", e);
+        internalFail(e);
+        return;
+      }
+
+      logger.debug("Starting fragment runner. {}:{}", context.getHandle().getMajorFragmentId(), context.getHandle().getMinorFragmentId());
+      if(!updateState(FragmentState.AWAITING_ALLOCATION, FragmentState.RUNNING, false)){
+        internalFail(new RuntimeException(String.format("Run was called when fragment was in %s state.  FragmentRunnables should only be started when they are currently in awaiting allocation state.", FragmentState.valueOf(state.get()))));
+        return;
+      }
 
 
 
-    // run the query until root.next returns false.
-    try{
-      while(state.get() == FragmentState.RUNNING_VALUE){
-        if(!root.next()){
-          if(context.isFailed()){
-            updateState(FragmentState.RUNNING, FragmentState.FAILED, false);
-          }else{
-            updateState(FragmentState.RUNNING, FragmentState.FINISHED, false);
+      // run the query until root.next returns false.
+      try{
+        while(state.get() == FragmentState.RUNNING_VALUE){
+          if(!root.next()){
+            if(context.isFailed()){
+              updateState(FragmentState.RUNNING, FragmentState.FAILED, false);
+            }else{
+              updateState(FragmentState.RUNNING, FragmentState.FINISHED, false);
+            }
+
           }
+        }
 
+        root.stop();
+        if(context.isFailed()) {
+          internalFail(context.getFailureCause());
+        }
+
+        closed = true;
+
+        context.close();
+      }catch(AssertionError | Exception ex){
+        logger.debug("Caught exception while running fragment", ex);
+        internalFail(ex);
+      }finally{
+        Thread.currentThread().setName(originalThread);
+        if(!closed) {
+          try {
+            if(context.isFailed()) {
+              internalFail(context.getFailureCause());
+            }
+            context.close();
+          } catch (RuntimeException e) {
+            logger.warn("Failure while closing context in failed state.", e);
+          }
         }
       }
-
-      root.stop();
-      if(context.isFailed()) {
-        internalFail(context.getFailureCause());
-      }
-
-      closed = true;
-
-      context.close();
-    }catch(AssertionError | Exception ex){
-      logger.debug("Caught exception while running fragment", ex);
-      internalFail(ex);
-    }finally{
-      Thread.currentThread().setName(originalThread);
-      if(!closed) {
-        try {
-          root.stop();
-          if(context.isFailed()) {
-            internalFail(context.getFailureCause());
-          }
-          context.close();
-        } catch (RuntimeException e) {
-          logger.warn("Failure while closing context in failed state.", e);
-        }
-      }
+    } finally {
+      logger.debug("Fragment runner complete. {}:{}", context.getHandle().getMajorFragmentId(), context.getHandle().getMinorFragmentId());
+      bee.removeFragment(context.getHandle());
     }
-    logger.debug("Fragment runner complete. {}:{}", context.getHandle().getMajorFragmentId(), context.getHandle().getMinorFragmentId());
   }
 
   private void internalFail(Throwable excep){

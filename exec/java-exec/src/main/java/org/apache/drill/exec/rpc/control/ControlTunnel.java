@@ -51,10 +51,9 @@ public class ControlTunnel {
     manager.runCommand(b);
   }
 
-  public DrillRpcFuture<Ack> cancelFragment(FragmentHandle handle){
-    CancelFragment b = new CancelFragment(handle);
+  public void cancelFragment(RpcOutcomeListener<Ack> outcomeListener, FragmentHandle handle){
+    CancelFragment b = new CancelFragment(outcomeListener, handle);
     manager.runCommand(b);
-    return b.getFuture();
   }
 
   public DrillRpcFuture<Ack> sendFragmentStatus(FragmentStatus status){
@@ -85,17 +84,17 @@ public class ControlTunnel {
 
   }
 
-  public static class CancelFragment extends FutureBitCommand<Ack, ControlConnection> {
+  public static class CancelFragment extends ListeningCommand<Ack, ControlConnection> {
     final FragmentHandle handle;
 
-    public CancelFragment(FragmentHandle handle) {
-      super();
+    public CancelFragment(RpcOutcomeListener<Ack> listener, FragmentHandle handle) {
+      super(listener);
       this.handle = handle;
     }
 
     @Override
     public void doRpcCall(RpcOutcomeListener<Ack> outcomeListener, ControlConnection connection) {
-      connection.send(outcomeListener, RpcType.REQ_CANCEL_FRAGMENT, handle,  Ack.class);
+      connection.sendUnsafe(outcomeListener, RpcType.REQ_CANCEL_FRAGMENT, handle, Ack.class);
     }
 
   }

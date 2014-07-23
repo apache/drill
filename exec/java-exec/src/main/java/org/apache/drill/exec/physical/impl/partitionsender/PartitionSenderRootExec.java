@@ -154,8 +154,8 @@ public class PartitionSenderRootExec extends BaseRootExec {
         try {
           partitioner.partitionBatch(incoming);
         } catch (IOException e) {
-          incoming.kill();
           context.fail(e);
+          incoming.kill();
           return false;
         }
         for (VectorWrapper<?> v : incoming) {

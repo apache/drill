@@ -35,6 +35,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.drill.exec.proto.UserBitShared.QueryProfile;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
+import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.store.sys.PStore;
 import org.apache.drill.exec.work.WorkManager;
 import org.apache.drill.exec.work.foreman.QueryStatus;
@@ -168,5 +169,21 @@ public class ProfileResources {
 
     return new Viewable("/rest/profile/profile.ftl", wrapper);
 
+  }
+
+  @GET
+  @Path("/profiles/cancel/{queryid}")
+  @Produces(MediaType.TEXT_PLAIN)
+  public String cancelQuery(@PathParam("queryid") String queryId) throws IOException {
+    PStore<QueryProfile> profiles = work.getContext().getPersistentStoreProvider().getPStore(QueryStatus.QUERY_PROFILE);
+    QueryProfile profile = profiles.get(queryId);
+    if (profile != null && (profile.getState() == QueryState.RUNNING || profile.getState() == QueryState.PENDING)) {
+      work.getUserWorker().cancelQuery(QueryIdHelper.getQueryIdFromString(queryId));
+      return "Cancelled query " + queryId;
+    }
+    if (profile == null) {
+      return "No such query: " + queryId;
+    }
+    return "Query " + queryId + " not running";
   }
 }

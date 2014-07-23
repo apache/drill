@@ -138,6 +138,9 @@ public class UnorderedReceiverBatch implements RecordBatch {
 
       if (batch == null) {
         batchLoader.clear();
+        if (context.isCancelled()) {
+          return IterOutcome.STOP;
+        }
         return IterOutcome.NONE;
       }
 

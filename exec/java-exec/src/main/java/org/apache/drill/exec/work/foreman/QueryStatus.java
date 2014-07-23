@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.work.foreman;
 
+import com.google.common.collect.Lists;
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.exec.cache.DistributedCache;
 import org.apache.drill.exec.cache.DistributedCache.CacheConfig;
@@ -38,6 +39,9 @@ import org.apache.drill.exec.store.sys.PStoreProvider;
 import org.apache.drill.exec.work.foreman.Foreman.ForemanManagerListener;
 
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class QueryStatus {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QueryStatus.class);
@@ -48,6 +52,7 @@ public class QueryStatus {
 
   // doesn't need to be thread safe as fragmentDataMap is generated in a single thread and then accessed by multiple threads for reads only.
   private IntObjectOpenHashMap<IntObjectOpenHashMap<FragmentData>> fragmentDataMap = new IntObjectOpenHashMap<IntObjectOpenHashMap<FragmentData>>();
+  private List<FragmentData> fragmentDataSet = Lists.newArrayList();
 
   private final String queryId;
   private final QueryId id;
@@ -71,6 +76,10 @@ public class QueryStatus {
       throw new DrillRuntimeException(e);
     }
     this.foreman = foreman;
+  }
+
+  public List<FragmentData> getFragmentData() {
+    return fragmentDataSet;
   }
 
   public void setPlanText(String planText){
@@ -106,6 +115,7 @@ public class QueryStatus {
     }
 
     minorMap.put(minorFragmentId, data);
+    fragmentDataSet.add(data);
   }
 
   void update(FragmentStatus status, boolean updateCache){

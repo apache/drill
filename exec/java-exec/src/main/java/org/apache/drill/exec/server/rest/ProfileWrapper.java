@@ -29,6 +29,7 @@ import org.apache.drill.exec.proto.UserBitShared.StreamProfile;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Collections2;
+import org.apache.drill.exec.proto.helper.QueryIdHelper;
 
 import java.text.DateFormat;
 import java.text.NumberFormat;
@@ -44,13 +45,19 @@ import java.util.TreeMap;
 
 public class ProfileWrapper {
   public QueryProfile profile;
+  public String id;
 
   public ProfileWrapper(QueryProfile profile) {
     this.profile = profile;
+    this.id = QueryIdHelper.getQueryId(profile.getId());
   }
 
   public QueryProfile getProfile() {
     return profile;
+  }
+
+  public String getId() {
+    return id;
   }
 
   @Override
