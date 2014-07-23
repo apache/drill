@@ -19,82 +19,80 @@
     {
       hiveType: "BOOLEAN",
       hiveOI: "BooleanObjectInspector",
-      serdeConstant: "BOOLEAN_TYPE_NAME",
       javaType: "boolean",
-      minorType: "BIT",
-      holder: "Bit"
+      drillType: "Bit"
     },
     {
       hiveType: "BYTE",
       hiveOI: "ByteObjectInspector",
-      serdeConstant: "TINYINT_TYPE_NAME",
       javaType: "byte",
-      minorType: "TINYINT",
-      holder: "TinyInt"
+      drillType: "TinyInt"
     },
     {
       hiveType: "SHORT",
       hiveOI: "ShortObjectInspector",
-      serdeConstant: "SMALLINT_TYPE_NAME",
       javaType: "short",
-      minorType: "SMALLINT",
-      holder: "SmallInt"
+      drillType: "SmallInt"
     },
     {
       hiveType: "INT",
       hiveOI: "IntObjectInspector",
-      serdeConstant: "INT_TYPE_NAME",
       javaType: "int",
-      minorType: "INT",
-      holder: "Int"
+      drillType: "Int"
     },
     {
       hiveType: "LONG",
       hiveOI: "LongObjectInspector",
-      serdeConstant: "BIGINT_TYPE_NAME",
       javaType: "long",
-      minorType: "BIGINT",
-      holder: "BigInt"
+      drillType: "BigInt"
     },
     {
       hiveType: "FLOAT",
       hiveOI: "FloatObjectInspector",
-      serdeConstant: "FLOAT_TYPE_NAME",
       javaType: "float",
-      minorType: "FLOAT4",
-      holder: "Float4"
+      drillType: "Float4"
     },
     {
       hiveType: "DOUBLE",
       hiveOI: "DoubleObjectInspector",
-      serdeConstant: "DOUBLE_TYPE_NAME",
       javaType: "double",
-      minorType: "FLOAT8",
-      holder: "Float8"
+      drillType: "Float8"
     },
     {
       hiveType: "VARCHAR",
       hiveOI: "HiveVarcharObjectInspector",
-      serdeConstant: "VARCHAR_TYPE_NAME",
       javaType: "",
-      minorType: "VARCHAR",
-      holder: "VarChar"
+      drillType: "VarChar"
     },
     {
       hiveType: "STRING",
       hiveOI: "StringObjectInspector",
-      serdeConstant: "STRING_TYPE_NAME",
       javaType: "",
-      minorType: "VAR16CHAR",
-      holder: "Var16Char"
+      drillType: "Var16Char"
     },
     {
       hiveType: "BINARY",
       hiveOI: "BinaryObjectInspector",
-      serdeConstant: "BINARY_TYPE_NAME",
       javaType: "",
-      minorType: "VARBINARY",
-      holder: "VarBinary"
+      drillType: "VarBinary"
+    },
+    {
+      hiveType: "TIMESTAMP",
+      hiveOI: "TimestampObjectInspector",
+      javaType: "java.sql.Timestamp",
+      drillType: "TimeStamp"
+    },
+    {
+      hiveType: "DECIMAL",
+      hiveOI: "HiveDecimalObjectInspector",
+      javaType: "org.apache.hadoop.hive.common.type.HiveDecimal",
+      drillType: "Decimal38Sparse"
+    },
+    {
+      hiveType: "DATE",
+      hiveOI: "DateObjectInspector",
+      javaType: "java.sql.Date",
+      drillType: "Date"
     }
   ]
 }

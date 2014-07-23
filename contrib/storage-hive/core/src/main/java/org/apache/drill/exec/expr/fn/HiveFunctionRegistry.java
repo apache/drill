@@ -99,8 +99,15 @@ public class HiveFunctionRegistry implements PluggableFunctionRegistry{
     MajorType[] argTypes = new MajorType[call.args.size()];
     ObjectInspector[] argOIs = new ObjectInspector[call.args.size()];
     for(int i=0; i<call.args.size(); i++) {
-      argTypes[i] = call.args.get(i).getMajorType();
-      argOIs[i] = ObjectInspectorHelper.getDrillObjectInspector(argTypes[i].getMinorType());
+      try {
+        argTypes[i] = call.args.get(i).getMajorType();
+        argOIs[i] = ObjectInspectorHelper.getDrillObjectInspector(argTypes[i].getMode(), argTypes[i].getMinorType());
+      } catch(Exception e) {
+        // Hive throws errors if there are unsupported types. Consider there is no hive UDF supporting the
+        // given argument types
+        logger.trace("Failed to find a hive function for given FunctionCall: '{}'", call.toString(), e);
+        return null;
+      }
     }
 
     String funcName = call.getName().toLowerCase();

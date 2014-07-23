@@ -261,6 +261,7 @@ public class HiveTestDataGenerator {
 
     PrintWriter printWriter = new PrintWriter(file);
     printWriter.println("YmluYXJ5ZmllbGQ=,false,34,3489423929323435243,8.345,4.67,123456,234235,3455,stringfield,varcharfield,2013-07-05 17:01:00,2013-07-05");
+    printWriter.println(",,,,,,,,,,,,");
     printWriter.close();
 
     return file.getPath();

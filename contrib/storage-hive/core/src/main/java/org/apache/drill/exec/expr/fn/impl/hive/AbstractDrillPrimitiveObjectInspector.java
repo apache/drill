@@ -17,30 +17,14 @@
  */
 package org.apache.drill.exec.expr.fn.impl.hive;
 
-import org.apache.hadoop.hive.serde2.objectinspector.PrimitiveObjectInspector;
-import org.apache.hadoop.hive.serde2.typeinfo.BaseTypeParams;
+import org.apache.hadoop.hive.serde2.objectinspector.primitive.AbstractPrimitiveObjectInspector;
+import org.apache.hadoop.hive.serde2.objectinspector.primitive.PrimitiveObjectInspectorUtils.PrimitiveTypeEntry;
 
 
-public abstract class AbstractPrimitiveObjectInspector implements PrimitiveObjectInspector {
+public abstract class AbstractDrillPrimitiveObjectInspector extends AbstractPrimitiveObjectInspector {
 
-  @Override
-  public Class<?> getPrimitiveWritableClass() {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public Object getPrimitiveWritableObject(Object o) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public Class<?> getJavaPrimitiveClass() {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public Object getPrimitiveJavaObject(Object o) {
-    throw new UnsupportedOperationException();
+  public AbstractDrillPrimitiveObjectInspector(PrimitiveTypeEntry typeEntry) {
+    super(typeEntry);
   }
 
   @Override
@@ -51,20 +35,5 @@ public abstract class AbstractPrimitiveObjectInspector implements PrimitiveObjec
   @Override
   public boolean preferWritable() {
     return false;
-  }
-
-  @Override
-  public BaseTypeParams getTypeParams() {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public void setTypeParams(BaseTypeParams baseTypeParams) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public Category getCategory() {
-    return Category.PRIMITIVE;
   }
 }

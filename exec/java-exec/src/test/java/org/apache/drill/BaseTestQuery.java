@@ -275,4 +275,23 @@ public class BaseTestQuery extends ExecTest{
     return rowCount;
   }
 
+  protected String getResultString(List<QueryResultBatch> results, String delimiter) throws SchemaChangeException {
+    StringBuilder formattedResults = new StringBuilder();
+    boolean includeHeader = true;
+    RecordBatchLoader loader = new RecordBatchLoader(getAllocator());
+    for(QueryResultBatch result : results){
+      loader.load(result.getHeader().getDef(), result.getData());
+      if (loader.getRecordCount() <= 0) {
+        break;
+      }
+      VectorUtil.appendVectorAccessibleContent(loader, formattedResults, delimiter, includeHeader);
+      if (!includeHeader) {
+        includeHeader = false;
+      }
+      loader.clear();
+      result.release();
+    }
+
+    return formattedResults.toString();
+  }
 }

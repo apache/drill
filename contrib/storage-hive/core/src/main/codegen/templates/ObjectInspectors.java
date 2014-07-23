@@ -18,28 +18,40 @@
 <@pp.dropOutputFile />
 
 <#list drillOI.map as entry>
-<@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/hive/Drill${entry.holder}ObjectInspector.java" />
+<@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/hive/Drill${entry.drillType}ObjectInspector.java" />
 
 <#include "/@includes/license.ftl" />
 
 package org.apache.drill.exec.expr.fn.impl.hive;
 
+import org.apache.drill.common.util.DecimalUtility;
 import org.apache.drill.exec.expr.holders.*;
+import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.common.type.HiveVarchar;
 import org.apache.hadoop.hive.serde.serdeConstants;
+import org.apache.hadoop.hive.serde2.io.ByteWritable;
+import org.apache.hadoop.hive.serde2.io.DateWritable;
+import org.apache.hadoop.hive.serde2.io.DoubleWritable;
+import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.hadoop.hive.serde2.io.HiveVarcharWritable;
+import org.apache.hadoop.hive.serde2.io.ShortWritable;
+import org.apache.hadoop.hive.serde2.io.TimestampWritable;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.*;
+import org.apache.hadoop.io.BooleanWritable;
+import org.apache.hadoop.io.BytesWritable;
+import org.apache.hadoop.io.FloatWritable;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 
-public class Drill${entry.holder}ObjectInspector extends AbstractPrimitiveObjectInspector
+public abstract class Drill${entry.drillType}ObjectInspector extends AbstractDrillPrimitiveObjectInspector
   implements ${entry.hiveOI} {
 
-  @Override
-  public String getTypeName() {
-    return serdeConstants.${entry.serdeConstant};
+  public Drill${entry.drillType}ObjectInspector() {
+    super(PrimitiveObjectInspectorUtils.${entry.hiveType?lower_case}TypeEntry);
   }
 
-<#if entry.minorType == "VARCHAR">
+<#if entry.drillType == "VarChar">
   @Override
   public HiveVarcharWritable getPrimitiveWritableObject(Object o) {
     HiveVarcharWritable valW = new HiveVarcharWritable();
@@ -47,67 +59,182 @@ public class Drill${entry.holder}ObjectInspector extends AbstractPrimitiveObject
     return valW;
   }
 
-  @Override
-  public HiveVarchar getPrimitiveJavaObject(Object o) {
-    String val = ((VarCharHolder)o).toString();
-    return new HiveVarchar(val, HiveVarchar.MAX_VARCHAR_LENGTH);
+  public static class Required extends Drill${entry.drillType}ObjectInspector {
+    @Override
+    public HiveVarchar getPrimitiveJavaObject(Object o) {
+      return new HiveVarchar(((VarCharHolder)o).toString(), HiveVarchar.MAX_VARCHAR_LENGTH);
+    }
   }
-<#elseif entry.minorType == "VAR16CHAR">
+
+  public static class Optional extends Drill${entry.drillType}ObjectInspector {
+    @Override
+    public HiveVarchar getPrimitiveJavaObject(Object o) {
+      return new HiveVarchar(((NullableVarCharHolder)o).toString(), HiveVarchar.MAX_VARCHAR_LENGTH);
+    }
+  }
+
+<#elseif entry.drillType == "Var16Char">
 @Override
   public Text getPrimitiveWritableObject(Object o) {
     throw new UnsupportedOperationException();
   }
 
-  @Override
-  public String getPrimitiveJavaObject(Object o) {
-    if (o instanceof Var16CharHolder)
-    return ((Var16CharHolder)o).toString();
-    else
-    return ((NullableVar16CharHolder)o).toString();
+  public static class Required extends Drill${entry.drillType}ObjectInspector {
+    @Override
+    public String getPrimitiveJavaObject(Object o){
+      return((Var16CharHolder)o).toString();
+    }
   }
-<#elseif entry.minorType == "VARBINARY">  
-@Override
-public org.apache.hadoop.io.BytesWritable getPrimitiveWritableObject(Object o) {
-  throw new UnsupportedOperationException();
-}
 
-@Override
-public byte[] getPrimitiveJavaObject(Object o) {
-  if (o instanceof VarBinaryHolder){
-    VarBinaryHolder h = (VarBinaryHolder)o;
-    byte[] buf = new byte[h.end-h.start];
-    h.buffer.getBytes(h.start, buf, 0, h.end-h.start);
-    return buf;
-  }else{
-    NullableVarBinaryHolder h = (NullableVarBinaryHolder)o;
-    byte[] buf = new byte[h.end-h.start];
-    h.buffer.getBytes(h.start, buf, 0, h.end-h.start);
-    return buf;
-    
+  public static class Optional extends Drill${entry.drillType}ObjectInspector {
+    @Override
+    public String getPrimitiveJavaObject(Object o){
+      return((NullableVar16CharHolder)o).toString();
+    }
   }
-}
-<#elseif entry.minorType == "BIT">
+<#elseif entry.drillType == "VarBinary">
   @Override
-  public boolean get(Object o) {
-    if (o instanceof BitHolder)
-    return ((BitHolder)o).value == 0 ? false : true;
-    else
+  public BytesWritable getPrimitiveWritableObject(Object o) {
+    return new BytesWritable(getPrimitiveJavaObject(o));
+  }
+
+  public static class Required extends Drill${entry.drillType}ObjectInspector {
+    @Override
+    public byte[] getPrimitiveJavaObject(Object o) {
+      VarBinaryHolder h = (VarBinaryHolder)o;
+      byte[] buf = new byte[h.end-h.start];
+      h.buffer.getBytes(h.start, buf, 0, h.end-h.start);
+      return buf;
+    }
+  }
+
+  public static class Optional extends Drill${entry.drillType}ObjectInspector {
+    @Override
+    public byte[] getPrimitiveJavaObject(Object o) {
+      NullableVarBinaryHolder h = (NullableVarBinaryHolder)o;
+      byte[] buf = new byte[h.end-h.start];
+      h.buffer.getBytes(h.start, buf, 0, h.end-h.start);
+      return buf;
+    }
+  }
+
+<#elseif entry.drillType == "Bit">
+  public static class Required extends Drill${entry.drillType}ObjectInspector {
+    @Override
+    public boolean get(Object o) {
+      return ((BitHolder)o).value == 0 ? false : true;
+    }
+  }
+
+  public static class Optional extends Drill${entry.drillType}ObjectInspector {
+    @Override
+    public boolean get(Object o) {
     return ((NullableBitHolder)o).value == 0 ? false : true;
+    }
+  }
+
+  @Override
+  public BooleanWritable getPrimitiveWritableObject(Object o) {
+    return new BooleanWritable(get(o));
+  }
+
+  @Override
+  public Boolean getPrimitiveJavaObject(Object o) {
+    return new Boolean(get(o));
+  }
+
+<#elseif entry.drillType == "Decimal38Sparse">
+  public HiveDecimalWritable getPrimitiveWritableObject(Object o) {
+    return new HiveDecimalWritable(getPrimitiveJavaObject(o));
+  }
+
+  public static class Required extends Drill${entry.drillType}ObjectInspector{
+    @Override
+    public HiveDecimal getPrimitiveJavaObject(Object o){
+      Decimal38SparseHolder h = (Decimal38SparseHolder) o;
+      return new HiveDecimal(DecimalUtility.getBigDecimalFromSparse(h.buffer, h.start, h.nDecimalDigits, h.scale));
+    }
+  }
+
+  public static class Optional extends Drill${entry.drillType}ObjectInspector{
+    @Override
+    public HiveDecimal getPrimitiveJavaObject(Object o){
+      NullableDecimal38SparseHolder h = (NullableDecimal38SparseHolder) o;
+      return new HiveDecimal(DecimalUtility.getBigDecimalFromSparse(h.buffer, h.start, h.nDecimalDigits, h.scale));
+    }
+  }
+
+<#elseif entry.drillType == "TimeStamp">
+  @Override
+  public TimestampWritable getPrimitiveWritableObject(Object o) {
+    return new TimestampWritable(getPrimitiveJavaObject(o));
+  }
+
+  public static class Required extends Drill${entry.drillType}ObjectInspector{
+    @Override
+    public java.sql.Timestamp getPrimitiveJavaObject(Object o){
+      return new java.sql.Timestamp(((TimeStampHolder)o).value);
+    }
+  }
+
+  public static class Optional extends Drill${entry.drillType}ObjectInspector{
+    @Override
+    public java.sql.Timestamp getPrimitiveJavaObject(Object o){
+      return new java.sql.Timestamp(((NullableTimeStampHolder)o).value);
+    }
+  }
+
+<#elseif entry.drillType == "Date">
+  @Override
+  public DateWritable getPrimitiveWritableObject(Object o) {
+    return new DateWritable(getPrimitiveJavaObject(o));
+  }
+
+  public static class Required extends Drill${entry.drillType}ObjectInspector{
+    @Override
+    public java.sql.Date getPrimitiveJavaObject(Object o){
+      return new java.sql.Date(((DateHolder)o).value);
+    }
+  }
+
+  public static class Optional extends Drill${entry.drillType}ObjectInspector{
+    @Override
+    public java.sql.Date getPrimitiveJavaObject(Object o){
+      return new java.sql.Date(((NullableDateHolder)o).value);
+    }
+  }
+<#else>
+<#if entry.drillType == "Int">
+  @Override
+  public Integer getPrimitiveJavaObject(Object o) {
+    return new Integer(get(o));
   }
 <#else>
   @Override
-  public ${entry.javaType} get(Object o) {
-    if (o instanceof ${entry.holder}Holder)
-    return ((${entry.holder}Holder)o).value;
-    else
-    return ((Nullable${entry.holder}Holder)o).value;
+  public ${entry.javaType?cap_first} getPrimitiveJavaObject(Object o) {
+    return new ${entry.javaType?cap_first}(get(o));
   }
 </#if>
 
   @Override
-  public PrimitiveCategory getPrimitiveCategory() {
-    return PrimitiveCategory.${entry.hiveType};
+  public ${entry.javaType?cap_first}Writable getPrimitiveWritableObject(Object o) {
+    return new ${entry.javaType?cap_first}Writable(get(o));
   }
+
+  public static class Required extends Drill${entry.drillType}ObjectInspector{
+    @Override
+    public ${entry.javaType} get(Object o){
+      return((${entry.drillType}Holder)o).value;
+    }
+  }
+
+  public static class Optional extends Drill${entry.drillType}ObjectInspector{
+    @Override
+    public ${entry.javaType} get(Object o){
+      return((Nullable${entry.drillType}Holder)o).value;
+    }
+  }
+</#if>
 }
 
 </#list>

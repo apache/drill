@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 <@pp.dropOutputFile />
 <@pp.changeOutputFile name="/org/apache/drill/exec/expr/fn/impl/hive/ObjectInspectorHelper.java" />
 
@@ -25,38 +26,51 @@ package org.apache.drill.exec.expr.fn.impl.hive;
 import com.sun.codemodel.*;
 
 import org.apache.drill.common.types.TypeProtos;
+import org.apache.drill.common.types.TypeProtos.DataMode;
 import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.exec.expr.DirectExpression;
 import org.apache.drill.exec.expr.TypeHelper;
-import org.apache.drill.exec.expr.holders.*;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.PrimitiveObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.PrimitiveObjectInspector.PrimitiveCategory;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.*;
 
+import java.lang.UnsupportedOperationException;
+import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
 
 public class ObjectInspectorHelper {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ObjectInspectorHelper.class);
 
-  private static Map<MinorType, Class> OIMAP = new HashMap<>();
+  private static Map<MinorType, Class> OIMAP_REQUIRED = new HashMap<>();
+  private static Map<MinorType, Class> OIMAP_OPTIONAL = new HashMap<>();
   static {
 <#list drillOI.map as entry>
-    OIMAP.put(MinorType.${entry.minorType}, Drill${entry.holder}ObjectInspector.class);
+    OIMAP_REQUIRED.put(MinorType.${entry.drillType?upper_case}, Drill${entry.drillType}ObjectInspector.Required.class);
+    OIMAP_OPTIONAL.put(MinorType.${entry.drillType?upper_case}, Drill${entry.drillType}ObjectInspector.Optional.class);
 </#list>
   }
 
-  public static ObjectInspector getDrillObjectInspector(MinorType drillType) {
-    if (OIMAP.containsKey(drillType)) {
-      try {
-        return (ObjectInspector)OIMAP.get(drillType).newInstance();
-      } catch(InstantiationException | IllegalAccessException e) {
-        throw new RuntimeException("Failed to instantiate ObjectInspector", e);
+  public static ObjectInspector getDrillObjectInspector(DataMode mode, MinorType minorType) {
+    try {
+      if (mode == DataMode.REQUIRED) {
+        if (OIMAP_REQUIRED.containsKey(minorType)) {
+          return (ObjectInspector) OIMAP_REQUIRED.get(minorType).newInstance();
+        }
+      } else if (mode == DataMode.OPTIONAL) {
+        if (OIMAP_OPTIONAL.containsKey(minorType)) {
+          return (ObjectInspector) OIMAP_OPTIONAL.get(minorType).newInstance();
+        }
+      } else {
+        throw new UnsupportedOperationException("Repeated types are not supported as arguement to Hive UDFs");
       }
+    } catch(InstantiationException | IllegalAccessException e) {
+      throw new RuntimeException("Failed to instantiate ObjectInspector", e);
     }
 
-    throw new UnsupportedOperationException(drillType.toString());
+    throw new UnsupportedOperationException(
+        String.format("Type %s[%s] not supported as arguement to Hive UDFs", minorType.toString(), mode.toString()));
   }
 
   public static JBlock initReturnValueHolder(JCodeModel m, JVar returnValueHolder, ObjectInspector oi, MinorType returnType) {
@@ -95,7 +109,7 @@ public class ObjectInspectorHelper {
   private static Map<PrimitiveCategory, MinorType> TYPE_HIVE2DRILL = new HashMap<>();
   static {
 <#list drillOI.map as entry>
-    TYPE_HIVE2DRILL.put(PrimitiveCategory.${entry.hiveType}, MinorType.${entry.minorType});
+    TYPE_HIVE2DRILL.put(PrimitiveCategory.${entry.hiveType}, MinorType.${entry.drillType?upper_case});
 </#list>
   }
 
@@ -168,7 +182,14 @@ public class ObjectInspectorHelper {
                 .invoke("setBytes").arg(JExpr.lit(0)).arg(data));
             jc._else().assign(returnValueHolder.ref("start"), JExpr.lit(0));
             jc._else().assign(returnValueHolder.ref("end"), data.ref("length"));
-
+          <#elseif entry.hiveType == "TIMESTAMP">
+            JVar tsVar = jc._else().decl(m.directClass(java.sql.Timestamp.class.getCanonicalName()), "ts",
+              castedOI.invoke("getPrimitiveJavaObject").arg(returnValue));
+            jc._else().assign(returnValueHolder.ref("value"), tsVar.invoke("getTime"));
+          <#elseif entry.hiveType == "DATE">
+            JVar dVar = jc._else().decl(m.directClass(java.sql.Date.class.getCanonicalName()), "d",
+              castedOI.invoke("getPrimitiveJavaObject").arg(returnValue));
+            jc._else().assign(returnValueHolder.ref("value"), dVar.invoke("getTime"));
           <#else>
             jc._else().assign(returnValueHolder.ref("value"),
               castedOI.invoke("get").arg(returnValue));

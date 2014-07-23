@@ -52,7 +52,7 @@ public class TestHiveProjectPushDown extends PlanTestBase {
     String query = "SELECT boolean_field as b_f, tinyint_field as ti_f FROM hive.`default`.readtest";
     String expectedColNames = " \"columns\" : [ \"`boolean_field`\", \"`tinyint_field`\" ]";
 
-    testHelper(query, expectedColNames, 1);
+    testHelper(query, expectedColNames, 2);
   }
 
   @Test
@@ -60,7 +60,7 @@ public class TestHiveProjectPushDown extends PlanTestBase {
     String query = "SELECT double_part as dbl_p FROM hive.`default`.readtest";
     String expectedColNames = " \"columns\" : [ \"`double_part`\" ]";
 
-    testHelper(query, expectedColNames, 1);
+    testHelper(query, expectedColNames, 2);
   }
 
   @Test
@@ -68,7 +68,7 @@ public class TestHiveProjectPushDown extends PlanTestBase {
     String query = "SELECT double_part as dbl_p, decimal_part as dec_p FROM hive.`default`.readtest";
     String expectedColNames = " \"columns\" : [ \"`double_part`\", \"`decimal_part`\" ]";
 
-    testHelper(query, expectedColNames, 1);
+    testHelper(query, expectedColNames, 2);
   }
 
   @Test
@@ -78,7 +78,7 @@ public class TestHiveProjectPushDown extends PlanTestBase {
     String expectedColNames = " \"columns\" : [ \"`boolean_field`\", \"`tinyint_field`\", " +
         "\"`double_part`\", \"`decimal_part`\" ]";
 
-    testHelper(query, expectedColNames, 1);
+    testHelper(query, expectedColNames, 2);
   }
 
   @Test
