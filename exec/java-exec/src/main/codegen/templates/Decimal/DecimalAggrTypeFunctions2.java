@@ -55,17 +55,16 @@ public class Decimal${aggrtype.className}Functions {
 public static class ${type.inputType}${aggrtype.className} implements DrillAggFunc{
 
   @Param ${type.inputType}Holder in;
-  @Workspace java.math.BigDecimal value;
+  @Workspace ObjectHolder value;
   @Workspace ${type.countRunningType}Holder count;
-  @Workspace ByteBuf buffer;
-  @Workspace int outputScale;
+  @Workspace IntHolder outputScale;
   @Output ${type.outputType}Holder out;
 
   public void setup(RecordBatch b) {
-    value = java.math.BigDecimal.ZERO;
+    value.obj = java.math.BigDecimal.ZERO;
     count = new ${type.countRunningType}Holder();
     count.value = 0;
-    outputScale = Integer.MIN_VALUE;
+    outputScale.value = Integer.MIN_VALUE;
   }
 
   @Override
@@ -83,9 +82,9 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     <#else>
     java.math.BigDecimal currentValue = org.apache.drill.common.util.DecimalUtility.getBigDecimalFromSparse(in.buffer, in.start, in.nDecimalDigits, in.scale);
     </#if>
-    value = value.add(currentValue);
-    if (outputScale == Integer.MIN_VALUE) {
-      outputScale = in.scale;
+    value.obj = ((java.math.BigDecimal)(value.obj)).add(currentValue);
+    if (outputScale.value == Integer.MIN_VALUE) {
+      outputScale.value = in.scale;
     }
 	<#if type.inputType?starts_with("Nullable")>
     } // end of sout block
@@ -94,22 +93,22 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 
   @Override
   public void output() {
-    buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte[out.WIDTH]);
+    io.netty.buffer.ByteBuf buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte[out.WIDTH]);
     buffer = new io.netty.buffer.SwappedByteBuf(buffer);
     out.buffer = buffer;
     out.start  = 0;
-    out.scale = outputScale;
+    out.scale = outputScale.value;
     out.precision = 38;
-    java.math.BigDecimal average = value.divide(java.math.BigDecimal.valueOf(count.value, 0), out.scale, java.math.BigDecimal.ROUND_HALF_UP);
+    java.math.BigDecimal average = ((java.math.BigDecimal)(value.obj)).divide(java.math.BigDecimal.valueOf(count.value, 0), out.scale, java.math.BigDecimal.ROUND_HALF_UP);
     org.apache.drill.common.util.DecimalUtility.getSparseFromBigDecimal(average, out.buffer, out.start, out.scale, out.precision, out.nDecimalDigits);
   }
 
   @Override
   public void reset() {
-    value = java.math.BigDecimal.ZERO;
+    value.obj = java.math.BigDecimal.ZERO;
     count = new ${type.countRunningType}Holder();
     count.value = 0;
-    outputScale = Integer.MIN_VALUE;
+    outputScale.value = Integer.MIN_VALUE;
   }
 }
 

@@ -54,4 +54,10 @@ public class TestBugFixes extends BaseTestQuery {
     String query = "select foo.mycol.x as COMPLEX_COL from (select convert_from('{ x : [1,2], y : 100 }', 'JSON') as mycol from cp.`tpch/nation.parquet`) as foo(mycol) limit 1";
     test(query);
   }
+
+  @Test
+  public void DRILL1126() throws Exception {
+    String query = "select sum(cast(employee_id as decimal(38, 18))), avg(cast(employee_id as decimal(38, 18))) from cp.`employee.json` group by (department_id)";
+    test(query);
+  }
 }

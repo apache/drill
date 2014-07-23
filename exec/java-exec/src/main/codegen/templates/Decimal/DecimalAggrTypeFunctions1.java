@@ -58,12 +58,12 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 
   @Param ${type.inputType}Holder in;
   <#if aggrtype.funcName == "sum">
-  @Workspace java.math.BigDecimal value;
-  @Workspace int outputScale;
+  @Workspace ObjectHolder value;
+  @Workspace IntHolder outputScale;
   <#else>
   @Workspace ${type.runningType}Holder value;
-  </#if>
   @Workspace ByteBuf buffer;
+  </#if>
   @Output ${type.outputType}Holder out;
 
   public void setup(RecordBatch b) {
@@ -94,8 +94,8 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     value.value = ${type.initValue};
     </#if>
   <#elseif aggrtype.funcName == "sum">
-    value = java.math.BigDecimal.ZERO;
-    outputScale = Integer.MIN_VALUE;
+    value.obj = java.math.BigDecimal.ZERO;
+    outputScale.value = Integer.MIN_VALUE;
 	</#if>
 
   }
@@ -163,9 +163,9 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     <#else>
     java.math.BigDecimal currentValue = org.apache.drill.common.util.DecimalUtility.getBigDecimalFromSparse(in.buffer, in.start, in.nDecimalDigits, in.scale);
     </#if>
-    value = value.add(currentValue);
-    if (outputScale == Integer.MIN_VALUE) {
-      outputScale = in.scale;
+    value.obj = ((java.math.BigDecimal)(value.obj)).add(currentValue);
+    if (outputScale.value == Integer.MIN_VALUE) {
+      outputScale.value = in.scale;
     }
     </#if>
 	<#if type.inputType?starts_with("Nullable")>
@@ -178,15 +178,15 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     <#if aggrtype.funcName == "count">
     out.value = value.value;
     <#elseif aggrtype.funcName == "sum">
-    buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte[out.WIDTH]);
+    io.netty.buffer.ByteBuf buffer = io.netty.buffer.Unpooled.wrappedBuffer(new byte[out.WIDTH]);
     buffer = new io.netty.buffer.SwappedByteBuf(buffer);
     out.buffer = buffer;
     out.start  = 0;
-    out.scale = outputScale;
+    out.scale = outputScale.value;
     out.precision = 38;
-    value = value.setScale(out.scale, java.math.BigDecimal.ROUND_HALF_UP);
-    org.apache.drill.common.util.DecimalUtility.getSparseFromBigDecimal(value, out.buffer, out.start, out.scale, out.precision, out.nDecimalDigits);
-    <#else>
+    value.obj = ((java.math.BigDecimal) (value.obj)).setScale(out.scale, java.math.BigDecimal.ROUND_HALF_UP);
+    org.apache.drill.common.util.DecimalUtility.getSparseFromBigDecimal((java.math.BigDecimal) value.obj, out.buffer, out.start, out.scale, out.precision, out.nDecimalDigits);
+   <#else>
     <#if type.outputType.endsWith("Dense") || type.outputType.endsWith("Sparse") || aggrtype.funcName == "sum">
     out.buffer = value.buffer;
     out.start = value.start;
@@ -223,7 +223,7 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     value.value = ${type.initValue};
     </#if>
   <#elseif aggrtype.funcName == "sum">
-    value = java.math.BigDecimal.ZERO;
+    value.obj = java.math.BigDecimal.ZERO;
 	</#if>
 
   }

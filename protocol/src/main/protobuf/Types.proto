@@ -63,6 +63,7 @@ enum MinorType {
     INTERVALYEAR = 38; // Interval type specifying YEAR to MONTH
     INTERVALDAY = 39; // Interval type specifying DAY to SECONDS
     LIST = 40;
+    GENERIC_OBJECT = 41;
 }
 
 message MajorType {
