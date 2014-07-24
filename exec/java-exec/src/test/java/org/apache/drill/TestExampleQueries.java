@@ -39,6 +39,58 @@ public class TestExampleQueries extends BaseTestQuery{
     test("select count(*) from cp.`customer.json` limit 1");
   }
 
+  // DRILL-931 : select * query. 
+  @Test
+  public void testSelStarOrderBy() throws Exception{
+    test("select * from cp.`employee.json` order by last_name");
+  }
+  
+  @Test
+  public void testSelStarOrderByLimit() throws Exception{
+    test("select * from cp.`employee.json` order by employee_id limit 2;");
+  }
+  
+  @Test
+  public void testSelStarPlusRegCol() throws Exception{
+    test("select *, n_nationkey from cp.`tpch/nation.parquet` limit 2;");
+  }
+
+  @Test
+  public void testSelStarWhereOrderBy() throws Exception{
+    test("select * from cp.`employee.json` where first_name = 'James' order by employee_id");
+  }
+  
+  @Test
+  public void testSelStarJoin() throws Exception {
+    test("select * from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey order by n.n_name;");
+  }
+
+  @Test
+  public void testSelLeftStarJoin() throws Exception {
+    test("select n.* from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey order by n.n_name;");
+  }
+
+  @Test
+  public void testSelRightStarJoin() throws Exception {
+    test("select r.* from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey order by n.n_name;");
+  }
+
+  @Test
+  public void testSelStarRegColConstJoin() throws Exception {
+    test("select *, n.n_nationkey, 1 + 2 as constant from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey order by n.n_name;");
+  }
+  
+  @Test
+  public void testSelStarBothSideJoin() throws Exception {
+    test("select n.*, r.* from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey;");
+  }
+  
+  @Test
+  public void testSelStarJoinSameColName() throws Exception {
+    test("select * from cp.`tpch/nation.parquet` n1, cp.`tpch/nation.parquet` n2 where n1.n_nationkey = n2.n_nationkey;");
+  }
+  
+ 
   @Test
   public void testJoinExpOn() throws Exception{
     test("select a.n_nationkey from cp.`tpch/nation.parquet` a join cp.`tpch/region.parquet` b on a.n_regionkey + 1 = b.r_regionkey and a.n_regionkey + 1 = b.r_regionkey;");

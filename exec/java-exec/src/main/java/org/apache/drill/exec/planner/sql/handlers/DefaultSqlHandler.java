@@ -52,6 +52,7 @@ import org.apache.drill.exec.planner.physical.visitor.ProducerConsumerPrelVisito
 import org.apache.drill.exec.planner.physical.visitor.RelUniqifier;
 import org.apache.drill.exec.planner.physical.visitor.SelectionVectorPrelVisitor;
 import org.apache.drill.exec.planner.sql.DrillOperatorTable;
+import org.apache.drill.exec.planner.physical.visitor.StarColumnConverter;
 import org.apache.drill.exec.planner.sql.DrillSqlWorker;
 import org.apache.drill.exec.util.Pointer;
 import org.eigenbase.rel.RelNode;
@@ -157,6 +158,15 @@ public class DefaultSqlHandler extends AbstractSqlHandler {
 
     /*  The order of the following transformation is important */
 
+    /*
+     * 0.) For select * from join query, we need insert project on top of scan and a top project just
+     * under screen operator. The project on top of scan will rename from * to T1*, while the top project
+     * will rename T1* to *, before it output the final result. Only the top project will allow
+     * duplicate columns, since user could "explicitly" ask for duplicate columns ( select *, col, *).
+     * The rest of projects will remove the duplicate column when we generate POP in json format.  
+     */
+    phyRelNode = StarColumnConverter.insertRenameProject(phyRelNode, phyRelNode.getRowType());
+    
     /*
      * 1.)
      * Join might cause naming conflicts from its left and right child.
