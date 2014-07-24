@@ -94,7 +94,9 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     value.value = ${type.initValue};
     </#if>
   <#elseif aggrtype.funcName == "sum">
+    value = new ObjectHolder();
     value.obj = java.math.BigDecimal.ZERO;
+    outputScale = new IntHolder();
     outputScale.value = Integer.MIN_VALUE;
 	</#if>
 
@@ -223,7 +225,10 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
     value.value = ${type.initValue};
     </#if>
   <#elseif aggrtype.funcName == "sum">
+    value = new ObjectHolder();
     value.obj = java.math.BigDecimal.ZERO;
+    outputScale = new IntHolder();
+    outputScale.value = Integer.MIN_VALUE;
 	</#if>
 
   }

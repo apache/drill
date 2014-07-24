@@ -61,9 +61,11 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
   @Output ${type.outputType}Holder out;
 
   public void setup(RecordBatch b) {
+    value = new ObjectHolder();
     value.obj = java.math.BigDecimal.ZERO;
     count = new ${type.countRunningType}Holder();
     count.value = 0;
+    outputScale = new IntHolder();
     outputScale.value = Integer.MIN_VALUE;
   }
 
@@ -105,9 +107,11 @@ public static class ${type.inputType}${aggrtype.className} implements DrillAggFu
 
   @Override
   public void reset() {
+    value = new ObjectHolder();
     value.obj = java.math.BigDecimal.ZERO;
     count = new ${type.countRunningType}Holder();
     count.value = 0;
+    outputScale = new IntHolder();
     outputScale.value = Integer.MIN_VALUE;
   }
 }
