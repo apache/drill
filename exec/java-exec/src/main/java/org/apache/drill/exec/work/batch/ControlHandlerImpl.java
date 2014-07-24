@@ -30,6 +30,7 @@ import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.impl.ImplCreator;
 import org.apache.drill.exec.physical.impl.RootExec;
+import org.apache.drill.exec.proto.BitControl.FinishedReceiver;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.BitControl.RpcType;
@@ -72,6 +73,11 @@ public class ControlHandlerImpl implements ControlMessageHandler {
     case RpcType.REQ_CANCEL_FRAGMENT_VALUE:
       FragmentHandle handle = get(pBody, FragmentHandle.PARSER);
       cancelFragment(handle);
+      return DataRpcConfig.OK;
+
+    case RpcType.REQ_RECEIVER_FINISHED_VALUE:
+      FinishedReceiver finishedReceiver = get(pBody, FinishedReceiver.PARSER);
+      receivingFragmentFinished(finishedReceiver);
       return DataRpcConfig.OK;
 
     case RpcType.REQ_FRAGMENT_STATUS_VALUE:
@@ -159,6 +165,22 @@ public class ControlHandlerImpl implements ControlMessageHandler {
     return Acks.OK;
   }
 
+  public Ack receivingFragmentFinished(FinishedReceiver finishedReceiver) {
+    FragmentManager manager = bee.getContext().getWorkBus().getFragmentManager(finishedReceiver.getSender());
 
+    FragmentExecutor executor;
+    if(manager != null) {
+      executor = manager.getRunnable();
+    } else {
+      // then try local cancel.
+      executor = bee.getFragmentRunner(finishedReceiver.getSender());
+    }
+
+    if (executor != null) {
+      executor.receivingFragmentFinished(finishedReceiver.getReceiver());
+    }
+
+    return Acks.OK;
+  }
 
 }

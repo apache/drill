@@ -182,7 +182,7 @@ public class ProducerConsumerBatch extends AbstractRecordBatch {
   }
 
   @Override
-  protected void killIncoming() {
+  protected void killIncoming(boolean sendUpstream) {
     producer.interrupt();
     stop = true;
     try {

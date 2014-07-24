@@ -25,6 +25,7 @@ import org.apache.drill.exec.physical.base.FragmentRoot;
 import org.apache.drill.exec.physical.impl.ImplCreator;
 import org.apache.drill.exec.physical.impl.RootExec;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
+import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.proto.UserBitShared.FragmentState;
 import org.apache.drill.exec.proto.helper.QueryIdHelper;
 import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
@@ -69,6 +70,10 @@ public class FragmentExecutor implements Runnable, CancelableQuery, StatusProvid
     if (executionThread != null) {
       executionThread.interrupt();
     }
+  }
+
+  public void receivingFragmentFinished(FragmentHandle handle) {
+    root.receivingFragmentFinished(handle);
   }
 
   public UserClientConnection getClient(){

@@ -300,7 +300,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
         partitionVectors.add(w.getValueVector());
       }
     } catch (ClassTransformationException | IOException | SchemaChangeException | InterruptedException ex) {
-      kill();
+      kill(false);
       logger.error("Failure while building final partition table.", ex);
       context.fail(ex);
       return false;
@@ -419,8 +419,8 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
   }
 
   @Override
-  protected void killIncoming() {
-    incoming.kill();
+  protected void killIncoming(boolean sendUpstream) {
+    incoming.kill(sendUpstream);
   }
 
   @Override
@@ -441,7 +441,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
         // Must set up a new schema each time, because ValueVectors are not reused between containers in queue
         setupNewSchema(vc);
       } catch (SchemaChangeException ex) {
-        kill();
+        kill(false);
         logger.error("Failure during query", ex);
         context.fail(ex);
         return IterOutcome.STOP;
@@ -474,7 +474,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
       try {
         setupNewSchema(vc);
       } catch (SchemaChangeException ex) {
-        kill();
+        kill(false);
         logger.error("Failure during query", ex);
         context.fail(ex);
         return IterOutcome.STOP;
@@ -504,7 +504,7 @@ public class OrderedPartitionRecordBatch extends AbstractRecordBatch<OrderedPart
       try {
         setupNewSchema(incoming);
       } catch (SchemaChangeException ex) {
-        kill();
+        kill(false);
         logger.error("Failure during query", ex);
         context.fail(ex);
         return IterOutcome.STOP;

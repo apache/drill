@@ -25,7 +25,6 @@ import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.config.HashPartitionSender;
 import org.apache.drill.exec.physical.impl.SendingAccountor;
 import org.apache.drill.exec.record.RecordBatch;
-import org.apache.drill.exec.physical.impl.partitionsender.PartitionStatsBatch;
 
 import java.io.IOException;
 import java.util.List;
@@ -44,7 +43,7 @@ public interface Partitioner {
   public abstract void flushOutgoingBatches(boolean isLastBatch, boolean schemaChanged) throws IOException;
   public abstract void initialize();
   public abstract void clear();
-  public abstract List<? extends PartitionStatsBatch> getOutgoingBatches();
+  public abstract List<? extends PartitionOutgoingBatch> getOutgoingBatches();
 
   public static TemplateClassDefinition<Partitioner> TEMPLATE_DEFINITION = new TemplateClassDefinition<>(Partitioner.class, PartitionerTemplate.class);
 }

@@ -242,6 +242,7 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
                     for (VectorWrapper<?> wrapper : left) {
                       wrapper.getValueVector().clear();
                     }
+                    left.kill(true);
                     leftUpstream = next(HashJoinHelper.LEFT_INPUT, left);
                     while (leftUpstream == IterOutcome.OK_NEW_SCHEMA || leftUpstream == IterOutcome.OK) {
                       for (VectorWrapper<?> wrapper : left) {
@@ -260,7 +261,7 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
             return IterOutcome.NONE;
         } catch (ClassTransformationException | SchemaChangeException | IOException e) {
             context.fail(e);
-            killIncoming();
+            killIncoming(false);
             return IterOutcome.STOP;
         }
     }
@@ -483,9 +484,9 @@ public class HashJoinBatch extends AbstractRecordBatch<HashJoinPOP> {
     }
 
     @Override
-    public void killIncoming() {
-        this.left.kill();
-        this.right.kill();
+    public void killIncoming(boolean sendUpstream) {
+        this.left.kill(sendUpstream);
+        this.right.kill(sendUpstream);
     }
 
     @Override

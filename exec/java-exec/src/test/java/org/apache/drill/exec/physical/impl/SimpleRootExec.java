@@ -23,6 +23,7 @@ import java.util.List;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.physical.impl.ScreenCreator.ScreenRoot;
+import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.record.RecordBatch.IterOutcome;
 import org.apache.drill.exec.record.TypedFieldId;
@@ -82,6 +83,11 @@ public class SimpleRootExec implements RootExec, Iterable<ValueVector>{
   @Override
   public void stop() {
     screenRoot.stop();
+  }
+
+  @Override
+  public void receivingFragmentFinished(FragmentHandle handle) {
+    //no op
   }
 
   @Override

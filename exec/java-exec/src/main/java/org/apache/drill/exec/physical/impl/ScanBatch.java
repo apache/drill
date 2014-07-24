@@ -119,8 +119,12 @@ public class ScanBatch implements RecordBatch {
   }
 
   @Override
-  public void kill() {
-    releaseAssets();
+  public void kill(boolean sendUpstream) {
+    if (sendUpstream) {
+      done = true;
+    } else {
+      releaseAssets();
+    }
   }
 
   private void releaseAssets() {

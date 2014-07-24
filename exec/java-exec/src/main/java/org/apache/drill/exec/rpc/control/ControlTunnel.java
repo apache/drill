@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.rpc.control;
 
+import org.apache.drill.exec.proto.BitControl.FinishedReceiver;
 import org.apache.drill.exec.proto.BitControl.FragmentStatus;
 import org.apache.drill.exec.proto.BitControl.PlanFragment;
 import org.apache.drill.exec.proto.BitControl.RpcType;
@@ -56,6 +57,11 @@ public class ControlTunnel {
     manager.runCommand(b);
   }
 
+  public void informReceiverFinished(RpcOutcomeListener<Ack> outcomeListener, FinishedReceiver finishedReceiver){
+    ReceiverFinished b = new ReceiverFinished(outcomeListener, finishedReceiver);
+    manager.runCommand(b);
+  }
+
   public DrillRpcFuture<Ack> sendFragmentStatus(FragmentStatus status){
     SendFragmentStatus b = new SendFragmentStatus(status);
     manager.runCommand(b);
@@ -82,6 +88,21 @@ public class ControlTunnel {
       connection.sendUnsafe(outcomeListener, RpcType.REQ_FRAGMENT_STATUS, status, Ack.class);
     }
 
+  }
+
+
+  public static class ReceiverFinished extends ListeningCommand<Ack, ControlConnection> {
+    final FinishedReceiver finishedReceiver;
+
+    public ReceiverFinished(RpcOutcomeListener<Ack> listener, FinishedReceiver finishedReceiver) {
+      super(listener);
+      this.finishedReceiver = finishedReceiver;
+    }
+
+    @Override
+    public void doRpcCall(RpcOutcomeListener<Ack> outcomeListener, ControlConnection connection) {
+      connection.send(outcomeListener, RpcType.REQ_RECEIVER_FINISHED, finishedReceiver, Ack.class);
+    }
   }
 
   public static class CancelFragment extends ListeningCommand<Ack, ControlConnection> {
@@ -127,5 +148,4 @@ public class ControlTunnel {
       connection.send(outcomeListener, RpcType.REQ_QUERY_STATUS, queryId, QueryProfile.class);
     }
   }
-
 }

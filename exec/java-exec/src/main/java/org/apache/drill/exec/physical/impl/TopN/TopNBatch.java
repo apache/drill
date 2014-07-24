@@ -101,11 +101,6 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
   }
 
   @Override
-  public void kill() {
-    incoming.kill();
-  }
-
-  @Override
   public SelectionVector2 getSelectionVector2() {
     throw new UnsupportedOperationException();
   }
@@ -203,7 +198,7 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
       return IterOutcome.OK_NEW_SCHEMA;
 
     }catch(SchemaChangeException | ClassTransformationException | IOException ex){
-      kill();
+      kill(false);
       logger.error("Failure during query", ex);
       context.fail(ex);
       return IterOutcome.STOP;
@@ -297,8 +292,8 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
   }
 
   @Override
-  protected void killIncoming() {
-    incoming.kill();
+  protected void killIncoming(boolean sendUpstream) {
+    incoming.kill(sendUpstream);
   }
 
 
@@ -334,7 +329,7 @@ public class TopNBatch extends AbstractRecordBatch<TopN> {
     }
 
     @Override
-    public void kill() {
+    public void kill(boolean sendUpstream) {
     }
 
     @Override

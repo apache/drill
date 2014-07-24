@@ -67,8 +67,8 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
   }
 
   @Override
-  protected void killIncoming() {
-    incoming.kill();
+  protected void killIncoming(boolean sendUpstream) {
+    incoming.kill(sendUpstream);
   }
 
   @Override
@@ -100,7 +100,7 @@ public class WriterRecordBatch extends AbstractRecordBatch<Writer> {
           try{
             setupNewSchema();
           }catch(Exception ex){
-            kill();
+            kill(false);
             logger.error("Failure during query", ex);
             context.fail(ex);
             return IterOutcome.STOP;

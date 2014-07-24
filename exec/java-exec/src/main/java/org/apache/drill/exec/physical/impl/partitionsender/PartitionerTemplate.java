@@ -51,7 +51,6 @@ import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
 import org.apache.drill.exec.rpc.data.DataTunnel;
 import org.apache.drill.exec.vector.ValueVector;
-import org.apache.drill.exec.vector.allocator.VectorAllocator;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -71,7 +70,7 @@ public abstract class PartitionerTemplate implements Partitioner {
   }
 
   @Override
-  public List<? extends PartitionStatsBatch> getOutgoingBatches() {
+  public List<? extends PartitionOutgoingBatch> getOutgoingBatches() {
     return outgoingBatches;
   }
 
@@ -203,7 +202,7 @@ public abstract class PartitionerTemplate implements Partitioner {
   public abstract void doSetup(@Named("context") FragmentContext context, @Named("incoming") RecordBatch incoming, @Named("outgoing") OutgoingRecordBatch[] outgoing) throws SchemaChangeException;
   public abstract int doEval(@Named("inIndex") int inIndex);
 
-  public class OutgoingRecordBatch implements PartitionStatsBatch, VectorAccessible {
+  public class OutgoingRecordBatch implements PartitionOutgoingBatch, VectorAccessible {
 
     private final DataTunnel tunnel;
     private final HashPartitionSender operator;
@@ -214,6 +213,8 @@ public abstract class PartitionerTemplate implements Partitioner {
     private final int oppositeMinorFragmentId;
 
     private boolean isLast = false;
+    private volatile boolean terminated = false;
+    private boolean dropAll = false;
     private BatchSchema outSchema;
     private int recordCount;
     private int totalRecords;
@@ -247,6 +248,11 @@ public abstract class PartitionerTemplate implements Partitioner {
       return false;
     }
 
+    @Override
+    public void terminate() {
+      terminated = true;
+    }
+
     @RuntimeOverridden
     protected void doSetup(@Named("incoming") RecordBatch incoming, @Named("outgoing") VectorAccessible outgoing) {};
 
@@ -254,9 +260,13 @@ public abstract class PartitionerTemplate implements Partitioner {
     protected boolean doEval(@Named("inIndex") int inIndex, @Named("outIndex") int outIndex) { return false; };
 
     public void flush() throws IOException {
-      final ExecProtos.FragmentHandle handle = context.getHandle();
+      if (dropAll) {
+        vectorContainer.zeroVectors();
+        return;
+      }
+      final FragmentHandle handle = context.getHandle();
 
-      if (recordCount != 0) {
+      if (recordCount != 0 && !terminated) {
 
         for(VectorWrapper<?> w : vectorContainer){
           w.getValueVector().getMutator().setValueCount(recordCount);
@@ -280,9 +290,9 @@ public abstract class PartitionerTemplate implements Partitioner {
         this.sendCount.increment();
       } else {
         logger.debug("Flush requested on an empty outgoing record batch" + (isLast ? " (last batch)" : ""));
-        if (isLast) {
+        if (isLast || terminated) {
           // send final (empty) batch
-          FragmentWritableBatch writableBatch = new FragmentWritableBatch(isLast,
+          FragmentWritableBatch writableBatch = new FragmentWritableBatch(true,
                   handle.getQueryId(),
                   handle.getMajorFragmentId(),
                   handle.getMinorFragmentId(),
@@ -296,7 +306,8 @@ public abstract class PartitionerTemplate implements Partitioner {
             stats.stopWait();
           }
           this.sendCount.increment();
-          vectorContainer.clear();
+          vectorContainer.zeroVectors();
+          dropAll = true;
           return;
         }
       }

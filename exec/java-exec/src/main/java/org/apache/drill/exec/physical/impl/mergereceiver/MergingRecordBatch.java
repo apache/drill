@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.PriorityQueue;
 
+import io.netty.buffer.ByteBuf;
 import org.apache.drill.common.expression.ErrorCollector;
 import org.apache.drill.common.expression.ErrorCollectorImpl;
 import org.apache.drill.common.expression.LogicalExpression;
@@ -43,6 +44,9 @@ import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
 import org.apache.drill.exec.ops.MetricDef;
 import org.apache.drill.exec.physical.config.MergingReceiverPOP;
+import org.apache.drill.exec.proto.BitControl.FinishedReceiver;
+import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
+import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.record.AbstractRecordBatch;
 import org.apache.drill.exec.record.BatchSchema;
@@ -60,6 +64,8 @@ import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
+import org.apache.drill.exec.rpc.RpcException;
+import org.apache.drill.exec.rpc.RpcOutcomeListener;
 import org.apache.drill.exec.vector.CopyUtil;
 import org.apache.drill.exec.vector.ValueVector;
 import org.apache.drill.exec.vector.allocator.VectorAllocator;
@@ -87,6 +93,7 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
   private BatchSchema schema;
   private VectorContainer outgoingContainer;
   private MergingReceiverGeneratorBase merger;
+  private MergingReceiverPOP config;
   private boolean hasRun = false;
   private boolean prevBatchWasFull = false;
   private boolean hasMoreIncoming = true;
@@ -119,6 +126,7 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
     this.context = context;
     this.outgoingContainer = new VectorContainer();
     this.stats.setLongStat(Metric.NUM_SENDERS, config.getNumSenders());
+    this.config = config;
   }
 
   private RawFragmentBatch getNext(RawFragmentBatchProvider provider) throws IOException{
@@ -437,15 +445,49 @@ public class MergingRecordBatch extends AbstractRecordBatch<MergingReceiverPOP> 
   }
 
   @Override
-  public void kill() {
-    cleanup();
-    for (RawFragmentBatchProvider provider : fragProviders) {
-      provider.kill(context);
+  public void kill(boolean sendUpstream) {
+    if (sendUpstream) {
+      informSenders();
+    } else {
+      cleanup();
+      for (RawFragmentBatchProvider provider : fragProviders) {
+        provider.kill(context);
+      }
+    }
+  }
+
+  private void informSenders() {
+    FragmentHandle handlePrototype = FragmentHandle.newBuilder()
+            .setMajorFragmentId(config.getOppositeMajorFragmentId())
+            .setQueryId(context.getHandle().getQueryId())
+            .build();
+    for (int i = 0; i < config.getNumSenders(); i++) {
+      FragmentHandle sender = FragmentHandle.newBuilder(handlePrototype)
+              .setMinorFragmentId(i)
+              .build();
+      FinishedReceiver finishedReceiver = FinishedReceiver.newBuilder()
+              .setReceiver(context.getHandle())
+              .setSender(sender)
+              .build();
+      context.getControlTunnel(config.getProvidingEndpoints().get(i)).informReceiverFinished(new OutcomeListener(), finishedReceiver);
+    }
+  }
+
+  private class OutcomeListener implements RpcOutcomeListener<Ack> {
+
+    @Override
+    public void failed(RpcException ex) {
+      logger.warn("Failed to inform upstream that receiver is finished");
+    }
+
+    @Override
+    public void success(Ack value, ByteBuf buffer) {
+      // Do nothing
     }
   }
 
   @Override
-  protected void killIncoming() {
+  protected void killIncoming(boolean sendUpstream) {
     //No op
   }
 

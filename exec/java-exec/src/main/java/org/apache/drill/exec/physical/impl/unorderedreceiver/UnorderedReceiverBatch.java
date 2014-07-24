@@ -20,6 +20,7 @@ package org.apache.drill.exec.physical.impl.unorderedreceiver;
 import java.io.IOException;
 import java.util.Iterator;
 
+import io.netty.buffer.ByteBuf;
 import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.OutOfMemoryException;
@@ -28,6 +29,9 @@ import org.apache.drill.exec.ops.MetricDef;
 import org.apache.drill.exec.ops.OpProfileDef;
 import org.apache.drill.exec.ops.OperatorStats;
 import org.apache.drill.exec.physical.config.UnorderedReceiver;
+import org.apache.drill.exec.proto.BitControl.FinishedReceiver;
+import org.apache.drill.exec.proto.ExecProtos.FragmentHandle;
+import org.apache.drill.exec.proto.GeneralRPCProtos.Ack;
 import org.apache.drill.exec.proto.UserBitShared.RecordBatchDef;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.RawFragmentBatch;
@@ -40,6 +44,9 @@ import org.apache.drill.exec.record.VectorWrapper;
 import org.apache.drill.exec.record.WritableBatch;
 import org.apache.drill.exec.record.selection.SelectionVector2;
 import org.apache.drill.exec.record.selection.SelectionVector4;
+import org.apache.drill.exec.rpc.RpcException;
+import org.apache.drill.exec.rpc.RpcOutcomeListener;
+import org.apache.drill.exec.rpc.control.ControlTunnel.ReceiverFinished;
 
 public class UnorderedReceiverBatch implements RecordBatch {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UnorderedReceiverBatch.class);
@@ -50,6 +57,7 @@ public class UnorderedReceiverBatch implements RecordBatch {
   private BatchSchema schema;
   private OperatorStats stats;
   private boolean first = true;
+  private UnorderedReceiver config;
 
   public enum Metric implements MetricDef {
     BYTES_RECEIVED,
@@ -70,6 +78,7 @@ public class UnorderedReceiverBatch implements RecordBatch {
 
     this.stats = context.getStats().getOperatorStats(new OpProfileDef(config.getOperatorId(), config.getOperatorType(), 1), null);
     this.stats.setLongStat(Metric.NUM_SENDERS, config.getNumSenders());
+    this.config = config;
   }
 
   @Override
@@ -88,8 +97,12 @@ public class UnorderedReceiverBatch implements RecordBatch {
   }
 
   @Override
-  public void kill() {
-    fragProvider.kill(context);
+  public void kill(boolean sendUpstream) {
+    if (sendUpstream) {
+      informSenders();
+    } else {
+      fragProvider.kill(context);
+    }
   }
 
   @Override
@@ -186,6 +199,36 @@ public class UnorderedReceiverBatch implements RecordBatch {
   @Override
   public VectorContainer getOutgoingContainer() {
     throw new UnsupportedOperationException(String.format(" You should not call getOutgoingContainer() for class %s", this.getClass().getCanonicalName()));
+  }
+
+  private void informSenders() {
+    FragmentHandle handlePrototype = FragmentHandle.newBuilder()
+            .setMajorFragmentId(config.getOppositeMajorFragmentId())
+            .setQueryId(context.getHandle().getQueryId())
+            .build();
+    for (int i = 0; i < config.getNumSenders(); i++) {
+      FragmentHandle sender = FragmentHandle.newBuilder(handlePrototype)
+              .setMinorFragmentId(i)
+              .build();
+      FinishedReceiver finishedReceiver = FinishedReceiver.newBuilder()
+              .setReceiver(context.getHandle())
+              .setSender(sender)
+              .build();
+      context.getControlTunnel(config.getProvidingEndpoints().get(i)).informReceiverFinished(new OutcomeListener(), finishedReceiver);
+    }
+  }
+
+  private class OutcomeListener implements RpcOutcomeListener<Ack> {
+
+    @Override
+    public void failed(RpcException ex) {
+      logger.warn("Failed to inform upstream that receiver is finished");
+    }
+
+    @Override
+    public void success(Ack value, ByteBuf buffer) {
+      // Do nothing
+    }
   }
 
 }

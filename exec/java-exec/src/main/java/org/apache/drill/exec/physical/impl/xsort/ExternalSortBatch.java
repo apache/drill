@@ -132,8 +132,8 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
   }
 
   @Override
-  public void kill() {
-    incoming.kill();
+  public void kill(boolean sendUpstream) {
+    incoming.kill(sendUpstream);
   }
 
   @Override
@@ -324,7 +324,7 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
       return IterOutcome.OK_NEW_SCHEMA;
 
     }catch(SchemaChangeException | ClassTransformationException | IOException ex){
-      kill();
+      kill(false);
       logger.error("Failure during query", ex);
       context.fail(ex);
       return IterOutcome.STOP;
@@ -577,8 +577,8 @@ public class ExternalSortBatch extends AbstractRecordBatch<ExternalSort> {
   }
 
   @Override
-  protected void killIncoming() {
-    incoming.kill();
+  protected void killIncoming(boolean sendUpstream) {
+    incoming.kill(sendUpstream);
   }
 
 }

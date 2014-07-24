@@ -79,7 +79,7 @@ public interface RecordBatch extends VectorAccessible {
    * Inform child nodes that this query should be terminated. Child nodes should utilize the QueryContext to determine
    * what has happened.
    */
-  public void kill();
+  public void kill(boolean sendUpstream);
 
   public abstract SelectionVector2 getSelectionVector2();
 

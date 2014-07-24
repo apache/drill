@@ -59,21 +59,21 @@ public class UnionAllRecordBatch extends AbstractRecordBatch<UnionAll> {
   }
 
   @Override
-  public void kill() {
+  public void kill(boolean sendUpstream) {
     if(current != null){
-      current.kill();
+      current.kill(sendUpstream);
       current = null;
     }
     for(;incomingIterator.hasNext();){
-      incomingIterator.next().kill();
+      incomingIterator.next().kill(sendUpstream);
     }
   }
 
   @Override
-  protected void killIncoming() {
+  protected void killIncoming(boolean sendUpstream) {
     for (int i = 0; i < incoming.size(); i++) {
       RecordBatch in = incoming.get(i);
-      in.kill();
+      in.kill(sendUpstream);
     }
   }
 

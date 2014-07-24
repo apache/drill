@@ -18,7 +18,9 @@
 package org.apache.drill.exec.physical.impl.partitionsender;
 
 
-public interface PartitionStatsBatch {
+public interface PartitionOutgoingBatch {
 
   public long getTotalRecords();
+
+  public void terminate();
 }

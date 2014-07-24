@@ -106,11 +106,11 @@ public abstract class AbstractRecordBatch<T extends PhysicalOperator> implements
   }
 
   @Override
-  public void kill() {
-    killIncoming();
+  public void kill(boolean sendUpstream) {
+    killIncoming(sendUpstream);
   }
 
-  protected abstract void killIncoming();
+  protected abstract void killIncoming(boolean sendUpstream);
 
   public void cleanup(){
     container.clear();

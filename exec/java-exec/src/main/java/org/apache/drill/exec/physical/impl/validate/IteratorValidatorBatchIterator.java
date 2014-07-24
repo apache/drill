@@ -82,8 +82,8 @@ public class IteratorValidatorBatchIterator implements RecordBatch {
   }
 
   @Override
-  public void kill() {
-    incoming.kill();
+  public void kill(boolean sendUpstream) {
+    incoming.kill(sendUpstream);
   }
 
   @Override

@@ -83,8 +83,8 @@ public class LimitRecordBatch extends AbstractSingleRecordBatch<Limit> {
   @Override
   public IterOutcome innerNext() {
     if(!noEndLimit && recordsLeft <= 0) {
-      // don't kill incoming batches or call cleanup yet, as this could close allocators before the buffers have been cleared
-      // Drain the incoming record batch and clear the memory
+      incoming.kill(true);
+
       IterOutcome upStream = incoming.next();
 
       while (upStream == IterOutcome.OK || upStream == IterOutcome.OK_NEW_SCHEMA) {

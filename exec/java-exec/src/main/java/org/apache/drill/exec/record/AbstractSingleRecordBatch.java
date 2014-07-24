@@ -36,8 +36,8 @@ public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> exte
   }
 
   @Override
-  protected void killIncoming() {
-    incoming.kill();
+  protected void killIncoming(boolean sendUpstream) {
+    incoming.kill(sendUpstream);
   }
 
   @Override
@@ -65,7 +65,7 @@ public abstract class AbstractSingleRecordBatch<T extends PhysicalOperator> exte
         stats.startSetup();
         setupNewSchema();
       }catch(SchemaChangeException ex){
-        kill();
+        kill(false);
         logger.error("Failure during query", ex);
         context.fail(ex);
         return IterOutcome.STOP;

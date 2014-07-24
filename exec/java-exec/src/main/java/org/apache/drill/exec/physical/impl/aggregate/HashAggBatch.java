@@ -180,7 +180,7 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
     }catch(SchemaChangeException | ClassTransformationException | IOException ex){
       context.fail(ex);
       container.clear();
-      incoming.kill();
+      incoming.kill(false);
       return false;
     }finally{
       stats.stopSetup();
@@ -301,8 +301,8 @@ public class HashAggBatch extends AbstractRecordBatch<HashAggregate> {
   }
 
   @Override
-  protected void killIncoming() {
-    incoming.kill();
+  protected void killIncoming(boolean sendUpstream) {
+    incoming.kill(sendUpstream);
   }
 
 }
