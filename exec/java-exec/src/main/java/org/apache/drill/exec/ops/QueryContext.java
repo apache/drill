@@ -92,6 +92,7 @@ public class QueryContext{
   public OptionManager getOptions(){
     return session.getOptions();
   }
+
   public DrillbitEndpoint getCurrentEndpoint(){
     return drillbitContext.getEndpoint();
   }

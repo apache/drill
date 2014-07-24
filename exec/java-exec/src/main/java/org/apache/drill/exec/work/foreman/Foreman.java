@@ -69,6 +69,7 @@ import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.rpc.RpcOutcomeListener;
 import org.apache.drill.exec.rpc.user.UserServer.UserClientConnection;
 import org.apache.drill.exec.server.DrillbitContext;
+import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.util.AtomicState;
 import org.apache.drill.exec.util.Pointer;
 import org.apache.drill.exec.work.ErrorHelper;
@@ -157,7 +158,9 @@ public class Foreman implements Runnable, Closeable, Comparable<Object>{
       if (!state.updateState(QueryState.PENDING, QueryState.FAILED))
       logger.warn("Tried to update query state to FAILED, but was not RUNNING");
     }
-    DrillPBError error = ErrorHelper.logAndConvertError(context.getCurrentEndpoint(), message, t, logger);
+
+    boolean verbose = getContext().getOptions().getOption(ExecConstants.ENABLE_VERBOSE_ERRORS_KEY).bool_val;
+    DrillPBError error = ErrorHelper.logAndConvertError(context.getCurrentEndpoint(), message, t, logger, verbose);
     QueryResult result = QueryResult //
         .newBuilder() //
         .addError(error) //

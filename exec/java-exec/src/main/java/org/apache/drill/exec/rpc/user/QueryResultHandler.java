@@ -22,9 +22,11 @@ import io.netty.buffer.ByteBuf;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 
+import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.proto.UserBitShared.QueryId;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult;
 import org.apache.drill.exec.proto.UserBitShared.QueryResult.QueryState;
+import org.apache.drill.exec.proto.beans.DrillPBError;
 import org.apache.drill.exec.rpc.BaseRpcOutcomeListener;
 import org.apache.drill.exec.rpc.RpcBus;
 import org.apache.drill.exec.rpc.RpcException;
@@ -70,12 +72,13 @@ public class QueryResultHandler {
       }
     }
 
-    if(failed){
-      l.submissionFailed(new RpcException("Remote failure while running query." + batch.getHeader().getErrorList()));
+    if(failed) {
+      String message = buildErrorMessage(batch);
+      l.submissionFailed(new RpcException(message));
       resultsListener.remove(result.getQueryId(), l);
     }else{
       try {
-      l.resultArrived(batch, throttle);
+        l.resultArrived(batch, throttle);
       } catch (Exception e) {
         batch.release();
         l.submissionFailed(new RpcException(e));
@@ -89,6 +92,15 @@ public class QueryResultHandler {
         ) {
       resultsListener.remove(result.getQueryId(), l);
     }
+  }
+
+  protected String buildErrorMessage(QueryResultBatch batch) {
+    StringBuilder sb = new StringBuilder();
+    for (UserBitShared.DrillPBError error:batch.getHeader().getErrorList()) {
+      sb.append(error.getMessage());
+      sb.append("\n");
+    }
+    return sb.toString();
   }
 
   private void failAll() {

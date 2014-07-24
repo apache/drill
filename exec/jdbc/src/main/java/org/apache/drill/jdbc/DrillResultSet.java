@@ -123,7 +123,7 @@ public class DrillResultSet extends AvaticaResultSet {
       this.ex = ex;
       completed = true;
       close();
-      System.out.println("Query failed: " + ex);
+      System.out.println("Query failed: " + ex.getMessage());
     }
 
     @Override
