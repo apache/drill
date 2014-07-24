@@ -466,6 +466,16 @@ public class TestFunctionsQuery {
   }
 
   @Test
+  public void testNullConstantsTimeTimeStampAndDate() throws Exception {
+    JdbcAssert.withNoDefaultSchema()
+        .sql("SELECT CAST(NULL AS TIME) AS t, " +
+            "CAST(NULL AS TIMESTAMP) AS ts, " +
+            "CAST(NULL AS DATE) AS d " +
+            "FROM cp.`region.json` LIMIT 1")
+        .returns("t=null; ts=null; d=null");
+  }
+
+  @Test
   public void testIntMinToDecimal() throws Exception {
     String query = "select cast((employee_id - employee_id + -2147483648) as decimal(28, 2)) as DEC_28," +
                    "cast((employee_id - employee_id + -2147483648) as decimal(18, 2)) as DEC_18 from " +
