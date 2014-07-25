@@ -28,6 +28,9 @@ import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 public class MongoStoragePlugin extends AbstractStoragePlugin {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MongoStoragePlugin.class);
 
@@ -62,9 +65,9 @@ public class MongoStoragePlugin extends AbstractStoragePlugin {
   }
   
   @Override
-  public AbstractGroupScan getPhysicalScan(JSONOptions selection)
-      throws IOException {
-    return super.getPhysicalScan(selection);
+  public AbstractGroupScan getPhysicalScan(JSONOptions selection) throws IOException {
+    MongoScanSpec mongoScanSpec = selection.getListWith(new ObjectMapper(), new TypeReference<MongoScanSpec>(){});
+    return new MongoGroupScan(this, mongoScanSpec, null);
   }
 
 }

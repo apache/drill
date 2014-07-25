@@ -17,21 +17,29 @@
  */
 package org.apache.drill.exec.store.mongo;
 
+import java.util.ArrayList;
+
 import org.apache.drill.exec.planner.logical.DrillTable;
 import org.apache.drill.exec.store.StoragePlugin;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
+import org.eigenbase.sql.type.SqlTypeName;
 
-public class DrillMongoTable extends DrillTable implements DrillMongoConstants{
+public class DrillMongoTable extends DrillTable implements DrillMongoConstants {
 
-  public DrillMongoTable(String storageEngineName, StoragePlugin plugin,
-      Object selection) {
+  public DrillMongoTable(String storageEngineName, StoragePlugin plugin, MongoScanSpec selection) {
     super(storageEngineName, plugin, selection);
   }
 
   @Override
-  public RelDataType getRowType(RelDataTypeFactory arg0) {
-    return null;
+  public RelDataType getRowType(RelDataTypeFactory typeFactory) {
+    ArrayList<RelDataType> typeList = new ArrayList<>();
+    ArrayList<String> fieldNameList = new ArrayList<>();
+    
+    fieldNameList.add(ID);
+    typeList.add(typeFactory.createSqlType(SqlTypeName.ANY));
+    
+    return typeFactory.createStructType(typeList, fieldNameList);
   }
 
 }

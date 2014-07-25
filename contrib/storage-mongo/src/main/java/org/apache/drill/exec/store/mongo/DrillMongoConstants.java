@@ -18,7 +18,8 @@
 package org.apache.drill.exec.store.mongo;
 
 public interface DrillMongoConstants {
-  public static final String SYS_STORE_PROVIDER_HBASE_TABLE = "drill.exec.sys.store.provider.hbase.table";
-
-  public static final String SYS_STORE_PROVIDER_HBASE_CONFIG = "drill.exec.sys.store.provider.hbase.config";
+  
+  public static final String SYS_STORE_PROVIDER_MONGO_URL = "drill.exec.sys.store.provider.mongo.url";
+  
+  public static final String ID = "_id";
 }

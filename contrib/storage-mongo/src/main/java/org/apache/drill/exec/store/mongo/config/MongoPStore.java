@@ -17,36 +17,132 @@
  */
 package org.apache.drill.exec.store.mongo.config;
 
+import java.io.IOException;
+import java.io.Serializable;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.Map.Entry;
 
+import org.apache.commons.lang.SerializationUtils;
+import org.apache.drill.common.exceptions.DrillRuntimeException;
+import org.apache.drill.exec.store.mongo.DrillMongoConstants;
 import org.apache.drill.exec.store.sys.PStore;
+import org.apache.drill.exec.store.sys.PStoreConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class MongoPStore<V> implements PStore<V>{
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
+import com.mongodb.WriteResult;
 
-  @Override
-  public Iterator<Entry<String, V>> iterator() {
-    return null;
+public class MongoPStore<V> implements PStore<V>, DrillMongoConstants {
+
+  static final Logger logger = LoggerFactory.getLogger(MongoPStore.class);
+
+  private final PStoreConfig<V> config;
+
+  private final DBCollection collection;
+
+  public MongoPStore(PStoreConfig<V> config, DBCollection collection)
+      throws IOException {
+    this.config = config;
+    this.collection = collection;
   }
 
   @Override
   public V get(String key) {
-    return null;
+    DBObject query = new BasicDBObject().append(key, null);
+    DBCursor cursor = collection.find(query);
+    return value(cursor.next().get(key));
   }
 
   @Override
   public void put(String key, V value) {
-    
+    DBObject put = new BasicDBObject(1).append(key, value);
+    collection.insert(put);
   }
 
   @Override
   public boolean putIfAbsent(String key, V value) {
-    return false;
+    DBObject check = new BasicDBObject(1).append(key, null);
+    DBObject put = new BasicDBObject(1).append(key, value);
+    WriteResult wr = collection.update(check, put, true, false);
+    return wr.getN() == 1 ? true : false;
   }
 
   @Override
   public void delete(String key) {
-    
+    DBObject delete = new BasicDBObject(1).append(key, null);
+    collection.remove(delete);
+  }
+
+  private V value(Object obj) {
+    try {
+      byte[] serialize = SerializationUtils.serialize((Serializable) obj);
+      return config.getSerializer().deserialize(serialize);
+    } catch (IOException e) {
+      throw new DrillRuntimeException(e.getMessage(), e);
+    }
+  }
+
+  @Override
+  public Iterator<Entry<String, V>> iterator() {
+    return new MongoIterator();
+  }
+
+  private class MongoIterator implements Iterator<Entry<String, V>> {
+
+    private DBCursor cursor;
+
+    public MongoIterator() {
+      cursor = collection.find();
+    }
+
+    @Override
+    public boolean hasNext() {
+      return cursor.hasNext();
+    }
+
+    @Override
+    public Entry<String, V> next() {
+      if (!hasNext()) {
+        throw new NoSuchElementException();
+      }
+      return new DeferredEntry(cursor.next());
+    }
+
+    @Override
+    public void remove() {
+      cursor.remove();
+    }
+
+  }
+
+  private class DeferredEntry implements Entry<String, V> {
+
+    private DBObject result;
+
+    public DeferredEntry(DBObject result) {
+      this.result = result;
+    }
+
+    @Override
+    public String getKey() {
+      return result.get(ID).toString();
+    }
+
+    @Override
+    public V getValue() {
+      return get(result.get(ID).toString());
+    }
+
+    @Override
+    public V setValue(V value) {
+      throw new UnsupportedOperationException();
+    }
+
   }
 
 }

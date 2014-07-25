@@ -21,6 +21,7 @@ import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.exceptions.PhysicalOperatorSetupException;
+import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.physical.base.PhysicalOperator;
@@ -31,10 +32,13 @@ import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 public class MongoGroupScan extends AbstractGroupScan implements
     DrillMongoConstants {
 
+  public MongoGroupScan(MongoStoragePlugin mongoStoragePlugin,
+      MongoScanSpec mongoScanSpec, List<SchemaPath> columns) {
+  }
+
   @Override
   public void applyAssignments(List<DrillbitEndpoint> endpoints)
       throws PhysicalOperatorSetupException {
-
   }
 
   @Override
