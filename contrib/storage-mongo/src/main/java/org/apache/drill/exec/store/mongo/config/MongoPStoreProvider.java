@@ -37,7 +37,7 @@ public class MongoPStoreProvider implements PStoreProvider, DrillMongoConstants 
 
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MongoPStoreProvider.class);
   
-  static final String pKey = "pKey"; 
+  static final String pKey = "pKey";
   
   private MongoClient client;
   
@@ -56,8 +56,8 @@ public class MongoPStoreProvider implements PStoreProvider, DrillMongoConstants 
     DB db = client.getDB(clientURI.getDatabase());
     collection = db.getCollection(clientURI.getCollection());
     collection.setWriteConcern(WriteConcern.FSYNC_SAFE);
-    DBObject pKeyIndex = new BasicDBObject().append(pKey, Integer.valueOf(1));
-    collection.createIndex(pKeyIndex);
+    DBObject index = new BasicDBObject(1).append(pKey, Integer.valueOf(1));
+    collection.createIndex(index);
   }
 
   @Override

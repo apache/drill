@@ -53,28 +53,31 @@ public class MongoPStore<V> implements PStore<V>, DrillMongoConstants {
 
   @Override
   public V get(String key) {
-    DBObject query = new BasicDBObject().append(key, null);
-    DBCursor cursor = collection.find(query);
-    return value(cursor.next().get(key));
+    DBObject get = new BasicDBObject().append(ID, key);
+    DBCursor cursor = collection.find(get);
+    return value(cursor.next().get(MongoPStoreProvider.pKey));
   }
 
   @Override
   public void put(String key, V value) {
-    DBObject put = new BasicDBObject(1).append(key, value);
-    collection.insert(put);
+    DBObject putObj = new BasicDBObject(2);
+    putObj.put(ID, key);
+    putObj.put(MongoPStoreProvider.pKey, value);
+    collection.insert(putObj);
   }
 
   @Override
   public boolean putIfAbsent(String key, V value) {
-    DBObject check = new BasicDBObject(1).append(key, null);
-    DBObject put = new BasicDBObject(1).append(key, value);
-    WriteResult wr = collection.update(check, put, true, false);
+    DBObject check = new BasicDBObject(1).append(ID, key);
+    DBObject putObj = new BasicDBObject(2);
+    putObj.put(MongoPStoreProvider.pKey, value);
+    WriteResult wr = collection.update(check, putObj, true, false);
     return wr.getN() == 1 ? true : false;
   }
 
   @Override
   public void delete(String key) {
-    DBObject delete = new BasicDBObject(1).append(key, null);
+    DBObject delete = new BasicDBObject(1).append(ID, key);
     collection.remove(delete);
   }
 
