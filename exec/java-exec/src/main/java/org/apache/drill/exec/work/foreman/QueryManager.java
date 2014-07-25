@@ -174,6 +174,7 @@ public class QueryManager implements FragmentStatusListener{
               .setQueryId(queryId) //
               .build();
       foremanManagerListener.cleanupAndSendResult(result);
+      workBus.removeFragmentStatusListener(queryId);
     }
     this.status.setEndTime(System.currentTimeMillis());
     this.status.incrementFinishedFragments();
@@ -190,6 +191,7 @@ public class QueryManager implements FragmentStatusListener{
 
 
   private void stopQuery(){
+    workBus.removeFragmentStatusListener(queryId);
     // Stop all queries with a currently active status.
 //    for(FragmentData data: map.values()){
 //      FragmentHandle handle = data.getStatus().getHandle();

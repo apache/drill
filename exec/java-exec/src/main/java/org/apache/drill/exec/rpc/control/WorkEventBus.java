@@ -49,9 +49,9 @@ public class WorkEventBus {
     this.bee = bee;
   }
 
-  public void removeFragmentStatusListener(FragmentHandle handle) throws RpcException {
-    logger.debug("Removing framgent status listener for handle {}.", handle);
-    listeners.remove(handle);
+  public void removeFragmentStatusListener(QueryId queryId) {
+    logger.debug("Removing framgent status listener for queryId {}.", queryId);
+    listeners.remove(queryId);
   }
 
   public void setFragmentStatusListener(QueryId queryId, FragmentStatusListener listener) throws RpcException {
