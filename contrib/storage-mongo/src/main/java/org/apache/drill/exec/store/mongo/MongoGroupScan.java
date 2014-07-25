@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.mongo;
 
+import java.io.IOException;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -28,22 +29,51 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
+import org.apache.drill.exec.store.StoragePluginRegistry;
 
-public class MongoGroupScan extends AbstractGroupScan implements
-    DrillMongoConstants {
+import parquet.org.codehaus.jackson.annotate.JsonCreator;
 
-  public MongoGroupScan(MongoStoragePlugin mongoStoragePlugin,
-      MongoScanSpec mongoScanSpec, List<SchemaPath> columns) {
+import com.fasterxml.jackson.annotation.JacksonInject;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.google.common.base.Stopwatch;
+
+@JsonTypeName("mongo-scan")
+public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConstants {
+
+  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MongoGroupScan.class);
+  
+  private MongoStoragePlugin storagePlugin;
+  
+  private MongoStoragePluginConfig storagePluginConfig;
+  
+  private MongoScanSpec scanSpec;
+  
+  private List<SchemaPath> columns;
+  
+  private Stopwatch watch = new Stopwatch();
+  
+  @JsonCreator
+  public MongoGroupScan(@JsonProperty("mongoScanSpec") MongoScanSpec mongoScanSpec,
+                        @JsonProperty("storage") MongoStoragePluginConfig storagePluginConfig,
+                        @JsonProperty("columns") List<SchemaPath> columns,
+                        @JacksonInject StoragePluginRegistry pluginRegistry) throws IOException, ExecutionSetupException {
+    this ((MongoStoragePlugin) pluginRegistry.getPlugin(storagePluginConfig), mongoScanSpec, columns);
+  }
+  
+  public MongoGroupScan(MongoStoragePlugin storagePlugin, MongoScanSpec scanSpec, List<SchemaPath> columns) {
+    this.storagePlugin = storagePlugin;
+    this.storagePluginConfig = storagePlugin.getConfig();
+    this.scanSpec = scanSpec;
+    this.columns = columns;
   }
 
   @Override
-  public void applyAssignments(List<DrillbitEndpoint> endpoints)
-      throws PhysicalOperatorSetupException {
+  public void applyAssignments(List<DrillbitEndpoint> endpoints) throws PhysicalOperatorSetupException {
   }
 
   @Override
-  public SubScan getSpecificScan(int minorFragmentId)
-      throws ExecutionSetupException {
+  public SubScan getSpecificScan(int minorFragmentId) throws ExecutionSetupException {
     return null;
   }
 
@@ -63,8 +93,7 @@ public class MongoGroupScan extends AbstractGroupScan implements
   }
 
   @Override
-  public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children)
-      throws ExecutionSetupException {
+  public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException {
     return null;
   }
 

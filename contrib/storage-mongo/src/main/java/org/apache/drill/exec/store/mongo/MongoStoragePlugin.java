@@ -50,7 +50,7 @@ public class MongoStoragePlugin extends AbstractStoragePlugin {
   }
   
   @Override
-  public StoragePluginConfig getConfig() {
+  public MongoStoragePluginConfig getConfig() {
     return mongoConfig;
   }
 
