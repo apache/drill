@@ -157,7 +157,7 @@ public class DrillOptiq {
           for (int i=1; i<caseArgs.size(); i=i+2) {
             elseExpression = IfExpression.newBuilder()
               .setElse(elseExpression)
-              .addCondition(new IfCondition(caseArgs.get(i + 1), caseArgs.get(i))).build();
+              .setIfCondition(new IfCondition(caseArgs.get(i + 1), caseArgs.get(i))).build();
           }
           return elseExpression;
         }

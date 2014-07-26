@@ -136,32 +136,31 @@ public class EvaluationVisitor {
 
       JConditional jc = null;
       JBlock conditionalBlock = new JBlock(false, false);
-      for (IfCondition c : ifExpr.conditions) {
-        HoldingContainer holdingContainer = c.condition.accept(this, generator);
-        if (jc == null) {
-          if (holdingContainer.isOptional()) {
-            jc = conditionalBlock._if(holdingContainer.getIsSet().eq(JExpr.lit(1)).cand(holdingContainer.getValue().eq(JExpr.lit(1))));
-          } else {
-            jc = conditionalBlock._if(holdingContainer.getValue().eq(JExpr.lit(1)));
-          }
-        } else {
-          if (holdingContainer.isOptional()) {
-            jc = jc._else()._if(holdingContainer.getIsSet().eq(JExpr.lit(1)).cand(holdingContainer.getValue().eq(JExpr.lit(1))));
-          } else {
-            jc = jc._else()._if(holdingContainer.getValue().eq(JExpr.lit(1)));
-          }
-        }
+      IfCondition c = ifExpr.ifCondition;
 
-        HoldingContainer thenExpr = c.expression.accept(this, generator);
-        if (thenExpr.isOptional()) {
-          JConditional newCond = jc._then()._if(thenExpr.getIsSet().ne(JExpr.lit(0)));
-          JBlock b = newCond._then();
-          b.assign(output.getHolder(), thenExpr.getHolder());
-          //b.assign(output.getIsSet(), thenExpr.getIsSet());
+      HoldingContainer holdingContainer = c.condition.accept(this, generator);
+      if (jc == null) {
+        if (holdingContainer.isOptional()) {
+          jc = conditionalBlock._if(holdingContainer.getIsSet().eq(JExpr.lit(1)).cand(holdingContainer.getValue().eq(JExpr.lit(1))));
         } else {
-          jc._then().assign(output.getHolder(), thenExpr.getHolder());
+          jc = conditionalBlock._if(holdingContainer.getValue().eq(JExpr.lit(1)));
         }
+      } else {
+        if (holdingContainer.isOptional()) {
+          jc = jc._else()._if(holdingContainer.getIsSet().eq(JExpr.lit(1)).cand(holdingContainer.getValue().eq(JExpr.lit(1))));
+        } else {
+          jc = jc._else()._if(holdingContainer.getValue().eq(JExpr.lit(1)));
+        }
+      }
 
+      HoldingContainer thenExpr = c.expression.accept(this, generator);
+      if (thenExpr.isOptional()) {
+        JConditional newCond = jc._then()._if(thenExpr.getIsSet().ne(JExpr.lit(0)));
+        JBlock b = newCond._then();
+        b.assign(output.getHolder(), thenExpr.getHolder());
+        //b.assign(output.getIsSet(), thenExpr.getIsSet());
+      } else {
+        jc._then().assign(output.getHolder(), thenExpr.getHolder());
       }
 
       HoldingContainer elseExpr = ifExpr.elseExpression.accept(this, generator);

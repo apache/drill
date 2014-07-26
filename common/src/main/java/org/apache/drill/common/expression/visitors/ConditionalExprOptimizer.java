@@ -81,18 +81,14 @@ public class ConditionalExprOptimizer extends AbstractExprVisitor<LogicalExpress
   
   @Override
   public LogicalExpression visitIfExpression(IfExpression ifExpr, Void value) throws RuntimeException{
-    List<IfExpression.IfCondition> conditions = Lists.newArrayList(ifExpr.conditions);
     LogicalExpression newElseExpr = ifExpr.elseExpression.accept(this, value);
+    IfCondition conditions = ifExpr.ifCondition;
 
-    for (int i = 0; i < conditions.size(); ++i) {
-      IfExpression.IfCondition condition = conditions.get(i);
+    LogicalExpression newCondition = conditions.condition.accept(this, value);
+    LogicalExpression newExpr = conditions.expression.accept(this, value);
+    conditions = new IfExpression.IfCondition(newCondition, newExpr);
 
-      LogicalExpression newCondition = condition.condition.accept(this, value);
-      LogicalExpression newExpr = condition.expression.accept(this, value);
-      conditions.set(i, new IfExpression.IfCondition(newCondition, newExpr));
-    }
-
-    return IfExpression.newBuilder().setElse(newElseExpr).addConditions(conditions).build();
+    return IfExpression.newBuilder().setElse(newElseExpr).setIfCondition(conditions).build();
   }
   
   @Override
