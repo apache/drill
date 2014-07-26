@@ -37,7 +37,7 @@ public class DrillMongoTable extends DrillTable implements DrillMongoConstants {
     ArrayList<String> fieldNameList = new ArrayList<>();
     
     fieldNameList.add(ID);
-    typeList.add(typeFactory.createSqlType(SqlTypeName.ANY));
+    typeList.add(typeFactory.createSqlType(SqlTypeName.VARCHAR));
     
     return typeFactory.createStructType(typeList, fieldNameList);
   }
