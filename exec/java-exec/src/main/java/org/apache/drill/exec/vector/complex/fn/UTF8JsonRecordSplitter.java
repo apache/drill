@@ -19,94 +19,45 @@ package org.apache.drill.exec.vector.complex.fn;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
-import com.google.common.io.CharStreams;
 
-public class UTF8JsonRecordSplitter implements JsonRecordSplitter {
-  static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UTF8JsonRecordSplitter.class);
+public class UTF8JsonRecordSplitter extends JsonRecordSplitterBase {
+  private final static org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UTF8JsonRecordSplitter.class);
 
-  private static final int OPEN_CBRACKET = '{';
-  private static final int OPEN_BRACKET = '[';
-  private static final int CLOSE_CBRACKET = '}';
-  private static final int CLOSE_BRACKET = ']';
-
-  private static final int SPACE = ' ';
-  private static final int TAB = '\t';
-  private static final int NEW_LINE = '\n';
-  private static final int FORM_FEED = '\f';
-  private static final int CR = '\r';
-
-  private long start = 0;
-  private InputStream incoming;
+  private final InputStream incoming;
 
   public UTF8JsonRecordSplitter(InputStream incoming){
     this.incoming = new BufferedInputStream(incoming);
   }
 
   @Override
-  public Reader getNextReader() throws IOException{
+  protected void preScan() throws IOException {
+    incoming.mark(MAX_RECORD_SIZE);
+  }
 
-    boolean inCandidate = false;
-    boolean found = false;
+  @Override
+  protected void postScan() throws IOException {
+    incoming.reset();
+  }
 
-    incoming.mark(128*1024);
-    long endOffset = start;
-    outside: while(true){
-      int b = incoming.read();
-//      System.out.println(b);
-      endOffset++;
+  @Override
+  protected int readNext() throws IOException {
+    return incoming.read();
+  }
 
-      if(b == -1){
-        if(inCandidate){
-          found = true;
-        }
-        break;
-      }
-
-      switch(b){
-      case CLOSE_BRACKET:
-      case CLOSE_CBRACKET:
-//        System.out.print("c");
-        inCandidate = true;
-        break;
-      case OPEN_BRACKET:
-      case OPEN_CBRACKET:
-//        System.out.print("o");
-        if(inCandidate){
-          found = true;
-          break outside;
-        }
-        break;
-
-      case SPACE:
-      case TAB:
-      case NEW_LINE:
-      case CR:
-      case FORM_FEED:
-//        System.out.print(' ');
-        break;
-
-      default:
-//        System.out.print('-');
-        inCandidate = false;
-      }
-    }
-
-    if(found){
-      long maxBytes = endOffset - 1 - start;
-      start = endOffset;
-      incoming.reset();
-      return new BufferedReader(new InputStreamReader(new DelInputStream(incoming, maxBytes), Charsets.UTF_8));
-    }else{
-      return null;
-    }
-
+  @Override
+  protected Reader createReader(long maxBytes) {
+    return new BufferedReader(new InputStreamReader(new DelInputStream(incoming, maxBytes), Charsets.UTF_8));
   }
 
   private class DelInputStream extends InputStream {
@@ -128,23 +79,29 @@ public class UTF8JsonRecordSplitter implements JsonRecordSplitter {
         bytes++;
         return incoming.read();
       }
-
-
     }
-
   }
 
-  public static void main(String[] args) throws Exception{
-    byte[] str = " { \"b\": \"hello\", \"c\": \"goodbye\", r: []}\n { \"b\": \"yellow\", \"c\": \"red\"}\n ".getBytes(Charsets.UTF_8);
-    InputStream s = new ByteArrayInputStream(str);
+  public static void main(String[] args) throws Exception {
+    String path = "/Users/hgunes/workspaces/mapr/incubator-drill/yelp_academic_dataset_review.json";
+    InputStream s = new FileInputStream(new File(path));
     JsonRecordSplitter splitter = new UTF8JsonRecordSplitter(s);
-    Reader obj = null;
-    System.out.println();
-
-    while( (obj = splitter.getNextReader()) != null){
-      System.out.println();
-      System.out.println(CharStreams.toString(obj));
-      System.out.println("===end obj===");
+    int recordCount = 0;
+    Reader record = null;
+    ObjectMapper mapper = new ObjectMapper();
+    try {
+      while ((record = splitter.getNextReader()) != null) {
+        recordCount++;
+        JsonNode node = mapper.readTree(record);
+        out(node.toString());
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
     }
+    out("last record: " + recordCount);
+  }
+
+  static void out(Object thing) {
+    System.out.println(thing);
   }
 }
