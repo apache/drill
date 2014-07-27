@@ -31,39 +31,36 @@ import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.vector.complex.fn.JsonReaderWithState;
 import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Sets;
-import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
-import com.mongodb.MongoClient;
 
 public class MongoRecordReader implements RecordReader {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory
-      .getLogger(MongoRecordReader.class);
+  static final Logger logger = LoggerFactory.getLogger(MongoRecordReader.class);
+  
   private static final int TARGET_RECORD_COUNT = 4000;
-  private MongoClient mongoClient;
+  
   private LinkedHashSet<SchemaPath> columns;
   private OutputMutator outputMutator;
-  private String dbName;
-  private String collectionName;
-  private DB db;
+  
   private DBCollection collection;
   private DBObject leftOver;
   private DBCursor cursor;
+  
+  private MongoGroupScan scan;
+  
   private JsonReaderWithState jsonReader;
   private OutputMutator mutator;
   private VectorContainerWriter writer;
 
-  public MongoRecordReader(MongoSubScan.MongoSubScanSpec mongoSubScanSpec,
-      List<SchemaPath> projectedColumns, FragmentContext context) {
-    mongoClient = mongoSubScanSpec.getMongoClient();
-    dbName = mongoSubScanSpec.getDbName();
-    collectionName = mongoSubScanSpec.getCollectionName();
-    mongoClient.setWriteConcern(mongoSubScanSpec.getWriteConcern());
+  public MongoRecordReader(MongoGroupScan scan, List<SchemaPath> projectedColumns, FragmentContext context) {
+    this.scan = scan;
     this.columns = Sets.newLinkedHashSet();
     if (projectedColumns != null && projectedColumns.size() != 0) {
       Iterator<SchemaPath> columnIterator = projectedColumns.iterator();
@@ -73,8 +70,8 @@ public class MongoRecordReader implements RecordReader {
         this.columns.add(SchemaPath.getSimplePath(root.getPath()));
       }
     }
-    // set the projected fields for
-    // create the query.
+    
+    // set the projected fields for create the query.
     cursor = collection.find();
   }
 
@@ -84,8 +81,7 @@ public class MongoRecordReader implements RecordReader {
     for (SchemaPath column : columns) {
       getOrCreateVector(column.getRootSegment().getPath(), false);
     }
-    db = mongoClient.getDB(dbName);
-    collection = db.getCollection(collectionName);
+    collection = scan.getCollection();
     try {
       this.writer = new VectorContainerWriter(output);
       this.mutator = output;

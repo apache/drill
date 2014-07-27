@@ -28,6 +28,8 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -40,42 +42,37 @@ import com.mongodb.WriteConcern;
 
 @JsonTypeName("mongo-shard-read")
 public class MongoSubScan extends AbstractBase implements SubScan {
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory
-      .getLogger(MongoSubScan.class);
+  static final Logger logger = LoggerFactory.getLogger(MongoSubScan.class);
 
   @JsonProperty
   private final MongoStoragePluginConfig mongoPluginConfig;
+  
   @JsonIgnore
   private final MongoStoragePlugin mongoStoragePlugin;
-  private final List<SchemaPath> columnSchemas;
-  private final List<MongoSubScanSpec> shardList;
+  
+  private final List<SchemaPath> fields;
 
   @JsonCreator
   public MongoSubScan(
       @JacksonInject StoragePluginRegistry registry,
       @JsonProperty("storagePlgConfig") StoragePluginConfig storagePluginConfig,
-      @JsonProperty("shardLists") List<MongoSubScanSpec> shardLists,
-      @JsonProperty("columnsSchemas") List<SchemaPath> columns)
+      @JsonProperty("fields") List<SchemaPath> fields)
       throws ExecutionSetupException {
-    this.columnSchemas = columns;
-    this.shardList = shardLists;
+    this.fields = fields;
     this.mongoPluginConfig = (MongoStoragePluginConfig) storagePluginConfig;
-    this.mongoStoragePlugin = (MongoStoragePlugin) registry
-        .getPlugin(storagePluginConfig);
+    this.mongoStoragePlugin = (MongoStoragePlugin) registry.getPlugin(storagePluginConfig);
   }
 
   public MongoSubScan(MongoStoragePlugin storagePlugin,
-      MongoStoragePluginConfig storagePluginConfig,
-      List<MongoSubScanSpec> shardLists, List<SchemaPath> columnPath) {
+                      MongoStoragePluginConfig storagePluginConfig,
+                      List<SchemaPath> fields) {
     this.mongoStoragePlugin = storagePlugin;
     this.mongoPluginConfig = storagePluginConfig;
-    this.columnSchemas = columnPath;
-    this.shardList = shardLists;
+    this.fields = fields;
   }
 
   @Override
-  public <T, X, E extends Throwable> T accept(
-      PhysicalVisitor<T, X, E> physicalVisitor, X value) throws E {
+  public <T, X, E extends Throwable> T accept(PhysicalVisitor<T, X, E> physicalVisitor, X value) throws E {
     return physicalVisitor.visitSubScan(this, value);
   }
 
@@ -87,20 +84,14 @@ public class MongoSubScan extends AbstractBase implements SubScan {
     return mongoStoragePlugin;
   }
 
-  public List<SchemaPath> getColumnSchemas() {
-    return columnSchemas;
-  }
-
-  public List<MongoSubScanSpec> getShardList() {
-    return shardList;
+  public List<SchemaPath> getFields() {
+    return fields;
   }
 
   @Override
-  public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children)
-      throws ExecutionSetupException {
+  public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException {
     Preconditions.checkArgument(children.isEmpty());
-    return new MongoSubScan(mongoStoragePlugin, mongoPluginConfig, shardList,
-        columnSchemas);
+    return new MongoSubScan(mongoStoragePlugin, mongoPluginConfig, null);
   }
 
   @Override

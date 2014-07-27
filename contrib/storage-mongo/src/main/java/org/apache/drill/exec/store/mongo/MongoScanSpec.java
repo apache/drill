@@ -17,49 +17,32 @@
  */
 package org.apache.drill.exec.store.mongo;
 
-import java.util.List;
-
-import org.apache.drill.exec.store.mongo.common.MongoFilter;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
 
 public class MongoScanSpec {
-  private DB dbName;
-  private DBCollection collectionName;
-  private List<MongoFilter> filters;
+  private String dbName;
+  private String collectionName;
 
   @JsonCreator
-  public MongoScanSpec(@JsonProperty("dbName") DB dbName,
-      @JsonProperty("collectionName") DBCollection dbCollection,
-      @JsonProperty("queryFilters") List<MongoFilter> filters) {
+  public MongoScanSpec(
+      @JsonProperty("dbName") String dbName,
+      @JsonProperty("collectionName") String collectionName) {
     this.dbName = dbName;
-    this.collectionName = dbCollection;
-    this.filters = filters;
+    this.collectionName = collectionName;
   }
 
-  public MongoScanSpec(DB dbName, DBCollection dbCollection) {
-    this.dbName = dbName;
-    this.collectionName = dbCollection;
-  }
-
-  public DB getDbName() {
+  public String getDbName() {
     return dbName;
   }
 
-  public DBCollection getCollectionName() {
+  public String getCollectionName() {
     return collectionName;
-  }
-
-  public List<MongoFilter> getFilters() {
-    return filters;
   }
 
   @Override
   public String toString() {
     return "MongoScanSpec [dbName=" + dbName + ", collectionName="
-        + collectionName + ", filters=" + filters + "]";
+        + collectionName + "]";
   }
 }
