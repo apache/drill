@@ -42,6 +42,7 @@ import parquet.org.codehaus.jackson.annotate.JsonCreator;
 import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import com.mongodb.CommandResult;
@@ -51,7 +52,7 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 
 @JsonTypeName("mongo-scan")
-public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConstants {
+public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConstants,SubScan {
 
   private static final String SIZE = "size";
 
@@ -90,6 +91,19 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
     init();
   }
   
+  /**
+   * Private constructor, used for cloning.
+   * @param that The MongoGroupScan to clone
+   */
+  private MongoGroupScan (MongoGroupScan that) {
+    this.scanSpec = that.scanSpec;
+    this.collection = that.collection;
+    this.columns = that.columns;
+    this.storagePlugin = that.storagePlugin;
+    this.storagePluginConfig = that.storagePluginConfig;
+    this.url = that.url;
+  }
+  
   private void init() {
     try {
       MongoClientURI clientURI = new MongoClientURI(url);
@@ -104,12 +118,12 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
 
   @Override
   public void applyAssignments(List<DrillbitEndpoint> endpoints) throws PhysicalOperatorSetupException {
-    //Need to implement this.
+    
   }
-
+  
   @Override
   public SubScan getSpecificScan(int minorFragmentId) throws ExecutionSetupException {
-    return new MongoSubScan(storagePlugin, storagePluginConfig, columns);
+    return new MongoGroupScan(this.storagePlugin, this.url, this.columns);
   }
 
   @Override
@@ -131,7 +145,8 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
 
   @Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException {
-    return null;
+    Preconditions.checkArgument(children.isEmpty());
+    return new MongoGroupScan(this);
   }
 
   @Override

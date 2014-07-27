@@ -36,6 +36,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
+import javax.ws.rs.core.Response.StatusType;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.logical.StoragePluginConfig;
@@ -138,9 +139,14 @@ public class StorageResources {
   @Consumes("application/x-www-form-urlencoded")
   public Viewable createTrackInJSON(@FormParam("name") String name, @FormParam("config") String storagePluginConfig)
       throws ExecutionSetupException, JsonParseException, JsonMappingException, IOException {
-	StoragePluginConfig config = mapper.readValue(new StringReader(storagePluginConfig), StoragePluginConfig.class);
-    storage.createOrUpdate(name, config, true);
-    return new Viewable("/rest/status.ftl", "Updated " + name);
+	  try {
+		StoragePluginConfig config = mapper.readValue(new StringReader(storagePluginConfig), StoragePluginConfig.class);
+		storage.createOrUpdate(name, config, true);
+		return new Viewable("/rest/status.ftl", "Updated " + name);
+	  } catch(Exception e) {
+		logger.info(e.getMessage(), e);
+		throw e;
+	  }
   }
 
   private JsonResult r(String message) {
