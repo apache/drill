@@ -39,63 +39,52 @@ public class TestExampleQueries extends BaseTestQuery{
     test("select count(*) from cp.`customer.json` limit 1");
   }
 
-  // DRILL-931 : select * query.
   @Test
-  @Ignore("until project fixes merged")
   public void testSelStarOrderBy() throws Exception{
     test("select * from cp.`employee.json` order by last_name");
   }
 
   @Test
-  @Ignore("until project fixes merged")
   public void testSelStarOrderByLimit() throws Exception{
     test("select * from cp.`employee.json` order by employee_id limit 2;");
   }
 
   @Test
-  @Ignore("until project fixes merged")
   public void testSelStarPlusRegCol() throws Exception{
     test("select *, n_nationkey from cp.`tpch/nation.parquet` limit 2;");
   }
 
   @Test
-  @Ignore("until project fixes merged")
   public void testSelStarWhereOrderBy() throws Exception{
     test("select * from cp.`employee.json` where first_name = 'James' order by employee_id");
   }
 
   @Test
-  @Ignore("until project fixes merged")
   public void testSelStarJoin() throws Exception {
     test("select * from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey order by n.n_name;");
   }
 
   @Test
-  @Ignore("until project fixes merged")
   public void testSelLeftStarJoin() throws Exception {
     test("select n.* from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey order by n.n_name;");
   }
 
   @Test
-  @Ignore("until project fixes merged")
   public void testSelRightStarJoin() throws Exception {
     test("select r.* from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey order by n.n_name;");
   }
 
   @Test
-  @Ignore("until project fixes merged")
   public void testSelStarRegColConstJoin() throws Exception {
     test("select *, n.n_nationkey, 1 + 2 as constant from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey order by n.n_name;");
   }
 
   @Test
-  @Ignore("until project fixes merged")
   public void testSelStarBothSideJoin() throws Exception {
     test("select n.*, r.* from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey;");
   }
 
   @Test
-  @Ignore("until project fixes merged")
   public void testSelStarJoinSameColName() throws Exception {
     test("select * from cp.`tpch/nation.parquet` n1, cp.`tpch/nation.parquet` n2 where n1.n_nationkey = n2.n_nationkey;");
   }

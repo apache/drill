@@ -70,9 +70,6 @@
     "pop" : "project",
     "@id" : 5,
     "exprs" : [ {
-      "ref" : "`*0`",
-      "expr" : "`*`"
-    }, {
       "ref" : "`N_REGIONKEY`",
       "expr" : "`N_REGIONKEY`"
     } ],
