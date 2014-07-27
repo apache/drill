@@ -19,13 +19,10 @@ package org.apache.drill.exec.planner.physical;
 
 import org.apache.drill.exec.planner.logical.DrillFilterRel;
 import org.apache.drill.exec.planner.logical.RelOptHelper;
-import org.eigenbase.rel.RelCollation;
-import org.eigenbase.rel.RelCollationTraitDef;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptRule;
 import org.eigenbase.relopt.RelOptRuleCall;
 import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.relopt.volcano.RelSubset;
 
 public class FilterPrule extends Prule {
   public static final RelOptRule INSTANCE = new FilterPrule();
@@ -41,19 +38,25 @@ public class FilterPrule extends Prule {
 
     RelTraitSet traits = input.getTraitSet().plus(Prel.DRILL_PHYSICAL);
     RelNode convertedInput = convert(input, traits);
-    boolean transform = false;
-    
-    if (convertedInput instanceof RelSubset) {
-      RelSubset subset = (RelSubset) convertedInput;
-      RelNode bestRel = null;
-      if ((bestRel = subset.getBest()) != null) {
-        call.transformTo(new FilterPrel(filter.getCluster(), bestRel.getTraitSet(), convertedInput, filter.getCondition()));  
-        transform = true;
-      } 
-    }
+
+    boolean transform = new Subset(call).go(filter, convertedInput);
+
     if (!transform) {
       call.transformTo(new FilterPrel(filter.getCluster(), convertedInput.getTraitSet(), convertedInput, filter.getCondition()));
     }
   }
-  
+
+
+  private class Subset extends SubsetTransformer<DrillFilterRel, RuntimeException> {
+
+    public Subset(RelOptRuleCall call) {
+      super(call);
+    }
+
+    @Override
+    public RelNode convertChild(DrillFilterRel filter, RelNode rel) {
+      return new FilterPrel(filter.getCluster(), rel.getTraitSet(), rel, filter.getCondition());
+    }
+
+  }
 }

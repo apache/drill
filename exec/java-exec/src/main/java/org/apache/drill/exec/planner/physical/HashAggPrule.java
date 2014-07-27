@@ -26,8 +26,8 @@ import org.eigenbase.rel.InvalidRelException;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptRule;
 import org.eigenbase.relopt.RelOptRuleCall;
+import org.eigenbase.relopt.RelTrait;
 import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.relopt.volcano.RelSubset;
 import org.eigenbase.trace.EigenbaseTrace;
 
 import com.google.common.collect.ImmutableList;
@@ -84,39 +84,47 @@ public class HashAggPrule extends AggPruleBase {
           traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL) ;
 
           RelNode convertedInput = convert(input, traits);
+          new TwoPhaseSubset(call, distOnAllKeys).go(aggregate, convertedInput);
 
-          if (convertedInput instanceof RelSubset) {
-            RelSubset subset = (RelSubset) convertedInput;
-            for (RelNode rel : subset.getRelList()) {
-              if (!rel.getTraitSet().getTrait(DrillDistributionTraitDef.INSTANCE).equals(DrillDistributionTrait.DEFAULT)) {
-                DrillDistributionTrait toDist = rel.getTraitSet().getTrait(DrillDistributionTraitDef.INSTANCE);
-                traits = call.getPlanner().emptyTraitSet().plus(Prel.DRILL_PHYSICAL).plus(toDist);
-                RelNode newInput = convert(input, traits);
-
-                HashAggPrel phase1Agg = new HashAggPrel(aggregate.getCluster(), traits, newInput,
-                    aggregate.getGroupSet(),
-                    aggregate.getAggCallList(), 
-                    OperatorPhase.PHASE_1of2);
-
-                HashToRandomExchangePrel exch =
-                    new HashToRandomExchangePrel(phase1Agg.getCluster(), phase1Agg.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(distOnAllKeys),
-                        phase1Agg, ImmutableList.copyOf(getDistributionField(aggregate, true)));
-
-                HashAggPrel phase2Agg =  new HashAggPrel(aggregate.getCluster(), traits, exch,
-                                                         aggregate.getGroupSet(),
-                                                         phase1Agg.getPhase2AggCalls(), 
-                                                         OperatorPhase.PHASE_2of2); 
-                                                    
-
-                call.transformTo(phase2Agg);
-              }
-            }
-          }
         }
       }
     } catch (InvalidRelException e) {
       tracer.warning(e.toString());
     }
+  }
+
+
+  private class TwoPhaseSubset extends SubsetTransformer<DrillAggregateRel, InvalidRelException> {
+    final RelTrait distOnAllKeys;
+
+    public TwoPhaseSubset(RelOptRuleCall call, RelTrait distOnAllKeys) {
+      super(call);
+      this.distOnAllKeys = distOnAllKeys;
+    }
+
+    @Override
+    public RelNode convertChild(DrillAggregateRel aggregate, RelNode input) throws InvalidRelException {
+
+      RelTraitSet traits = newTraitSet(Prel.DRILL_PHYSICAL, input.getTraitSet().getTrait(DrillDistributionTraitDef.INSTANCE));
+      RelNode newInput = convert(input, traits);
+
+      HashAggPrel phase1Agg = new HashAggPrel(aggregate.getCluster(), traits, newInput,
+          aggregate.getGroupSet(),
+          aggregate.getAggCallList(),
+          OperatorPhase.PHASE_1of2);
+
+      HashToRandomExchangePrel exch =
+          new HashToRandomExchangePrel(phase1Agg.getCluster(), phase1Agg.getTraitSet().plus(Prel.DRILL_PHYSICAL).plus(distOnAllKeys),
+              phase1Agg, ImmutableList.copyOf(getDistributionField(aggregate, true)));
+
+      HashAggPrel phase2Agg =  new HashAggPrel(aggregate.getCluster(), traits, exch,
+                                               aggregate.getGroupSet(),
+                                               phase1Agg.getPhase2AggCalls(),
+                                               OperatorPhase.PHASE_2of2);
+
+      return phase2Agg;
+    }
+
   }
 
   private void createTransformRequest(RelOptRuleCall call, DrillAggregateRel aggregate,
