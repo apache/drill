@@ -145,7 +145,9 @@ public class MongoSchemaFactory implements SchemaFactory {
 
   @Override
   public void registerSchemas(UserSession session, SchemaPlus parent) {
-
+    MongoSchema schema = new MongoSchema(schemaName);
+    SchemaPlus hPlus = parent.add(schemaName, schema);
+    schema.setHolder(hPlus);
   }
 
   class MongoSchema extends AbstractSchema {
