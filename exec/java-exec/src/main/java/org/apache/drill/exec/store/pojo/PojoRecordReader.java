@@ -23,6 +23,7 @@ import java.util.Iterator;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.exception.SchemaChangeException;
+import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.store.pojo.Writers.BitWriter;
@@ -47,10 +48,19 @@ public class PojoRecordReader<T> implements RecordReader{
   private PojoWriter[] writers;
   private boolean doCurrent;
   private T currentPojo;
+  private OperatorContext operatorContext;
 
   public PojoRecordReader(Class<T> pojoClass, Iterator<T> iterator){
     this.pojoClass = pojoClass;
     this.iterator = iterator;
+  }
+
+  public OperatorContext getOperatorContext() {
+    return operatorContext;
+  }
+
+  public void setOperatorContext(OperatorContext operatorContext) {
+    this.operatorContext = operatorContext;
   }
 
   @Override

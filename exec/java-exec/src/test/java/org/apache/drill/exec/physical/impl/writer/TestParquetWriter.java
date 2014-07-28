@@ -27,6 +27,7 @@ import org.apache.drill.BaseTestQuery;
 import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.TopLevelAllocator;
+import org.apache.drill.exec.planner.physical.PlannerSettings;
 import org.apache.drill.exec.record.BatchSchema;
 import org.apache.drill.exec.record.RecordBatchLoader;
 import org.apache.drill.exec.record.VectorWrapper;
@@ -219,7 +220,8 @@ public class TestParquetWriter extends BaseTestQuery {
       fs.delete(path, true);
     }
 
-    test("use dfs_test.tmp");
+    test("use dfs.tmp");
+//    test("ALTER SESSION SET `planner.add_producer_consumer` = false");
     String query = String.format("SELECT %s FROM %s", selection, inputTable);
     String create = "CREATE TABLE " + outputFile + " AS " + query;
     String validateQuery = String.format("SELECT %s FROM " + outputFile, validationSelection);

@@ -126,6 +126,17 @@
         <enabled>true</enabled>
       </snapshots>
     </repository>
+    <repository>
+      <id>mapr-drill-thirdparty</id>
+      <name>MapR Drill Third Party Artifacts</name>
+      <url>http://repository.mapr.com/nexus/content/repositories/drill/</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
   </repositories>
 
   <issueManagement>
@@ -565,8 +576,8 @@
         <dependencies>
           <dependency>
             <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-core</artifactId>
-            <version>1.2.1</version>
+            <artifactId>hadoop-client</artifactId>
+            <version>2.4.1</version>
             <exclusions>
               <exclusion>
                   <groupId>org.mortbay.jetty</groupId>
@@ -577,6 +588,14 @@
                   <artifactId>servlet-api-2.5</artifactId>
               </exclusion>
               <exclusion>
+                  <groupId>org.mortbay.jetty</groupId>
+                  <artifactId>jetty-util</artifactId>
+              </exclusion>
+              <exclusion>
+                  <groupId>org.apache.hadoop</groupId>
+                  <artifactId>hadoop-yarn-api</artifactId>
+              </exclusion>
+              <exclusion>
                 <artifactId>jets3t</artifactId>
                 <groupId>net.java.dev.jets3t</groupId>
               </exclusion>
@@ -584,7 +603,10 @@
                 <artifactId>log4j</artifactId>
                 <groupId>log4j</groupId>
               </exclusion>
-
+              <exclusion>
+                <artifactId>slf4j-log4j12</artifactId>
+                <groupId>org.slf4j</groupId>
+              </exclusion>
               <exclusion>
                 <artifactId>mockito-all</artifactId>
                 <groupId>org.mockito</groupId>
@@ -623,7 +645,6 @@
               </exclusion>
             </exclusions>
           </dependency>
-
           <dependency>
             <groupId>xerces</groupId>
             <artifactId>xercesImpl</artifactId>
@@ -651,6 +672,21 @@
               </exclusion>
             </exclusions>
           </dependency>
+
+          <!-- Test Dependencies -->
+          <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-hdfs</artifactId>
+            <version>2.4.1</version>
+            <classifier>tests</classifier>
+            <scope>test</scope>
+            <exclusions>
+              <exclusion>
+                <groupId>commons-logging</groupId>
+                <artifactId>commons-logging</artifactId>
+              </exclusion>
+            </exclusions>
+          </dependency>
         </dependencies>
       </dependencyManagement>
     </profile>
@@ -663,30 +699,9 @@
       <dependencyManagement>
         <dependencies>
           <dependency>
-            <groupId>xerces</groupId>
-            <artifactId>xercesImpl</artifactId>
-            <version>2.11.0</version>
-          </dependency>
-          <dependency>
-            <groupId>xalan</groupId>
-            <artifactId>xalan</artifactId>
-            <version>2.7.1</version>
-          </dependency>
-          <dependency>
-            <groupId>org.apache.hbase</groupId>
-            <artifactId>hbase</artifactId>
-            <version>0.94.13-mapr-1401-m7-3.0.2</version>
-            <exclusions>
-              <exclusion>
-                <groupId>commons-logging</groupId>
-                <artifactId>commons-logging</artifactId>
-              </exclusion>
-            </exclusions>
-          </dependency>
-          <dependency>
             <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-core</artifactId>
-            <version>1.0.3-mapr-3.0.2</version>
+            <artifactId>hadoop-client</artifactId>
+            <version>2.4.1-mapr-4.0.0-SNAPSHOT</version>
             <exclusions>
               <exclusion>
                   <groupId>org.mortbay.jetty</groupId>
@@ -697,12 +712,44 @@
                   <artifactId>servlet-api-2.5</artifactId>
               </exclusion>
               <exclusion>
-                <artifactId>asm</artifactId>
-                <groupId>asm</groupId>
+                  <groupId>org.mortbay.jetty</groupId>
+                  <artifactId>jetty-util</artifactId>
               </exclusion>
               <exclusion>
-                <artifactId>central-logging</artifactId>
-                <groupId>com.mapr.util</groupId>
+                  <groupId>org.apache.hadoop</groupId>
+                  <artifactId>hadoop-yarn-api</artifactId>
+              </exclusion>
+              <exclusion>
+                <artifactId>jets3t</artifactId>
+                <groupId>net.java.dev.jets3t</groupId>
+              </exclusion>
+              <exclusion>
+                <artifactId>log4j</artifactId>
+                <groupId>log4j</groupId>
+              </exclusion>
+              <exclusion>
+                <artifactId>slf4j-log4j12</artifactId>
+                <groupId>org.slf4j</groupId>
+              </exclusion>
+              <exclusion>
+                <artifactId>mockito-all</artifactId>
+                <groupId>org.mockito</groupId>
+              </exclusion>
+              <exclusion>
+                <artifactId>commons-logging-api</artifactId>
+                <groupId>commons-logging</groupId>
+              </exclusion>
+              <exclusion>
+                <artifactId>commons-logging</artifactId>
+                <groupId>commons-logging</groupId>
+              </exclusion>
+              <exclusion>
+                <artifactId>jersey-server</artifactId>
+                <groupId>com.sun.jersey</groupId>
+              </exclusion>
+              <exclusion>
+                <artifactId>core</artifactId>
+                <groupId>org.eclipse.jdt</groupId>
               </exclusion>
               <exclusion>
                 <groupId>org.codehaus.jackson</groupId>
@@ -721,58 +768,47 @@
                 <artifactId>jackson-jaxrs</artifactId>
               </exclusion>
               <exclusion>
-                <artifactId>mockito-all</artifactId>
-                <groupId>org.codehaus</groupId>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-core</artifactId>
               </exclusion>
+            </exclusions>
+          </dependency>
+          <dependency>
+            <groupId>xerces</groupId>
+            <artifactId>xercesImpl</artifactId>
+            <version>2.11.0</version>
+          </dependency>
+          <dependency>
+            <groupId>xalan</groupId>
+            <artifactId>xalan</artifactId>
+            <version>2.7.1</version>
+          </dependency>
+          <dependency>
+            <groupId>sqlline</groupId>
+            <artifactId>sqlline</artifactId>
+            <version>1.1.6</version>
+          </dependency>
+          <!-- Test Dependencies -->
+          <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-hdfs</artifactId>
+            <version>2.4.1-mapr-4.0.0-SNAPSHOT</version>
+            <scope>test</scope>
+            <exclusions>
               <exclusion>
-
-                <artifactId>jets3t</artifactId>
-                <groupId>net.java.dev.jets3t</groupId>
-              </exclusion>
-              <exclusion>
-                <artifactId>log4j</artifactId>
-                <groupId>log4j</groupId>
-              </exclusion>
-
-              <exclusion>
-                <artifactId>mockito-all</artifactId>
-                <groupId>org.mockito</groupId>
-              </exclusion>
-              <exclusion>
-                <artifactId>commons-logging-api</artifactId>
                 <groupId>commons-logging</groupId>
-              </exclusion>
-              <exclusion>
                 <artifactId>commons-logging</artifactId>
+              </exclusion>
+            </exclusions>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase</artifactId>
+            <version>0.94.17-mapr-1405-4.0.0-FCS</version>
+            <exclusions>
+              <exclusion>
                 <groupId>commons-logging</groupId>
-              </exclusion>
-              <exclusion>
-                <artifactId>slf4j-log4j12</artifactId>
-                <groupId>org.slf4j</groupId>
-              </exclusion>
-              <exclusion>
-                <artifactId>servlet-api-2.5</artifactId>
-                <groupId>org.mortbay.jetty</groupId>
-              </exclusion>
-              <exclusion>
-                <artifactId>jasper-runtime</artifactId>
-                <groupId>tomcat</groupId>
-              </exclusion>
-              <exclusion>
-                <artifactId>jasper-compiler</artifactId>
-                <groupId>tomcat</groupId>
-              </exclusion>
-              <exclusion>
-                <artifactId>jetty</artifactId>
-                <groupId>org.mortbay.jetty</groupId>
-              </exclusion>
-              <exclusion>
-                <artifactId>jersey-server</artifactId>
-                <groupId>com.sun.jersey</groupId>
-              </exclusion>
-              <exclusion>
-                <artifactId>core</artifactId>
-                <groupId>org.eclipse.jdt</groupId>
+                <artifactId>commons-logging</artifactId>
               </exclusion>
             </exclusions>
           </dependency>
@@ -781,12 +817,12 @@
       <repositories>
         <repository>
           <id>mapr-releases</id>
-          <url>http://repository.mapr.com/maven/</url>
+          <url>http://maven.corp.maprtech.com/nexus/content/repositories/public</url>
           <snapshots>
-            <enabled>false</enabled>
+            <enabled>true</enabled>
           </snapshots>
           <releases>
-            <enabled>true</enabled>
+            <enabled>false</enabled>
           </releases>
         </repository>
       </repositories>
@@ -801,7 +837,7 @@
           <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-common</artifactId>
-            <version>2.0.0-cdh4.4.0</version>
+            <version>2.3.0-cdh5.0.3</version>
             <exclusions>
               <exclusion>
                 <artifactId>commons-logging</artifactId>
@@ -836,7 +872,7 @@
           <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-common</artifactId>
-            <version>2.1.0.2.0.5.0-67</version>
+            <version>2.4.0.2.1.3.0-563</version>
             <exclusions>
               <exclusion>
                 <artifactId>commons-logging</artifactId>

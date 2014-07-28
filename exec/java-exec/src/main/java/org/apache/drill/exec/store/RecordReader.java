@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
+import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 
 public interface RecordReader {
@@ -34,6 +35,14 @@ public interface RecordReader {
    * @throws ExecutionSetupException
    */
   public abstract void setup(OutputMutator output) throws ExecutionSetupException;
+
+  /**
+   * Set the operator context. The Reader can use this to access the operator context and allocate direct memory
+   * if needed
+   * @param operatorContext
+   */
+  public abstract void setOperatorContext(OperatorContext operatorContext);
+
 
   /**
    * Increment record reader forward, writing into the provided output batch.  

@@ -17,6 +17,7 @@
  */
 package org.apache.drill.exec.store.parquet.columnreaders;
 
+import io.netty.buffer.ByteBuf;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.util.DecimalUtility;
 import org.apache.drill.exec.expr.holders.Decimal28SparseHolder;
@@ -35,7 +36,7 @@ import java.math.BigDecimal;
 
 class FixedByteAlignedReader extends ColumnReader {
 
-  protected byte[] bytes;
+  protected ByteBuf bytebuf;
 
   
   FixedByteAlignedReader(ParquetRecordReader parentReader, int allocateSize, ColumnDescriptor descriptor, ColumnChunkMetaData columnChunkMetaData,
@@ -54,13 +55,13 @@ class FixedByteAlignedReader extends ColumnReader {
     readLengthInBits = recordsReadInThisIteration * dataTypeLengthInBits;
     readLength = (int) Math.ceil(readLengthInBits / 8.0);
 
-    bytes = pageReader.pageDataByteArray;
+    bytebuf = pageReader.pageDataByteArray;
     // vectorData is assigned by the superclass read loop method
     writeData();
   }
 
   protected void writeData() {
-    vectorData.writeBytes(bytes,
+    vectorData.writeBytes(bytebuf,
         (int) readStartInBytes, (int) readLength);
   }
 
@@ -81,7 +82,7 @@ class FixedByteAlignedReader extends ColumnReader {
     }
 
     /**
-     * Reads from bytes, converts, and writes to buffer
+     * Reads from bytebuf, converts, and writes to buffer
      * @param start the index in bytes to start reading from
      * @param index the index of the ValueVector
      */
@@ -101,7 +102,7 @@ class FixedByteAlignedReader extends ColumnReader {
     @Override
     void addNext(int start, int index) {
       dateVector.getMutator().set(index, DateTimeUtils.fromJulianDay(
-          NullableFixedByteAlignedReaders.NullableDateReader.readIntLittleEndian(bytes, start)
+          NullableFixedByteAlignedReaders.NullableDateReader.readIntLittleEndian(bytebuf, start)
               - ParquetOutputRecordWriter.JULIAN_DAY_EPOC - 0.5));
     }
   }
@@ -119,7 +120,7 @@ class FixedByteAlignedReader extends ColumnReader {
     @Override
     void addNext(int start, int index) {
       int width = Decimal28SparseHolder.WIDTH;
-      BigDecimal intermediate = DecimalUtility.getBigDecimalFromByteArray(bytes, start, dataTypeLengthInBytes, schemaElement.getScale());
+      BigDecimal intermediate = DecimalUtility.getBigDecimalFromByteBuf(bytebuf, start, dataTypeLengthInBytes, schemaElement.getScale());
       DecimalUtility.getSparseFromBigDecimal(intermediate, decimal28Vector.getData(), index * width, schemaElement.getScale(),
               schemaElement.getPrecision(), Decimal28SparseHolder.nDecimalDigits);
     }
@@ -138,7 +139,7 @@ class FixedByteAlignedReader extends ColumnReader {
     @Override
     void addNext(int start, int index) {
       int width = Decimal38SparseHolder.WIDTH;
-      BigDecimal intermediate = DecimalUtility.getBigDecimalFromByteArray(bytes, start, dataTypeLengthInBytes, schemaElement.getScale());
+      BigDecimal intermediate = DecimalUtility.getBigDecimalFromByteBuf(bytebuf, start, dataTypeLengthInBytes, schemaElement.getScale());
       DecimalUtility.getSparseFromBigDecimal(intermediate, decimal38Vector.getData(), index * width, schemaElement.getScale(),
               schemaElement.getPrecision(), Decimal38SparseHolder.nDecimalDigits);
     }

@@ -27,6 +27,7 @@ import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.memory.BufferAllocator;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.store.RecordReader;
@@ -47,10 +48,14 @@ public class MockRecordReader implements RecordReader {
   private ValueVector[] valueVectors;
   private int recordsRead;
   private int batchRecordCount;
+  private FragmentContext fragmentContext;
+  private OperatorContext operatorContext;
+
 
   public MockRecordReader(FragmentContext context, MockScanEntry config) throws OutOfMemoryException {
     this.context = context;
     this.config = config;
+    this.fragmentContext=context;
   }
 
   private int getEstimatedRecordSize(MockColumn[] types) {
@@ -67,6 +72,14 @@ public class MockRecordReader implements RecordReader {
 
     return f;
 
+  }
+
+  public OperatorContext getOperatorContext() {
+    return operatorContext;
+  }
+
+  public void setOperatorContext(OperatorContext operatorContext) {
+    this.operatorContext = operatorContext;
   }
 
   @Override

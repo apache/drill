@@ -34,6 +34,7 @@ import org.apache.drill.common.types.Types;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.store.RecordReader;
@@ -101,6 +102,9 @@ public class HiveRecordReader implements RecordReader {
   protected Object redoRecord;
   protected boolean empty;
   private Map<String, String> hiveConfigOverride;
+  private FragmentContext fragmentContext;
+  private OperatorContext operatorContext;
+
 
   protected static final int TARGET_RECORD_COUNT = 4000;
   protected static final int FIELD_SIZE = 50;
@@ -114,6 +118,7 @@ public class HiveRecordReader implements RecordReader {
     this.projectedColumns = projectedColumns;
     this.empty = (inputSplit == null && partition == null);
     this.hiveConfigOverride = hiveConfigOverride;
+    this.fragmentContext=context;
     init();
   }
 
@@ -227,6 +232,14 @@ public class HiveRecordReader implements RecordReader {
       key = reader.createKey();
       value = reader.createValue();
     }
+  }
+
+  public OperatorContext getOperatorContext() {
+    return operatorContext;
+  }
+
+  public void setOperatorContext(OperatorContext operatorContext) {
+    this.operatorContext = operatorContext;
   }
 
   @Override

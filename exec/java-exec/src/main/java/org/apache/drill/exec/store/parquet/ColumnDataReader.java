@@ -17,9 +17,16 @@
  */
 package org.apache.drill.exec.store.parquet;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.nio.channels.Channels;
+import java.nio.channels.WritableByteChannel;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -27,6 +34,7 @@ import org.apache.hadoop.fs.Path;
 import parquet.bytes.BytesInput;
 import parquet.format.PageHeader;
 import parquet.format.Util;
+import parquet.hadoop.util.CompatibilityUtil;
 
 public class ColumnDataReader {
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ColumnDataReader.class);
@@ -43,13 +51,26 @@ public class ColumnDataReader {
   public PageHeader readPageHeader() throws IOException{
     return Util.readPageHeader(input);
   }
-  
+
   public BytesInput getPageAsBytesInput(int pageLength) throws IOException{
     byte[] b = new byte[pageLength];
     input.read(b);
     return new HadoopBytesInput(b);
   }
-  
+
+  public ByteBuf getPageAsBytesBuf(ByteBuf byteBuf, int pageLength) throws IOException{
+    ByteBuffer directBuffer=byteBuf.nioBuffer(0, pageLength);
+    int l=directBuffer.remaining();
+    int bl=byteBuf.capacity();
+    try{
+      CompatibilityUtil.getBuf(input, directBuffer, pageLength);
+    }catch(Exception e) {
+      logger.error("Failed to read data into Direct ByteBuffer with exception: "+e.getMessage());
+      throw new DrillRuntimeException(e.getMessage());
+    }
+    return byteBuf;
+  }
+
   public void clear(){
     try{
       input.close();
@@ -87,4 +108,5 @@ public class ColumnDataReader {
     }
     
   }
+
 }

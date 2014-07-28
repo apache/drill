@@ -37,6 +37,12 @@
       <groupId>org.apache.drill.exec</groupId>
       <artifactId>drill-java-exec</artifactId>
       <version>${project.version}</version>
+      <exclusions>
+        <exclusion>
+          <artifactId>hadoop-client</artifactId>
+          <groupId>org.apache.hadoop</groupId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <!-- Test dependencies -->
@@ -46,6 +52,17 @@
       <classifier>tests</classifier>
       <version>${project.version}</version>
       <scope>test</scope>
+      <!-- here we explicitly exclude hadoop v2.x dependencies
+           because HBase 0.94.x unit tests do not work with hadoop 2
+           test classes, e.g. MiniDFSCluster.
+           This will change once we move to HBase 0.98 or later.
+        -->
+      <exclusions>
+        <exclusion>
+          <artifactId>hadoop-client</artifactId>
+          <groupId>org.apache.hadoop</groupId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.drill</groupId>
@@ -146,10 +163,37 @@
           </exclusions>
         </dependency>
         <dependency>
+          <!-- contrary to other Drill modules, this HBase storage module
+               compiles against hadoop 1.x to allow running a mini HBase
+               cluster to run the unit tests.
+               This will change once we move to HBase 0.98 or later.
+            -->
+          <groupId>org.apache.hadoop</groupId>
+          <artifactId>hadoop-core</artifactId>
+          <version>1.2.1</version>
+          <exclusions>
+            <exclusion>
+              <artifactId>commons-logging</artifactId>
+              <groupId>commons-logging</groupId>
+            </exclusion>
+            <exclusion>
+              <artifactId>asm</artifactId>
+              <groupId>asm</groupId>
+            </exclusion>
+          </exclusions>
+        </dependency>
+        <!-- test dependencies -->
+        <dependency>
           <groupId>org.apache.hadoop</groupId>
           <artifactId>hadoop-test</artifactId>
           <version>1.2.1</version>
           <scope>test</scope>
+          <exclusions>
+            <exclusion>
+              <artifactId>commons-logging</artifactId>
+              <groupId>commons-logging</groupId>
+            </exclusion>
+          </exclusions>
         </dependency>
         <dependency>
           <groupId>org.apache.hbase</groupId>
@@ -229,6 +273,10 @@
             <exclusion>
               <artifactId>jruby-complete</artifactId>
               <groupId>org.jruby</groupId>
+            </exclusion>
+            <exclusion>
+              <artifactId>hadoop-core</artifactId>
+              <groupId>org.apache</groupId>
             </exclusion>
           </exclusions>
         </dependency>

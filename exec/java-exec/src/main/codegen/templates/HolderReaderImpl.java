@@ -44,7 +44,6 @@ import java.math.BigInteger;
 import org.apache.drill.exec.expr.holders.*;
 import org.apache.hadoop.io.Text;
 import org.joda.time.Period;
-import org.mortbay.jetty.servlet.Holder;
 
 @SuppressWarnings("unused")
 public class ${holderMode}${name}HolderReaderImpl extends AbstractFieldReader {

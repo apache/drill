@@ -17,6 +17,7 @@
  ******************************************************************************/
 package org.apache.drill.exec.store.parquet.columnreaders;
 
+import io.netty.buffer.ByteBuf;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.vector.ValueVector;
 import parquet.bytes.BytesUtils;
@@ -37,7 +38,7 @@ public abstract class NullableVarLengthValuesColumn<V extends ValueVector> exten
     super(parentReader, allocateSize, descriptor, columnChunkMetaData, fixedLength, v, schemaElement);
   }
 
-  public abstract boolean setSafe(int index, byte[] value, int start, int length);
+  public abstract boolean setSafe(int index, ByteBuf value, int start, int length);
 
   public abstract int capacity();
 
@@ -81,7 +82,7 @@ public abstract class NullableVarLengthValuesColumn<V extends ValueVector> exten
     }
     else {
       // re-purposing  this field here for length in BYTES to prevent repetitive multiplication/division
-      dataTypeLengthInBits = BytesUtils.readIntLittleEndian(pageReader.pageDataByteArray,
+      dataTypeLengthInBits = BytesUtils.readIntLittleEndian(pageReader.pageDataByteArray.nioBuffer(),
           (int) pageReader.readyToReadPosInBytes);
     }
     // I think this also needs to happen if it is null for the random access

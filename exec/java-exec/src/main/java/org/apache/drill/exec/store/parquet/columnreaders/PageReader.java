@@ -18,7 +18,12 @@
 package org.apache.drill.exec.store.parquet.columnreaders;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.store.parquet.ColumnDataReader;
 import org.apache.drill.exec.store.parquet.ParquetFormatPlugin;
@@ -37,6 +42,7 @@ import parquet.format.PageHeader;
 import parquet.format.PageType;
 import parquet.format.Util;
 import parquet.hadoop.metadata.ColumnChunkMetaData;
+import parquet.hadoop.metadata.CompressionCodecName;
 import parquet.schema.PrimitiveType;
 
 // class to keep track of the read position of variable length columns
@@ -48,7 +54,7 @@ final class PageReader {
   // store references to the pages that have been uncompressed, but not copied to ValueVectors yet
   Page currentPage;
   // buffer to store bytes of current page
-  byte[] pageDataByteArray;
+  ByteBuf pageDataByteArray;
 
   // for variable length data we need to keep track of our current position in the page data
   // as the values and lengths are intermixed, making random access to the length data impossible
@@ -81,8 +87,12 @@ final class PageReader {
   Dictionary dictionary;
   PageHeader pageHeader = null;
 
-  PageReader(ColumnReader parentStatus, FileSystem fs, Path path, ColumnChunkMetaData columnChunkMetaData) throws ExecutionSetupException{
+  List<ByteBuf> allocatedBuffers;
+
+  PageReader(ColumnReader parentStatus, FileSystem fs, Path path, ColumnChunkMetaData columnChunkMetaData)
+    throws ExecutionSetupException{
     this.parentColumnReader = parentStatus;
+    allocatedBuffers = new ArrayList<ByteBuf>();
 
     long totalByteLength = columnChunkMetaData.getTotalUncompressedSize();
     long start = columnChunkMetaData.getFirstDataPageOffset();
@@ -93,11 +103,25 @@ final class PageReader {
         f.seek(columnChunkMetaData.getDictionaryPageOffset());
         PageHeader pageHeader = Util.readPageHeader(f);
         assert pageHeader.type == PageType.DICTIONARY_PAGE;
-        BytesInput bytesIn = parentColumnReader.parentReader.getCodecFactoryExposer()
-            .decompress( //
-                dataReader.getPageAsBytesInput(pageHeader.compressed_page_size), //
-                pageHeader.getUncompressed_page_size(), //
-                parentColumnReader.columnChunkMetaData.getCodec());
+
+        BytesInput bytesIn;
+        ByteBuf uncompressedData=allocateBuffer(pageHeader.getUncompressed_page_size());
+        allocatedBuffers.add(uncompressedData);
+        if(parentColumnReader.columnChunkMetaData.getCodec()==CompressionCodecName.UNCOMPRESSED) {
+          dataReader.getPageAsBytesBuf(uncompressedData, pageHeader.compressed_page_size);
+          bytesIn=parentColumnReader.parentReader.getCodecFactoryExposer().getBytesInput(uncompressedData,
+            pageHeader.getUncompressed_page_size());
+        }else{
+          ByteBuf compressedData=allocateBuffer(pageHeader.compressed_page_size);
+          dataReader.getPageAsBytesBuf(compressedData, pageHeader.compressed_page_size);
+          bytesIn = parentColumnReader.parentReader.getCodecFactoryExposer()
+            .decompress(parentColumnReader.columnChunkMetaData.getCodec(),
+              compressedData,
+              uncompressedData,
+              pageHeader.compressed_page_size,
+              pageHeader.getUncompressed_page_size());
+          compressedData.release();
+        }
         DictionaryPage page = new DictionaryPage(
             bytesIn,
             pageHeader.uncompressed_page_size,
@@ -107,7 +131,8 @@ final class PageReader {
         this.dictionary = page.getEncoding().initDictionary(parentStatus.columnDescriptor, page);
       }
     } catch (IOException e) {
-      throw new ExecutionSetupException("Error opening or reading metatdata for parquet file at location: " + path.getName(), e);
+      throw new ExecutionSetupException("Error opening or reading metadata for parquet file at location: "
+        + path.getName(), e);
     }
     
   }
@@ -137,11 +162,26 @@ final class PageReader {
     do {
       pageHeader = dataReader.readPageHeader();
       if (pageHeader.getType() == PageType.DICTIONARY_PAGE) {
-        BytesInput bytesIn = parentColumnReader.parentReader.getCodecFactoryExposer()
-            .decompress( //
-                dataReader.getPageAsBytesInput(pageHeader.compressed_page_size), //
-                pageHeader.getUncompressed_page_size(), //
-                parentColumnReader.columnChunkMetaData.getCodec());
+
+        //TODO: Handle buffer allocation exception
+        BytesInput bytesIn;
+        ByteBuf uncompressedData=allocateBuffer(pageHeader.getUncompressed_page_size());
+        allocatedBuffers.add(uncompressedData);
+        if( parentColumnReader.columnChunkMetaData.getCodec()== CompressionCodecName.UNCOMPRESSED) {
+          dataReader.getPageAsBytesBuf(uncompressedData, pageHeader.compressed_page_size);
+          bytesIn=parentColumnReader.parentReader.getCodecFactoryExposer().getBytesInput(uncompressedData,
+            pageHeader.getUncompressed_page_size());
+        }else{
+          ByteBuf compressedData=allocateBuffer(pageHeader.compressed_page_size);
+          dataReader.getPageAsBytesBuf(compressedData, pageHeader.compressed_page_size);
+          bytesIn = parentColumnReader.parentReader.getCodecFactoryExposer()
+            .decompress(parentColumnReader.columnChunkMetaData.getCodec(),
+              compressedData,
+              uncompressedData,
+              pageHeader.compressed_page_size,
+              pageHeader.getUncompressed_page_size());
+          compressedData.release();
+        }
         DictionaryPage page = new DictionaryPage(
             bytesIn,
             pageHeader.uncompressed_page_size,
@@ -152,11 +192,25 @@ final class PageReader {
       }
     } while (pageHeader.getType() == PageType.DICTIONARY_PAGE);
 
-    BytesInput bytesIn = parentColumnReader.parentReader.getCodecFactoryExposer()
-        .decompress( //
-            dataReader.getPageAsBytesInput(pageHeader.compressed_page_size), // 
-            pageHeader.getUncompressed_page_size(), //
-            parentColumnReader.columnChunkMetaData.getCodec());
+    //TODO: Handle buffer allocation exception
+    BytesInput bytesIn;
+    ByteBuf uncompressedData=allocateBuffer(pageHeader.getUncompressed_page_size());
+    allocatedBuffers.add(uncompressedData);
+    if(parentColumnReader.columnChunkMetaData.getCodec()==CompressionCodecName.UNCOMPRESSED) {
+      dataReader.getPageAsBytesBuf(uncompressedData, pageHeader.compressed_page_size);
+      bytesIn=parentColumnReader.parentReader.getCodecFactoryExposer().getBytesInput(uncompressedData,
+        pageHeader.getUncompressed_page_size());
+    }else{
+      ByteBuf compressedData=allocateBuffer(pageHeader.compressed_page_size);
+      dataReader.getPageAsBytesBuf(compressedData, pageHeader.compressed_page_size);
+      bytesIn = parentColumnReader.parentReader.getCodecFactoryExposer()
+        .decompress(parentColumnReader.columnChunkMetaData.getCodec(),
+          compressedData,
+          uncompressedData,
+          pageHeader.compressed_page_size,
+          pageHeader.getUncompressed_page_size());
+      compressedData.release();
+    }
     currentPage = new Page(
         bytesIn,
         pageHeader.data_page_header.num_values,
@@ -172,12 +226,12 @@ final class PageReader {
       return false;
     }
 
-    pageDataByteArray = currentPage.getBytes().toByteArray();
+    pageDataByteArray = Unpooled.wrappedBuffer(currentPage.getBytes().toByteBuffer());
 
     readPosInBytes = 0;
     if (parentColumnReader.getColumnDescriptor().getMaxRepetitionLevel() > 0) {
       repetitionLevels = currentPage.getRlEncoding().getValuesReader(parentColumnReader.columnDescriptor, ValuesType.REPETITION_LEVEL);
-      repetitionLevels.initFromPage(currentPage.getValueCount(), pageDataByteArray, (int) readPosInBytes);
+      repetitionLevels.initFromPage(currentPage.getValueCount(), pageDataByteArray.nioBuffer(), (int) readPosInBytes);
       // we know that the first value will be a 0, at the end of each list of repeated values we will hit another 0 indicating
       // a new record, although we don't know the length until we hit it (and this is a one way stream of integers) so we
       // read the first zero here to simplify the reading processes, and start reading the first value the same as all
@@ -191,23 +245,23 @@ final class PageReader {
       if (!currentPage.getValueEncoding().usesDictionary()) {
         parentColumnReader.usingDictionary = false;
         definitionLevels = currentPage.getDlEncoding().getValuesReader(parentColumnReader.columnDescriptor, ValuesType.DEFINITION_LEVEL);
-        definitionLevels.initFromPage(currentPage.getValueCount(), pageDataByteArray, (int) readPosInBytes);
+        definitionLevels.initFromPage(currentPage.getValueCount(), pageDataByteArray.nioBuffer(), (int) readPosInBytes);
         readPosInBytes = definitionLevels.getNextOffset();
         if (parentColumnReader.columnDescriptor.getType() == PrimitiveType.PrimitiveTypeName.BOOLEAN) {
           valueReader = currentPage.getValueEncoding().getValuesReader(parentColumnReader.columnDescriptor, ValuesType.VALUES);
-          valueReader.initFromPage(currentPage.getValueCount(), pageDataByteArray, (int) readPosInBytes);
+          valueReader.initFromPage(currentPage.getValueCount(), pageDataByteArray.nioBuffer(), (int) readPosInBytes);
         }
       } else {
         parentColumnReader.usingDictionary = true;
         definitionLevels = currentPage.getDlEncoding().getValuesReader(parentColumnReader.columnDescriptor, ValuesType.DEFINITION_LEVEL);
-        definitionLevels.initFromPage(currentPage.getValueCount(), pageDataByteArray, (int) readPosInBytes);
+        definitionLevels.initFromPage(currentPage.getValueCount(), pageDataByteArray.nioBuffer(), (int) readPosInBytes);
         readPosInBytes = definitionLevels.getNextOffset();
         // initialize two of the dictionary readers, one is for determining the lengths of each value, the second is for
         // actually copying the values out into the vectors
         dictionaryLengthDeterminingReader = new DictionaryValuesReader(dictionary);
-        dictionaryLengthDeterminingReader.initFromPage(currentPage.getValueCount(), pageDataByteArray, (int) readPosInBytes);
+        dictionaryLengthDeterminingReader.initFromPage(currentPage.getValueCount(), pageDataByteArray.nioBuffer(), (int) readPosInBytes);
         dictionaryValueReader = new DictionaryValuesReader(dictionary);
-        dictionaryValueReader.initFromPage(currentPage.getValueCount(), pageDataByteArray, (int) readPosInBytes);
+        dictionaryValueReader.initFromPage(currentPage.getValueCount(), pageDataByteArray.nioBuffer(), (int) readPosInBytes);
         this.parentColumnReader.usingDictionary = true;
       }
     }
@@ -221,5 +275,28 @@ final class PageReader {
   
   public void clear(){
     this.dataReader.clear();
+    // Free all memory, including fixed length types. (Data is being copied for all types not just var length types)
+    //if(!this.parentColumnReader.isFixedLength) {
+      for (ByteBuf b : allocatedBuffers) {
+        b.release();
+      }
+    //}
   }
+
+  /*
+    Allocate direct memory to read data into
+   */
+  private ByteBuf allocateBuffer(int size) {
+    ByteBuf b;
+    try {
+      b = parentColumnReader.parentReader.getOperatorContext().getAllocator().buffer(size);
+      //b = UnpooledByteBufAllocator.DEFAULT.heapBuffer(size);
+    }catch(Exception e){
+      throw new DrillRuntimeException("Unable to allocate "+size+" bytes of memory in the Parquet Reader."+
+        "[Exception: "+e.getMessage()+"]"
+      );
+    }
+    return b;
+  }
+
 }

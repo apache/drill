@@ -553,9 +553,16 @@ public class DecimalUtility {
       return 0;
     }
 
-
     public static BigDecimal getBigDecimalFromByteArray(byte[] bytes, int start, int length, int scale) {
       byte[] value = Arrays.copyOfRange(bytes, start, start + length);
+      BigInteger unscaledValue = new BigInteger(value);
+      return new BigDecimal(unscaledValue, scale);
+    }
+
+
+    public static BigDecimal getBigDecimalFromByteBuf(ByteBuf bytebuf, int start, int length, int scale) {
+      byte[] value = new byte[length];
+      bytebuf.getBytes(start, value, 0, length);
       BigInteger unscaledValue = new BigInteger(value);
       return new BigDecimal(unscaledValue, scale);
     }

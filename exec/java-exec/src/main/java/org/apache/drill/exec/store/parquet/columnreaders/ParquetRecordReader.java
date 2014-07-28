@@ -31,6 +31,7 @@ import org.apache.drill.common.types.TypeProtos.MajorType;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.store.RecordReader;
@@ -82,6 +83,8 @@ public class ParquetRecordReader implements RecordReader {
   private VarLenBinaryReader varLengthReader;
   private ParquetMetadata footer;
   private List<SchemaPath> columns;
+  private FragmentContext fragmentContext;
+  private OperatorContext operatorContext;
   private final CodecFactoryExposer codecFactoryExposer;
   int rowGroupIndex;
 
@@ -107,6 +110,8 @@ public class ParquetRecordReader implements RecordReader {
     this.batchSize = batchSize;
     this.footer = footer;
     this.columns = columns;
+    this.fragmentContext=fragmentContext;
+
   }
 
   public CodecFactoryExposer getCodecFactoryExposer() {
@@ -131,6 +136,14 @@ public class ParquetRecordReader implements RecordReader {
 
   public long getBatchSize() {
     return batchSize;
+  }
+
+  public OperatorContext getOperatorContext() {
+    return operatorContext;
+  }
+
+  public void setOperatorContext(OperatorContext operatorContext) {
+    this.operatorContext = operatorContext;
   }
 
   /**

@@ -33,6 +33,7 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.store.RecordReader;
@@ -70,12 +71,16 @@ public class HBaseRecordReader implements RecordReader, DrillHBaseConstants {
   private Scan hbaseScan;
   private Configuration hbaseConf;
   private Result leftOver;
+  private FragmentContext fragmentContext;
+  private OperatorContext operatorContext;
+
 
   public HBaseRecordReader(Configuration conf, HBaseSubScan.HBaseSubScanSpec subScanSpec,
       List<SchemaPath> projectedColumns, FragmentContext context) throws OutOfMemoryException {
     hbaseConf = conf;
     hbaseTable = subScanSpec.getTableName();
     hbaseScan = new Scan(subScanSpec.getStartRow(), subScanSpec.getStopRow());
+    fragmentContext=context;
     boolean rowKeyOnly = true;
     this.columns = Sets.newLinkedHashSet();
     if (projectedColumns != null && projectedColumns.size() != 0) {
@@ -116,6 +121,15 @@ public class HBaseRecordReader implements RecordReader, DrillHBaseConstants {
     }
     hbaseScan.setCaching(TARGET_RECORD_COUNT);
   }
+
+  public OperatorContext getOperatorContext() {
+    return operatorContext;
+  }
+
+  public void setOperatorContext(OperatorContext operatorContext) {
+    this.operatorContext = operatorContext;
+  }
+
 
   @Override
   public void setup(OutputMutator output) throws ExecutionSetupException {

@@ -143,7 +143,13 @@ public class ParquetScanBatchCreator implements BatchCreator<ParquetRowGroupScan
       }
     }
 
-    return new ScanBatch(rowGroupScan, context, readers.iterator(), partitionColumns, selectedPartitionColumns);
+    ScanBatch s = new ScanBatch(rowGroupScan, context, readers.iterator(), partitionColumns, selectedPartitionColumns);
+
+    for(RecordReader r  : readers){
+      r.setOperatorContext(s.getOperatorContext());
+    }
+
+    return s;
   }
 
   private static boolean isComplex(ParquetMetadata footer) {

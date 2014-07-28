@@ -28,6 +28,7 @@ import org.apache.drill.common.expression.SchemaPath;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.memory.OutOfMemoryException;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.store.RecordReader;
 import org.apache.drill.exec.vector.complex.fn.JsonReader;
@@ -50,11 +51,15 @@ public class JSONRecordReader2 implements RecordReader{
   private InputStream stream;
   private JsonReaderWithState jsonReader;
   private int recordCount;
+  private FragmentContext fragmentContext;
+  private OperatorContext operatorContext;
+
 
   public JSONRecordReader2(FragmentContext fragmentContext, String inputPath, FileSystem fileSystem,
                           List<SchemaPath> columns) throws OutOfMemoryException {
     this.hadoopPath = new Path(inputPath);
     this.fileSystem = fileSystem;
+    this.fragmentContext=fragmentContext;
   }
 
   @Override
@@ -78,6 +83,15 @@ public class JSONRecordReader2 implements RecordReader{
       sb.append(" column: ").append(ex.getLocation().getColumnNr());
     }
     throw new DrillRuntimeException(sb.toString(), e);
+  }
+
+
+  public OperatorContext getOperatorContext() {
+    return operatorContext;
+  }
+
+  public void setOperatorContext(OperatorContext operatorContext) {
+    this.operatorContext = operatorContext;
   }
 
   @Override

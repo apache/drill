@@ -31,6 +31,7 @@ import org.apache.drill.exec.ExecConstants;
 import org.apache.drill.exec.exception.SchemaChangeException;
 import org.apache.drill.exec.expr.TypeHelper;
 import org.apache.drill.exec.ops.FragmentContext;
+import org.apache.drill.exec.ops.OperatorContext;
 import org.apache.drill.exec.physical.impl.OutputMutator;
 import org.apache.drill.exec.record.MaterializedField;
 import org.apache.drill.exec.store.RecordReader;
@@ -57,7 +58,8 @@ public class DrillTextRecordReader implements RecordReader {
   private byte delimiter;
   private int targetRecordCount;
   private FieldReference ref = new FieldReference(COL_NAME);
-  private FragmentContext context;
+  private FragmentContext fragmentContext;
+  private OperatorContext operatorContext;
   private RepeatedVarCharVector vector;
   private List<Integer> columnIds = Lists.newArrayList();
   private LongWritable key;
@@ -67,7 +69,7 @@ public class DrillTextRecordReader implements RecordReader {
   private boolean first = true;
 
   public DrillTextRecordReader(FileSplit split, FragmentContext context, char delimiter, List<SchemaPath> columns) {
-    this.context = context;
+    this.fragmentContext = context;
     this.delimiter = (byte) delimiter;
     boolean getEntireRow = false;
 
@@ -105,6 +107,14 @@ public class DrillTextRecordReader implements RecordReader {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  public OperatorContext getOperatorContext() {
+    return operatorContext;
+  }
+
+  public void setOperatorContext(OperatorContext operatorContext) {
+    this.operatorContext = operatorContext;
   }
 
   @Override
