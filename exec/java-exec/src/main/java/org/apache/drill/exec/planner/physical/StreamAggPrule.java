@@ -145,7 +145,7 @@ public class StreamAggPrule extends AggPruleBase {
                       collation,
                       numEndPoints);
 
-              return new StreamAggPrel(aggregate.getCluster(), traits, exch,
+              return new StreamAggPrel(aggregate.getCluster(), exch.getTraitSet(), exch,
                   aggregate.getGroupSet(),
                   phase1Agg.getPhase2AggCalls(),
                   OperatorPhase.PHASE_2of2);
