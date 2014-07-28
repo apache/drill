@@ -11,68 +11,153 @@
 
 <#include "*/generic.ftl">
 <#macro page_head>
-<link href="/www/style.css" rel="stylesheet">
-
-<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="http://d3js.org/d3.v3.js"></script>
 <script src="http://cpettitt.github.io/project/dagre-d3/latest/dagre-d3.js"></script>
 <script src="/www/graph.js"></script>
+<script>
+    var globalconfig = {
+        "queryid" : "${model.getQueryId()}",
+        "operators" : ${model.getOperatorsJSON()}
+    };
+</script>
 </#macro>
 
 <#macro page_body>
   <a href="/queries">back</a><br/>
   <div class="page-header">
   </div>
-  <h3>Query</h3>
-  <form role="form" action="/query" method="POST">
-    <div class="form-group">
-      <textarea class="form-control" id="query" name="query" style="font-family: Courier;">${model.getProfile().query}</textarea>
+  <h3>Query and Planning</h3>
+  <ul id="query-tabs" class="nav nav-tabs" role="tablist">
+    <li><a href="#query-query" role="tab" data-toggle="tab">Query</a></li>
+    <li><a href="#query-physical" role="tab" data-toggle="tab">Physical Plan</a></li>
+    <li><a href="#query-visual" role="tab" data-toggle="tab">Visualized Plan</a></li>
+    <li><a href="#query-edit" role="tab" data-toggle="tab">Edit Query</a></li>
+  </ul>
+  <div id="query-content" class="tab-content">
+    <div id="query-query" class="tab-pane">
+      <p><pre>${model.getProfile().query}</pre></p>
     </div>
-    <div class="form-group">
-      <div class="radio-inline">
-        <label>
-          <input type="radio" name="queryType" id="sql" value="SQL" checked>
-          SQL
-        </label>
+    <div id="query-physical" class="tab-pane">
+      <p><pre>${model.profile.plan}</pre></p>
+    </div>
+    <div id="query-visual" class="tab-pane">
+      <svg id="query-visual-canvas" class="center-block"></svg>
+    </div>
+    <div id="query-edit" class="tab-pane">
+      <form role="form" action="/query" method="POST">
+        <div class="form-group">
+          <textarea class="form-control" id="query" name="query" style="font-family: Courier;">${model.getProfile().query}</textarea>
+        </div>
+        <div class="form-group">
+          <div class="radio-inline">
+            <label>
+              <input type="radio" name="queryType" id="sql" value="SQL" checked>
+              SQL
+            </label>
+          </div>
+          <div class="radio-inline">
+            <label>
+              <input type="radio" name="queryType" id="physical" value="PHYSICAL">
+              PHYSICAL
+            </label>
+          </div>
+          <div class="radio-inline">
+            <label>
+              <input type="radio" name="queryType" id="logical" value="LOGICAL">
+              LOGICAL
+            </label>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-default">Re-run query</button>
+      </form>
+      <form action="/profiles/cancel/${model.id}" method="GET">
+        <button type="link" class="btn btn-default">Cancel query</button>
+      </form>
+    </div>
+  </div>
+  
+  <div class="page-header"></div>
+  <h3>Fragment Profiles</h3>
+  
+  <div class="panel-group" id="fragment-accordion">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h4 class="panel-title">
+          <a data-toggle="collapse" href="#fragment-overview">
+            Overview
+          </a>
+        </h4>
       </div>
-      <div class="radio-inline">
-        <label>
-          <input type="radio" name="queryType" id="physical" value="PHYSICAL">
-          PHYSICAL
-        </label>
-      </div>
-      <div class="radio-inline">
-        <label>
-          <input type="radio" name="queryType" id="logical" value="LOGICAL">
-          LOGICAL
-        </label>
+      <div id="fragment-overview" class="panel-collapse collapse">
+        <div class="panel-body">
+          <svg id="fragment-overview-canvas" class="center-block"></svg>
+          ${model.getFragmentsOverview()}
+        </div>
       </div>
     </div>
-    <button type="submit" class="btn btn-default">Re-run query</button>
-  </form>
-  <form action="/profiles/cancel/${model.id}" method="GET">
-    <button type="link" class="btn btn-default">Cancel query</button>
-  </form>
-  <div class="page-header">
+    <#list model.getFragmentProfiles() as frag>
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h4 class="panel-title">
+          <a data-toggle="collapse" href="#${frag.getId()}">
+            ${frag.getDisplayName()}
+          </a>
+        </h4>
+      </div>
+      <div id="${frag.getId()}" class="panel-collapse collapse">
+        <div class="panel-body">
+          ${frag.getContent()}
+        </div>
+      </div>
+    </div>
+    </#list>
   </div>
-  <h3>Visualized Plan</h3>
-  <button id="renderbutton" class="btn btn-default">Generate</button>
-  <svg id="svg-canvas" style="margin: auto; display: block;">
-    <g transform="translate(20, 20)"/>
-  </svg>
-  <div class="page-header">
+  
+  <div class="page-header"></div>
+  <h3>Operator Profiles</h3>
+  
+  <div class="panel-group" id="operator-accordion">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h4 class="panel-title">
+          <a data-toggle="collapse" href="#operator-overview">
+            Overview
+          </a>
+        </h4>
+      </div>
+      <div id="operator-overview" class="panel-collapse collapse">
+        <div class="panel-body">
+          ${model.getOperatorsOverview()}
+        </div>
+      </div>
+    </div>
+
+    <#list model.getOperatorProfiles() as op>
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h4 class="panel-title">
+          <a data-toggle="collapse" href="#${op.getId()}">
+            ${op.getDisplayName()}
+          </a>
+        </h4>
+      </div>
+      <div id="${op.getId()}" class="panel-collapse collapse">
+        <div class="panel-body">
+          ${op.getContent()}
+        </div>
+      </div>
+    </div>
+    </#list>
   </div>
-  <h3>Physical Plan</h3>
-  <p><pre>${model.profile.plan}</pre></p>
-  <div class="page-header">
-  </div>
-  <h3>Profile Summary</h3>
-  <p>${model.toString()}</p>
-  <div class="page-header">
-  </div>
-  <div class="span4 collapse-group">
-    <a class="btn btn-default" data-toggle="collapse" data-target="#viewdetails">View complete profile</a>
+  
+  <div class="page-header"></div>
+  <h3>Full JSON Profile</h3>
+  
+  <div class="span4 collapse-group" id="full-json-profile">
+    <a class="btn btn-default" data-toggle="collapse" data-target="#full-json-profile-json">JSON profile</a>
     <br> <br>
-    <pre class="collapse" id="viewdetails">${model.profile.toString()}</pre>
+    <pre class="collapse" id="full-json-profile-json">
+    </pre>
   </div>
   <div class="page-header">
   </div> <br>
