@@ -121,7 +121,7 @@ public class View {
       names.add(field.name);
       if(field.precision == null && field.scale == null){
         types.add(factory.createSqlType(field.type));
-      }else if(field.precision != null){
+      }else if(field.precision != null && field.scale == null){
         types.add(factory.createSqlType(field.type, field.precision));
       }else{
         types.add(factory.createSqlType(field.type, field.precision, field.scale));
