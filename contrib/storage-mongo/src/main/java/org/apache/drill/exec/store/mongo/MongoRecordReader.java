@@ -38,6 +38,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Charsets;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Sets;
+import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
@@ -51,11 +52,13 @@ public class MongoRecordReader implements RecordReader {
   private OutputMutator outputMutator;
   
   private DBCollection collection;
-  private DBObject leftOver;
   private DBCursor cursor;
   
   private JsonReaderWithState jsonReader;
   private VectorContainerWriter writer;
+  
+  private DBObject filters;
+  private DBObject fields;
 
   public MongoRecordReader(MongoGroupScan scan, List<SchemaPath> projectedColumns, FragmentContext context) {
     this.columns = Sets.newLinkedHashSet();
@@ -67,6 +70,11 @@ public class MongoRecordReader implements RecordReader {
         this.columns.add(SchemaPath.getSimplePath(root.getPath()));
       }
     }
+    this.filters = new BasicDBObject();
+    this.fields = new BasicDBObject();
+    // exclude ID field, if not mentioned by user.
+    this.fields.put(DrillMongoConstants.ID, Integer.valueOf(0));
+    
     this.collection = scan.getCollection();
   }
 
@@ -82,8 +90,7 @@ public class MongoRecordReader implements RecordReader {
     } catch (IOException e) {
       throw new ExecutionSetupException("Failure in Mongo JsonReader initialization.", e);
     }
-    // set the projected fields for create the query.
-    cursor = collection.find();
+    cursor = collection.find(filters, fields);
   }
 
   private void getOrCreateVector(String path, boolean b) {
@@ -102,16 +109,9 @@ public class MongoRecordReader implements RecordReader {
 
     try {
       done: 
-      for (; rowCount < TARGET_RECORD_COUNT; rowCount++) {
+      for (; rowCount < TARGET_RECORD_COUNT && cursor.hasNext() ; rowCount++) {
         writer.setPosition(i);
         DBObject record = cursor.next();
-        if (leftOver != null) {
-          record = leftOver;
-          leftOver = null;
-        } else {
-          record = cursor.next();
-        }
-
         if (record == null) {
           break done;
         }
@@ -131,12 +131,12 @@ public class MongoRecordReader implements RecordReader {
           break done;
         }
       }
-    } catch (IOException e) {
+      writer.setValueCount(i);
+      logger.debug("Took {} ms to get {} records", watch.elapsed(TimeUnit.MILLISECONDS), rowCount);
+      return i;
+    } catch (Exception e) {
       throw new DrillRuntimeException("Failure while reading Mongo Record.", e);
     }
-    writer.setValueCount(i);
-    logger.debug("Took {} ms to get {} records", watch.elapsed(TimeUnit.MILLISECONDS), rowCount);
-    return i;
   }
 
   @Override
