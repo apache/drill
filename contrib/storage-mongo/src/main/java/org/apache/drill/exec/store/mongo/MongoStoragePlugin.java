@@ -31,6 +31,9 @@ import org.apache.drill.exec.store.mongo.schema.MongoSchemaFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 public class MongoStoragePlugin extends AbstractStoragePlugin {
   static final Logger logger = LoggerFactory.getLogger(MongoStoragePlugin.class);
 
@@ -66,8 +69,8 @@ public class MongoStoragePlugin extends AbstractStoragePlugin {
   
   @Override
   public AbstractGroupScan getPhysicalScan(JSONOptions selection) throws IOException {
-//    MongoScanSpec mongoScanSpec = selection.getListWith(new ObjectMapper(), new TypeReference<MongoScanSpec>(){});
-    return new MongoGroupScan(this, mongoConfig.getConnection() , null);
+    MongoScanSpec mongoScanSpec = selection.getListWith(new ObjectMapper(), new TypeReference<MongoScanSpec>(){});
+    return new MongoGroupScan(this, mongoScanSpec, null);
   }
 
 }

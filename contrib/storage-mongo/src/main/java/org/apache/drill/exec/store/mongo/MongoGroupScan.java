@@ -40,6 +40,7 @@ import org.apache.drill.exec.store.StoragePluginRegistry;
 import parquet.org.codehaus.jackson.annotate.JsonCreator;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
@@ -68,24 +69,23 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
   
   private List<SchemaPath> columns;
   
-  private String url;
-  
+  @JsonIgnore
   private DBCollection collection;
   
   private Stopwatch watch = new Stopwatch();
   
   @JsonCreator
-  public MongoGroupScan(@JsonProperty("url") String url,
+  public MongoGroupScan(@JsonProperty("mongoScanSpec") MongoScanSpec scanSpec,
                         @JsonProperty("storage") MongoStoragePluginConfig storagePluginConfig,
                         @JsonProperty("columns") List<SchemaPath> columns,
                         @JacksonInject StoragePluginRegistry pluginRegistry) throws IOException, ExecutionSetupException {
-    this ((MongoStoragePlugin) pluginRegistry.getPlugin(storagePluginConfig), url, columns);
+    this ((MongoStoragePlugin) pluginRegistry.getPlugin(storagePluginConfig), scanSpec, columns);
   }
   
-  public MongoGroupScan(MongoStoragePlugin storagePlugin, String url, List<SchemaPath> columns) {
+  public MongoGroupScan(MongoStoragePlugin storagePlugin, MongoScanSpec scanSpec, List<SchemaPath> columns) {
     this.storagePlugin = storagePlugin;
     this.storagePluginConfig = storagePlugin.getConfig();
-    this.url = url;
+    this.scanSpec = scanSpec;
     this.columns = columns;
     this.storagePluginConfig.getConnection();
     init();
@@ -101,15 +101,14 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
     this.columns = that.columns;
     this.storagePlugin = that.storagePlugin;
     this.storagePluginConfig = that.storagePluginConfig;
-    this.url = that.url;
   }
   
   private void init() {
     try {
-      MongoClientURI clientURI = new MongoClientURI(url);
+      MongoClientURI clientURI = new MongoClientURI(this.storagePluginConfig.getConnection());
       MongoClient client = new MongoClient(clientURI);
-      DB db = client.getDB(clientURI.getDatabase());
-      collection = db.getCollection(clientURI.getCollection());
+      DB db = client.getDB(this.scanSpec.getDbName());
+      collection = db.getCollection(this.scanSpec.getCollectionName());
     } catch (UnknownHostException e) {
       throw new DrillRuntimeException(e.getMessage(), e);
     }
@@ -123,7 +122,7 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
   
   @Override
   public SubScan getSpecificScan(int minorFragmentId) throws ExecutionSetupException {
-    return new MongoGroupScan(this.storagePlugin, this.url, this.columns);
+    return new MongoGroupScan(this.storagePlugin, this.scanSpec, this.columns);
   }
 
   @Override
