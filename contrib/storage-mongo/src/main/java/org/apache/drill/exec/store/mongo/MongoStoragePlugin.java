@@ -22,6 +22,7 @@ import java.io.IOException;
 import net.hydromatic.optiq.SchemaPlus;
 
 import org.apache.drill.common.JSONOptions;
+import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
@@ -37,7 +38,7 @@ public class MongoStoragePlugin extends AbstractStoragePlugin {
   private MongoSchemaFactory schemaFactory;
 
   public MongoStoragePlugin(MongoStoragePluginConfig mongoConfig, DrillbitContext context, String name)
-      throws IOException {
+      throws IOException, ExecutionSetupException {
     this.context = context;
     this.schemaFactory = new MongoSchemaFactory(this, name);
     this.mongoConfig = mongoConfig;
