@@ -27,6 +27,7 @@ import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.rpc.user.UserSession;
 import org.apache.drill.exec.server.DrillbitContext;
 import org.apache.drill.exec.store.AbstractStoragePlugin;
+import org.apache.drill.exec.store.mongo.schema.MongoSchemaFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,8 +41,8 @@ public class MongoStoragePlugin extends AbstractStoragePlugin {
   public MongoStoragePlugin(MongoStoragePluginConfig mongoConfig, DrillbitContext context, String name)
       throws IOException, ExecutionSetupException {
     this.context = context;
-    this.schemaFactory = new MongoSchemaFactory(this, name);
     this.mongoConfig = mongoConfig;
+    this.schemaFactory = new MongoSchemaFactory(this, name);
   }
   
   public DrillbitContext getContext() {

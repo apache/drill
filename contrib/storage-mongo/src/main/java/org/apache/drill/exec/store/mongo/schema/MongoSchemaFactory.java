@@ -51,14 +51,14 @@ import com.mongodb.MongoClientURI;
 
 public class MongoSchemaFactory implements SchemaFactory {
 
-  static final Logger logger = LoggerFactory
-      .getLogger(MongoSchemaFactory.class);
+  static final Logger logger = LoggerFactory.getLogger(MongoSchemaFactory.class);
 
   private static final String DATABASES = "databases";
 
   private final MongoClient client;
   private LoadingCache<String, List<String>> databases;
   private LoadingCache<String, List<String>> tableNameLoader;
+  @SuppressWarnings("unused")
   private LoadingCache<String, LoadingCache<String, String>> tableLoaders;
   private final String schemaName;
   private final MongoStoragePlugin plugin;
@@ -121,8 +121,7 @@ public class MongoSchemaFactory implements SchemaFactory {
 
     @Override
     public LoadingCache<String, String> load(String key) throws Exception {
-      return CacheBuilder.newBuilder().expireAfterAccess(1, TimeUnit.MINUTES)
-          .build(new TableLoader(key));
+      return CacheBuilder.newBuilder().expireAfterAccess(1, TimeUnit.MINUTES).build(new TableLoader(key));
     }
 
   }
