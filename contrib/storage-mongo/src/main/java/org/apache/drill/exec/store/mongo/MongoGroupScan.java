@@ -20,6 +20,7 @@ package org.apache.drill.exec.store.mongo;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -45,6 +46,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
+import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.mongodb.CommandResult;
 import com.mongodb.DB;
@@ -163,6 +165,16 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
 
     logger.debug("Took {} µs to get operator affinity", watch.elapsed(TimeUnit.NANOSECONDS)/1000);
     return Lists.newArrayList(affinityMap.values());
+  }
+  
+  @Override
+  public int getOperatorType() {
+    return 1009;
+  }
+  
+  @Override
+  public Iterator<PhysicalOperator> iterator() {
+    return Iterators.emptyIterator();
   }
   
   public DBCollection getCollection() {

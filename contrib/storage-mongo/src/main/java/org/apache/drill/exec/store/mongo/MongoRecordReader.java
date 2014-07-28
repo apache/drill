@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.drill.common.exceptions.DrillRuntimeException;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -53,14 +54,10 @@ public class MongoRecordReader implements RecordReader {
   private DBObject leftOver;
   private DBCursor cursor;
   
-  private MongoGroupScan scan;
-  
   private JsonReaderWithState jsonReader;
-  private OutputMutator mutator;
   private VectorContainerWriter writer;
 
   public MongoRecordReader(MongoGroupScan scan, List<SchemaPath> projectedColumns, FragmentContext context) {
-    this.scan = scan;
     this.columns = Sets.newLinkedHashSet();
     if (projectedColumns != null && projectedColumns.size() != 0) {
       Iterator<SchemaPath> columnIterator = projectedColumns.iterator();
@@ -70,9 +67,7 @@ public class MongoRecordReader implements RecordReader {
         this.columns.add(SchemaPath.getSimplePath(root.getPath()));
       }
     }
-    
-    // set the projected fields for create the query.
-    cursor = collection.find();
+    this.collection = scan.getCollection();
   }
 
   @Override
@@ -81,15 +76,14 @@ public class MongoRecordReader implements RecordReader {
     for (SchemaPath column : columns) {
       getOrCreateVector(column.getRootSegment().getPath(), false);
     }
-    collection = scan.getCollection();
     try {
       this.writer = new VectorContainerWriter(output);
-      this.mutator = output;
       jsonReader = new JsonReaderWithState();
     } catch (IOException e) {
-      throw new ExecutionSetupException(
-          "Failure in Mongo JsonReader initialization.", e);
+      throw new ExecutionSetupException("Failure in Mongo JsonReader initialization.", e);
     }
+    // set the projected fields for create the query.
+    cursor = collection.find();
   }
 
   private void getOrCreateVector(String path, boolean b) {
@@ -107,7 +101,8 @@ public class MongoRecordReader implements RecordReader {
     int rowCount = 0;
 
     try {
-      done: for (; rowCount < TARGET_RECORD_COUNT; rowCount++) {
+      done: 
+      for (; rowCount < TARGET_RECORD_COUNT; rowCount++) {
         writer.setPosition(i);
         DBObject record = cursor.next();
         if (leftOver != null) {
@@ -121,8 +116,7 @@ public class MongoRecordReader implements RecordReader {
           break done;
         }
 
-        switch (jsonReader.write(record.toString().getBytes(Charsets.UTF_8),
-            writer)) {
+        switch (jsonReader.write(record.toString().getBytes(Charsets.UTF_8), writer)) {
         case WRITE_SUCCEED:
           i++;
           break;
@@ -132,18 +126,16 @@ public class MongoRecordReader implements RecordReader {
 
         case WRITE_FAILED:
           if (i == 0) {
-            throw new DrillRuntimeException(
-                "Record is too big to fit into allocated ValueVector");
+            throw new DrillRuntimeException("Record is too big to fit into allocated ValueVector");
           }
           break done;
         }
-        ;
-
       }
     } catch (IOException e) {
       throw new DrillRuntimeException("Failure while reading Mongo Record.", e);
     }
     writer.setValueCount(i);
+    logger.debug("Took {} ms to get {} records", watch.elapsed(TimeUnit.MILLISECONDS), rowCount);
     return i;
   }
 
