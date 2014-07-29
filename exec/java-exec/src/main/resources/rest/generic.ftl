@@ -23,6 +23,7 @@
       <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
       <title>Apache Drill</title>
+      <link rel="shortcut icon" href="/www/drill.ico">
 
       <link href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet">
 
