@@ -65,7 +65,7 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
   private final Mutator mutator = new Mutator();
   private final BufferAllocator allocator;
   private final MaterializedField field;
-  private int lastSet = 0;
+  private int lastSet = -1;
 
   public RepeatedMapVector(MaterializedField field, BufferAllocator allocator){
     this.field = field;
@@ -254,6 +254,7 @@ public class RepeatedMapVector extends AbstractContainerVector implements Repeat
         }
       }
       if(!this.to.offsets.getMutator().setSafe(to+1, newIndex)) return false;
+      this.to.lastSet++;
       return true;
     }
 
