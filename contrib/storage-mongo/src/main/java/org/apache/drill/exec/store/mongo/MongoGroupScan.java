@@ -20,7 +20,7 @@ package org.apache.drill.exec.store.mongo;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -37,6 +37,7 @@ import org.apache.drill.exec.physical.base.ScanStats.GroupScanProperty;
 import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.store.StoragePluginRegistry;
+import org.apache.drill.exec.store.mongo.MongoSubScan.MongoSubScanSpec;
 
 import parquet.org.codehaus.jackson.annotate.JsonCreator;
 
@@ -46,7 +47,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
-import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.mongodb.CommandResult;
 import com.mongodb.DB;
@@ -55,7 +55,7 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 
 @JsonTypeName("mongo-scan")
-public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConstants,SubScan {
+public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConstants {
 
   private static final String SIZE = "size";
 
@@ -124,7 +124,10 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
   
   @Override
   public SubScan getSpecificScan(int minorFragmentId) throws ExecutionSetupException {
-    return new MongoGroupScan(this.storagePlugin, this.scanSpec, this.columns);
+	MongoSubScanSpec subScanSpec = new MongoSubScanSpec(scanSpec.getDbName(), scanSpec.getCollectionName(), storagePluginConfig.getConnection());
+	List<MongoSubScanSpec> subScanList = new LinkedList<MongoSubScanSpec>();
+	subScanList.add(subScanSpec);
+	return new MongoSubScan(this.storagePlugin, this.storagePluginConfig, subScanList, this.columns);
   }
 
   @Override
@@ -165,16 +168,6 @@ public class MongoGroupScan extends AbstractGroupScan implements DrillMongoConst
 
     logger.debug("Took {} µs to get operator affinity", watch.elapsed(TimeUnit.NANOSECONDS)/1000);
     return Lists.newArrayList(affinityMap.values());
-  }
-  
-  @Override
-  public int getOperatorType() {
-    return 1009;
-  }
-  
-  @Override
-  public Iterator<PhysicalOperator> iterator() {
-    return Iterators.emptyIterator();
   }
   
   public DBCollection getCollection() {

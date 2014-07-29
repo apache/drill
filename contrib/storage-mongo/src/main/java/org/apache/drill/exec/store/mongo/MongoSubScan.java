@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.mongo;
 
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -37,8 +38,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
-import com.mongodb.MongoClient;
-import com.mongodb.WriteConcern;
+import com.google.common.collect.Iterators;
 
 @JsonTypeName("mongo-shard-read")
 public class MongoSubScan extends AbstractBase implements SubScan {
@@ -46,29 +46,31 @@ public class MongoSubScan extends AbstractBase implements SubScan {
 
   @JsonProperty
   private final MongoStoragePluginConfig mongoPluginConfig;
-  
   @JsonIgnore
   private final MongoStoragePlugin mongoStoragePlugin;
+  private final List<SchemaPath> columns;
   
-  private final List<SchemaPath> fields;
+  private final List<MongoSubScanSpec> chunkScanSpecList;
 
   @JsonCreator
-  public MongoSubScan(
-      @JacksonInject StoragePluginRegistry registry,
-      @JsonProperty("storagePlgConfig") StoragePluginConfig storagePluginConfig,
-      @JsonProperty("fields") List<SchemaPath> fields)
-      throws ExecutionSetupException {
-    this.fields = fields;
+  public MongoSubScan(@JacksonInject StoragePluginRegistry registry,
+		  			  @JsonProperty("storagePlgConfig") StoragePluginConfig storagePluginConfig,
+		  			  @JsonProperty("chunkScanSpec") LinkedList<MongoSubScanSpec> chunkScanSpecList,
+		  			  @JsonProperty("fields") List<SchemaPath> columns) throws ExecutionSetupException {
+    this.columns = columns;
     this.mongoPluginConfig = (MongoStoragePluginConfig) storagePluginConfig;
     this.mongoStoragePlugin = (MongoStoragePlugin) registry.getPlugin(storagePluginConfig);
+    this.chunkScanSpecList = chunkScanSpecList;
   }
 
   public MongoSubScan(MongoStoragePlugin storagePlugin,
                       MongoStoragePluginConfig storagePluginConfig,
-                      List<SchemaPath> fields) {
+                      List<MongoSubScanSpec> chunkScanSpecList,
+                      List<SchemaPath> columns) {
     this.mongoStoragePlugin = storagePlugin;
     this.mongoPluginConfig = storagePluginConfig;
-    this.fields = fields;
+    this.columns = columns;
+    this.chunkScanSpecList = chunkScanSpecList;
   }
 
   @Override
@@ -84,63 +86,57 @@ public class MongoSubScan extends AbstractBase implements SubScan {
     return mongoStoragePlugin;
   }
 
-  public List<SchemaPath> getFields() {
-    return fields;
+  public List<SchemaPath> getColumns() {
+    return columns;
+  }
+  
+  public List<MongoSubScanSpec> getChunkScanSpecList() {
+	return chunkScanSpecList;
   }
 
-  @Override
+@Override
   public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException {
     Preconditions.checkArgument(children.isEmpty());
-    return new MongoSubScan(mongoStoragePlugin, mongoPluginConfig, null);
+    return new MongoSubScan(mongoStoragePlugin, mongoPluginConfig, chunkScanSpecList, columns);
   }
 
   @Override
   public int getOperatorType() {
-    return 0;
+    return 1009;
   }
 
   @Override
   public Iterator<PhysicalOperator> iterator() {
-    return null;
+    return Iterators.emptyIterator();
   }
 
   public static class MongoSubScanSpec {
-    protected MongoClient mongoClient;
+	  
     protected String dbName;
     protected String collectionName;
-    protected WriteConcern writeConcern;
-
-    public MongoClient getMongoClient() {
-      return mongoClient;
+    protected String connection;
+    
+    @parquet.org.codehaus.jackson.annotate.JsonCreator
+    public MongoSubScanSpec(@JsonProperty("dbName") String dbName,
+    						@JsonProperty("collectionName") String collectionName,
+    						@JsonProperty("connection") String connection) {
+    	this.dbName = dbName;
+    	this.collectionName = collectionName;
+    	this.connection = connection;
     }
 
-    public void setMongoClient(MongoClient mongoClient) {
-      this.mongoClient = mongoClient;
+    public String getConnection() {
+      return connection;
     }
-
+    
     public String getDbName() {
       return dbName;
-    }
-
-    public void setDbName(String dbName) {
-      this.dbName = dbName;
     }
 
     public String getCollectionName() {
       return collectionName;
     }
 
-    public void setCollectionName(String collectionName) {
-      this.collectionName = collectionName;
-    }
-
-    public WriteConcern getWriteConcern() {
-      return writeConcern;
-    }
-
-    public void setWriteConcern(WriteConcern writeConcern) {
-      this.writeConcern = writeConcern;
-    }
   }
 
 }

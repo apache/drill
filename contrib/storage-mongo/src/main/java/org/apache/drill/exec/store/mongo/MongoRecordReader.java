@@ -18,6 +18,7 @@
 package org.apache.drill.exec.store.mongo;
 
 import java.io.IOException;
+import java.net.UnknownHostException;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -39,9 +40,12 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Sets;
 import com.mongodb.BasicDBObject;
+import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
+import com.mongodb.MongoClient;
+import com.mongodb.MongoClientURI;
 
 public class MongoRecordReader implements RecordReader {
   static final Logger logger = LoggerFactory.getLogger(MongoRecordReader.class);
@@ -60,7 +64,7 @@ public class MongoRecordReader implements RecordReader {
   private DBObject filters;
   private DBObject fields;
 
-  public MongoRecordReader(MongoGroupScan scan, List<SchemaPath> projectedColumns, FragmentContext context) {
+  public MongoRecordReader(MongoSubScan.MongoSubScanSpec subScanSpec, List<SchemaPath> projectedColumns, FragmentContext context) {
     this.columns = Sets.newLinkedHashSet();
     if (projectedColumns != null && projectedColumns.size() != 0) {
       Iterator<SchemaPath> columnIterator = projectedColumns.iterator();
@@ -74,10 +78,20 @@ public class MongoRecordReader implements RecordReader {
     this.fields = new BasicDBObject();
     // exclude ID field, if not mentioned by user.
     this.fields.put(DrillMongoConstants.ID, Integer.valueOf(0));
-    
-    this.collection = scan.getCollection();
+    init(subScanSpec);
   }
-
+  
+  private void init(MongoSubScan.MongoSubScanSpec subScanSpec) {
+	try {
+	  MongoClientURI clientURI = new MongoClientURI(subScanSpec.getConnection());
+	  MongoClient client = new MongoClient(clientURI);
+	  DB db = client.getDB(subScanSpec.getDbName());
+	  collection = db.getCollection(subScanSpec.getCollectionName());
+	} catch (UnknownHostException e) {
+	  throw new DrillRuntimeException(e.getMessage(), e);
+	}
+  }
+  
   @Override
   public void setup(OutputMutator output) throws ExecutionSetupException {
     this.outputMutator = output;

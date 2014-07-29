@@ -29,15 +29,21 @@ import org.apache.drill.exec.store.RecordReader;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
-public class MongoScanBatchCreator implements BatchCreator<MongoGroupScan> {
+public class MongoScanBatchCreator implements BatchCreator<MongoSubScan> {
 
   @Override
-  public RecordBatch getBatch(FragmentContext context, MongoGroupScan scan,
+  public RecordBatch getBatch(FragmentContext context, MongoSubScan subScan,
       List<RecordBatch> children) throws ExecutionSetupException {
     Preconditions.checkArgument(children.isEmpty());
     List<RecordReader> readers = Lists.newArrayList();
-    readers.add(new MongoRecordReader(scan, scan.getColumns(), context));
-    return new ScanBatch(scan, context, readers.iterator());
+    for (MongoSubScan.MongoSubScanSpec scanSpec : subScan.getChunkScanSpecList()) {
+      try {
+        readers.add(new MongoRecordReader(scanSpec, subScan.getColumns(), context));
+      } catch (Exception e) {
+        throw new ExecutionSetupException(e);
+      }
+    }
+    return new ScanBatch(subScan, context, readers.iterator());
   }
 
 }
