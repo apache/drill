@@ -19,6 +19,7 @@ package org.apache.drill.exec.store.hive.schema;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -63,10 +64,19 @@ public class HiveSchemaFactory implements SchemaFactory {
   private LoadingCache<String, LoadingCache<String, HiveReadEntry>> tableLoaders;
   private HiveStoragePlugin plugin;
   private final String schemaName;
+  private final Map<String, String> hiveConfigOverride;
 
-  public HiveSchemaFactory(HiveStoragePlugin plugin, String name, HiveConf hiveConf) throws ExecutionSetupException {
+  public HiveSchemaFactory(HiveStoragePlugin plugin, String name, Map<String, String> hiveConfigOverride) throws ExecutionSetupException {
     this.schemaName = name;
     this.plugin = plugin;
+
+    this.hiveConfigOverride = hiveConfigOverride;
+    HiveConf hiveConf = new HiveConf();
+    if (hiveConfigOverride != null) {
+      for (Map.Entry<String, String> entry : hiveConfigOverride.entrySet()) {
+        hiveConf.set(entry.getKey(), entry.getValue());
+      }
+    }
 
     try {
       this.mClient = new HiveMetaStoreClient(hiveConf);
@@ -168,7 +178,7 @@ public class HiveSchemaFactory implements SchemaFactory {
 
       if (hivePartitions.size() == 0)
         hivePartitions = null;
-      return new HiveReadEntry(new HiveTable(t), hivePartitions);
+      return new HiveReadEntry(new HiveTable(t), hivePartitions, hiveConfigOverride);
 
     }
 

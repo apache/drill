@@ -100,18 +100,20 @@ public class HiveRecordReader implements RecordReader {
   protected List<ValueVector> pVectors = Lists.newArrayList();
   protected Object redoRecord;
   protected boolean empty;
+  private Map<String, String> hiveConfigOverride;
 
   protected static final int TARGET_RECORD_COUNT = 4000;
   protected static final int FIELD_SIZE = 50;
 
   public HiveRecordReader(Table table, Partition partition, InputSplit inputSplit, List<SchemaPath> projectedColumns,
-      FragmentContext context) throws ExecutionSetupException {
+      FragmentContext context, Map<String, String> hiveConfigOverride) throws ExecutionSetupException {
     this.table = table;
     this.partition = partition;
     this.inputSplit = inputSplit;
     this.context = context;
     this.projectedColumns = projectedColumns;
     this.empty = (inputSplit == null && partition == null);
+    this.hiveConfigOverride = hiveConfigOverride;
     init();
   }
 
@@ -134,6 +136,9 @@ public class HiveRecordReader implements RecordReader {
     }
     for (Object obj : properties.keySet()) {
       job.set((String) obj, (String) properties.get(obj));
+    }
+    for(Map.Entry<String, String> entry : hiveConfigOverride.entrySet()) {
+      job.set(entry.getKey(), entry.getValue());
     }
     InputFormat format;
     String sLib = (partition == null) ? table.getSd().getSerdeInfo().getSerializationLib() : partition.getSd().getSerdeInfo().getSerializationLib();

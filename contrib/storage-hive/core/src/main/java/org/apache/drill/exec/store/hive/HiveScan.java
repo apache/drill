@@ -138,6 +138,9 @@ public class HiveScan extends AbstractGroupScan {
         for (Object obj : properties.keySet()) {
           job.set((String) obj, (String) properties.get(obj));
         }
+        for(Map.Entry<String, String> entry : hiveReadEntry.hiveConfigOverride.entrySet()) {
+          job.set(entry.getKey(), entry.getValue());
+        }
         InputFormat<?, ?> format = (InputFormat<?, ?>) Class.forName(table.getSd().getInputFormat()).getConstructor().newInstance();
         job.setInputFormat(format.getClass());
         Path path = new Path(table.getSd().getLocation());
@@ -158,6 +161,9 @@ public class HiveScan extends AbstractGroupScan {
           JobConf job = new JobConf();
           for (Object obj : properties.keySet()) {
             job.set((String) obj, (String) properties.get(obj));
+          }
+          for(Map.Entry<String, String> entry : hiveReadEntry.hiveConfigOverride.entrySet()) {
+            job.set(entry.getKey(), entry.getValue());
           }
           InputFormat<?, ?> format = (InputFormat<?, ?>) Class.forName(partition.getSd().getInputFormat()).getConstructor().newInstance();
           job.setInputFormat(format.getClass());

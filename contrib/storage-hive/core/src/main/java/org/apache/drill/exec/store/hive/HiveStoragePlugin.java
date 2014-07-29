@@ -48,7 +48,7 @@ public class HiveStoragePlugin extends AbstractStoragePlugin {
   public HiveStoragePlugin(HiveStoragePluginConfig config, DrillbitContext context, String name) throws ExecutionSetupException {
     this.config = config;
     this.context = context;
-    this.schemaFactory = new HiveSchemaFactory(this, name, config.getHiveConf());
+    this.schemaFactory = new HiveSchemaFactory(this, name, config.getHiveConfigOverride());
     this.name = name;
   }
 
