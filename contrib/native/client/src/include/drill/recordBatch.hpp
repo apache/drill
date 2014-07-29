@@ -302,7 +302,7 @@ template <int DECIMAL_DIGITS, int WIDTH_IN_BYTES, bool IS_SPARSE, int MAX_PRECIS
 
             void getValueAt(size_t index, char* buf, size_t nChars) const {
                 const DecimalValue& val = this->get(index);
-                std::string& str = boost::lexical_cast<std::string>(val.m_unscaledValue);
+                std::string str = boost::lexical_cast<std::string>(val.m_unscaledValue);
                 if (str[0] == '-') {
                     str = str.substr(1);
                     while (str.length() < m_scale) {
