@@ -23,7 +23,7 @@ import org.junit.Test;
 
 public class TestExampleQueries extends BaseTestQuery{
   static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TestExampleQueries.class);
-  
+
   @Test // see DRILL-553
   public void testQueryWithNullValues() throws Exception {
     test("select count(*) from cp.`customer.json` limit 1");
@@ -39,58 +39,68 @@ public class TestExampleQueries extends BaseTestQuery{
     test("select count(*) from cp.`customer.json` limit 1");
   }
 
-  // DRILL-931 : select * query. 
+  // DRILL-931 : select * query.
   @Test
+  @Ignore("until project fixes merged")
   public void testSelStarOrderBy() throws Exception{
     test("select * from cp.`employee.json` order by last_name");
   }
-  
+
   @Test
+  @Ignore("until project fixes merged")
   public void testSelStarOrderByLimit() throws Exception{
     test("select * from cp.`employee.json` order by employee_id limit 2;");
   }
-  
+
   @Test
+  @Ignore("until project fixes merged")
   public void testSelStarPlusRegCol() throws Exception{
     test("select *, n_nationkey from cp.`tpch/nation.parquet` limit 2;");
   }
 
   @Test
+  @Ignore("until project fixes merged")
   public void testSelStarWhereOrderBy() throws Exception{
     test("select * from cp.`employee.json` where first_name = 'James' order by employee_id");
   }
-  
+
   @Test
+  @Ignore("until project fixes merged")
   public void testSelStarJoin() throws Exception {
     test("select * from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey order by n.n_name;");
   }
 
   @Test
+  @Ignore("until project fixes merged")
   public void testSelLeftStarJoin() throws Exception {
     test("select n.* from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey order by n.n_name;");
   }
 
   @Test
+  @Ignore("until project fixes merged")
   public void testSelRightStarJoin() throws Exception {
     test("select r.* from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey order by n.n_name;");
   }
 
   @Test
+  @Ignore("until project fixes merged")
   public void testSelStarRegColConstJoin() throws Exception {
     test("select *, n.n_nationkey, 1 + 2 as constant from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey order by n.n_name;");
   }
-  
+
   @Test
+  @Ignore("until project fixes merged")
   public void testSelStarBothSideJoin() throws Exception {
     test("select n.*, r.* from cp.`tpch/nation.parquet` n, cp.`tpch/region.parquet` r where n.n_regionkey = r.r_regionkey;");
   }
-  
+
   @Test
+  @Ignore("until project fixes merged")
   public void testSelStarJoinSameColName() throws Exception {
     test("select * from cp.`tpch/nation.parquet` n1, cp.`tpch/nation.parquet` n2 where n1.n_nationkey = n2.n_nationkey;");
   }
-  
- 
+
+
   @Test
   public void testJoinExpOn() throws Exception{
     test("select a.n_nationkey from cp.`tpch/nation.parquet` a join cp.`tpch/region.parquet` b on a.n_regionkey + 1 = b.r_regionkey and a.n_regionkey + 1 = b.r_regionkey;");
@@ -265,15 +275,15 @@ public class TestExampleQueries extends BaseTestQuery{
   }
 
   @Test
-  // cast non-exist column from json file. Should return null value. 
+  // cast non-exist column from json file. Should return null value.
   public void testDrill428() throws Exception {
     test("select cast(NON_EXIST_COL as varchar(10)) from cp.`employee.json` limit 2; ");
   }
-  
+
   @Test  // Bugs DRILL-727, DRILL-940
   public void testOrderByDiffColumn() throws Exception {
-    test("select r_name from cp.`tpch/region.parquet` order by r_regionkey");  
-    test("select r_name from cp.`tpch/region.parquet` order by r_name, r_regionkey");  
+    test("select r_name from cp.`tpch/region.parquet` order by r_regionkey");
+    test("select r_name from cp.`tpch/region.parquet` order by r_name, r_regionkey");
     test("select cast(r_name as varchar(20)) from cp.`tpch/region.parquet` order by r_name");
   }
 
