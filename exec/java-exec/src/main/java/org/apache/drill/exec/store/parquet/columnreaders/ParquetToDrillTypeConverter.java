@@ -59,9 +59,10 @@ public class ParquetToDrillTypeConverter {
             switch(convertedType) {
               case DECIMAL:
                 return Types.withScaleAndPrecision(TypeProtos.MinorType.DECIMAL18, DataMode.OPTIONAL, schemaElement.getScale(), schemaElement.getPrecision());
-              case FINETIME:
-                throw new UnsupportedOperationException();
-              case TIMESTAMP:
+              // TODO - add this back if it is decided to be added upstream, was removed form our pull request July 2014
+//              case TIME_MICROS:
+//                throw new UnsupportedOperationException();
+              case TIMESTAMP_MILLIS:
                 return Types.optional(MinorType.TIMESTAMP);
               default:
                 throw new UnsupportedOperationException(String.format("unsupported type: %s %s", primitiveTypeName, convertedType));
@@ -75,7 +76,7 @@ public class ParquetToDrillTypeConverter {
                 return Types.withScaleAndPrecision(MinorType.DECIMAL9, DataMode.OPTIONAL, schemaElement.getScale(), schemaElement.getPrecision());
               case DATE:
                 return Types.optional(MinorType.DATE);
-              case TIME:
+              case TIME_MILLIS:
                 return Types.optional(MinorType.TIME);
               default:
                 throw new UnsupportedOperationException(String.format("unsupported type: %s %s", primitiveTypeName, convertedType));
@@ -123,9 +124,9 @@ public class ParquetToDrillTypeConverter {
             switch(convertedType) {
               case DECIMAL:
                 return Types.withScaleAndPrecision(MinorType.DECIMAL18, DataMode.REQUIRED, schemaElement.getScale(), schemaElement.getPrecision());
-              case FINETIME:
-                throw new UnsupportedOperationException();
-              case TIMESTAMP:
+//              case FINETIME:
+//                throw new UnsupportedOperationException();
+              case TIMESTAMP_MILLIS:
                 return Types.required(MinorType.TIMESTAMP);
               default:
                 throw new UnsupportedOperationException(String.format("unsupported type: %s %s", primitiveTypeName, convertedType));
@@ -139,7 +140,7 @@ public class ParquetToDrillTypeConverter {
                 return Types.withScaleAndPrecision(MinorType.DECIMAL9, DataMode.REQUIRED, schemaElement.getScale(), schemaElement.getPrecision());
               case DATE:
                 return Types.required(MinorType.DATE);
-              case TIME:
+              case TIME_MILLIS:
                 return Types.required(MinorType.TIME);
               default:
                 throw new UnsupportedOperationException(String.format("unsupported type: %s %s", primitiveTypeName, convertedType));
@@ -187,9 +188,9 @@ public class ParquetToDrillTypeConverter {
             switch(convertedType) {
               case DECIMAL:
                 return Types.withScaleAndPrecision(MinorType.DECIMAL18, DataMode.REPEATED, schemaElement.getScale(), schemaElement.getPrecision());
-              case FINETIME:
-                throw new UnsupportedOperationException();
-              case TIMESTAMP:
+//              case FINETIME:
+//                throw new UnsupportedOperationException();
+              case TIMESTAMP_MILLIS:
                 return Types.repeated(MinorType.TIMESTAMP);
               default:
                 throw new UnsupportedOperationException(String.format("unsupported type: %s %s", primitiveTypeName, convertedType));
@@ -203,7 +204,7 @@ public class ParquetToDrillTypeConverter {
                 return Types.withScaleAndPrecision(MinorType.DECIMAL9, DataMode.REPEATED, schemaElement.getScale(), schemaElement.getPrecision());
               case DATE:
                 return Types.repeated(MinorType.DATE);
-              case TIME:
+              case TIME_MILLIS:
                 return Types.repeated(MinorType.TIME);
               default:
                 throw new UnsupportedOperationException(String.format("unsupported type: %s %s", primitiveTypeName, convertedType));

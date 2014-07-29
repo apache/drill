@@ -110,9 +110,9 @@ public class ParquetTypeHelper {
     </#list>
             originalTypeMap.put(MinorType.VARCHAR, OriginalType.UTF8);
             originalTypeMap.put(MinorType.DATE, OriginalType.DATE);
-            originalTypeMap.put(MinorType.TIME, OriginalType.TIME);
-            originalTypeMap.put(MinorType.TIMESTAMP, OriginalType.TIMESTAMP);
-            originalTypeMap.put(MinorType.TIMESTAMPTZ, OriginalType.TIMESTAMPTZ);
+            originalTypeMap.put(MinorType.TIME, OriginalType.TIME_MILLIS);
+            originalTypeMap.put(MinorType.TIMESTAMP, OriginalType.TIMESTAMP_MILLIS);
+//            originalTypeMap.put(MinorType.TIMESTAMPTZ, OriginalType.TIMESTAMPTZ);
   }
 
   public static PrimitiveTypeName getPrimitiveTypeNameForMinorType(MinorType minorType) {
