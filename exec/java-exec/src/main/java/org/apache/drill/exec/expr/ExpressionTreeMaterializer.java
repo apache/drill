@@ -232,7 +232,22 @@ public class ExpressionTreeMaterializer {
       // as no drill func is found, search for a non-Drill function.
       AbstractFuncHolder matchedNonDrillFuncHolder = registry.findNonDrillFunction(call);
       if (matchedNonDrillFuncHolder != null) {
-        return matchedNonDrillFuncHolder.getExpr(call.getName(), call.args, call.getPosition());
+        // Insert implicit cast function holder expressions if required
+        List<LogicalExpression> extArgsWithCast = Lists.newArrayList();
+
+        for (int i = 0; i < call.args.size(); ++i) {
+          LogicalExpression currentArg = call.args.get(i);
+          TypeProtos.MajorType parmType = matchedNonDrillFuncHolder.getParmMajorType(i);
+
+          if (Types.softEquals(parmType, currentArg.getMajorType(), true)) {
+            extArgsWithCast.add(currentArg);
+          } else {
+            // Insert cast if param type is different from arg type.
+            extArgsWithCast.add(addCastExpression(call.args.get(i), parmType, registry));
+          }
+        }
+
+        return matchedNonDrillFuncHolder.getExpr(call.getName(), extArgsWithCast, call.getPosition());
       }
 
       logFunctionResolutionError(errorCollector, call);

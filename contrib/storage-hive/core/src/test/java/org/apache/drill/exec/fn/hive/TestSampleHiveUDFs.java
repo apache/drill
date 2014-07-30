@@ -95,10 +95,9 @@ public class TestSampleHiveUDFs extends BaseTestQuery {
   }
 
   @Test
-  @Ignore // TODO: need var16char input. String type field read from Hive is converted to VarChar type
   public void stringInOut() throws Exception{
     String query = "SELECT testHiveUDFString(string_field) as col1 FROM hive.readtest";
-    String expected = "col1\n" + "8.345\n" + "null\n";
+    String expected = "col1\n" + "stringfield\n" + "\n";
     helper(query, expected);
   }
 

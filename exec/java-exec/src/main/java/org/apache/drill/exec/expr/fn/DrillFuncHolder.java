@@ -196,10 +196,12 @@ public abstract class DrillFuncHolder extends AbstractFuncHolder {
     return true;
   }
 
+  @Override
   public MajorType getParmMajorType(int i) {
     return this.parameters[i].type;
   }
 
+  @Override
   public int getParamCount() {
     return this.parameters.length;
   }

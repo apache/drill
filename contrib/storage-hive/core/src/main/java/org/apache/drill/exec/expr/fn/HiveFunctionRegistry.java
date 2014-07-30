@@ -24,6 +24,7 @@ import com.google.common.collect.Sets;
 import org.apache.drill.common.config.DrillConfig;
 import org.apache.drill.common.expression.FunctionCall;
 import org.apache.drill.common.types.TypeProtos.MajorType;
+import org.apache.drill.common.types.TypeProtos.MinorType;
 import org.apache.drill.common.types.Types;
 import org.apache.drill.common.util.PathScanner;
 import org.apache.drill.exec.expr.fn.impl.hive.ObjectInspectorHelper;
@@ -94,13 +95,35 @@ public class HiveFunctionRegistry implements PluggableFunctionRegistry{
    * @return
    */
   @Override
-  public HiveFuncHolder getFunction(FunctionCall call){
+  public HiveFuncHolder getFunction(FunctionCall call) {
+    HiveFuncHolder h;
+
+    h = resolveFunction(call, false);
+    if (h != null) {
+      return h;
+    }
+
+    return resolveFunction(call, true);
+  }
+
+  /**
+   * Helper method which resolves the given function call to a Hive UDF. It takes an argument
+   * <i>convertVarCharToVar16Char</i> which tells to implicitly cast input arguments of type VARCHAR to VAR16CHAR
+   * and search Hive UDF registry using implicitly casted argument types.
+   *
+   * TODO: This is a rudimentary function resolver. Need to include more implicit casting such as DECIMAL28 to
+   * DECIMAL38 as Hive UDFs can accept only DECIMAL38 type.
+   */
+  private HiveFuncHolder resolveFunction(FunctionCall call, boolean convertVarCharToVar16Char) {
     HiveFuncHolder holder;
     MajorType[] argTypes = new MajorType[call.args.size()];
     ObjectInspector[] argOIs = new ObjectInspector[call.args.size()];
     for(int i=0; i<call.args.size(); i++) {
       try {
         argTypes[i] = call.args.get(i).getMajorType();
+        if (convertVarCharToVar16Char && argTypes[i].getMinorType() == MinorType.VARCHAR) {
+          argTypes[i] = Types.withMode(MinorType.VAR16CHAR, argTypes[i].getMode());
+        }
         argOIs[i] = ObjectInspectorHelper.getDrillObjectInspector(argTypes[i].getMode(), argTypes[i].getMinorType());
       } catch(Exception e) {
         // Hive throws errors if there are unsupported types. Consider there is no hive UDF supporting the

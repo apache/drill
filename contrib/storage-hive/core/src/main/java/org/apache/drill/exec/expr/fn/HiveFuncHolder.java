@@ -112,6 +112,16 @@ public class HiveFuncHolder extends AbstractFuncHolder {
     return isRandom;
   }
 
+  @Override
+  public MajorType getParmMajorType(int i) {
+    return argTypes[i];
+  }
+
+  @Override
+  public int getParamCount() {
+    return argTypes.length;
+  }
+
   /**
    * Start generating code
    * @return workspace variables
