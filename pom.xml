@@ -25,6 +25,8 @@
   <packaging>pom</packaging>
 
   <name>Apache Drill Root POM</name>
+  <description>Apache Drill is an open source, low latency SQL query engine for Hadoop and NoSQL.</description>
+  <url>http://incubator.apache.org/drill/</url>
 
   <properties>
     <target.gen.source.path>${project.basedir}/target/generated-sources</target.gen.source.path>
@@ -39,6 +41,35 @@
     <url>https://github.com/apache/incubator-drill</url>
     <tag>HEAD</tag>
   </scm>
+
+  <mailingLists>
+    <mailingList>
+      <name>User List</name>
+      <subscribe>drill-user-subscribe@incubator.apache.org</subscribe>
+      <unsubscribe>drill-user-unsubscribe@incubator.apache.org</unsubscribe>
+      <post>drill-user@incubator.apache.org</post>
+      <archive>https://mail-archives.apache.org/mod_mbox/incubator-drill-user/</archive>
+    </mailingList>
+    <mailingList>
+      <name>Developer List</name>
+      <subscribe>drill-dev-subscribe@incubator.apache.org</subscribe>
+      <unsubscribe>drill-dev-unsubscribe@incubator.apache.org</unsubscribe>
+      <post>drill-dev@incubator.apache.org</post>
+      <archive>https://mail-archives.apache.org/mod_mbox/incubator-drill-dev/</archive>
+    </mailingList>
+    <mailingList>
+      <name>Commits List</name>
+      <subscribe>drill-commits-subscribe@incubator.apache.org</subscribe>
+      <unsubscribe>drill-commits-unsubscribe@incubator.apache.org</unsubscribe>
+      <archive>https://mail-archives.apache.org/mod_mbox/incubator-drill-commits/</archive>
+    </mailingList>
+    <mailingList>
+      <name>Issues List</name>
+      <subscribe>issues-subscribe@drill.incubator.apache.org</subscribe>
+      <unsubscribe>issues-unsubscribe@drill.incubator.apache.org</unsubscribe>
+      <archive>https://mail-archives.apache.org/mod_mbox/incubator-drill-issues/</archive>
+    </mailingList>
+  </mailingLists>
 
   <repositories>
     <repository>
