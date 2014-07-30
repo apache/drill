@@ -16,7 +16,7 @@
   <parent>
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
-    <version>13</version>
+    <version>14</version>
   </parent>
 
   <groupId>org.apache.drill</groupId>
@@ -304,7 +304,7 @@
             <useReleaseProfile>false</useReleaseProfile>
             <pushChanges>false</pushChanges>
             <goals>deploy</goals>
-            <arguments>-Pdrill-release ${arguments}</arguments>
+            <arguments>-Papache-release ${arguments}</arguments>
           </configuration>
         </plugin>
 
@@ -463,9 +463,8 @@
 
   <profiles>
     <profile>
-      <!-- this is heavily borrowed from the apache-root pom but updated 
-        so we don't have some of the issues it has. -->
-      <id>drill-release</id>
+      <!-- this profile adds/overrides few features of the 'apache-release' profile in the parent pom. -->
+      <id>apache-release</id>
       <build>
         <plugins>
           <plugin>
@@ -487,19 +486,9 @@
               <failOnError>false</failOnError>
             </configuration>
           </plugin>
-
-          <!-- Create a source-release artifact that contains the fully buildable 
-            project directory source structure. This is the artifact which is the official 
-            subject of any release vote. -->
+          <!-- override the parent assembly execution to customize the assembly descriptor and final name -->
           <plugin>
             <artifactId>maven-assembly-plugin</artifactId>
-            <dependencies>
-              <dependency>
-                <groupId>org.apache.apache.resources</groupId>
-                <artifactId>apache-source-release-assembly-descriptor</artifactId>
-                <version>1.0.4</version>
-              </dependency>
-            </dependencies>
             <executions>
               <execution>
                 <id>source-release-assembly</id>
@@ -509,60 +498,11 @@
                 </goals>
                 <configuration>
                   <runOnlyAtExecutionRoot>true</runOnlyAtExecutionRoot>
-                  <descriptor>src/assembly/source-assembly.xml</descriptor>
-                  <finalName>apache-drill-${project.version}</finalName>
+                  <appendAssemblyId>false</appendAssemblyId>
+                  <descriptor>src/main/resources/assemblies/source-assembly.xml</descriptor>
+                  <finalName>apache-drill-${project.version}-src</finalName>
                   <tarLongFileMode>gnu</tarLongFileMode>
                 </configuration>
-              </execution>
-            </executions>
-          </plugin>
-          <!-- We want to deploy the artifact to a staging location for perusal -->
-          <plugin>
-            <inherited>true</inherited>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-deploy-plugin</artifactId>
-            <configuration>
-              <updateReleaseInfo>true</updateReleaseInfo>
-            </configuration>
-          </plugin>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-source-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>attach-sources</id>
-                <phase>verify</phase>
-                <goals>
-                  <goal>jar</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-javadoc-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>attach-javadocs</id>
-                <goals>
-                  <goal>jar</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-          <!-- We want to sign the artifact, the POM, and all attached artifacts -->
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-gpg-plugin</artifactId>
-            <configuration>
-              <passphrase>${gpg.passphrase}</passphrase>
-              <useAgent>${gpg.useagent}</useAgent>
-            </configuration>
-            <executions>
-              <execution>
-                <goals>
-                  <goal>sign</goal>
-                </goals>
               </execution>
             </executions>
           </plugin>
